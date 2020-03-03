@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MorphicWin"
         mc:Ignorable="d"
-        Title="MorphicConfigurator" Height="450" Width="800">
+        Title="Morphic" Height="450" Width="800"
+        WindowStartupLocation="CenterScreen">
     <Grid>
         <Button x:Name="createUserButton" Content="Create Test User" HorizontalAlignment="Center" VerticalAlignment="Center" Click="CreateTestUser"/>
         <Button x:Name="clearUserButton" Content="Clear Test User" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Hidden" Click="ClearTestUser"/>
