@@ -1,0 +1,15 @@
+﻿<Window x:Class="MorphicWin.QuickStrip"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MorphicWin"
+        mc:Ignorable="d"
+        Title="QuickStrip" Height="137" Width="800"
+        ShowInTaskbar="False"
+        WindowStyle="None">
+    <Grid>
+        <Button x:Name="button" Content="Open Configurator" HorizontalAlignment="Center" VerticalAlignment="Center" Click="OpenConfigurator"/>
+
+    </Grid>
+</Window>
