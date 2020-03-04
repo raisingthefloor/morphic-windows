@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows;
+using MorphicCore;
 
 namespace MorphicWin
 {
@@ -35,7 +36,7 @@ namespace MorphicWin
 
         private void CreateTestUser(object sender, RoutedEventArgs e)
         {
-            Settings.Default.UserId = Guid.NewGuid().ToString();
+            Settings.Default.UserId = new User().identifier;
             Settings.Default.Save();
             Close();
         }
