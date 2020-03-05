@@ -21,10 +21,7 @@ namespace MorphicWin
 
         private void OpenConfigurator(object sender, RoutedEventArgs e)
         {
-            var configurator = new MorphicConfigurator();
-            configurator.Show();
-            configurator.Activate();
-            Close();
+            Morphic.Shared.OpenConfigurator();
         }
     }
 }

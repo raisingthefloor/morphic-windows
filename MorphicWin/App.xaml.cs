@@ -8,6 +8,7 @@ namespace MorphicWin
     /// </summary>
     public partial class App : Application
     {
+
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
@@ -15,19 +16,19 @@ namespace MorphicWin
             Settings.Default.PropertyChanged += OnSettingChanged;
             if (Settings.Default.UserId == "")
             {
-                var configurator = new MorphicConfigurator();
-                configurator.Show();
-                configurator.Activate();
+                Morphic.Shared.OpenConfigurator();
             }
         }
 
         private void OnSettingChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == "UserId" && Settings.Default.UserId != "" && quickStrip == null)
+            if (e.PropertyName == "UserId" && Settings.Default.UserId != "")
             {
-                ToggleQuickStrip();
+                Morphic.Shared.ShowQuickStrip();
             }
         }
+
+        #region System Tray Icon
 
         private System.Windows.Forms.NotifyIcon notifyIcon = null;
 
@@ -42,32 +43,10 @@ namespace MorphicWin
 
         private void OnNotifyIconClicked(object sender, EventArgs e)
         {
-            ToggleQuickStrip();
+            Morphic.Shared.ToggleQuickStrip();
         }
 
-        private Window quickStrip = null;
+        #endregion
 
-        private void ToggleQuickStrip()
-        {
-            if (quickStrip != null)
-            {
-                quickStrip.Close();
-            }
-            else
-            {
-                quickStrip = new QuickStrip();
-                quickStrip.Closed += QuickStripClosed;
-                var screenSize = SystemParameters.WorkArea;
-                quickStrip.Top = screenSize.Height - quickStrip.Height;
-                quickStrip.Left = screenSize.Width - quickStrip.Width;
-                quickStrip.Show();
-                quickStrip.Activate();
-            }
-        }
-
-        private void QuickStripClosed(object sender, EventArgs e)
-        {
-            quickStrip = null;
-        }
     }
 }
