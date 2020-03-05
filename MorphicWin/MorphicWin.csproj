@@ -50,4 +50,8 @@
     </None>
   </ItemGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="IF &quot;$(ConfigurationName)&quot; == &quot;Debug&quot; (&#xD;&#xA;    IF EXIST &quot;Dev.config&quot; (&#xD;&#xA;        copy Dev.config $(OutDir)Morphic.dll.config&#xD;&#xA;    )&#xD;&#xA;)" />
+  </Target>
+
 </Project>
