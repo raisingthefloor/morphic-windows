@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29806.167
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MorphicWin", "MorphicWin.csproj", "{DDEF3455-1396-495E-9BAA-16C8C80AD6F5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MorphicWin", "MorphicWin\MorphicWin.csproj", "{DDEF3455-1396-495E-9BAA-16C8C80AD6F5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MorphicCore", "..\MorphicCore\MorphicCore.csproj", "{31FB0877-17D1-444F-9506-EE5887A63AF6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MorphicCore", "MorphicCore\MorphicCore.csproj", "{31FB0877-17D1-444F-9506-EE5887A63AF6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MorphicService", "..\MorphicService\MorphicService.csproj", "{C3C85B67-282B-4D19-AF64-0EE027A9D307}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MorphicService", "MorphicService\MorphicService.csproj", "{C3C85B67-282B-4D19-AF64-0EE027A9D307}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MorphicSettings", "..\MorphicSettings\MorphicSettings.csproj", "{2AD5A5C8-5538-48C8-838D-97F42ED4ECE1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MorphicSettings", "MorphicSettings\MorphicSettings.csproj", "{2AD5A5C8-5538-48C8-838D-97F42ED4ECE1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
