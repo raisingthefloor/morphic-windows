@@ -20,8 +20,7 @@ namespace MorphicService
         public static async Task<AuthResponse?> Register(this Service service, User user, UsernameCredentials usernameCredentials)
         {
             var registration = new UsernameRegistration(usernameCredentials, user);
-            var request = HttpRequestMessageExtensions.Create(service.Session, "register/username", HttpMethod.Post, registration);
-            return await service.Session.Send<AuthResponse>(request);
+            return await service.Session.Send<AuthResponse>(() => HttpRequestMessageExtensions.Create(service.Session, "register/username", HttpMethod.Post, registration));
         }
 
         /// <summary>
@@ -34,8 +33,7 @@ namespace MorphicService
         public static async Task<AuthResponse?> Register(this Service service, User user, KeyCredentials keyCredentials)
         {
             var registration = new KeyRegistration(keyCredentials, user);
-            var request = HttpRequestMessageExtensions.Create(service.Session, "register/key", HttpMethod.Post, registration);
-            return await service.Session.Send<AuthResponse>(request);
+            return await service.Session.Send<AuthResponse>(() => HttpRequestMessageExtensions.Create(service.Session, "register/key", HttpMethod.Post, registration));
         }
 
         /// <summary>
@@ -114,8 +112,22 @@ namespace MorphicService
         /// <returns>An authentication token and user information, or <code>null</code> if the request failed</returns>
         public static async Task<AuthResponse?> AuthenticateUsername(this Service service, UsernameCredentials usernameCredentials)
         {
-            var request = HttpRequestMessageExtensions.Create(service.Session, "auth/username", HttpMethod.Post, usernameCredentials);
-            return await service.Session.Send<AuthResponse>(request);
+            var body = new AuthUsernameRequest(usernameCredentials.Username, usernameCredentials.Password);
+            return await service.Session.Send<AuthResponse>(() => HttpRequestMessageExtensions.Create(service.Session, "auth/username", HttpMethod.Post, body));
+        }
+
+        private class AuthUsernameRequest
+        {
+            [JsonPropertyName("username")]
+            public string Username { get; set; }
+            [JsonPropertyName("password")]
+            public string Password { get; set; }
+
+            public AuthUsernameRequest(string username, string password)
+            {
+                Username = username;
+                Password = password;
+            }
         }
 
         /// <summary>
@@ -126,8 +138,19 @@ namespace MorphicService
         /// <returns>An authentication token and user information, or <code>null</code> if the request failed</returns>
         public static async Task<AuthResponse?> AuthenticateKey(this Service service, KeyCredentials keyCredentials)
         {
-            var request = HttpRequestMessageExtensions.Create(service.Session, "auth/username", HttpMethod.Post, keyCredentials);
-            return await service.Session.Send<AuthResponse>(request);
+            var body = new AuthKeyRequest(keyCredentials.Key);
+            return await service.Session.Send<AuthResponse>(() => HttpRequestMessageExtensions.Create(service.Session, "auth/key", HttpMethod.Post, body));
+        }
+
+        private class AuthKeyRequest
+        {
+            [JsonPropertyName("key")]
+            public string Key { get; set; } = "";
+
+            public AuthKeyRequest(string key)
+            {
+                Key = key;
+            }
         }
 
         #endregion

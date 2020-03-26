@@ -15,8 +15,7 @@ namespace MorphicService
         /// <returns>The preferences, or <code>null</code> if the request failed</returns>
         public static async Task<Preferences?> FetchPreferences(this Service service, string identifier)
         {
-            var request = HttpRequestMessageExtensions.Create(service.Session, string.Format("preferences/{0}", identifier), HttpMethod.Get);
-            return await service.Session.Send<Preferences>(request);
+            return await service.Session.Send<Preferences>(() => HttpRequestMessageExtensions.Create(service.Session, string.Format("preferences/{0}", identifier), HttpMethod.Get));
         }
 
         /// <summary>
@@ -27,8 +26,7 @@ namespace MorphicService
         /// <returns><code>true</code> if the request succeeded, <code>false</code> otherwise</returns>
         public static async Task<bool> Save(this Service service, Preferences preferences)
         {
-            var request = HttpRequestMessageExtensions.Create(service.Session, string.Format("preferences/{0}", preferences.Id), HttpMethod.Put, preferences);
-            return await service.Session.Send(request);
+            return await service.Session.Send(() => HttpRequestMessageExtensions.Create(service.Session, string.Format("preferences/{0}", preferences.Id), HttpMethod.Put, preferences));
         }
     }
 }

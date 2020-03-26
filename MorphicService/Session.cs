@@ -3,7 +3,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Timers;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
 using MorphicCore;
 using MorphicSettings;
 
@@ -12,7 +11,7 @@ namespace MorphicService
 
     public class SessionOptions
     {
-        public string Endpoint = "";
+        public string Endpoint { get; set; } = "";
     }
 
     /// <summary>
@@ -27,18 +26,21 @@ namespace MorphicService
         /// Create a new session with the given URL
         /// </summary>
         /// <param name="endpoint">The root URL of the Morphic HTTP service</param>
-        public Session(SessionOptions options, Settings settings, ILogger<Session> logger)
+        public Session(SessionOptions options, Settings settings, IKeychain keychain, ILogger<Session> logger)
         {
             Service = new Service(new Uri(options.Endpoint), this);
             client = new HttpClient();
-            this.logger = logger;
             this.settings = settings;
+            this.keychain = keychain;
+            this.logger = logger;
         }
 
         /// <summary>
         /// The unerlying Morphic service this session talks to
         /// </summary>
-        internal Service Service;
+        public Service Service { get; private set; }
+
+        private readonly IKeychain keychain;
 
         /// <summary>
         /// Open the session by trying to login with the saved user information, if any 
@@ -55,6 +57,10 @@ namespace MorphicService
                 {
                     Preferences = await Service.FetchPreferences(User.PreferencesId);
                 }
+            }
+            else
+            {
+                logger.LogInformation("No saved user");
             }
         }
 
@@ -80,12 +86,17 @@ namespace MorphicService
         /// Send a request, re-authenticating if needed
         /// </summary>
         /// <typeparam name="ResponseBody">The type of response expected to be decoded from JSON</typeparam>
-        /// <param name="request">The request to send</param>
+        /// <param name="requestFactory">A function that creates the request to send</param>
+        /// <remarks>
+        /// We use a request factory function in case we need to re-send the request after re-authenticating.
+        /// Unfortunately, an HttpRequestMessage can only be sent once.
+        /// </remarks>
         /// <returns>The response decoded from JSON, or <code>null</code> if no valid response was provided</returns>
-        public async Task<ResponseBody?> Send<ResponseBody>(HttpRequestMessage request) where ResponseBody: class
+        public async Task<ResponseBody?> Send<ResponseBody>(Func<HttpRequestMessage> requestFactory) where ResponseBody: class
         {
             try
             {
+                var request = requestFactory.Invoke();
                 logger.LogInformation("{0} {1}", request.Method, request.RequestUri.AbsolutePath);
                 var response = await client.SendAsync(request);
                 logger.LogInformation("{0} {1}", response.StatusCode.ToString(), request.RequestUri.AbsolutePath);
@@ -97,6 +108,7 @@ namespace MorphicService
                         logger.LogInformation("Could not authenticate user");
                         return null;
                     }
+                    request = requestFactory.Invoke();
                     logger.LogInformation("{0} {1}", request.Method, request.RequestUri.AbsolutePath);
                     response = await client.SendAsync(request);
                     logger.LogInformation("{0} {1}", response.StatusCode.ToString(), request.RequestUri.AbsolutePath);
@@ -112,12 +124,17 @@ namespace MorphicService
         /// <summary>
         /// Send a request that expects no response body, re-authenticating if needed
         /// </summary>
-        /// <param name="request">The request to send</param>
+        /// <param name="requestFactory">A function that creates the request to send</param>
+        /// <remarks>
+        /// We use a request factory function in case we need to re-send the request after re-authenticating.
+        /// Unfortunately, an HttpRequestMessage can only be sent once.
+        /// </remarks>
         /// <returns><code>true</code> if the request succeeds, <code>false</code> otherwise</returns>
-        public async Task<bool> Send(HttpRequestMessage request)
+        public async Task<bool> Send(Func<HttpRequestMessage> requestFactory)
         {
             try
             {
+                var request = requestFactory.Invoke();
                 logger.LogInformation("{0} {1}", request.Method, request.RequestUri.AbsolutePath);
                 var response = await client.SendAsync(request);
                 logger.LogInformation("{0} {1}", response.StatusCode.ToString(), request.RequestUri.AbsolutePath);
@@ -129,6 +146,7 @@ namespace MorphicService
                         logger.LogInformation("Could not authenticate user");
                         return false;
                     }
+                    request = requestFactory.Invoke();
                     logger.LogInformation("{0} {1}", request.Method, request.RequestUri.AbsolutePath);
                     response = await client.SendAsync(request);
                     logger.LogInformation("{0} {1}", response.StatusCode.ToString(), request.RequestUri.AbsolutePath);
@@ -146,24 +164,10 @@ namespace MorphicService
 
         #region Authentication
 
-        private string? authToken;
-
         /// <summary>
         /// The session's auth token
         /// </summary>
-        public string? AuthToken
-        {
-            get
-            {
-                // FIXME: fetch from Credentials Manager
-                return authToken;
-            }
-            set
-            {
-                // FIXME: store in Credentials Manager
-                authToken = value;
-            }
-        }
+        public string? AuthToken { get; set; }
 
         /// <summary>
         /// The current user's saved credentials, if any
@@ -174,7 +178,7 @@ namespace MorphicService
             {
                 if (CurrentUserId is string userId)
                 {
-                    // FIXME: fetch from Credentials Manager
+                    return keychain.LoadKey(Service.Endpoint, userId);
                 }
                 return null;
             }
@@ -211,12 +215,66 @@ namespace MorphicService
         /// <summary>
         /// The current user's information
         /// </summary>
-        public User? User;
+        public User? User
+        {
+            get
+            {
+                return user;
+            }
+            set
+            {
+                user = value;
+                if (value != null)
+                {
+                    CurrentUserId = value.Id;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Field backing for the User property
+        /// </summary>
+        private User? user;
 
         /// <summary>
         /// The current user's preferences
         /// </summary>
         public Preferences? Preferences;
+
+        public async Task Signin(User user)
+        {
+            User = user;
+            Preferences = null;
+            if (user.PreferencesId is string id)
+            {
+                Preferences = await Service.FetchPreferences(id);
+            }
+            ApplyAllPreferences();
+        }
+
+        public void  Signout()
+        {
+            User = null;
+            Preferences = null;
+        }
+
+        public async Task<bool> RegisterUser()
+        {
+            var user = new User();
+            var creds = new KeyCredentials();
+            var auth = await Service.Register(user, creds);
+            if (auth != null)
+            {
+                if (!keychain.Save(creds, Service.Endpoint, auth.User.Id))
+                {
+                    logger.LogError("Failed to save key creds to keychain");
+                }
+                AuthToken = auth.Token;
+                await Signin(auth.User);
+                return true;
+            }
+            return false;
+        }
 
         #endregion
 
@@ -246,6 +304,15 @@ namespace MorphicService
                 return settings.Apply(solution, preference, value);
             }
             return false;
+        }
+
+        public string? GetString(string solution, string preference)
+        {
+            if (Preferences is Preferences preferences)
+            {
+                return preferences.Get(solution, preference) as string;
+            }
+            return null;
         }
 
         /// <summary>

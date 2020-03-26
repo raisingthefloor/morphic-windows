@@ -6,12 +6,12 @@ namespace MorphicSettings
     public class Settings
     {
 
-        public Settings(ILogger logger)
+        public Settings(ILogger<Settings> logger)
         {
             this.logger = logger;
         }
 
-        private readonly ILogger logger;
+        private readonly ILogger<Settings> logger;
 
         public bool Apply(string solution, string preference, object? value)
         {

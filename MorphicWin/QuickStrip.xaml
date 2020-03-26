@@ -9,7 +9,8 @@
         ShowInTaskbar="False"
         WindowStyle="None">
     <Grid>
-        <Button x:Name="button" Content="Open Configurator" HorizontalAlignment="Center" VerticalAlignment="Center" Click="OpenConfigurator"/>
+        <Button x:Name="button" Content="Open Configurator" Click="OpenConfigurator" Margin="0,0,10,10" Height="20" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="104"/>
+        <ComboBox x:Name="displayZoomComboBox" HorizontalAlignment="Center" VerticalAlignment="Center" Width="120"/>
 
     </Grid>
 </Window>

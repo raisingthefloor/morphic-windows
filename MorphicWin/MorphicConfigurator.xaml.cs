@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Windows;
+using System.Threading.Tasks;
 using MorphicCore;
+using MorphicService;
 
 namespace MorphicWin
 {
@@ -9,10 +11,13 @@ namespace MorphicWin
     /// </summary>
     public partial class MorphicConfigurator : Window
     {
-        public MorphicConfigurator()
+        public MorphicConfigurator(Session session)
         {
+            this.session = session;
             InitializeComponent();
         }
+
+        private readonly Session session;
 
         protected override void OnInitialized(EventArgs e)
         {
@@ -34,15 +39,32 @@ namespace MorphicWin
             }
         }
 
-        private void CreateTestUser(object sender, RoutedEventArgs e)
+        private void CreateTestUser(object? sender, RoutedEventArgs e)
         {
-            Settings.Default.UserId = new User().identifier;
-            Settings.Default.Save();
-            Close();
+            var task = session.RegisterUser();
+            createUserButton.IsEnabled = false;
+            task.ContinueWith(task =>
+            {
+                if (task.Result)
+                {
+                    if (session.User != null)
+                    {
+                        Settings.Default.UserId = session.User.Id;
+                        Settings.Default.Save();
+                    }
+                    Close();
+                }
+                else
+                {
+                    createUserButton.IsEnabled = true;
+                }
+
+            }, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
-        private void ClearTestUser(object sender, RoutedEventArgs e)
+        private void ClearTestUser(object? sender, RoutedEventArgs e)
         {
+            session.Signout();
             Settings.Default.UserId = "";
             Settings.Default.Save();
             Close();

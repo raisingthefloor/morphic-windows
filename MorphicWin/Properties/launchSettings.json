@@ -3,7 +3,7 @@
     "MorphicWin": {
       "commandName": "Project",
       "environmentVariables": {
-        "MORPHIC_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development"
       }
     }
   }

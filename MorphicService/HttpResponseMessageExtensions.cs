@@ -17,8 +17,11 @@ namespace MorphicService
             {
                 return null;
             }
-            var contentType = response.Headers.GetValues("Content-Type").FirstOrDefault();
-            if (contentType != "application/json; charset=utf-8")
+            if (response.Content.Headers.ContentType.MediaType != "application/json")
+            {
+                return null;
+            }
+            if (response.Content.Headers.ContentType.CharSet != "utf-8")
             {
                 return null;
             }
