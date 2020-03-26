@@ -1,22 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace MorphicCore
 {
     public class User
     {
-
-        public User()
-        {
-            this.identifier = Guid.NewGuid().ToString();
-        }
-
-        public User(string identifier)
-        {
-            this.identifier = identifier;
-        }
-
-        public string identifier { get; set; }
+        public string Id { get; set; } = "";
+        public string? PreferencesId { get; set; }
+        public string? FirstName { get; set; }
+        public string? LastName { get; set; }
     }
 }

@@ -1,40 +1,34 @@
 ﻿using MorphicCore;
-using System.Net.Http;
-using System;
 using System.Threading.Tasks;
-
-#nullable enable
+using System.Net.Http;
 
 namespace MorphicService
 {
-    public class PreferencesService
+    static class PreferencesService
     {
 
-        public PreferencesService(Uri endpoint)
+        /// <summary>
+        /// Get the preferences for the given identifier
+        /// </summary>
+        /// <param name="service"></param>
+        /// <param name="identifier">The preferences identifier, typically found in <code>User.PreferencesId</code></param>
+        /// <returns>The preferences, or <code>null</code> if the request failed</returns>
+        public static async Task<Preferences?> FetchPreferences(this Service service, string identifier)
         {
-            Endpoint = endpoint;
-            Client = new HttpClient();
-            PreferencesRootUri = new Uri(Endpoint, "preferences/");
+            var request = HttpRequestMessageExtensions.Create(service.Session, string.Format("preferences/{0}", identifier), HttpMethod.Get);
+            return await service.Session.Send<Preferences>(request);
         }
 
-        public Uri Endpoint { get; }
-        public HttpClient Client { get; }
-
-        public async Task<Preferences?> FetchPrefernces(User user)
+        /// <summary>
+        /// Save the given preferences
+        /// </summary>
+        /// <param name="service"></param>
+        /// <param name="preferences">The preferences to save</param>
+        /// <returns><code>true</code> if the request succeeded, <code>false</code> otherwise</returns>
+        public static async Task<bool> Save(this Service service, Preferences preferences)
         {
-            var uri = GetPreferencesUri(user);
-            var response = await Client.GetAsync(uri);
-            return await response.GetObject<Preferences>();
+            var request = HttpRequestMessageExtensions.Create(service.Session, string.Format("preferences/{0}", preferences.Id), HttpMethod.Put, preferences);
+            return await service.Session.Send(request);
         }
-
-        private Uri PreferencesRootUri;
-
-        private Uri GetPreferencesUri(User user)
-        {
-            return new Uri(PreferencesRootUri, user.identifier);
-        }
-         
     }
 }
-
-#nullable disable

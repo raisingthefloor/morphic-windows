@@ -18,7 +18,7 @@ namespace MorphicWin
         {
             var endpointString = ConfigurationManager.AppSettings.Get("MorphicServiceEndpoint");
             Endpoint = new Uri(endpointString);
-            PreferencesService = new PreferencesService(Endpoint);
+            PreferencesService = new Service(Endpoint);
         }
 
         #endregion Instance
@@ -26,7 +26,7 @@ namespace MorphicWin
         #region Service
 
         private Uri Endpoint;
-        public PreferencesService PreferencesService { get; }
+        public Service PreferencesService { get; }
 
         #endregion
 

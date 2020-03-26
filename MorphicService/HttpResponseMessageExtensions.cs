@@ -3,6 +3,7 @@ using System.Linq;
 using System;
 using System.Text.Json;
 using System.Threading.Tasks;
+using MorphicCore;
 
 #nullable enable
 
@@ -24,12 +25,19 @@ namespace MorphicService
             var json = await response.Content.ReadAsStreamAsync();
             try
             {
-                return await JsonSerializer.DeserializeAsync<T>(json);
+                var options = new JsonSerializerOptions();
+                options.Converters.Add(new JsonElementInferredTypeConverter());
+                return await JsonSerializer.DeserializeAsync<T>(json, options);
             }
             catch
             {
                 return null;
             }
+        }
+
+        internal static bool RequiresMorphicAuthentication(this HttpResponseMessage response)
+        {
+            return response.StatusCode == System.Net.HttpStatusCode.Unauthorized;
         }
     }
 }

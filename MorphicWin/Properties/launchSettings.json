@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "MorphicWin": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "MORPHIC_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
