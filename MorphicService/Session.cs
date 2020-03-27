@@ -56,6 +56,7 @@ namespace MorphicService
                 if (User != null && User.PreferencesId != null)
                 {
                     Preferences = await Service.FetchPreferences(User.PreferencesId);
+                    ApplyAllPreferences();
                 }
             }
             else

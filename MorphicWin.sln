@@ -5,11 +5,13 @@ VisualStudioVersion = 16.0.29806.167
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MorphicWin", "MorphicWin\MorphicWin.csproj", "{DDEF3455-1396-495E-9BAA-16C8C80AD6F5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MorphicCore", "MorphicCore\MorphicCore.csproj", "{31FB0877-17D1-444F-9506-EE5887A63AF6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MorphicCore", "MorphicCore\MorphicCore.csproj", "{31FB0877-17D1-444F-9506-EE5887A63AF6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MorphicService", "MorphicService\MorphicService.csproj", "{C3C85B67-282B-4D19-AF64-0EE027A9D307}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MorphicService", "MorphicService\MorphicService.csproj", "{C3C85B67-282B-4D19-AF64-0EE027A9D307}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MorphicSettings", "MorphicSettings\MorphicSettings.csproj", "{2AD5A5C8-5538-48C8-838D-97F42ED4ECE1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MorphicSettings", "MorphicSettings\MorphicSettings.csproj", "{2AD5A5C8-5538-48C8-838D-97F42ED4ECE1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Morphic.Windows.Native", "Morphic.Windows.Native\Morphic.Windows.Native.csproj", "{98AC1F49-CE2F-4294-8FAD-1A287B0E7824}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{2AD5A5C8-5538-48C8-838D-97F42ED4ECE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2AD5A5C8-5538-48C8-838D-97F42ED4ECE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2AD5A5C8-5538-48C8-838D-97F42ED4ECE1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{98AC1F49-CE2F-4294-8FAD-1A287B0E7824}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{98AC1F49-CE2F-4294-8FAD-1A287B0E7824}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{98AC1F49-CE2F-4294-8FAD-1A287B0E7824}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{98AC1F49-CE2F-4294-8FAD-1A287B0E7824}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

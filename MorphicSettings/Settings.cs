@@ -23,7 +23,7 @@ namespace MorphicSettings
                     {
                         if (Enum.TryParse<Display.ZoomLevel>(stringValue, true, out var level))
                         {
-                            var success = Display.Main.SetZoomLevel(level);
+                            var success = Display.Primary.SetZoomLevel(level);
                             if (!success)
                             {
                                 logger.LogError("Failed to set display zoom level");
