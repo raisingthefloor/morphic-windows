@@ -26,6 +26,7 @@ using System.Windows;
 using System.Windows.Controls;
 using MorphicService;
 using MorphicSettings;
+using System.Windows.Media.Animation;
 
 namespace MorphicWin
 {
@@ -44,47 +45,210 @@ namespace MorphicWin
         protected override void OnInitialized(EventArgs e)
         {
             base.OnInitialized(e);
-            var currentValue = session.GetString("com.microsoft.windows.display", "zoom") ?? "normal";
-            var currentLevel = Enum.Parse<Display.ZoomLevel>(currentValue, ignoreCase: true);
-            foreach (var level in displayZoomLevels)
-            {
-                var item = new ComboBoxItem
-                {
-                    Content = level.Item2
-                };
-                displayZoomComboBox.Items.Add(item);
-                if (level.Item1 == currentLevel)
-                {
-                    displayZoomComboBox.SelectedItem = item;
-                }
-            }
-            displayZoomComboBox.SelectionChanged += DisplayZoomChanged;
+        }
+
+        private void OnLoaded(object? sender, RoutedEventArgs e)
+        {
+            Reposition(animated: false);
         }
 
         private readonly Session session;
 
         private void OnDeactivated(object? sender, EventArgs e)
         {
-            //Close();
         }
 
-        private void OpenConfigurator(object? sender, RoutedEventArgs e)
+        #region Logo Button & Menu
+
+        /// <summary>
+        /// Event handler for when the user clicks on the logo button
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void LogoButtonClicked(object sender, RoutedEventArgs e)
+        {
+            LogoButton.ContextMenu.IsOpen = true;
+        }
+
+        /// <summary>
+        /// Event handler for when the user selects Hide Quick Strip from the logo button's menu
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void HideQuickStrip(object sender, RoutedEventArgs e)
+        {
+            App.Shared.HideQuickStrip();
+        }
+
+        /// <summary>
+        /// Event handler for when the user selects Customize Quick Strip from the logo button's menu
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CustomizeQuickStrip(object sender, RoutedEventArgs e)
         {
             App.Shared.OpenConfigurator();
         }
 
-        private readonly (Display.ZoomLevel, string)[] displayZoomLevels = {
-            (Display.ZoomLevel.Normal, "Normal"),
-            (Display.ZoomLevel.Percent125, "125%"),
-            (Display.ZoomLevel.Percent150, "150%"),
-            (Display.ZoomLevel.Percent200, "200%")
-        };
-
-        private void DisplayZoomChanged(object? sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        /// <summary>
+        /// Event handler for when the user selects Quit from the logo button's menu
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Quit(object sender, RoutedEventArgs e)
         {
-            var level = displayZoomLevels[displayZoomComboBox.SelectedIndex].Item1;
-            session.SetPreference("com.microsoft.windows.display", "zoom", level.ToString().ToLower());
-            Close();
+            App.Shared.Shutdown();
+        }
+
+        #endregion
+
+        #region Layout & Position
+
+        /// <summary>
+        /// Amount the Quick Strip should be inset from the edge of each screen
+        /// </summary>
+        public double ScreenEdgeInset = 4;
+
+        /// <summary>
+        /// The possible positions for the quick strip 
+        /// </summary>
+        public enum FixedPosition
+        {
+            BottomRight,
+            BottomLeft,
+            TopLeft,
+            TopRight
+        }
+
+        /// <summary>
+        /// The preferred position of the quick strip
+        /// </summary>
+        private FixedPosition position = QuickStrip.FixedPosition.BottomRight;
+
+        /// <summary>
+        /// The preferred position of the quick strip
+        /// </summary>
+        public FixedPosition Position
+        {
+            get
+            {
+                return position;
+            }
+            set
+            {
+                position = value;
+                Reposition(animated: true);
+            }
+        }
+
+        /// <summary>
+        /// Reposition the Quick Strip to its current fixed position
+        /// </summary>
+        /// <param name="animated"></param>
+        private void Reposition(bool animated)
+        {
+            var screenSize = SystemParameters.WorkArea;
+            double top = Top;
+            double left = Left;
+            switch (position)
+            {
+                case FixedPosition.BottomRight:
+                    top = screenSize.Height - Height - ScreenEdgeInset;
+                    left = screenSize.Width - Width - ScreenEdgeInset;
+                    break;
+                case FixedPosition.BottomLeft:
+                    top = screenSize.Height - Height - ScreenEdgeInset;
+                    left = ScreenEdgeInset;
+                    break;
+                case FixedPosition.TopLeft:
+                    top = ScreenEdgeInset;
+                    left = ScreenEdgeInset;
+                    break;
+                case FixedPosition.TopRight:
+                    top = ScreenEdgeInset;
+                    left = screenSize.Width - Width - ScreenEdgeInset;
+                    break;
+            }
+            if (animated)
+            {
+                var duration = new Duration(TimeSpan.FromSeconds(0.5));
+                var topAnimation = new DoubleAnimation();
+                topAnimation.From = Top;
+                topAnimation.To = top;
+                topAnimation.Duration = duration;
+                topAnimation.FillBehavior = FillBehavior.Stop;
+
+                var leftAnimation = new DoubleAnimation();
+                leftAnimation.From = Left;
+                leftAnimation.To = left;
+                leftAnimation.Duration = duration;
+                leftAnimation.FillBehavior = FillBehavior.Stop;
+
+                BeginAnimation(Window.TopProperty, topAnimation);
+                BeginAnimation(Window.LeftProperty, leftAnimation);
+            }
+            else
+            {
+                Top = top;
+                Left = left;
+            }
+        }
+
+        /// <summary>
+        /// Get the nearest fixed position to the window's current position
+        /// </summary>
+        /// <remarks>
+        /// Helpful for snapping into the correct place after the user moves the window
+        /// </remarks>
+        private FixedPosition NearestPosition
+        {
+            get
+            {
+                var screenSize = SystemParameters.WorkArea;
+                if (Left < screenSize.Width / 2){
+                    if (Top < screenSize.Height / 2)
+                    {
+                        return FixedPosition.TopLeft;
+                    }
+                    return FixedPosition.BottomLeft;
+                }
+                else
+                {
+                    if (Top < screenSize.Height / 2)
+                    {
+                        return FixedPosition.TopRight;
+                    }
+                    return FixedPosition.BottomRight;
+                }
+            }
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Event handler for mouse down to move the window
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Window_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == System.Windows.Input.MouseButton.Left)
+            {
+                DragMove();
+            }
+        }
+
+        /// <summary>
+        /// Event handler for mouse up to snap into place after moving the window
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Window_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == System.Windows.Input.MouseButton.Left)
+            {
+                Position = NearestPosition;
+            }
         }
     }
 }

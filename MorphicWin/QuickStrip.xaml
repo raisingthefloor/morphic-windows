@@ -5,12 +5,40 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MorphicWin"
         mc:Ignorable="d"
-        Title="QuickStrip" Height="137" Width="800"
+        Title="Morphic Quick Strip" Height="60" Width="800"
         ShowInTaskbar="False"
-        WindowStyle="None">
-    <Grid>
-        <Button x:Name="button" Content="Open Configurator" Click="OpenConfigurator" Margin="0,0,10,10" Height="20" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="104"/>
-        <ComboBox x:Name="displayZoomComboBox" HorizontalAlignment="Center" VerticalAlignment="Center" Width="120"/>
-
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        Topmost="True"
+        SizeToContent="Width"
+        Loaded="OnLoaded"
+        MouseDown="Window_MouseDown"
+        MouseUp="Window_MouseUp" BorderBrush="Black" BorderThickness="1">
+    <Grid Height="44" x:Uid="WindowGrid" Margin="7,7,7,7">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition x:Uid="ControlsColumn" Width="*"/>
+            <ColumnDefinition x:Uid="LogoColumn" Width="44"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="44"/>
+        </Grid.RowDefinitions>
+        <Grid x:Uid="Controls" x:Name="QuickStripGrid" Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="44"/>
+            </Grid.RowDefinitions>
+        </Grid>
+        <Button x:Name="LogoButton" BorderBrush="{x:Null}" Click="LogoButtonClicked" HorizontalAlignment="Left" Width="44" Height="44" Grid.Column="2" Background="{x:Null}">
+            <Image Source="/Icon.png"/>
+            <Button.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Hide Quick Strip" Click="HideQuickStrip"/>
+                    <MenuItem Header="Customize Quick Strip..."  Click="CustomizeQuickStrip"/>
+                    <Separator/>
+                    <MenuItem Header="Take My Settings with Me..."/>
+                    <Separator/>
+                    <MenuItem Header="Quit Morphic" Click="Quit"/>
+                </ContextMenu>
+            </Button.ContextMenu>
+        </Button>
     </Grid>
 </Window>

@@ -49,6 +49,8 @@ namespace MorphicWin
         private ILogger<App> logger;
 #pragma warning restore CS8618 // Non-nullable field is uninitialized. Consider declaring as nullable.
 
+        #region Configuration & Startup
+
         /// <summary>
         /// Create a Configuration from appsettings.json
         /// </summary>
@@ -102,8 +104,12 @@ namespace MorphicWin
             logger = ServiceProvider.GetRequiredService<ILogger<App>>();
             Session = ServiceProvider.GetRequiredService<Session>();
             logger.LogInformation("App Started");
-            var task = Session.Open(Settings.Default.UserId);
-            task.ContinueWith(SessionOpened, TaskScheduler.FromCurrentSynchronizationContext());
+            logger.LogInformation("Creating Tray Icon");
+            CreateMainMenu();
+            CreateNotifyIcon();
+            ShowQuickStrip();
+            //var task = Session.Open(Settings.Default.UserId);
+            //task.ContinueWith(SessionOpened, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
         /// <summary>
@@ -112,8 +118,6 @@ namespace MorphicWin
         /// <param name="task"></param>
         private void SessionOpened(Task task)
         {
-            logger.LogInformation("Creating Tray Icon");
-            CreateNotifyIcon();
             Settings.Default.PropertyChanged += OnSettingChanged;
             logger.LogInformation("Ready");
             if (Session.Preferences == null)
@@ -135,6 +139,8 @@ namespace MorphicWin
             }
         }
 
+        #endregion
+
         #region System Tray Icon
 
         /// <summary>
@@ -145,8 +151,30 @@ namespace MorphicWin
             notifyIcon = new System.Windows.Forms.NotifyIcon();
             notifyIcon.Click += OnNotifyIconClicked;
             notifyIcon.Icon = MorphicWin.Properties.Resources.Icon;
-            notifyIcon.Text = "Morphic Quick Strip";
+            notifyIcon.Text = "Morphic";
             notifyIcon.Visible = true;
+            notifyIcon.ContextMenuStrip = mainMenu;
+        }
+
+        /// <summary>
+        /// Create the main menu that is displayed from the system tray icon
+        /// </summary>
+        private void CreateMainMenu()
+        {
+            System.Windows.Forms.ToolStripItem item;
+            showQuickStripItem = mainMenu.Items.Add("Show Quick Strip");
+            showQuickStripItem.Click += (sender, e) => { ShowQuickStrip(); };
+            showQuickStripItem.Visible = false;
+            hideQuickStripItem = mainMenu.Items.Add("Hide Quick Strip");
+            hideQuickStripItem.Click += (sender, e) => { HideQuickStrip(); };
+            item = mainMenu.Items.Add("Customize Quick Strip...");
+            item.Click += (sender, e) => { OpenConfigurator(); };
+            mainMenu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
+            item = mainMenu.Items.Add("Take My Settings with Me...");
+            item.Enabled = false;
+            mainMenu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
+            item = mainMenu.Items.Add("Quit Morphic");
+            item.Click += (sender, e) => { Shutdown(); };
         }
 
         /// <summary>
@@ -155,13 +183,34 @@ namespace MorphicWin
         private System.Windows.Forms.NotifyIcon? notifyIcon = null;
 
         /// <summary>
+        /// The main menu shown from the system tray icon
+        /// </summary>
+        private System.Windows.Forms.ContextMenuStrip mainMenu = new System.Windows.Forms.ContextMenuStrip();
+
+        /// <summary>
+        /// The main menu item for showing the quick strip
+        /// </summary>
+        private System.Windows.Forms.ToolStripItem? showQuickStripItem;
+
+        /// <summary>
+        /// The main menu item for hiding the quick strip
+        /// </summary>
+        private System.Windows.Forms.ToolStripItem? hideQuickStripItem;
+
+        /// <summary>
         /// Called when the system tray icon is clicked
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void OnNotifyIconClicked(object? sender, EventArgs e)
         {
-            ToggleQuickStrip();
+            if (e is System.Windows.Forms.MouseEventArgs mouseEvent)
+            {
+                if (mouseEvent.Button == System.Windows.Forms.MouseButtons.Left)
+                {
+                    mainMenu.Show(500,500);
+                }
+            }
         }
 
         #endregion
@@ -197,12 +246,17 @@ namespace MorphicWin
             {
                 QuickStrip = ServiceProvider.GetRequiredService<QuickStrip>();
                 QuickStrip.Closed += QuickStripClosed;
-                var screenSize = SystemParameters.WorkArea;
-                QuickStrip.Top = screenSize.Height - QuickStrip.Height;
-                QuickStrip.Left = screenSize.Width - QuickStrip.Width;
                 QuickStrip.Show();
             }
             QuickStrip.Activate();
+            if (showQuickStripItem != null)
+            {
+                showQuickStripItem.Visible = false;
+            }
+            if (hideQuickStripItem != null)
+            {
+                hideQuickStripItem.Visible = true;
+            }
         }
 
         /// <summary>
@@ -213,6 +267,14 @@ namespace MorphicWin
             if (QuickStrip != null)
             {
                 QuickStrip.Close();
+            }
+            if (showQuickStripItem != null)
+            {
+                showQuickStripItem.Visible = true;
+            }
+            if (hideQuickStripItem != null)
+            {
+                hideQuickStripItem.Visible = false;
             }
         }
 
@@ -257,6 +319,22 @@ namespace MorphicWin
         private void OnConfiguratorClosed(object? sender, EventArgs e)
         {
             Configurator = null;
+        }
+
+        #endregion
+
+        #region Shutdown
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            // Windows doesn't seem to clean up the system tray icon until the user
+            // hovers over it after the application closes.  So, we need to make it
+            // invisible on app exit ourselves.
+            if (notifyIcon is System.Windows.Forms.NotifyIcon icon)
+            {
+                icon.Visible = false;
+            }
+            base.OnExit(e);
         }
 
         #endregion
