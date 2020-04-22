@@ -13,8 +13,9 @@
   <ItemGroup>
     <None Remove="appsettings.Development.json" />
     <None Remove="appsettings.json" />
-    <None Remove="Icon.eps" />
     <None Remove="Icon.png" />
+    <None Remove="Minus.png" />
+    <None Remove="Plus.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -52,6 +53,8 @@
 
   <ItemGroup>
     <Resource Include="Icon.png" />
+    <Resource Include="Minus.png" />
+    <Resource Include="Plus.png" />
   </ItemGroup>
 
   <ItemGroup>

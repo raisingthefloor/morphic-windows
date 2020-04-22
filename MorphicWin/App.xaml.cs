@@ -161,6 +161,7 @@ namespace MorphicWin
         /// </summary>
         private void CreateMainMenu()
         {
+            mainMenu.AutoClose = true;
             System.Windows.Forms.ToolStripItem item;
             showQuickStripItem = mainMenu.Items.Add("Show Quick Strip");
             showQuickStripItem.Click += (sender, e) => { ShowQuickStrip(); };
@@ -208,7 +209,12 @@ namespace MorphicWin
             {
                 if (mouseEvent.Button == System.Windows.Forms.MouseButtons.Left)
                 {
-                    mainMenu.Show(500,500);
+                    // Ideally we'd show the mainMenu here, but I can't figure out how to
+                    // get the position of the click or even just the notifyIcon.  The
+                    // MouseEventArgs always say location is 0,0.  For now, we'll just
+                    // show the quick strip as the click action.  Right click shows the
+                    // menu automatically
+                    ShowQuickStrip();
                 }
             }
         }

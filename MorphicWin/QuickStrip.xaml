@@ -14,7 +14,7 @@
         Loaded="OnLoaded"
         MouseDown="Window_MouseDown"
         MouseUp="Window_MouseUp" BorderBrush="Black" BorderThickness="1">
-    <Grid Height="44" x:Uid="WindowGrid" Margin="7,7,7,7">
+    <Grid Name="ItemGrid" Height="44" x:Uid="WindowGrid" Margin="8,7,6,-9">
         <Grid.ColumnDefinitions>
             <ColumnDefinition x:Uid="ControlsColumn" Width="*"/>
             <ColumnDefinition x:Uid="LogoColumn" Width="44"/>

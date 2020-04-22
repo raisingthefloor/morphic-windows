@@ -121,4 +121,19 @@
   <data name="Icon" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Icon.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="QuickStrip_Resolution_Bigger_HelpMessage" xml:space="preserve">
+    <value>Make all the text and icons bigger</value>
+  </data>
+  <data name="QuickStrip_Resolution_Bigger_HelpTitle" xml:space="preserve">
+    <value>Increase Text Size</value>
+  </data>
+  <data name="QuickStrip_Resolution_Smaller_HelpMessage" xml:space="preserve">
+    <value>Make all the text and icons smaller</value>
+  </data>
+  <data name="QuickStrip_Resolution_Smaller_HelpTitle" xml:space="preserve">
+    <value>Decrease Text Size</value>
+  </data>
+  <data name="QuickStrip_Resolution_Title" xml:space="preserve">
+    <value>Text Size</value>
+  </data>
 </root>

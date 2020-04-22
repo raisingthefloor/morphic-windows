@@ -69,5 +69,50 @@ namespace MorphicWin.Properties {
                 return ((System.Drawing.Icon)(obj));
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Make all the text and icons bigger.
+        /// </summary>
+        internal static string QuickStrip_Resolution_Bigger_HelpMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_Resolution_Bigger_HelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Increase Text Size.
+        /// </summary>
+        internal static string QuickStrip_Resolution_Bigger_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_Resolution_Bigger_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Make all the text and icons smaller.
+        /// </summary>
+        internal static string QuickStrip_Resolution_Smaller_HelpMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_Resolution_Smaller_HelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Decrease Text Size.
+        /// </summary>
+        internal static string QuickStrip_Resolution_Smaller_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_Resolution_Smaller_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Text Size.
+        /// </summary>
+        internal static string QuickStrip_Resolution_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_Resolution_Title", resourceCulture);
+            }
+        }
     }
 }
