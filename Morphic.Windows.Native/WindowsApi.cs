@@ -421,9 +421,21 @@ namespace Morphic.Windows.Native
 
         /* kernel32 */
         //
+        // https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-getprivateprofilestringw
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        internal static extern UInt32 GetPrivateProfileString(String lpAppName, String lpKeyName, String lpDefault, out String lpReturnedString, UInt32 size, String lpFileName);
+        //
         // https://docs.microsoft.com/en-us/windows/win32/api/sysinfoapi/nf-sysinfoapi-getsysteminfo
         [DllImport("kernel32.dll")]
         internal static extern void GetSystemInfo(out SYSTEM_INFO lpSystemInfo);
+        //
+        // https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-writeprivateprofilesectionw
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        internal static extern Boolean WritePrivateProfileSection(String lpAppName, String lpString, String lpFileName);
+        //
+        // https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-writeprofilestringw
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        internal static extern Boolean WritePrivateProfileString(String lpAppName, String lpKeyName, String? lpString, String lpFileName);
 
         internal enum ChangeDisplaySettingsFlags: UInt32
         {
@@ -439,6 +451,23 @@ namespace Morphic.Windows.Native
             //CDS_RESET_EX = 0x20000000,
             //CDS_NORESET = 0x10000000,
         }
+
+        // Windows error codes
+        private const Int32 ERROR_NOT_FOUND = 0x00000490;
+
+        // https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-erref/0c0bcf55-277e-4120-b5dc-f6115fc8dc38
+        private static Int32 HRESULT_FROM_WIN32(Int32 x)
+        {
+            Int32 FACILITY_WIN32 = 7;
+            return unchecked((Int32)(x) <= 0 ? ((Int32)(x)) : ((Int32)(((x) & 0x0000FFFF) | (FACILITY_WIN32 << 16) | 0x80000000)));
+        }
+
+        // HRESULT values
+        internal const Int32 S_OK = 0x00000000;
+        internal const Int32 E_INVALIDARG = unchecked((Int32)0x80070057);
+        internal static Int32 E_NOTFOUND = HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
+        internal const Int32 E_OUTOFMEMORY = unchecked((Int32)0x8007000E);
+        internal const Int32 E_POINTER = unchecked((Int32)0x80004003);
 
         /* user32 */
         //
