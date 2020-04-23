@@ -54,6 +54,7 @@ namespace MorphicWin
             }
             shared.TitleLabel.Content = title;
             shared.MessageLabel.Content = message;
+            shared.Reposition();
             shared.Show();
             hideTimer?.Stop();
             hideTimer = null;
@@ -73,12 +74,29 @@ namespace MorphicWin
         public static void Dismiss()
         {
             hideTimer = new Timer(200);
+            hideTimer.AutoReset = false;
+            var mainContext = System.Threading.SynchronizationContext.Current;
             hideTimer.Elapsed += (sender, e) =>
             {
-                hideTimer = null;
-                shared?.Close();
-                shared = null;
+                mainContext?.Send(state => {
+                    hideTimer.Dispose();
+                    hideTimer = null;
+                    shared?.Close();
+                    shared = null;
+                }, null);
             };
+            hideTimer.Start();
+        }
+
+        /// <summary>
+        /// Center the window in the screen
+        /// </summary>
+        /// <param name="animated"></param>
+        private void Reposition()
+        {
+            var screenSize = SystemParameters.WorkArea;
+            Left = System.Math.Round((screenSize.Width - Width) / 2.0);
+            Top = System.Math.Round((screenSize.Height - Height) / 2.0);
         }
     }
 }

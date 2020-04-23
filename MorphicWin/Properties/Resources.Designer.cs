@@ -71,6 +71,195 @@ namespace MorphicWin.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Make it harder to distinguish items.
+        /// </summary>
+        internal static string QuickStrip_Contrast_Off_HelpMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_Contrast_Off_HelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Turn Off High Contrast.
+        /// </summary>
+        internal static string QuickStrip_Contrast_Off_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_Contrast_Off_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Off.
+        /// </summary>
+        internal static string QuickStrip_Contrast_Off_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_Contrast_Off_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Make it easier to distinguish items.
+        /// </summary>
+        internal static string QuickStrip_Contrast_On_HelpMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_Contrast_On_HelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Turn On High Contrast.
+        /// </summary>
+        internal static string QuickStrip_Contrast_On_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_Contrast_On_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to On.
+        /// </summary>
+        internal static string QuickStrip_Contrast_On_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_Contrast_On_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to High Contrast.
+        /// </summary>
+        internal static string QuickStrip_Contrast_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_Contrast_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stop magnifying part of the screen as you move.
+        /// </summary>
+        internal static string QuickStrip_Magnifier_Hide_HelpMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_Magnifier_Hide_HelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hide the Magnifying Glass.
+        /// </summary>
+        internal static string QuickStrip_Magnifier_Hide_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_Magnifier_Hide_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hide.
+        /// </summary>
+        internal static string QuickStrip_Magnifier_Hide_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_Magnifier_Hide_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Magnify a part of the screen as you move around.
+        /// </summary>
+        internal static string QuickStrip_Magnifier_Show_HelpMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_Magnifier_Show_HelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show a Magnifying Glass.
+        /// </summary>
+        internal static string QuickStrip_Magnifier_Show_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_Magnifier_Show_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show.
+        /// </summary>
+        internal static string QuickStrip_Magnifier_Show_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_Magnifier_Show_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Magnifier.
+        /// </summary>
+        internal static string QuickStrip_Magnifier_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_Magnifier_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stop the computer from reading text aloud.
+        /// </summary>
+        internal static string QuickStrip_Reader_Off_HelpMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_Reader_Off_HelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Turn Off Screen Reader.
+        /// </summary>
+        internal static string QuickStrip_Reader_Off_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_Reader_Off_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Off.
+        /// </summary>
+        internal static string QuickStrip_Reader_Off_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_Reader_Off_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Have the computer read text aloud.
+        /// </summary>
+        internal static string QuickStrip_Reader_On_HelpMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_Reader_On_HelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Turn On Screen Reader.
+        /// </summary>
+        internal static string QuickStrip_Reader_On_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_Reader_On_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to On.
+        /// </summary>
+        internal static string QuickStrip_Reader_On_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_Reader_On_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Screen Reader.
+        /// </summary>
+        internal static string QuickStrip_Reader_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_Reader_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Make all the text and icons bigger.
         /// </summary>
         internal static string QuickStrip_Resolution_Bigger_HelpMessage {
@@ -112,6 +301,78 @@ namespace MorphicWin.Properties {
         internal static string QuickStrip_Resolution_Title {
             get {
                 return ResourceManager.GetString("QuickStrip_Resolution_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Make all the sounds quieter.
+        /// </summary>
+        internal static string QuickStrip_Volume_Down_HelpMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_Volume_Down_HelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Turn the Volume Down.
+        /// </summary>
+        internal static string QuickStrip_Volume_Down_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_Volume_Down_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Turn off all sounds from the computer.
+        /// </summary>
+        internal static string QuickStrip_Volume_Mute_HelpMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_Volume_Mute_HelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mute All Sounds.
+        /// </summary>
+        internal static string QuickStrip_Volume_Mute_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_Volume_Mute_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mute.
+        /// </summary>
+        internal static string QuickStrip_Volume_Mute_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_Volume_Mute_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Volume.
+        /// </summary>
+        internal static string QuickStrip_Volume_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_Volume_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Make all the sounds louder.
+        /// </summary>
+        internal static string QuickStrip_Volume_Up_HelpMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_Volume_Up_HelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Turn the Volume Up.
+        /// </summary>
+        internal static string QuickStrip_Volume_Up_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_Volume_Up_HelpTitle", resourceCulture);
             }
         }
     }

@@ -14,20 +14,10 @@
         Loaded="OnLoaded"
         MouseDown="Window_MouseDown"
         MouseUp="Window_MouseUp" BorderBrush="Black" BorderThickness="1">
-    <Grid Name="ItemGrid" Height="44" x:Uid="WindowGrid" Margin="8,7,6,-9">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition x:Uid="ControlsColumn" Width="*"/>
-            <ColumnDefinition x:Uid="LogoColumn" Width="44"/>
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="44"/>
-        </Grid.RowDefinitions>
-        <Grid x:Uid="Controls" x:Name="QuickStripGrid" Grid.Column="1">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="44"/>
-            </Grid.RowDefinitions>
-        </Grid>
-        <Button x:Name="LogoButton" BorderBrush="{x:Null}" Click="LogoButtonClicked" HorizontalAlignment="Left" Width="44" Height="44" Grid.Column="2" Background="{x:Null}">
+    <StackPanel Height="44" Margin="7,7,7,7" Orientation="Horizontal">
+        <StackPanel x:Name="ControlStack" Grid.Column="0" Orientation="Horizontal">
+        </StackPanel>
+        <Button x:Name="LogoButton" BorderBrush="{x:Null}" Click="LogoButtonClicked" HorizontalAlignment="Left" Width="44" Height="44" Grid.Column="1" Background="{x:Null}">
             <Image Source="/Icon.png"/>
             <Button.ContextMenu>
                 <ContextMenu>
@@ -40,5 +30,5 @@
                 </ContextMenu>
             </Button.ContextMenu>
         </Button>
-    </Grid>
+    </StackPanel>
 </Window>

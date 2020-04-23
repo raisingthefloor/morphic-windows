@@ -62,7 +62,7 @@ namespace MorphicWin
             set
             {
                 showsHelp = value;
-                foreach (var element in ActionGrid.Children)
+                foreach (var element in ActionStack.Children)
                 {
                     if (element is ActionButton button)
                     {
@@ -93,6 +93,7 @@ namespace MorphicWin
         /// <param name="isPrimary">Indicates how the button should be styled</param>
         public void AddButton(Image image, string? helpTitle, string? helpMessage, bool isPrimary)
         {
+            image.Stretch = Stretch.None;
             AddButton(image as object, helpTitle, helpMessage, isPrimary);
         }
 
@@ -106,10 +107,17 @@ namespace MorphicWin
         private void AddButton(object content, string? helpTitle, string? helpMessage, bool isPrimary)
         {
             var button = new ActionButton();
+            button.FontFamily = TitleLabel.FontFamily;
+            button.FontSize = 14;
+            button.FontWeight = System.Windows.FontWeight.FromOpenTypeWeight(700);
             button.Content = content;
             button.HelpTitle = helpTitle;
             button.HelpMessage = helpMessage;
             button.Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+            button.BorderThickness = new System.Windows.Thickness(0);
+            button.Padding = new System.Windows.Thickness(7, 0, 7, 0);
+            button.HorizontalContentAlignment = System.Windows.HorizontalAlignment.Center;
+            button.VerticalContentAlignment = System.Windows.VerticalAlignment.Center;
             if (isPrimary)
             {
                 button.Background = PrimaryButtonColor;
@@ -119,7 +127,7 @@ namespace MorphicWin
                 button.Background = SecondaryButtonColor;
             }
             button.Click += Button_Click;
-            ActionGrid.Children.Add(button);
+            ActionStack.Children.Add(button);
         }
 
         /// <summary>
@@ -131,7 +139,7 @@ namespace MorphicWin
         {
             if (sender is ActionButton button)
             {
-                var index = ActionGrid.Children.IndexOf(button);
+                var index = ActionStack.Children.IndexOf(button);
                 var args = new ActionEventArgs(index);
                 Action?.Invoke(this, args);
             }

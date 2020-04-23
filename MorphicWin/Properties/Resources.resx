@@ -121,6 +121,69 @@
   <data name="Icon" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Icon.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="QuickStrip_Contrast_Off_HelpMessage" xml:space="preserve">
+    <value>Make it harder to distinguish items</value>
+  </data>
+  <data name="QuickStrip_Contrast_Off_HelpTitle" xml:space="preserve">
+    <value>Turn Off High Contrast</value>
+  </data>
+  <data name="QuickStrip_Contrast_Off_Title" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="QuickStrip_Contrast_On_HelpMessage" xml:space="preserve">
+    <value>Make it easier to distinguish items</value>
+  </data>
+  <data name="QuickStrip_Contrast_On_HelpTitle" xml:space="preserve">
+    <value>Turn On High Contrast</value>
+  </data>
+  <data name="QuickStrip_Contrast_On_Title" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="QuickStrip_Contrast_Title" xml:space="preserve">
+    <value>High Contrast</value>
+  </data>
+  <data name="QuickStrip_Magnifier_Hide_HelpMessage" xml:space="preserve">
+    <value>Stop magnifying part of the screen as you move</value>
+  </data>
+  <data name="QuickStrip_Magnifier_Hide_HelpTitle" xml:space="preserve">
+    <value>Hide the Magnifying Glass</value>
+  </data>
+  <data name="QuickStrip_Magnifier_Hide_Title" xml:space="preserve">
+    <value>Hide</value>
+  </data>
+  <data name="QuickStrip_Magnifier_Show_HelpMessage" xml:space="preserve">
+    <value>Magnify a part of the screen as you move around</value>
+  </data>
+  <data name="QuickStrip_Magnifier_Show_HelpTitle" xml:space="preserve">
+    <value>Show a Magnifying Glass</value>
+  </data>
+  <data name="QuickStrip_Magnifier_Show_Title" xml:space="preserve">
+    <value>Show</value>
+  </data>
+  <data name="QuickStrip_Magnifier_Title" xml:space="preserve">
+    <value>Magnifier</value>
+  </data>
+  <data name="QuickStrip_Reader_Off_HelpMessage" xml:space="preserve">
+    <value>Stop the computer from reading text aloud</value>
+  </data>
+  <data name="QuickStrip_Reader_Off_HelpTitle" xml:space="preserve">
+    <value>Turn Off Screen Reader</value>
+  </data>
+  <data name="QuickStrip_Reader_Off_Title" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="QuickStrip_Reader_On_HelpMessage" xml:space="preserve">
+    <value>Have the computer read text aloud</value>
+  </data>
+  <data name="QuickStrip_Reader_On_HelpTitle" xml:space="preserve">
+    <value>Turn On Screen Reader</value>
+  </data>
+  <data name="QuickStrip_Reader_On_Title" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="QuickStrip_Reader_Title" xml:space="preserve">
+    <value>Screen Reader</value>
+  </data>
   <data name="QuickStrip_Resolution_Bigger_HelpMessage" xml:space="preserve">
     <value>Make all the text and icons bigger</value>
   </data>
@@ -135,5 +198,29 @@
   </data>
   <data name="QuickStrip_Resolution_Title" xml:space="preserve">
     <value>Text Size</value>
+  </data>
+  <data name="QuickStrip_Volume_Down_HelpMessage" xml:space="preserve">
+    <value>Make all the sounds quieter</value>
+  </data>
+  <data name="QuickStrip_Volume_Down_HelpTitle" xml:space="preserve">
+    <value>Turn the Volume Down</value>
+  </data>
+  <data name="QuickStrip_Volume_Mute_HelpMessage" xml:space="preserve">
+    <value>Turn off all sounds from the computer</value>
+  </data>
+  <data name="QuickStrip_Volume_Mute_HelpTitle" xml:space="preserve">
+    <value>Mute All Sounds</value>
+  </data>
+  <data name="QuickStrip_Volume_Mute_Title" xml:space="preserve">
+    <value>Mute</value>
+  </data>
+  <data name="QuickStrip_Volume_Title" xml:space="preserve">
+    <value>Volume</value>
+  </data>
+  <data name="QuickStrip_Volume_Up_HelpMessage" xml:space="preserve">
+    <value>Make all the sounds louder</value>
+  </data>
+  <data name="QuickStrip_Volume_Up_HelpTitle" xml:space="preserve">
+    <value>Turn the Volume Up</value>
   </data>
 </root>

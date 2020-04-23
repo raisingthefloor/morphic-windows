@@ -13,7 +13,7 @@
             <RowDefinition Height="27"/>
         </Grid.RowDefinitions>
         <Label Grid.Row="0" Name="TitleLabel" FontSize="14" FontFamily="{x:Static SystemFonts.MessageFontFamily}" FontWeight="Bold" Content="Text Size" VerticalAlignment="Top" Padding="0,0,0,0" HorizontalAlignment="Center" Height="17" Margin="0,-4,0,0"/>
-        <Grid Grid.Row="2" Name="ActionGrid">
-        </Grid>
+        <StackPanel Grid.Row="2" Name="ActionStack" Orientation="Horizontal" HorizontalAlignment="Center">
+        </StackPanel>
     </Grid>
 </local:QuickStripItemControl>

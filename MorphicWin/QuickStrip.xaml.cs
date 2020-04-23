@@ -246,42 +246,42 @@ namespace MorphicWin
                             var control = new QuickStripSegmentedButtonControl();
                             control.TitleLabel.Content = Properties.Resources.QuickStrip_Resolution_Title;
                             control.AddButton(new Image() { Source = new BitmapImage(new Uri("Plus.png", UriKind.Relative)) }, Properties.Resources.QuickStrip_Resolution_Bigger_HelpTitle, Properties.Resources.QuickStrip_Resolution_Bigger_HelpMessage, isPrimary: true);
-                            control.AddButton(new Image() { Source = new BitmapImage(new Uri("Minus.png", UriKind.Relative)) }, Properties.Resources.QuickStrip_Resolution_Bigger_HelpTitle, Properties.Resources.QuickStrip_Resolution_Bigger_HelpMessage, isPrimary: false);
+                            control.AddButton(new Image() { Source = new BitmapImage(new Uri("Minus.png", UriKind.Relative)) }, Properties.Resources.QuickStrip_Resolution_Smaller_HelpTitle, Properties.Resources.QuickStrip_Resolution_Smaller_HelpMessage, isPrimary: false);
                             control.Action += Zoom;
                             return control;
                         }
                     case "magnifier":
                         {
                             var control = new QuickStripSegmentedButtonControl();
-                            control.TitleLabel.Content = "Magnifier";
-                            control.AddButton("On", "Show a Magnifying Glass", "Magnify a part of the screen as you move around", isPrimary: true);
-                            control.AddButton("Off", "Hide the Magnifying Glass", "Stop magnifying part of the screen as you move", isPrimary: false);
+                            control.TitleLabel.Content = Properties.Resources.QuickStrip_Magnifier_Title;
+                            control.AddButton(Properties.Resources.QuickStrip_Magnifier_Show_Title, Properties.Resources.QuickStrip_Magnifier_Show_HelpTitle, Properties.Resources.QuickStrip_Magnifier_Show_HelpMessage, isPrimary: true);
+                            control.AddButton(Properties.Resources.QuickStrip_Magnifier_Hide_Title, Properties.Resources.QuickStrip_Magnifier_Hide_HelpTitle, Properties.Resources.QuickStrip_Magnifier_Hide_HelpMessage, isPrimary: false);
                             control.Action += OnMagnify;
                             return control;
                         }
                     case "reader":
                         {
                             var control = new QuickStripSegmentedButtonControl();
-                            control.TitleLabel.Content = "Screen Reader";
-                            control.AddButton("On", "Turn On Screen Reader", "Have the computer read text aloud", isPrimary: true);
-                            control.AddButton("Off", "Turn Off Screen Reader", "Stop the computer from reading text aloud", isPrimary: false);
+                            control.TitleLabel.Content = Properties.Resources.QuickStrip_Reader_Title;
+                            control.AddButton(Properties.Resources.QuickStrip_Reader_On_Title, Properties.Resources.QuickStrip_Reader_On_HelpTitle, Properties.Resources.QuickStrip_Reader_On_HelpMessage, isPrimary: true);
+                            control.AddButton(Properties.Resources.QuickStrip_Reader_Off_Title, Properties.Resources.QuickStrip_Reader_Off_HelpTitle, Properties.Resources.QuickStrip_Reader_Off_HelpMessage, isPrimary: false);
                             return control;
                         }
                     case "volume":
                         {
                             var control = new QuickStripSegmentedButtonControl();
-                            control.TitleLabel.Content = "Volume";
-                            control.AddButton(new Image() { Source = new BitmapImage(new Uri("Plus.png", UriKind.Relative)) }, "Turn the Volume Up", "Make all the sounds louder", isPrimary: true);
-                            control.AddButton(new Image() { Source = new BitmapImage(new Uri("Minus.png", UriKind.Relative)) }, "Turn the Volume Down", "Make all the sounds quieter", isPrimary: false);
-                            control.AddButton("Mute", "Mute All Sounds", "Turn off all sounds from the computer", isPrimary: true);
+                            control.TitleLabel.Content = Properties.Resources.QuickStrip_Volume_Title;
+                            control.AddButton(new Image() { Source = new BitmapImage(new Uri("Plus.png", UriKind.Relative)) }, Properties.Resources.QuickStrip_Volume_Up_HelpTitle, Properties.Resources.QuickStrip_Volume_Up_HelpMessage, isPrimary: true);
+                            control.AddButton(new Image() { Source = new BitmapImage(new Uri("Minus.png", UriKind.Relative)) }, Properties.Resources.QuickStrip_Volume_Down_HelpTitle, Properties.Resources.QuickStrip_Volume_Down_HelpMessage, isPrimary: false);
+                            control.AddButton(Properties.Resources.QuickStrip_Volume_Mute_Title, Properties.Resources.QuickStrip_Volume_Mute_HelpTitle, Properties.Resources.QuickStrip_Volume_Mute_HelpMessage, isPrimary: true);
                             return control;
                         }
                     case "contrast":
                         {
                             var control = new QuickStripSegmentedButtonControl();
-                            control.TitleLabel.Content = "High Contrast";
-                            control.AddButton("On", "Turn On High Contrast", "Make it easier to distinguish items", isPrimary: true);
-                            control.AddButton("Off", "Turn Off High Contrast", "Make it harder to distinguish items", isPrimary: false);
+                            control.TitleLabel.Content = Properties.Resources.QuickStrip_Contrast_Title;
+                            control.AddButton(Properties.Resources.QuickStrip_Contrast_On_Title, Properties.Resources.QuickStrip_Contrast_On_HelpTitle, Properties.Resources.QuickStrip_Contrast_On_HelpMessage, isPrimary: true);
+                            control.AddButton(Properties.Resources.QuickStrip_Contrast_Off_Title, Properties.Resources.QuickStrip_Contrast_Off_HelpTitle, Properties.Resources.QuickStrip_Contrast_Off_HelpMessage, isPrimary: false);
                             return control;
                         }
                     default:
@@ -336,14 +336,15 @@ namespace MorphicWin
 
         private void UpdateControls()
         {
-            ItemGrid.Children.RemoveRange(0, ItemGrid.Children.Count);
+            ControlStack.Children.RemoveRange(0, ControlStack.Children.Count);
             itemControls.Clear();
             foreach (var item in items)
             {
                 if (item.GetControl() is QuickStripItemControl control)
                 {
+                    control.Margin = new Thickness(0, 0, 18, 0);
                     itemControls.Add(control);
-                    ItemGrid.Children.Add(control);
+                    ControlStack.Children.Add(control);
                 }
             }
         }
