@@ -22,6 +22,8 @@
 // * Consumer Electronics Association Foundation
 
 using System;
+using System.Windows;
+using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Controls;
 
@@ -41,12 +43,53 @@ namespace MorphicWin
         /// <summary>
         /// The color for primary action button segments
         /// </summary>
-        public Brush PrimaryButtonColor = new SolidColorBrush(Color.FromRgb(0, 129, 69));
+        public Brush PrimaryButtonBackground = new SolidColorBrush(Color.FromRgb(0, 129, 69));
 
         /// <summary>
         /// The color for secondary action button segments
         /// </summary>
-        public Brush SecondaryButtonColor = new SolidColorBrush(Color.FromRgb(102, 181, 90));
+        public Brush SecondaryButtonBackground = new SolidColorBrush(Color.FromRgb(102, 181, 90));
+
+        private Style CreateBaseButtonStyle()
+        {
+            var style = new Style();
+            var template = new ControlTemplate(typeof(ActionButton));
+            var factory = new FrameworkElementFactory(typeof(Border));
+            factory.SetBinding(Border.BackgroundProperty, new Binding { RelativeSource = RelativeSource.TemplatedParent, Path = new PropertyPath("Background") });
+            factory.SetBinding(Border.PaddingProperty, new Binding { RelativeSource = RelativeSource.TemplatedParent, Path = new PropertyPath("Padding") });
+            template.VisualTree = factory;
+            factory.AppendChild(new FrameworkElementFactory(typeof(ContentPresenter)));
+            style.Setters.Add(new Setter { Property = ActionButton.TemplateProperty, Value = template });
+            style.Setters.Add(new Setter { Property = ActionButton.SnapsToDevicePixelsProperty, Value = true });
+            style.Setters.Add(new Setter { Property = ActionButton.PaddingProperty, Value = new Thickness(7, 4, 7, 4) });
+            style.Setters.Add(new Setter { Property = ActionButton.VerticalContentAlignmentProperty, Value = VerticalAlignment.Center });
+            style.Setters.Add(new Setter { Property = ActionButton.HorizontalContentAlignmentProperty, Value = HorizontalAlignment.Center });
+            style.Setters.Add(new Setter { Property = ActionButton.ForegroundProperty, Value = new SolidColorBrush(Color.FromRgb(255, 255, 255)) });
+            style.Setters.Add(new Setter { Property = ActionButton.FontFamilyProperty, Value = SystemFonts.MessageFontFamily });
+            style.Setters.Add(new Setter { Property = ActionButton.FontSizeProperty, Value = 14.0 });
+            style.Setters.Add(new Setter { Property = ActionButton.FontWeightProperty, Value = FontWeight.FromOpenTypeWeight(700) });
+            return style;
+        }
+
+        private Style CreatePrimaryButtonStyle()
+        {
+            var style = CreateBaseButtonStyle();
+            style.Setters.Add(new Setter { Property = ActionButton.BackgroundProperty, Value = PrimaryButtonBackground });
+            var trigger = new Trigger { Property = ActionButton.IsPressedProperty, Value = true };
+            trigger.Setters.Add(new Setter { Property = ActionButton.BackgroundProperty, Value = PrimaryButtonBackground.DarkenedByPercentage(0.4) });
+            style.Triggers.Add(trigger);
+            return style;
+        }
+
+        private Style CreateSecondaryButtonStyle()
+        {
+            var style = CreateBaseButtonStyle();
+            style.Setters.Add(new Setter { Property = ActionButton.BackgroundProperty, Value = SecondaryButtonBackground });
+            var trigger = new Trigger { Property = ActionButton.IsPressedProperty, Value = true };
+            trigger.Setters.Add(new Setter { Property = ActionButton.BackgroundProperty, Value = SecondaryButtonBackground.DarkenedByPercentage(0.4) });
+            style.Triggers.Add(trigger);
+            return style;
+        }
 
         /// <summary>
         /// Private backing value for <code>ShowsHelp</code>
@@ -107,25 +150,17 @@ namespace MorphicWin
         private void AddButton(object content, string? helpTitle, string? helpMessage, bool isPrimary)
         {
             var button = new ActionButton();
-            button.FontFamily = TitleLabel.FontFamily;
-            button.FontSize = 14;
-            button.FontWeight = System.Windows.FontWeight.FromOpenTypeWeight(700);
-            button.Content = content;
-            button.HelpTitle = helpTitle;
-            button.HelpMessage = helpMessage;
-            button.Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255));
-            button.BorderThickness = new System.Windows.Thickness(0);
-            button.Padding = new System.Windows.Thickness(7, 0, 7, 0);
-            button.HorizontalContentAlignment = System.Windows.HorizontalAlignment.Center;
-            button.VerticalContentAlignment = System.Windows.VerticalAlignment.Center;
             if (isPrimary)
             {
-                button.Background = PrimaryButtonColor;
+                button.Style = CreatePrimaryButtonStyle();
             }
             else
             {
-                button.Background = SecondaryButtonColor;
+                button.Style = CreateSecondaryButtonStyle();
             }
+            button.Content = content;
+            button.HelpTitle = helpTitle;
+            button.HelpMessage = helpMessage;
             button.Click += Button_Click;
             ActionStack.Children.Add(button);
         }
@@ -238,6 +273,31 @@ namespace MorphicWin
                     QuickHelpWindow.Dismiss();
                 }
             }
+        }
+    }
+
+    public static class BrushExtensions
+    {
+        public static Brush DarkenedByPercentage(this Brush brush, double percentage)
+        {
+            if (brush is SolidColorBrush colorBrush)
+            {
+                var color = colorBrush.Color;
+                var darkenedColor = Color.FromRgb((byte)Math.Round((double)color.R * (1 - percentage)), (byte)Math.Round((double)color.G * (1 - percentage)), (byte)Math.Round((double)color.B * (1 - percentage)));
+                return new SolidColorBrush(darkenedColor);
+            }
+            return brush;
+        }
+
+        public static Brush LightenedByPercentage(this Brush brush, double percentage)
+        {
+            if (brush is SolidColorBrush colorBrush)
+            {
+                var color = colorBrush.Color;
+                var darkenedColor = Color.FromRgb((byte)(color.R + (byte)Math.Round((double)(255 - color.R) * (percentage))), (byte)(color.G + (byte)Math.Round((double)(255 - color.G) * (percentage))), (byte)(color.B + (byte)Math.Round((double)(255 - color.B) * (percentage))));
+                return new SolidColorBrush(darkenedColor);
+            }
+            return brush;
         }
     }
 }
