@@ -319,22 +319,22 @@ namespace MorphicService
         /// <param name="preference">The preference name</param>
         /// <param name="value">The preference value</param>
         /// <returns>Whether the preference was successfully applied to the system</returns>
-        public bool SetPreference(string solution, string preference, object? value)
+        public bool SetPreference(Preferences.Key key, object? value)
         {
             if (Preferences is Preferences preferences)
             {
-                preferences.Set(solution, preference, value);
+                preferences.Set(key, value);
                 SetNeedsPreferencesSave();
-                return settings.Apply(solution, preference, value);
+                return settings.Apply(key, value);
             }
             return false;
         }
 
-        public string? GetString(string solution, string preference)
+        public string? GetString(Preferences.Key key)
         {
             if (Preferences is Preferences preferences)
             {
-                return preferences.Get(solution, preference) as string;
+                return preferences.Get(key) as string;
             }
             return null;
         }
@@ -355,7 +355,7 @@ namespace MorphicService
                     {
                         foreach (var preference in solution.Value.Values)
                         {
-                            _ = settings.Apply(solution.Key, preference.Key, preference.Value);
+                            _ = settings.Apply(new Preferences.Key(solution.Key, preference.Key), preference.Value);
                         }
                     }
                 }

@@ -37,26 +37,57 @@ namespace MorphicCore
         // within the solution preferences, we don't lose any functionality by storing serialized JSON.
         public Dictionary<string, SolutionPreferences>? Default { get; set; }
 
-        public void Set(string solution, string preference, object? value)
+        public struct Key
+        {
+            public string Solution;
+            public string Preference;
+
+            public Key(string solution, string preference)
+            {
+                Solution = solution;
+                Preference = preference;
+            }
+
+            public override string ToString()
+            {
+                return string.Format("{0}.{1}", Solution, Preference);
+            }
+
+            public override int GetHashCode()
+            {
+                return Solution.GetHashCode() ^ Preference.GetHashCode();
+            }
+
+            public override bool Equals(object? obj)
+            {
+                if (obj is Key other)
+                {
+                    return Solution == other.Solution && Preference == other.Preference;
+                }
+                return false;
+            }
+        }
+
+        public void Set(Key key, object? value)
         {
             if (Default == null)
             {
                 Default = new Dictionary<string, SolutionPreferences>();
             }
-            if (!Default.ContainsKey(solution))
+            if (!Default.ContainsKey(key.Solution))
             {
-                Default[solution] = new SolutionPreferences();
+                Default[key.Solution] = new SolutionPreferences();
             }
-            Default[solution].Values[preference] = value;
+            Default[key.Solution].Values[key.Preference] = value;
         }
 
-        public object? Get(string solution, string preference)
+        public object? Get(Key key)
         {
             if (Default != null)
             {
-                if (Default.TryGetValue(solution, out var preferencesSet))
+                if (Default.TryGetValue(key.Solution, out var preferencesSet))
                 {
-                    if (preferencesSet.Values.TryGetValue(preference, out var value))
+                    if (preferencesSet.Values.TryGetValue(key.Preference, out var value))
                     {
                         return value;
                     }

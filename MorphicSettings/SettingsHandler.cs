@@ -23,51 +23,33 @@
 
 using System;
 using MorphicCore;
-using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
+using System.Text;
 
 namespace MorphicSettings
 {
-    public class Settings
+    public abstract class SettingsHandler
     {
 
-        public Settings(ILogger<Settings> logger)
+        public abstract bool Apply(object? value);
+
+        private static Dictionary<Preferences.Key, Type> handlerTypesByKey = new Dictionary<Preferences.Key, Type>();
+
+        public static void Register(Type type, Preferences.Key key)
         {
-            this.logger = logger;
-            SettingsHandler.Register(typeof(DisplayZoomHandler), Keys.WindowsDisplayZoom);
+            handlerTypesByKey[key] = type;
         }
 
-        private readonly ILogger<Settings> logger;
-
-        public bool Apply(Preferences.Key key, object? value)
+        public static SettingsHandler? Handler(Preferences.Key key)
         {
-            if (SettingsHandler.Handler(key) is SettingsHandler handler)
+            if (handlerTypesByKey.TryGetValue(key, out var type))
             {
-                try
+                if (Activator.CreateInstance(type) is SettingsHandler handler)
                 {
-                    if (handler.Apply(value))
-                    {
-                        return true;
-                    }
-                    // TODO: log correct name
-                    logger.LogError("Failed to set display zoom level");
-                    return false;
-                }
-                catch
-                {
-                    // TODO: log exception
-                    return false;
+                    return handler;
                 }
             }
-            else
-            {
-                // TODO: log no handler found
-                return false;
-            }
-        }
-
-        public static class Keys
-        {
-            public static Preferences.Key WindowsDisplayZoom = new Preferences.Key("com.microsoft.windows.display", "zoom");
+            return null;
         }
     }
 }

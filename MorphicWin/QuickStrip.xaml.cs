@@ -24,6 +24,7 @@
 using System;
 using System.Windows;
 using System.Windows.Controls;
+using MorphicCore;
 using MorphicService;
 using MorphicSettings;
 using System.Windows.Media.Animation;
@@ -164,7 +165,7 @@ namespace MorphicWin
             /// Get the control that should appear on the quick strip for this item, or <code>null</code> if no valid control exists
             /// </summary>
             /// <returns></returns>
-            virtual public QuickStripItemControl? GetControl()
+            virtual public QuickStripItemControl? GetControl(QuickStrip quickStrip)
             {
                 return null;
             }
@@ -237,7 +238,7 @@ namespace MorphicWin
 
             public string Feature { get; private set; } = "";
 
-            public override QuickStripItemControl? GetControl()
+            public override QuickStripItemControl? GetControl(QuickStrip quickStrip)
             {
                 switch (Feature)
                 {
@@ -247,7 +248,7 @@ namespace MorphicWin
                             control.TitleLabel.Content = Properties.Resources.QuickStrip_Resolution_Title;
                             control.AddButton(new Image() { Source = new BitmapImage(new Uri("Plus.png", UriKind.Relative)) }, Properties.Resources.QuickStrip_Resolution_Bigger_HelpTitle, Properties.Resources.QuickStrip_Resolution_Bigger_HelpMessage, isPrimary: true);
                             control.AddButton(new Image() { Source = new BitmapImage(new Uri("Minus.png", UriKind.Relative)) }, Properties.Resources.QuickStrip_Resolution_Smaller_HelpTitle, Properties.Resources.QuickStrip_Resolution_Smaller_HelpMessage, isPrimary: false);
-                            control.Action += Zoom;
+                            control.Action += quickStrip.Zoom;
                             return control;
                         }
                     case "magnifier":
@@ -256,7 +257,7 @@ namespace MorphicWin
                             control.TitleLabel.Content = Properties.Resources.QuickStrip_Magnifier_Title;
                             control.AddButton(Properties.Resources.QuickStrip_Magnifier_Show_Title, Properties.Resources.QuickStrip_Magnifier_Show_HelpTitle, Properties.Resources.QuickStrip_Magnifier_Show_HelpMessage, isPrimary: true);
                             control.AddButton(Properties.Resources.QuickStrip_Magnifier_Hide_Title, Properties.Resources.QuickStrip_Magnifier_Hide_HelpTitle, Properties.Resources.QuickStrip_Magnifier_Hide_HelpMessage, isPrimary: false);
-                            control.Action += OnMagnify;
+                            control.Action += quickStrip.OnMagnify;
                             return control;
                         }
                     case "reader":
@@ -288,30 +289,6 @@ namespace MorphicWin
                         return null;
                 }
             }
-
-            private void Zoom(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
-            {
-                if (e.SelectedIndex == 0)
-                {
-                    // Zoom in
-                }
-                else
-                {
-                    // Zoom out
-                }
-            }
-
-            private void OnMagnify(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
-            {
-                if (e.SelectedIndex == 0)
-                {
-                    // Show magnifier
-                }
-                else if (e.SelectedIndex == 1)
-                {
-                    // Hide magnifier
-                }
-            }
         }
 
         private List<Item> items = new List<Item>();
@@ -330,6 +307,36 @@ namespace MorphicWin
 
         #endregion
 
+        #region Item Actions
+
+        private void Zoom(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
+        {
+            double percentage = 1.0;
+            if (e.SelectedIndex == 0)
+            {
+                percentage = Display.Primary.PercentageForZoomingIn;
+            }
+            else
+            {
+                percentage = Display.Primary.PercentageForZoomingOut;
+            }
+            session.SetPreference(MorphicSettings.Settings.Keys.WindowsDisplayZoom, percentage);
+        }
+
+        private void OnMagnify(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
+        {
+            if (e.SelectedIndex == 0)
+            {
+                // Show magnifier
+            }
+            else if (e.SelectedIndex == 1)
+            {
+                // Hide magnifier
+            }
+        }
+
+        #endregion
+
         #region Item Controls
 
         private List<QuickStripItemControl> itemControls = new List<QuickStripItemControl>();
@@ -340,7 +347,7 @@ namespace MorphicWin
             itemControls.Clear();
             foreach (var item in items)
             {
-                if (item.GetControl() is QuickStripItemControl control)
+                if (item.GetControl(this) is QuickStripItemControl control)
                 {
                     control.Margin = new Thickness(0, 0, 18, 0);
                     itemControls.Add(control);

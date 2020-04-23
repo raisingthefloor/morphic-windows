@@ -40,6 +40,7 @@ namespace MorphicSettings
         public Display(string name)
         {
             Name = name;
+            PossibleSettings = FindPossibleSettings();
         }
 
         private static Display? primary;
@@ -69,31 +70,81 @@ namespace MorphicSettings
 
         public string Name { get; private set; }
 
+        private List<Native.Display.DisplaySettings> PossibleSettings;
+
+        public Native.Display.DisplaySettings? NormalSettings;
+
+        public Native.Display.DisplaySettings? CurrentSettings
+        {
+            get
+            {
+                return Native.Display.GetCurrentDisplaySettingsForDisplayAdapter(Name);
+            }
+        }
+
         #endregion
 
         #region Zoom Level
 
-        public enum ZoomLevel
+        public double PercentageForZoomingIn
         {
-            Normal,
-            Percent125,
-            Percent150,
-            Percent200
+            get
+            {
+                if (NormalSettings is Native.Display.DisplaySettings normal)
+                {
+                    if (CurrentSettings is Native.Display.DisplaySettings current)
+                    {
+                        Native.Display.DisplaySettings target;
+                        try
+                        {
+                            target = PossibleSettings.Last(setting => setting.widthInPixels < current.widthInPixels);
+                        }
+                        catch
+                        {
+                            target = current;
+                        }
+                        return (double)target.widthInPixels / (double)normal.widthInPixels;
+                    }
+                }
+                return 1.0;
+            }
         }
 
-        public bool SetZoomLevel(ZoomLevel zoomLevel)
+        public double PercentageForZoomingOut
         {
-            var settings = GetDisplaySettingsForZoomLevel(zoomLevel);
-            Native.Display.SetCurrentDisplaySettings(Name, settings);
-            return true;
+            get
+            {
+                if (NormalSettings is Native.Display.DisplaySettings normal)
+                {
+                    if (CurrentSettings is Native.Display.DisplaySettings current)
+                    {
+                        Native.Display.DisplaySettings target;
+                        try
+                        {
+                            target = PossibleSettings.First(setting => setting.widthInPixels > current.widthInPixels);
+                        }
+                        catch
+                        {
+                            target = current;
+                        }
+                        return (double)target.widthInPixels / (double)normal.widthInPixels;
+                    }
+                }
+                return 1.0;
+            }
         }
 
-        public IEnumerable<string> PossibleSettingsStrings()
+        public bool Zoom(double percentage)
         {
-            return PossibleSettings().Select(setting => NativeDisplayExtensions.ToString(setting));
+            if (GetDisplaySettingsForZoomPercentage(percentage) is Native.Display.DisplaySettings settings)
+            {
+                Native.Display.SetCurrentDisplaySettings(Name, settings);
+                return true;
+            }
+            return false;
         }
 
-        private List<Native.Display.DisplaySettings> PossibleSettings()
+        private List<Native.Display.DisplaySettings> FindPossibleSettings()
         {
             var settings = Native.Display.GetAllDisplaySettingsForDisplayAdapter(Name);
             if (Native.Display.GetCurrentDisplaySettingsForDisplayAdapter(Name) is Native.Display.DisplaySettings current)
@@ -104,45 +155,23 @@ namespace MorphicSettings
             return settings;
         }
 
-        private Native.Display.DisplaySettings GetDisplaySettingsForZoomLevel(ZoomLevel zoomLevel)
+        private Native.Display.DisplaySettings? GetDisplaySettingsForZoomPercentage(double percentage)
         {
-            var possibleSettings = PossibleSettings();
-            var normalSettings = possibleSettings.First(settings => settings.IsDefault());
-            possibleSettings.Reverse();
-            switch (zoomLevel)
+            if (NormalSettings is Native.Display.DisplaySettings normal)
             {
-                case ZoomLevel.Normal:
-                    return normalSettings;
-                case ZoomLevel.Percent125:
-                    try
-                    {
-                        return possibleSettings.FirstOrDefault(settings => settings.widthInPixels <= (int)((double)normalSettings.widthInPixels * 4.0 / 5.0));
-                    }
-                    catch
-                    {
-                        return possibleSettings.Last();
-                    }
-                case ZoomLevel.Percent150:
-                    try
-                    {
-                        return possibleSettings.FirstOrDefault(settings => settings.widthInPixels <= (int)((double)normalSettings.widthInPixels * 2.0 / 3.0));
-                    }
-                    catch
-                    {
-                        return possibleSettings.Last();
-                    }
-                case ZoomLevel.Percent200:
-                    try
-                    {
-                        return possibleSettings.FirstOrDefault(settings => settings.widthInPixels <= (int)((double)normalSettings.widthInPixels / 2.0));
-                    }
-                    catch
-                    {
-                        return possibleSettings.Last();
-                    }
-                default:
-                    throw new ArgumentException("Invalid ZoomLevel");
+                var targetWidth = (uint)((double)normal.widthInPixels * percentage);
+                var settings = PossibleSettings.Select(setting => (Math.Abs(setting.widthInPixels - targetWidth), setting));
+                settings.OrderBy(pair => pair.Item1);
+                try
+                {
+                    return settings.First().Item2;
+                }
+                catch
+                {
+                    return normal;
+                }
             }
+            return null;
         }
 
         #endregion
@@ -170,6 +199,21 @@ namespace MorphicSettings
         public static bool MatchesAspectRatio(this Native.Display.DisplaySettings settings, Native.Display.DisplaySettings other)
         {
             return Math.Abs(settings.GetAspectRatio() - other.GetAspectRatio()) < 0.1;
+        }
+    }
+
+    public class DisplayZoomHandler: SettingsHandler
+    {
+        public override bool Apply(object? value)
+        {
+            if (value is double percentage)
+            {
+                return Display.Primary.Zoom(percentage);
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }
