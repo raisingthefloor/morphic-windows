@@ -503,5 +503,24 @@ namespace MorphicWin
         }
 
         #endregion
+
+        private void LogoButton_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            QuickHelpWindow.Show(Properties.Resources.QuickStrip_Advanced_HelpTitle, Properties.Resources.QuickStrip_Advanced_HelpMessage);
+        }
+
+        private void LogoButton_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            QuickHelpWindow.Dismiss();
+        }
+
+        private void Window_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            Activate();
+        }
+
+        private void Window_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+        }
     }
 }

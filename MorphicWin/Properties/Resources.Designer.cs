@@ -71,6 +71,24 @@ namespace MorphicWin.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Customize buttons and take your settings with you anywhere.
+        /// </summary>
+        internal static string QuickStrip_Advanced_HelpMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_Advanced_HelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Advanced Features.
+        /// </summary>
+        internal static string QuickStrip_Advanced_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_Advanced_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Make it harder to distinguish items.
         /// </summary>
         internal static string QuickStrip_Contrast_Off_HelpMessage {

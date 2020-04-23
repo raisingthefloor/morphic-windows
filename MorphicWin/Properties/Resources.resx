@@ -121,6 +121,12 @@
   <data name="Icon" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Icon.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="QuickStrip_Advanced_HelpMessage" xml:space="preserve">
+    <value>Customize buttons and take your settings with you anywhere</value>
+  </data>
+  <data name="QuickStrip_Advanced_HelpTitle" xml:space="preserve">
+    <value>Advanced Features</value>
+  </data>
   <data name="QuickStrip_Contrast_Off_HelpMessage" xml:space="preserve">
     <value>Make it harder to distinguish items</value>
   </data>
