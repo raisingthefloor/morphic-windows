@@ -52,34 +52,14 @@ namespace MorphicWin
         protected override void OnInitialized(EventArgs e)
         {
             base.OnInitialized(e);
-            Items = Item.CreateItems(new List<object>()
+            if (Enum.TryParse<FixedPosition>(session.GetString(PreferenceKeys.Position), out var position))
             {
-                new Dictionary<string, object>()
-                {
-                    ["type"] = "control",
-                    ["feature"] = "resolution"
-                },
-                new Dictionary<string, object>()
-                {
-                    ["type"] = "control",
-                    ["feature"] = "magnifier"
-                },
-                new Dictionary<string, object>()
-                {
-                    ["type"] = "control",
-                    ["feature"] = "reader"
-                },
-                new Dictionary<string, object>()
-                {
-                    ["type"] = "control",
-                    ["feature"] = "volume"
-                },
-                new Dictionary<string, object>()
-                {
-                    ["type"] = "control",
-                    ["feature"] = "contrast"
-                }
-            });
+                this.position = position;
+            }
+            if (session.GetArray(PreferenceKeys.Items) is object?[] items)
+            {
+                Items = Item.CreateItems(items);
+            }
         }
 
         private void OnLoaded(object? sender, RoutedEventArgs e)
@@ -150,13 +130,13 @@ namespace MorphicWin
             /// <summary>
             /// The raw preference data, stored in generic form to prevent loss of data
             /// </summary>
-            public Dictionary<string, object> Payload;
+            public Dictionary<string, object?> Payload;
 
             /// <summary>
             /// Create a new item from generic data
             /// </summary>
             /// <param name="payload"></param>
-            public Item(Dictionary<string, object> payload)
+            public Item(Dictionary<string, object?> payload)
             {
                 Payload = payload;
             }
@@ -175,14 +155,17 @@ namespace MorphicWin
             /// </summary>
             /// <param name="descriptions"></param>
             /// <returns></returns>
-            public static List<Item> CreateItems(List<object> descriptions)
+            public static List<Item> CreateItems(object?[] descriptions)
             {
                 var items = new List<Item>();
                 foreach (var obj in descriptions)
                 {
-                    if (CreateItem(obj) is Item item)
+                    if (obj is Dictionary<string, object?> payload)
                     {
-                        items.Add(item);
+                        if (CreateItem(payload) is Item item)
+                        {
+                            items.Add(item);
+                        }
                     }
                 }
                 return items;
@@ -193,24 +176,20 @@ namespace MorphicWin
             /// </summary>
             /// <param name="description"></param>
             /// <returns></returns>
-            public static Item? CreateItem(object description)
+            public static Item? CreateItem(Dictionary<string, object?> payload)
             {
-                if (description is Dictionary<string, object> payload)
+                if (payload.TryGetValue("type", out var typeValue))
                 {
-                    if (payload.TryGetValue("type", out var typeValue))
+                    if (typeValue is string type)
                     {
-                        if (typeValue is string type)
+                        switch (type)
                         {
-                            switch (type)
-                            {
-                                case "control":
-                                    return new ControlItem(payload);
-                            }
+                            case "control":
+                                return new ControlItem(payload);
                         }
                     }
-                    return new Item(payload);
                 }
-                return null;
+                return new Item(payload);
             }
 
         }
@@ -225,7 +204,7 @@ namespace MorphicWin
             /// Create a control item from a generic payload, extracting the <code>Feature</code> if present
             /// </summary>
             /// <param name="payload"></param>
-            public ControlItem(Dictionary<string, object> payload): base(payload)
+            public ControlItem(Dictionary<string, object?> payload): base(payload)
             {
                 if (payload.TryGetValue("feature", out var obj))
                 {
@@ -528,6 +507,14 @@ namespace MorphicWin
 
         private void Window_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
         {
+        }
+
+        public static class PreferenceKeys
+        {
+            public static Preferences.Key Visible = new Preferences.Key("org.raisingthefloor.morphic.quickstrip", "visible");
+            public static Preferences.Key Position = new Preferences.Key("org.raisingthefloor.morphic.quickstrip", "position.win");
+            public static Preferences.Key ShowsHelp = new Preferences.Key("org.raisingthefloor.morphic.quickstrip", "showsHelp");
+            public static Preferences.Key Items = new Preferences.Key("org.raisingthefloor.morphic.quickstrip", "items");
         }
     }
 }

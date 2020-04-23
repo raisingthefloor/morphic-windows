@@ -22,6 +22,7 @@
 // * Consumer Electronics Association Foundation
 
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Timers;
@@ -49,13 +50,15 @@ namespace MorphicService
         /// Create a new session with the given URL
         /// </summary>
         /// <param name="endpoint">The root URL of the Morphic HTTP service</param>
-        public Session(SessionOptions options, Settings settings, IKeychain keychain, ILogger<Session> logger)
+        public Session(SessionOptions options, Settings settings, Storage storage, Keychain keychain, IUserSettings userSettings, ILogger<Session> logger)
         {
             Service = new Service(new Uri(options.Endpoint), this);
             client = new HttpClient();
             this.settings = settings;
+            Storage = storage;
             this.keychain = keychain;
             this.logger = logger;
+            this.userSettings = userSettings;
         }
 
         /// <summary>
@@ -63,34 +66,30 @@ namespace MorphicService
         /// </summary>
         public Service Service { get; private set; }
 
-        private readonly IKeychain keychain;
+        private readonly Keychain keychain;
+
+        public readonly Storage Storage;
+
+        private readonly IUserSettings userSettings;
 
         /// <summary>
         /// Open the session by trying to login with the saved user information, if any 
         /// </summary>
         /// <returns>A task that completes when the user information has been fetched</returns>
-        public async Task Open(string userId)
+        public async Task Open()
         {
-            if (userId != "")
+            logger.LogInformation("Opening Session");
+            if (CurrentUserId is string userId)
             {
-                logger.LogInformation("Opening Session");
-                CurrentUserId = userId;
-                User = await Service.FetchUser(userId);
-                if (User != null && User.PreferencesId != null)
-                {
-                    Preferences = await Service.FetchPreferences(User.PreferencesId);
-                    ApplyAllPreferences();
-                }
+                User = await Storage.Load<User>(userId);
             }
-            else
-            {
-                logger.LogInformation("No saved user");
-            }
+            var preferencesId = User?.PreferencesId ?? "__default__";
+            Preferences = await Storage.Load<Preferences>(preferencesId);
         }
 
         #endregion
 
-        #region
+        #region Logger
 
         /// <summary>
         /// The logger for this session
@@ -234,7 +233,17 @@ namespace MorphicService
         /// <summary>
         /// The current user's id
         /// </summary>
-        public string? CurrentUserId;
+        public string? CurrentUserId
+        {
+            get
+            {
+                return userSettings.UserId;
+            }
+            set
+            {
+                userSettings.UserId = value;
+            }
+        }
 
         /// <summary>
         /// The current user's information
@@ -248,10 +257,7 @@ namespace MorphicService
             set
             {
                 user = value;
-                if (value != null)
-                {
-                    CurrentUserId = value.Id;
-                }
+                CurrentUserId = value?.Id;
             }
         }
 
@@ -315,28 +321,74 @@ namespace MorphicService
         /// <remarks>
         /// Calls <code>SetNeedsPreferencesSave()</code> to queue a save after a timeout.
         /// </remarks>
-        /// <param name="solution">The solution name</param>
-        /// <param name="preference">The preference name</param>
+        /// <param name="key">The preference lookup key</param>
         /// <param name="value">The preference value</param>
         /// <returns>Whether the preference was successfully applied to the system</returns>
         public bool SetPreference(Preferences.Key key, object? value)
         {
-            if (Preferences is Preferences preferences)
-            {
-                preferences.Set(key, value);
-                SetNeedsPreferencesSave();
-                return settings.Apply(key, value);
-            }
-            return false;
+            Preferences?.Set(key, value);
+            SetNeedsPreferencesSave();
+            return settings.Apply(key, value);
         }
 
+        /// <summary>
+        /// Get a string preference
+        /// </summary>
+        /// <param name="key">The preference key</param>
+        /// <returns>The requested string or <code>null</code> if no string is found for the key</returns>
         public string? GetString(Preferences.Key key)
         {
-            if (Preferences is Preferences preferences)
-            {
-                return preferences.Get(key) as string;
-            }
-            return null;
+            return Preferences?.Get(key) as string;
+        }
+
+        /// <summary>
+        /// Get a double preference
+        /// </summary>
+        /// <param name="key">The preference key</param>
+        /// <returns>The requested double or <code>null</code> if no double is found for the key</returns>
+        public double? GetDouble(Preferences.Key key)
+        {
+            return Preferences?.Get(key) as double?;
+        }
+
+        /// <summary>
+        /// Get an integer preference
+        /// </summary>
+        /// <param name="key">The preference key</param>
+        /// <returns>The requested integer or <code>null</code> if no integer is found for the key</returns>
+        public long? GetInteger(Preferences.Key key)
+        {
+            return Preferences?.Get(key) as long?;
+        }
+
+        /// <summary>
+        /// Get a boolean preference
+        /// </summary>
+        /// <param name="key">The preference key</param>
+        /// <returns>The requested boolean or <code>null</code> if no boolea  is found for the key</returns>
+        public bool? GetBool(Preferences.Key key)
+        {
+            return Preferences?.Get(key) as bool?;
+        }
+
+        /// <summary>
+        /// Get a dictionary preference
+        /// </summary>
+        /// <param name="key">The preference key</param>
+        /// <returns>The requested dictionary or <code>null</code> if no dictionary is found for the key</returns>
+        public Dictionary<string, object?>? GetDictionary(Preferences.Key key)
+        {
+            return Preferences?.Get(key) as Dictionary<string, object?>;
+        }
+
+        /// <summary>
+        /// Get an array preference
+        /// </summary>
+        /// <param name="key">The preference key</param>
+        /// <returns>The requested array or <code>null</code> if no array is found for the key</returns>
+        public object?[]? GetArray(Preferences.Key key)
+        {
+            return Preferences?.Get(key) as object?[];
         }
 
         /// <summary>

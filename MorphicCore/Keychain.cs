@@ -30,22 +30,69 @@ using System.Text.Json;
 using System.Text;
 using Microsoft.Extensions.Logging;
 
-namespace MorphicWin
+namespace MorphicCore
 {
-    class Keychain : IKeychain
+
+    /// <summary>
+    /// Options for creating a keychain
+    /// </summary>
+    /// <remarks>
+    /// Designed to pass one or more options to a <code>Keychain</code> constructor via dependency injection
+    /// </remarks>
+    public class KeychainOptions
     {
-        public Keychain(ILogger<Keychain> logger)
+        /// <summary>
+        /// The file path of the keychain
+        /// </summary>
+        public string Path = "";
+    }
+
+    /// <summary>
+    /// A keychain that encrypts and saves sensitive user data like passwords
+    /// </summary>
+    public class Keychain
+    {
+
+        /// <summary>
+        /// Create a new keychain
+        /// </summary>
+        /// <param name="options">The creation options</param>
+        /// <param name="dataProtection">A object that can encrypt and decrypt data</param>
+        /// <param name="logger">A logger for the keychain</param>
+        public Keychain(KeychainOptions options, IDataProtection dataProtection, ILogger<Keychain> logger)
         {
-            path = Path.Combine(new string[] { Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MorphicLite", "keychain" });
+            path = options.Path;
             this.logger = logger;
+            this.dataProtection = dataProtection;
             if (!ReadEncryptedData())
             {
                 logger.LogError("Failed to read keychain");
             }
         }
 
+        /// <summary>
+        /// The keychain's logger
+        /// </summary>
         private readonly ILogger<Keychain> logger;
 
+        /// <summary>
+        /// An object that handles the encryption and decryption for the keychain
+        /// </summary>
+        /// <remarks>
+        /// On Windows, the <code>ProtectedData</code> class provides a way to
+        /// encrypt data for the user, but it's not available in a .net core library,
+        /// so the keychain delegates its encryption tasks to this object that can
+        /// be provided by an application with access to <code>ProtectedData</code>
+        /// </remarks>
+        private readonly IDataProtection dataProtection;
+
+        /// <summary>
+        /// Save the key-based credentials to the keychain
+        /// </summary>
+        /// <param name="keyCredentials">The credentials to save</param>
+        /// <param name="endpoint">The endpoint to which they apply</param>
+        /// <param name="userId">The user tied to the credentials</param>
+        /// <returns></returns>
         public bool Save(KeyCredentials keyCredentials, Uri endpoint, string userId)
         {
             var key = userId + ';' + endpoint.ToString();
@@ -53,6 +100,12 @@ namespace MorphicWin
             return PersistEncryptedData();
         }
 
+        /// <summary>
+        /// Get the key-based credentials for a given user
+        /// </summary>
+        /// <param name="endpoint">The endpoint where the credentials are used</param>
+        /// <param name="userId">The identifier of the user tied to the credentials</param>
+        /// <returns>The saved credentials, if found</returns>
         public KeyCredentials? LoadKey(Uri endpoint, string userId)
         {
             var key = userId + ';' + endpoint.ToString();
@@ -63,6 +116,13 @@ namespace MorphicWin
             return null;
         }
 
+        /// <summary>
+        /// Save the username/password-based credentials to the keychain
+        /// </summary>
+        /// <param name="keyCredentials">The credentials to save</param>
+        /// <param name="endpoint">The endpoint to which they apply</param>
+        /// <param name="userId">The user tied to the credentials</param>
+        /// <returns></returns>
         public bool Save(UsernameCredentials usernameCredentials, Uri endpoint)
         {
             var key = usernameCredentials.Username + ';' + endpoint.ToString();
@@ -70,6 +130,12 @@ namespace MorphicWin
             return PersistEncryptedData();
         }
 
+        /// <summary>
+        /// Get the username/password-based credentials for a given user
+        /// </summary>
+        /// <param name="endpoint">The endpoint where the credentials are used</param>
+        /// <param name="userId">The username in the credentials</param>
+        /// <returns>The saved credentials, if found</returns>
         public UsernameCredentials? LoadUsername(Uri endpoint, string username)
         {
             var key = username + ';' + endpoint.ToString();
@@ -93,7 +159,7 @@ namespace MorphicWin
             try
             {
                 byte[] encrypted = File.ReadAllBytes(path);
-                var json = ProtectedData.Unprotect(encrypted, null, DataProtectionScope.CurrentUser);
+                var json = dataProtection.Unprotect(encrypted);
                 values = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
                 return true;
             }
@@ -116,7 +182,7 @@ namespace MorphicWin
                     }
                 }
                 var json = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(values));
-                var encrypted = ProtectedData.Protect(json, null, DataProtectionScope.CurrentUser);
+                var encrypted = dataProtection.Protect(json);
                 File.WriteAllBytes(path, encrypted);
                 return true;
             }

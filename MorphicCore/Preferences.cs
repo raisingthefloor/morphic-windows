@@ -26,15 +26,19 @@ using System.Collections.Generic;
 
 namespace MorphicCore
 {
-    public class Preferences
+    public class Preferences: IRecord
     {
+        [JsonPropertyName("id")]
         public string Id { get; set; } = "";
+
+        [JsonPropertyName("user_id")]
         public string? UserId { get; set; }
 
         /// <summary>The user's default preferences</summary>
         // Stored as a serialized JSON string in the mongo database because keys might contain dots,
         // and mongoDB doesn't allow dots in field keys.  Since we're unlikely to need to run queries
         // within the solution preferences, we don't lose any functionality by storing serialized JSON.
+        [JsonPropertyName("default")]
         public Dictionary<string, SolutionPreferences>? Default { get; set; }
 
         public struct Key

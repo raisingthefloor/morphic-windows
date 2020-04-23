@@ -22,34 +22,28 @@
 // * Consumer Electronics Association Foundation
 
 using System;
-using MorphicCore;
-using System.Collections.Generic;
-using System.Text;
 
-namespace MorphicSettings
+namespace MorphicCore
 {
-    public abstract class SettingsHandler
+    /// <summary>
+    /// An encryption interface for data protection
+    /// </summary>
+    public interface IDataProtection
     {
 
-        public abstract bool Apply(object? value);
+        /// <summary>
+        /// Encrypt data
+        /// </summary>
+        /// <param name="userData">The data to be encrypted</param>
+        /// <returns>The encrypted data</returns>
+        public byte[] Protect(byte[] userData);
 
-        private static readonly Dictionary<Preferences.Key, Type> handlerTypesByKey = new Dictionary<Preferences.Key, Type>();
+        /// <summary>
+        /// Decrypt data
+        /// </summary>
+        /// <param name="encryptedData">The data to decrypted</param>
+        /// <returns>The unencrypted data</returns>
+        public byte[] Unprotect(byte[] encryptedData);
 
-        public static void Register(Type type, Preferences.Key key)
-        {
-            handlerTypesByKey[key] = type;
-        }
-
-        public static SettingsHandler? Handler(Preferences.Key key)
-        {
-            if (handlerTypesByKey.TryGetValue(key, out var type))
-            {
-                if (Activator.CreateInstance(type) is SettingsHandler handler)
-                {
-                    return handler;
-                }
-            }
-            return null;
-        }
     }
 }

@@ -22,34 +22,14 @@
 // * Consumer Electronics Association Foundation
 
 using System;
-using MorphicCore;
 using System.Collections.Generic;
 using System.Text;
+using MorphicCore;
 
-namespace MorphicSettings
+namespace MorphicWin
 {
-    public abstract class SettingsHandler
+    class UserSettings : IUserSettings
     {
-
-        public abstract bool Apply(object? value);
-
-        private static readonly Dictionary<Preferences.Key, Type> handlerTypesByKey = new Dictionary<Preferences.Key, Type>();
-
-        public static void Register(Type type, Preferences.Key key)
-        {
-            handlerTypesByKey[key] = type;
-        }
-
-        public static SettingsHandler? Handler(Preferences.Key key)
-        {
-            if (handlerTypesByKey.TryGetValue(key, out var type))
-            {
-                if (Activator.CreateInstance(type) is SettingsHandler handler)
-                {
-                    return handler;
-                }
-            }
-            return null;
-        }
+        public string? UserId { get => Settings.Default.UserId; set => Settings.Default.UserId = value; }
     }
 }

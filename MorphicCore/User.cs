@@ -22,14 +22,22 @@
 // * Consumer Electronics Association Foundation
 
 using System;
+using System.Text.Json.Serialization;
 
 namespace MorphicCore
 {
-    public class User
+    public class User: IRecord
     {
+        [JsonPropertyName("id")]
         public string Id { get; set; } = "";
+
+        [JsonPropertyName("preferences_id")]
         public string? PreferencesId { get; set; }
+
+        [JsonPropertyName("first_name")]
         public string? FirstName { get; set; }
+
+        [JsonPropertyName("last_name")]
         public string? LastName { get; set; }
     }
 }

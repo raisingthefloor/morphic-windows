@@ -41,6 +41,14 @@ namespace MorphicSettings
         {
             Name = name;
             PossibleSettings = FindPossibleSettings();
+            try
+            {
+                NormalSettings = PossibleSettings.Last();
+            }
+            catch
+            {
+                // oh well
+            }
         }
 
         private static Display? primary;
@@ -70,7 +78,7 @@ namespace MorphicSettings
 
         public string Name { get; private set; }
 
-        private List<Native.Display.DisplaySettings> PossibleSettings;
+        private readonly List<Native.Display.DisplaySettings> PossibleSettings;
 
         public Native.Display.DisplaySettings? NormalSettings;
 
@@ -160,11 +168,11 @@ namespace MorphicSettings
             if (NormalSettings is Native.Display.DisplaySettings normal)
             {
                 var targetWidth = (uint)((double)normal.widthInPixels * percentage);
-                var settings = PossibleSettings.Select(setting => (Math.Abs(setting.widthInPixels - targetWidth), setting));
-                settings.OrderBy(pair => pair.Item1);
+                var settings = PossibleSettings.Select(setting => (diff: Math.Abs(setting.widthInPixels - targetWidth), setting));
+                settings.OrderBy(pair => pair.diff);
                 try
                 {
-                    return settings.First().Item2;
+                    return settings.First().setting;
                 }
                 catch
                 {
@@ -180,11 +188,6 @@ namespace MorphicSettings
 
     public static class NativeDisplayExtensions
     {
-        public static bool IsDefault(this Native.Display.DisplaySettings settings)
-        {
-            // FIXME: not sure how to tell this
-            return settings.widthInPixels == 3840;
-        }
 
         public static string ToString(this Native.Display.DisplaySettings settings)
         {

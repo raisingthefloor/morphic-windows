@@ -24,6 +24,8 @@
 using System;
 using System.Windows;
 using System.Threading.Tasks;
+using System.Text.Json;
+using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -51,6 +53,8 @@ namespace MorphicWin
 
         #region Configuration & Startup
 
+        private readonly string ApplicationDataFolderPath = Path.Combine(new string[] { Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MorphicLite" });
+
         /// <summary>
         /// Create a Configuration from appsettings.json
         /// </summary>
@@ -77,8 +81,13 @@ namespace MorphicWin
             services.AddLogging(ConfigureLogging);
             services.Configure<SessionOptions>(Configuration.GetSection("MorphicService"));
             services.AddSingleton<SessionOptions>(serviceProvider => serviceProvider.GetRequiredService<IOptions<SessionOptions>>().Value);
+            services.AddSingleton(new StorageOptions { RootPath = Path.Combine(ApplicationDataFolderPath, "Data") });
+            services.AddSingleton(new KeychainOptions { Path = Path.Combine(ApplicationDataFolderPath, "keychain") });
+            services.AddSingleton<IDataProtection, DataProtector>();
+            services.AddSingleton<IUserSettings, UserSettings>();
             services.AddSingleton<MorphicSettings.Settings>();
-            services.AddSingleton<IKeychain, Keychain>();
+            services.AddSingleton<Keychain>();
+            services.AddSingleton<Storage>();
             services.AddSingleton<Session>();
             services.AddTransient<MorphicConfigurator>();
             services.AddTransient<QuickStrip>();
@@ -107,9 +116,37 @@ namespace MorphicWin
             logger.LogInformation("Creating Tray Icon");
             CreateMainMenu();
             CreateNotifyIcon();
-            ShowQuickStrip();
-            //var task = Session.Open(Settings.Default.UserId);
-            //task.ContinueWith(SessionOpened, TaskScheduler.FromCurrentSynchronizationContext());
+            var task = OpenSession();
+            task.ContinueWith(SessionOpened, TaskScheduler.FromCurrentSynchronizationContext());
+        }
+
+        private async Task OpenSession()
+        {
+            await CopyDefaultPreferences();
+            await Session.Open();
+        }
+
+        private async Task CopyDefaultPreferences()
+        {
+            if (!Session.Storage.Exists<Preferences>("__default__"))
+            {
+                var prefs = new Preferences();
+                prefs.Id = "__default__";
+                using (var stream = File.OpenRead("DefaultPreferences.json"))
+                {
+                    var options = new JsonSerializerOptions();
+                    options.Converters.Add(new JsonElementInferredTypeConverter());
+                    try
+                    {
+                        prefs.Default = await JsonSerializer.DeserializeAsync<Dictionary<string, SolutionPreferences>>(stream, options);
+                    }
+                    catch
+                    {
+
+                    }
+                }
+                await Session.Storage.Save(prefs);
+            }
         }
 
         /// <summary>
@@ -118,12 +155,7 @@ namespace MorphicWin
         /// <param name="task"></param>
         private void SessionOpened(Task task)
         {
-            Settings.Default.PropertyChanged += OnSettingChanged;
-            logger.LogInformation("Ready");
-            if (Session.Preferences == null)
-            {
-                OpenConfigurator();
-            }
+            logger.LogInformation("Session Open");
         }
 
         /// <summary>
