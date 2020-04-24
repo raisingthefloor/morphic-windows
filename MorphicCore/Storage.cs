@@ -93,21 +93,25 @@ namespace MorphicCore
         {
             var type = typeof(RecordType);
             var path = PathForRecord(record.Id, type);
+            logger.LogInformation("Saving {0}/{1}", type.Name, record.Id);
             var parent = Path.GetDirectoryName(path);
             try
             {
                 if (!Directory.Exists(parent))
                 {
-                    Directory.CreateDirectory(path);
+                    logger.LogInformation("Creating directory {0}", type.Name);
+                    Directory.CreateDirectory(parent);
                 }
-                using (var stream = File.OpenWrite(path))
+                using (var stream = File.Open(path, FileMode.Truncate, FileAccess.Write))
                 {
                     await JsonSerializer.SerializeAsync<RecordType>(stream, record);
                 }
+                logger.LogInformation("Saved {0}/{1}", type.Name, record.Id);
                 return true;
             }
-            catch
+            catch (Exception e)
             {
+                logger.LogError(e, "Failed to save {0}/{1}", type.Name, record.Id);
                 return false;
             }
         }
@@ -122,6 +126,7 @@ namespace MorphicCore
         {
             var type = typeof(RecordType);
             var path = PathForRecord(identifier, type);
+            logger.LogInformation("Loading {0}/{1}", type.Name, identifier);
             try
             {
                 if (File.Exists(path))
@@ -134,10 +139,12 @@ namespace MorphicCore
                         return record;
                     }
                 }
+                logger.LogInformation("Not such record {0}/{1}", type.Name, identifier);
                 return null;
             }
-            catch
+            catch (Exception e)
             {
+                logger.LogError(e, "Failed to read {0}/{1}", type.Name, identifier);
                 return null;
             }
         }

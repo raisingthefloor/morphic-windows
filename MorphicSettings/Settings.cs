@@ -24,23 +24,26 @@
 using System;
 using MorphicCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MorphicSettings
 {
     public class Settings
     {
 
-        public Settings(ILogger<Settings> logger)
+        public Settings(IServiceProvider provider, ILogger<Settings> logger)
         {
             this.logger = logger;
-            SettingsHandler.Register(typeof(DisplayZoomHandler), Keys.WindowsDisplayZoom);
+            this.provider = provider;
         }
 
         private readonly ILogger<Settings> logger;
+        private readonly IServiceProvider provider;
 
         public bool Apply(Preferences.Key key, object? value)
         {
-            if (SettingsHandler.Handler(key) is SettingsHandler handler)
+            logger.LogInformation("Apply {0}", key);
+            if (SettingsHandler.Handler(provider, key) is SettingsHandler handler)
             {
                 try
                 {
@@ -48,19 +51,18 @@ namespace MorphicSettings
                     {
                         return true;
                     }
-                    // TODO: log correct name
-                    logger.LogError("Failed to set display zoom level");
+                    logger.LogError("Failed to set {0}", key);
                     return false;
                 }
-                catch
+                catch (Exception e)
                 {
-                    // TODO: log exception
+                    logger.LogError(e, "Failed to set {0}", key);
                     return false;
                 }
             }
             else
             {
-                // TODO: log no handler found
+                logger.LogInformation("No handler for {0}", key);
                 return false;
             }
         }
@@ -68,6 +70,16 @@ namespace MorphicSettings
         public static class Keys
         {
             public static Preferences.Key WindowsDisplayZoom = new Preferences.Key("com.microsoft.windows.display", "zoom");
+        }
+    }
+
+    public static class SettingsServiceProvider
+    {
+        public static void AddMorphicSettingsHandlers(this IServiceCollection services, Action<SettingsHandlerBuilder> callback)
+        {
+            var builder = new SettingsHandlerBuilder(services);
+            builder.AddHandler(typeof(DisplayZoomHandler), Settings.Keys.WindowsDisplayZoom);
+            callback(builder);
         }
     }
 }

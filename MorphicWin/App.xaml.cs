@@ -32,6 +32,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MorphicService;
 using MorphicCore;
+using MorphicSettings;
 using System.IO;
 
 namespace MorphicWin
@@ -80,6 +81,8 @@ namespace MorphicWin
         {
             services.AddLogging(ConfigureLogging);
             services.Configure<SessionOptions>(Configuration.GetSection("MorphicService"));
+            services.AddSingleton<IServiceCollection>(services);
+            services.AddSingleton<IServiceProvider>(provider => provider);
             services.AddSingleton<SessionOptions>(serviceProvider => serviceProvider.GetRequiredService<IOptions<SessionOptions>>().Value);
             services.AddSingleton(new StorageOptions { RootPath = Path.Combine(ApplicationDataFolderPath, "Data") });
             services.AddSingleton(new KeychainOptions { Path = Path.Combine(ApplicationDataFolderPath, "keychain") });
@@ -91,6 +94,7 @@ namespace MorphicWin
             services.AddSingleton<Session>();
             services.AddTransient<MorphicConfigurator>();
             services.AddTransient<QuickStrip>();
+            services.AddMorphicSettingsHandlers(ConfigureSettingsHandlers);
         }
 
         /// <summary>
@@ -100,6 +104,10 @@ namespace MorphicWin
         private void ConfigureLogging(ILoggingBuilder logging)
         {
             logging.AddDebug();
+        }
+
+        private void ConfigureSettingsHandlers(SettingsHandlerBuilder settings)
+        {
         }
 
         protected override void OnStartup(StartupEventArgs e)
@@ -130,22 +138,27 @@ namespace MorphicWin
         {
             if (!Session.Storage.Exists<Preferences>("__default__"))
             {
+                logger.LogInformation("Saving default preferences");
                 var prefs = new Preferences();
                 prefs.Id = "__default__";
-                using (var stream = File.OpenRead("DefaultPreferences.json"))
+                try
                 {
-                    var options = new JsonSerializerOptions();
-                    options.Converters.Add(new JsonElementInferredTypeConverter());
-                    try
+                    using (var stream = File.OpenRead("DefaultPreferences.json"))
                     {
+                        var options = new JsonSerializerOptions();
+                        options.Converters.Add(new JsonElementInferredTypeConverter());
                         prefs.Default = await JsonSerializer.DeserializeAsync<Dictionary<string, SolutionPreferences>>(stream, options);
                     }
-                    catch
-                    {
-
-                    }
                 }
-                await Session.Storage.Save(prefs);
+                catch (Exception e)
+                {
+                    logger.LogError(e, "Failed to read default preferences");
+                    return;
+                }
+                if (!await Session.Storage.Save(prefs))
+                {
+                    logger.LogError("Failed to save default preferences");
+                }
             }
         }
 
@@ -156,18 +169,9 @@ namespace MorphicWin
         private void SessionOpened(Task task)
         {
             logger.LogInformation("Session Open");
-        }
-
-        /// <summary>
-        /// Called when the UserId saved setting changes
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void OnSettingChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == "UserId" && Settings.Default.UserId != "")
+            if (Session.GetBool(MorphicWin.QuickStrip.PreferenceKeys.Visible) ?? true)
             {
-                ShowQuickStrip();
+                ShowQuickStrip(skippingSave: true);
             }
         }
 
@@ -197,13 +201,14 @@ namespace MorphicWin
             System.Windows.Forms.ToolStripItem item;
             showQuickStripItem = mainMenu.Items.Add("Show Quick Strip");
             showQuickStripItem.Click += (sender, e) => { ShowQuickStrip(); };
-            showQuickStripItem.Visible = false;
             hideQuickStripItem = mainMenu.Items.Add("Hide Quick Strip");
             hideQuickStripItem.Click += (sender, e) => { HideQuickStrip(); };
+            hideQuickStripItem.Visible = false;
             item = mainMenu.Items.Add("Customize Quick Strip...");
             item.Click += (sender, e) => { OpenConfigurator(); };
             mainMenu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
             item = mainMenu.Items.Add("Take My Settings with Me...");
+            item = mainMenu.Items.Add("Apply My Settings...");
             item.Enabled = false;
             mainMenu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
             item = mainMenu.Items.Add("Quit Morphic");
@@ -278,7 +283,7 @@ namespace MorphicWin
         /// <summary>
         /// Ensure the Quick Strip window is shown
         /// </summary>
-        public void ShowQuickStrip()
+        public void ShowQuickStrip(bool skippingSave = false)
         {
             if (QuickStrip == null)
             {
@@ -294,6 +299,10 @@ namespace MorphicWin
             if (hideQuickStripItem != null)
             {
                 hideQuickStripItem.Visible = true;
+            }
+            if (!skippingSave)
+            {
+                Session.SetPreference(MorphicWin.QuickStrip.PreferenceKeys.Visible, true);
             }
         }
 
@@ -314,6 +323,7 @@ namespace MorphicWin
             {
                 hideQuickStripItem.Visible = false;
             }
+            Session.SetPreference(MorphicWin.QuickStrip.PreferenceKeys.Visible, false);
         }
 
         /// <summary>

@@ -24,6 +24,7 @@
 using System;
 using MorphicCore;
 using System.Collections.Generic;
+using Microsoft.Extensions.DependencyInjection;
 using System.Text;
 
 namespace MorphicSettings
@@ -40,16 +41,33 @@ namespace MorphicSettings
             handlerTypesByKey[key] = type;
         }
 
-        public static SettingsHandler? Handler(Preferences.Key key)
+        public static SettingsHandler? Handler(IServiceProvider provider, Preferences.Key key)
         {
             if (handlerTypesByKey.TryGetValue(key, out var type))
             {
-                if (Activator.CreateInstance(type) is SettingsHandler handler)
+                var instance = provider.GetService(type);
+                if (instance is SettingsHandler handler)
                 {
                     return handler;
                 }
             }
             return null;
+        }
+    }
+
+    public class SettingsHandlerBuilder
+    {
+        public SettingsHandlerBuilder(IServiceCollection services)
+        {
+            this.services = services;
+        }
+
+        IServiceCollection services;
+
+        public void AddHandler(Type type, Preferences.Key key)
+        {
+            services.AddTransient(type);
+            SettingsHandler.Register(type, key);
         }
     }
 }

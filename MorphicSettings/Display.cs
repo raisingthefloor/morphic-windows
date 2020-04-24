@@ -25,6 +25,7 @@ using System;
 using Native = Morphic.Windows.Native;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace MorphicSettings
 {
@@ -168,8 +169,8 @@ namespace MorphicSettings
             if (NormalSettings is Native.Display.DisplaySettings normal)
             {
                 var targetWidth = (uint)((double)normal.widthInPixels * percentage);
-                var settings = PossibleSettings.Select(setting => (diff: Math.Abs(setting.widthInPixels - targetWidth), setting));
-                settings.OrderBy(pair => pair.diff);
+                var settings = PossibleSettings.Select(setting => (diff: Math.Abs((int)setting.widthInPixels - (int)targetWidth), setting)).ToList();
+                settings.Sort((a, b) => a.diff - b.diff);
                 try
                 {
                     return settings.First().setting;
@@ -207,6 +208,14 @@ namespace MorphicSettings
 
     public class DisplayZoomHandler: SettingsHandler
     {
+
+        public DisplayZoomHandler(ILogger<DisplayZoomHandler> logger)
+        {
+            this.logger = logger;
+        }
+
+        private readonly ILogger<DisplayZoomHandler> logger;
+
         public override bool Apply(object? value)
         {
             if (value is double percentage)
@@ -215,6 +224,14 @@ namespace MorphicSettings
             }
             else
             {
+                if (value is object obj)
+                {
+                    logger.LogError("Invalid data type for display zoom: {0}", obj.GetType().Name);
+                }
+                else
+                {
+                    logger.LogError("Invalid data type for display zoom: null");
+                }
                 return false;
             }
         }

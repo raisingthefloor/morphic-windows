@@ -81,7 +81,10 @@ namespace MorphicService
             logger.LogInformation("Opening Session");
             if (CurrentUserId is string userId)
             {
-                User = await Storage.Load<User>(userId);
+                if (userId != "")
+                {
+                    User = await Storage.Load<User>(userId);
+                }
             }
             var preferencesId = User?.PreferencesId ?? "__default__";
             Preferences = await Storage.Load<Preferences>(preferencesId);
@@ -326,6 +329,7 @@ namespace MorphicService
         /// <returns>Whether the preference was successfully applied to the system</returns>
         public bool SetPreference(Preferences.Key key, object? value)
         {
+            logger.LogInformation("Setting {0}={1}", key, value);
             Preferences?.Set(key, value);
             SetNeedsPreferencesSave();
             return settings.Apply(key, value);
@@ -399,6 +403,7 @@ namespace MorphicService
         /// </remarks>
         public void ApplyAllPreferences()
         {
+            logger.LogInformation("Setting all preferences");
             if (Preferences is Preferences preferences)
             {
                 if (preferences.Default != null)
@@ -461,10 +466,27 @@ namespace MorphicService
         {
             if (Preferences is Preferences preferences)
             {
-                var success = await Service.Save(preferences);
-                if (!success)
+                logger.LogInformation("Saving preferences to disk");
+                if (await Storage.Save(preferences))
                 {
-                    logger.LogError("Failed to save preferences");
+                    logger.LogInformation("Saved preferences to disk");
+                }
+                else
+                {
+                    logger.LogError("Failed to save preferences to disk");
+                }
+                if (User != null)
+                {
+                    logger.LogInformation("Saving preferences to server");
+                    if (await Service.Save(preferences))
+                    {
+                        logger.LogInformation("Saved preferences to server");
+                    }
+                    else
+                    {
+                        logger.LogError("Failed to save preferences to server");
+                    }
+
                 }
             }
             else

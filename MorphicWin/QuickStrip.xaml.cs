@@ -31,6 +31,7 @@ using System.Windows.Media.Animation;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Media.Imaging;
+using Microsoft.Win32;
 
 namespace MorphicWin
 {
@@ -47,6 +48,12 @@ namespace MorphicWin
             this.session = session;
             InitializeComponent();
             Deactivated += OnDeactivated;
+            SystemEvents.DisplaySettingsChanged += SystemEvents_DisplaySettingsChanged;
+        }
+
+        private void SystemEvents_DisplaySettingsChanged(object? sender, EventArgs e)
+        {
+            Reposition(animated: false);
         }
 
         protected override void OnInitialized(EventArgs e)
@@ -254,6 +261,7 @@ namespace MorphicWin
                             control.AddButton(new Image() { Source = new BitmapImage(new Uri("Plus.png", UriKind.Relative)) }, Properties.Resources.QuickStrip_Volume_Up_HelpTitle, Properties.Resources.QuickStrip_Volume_Up_HelpMessage, isPrimary: true);
                             control.AddButton(new Image() { Source = new BitmapImage(new Uri("Minus.png", UriKind.Relative)) }, Properties.Resources.QuickStrip_Volume_Down_HelpTitle, Properties.Resources.QuickStrip_Volume_Down_HelpMessage, isPrimary: false);
                             control.AddButton(Properties.Resources.QuickStrip_Volume_Mute_Title, Properties.Resources.QuickStrip_Volume_Mute_HelpTitle, Properties.Resources.QuickStrip_Volume_Mute_HelpMessage, isPrimary: true);
+                            control.Action += quickStrip.OnVolume;
                             return control;
                         }
                     case "contrast":
@@ -314,6 +322,37 @@ namespace MorphicWin
             }
         }
 
+        private void OnVolume(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
+        {
+            var endpoint = Audio.DefaultOutputEndpoint;
+            if (e.SelectedIndex == 0)
+            {
+                if (endpoint.GetMasterMuteState() == true)
+                {
+                    endpoint.SetMasterMuteState(false);
+                }
+                else
+                {
+                    endpoint.SetMasterVolumeLevel(Math.Min(1, Math.Max(0, endpoint.GetMasterVolumeLevel() + (float)0.1)));
+                }
+            }
+            else if (e.SelectedIndex == 1)
+            {
+                if (endpoint.GetMasterMuteState() == true)
+                {
+                    endpoint.SetMasterMuteState(false);
+                }
+                else
+                {
+                    endpoint.SetMasterVolumeLevel(Math.Min(1, Math.Max(0, endpoint.GetMasterVolumeLevel() - (float)0.1)));
+                }
+            }
+            else
+            {
+                endpoint.SetMasterMuteState(true);
+            }
+        }
+
         #endregion
 
         #region Item Controls
@@ -371,7 +410,11 @@ namespace MorphicWin
             }
             set
             {
-                position = value;
+                if (value != position)
+                {
+                    position = value;
+                    session.SetPreference(PreferenceKeys.Position, position.ToString());
+                }
                 Reposition(animated: true);
             }
         }

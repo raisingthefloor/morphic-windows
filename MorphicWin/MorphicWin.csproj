@@ -13,6 +13,7 @@
   <ItemGroup>
     <None Remove="appsettings.Development.json" />
     <None Remove="appsettings.json" />
+    <None Remove="DefaultPreferences.json" />
     <None Remove="Icon.png" />
     <None Remove="Minus.png" />
     <None Remove="Plus.png" />
@@ -38,6 +39,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MorphicCore\MorphicCore.csproj" />
     <ProjectReference Include="..\MorphicService\MorphicService.csproj" />
     <ProjectReference Include="..\MorphicSettings\MorphicSettings.csproj" />
   </ItemGroup>
@@ -52,6 +54,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="DefaultPreferences.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Resource Include="Icon.png" />
     <Resource Include="Minus.png" />
     <Resource Include="Plus.png" />
