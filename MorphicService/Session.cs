@@ -278,10 +278,7 @@ namespace MorphicService
         {
             User = user;
             Preferences = null;
-            if (user.PreferencesId is string id)
-            {
-                Preferences = await Service.FetchPreferences(id);
-            }
+            Preferences = await Service.FetchPreferences(user);
             ApplyAllPreferences();
         }
 

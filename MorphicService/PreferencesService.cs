@@ -36,9 +36,13 @@ namespace MorphicService
         /// <param name="service"></param>
         /// <param name="identifier">The preferences identifier, typically found in <code>User.PreferencesId</code></param>
         /// <returns>The preferences, or <code>null</code> if the request failed</returns>
-        public static async Task<Preferences?> FetchPreferences(this Service service, string identifier)
+        public static async Task<Preferences?> FetchPreferences(this Service service, User user)
         {
-            return await service.Session.Send<Preferences>(() => HttpRequestMessageExtensions.Create(service.Session, string.Format("preferences/{0}", identifier), HttpMethod.Get));
+            if (user.PreferencesId is string prefsId)
+            {
+                return await service.Session.Send<Preferences>(() => HttpRequestMessageExtensions.Create(service.Session, string.Format("v1/users/{0}/preferences/{1}", user.Id, prefsId), HttpMethod.Get));
+            }
+            return null;
         }
 
         /// <summary>
@@ -49,7 +53,11 @@ namespace MorphicService
         /// <returns><code>true</code> if the request succeeded, <code>false</code> otherwise</returns>
         public static async Task<bool> Save(this Service service, Preferences preferences)
         {
-            return await service.Session.Send(() => HttpRequestMessageExtensions.Create(service.Session, string.Format("preferences/{0}", preferences.Id), HttpMethod.Put, preferences));
+            if (preferences.UserId is string userId)
+            {
+                return await service.Session.Send(() => HttpRequestMessageExtensions.Create(service.Session, string.Format("v1/users/{0}/preferences/{1}", userId, preferences.Id), HttpMethod.Put, preferences));
+            }
+            return false;
         }
     }
 }

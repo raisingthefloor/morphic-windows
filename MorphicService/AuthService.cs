@@ -43,7 +43,7 @@ namespace MorphicService
         public static async Task<AuthResponse?> Register(this Service service, User user, UsernameCredentials usernameCredentials)
         {
             var registration = new UsernameRegistration(usernameCredentials, user);
-            return await service.Session.Send<AuthResponse>(() => HttpRequestMessageExtensions.Create(service.Session, "register/username", HttpMethod.Post, registration));
+            return await service.Session.Send<AuthResponse>(() => HttpRequestMessageExtensions.Create(service.Session, "v1/register/username", HttpMethod.Post, registration));
         }
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace MorphicService
         public static async Task<AuthResponse?> Register(this Service service, User user, KeyCredentials keyCredentials)
         {
             var registration = new KeyRegistration(keyCredentials, user);
-            return await service.Session.Send<AuthResponse>(() => HttpRequestMessageExtensions.Create(service.Session, "register/key", HttpMethod.Post, registration));
+            return await service.Session.Send<AuthResponse>(() => HttpRequestMessageExtensions.Create(service.Session, "v1/register/key", HttpMethod.Post, registration));
         }
 
         /// <summary>
@@ -77,9 +77,9 @@ namespace MorphicService
             public string Username { get; set; }
             [JsonPropertyName("password")]
             public string Password { get; set; }
-            [JsonPropertyName("firstName")]
+            [JsonPropertyName("first_name")]
             public string? FirstName { get; set; }
-            [JsonPropertyName("lastName")]
+            [JsonPropertyName("last_name")]
             public string? LastName { get; set; }
         }
 
@@ -98,9 +98,9 @@ namespace MorphicService
 
             [JsonPropertyName("key")]
             public string Key { get; set; }
-            [JsonPropertyName("firstName")]
+            [JsonPropertyName("first_name")]
             public string? FirstName { get; set; }
-            [JsonPropertyName("lastName")]
+            [JsonPropertyName("last_name")]
             public string? LastName { get; set; }
         }
 
@@ -136,7 +136,7 @@ namespace MorphicService
         public static async Task<AuthResponse?> AuthenticateUsername(this Service service, UsernameCredentials usernameCredentials)
         {
             var body = new AuthUsernameRequest(usernameCredentials.Username, usernameCredentials.Password);
-            return await service.Session.Send<AuthResponse>(() => HttpRequestMessageExtensions.Create(service.Session, "auth/username", HttpMethod.Post, body));
+            return await service.Session.Send<AuthResponse>(() => HttpRequestMessageExtensions.Create(service.Session, "v1/auth/username", HttpMethod.Post, body));
         }
 
         private class AuthUsernameRequest
@@ -162,7 +162,7 @@ namespace MorphicService
         public static async Task<AuthResponse?> AuthenticateKey(this Service service, KeyCredentials keyCredentials)
         {
             var body = new AuthKeyRequest(keyCredentials.Key);
-            return await service.Session.Send<AuthResponse>(() => HttpRequestMessageExtensions.Create(service.Session, "auth/key", HttpMethod.Post, body));
+            return await service.Session.Send<AuthResponse>(() => HttpRequestMessageExtensions.Create(service.Session, "v1/auth/key", HttpMethod.Post, body));
         }
 
         private class AuthKeyRequest
