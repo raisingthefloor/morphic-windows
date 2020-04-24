@@ -37,7 +37,7 @@ namespace MorphicService
             var request = new HttpRequestMessage(method, uri);
             if (session.AuthToken is string token)
             {
-                request.Headers.Add("X-Morphic-Auth-Token", token);
+                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
             }
             return request;
         }
