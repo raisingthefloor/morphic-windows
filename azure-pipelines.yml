@@ -10,24 +10,85 @@ pool:
   vmImage: 'windows-latest'
 
 variables:
-  solution: '**/*.sln'
-  buildPlatform: 'Any CPU'
-  buildConfiguration: 'Release'
+# must be created in the azure UI under Pipelines > Library and specify accessKey, secretKey, region, and bucket
+- group: 's3-public-bucket-upload'
+- name: solution 
+  value: '**/*.sln'
+- name: buildPlatform
+  value: 'Any CPU'
+- name: buildConfiguration
+  value: 'Release'
+- name: installerPath
+  value: "MorphicWin/bin/Release/netcoreapp3.1/Morphic.exe"
 
-steps:
-- task: NuGetToolInstaller@1
+stages:
+- stage: build
+  jobs:
+    - job: build
+      steps:
+        - task: NuGetToolInstaller@1
+        
+        - task: NuGetCommand@2
+          inputs:
+            restoreSolution: '$(solution)'
+        
+        - task: VSBuild@1
+          inputs:
+            solution: '$(solution)'
+            platform: '$(buildPlatform)'
+            configuration: '$(buildConfiguration)'
+        
+        - task: VSTest@2
+          inputs:
+            platform: '$(buildPlatform)'
+            configuration: '$(buildConfiguration)'
 
-- task: NuGetCommand@2
-  inputs:
-    restoreSolution: '$(solution)'
+        - publish: $(System.DefaultWorkingDirectory)/$(installerPath)
+          artifact: installer
 
-- task: VSBuild@1
-  inputs:
-    solution: '$(solution)'
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+- stage: upload
+  jobs:
+    - job: publish_client
+      pool:
+        vmImage: "ubuntu-18.04"
+      steps:
+        # do not checkout code. we only need to upload the published artifact
+        - checkout: none
+        - download: current
+          artifact: installer
+        - task: Bash@3
+          env:
+            AWS_ACCESS_KEY_ID: $(accessKey)
+            AWS_SECRET_ACCESS_KEY: $(secretKey)
+            BUCKET: $(bucket)
+            AWS_DEFAULT_REGION: $(region)
+            BRANCH: $(Build.SourceBranch)
+            BRANCH_NAME: $(Build.SourceBranchName)
+          inputs:
+            targetType: 'inline'
+            script: |
+              set -e
+              
+              CLIENT_NAME=""
+              if [[ "${BRANCH_NAME}" == "master" ]]; then
+                CLIENT_NAME="Morphic.msi"
+              fi
+              if [[ "${BRANCH_NAME}" == "develop" ]]; then
+                CLIENT_NAME="Morphic-latest.msi"
+              fi
+              if [[ "${BRANCH}" == *"tags"* ]]; then
+                CLIENT_NAME="Morphic-${BRANCH_NAME}.msi"
+              fi
+              
+              if [[ "$CLIENT_NAME" == "" ]]; then
+                echo "no client name found. will not publish to s3"
+                exit 0
+              fi
 
-- task: VSTest@2
-  inputs:
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+              set -x
+              
+              echo "install AWS CLI"
+              sudo apt-get install -y awscli
+              
+              ls -al ${AGENT_BUILDDIRECTORY}
+              aws s3 cp ${AGENT_BUILDDIRECTORY}/installer/Morphic.exe s3://${BUCKET}/win/$CLIENT_NAME
