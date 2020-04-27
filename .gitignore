@@ -2,3 +2,5 @@
 *.csproj.user
 bin/
 obj/
+MorphicSetup/Debug
+MorphicSetup/Release

@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MorphicSettings", "MorphicS
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Morphic.Windows.Native", "Morphic.Windows.Native\Morphic.Windows.Native.csproj", "{98AC1F49-CE2F-4294-8FAD-1A287B0E7824}"
 EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "MorphicSetup", "MorphicSetup\MorphicSetup.vdproj", "{5C5C7B5B-495F-4E20-A988-D68170A49F1E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,8 @@ Global
 		{98AC1F49-CE2F-4294-8FAD-1A287B0E7824}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{98AC1F49-CE2F-4294-8FAD-1A287B0E7824}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{98AC1F49-CE2F-4294-8FAD-1A287B0E7824}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5C5C7B5B-495F-4E20-A988-D68170A49F1E}.Debug|Any CPU.ActiveCfg = Debug
+		{5C5C7B5B-495F-4E20-A988-D68170A49F1E}.Release|Any CPU.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
