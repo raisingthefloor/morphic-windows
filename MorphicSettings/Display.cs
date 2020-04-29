@@ -112,7 +112,7 @@ namespace MorphicSettings
                         {
                             target = current;
                         }
-                        return (double)target.widthInPixels / (double)normal.widthInPixels;
+                        return (double)normal.widthInPixels / (double)target.widthInPixels;
                     }
                 }
                 return 1.0;
@@ -136,7 +136,7 @@ namespace MorphicSettings
                         {
                             target = current;
                         }
-                        return (double)target.widthInPixels / (double)normal.widthInPixels;
+                        return (double)normal.widthInPixels / (double)target.widthInPixels;
                     }
                 }
                 return 1.0;
@@ -168,7 +168,7 @@ namespace MorphicSettings
         {
             if (NormalSettings is Native.Display.DisplaySettings normal)
             {
-                var targetWidth = (uint)((double)normal.widthInPixels * percentage);
+                var targetWidth = (uint)((double)normal.widthInPixels / percentage);
                 var settings = PossibleSettings.Select(setting => (diff: Math.Abs((int)setting.widthInPixels - (int)targetWidth), setting)).ToList();
                 settings.Sort((a, b) => a.diff - b.diff);
                 try
