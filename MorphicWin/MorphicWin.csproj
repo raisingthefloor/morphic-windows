@@ -17,6 +17,7 @@
     <None Remove="Icon.png" />
     <None Remove="Minus.png" />
     <None Remove="Plus.png" />
+    <None Remove="Solutions.json" />
   </ItemGroup>
 
   <ItemGroup>
@@ -24,6 +25,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Solutions.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

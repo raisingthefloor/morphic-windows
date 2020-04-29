@@ -102,7 +102,7 @@ namespace MorphicCore
                     logger.LogInformation("Creating directory {0}", type.Name);
                     Directory.CreateDirectory(parent);
                 }
-                using (var stream = File.Open(path, FileMode.Truncate, FileAccess.Write))
+                using (var stream = File.Open(path, File.Exists(path) ? FileMode.Truncate : FileMode.CreateNew, FileAccess.Write))
                 {
                     await JsonSerializer.SerializeAsync<RecordType>(stream, record);
                 }

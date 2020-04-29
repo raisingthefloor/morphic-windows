@@ -28,18 +28,43 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace MorphicSettings
 {
+
+    /// <summary>
+    /// The central settings manager
+    /// </summary>
     public class Settings
     {
 
+        /// <summary>
+        /// Create a new settings manager
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <param name="logger"></param>
         public Settings(IServiceProvider provider, ILogger<Settings> logger)
         {
             this.logger = logger;
             this.provider = provider;
         }
 
+        /// <summary>
+        /// The logger to user
+        /// </summary>
         private readonly ILogger<Settings> logger;
+
+        /// <summary>
+        /// The service provider to use when creating settings handlers
+        /// </summary>
         private readonly IServiceProvider provider;
 
+        /// <summary>
+        /// Apply the given value for the given prefernce
+        /// </summary>
+        /// <remarks>
+        /// Looks for a settings handler for the given key
+        /// </remarks>
+        /// <param name="key">The preference key</param>
+        /// <param name="value">The value to apply</param>
+        /// <returns></returns>
         public bool Apply(Preferences.Key key, object? value)
         {
             logger.LogInformation("Apply {0}", key);
@@ -67,18 +92,33 @@ namespace MorphicSettings
             }
         }
 
+        /// <summary>
+        /// Known settings keys
+        /// </summary>
         public static class Keys
         {
+            /// <summary>
+            /// Display Zoom level on Microsoft Windows (essentially display resolution)
+            /// </summary>
             public static Preferences.Key WindowsDisplayZoom = new Preferences.Key("com.microsoft.windows.display", "zoom");
         }
     }
 
+    /// <summary>
+    /// Extension to IServiceCollection for adding settings handlers
+    /// </summary>
     public static class SettingsServiceProvider
     {
+
+        /// <summary>
+        /// Add client settings handlers and give the caller an opporunity to add their own with a builder
+        /// </summary>
+        /// <param name="services"></param>
+        /// <param name="callback"></param>
         public static void AddMorphicSettingsHandlers(this IServiceCollection services, Action<SettingsHandlerBuilder> callback)
         {
             var builder = new SettingsHandlerBuilder(services);
-            builder.AddHandler(typeof(DisplayZoomHandler), Settings.Keys.WindowsDisplayZoom);
+            builder.AddClientHandler(typeof(DisplayZoomHandler), Settings.Keys.WindowsDisplayZoom);
             callback(builder);
         }
     }

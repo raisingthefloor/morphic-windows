@@ -25,49 +25,108 @@ using System;
 using MorphicCore;
 using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System.Text;
 
 namespace MorphicSettings
 {
+    /// <summary>
+    /// The abstract base class and factory source for settings handlers
+    /// </summary>
     public abstract class SettingsHandler
     {
 
+        /// <summary>
+        /// Apply the value for the setting controled by this handler
+        /// </summary>
+        /// <remarks>
+        /// Each setting handler is created with knowledge of the setting it needs to update
+        /// </remarks>
+        /// <param name="value">The value to apply</param>
+        /// <returns></returns>
         public abstract bool Apply(object? value);
 
-        private static readonly Dictionary<Preferences.Key, Type> handlerTypesByKey = new Dictionary<Preferences.Key, Type>();
+        /// <summary>
+        /// A lookup table of client handlers
+        /// </summary>
+        private static readonly Dictionary<Preferences.Key, Type> clientHandlerTypesByKey = new Dictionary<Preferences.Key, Type>();
 
-        public static void Register(Type type, Preferences.Key key)
+        /// <summary>
+        /// Register a new client handler for the given preference key
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="key"></param>
+        public static void RegisterClientHandler(Type type, Preferences.Key key)
         {
-            handlerTypesByKey[key] = type;
+            clientHandlerTypesByKey[key] = type;
         }
 
+        /// <summary>
+        /// Get the handler for the given preference key
+        /// </summary>
+        /// <param name="provider">A service provider for dependency injection</param>
+        /// <param name="key">The preference key</param>
+        /// <returns></returns>
         public static SettingsHandler? Handler(IServiceProvider provider, Preferences.Key key)
         {
-            if (handlerTypesByKey.TryGetValue(key, out var type))
+            if (Solution.GetSetting(key) is Solution.Setting setting)
             {
-                var instance = provider.GetService(type);
-                if (instance is SettingsHandler handler)
+                switch (setting.Handler?.Kind ?? Solution.Setting.HandlerDescription.HandlerKind.Unknown)
                 {
-                    return handler;
+                    case Solution.Setting.HandlerDescription.HandlerKind.Client:
+                        if (clientHandlerTypesByKey.TryGetValue(key, out var type))
+                        {
+                            var instance = provider.GetService(type);
+                            if (instance is SettingsHandler handler)
+                            {
+                                return handler;
+                            }
+                        }
+                        return null;
+                    case Solution.Setting.HandlerDescription.HandlerKind.Registry:
+                        {
+                            var logger = provider.GetService<ILogger<RegistrySettingsHandler>>();
+                            if (setting.Handler is Solution.Setting.RegistryHandlerDescription description)
+                            {
+                                return new RegistrySettingsHandler(description, logger);
+                            }
+                            return null;
+                        }
                 }
             }
             return null;
         }
     }
 
+    /// <summary>
+    /// A builder used to register client handlers with SettingsHandler and with an IServiceCollection
+    /// </summary>
     public class SettingsHandlerBuilder
     {
+
+        /// <summary>
+        /// Create a new builder that uses the given service collection
+        /// </summary>
+        /// <param name="services"></param>
         public SettingsHandlerBuilder(IServiceCollection services)
         {
             this.services = services;
         }
 
-        IServiceCollection services;
+        /// <summary>
+        /// The service collection on which transient types will be registered
+        /// </summary>
+        readonly IServiceCollection services;
 
-        public void AddHandler(Type type, Preferences.Key key)
+        /// <summary>
+        /// Add a client setting handler for the given key
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="key"></param>
+        public void AddClientHandler(Type type, Preferences.Key key)
         {
             services.AddTransient(type);
-            SettingsHandler.Register(type, key);
+            SettingsHandler.RegisterClientHandler(type, key);
         }
     }
 }

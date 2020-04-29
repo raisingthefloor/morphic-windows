@@ -131,6 +131,7 @@ namespace MorphicWin
         private async Task OpenSession()
         {
             await CopyDefaultPreferences();
+            await Solution.PopulateRegistry("Solutions.json");
             await Session.Open();
         }
 
@@ -168,6 +169,10 @@ namespace MorphicWin
         /// <param name="task"></param>
         private void SessionOpened(Task task)
         {
+            if (task.Exception is Exception e)
+            {
+                throw e;
+            }
             logger.LogInformation("Session Open");
             if (Session.GetBool(MorphicWin.QuickStrip.PreferenceKeys.Visible) ?? true)
             {

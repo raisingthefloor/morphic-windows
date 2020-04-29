@@ -1,0 +1,51 @@
+﻿[
+  {
+    "id": "com.microsoft.windows.display",
+    "settings": [
+      {
+        "name": "zoom",
+        "type": "double",
+        "handler": {
+          "type": "org.raisingthefloor.morphic.client"
+        }
+      }
+    ]
+  },
+  {
+    "id": "com.microsoft.windows.magnifier",
+    "settings": [
+      {
+        "name": "on",
+        "type": "boolean",
+        "handler": {
+          "type": "org.raisingthefloor.morphic.client"
+        }
+      },
+      {
+        "name": "invert",
+        "type": "boolean",
+        "handler": {
+          "type": "com.microsoft.windows.registry",
+          "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
+          "value_name": "Invert",
+          "value_type": "dword"
+        }
+      }
+    ]
+  },
+  {
+    "id": "com.freedomscientific.jaws",
+    "settings": [
+      {
+        "name": "braille.cursor.all.dots",
+        "type": "boolean",
+        "handler": {
+          "type": "com.microsoft.windows.ini",
+          "filename": "$(APPDATA)\\Freedom Scientific\\JAWS\\2019\\Settings\\enu\\DEFAULT.JCF",
+          "section": "Braille",
+          "key": "AllDotsBrailleCursor"
+        }
+      }
+    ]
+  }
+]
