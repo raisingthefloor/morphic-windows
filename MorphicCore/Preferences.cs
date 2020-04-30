@@ -99,6 +99,27 @@ namespace MorphicCore
             }
             return null;
         }
+
+        /// <summary>
+        /// Get a flat set of preference values keyed by Preferences.Key
+        /// </summary>
+        /// <returns></returns>
+        public Dictionary<Key, object?> GetValuesByKey()
+        {
+            var valuesByKey = new Dictionary<Key, object?>();
+            if (Default != null)
+            {
+                foreach (var solutionPair in Default)
+                {
+                    foreach (var preferencePair in solutionPair.Value.Values)
+                    {
+                        var key = new Key(solutionPair.Key, preferencePair.Key);
+                        valuesByKey.Add(key, preferencePair.Value);
+                    }
+                }
+            }
+            return valuesByKey;
+        }
     }
 
     /// <summary>Stores preferences for a specific solution</summary>

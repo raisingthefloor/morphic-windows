@@ -28,6 +28,11 @@ namespace MorphicSettings
         public List<Preferences.Key> Keys = new List<Preferences.Key>();
 
         /// <summary>
+        /// Capture values that match the default system value
+        /// </summary>
+        public bool CaptureDefaultValues { get; set; } = false;
+
+        /// <summary>
         /// Create a new capture session
         /// </summary>
         /// <param name="settings"></param>
@@ -60,12 +65,18 @@ namespace MorphicSettings
         {
             foreach (var key in Keys)
             {
-                if (Settings.Handler(key) is SettingsHandler handler)
+                if (Solution.GetSetting(key) is Solution.Setting setting)
                 {
-                    var result = await handler.Capture();
-                    if (result.Success)
+                    if (Settings.Handler(key) is SettingsHandler handler)
                     {
-                        Preferences.Set(key, result.Value);
+                        var result = await handler.Capture();
+                        if (result.Success)
+                        {
+                            if (CaptureDefaultValues || result.Value != setting.Default)
+                            {
+                                Preferences.Set(key, result.Value);
+                            }
+                        }
                     }
                 }
             }

@@ -155,6 +155,12 @@ namespace MorphicSettings
             public ValueKind Kind { get; set; }
 
             /// <summary>
+            /// The default value for this setting
+            /// </summary>
+            [JsonPropertyName("default")]
+            public object? Default { get; set; }
+
+            /// <summary>
             /// The description of the handler for this setting
             /// </summary>
             [JsonPropertyName("handler")]
