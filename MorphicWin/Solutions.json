@@ -15,10 +15,111 @@
     "id": "com.microsoft.windows.magnifier",
     "settings": [
       {
-        "name": "on",
+        "name": "enabled",
         "type": "boolean",
         "handler": {
-          "type": "org.raisingthefloor.morphic.client"
+          "type": "com.microsoft.windows.system",
+          "subkey": "SystemSettings_Accessibility_Magnifier_IsEnabled"
+        }
+      },
+      {
+        "name": "mode",
+        "type": "integer",
+        "handler": {
+          "type": "com.microsoft.windows.registry",
+          "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
+          "value_name": "MagnificationMode",
+          "value_type": "dword"
+        }
+      },
+      {
+        "name": "magnification",
+        "type": "integer",
+        "handler": {
+          "type": "com.microsoft.windows.registry",
+          "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
+          "value_name": "Magnification",
+          "value_type": "dword"
+        }
+      },
+      {
+        "name": "increment",
+        "type": "integer",
+        "handler": {
+          "type": "com.microsoft.windows.registry",
+          "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
+          "value_name": "ZoomIncrement",
+          "value_type": "dword"
+        }
+      },
+      {
+        "name": "smoothing",
+        "type": "boolean",
+        "handler": {
+          "type": "com.microsoft.windows.registry",
+          "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
+          "value_name": "UseBitmapSmoothing",
+          "value_type": "dword"
+        }
+      },
+      {
+        "name": "lens.height",
+        "type": "integer",
+        "handler": {
+          "type": "com.microsoft.windows.registry",
+          "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
+          "value_name": "LensHeight",
+          "value_type": "dword"
+        }
+      },
+      {
+        "name": "lens.width",
+        "type": "integer",
+        "handler": {
+          "type": "com.microsoft.windows.registry",
+          "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
+          "value_name": "LensWidth",
+          "value_type": "dword"
+        }
+      },
+      {
+        "name": "follow.mouse",
+        "type": "boolean",
+        "handler": {
+          "type": "com.microsoft.windows.registry",
+          "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
+          "value_name": "FollowMouse",
+          "value_type": "dword"
+        }
+      },
+      {
+        "name": "follow.focus",
+        "type": "boolean",
+        "handler": {
+          "type": "com.microsoft.windows.registry",
+          "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
+          "value_name": "FollowFocus",
+          "value_type": "dword"
+        }
+      },
+      {
+        "name": "follow.caret",
+        "type": "boolean",
+        "handler": {
+          "type": "com.microsoft.windows.registry",
+          "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
+          "value_name": "FollowCaret",
+          "value_type": "dword"
+        }
+      },
+      {
+        "name": "follow.narrator",
+        "type": "boolean",
+        "handler": {
+          "type": "com.microsoft.windows.registry",
+          "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
+          "value_name": "FollowNarrator",
+          "value_type": "dword"
         }
       },
       {
@@ -29,6 +130,27 @@
           "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
           "value_name": "Invert",
           "value_type": "dword"
+        }
+      },
+      {
+        "name": "fade",
+        "type": "boolean",
+        "handler": {
+          "type": "com.microsoft.windows.registry",
+          "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
+          "value_name": "FadeToMagIcon",
+          "value_type": "dword"
+        }
+      }
+    ]
+  },
+  {
+    "id": "com.microsoft.windows.narrator",
+    "settings": [
+      {
+        "name": "enabled",
+        "handler": {
+          "type": "org.raisingthefloor.morphic.client"
         }
       }
     ]

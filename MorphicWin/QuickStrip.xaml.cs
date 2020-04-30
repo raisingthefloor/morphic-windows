@@ -314,11 +314,11 @@ namespace MorphicWin
         {
             if (e.SelectedIndex == 0)
             {
-                // Show magnifier
+                session.SetPreference(MorphicSettings.Settings.Keys.WindowsMagnifierEnabled, true);
             }
             else if (e.SelectedIndex == 1)
             {
-                // Hide magnifier
+                session.SetPreference(MorphicSettings.Settings.Keys.WindowsMagnifierEnabled, false);
             }
         }
 

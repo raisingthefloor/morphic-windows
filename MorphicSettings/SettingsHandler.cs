@@ -83,6 +83,15 @@ namespace MorphicSettings
                             }
                         }
                         return null;
+                    case Solution.Setting.HandlerDescription.HandlerKind.System:
+                        {
+                            var logger = provider.GetService<ILogger<SystemSettingsHandler>>();
+                            if (setting.Handler is Solution.Setting.SystemSettingHandlerDescription description)
+                            {
+                                return new SystemSettingsHandler(description, logger);
+                            }
+                            return null;
+                        }
                     case Solution.Setting.HandlerDescription.HandlerKind.Registry:
                         {
                             var logger = provider.GetService<ILogger<RegistrySettingsHandler>>();

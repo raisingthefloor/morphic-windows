@@ -182,6 +182,11 @@ namespace MorphicSettings
                     Registry,
 
                     /// <summary>
+                    /// A registry handler sets a specific SystemSetting
+                    /// </summary>
+                    System,
+
+                    /// <summary>
                     /// An ini handler sets a specific value in an ini file
                     /// </summary>
                     Ini,
@@ -236,6 +241,11 @@ namespace MorphicSettings
                                         var section = element.GetProperty("section").GetString();
                                         var key = element.GetProperty("key").GetString();
                                         return new IniHandlerDescription(filename, section, key);
+                                    }
+                                case "com.microsoft.windows.system":
+                                    {
+                                        var subkey = element.GetProperty("subkey").GetString();
+                                        return new SystemSettingHandlerDescription(subkey);
                                     }
                             }
                         }
@@ -319,6 +329,27 @@ namespace MorphicSettings
                     Filename = filename;
                     Section = section;
                     Key = key;
+                }
+            }
+
+            /// <summary>
+            /// An ini handler description that specifies which part of the ini file should be udpated
+            /// </summary>
+            public class SystemSettingHandlerDescription : HandlerDescription
+            {
+
+                /// <summary>
+                /// The filename of the ini file, possibly including environmental variables
+                /// </summary>
+                public string Subkey;
+
+                /// <summary>
+                /// Create a new ini file handler
+                /// </summary>
+                /// <param name="subkey"></param>
+                public SystemSettingHandlerDescription(string subkey) : base(HandlerKind.System)
+                {
+                    Subkey = subkey;
                 }
             }
         }

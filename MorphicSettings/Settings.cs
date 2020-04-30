@@ -101,6 +101,8 @@ namespace MorphicSettings
             /// Display Zoom level on Microsoft Windows (essentially display resolution)
             /// </summary>
             public static Preferences.Key WindowsDisplayZoom = new Preferences.Key("com.microsoft.windows.display", "zoom");
+
+            public static Preferences.Key WindowsMagnifierEnabled = new Preferences.Key("com.microsoft.windows.magnifier", "enabled");
         }
     }
 
