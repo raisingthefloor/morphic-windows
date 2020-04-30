@@ -96,6 +96,22 @@ namespace MorphicSettings
 
         #region Zoom Level
 
+        public double CurrentZoomPercentage
+        {
+            get
+            {
+                if (NormalSettings is Native.Display.DisplaySettings normal)
+                {
+                    if (CurrentSettings is Native.Display.DisplaySettings current)
+                    {
+                        return (double)normal.widthInPixels / (double)current.widthInPixels;
+                    }
+                }
+                return 1.0;
+
+            }
+        }
+
         public double PercentageForZoomingIn
         {
             get
@@ -236,6 +252,14 @@ namespace MorphicSettings
                 }
                 return Task.FromResult(false);
             }
+        }
+
+        public override Task<CaptureResult> Capture()
+        {
+            var result = new CaptureResult();
+            result.Value = Display.Primary.CurrentZoomPercentage;
+            result.Success = true;
+            return Task.FromResult(result);
         }
     }
 }

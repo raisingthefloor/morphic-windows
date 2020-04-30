@@ -122,20 +122,28 @@ namespace MorphicSettings
             {
                 if (value != null)
                 {
-                    var result = item.SetValue("Value", value);
-                    if (result != 0)
+                    try
                     {
-                        logger.LogError("SetValue returned non-0");
+                        var result = item.SetValue("Value", value);
+                        if (result != 0)
+                        {
+                            logger.LogError("SetValue returned non-0");
+                            return false;
+                        }
+                        var updateResult = await item.WaitForUpdate(30);
+                        logger.LogInformation("setting took {0}ms to apply", updateResult.Item2);
+                        if (!updateResult.Item1)
+                        {
+                            logger.LogError("SetValue timed out waiting for update");
+                            return false;
+                        }
+                        return true;
+                    }
+                    catch (Exception e)
+                    {
+                        logger.LogError(e, "Failed to SetValue()");
                         return false;
                     }
-                    var updateResult = await item.WaitForUpdate(30);
-                    logger.LogInformation("setting took {0}ms to apply", updateResult.Item2);
-                    if (!updateResult.Item1)
-                    {
-                        logger.LogError("SetValue timed out waiting for update");
-                        return false;
-                    }
-                    return true;
                 }
                 else
                 {
@@ -148,6 +156,28 @@ namespace MorphicSettings
                 logger.LogError("null settingItem");
                 return false;
             }
+        }
+
+        public override Task<CaptureResult> Capture()
+        {
+            var result = new CaptureResult();
+            if (settingItem is ISettingItem item)
+            {
+                try
+                {
+                    result.Value = settingItem.GetValue("Value");
+                    result.Success = true;
+                }
+                catch(Exception e)
+                {
+                    logger.LogError(e, "Failed to GetValue()");
+                }
+            }
+            else
+            {
+                logger.LogError("null settingItem");
+            }
+            return Task.FromResult(result);
         }
 
         /// <summary>

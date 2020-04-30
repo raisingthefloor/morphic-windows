@@ -75,10 +75,28 @@ namespace MorphicSettings
                 }
                 catch (Exception e)
                 {
-                    logger.LogError(e, "Failed to set registry value");
+                    logger.LogError(e, "Failed to set registry value {0}.{1}", Description.KeyName, Description.ValueName);
                 }
             }
             return Task.FromResult(false);
+        }
+
+        /// <summary>
+        /// Red the value from the appropriate registry key
+        /// </summary>
+        /// <returns></returns>
+        public override Task<CaptureResult> Capture()
+        {
+            var result = new CaptureResult();
+            try
+            {
+                result.Value = Registry.GetValue(Description.KeyName, Description.ValueName, null);
+                result.Success = true;
+            }catch (Exception e)
+            {
+                logger.LogError(e, "Failed to get registry value {0}.{1}", Description.KeyName, Description.ValueName);
+            }
+            return Task.FromResult(result);
         }
 
     }

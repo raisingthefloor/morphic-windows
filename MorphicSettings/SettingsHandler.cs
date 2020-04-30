@@ -48,6 +48,19 @@ namespace MorphicSettings
         public abstract Task<bool> Apply(object? value);
 
         /// <summary>
+        /// Capture the current value for the setting controlled by this handler
+        /// </summary>
+        /// <param name="value">The captured value</param>
+        /// <returns>Whether or not the capture was successful</returns>
+        public abstract Task<CaptureResult> Capture();
+
+        public struct CaptureResult
+        {
+            public bool Success;
+            public object? Value;
+        }
+
+        /// <summary>
         /// A lookup table of client handlers
         /// </summary>
         private static readonly Dictionary<Preferences.Key, Type> clientHandlerTypesByKey = new Dictionary<Preferences.Key, Type>();

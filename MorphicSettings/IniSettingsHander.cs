@@ -108,5 +108,24 @@ namespace MorphicSettings
             return Task.FromResult(false);
         }
 
+        /// <summary>
+        /// Read the value from the section+key
+        /// </summary>
+        /// <returns></returns>
+        public override Task<CaptureResult> Capture()
+        {
+            var result = new CaptureResult();
+            try
+            {
+                // FIXME: need to parse correct type from string
+                result.Value = iniFile.ReadValue(Description.Key, Description.Section);
+                result.Success = true;
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Failed to capture ini value");
+            }
+            return Task.FromResult(result);
+        }
     }
 }
