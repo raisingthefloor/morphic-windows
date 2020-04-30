@@ -69,7 +69,7 @@ namespace MorphicSettings
         public async Task<bool> Apply(Preferences.Key key, object? value)
         {
             logger.LogInformation("Apply {0}", key);
-            if (SettingsHandler.Handler(provider, key) is SettingsHandler handler)
+            if (Handler(key) is SettingsHandler handler)
             {
                 try
                 {
@@ -91,6 +91,11 @@ namespace MorphicSettings
                 logger.LogInformation("No handler for {0}", key);
                 return false;
             }
+        }
+
+        public SettingsHandler? Handler(Preferences.Key key)
+        {
+            return SettingsHandler.Handler(provider, key);
         }
 
         /// <summary>
