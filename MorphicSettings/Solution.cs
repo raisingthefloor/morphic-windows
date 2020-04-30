@@ -244,8 +244,8 @@ namespace MorphicSettings
                                     }
                                 case "com.microsoft.windows.system":
                                     {
-                                        var subkey = element.GetProperty("subkey").GetString();
-                                        return new SystemSettingHandlerDescription(subkey);
+                                        var settingId = element.GetProperty("setting_id").GetString();
+                                        return new SystemSettingHandlerDescription(settingId);
                                     }
                             }
                         }
@@ -341,15 +341,15 @@ namespace MorphicSettings
                 /// <summary>
                 /// The filename of the ini file, possibly including environmental variables
                 /// </summary>
-                public string Subkey;
+                public string SettingId;
 
                 /// <summary>
                 /// Create a new ini file handler
                 /// </summary>
-                /// <param name="subkey"></param>
-                public SystemSettingHandlerDescription(string subkey) : base(HandlerKind.System)
+                /// <param name="settingId"></param>
+                public SystemSettingHandlerDescription(string settingId) : base(HandlerKind.System)
                 {
-                    Subkey = subkey;
+                    SettingId = settingId;
                 }
             }
         }

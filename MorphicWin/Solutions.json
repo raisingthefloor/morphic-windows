@@ -14,7 +14,7 @@
         "type": "boolean",
         "handler": {
           "type": "com.microsoft.windows.system",
-          "subkey": "SystemSettings_Accessibility_CoreHighContrast_IsEnabled"
+          "setting_id": "SystemSettings_Accessibility_CoreHighContrast_IsEnabled"
         }
       }
     ]
@@ -27,7 +27,7 @@
         "type": "boolean",
         "handler": {
           "type": "com.microsoft.windows.system",
-          "subkey": "SystemSettings_Accessibility_Magnifier_IsEnabled"
+          "setting_id": "SystemSettings_Accessibility_Magnifier_IsEnabled"
         }
       },
       {
@@ -160,7 +160,7 @@
         "type": "boolean",
         "handler": {
           "type": "com.microsoft.windows.system",
-          "subkey": "SystemSettings_Accessibility_Narrator_IsEnabled"
+          "setting_id": "SystemSettings_Accessibility_Narrator_IsEnabled"
         }
       }
     ]

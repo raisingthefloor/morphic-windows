@@ -17,12 +17,12 @@ namespace MorphicSettings
     /// <remarks>
     /// Information about System Settings can be found in the Windows Registry under
     /// 
-    /// HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\SystemSettings\SettingId\SomeSettingName
+    /// HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\SystemSettings\SettingId\SomeSettingId
     /// 
     /// Each subkey has an value for DllPath, which contains a string of the absolute path to a DLL
     /// that in turn contains a GetSetting() function.
     /// 
-    /// The result of calling GetSetting("SomeSettingName") is an object that has GetValue() and SetValue() methods,
+    /// The result of calling GetSetting("SomeSettingId") is an object that has GetValue() and SetValue() methods,
     /// which read and write the setting, respectively.
     /// </remarks>
     class SystemSettingsHandler: SettingsHandler
@@ -51,7 +51,7 @@ namespace MorphicSettings
         public SystemSettingsHandler(Solution.Setting.SystemSettingHandlerDescription description, ILogger<SystemSettingsHandler> logger)
         {
             Description = description;
-            registryKeyName = $"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\SystemSettings\\SettingId\\{description.Subkey}";
+            registryKeyName = $"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\SystemSettings\\SettingId\\{description.SettingId}";
             this.logger = logger;
             settingItem = LoadSettingItem();
         }
@@ -100,7 +100,7 @@ namespace MorphicSettings
 
             var function = Marshal.GetDelegateForFunctionPointer<GetSetting>(functionPointer);
 
-            if (function(Description.Subkey, out var item, IntPtr.Zero) != IntPtr.Zero)
+            if (function(Description.SettingId, out var item, IntPtr.Zero) != IntPtr.Zero)
             {
                 logger.LogError("GetSetting failed");
                 return null;
