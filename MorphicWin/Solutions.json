@@ -8,6 +8,14 @@
         "handler": {
           "type": "org.raisingthefloor.morphic.client"
         }
+      },
+      {
+        "name": "contrast.enabled",
+        "type": "boolean",
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "subkey": "SystemSettings_Accessibility_CoreHighContrast_IsEnabled"
+        }
       }
     ]
   },
@@ -149,8 +157,10 @@
     "settings": [
       {
         "name": "enabled",
+        "type": "boolean",
         "handler": {
-          "type": "org.raisingthefloor.morphic.client"
+          "type": "com.microsoft.windows.system",
+          "subkey": "SystemSettings_Accessibility_Narrator_IsEnabled"
         }
       }
     ]

@@ -252,6 +252,7 @@ namespace MorphicWin
                             control.TitleLabel.Content = Properties.Resources.QuickStrip_Reader_Title;
                             control.AddButton(Properties.Resources.QuickStrip_Reader_On_Title, Properties.Resources.QuickStrip_Reader_On_HelpTitle, Properties.Resources.QuickStrip_Reader_On_HelpMessage, isPrimary: true);
                             control.AddButton(Properties.Resources.QuickStrip_Reader_Off_Title, Properties.Resources.QuickStrip_Reader_Off_HelpTitle, Properties.Resources.QuickStrip_Reader_Off_HelpMessage, isPrimary: false);
+                            control.Action += quickStrip.OnReader;
                             return control;
                         }
                     case "volume":
@@ -270,6 +271,7 @@ namespace MorphicWin
                             control.TitleLabel.Content = Properties.Resources.QuickStrip_Contrast_Title;
                             control.AddButton(Properties.Resources.QuickStrip_Contrast_On_Title, Properties.Resources.QuickStrip_Contrast_On_HelpTitle, Properties.Resources.QuickStrip_Contrast_On_HelpMessage, isPrimary: true);
                             control.AddButton(Properties.Resources.QuickStrip_Contrast_Off_Title, Properties.Resources.QuickStrip_Contrast_Off_HelpTitle, Properties.Resources.QuickStrip_Contrast_Off_HelpMessage, isPrimary: false);
+                            control.Action += quickStrip.OnContrast;
                             return control;
                         }
                     default:
@@ -322,6 +324,18 @@ namespace MorphicWin
             }
         }
 
+        private void OnReader(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
+        {
+            if (e.SelectedIndex == 0)
+            {
+                session.SetPreference(MorphicSettings.Settings.Keys.WindowsNarratorEnabled, true);
+            }
+            else if (e.SelectedIndex == 1)
+            {
+                session.SetPreference(MorphicSettings.Settings.Keys.WindowsNarratorEnabled, false);
+            }
+        }
+
         private void OnVolume(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
         {
             var endpoint = Audio.DefaultOutputEndpoint;
@@ -350,6 +364,18 @@ namespace MorphicWin
             else
             {
                 endpoint.SetMasterMuteState(true);
+            }
+        }
+
+        private void OnContrast(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
+        {
+            if (e.SelectedIndex == 0)
+            {
+                session.SetPreference(MorphicSettings.Settings.Keys.WindowsDisplayContrastEnabled, true);
+            }
+            else if (e.SelectedIndex == 1)
+            {
+                session.SetPreference(MorphicSettings.Settings.Keys.WindowsDisplayContrastEnabled, false);
             }
         }
 
