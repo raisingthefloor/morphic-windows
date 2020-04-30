@@ -22,6 +22,7 @@
 // * Consumer Electronics Association Foundation
 
 using System;
+using System.Threading.Tasks;
 using Native = Morphic.Windows.Native;
 using System.Collections.Generic;
 using System.Linq;
@@ -216,11 +217,12 @@ namespace MorphicSettings
 
         private readonly ILogger<DisplayZoomHandler> logger;
 
-        public override bool Apply(object? value)
+        public override Task<bool> Apply(object? value)
         {
             if (value is double percentage)
             {
-                return Display.Primary.Zoom(percentage);
+                var result = Display.Primary.Zoom(percentage);
+                return Task.FromResult(result);
             }
             else
             {
@@ -232,7 +234,7 @@ namespace MorphicSettings
                 {
                     logger.LogError("Invalid data type for display zoom: null");
                 }
-                return false;
+                return Task.FromResult(false);
             }
         }
     }

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Diagnostics;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using System.Runtime.InteropServices;
@@ -114,14 +116,26 @@ namespace MorphicSettings
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public override bool Apply(object? value)
+        public override async Task<bool> Apply(object? value)
         {
             if (settingItem is ISettingItem item)
             {
                 if (value != null)
                 {
                     var result = item.SetValue("Value", value);
-                    return result == 0;
+                    if (result != 0)
+                    {
+                        logger.LogError("SetValue returned non-0");
+                        return false;
+                    }
+                    var updateResult = await item.WaitForUpdate(30);
+                    logger.LogInformation("setting took {0}ms to apply", updateResult.Item2);
+                    if (!updateResult.Item1)
+                    {
+                        logger.LogError("SetValue timed out waiting for update");
+                        return false;
+                    }
+                    return true;
                 }
                 else
                 {
@@ -265,6 +279,36 @@ namespace MorphicSettings
         IntPtr GetPossibleValues(out IList<object> value);
 
         // There are more unknown methods.
+    }
+
+    public static class ISettingItemExtensions
+    {
+        /// <summary>
+        /// Wait for <code>IsUpdating</code> to be false
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="timeoutInSeconds">The longeset time to wait for</param>
+        /// <returns>Whether the item completed updated within the allotted time</returns>
+        public static Task<(bool, long)> WaitForUpdate(this ISettingItem item, int timeoutInSeconds)
+        {
+            var task = new Task<(bool, long)>(() =>
+            {
+                var timeoutInMilliseconds = timeoutInSeconds * 1000;
+                var watch = new Stopwatch();
+                watch.Start();
+                while (item.IsUpdating && watch.ElapsedMilliseconds < timeoutInMilliseconds)
+                {
+                    // Busy wait for the first 50ms and then sleep for 50ms intervals
+                    if (watch.ElapsedMilliseconds > 50)
+                    {
+                        Thread.Sleep(50);
+                    }
+                }
+                return (!item.IsUpdating, watch.ElapsedMilliseconds);
+            });
+            task.Start();
+            return task;
+        }
     }
 
     /// <summary>The type of setting.</summary>

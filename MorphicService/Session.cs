@@ -324,12 +324,26 @@ namespace MorphicService
         /// <param name="key">The preference lookup key</param>
         /// <param name="value">The preference value</param>
         /// <returns>Whether the preference was successfully applied to the system</returns>
+        public async Task<bool> Apply(Preferences.Key key, object? value)
+        {
+            return await settings.Apply(key, value);
+        }
+
+        /// <summary>
+        /// Set the specified preference to the given value
+        /// </summary>
+        /// <remarks>
+        /// Calls <code>SetNeedsPreferencesSave()</code> to queue a save after a timeout.
+        /// </remarks>
+        /// <param name="key">The preference lookup key</param>
+        /// <param name="value">The preference value</param>
+        /// <returns>Whether the preference was successfully applied to the system</returns>
         public bool SetPreference(Preferences.Key key, object? value)
         {
             logger.LogInformation("Setting {0}={1}", key, value);
             Preferences?.Set(key, value);
             SetNeedsPreferencesSave();
-            return settings.Apply(key, value);
+            return true;
         }
 
         /// <summary>

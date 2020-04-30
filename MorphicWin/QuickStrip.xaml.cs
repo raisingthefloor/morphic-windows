@@ -22,6 +22,7 @@
 // * Consumer Electronics Association Foundation
 
 using System;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using MorphicCore;
@@ -309,18 +310,18 @@ namespace MorphicWin
             {
                 percentage = Display.Primary.PercentageForZoomingOut;
             }
-            session.SetPreference(MorphicSettings.Settings.Keys.WindowsDisplayZoom, percentage);
+            _ = session.Apply(MorphicSettings.Settings.Keys.WindowsDisplayZoom, percentage);
         }
 
         private void OnMagnify(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
         {
             if (e.SelectedIndex == 0)
             {
-                session.SetPreference(MorphicSettings.Settings.Keys.WindowsMagnifierEnabled, true);
+                _ = session.Apply(MorphicSettings.Settings.Keys.WindowsMagnifierEnabled, true);
             }
             else if (e.SelectedIndex == 1)
             {
-                session.SetPreference(MorphicSettings.Settings.Keys.WindowsMagnifierEnabled, false);
+                _ = session.Apply(MorphicSettings.Settings.Keys.WindowsMagnifierEnabled, false);
             }
         }
 
@@ -328,11 +329,11 @@ namespace MorphicWin
         {
             if (e.SelectedIndex == 0)
             {
-                session.SetPreference(MorphicSettings.Settings.Keys.WindowsNarratorEnabled, true);
+                _ = session.Apply(MorphicSettings.Settings.Keys.WindowsNarratorEnabled, true);
             }
             else if (e.SelectedIndex == 1)
             {
-                session.SetPreference(MorphicSettings.Settings.Keys.WindowsNarratorEnabled, false);
+                _ = session.Apply(MorphicSettings.Settings.Keys.WindowsNarratorEnabled, false);
             }
         }
 
@@ -371,11 +372,11 @@ namespace MorphicWin
         {
             if (e.SelectedIndex == 0)
             {
-                session.SetPreference(MorphicSettings.Settings.Keys.WindowsDisplayContrastEnabled, true);
+                _ = session.Apply(MorphicSettings.Settings.Keys.WindowsDisplayContrastEnabled, true);
             }
             else if (e.SelectedIndex == 1)
             {
-                session.SetPreference(MorphicSettings.Settings.Keys.WindowsDisplayContrastEnabled, false);
+                _ = session.Apply(MorphicSettings.Settings.Keys.WindowsDisplayContrastEnabled, false);
             }
         }
 

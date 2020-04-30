@@ -22,6 +22,7 @@
 // * Consumer Electronics Association Foundation
 
 using System;
+using System.Threading.Tasks;
 using System.Security;
 using System.Collections.Generic;
 using System.Text;
@@ -63,21 +64,21 @@ namespace MorphicSettings
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public override bool Apply(object? value)
+        public override Task<bool> Apply(object? value)
         {
             if (value is object nonnullValue)
             {
                 try
                 {
                     Registry.SetValue(Description.KeyName, Description.ValueName, nonnullValue, Description.ValueKind);
-                    return true;
+                    return Task.FromResult(true);
                 }
                 catch (Exception e)
                 {
                     logger.LogError(e, "Failed to set registry value");
                 }
             }
-            return false;
+            return Task.FromResult(false);
         }
 
     }

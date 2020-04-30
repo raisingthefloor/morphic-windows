@@ -22,6 +22,7 @@
 // * Consumer Electronics Association Foundation
 
 using System;
+using System.Threading.Tasks;
 using MorphicCore;
 using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
@@ -44,7 +45,7 @@ namespace MorphicSettings
         /// </remarks>
         /// <param name="value">The value to apply</param>
         /// <returns></returns>
-        public abstract bool Apply(object? value);
+        public abstract Task<bool> Apply(object? value);
 
         /// <summary>
         /// A lookup table of client handlers

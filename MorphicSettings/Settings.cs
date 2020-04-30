@@ -22,6 +22,7 @@
 // * Consumer Electronics Association Foundation
 
 using System;
+using System.Threading.Tasks;
 using MorphicCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
@@ -65,14 +66,14 @@ namespace MorphicSettings
         /// <param name="key">The preference key</param>
         /// <param name="value">The value to apply</param>
         /// <returns></returns>
-        public bool Apply(Preferences.Key key, object? value)
+        public async Task<bool> Apply(Preferences.Key key, object? value)
         {
             logger.LogInformation("Apply {0}", key);
             if (SettingsHandler.Handler(provider, key) is SettingsHandler handler)
             {
                 try
                 {
-                    if (handler.Apply(value))
+                    if (await handler.Apply(value))
                     {
                         return true;
                     }

@@ -22,6 +22,7 @@
 // * Consumer Electronics Association Foundation
 
 using System;
+using System.Threading.Tasks;
 using System.Security;
 using System.Collections.Generic;
 using System.Text;
@@ -89,7 +90,7 @@ namespace MorphicSettings
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public override bool Apply(object? value)
+        public override Task<bool> Apply(object? value)
         {
             // FIXME: ToString() probably isn't correct for all types
             if (value?.ToString() is string stringValue)
@@ -97,14 +98,14 @@ namespace MorphicSettings
                 try
                 {
                     iniFile.WriteValue(stringValue, Description.Key, Description.Section);
-                    return true;
+                    return Task.FromResult(true);
                 }
                 catch (Exception e)
                 {
                     logger.LogError(e, "Failed to set ini value");
                 }
             }
-            return false;
+            return Task.FromResult(false);
         }
 
     }
