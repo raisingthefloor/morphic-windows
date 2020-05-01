@@ -97,7 +97,6 @@ namespace MorphicWin
             services.AddTransient<MorphicConfigurator>();
             services.AddTransient<QuickStrip>();
             services.AddMorphicSettingsHandlers(ConfigureSettingsHandlers);
-            ConfigureCountly();
         }
 
         private void ConfigureCountly()
@@ -141,6 +140,7 @@ namespace MorphicWin
             CreateNotifyIcon();
             var task = OpenSession();
             task.ContinueWith(SessionOpened, TaskScheduler.FromCurrentSynchronizationContext());
+            ConfigureCountly();
         }
 
         private async Task OpenSession()
