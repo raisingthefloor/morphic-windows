@@ -36,4 +36,4 @@ steps:
   inputs:
     installTaskMode: 'solution'
     SlnPath: '$(solution)'
-    VsVersion: 'VS2017'
+    VsVersion: 'VS2019'
