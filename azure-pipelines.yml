@@ -31,3 +31,9 @@ steps:
   inputs:
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
+
+- task: BuildInstaller@1
+  inputs:
+    installTaskMode: 'solution'
+    SlnPath: '$(solution)'
+    VsVersion: 'VS2017'
