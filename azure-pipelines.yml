@@ -32,15 +32,8 @@ steps:
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
 
-- task: Bash@3
+- task: PowerShell@2
   inputs:
-    targetType: 'inline'
+    targetType: 'inline'  
     script: |
-      set -x
-      find '/c/Program Files (x86)/Microsoft Visual Studio/2019'
-
-- task: BuildInstaller@1
-  inputs:
-    installTaskMode: 'solution'
-    SlnPath: '$(solution)'
-    VsVersion: 'VS2019'
+      "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\devenv.com" MorphicWin.sln /Project MorphicSetup\MorphicSetup.vdproj /Build Release
