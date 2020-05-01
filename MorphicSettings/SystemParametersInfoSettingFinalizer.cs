@@ -55,6 +55,7 @@ namespace MorphicSettings
             {
                 param3 |= 0x2;
             }
+            logger.LogDebug("SystemParametersInfoW({0}, {1}, {2}, {3})", (int)Description.Action, Description.Parameter1, Description.Parameter2, param3);
             var result = SystemParametersInfo.SystemParametersInfoW((int)Description.Action, Description.Parameter1, GCHandle.ToIntPtr(param2Handle), param3);
             param2Handle.Free();
             return Task.FromResult(result);

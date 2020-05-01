@@ -97,6 +97,7 @@ namespace MorphicSettings
             {
                 try
                 {
+                    logger.LogDebug("Writing {0}:{1}.{2}", Description.Filename, Description.Section, Description.Key);
                     iniFile.WriteValue(stringValue, Description.Key, Description.Section);
                     return Task.FromResult(true);
                 }

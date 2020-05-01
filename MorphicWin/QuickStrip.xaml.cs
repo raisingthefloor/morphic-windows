@@ -275,6 +275,15 @@ namespace MorphicWin
                             control.Action += quickStrip.OnContrast;
                             return control;
                         }
+                    case "cursor":
+                        {
+                            var control = new QuickStripSegmentedButtonControl();
+                            control.TitleLabel.Content = "Cursor";
+                            control.AddButton("White", "Make the cursor white", "White is the default for your computer", isPrimary: true);
+                            control.AddButton("Black", "Make the cursor black", "Black can be easier to see for some people", isPrimary: false);
+                            control.Action += quickStrip.OnCursorColor;
+                            return control;
+                        }
                     default:
                         return null;
                 }
@@ -377,6 +386,27 @@ namespace MorphicWin
             else if (e.SelectedIndex == 1)
             {
                 _ = session.Apply(MorphicSettings.Settings.Keys.WindowsDisplayContrastEnabled, false);
+            }
+        }
+
+        private void OnCursorColor(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
+        {
+            // FIXME: incomplete, for demo purposes only
+            if (e.SelectedIndex == 0)
+            {
+                _ = session.Apply(new Dictionary<Preferences.Key, object?>
+                {
+                    { MorphicSettings.Settings.Keys.WindowsCursorArrow, "%SystemRoot%\\cursors\\aero_arrow.cur" },
+                    { MorphicSettings.Settings.Keys.WindowsCursorWait, "%SystemRoot%\\cursors\\aero_busy.ani" },
+                });
+            }
+            else
+            {
+                _ = session.Apply(new Dictionary<Preferences.Key, object?>
+                {
+                    { MorphicSettings.Settings.Keys.WindowsCursorArrow, "%SystemRoot%\\cursors\\arrow_r.cur" },
+                    { MorphicSettings.Settings.Keys.WindowsCursorWait, "%SystemRoot%\\cursors\\busy_r.cur" },
+                });
             }
         }
 

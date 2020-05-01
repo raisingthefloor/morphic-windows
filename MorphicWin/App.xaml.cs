@@ -103,6 +103,8 @@ namespace MorphicWin
         /// <param name="logging"></param>
         private void ConfigureLogging(ILoggingBuilder logging)
         {
+            logging.AddConfiguration(Configuration);
+            logging.SetMinimumLevel(LogLevel.Debug);
             logging.AddDebug();
         }
 

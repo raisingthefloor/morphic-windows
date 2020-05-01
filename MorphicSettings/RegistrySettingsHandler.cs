@@ -70,6 +70,7 @@ namespace MorphicSettings
             {
                 try
                 {
+                    logger.LogDebug("Registry Write {0}\\{1}", Description.KeyName, Description.ValueName);
                     Registry.SetValue(Description.KeyName, Description.ValueName, nonnullValue, Description.ValueKind);
                     return Task.FromResult(true);
                 }

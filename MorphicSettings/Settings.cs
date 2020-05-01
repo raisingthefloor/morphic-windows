@@ -157,6 +157,9 @@ namespace MorphicSettings
             public static Preferences.Key WindowsMagnifierEnabled = new Preferences.Key("com.microsoft.windows.magnifier", "enabled");
 
             public static Preferences.Key WindowsNarratorEnabled = new Preferences.Key("com.microsoft.windows.narrator", "enabled");
+
+            public static Preferences.Key WindowsCursorArrow = new Preferences.Key("com.microsoft.windows.cursor", "arrow");
+            public static Preferences.Key WindowsCursorWait = new Preferences.Key("com.microsoft.windows.cursor", "wait");
         }
     }
 

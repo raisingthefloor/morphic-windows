@@ -142,7 +142,6 @@ namespace MorphicSettings
                 }
             }
 
-
             if (uniqueFinalizerDescriptions.Count > 0)
             {
                 logger.LogInformation("Running finalizers");

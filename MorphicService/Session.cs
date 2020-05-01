@@ -329,6 +329,11 @@ namespace MorphicService
             return await Settings.Apply(key, value);
         }
 
+        public async Task<Dictionary<Preferences.Key, bool>> Apply(Dictionary<Preferences.Key, object?> valuesByKey)
+        {
+            return await Settings.Apply(valuesByKey);
+        }
+
         /// <summary>
         /// Set the specified preference to the given value
         /// </summary>

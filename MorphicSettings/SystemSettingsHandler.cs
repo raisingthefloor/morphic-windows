@@ -147,6 +147,7 @@ namespace MorphicSettings
                 {
                     try
                     {
+                        logger.LogDebug("{0}.SetValue()", Description.SettingId);
                         var result = item.SetValue("Value", value);
                         if (result != 0)
                         {
