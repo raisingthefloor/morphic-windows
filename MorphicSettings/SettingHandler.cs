@@ -34,7 +34,7 @@ namespace MorphicSettings
     /// <summary>
     /// The abstract base class and factory source for settings handlers
     /// </summary>
-    public abstract class SettingsHandler
+    public abstract class SettingHandler
     {
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace MorphicSettings
         /// <summary>
         /// A lookup table of client handlers
         /// </summary>
-        private static readonly Dictionary<Preferences.Key, Type> clientHandlerTypesByKey = new Dictionary<Preferences.Key, Type>();
+        internal static readonly Dictionary<Preferences.Key, Type> clientHandlerTypesByKey = new Dictionary<Preferences.Key, Type>();
 
         /// <summary>
         /// Register a new client handler for the given preference key
@@ -75,47 +75,33 @@ namespace MorphicSettings
             clientHandlerTypesByKey[key] = type;
         }
 
-        /// <summary>
-        /// Get the handler for the given preference key
-        /// </summary>
-        /// <param name="provider">A service provider for dependency injection</param>
-        /// <param name="key">The preference key</param>
-        /// <returns></returns>
-        public static SettingsHandler? Handler(IServiceProvider provider, Preferences.Key key)
+    }
+
+    public static class HandlerDescriptionExtensions
+    {
+
+        public static SettingHandler? CreateHandler(this SettingHandlerDescription description, IServiceProvider serviceProvider)
         {
-            if (Solution.GetSetting(key) is Solution.Setting setting)
+            if (description is ClientSettingHandlerDescription clientDescription)
             {
-                switch (setting.Handler?.Kind ?? Solution.Setting.HandlerDescription.HandlerKind.Unknown)
+                if (SettingHandler.clientHandlerTypesByKey.TryGetValue(clientDescription.Key, out var type))
                 {
-                    case Solution.Setting.HandlerDescription.HandlerKind.Client:
-                        if (clientHandlerTypesByKey.TryGetValue(key, out var type))
-                        {
-                            var instance = provider.GetService(type);
-                            if (instance is SettingsHandler handler)
-                            {
-                                return handler;
-                            }
-                        }
-                        return null;
-                    case Solution.Setting.HandlerDescription.HandlerKind.System:
-                        {
-                            var logger = provider.GetService<ILogger<SystemSettingsHandler>>();
-                            if (setting.Handler is Solution.Setting.SystemSettingHandlerDescription description)
-                            {
-                                return new SystemSettingsHandler(description, logger);
-                            }
-                            return null;
-                        }
-                    case Solution.Setting.HandlerDescription.HandlerKind.Registry:
-                        {
-                            var logger = provider.GetService<ILogger<RegistrySettingsHandler>>();
-                            if (setting.Handler is Solution.Setting.RegistryHandlerDescription description)
-                            {
-                                return new RegistrySettingsHandler(description, logger);
-                            }
-                            return null;
-                        }
+                    var instance = serviceProvider.GetService(type);
+                    if (instance is SettingHandler handler)
+                    {
+                        return handler;
+                    }
                 }
+            }
+            else if (description is SystemSettingHandlerDescription systemDescription)
+            {
+                var logger = serviceProvider.GetService<ILogger<SystemSettingsHandler>>();
+                return new SystemSettingsHandler(systemDescription, logger);
+            }
+            else if (description is RegistrySettingHandlerDescription registryDescription)
+            {
+                var logger = serviceProvider.GetService<ILogger<RegistrySettingsHandler>>();
+                return new RegistrySettingsHandler(registryDescription, logger);
             }
             return null;
         }
@@ -149,7 +135,7 @@ namespace MorphicSettings
         public void AddClientHandler(Type type, Preferences.Key key)
         {
             services.AddTransient(type);
-            SettingsHandler.RegisterClientHandler(type, key);
+            SettingHandler.RegisterClientHandler(type, key);
         }
     }
 }

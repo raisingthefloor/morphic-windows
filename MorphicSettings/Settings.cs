@@ -23,6 +23,10 @@
 
 using System;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using MorphicCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,7 +37,7 @@ namespace MorphicSettings
     /// <summary>
     /// The central settings manager
     /// </summary>
-    public class Settings
+    public class Settings: IServiceProvider
     {
 
         /// <summary>
@@ -57,6 +61,53 @@ namespace MorphicSettings
         /// </summary>
         private readonly IServiceProvider provider;
 
+        public object GetService(Type serviceType)
+        {
+            return provider.GetService(serviceType);
+        }
+
+        /// <summary>
+        /// A public registry of solutions by name
+        /// </summary>
+        public readonly Dictionary<string, Solution> SolutionsById = new Dictionary<string, Solution>();
+
+        /// <summary>
+        /// Populate the registry of solutions with the contents of the given json file
+        /// </summary>
+        /// <param name="jsonPath">The path the file containing solutions in json format</param>
+        public async Task Populate(string jsonPath)
+        {
+            using (var stream = File.OpenRead(jsonPath))
+            {
+                var options = new JsonSerializerOptions();
+                options.Converters.Add(new SettingHandlerDescription.JsonConverter());
+                options.Converters.Add(new SettingFinalizerDescription.JsonConverter());
+                options.Converters.Add(new JsonStringEnumConverter());
+                var solutions = await JsonSerializer.DeserializeAsync<Solution[]>(stream, options);
+                foreach (var solution in solutions)
+                {
+                    SolutionsById.Add(solution.Id, solution);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Get the setting for the given preference key
+        /// </summary>
+        /// <param name="key">The key of the setting to lookup</param>
+        /// <returns></returns>
+        public Setting? Get(Preferences.Key key)
+        {
+            if (SolutionsById.TryGetValue(key.Solution, out var solution))
+            {
+                if (solution.SettingsByName.TryGetValue(key.Preference, out var setting))
+                {
+                    return setting;
+                }
+            }
+            return null;
+        }
+
         /// <summary>
         /// Apply the given value for the given prefernce
         /// </summary>
@@ -68,34 +119,27 @@ namespace MorphicSettings
         /// <returns></returns>
         public async Task<bool> Apply(Preferences.Key key, object? value)
         {
-            logger.LogInformation("Apply {0}", key);
-            if (Handler(key) is SettingsHandler handler)
+            var results = await Apply(new Dictionary<Preferences.Key, object?>
             {
-                try
-                {
-                    if (await handler.Apply(value))
-                    {
-                        return true;
-                    }
-                    logger.LogError("Failed to set {0}", key);
-                    return false;
-                }
-                catch (Exception e)
-                {
-                    logger.LogError(e, "Failed to set {0}", key);
-                    return false;
-                }
-            }
-            else
+                {key, value}
+            });
+            if (results.TryGetValue(key, out var result))
             {
-                logger.LogInformation("No handler for {0}", key);
-                return false;
+                return result;
             }
+            return false;
         }
 
-        public SettingsHandler? Handler(Preferences.Key key)
+        /// <summary>
+        /// Apply a batch of settings
+        /// </summary>
+        /// <param name="valuesByKey"></param>
+        /// <returns></returns>
+        public async Task<Dictionary<Preferences.Key, bool>> Apply(Dictionary<Preferences.Key, object?> valuesByKey)
         {
-            return SettingsHandler.Handler(provider, key);
+            var session = new ApplySession(this, valuesByKey);
+            session.ApplyDefaultValues = false;
+            return await session.Run();
         }
 
         /// <summary>

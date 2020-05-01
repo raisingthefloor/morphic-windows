@@ -54,7 +54,7 @@ namespace MorphicService
         {
             Service = new Service(new Uri(options.Endpoint), this);
             client = new HttpClient();
-            this.settings = settings;
+            this.Settings = settings;
             Storage = storage;
             this.keychain = keychain;
             this.logger = logger;
@@ -313,7 +313,7 @@ namespace MorphicService
         /// <summary>
         /// The Settings object that applies settings to the system
         /// </summary>
-        private readonly Settings settings;
+        public readonly Settings Settings;
 
         /// <summary>
         /// Set the specified preference to the given value
@@ -326,7 +326,7 @@ namespace MorphicService
         /// <returns>Whether the preference was successfully applied to the system</returns>
         public async Task<bool> Apply(Preferences.Key key, object? value)
         {
-            return await settings.Apply(key, value);
+            return await Settings.Apply(key, value);
         }
 
         /// <summary>
@@ -423,7 +423,7 @@ namespace MorphicService
                     {
                         foreach (var preference in solution.Value.Values)
                         {
-                            _ = settings.Apply(new Preferences.Key(solution.Key, preference.Key), preference.Value);
+                            _ = Settings.Apply(new Preferences.Key(solution.Key, preference.Key), preference.Value);
                         }
                     }
                 }

@@ -6,7 +6,9 @@
         "name": "zoom",
         "type": "double",
         "handler": {
-          "type": "org.raisingthefloor.morphic.client"
+          "type": "org.raisingthefloor.morphic.client",
+          "solution": "com.microsoft.windows.display",
+          "preference": "zoom"
         }
       },
       {
@@ -15,6 +17,41 @@
         "handler": {
           "type": "com.microsoft.windows.system",
           "setting_id": "SystemSettings_Accessibility_CoreHighContrast_IsEnabled"
+        }
+      }
+    ]
+  },
+  {
+    "id": "com.microsoft.windows.cursor",
+    "settings": [
+      {
+        "name": "arrow",
+        "type": "string",
+        "default": "$(SystemRoot)\\cursors\\arrow_i.cur",
+        "handler": {
+          "type": "com.microsoft.windows.registry",
+          "key_name": "HKEY_CURRENT_USER\\Control Panel\\Cursors",
+          "value_name": "Arrow",
+          "value_type": "string"
+        },
+        "finalizer": {
+          "type": "com.microsoft.windows.systemParametersInfo",
+          "action": "setcursors"
+        }
+      },
+      {
+        "name": "wait",
+        "type": "string",
+        "default": "$(SystemRoot)\\cursors\\busy_i.cur",
+        "handler": {
+          "type": "com.microsoft.windows.registry",
+          "key_name": "HKEY_CURRENT_USER\\Control Panel\\Cursors",
+          "value_name": "Wait",
+          "value_type": "string"
+        },
+        "finalizer": {
+          "type": "com.microsoft.windows.systemParametersInfo",
+          "action": "setcursors"
         }
       }
     ]

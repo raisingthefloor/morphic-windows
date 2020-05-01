@@ -1,4 +1,27 @@
-﻿using System;
+﻿// Copyright 2020 Raising the Floor - International
+//
+// Licensed under the New BSD license. You may not use this file except in
+// compliance with this License.
+//
+// You may obtain a copy of the License at
+// https://github.com/GPII/universal/blob/master/LICENSE.txt
+//
+// The R&D leading to these results received funding from the:
+// * Rehabilitation Services Administration, US Dept. of Education under 
+//   grant H421A150006 (APCP)
+// * National Institute on Disability, Independent Living, and 
+//   Rehabilitation Research (NIDILRR)
+// * Administration for Independent Living & Dept. of Education under grants 
+//   H133E080022 (RERC-IT) and H133E130028/90RE5003-01-00 (UIITA-RERC)
+// * European Union's Seventh Framework Programme (FP7/2007-2013) grant 
+//   agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
+// * William and Flora Hewlett Foundation
+// * Ontario Ministry of Research and Innovation
+// * Canadian Foundation for Innovation
+// * Adobe Foundation
+// * Consumer Electronics Association Foundation
+
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Diagnostics;
@@ -27,13 +50,13 @@ namespace MorphicSettings
     /// The result of calling GetSetting("SomeSettingId") is an object that has GetValue() and SetValue() methods,
     /// which read and write the setting, respectively.
     /// </remarks>
-    class SystemSettingsHandler: SettingsHandler
+    class SystemSettingsHandler: SettingHandler
     {
 
         /// <summary>
         /// The handler description from the solution registry
         /// </summary>
-        public Solution.Setting.SystemSettingHandlerDescription Description;
+        public SystemSettingHandlerDescription Description;
 
         /// <summary>
         /// The registry key name for this setting's information
@@ -50,7 +73,7 @@ namespace MorphicSettings
         /// </summary>
         /// <param name="description"></param>
         /// <param name="logger"></param>
-        public SystemSettingsHandler(Solution.Setting.SystemSettingHandlerDescription description, ILogger<SystemSettingsHandler> logger)
+        public SystemSettingsHandler(SystemSettingHandlerDescription description, ILogger<SystemSettingsHandler> logger)
         {
             Description = description;
             registryKeyName = $"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\SystemSettings\\SettingId\\{description.SettingId}";
@@ -77,7 +100,7 @@ namespace MorphicSettings
             var dll = DllPath;
             if (dll == null)
             {
-                logger.LogError("Failed to find dll");
+                logger.LogError("Failed to find dll for {0}", Description.SettingId);
                 return null;
             }
 
@@ -86,7 +109,7 @@ namespace MorphicSettings
                 libraryPointer = LoadLibrary(dll);
                 if (libraryPointer == IntPtr.Zero)
                 {
-                    logger.LogError("Failed to load dll");
+                    logger.LogError("Failed to load dll for {0}", Description.SettingId);
                     return null;
                 }
 
@@ -96,7 +119,7 @@ namespace MorphicSettings
             var functionPointer = GetProcAddress(libraryPointer, "GetSetting");
             if (functionPointer == IntPtr.Zero)
             {
-                logger.LogError("Failed to location GetSetting function in library");
+                logger.LogError("Failed to location GetSetting function in library for {0}", Description.SettingId);
                 return null;
             }
 
@@ -104,7 +127,7 @@ namespace MorphicSettings
 
             if (function(Description.SettingId, out var item, IntPtr.Zero) != IntPtr.Zero)
             {
-                logger.LogError("GetSetting failed");
+                logger.LogError("GetSetting failed for {0}", Description.SettingId);
                 return null;
             }
 
@@ -127,21 +150,21 @@ namespace MorphicSettings
                         var result = item.SetValue("Value", value);
                         if (result != 0)
                         {
-                            logger.LogError("SetValue returned non-0");
+                            logger.LogError("SetValue returned non-0 for {0}", Description.SettingId);
                             return false;
                         }
                         var updateResult = await item.WaitForUpdate(30);
-                        logger.LogInformation("setting took {0}ms to apply", updateResult.Item2);
+                        logger.LogInformation("setting took {0}ms to apply for {1}", updateResult.Item2, Description.SettingId);
                         if (!updateResult.Item1)
                         {
-                            logger.LogError("SetValue timed out waiting for update");
+                            logger.LogError("SetValue timed out waiting for update for {0}", Description.SettingId);
                             return false;
                         }
                         return true;
                     }
                     catch (Exception e)
                     {
-                        logger.LogError(e, "Failed to SetValue()");
+                        logger.LogError(e, "Failed to SetValue() for {0}", Description.SettingId);
                         return false;
                     }
                 }
@@ -153,7 +176,7 @@ namespace MorphicSettings
             }
             else
             {
-                logger.LogError("null settingItem");
+                logger.LogError("null settingItem for {0}", Description.SettingId);
                 return false;
             }
         }
@@ -170,12 +193,12 @@ namespace MorphicSettings
                 }
                 catch(Exception e)
                 {
-                    logger.LogError(e, "Failed to GetValue()");
+                    logger.LogError(e, "Failed to GetValue() for {0}", Description.SettingId);
                 }
             }
             else
             {
-                logger.LogError("null settingItem");
+                logger.LogError("null settingItem for {0}", Description.SettingId);
             }
             return Task.FromResult(result);
         }
@@ -204,7 +227,7 @@ namespace MorphicSettings
                 return value as string;
             }
             catch (Exception e){
-                logger.LogError(e, "Failed to read registry value");
+                logger.LogError(e, "Failed to read registry value for {0}.{1}", Description.SettingId, valueName);
                 return null;
             }
         }

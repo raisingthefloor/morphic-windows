@@ -223,7 +223,7 @@ namespace MorphicSettings
         }
     }
 
-    public class DisplayZoomHandler: SettingsHandler
+    public class DisplayZoomHandler: SettingHandler
     {
 
         public DisplayZoomHandler(ILogger<DisplayZoomHandler> logger)

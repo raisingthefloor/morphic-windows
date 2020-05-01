@@ -35,20 +35,20 @@ namespace MorphicSettings
     /// <summary>
     /// A settings handler for registry settings
     /// </summary>
-    class RegistrySettingsHandler: SettingsHandler
+    class RegistrySettingsHandler: SettingHandler
     {
 
         /// <summary>
         /// The handler description for the setting to read/write
         /// </summary>
-        public Solution.Setting.RegistryHandlerDescription Description { get; private set; }
+        public RegistrySettingHandlerDescription Description { get; private set; }
 
         /// <summary>
         /// Create a new registry settings handler based on a handler descritpion
         /// </summary>
         /// <param name="description"></param>
         /// <param name="logger"></param>
-        public RegistrySettingsHandler(Solution.Setting.RegistryHandlerDescription description, ILogger<RegistrySettingsHandler> logger)
+        public RegistrySettingsHandler(RegistrySettingHandlerDescription description, ILogger<RegistrySettingsHandler> logger)
         {
             Description = description;
             this.logger = logger;

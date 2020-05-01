@@ -1,6 +1,31 @@
-﻿using System;
+﻿// Copyright 2020 Raising the Floor - International
+//
+// Licensed under the New BSD license. You may not use this file except in
+// compliance with this License.
+//
+// You may obtain a copy of the License at
+// https://github.com/GPII/universal/blob/master/LICENSE.txt
+//
+// The R&D leading to these results received funding from the:
+// * Rehabilitation Services Administration, US Dept. of Education under 
+//   grant H421A150006 (APCP)
+// * National Institute on Disability, Independent Living, and 
+//   Rehabilitation Research (NIDILRR)
+// * Administration for Independent Living & Dept. of Education under grants 
+//   H133E080022 (RERC-IT) and H133E130028/90RE5003-01-00 (UIITA-RERC)
+// * European Union's Seventh Framework Programme (FP7/2007-2013) grant 
+//   agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
+// * William and Flora Hewlett Foundation
+// * Ontario Ministry of Research and Innovation
+// * Canadian Foundation for Innovation
+// * Adobe Foundation
+// * Consumer Electronics Association Foundation
+
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 using System.Text;
 using MorphicCore;
 
@@ -51,13 +76,15 @@ namespace MorphicSettings
         /// Apply all the settings
         /// </summary>
         /// <returns></returns>
-        public async Task Run()
+        public async Task<Dictionary<Preferences.Key, bool>> Run()
         {
             var valuesByKey = ValuesByKey;
             if (ApplyDefaultValues)
             {
+                // Loop through all settings and add the default value for any setting
+                // that isn't already in valuesByKey
                 valuesByKey = new Dictionary<Preferences.Key, object?>(valuesByKey);
-                foreach (var solution in Solution.Registry.Values)
+                foreach (var solution in Settings.SolutionsById.Values)
                 {
                     foreach (var setting in solution.Settings)
                     {
@@ -73,15 +100,68 @@ namespace MorphicSettings
                 }
             }
 
-            // TODO: figure out any order dependency among settings
-            // TODO: queue things like unique service restarts
+            var resultsByKey = new Dictionary<Preferences.Key, bool>();
+            var uniqueFinalizerDescriptions = new HashSet<SettingFinalizerDescription>();
+            var serviceProvider = Settings;
+
+            var logger = serviceProvider.GetService<ILogger<ApplySession>>();
+
+            // Loop over all requested settings and apply values, collecting a dictionary of results
+            // Keep track of any unique finalizers that need to run
+            // TODO: enforce any order dependency among settings (currently no known dependencies, but
+            // some are expected)
             foreach (var pair in valuesByKey)
             {
-                if (Settings.Handler(pair.Key) is SettingsHandler handler)
+                if (Settings.Get(pair.Key) is Setting setting)
                 {
-                    await handler.Apply(pair.Value);
+                    if (setting.HandlerDescription?.CreateHandler(serviceProvider) is SettingHandler handler)
+                    {
+                        logger.LogInformation("Applying {0}.{1}", pair.Key.Solution, pair.Key.Preference);
+                        var success = await handler.Apply(pair.Value);
+                        if (success)
+                        {
+                            if (setting.FinalizerDescription is SettingFinalizerDescription finalizerDescription)
+                            {
+                                uniqueFinalizerDescriptions.Add(finalizerDescription);
+                            }
+                        }
+                        else
+                        {
+                            logger.LogError("Failed to set {0}.{1}", pair.Key.Solution, pair.Key.Preference);
+                        }
+                        resultsByKey.Add(pair.Key, success);
+                    }
+                    else
+                    {
+                        logger.LogError("No handler for {0}.{1}", pair.Key.Solution, pair.Key.Preference);
+                    }
+                }
+                else
+                {
+                    logger.LogError("No definition found for {0}.{1}", pair.Key.Solution, pair.Key.Preference);
                 }
             }
+
+
+            if (uniqueFinalizerDescriptions.Count > 0)
+            {
+                logger.LogInformation("Running finalizers");
+                // Run the unique finalizers
+                foreach (var finalizerDescription in uniqueFinalizerDescriptions)
+                {
+                    if (finalizerDescription.CreateFinalizer(serviceProvider) is SettingFinalizer finalizer)
+                    {
+                        var success = await finalizer.Run();
+                        if (!success)
+                        {
+                            logger.LogError("Finalizer failed");
+                        }
+                    }
+                }
+                logger.LogInformation("Finalizers done");
+            }
+
+            return resultsByKey;
         }
 
     }

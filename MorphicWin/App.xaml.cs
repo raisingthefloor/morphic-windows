@@ -131,7 +131,7 @@ namespace MorphicWin
         private async Task OpenSession()
         {
             await CopyDefaultPreferences();
-            await Solution.PopulateRegistry("Solutions.json");
+            await Session.Settings.Populate("Solutions.json");
             await Session.Open();
         }
 
