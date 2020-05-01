@@ -10,7 +10,9 @@ pool:
   vmImage: 'windows-latest'
 
 variables:
-  solution: '**/*.sln'
+  solution: |
+    **/*.sln
+    !MorphicSetup/*.sln
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
 
