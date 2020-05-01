@@ -113,6 +113,7 @@ namespace MorphicWin
         /// <param name="e"></param>
         private void CustomizeQuickStrip(object sender, RoutedEventArgs e)
         {
+            Countly.RecordEvent("customize-quickstrip");
             App.Shared.OpenConfigurator();
         }
 
@@ -558,6 +559,7 @@ namespace MorphicWin
         /// <param name="e"></param>
         private void Window_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
+            Countly.RecordEvent("window-moved");
             if (e.ChangedButton == System.Windows.Input.MouseButton.Left)
             {
                 Position = NearestPosition;
