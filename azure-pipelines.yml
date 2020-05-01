@@ -36,10 +36,8 @@ steps:
   inputs:
     targetType: 'inline'
     script: |
-      pwd
-      ls -al
-      which devenv
-      which devenv.com
+      set -x
+      find '/c/Program Files (x86)/Microsoft Visual Studio/2019'
 
 - task: BuildInstaller@1
   inputs:
