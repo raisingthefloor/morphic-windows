@@ -34,6 +34,8 @@ using MorphicService;
 using MorphicCore;
 using MorphicSettings;
 using System.IO;
+using CountlySDK;
+using CountlySDK.Entities;
 
 namespace MorphicWin
 {
@@ -97,6 +99,18 @@ namespace MorphicWin
             services.AddMorphicSettingsHandlers(ConfigureSettingsHandlers);
         }
 
+        private void ConfigureCountly()
+        {
+            var section = Configuration.GetSection("Countly");
+            CountlyConfig cc = new CountlyConfig();
+            cc.appKey = section["AppKey"];
+            cc.serverUrl = section["ServerUrl"];
+            // @TODO is there some type of compile time we could stick in here? Or something real?
+            cc.appVersion = "1.2.3";
+            Countly.Instance.Init(cc);
+            Countly.Instance.SessionBegin();
+        }
+
         /// <summary>
         /// Configure the logging for the application
         /// </summary>
@@ -128,6 +142,7 @@ namespace MorphicWin
             CreateNotifyIcon();
             var task = OpenSession();
             task.ContinueWith(SessionOpened, TaskScheduler.FromCurrentSynchronizationContext());
+            ConfigureCountly();
         }
 
         private async Task OpenSession()
@@ -382,6 +397,7 @@ namespace MorphicWin
 
         protected override void OnExit(ExitEventArgs e)
         {
+            Countly.Instance.SessionEnd();
             // Windows doesn't seem to clean up the system tray icon until the user
             // hovers over it after the application closes.  So, we need to make it
             // invisible on app exit ourselves.

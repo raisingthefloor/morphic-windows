@@ -33,6 +33,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Media.Imaging;
 using Microsoft.Win32;
+using CountlySDK;
 
 namespace MorphicWin
 {
@@ -112,6 +113,7 @@ namespace MorphicWin
         /// <param name="e"></param>
         private void CustomizeQuickStrip(object sender, RoutedEventArgs e)
         {
+            Countly.RecordEvent("customize-quickstrip");
             App.Shared.OpenConfigurator();
         }
 
@@ -310,6 +312,7 @@ namespace MorphicWin
 
         private void Zoom(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
         {
+            Countly.RecordEvent("change-zoom");
             double percentage = 1.0;
             if (e.SelectedIndex == 0)
             {
@@ -324,6 +327,7 @@ namespace MorphicWin
 
         private void OnMagnify(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
         {
+            Countly.RecordEvent("toggle-magnify");
             if (e.SelectedIndex == 0)
             {
                 _ = session.Apply(MorphicSettings.Settings.Keys.WindowsMagnifierEnabled, true);
@@ -336,6 +340,7 @@ namespace MorphicWin
 
         private void OnReader(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
         {
+            Countly.RecordEvent("toggle-reader");
             if (e.SelectedIndex == 0)
             {
                 _ = session.Apply(MorphicSettings.Settings.Keys.WindowsNarratorEnabled, true);
@@ -348,6 +353,7 @@ namespace MorphicWin
 
         private void OnVolume(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
         {
+            Countly.RecordEvent("change-volume");
             var endpoint = Audio.DefaultOutputEndpoint;
             if (e.SelectedIndex == 0)
             {
@@ -379,6 +385,7 @@ namespace MorphicWin
 
         private void OnContrast(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
         {
+            Countly.RecordEvent("toggle-contrast");
             if (e.SelectedIndex == 0)
             {
                 _ = session.Apply(MorphicSettings.Settings.Keys.WindowsDisplayContrastEnabled, true);
@@ -582,6 +589,7 @@ namespace MorphicWin
         /// <param name="e"></param>
         private void Window_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
+            Countly.RecordEvent("window-moved");
             if (e.ChangedButton == System.Windows.Input.MouseButton.Left)
             {
                 Position = NearestPosition;
