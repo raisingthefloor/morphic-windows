@@ -11,7 +11,7 @@ pool:
 
 variables:
   solution: '**/*proj'
-  buildPlatform: 'Any CPU'
+  buildPlatform: 'x86'
   buildConfiguration: 'Release'
 
 steps:
