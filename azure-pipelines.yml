@@ -98,8 +98,9 @@ stages:
                 fi
   
                 if [[ "$CLIENT_NAME" == "" ]]; then
-                  echo "no client name found. will not publish to s3"
-                  exit 0
+                  CLIENT_NAME="MorphicSetup-test.msi"
+                  #echo "no client name found. will not publish to s3"
+                  #exit 0
                 fi
                 set -x
   
