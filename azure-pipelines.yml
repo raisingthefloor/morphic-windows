@@ -10,40 +10,100 @@ pool:
   vmImage: 'windows-latest'
 
 variables:
-  solution: '**/*.sln'
-  projects: '**/*proj'
-  buildPlatform: 'Any CPU'
-  buildConfiguration: 'Release'
+# must be created in the azure UI under Pipelines > Library and specify accessKey, secretKey, region, and bucket
+- group: 's3-public-bucket-upload'
+- name: solution
+  value: '**/*.sln'
+- name: projects
+  value: '**/*proj'
+- name: buildPlatform
+  value: 'Any CPU'
+- name: buildConfiguration
+  value: 'Release'
 
-steps:
-- task: NuGetToolInstaller@1
+stages:
+  - stage: build
+    jobs:
+      - job: build
+        steps:
+        - task: NuGetToolInstaller@1
+        
+        - task: NuGetCommand@2
+          displayName: "restore solutions"
+          inputs:
+            restoreSolution: '$(solution)'
+        
+        - task: NuGetCommand@2
+          displayName: "restore projects"
+          inputs:
+            restoreSolution: '$(projects)'
+        
+        - task: VSBuild@1
+          displayName: "build solutions"
+          inputs:
+            solution: '$(solution)'
+            platform: '$(buildPlatform)'
+            configuration: '$(buildConfiguration)'
+        
+        - task: VSTest@2
+          displayName: "execute tests"
+          inputs:
+            platform: '$(buildPlatform)'
+            configuration: '$(buildConfiguration)'
+        
+        - task: VSBuild@1
+          displayName: "build x86 installer"
+          inputs:
+            solution: 'MorphicSetup\MorphicSetup.wixproj'
+            platform: 'x86'
+            configuration: '$(buildConfiguration)'
+        
+        - publish: $(System.DefaultWorkingDirectory)\MorphicSetup\bin\Release\MorphicSetup.msi
+          displayName: "save x86 installer for later"
+          artifact: x86-installer
+            
+- stage: upload
+  jobs:
+    - job: publish_client
+      pool:
+        vmImage: "ubuntu-18.04"
+      steps:
+        # do not checkout code. we only need to upload the published artifact
+        - checkout: none
+        - download: current
+          artifact: x86-installer
+        - task: Bash@3
+          env:
+            AWS_ACCESS_KEY_ID: $(accessKey)
+            AWS_SECRET_ACCESS_KEY: $(secretKey)
+            BUCKET: $(bucket)
+            AWS_DEFAULT_REGION: $(region)
+            BRANCH: $(Build.SourceBranch)
+            BRANCH_NAME: $(Build.SourceBranchName)
+          inputs:
+            targetType: 'inline'
+            script: |
+              set -e
 
-- task: NuGetCommand@2
-  displayName: "restore solutions"
-  inputs:
-    restoreSolution: '$(solution)'
+              CLIENT_NAME=""
+              if [[ "${BRANCH_NAME}" == "master" ]]; then
+                CLIENT_NAME="MorphicSetup.msi"
+              fi
+              if [[ "${BRANCH_NAME}" == "develop" ]]; then
+                CLIENT_NAME="MorphicSetup-latest.msi"
+              fi
+              if [[ "${BRANCH}" == *"tags"* ]]; then
+                CLIENT_NAME="MorphicSetup-${BRANCH_NAME}.msi"
+              fi
 
-- task: NuGetCommand@2
-  displayName: "restore projects"
-  inputs:
-    restoreSolution: '$(projects)'
+              if [[ "$CLIENT_NAME" == "" ]]; then
+                echo "no client name found. will not publish to s3"
+                exit 0
+              fi
+              set -x
 
-- task: VSBuild@1
-  displayName: "build solutions"
-  inputs:
-    solution: '$(solution)'
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+              echo "install AWS CLI"
+              sudo apt-get install -y awscli
 
-- task: VSTest@2
-  displayName: "execute tests"
-  inputs:
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
-
-- task: VSBuild@1
-  displayName: "build x86 installer"
-  inputs:
-    solution: 'MorphicSetup\MorphicSetup.wixproj'
-    platform: 'x86'
-    configuration: '$(buildConfiguration)'
+              ls -al ${AGENT_BUILDDIRECTORY}
+              aws s3 cp ${AGENT_BUILDDIRECTORY}/x86-installer/Morphic.exe s3://${BUCKET}/win/x86/$CLIENT_NAME
