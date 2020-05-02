@@ -10,7 +10,7 @@ pool:
   vmImage: 'windows-latest'
 
 variables:
-  solution: '**.*proj'
+  solution: '**/*proj'
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
 
