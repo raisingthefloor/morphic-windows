@@ -10,7 +10,8 @@ pool:
   vmImage: 'windows-latest'
 
 variables:
-  solution: '**/*proj'
+  solution: '**/*.sln'
+  projects: '**/*proj'
   buildPlatform: 'x86'
   buildConfiguration: 'Release'
 
@@ -21,9 +22,19 @@ steps:
   inputs:
     restoreSolution: '$(solution)'
 
+- task: NuGetCommand@2
+  inputs:
+    restoreSolution: '$(projects)'
+
 - task: VSBuild@1
   inputs:
     solution: '$(solution)'
+    platform: '$(buildPlatform)'
+    configuration: '$(buildConfiguration)'
+    
+- task: VSBuild@1
+  inputs:
+    solution: '$(projects)'
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
 
