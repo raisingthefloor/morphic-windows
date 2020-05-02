@@ -12,33 +12,38 @@ pool:
 variables:
   solution: '**/*.sln'
   projects: '**/*proj'
-  buildPlatform: 'x86'
+  buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
 
 steps:
 - task: NuGetToolInstaller@1
 
 - task: NuGetCommand@2
+  displayName: "restore solutions"
   inputs:
     restoreSolution: '$(solution)'
 
 - task: NuGetCommand@2
+  displayName: "restore projects"
   inputs:
     restoreSolution: '$(projects)'
 
 - task: VSBuild@1
+  displayName: "build solutions"
   inputs:
     solution: '$(solution)'
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
-    
-- task: VSBuild@1
+
+- task: VSTest@2
+  displayName: "execute tests"
   inputs:
-    solution: '$(projects)'
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
 
-- task: VSTest@2
+- task: VSBuild@1
+  displayName: "build x86 installer"
   inputs:
-    platform: '$(buildPlatform)'
+    solution: 'MorphicSetup\MorphicSetup.wixproj'
+    platform: 'x86'
     configuration: '$(buildConfiguration)'
