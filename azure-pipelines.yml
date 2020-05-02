@@ -10,7 +10,7 @@ pool:
   vmImage: 'windows-latest'
 
 variables:
-  solution: '**/*.sln'
+  solution: '**.*proj'
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
 
@@ -24,12 +24,6 @@ steps:
 - task: MSBuild@1
   inputs:
     solution: '$(solution)'
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
-
-- task: MSBuild@1
-  inputs:
-    solution: '**/*.wixproj'
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
 
