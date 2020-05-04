@@ -38,10 +38,11 @@
     <Error Text="The WiX Toolset v3.11 (or newer) build tools must be installed to build this project. To download the WiX Toolset, see http://wixtoolset.org/releases/" />
   </Target>
   <PropertyGroup>
-    <DefineConstants>ClientOutputDirectory=..\MorphicWin\bin\$(Configuration)\netcoreapp3.1</DefineConstants>
+    <DefineConstants>ClientOutputDirectory=..\MorphicWin\bin\$(Configuration)\netcoreapp3.1\win-x86\publish</DefineConstants>
   </PropertyGroup>
   <Target Name="BeforeBuild">
-    <HeatDirectory Directory="..\MorphicWin\bin\$(Configuration)\netcoreapp3.1" PreprocessorVariable="var.ClientOutputDirectory" OutputFile="Generated.wxs" ComponentGroupName="GeneratedComponents" DirectoryRefId="INSTALLFOLDER" AutogenerateGuids="true" ToolPath="$(WixToolPath)" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" />
+  	<Exec Command="dotnet publish ..\MorphicWin\MorphicWin.csproj -r win-x86 -c $(Configuration)" />
+    <HeatDirectory Directory="..\MorphicWin\bin\$(Configuration)\netcoreapp3.1\win-x86\publish" PreprocessorVariable="var.ClientOutputDirectory" OutputFile="Generated.wxs" ComponentGroupName="GeneratedComponents" DirectoryRefId="INSTALLFOLDER" AutogenerateGuids="true" ToolPath="$(WixToolPath)" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" />
   </Target>
   <!--
 	To modify your build process, add your task inside one of the targets below and uncomment it.
