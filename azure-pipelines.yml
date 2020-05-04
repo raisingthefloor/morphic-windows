@@ -64,7 +64,7 @@ stages:
             platform: 'x64'
             configuration: '$(buildConfiguration)'
         
-        - publish: $(System.DefaultWorkingDirectory)\MorphicSetup\bin\Release\MorphicSetup.msi
+        - publish: $(System.DefaultWorkingDirectory)\MorphicSetup\bin\Release\x64\MorphicSetup.msi
           displayName: "save x64 installer for later"
           artifact: x64-installer
             
