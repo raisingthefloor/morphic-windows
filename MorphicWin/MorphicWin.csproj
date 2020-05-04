@@ -5,9 +5,12 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>Icon.ico</ApplicationIcon>
     <Win32Resource />
     <AssemblyName>Morphic</AssemblyName>
+    <PublishTrimmed>true</PublishTrimmed>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
@@ -47,15 +50,6 @@
     <ProjectReference Include="..\MorphicCore\MorphicCore.csproj" />
     <ProjectReference Include="..\MorphicService\MorphicService.csproj" />
     <ProjectReference Include="..\MorphicSettings\MorphicSettings.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="System.Drawing.Common">
-      <HintPath>System.Drawing.Common.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Windows.Forms">
-      <HintPath>System.Windows.Forms.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
   <ItemGroup>

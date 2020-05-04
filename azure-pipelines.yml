@@ -58,15 +58,15 @@ stages:
             configuration: '$(buildConfiguration)'
         
         - task: VSBuild@1
-          displayName: "build x86 installer"
+          displayName: "build x64 installer"
           inputs:
             solution: 'MorphicSetup\MorphicSetup.wixproj'
-            platform: 'x86'
+            platform: 'x64'
             configuration: '$(buildConfiguration)'
         
-        - publish: $(System.DefaultWorkingDirectory)\MorphicSetup\bin\Release\MorphicSetup.msi
-          displayName: "save x86 installer for later"
-          artifact: x86-installer
+        - publish: $(System.DefaultWorkingDirectory)\MorphicSetup\bin\Release\x64\MorphicSetup.msi
+          displayName: "save x64 installer for later"
+          artifact: x64-installer
             
   - stage: upload
     jobs:
@@ -77,7 +77,7 @@ stages:
           # do not checkout code. we only need to upload the published artifact
           - checkout: none
           - download: current
-            artifact: x86-installer
+            artifact: x64-installer
           - task: Bash@3
             displayName: "upload MSI to s3"
             env:
@@ -104,8 +104,9 @@ stages:
                 fi
   
                 if [[ "$UPLOAD_NAME" == "" ]]; then
-                  echo "no client name found. will not publish to s3"
-                  exit 0
+                  #echo "no client name found. will not publish to s3"
+                  #exit 0
+                  UPLOAD_NAME="MorphicSetup-selfcontained.msi"
                 fi
                 set -x
   
@@ -113,4 +114,4 @@ stages:
                 #sudo apt-get install -y awscli
   
                 ls -al ${AGENT_BUILDDIRECTORY}
-                aws s3 cp ${AGENT_BUILDDIRECTORY}/x86-installer/MorphicSetup.msi s3://${BUCKET}/win/x86/$UPLOAD_NAME
+                aws s3 cp ${AGENT_BUILDDIRECTORY}/x64-installer/MorphicSetup.msi s3://${BUCKET}/win/x64/$UPLOAD_NAME
