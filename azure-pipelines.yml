@@ -109,8 +109,8 @@ stages:
                 fi
                 set -x
   
-                echo "install AWS CLI"
-                sudo apt-get install -y awscli
+                #echo "install AWS CLI"
+                #sudo apt-get install -y awscli
   
                 ls -al ${AGENT_BUILDDIRECTORY}
                 aws s3 cp ${AGENT_BUILDDIRECTORY}/x86-installer/MorphicSetup.msi s3://${BUCKET}/win/x86/$UPLOAD_NAME
