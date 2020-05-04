@@ -10,6 +10,7 @@
     <Win32Resource />
     <AssemblyName>Morphic</AssemblyName>
     <PublishTrimmed>true</PublishTrimmed>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>

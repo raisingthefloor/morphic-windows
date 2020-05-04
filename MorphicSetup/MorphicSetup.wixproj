@@ -2,21 +2,17 @@
 <Project ToolsVersion="4.0" DefaultTargets="Build" InitialTargets="EnsureWixToolsetInstalled" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
     <ProductVersion>3.10</ProductVersion>
     <ProjectGuid>8b686c6d-d3da-4019-b4b7-a0643f17a7f7</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
     <OutputName>MorphicSetup</OutputName>
     <OutputType>Package</OutputType>
+    <OutputPath>bin\$(Configuration)\$(Platform)\</OutputPath>
+    <IntermediateOutputPath>obj\$(Configuration)\$(Platform(\</IntermediateOutputPath>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <OutputPath>bin\$(Configuration)\</OutputPath>
-    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DefineConstants>Debug</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <OutputPath>bin\$(Configuration)\</OutputPath>
-    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Product.wxs" />
@@ -38,11 +34,11 @@
     <Error Text="The WiX Toolset v3.11 (or newer) build tools must be installed to build this project. To download the WiX Toolset, see http://wixtoolset.org/releases/" />
   </Target>
   <PropertyGroup>
-    <DefineConstants>ClientOutputDirectory=..\MorphicWin\bin\$(Configuration)\netcoreapp3.1\win-x86\publish</DefineConstants>
+    <DefineConstants>ClientOutputDirectory=..\MorphicWin\bin\$(Configuration)\netcoreapp3.1\win-x64\publish</DefineConstants>
   </PropertyGroup>
   <Target Name="BeforeBuild">
-  	<Exec Command="dotnet publish ..\MorphicWin\MorphicWin.csproj -r win-x86 -c $(Configuration)" />
-    <HeatDirectory Directory="..\MorphicWin\bin\$(Configuration)\netcoreapp3.1\win-x86\publish" PreprocessorVariable="var.ClientOutputDirectory" OutputFile="Generated.wxs" ComponentGroupName="GeneratedComponents" DirectoryRefId="INSTALLFOLDER" AutogenerateGuids="true" ToolPath="$(WixToolPath)" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" />
+  	<Exec Command="dotnet publish ..\MorphicWin\MorphicWin.csproj -r win-x64 -c $(Configuration)" />
+    <HeatDirectory Directory="..\MorphicWin\bin\$(Configuration)\netcoreapp3.1\win-x64\publish" PreprocessorVariable="var.ClientOutputDirectory" OutputFile="Generated.wxs" ComponentGroupName="GeneratedComponents" DirectoryRefId="INSTALLFOLDER" AutogenerateGuids="true" ToolPath="$(WixToolPath)" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" />
   </Target>
   <!--
 	To modify your build process, add your task inside one of the targets below and uncomment it.
