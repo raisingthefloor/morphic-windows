@@ -9,7 +9,7 @@
     <OutputName>MorphicSetup</OutputName>
     <OutputType>Package</OutputType>
     <OutputPath>bin\$(Configuration)\$(Platform)\</OutputPath>
-    <IntermediateOutputPath>obj\$(Configuration)\$(Platform(\</IntermediateOutputPath>
+    <IntermediateOutputPath>obj\$(Configuration)\$(Platform)\</IntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DefineConstants>Debug</DefineConstants>
