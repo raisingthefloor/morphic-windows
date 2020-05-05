@@ -58,15 +58,23 @@ stages:
             configuration: '$(buildConfiguration)'
         
         - task: VSBuild@1
-          displayName: "build installers"
+          displayName: "build x64 installers"
           inputs:
             solution: 'MorphicSetup\MorphicSetup.wixproj'
-            platform: 'Any CPU'
+            platform: 'x64'
             configuration: '$(buildConfiguration)'
         
         - publish: $(System.DefaultWorkingDirectory)\MorphicSetup\bin\Release\x64\MorphicSetup.msi
           displayName: "save x64 installer for later"
           artifact: x64-installer
+          
+        - task: VSBuild@1
+          displayName: "build x86 installers"
+          inputs:
+            solution: 'MorphicSetup\MorphicSetup.wixproj'
+            platform: 'x86'
+            configuration: '$(buildConfiguration)'
+            
         - publish: $(System.DefaultWorkingDirectory)\MorphicSetup\bin\Release\x86\MorphicSetup.msi
           displayName: "save x86 installer for later"
           artifact: x86-installer
