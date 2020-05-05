@@ -104,6 +104,12 @@ namespace MorphicSettings
                 var registry = serviceProvider.GetService<IRegistry>();
                 return new RegistrySettingsHandler(registryDescription, registry, logger);
             }
+            else if (description is IniSettingHandlerDescription iniDescription)
+            {
+                var logger = serviceProvider.GetService<ILogger<IniSettingsHandler>>();
+                var iniFactory = serviceProvider.GetService<IIniFileFactory>();
+                return new IniSettingsHandler(iniDescription, iniFactory, logger);
+            }
             return null;
         }
     }

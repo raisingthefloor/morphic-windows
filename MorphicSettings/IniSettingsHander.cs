@@ -23,12 +23,7 @@
 
 using System;
 using System.Threading.Tasks;
-using System.Security;
-using System.Collections.Generic;
-using System.Text;
-using Microsoft.Win32;
 using Microsoft.Extensions.Logging;
-using Morphic.Windows.Native;
 
 namespace MorphicSettings
 {
@@ -48,12 +43,12 @@ namespace MorphicSettings
         /// </summary>
         /// <param name="description"></param>
         /// <param name="logger"></param>
-        public IniSettingsHandler(IniSettingHandlerDescription description, ILogger<IniSettingsHandler> logger)
+        public IniSettingsHandler(IniSettingHandlerDescription description, IIniFileFactory iniFactory, ILogger<IniSettingsHandler> logger)
         {
             Description = description;
             this.logger = logger;
-            var path = ExpandedPath(description.Filename);
-            iniFile = new IniFileReaderWriter(path);
+            var path = ExpandedPath(Description.Filename);
+            this.iniFile = iniFactory.Open(path);
         }
 
         /// <summary>
@@ -83,7 +78,7 @@ namespace MorphicSettings
         /// <summary>
         /// The ini file reader/writer
         /// </summary>
-        private readonly IniFileReaderWriter iniFile;
+        private readonly IIniFile iniFile;
 
         /// <summary>
         /// Write the value to the section+key
@@ -98,7 +93,7 @@ namespace MorphicSettings
                 try
                 {
                     logger.LogDebug("Writing {0}:{1}.{2}", Description.Filename, Description.Section, Description.Key);
-                    iniFile.WriteValue(stringValue, Description.Key, Description.Section);
+                    iniFile.SetValue(Description.Section, Description.Key, stringValue);
                     return Task.FromResult(true);
                 }
                 catch (Exception e)
@@ -119,7 +114,7 @@ namespace MorphicSettings
             try
             {
                 // FIXME: need to parse correct type from string
-                result.Value = iniFile.ReadValue(Description.Key, Description.Section);
+                result.Value = iniFile.GetValue(Description.Section, Description.Key);
                 result.Success = true;
             }
             catch (Exception e)

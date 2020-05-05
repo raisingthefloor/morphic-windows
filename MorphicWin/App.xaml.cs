@@ -91,6 +91,7 @@ namespace MorphicWin
             services.AddSingleton<IDataProtection, DataProtector>();
             services.AddSingleton<IUserSettings, UserSettings>();
             services.AddSingleton<IRegistry, WindowsRegistry>();
+            services.AddSingleton<IIniFileFactory, IniFileFactory>();
             services.AddSingleton<MorphicSettings.Settings>();
             services.AddSingleton<Keychain>();
             services.AddSingleton<Storage>();
