@@ -34,18 +34,15 @@
     <Error Text="The WiX Toolset v3.11 (or newer) build tools must be installed to build this project. To download the WiX Toolset, see http://wixtoolset.org/releases/" />
   </Target>
   <PropertyGroup>
-    <DefineConstants>ClientOutputDirectory=..\MorphicWin\bin\$(Configuration)\netcoreapp3.1\win-x64\publish</DefineConstants>
+    <DefineConstants>ClientOutputDirectoryx64=..\MorphicWin\bin\$(Configuration)\netcoreapp3.1\win-x64\publish</DefineConstants>
+    <DefineConstants>ClientOutputDirectoryx86=..\MorphicWin\bin\$(Configuration)\netcoreapp3.1\win-x86\publish</DefineConstants>
   </PropertyGroup>
   <Target Name="BeforeBuild">
   	<Exec Command="dotnet publish ..\MorphicWin\MorphicWin.csproj -r win-x64 -c $(Configuration)" />
-    <HeatDirectory Directory="..\MorphicWin\bin\$(Configuration)\netcoreapp3.1\win-x64\publish" PreprocessorVariable="var.ClientOutputDirectory" OutputFile="Generated.wxs" ComponentGroupName="GeneratedComponents" DirectoryRefId="INSTALLFOLDER" AutogenerateGuids="true" ToolPath="$(WixToolPath)" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" />
+    <HeatDirectory Directory="..\MorphicWin\bin\$(Configuration)\netcoreapp3.1\win-x64\publish" PreprocessorVariable="var.ClientOutputDirectoryx64" OutputFile="Generated.wxs" ComponentGroupName="GeneratedComponents" DirectoryRefId="INSTALLFOLDER" AutogenerateGuids="true" ToolPath="$(WixToolPath)" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" />
   </Target>
-  <!--
-	To modify your build process, add your task inside one of the targets below and uncomment it.
-	Other similar extension points exist, see Wix.targets.
-	<Target Name="BeforeBuild">
-	</Target>
-	<Target Name="AfterBuild">
-	</Target>
-	-->
+  <Target Name="BeforeBuild">
+    <Exec Command="dotnet publish ..\MorphicWin\MorphicWin.csproj -r win-x86 -c $(Configuration)" />
+    <HeatDirectory Directory="..\MorphicWin\bin\$(Configuration)\netcoreapp3.1\win-x86\publish" PreprocessorVariable="var.ClientOutputDirectoryx86" OutputFile="Generated.wxs" ComponentGroupName="GeneratedComponents" DirectoryRefId="INSTALLFOLDER" AutogenerateGuids="true" ToolPath="$(WixToolPath)" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" />
+  </Target>
 </Project>
