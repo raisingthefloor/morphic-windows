@@ -23,10 +23,6 @@
 
 using System;
 using System.Threading.Tasks;
-using System.Security;
-using System.Collections.Generic;
-using System.Text;
-using Microsoft.Win32;
 using Microsoft.Extensions.Logging;
 
 namespace MorphicSettings
@@ -47,17 +43,21 @@ namespace MorphicSettings
         /// Create a new registry settings handler based on a handler descritpion
         /// </summary>
         /// <param name="description"></param>
+        /// <param name="registry"></param>
         /// <param name="logger"></param>
-        public RegistrySettingsHandler(RegistrySettingHandlerDescription description, ILogger<RegistrySettingsHandler> logger)
+        public RegistrySettingsHandler(RegistrySettingHandlerDescription description, IRegistry registry, ILogger<RegistrySettingsHandler> logger)
         {
             Description = description;
             this.logger = logger;
+            this.registry = registry;
         }
 
         /// <summary>
         /// The logger to use
         /// </summary>
         private readonly ILogger<RegistrySettingsHandler> logger;
+
+        private readonly IRegistry registry;
 
         /// <summary>
         /// Write the given value to the appropriate registry key
@@ -71,7 +71,7 @@ namespace MorphicSettings
                 try
                 {
                     logger.LogDebug("Registry Write {0}\\{1}", Description.KeyName, Description.ValueName);
-                    Registry.SetValue(Description.KeyName, Description.ValueName, nonnullValue, Description.ValueKind);
+                    registry.SetValue(Description.KeyName, Description.ValueName, nonnullValue, Description.ValueKind);
                     return Task.FromResult(true);
                 }
                 catch (Exception e)
@@ -91,7 +91,7 @@ namespace MorphicSettings
             var result = new CaptureResult();
             try
             {
-                result.Value = Registry.GetValue(Description.KeyName, Description.ValueName, null);
+                result.Value = registry.GetValue(Description.KeyName, Description.ValueName, null);
                 result.Success = true;
             }catch (Exception e)
             {

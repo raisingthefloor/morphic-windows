@@ -90,6 +90,7 @@ namespace MorphicWin
             services.AddSingleton(new KeychainOptions { Path = Path.Combine(ApplicationDataFolderPath, "keychain") });
             services.AddSingleton<IDataProtection, DataProtector>();
             services.AddSingleton<IUserSettings, UserSettings>();
+            services.AddSingleton<IRegistry, WindowsRegistry>();
             services.AddSingleton<MorphicSettings.Settings>();
             services.AddSingleton<Keychain>();
             services.AddSingleton<Storage>();

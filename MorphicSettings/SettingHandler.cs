@@ -101,7 +101,8 @@ namespace MorphicSettings
             else if (description is RegistrySettingHandlerDescription registryDescription)
             {
                 var logger = serviceProvider.GetService<ILogger<RegistrySettingsHandler>>();
-                return new RegistrySettingsHandler(registryDescription, logger);
+                var registry = serviceProvider.GetService<IRegistry>();
+                return new RegistrySettingsHandler(registryDescription, registry, logger);
             }
             return null;
         }
