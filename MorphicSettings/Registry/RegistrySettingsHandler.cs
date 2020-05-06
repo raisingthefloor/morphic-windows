@@ -31,7 +31,7 @@ namespace MorphicSettings
     /// <summary>
     /// A settings handler for registry settings
     /// </summary>
-    class RegistrySettingsHandler: SettingHandler
+    public class RegistrySettingsHandler: SettingHandler
     {
 
         /// <summary>

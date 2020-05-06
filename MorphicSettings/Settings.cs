@@ -91,6 +91,11 @@ namespace MorphicSettings
             }
         }
 
+        public void Add(Solution solution)
+        {
+            SolutionsById.Add(solution.Id, solution);
+        }
+
         /// <summary>
         /// Get the setting for the given preference key
         /// </summary>

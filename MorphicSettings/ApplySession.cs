@@ -34,7 +34,7 @@ namespace MorphicSettings
     /// <summary>
     /// Apply many settings at once
     /// </summary>
-    class ApplySession
+    public class ApplySession
     {
 
         /// <summary>
@@ -134,11 +134,13 @@ namespace MorphicSettings
                     else
                     {
                         logger.LogError("No handler for {0}.{1}", pair.Key.Solution, pair.Key.Preference);
+                        resultsByKey.Add(pair.Key, false);
                     }
                 }
                 else
                 {
                     logger.LogError("No definition found for {0}.{1}", pair.Key.Solution, pair.Key.Preference);
+                    resultsByKey.Add(pair.Key, false);
                 }
             }
 
