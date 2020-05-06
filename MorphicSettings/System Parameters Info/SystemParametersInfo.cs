@@ -23,13 +23,33 @@
 
 using System;
 using System.Runtime.InteropServices;
-using System.Collections.Generic;
-using System.Text;
+using MorphicSettings.System_Parameters_Info;
 
 namespace MorphicSettings
 {
-    public static class SystemParametersInfo
+
+    /// <summary>
+    /// An SPI implementation that calls the SystemParametersInfo function in windows
+    /// </summary>
+    public class SystemParametersInfo: ISystemParametersInfo
     {
+
+        public bool Call(Action action, int parameter1, object? parameter2, bool updateUserProfile = false, bool sendChange = false)
+        {
+            var param2Handle = GCHandle.Alloc(parameter2);
+            int param3 = 0;
+            if (updateUserProfile)
+            {
+                param3 |= 0x1;
+            }
+            if (sendChange)
+            {
+                param3 |= 0x2;
+            }
+            var result = SystemParametersInfoW((int)action, parameter1, GCHandle.ToIntPtr(param2Handle), param3);
+            param2Handle.Free();
+            return result;
+        }
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern bool SystemParametersInfoW(int uiAction, int uiParam, IntPtr pvParam, int fWinIni);

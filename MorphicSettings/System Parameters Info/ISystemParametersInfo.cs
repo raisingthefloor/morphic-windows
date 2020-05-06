@@ -22,32 +22,28 @@
 // * Consumer Electronics Association Foundation
 
 using System;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Text;
-using MorphicSettings.System_Parameters_Info;
 
-namespace MorphicSettings
+namespace MorphicSettings.System_Parameters_Info
 {
-    public abstract class SettingFinalizer
-    {
-        public abstract Task<bool> Run();
-    }
 
-    public static class FinalizerDescriptionExtensions
+    /// <summary>
+    /// An interface for System Parameter Info (SPI) calls
+    /// </summary>
+    public interface ISystemParametersInfo
     {
 
-        public static SettingFinalizer? CreateFinalizer(this SettingFinalizerDescription description, IServiceProvider serviceProvider)
-        {
-            if (description is SystemParametersInfoSettingFinalizerDescription spiDescription)
-            {
-                var logger = serviceProvider.GetRequiredService<ILogger<SystemParametersInfoSettingsFinalizer>>();
-                var spi = serviceProvider.GetRequiredService<ISystemParametersInfo>();
-                return new SystemParametersInfoSettingsFinalizer(spiDescription, spi, logger);
-            }
-            return null;
-        }
+        /// <summary>
+        /// Call SystemParametersInfo to set a value or perform an action
+        /// </summary>
+        /// <param name="action"></param>
+        /// <param name="parameter1"></param>
+        /// <param name="parameter2"></param>
+        /// <param name="updateUserProfile"></param>
+        /// <param name="sendChange"></param>
+        /// <returns></returns>
+        public bool Call(SystemParametersInfo.Action action, int parameter1, object? parameter2, bool updateUserProfile = false, bool sendChange = false);
+
     }
 }

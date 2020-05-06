@@ -36,6 +36,7 @@ using MorphicSettings;
 using System.IO;
 using CountlySDK;
 using CountlySDK.Entities;
+using MorphicSettings.System_Parameters_Info;
 
 namespace MorphicWin
 {
@@ -93,6 +94,7 @@ namespace MorphicWin
             services.AddSingleton<IRegistry, WindowsRegistry>();
             services.AddSingleton<IIniFileFactory, IniFileFactory>();
             services.AddSingleton<ISystemSettingFactory, SystemSettingFactory>();
+            services.AddSingleton<ISystemParametersInfo, SystemParametersInfo>();
             services.AddSingleton<MorphicSettings.Settings>();
             services.AddSingleton<Keychain>();
             services.AddSingleton<Storage>();
