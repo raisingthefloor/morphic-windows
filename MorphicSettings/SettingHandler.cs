@@ -95,19 +95,20 @@ namespace MorphicSettings
             }
             else if (description is SystemSettingHandlerDescription systemDescription)
             {
-                var logger = serviceProvider.GetService<ILogger<SystemSettingsHandler>>();
-                return new SystemSettingsHandler(systemDescription, logger);
+                var logger = serviceProvider.GetRequiredService<ILogger<SystemSettingsHandler>>();
+                var settingFactory = serviceProvider.GetRequiredService<ISystemSettingFactory>();
+                return new SystemSettingsHandler(systemDescription, settingFactory, serviceProvider, logger);
             }
             else if (description is RegistrySettingHandlerDescription registryDescription)
             {
-                var logger = serviceProvider.GetService<ILogger<RegistrySettingsHandler>>();
-                var registry = serviceProvider.GetService<IRegistry>();
+                var logger = serviceProvider.GetRequiredService<ILogger<RegistrySettingsHandler>>();
+                var registry = serviceProvider.GetRequiredService<IRegistry>();
                 return new RegistrySettingsHandler(registryDescription, registry, logger);
             }
             else if (description is IniSettingHandlerDescription iniDescription)
             {
-                var logger = serviceProvider.GetService<ILogger<IniSettingsHandler>>();
-                var iniFactory = serviceProvider.GetService<IIniFileFactory>();
+                var logger = serviceProvider.GetRequiredService<ILogger<IniSettingsHandler>>();
+                var iniFactory = serviceProvider.GetRequiredService<IIniFileFactory>();
                 return new IniSettingsHandler(iniDescription, iniFactory, logger);
             }
             return null;
