@@ -34,6 +34,7 @@ using MorphicService;
 using MorphicCore;
 using MorphicSettings;
 using System.IO;
+using System.Reflection;
 using CountlySDK;
 using CountlySDK.Entities;
 
@@ -106,7 +107,15 @@ namespace MorphicWin
             cc.appKey = section["AppKey"];
             cc.serverUrl = section["ServerUrl"];
             // @TODO is there some type of compile time we could stick in here? Or something real?
-            cc.appVersion = "1.2.3";
+            var info = Assembly.GetEntryAssembly();
+            if (info != null)
+            {
+                var version = info.GetName().Version;
+                if (version != null) {
+                    cc.appVersion = version.ToString();
+                }
+            }
+
             Countly.Instance.Init(cc);
             Countly.Instance.SessionBegin();
         }

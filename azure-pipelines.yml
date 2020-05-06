@@ -50,6 +50,7 @@ stages:
             solution: '$(solution)'
             platform: '$(buildPlatform)'
             configuration: '$(buildConfiguration)'
+            msbuildArgs: '/p:Version=$(Build.BuildNumber)'
         
         - task: VSTest@2
           displayName: "execute tests"
@@ -63,6 +64,7 @@ stages:
             solution: 'MorphicSetup\MorphicSetup.wixproj'
             platform: 'x64'
             configuration: '$(buildConfiguration)'
+            msbuildArgs: '/p:Version=$(Build.BuildNumber)'
         
         - publish: $(System.DefaultWorkingDirectory)\MorphicSetup\bin\Release\x64\MorphicSetup.msi
           displayName: "save x64 installer for later"
