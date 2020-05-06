@@ -107,14 +107,10 @@ namespace MorphicWin
             cc.appKey = section["AppKey"];
             cc.serverUrl = section["ServerUrl"];
             // @TODO is there some type of compile time we could stick in here? Or something real?
-            var info = Assembly.GetEntryAssembly();
-            if (info != null)
-            {
-                var version = info.GetName().Version;
-                if (version != null) {
-                    cc.appVersion = version.ToString();
-                }
-            }
+            var assembly = Assembly.GetExecutingAssembly();
+            var informationVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+                .InformationalVersion;
+            cc.appVersion = informationVersion;
 
             Countly.Instance.Init(cc);
             Countly.Instance.SessionBegin();
