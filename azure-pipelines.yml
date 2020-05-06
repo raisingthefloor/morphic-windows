@@ -104,9 +104,9 @@ stages:
                 fi
   
                 if [[ "$UPLOAD_NAME" == "" ]]; then
-                  #echo "no client name found. will not publish to s3"
-                  #exit 0
-                  UPLOAD_NAME="MorphicSetup-selfcontained.msi"
+                  echo "no client name found. will not publish to s3"
+                  exit 0
+                  #UPLOAD_NAME="MorphicSetup-test.msi"
                 fi
                 set -x
   
