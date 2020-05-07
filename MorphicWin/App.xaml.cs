@@ -94,7 +94,9 @@ namespace MorphicWin
             services.AddSingleton<Keychain>();
             services.AddSingleton<Storage>();
             services.AddSingleton<Session>();
-            services.AddTransient<MorphicConfigurator>();
+            services.AddTransient<TravelWindow>();
+            services.AddTransient<CapturePanel>();
+            services.AddTransient<TravelCompletedPanel>();
             services.AddTransient<QuickStrip>();
             services.AddMorphicSettingsHandlers(ConfigureSettingsHandlers);
         }
@@ -227,9 +229,10 @@ namespace MorphicWin
             hideQuickStripItem.Click += (sender, e) => { HideQuickStrip(); };
             hideQuickStripItem.Visible = false;
             item = mainMenu.Items.Add("Customize Quick Strip...");
-            item.Click += (sender, e) => { OpenConfigurator(); };
+            item.Enabled = false;
             mainMenu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
             item = mainMenu.Items.Add("Take My Settings with Me...");
+            item.Click += (object? sender, EventArgs e) => { OpenTravelWindow(); };
             item = mainMenu.Items.Add("Apply My Settings...");
             item.Enabled = false;
             mainMenu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
@@ -360,25 +363,25 @@ namespace MorphicWin
 
         #endregion
 
-        #region Configurator Window
+        #region Travel Window
 
         /// <summary>
         /// The Configurator window, if visible
         /// </summary>
-        private MorphicConfigurator? Configurator;
+        private TravelWindow? TravelWindow;
 
         /// <summary>
         /// Show the Morphic Configurator window
         /// </summary>
-        internal void OpenConfigurator()
+        internal void OpenTravelWindow()
         {
-            if (Configurator == null)
+            if (TravelWindow == null)
             {
-                Configurator = ServiceProvider.GetRequiredService<MorphicConfigurator>();
-                Configurator.Show();
-                Configurator.Closed += OnConfiguratorClosed;
+                TravelWindow = ServiceProvider.GetRequiredService<TravelWindow>();
+                TravelWindow.Show();
+                TravelWindow.Closed += OnTravelWindowClosed;
             }
-            Configurator.Activate();
+            TravelWindow.Activate();
         }
 
         /// <summary>
@@ -386,9 +389,9 @@ namespace MorphicWin
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void OnConfiguratorClosed(object? sender, EventArgs e)
+        private void OnTravelWindowClosed(object? sender, EventArgs e)
         {
-            Configurator = null;
+            TravelWindow = null;
         }
 
         #endregion
