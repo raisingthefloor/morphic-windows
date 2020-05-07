@@ -2,6 +2,7 @@
 using MorphicCore;
 using MorphicService;
 using System;
+using System.Windows;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Controls;
@@ -26,7 +27,7 @@ namespace MorphicWin
 
         public EventHandler? Completed;
 
-        public void OnSubmit(object? sender, EventArgs e)
+        public void OnSubmit(object? sender, RoutedEventArgs e)
         {
             _ = Submit();
         }
@@ -108,7 +109,7 @@ namespace MorphicWin
             UpdateValidation();
         }
 
-        private void PasswordField_PasswordChanged(object sender, System.Windows.RoutedEventArgs e)
+        private void PasswordField_PasswordChanged(object sender, RoutedEventArgs e)
         {
             UpdateValidation();
         }

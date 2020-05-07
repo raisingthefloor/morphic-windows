@@ -95,6 +95,7 @@ namespace MorphicWin
             services.AddSingleton<Storage>();
             services.AddSingleton<Session>();
             services.AddTransient<TravelWindow>();
+            services.AddTransient<CreateAccountPanel>();
             services.AddTransient<CapturePanel>();
             services.AddTransient<TravelCompletedPanel>();
             services.AddTransient<QuickStrip>();
