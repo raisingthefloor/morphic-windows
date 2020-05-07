@@ -288,14 +288,12 @@ namespace MorphicService
             Preferences = null;
         }
 
-        public async Task<bool> RegisterUser()
+        public async Task<bool> RegisterUser(User user, UsernameCredentials credentials)
         {
-            var user = new User();
-            var creds = new KeyCredentials();
-            var auth = await Service.Register(user, creds);
+            var auth = await Service.Register(user, credentials);
             if (auth != null)
             {
-                if (!keychain.Save(creds, Service.Endpoint, auth.User.Id))
+                if (!keychain.Save(credentials, Service.Endpoint))
                 {
                     logger.LogError("Failed to save key creds to keychain");
                 }

@@ -34,6 +34,13 @@ namespace MorphicWin
     /// </summary>
     public partial class TravelWindow : Window
     {
+
+        private readonly Session session;
+
+        private readonly ILogger<TravelWindow> logger;
+
+        private readonly IServiceProvider serviceProvider;
+
         public TravelWindow(Session session, ILogger<TravelWindow> logger, IServiceProvider serviceProvider)
         {
             this.session = session;
@@ -45,21 +52,46 @@ namespace MorphicWin
         protected override void OnInitialized(EventArgs e)
         {
             base.OnInitialized(e);
+            if (session.User == null)
+            {
+                logger.LogInformation("No user logged in, showing account creation panel");
+                ShowCreateAccountPanel(animated: false);
+            }
+            else
+            {
+                logger.LogInformation("User logged in, skipping directly to capture panel");
+                ShowCapturePanel(animated: false);
+            }
+        }
+
+        private void ShowCreateAccountPanel(bool animated = true)
+        {
+            var accountPanel = serviceProvider.GetRequiredService<CreateAccountPanel>();
+            accountPanel.Completed += AccountCreationCompleted;
+            StepFrame.PushPanel(accountPanel, animated: animated);
+        }
+
+        private void ShowCapturePanel(bool animated = true)
+        {
             var capturePage = serviceProvider.GetRequiredService<CapturePanel>();
             capturePage.Completed += CaptureCompleted;
-            StepFrame.PushPanel(capturePage, animated: false);
+            StepFrame.PushPanel(capturePage, animated: animated);
+        }
+
+        private void ShowCompletedPanel(bool animated = true)
+        {
+            var completedPage = serviceProvider.GetRequiredService<TravelCompletedPanel>();
+            StepFrame.PushPanel(completedPage, animated: animated);
+        }
+
+        private void AccountCreationCompleted(object? sender, EventArgs e)
+        {
+            ShowCapturePanel();
         }
 
         private void CaptureCompleted(object? sender, EventArgs e)
         {
-            var completedPage = serviceProvider.GetRequiredService<TravelCompletedPanel>();
-            StepFrame.PushPanel(completedPage, animated: true);
+            ShowCompletedPanel();
         }
-
-        private readonly Session session;
-
-        private readonly ILogger<TravelWindow> logger;
-
-        private readonly IServiceProvider serviceProvider;
     }
 }
