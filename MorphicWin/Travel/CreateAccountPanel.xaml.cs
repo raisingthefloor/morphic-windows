@@ -55,8 +55,10 @@ namespace MorphicWin
             None,
             EmptyUsername,
             EmptyPassword,
+            EmptyConfirmation,
             UsernameTooShort,
-            PasswordTooShort
+            PasswordTooShort,
+            PasswordsDontMatch
         }
 
         private const int minimumUsernameLength = 2;
@@ -66,7 +68,8 @@ namespace MorphicWin
             {
                 var username = UsernameField.Text;
                 var password = PasswordField.Password;
-                if (username.Length == 0)
+                var confirmation = ConfirmPasswordField.Password;
+                if (!hasTypedUsername)
                 {
                     return ValidationError.EmptyUsername;
                 }
@@ -74,13 +77,21 @@ namespace MorphicWin
                 {
                     return ValidationError.UsernameTooShort;
                 }
-                if (password.Length == 0)
+                if (!hasTypedPassword)
                 {
                     return ValidationError.EmptyPassword;
                 }
                 if (password.Length < minimumPasswordLength)
                 {
                     return ValidationError.PasswordTooShort;
+                }
+                if (!hasTypedConfirmation)
+                {
+                    return ValidationError.EmptyConfirmation;
+                }
+                if (password != confirmation)
+                {
+                    return ValidationError.PasswordsDontMatch;
                 }
                 return ValidationError.None;
             }
@@ -95,22 +106,74 @@ namespace MorphicWin
             SubmitButton.IsEnabled = enabled;
         }
 
+        private bool hasTypedUsername;
+        private bool hasTypedPassword;
+        private bool hasTypedConfirmation;
+
         private void UpdateValidation()
         {
             var error = inputError;
             SubmitButton.IsEnabled = error == ValidationError.None;
+            switch (error) {
+                case ValidationError.UsernameTooShort:
+                    ErrorLabel.Content = String.Format("Your username needs to be at least {0} letters", minimumUsernameLength);
+                    ErrorLabel.Visibility = Visibility.Visible;
+                    break;
+                case ValidationError.PasswordTooShort:
+                    ErrorLabel.Content = String.Format("Your password needs to be at least {0} letters", minimumPasswordLength);
+                    ErrorLabel.Visibility = Visibility.Visible;
+                    break;
+                case ValidationError.PasswordsDontMatch:
+                    ErrorLabel.Content = "Your passwords don't match";
+                    ErrorLabel.Visibility = Visibility.Visible;
+                    break;
+                default:
+                    ErrorLabel.Visibility = Visibility.Hidden;
+                    break;
+            }
+
         }
 
-        private static Regex whitespaceExpression = new Regex(@"\w");
+        private static Regex whitespaceExpression = new Regex(@"\s");
 
         private void UsernameField_TextChanged(object sender, TextChangedEventArgs e)
         {
             UsernameField.Text = whitespaceExpression.Replace(UsernameField.Text, "");
+            UsernameField.SelectionStart = UsernameField.Text.Length;
+            UsernameField.SelectionLength = 0;
             UpdateValidation();
         }
 
         private void PasswordField_PasswordChanged(object sender, RoutedEventArgs e)
         {
+            UpdateValidation();
+        }
+
+        public void OnAlreadyHaveAccount(object? sender, RoutedEventArgs e)
+        {
+            // TODO: show login
+        }
+
+        private void UsernameField_LostFocus(object sender, RoutedEventArgs e)
+        {
+            hasTypedUsername = UsernameField.Text.Length > 0;
+            UpdateValidation();
+        }
+
+        private void PasswordField_LostFocus(object sender, RoutedEventArgs e)
+        {
+            hasTypedPassword = PasswordField.Password.Length > 0;
+            UpdateValidation();
+        }
+
+        private void ConfirmPasswordField_PasswordChanged(object sender, RoutedEventArgs e)
+        {
+            UpdateValidation();
+        }
+
+        private void ConfirmPasswordField_LostFocus(object sender, RoutedEventArgs e)
+        {
+            hasTypedConfirmation = ConfirmPasswordField.Password.Length > 0;
             UpdateValidation();
         }
     }

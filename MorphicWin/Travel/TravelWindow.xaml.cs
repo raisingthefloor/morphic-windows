@@ -52,16 +52,7 @@ namespace MorphicWin
         protected override void OnInitialized(EventArgs e)
         {
             base.OnInitialized(e);
-            if (session.User == null)
-            {
-                logger.LogInformation("No user logged in, showing account creation panel");
-                ShowCreateAccountPanel(animated: false);
-            }
-            else
-            {
-                logger.LogInformation("User logged in, skipping directly to capture panel");
-                ShowCapturePanel(animated: false);
-            }
+            ShowCapturePanel(animated: false);
         }
 
         private void ShowCreateAccountPanel(bool animated = true)
@@ -86,12 +77,12 @@ namespace MorphicWin
 
         private void AccountCreationCompleted(object? sender, EventArgs e)
         {
-            ShowCapturePanel();
+            ShowCompletedPanel();
         }
 
         private void CaptureCompleted(object? sender, EventArgs e)
         {
-            ShowCompletedPanel();
+            ShowCreateAccountPanel();
         }
     }
 }

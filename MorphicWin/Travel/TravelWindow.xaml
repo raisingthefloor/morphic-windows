@@ -5,6 +5,6 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MorphicWin"
         mc:Ignorable="d"
-        Title="Take My Settings With Me" Height="450" Width="800" WindowStartupLocation="CenterScreen">
+        Title="Travel with Settings" Height="500" Width="800" WindowStartupLocation="CenterScreen">
     <local:StepFrame x:Name="StepFrame"></local:StepFrame>
 </Window>

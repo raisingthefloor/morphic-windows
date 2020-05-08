@@ -24,6 +24,8 @@
 using Microsoft.Extensions.Logging;
 using MorphicService;
 using System;
+using System.Threading;
+using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -39,6 +41,36 @@ namespace MorphicWin
             this.session = session;
             this.logger = logger;
             InitializeComponent();
+            Loaded += OnLoaded;
+        }
+
+        private System.Timers.Timer? minimumIntervalTimer;
+
+        private const int minimumWaitTimeInSeconds = 10;
+
+        private SynchronizationContext? timerSynchronizatinContext;
+
+        private void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            timerSynchronizatinContext = SynchronizationContext.Current;
+            minimumIntervalTimer = new System.Timers.Timer(minimumWaitTimeInSeconds * 1000);
+            minimumIntervalTimer.AutoReset = false;
+            minimumIntervalTimer.Elapsed += OnTimerElapsed;
+            minimumIntervalTimer.Start();
+        }
+
+        private void OnTimerElapsed(object? sender, EventArgs e)
+        {
+            minimumIntervalTimer = null;
+            if (timerSynchronizatinContext is SynchronizationContext context)
+            {
+                timerSynchronizatinContext = null;
+                context.Post(state =>
+                {
+                    Completed?.Invoke(this, new EventArgs());
+                }, null);
+            }
+            
         }
 
         private readonly Session session;
@@ -46,11 +78,5 @@ namespace MorphicWin
         private readonly ILogger<CapturePanel> logger;
 
         public event EventHandler? Completed;
-
-        private void button_Click(object sender, RoutedEventArgs e)
-        {
-            var args = new EventArgs();
-            Completed?.Invoke(this, args);
-        }
     }
 }
