@@ -55,13 +55,6 @@ namespace MorphicWin
             ShowCapturePanel(animated: false);
         }
 
-        private void ShowCreateAccountPanel(bool animated = true)
-        {
-            var accountPanel = serviceProvider.GetRequiredService<CreateAccountPanel>();
-            accountPanel.Completed += AccountCreationCompleted;
-            StepFrame.PushPanel(accountPanel, animated: animated);
-        }
-
         private void ShowCapturePanel(bool animated = true)
         {
             var capturePage = serviceProvider.GetRequiredService<CapturePanel>();
@@ -69,10 +62,23 @@ namespace MorphicWin
             StepFrame.PushPanel(capturePage, animated: animated);
         }
 
+        private void ShowCreateAccountPanel(bool animated = true)
+        {
+            var accountPanel = serviceProvider.GetRequiredService<CreateAccountPanel>();
+            accountPanel.Completed += AccountCreationCompleted;
+            StepFrame.PushPanel(accountPanel, animated: animated);
+        }
+
         private void ShowCompletedPanel(bool animated = true)
         {
             var completedPage = serviceProvider.GetRequiredService<TravelCompletedPanel>();
+            completedPage.Completed += CompletedCompleted;
             StepFrame.PushPanel(completedPage, animated: animated);
+        }
+
+        private void CaptureCompleted(object? sender, EventArgs e)
+        {
+            ShowCreateAccountPanel();
         }
 
         private void AccountCreationCompleted(object? sender, EventArgs e)
@@ -80,9 +86,9 @@ namespace MorphicWin
             ShowCompletedPanel();
         }
 
-        private void CaptureCompleted(object? sender, EventArgs e)
+        private void CompletedCompleted(object? sender, EventArgs e)
         {
-            ShowCreateAccountPanel();
+            Close();
         }
     }
 }

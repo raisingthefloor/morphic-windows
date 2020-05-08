@@ -3,3 +3,4 @@
 bin/
 obj/
 MorphicSetup/Generated.wxs
+MorphicWin/appsettings.Local.json

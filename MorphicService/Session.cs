@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Timers;
 using Microsoft.Extensions.Logging;
@@ -140,7 +141,12 @@ namespace MorphicService
                     logger.LogInformation("{0} {1}", response.StatusCode.ToString(), request.RequestUri.AbsolutePath);
                 }
                 return await response.GetObject<ResponseBody>();
-            }catch (Exception e)
+            }
+            catch (BadRequestException e)
+            { 
+                throw e;
+            }
+            catch (Exception e)
             {
                 logger.LogError(e, "Request failed");
                 return null;
@@ -184,6 +190,17 @@ namespace MorphicService
                 logger.LogError(e, "Request failed");
                 return false;
             }
+        }
+
+        public class BadRequestException: Exception
+        {
+
+            [JsonPropertyName("error")]
+            public string Error { get; set; } = null!;
+
+            [JsonPropertyName("details")]
+            public Dictionary<string, object?>? Details { get; set; }
+
         }
 
         #endregion

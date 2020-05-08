@@ -35,17 +35,44 @@ namespace MorphicWin
         private async Task Submit()
         {
             // TODO: show activity indicator
+            UpdateValidation();
             SetFieldsEnabled(false);
             var user = new User();
             var credentials = new UsernameCredentials(UsernameField.Text, PasswordField.Password);
-            var success = await session.RegisterUser(user, credentials);
+            var success = false;
+            var errorMessage = "";
+            try
+            {
+                success = await session.RegisterUser(user, credentials);
+            }
+            catch (AuthService.BadPasswordException)
+            {
+                errorMessage = "Your password is too easily guessed.  Please use another.";
+            }
+            catch (AuthService.ExistingEmailException)
+            {
+                errorMessage = "We recognize your email.  Use the 'Already have an account?' link below.";
+            }
+            catch (AuthService.ExistingUsernameException)
+            {
+                errorMessage = "We recognize your email.  Use the 'Already have an account?' link below.";
+            }
+            catch (AuthService.InvalidEmailException)
+            {
+                errorMessage = "Please provide a valid email address";
+            }
             if (success)
             {
                 Completed?.Invoke(this, new EventArgs());
             }
             else
             {
-                // TODO: get and show error
+                if (errorMessage == "")
+                {
+                    errorMessage = "We could not complete the request.  Please try again.";
+                }
+                ErrorLabel.Visibility = Visibility.Visible;
+                ErrorLabel.Content = errorMessage;
                 SetFieldsEnabled(true);
             }
         }
@@ -168,6 +195,7 @@ namespace MorphicWin
 
         private void ConfirmPasswordField_PasswordChanged(object sender, RoutedEventArgs e)
         {
+            hasTypedConfirmation = ConfirmPasswordField.Password == PasswordField.Password;
             UpdateValidation();
         }
 

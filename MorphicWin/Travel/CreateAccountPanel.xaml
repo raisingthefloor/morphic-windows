@@ -23,7 +23,7 @@
             <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0">Take Your Settings Anywhere</Label>
             <TextBlock FontSize="17" TextWrapping="Wrap" TextAlignment="Center" Margin="0,10,0,30">You'll need to create an account so we can remember your settings and securely apply them to another computer</TextBlock>
         </StackPanel>
-        <Label Grid.Column="0" Grid.Row="1" Margin="0,4" FontSize="17">Choose a Username</Label>
+        <Label Grid.Column="0" Grid.Row="1" Margin="0,4" FontSize="17">Your Email Address</Label>
         <TextBox Grid.Column="1" Grid.Row="1" Margin="0,4" x:Name="UsernameField" AcceptsReturn="False" AcceptsTab="False" MaxLines="1" TextWrapping="NoWrap" TextChanged="UsernameField_TextChanged" LostFocus="UsernameField_LostFocus" FontSize="17" VerticalAlignment="Center" Padding="0,4,0,4" />
         <Label Grid.Column="0" Grid.Row="2" Margin="0,4" FontSize="17">Choose a Password</Label>
         <PasswordBox Grid.Column="1" Grid.Row="2" Margin="0,4" x:Name="PasswordField" PasswordChanged="PasswordField_PasswordChanged" LostFocus="PasswordField_LostFocus" FontSize="17" VerticalAlignment="Center" Padding="0,4,0,4"/>

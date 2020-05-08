@@ -46,7 +46,7 @@ namespace MorphicWin
 
         private System.Timers.Timer? minimumIntervalTimer;
 
-        private const int minimumWaitTimeInSeconds = 10;
+        private const int minimumWaitTimeInSeconds = 1;
 
         private SynchronizationContext? timerSynchronizatinContext;
 

@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Extensions.Logging;
 using MorphicService;
@@ -17,8 +19,15 @@ namespace MorphicWin
             InitializeComponent();
         }
 
+        public event EventHandler? Completed;
+
         private readonly Session session;
 
         private readonly ILogger<TravelCompletedPanel> logger;
+
+        private void OnClose(object? sender, RoutedEventArgs e)
+        {
+            Completed?.Invoke(this, new EventArgs());
+        }
     }
 }

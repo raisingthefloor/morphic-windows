@@ -21,10 +21,12 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
+using System;
 using MorphicCore;
 using System.Threading.Tasks;
 using System.Net.Http;
 using System.Text.Json.Serialization;
+using System.ComponentModel.DataAnnotations;
 
 namespace MorphicService
 {
@@ -43,7 +45,27 @@ namespace MorphicService
         public static async Task<AuthResponse?> Register(this Service service, User user, UsernameCredentials usernameCredentials)
         {
             var registration = new UsernameRegistration(usernameCredentials, user);
-            return await service.Session.Send<AuthResponse>(() => HttpRequestMessageExtensions.Create(service.Session, "v1/register/username", HttpMethod.Post, registration));
+            try
+            {
+                return await service.Session.Send<AuthResponse>(() => HttpRequestMessageExtensions.Create(service.Session, "v1/register/username", HttpMethod.Post, registration));
+            }
+            catch (Session.BadRequestException e)
+            {
+                switch (e.Error)
+                {
+                    case "existing_username":
+                        throw new ExistingUsernameException();
+                    case "existing_email":
+                        throw new ExistingEmailException();
+                    case "malformed_email":
+                        throw new InvalidEmailException();
+                    case "bad_password":
+                        throw new BadPasswordException();
+                    case "short_password":
+                        throw new BadPasswordException();
+                }
+            }
+            return null;
         }
 
         /// <summary>
@@ -69,6 +91,7 @@ namespace MorphicService
             {
                 Username = credentials.Username;
                 Password = credentials.Password;
+                Email = credentials.Username;
                 FirstName = user.FirstName;
                 LastName = user.LastName;
             }
@@ -77,6 +100,8 @@ namespace MorphicService
             public string Username { get; set; }
             [JsonPropertyName("password")]
             public string Password { get; set; }
+            [JsonPropertyName("email")]
+            public string Email { get; set; }
             [JsonPropertyName("first_name")]
             public string? FirstName { get; set; }
             [JsonPropertyName("last_name")]
@@ -102,6 +127,22 @@ namespace MorphicService
             public string? FirstName { get; set; }
             [JsonPropertyName("last_name")]
             public string? LastName { get; set; }
+        }
+
+        public class ExistingUsernameException: Exception
+        {
+        }
+
+        public class ExistingEmailException : Exception
+        {
+        }
+
+        public class InvalidEmailException : Exception
+        {
+        }
+
+        public class BadPasswordException : Exception
+        {
         }
 
         #endregion

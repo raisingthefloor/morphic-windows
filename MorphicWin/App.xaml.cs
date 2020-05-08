@@ -71,6 +71,7 @@ namespace MorphicWin
             {
                 builder.AddJsonFile($"appsettings.{env}.json", optional: true);
             }
+            builder.AddJsonFile($"appsettings.Local.json", optional: true);
             builder.AddEnvironmentVariables();
             return builder.Build();
         }
