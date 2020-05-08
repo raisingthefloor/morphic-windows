@@ -10,10 +10,13 @@ using System.Windows.Controls;
 namespace MorphicWin
 {
     /// <summary>
-    /// Interaction logic for CreateAccountPanel.xaml
+    /// A panel shown when the user needs to create an account in order to save their captured settings
     /// </summary>
     public partial class CreateAccountPanel : StackPanel
     {
+
+        #region Creating a Panel
+
         public CreateAccountPanel(Session session, ILogger<CreateAccountPanel> logger)
         {
             this.session = session;
@@ -21,17 +24,43 @@ namespace MorphicWin
             InitializeComponent();
         }
 
-        private readonly Session session;
-
+        /// <summary>
+        /// A logger to use
+        /// </summary>
         private readonly ILogger<CreateAccountPanel> logger;
 
+        #endregion
+
+        #region Completion Events
+
+        /// <summary>
+        /// Dispatched when the user's accout is successfully created
+        /// </summary>
         public EventHandler? Completed;
 
+        #endregion
+
+        #region Form Submission
+
+        /// <summary>
+        /// The session to use for making requests
+        /// </summary>
+        private readonly Session session;
+
+        /// <summary>
+        /// Event handler for the submit button click
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         public void OnSubmit(object? sender, RoutedEventArgs e)
         {
             _ = Submit();
         }
 
+        /// <summary>
+        /// An async method for actually doing the registration submission
+        /// </summary>
+        /// <returns></returns>
         private async Task Submit()
         {
             // TODO: show activity indicator
@@ -77,6 +106,13 @@ namespace MorphicWin
             }
         }
 
+        #endregion
+
+        #region Input Validation
+
+        /// <summary>
+        /// The various client-checked input errors the user may encounter
+        /// </summary>
         private enum ValidationError
         {
             None,
@@ -88,8 +124,9 @@ namespace MorphicWin
             PasswordsDontMatch
         }
 
-        private const int minimumUsernameLength = 2;
-
+        /// <summary>
+        /// Get the most revelant input error for the user
+        /// </summary>
         private ValidationError inputError {
             get
             {
@@ -124,8 +161,35 @@ namespace MorphicWin
             }
         }
 
+        /// <summary>
+        /// A client-enforced username minimum length
+        /// </summary>
+        private const int minimumUsernameLength = 2;
+
+        /// <summary>
+        /// A client-enforced password minimum length
+        /// </summary>
         private const int minimumPasswordLength = 6;
 
+        /// <summary>
+        /// Indicates if the username field has been typed in, which is used to decide which errors to show
+        /// </summary>
+        private bool hasTypedUsername;
+
+        /// <summary>
+        /// Indicates if the password field has been typed in, which is used to decide which errors to show
+        /// </summary>
+        private bool hasTypedPassword;
+
+        /// <summary>
+        /// Indicates if the password confirmation has been typed in, which is used to decide which errors to show
+        /// </summary>
+        private bool hasTypedConfirmation;
+
+        /// <summary>
+        /// Enable or disable all the fields
+        /// </summary>
+        /// <param name="enabled"></param>
         private void SetFieldsEnabled(bool enabled)
         {
             UsernameField.IsEnabled = enabled;
@@ -133,10 +197,9 @@ namespace MorphicWin
             SubmitButton.IsEnabled = enabled;
         }
 
-        private bool hasTypedUsername;
-        private bool hasTypedPassword;
-        private bool hasTypedConfirmation;
-
+        /// <summary>
+        /// Update the UI based on the current input validation state
+        /// </summary>
         private void UpdateValidation()
         {
             var error = inputError;
@@ -161,6 +224,9 @@ namespace MorphicWin
 
         }
 
+        /// <summary>
+        /// Used to remove whitespace from the username field
+        /// </summary>
         private static Regex whitespaceExpression = new Regex(@"\s");
 
         private void UsernameField_TextChanged(object sender, TextChangedEventArgs e)
@@ -174,11 +240,6 @@ namespace MorphicWin
         private void PasswordField_PasswordChanged(object sender, RoutedEventArgs e)
         {
             UpdateValidation();
-        }
-
-        public void OnAlreadyHaveAccount(object? sender, RoutedEventArgs e)
-        {
-            // TODO: show login
         }
 
         private void UsernameField_LostFocus(object sender, RoutedEventArgs e)
@@ -204,5 +265,21 @@ namespace MorphicWin
             hasTypedConfirmation = ConfirmPasswordField.Password.Length > 0;
             UpdateValidation();
         }
+
+        #endregion
+
+        #region Other Actions
+
+        /// <summary>
+        /// Handler for when the user clicks on the "Already have an Account?" button
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void OnAlreadyHaveAccount(object? sender, RoutedEventArgs e)
+        {
+            // TODO: show login
+        }
+
+        #endregion
     }
 }

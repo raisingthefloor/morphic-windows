@@ -32,10 +32,14 @@ using System.Windows.Controls;
 namespace MorphicWin
 {
     /// <summary>
-    /// Interaction logic for CapturePanel.xaml
+    /// The Capture panel is one of the steps shown when the user is walked through the process of taking their settings with them.
+    /// It shows a progress indicator while a <code>CaptureSession</code> is run behind the scenes.  No user interaction is required.
     /// </summary>
     public partial class CapturePanel : StackPanel
     {
+
+        #region Creating a Panel
+
         public CapturePanel(Session session, ILogger<CapturePanel> logger)
         {
             this.session = session;
@@ -44,11 +48,23 @@ namespace MorphicWin
             Loaded += OnLoaded;
         }
 
-        private System.Timers.Timer? minimumIntervalTimer;
+        /// <summary>
+        /// A logger to use
+        /// </summary>
+        private readonly ILogger<CapturePanel> logger;
 
-        private const int minimumWaitTimeInSeconds = 1;
+        #endregion
 
-        private SynchronizationContext? timerSynchronizatinContext;
+        #region Completion Events
+
+        /// <summary>
+        /// Dispatched when the capture process is complete and the minimum time has elapsed
+        /// </summary>
+        public event EventHandler? Completed;
+
+        #endregion
+
+        #region Lifecycle
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
@@ -59,6 +75,31 @@ namespace MorphicWin
             minimumIntervalTimer.Start();
         }
 
+        #endregion
+
+        #region Minimum Time
+
+        /// <summary>
+        /// The capture panel is shown for a minimum amount of time regardless of how quickly the capture session runs.
+        /// This gives the user enough time to read the screen and understand what is going on.
+        /// </summary>
+        private System.Timers.Timer? minimumIntervalTimer;
+
+        /// <summary>
+        /// The minimum time to wait before continuing
+        /// </summary>
+        private const int minimumWaitTimeInSeconds = 1;
+
+        /// <summary>
+        /// Used to get back to the main thread when the timer fires
+        /// </summary>
+        private SynchronizationContext? timerSynchronizatinContext;
+
+        /// <summary>
+        /// Called when the minimum time has elapsed
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void OnTimerElapsed(object? sender, EventArgs e)
         {
             minimumIntervalTimer = null;
@@ -73,10 +114,15 @@ namespace MorphicWin
             
         }
 
+        #endregion
+
+        #region Capture
+
+        /// <summary>
+        /// The Morphic Session to use for making requests
+        /// </summary>
         private readonly Session session;
 
-        private readonly ILogger<CapturePanel> logger;
-
-        public event EventHandler? Completed;
+        #endregion
     }
 }
