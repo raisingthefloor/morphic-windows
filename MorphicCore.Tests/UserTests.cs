@@ -64,6 +64,24 @@ namespace MorphicCore.Tests
             Assert.Null(user.PreferencesId);
             Assert.Null(user.FirstName);
             Assert.Null(user.LastName);
+
+
+            // Invalid user, all other fields populated
+            options = new JsonSerializerOptions();
+            options.Converters.Add(new JsonElementInferredTypeConverter());
+            uid = Guid.NewGuid().ToString();
+            pid = Guid.NewGuid().ToString();
+            json = JsonSerializer.Serialize(new Dictionary<string, object?>()
+            {
+                { "preferences_id", pid },
+                { "first_name", "Test" },
+                { "last_name", "User" }
+            });
+            user = JsonSerializer.Deserialize<User>(json, options);
+            //TODO: this works fine with the current build. Shouldn't it not?
+            Assert.Equal(pid, user.PreferencesId);
+            Assert.Equal("Test", user.FirstName);
+            Assert.Equal("User", user.LastName);
         }
     }
 }
