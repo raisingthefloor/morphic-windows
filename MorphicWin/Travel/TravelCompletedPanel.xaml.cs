@@ -73,8 +73,7 @@ namespace MorphicWin
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            // FIXME: enable once Email is added to the user model
-            // EmailLabel.Content = session.User?.Email;
+            EmailLabel.Content = session.User?.Email;
         }
 
         #endregion
