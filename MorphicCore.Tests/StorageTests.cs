@@ -31,6 +31,7 @@ using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Text.Json.Serialization;
 using Xunit;
+#nullable enable
 
 namespace MorphicCore.Tests
 {
@@ -132,3 +133,4 @@ namespace MorphicCore.Tests
         }
     }
 }
+#nullable disable

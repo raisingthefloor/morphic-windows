@@ -25,6 +25,8 @@ using System;
 using System.Text.Json;
 using System.Collections.Generic;
 using Xunit;
+using Microsoft.Extensions.Options;
+#nullable enable
 
 namespace MorphicCore.Tests
 {
@@ -42,24 +44,25 @@ namespace MorphicCore.Tests
             {
                 { "id", uid },
                 { "preferences_id", pid },
-                { "first_name", "Test" },
-                { "last_name", "User" }
+                { "first_name", "John" },
+                { "last_name", "Doe" }
             });
             var user = JsonSerializer.Deserialize<User>(json, options);
+            Assert.NotNull(user);
             Assert.Equal(uid, user.Id);
             Assert.Equal(pid, user.PreferencesId);
-            Assert.Equal("Test", user.FirstName);
-            Assert.Equal("User", user.LastName);
+            Assert.Equal("John", user.FirstName);
+            Assert.Equal("Doe", user.LastName);
 
 
             // Valid user, minimum set of fields populated
             uid = Guid.NewGuid().ToString();
-            pid = Guid.NewGuid().ToString();
             json = JsonSerializer.Serialize(new Dictionary<string, object?>()
             {
                 { "id", uid }
             });
             user = JsonSerializer.Deserialize<User>(json, options);
+            Assert.NotNull(user);
             Assert.Equal(uid, user.Id);
             Assert.Null(user.PreferencesId);
             Assert.Null(user.FirstName);
@@ -67,21 +70,35 @@ namespace MorphicCore.Tests
 
 
             // Invalid user, all other fields populated
-            options = new JsonSerializerOptions();
-            options.Converters.Add(new JsonElementInferredTypeConverter());
-            uid = Guid.NewGuid().ToString();
             pid = Guid.NewGuid().ToString();
             json = JsonSerializer.Serialize(new Dictionary<string, object?>()
             {
                 { "preferences_id", pid },
-                { "first_name", "Test" },
-                { "last_name", "User" }
+                { "first_name", "John" },
+                { "last_name", "Doe" }
             });
             user = JsonSerializer.Deserialize<User>(json, options);
-            //TODO: this works fine with the current build. Shouldn't it not?
-            Assert.Equal(pid, user.PreferencesId);
-            Assert.Equal("Test", user.FirstName);
-            Assert.Equal("User", user.LastName);
+            Assert.NotNull(user);
+            //TODO: this one should actually fail, need to change the code
+        }
+
+        [Fact]
+        public void TestJsonSerialize()
+        {
+            var uid = Guid.NewGuid().ToString();
+            var pid = Guid.NewGuid().ToString();
+            User user = new User();
+            user.Id = uid;
+            user.PreferencesId = pid;
+            user.FirstName = "John";
+            user.LastName = "Doe";
+            var json = JsonSerializer.Serialize(user);
+            var obj = JsonDocument.Parse(json).RootElement;
+            Assert.Equal(uid, obj.GetProperty("id").GetString());
+            Assert.Equal(pid, obj.GetProperty("preferences_id").GetString());
+            Assert.Equal("John", obj.GetProperty("first_name").GetString());
+            Assert.Equal("Doe", obj.GetProperty("last_name").GetString());
         }
     }
 }
+#nullable disable
