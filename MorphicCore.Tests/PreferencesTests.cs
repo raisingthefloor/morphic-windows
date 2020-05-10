@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Text.Json;
 using Xunit;
 #nullable enable
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
 
 namespace MorphicCore.Tests
 {
@@ -51,11 +52,14 @@ namespace MorphicCore.Tests
             Assert.NotNull(prefs);
             Assert.Equal(pid, prefs.Id);
             Assert.Equal(uid, prefs.UserId);
+            Assert.NotNull(prefs.Default);
             foreach(var k1 in tr.Default.Keys)
             {
+                Assert.NotNull(prefs.Default[k1]);
                 foreach(var k2 in tr.Default[k1].Values.Keys)
                 {
                     var defval = prefs.Default[k1].Values[k2];
+                    Assert.NotNull(defval);
                     Assert.Equal(tr.Default[k1].Values[k2].ToString(), defval.ToString());
                 }
             }
@@ -186,4 +190,5 @@ namespace MorphicCore.Tests
         }
     }
 }
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
 #nullable disable

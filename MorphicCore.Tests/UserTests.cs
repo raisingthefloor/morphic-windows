@@ -27,6 +27,7 @@ using System.Collections.Generic;
 using Xunit;
 using Microsoft.Extensions.Options;
 #nullable enable
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
 
 namespace MorphicCore.Tests
 {
@@ -101,4 +102,5 @@ namespace MorphicCore.Tests
         }
     }
 }
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
 #nullable disable

@@ -32,6 +32,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using Xunit;
 #nullable enable
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
 
 namespace MorphicCore.Tests
 {
@@ -63,6 +64,7 @@ namespace MorphicCore.Tests
             var badjsonfile = await s.Load<MockRecord>("badjsonfile");
             var binaryfile = await s.Load<MockRecord>("binaryfile");
             var r = tr.basicRecord;
+            Assert.NotNull(testfile);
             Assert.Equal(testfile.UserId, r.UserId);
             Assert.Equal(testfile.PreferencesId, r.PreferencesId);
             Assert.Equal(testfile.FirstName, r.FirstName);
@@ -133,4 +135,5 @@ namespace MorphicCore.Tests
         }
     }
 }
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
 #nullable disable
