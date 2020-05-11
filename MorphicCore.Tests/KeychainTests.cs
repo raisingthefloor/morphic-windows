@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging.Abstractions;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,19 +19,21 @@ namespace MorphicCore.Tests
             var uri = new Uri("http://www.morphic.world");
             var user = new UsernameCredentials("supersecret", "swordfish");
             var key = new KeyCredentials("thekey");
-            var kc = new Keychain(ko, new MockEncrypter(), new NullLogger<Keychain>());
+            var loggerFactory = new LoggerFactory();
+            var logger = loggerFactory.CreateLogger<Keychain>();
+            var kc = new Keychain(ko, new MockEncrypter(), logger);
             Assert.True(kc.Save(user, uri));
             var a = File.ReadAllBytes("../../../testfiles/keychain/testsave.json");
             var b = File.ReadAllBytes("../../../testfiles/keychain/saveuserref.json");
             Assert.Equal(b, a);
             File.Delete("../../../testfiles/keychain/testsave.json");
-            kc = new Keychain(ko, new MockEncrypter(), new NullLogger<Keychain>());
+            kc = new Keychain(ko, new MockEncrypter(), logger);
             Assert.True(kc.Save(key, uri, "theusername"));
             a = File.ReadAllBytes("../../../testfiles/keychain/testsave.json");
             b = File.ReadAllBytes("../../../testfiles/keychain/savekeyref.json");
             Assert.Equal(b, a);
             File.Delete("../../../testfiles/keychain/testsave.json");
-            kc = new Keychain(ko, new MockEncrypter(), new NullLogger<Keychain>());
+            kc = new Keychain(ko, new MockEncrypter(), logger);
             Assert.True(kc.Save(user, uri));
             Assert.True(kc.Save(key, uri, "theusername"));
             a = File.ReadAllBytes("../../../testfiles/keychain/testsave.json");
@@ -39,7 +42,7 @@ namespace MorphicCore.Tests
             File.Delete("../../../testfiles/keychain/testsave.json");
             //TODO: so this actually can just write any file type. Verify this is expected behavior.
             ko.Path = "../../../testfiles/keychain/notajsonfile";
-            kc = new Keychain(ko, new MockEncrypter(), new NullLogger<Keychain>());
+            kc = new Keychain(ko, new MockEncrypter(), logger);
             kc.Save(user, uri);
             kc.Save(key, uri, "theusername");
             a = File.ReadAllBytes("../../../testfiles/keychain/notajsonfile");
@@ -53,9 +56,11 @@ namespace MorphicCore.Tests
         {
             var ko = new KeychainOptions();
             ko.Path = "../../../testfiles/keychain/biguserlist.json";
+            var loggerFactory = new LoggerFactory();
+            var logger = loggerFactory.CreateLogger<Keychain>();
             var uri = new Uri("http://www.morphic.world");
             var wronguri = new Uri("http://www.gpii.net");
-            Keychain kc = new Keychain(ko, new MockEncrypter(), new NullLogger<Keychain>());
+            Keychain kc = new Keychain(ko, new MockEncrypter(), logger);
             var bob = kc.LoadKey(uri, "bob");   //bob is a key account
             Assert.NotNull(bob);
             Assert.Equal("bobkey", bob.Key);
@@ -72,9 +77,11 @@ namespace MorphicCore.Tests
         {
             var ko = new KeychainOptions();
             ko.Path = "../../../testfiles/keychain/biguserlist.json";
+            var loggerFactory = new LoggerFactory();
+            var logger = loggerFactory.CreateLogger<Keychain>();
             var uri = new Uri("http://www.morphic.world");
             var wronguri = new Uri("http://www.gpii.net");
-            Keychain kc = new Keychain(ko, new MockEncrypter(), new NullLogger<Keychain>());
+            Keychain kc = new Keychain(ko, new MockEncrypter(), logger);
             var dave = kc.LoadUsername(uri, "dave");   //dave is a password account
             Assert.NotNull(dave);
             Assert.Equal("dave", dave.Username);

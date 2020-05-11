@@ -43,7 +43,9 @@ namespace MorphicCore.Tests
         {
             var so = new StorageOptions();
             so.RootPath = "../../../testfiles/submission";
-            Storage s = new Storage(so, new NullLogger<Storage>());
+            var loggerFactory = new LoggerFactory();
+            var logger = loggerFactory.CreateLogger<Storage>();
+            Storage s = new Storage(so, logger);
             var tr = new TestResource();
             await s.Save<MockRecord>(new MockRecord());
             var a = File.ReadAllBytes("../../../testfiles/submission/MockRecord/testrecord.json");
@@ -57,7 +59,9 @@ namespace MorphicCore.Tests
         {
             var so = new StorageOptions();
             so.RootPath = "../../../testfiles/reference";
-            Storage s = new Storage(so, new NullLogger<Storage>());
+            var loggerFactory = new LoggerFactory();
+            var logger = loggerFactory.CreateLogger<Storage>();
+            Storage s = new Storage(so, logger);
             var tr = new TestResource();
             var testfile = await s.Load<MockRecord>("testrecord");
             var nofile = await s.Load<MockRecord>("thisfileisnthere");
@@ -80,7 +84,9 @@ namespace MorphicCore.Tests
         {
             var so = new StorageOptions();
             so.RootPath = "../../../testfiles/reference";
-            Storage s = new Storage(so, new NullLogger<Storage>());
+            var loggerFactory = new LoggerFactory();
+            var logger = loggerFactory.CreateLogger<Storage>();
+            Storage s = new Storage(so, logger);
             Assert.True(s.Exists<MockRecord>("testrecord"));
             Assert.False(s.Exists<MockRecord>("aintherechief"));
             Assert.False(s.Exists<Preferences>("testrecord"));
