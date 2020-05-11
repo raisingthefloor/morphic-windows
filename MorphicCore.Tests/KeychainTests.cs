@@ -15,7 +15,7 @@ namespace MorphicCore.Tests
         public void TestSave()
         {
             var ko = new KeychainOptions();
-            ko.Path = "../../../testfiles/keychain/testsave.json";
+            ko.Path = GetTestFile("testusersave.json");
             var uri = new Uri("http://www.morphic.world");
             var user = new UsernameCredentials("supersecret", "swordfish");
             var key = new KeyCredentials("thekey");
@@ -23,39 +23,39 @@ namespace MorphicCore.Tests
             var logger = loggerFactory.CreateLogger<Keychain>();
             var kc = new Keychain(ko, new MockEncrypter(), logger);
             Assert.True(kc.Save(user, uri));
-            var a = File.ReadAllBytes("../../../testfiles/keychain/testsave.json");
-            var b = File.ReadAllBytes("../../../testfiles/keychain/saveuserref.json");
+            var a = File.ReadAllBytes(GetTestFile("testusersave.json"));
+            var b = File.ReadAllBytes(GetTestFile("saveuserref.json"));
             Assert.Equal(b, a);
-            File.Delete("../../../testfiles/keychain/testsave.json");
+            ko = new KeychainOptions();
+            ko.Path = GetTestFile("testkeysave.json");
             kc = new Keychain(ko, new MockEncrypter(), logger);
             Assert.True(kc.Save(key, uri, "theusername"));
-            a = File.ReadAllBytes("../../../testfiles/keychain/testsave.json");
-            b = File.ReadAllBytes("../../../testfiles/keychain/savekeyref.json");
+            a = File.ReadAllBytes(GetTestFile("testkeysave.json"));
+            b = File.ReadAllBytes(GetTestFile("savekeyref.json"));
             Assert.Equal(b, a);
-            File.Delete("../../../testfiles/keychain/testsave.json");
+            ko = new KeychainOptions();
+            ko.Path = GetTestFile("testcombsave.json");
             kc = new Keychain(ko, new MockEncrypter(), logger);
             Assert.True(kc.Save(user, uri));
             Assert.True(kc.Save(key, uri, "theusername"));
-            a = File.ReadAllBytes("../../../testfiles/keychain/testsave.json");
-            b = File.ReadAllBytes("../../../testfiles/keychain/savecombref.json");
+            a = File.ReadAllBytes(GetTestFile("testcombsave.json"));
+            b = File.ReadAllBytes(GetTestFile("savecombref.json"));
             Assert.Equal(b, a);
-            File.Delete("../../../testfiles/keychain/testsave.json");
             //TODO: so this actually can just write any file type. Verify this is expected behavior.
-            ko.Path = "../../../testfiles/keychain/notajsonfile";
+            ko.Path = GetTestFile("notajsonfile");
             kc = new Keychain(ko, new MockEncrypter(), logger);
             kc.Save(user, uri);
             kc.Save(key, uri, "theusername");
-            a = File.ReadAllBytes("../../../testfiles/keychain/notajsonfile");
-            b = File.ReadAllBytes("../../../testfiles/keychain/savecombref.json");
+            a = File.ReadAllBytes(GetTestFile("notajsonfile"));
+            b = File.ReadAllBytes(GetTestFile("savecombref.json"));
             Assert.Equal(b, a);
-            File.Delete("../../../testfiles/keychain/notajsonfile");
         }
 
         [Fact]
         public void TestLoadKey()
         {
             var ko = new KeychainOptions();
-            ko.Path = "../../../testfiles/keychain/biguserlist.json";
+            ko.Path = GetTestFile("biguserlist.json");
             var loggerFactory = new LoggerFactory();
             var logger = loggerFactory.CreateLogger<Keychain>();
             var uri = new Uri("http://www.morphic.world");
@@ -76,7 +76,7 @@ namespace MorphicCore.Tests
         public void TestLoadUsername()
         {
             var ko = new KeychainOptions();
-            ko.Path = "../../../testfiles/keychain/biguserlist.json";
+            ko.Path = GetTestFile("biguserlist.json");
             var loggerFactory = new LoggerFactory();
             var logger = loggerFactory.CreateLogger<Keychain>();
             var uri = new Uri("http://www.morphic.world");
@@ -92,6 +92,11 @@ namespace MorphicCore.Tests
             //Assert.Null(alex);
             var daveagain = kc.LoadUsername(wronguri, "dave"); //dave doesn't have a gpii.net endpoint
             Assert.Null(daveagain);
+        }
+
+        private string GetTestFile(string file)
+        {
+            return Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..\\..\\..\\testfiles\\keychain", file));
         }
 
         class MockEncrypter : IDataProtection
@@ -114,8 +119,10 @@ namespace MorphicCore.Tests
 
         public void Dispose()
         {
-            File.Delete("../../../testfiles/keychain/testsave.json");
-            File.Delete("../../../testfiles/keychain/notajsonfile");
+            File.Delete(GetTestFile("testkeysave.json"));
+            File.Delete(GetTestFile("testusersave.json"));
+            File.Delete(GetTestFile("testcombsave.json"));
+            File.Delete(GetTestFile("notajsonfile"));
         }
     }
 }
