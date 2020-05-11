@@ -90,6 +90,7 @@ namespace MorphicWin
             UpdateValidation();
             SetFieldsEnabled(false);
             var user = new User();
+            user.Email = UsernameField.Text;
             var credentials = new UsernameCredentials(UsernameField.Text, PasswordField.Password);
             var success = false;
             var errorMessage = "";

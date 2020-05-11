@@ -315,6 +315,9 @@ namespace MorphicService
                     logger.LogError("Failed to save key creds to keychain");
                 }
                 AuthToken = auth.Token;
+                // The server doesn't currently send email, but we reference it immedately after creating an account,
+                // so just fill it in from the input
+                auth.User.Email = auth.User.Email ?? user.Email;
                 await Signin(auth.User);
                 return true;
             }
