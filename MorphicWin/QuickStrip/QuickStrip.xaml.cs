@@ -122,6 +122,12 @@ namespace MorphicWin
             App.Shared.OpenTravelWindow();
         }
 
+        private void ApplyMySettings(object sender, RoutedEventArgs e)
+        {
+            Countly.RecordEvent("apply-my-settings");
+            App.Shared.OpenLoginWindow();
+        }
+
         /// <summary>
         /// Event handler for when the user selects Quit from the logo button's menu
         /// </summary>

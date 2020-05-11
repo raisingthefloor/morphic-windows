@@ -34,7 +34,7 @@ namespace MorphicSettings
     /// <summary>
     /// Apply many settings at once
     /// </summary>
-    class ApplySession
+    public class ApplySession
     {
 
         /// <summary>

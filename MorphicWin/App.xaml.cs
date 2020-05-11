@@ -102,6 +102,7 @@ namespace MorphicWin
             services.AddTransient<CapturePanel>();
             services.AddTransient<TravelCompletedPanel>();
             services.AddTransient<QuickStrip>();
+            services.AddTransient<LoginWindow>();
             services.AddMorphicSettingsHandlers(ConfigureSettingsHandlers);
         }
 
@@ -307,6 +308,12 @@ namespace MorphicWin
             OpenTravelWindow();
         }
 
+        private void ApplyMySettings(object sender, RoutedEventArgs e)
+        {
+            Countly.RecordEvent("apply-my-settings");
+            OpenLoginWindow();
+        }
+
         /// <summary>
         /// Event handler for when the user selects Quit from the logo button's menu
         /// </summary>
@@ -428,6 +435,28 @@ namespace MorphicWin
         private void OnTravelWindowClosed(object? sender, EventArgs e)
         {
             TravelWindow = null;
+        }
+
+        #endregion
+
+        #region Login Window
+
+        private LoginWindow? loginWindow;
+
+        public void OpenLoginWindow()
+        {
+            if (loginWindow == null)
+            {
+                loginWindow = ServiceProvider.GetRequiredService<LoginWindow>();
+                loginWindow.Show();
+                loginWindow.Closed += OnLoginWindowClosed;
+            }
+            loginWindow.Activate();
+        }
+
+        private void OnLoginWindowClosed(object? sender, EventArgs e)
+        {
+            loginWindow = null;
         }
 
         #endregion

@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Timers;
@@ -246,6 +247,19 @@ namespace MorphicService
             return false;
         }
 
+        public async Task<bool> Authenticate(UsernameCredentials credentials)
+        {
+            var auth = await Service.Authenticate(credentials);
+            if (auth != null)
+            {
+                keychain.Save(credentials, Service.Endpoint);
+                AuthToken = auth.Token;
+                await Signin(auth.User);
+                return true;
+            }
+            return false;
+        }
+
         #endregion
 
         #region User Info
@@ -296,7 +310,6 @@ namespace MorphicService
             User = user;
             Preferences = null;
             Preferences = await Service.FetchPreferences(user);
-            ApplyAllPreferences();
         }
 
         public void  Signout()
@@ -370,6 +383,19 @@ namespace MorphicService
         }
 
         /// <summary>
+        /// Create and run an apply session for the current user's preferences
+        /// </summary>
+        /// <returns></returns>
+        public async Task ApplyAllPreferences()
+        {
+            if (Preferences is Preferences preferences)
+            {
+                var applySession = new ApplySession(Settings, preferences);
+                await applySession.Run();
+            }
+        }
+
+        /// <summary>
         /// Get a string preference
         /// </summary>
         /// <param name="key">The preference key</param>
@@ -427,30 +453,6 @@ namespace MorphicService
         public object?[]? GetArray(Preferences.Key key)
         {
             return Preferences?.Get(key) as object?[];
-        }
-
-        /// <summary>
-        /// Applies all of the user's preferences to the system
-        /// </summary>
-        /// <remarks>
-        /// Used after the user logs in
-        /// </remarks>
-        public void ApplyAllPreferences()
-        {
-            logger.LogInformation("Setting all preferences");
-            if (Preferences is Preferences preferences)
-            {
-                if (preferences.Default != null)
-                {
-                    foreach (var solution in preferences.Default)
-                    {
-                        foreach (var preference in solution.Value.Values)
-                        {
-                            _ = Settings.Apply(new Preferences.Key(solution.Key, preference.Key), preference.Value);
-                        }
-                    }
-                }
-            }
         }
 
         /// <summary>
