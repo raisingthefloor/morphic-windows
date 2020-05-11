@@ -38,6 +38,7 @@ using CountlySDK;
 using CountlySDK.Entities;
 using System.Windows.Controls;
 using System.Windows.Input;
+using NHotkey.Wpf;
 
 namespace MorphicWin
 {
@@ -147,9 +148,19 @@ namespace MorphicWin
             logger.LogInformation("Creating Tray Icon");
             CreateMainMenu();
             CreateNotifyIcon();
+            RegisterGlobalHotKeys();
             var task = OpenSession();
             task.ContinueWith(SessionOpened, TaskScheduler.FromCurrentSynchronizationContext());
             ConfigureCountly();
+        }
+
+        private void RegisterGlobalHotKeys()
+        {
+            HotkeyManager.Current.AddOrReplace("Login with Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift, (sender, e) =>
+            {
+                OpenLoginWindow();
+                loginWindow?.Announce();
+            });
         }
 
         private async Task OpenSession()

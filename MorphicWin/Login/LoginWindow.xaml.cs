@@ -24,6 +24,9 @@
 using Microsoft.Extensions.Logging;
 using MorphicCore;
 using MorphicService;
+using System.Collections.Generic;
+using System.IO;
+using System.Media;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -112,6 +115,11 @@ namespace MorphicWin
 
         private void UsernameField_TextChanged(object sender, TextChangedEventArgs e)
         {
+            if (UsernameField.Text == " ")
+            {
+                _ = EnableNarrator();
+                UsernameField.Text = "";
+            }
             UpdateValidation();
         }
 
@@ -123,6 +131,26 @@ namespace MorphicWin
         private void UpdateValidation()
         {
             LoginButton.IsEnabled = UsernameField.Text.Length > 0 && PasswordField.Password.Length > 0;
+        }
+
+        #endregion
+
+        #region Announcement
+
+        public async Task Announce()
+        {
+            var isNarratorEnabled = await session.Settings.CaptureBool(MorphicSettings.Settings.Keys.WindowsNarratorEnabled) ?? false;
+            if (!isNarratorEnabled)
+            {
+                var player = new SoundPlayer(Properties.Resources.LoginAnnounce);
+                player.Load();
+                player.Play();
+            }
+        }
+
+        public async Task EnableNarrator()
+        {
+            _ = await session.Settings.Apply(MorphicSettings.Settings.Keys.WindowsNarratorEnabled, true);
         }
 
         #endregion
