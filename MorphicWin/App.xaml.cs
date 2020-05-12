@@ -26,6 +26,7 @@ using System.Windows;
 using System.Threading.Tasks;
 using System.Text.Json;
 using System.Collections.Generic;
+using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -36,6 +37,7 @@ using MorphicSettings;
 using System.IO;
 using System.Reflection;
 using CountlySDK;
+using CountlySDK.CountlyCommon;
 using CountlySDK.Entities;
 
 namespace MorphicWin
@@ -106,7 +108,6 @@ namespace MorphicWin
             CountlyConfig cc = new CountlyConfig();
             cc.appKey = section["AppKey"];
             cc.serverUrl = section["ServerUrl"];
-            // @TODO is there some type of compile time we could stick in here? Or something real?
             var assembly = Assembly.GetExecutingAssembly();
             var informationVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
                 .InformationalVersion;
@@ -114,6 +115,31 @@ namespace MorphicWin
 
             Countly.Instance.Init(cc);
             Countly.Instance.SessionBegin();
+            Countly.IsLoggingEnabled = true;
+        }
+        
+        private void RecordedException(Task task)
+        {
+            if (task.Exception is Exception e)
+            {
+                Console.WriteLine("failed to record exception: " + e.Message);
+                throw e;
+            }
+
+            Console.WriteLine("done sending exception");
+        }
+
+        void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+        {
+            Exception ex = e.Exception;
+
+            Dictionary<String, String> dict = new Dictionary<string, string>();
+            dict.Add("booh", "waah");
+            // have to cut the stacktrace short or else sends don't seem to work
+            Countly.RecordException(ex.Message, ex.StackTrace, dict, true).ContinueWith(RecordedException, TaskScheduler.FromCurrentSynchronizationContext());
+
+            MessageBox.Show("An unhandled exception just occurred: " + e.Exception.Message, "Exception Sample", MessageBoxButton.OK, MessageBoxImage.Warning);
+            e.Handled = true;
         }
 
         /// <summary>
