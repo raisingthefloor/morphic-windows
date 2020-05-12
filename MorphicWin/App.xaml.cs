@@ -47,15 +47,11 @@ namespace MorphicWin
     /// </summary>
     public partial class App : Application
     {
-
-#pragma warning disable CS8618 // Non-nullable field is uninitialized. Consider declaring as nullable.
-        public static App Shared { get; private set; }
-
-        public IServiceProvider ServiceProvider { get; private set; }
-        public IConfiguration Configuration { get; private set; }
-        public Session Session { get; private set; }
-        private ILogger<App> logger;
-#pragma warning restore CS8618 // Non-nullable field is uninitialized. Consider declaring as nullable.
+        public static App Shared { get; private set; } = null!;
+        public IServiceProvider ServiceProvider { get; private set; } = null!;
+        public IConfiguration Configuration { get; private set; } = null!;
+        public Session Session { get; private set; } = null!;
+        private ILogger<App> logger = null!;
 
         #region Configuration & Startup
 
