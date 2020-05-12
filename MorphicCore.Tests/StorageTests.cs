@@ -31,8 +31,7 @@ using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Text.Json.Serialization;
 using Xunit;
-#nullable enable
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
+#pragma warning disable CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
 
 namespace MorphicCore.Tests
 {
@@ -150,5 +149,5 @@ namespace MorphicCore.Tests
         }
     }
 }
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
-#nullable disable
+
+#pragma warning restore CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.

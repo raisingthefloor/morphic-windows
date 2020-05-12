@@ -25,8 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using Xunit;
-#nullable enable
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
+#pragma warning disable CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
 
 namespace MorphicCore.Tests
 {
@@ -53,16 +52,15 @@ namespace MorphicCore.Tests
             Assert.Equal(pid, prefs.Id);
             Assert.Equal(uid, prefs.UserId);
             Assert.NotNull(prefs.Default);
-            foreach(var k1 in tr.Default.Keys)
-            {
-                Assert.NotNull(prefs.Default[k1]);
-                foreach(var k2 in tr.Default[k1].Values.Keys)
-                {
-                    var defval = prefs.Default[k1].Values[k2];
-                    Assert.NotNull(defval);
-                    Assert.Equal(tr.Default[k1].Values[k2].ToString(), defval.ToString());
-                }
-            }
+            Assert.Equal("ayy lmao", prefs.Default["firstthing"].Values["thisisastring"]);
+            Assert.Equal(3.14159d, prefs.Default["firstthing"].Values["thisisadouble"]);
+            Assert.Equal(52L, prefs.Default["firstthing"].Values["thisisaninteger"]);
+            Assert.Equal(true, prefs.Default["firstthing"].Values["thisisaboolean"]);
+            var dict = (Dictionary<string, object?>)prefs.Default["firstthing"].Values["thisisadictionary"];
+            Assert.Equal(1L, dict["one"]);
+            Assert.Equal(2L, dict["two"]);
+            Assert.Equal(3L, dict["three"]);
+            Assert.Equal(413L, ((Object?[])prefs.Default["firstthing"].Values["thisisanarray"])[5]);
 
             //testing minimally populated
             pid = Guid.NewGuid().ToString();
@@ -91,14 +89,14 @@ namespace MorphicCore.Tests
             var obj = JsonDocument.Parse(json).RootElement;
             Assert.Equal(pid, obj.GetProperty("id").GetString());
             Assert.Equal(uid, obj.GetProperty("user_id").GetString());
-            foreach(var k1 in tr.Default.Keys)
-            {
-                foreach(var k2 in tr.Default[k1].Values.Keys)
-                {
-                    var defval = obj.GetProperty("default").GetProperty(k1).GetProperty(k2).GetObject();
-                    Assert.Equal(tr.Default[k1].Values[k2].ToString(), defval.ToString());  //use toString because of object types that do not compare well
-                }
-            }
+            Assert.Equal("ayy lmao", obj.GetProperty("default").GetProperty("firstthing").GetProperty("thisisastring").GetString());
+            Assert.Equal(3.14159d, obj.GetProperty("default").GetProperty("firstthing").GetProperty("thisisadouble").GetDouble());
+            Assert.Equal(52L, obj.GetProperty("default").GetProperty("firstthing").GetProperty("thisisaninteger").GetInt64());
+            Assert.True(obj.GetProperty("default").GetProperty("firstthing").GetProperty("thisisaboolean").GetBoolean());
+            Assert.Equal(1L, obj.GetProperty("default").GetProperty("firstthing").GetProperty("thisisadictionary").GetProperty("one").GetInt64());
+            Assert.Equal(2L, obj.GetProperty("default").GetProperty("firstthing").GetProperty("thisisadictionary").GetProperty("two").GetInt64());
+            Assert.Equal(3L, obj.GetProperty("default").GetProperty("firstthing").GetProperty("thisisadictionary").GetProperty("three").GetInt64());
+            Assert.Equal(413L, obj.GetProperty("default").GetProperty("firstthing").GetProperty("thisisanarray")[5].GetInt64());
         }
 
         [Fact]
@@ -121,7 +119,7 @@ namespace MorphicCore.Tests
             Assert.Equal(retstring, prefs.Default["firstthing"].Values["thisisastring"]);
             Assert.IsType<Double>(retdouble);
             Assert.Equal(retdouble, prefs.Default["firstthing"].Values["thisisadouble"]);
-            Assert.IsType<int>(retint);
+            Assert.IsType<Int64>(retint);
             Assert.Equal(retint, prefs.Default["firstthing"].Values["thisisaninteger"]);
             Assert.IsType<Boolean>(retbool);
             Assert.Equal(retbool, prefs.Default["firstthing"].Values["thisisaboolean"]);
@@ -142,9 +140,9 @@ namespace MorphicCore.Tests
             prefs.Set(new Preferences.Key("firstthing", "thisisastring"), "set the string with a different value to start");
             prefs.Set(new Preferences.Key("firstthing", "thisisadouble"), 3.14159d);
             prefs.Set(new Preferences.Key("firstthing", "thisisaninteger"), "whoops I used the wrong data type");
-            prefs.Set(new Preferences.Key("firstthing", "thisisaninteger"), 12345);
+            prefs.Set(new Preferences.Key("firstthing", "thisisaninteger"), 12345L);
             prefs.Set(new Preferences.Key("firstthing", "thisisaboolean"), true);
-            prefs.Set(new Preferences.Key("firstthing", "thisisadictionary"), 823847);
+            prefs.Set(new Preferences.Key("firstthing", "thisisadictionary"), 823847L);
             prefs.Set(new Preferences.Key("firstthing", "thisisadictionary"), tr.Default["firstthing"].Values["thisisadictionary"]);
             prefs.Set(new Preferences.Key("firstthing", "thisisanarray"), new object?[40]);
             prefs.Set(new Preferences.Key("firstthing", "thisisastring"), "now change the string");
@@ -153,8 +151,8 @@ namespace MorphicCore.Tests
             Assert.Equal("now change the string", prefs.Default["firstthing"].Values["thisisastring"]);
             Assert.IsType<Double>(prefs.Default["firstthing"].Values["thisisadouble"]);
             Assert.Equal(3.14159d, prefs.Default["firstthing"].Values["thisisadouble"]);
-            Assert.IsType<int>(prefs.Default["firstthing"].Values["thisisaninteger"]);
-            Assert.Equal(12345, prefs.Default["firstthing"].Values["thisisaninteger"]);
+            Assert.IsType<Int64>(prefs.Default["firstthing"].Values["thisisaninteger"]);
+            Assert.Equal(12345L, prefs.Default["firstthing"].Values["thisisaninteger"]);
             Assert.IsType<Boolean>(prefs.Default["firstthing"].Values["thisisaboolean"]);
             Assert.Equal(true, prefs.Default["firstthing"].Values["thisisaboolean"]);
             Assert.IsType<Dictionary<string, object?>>(prefs.Default["firstthing"].Values["thisisadictionary"]);
@@ -175,11 +173,12 @@ namespace MorphicCore.Tests
                 Default.Add("firstthing", new SolutionPreferences());
                 Default["firstthing"].Values.Add("thisisastring", "ayy lmao");
                 Default["firstthing"].Values.Add("thisisadouble", 3.14159d);
-                Default["firstthing"].Values.Add("thisisaninteger", 52);
+                Default["firstthing"].Values.Add("thisisaninteger", 52L);
                 Default["firstthing"].Values.Add("thisisaboolean", true);
-                Dictionary<string, object?> dict = new Dictionary<string, object?>() { { "one", 1 }, { "two", 2 }, { "three", 3 } };
+                Dictionary<string, object?> dict = new Dictionary<string, object?>() { { "one", 1L }, { "two", 2L }, { "three", 3L } };
                 Default["firstthing"].Values.Add("thisisadictionary", dict);
                 object?[] arr = new object?[10];
+                arr[5] = 413L;
                 Default["firstthing"].Values.Add("thisisanarray", arr);
                 Default.Add("secondthing", new SolutionPreferences());
                 Default["secondthing"].Values.Add("thisisaboolean", false);
@@ -190,5 +189,5 @@ namespace MorphicCore.Tests
         }
     }
 }
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
-#nullable disable
+
+#pragma warning restore CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
