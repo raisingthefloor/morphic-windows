@@ -222,6 +222,13 @@ namespace MorphicService
             {
                 if (CurrentUserId is string userId)
                 {
+                    if (userSettings.GetUsernameForId(userId) is string username)
+                    {
+                        if (keychain.LoadUsername(Service.Endpoint, username) is ICredentials credentials)
+                        {
+                            return credentials;
+                        }
+                    }
                     return keychain.LoadKey(Service.Endpoint, userId);
                 }
                 return null;
@@ -254,6 +261,7 @@ namespace MorphicService
             {
                 keychain.Save(credentials, Service.Endpoint);
                 AuthToken = auth.Token;
+                userSettings.SetUsernameForId(credentials.Username, auth.User.Id);
                 await Signin(auth.User);
                 return true;
             }
@@ -310,6 +318,11 @@ namespace MorphicService
             User = user;
             Preferences = null;
             Preferences = await Service.FetchPreferences(user);
+            await Storage.Save(user);
+            if (Preferences is Preferences preferences)
+            {
+                await Storage.Save(preferences);
+            }
         }
 
         public void  Signout()
@@ -325,12 +338,26 @@ namespace MorphicService
             {
                 if (!keychain.Save(credentials, Service.Endpoint))
                 {
-                    logger.LogError("Failed to save key creds to keychain");
+                    logger.LogError("Failed to save username creds to keychain");
                 }
                 AuthToken = auth.Token;
                 // The server doesn't currently send email, but we reference it immedately after creating an account,
                 // so just fill it in from the input
                 auth.User.Email = auth.User.Email ?? user.Email;
+                if (auth.User.PreferencesId is string preferencesId)
+                {
+                    if (Preferences?.Id != "__default__")
+                    {
+                        Preferences = await Storage.Load<Preferences>("__default__");
+                    }
+                    if (Preferences is Preferences preferences)
+                    {
+                        preferences.Id = preferencesId;
+                        preferences.UserId = auth.User.Id;
+                        await Service.Save(preferences);
+                    }
+                }
+                userSettings.SetUsernameForId(credentials.Username, auth.User.Id);
                 await Signin(auth.User);
                 return true;
             }

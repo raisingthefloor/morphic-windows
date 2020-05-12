@@ -30,6 +30,36 @@ namespace MorphicWin
 {
     class UserSettings : IUserSettings
     {
-        public string? UserId { get => Settings.Default.UserId; set => Settings.Default.UserId = value; }
+        public string? UserId
+        {
+            get
+            {
+                return Settings.Default.UserId;
+            }
+            set
+            {
+                Settings.Default.UserId = value;
+                Settings.Default.Save();
+            }
+        }
+
+        public string? GetUsernameForId(string userId)
+        {
+            if (Settings.Default.UsernamesById == null)
+            {
+                return null;
+            }
+            return Settings.Default.UsernamesById[UserId];
+        }
+
+        public void SetUsernameForId(string username, string userId)
+        {
+            if (Settings.Default.UsernamesById == null)
+            {
+                Settings.Default.UsernamesById = new StringDictionarySetting();
+            }
+            Settings.Default.UsernamesById[userId] = username;
+            Settings.Default.Save();
+        }
     }
 }
