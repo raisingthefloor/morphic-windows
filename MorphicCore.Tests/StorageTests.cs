@@ -36,62 +36,70 @@ using Xunit;
 
 namespace MorphicCore.Tests
 {
-    public class StorageTests
+    public class StorageTests : IDisposable
     {
-        [Fact]
-        public async void TestSave()
+        public StorageTests()
         {
-            var so = new StorageOptions();
-            so.RootPath = "../../../testfiles/submission";
-            var loggerFactory = new LoggerFactory();
-            var logger = loggerFactory.CreateLogger<Storage>();
-            Storage s = new Storage(so, logger);
-            var tr = new TestResource();
-            await s.Save<MockRecord>(new MockRecord());
-            var a = File.ReadAllBytes("../../../testfiles/submission/MockRecord/testrecord.json");
-            var b = File.ReadAllBytes("../../../testfiles/reference/MockRecord/testrecord.json");
-            Assert.Equal(a, b);
-            File.Delete("../../../testfiles/submission/MockRecord/testrecord.json");
+            directoryName = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            byte[] junk = new byte[100];
+            Random rnd = new Random();
+            rnd.NextBytes(junk);
+            Directory.CreateDirectory(Path.Combine(directoryName, "MockRecord"));
+            File.WriteAllBytes(Path.Combine(directoryName, "MockRecord/binaryfile.json"), junk);
+            File.WriteAllText(Path.Combine(directoryName, "MockRecord/badjsonfile.json"), "{\"whoops\"; \"thisisafail\"}");
+            File.WriteAllText(Path.Combine(directoryName, "MockRecord/incorrectfields.json"), "{\"notarecord\": \"atall\"}");
+            File.WriteAllText(Path.Combine(directoryName, "MockRecord/notajsonfile"), "{\"ayy\":\"lmao\"}");
         }
 
+
+        private string directoryName;
+
         [Fact]
-        public async void TestLoad()
+        public async void TestSaveLoad()
         {
             var so = new StorageOptions();
-            so.RootPath = "../../../testfiles/reference";
-            var loggerFactory = new LoggerFactory();
-            var logger = loggerFactory.CreateLogger<Storage>();
+            so.RootPath = directoryName;
+            var logger = new LoggerFactory().CreateLogger<Storage>();
+            //SAVING TEST
             Storage s = new Storage(so, logger);
-            var tr = new TestResource();
+            var mock = new MockRecord();
+            mock.populate();
+            bool sav = await s.Save<MockRecord>(mock);
+            Assert.True(sav);
+            //EXISTS TEST
+            Assert.True(s.Exists<MockRecord>("testrecord"));
+            Assert.True(s.Exists<MockRecord>("binaryfile"));
+            Assert.True(s.Exists<MockRecord>("badjsonfile"));
+            Assert.True(s.Exists<MockRecord>("incorrectfields"));
+            Assert.False(s.Exists<MockRecord>("aintherechief"));
+            Assert.False(s.Exists<Preferences>("testrecord"));
+            Assert.False(s.Exists<MockRecord>("notajsonfile"));
+            //LOAD TEST
             var testfile = await s.Load<MockRecord>("testrecord");
             var nofile = await s.Load<MockRecord>("thisfileisnthere");
+            var wrongfields = await s.Load<MockRecord>("incorrectfields");
             var badjsonfile = await s.Load<MockRecord>("badjsonfile");
+            var notajson = await s.Load<MockRecord>("notajsonfile");
             var binaryfile = await s.Load<MockRecord>("binaryfile");
-            var r = tr.basicRecord;
             Assert.NotNull(testfile);
-            Assert.Equal(testfile.UserId, r.UserId);
-            Assert.Equal(testfile.PreferencesId, r.PreferencesId);
-            Assert.Equal(testfile.FirstName, r.FirstName);
-            Assert.Equal(testfile.LastName, r.LastName);
-            Assert.Equal(testfile.Default.ToString(), r.Default.ToString());
+            Assert.Equal(mock.UserId, testfile.UserId);
+            Assert.Equal(mock.PreferencesId, testfile.PreferencesId);
+            Assert.Equal(mock.FirstName, testfile.FirstName);
+            Assert.Equal(mock.LastName, testfile.LastName);
+            Assert.Equal(mock.Default["firstthing"].Values["thisisastring"], testfile.Default["firstthing"].Values["thisisastring"]);
+            Assert.Equal(mock.Default["firstthing"].Values["thisisadouble"], testfile.Default["firstthing"].Values["thisisadouble"]);
+            Assert.Equal(mock.Default["firstthing"].Values["thisisaninteger"], testfile.Default["firstthing"].Values["thisisaninteger"]);
+            Assert.Equal(mock.Default["firstthing"].Values["thisisaboolean"], testfile.Default["firstthing"].Values["thisisaboolean"]);
             Assert.Null(nofile);
+            //Assert.Null(wrongfields); //TODO: assess whether check should be done as to whether proper fields are provided?
             Assert.Null(badjsonfile);
+            Assert.Null(notajson);
             Assert.Null(binaryfile);
         }
 
-        [Fact]
-        public void TestExists()
+        private string GetTestPath(string file)
         {
-            var so = new StorageOptions();
-            so.RootPath = "../../../testfiles/reference";
-            var loggerFactory = new LoggerFactory();
-            var logger = loggerFactory.CreateLogger<Storage>();
-            Storage s = new Storage(so, logger);
-            Assert.True(s.Exists<MockRecord>("testrecord"));
-            Assert.False(s.Exists<MockRecord>("aintherechief"));
-            Assert.False(s.Exists<Preferences>("testrecord"));
-            Assert.True(s.Exists<Preferences>("testprefsfile"));
-            Assert.False(s.Exists<MockRecord>("notajsonfile"));
+            return Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..\\..\\..\\testfiles\\storage", file));
         }
 
         //record class that contains all fields to be tested
@@ -101,26 +109,31 @@ namespace MorphicCore.Tests
             string IRecord.Id { get; set; } = "testrecord";
 
             [JsonPropertyName("user_id")]
-            public string? UserId { get; set; } = "62398721067952310238967627839";
+            public string? UserId { get; set; }
 
             [JsonPropertyName("preferences_id")]
-            public string? PreferencesId { get; set; } = "892319065789120956462348671234";
+            public string? PreferencesId { get; set; }
 
             [JsonPropertyName("first_name")]
-            public string? FirstName { get; set; } = "John";
+            public string? FirstName { get; set; }
 
             [JsonPropertyName("last_name")]
-            public string? LastName { get; set; } = "Doe";
+            public string? LastName { get; set; }
 
             [JsonPropertyName("default")]
-            public Dictionary<string, SolutionPreferences>? Default { get; set; } = new Dictionary<string, SolutionPreferences>();
+            public Dictionary<string, SolutionPreferences>? Default { get; set; }
 
-            public MockRecord()
+            public void populate()
             {
+                UserId = "62398721067952310238967627839";
+                PreferencesId = "892319065789120956462348671234";
+                FirstName = "John";
+                LastName = "Doe";
+                Default = new Dictionary<string, SolutionPreferences>();
                 Default.Add("firstthing", new SolutionPreferences());
                 Default["firstthing"].Values.Add("thisisastring", "ayy lmao");
                 Default["firstthing"].Values.Add("thisisadouble", 3.14159d);
-                Default["firstthing"].Values.Add("thisisaninteger", 52);
+                Default["firstthing"].Values.Add("thisisaninteger", 52L);
                 Default["firstthing"].Values.Add("thisisaboolean", true);
                 Dictionary<string, object?> dict = new Dictionary<string, object?>() { { "one", 1 }, { "two", 2 }, { "three", 3 } };
                 Default["firstthing"].Values.Add("thisisadictionary", dict);
@@ -131,13 +144,9 @@ namespace MorphicCore.Tests
             }
         }
 
-        class TestResource
+        public void Dispose()
         {
-            public MockRecord basicRecord;
-            public TestResource()
-            {
-                basicRecord = new MockRecord();
-            }
+            Directory.Delete(directoryName, true);
         }
     }
 }

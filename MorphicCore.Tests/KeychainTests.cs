@@ -3,6 +3,8 @@ using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using Xunit;
 
@@ -10,119 +12,73 @@ namespace MorphicCore.Tests
 {
     public class KeychainTests : IDisposable
     {
-
-        [Fact]
-        public void TestSave()
+        public KeychainTests()
         {
-            var ko = new KeychainOptions();
-            ko.Path = GetTestFile("testusersave.json");
-            var uri = new Uri("http://www.morphic.world");
-            var user = new UsernameCredentials("supersecret", "swordfish");
-            var key = new KeyCredentials("thekey");
-            var loggerFactory = new LoggerFactory();
-            var logger = loggerFactory.CreateLogger<Keychain>();
-            var kc = new Keychain(ko, new MockEncrypter(), logger);
-            Assert.True(kc.Save(user, uri));
-            var a = File.ReadAllBytes(GetTestFile("testusersave.json"));
-            var b = File.ReadAllBytes(GetTestFile("saveuserref.json"));
-            Assert.Equal(b, a);
-            ko = new KeychainOptions();
-            ko.Path = GetTestFile("testkeysave.json");
-            kc = new Keychain(ko, new MockEncrypter(), logger);
-            Assert.True(kc.Save(key, uri, "theusername"));
-            a = File.ReadAllBytes(GetTestFile("testkeysave.json"));
-            b = File.ReadAllBytes(GetTestFile("savekeyref.json"));
-            Assert.Equal(b, a);
-            ko = new KeychainOptions();
-            ko.Path = GetTestFile("testcombsave.json");
-            kc = new Keychain(ko, new MockEncrypter(), logger);
-            Assert.True(kc.Save(user, uri));
-            Assert.True(kc.Save(key, uri, "theusername"));
-            a = File.ReadAllBytes(GetTestFile("testcombsave.json"));
-            b = File.ReadAllBytes(GetTestFile("savecombref.json"));
-            Assert.Equal(b, a);
-            //TODO: so this actually can just write any file type. Verify this is expected behavior.
-            ko.Path = GetTestFile("notajsonfile");
-            kc = new Keychain(ko, new MockEncrypter(), logger);
-            kc.Save(user, uri);
-            kc.Save(key, uri, "theusername");
-            a = File.ReadAllBytes(GetTestFile("notajsonfile"));
-            b = File.ReadAllBytes(GetTestFile("savecombref.json"));
-            Assert.Equal(b, a);
+            directoryName = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         }
 
+        private string directoryName;
+        
         [Fact]
-        public void TestLoadKey()
+        public void TestSaveLoad()
         {
+            var encrypt = new MockEncrypter();
             var ko = new KeychainOptions();
-            ko.Path = GetTestFile("biguserlist.json");
-            var loggerFactory = new LoggerFactory();
-            var logger = loggerFactory.CreateLogger<Keychain>();
+            ko.Path = Path.Combine(directoryName, "testsave.json");
             var uri = new Uri("http://www.morphic.world");
             var wronguri = new Uri("http://www.gpii.net");
-            Keychain kc = new Keychain(ko, new MockEncrypter(), logger);
-            var bob = kc.LoadKey(uri, "bob");   //bob is a key account
-            Assert.NotNull(bob);
-            Assert.Equal("bobkey", bob.Key);
-            var shirley = kc.LoadKey(uri, "shirley");   //no account at all
-            Assert.Null(shirley);
-            var steve = kc.LoadKey(uri, "steve");   //steve is a password account
-            //Assert.Null(steve);   //TODO: should we be differentiating between passwords and keys? And allowing multiple entry strats so you can have a key and a password?
-            var bobagain = kc.LoadKey(wronguri, "bob"); //bob doesn't have a gpii.net endpoint
-            Assert.Null(bobagain);
-        }
-
-        [Fact]
-        public void TestLoadUsername()
-        {
-            var ko = new KeychainOptions();
-            ko.Path = GetTestFile("biguserlist.json");
-            var loggerFactory = new LoggerFactory();
-            var logger = loggerFactory.CreateLogger<Keychain>();
-            var uri = new Uri("http://www.morphic.world");
-            var wronguri = new Uri("http://www.gpii.net");
-            Keychain kc = new Keychain(ko, new MockEncrypter(), logger);
-            var dave = kc.LoadUsername(uri, "dave");   //dave is a password account
-            Assert.NotNull(dave);
-            Assert.Equal("dave", dave.Username);
-            Assert.Equal("davepassword", dave.Password);
-            var shirley = kc.LoadUsername(uri, "shirley");   //no account at all
-            Assert.Null(shirley);
-            var alex = kc.LoadUsername(uri, "alex");   //alex is a key account
-            //Assert.Null(alex);
-            var daveagain = kc.LoadUsername(wronguri, "dave"); //dave doesn't have a gpii.net endpoint
-            Assert.Null(daveagain);
-        }
-
-        private string GetTestFile(string file)
-        {
-            return Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..\\..\\..\\testfiles\\keychain", file));
+            var user = new UsernameCredentials("passuser", "password");
+            var key = new KeyCredentials("key");
+            var logger = new LoggerFactory().CreateLogger<Keychain>();
+            //TEST SAVING
+            var kc = new Keychain(ko, encrypt, logger);
+            Assert.True(kc.Save(user, uri));
+            Assert.Equal(1, encrypt.encryptCounter);
+            Assert.Equal(0, encrypt.decryptCounter);
+            Assert.True(kc.Save(key, uri, "keyuser"));
+            Assert.Equal(2, encrypt.encryptCounter);
+            Assert.Equal(0, encrypt.decryptCounter);
+            //TEST LOADING
+            kc = new Keychain(ko, encrypt, logger);
+            Assert.Equal(2, encrypt.encryptCounter);
+            Assert.Equal(1, encrypt.decryptCounter);
+            //TEST RETRIEVAL
+            var nuser = kc.LoadUsername(uri, "passuser");
+            Assert.Equal("passuser", nuser.Username);
+            Assert.Equal("password", nuser.Password);
+            var nkey = kc.LoadKey(uri, "keyuser");
+            Assert.Equal("key", nkey.Key);
+            nuser = kc.LoadUsername(uri, "notathing");
+            nkey = kc.LoadKey(uri, "notathing");
+            Assert.Null(nuser);
+            Assert.Null(nkey);
+            //TODO: put any tests for switching usernames and keys here once that does something
+            nuser = kc.LoadUsername(wronguri, "passuser");
+            nkey = kc.LoadKey(wronguri, "keyuser");
+            Assert.Null(nuser);
+            Assert.Null(nkey);
         }
 
         class MockEncrypter : IDataProtection
         {
+            public int encryptCounter = 0;
+            public int decryptCounter = 0;
             public byte[] Protect(byte[] userData)
             {
-                byte[] reply = new byte[userData.Length];
-                for(int i = 0; i < userData.Length; ++i)
-                {
-                    reply[reply.Length - i - 1] = userData[i];
-                }
-                return reply;
+                ++encryptCounter;
+                return userData;
             }
 
             public byte[] Unprotect(byte[] encryptedData)
             {
-                return Protect(encryptedData);
+                ++decryptCounter;
+                return encryptedData;
             }
         }
 
         public void Dispose()
         {
-            File.Delete(GetTestFile("testkeysave.json"));
-            File.Delete(GetTestFile("testusersave.json"));
-            File.Delete(GetTestFile("testcombsave.json"));
-            File.Delete(GetTestFile("notajsonfile"));
+            Directory.Delete(directoryName, true);
         }
     }
 }
