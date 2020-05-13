@@ -39,38 +39,38 @@ namespace MorphicCore.Tests
             TestResource tr = new TestResource();
             var options = new JsonSerializerOptions();
             options.Converters.Add(new JsonElementInferredTypeConverter());
-            var pid = Guid.NewGuid().ToString();
-            var uid = Guid.NewGuid().ToString();
+            var preferencesid = Guid.NewGuid().ToString();
+            var userid = Guid.NewGuid().ToString();
             var json = JsonSerializer.Serialize(new Dictionary<string, object?>()
             {
-                { "id", pid },
-                { "user_id", uid },
+                { "id", preferencesid },
+                { "user_id", userid },
                 { "default", tr.Default }
             });
-            var prefs = JsonSerializer.Deserialize<Preferences>(json, options);
-            Assert.NotNull(prefs);
-            Assert.Equal(pid, prefs.Id);
-            Assert.Equal(uid, prefs.UserId);
-            Assert.NotNull(prefs.Default);
-            Assert.Equal("ayy lmao", prefs.Default["firstthing"].Values["thisisastring"]);
-            Assert.Equal(3.14159d, prefs.Default["firstthing"].Values["thisisadouble"]);
-            Assert.Equal(52L, prefs.Default["firstthing"].Values["thisisaninteger"]);
-            Assert.Equal(true, prefs.Default["firstthing"].Values["thisisaboolean"]);
-            var dict = (Dictionary<string, object?>)prefs.Default["firstthing"].Values["thisisadictionary"];
-            Assert.Equal(1L, dict["one"]);
-            Assert.Equal(2L, dict["two"]);
-            Assert.Equal(3L, dict["three"]);
-            Assert.Equal(413L, ((Object?[])prefs.Default["firstthing"].Values["thisisanarray"])[5]);
+            var preferences = JsonSerializer.Deserialize<Preferences>(json, options);
+            Assert.NotNull(preferences);
+            Assert.Equal(preferencesid, preferences.Id);
+            Assert.Equal(userid, preferences.UserId);
+            Assert.NotNull(preferences.Default);
+            Assert.Equal("ayy lmao", preferences.Default["firstthing"].Values["thisisastring"]);
+            Assert.Equal(3.14159d, preferences.Default["firstthing"].Values["thisisadouble"]);
+            Assert.Equal(52L, preferences.Default["firstthing"].Values["thisisaninteger"]);
+            Assert.Equal(true, preferences.Default["firstthing"].Values["thisisaboolean"]);
+            var dictionary = (Dictionary<string, object?>)preferences.Default["firstthing"].Values["thisisadictionary"];
+            Assert.Equal(1L, dictionary["one"]);
+            Assert.Equal(2L, dictionary["two"]);
+            Assert.Equal(3L, dictionary["three"]);
+            Assert.Equal(413L, ((Object?[])preferences.Default["firstthing"].Values["thisisanarray"])[5]);
 
             //testing minimally populated
-            pid = Guid.NewGuid().ToString();
+            preferencesid = Guid.NewGuid().ToString();
             json = JsonSerializer.Serialize(new Dictionary<string, object?>()
             {
-                { "id", pid }
+                { "id", preferencesid }
             });
-            prefs = JsonSerializer.Deserialize<Preferences>(json, options);
-            Assert.NotNull(prefs);
-            Assert.Equal(pid, prefs.Id);
+            preferences = JsonSerializer.Deserialize<Preferences>(json, options);
+            Assert.NotNull(preferences);
+            Assert.Equal(preferencesid, preferences.Id);
 
             //TODO: test invalid cases once expected behavior for deserialization failure is known
         }
@@ -78,55 +78,55 @@ namespace MorphicCore.Tests
         [Fact]
         public void TestJsonSerialize()
         {
-            var pid = Guid.NewGuid().ToString();
-            var uid = Guid.NewGuid().ToString();
-            var tr = new TestResource();
-            var prefs = new Preferences();
-            prefs.Id = pid;
-            prefs.UserId = uid;
-            prefs.Default = tr.Default;
-            var json = JsonSerializer.Serialize(prefs);
-            var obj = JsonDocument.Parse(json).RootElement;
-            Assert.Equal(pid, obj.GetProperty("id").GetString());
-            Assert.Equal(uid, obj.GetProperty("user_id").GetString());
-            Assert.Equal("ayy lmao", obj.GetProperty("default").GetProperty("firstthing").GetProperty("thisisastring").GetString());
-            Assert.Equal(3.14159d, obj.GetProperty("default").GetProperty("firstthing").GetProperty("thisisadouble").GetDouble());
-            Assert.Equal(52L, obj.GetProperty("default").GetProperty("firstthing").GetProperty("thisisaninteger").GetInt64());
-            Assert.True(obj.GetProperty("default").GetProperty("firstthing").GetProperty("thisisaboolean").GetBoolean());
-            Assert.Equal(1L, obj.GetProperty("default").GetProperty("firstthing").GetProperty("thisisadictionary").GetProperty("one").GetInt64());
-            Assert.Equal(2L, obj.GetProperty("default").GetProperty("firstthing").GetProperty("thisisadictionary").GetProperty("two").GetInt64());
-            Assert.Equal(3L, obj.GetProperty("default").GetProperty("firstthing").GetProperty("thisisadictionary").GetProperty("three").GetInt64());
-            Assert.Equal(413L, obj.GetProperty("default").GetProperty("firstthing").GetProperty("thisisanarray")[5].GetInt64());
+            var preferencesid = Guid.NewGuid().ToString();
+            var userid = Guid.NewGuid().ToString();
+            var resource = new TestResource();
+            var preferences = new Preferences();
+            preferences.Id = preferencesid;
+            preferences.UserId = userid;
+            preferences.Default = resource.Default;
+            var json = JsonSerializer.Serialize(preferences);
+            var jsonobject = JsonDocument.Parse(json).RootElement;
+            Assert.Equal(preferencesid, jsonobject.GetProperty("id").GetString());
+            Assert.Equal(userid, jsonobject.GetProperty("user_id").GetString());
+            Assert.Equal("ayy lmao", jsonobject.GetProperty("default").GetProperty("firstthing").GetProperty("thisisastring").GetString());
+            Assert.Equal(3.14159d, jsonobject.GetProperty("default").GetProperty("firstthing").GetProperty("thisisadouble").GetDouble());
+            Assert.Equal(52L, jsonobject.GetProperty("default").GetProperty("firstthing").GetProperty("thisisaninteger").GetInt64());
+            Assert.True(jsonobject.GetProperty("default").GetProperty("firstthing").GetProperty("thisisaboolean").GetBoolean());
+            Assert.Equal(1L, jsonobject.GetProperty("default").GetProperty("firstthing").GetProperty("thisisadictionary").GetProperty("one").GetInt64());
+            Assert.Equal(2L, jsonobject.GetProperty("default").GetProperty("firstthing").GetProperty("thisisadictionary").GetProperty("two").GetInt64());
+            Assert.Equal(3L, jsonobject.GetProperty("default").GetProperty("firstthing").GetProperty("thisisadictionary").GetProperty("three").GetInt64());
+            Assert.Equal(413L, jsonobject.GetProperty("default").GetProperty("firstthing").GetProperty("thisisanarray")[5].GetInt64());
         }
 
         [Fact]
         public void TestGet()
         {
-            var prefs = new Preferences();
-            prefs.Default = new TestResource().Default;
+            var preferences = new Preferences();
+            preferences.Default = new TestResource().Default;
             //fetch every data type
-            var retstring = prefs.Get(new Preferences.Key("firstthing", "thisisastring"));
-            var retdouble = prefs.Get(new Preferences.Key("firstthing", "thisisadouble"));
-            var retint = prefs.Get(new Preferences.Key("firstthing", "thisisaninteger"));
-            var retbool = prefs.Get(new Preferences.Key("firstthing", "thisisaboolean"));
-            var retdict = prefs.Get(new Preferences.Key("firstthing", "thisisadictionary"));
-            var retarr = prefs.Get(new Preferences.Key("firstthing", "thisisanarray"));
+            var returnstring = preferences.Get(new Preferences.Key("firstthing", "thisisastring"));
+            var returndouble = preferences.Get(new Preferences.Key("firstthing", "thisisadouble"));
+            var returnint = preferences.Get(new Preferences.Key("firstthing", "thisisaninteger"));
+            var returnboolean = preferences.Get(new Preferences.Key("firstthing", "thisisaboolean"));
+            var returndictionary = preferences.Get(new Preferences.Key("firstthing", "thisisadictionary"));
+            var returnarray = preferences.Get(new Preferences.Key("firstthing", "thisisanarray"));
             //try to fetch something that isn't there, and something in a different solution
-            var nothere = prefs.Get(new Preferences.Key("firstthing", "somethingdifferent"));
-            var wrongplace = prefs.Get(new Preferences.Key("secondthing", "thisisadictionary"));
+            var nothere = preferences.Get(new Preferences.Key("firstthing", "somethingdifferent"));
+            var wrongplace = preferences.Get(new Preferences.Key("secondthing", "thisisadictionary"));
 
-            Assert.IsType<string>(retstring);
-            Assert.Equal(retstring, prefs.Default["firstthing"].Values["thisisastring"]);
-            Assert.IsType<Double>(retdouble);
-            Assert.Equal(retdouble, prefs.Default["firstthing"].Values["thisisadouble"]);
-            Assert.IsType<Int64>(retint);
-            Assert.Equal(retint, prefs.Default["firstthing"].Values["thisisaninteger"]);
-            Assert.IsType<Boolean>(retbool);
-            Assert.Equal(retbool, prefs.Default["firstthing"].Values["thisisaboolean"]);
-            Assert.IsType<Dictionary<string, object?>>(retdict);
-            Assert.Equal(retdict, prefs.Default["firstthing"].Values["thisisadictionary"]);
-            Assert.IsType<Object?[]>(retarr);
-            Assert.Equal(retarr, prefs.Default["firstthing"].Values["thisisanarray"]);
+            Assert.IsType<string>(returnstring);
+            Assert.Equal(returnstring, preferences.Default["firstthing"].Values["thisisastring"]);
+            Assert.IsType<Double>(returndouble);
+            Assert.Equal(returndouble, preferences.Default["firstthing"].Values["thisisadouble"]);
+            Assert.IsType<Int64>(returnint);
+            Assert.Equal(returnint, preferences.Default["firstthing"].Values["thisisaninteger"]);
+            Assert.IsType<Boolean>(returnboolean);
+            Assert.Equal(returnboolean, preferences.Default["firstthing"].Values["thisisaboolean"]);
+            Assert.IsType<Dictionary<string, object?>>(returndictionary);
+            Assert.Equal(returndictionary, preferences.Default["firstthing"].Values["thisisadictionary"]);
+            Assert.IsType<Object?[]>(returnarray);
+            Assert.Equal(returnarray, preferences.Default["firstthing"].Values["thisisanarray"]);
             Assert.Null(nothere);
             Assert.Null(wrongplace);
         }
@@ -134,31 +134,31 @@ namespace MorphicCore.Tests
         [Fact]
         public void TestSet()
         {
-            var prefs = new Preferences();
-            var tr = new TestResource();
+            var preferences = new Preferences();
+            var resource = new TestResource();
             //prefs.Default = new tResource1().Default;
-            prefs.Set(new Preferences.Key("firstthing", "thisisastring"), "set the string with a different value to start");
-            prefs.Set(new Preferences.Key("firstthing", "thisisadouble"), 3.14159d);
-            prefs.Set(new Preferences.Key("firstthing", "thisisaninteger"), "whoops I used the wrong data type");
-            prefs.Set(new Preferences.Key("firstthing", "thisisaninteger"), 12345L);
-            prefs.Set(new Preferences.Key("firstthing", "thisisaboolean"), true);
-            prefs.Set(new Preferences.Key("firstthing", "thisisadictionary"), 823847L);
-            prefs.Set(new Preferences.Key("firstthing", "thisisadictionary"), tr.Default["firstthing"].Values["thisisadictionary"]);
-            prefs.Set(new Preferences.Key("firstthing", "thisisanarray"), new object?[40]);
-            prefs.Set(new Preferences.Key("firstthing", "thisisastring"), "now change the string");
+            preferences.Set(new Preferences.Key("firstthing", "thisisastring"), "set the string with a different value to start");
+            preferences.Set(new Preferences.Key("firstthing", "thisisadouble"), 3.14159d);
+            preferences.Set(new Preferences.Key("firstthing", "thisisaninteger"), "whoops I used the wrong data type");
+            preferences.Set(new Preferences.Key("firstthing", "thisisaninteger"), 12345L);
+            preferences.Set(new Preferences.Key("firstthing", "thisisaboolean"), true);
+            preferences.Set(new Preferences.Key("firstthing", "thisisadictionary"), 823847L);
+            preferences.Set(new Preferences.Key("firstthing", "thisisadictionary"), resource.Default["firstthing"].Values["thisisadictionary"]);
+            preferences.Set(new Preferences.Key("firstthing", "thisisanarray"), new object?[40]);
+            preferences.Set(new Preferences.Key("firstthing", "thisisastring"), "now change the string");
 
-            Assert.IsType<string>(prefs.Default["firstthing"].Values["thisisastring"]);
-            Assert.Equal("now change the string", prefs.Default["firstthing"].Values["thisisastring"]);
-            Assert.IsType<Double>(prefs.Default["firstthing"].Values["thisisadouble"]);
-            Assert.Equal(3.14159d, prefs.Default["firstthing"].Values["thisisadouble"]);
-            Assert.IsType<Int64>(prefs.Default["firstthing"].Values["thisisaninteger"]);
-            Assert.Equal(12345L, prefs.Default["firstthing"].Values["thisisaninteger"]);
-            Assert.IsType<Boolean>(prefs.Default["firstthing"].Values["thisisaboolean"]);
-            Assert.Equal(true, prefs.Default["firstthing"].Values["thisisaboolean"]);
-            Assert.IsType<Dictionary<string, object?>>(prefs.Default["firstthing"].Values["thisisadictionary"]);
-            Assert.Equal(tr.Default["firstthing"].Values["thisisadictionary"], prefs.Default["firstthing"].Values["thisisadictionary"]);
-            Assert.IsType<Object?[]>(prefs.Default["firstthing"].Values["thisisanarray"]);
-            Assert.Equal(new object?[40], prefs.Default["firstthing"].Values["thisisanarray"]);
+            Assert.IsType<string>(preferences.Default["firstthing"].Values["thisisastring"]);
+            Assert.Equal("now change the string", preferences.Default["firstthing"].Values["thisisastring"]);
+            Assert.IsType<Double>(preferences.Default["firstthing"].Values["thisisadouble"]);
+            Assert.Equal(3.14159d, preferences.Default["firstthing"].Values["thisisadouble"]);
+            Assert.IsType<Int64>(preferences.Default["firstthing"].Values["thisisaninteger"]);
+            Assert.Equal(12345L, preferences.Default["firstthing"].Values["thisisaninteger"]);
+            Assert.IsType<Boolean>(preferences.Default["firstthing"].Values["thisisaboolean"]);
+            Assert.Equal(true, preferences.Default["firstthing"].Values["thisisaboolean"]);
+            Assert.IsType<Dictionary<string, object?>>(preferences.Default["firstthing"].Values["thisisadictionary"]);
+            Assert.Equal(resource.Default["firstthing"].Values["thisisadictionary"], preferences.Default["firstthing"].Values["thisisadictionary"]);
+            Assert.IsType<Object?[]>(preferences.Default["firstthing"].Values["thisisanarray"]);
+            Assert.Equal(new object?[40], preferences.Default["firstthing"].Values["thisisanarray"]);
         }
 
         //test resources

@@ -38,42 +38,42 @@ namespace MorphicCore.Tests
             // Valid user, all fields populated
             var options = new JsonSerializerOptions();
             options.Converters.Add(new JsonElementInferredTypeConverter());
-            var uid = Guid.NewGuid().ToString();
-            var pid = Guid.NewGuid().ToString();
+            var userid = Guid.NewGuid().ToString();
+            var preferencesid = Guid.NewGuid().ToString();
             var json = JsonSerializer.Serialize(new Dictionary<string, object?>()
             {
-                { "id", uid },
-                { "preferences_id", pid },
+                { "id", userid },
+                { "preferences_id", preferencesid },
                 { "first_name", "John" },
                 { "last_name", "Doe" }
             });
             var user = JsonSerializer.Deserialize<User>(json, options);
             Assert.NotNull(user);
-            Assert.Equal(uid, user.Id);
-            Assert.Equal(pid, user.PreferencesId);
+            Assert.Equal(userid, user.Id);
+            Assert.Equal(preferencesid, user.PreferencesId);
             Assert.Equal("John", user.FirstName);
             Assert.Equal("Doe", user.LastName);
 
 
             // Valid user, minimum set of fields populated
-            uid = Guid.NewGuid().ToString();
+            userid = Guid.NewGuid().ToString();
             json = JsonSerializer.Serialize(new Dictionary<string, object?>()
             {
-                { "id", uid }
+                { "id", userid }
             });
             user = JsonSerializer.Deserialize<User>(json, options);
             Assert.NotNull(user);
-            Assert.Equal(uid, user.Id);
+            Assert.Equal(userid, user.Id);
             Assert.Null(user.PreferencesId);
             Assert.Null(user.FirstName);
             Assert.Null(user.LastName);
 
 
             // Invalid user, all other fields populated
-            pid = Guid.NewGuid().ToString();
+            preferencesid = Guid.NewGuid().ToString();
             json = JsonSerializer.Serialize(new Dictionary<string, object?>()
             {
-                { "preferences_id", pid },
+                { "preferences_id", preferencesid },
                 { "first_name", "John" },
                 { "last_name", "Doe" }
             });
@@ -85,19 +85,28 @@ namespace MorphicCore.Tests
         [Fact]
         public void TestJsonSerialize()
         {
-            var uid = Guid.NewGuid().ToString();
-            var pid = Guid.NewGuid().ToString();
+            var userid = Guid.NewGuid().ToString();
+            var preferencesid = Guid.NewGuid().ToString();
             User user = new User();
-            user.Id = uid;
-            user.PreferencesId = pid;
+            user.Id = userid;
+            user.PreferencesId = preferencesid;
             user.FirstName = "John";
             user.LastName = "Doe";
             var json = JsonSerializer.Serialize(user);
             var obj = JsonDocument.Parse(json).RootElement;
-            Assert.Equal(uid, obj.GetProperty("id").GetString());
-            Assert.Equal(pid, obj.GetProperty("preferences_id").GetString());
+            Assert.Equal(userid, obj.GetProperty("id").GetString());
+            Assert.Equal(preferencesid, obj.GetProperty("preferences_id").GetString());
             Assert.Equal("John", obj.GetProperty("first_name").GetString());
             Assert.Equal("Doe", obj.GetProperty("last_name").GetString());
+
+            user = new User();
+            user.Id = userid;
+            json = JsonSerializer.Serialize(user);
+            obj = JsonDocument.Parse(json).RootElement;
+            Assert.Equal(userid, obj.GetProperty("id").GetString());
+            Assert.Null(obj.GetProperty("preferences_id").GetObject());
+            Assert.Null(obj.GetProperty("first_name").GetObject());
+            Assert.Null(obj.GetProperty("last_name").GetObject());
         }
     }
 }

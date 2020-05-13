@@ -56,30 +56,30 @@ namespace MorphicCore.Tests
         [Fact]
         public async void TestSaveLoad()
         {
-            var so = new StorageOptions();
-            so.RootPath = directoryName;
+            var options = new StorageOptions();
+            options.RootPath = directoryName;
             var logger = new LoggerFactory().CreateLogger<Storage>();
             //SAVING TEST
-            Storage s = new Storage(so, logger);
+            Storage storage = new Storage(options, logger);
             var mock = new MockRecord();
             mock.populate();
-            bool sav = await s.Save<MockRecord>(mock);
+            bool sav = await storage.Save<MockRecord>(mock);
             Assert.True(sav);
             //EXISTS TEST
-            Assert.True(s.Exists<MockRecord>("testrecord"));
-            Assert.True(s.Exists<MockRecord>("binaryfile"));
-            Assert.True(s.Exists<MockRecord>("badjsonfile"));
-            Assert.True(s.Exists<MockRecord>("incorrectfields"));
-            Assert.False(s.Exists<MockRecord>("aintherechief"));
-            Assert.False(s.Exists<Preferences>("testrecord"));
-            Assert.False(s.Exists<MockRecord>("notajsonfile"));
+            Assert.True(storage.Exists<MockRecord>("testrecord"));
+            Assert.True(storage.Exists<MockRecord>("binaryfile"));
+            Assert.True(storage.Exists<MockRecord>("badjsonfile"));
+            Assert.True(storage.Exists<MockRecord>("incorrectfields"));
+            Assert.False(storage.Exists<MockRecord>("aintherechief"));
+            Assert.False(storage.Exists<Preferences>("testrecord"));
+            Assert.False(storage.Exists<MockRecord>("notajsonfile"));
             //LOAD TEST
-            var testfile = await s.Load<MockRecord>("testrecord");
-            var nofile = await s.Load<MockRecord>("thisfileisnthere");
-            var wrongfields = await s.Load<MockRecord>("incorrectfields");
-            var badjsonfile = await s.Load<MockRecord>("badjsonfile");
-            var notajson = await s.Load<MockRecord>("notajsonfile");
-            var binaryfile = await s.Load<MockRecord>("binaryfile");
+            var testfile = await storage.Load<MockRecord>("testrecord");
+            var nofile = await storage.Load<MockRecord>("thisfileisnthere");
+            var wrongfields = await storage.Load<MockRecord>("incorrectfields");
+            var badjsonfile = await storage.Load<MockRecord>("badjsonfile");
+            var notajson = await storage.Load<MockRecord>("notajsonfile");
+            var binaryfile = await storage.Load<MockRecord>("binaryfile");
             Assert.NotNull(testfile);
             Assert.Equal(mock.UserId, testfile.UserId);
             Assert.Equal(mock.PreferencesId, testfile.PreferencesId);

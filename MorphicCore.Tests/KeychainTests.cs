@@ -23,40 +23,40 @@ namespace MorphicCore.Tests
         public void TestSaveLoad()
         {
             var encrypt = new MockEncrypter();
-            var ko = new KeychainOptions();
-            ko.Path = Path.Combine(directoryName, "testsave.json");
+            var options = new KeychainOptions();
+            options.Path = Path.Combine(directoryName, "testsave.json");
             var uri = new Uri("http://www.morphic.world");
             var wronguri = new Uri("http://www.gpii.net");
-            var user = new UsernameCredentials("passuser", "password");
+            var username = new UsernameCredentials("passuser", "password");
             var key = new KeyCredentials("key");
             var logger = new LoggerFactory().CreateLogger<Keychain>();
             //TEST SAVING
-            var kc = new Keychain(ko, encrypt, logger);
-            Assert.True(kc.Save(user, uri));
+            var keychain = new Keychain(options, encrypt, logger);
+            Assert.True(keychain.Save(username, uri));
             Assert.Equal(1, encrypt.encryptCounter);
             Assert.Equal(0, encrypt.decryptCounter);
-            Assert.True(kc.Save(key, uri, "keyuser"));
+            Assert.True(keychain.Save(key, uri, "keyuser"));
             Assert.Equal(2, encrypt.encryptCounter);
             Assert.Equal(0, encrypt.decryptCounter);
             //TEST LOADING
-            kc = new Keychain(ko, encrypt, logger);
+            keychain = new Keychain(options, encrypt, logger);
             Assert.Equal(2, encrypt.encryptCounter);
             Assert.Equal(1, encrypt.decryptCounter);
             //TEST RETRIEVAL
-            var nuser = kc.LoadUsername(uri, "passuser");
-            Assert.Equal("passuser", nuser.Username);
-            Assert.Equal("password", nuser.Password);
-            var nkey = kc.LoadKey(uri, "keyuser");
-            Assert.Equal("key", nkey.Key);
-            nuser = kc.LoadUsername(uri, "notathing");
-            nkey = kc.LoadKey(uri, "notathing");
-            Assert.Null(nuser);
-            Assert.Null(nkey);
+            var newusername = keychain.LoadUsername(uri, "passuser");
+            Assert.Equal("passuser", newusername.Username);
+            Assert.Equal("password", newusername.Password);
+            var newkey = keychain.LoadKey(uri, "keyuser");
+            Assert.Equal("key", newkey.Key);
+            newusername = keychain.LoadUsername(uri, "notathing");
+            newkey = keychain.LoadKey(uri, "notathing");
+            Assert.Null(newusername);
+            Assert.Null(newkey);
             //TODO: put any tests for switching usernames and keys here once that does something
-            nuser = kc.LoadUsername(wronguri, "passuser");
-            nkey = kc.LoadKey(wronguri, "keyuser");
-            Assert.Null(nuser);
-            Assert.Null(nkey);
+            newusername = keychain.LoadUsername(wronguri, "passuser");
+            newkey = keychain.LoadKey(wronguri, "keyuser");
+            Assert.Null(newusername);
+            Assert.Null(newkey);
         }
 
         class MockEncrypter : IDataProtection
