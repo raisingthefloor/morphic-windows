@@ -37,7 +37,6 @@ using System.IO;
 using System.Reflection;
 using CountlySDK;
 using CountlySDK.Entities;
-using MorphicSettings.System_Parameters_Info;
 using System.Windows.Controls;
 using System.Windows.Input;
 using NHotkey.Wpf;

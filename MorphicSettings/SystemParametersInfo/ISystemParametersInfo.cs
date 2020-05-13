@@ -22,41 +22,28 @@
 // * Consumer Electronics Association Foundation
 
 using System;
-using System.Runtime.InteropServices;
-using MorphicSettings.System_Parameters_Info;
+using System.Collections.Generic;
+using System.Text;
 
 namespace MorphicSettings
 {
 
     /// <summary>
-    /// An SPI implementation that calls the SystemParametersInfo function in windows
+    /// An interface for System Parameter Info (SPI) calls
     /// </summary>
-    public class SystemParametersInfo: ISystemParametersInfo
+    public interface ISystemParametersInfo
     {
 
-        public bool Call(Action action, int parameter1, object? parameter2, bool updateUserProfile = false, bool sendChange = false)
-        {
-            var param2Handle = GCHandle.Alloc(parameter2);
-            int param3 = 0;
-            if (updateUserProfile)
-            {
-                param3 |= 0x1;
-            }
-            if (sendChange)
-            {
-                param3 |= 0x2;
-            }
-            var result = SystemParametersInfoW((int)action, parameter1, GCHandle.ToIntPtr(param2Handle), param3);
-            param2Handle.Free();
-            return result;
-        }
+        /// <summary>
+        /// Call SystemParametersInfo to set a value or perform an action
+        /// </summary>
+        /// <param name="action"></param>
+        /// <param name="parameter1"></param>
+        /// <param name="parameter2"></param>
+        /// <param name="updateUserProfile"></param>
+        /// <param name="sendChange"></param>
+        /// <returns></returns>
+        public bool Call(SystemParametersInfo.Action action, int parameter1, object? parameter2, bool updateUserProfile = false, bool sendChange = false);
 
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern bool SystemParametersInfoW(int uiAction, int uiParam, IntPtr pvParam, int fWinIni);
-
-        public enum Action
-        {
-            SetCursors = 0x57
-        }
     }
 }
