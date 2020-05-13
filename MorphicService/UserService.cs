@@ -27,7 +27,7 @@ using System.Net.Http;
 
 namespace MorphicService
 {
-    static class UserService
+    public static class UserService
     {
 
         /// <summary>

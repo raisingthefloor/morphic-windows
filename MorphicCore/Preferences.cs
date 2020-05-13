@@ -23,11 +23,36 @@
 
 using System.Text.Json.Serialization;
 using System.Collections.Generic;
+using System.Security.Cryptography.X509Certificates;
 
 namespace MorphicCore
 {
     public class Preferences: IRecord
     {
+
+        /// <summary>
+        /// Default constructor
+        /// </summary>
+        public Preferences()
+        {
+        }
+
+        /// <summary>
+        /// Copy Constructor
+        /// </summary>
+        /// <param name="other"></param>
+        public Preferences(Preferences other)
+        {
+            if (other.Default is Dictionary<string, SolutionPreferences> otherDefault)
+            {
+                Default = new Dictionary<string, SolutionPreferences>();
+                foreach (var pair in otherDefault)
+                {
+                    Default.Add(pair.Key, new SolutionPreferences(pair.Value));
+                }
+            }
+        }
+
         [JsonPropertyName("id")]
         public string Id { get; set; } = "";
 
@@ -101,6 +126,25 @@ namespace MorphicCore
         }
 
         /// <summary>
+        /// Remove the given key from these preferences
+        /// </summary>
+        /// <param name="key"></param>
+        public void Remove(Key key)
+        {
+            if (Default != null)
+            {
+                if (Default.TryGetValue(key.Solution, out var preferencesSet))
+                {
+                    preferencesSet.Values.Remove(key.Preference);
+                    if (preferencesSet.Values.Count == 0)
+                    {
+                        Default.Remove(key.Solution);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Get a flat set of preference values keyed by Preferences.Key
         /// </summary>
         /// <returns></returns>
@@ -128,5 +172,21 @@ namespace MorphicCore
         /// <summary>Arbitrary preferences specific to the solution</summary>
         [JsonExtensionData]
         public Dictionary<string, object?> Values { get; set; } = new Dictionary<string, object?>();
+
+        /// <summary>
+        /// Default constructor
+        /// </summary>
+        public SolutionPreferences()
+        {
+        }
+
+        /// <summary>
+        /// Copy constructor
+        /// </summary>
+        /// <param name="other"></param>
+        public SolutionPreferences(SolutionPreferences other)
+        {
+            Values = new Dictionary<string, object?>(other.Values);
+        }
     }
 }

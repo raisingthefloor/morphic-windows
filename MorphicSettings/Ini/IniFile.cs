@@ -22,6 +22,7 @@
 // * Consumer Electronics Association Foundation
 
 using Morphic.Windows.Native;
+using System.IO;
 
 namespace MorphicSettings
 {
