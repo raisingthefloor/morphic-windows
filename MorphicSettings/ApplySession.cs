@@ -114,7 +114,7 @@ namespace MorphicSettings
             {
                 if (Settings.Get(pair.Key) is Setting setting)
                 {
-                    if (setting.HandlerDescription?.CreateHandler(serviceProvider) is SettingHandler handler)
+                    if (setting.CreateHandler(serviceProvider) is SettingHandler handler)
                     {
                         logger.LogInformation("Applying {0}.{1}", pair.Key.Solution, pair.Key.Preference);
                         var success = await handler.Apply(pair.Value);

@@ -32,7 +32,7 @@ namespace MorphicSettings
     /// <summary>
     /// Captures many settings at once
     /// </summary>
-    class CaptureSession
+    public class CaptureSession
     {
 
         /// <summary>
@@ -92,14 +92,18 @@ namespace MorphicSettings
             {
                 if (Settings.Get(key) is Setting setting)
                 {
-                    if (setting.HandlerDescription?.CreateHandler(serviceProvider) is SettingHandler handler)
+                    if (setting.CreateHandler(serviceProvider) is SettingHandler handler)
                     {
                         var result = await handler.Capture();
                         if (result.Success)
                         {
-                            if (CaptureDefaultValues || result.Value != setting.Default)
+                            if (CaptureDefaultValues || !setting.isDefault(result.Value))
                             {
                                 Preferences.Set(key, result.Value);
+                            }
+                            else
+                            {
+                                Preferences.Remove(key);
                             }
                         }
                     }

@@ -28,6 +28,11 @@ using System.Threading;
 using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
+using MorphicSettings;
+using System.Text.RegularExpressions;
+using MorphicCore;
+using System.Threading.Tasks;
+using System.Security.Cryptography;
 
 namespace MorphicWin
 {
@@ -62,17 +67,25 @@ namespace MorphicWin
         /// </summary>
         public event EventHandler? Completed;
 
+        /// <summary>
+        /// Will invoke the Completed event if the capture is done and the minimum time has elapsed
+        /// </summary>
+        private void CompleteIfAllDone()
+        {
+            if (hasCompletedCapture && hasReachedMinimumTime)
+            {
+                Completed?.Invoke(this, new EventArgs());
+            }
+        }
+
         #endregion
 
         #region Lifecycle
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            timerSynchronizatinContext = SynchronizationContext.Current;
-            minimumIntervalTimer = new System.Timers.Timer(minimumWaitTimeInSeconds * 1000);
-            minimumIntervalTimer.AutoReset = false;
-            minimumIntervalTimer.Elapsed += OnTimerElapsed;
-            minimumIntervalTimer.Start();
+            StartMinimumTimer();
+            _ = RunCapture();
         }
 
         #endregion
@@ -88,12 +101,29 @@ namespace MorphicWin
         /// <summary>
         /// The minimum time to wait before continuing
         /// </summary>
-        private const int minimumWaitTimeInSeconds = 1;
+        private const int minimumWaitTimeInSeconds = 10;
 
         /// <summary>
         /// Used to get back to the main thread when the timer fires
         /// </summary>
         private SynchronizationContext? timerSynchronizatinContext;
+
+        /// <summary>
+        /// Set to true when the minimim time has elapsed
+        /// </summary>
+        private bool hasReachedMinimumTime = false;
+
+        /// <summary>
+        /// Create and start timer to wait for a minimum amount of time
+        /// </summary>
+        private void StartMinimumTimer()
+        {
+            timerSynchronizatinContext = SynchronizationContext.Current;
+            minimumIntervalTimer = new System.Timers.Timer(minimumWaitTimeInSeconds * 1000);
+            minimumIntervalTimer.AutoReset = false;
+            minimumIntervalTimer.Elapsed += OnTimerElapsed;
+            minimumIntervalTimer.Start();
+        }
 
         /// <summary>
         /// Called when the minimum time has elapsed
@@ -108,7 +138,8 @@ namespace MorphicWin
                 timerSynchronizatinContext = null;
                 context.Post(state =>
                 {
-                    Completed?.Invoke(this, new EventArgs());
+                    hasReachedMinimumTime = true;
+                    CompleteIfAllDone();
                 }, null);
             }
             
@@ -122,6 +153,34 @@ namespace MorphicWin
         /// The Morphic Session to use for making requests
         /// </summary>
         private readonly Session session;
+
+        /// <summary>
+        /// Set to true when the capture has completed
+        /// </summary>
+        private bool hasCompletedCapture = false;
+
+        /// <summary>
+        /// The preferences where captured values will be stored
+        /// </summary>
+        public Preferences Preferences { get; set; } = null!;
+
+        /// <summary>
+        /// Create and run a capture session
+        /// </summary>
+        /// <returns></returns>
+        private async Task RunCapture()
+        {
+
+            var captureSession = new CaptureSession(session.Settings, Preferences);
+            captureSession.AddAllSolutions();
+            await captureSession.Run();
+            hasCompletedCapture = true;
+            if (session.User != null)
+            {
+                await session.Service.Save(Preferences);
+            }
+            CompleteIfAllDone();
+        }
 
         #endregion
     }

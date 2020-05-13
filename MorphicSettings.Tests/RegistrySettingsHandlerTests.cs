@@ -45,10 +45,15 @@ namespace MorphicSettings.Tests
         {
             var registry = new MockRegistry();
             var loggerFactory = new LoggerFactory();
-            var logger = loggerFactory.CreateLogger<RegistrySettingsHandler>();
+            var logger = loggerFactory.CreateLogger<RegistrySettingHandler>();
 
-            var description = new RegistrySettingHandlerDescription(@"HKEY_TEST\Test\Key", "SomeValue", RegistryValueKind.String);
-            var handler = new RegistrySettingsHandler(description, registry, logger);
+            var setting = new Setting()
+            {
+                Name = "test",
+                Kind = Setting.ValueKind.String,
+                HandlerDescription = new RegistrySettingHandlerDescription(@"HKEY_TEST\Test\Key", "SomeValue", RegistryValueKind.String)
+            };
+            var handler = new RegistrySettingHandler(setting, registry, logger);
             var callCount = 0;
             registry.NextGetResponder = (string keyName, string valueName, object? defaultValue) =>
             {

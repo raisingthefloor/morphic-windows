@@ -22,6 +22,7 @@
 // * Consumer Electronics Association Foundation
 
 using System;
+using System.Linq;
 using Microsoft.Win32;
 
 namespace MorphicSettings
@@ -31,15 +32,58 @@ namespace MorphicSettings
     /// </summary>
     public class WindowsRegistry : IRegistry
     {
+
         public object? GetValue(string keyName, string valueName, object? defaultValue)
         {
-            return Registry.GetValue(keyName, valueName, defaultValue);
+            object? value = defaultValue;
+            if (GetKey(keyName) is RegistryKey key)
+            {
+                value = key.GetValue(valueName, defaultValue, RegistryValueOptions.DoNotExpandEnvironmentNames);
+            }
+            return value;
         }
 
         public bool SetValue(string keyName, string valueName, object? value, RegistryValueKind valueKind)
         {
-            Registry.SetValue(keyName, valueName, value, valueKind);
-            return true;
+            if (GetKey(keyName, writable: true) is RegistryKey key)
+            {
+                key.SetValue(valueName, value, valueKind);
+                return true;
+            }
+            return false;
+        }
+
+        private RegistryKey? GetKey(string keyName, bool writable = false)
+        {
+            var components = keyName.Split(@"\");
+            var i = 0;
+            var key = GetRootKey(components[i++]);
+            while (key != null && i < components.Length)
+            {
+                key = key.OpenSubKey(components[i], writable && i == components.Length - 1);
+                ++i;
+            }
+            return key;
+        }
+
+        private RegistryKey? GetRootKey(string name)
+        {
+            switch (name)
+            {
+                case "HKEY_CLASSES_ROOT":
+                    return Registry.ClassesRoot;
+                case "HKEY_CURRENT_CONFIG":
+                    return Registry.CurrentConfig;
+                case "HKEY_CURRENT_USER":
+                    return Registry.CurrentUser;
+                case "HKEY_LOCAL_MACHINE":
+                    return Registry.LocalMachine;
+                case "HKEY_PERFORMANCE_DATA":
+                    return Registry.PerformanceData;
+                case "HKEY_USERS":
+                    return Registry.Users;
+            }
+            return null;
         }
     }
 }
