@@ -34,6 +34,9 @@ namespace MorphicCore
         [JsonPropertyName("preferences_id")]
         public string? PreferencesId { get; set; }
 
+        [JsonPropertyName("email")]
+        public string? Email { get; set; }
+
         [JsonPropertyName("first_name")]
         public string? FirstName { get; set; }
 

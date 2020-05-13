@@ -147,6 +147,20 @@ namespace MorphicSettings
             return await session.Run();
         }
 
+        public async Task<object?> Capture(Preferences.Key key)
+        {
+            var prefs = new Preferences();
+            var session = new CaptureSession(this, prefs);
+            session.Keys.Add(key);
+            await session.Run();
+            return prefs.Get(key);
+        }
+
+        public async Task<bool?> CaptureBool(Preferences.Key key)
+        {
+            return await Capture(key) as bool?;
+        }
+
         /// <summary>
         /// Known settings keys
         /// </summary>

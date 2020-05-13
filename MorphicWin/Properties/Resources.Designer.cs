@@ -71,6 +71,15 @@ namespace MorphicWin.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.IO.UnmanagedMemoryStream similar to System.IO.MemoryStream.
+        /// </summary>
+        internal static System.IO.UnmanagedMemoryStream LoginAnnounce {
+            get {
+                return ResourceManager.GetStream("LoginAnnounce", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Customize buttons and take your settings with you anywhere.
         /// </summary>
         internal static string QuickStrip_Advanced_HelpMessage {

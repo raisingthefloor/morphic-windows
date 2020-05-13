@@ -114,7 +114,18 @@ namespace MorphicWin
         private void CustomizeQuickStrip(object sender, RoutedEventArgs e)
         {
             Countly.RecordEvent("customize-quickstrip");
-            App.Shared.OpenConfigurator();
+        }
+
+        private void TravelWithSettings(object sender, RoutedEventArgs e)
+        {
+            Countly.RecordEvent("travel-with-settings");
+            App.Shared.OpenTravelWindow();
+        }
+
+        private void ApplyMySettings(object sender, RoutedEventArgs e)
+        {
+            Countly.RecordEvent("apply-my-settings");
+            App.Shared.OpenLoginWindow();
         }
 
         /// <summary>

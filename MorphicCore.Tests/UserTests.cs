@@ -25,6 +25,7 @@ using System;
 using System.Text.Json;
 using System.Collections.Generic;
 using Xunit;
+using Microsoft.Extensions.Options;
 
 namespace MorphicCore.Tests
 {
@@ -36,34 +37,75 @@ namespace MorphicCore.Tests
             // Valid user, all fields populated
             var options = new JsonSerializerOptions();
             options.Converters.Add(new JsonElementInferredTypeConverter());
-            var uid = Guid.NewGuid().ToString();
-            var pid = Guid.NewGuid().ToString();
-            var json = JsonSerializer.Serialize(new Dictionary<string, object?>()
+            var userid = Guid.NewGuid().ToString();
+            var preferencesid = Guid.NewGuid().ToString();
+            var json = JsonSerializer.Serialize(new Dictionary<string, object>()
             {
-                { "id", uid },
-                { "preferences_id", pid },
-                { "first_name", "Test" },
-                { "last_name", "User" }
+                { "id", userid },
+                { "preferences_id", preferencesid },
+                { "first_name", "John" },
+                { "last_name", "Doe" }
             });
             var user = JsonSerializer.Deserialize<User>(json, options);
-            Assert.Equal(uid, user.Id);
-            Assert.Equal(pid, user.PreferencesId);
-            Assert.Equal("Test", user.FirstName);
-            Assert.Equal("User", user.LastName);
+            Assert.NotNull(user);
+            Assert.Equal(userid, user.Id);
+            Assert.Equal(preferencesid, user.PreferencesId);
+            Assert.Equal("John", user.FirstName);
+            Assert.Equal("Doe", user.LastName);
 
 
             // Valid user, minimum set of fields populated
-            uid = Guid.NewGuid().ToString();
-            pid = Guid.NewGuid().ToString();
-            json = JsonSerializer.Serialize(new Dictionary<string, object?>()
+            userid = Guid.NewGuid().ToString();
+            json = JsonSerializer.Serialize(new Dictionary<string, object>()
             {
-                { "id", uid }
+                { "id", userid }
             });
             user = JsonSerializer.Deserialize<User>(json, options);
-            Assert.Equal(uid, user.Id);
+            Assert.NotNull(user);
+            Assert.Equal(userid, user.Id);
             Assert.Null(user.PreferencesId);
             Assert.Null(user.FirstName);
             Assert.Null(user.LastName);
+
+
+            // Invalid user, all other fields populated
+            preferencesid = Guid.NewGuid().ToString();
+            json = JsonSerializer.Serialize(new Dictionary<string, object>()
+            {
+                { "preferences_id", preferencesid },
+                { "first_name", "John" },
+                { "last_name", "Doe" }
+            });
+            user = JsonSerializer.Deserialize<User>(json, options);
+            Assert.NotNull(user);
+            //TODO: this one should actually fail, need to change the code
+        }
+
+        [Fact]
+        public void TestJsonSerialize()
+        {
+            var userid = Guid.NewGuid().ToString();
+            var preferencesid = Guid.NewGuid().ToString();
+            User user = new User();
+            user.Id = userid;
+            user.PreferencesId = preferencesid;
+            user.FirstName = "John";
+            user.LastName = "Doe";
+            var json = JsonSerializer.Serialize(user);
+            var obj = JsonDocument.Parse(json).RootElement;
+            Assert.Equal(userid, obj.GetProperty("id").GetString());
+            Assert.Equal(preferencesid, obj.GetProperty("preferences_id").GetString());
+            Assert.Equal("John", obj.GetProperty("first_name").GetString());
+            Assert.Equal("Doe", obj.GetProperty("last_name").GetString());
+
+            user = new User();
+            user.Id = userid;
+            json = JsonSerializer.Serialize(user);
+            obj = JsonDocument.Parse(json).RootElement;
+            Assert.Equal(userid, obj.GetProperty("id").GetString());
+            Assert.Null(obj.GetProperty("preferences_id").GetObject());
+            Assert.Null(obj.GetProperty("first_name").GetObject());
+            Assert.Null(obj.GetProperty("last_name").GetObject());
         }
     }
 }

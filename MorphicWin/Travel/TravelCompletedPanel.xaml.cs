@@ -22,23 +22,46 @@
 // * Consumer Electronics Association Foundation
 
 using System;
+using System.Collections;
 using System.Windows;
-using System.Threading.Tasks;
-using MorphicCore;
+using System.Windows.Controls;
+using Microsoft.Extensions.Logging;
 using MorphicService;
 
 namespace MorphicWin
 {
     /// <summary>
-    /// Interaction logic for MorphicConfigurator.xaml
+    /// Shown at the end of the capture process as a review for the user
     /// </summary>
-    public partial class MorphicConfigurator : Window
+    public partial class TravelCompletedPanel : StackPanel
     {
-        public MorphicConfigurator(Session session)
+
+        #region Creating a Panel
+
+        public TravelCompletedPanel(Session session, ILogger<TravelCompletedPanel> logger)
         {
             this.session = session;
+            this.logger = logger;
             InitializeComponent();
         }
+
+        /// <summary>
+        /// A logger to use
+        /// </summary>
+        private readonly ILogger<TravelCompletedPanel> logger;
+
+        #endregion
+
+        #region Completion Events
+
+        /// <summary>
+        /// The event that is dispatched when the user clicks the Close button
+        /// </summary>
+        public event EventHandler? Completed;
+
+        #endregion
+
+        #region Lifecycle
 
         private readonly Session session;
 
@@ -50,47 +73,23 @@ namespace MorphicWin
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            if (Settings.Default.UserId == "")
-            {
-                createUserButton.Visibility = Visibility.Visible;
-                clearUserButton.Visibility = Visibility.Hidden;
-            }
-            else
-            {
-                createUserButton.Visibility = Visibility.Hidden;
-                clearUserButton.Visibility = Visibility.Visible;
-            }
+            EmailLabel.Content = session.User?.Email;
         }
 
-        private void CreateTestUser(object? sender, RoutedEventArgs e)
+        #endregion
+
+        #region Actions
+
+        /// <summary>
+        /// Handler for when the user clicks the Close button
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OnClose(object? sender, RoutedEventArgs e)
         {
-            var task = session.RegisterUser();
-            createUserButton.IsEnabled = false;
-            task.ContinueWith(task =>
-            {
-                if (task.Result)
-                {
-                    if (session.User != null)
-                    {
-                        Settings.Default.UserId = session.User.Id;
-                        Settings.Default.Save();
-                    }
-                    Close();
-                }
-                else
-                {
-                    createUserButton.IsEnabled = true;
-                }
-
-            }, TaskScheduler.FromCurrentSynchronizationContext());
+            Completed?.Invoke(this, new EventArgs());
         }
 
-        private void ClearTestUser(object? sender, RoutedEventArgs e)
-        {
-            session.Signout();
-            Settings.Default.UserId = "";
-            Settings.Default.Save();
-            Close();
-        }
+        #endregion
     }
 }

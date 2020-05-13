@@ -28,10 +28,10 @@
             <Button.ContextMenu>
                 <ContextMenu>
                     <MenuItem Header="Hide Quick Strip" Click="HideQuickStrip"/>
-                    <MenuItem Header="Customize Quick Strip..."  Click="CustomizeQuickStrip"/>
+                    <MenuItem Header="Customize Quick Strip..."  Click="CustomizeQuickStrip" IsEnabled="False"/>
                     <Separator/>
-                    <MenuItem Header="Take My Settings with Me..."/>
-                    <MenuItem Header="Apply My Settings..."/>
+                    <MenuItem Header="Take My Settings with Me..." Click="TravelWithSettings"/>
+                    <MenuItem Header="Apply My Settings..." Click="ApplyMySettings"/>
                     <Separator/>
                     <MenuItem Header="Quit Morphic" Click="Quit"/>
                 </ContextMenu>

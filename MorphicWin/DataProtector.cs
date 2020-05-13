@@ -40,7 +40,7 @@ namespace MorphicWin
             var payload = new byte[1 + entropy.Length + encrypted.Length];
             payload[0] = (byte)entropy.Length;
             entropy.CopyTo(payload, 1);
-            encrypted.CopyTo(payload, entropy.Length);
+            encrypted.CopyTo(payload, 1 + entropy.Length);
             return payload;
         }
 

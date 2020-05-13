@@ -24,6 +24,8 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Timers;
 using Microsoft.Extensions.Logging;
@@ -140,7 +142,12 @@ namespace MorphicService
                     logger.LogInformation("{0} {1}", response.StatusCode.ToString(), request.RequestUri.AbsolutePath);
                 }
                 return await response.GetObject<ResponseBody>();
-            }catch (Exception e)
+            }
+            catch (BadRequestException e)
+            { 
+                throw e;
+            }
+            catch (Exception e)
             {
                 logger.LogError(e, "Request failed");
                 return null;
@@ -186,6 +193,17 @@ namespace MorphicService
             }
         }
 
+        public class BadRequestException: Exception
+        {
+
+            [JsonPropertyName("error")]
+            public string Error { get; set; } = null!;
+
+            [JsonPropertyName("details")]
+            public Dictionary<string, object?>? Details { get; set; }
+
+        }
+
         #endregion
 
         #region Authentication
@@ -204,6 +222,13 @@ namespace MorphicService
             {
                 if (CurrentUserId is string userId)
                 {
+                    if (userSettings.GetUsernameForId(userId) is string username)
+                    {
+                        if (keychain.LoadUsername(Service.Endpoint, username) is ICredentials credentials)
+                        {
+                            return credentials;
+                        }
+                    }
                     return keychain.LoadKey(Service.Endpoint, userId);
                 }
                 return null;
@@ -225,6 +250,20 @@ namespace MorphicService
                     User = auth.User;
                     return true;
                 }
+            }
+            return false;
+        }
+
+        public async Task<bool> Authenticate(UsernameCredentials credentials)
+        {
+            var auth = await Service.Authenticate(credentials);
+            if (auth != null)
+            {
+                keychain.Save(credentials, Service.Endpoint);
+                AuthToken = auth.Token;
+                userSettings.SetUsernameForId(credentials.Username, auth.User.Id);
+                await Signin(auth.User);
+                return true;
             }
             return false;
         }
@@ -279,7 +318,11 @@ namespace MorphicService
             User = user;
             Preferences = null;
             Preferences = await Service.FetchPreferences(user);
-            ApplyAllPreferences();
+            await Storage.Save(user);
+            if (Preferences is Preferences preferences)
+            {
+                await Storage.Save(preferences);
+            }
         }
 
         public void  Signout()
@@ -288,18 +331,33 @@ namespace MorphicService
             Preferences = null;
         }
 
-        public async Task<bool> RegisterUser()
+        public async Task<bool> RegisterUser(User user, UsernameCredentials credentials)
         {
-            var user = new User();
-            var creds = new KeyCredentials();
-            var auth = await Service.Register(user, creds);
+            var auth = await Service.Register(user, credentials);
             if (auth != null)
             {
-                if (!keychain.Save(creds, Service.Endpoint, auth.User.Id))
+                if (!keychain.Save(credentials, Service.Endpoint))
                 {
-                    logger.LogError("Failed to save key creds to keychain");
+                    logger.LogError("Failed to save username creds to keychain");
                 }
                 AuthToken = auth.Token;
+                // The server doesn't currently send email, but we reference it immedately after creating an account,
+                // so just fill it in from the input
+                auth.User.Email = auth.User.Email ?? user.Email;
+                if (auth.User.PreferencesId is string preferencesId)
+                {
+                    if (Preferences?.Id != "__default__")
+                    {
+                        Preferences = await Storage.Load<Preferences>("__default__");
+                    }
+                    if (Preferences is Preferences preferences)
+                    {
+                        preferences.Id = preferencesId;
+                        preferences.UserId = auth.User.Id;
+                        await Service.Save(preferences);
+                    }
+                }
+                userSettings.SetUsernameForId(credentials.Username, auth.User.Id);
                 await Signin(auth.User);
                 return true;
             }
@@ -349,6 +407,19 @@ namespace MorphicService
             Preferences?.Set(key, value);
             SetNeedsPreferencesSave();
             return true;
+        }
+
+        /// <summary>
+        /// Create and run an apply session for the current user's preferences
+        /// </summary>
+        /// <returns></returns>
+        public async Task ApplyAllPreferences()
+        {
+            if (Preferences is Preferences preferences)
+            {
+                var applySession = new ApplySession(Settings, preferences);
+                await applySession.Run();
+            }
         }
 
         /// <summary>
@@ -409,30 +480,6 @@ namespace MorphicService
         public object?[]? GetArray(Preferences.Key key)
         {
             return Preferences?.Get(key) as object?[];
-        }
-
-        /// <summary>
-        /// Applies all of the user's preferences to the system
-        /// </summary>
-        /// <remarks>
-        /// Used after the user logs in
-        /// </remarks>
-        public void ApplyAllPreferences()
-        {
-            logger.LogInformation("Setting all preferences");
-            if (Preferences is Preferences preferences)
-            {
-                if (preferences.Default != null)
-                {
-                    foreach (var solution in preferences.Default)
-                    {
-                        foreach (var preference in solution.Value.Values)
-                        {
-                            _ = Settings.Apply(new Preferences.Key(solution.Key, preference.Key), preference.Value);
-                        }
-                    }
-                }
-            }
         }
 
         /// <summary>
