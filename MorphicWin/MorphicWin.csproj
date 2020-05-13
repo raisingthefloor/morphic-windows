@@ -57,8 +57,8 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Resource Include="Icon.png" />
-    <Resource Include="Minus.png" />
-    <Resource Include="Plus.png" />
+    <Resource Include="QuickStrip\Minus.png" />
+    <Resource Include="QuickStrip\Plus.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -89,7 +89,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="IF &quot;$(ConfigurationName)&quot; == &quot;Debug&quot; (&#xD;&#xA;    IF EXIST &quot;Dev.config&quot; (&#xD;&#xA;        copy Dev.config $(OutDir)Morphic.dll.config&#xD;&#xA;    )&#xD;&#xA;)" />
+    <Exec Command="IF &quot;$(ConfigurationName)&quot; == &quot;Debug&quot; (&#xD;&#xA;    IF EXIST &quot;appsettings.Local.json&quot; (&#xD;&#xA;        copy appsettings.Local.json $(OutDir)appsettings.Local.json&#xD;&#xA;    )&#xD;&#xA;)" />
   </Target>
 
 </Project>

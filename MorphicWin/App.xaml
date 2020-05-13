@@ -4,5 +4,15 @@
              xmlns:local="clr-namespace:MorphicWin"
              ShutdownMode="OnExplicitShutdown">
     <Application.Resources>
+        <ContextMenu x:Key="ContextMenu">
+            <MenuItem x:Name="showQuickStripItem" Header="Show Quick Strip" Click="ShowQuickStrip"/>
+            <MenuItem x:Name="hideQuickStripItem" Header="Hide Quick Strip" Click="HideQuickStrip" Visibility="Collapsed"/>
+            <MenuItem Header="Customize Quick Strip..."  Click="CustomizeQuickStrip" IsEnabled="False"/>
+            <Separator/>
+            <MenuItem Header="Take My Settings with Me..." Click="TravelWithSettings"/>
+            <MenuItem Header="Apply My Settings..." IsEnabled="False"/>
+            <Separator/>
+            <MenuItem Header="Quit Morphic" Click="Quit"/>
+        </ContextMenu>
     </Application.Resources>
 </Application>

@@ -37,6 +37,8 @@ using System.IO;
 using System.Reflection;
 using CountlySDK;
 using CountlySDK.Entities;
+using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace MorphicWin
 {
@@ -72,6 +74,7 @@ namespace MorphicWin
             {
                 builder.AddJsonFile($"appsettings.{env}.json", optional: true);
             }
+            builder.AddJsonFile($"appsettings.Local.json", optional: true);
             builder.AddEnvironmentVariables();
             return builder.Build();
         }
@@ -95,7 +98,10 @@ namespace MorphicWin
             services.AddSingleton<Keychain>();
             services.AddSingleton<Storage>();
             services.AddSingleton<Session>();
-            services.AddTransient<MorphicConfigurator>();
+            services.AddTransient<TravelWindow>();
+            services.AddTransient<CreateAccountPanel>();
+            services.AddTransient<CapturePanel>();
+            services.AddTransient<TravelCompletedPanel>();
             services.AddTransient<QuickStrip>();
             services.AddMorphicSettingsHandlers(ConfigureSettingsHandlers);
         }
@@ -216,7 +222,6 @@ namespace MorphicWin
             notifyIcon.Icon = MorphicWin.Properties.Resources.Icon;
             notifyIcon.Text = "Morphic";
             notifyIcon.Visible = true;
-            notifyIcon.ContextMenuStrip = mainMenu;
         }
 
         /// <summary>
@@ -224,22 +229,21 @@ namespace MorphicWin
         /// </summary>
         private void CreateMainMenu()
         {
-            mainMenu.AutoClose = true;
-            System.Windows.Forms.ToolStripItem item;
-            showQuickStripItem = mainMenu.Items.Add("Show Quick Strip");
-            showQuickStripItem.Click += (sender, e) => { ShowQuickStrip(); };
-            hideQuickStripItem = mainMenu.Items.Add("Hide Quick Strip");
-            hideQuickStripItem.Click += (sender, e) => { HideQuickStrip(); };
-            hideQuickStripItem.Visible = false;
-            item = mainMenu.Items.Add("Customize Quick Strip...");
-            item.Click += (sender, e) => { OpenConfigurator(); };
-            mainMenu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
-            item = mainMenu.Items.Add("Take My Settings with Me...");
-            item = mainMenu.Items.Add("Apply My Settings...");
-            item.Enabled = false;
-            mainMenu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
-            item = mainMenu.Items.Add("Quit Morphic");
-            item.Click += (sender, e) => { Shutdown(); };
+            mainMenu = (Resources["ContextMenu"] as ContextMenu)!;
+            foreach (var item in mainMenu.Items)
+            {
+                if (item is MenuItem menuItem)
+                {
+                    if (menuItem.Name == "showQuickStripItem")
+                    {
+                        showQuickStripItem = menuItem;
+                    }
+                    else if (menuItem.Name == "hideQuickStripItem")
+                    {
+                        hideQuickStripItem = menuItem;
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -250,17 +254,17 @@ namespace MorphicWin
         /// <summary>
         /// The main menu shown from the system tray icon
         /// </summary>
-        private System.Windows.Forms.ContextMenuStrip mainMenu = new System.Windows.Forms.ContextMenuStrip();
+        private ContextMenu mainMenu = new ContextMenu();
 
         /// <summary>
         /// The main menu item for showing the quick strip
         /// </summary>
-        private System.Windows.Forms.ToolStripItem? showQuickStripItem;
+        private MenuItem? showQuickStripItem;
 
         /// <summary>
         /// The main menu item for hiding the quick strip
         /// </summary>
-        private System.Windows.Forms.ToolStripItem? hideQuickStripItem;
+        private MenuItem? hideQuickStripItem;
 
         /// <summary>
         /// Called when the system tray icon is clicked
@@ -269,18 +273,53 @@ namespace MorphicWin
         /// <param name="e"></param>
         private void OnNotifyIconClicked(object? sender, EventArgs e)
         {
-            if (e is System.Windows.Forms.MouseEventArgs mouseEvent)
-            {
-                if (mouseEvent.Button == System.Windows.Forms.MouseButtons.Left)
-                {
-                    // Ideally we'd show the mainMenu here, but I can't figure out how to
-                    // get the position of the click or even just the notifyIcon.  The
-                    // MouseEventArgs always say location is 0,0.  For now, we'll just
-                    // show the quick strip as the click action.  Right click shows the
-                    // menu automatically
-                    ShowQuickStrip();
-                }
-            }
+            mainMenu.IsOpen = true;
+        }
+
+        /// <summary>
+        /// Event handler for when the user selects Show Quick Strip from the main menu
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ShowQuickStrip(object sender, RoutedEventArgs e)
+        {
+            ShowQuickStrip();
+        }
+
+        /// <summary>
+        /// Event handler for when the user selects Hide Quick Strip from the main menu
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void HideQuickStrip(object sender, RoutedEventArgs e)
+        {
+            HideQuickStrip();
+        }
+
+        /// <summary>
+        /// Event handler for when the user selects Customize Quick Strip from the main menu
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CustomizeQuickStrip(object sender, RoutedEventArgs e)
+        {
+            Countly.RecordEvent("customize-quickstrip");
+        }
+
+        private void TravelWithSettings(object sender, RoutedEventArgs e)
+        {
+            Countly.RecordEvent("travel-with-settings");
+            OpenTravelWindow();
+        }
+
+        /// <summary>
+        /// Event handler for when the user selects Quit from the logo button's menu
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Quit(object sender, RoutedEventArgs e)
+        {
+            App.Shared.Shutdown();
         }
 
         #endregion
@@ -321,11 +360,11 @@ namespace MorphicWin
             QuickStrip.Activate();
             if (showQuickStripItem != null)
             {
-                showQuickStripItem.Visible = false;
+                showQuickStripItem.Visibility = Visibility.Collapsed;
             }
             if (hideQuickStripItem != null)
             {
-                hideQuickStripItem.Visible = true;
+                hideQuickStripItem.Visibility = Visibility.Visible;
             }
             if (!skippingSave)
             {
@@ -344,11 +383,11 @@ namespace MorphicWin
             }
             if (showQuickStripItem != null)
             {
-                showQuickStripItem.Visible = true;
+                showQuickStripItem.Visibility = Visibility.Visible;
             }
             if (hideQuickStripItem != null)
             {
-                hideQuickStripItem.Visible = false;
+                hideQuickStripItem.Visibility = Visibility.Collapsed;
             }
             Session.SetPreference(MorphicWin.QuickStrip.PreferenceKeys.Visible, false);
         }
@@ -365,25 +404,25 @@ namespace MorphicWin
 
         #endregion
 
-        #region Configurator Window
+        #region Travel Window
 
         /// <summary>
         /// The Configurator window, if visible
         /// </summary>
-        private MorphicConfigurator? Configurator;
+        private TravelWindow? TravelWindow;
 
         /// <summary>
         /// Show the Morphic Configurator window
         /// </summary>
-        internal void OpenConfigurator()
+        internal void OpenTravelWindow()
         {
-            if (Configurator == null)
+            if (TravelWindow == null)
             {
-                Configurator = ServiceProvider.GetRequiredService<MorphicConfigurator>();
-                Configurator.Show();
-                Configurator.Closed += OnConfiguratorClosed;
+                TravelWindow = ServiceProvider.GetRequiredService<TravelWindow>();
+                TravelWindow.Show();
+                TravelWindow.Closed += OnTravelWindowClosed;
             }
-            Configurator.Activate();
+            TravelWindow.Activate();
         }
 
         /// <summary>
@@ -391,9 +430,9 @@ namespace MorphicWin
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void OnConfiguratorClosed(object? sender, EventArgs e)
+        private void OnTravelWindowClosed(object? sender, EventArgs e)
         {
-            Configurator = null;
+            TravelWindow = null;
         }
 
         #endregion

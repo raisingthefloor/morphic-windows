@@ -36,6 +36,21 @@ namespace MorphicService
     {
         internal static async Task<T?> GetObject<T>(this HttpResponseMessage response) where T : class
         {
+            if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            {
+                var errorJson = await response.Content.ReadAsStreamAsync();
+                try
+                {
+                    var options = new JsonSerializerOptions();
+                    options.Converters.Add(new JsonElementInferredTypeConverter());
+                    var error = await JsonSerializer.DeserializeAsync<Session.BadRequestException>(errorJson, options);
+                    throw error;
+                }
+                catch (JsonException)
+                {
+                    return null;
+                }
+            }
             if (!response.IsSuccessStatusCode)
             {
                 return null;

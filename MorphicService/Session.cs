@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Timers;
 using Microsoft.Extensions.Logging;
@@ -140,7 +141,12 @@ namespace MorphicService
                     logger.LogInformation("{0} {1}", response.StatusCode.ToString(), request.RequestUri.AbsolutePath);
                 }
                 return await response.GetObject<ResponseBody>();
-            }catch (Exception e)
+            }
+            catch (BadRequestException e)
+            { 
+                throw e;
+            }
+            catch (Exception e)
             {
                 logger.LogError(e, "Request failed");
                 return null;
@@ -184,6 +190,17 @@ namespace MorphicService
                 logger.LogError(e, "Request failed");
                 return false;
             }
+        }
+
+        public class BadRequestException: Exception
+        {
+
+            [JsonPropertyName("error")]
+            public string Error { get; set; } = null!;
+
+            [JsonPropertyName("details")]
+            public Dictionary<string, object?>? Details { get; set; }
+
         }
 
         #endregion
@@ -288,18 +305,19 @@ namespace MorphicService
             Preferences = null;
         }
 
-        public async Task<bool> RegisterUser()
+        public async Task<bool> RegisterUser(User user, UsernameCredentials credentials)
         {
-            var user = new User();
-            var creds = new KeyCredentials();
-            var auth = await Service.Register(user, creds);
+            var auth = await Service.Register(user, credentials);
             if (auth != null)
             {
-                if (!keychain.Save(creds, Service.Endpoint, auth.User.Id))
+                if (!keychain.Save(credentials, Service.Endpoint))
                 {
                     logger.LogError("Failed to save key creds to keychain");
                 }
                 AuthToken = auth.Token;
+                // The server doesn't currently send email, but we reference it immedately after creating an account,
+                // so just fill it in from the input
+                auth.User.Email = auth.User.Email ?? user.Email;
                 await Signin(auth.User);
                 return true;
             }
