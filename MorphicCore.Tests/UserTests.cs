@@ -26,7 +26,6 @@ using System.Text.Json;
 using System.Collections.Generic;
 using Xunit;
 using Microsoft.Extensions.Options;
-#pragma warning disable CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
 
 namespace MorphicCore.Tests
 {
@@ -40,7 +39,7 @@ namespace MorphicCore.Tests
             options.Converters.Add(new JsonElementInferredTypeConverter());
             var userid = Guid.NewGuid().ToString();
             var preferencesid = Guid.NewGuid().ToString();
-            var json = JsonSerializer.Serialize(new Dictionary<string, object?>()
+            var json = JsonSerializer.Serialize(new Dictionary<string, object>()
             {
                 { "id", userid },
                 { "preferences_id", preferencesid },
@@ -57,7 +56,7 @@ namespace MorphicCore.Tests
 
             // Valid user, minimum set of fields populated
             userid = Guid.NewGuid().ToString();
-            json = JsonSerializer.Serialize(new Dictionary<string, object?>()
+            json = JsonSerializer.Serialize(new Dictionary<string, object>()
             {
                 { "id", userid }
             });
@@ -71,7 +70,7 @@ namespace MorphicCore.Tests
 
             // Invalid user, all other fields populated
             preferencesid = Guid.NewGuid().ToString();
-            json = JsonSerializer.Serialize(new Dictionary<string, object?>()
+            json = JsonSerializer.Serialize(new Dictionary<string, object>()
             {
                 { "preferences_id", preferencesid },
                 { "first_name", "John" },
@@ -110,5 +109,3 @@ namespace MorphicCore.Tests
         }
     }
 }
-
-#pragma warning restore CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.

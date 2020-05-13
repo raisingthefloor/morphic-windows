@@ -25,7 +25,6 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using Xunit;
-#pragma warning disable CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
 
 namespace MorphicCore.Tests
 {
@@ -41,7 +40,7 @@ namespace MorphicCore.Tests
             options.Converters.Add(new JsonElementInferredTypeConverter());
             var preferencesid = Guid.NewGuid().ToString();
             var userid = Guid.NewGuid().ToString();
-            var json = JsonSerializer.Serialize(new Dictionary<string, object?>()
+            var json = JsonSerializer.Serialize(new Dictionary<string, object>()
             {
                 { "id", preferencesid },
                 { "user_id", userid },
@@ -56,15 +55,15 @@ namespace MorphicCore.Tests
             Assert.Equal(3.14159d, preferences.Default["firstthing"].Values["thisisadouble"]);
             Assert.Equal(52L, preferences.Default["firstthing"].Values["thisisaninteger"]);
             Assert.Equal(true, preferences.Default["firstthing"].Values["thisisaboolean"]);
-            var dictionary = (Dictionary<string, object?>)preferences.Default["firstthing"].Values["thisisadictionary"];
+            var dictionary = (Dictionary<string, object>)preferences.Default["firstthing"].Values["thisisadictionary"];
             Assert.Equal(1L, dictionary["one"]);
             Assert.Equal(2L, dictionary["two"]);
             Assert.Equal(3L, dictionary["three"]);
-            Assert.Equal(413L, ((Object?[])preferences.Default["firstthing"].Values["thisisanarray"])[5]);
+            Assert.Equal(413L, ((object[])preferences.Default["firstthing"].Values["thisisanarray"])[5]);
 
             //testing minimally populated
             preferencesid = Guid.NewGuid().ToString();
-            json = JsonSerializer.Serialize(new Dictionary<string, object?>()
+            json = JsonSerializer.Serialize(new Dictionary<string, object>()
             {
                 { "id", preferencesid }
             });
@@ -123,9 +122,9 @@ namespace MorphicCore.Tests
             Assert.Equal(returnint, preferences.Default["firstthing"].Values["thisisaninteger"]);
             Assert.IsType<Boolean>(returnboolean);
             Assert.Equal(returnboolean, preferences.Default["firstthing"].Values["thisisaboolean"]);
-            Assert.IsType<Dictionary<string, object?>>(returndictionary);
+            Assert.IsType<Dictionary<string, object>>(returndictionary);
             Assert.Equal(returndictionary, preferences.Default["firstthing"].Values["thisisadictionary"]);
-            Assert.IsType<Object?[]>(returnarray);
+            Assert.IsType<object[]>(returnarray);
             Assert.Equal(returnarray, preferences.Default["firstthing"].Values["thisisanarray"]);
             Assert.Null(nothere);
             Assert.Null(wrongplace);
@@ -144,7 +143,7 @@ namespace MorphicCore.Tests
             preferences.Set(new Preferences.Key("firstthing", "thisisaboolean"), true);
             preferences.Set(new Preferences.Key("firstthing", "thisisadictionary"), 823847L);
             preferences.Set(new Preferences.Key("firstthing", "thisisadictionary"), resource.Default["firstthing"].Values["thisisadictionary"]);
-            preferences.Set(new Preferences.Key("firstthing", "thisisanarray"), new object?[40]);
+            preferences.Set(new Preferences.Key("firstthing", "thisisanarray"), new object[40]);
             preferences.Set(new Preferences.Key("firstthing", "thisisastring"), "now change the string");
 
             Assert.IsType<string>(preferences.Default["firstthing"].Values["thisisastring"]);
@@ -155,10 +154,10 @@ namespace MorphicCore.Tests
             Assert.Equal(12345L, preferences.Default["firstthing"].Values["thisisaninteger"]);
             Assert.IsType<Boolean>(preferences.Default["firstthing"].Values["thisisaboolean"]);
             Assert.Equal(true, preferences.Default["firstthing"].Values["thisisaboolean"]);
-            Assert.IsType<Dictionary<string, object?>>(preferences.Default["firstthing"].Values["thisisadictionary"]);
+            Assert.IsType<Dictionary<string, object>>(preferences.Default["firstthing"].Values["thisisadictionary"]);
             Assert.Equal(resource.Default["firstthing"].Values["thisisadictionary"], preferences.Default["firstthing"].Values["thisisadictionary"]);
-            Assert.IsType<Object?[]>(preferences.Default["firstthing"].Values["thisisanarray"]);
-            Assert.Equal(new object?[40], preferences.Default["firstthing"].Values["thisisanarray"]);
+            Assert.IsType<object[]>(preferences.Default["firstthing"].Values["thisisanarray"]);
+            Assert.Equal(new object[40], preferences.Default["firstthing"].Values["thisisanarray"]);
         }
 
         //test resources
@@ -175,9 +174,9 @@ namespace MorphicCore.Tests
                 Default["firstthing"].Values.Add("thisisadouble", 3.14159d);
                 Default["firstthing"].Values.Add("thisisaninteger", 52L);
                 Default["firstthing"].Values.Add("thisisaboolean", true);
-                Dictionary<string, object?> dict = new Dictionary<string, object?>() { { "one", 1L }, { "two", 2L }, { "three", 3L } };
+                Dictionary<string, object> dict = new Dictionary<string, object>() { { "one", 1L }, { "two", 2L }, { "three", 3L } };
                 Default["firstthing"].Values.Add("thisisadictionary", dict);
-                object?[] arr = new object?[10];
+                object[] arr = new object[10];
                 arr[5] = 413L;
                 Default["firstthing"].Values.Add("thisisanarray", arr);
                 Default.Add("secondthing", new SolutionPreferences());
@@ -189,5 +188,3 @@ namespace MorphicCore.Tests
         }
     }
 }
-
-#pragma warning restore CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.

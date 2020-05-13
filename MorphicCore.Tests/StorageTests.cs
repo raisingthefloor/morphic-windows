@@ -31,7 +31,6 @@ using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Text.Json.Serialization;
 using Xunit;
-#pragma warning disable CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
 
 namespace MorphicCore.Tests
 {
@@ -101,6 +100,8 @@ namespace MorphicCore.Tests
             return Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..\\..\\..\\testfiles\\storage", file));
         }
 
+        #nullable enable
+
         //record class that contains all fields to be tested
         class MockRecord : IRecord
         {
@@ -143,11 +144,11 @@ namespace MorphicCore.Tests
             }
         }
 
+        #nullable disable
+
         public void Dispose()
         {
             Directory.Delete(directoryName, true);
         }
     }
 }
-
-#pragma warning restore CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
