@@ -63,6 +63,12 @@ namespace MorphicWin
 
         #endregion
 
+        #region User Info
+
+        public Preferences Preferences = null!;
+
+        #endregion
+
         #region Form Submission
 
         /// <summary>
@@ -96,7 +102,7 @@ namespace MorphicWin
             var errorMessage = "";
             try
             {
-                success = await session.RegisterUser(user, credentials);
+                success = await session.RegisterUser(user, credentials, Preferences);
             }
             catch (AuthService.BadPasswordException)
             {

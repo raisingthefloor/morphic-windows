@@ -50,13 +50,21 @@ namespace MorphicSettings
     /// The result of calling GetSetting("SomeSettingId") is an object that has GetValue() and SetValue() methods,
     /// which read and write the setting, respectively.
     /// </remarks>
-    class SystemSettingsHandler: SettingHandler
+    class SystemSettingHandler: SettingHandler
     {
+
+        public Setting Setting { get; private set; }
 
         /// <summary>
         /// The handler description from the solution registry
         /// </summary>
-        public SystemSettingHandlerDescription Description;
+        public SystemSettingHandlerDescription Description
+        {
+            get
+            {
+                return (Setting.HandlerDescription as SystemSettingHandlerDescription)!;
+            }
+        }
 
         /// <summary>
         /// The system setting instance that does most of the work
@@ -68,9 +76,9 @@ namespace MorphicSettings
         /// </summary>
         /// <param name="description"></param>
         /// <param name="logger"></param>
-        public SystemSettingsHandler(SystemSettingHandlerDescription description, ISystemSettingFactory systemSettingFactory, IServiceProvider serviceProvider, ILogger<SystemSettingsHandler> logger)
+        public SystemSettingHandler(Setting setting, ISystemSettingFactory systemSettingFactory, IServiceProvider serviceProvider, ILogger<SystemSettingHandler> logger)
         {
-            Description = description;
+            Setting = setting;
             systemSetting = systemSettingFactory.Create(Description.SettingId, serviceProvider);
             this.logger = logger;
         }
@@ -78,7 +86,7 @@ namespace MorphicSettings
         /// <summary>
         /// The logger to use
         /// </summary>
-        private readonly ILogger<SystemSettingsHandler> logger;
+        private readonly ILogger<SystemSettingHandler> logger;
 
         /// <summary>
         /// Apply the value to the setting

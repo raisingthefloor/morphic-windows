@@ -160,6 +160,106 @@ namespace MorphicCore.Tests
             Assert.Equal(new object[40], preferences.Default["firstthing"].Values["thisisanarray"]);
         }
 
+        [Fact]
+        public void TestCopyConstructor()
+        {
+            var preferences = new Preferences();
+            var key1 = new Preferences.Key("org.raisingthefloor.test", "one");
+            var key2 = new Preferences.Key("org.raisingthefloor.test", "two");
+            var key3 = new Preferences.Key("org.raisingthefloor.test", "three");
+            preferences.Set(key1, "Hello");
+            preferences.Set(key2, 12L);
+            preferences.Set(key3, new Dictionary<string, string>()
+            {
+                { "a", "value1" },
+                { "b", "value2" }
+            });
+
+            var preferences2 = new Preferences(preferences);
+
+            var value = preferences2.Get(key1);
+            Assert.IsType<string>(value);
+            Assert.Equal("Hello", (string)value);
+            value = preferences2.Get(key2);
+            Assert.IsType<long>(value);
+            Assert.Equal(12, (long)value);
+            value = preferences2.Get(key3);
+            Assert.IsType<Dictionary<string, string>>(value);
+            Assert.Equal("value1", ((Dictionary<string, string>)value)["a"]);
+            Assert.Equal("value2", ((Dictionary<string, string>)value)["b"]);
+
+            preferences.Set(key1, "World");
+            value = preferences2.Get(key1);
+            Assert.IsType<string>(value);
+            Assert.Equal("Hello", (string)value);
+
+            preferences2.Set(key1, "Testing");
+            value = preferences.Get(key1);
+            Assert.IsType<string>(value);
+            Assert.Equal("World", (string)value);
+
+            preferences.Set(key3, new Dictionary<string, string>()
+            {
+                { "a", "changed1" }
+            });
+
+            value = preferences2.Get(key3);
+            Assert.IsType<Dictionary<string, string>>(value);
+            Assert.Equal("value1", ((Dictionary<string, string>)value)["a"]);
+            Assert.Equal("value2", ((Dictionary<string, string>)value)["b"]);
+
+            preferences2.Set(key3, new Dictionary<string, string>()
+            {
+                { "a", "changed2" }
+            });
+
+            value = preferences.Get(key3);
+            Assert.IsType<Dictionary<string, string>>(value);
+            Assert.Equal("changed1", ((Dictionary<string, string>)value)["a"]);
+        }
+
+        [Fact]
+        void TestRemove()
+        {
+            var preferences = new Preferences();
+            var key1 = new Preferences.Key("org.raisingthefloor.test", "one");
+            var key2 = new Preferences.Key("org.raisingthefloor.test", "two");
+            var key3 = new Preferences.Key("org.raisingthefloor.test2", "three");
+            preferences.Set(key1, "Hello");
+            preferences.Set(key2, 12L);
+            preferences.Set(key3, new Dictionary<string, string>()
+            {
+                { "a", "value1" },
+                { "b", "value2" }
+            });
+
+            Assert.True(preferences.Default.TryGetValue("org.raisingthefloor.test", out var solutionPreferences));
+            Assert.True(solutionPreferences.Values.ContainsKey("one"));
+            Assert.True(solutionPreferences.Values.ContainsKey("two"));
+            Assert.True(preferences.Default.TryGetValue("org.raisingthefloor.test2", out solutionPreferences));
+            Assert.True(solutionPreferences.Values.ContainsKey("three"));
+
+            preferences.Remove(key1);
+
+            Assert.True(preferences.Default.TryGetValue("org.raisingthefloor.test", out solutionPreferences));
+            Assert.False(solutionPreferences.Values.ContainsKey("one"));
+            Assert.True(solutionPreferences.Values.ContainsKey("two"));
+            Assert.True(preferences.Default.TryGetValue("org.raisingthefloor.test2", out solutionPreferences));
+            Assert.True(solutionPreferences.Values.ContainsKey("three"));
+            
+            preferences.Remove(key3);
+
+            Assert.True(preferences.Default.TryGetValue("org.raisingthefloor.test", out solutionPreferences));
+            Assert.False(solutionPreferences.Values.ContainsKey("one"));
+            Assert.True(solutionPreferences.Values.ContainsKey("two"));
+            Assert.False(preferences.Default.TryGetValue("org.raisingthefloor.test2", out solutionPreferences));
+
+            preferences.Remove(key2);
+
+            Assert.False(preferences.Default.TryGetValue("org.raisingthefloor.test", out solutionPreferences));
+            Assert.False(preferences.Default.TryGetValue("org.raisingthefloor.test2", out solutionPreferences));
+        }
+
         //test resources
 
         class TestResource

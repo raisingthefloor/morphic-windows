@@ -23,6 +23,7 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using MorphicCore;
 using MorphicService;
 using System;
 using System.Windows;
@@ -68,6 +69,17 @@ namespace MorphicWin
         protected override void OnInitialized(EventArgs e)
         {
             base.OnInitialized(e);
+            if (session.User != null)
+            {
+                // If the user is logged in, we'll just capture to their preferences directly
+                preferences = session.Preferences!;
+            }
+            else
+            {
+                // If we'll be creating a new user, start with a copy of the default preferences
+                // so we don't actually change the defaults
+                preferences = new Preferences(session.Preferences!);
+            }
             ShowCapturePanel(animated: false);
         }
 
@@ -82,6 +94,7 @@ namespace MorphicWin
         private void ShowCapturePanel(bool animated = true)
         {
             var capturePage = serviceProvider.GetRequiredService<CapturePanel>();
+            capturePage.Preferences = preferences;
             capturePage.Completed += CaptureCompleted;
             StepFrame.PushPanel(capturePage, animated: animated);
         }
@@ -107,6 +120,8 @@ namespace MorphicWin
 
         #region Create Account
 
+        private Preferences preferences = null!;
+
         /// <summary>
         /// Show the account creation panel
         /// </summary>
@@ -114,6 +129,7 @@ namespace MorphicWin
         private void ShowCreateAccountPanel(bool animated = true)
         {
             var accountPanel = serviceProvider.GetRequiredService<CreateAccountPanel>();
+            accountPanel.Preferences = preferences;
             accountPanel.Completed += AccountCreationCompleted;
             StepFrame.PushPanel(accountPanel, animated: animated);
         }

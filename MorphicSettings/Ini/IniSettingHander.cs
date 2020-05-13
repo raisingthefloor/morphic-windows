@@ -30,22 +30,33 @@ namespace MorphicSettings
     /// <summary>
     /// A settings handler for ini files
     /// </summary>
-    class IniSettingsHandler : SettingHandler
+    class IniSettingHandler : SettingHandler
     {
+
+        /// <summary>
+        /// The setting to be handled
+        /// </summary>
+        public Setting Setting { get; private set; }
 
         /// <summary>
         /// The handler descrition indicating what file/section/key to read/write
         /// </summary>
-        public IniSettingHandlerDescription Description { get; private set; }
+        public IniSettingHandlerDescription Description
+        {
+            get
+            {
+                return (Setting.HandlerDescription as IniSettingHandlerDescription)!;
+            }
+        }
 
         /// <summary>
         /// Create a new ini handler from the given handler description
         /// </summary>
         /// <param name="description"></param>
         /// <param name="logger"></param>
-        public IniSettingsHandler(IniSettingHandlerDescription description, IIniFileFactory iniFactory, ILogger<IniSettingsHandler> logger)
+        public IniSettingHandler(Setting setting, IIniFileFactory iniFactory, ILogger<IniSettingHandler> logger)
         {
-            Description = description;
+            Setting = setting;
             this.logger = logger;
             var path = ExpandedPath(Description.Filename);
             this.iniFile = iniFactory.Open(path);
@@ -73,7 +84,7 @@ namespace MorphicSettings
         /// <summary>
         /// The logger to user
         /// </summary>
-        private readonly ILogger<IniSettingsHandler> logger;
+        private readonly ILogger<IniSettingHandler> logger;
 
         /// <summary>
         /// The ini file reader/writer

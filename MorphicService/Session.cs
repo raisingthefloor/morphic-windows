@@ -313,15 +313,19 @@ namespace MorphicService
         /// </summary>
         public Preferences? Preferences;
 
-        public async Task Signin(User user)
+        public async Task Signin(User user, Preferences? preferences = null)
         {
             User = user;
-            Preferences = null;
-            Preferences = await Service.FetchPreferences(user);
-            await Storage.Save(user);
-            if (Preferences is Preferences preferences)
+            if (preferences == null)
             {
-                await Storage.Save(preferences);
+                Preferences = null;
+                preferences = await Service.FetchPreferences(user);
+            }
+            Preferences = preferences;
+            await Storage.Save(user);
+            if (Preferences != null)
+            {
+                await Storage.Save(Preferences);
             }
         }
 
@@ -331,7 +335,7 @@ namespace MorphicService
             Preferences = null;
         }
 
-        public async Task<bool> RegisterUser(User user, UsernameCredentials credentials)
+        public async Task<bool> RegisterUser(User user, UsernameCredentials credentials, Preferences preferences)
         {
             var auth = await Service.Register(user, credentials);
             if (auth != null)
@@ -346,19 +350,12 @@ namespace MorphicService
                 auth.User.Email = auth.User.Email ?? user.Email;
                 if (auth.User.PreferencesId is string preferencesId)
                 {
-                    if (Preferences?.Id != "__default__")
-                    {
-                        Preferences = await Storage.Load<Preferences>("__default__");
-                    }
-                    if (Preferences is Preferences preferences)
-                    {
-                        preferences.Id = preferencesId;
-                        preferences.UserId = auth.User.Id;
-                        await Service.Save(preferences);
-                    }
+                    preferences.Id = preferencesId;
+                    preferences.UserId = auth.User.Id;
+                    await Service.Save(preferences);
                 }
                 userSettings.SetUsernameForId(credentials.Username, auth.User.Id);
-                await Signin(auth.User);
+                await Signin(auth.User, preferences);
                 return true;
             }
             return false;

@@ -80,6 +80,7 @@ namespace MorphicSettings
             using (var stream = File.OpenRead(jsonPath))
             {
                 var options = new JsonSerializerOptions();
+                options.Converters.Add(new JsonElementInferredTypeConverter());
                 options.Converters.Add(new SettingHandlerDescription.JsonConverter());
                 options.Converters.Add(new SettingFinalizerDescription.JsonConverter());
                 options.Converters.Add(new JsonStringEnumConverter());
