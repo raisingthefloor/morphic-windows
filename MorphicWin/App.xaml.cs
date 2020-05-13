@@ -39,6 +39,7 @@ using CountlySDK;
 using CountlySDK.Entities;
 using System.Windows.Controls;
 using System.Windows.Input;
+using NHotkey.Wpf;
 
 namespace MorphicWin
 {
@@ -47,15 +48,11 @@ namespace MorphicWin
     /// </summary>
     public partial class App : Application
     {
-
-#pragma warning disable CS8618 // Non-nullable field is uninitialized. Consider declaring as nullable.
-        public static App Shared { get; private set; }
-
-        public IServiceProvider ServiceProvider { get; private set; }
-        public IConfiguration Configuration { get; private set; }
-        public Session Session { get; private set; }
-        private ILogger<App> logger;
-#pragma warning restore CS8618 // Non-nullable field is uninitialized. Consider declaring as nullable.
+        public static App Shared { get; private set; } = null!;
+        public IServiceProvider ServiceProvider { get; private set; } = null!;
+        public IConfiguration Configuration { get; private set; } = null!;
+        public Session Session { get; private set; } = null!;
+        private ILogger<App> logger = null!;
 
         #region Configuration & Startup
 
@@ -103,6 +100,7 @@ namespace MorphicWin
             services.AddTransient<CapturePanel>();
             services.AddTransient<TravelCompletedPanel>();
             services.AddTransient<QuickStrip>();
+            services.AddTransient<LoginWindow>();
             services.AddMorphicSettingsHandlers(ConfigureSettingsHandlers);
         }
 
@@ -151,9 +149,19 @@ namespace MorphicWin
             logger.LogInformation("Creating Tray Icon");
             CreateMainMenu();
             CreateNotifyIcon();
+            RegisterGlobalHotKeys();
             var task = OpenSession();
             task.ContinueWith(SessionOpened, TaskScheduler.FromCurrentSynchronizationContext());
             ConfigureCountly();
+        }
+
+        private void RegisterGlobalHotKeys()
+        {
+            HotkeyManager.Current.AddOrReplace("Login with Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift, (sender, e) =>
+            {
+                OpenLoginWindow();
+                loginWindow?.Announce();
+            });
         }
 
         private async Task OpenSession()
@@ -312,6 +320,12 @@ namespace MorphicWin
             OpenTravelWindow();
         }
 
+        private void ApplyMySettings(object sender, RoutedEventArgs e)
+        {
+            Countly.RecordEvent("apply-my-settings");
+            OpenLoginWindow();
+        }
+
         /// <summary>
         /// Event handler for when the user selects Quit from the logo button's menu
         /// </summary>
@@ -433,6 +447,28 @@ namespace MorphicWin
         private void OnTravelWindowClosed(object? sender, EventArgs e)
         {
             TravelWindow = null;
+        }
+
+        #endregion
+
+        #region Login Window
+
+        private LoginWindow? loginWindow;
+
+        public void OpenLoginWindow()
+        {
+            if (loginWindow == null)
+            {
+                loginWindow = ServiceProvider.GetRequiredService<LoginWindow>();
+                loginWindow.Show();
+                loginWindow.Closed += OnLoginWindowClosed;
+            }
+            loginWindow.Activate();
+        }
+
+        private void OnLoginWindowClosed(object? sender, EventArgs e)
+        {
+            loginWindow = null;
         }
 
         #endregion

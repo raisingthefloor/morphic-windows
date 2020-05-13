@@ -5,5 +5,8 @@
     <Setting Name="UserId" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="UsernamesById" Type="MorphicWin.StringDictionarySetting" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>

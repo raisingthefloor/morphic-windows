@@ -34,5 +34,16 @@ namespace MorphicWin {
                 this["UserId"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public global::MorphicWin.StringDictionarySetting UsernamesById {
+            get {
+                return ((global::MorphicWin.StringDictionarySetting)(this["UsernamesById"]));
+            }
+            set {
+                this["UsernamesById"] = value;
+            }
+        }
     }
 }
