@@ -5,6 +5,7 @@
       {
         "name": "zoom",
         "type": "double",
+        "default": 1,
         "handler": {
           "type": "org.raisingthefloor.morphic.client",
           "solution": "com.microsoft.windows.display",
@@ -14,6 +15,7 @@
       {
         "name": "contrast.enabled",
         "type": "boolean",
+        "default": false,
         "handler": {
           "type": "com.microsoft.windows.system",
           "setting_id": "SystemSettings_Accessibility_CoreHighContrast_IsEnabled"
@@ -27,12 +29,12 @@
       {
         "name": "arrow",
         "type": "string",
-        "default": "$(SystemRoot)\\cursors\\arrow_i.cur",
+        "default": "%SystemRoot%\\cursors\\aero_arrow.cur",
         "handler": {
           "type": "com.microsoft.windows.registry",
           "key_name": "HKEY_CURRENT_USER\\Control Panel\\Cursors",
           "value_name": "Arrow",
-          "value_type": "string"
+          "value_type": "expandString"
         },
         "finalizer": {
           "type": "com.microsoft.windows.systemParametersInfo",
@@ -42,12 +44,12 @@
       {
         "name": "wait",
         "type": "string",
-        "default": "$(SystemRoot)\\cursors\\busy_i.cur",
+        "default": "%SystemRoot%\\cursors\\aero_busy.ani",
         "handler": {
           "type": "com.microsoft.windows.registry",
           "key_name": "HKEY_CURRENT_USER\\Control Panel\\Cursors",
           "value_name": "Wait",
-          "value_type": "string"
+          "value_type": "expandString"
         },
         "finalizer": {
           "type": "com.microsoft.windows.systemParametersInfo",
@@ -62,6 +64,7 @@
       {
         "name": "enabled",
         "type": "boolean",
+        "default": false,
         "handler": {
           "type": "com.microsoft.windows.system",
           "setting_id": "SystemSettings_Accessibility_Magnifier_IsEnabled"
@@ -70,6 +73,7 @@
       {
         "name": "mode",
         "type": "integer",
+        "default": 2,
         "handler": {
           "type": "com.microsoft.windows.registry",
           "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
@@ -80,6 +84,7 @@
       {
         "name": "magnification",
         "type": "integer",
+        "default": 200,
         "handler": {
           "type": "com.microsoft.windows.registry",
           "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
@@ -90,6 +95,7 @@
       {
         "name": "increment",
         "type": "integer",
+        "default": 100,
         "handler": {
           "type": "com.microsoft.windows.registry",
           "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
@@ -100,6 +106,7 @@
       {
         "name": "smoothing",
         "type": "boolean",
+        "default": true,
         "handler": {
           "type": "com.microsoft.windows.registry",
           "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
@@ -110,6 +117,7 @@
       {
         "name": "lens.height",
         "type": "integer",
+        "default": 10,
         "handler": {
           "type": "com.microsoft.windows.registry",
           "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
@@ -120,6 +128,7 @@
       {
         "name": "lens.width",
         "type": "integer",
+        "default": 10,
         "handler": {
           "type": "com.microsoft.windows.registry",
           "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
@@ -130,6 +139,7 @@
       {
         "name": "follow.mouse",
         "type": "boolean",
+        "default": true,
         "handler": {
           "type": "com.microsoft.windows.registry",
           "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
@@ -140,6 +150,7 @@
       {
         "name": "follow.focus",
         "type": "boolean",
+        "default": true,
         "handler": {
           "type": "com.microsoft.windows.registry",
           "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
@@ -150,6 +161,7 @@
       {
         "name": "follow.caret",
         "type": "boolean",
+        "default": true,
         "handler": {
           "type": "com.microsoft.windows.registry",
           "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
@@ -160,6 +172,7 @@
       {
         "name": "follow.narrator",
         "type": "boolean",
+        "default": true,
         "handler": {
           "type": "com.microsoft.windows.registry",
           "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
@@ -170,6 +183,7 @@
       {
         "name": "invert",
         "type": "boolean",
+        "default": false,
         "handler": {
           "type": "com.microsoft.windows.registry",
           "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
@@ -180,6 +194,7 @@
       {
         "name": "fade",
         "type": "boolean",
+        "default": false,
         "handler": {
           "type": "com.microsoft.windows.registry",
           "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
@@ -195,6 +210,7 @@
       {
         "name": "enabled",
         "type": "boolean",
+        "default": false,
         "handler": {
           "type": "com.microsoft.windows.system",
           "setting_id": "SystemSettings_Accessibility_Narrator_IsEnabled"
@@ -208,6 +224,7 @@
       {
         "name": "braille.cursor.all.dots",
         "type": "boolean",
+        "default": false,
         "handler": {
           "type": "com.microsoft.windows.ini",
           "filename": "$(APPDATA)\\Freedom Scientific\\JAWS\\2019\\Settings\\enu\\DEFAULT.JCF",

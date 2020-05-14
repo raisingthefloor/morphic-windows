@@ -23,37 +23,43 @@
 
 using System;
 using System.Threading.Tasks;
-using System.Security;
-using System.Collections.Generic;
-using System.Text;
-using Microsoft.Win32;
 using Microsoft.Extensions.Logging;
-using Morphic.Windows.Native;
 
 namespace MorphicSettings
 {
     /// <summary>
     /// A settings handler for ini files
     /// </summary>
-    class IniSettingsHandler : SettingHandler
+    class IniSettingHandler : SettingHandler
     {
+
+        /// <summary>
+        /// The setting to be handled
+        /// </summary>
+        public Setting Setting { get; private set; }
 
         /// <summary>
         /// The handler descrition indicating what file/section/key to read/write
         /// </summary>
-        public IniSettingHandlerDescription Description { get; private set; }
+        public IniSettingHandlerDescription Description
+        {
+            get
+            {
+                return (Setting.HandlerDescription as IniSettingHandlerDescription)!;
+            }
+        }
 
         /// <summary>
         /// Create a new ini handler from the given handler description
         /// </summary>
         /// <param name="description"></param>
         /// <param name="logger"></param>
-        public IniSettingsHandler(IniSettingHandlerDescription description, ILogger<IniSettingsHandler> logger)
+        public IniSettingHandler(Setting setting, IIniFileFactory iniFactory, ILogger<IniSettingHandler> logger)
         {
-            Description = description;
+            Setting = setting;
             this.logger = logger;
-            var path = ExpandedPath(description.Filename);
-            iniFile = new IniFileReaderWriter(path);
+            var path = ExpandedPath(Description.Filename);
+            this.iniFile = iniFactory.Open(path);
         }
 
         /// <summary>
@@ -78,12 +84,12 @@ namespace MorphicSettings
         /// <summary>
         /// The logger to user
         /// </summary>
-        private readonly ILogger<IniSettingsHandler> logger;
+        private readonly ILogger<IniSettingHandler> logger;
 
         /// <summary>
         /// The ini file reader/writer
         /// </summary>
-        private readonly IniFileReaderWriter iniFile;
+        private readonly IIniFile iniFile;
 
         /// <summary>
         /// Write the value to the section+key
@@ -98,7 +104,7 @@ namespace MorphicSettings
                 try
                 {
                     logger.LogDebug("Writing {0}:{1}.{2}", Description.Filename, Description.Section, Description.Key);
-                    iniFile.WriteValue(stringValue, Description.Key, Description.Section);
+                    iniFile.SetValue(Description.Section, Description.Key, stringValue);
                     return Task.FromResult(true);
                 }
                 catch (Exception e)
@@ -119,7 +125,7 @@ namespace MorphicSettings
             try
             {
                 // FIXME: need to parse correct type from string
-                result.Value = iniFile.ReadValue(Description.Key, Description.Section);
+                result.Value = iniFile.GetValue(Description.Section, Description.Key);
                 result.Success = true;
             }
             catch (Exception e)

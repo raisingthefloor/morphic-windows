@@ -37,7 +37,7 @@ using System.Threading;
 namespace MorphicSettings
 {
     /// <summary>
-    /// A setting handler for Windows System Settings
+    /// Implementation of Window System Settings
     /// </summary>
     /// <remarks>
     /// Information about System Settings can be found in the Windows Registry under
@@ -50,13 +50,10 @@ namespace MorphicSettings
     /// The result of calling GetSetting("SomeSettingId") is an object that has GetValue() and SetValue() methods,
     /// which read and write the setting, respectively.
     /// </remarks>
-    class SystemSettingsHandler: SettingHandler
+    class SystemSetting: ISystemSetting
     {
 
-        /// <summary>
-        /// The handler description from the solution registry
-        /// </summary>
-        public SystemSettingHandlerDescription Description;
+        public string Id { get; private set; }
 
         /// <summary>
         /// The registry key name for this setting's information
@@ -68,23 +65,32 @@ namespace MorphicSettings
         /// </summary>
         private ISettingItem? settingItem;
 
+        private SettingNotFoundException? settingLoadException;
+
         /// <summary>
         /// Create a new system settings handler with the given description and logger
         /// </summary>
         /// <param name="description"></param>
         /// <param name="logger"></param>
-        public SystemSettingsHandler(SystemSettingHandlerDescription description, ILogger<SystemSettingsHandler> logger)
+        public SystemSetting(string id, ILogger<SystemSetting> logger)
         {
-            Description = description;
-            registryKeyName = $"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\SystemSettings\\SettingId\\{description.SettingId}";
+            Id = id;
+            registryKeyName = $"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\SystemSettings\\SettingId\\{Id}";
             this.logger = logger;
-            settingItem = LoadSettingItem();
+            try
+            {
+                settingItem = LoadSettingItem();
+            }
+            catch (SettingNotFoundException e)
+            {
+                settingLoadException = e;
+            }
         }
 
         /// <summary>
         /// The logger to use
         /// </summary>
-        private readonly ILogger<SystemSettingsHandler> logger;
+        private readonly ILogger<SystemSetting> logger;
 
         /// <summary>
         /// A global cache of pointers to loaded dll's, so each dll only gets loaded once and then resued
@@ -100,8 +106,7 @@ namespace MorphicSettings
             var dll = DllPath;
             if (dll == null)
             {
-                logger.LogError("Failed to find dll for {0}", Description.SettingId);
-                return null;
+                throw new SettingNotFoundException(String.Format("Failed to get value for DllPath for {0}", Id));
             }
 
             if (!loadedLibraries.TryGetValue(dll, out var libraryPointer))
@@ -109,8 +114,7 @@ namespace MorphicSettings
                 libraryPointer = LoadLibrary(dll);
                 if (libraryPointer == IntPtr.Zero)
                 {
-                    logger.LogError("Failed to load dll for {0}", Description.SettingId);
-                    return null;
+                    throw new SettingNotFoundException(String.Format("Failed to load DLL for {0}", Id));
                 }
 
                 loadedLibraries.Add(dll, libraryPointer);
@@ -119,16 +123,14 @@ namespace MorphicSettings
             var functionPointer = GetProcAddress(libraryPointer, "GetSetting");
             if (functionPointer == IntPtr.Zero)
             {
-                logger.LogError("Failed to location GetSetting function in library for {0}", Description.SettingId);
-                return null;
+                throw new SettingNotFoundException(String.Format("Failed to location GetSetting function in library for {0}", Id));
             }
 
             var function = Marshal.GetDelegateForFunctionPointer<GetSetting>(functionPointer);
 
-            if (function(Description.SettingId, out var item, IntPtr.Zero) != IntPtr.Zero)
+            if (function(Id, out var item, IntPtr.Zero) != IntPtr.Zero)
             {
-                logger.LogError("GetSetting failed for {0}", Description.SettingId);
-                return null;
+                throw new SettingNotFoundException(String.Format("GetSetting failed for {0}", Id));
             }
 
             return item;
@@ -139,69 +141,40 @@ namespace MorphicSettings
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public override async Task<bool> Apply(object? value)
+        public async Task SetValue(object value)
         {
             if (settingItem is ISettingItem item)
             {
-                if (value != null)
+                var result = item.SetValue("Value", value);
+                if (result != 0)
                 {
-                    try
-                    {
-                        logger.LogDebug("{0}.SetValue()", Description.SettingId);
-                        var result = item.SetValue("Value", value);
-                        if (result != 0)
-                        {
-                            logger.LogError("SetValue returned non-0 for {0}", Description.SettingId);
-                            return false;
-                        }
-                        var updateResult = await item.WaitForUpdate(30);
-                        logger.LogInformation("setting took {0}ms to apply for {1}", updateResult.Item2, Description.SettingId);
-                        if (!updateResult.Item1)
-                        {
-                            logger.LogError("SetValue timed out waiting for update for {0}", Description.SettingId);
-                            return false;
-                        }
-                        return true;
-                    }
-                    catch (Exception e)
-                    {
-                        logger.LogError(e, "Failed to SetValue() for {0}", Description.SettingId);
-                        return false;
-                    }
+                    throw new Exception(String.Format("SetValue returned non-0 for {0}", Id));
                 }
-                else
+                var updateResult = await item.WaitForUpdate(30);
+                logger.LogInformation("setting took {0}ms to apply for {1}", updateResult.Item2, Id);
+                if (!updateResult.Item1)
                 {
-                    logger.LogError("null value");
-                    return false;
+                    throw new Exception(String.Format("SetValue timed out waiting for update for {0}", Id));
+
                 }
             }
             else
             {
-                logger.LogError("null settingItem for {0}", Description.SettingId);
-                return false;
+                throw settingLoadException!;
             }
         }
 
-        public override Task<CaptureResult> Capture()
+        public Task<object?> GetValue()
         {
-            var result = new CaptureResult();
             if (settingItem is ISettingItem item)
             {
-                try
-                {
-                    result.Value = settingItem.GetValue("Value");
-                    result.Success = true;
-                }
-                catch(Exception e)
-                {
-                    logger.LogError(e, "Failed to GetValue() for {0}", Description.SettingId);
-                }
+                var value = item.GetValue("Value");
+                return Task.FromResult<object?>(value);
             }
             else
             {
-                logger.LogError("null settingItem for {0}", Description.SettingId);
+                throw settingLoadException!;
             }
-            return Task.FromResult(result);
         }
 
         /// <summary>
@@ -227,9 +200,16 @@ namespace MorphicSettings
                 var value = Registry.GetValue(registryKeyName, valueName, RegistryValueKind.String);
                 return value as string;
             }
-            catch (Exception e){
-                logger.LogError(e, "Failed to read registry value for {0}.{1}", Description.SettingId, valueName);
-                return null;
+            catch (Exception e)
+            {
+                throw new SettingNotFoundException(String.Format("Failed to read registry value for {0}.{1}", Id, valueName));
+            }
+        }
+
+        public class SettingNotFoundException: Exception
+        {
+            public SettingNotFoundException(string message): base(message)
+            {
             }
         }
 

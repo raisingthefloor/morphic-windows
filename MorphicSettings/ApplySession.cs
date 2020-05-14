@@ -34,7 +34,7 @@ namespace MorphicSettings
     /// <summary>
     /// Apply many settings at once
     /// </summary>
-    class ApplySession
+    public class ApplySession
     {
 
         /// <summary>
@@ -114,7 +114,7 @@ namespace MorphicSettings
             {
                 if (Settings.Get(pair.Key) is Setting setting)
                 {
-                    if (setting.HandlerDescription?.CreateHandler(serviceProvider) is SettingHandler handler)
+                    if (setting.CreateHandler(serviceProvider) is SettingHandler handler)
                     {
                         logger.LogInformation("Applying {0}.{1}", pair.Key.Solution, pair.Key.Preference);
                         var success = await handler.Apply(pair.Value);
@@ -134,11 +134,13 @@ namespace MorphicSettings
                     else
                     {
                         logger.LogError("No handler for {0}.{1}", pair.Key.Solution, pair.Key.Preference);
+                        resultsByKey.Add(pair.Key, false);
                     }
                 }
                 else
                 {
                     logger.LogError("No definition found for {0}.{1}", pair.Key.Solution, pair.Key.Preference);
+                    resultsByKey.Add(pair.Key, false);
                 }
             }
 

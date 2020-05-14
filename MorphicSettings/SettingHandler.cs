@@ -80,9 +80,9 @@ namespace MorphicSettings
     public static class HandlerDescriptionExtensions
     {
 
-        public static SettingHandler? CreateHandler(this SettingHandlerDescription description, IServiceProvider serviceProvider)
+        public static SettingHandler? CreateHandler(this Setting setting, IServiceProvider serviceProvider)
         {
-            if (description is ClientSettingHandlerDescription clientDescription)
+            if (setting.HandlerDescription is ClientSettingHandlerDescription clientDescription)
             {
                 if (SettingHandler.clientHandlerTypesByKey.TryGetValue(clientDescription.Key, out var type))
                 {
@@ -93,15 +93,23 @@ namespace MorphicSettings
                     }
                 }
             }
-            else if (description is SystemSettingHandlerDescription systemDescription)
+            else if (setting.HandlerDescription is SystemSettingHandlerDescription)
             {
-                var logger = serviceProvider.GetService<ILogger<SystemSettingsHandler>>();
-                return new SystemSettingsHandler(systemDescription, logger);
+                var logger = serviceProvider.GetRequiredService<ILogger<SystemSettingHandler>>();
+                var settingFactory = serviceProvider.GetRequiredService<ISystemSettingFactory>();
+                return new SystemSettingHandler(setting, settingFactory, serviceProvider, logger);
             }
-            else if (description is RegistrySettingHandlerDescription registryDescription)
+            else if (setting.HandlerDescription is RegistrySettingHandlerDescription)
             {
-                var logger = serviceProvider.GetService<ILogger<RegistrySettingsHandler>>();
-                return new RegistrySettingsHandler(registryDescription, logger);
+                var logger = serviceProvider.GetRequiredService<ILogger<RegistrySettingHandler>>();
+                var registry = serviceProvider.GetRequiredService<IRegistry>();
+                return new RegistrySettingHandler(setting, registry, logger);
+            }
+            else if (setting.HandlerDescription is IniSettingHandlerDescription)
+            {
+                var logger = serviceProvider.GetRequiredService<ILogger<IniSettingHandler>>();
+                var iniFactory = serviceProvider.GetRequiredService<IIniFileFactory>();
+                return new IniSettingHandler(setting, iniFactory, logger);
             }
             return null;
         }

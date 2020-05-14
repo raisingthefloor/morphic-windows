@@ -23,11 +23,8 @@
 
 using System;
 using System.Threading.Tasks;
-using System.Security;
-using System.Collections.Generic;
-using System.Text;
-using Microsoft.Win32;
 using Microsoft.Extensions.Logging;
+using Microsoft.Win32;
 
 namespace MorphicSettings
 {
@@ -35,29 +32,44 @@ namespace MorphicSettings
     /// <summary>
     /// A settings handler for registry settings
     /// </summary>
-    class RegistrySettingsHandler: SettingHandler
+    public class RegistrySettingHandler: SettingHandler
     {
+
+        /// <summary>
+        /// The setting to handle
+        /// </summary>
+        public Setting Setting { get; private set; }
 
         /// <summary>
         /// The handler description for the setting to read/write
         /// </summary>
-        public RegistrySettingHandlerDescription Description { get; private set; }
+        public RegistrySettingHandlerDescription Description
+        {
+            get
+            {
+                return (Setting.HandlerDescription as RegistrySettingHandlerDescription)!;
+            }
+        }
 
         /// <summary>
         /// Create a new registry settings handler based on a handler descritpion
         /// </summary>
         /// <param name="description"></param>
+        /// <param name="registry"></param>
         /// <param name="logger"></param>
-        public RegistrySettingsHandler(RegistrySettingHandlerDescription description, ILogger<RegistrySettingsHandler> logger)
+        public RegistrySettingHandler(Setting setting, IRegistry registry, ILogger<RegistrySettingHandler> logger)
         {
-            Description = description;
+            Setting = setting;
             this.logger = logger;
+            this.registry = registry;
         }
 
         /// <summary>
         /// The logger to use
         /// </summary>
-        private readonly ILogger<RegistrySettingsHandler> logger;
+        private readonly ILogger<RegistrySettingHandler> logger;
+
+        private readonly IRegistry registry;
 
         /// <summary>
         /// Write the given value to the appropriate registry key
@@ -71,7 +83,7 @@ namespace MorphicSettings
                 try
                 {
                     logger.LogDebug("Registry Write {0}\\{1}", Description.KeyName, Description.ValueName);
-                    Registry.SetValue(Description.KeyName, Description.ValueName, nonnullValue, Description.ValueKind);
+                    registry.SetValue(Description.KeyName, Description.ValueName, nonnullValue, Description.ValueKind);
                     return Task.FromResult(true);
                 }
                 catch (Exception e)
@@ -91,8 +103,8 @@ namespace MorphicSettings
             var result = new CaptureResult();
             try
             {
-                result.Value = Registry.GetValue(Description.KeyName, Description.ValueName, null);
-                result.Success = true;
+                var registryValue = registry.GetValue(Description.KeyName, Description.ValueName, null);
+                result.Success = TryConvert(registryValue, Setting.Kind, out result.Value);
             }catch (Exception e)
             {
                 logger.LogError(e, "Failed to get registry value {0}.{1}", Description.KeyName, Description.ValueName);
@@ -100,5 +112,54 @@ namespace MorphicSettings
             return Task.FromResult(result);
         }
 
+        public static bool TryConvert(object? registryValue, Setting.ValueKind resultValueKind, out object? resultValue)
+        {
+            if (registryValue == null)
+            {
+                resultValue = null;
+                return false;
+            }
+            if (registryValue is Int32 intValue)
+            {
+                switch (resultValueKind)
+                {
+                    case Setting.ValueKind.Boolean:
+                        resultValue = intValue != 0;
+                        return true;
+                    case Setting.ValueKind.Integer:
+                        resultValue = (long)intValue;
+                        return true;
+                }
+                resultValue = null;
+                return false;
+            }
+            if (registryValue is Int64 longValue)
+            {
+                switch (resultValueKind)
+                {
+                    case Setting.ValueKind.Boolean:
+                        resultValue = longValue != 0;
+                        return true;
+                    case Setting.ValueKind.Integer:
+                        resultValue = (long)longValue;
+                        return true;
+                }
+                resultValue = null;
+                return false;
+            }
+            if (registryValue is string stringValue)
+            {
+                switch (resultValueKind)
+                {
+                    case Setting.ValueKind.String:
+                        resultValue = stringValue;
+                        return true;
+                }
+                resultValue = null;
+                return false;
+            }
+            resultValue = null;
+            return false;
+        }
     }
 }

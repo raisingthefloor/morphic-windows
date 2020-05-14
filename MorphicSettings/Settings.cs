@@ -80,6 +80,7 @@ namespace MorphicSettings
             using (var stream = File.OpenRead(jsonPath))
             {
                 var options = new JsonSerializerOptions();
+                options.Converters.Add(new JsonElementInferredTypeConverter());
                 options.Converters.Add(new SettingHandlerDescription.JsonConverter());
                 options.Converters.Add(new SettingFinalizerDescription.JsonConverter());
                 options.Converters.Add(new JsonStringEnumConverter());
@@ -89,6 +90,11 @@ namespace MorphicSettings
                     SolutionsById.Add(solution.Id, solution);
                 }
             }
+        }
+
+        public void Add(Solution solution)
+        {
+            SolutionsById.Add(solution.Id, solution);
         }
 
         /// <summary>
@@ -140,6 +146,20 @@ namespace MorphicSettings
             var session = new ApplySession(this, valuesByKey);
             session.ApplyDefaultValues = false;
             return await session.Run();
+        }
+
+        public async Task<object?> Capture(Preferences.Key key)
+        {
+            var prefs = new Preferences();
+            var session = new CaptureSession(this, prefs);
+            session.Keys.Add(key);
+            await session.Run();
+            return prefs.Get(key);
+        }
+
+        public async Task<bool?> CaptureBool(Preferences.Key key)
+        {
+            return await Capture(key) as bool?;
         }
 
         /// <summary>

@@ -84,6 +84,87 @@ namespace MorphicSettings
         /// </summary>
         [JsonPropertyName("finalizer")]
         public SettingFinalizerDescription? FinalizerDescription { get; set; }
+
+        public bool isDefault(object? value)
+        {
+            return EqualValues(Kind, value, Default);
+        }
+
+        public static bool EqualValues(ValueKind kind, object? value1, object? value2)
+        {
+            if (value1 == null && value2 == null)
+            {
+                return true;
+            }
+            switch (kind)
+            {
+                case ValueKind.Boolean:
+                    {
+                        if (value1 is bool boolValue1)
+                        {
+                            if (value2 is bool boolDefault2)
+                            {
+                                return boolValue1 == boolDefault2;
+                            }
+                        }
+                        return false;
+                    }
+                case ValueKind.Double:
+                    {
+                        double doubleValue1;
+                        double doubleValue2;
+                        if (value1 is double doubleValue1_)
+                        {
+                            doubleValue1 = doubleValue1_;
+                        }
+                        else if (value1 is long longValue1)
+                        {
+                            doubleValue1 = (double)longValue1;
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                        if (value2 is double doubleValue2_)
+                        {
+                            doubleValue2 = doubleValue2_;
+                        }
+                        else if (value2 is long longValue2)
+                        {
+                            doubleValue2 = (double)longValue2;
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                        return Math.Abs(doubleValue1 - doubleValue2) < 0.1;
+                    }
+                case ValueKind.Integer:
+                    {
+                        if (value1 is long longValue1)
+                        {
+                            if (value2 is long longValue2)
+                            {
+                                return longValue1 == longValue2;
+                            }
+                        }
+                        return false;
+                    }
+                case ValueKind.String:
+                    {
+                        if (value1 is string stringValue1)
+                        {
+                            if (value2 is string stringValue2)
+                            {
+                                return stringValue1 == stringValue2;
+                            }
+                        }
+                        return false;
+                    }
+                default:
+                    return false;
+            }
+        }
     }
 
 }

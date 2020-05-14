@@ -42,8 +42,9 @@ namespace MorphicSettings
         {
             if (description is SystemParametersInfoSettingFinalizerDescription spiDescription)
             {
-                var logger = serviceProvider.GetService<ILogger<SystemParametersInfoSettingsFinalizer>>();
-                return new SystemParametersInfoSettingsFinalizer(spiDescription, logger);
+                var logger = serviceProvider.GetRequiredService<ILogger<SystemParametersInfoSettingsFinalizer>>();
+                var spi = serviceProvider.GetRequiredService<ISystemParametersInfo>();
+                return new SystemParametersInfoSettingsFinalizer(spiDescription, spi, logger);
             }
             return null;
         }

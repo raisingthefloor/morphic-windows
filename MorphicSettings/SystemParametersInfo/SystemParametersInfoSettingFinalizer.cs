@@ -30,35 +30,52 @@ using System.Text;
 
 namespace MorphicSettings
 {
+    /// <summary>
+    /// A finalizer that calls into System Parameters Info (SPI)
+    /// </summary>
     class SystemParametersInfoSettingsFinalizer : SettingFinalizer
     {
 
+        /// <summary>
+        /// The handler description
+        /// </summary>
         public SystemParametersInfoSettingFinalizerDescription Description;
 
-        public SystemParametersInfoSettingsFinalizer(SystemParametersInfoSettingFinalizerDescription description, ILogger<SystemParametersInfoSettingsFinalizer> logger)
+        /// <summary>
+        /// The SPI object to use
+        /// </summary>
+        public ISystemParametersInfo systemParametersInfo;
+
+        /// <summary>
+        /// Create a new SPI handler
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="systemParametersInfo"></param>
+        /// <param name="logger"></param>
+        public SystemParametersInfoSettingsFinalizer(SystemParametersInfoSettingFinalizerDescription description, ISystemParametersInfo systemParametersInfo, ILogger<SystemParametersInfoSettingsFinalizer> logger)
         {
             Description = description;
             this.logger = logger;
+            this.systemParametersInfo = systemParametersInfo;
         }
 
+        /// <summary>
+        /// The logger to use
+        /// </summary>
         private readonly ILogger<SystemParametersInfoSettingsFinalizer> logger;
 
         public override Task<bool> Run()
         {
-            var param2Handle = GCHandle.Alloc(Description.Parameter2);
-            int param3 = 0;
-            if (Description.UpdateUserProfile)
+            var success = false;
+            try
             {
-                param3 |= 0x1;
-            }
-            if (Description.SendChange)
+                logger.LogInformation("SPI({0})", Description.Action);
+                success = systemParametersInfo.Call(Description.Action, Description.Parameter1, Description.Parameter2, Description.UpdateUserProfile, Description.SendChange);
+            }catch (Exception e)
             {
-                param3 |= 0x2;
+                logger.LogError(e, "Failed to set sysetem parameters info");
             }
-            logger.LogDebug("SystemParametersInfoW({0}, {1}, {2}, {3})", (int)Description.Action, Description.Parameter1, Description.Parameter2, param3);
-            var result = SystemParametersInfo.SystemParametersInfoW((int)Description.Action, Description.Parameter1, GCHandle.ToIntPtr(param2Handle), param3);
-            param2Handle.Free();
-            return Task.FromResult(result);
+            return Task.FromResult(success);
         }
 
     }
