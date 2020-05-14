@@ -323,7 +323,6 @@ namespace MorphicWin
 
         private void Zoom(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
         {
-            throw new Exception("test exception");
             Countly.RecordEvent("change-zoom");
             double percentage = 1.0;
             if (e.SelectedIndex == 0)
