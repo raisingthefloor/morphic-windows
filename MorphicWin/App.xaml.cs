@@ -149,6 +149,7 @@ namespace MorphicWin
             base.OnStartup(e);
             logger = ServiceProvider.GetRequiredService<ILogger<App>>();
             Session = ServiceProvider.GetRequiredService<Session>();
+            Session.UserChanged += Session_UserChanged;
             logger.LogInformation("App Started");
             logger.LogInformation("Creating Tray Icon");
             CreateMainMenu();
@@ -157,6 +158,21 @@ namespace MorphicWin
             var task = OpenSession();
             task.ContinueWith(SessionOpened, TaskScheduler.FromCurrentSynchronizationContext());
             ConfigureCountly();
+        }
+
+        private void Session_UserChanged(object? sender, EventArgs e)
+        {
+            if (logoutItem != null)
+            {
+                if (Session.User == null)
+                {
+                    logoutItem.Visibility = Visibility.Collapsed;
+                }
+                else
+                {
+                    logoutItem.Visibility = Visibility.Visible;
+                }
+            }
         }
 
         private void RegisterGlobalHotKeys()
@@ -254,6 +270,10 @@ namespace MorphicWin
                     {
                         hideQuickStripItem = menuItem;
                     }
+                    else if (menuItem.Name == "logoutItem")
+                    {
+                        logoutItem = menuItem;
+                    }
                 }
             }
         }
@@ -277,6 +297,11 @@ namespace MorphicWin
         /// The main menu item for hiding the quick strip
         /// </summary>
         private MenuItem? hideQuickStripItem;
+
+        /// <summary>
+        /// The main menu item for logging out
+        /// </summary>
+        private MenuItem? logoutItem;
 
         /// <summary>
         /// Called when the system tray icon is clicked
@@ -328,6 +353,11 @@ namespace MorphicWin
         {
             Countly.RecordEvent("apply-my-settings");
             OpenLoginWindow();
+        }
+
+        private void Logout(object sender, RoutedEventArgs e)
+        {
+            _ = Session.Signout();
         }
 
         /// <summary>

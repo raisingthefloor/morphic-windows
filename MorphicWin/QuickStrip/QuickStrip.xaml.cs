@@ -48,9 +48,15 @@ namespace MorphicWin
         public QuickStrip(Session session)
         {
             this.session = session;
+            session.UserChanged += Session_UserChanged;
             InitializeComponent();
             Deactivated += OnDeactivated;
             SystemEvents.DisplaySettingsChanged += SystemEvents_DisplaySettingsChanged;
+        }
+
+        private void Session_UserChanged(object? sender, EventArgs e)
+        {
+            Update();
         }
 
         private void SystemEvents_DisplaySettingsChanged(object? sender, EventArgs e)
@@ -61,14 +67,7 @@ namespace MorphicWin
         protected override void OnInitialized(EventArgs e)
         {
             base.OnInitialized(e);
-            if (Enum.TryParse<FixedPosition>(session.GetString(PreferenceKeys.Position), out var position))
-            {
-                this.position = position;
-            }
-            if (session.GetArray(PreferenceKeys.Items) is object?[] items)
-            {
-                Items = Item.CreateItems(items);
-            }
+            Update();
         }
 
         private void OnLoaded(object? sender, RoutedEventArgs e)
@@ -80,6 +79,26 @@ namespace MorphicWin
 
         private void OnDeactivated(object? sender, EventArgs e)
         {
+        }
+
+        private void Update()
+        {
+            if (Enum.TryParse<FixedPosition>(session.GetString(PreferenceKeys.Position), out var position))
+            {
+                this.position = position;
+            }
+            if (session.GetArray(PreferenceKeys.Items) is object?[] items)
+            {
+                Items = Item.CreateItems(items);
+            }
+            if (session.User == null)
+            {
+                logoutItem.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                logoutItem.Visibility = Visibility.Visible;
+            }
         }
 
         #endregion
@@ -126,6 +145,11 @@ namespace MorphicWin
         {
             Countly.RecordEvent("apply-my-settings");
             App.Shared.OpenLoginWindow();
+        }
+
+        private void Logout(object sender, RoutedEventArgs e)
+        {
+            _ = session.Signout();
         }
 
         /// <summary>

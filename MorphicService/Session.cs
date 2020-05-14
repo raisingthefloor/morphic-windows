@@ -90,6 +90,10 @@ namespace MorphicService
             }
             var preferencesId = User?.PreferencesId ?? "__default__";
             Preferences = await Storage.Load<Preferences>(preferencesId);
+            if (User != null)
+            {
+                UserChanged?.Invoke(this, new EventArgs());
+            }
         }
 
         #endregion
@@ -313,6 +317,8 @@ namespace MorphicService
         /// </summary>
         public Preferences? Preferences;
 
+        public event EventHandler? UserChanged;
+
         public async Task Signin(User user, Preferences? preferences = null)
         {
             User = user;
@@ -327,12 +333,14 @@ namespace MorphicService
             {
                 await Storage.Save(Preferences);
             }
+            UserChanged?.Invoke(this, new EventArgs());
         }
 
-        public void  Signout()
+        public async Task Signout()
         {
             User = null;
-            Preferences = null;
+            Preferences = await Storage.Load<Preferences>("__default__");
+            UserChanged?.Invoke(this, new EventArgs());
         }
 
         public async Task<bool> RegisterUser(User user, UsernameCredentials credentials, Preferences preferences)
