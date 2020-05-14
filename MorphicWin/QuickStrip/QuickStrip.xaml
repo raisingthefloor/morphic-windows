@@ -32,6 +32,7 @@
                     <Separator/>
                     <MenuItem Header="Take My Settings with Me..." Click="TravelWithSettings"/>
                     <MenuItem Header="Apply My Settings..." Click="ApplyMySettings"/>
+                    <MenuItem x:Name="logoutItem" Header="Logout" Click="Logout" Visibility="Collapsed"/>
                     <Separator/>
                     <MenuItem Header="Quit Morphic" Click="Quit"/>
                 </ContextMenu>
