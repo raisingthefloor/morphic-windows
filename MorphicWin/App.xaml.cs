@@ -37,7 +37,6 @@ using MorphicSettings;
 using System.IO;
 using System.Reflection;
 using CountlySDK;
-using CountlySDK.CountlyCommon;
 using CountlySDK.Entities;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -130,23 +129,23 @@ namespace MorphicWin
         {
             if (task.Exception is Exception e)
             {
-                Console.WriteLine("failed to record exception: " + e.Message);
+                logger.LogError("exception thrown while countly recording exception: {msg}", e.Message);
                 throw e;
             }
-
-            Console.WriteLine("done sending exception");
+            logger.LogDebug("successfully recorded countly exception");
         }
 
         void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
         {
             Exception ex = e.Exception;
+            logger.LogError("handled uncaught exception: {msg}", ex.Message);
 
-            Dictionary<String, String> dict = new Dictionary<string, string>();
-            dict.Add("booh", "waah");
-            // have to cut the stacktrace short or else sends don't seem to work
-            Countly.RecordException(ex.Message, ex.StackTrace, dict, true).ContinueWith(RecordedException, TaskScheduler.FromCurrentSynchronizationContext());
+            Dictionary<String, String> extraData = new Dictionary<string, string>();
+            Countly.RecordException(ex.Message, ex.StackTrace, extraData, true)
+                .ContinueWith(RecordedException, TaskScheduler.FromCurrentSynchronizationContext());
 
             MessageBox.Show("An unhandled exception just occurred: " + e.Exception.Message, "Exception Sample", MessageBoxButton.OK, MessageBoxImage.Warning);
+            // This prevents the exception from crashing the application
             e.Handled = true;
         }
 
