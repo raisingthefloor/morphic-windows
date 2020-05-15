@@ -20,9 +20,9 @@
     <Compile Include="Generated.wxs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MorphicWin\MorphicWin.csproj">
-      <Name>MorphicWin</Name>
-      <Project>{ddef3455-1396-495e-9baa-16c8c80ad6f5}</Project>
+    <ProjectReference Include="..\Morphic.Client\Morphic.Client.csproj">
+      <Name>Morphic.Client</Name>
+      <Project>{2485b22b-5c46-46f1-a466-f8a5b7e28c64}</Project>
       <Private>True</Private>
       <DoNotHarvest>True</DoNotHarvest>
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
@@ -35,7 +35,7 @@
     <Error Text="The WiX Toolset v3.11 (or newer) build tools must be installed to build this project. To download the WiX Toolset, see http://wixtoolset.org/releases/" />
   </Target>
   <PropertyGroup>
-    <DefineConstants>ClientOutputDirectory=..\MorphicWin\bin\$(Configuration)\netcoreapp3.1\win-x64\publish</DefineConstants>
+    <DefineConstants>ClientOutputDirectory=..\Morphic.Client\bin\$(Configuration)\netcoreapp3.1\win-x64\publish</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
     <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
@@ -50,8 +50,8 @@
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
   </PropertyGroup>
   <Target Name="BeforeBuild">
-    <Exec Command="dotnet publish ..\MorphicWin\MorphicWin.csproj -r win-x64 -c $(Configuration)" />
-    <HeatDirectory Directory="..\MorphicWin\bin\$(Configuration)\netcoreapp3.1\win-x64\publish" PreprocessorVariable="var.ClientOutputDirectory" OutputFile="Generated.wxs" ComponentGroupName="GeneratedComponents" DirectoryRefId="INSTALLFOLDER" AutogenerateGuids="true" ToolPath="$(WixToolPath)" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" />
+    <Exec Command="dotnet publish ..\Morphic.Client\Morphic.Client.csproj -r win-x64 -c $(Configuration)" />
+    <HeatDirectory Directory="..\Morphic.Client\bin\$(Configuration)\netcoreapp3.1\win-x64\publish" PreprocessorVariable="var.ClientOutputDirectory" OutputFile="Generated.wxs" ComponentGroupName="GeneratedComponents" DirectoryRefId="INSTALLFOLDER" AutogenerateGuids="true" ToolPath="$(WixToolPath)" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" />
   </Target>
   <!--
 	To modify your build process, add your task inside one of the targets below and uncomment it.
