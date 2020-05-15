@@ -2,5 +2,5 @@
 *.csproj.user
 bin/
 obj/
-MorphicSetup/Generated.wxs
+Morphic.Setup/Generated.wxs
 MorphicWin/appsettings.Local.json

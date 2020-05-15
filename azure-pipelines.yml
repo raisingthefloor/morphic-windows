@@ -61,12 +61,12 @@ stages:
         - task: VSBuild@1
           displayName: "build x64 installer"
           inputs:
-            solution: 'MorphicSetup\MorphicSetup.wixproj'
+            solution: 'Morphic.Setup\Morphic.Setup.wixproj'
             platform: 'x64'
             configuration: '$(buildConfiguration)'
             msbuildArgs: '/p:InformationalVersion=$(Build.BuildNumber)'
         
-        - publish: $(System.DefaultWorkingDirectory)\MorphicSetup\bin\Release\x64\MorphicSetup.msi
+        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicSetup.msi
           displayName: "save x64 installer for later"
           artifact: x64-installer
             
