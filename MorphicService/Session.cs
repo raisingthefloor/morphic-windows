@@ -30,7 +30,7 @@ using System.Threading.Tasks;
 using System.Timers;
 using Microsoft.Extensions.Logging;
 using Morphic.Core;
-using MorphicSettings;
+using Morphic.Settings;
 
 namespace MorphicService
 {
@@ -52,11 +52,11 @@ namespace MorphicService
         /// Create a new session with the given URL
         /// </summary>
         /// <param name="endpoint">The root URL of the Morphic HTTP service</param>
-        public Session(SessionOptions options, Settings settings, Storage storage, Keychain keychain, IUserSettings userSettings, ILogger<Session> logger)
+        public Session(SessionOptions options, SettingsManager settingsManager, Storage storage, Keychain keychain, IUserSettings userSettings, ILogger<Session> logger)
         {
             Service = new Service(new Uri(options.Endpoint), this);
             client = new HttpClient();
-            this.Settings = settings;
+            this.SettingsManager = settingsManager;
             Storage = storage;
             this.keychain = keychain;
             this.logger = logger;
@@ -376,7 +376,7 @@ namespace MorphicService
         /// <summary>
         /// The Settings object that applies settings to the system
         /// </summary>
-        public readonly Settings Settings;
+        public readonly SettingsManager SettingsManager;
 
         /// <summary>
         /// Set the specified preference to the given value
@@ -389,12 +389,12 @@ namespace MorphicService
         /// <returns>Whether the preference was successfully applied to the system</returns>
         public async Task<bool> Apply(Preferences.Key key, object? value)
         {
-            return await Settings.Apply(key, value);
+            return await SettingsManager.Apply(key, value);
         }
 
         public async Task<Dictionary<Preferences.Key, bool>> Apply(Dictionary<Preferences.Key, object?> valuesByKey)
         {
-            return await Settings.Apply(valuesByKey);
+            return await SettingsManager.Apply(valuesByKey);
         }
 
         /// <summary>
@@ -422,7 +422,7 @@ namespace MorphicService
         {
             if (Preferences is Preferences preferences)
             {
-                var applySession = new ApplySession(Settings, preferences);
+                var applySession = new ApplySession(SettingsManager, preferences);
                 await applySession.Run();
             }
         }

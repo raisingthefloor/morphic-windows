@@ -7,7 +7,7 @@ using Xunit;
 
 #nullable enable
 
-namespace MorphicSettings.Tests
+namespace Morphic.Settings.Tests
 {
 
     public class RegistrySettingsHandlerTests

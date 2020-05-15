@@ -5,8 +5,6 @@ VisualStudioVersion = 16.0.29806.167
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MorphicService", "MorphicService\MorphicService.csproj", "{C3C85B67-282B-4D19-AF64-0EE027A9D307}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MorphicSettings", "MorphicSettings\MorphicSettings.csproj", "{2AD5A5C8-5538-48C8-838D-97F42ED4ECE1}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Morphic.Windows.Native", "Morphic.Windows.Native\Morphic.Windows.Native.csproj", "{98AC1F49-CE2F-4294-8FAD-1A287B0E7824}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MorphicSettings.Tests", "MorphicSettings.Tests\MorphicSettings.Tests.csproj", "{BE41A067-66B6-4F13-AABA-910D4B8F567A}"
@@ -18,6 +16,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Morphic.Core", "Morphic.Core\Morphic.Core.csproj", "{F05E2E47-8F9B-4C41-827A-2BBC23C1B276}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Morphic.Core.Tests", "Morphic.Core.Tests\Morphic.Core.Tests.csproj", "{2FECA817-61F1-4E33-8CDC-2918B87CA5EF}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Morphic.Settings", "Morphic.Settings\Morphic.Settings.csproj", "{1EACE557-C098-4146-AEB8-89B0AEC6A823}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,14 +35,6 @@ Global
 		{C3C85B67-282B-4D19-AF64-0EE027A9D307}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C3C85B67-282B-4D19-AF64-0EE027A9D307}.Release|x64.ActiveCfg = Release|x64
 		{C3C85B67-282B-4D19-AF64-0EE027A9D307}.Release|x64.Build.0 = Release|x64
-		{2AD5A5C8-5538-48C8-838D-97F42ED4ECE1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2AD5A5C8-5538-48C8-838D-97F42ED4ECE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2AD5A5C8-5538-48C8-838D-97F42ED4ECE1}.Debug|x64.ActiveCfg = Debug|x64
-		{2AD5A5C8-5538-48C8-838D-97F42ED4ECE1}.Debug|x64.Build.0 = Debug|x64
-		{2AD5A5C8-5538-48C8-838D-97F42ED4ECE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2AD5A5C8-5538-48C8-838D-97F42ED4ECE1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2AD5A5C8-5538-48C8-838D-97F42ED4ECE1}.Release|x64.ActiveCfg = Release|x64
-		{2AD5A5C8-5538-48C8-838D-97F42ED4ECE1}.Release|x64.Build.0 = Release|x64
 		{98AC1F49-CE2F-4294-8FAD-1A287B0E7824}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{98AC1F49-CE2F-4294-8FAD-1A287B0E7824}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{98AC1F49-CE2F-4294-8FAD-1A287B0E7824}.Debug|x64.ActiveCfg = Debug|x64
@@ -87,6 +79,14 @@ Global
 		{2FECA817-61F1-4E33-8CDC-2918B87CA5EF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2FECA817-61F1-4E33-8CDC-2918B87CA5EF}.Release|x64.ActiveCfg = Release|x64
 		{2FECA817-61F1-4E33-8CDC-2918B87CA5EF}.Release|x64.Build.0 = Release|x64
+		{1EACE557-C098-4146-AEB8-89B0AEC6A823}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1EACE557-C098-4146-AEB8-89B0AEC6A823}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1EACE557-C098-4146-AEB8-89B0AEC6A823}.Debug|x64.ActiveCfg = Debug|x64
+		{1EACE557-C098-4146-AEB8-89B0AEC6A823}.Debug|x64.Build.0 = Debug|x64
+		{1EACE557-C098-4146-AEB8-89B0AEC6A823}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1EACE557-C098-4146-AEB8-89B0AEC6A823}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1EACE557-C098-4146-AEB8-89B0AEC6A823}.Release|x64.ActiveCfg = Release|x64
+		{1EACE557-C098-4146-AEB8-89B0AEC6A823}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

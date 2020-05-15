@@ -33,7 +33,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MorphicService;
 using Morphic.Core;
-using MorphicSettings;
+using Morphic.Settings;
 using System.IO;
 using System.Reflection;
 using CountlySDK;
@@ -91,12 +91,12 @@ namespace Morphic.Client
             services.AddSingleton(new StorageOptions { RootPath = Path.Combine(ApplicationDataFolderPath, "Data") });
             services.AddSingleton(new KeychainOptions { Path = Path.Combine(ApplicationDataFolderPath, "keychain") });
             services.AddSingleton<IDataProtection, DataProtector>();
-            services.AddSingleton<IUserSettings, UserSettings>();
+            services.AddSingleton<IUserSettings, WindowsUserSettings>();
             services.AddSingleton<IRegistry, WindowsRegistry>();
             services.AddSingleton<IIniFileFactory, IniFileFactory>();
             services.AddSingleton<ISystemSettingFactory, SystemSettingFactory>();
             services.AddSingleton<ISystemParametersInfo, SystemParametersInfo>();
-            services.AddSingleton<MorphicSettings.Settings>();
+            services.AddSingleton<SettingsManager>();
             services.AddSingleton<Keychain>();
             services.AddSingleton<Storage>();
             services.AddSingleton<Session>();
@@ -212,7 +212,7 @@ namespace Morphic.Client
         private async Task OpenSession()
         {
             await CopyDefaultPreferences();
-            await Session.Settings.Populate("Solutions.json");
+            await Session.SettingsManager.Populate("Solutions.json");
             await Session.Open();
         }
 

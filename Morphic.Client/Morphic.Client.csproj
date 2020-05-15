@@ -51,8 +51,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Morphic.Core\Morphic.Core.csproj" />
+    <ProjectReference Include="..\Morphic.Settings\Morphic.Settings.csproj" />
     <ProjectReference Include="..\MorphicService\MorphicService.csproj" />
-    <ProjectReference Include="..\MorphicSettings\MorphicSettings.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -70,10 +70,10 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Update="Settings.Designer.cs">
+    <Compile Update="UserSettings.Designer.cs">
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
+      <DependentUpon>UserSettings.settings</DependentUpon>
     </Compile>
   </ItemGroup>
 
@@ -85,9 +85,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Settings.settings">
+    <None Update="UserSettings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+      <LastGenOutput>UserSettings.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
 

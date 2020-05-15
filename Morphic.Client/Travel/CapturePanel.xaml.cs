@@ -28,7 +28,7 @@ using System.Threading;
 using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
-using MorphicSettings;
+using Morphic.Settings;
 using System.Text.RegularExpressions;
 using Morphic.Core;
 using System.Threading.Tasks;
@@ -171,7 +171,7 @@ namespace Morphic.Client
         private async Task RunCapture()
         {
 
-            var captureSession = new CaptureSession(session.Settings, Preferences);
+            var captureSession = new CaptureSession(session.SettingsManager, Preferences);
             captureSession.AddAllSolutions();
             await captureSession.Run();
             hasCompletedCapture = true;

@@ -23,6 +23,7 @@
 
 using Microsoft.Extensions.Logging;
 using Morphic.Core;
+using Morphic.Settings;
 using MorphicService;
 using System.Collections.Generic;
 using System.IO;
@@ -139,7 +140,7 @@ namespace Morphic.Client
 
         public async Task Announce()
         {
-            var isNarratorEnabled = await session.Settings.CaptureBool(MorphicSettings.Settings.Keys.WindowsNarratorEnabled) ?? false;
+            var isNarratorEnabled = await session.SettingsManager.CaptureBool(SettingsManager.Keys.WindowsNarratorEnabled) ?? false;
             if (!isNarratorEnabled)
             {
                 var player = new SoundPlayer(Properties.Resources.LoginAnnounce);
@@ -150,7 +151,7 @@ namespace Morphic.Client
 
         public async Task EnableNarrator()
         {
-            _ = await session.Settings.Apply(MorphicSettings.Settings.Keys.WindowsNarratorEnabled, true);
+            _ = await session.SettingsManager.Apply(SettingsManager.Keys.WindowsNarratorEnabled, true);
         }
 
         #endregion

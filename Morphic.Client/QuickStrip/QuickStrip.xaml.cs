@@ -27,7 +27,7 @@ using System.Windows;
 using System.Windows.Controls;
 using Morphic.Core;
 using MorphicService;
-using MorphicSettings;
+using Morphic.Settings;
 using System.Windows.Media.Animation;
 using System.Collections.Generic;
 using System.Linq;
@@ -357,7 +357,7 @@ namespace Morphic.Client
             {
                 percentage = Display.Primary.PercentageForZoomingOut;
             }
-            _ = session.Apply(MorphicSettings.Settings.Keys.WindowsDisplayZoom, percentage);
+            _ = session.Apply(SettingsManager.Keys.WindowsDisplayZoom, percentage);
         }
 
         private void OnMagnify(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
@@ -365,11 +365,11 @@ namespace Morphic.Client
             Countly.RecordEvent("toggle-magnify");
             if (e.SelectedIndex == 0)
             {
-                _ = session.Apply(MorphicSettings.Settings.Keys.WindowsMagnifierEnabled, true);
+                _ = session.Apply(SettingsManager.Keys.WindowsMagnifierEnabled, true);
             }
             else if (e.SelectedIndex == 1)
             {
-                _ = session.Apply(MorphicSettings.Settings.Keys.WindowsMagnifierEnabled, false);
+                _ = session.Apply(SettingsManager.Keys.WindowsMagnifierEnabled, false);
             }
         }
 
@@ -378,11 +378,11 @@ namespace Morphic.Client
             Countly.RecordEvent("toggle-reader");
             if (e.SelectedIndex == 0)
             {
-                _ = session.Apply(MorphicSettings.Settings.Keys.WindowsNarratorEnabled, true);
+                _ = session.Apply(SettingsManager.Keys.WindowsNarratorEnabled, true);
             }
             else if (e.SelectedIndex == 1)
             {
-                _ = session.Apply(MorphicSettings.Settings.Keys.WindowsNarratorEnabled, false);
+                _ = session.Apply(SettingsManager.Keys.WindowsNarratorEnabled, false);
             }
         }
 
@@ -423,11 +423,11 @@ namespace Morphic.Client
             Countly.RecordEvent("toggle-contrast");
             if (e.SelectedIndex == 0)
             {
-                _ = session.Apply(MorphicSettings.Settings.Keys.WindowsDisplayContrastEnabled, true);
+                _ = session.Apply(SettingsManager.Keys.WindowsDisplayContrastEnabled, true);
             }
             else if (e.SelectedIndex == 1)
             {
-                _ = session.Apply(MorphicSettings.Settings.Keys.WindowsDisplayContrastEnabled, false);
+                _ = session.Apply(SettingsManager.Keys.WindowsDisplayContrastEnabled, false);
             }
         }
 
@@ -438,16 +438,16 @@ namespace Morphic.Client
             {
                 _ = session.Apply(new Dictionary<Preferences.Key, object?>
                 {
-                    { MorphicSettings.Settings.Keys.WindowsCursorArrow, "%SystemRoot%\\cursors\\aero_arrow.cur" },
-                    { MorphicSettings.Settings.Keys.WindowsCursorWait, "%SystemRoot%\\cursors\\aero_busy.ani" },
+                    { SettingsManager.Keys.WindowsCursorArrow, "%SystemRoot%\\cursors\\aero_arrow.cur" },
+                    { SettingsManager.Keys.WindowsCursorWait, "%SystemRoot%\\cursors\\aero_busy.ani" },
                 });
             }
             else
             {
                 _ = session.Apply(new Dictionary<Preferences.Key, object?>
                 {
-                    { MorphicSettings.Settings.Keys.WindowsCursorArrow, "%SystemRoot%\\cursors\\arrow_r.cur" },
-                    { MorphicSettings.Settings.Keys.WindowsCursorWait, "%SystemRoot%\\cursors\\busy_r.cur" },
+                    { SettingsManager.Keys.WindowsCursorArrow, "%SystemRoot%\\cursors\\arrow_r.cur" },
+                    { SettingsManager.Keys.WindowsCursorWait, "%SystemRoot%\\cursors\\busy_r.cur" },
                 });
             }
         }

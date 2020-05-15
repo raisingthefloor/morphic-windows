@@ -10,7 +10,7 @@ using Microsoft.Win32;
 
 #nullable enable
 
-namespace MorphicSettings.Tests
+namespace Morphic.Settings.Tests
 {
     public class ApplySessionTests
     {
@@ -63,12 +63,12 @@ namespace MorphicSettings.Tests
             var services = new ServiceCollection();
             services.AddLogging();
             services.AddSingleton<IServiceProvider>(provider => provider);
-            services.AddSingleton<Settings>();
+            services.AddSingleton<SettingsManager>();
             services.AddSingleton<IRegistry, MockRegistry>();
             services.AddSingleton<ISystemSettingFactory, MockSystemSettingFactory>();
             var serviceProvider = services.BuildServiceProvider();
 
-            var settings = serviceProvider.GetRequiredService<Settings>();
+            var settings = serviceProvider.GetRequiredService<SettingsManager>();
             settings.Add(new Solution
             {
                 Id = "org.raisingthefloor.test",
