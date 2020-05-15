@@ -25,7 +25,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
-namespace Morphic.Settings
+namespace Morphic.Settings.Ini
 {
     /// <summary>
     /// A settings handler for ini files

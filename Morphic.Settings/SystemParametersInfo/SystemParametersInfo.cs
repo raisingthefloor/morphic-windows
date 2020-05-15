@@ -24,7 +24,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace Morphic.Settings
+namespace Morphic.Settings.Spi
 {
 
     /// <summary>

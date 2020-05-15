@@ -25,7 +25,7 @@ using System;
 using System.Linq;
 using Microsoft.Win32;
 
-namespace Morphic.Settings
+namespace Morphic.Settings.Registry
 {
     /// <summary>
     /// Concrete <code>IRegistry</code> implementation that gets/sets values from the windows registry
@@ -71,17 +71,17 @@ namespace Morphic.Settings
             switch (name)
             {
                 case "HKEY_CLASSES_ROOT":
-                    return Registry.ClassesRoot;
+                    return Microsoft.Win32.Registry.ClassesRoot;
                 case "HKEY_CURRENT_CONFIG":
-                    return Registry.CurrentConfig;
+                    return Microsoft.Win32.Registry.CurrentConfig;
                 case "HKEY_CURRENT_USER":
-                    return Registry.CurrentUser;
+                    return Microsoft.Win32.Registry.CurrentUser;
                 case "HKEY_LOCAL_MACHINE":
-                    return Registry.LocalMachine;
+                    return Microsoft.Win32.Registry.LocalMachine;
                 case "HKEY_PERFORMANCE_DATA":
-                    return Registry.PerformanceData;
+                    return Microsoft.Win32.Registry.PerformanceData;
                 case "HKEY_USERS":
-                    return Registry.Users;
+                    return Microsoft.Win32.Registry.Users;
             }
             return null;
         }

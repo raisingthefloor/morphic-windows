@@ -4,6 +4,7 @@ using Microsoft.Win32;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
+using Morphic.Settings.Registry;
 
 #nullable enable
 

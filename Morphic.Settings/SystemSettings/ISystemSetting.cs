@@ -23,7 +23,7 @@
 
 using System.Threading.Tasks;
 
-namespace Morphic.Settings
+namespace Morphic.Settings.SystemSettings
 {
 
     /// <summary>

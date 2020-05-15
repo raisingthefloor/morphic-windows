@@ -21,7 +21,7 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-namespace Morphic.Settings
+namespace Morphic.Settings.Registry
 {
 
     /// <summary>

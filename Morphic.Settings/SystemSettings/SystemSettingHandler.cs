@@ -34,7 +34,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using Microsoft.Win32;
 using System.Threading;
 
-namespace Morphic.Settings
+namespace Morphic.Settings.SystemSettings
 {
     /// <summary>
     /// A setting handler for Windows System Settings

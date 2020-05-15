@@ -24,7 +24,7 @@
 using Morphic.Windows.Native;
 using System.IO;
 
-namespace Morphic.Settings
+namespace Morphic.Settings.Ini
 {
     /// <summary>
     /// Implementation of <code>IIniFile</code> that uses <code>IniFileReaderWriter</code>

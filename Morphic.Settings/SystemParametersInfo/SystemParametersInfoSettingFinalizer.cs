@@ -28,7 +28,7 @@ using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Morphic.Settings
+namespace Morphic.Settings.Spi
 {
     /// <summary>
     /// A finalizer that calls into System Parameters Info (SPI)

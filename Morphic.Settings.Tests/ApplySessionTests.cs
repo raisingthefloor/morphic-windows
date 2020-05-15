@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Text;
 using Xunit;
 using Morphic.Core;
+using Morphic.Settings.Registry;
+using Morphic.Settings.SystemSettings;
 using Microsoft.Win32;
 
 #nullable enable

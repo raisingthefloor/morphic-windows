@@ -25,7 +25,7 @@ using System;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Morphic.Settings
+namespace Morphic.Settings.SystemSettings
 {
     /// <summary>
     /// Creates a <code>SystemSetting</code> object that manipulates real settings on a windows machine

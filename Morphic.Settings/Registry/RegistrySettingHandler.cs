@@ -26,7 +26,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 
-namespace Morphic.Settings
+namespace Morphic.Settings.Registry
 {
 
     /// <summary>

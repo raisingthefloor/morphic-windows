@@ -23,7 +23,7 @@
 
 using System;
 
-namespace Morphic.Settings
+namespace Morphic.Settings.SystemSettings
 {
 
     /// <summary>

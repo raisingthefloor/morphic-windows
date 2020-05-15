@@ -25,7 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Morphic.Settings
+namespace Morphic.Settings.Spi
 {
 
     /// <summary>

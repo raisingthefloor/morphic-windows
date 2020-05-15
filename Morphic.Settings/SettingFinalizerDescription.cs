@@ -30,6 +30,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Morphic.Core;
 using Microsoft.Win32;
+using Morphic.Settings.Spi;
 
 namespace Morphic.Settings
 {

@@ -34,7 +34,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using Microsoft.Win32;
 using System.Threading;
 
-namespace Morphic.Settings
+namespace Morphic.Settings.SystemSettings
 {
     /// <summary>
     /// Implementation of Window System Settings
@@ -197,7 +197,7 @@ namespace Morphic.Settings
         {
             try
             {
-                var value = Registry.GetValue(registryKeyName, valueName, RegistryValueKind.String);
+                var value = Microsoft.Win32.Registry.GetValue(registryKeyName, valueName, RegistryValueKind.String);
                 return value as string;
             }
             catch (Exception e)
