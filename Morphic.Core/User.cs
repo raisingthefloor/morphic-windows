@@ -22,30 +22,25 @@
 // * Consumer Electronics Association Foundation
 
 using System;
-using System.Security.Cryptography;
+using System.Text.Json.Serialization;
 
-namespace MorphicCore
+namespace Morphic.Core
 {
-
-    /// <summary>
-    /// Secret key based credentials
-    /// </summary>
-    public class KeyCredentials : ICredentials
+    public class User: IRecord
     {
+        [JsonPropertyName("id")]
+        public string Id { get; set; } = "";
 
-        public KeyCredentials()
-        {
-            var provider = RandomNumberGenerator.Create();
-            var data = new byte[64];
-            provider.GetBytes(data);
-            Key = Convert.ToBase64String(data);
-        }
+        [JsonPropertyName("preferences_id")]
+        public string? PreferencesId { get; set; }
 
-        public KeyCredentials(string key)
-        {
-            Key = key;
-        }
+        [JsonPropertyName("email")]
+        public string? Email { get; set; }
 
-        public string Key { get; set; }
+        [JsonPropertyName("first_name")]
+        public string? FirstName { get; set; }
+
+        [JsonPropertyName("last_name")]
+        public string? LastName { get; set; }
     }
 }

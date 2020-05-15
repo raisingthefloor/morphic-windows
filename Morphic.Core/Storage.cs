@@ -27,7 +27,7 @@ using System.Threading.Tasks;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 
-namespace MorphicCore
+namespace Morphic.Core
 {
 
     /// <summary>

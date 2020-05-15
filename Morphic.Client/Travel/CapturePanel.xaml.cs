@@ -30,7 +30,7 @@ using System.Windows;
 using System.Windows.Controls;
 using MorphicSettings;
 using System.Text.RegularExpressions;
-using MorphicCore;
+using Morphic.Core;
 using System.Threading.Tasks;
 using System.Security.Cryptography;
 

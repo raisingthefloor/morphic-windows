@@ -22,7 +22,7 @@
 // * Consumer Electronics Association Foundation
 
 using System;
-using MorphicCore;
+using Morphic.Core;
 using System.Threading.Tasks;
 using System.Net.Http;
 using System.Text.Json.Serialization;

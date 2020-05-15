@@ -26,7 +26,7 @@ using Xunit;
 using System.Collections.Generic;
 using System.Text.Json;
 
-namespace MorphicCore.Tests
+namespace Morphic.Core.Tests
 {
     public class JsonExtensionTests
     {

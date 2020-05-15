@@ -27,7 +27,7 @@ using System.Text.Json.Serialization;
 using System.Text.Unicode;
 using System.Collections.Generic;
 
-namespace MorphicCore
+namespace Morphic.Core
 {
 
 #nullable disable

@@ -25,7 +25,7 @@ using System.Text.Json.Serialization;
 using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 
-namespace MorphicCore
+namespace Morphic.Core
 {
     public class Preferences: IRecord
     {

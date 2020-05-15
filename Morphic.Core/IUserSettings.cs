@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace MorphicCore
+namespace Morphic.Core
 {
     /// <summary>
     /// A collection of settings that a morphic application manages and persists across app launches

@@ -22,13 +22,30 @@
 // * Consumer Electronics Association Foundation
 
 using System;
+using System.Security.Cryptography;
 
-namespace MorphicCore
+namespace Morphic.Core
 {
+
     /// <summary>
-    /// Interface to identify credential-holding classes
+    /// Secret key based credentials
     /// </summary>
-    public interface ICredentials
+    public class KeyCredentials : ICredentials
     {
+
+        public KeyCredentials()
+        {
+            var provider = RandomNumberGenerator.Create();
+            var data = new byte[64];
+            provider.GetBytes(data);
+            Key = Convert.ToBase64String(data);
+        }
+
+        public KeyCredentials(string key)
+        {
+            Key = key;
+        }
+
+        public string Key { get; set; }
     }
 }

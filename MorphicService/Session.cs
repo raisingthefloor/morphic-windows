@@ -29,7 +29,7 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Timers;
 using Microsoft.Extensions.Logging;
-using MorphicCore;
+using Morphic.Core;
 using MorphicSettings;
 
 namespace MorphicService

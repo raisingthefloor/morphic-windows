@@ -28,7 +28,7 @@ using System.Threading.Tasks;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using MorphicCore;
+using Morphic.Core;
 using Microsoft.Win32;
 
 namespace MorphicSettings

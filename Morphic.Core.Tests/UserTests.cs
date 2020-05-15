@@ -27,7 +27,7 @@ using System.Collections.Generic;
 using Xunit;
 using Microsoft.Extensions.Options;
 
-namespace MorphicCore.Tests
+namespace Morphic.Core.Tests
 {
     public class UserTests
     {

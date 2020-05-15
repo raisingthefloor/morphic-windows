@@ -8,7 +8,7 @@ using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using Xunit;
 
-namespace MorphicCore.Tests
+namespace Morphic.Core.Tests
 {
     public class KeychainTests : IDisposable
     {

@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MorphicCore\MorphicCore.csproj" />
+    <ProjectReference Include="..\Morphic.Core\Morphic.Core.csproj" />
   </ItemGroup>
 
 </Project>

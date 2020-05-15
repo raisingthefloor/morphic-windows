@@ -32,7 +32,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MorphicService;
-using MorphicCore;
+using Morphic.Core;
 using MorphicSettings;
 using System.IO;
 using System.Reflection;

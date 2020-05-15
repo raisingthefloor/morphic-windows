@@ -25,7 +25,7 @@ using System;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using MorphicCore;
+using Morphic.Core;
 using MorphicService;
 using MorphicSettings;
 using System.Windows.Media.Animation;

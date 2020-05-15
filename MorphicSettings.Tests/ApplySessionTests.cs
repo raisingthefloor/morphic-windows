@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Text;
 using Xunit;
-using MorphicCore;
+using Morphic.Core;
 using Microsoft.Win32;
 
 #nullable enable

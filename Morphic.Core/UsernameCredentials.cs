@@ -25,7 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace MorphicCore
+namespace Morphic.Core
 {
     /// <summary>
     /// Username/password based credentials

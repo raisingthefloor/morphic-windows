@@ -22,7 +22,7 @@
 // * Consumer Electronics Association Foundation
 
 using System;
-using MorphicCore;
+using Morphic.Core;
 using System.Security.Cryptography;
 
 namespace Morphic.Client

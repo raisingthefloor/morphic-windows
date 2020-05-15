@@ -23,7 +23,7 @@
 
 using System;
 
-namespace MorphicCore
+namespace Morphic.Core
 {
     /// <summary>
     /// An encryption interface for data protection

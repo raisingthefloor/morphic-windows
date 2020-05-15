@@ -23,7 +23,7 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using MorphicCore;
+using Morphic.Core;
 using MorphicService;
 using System;
 using System.Windows;

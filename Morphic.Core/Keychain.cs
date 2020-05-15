@@ -21,7 +21,7 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using MorphicCore;
+using Morphic.Core;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -30,7 +30,7 @@ using System.Text.Json;
 using System.Text;
 using Microsoft.Extensions.Logging;
 
-namespace MorphicCore
+namespace Morphic.Core
 {
 
     /// <summary>

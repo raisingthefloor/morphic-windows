@@ -26,7 +26,7 @@ using System.Linq;
 using System;
 using System.Text.Json;
 using System.Threading.Tasks;
-using MorphicCore;
+using Morphic.Core;
 
 #nullable enable
 

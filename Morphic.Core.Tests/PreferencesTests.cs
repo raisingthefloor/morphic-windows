@@ -26,7 +26,7 @@ using System.Collections.Generic;
 using System.Text.Json;
 using Xunit;
 
-namespace MorphicCore.Tests
+namespace Morphic.Core.Tests
 {
     public class PreferencesTests
     {

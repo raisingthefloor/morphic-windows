@@ -27,7 +27,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using System.Text;
-using MorphicCore;
+using Morphic.Core;
 
 namespace MorphicSettings
 {

@@ -21,7 +21,7 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using MorphicCore;
+using Morphic.Core;
 using System.Threading.Tasks;
 using System.Net.Http;
 

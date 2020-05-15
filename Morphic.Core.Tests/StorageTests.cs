@@ -32,7 +32,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using Xunit;
 
-namespace MorphicCore.Tests
+namespace Morphic.Core.Tests
 {
     public class StorageTests : IDisposable
     {
