@@ -27,7 +27,7 @@ using System.Text.Json;
 using System.Text;
 using Morphic.Core;
 
-namespace MorphicService
+namespace Morphic.Service
 {
     internal static class HttpRequestMessageExtensions
     {

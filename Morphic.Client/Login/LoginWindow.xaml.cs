@@ -24,7 +24,7 @@
 using Microsoft.Extensions.Logging;
 using Morphic.Core;
 using Morphic.Settings;
-using MorphicService;
+using Morphic.Service;
 using System.Collections.Generic;
 using System.IO;
 using System.Media;

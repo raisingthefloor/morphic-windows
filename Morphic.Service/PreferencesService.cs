@@ -25,7 +25,7 @@ using Morphic.Core;
 using System.Threading.Tasks;
 using System.Net.Http;
 
-namespace MorphicService
+namespace Morphic.Service
 {
     public static class PreferencesService
     {
@@ -36,7 +36,7 @@ namespace MorphicService
         /// <param name="service"></param>
         /// <param name="identifier">The preferences identifier, typically found in <code>User.PreferencesId</code></param>
         /// <returns>The preferences, or <code>null</code> if the request failed</returns>
-        public static async Task<Preferences?> FetchPreferences(this Service service, User user)
+        public static async Task<Preferences?> FetchPreferences(this HttpService service, User user)
         {
             if (user.PreferencesId is string prefsId)
             {
@@ -51,7 +51,7 @@ namespace MorphicService
         /// <param name="service"></param>
         /// <param name="preferences">The preferences to save</param>
         /// <returns><code>true</code> if the request succeeded, <code>false</code> otherwise</returns>
-        public static async Task<bool> Save(this Service service, Preferences preferences)
+        public static async Task<bool> Save(this HttpService service, Preferences preferences)
         {
             if (preferences.UserId is string userId)
             {

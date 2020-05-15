@@ -32,7 +32,7 @@ using Microsoft.Extensions.Logging;
 using Morphic.Core;
 using Morphic.Settings;
 
-namespace MorphicService
+namespace Morphic.Service
 {
 
     public class SessionOptions
@@ -54,7 +54,7 @@ namespace MorphicService
         /// <param name="endpoint">The root URL of the Morphic HTTP service</param>
         public Session(SessionOptions options, SettingsManager settingsManager, Storage storage, Keychain keychain, IUserSettings userSettings, ILogger<Session> logger)
         {
-            Service = new Service(new Uri(options.Endpoint), this);
+            Service = new HttpService(new Uri(options.Endpoint), this);
             client = new HttpClient();
             this.SettingsManager = settingsManager;
             Storage = storage;
@@ -66,7 +66,7 @@ namespace MorphicService
         /// <summary>
         /// The unerlying Morphic service this session talks to
         /// </summary>
-        public Service Service { get; private set; }
+        public HttpService Service { get; private set; }
 
         private readonly Keychain keychain;
 

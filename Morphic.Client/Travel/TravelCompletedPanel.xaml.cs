@@ -26,7 +26,7 @@ using System.Collections;
 using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Extensions.Logging;
-using MorphicService;
+using Morphic.Service;
 
 namespace Morphic.Client
 {

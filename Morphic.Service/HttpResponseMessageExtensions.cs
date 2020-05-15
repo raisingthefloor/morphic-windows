@@ -30,7 +30,7 @@ using Morphic.Core;
 
 #nullable enable
 
-namespace MorphicService
+namespace Morphic.Service
 {
     internal static class HttpResponseMessageExtensions
     {

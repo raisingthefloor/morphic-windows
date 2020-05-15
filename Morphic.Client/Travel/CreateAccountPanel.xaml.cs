@@ -23,7 +23,7 @@
 
 using Microsoft.Extensions.Logging;
 using Morphic.Core;
-using MorphicService;
+using Morphic.Service;
 using System;
 using System.Windows;
 using System.Text.RegularExpressions;

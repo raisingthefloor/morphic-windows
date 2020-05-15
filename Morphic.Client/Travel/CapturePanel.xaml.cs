@@ -22,7 +22,7 @@
 // * Consumer Electronics Association Foundation
 
 using Microsoft.Extensions.Logging;
-using MorphicService;
+using Morphic.Service;
 using System;
 using System.Threading;
 using System.Timers;

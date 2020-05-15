@@ -25,7 +25,7 @@ using System;
 
 #nullable enable
 
-namespace MorphicService
+namespace Morphic.Service
 {
     /// <summary>
     /// An interface to the Morphic HTTP API
@@ -33,7 +33,7 @@ namespace MorphicService
     /// <remarks>
     /// The service is implemented via extensions across multiple files
     /// </remarks>
-    public class Service
+    public class HttpService
     {
 
         /// <summary>
@@ -41,7 +41,7 @@ namespace MorphicService
         /// </summary>
         /// <param name="endpoint">The root URL of the morphic server</param>
         /// <param name="session">The session in which to make requests</param>
-        public Service(Uri endpoint, Session session)
+        public HttpService(Uri endpoint, Session session)
         {
             Endpoint = endpoint;
             WeakSession = new WeakReference<Session>(session);

@@ -28,7 +28,7 @@ using System.Net.Http;
 using System.Text.Json.Serialization;
 using System.ComponentModel.DataAnnotations;
 
-namespace MorphicService
+namespace Morphic.Service
 {
     public static class AuthService
     {
@@ -42,7 +42,7 @@ namespace MorphicService
         /// <param name="user">The user to create</param>
         /// <param name="usernameCredentials">The user's username credentials</param>
         /// <returns>An authentication token and user information, or <code>null</code> if the request failed</returns>
-        public static async Task<AuthResponse?> Register(this Service service, User user, UsernameCredentials usernameCredentials)
+        public static async Task<AuthResponse?> Register(this HttpService service, User user, UsernameCredentials usernameCredentials)
         {
             var registration = new UsernameRegistration(usernameCredentials, user);
             try
@@ -75,7 +75,7 @@ namespace MorphicService
         /// <param name="user">The user to create</param>
         /// <param name="usernameCredentials">The user's key credentials</param>
         /// <returns>An authentication token and user information, or <code>null</code> if the request failed</returns>
-        public static async Task<AuthResponse?> Register(this Service service, User user, KeyCredentials keyCredentials)
+        public static async Task<AuthResponse?> Register(this HttpService service, User user, KeyCredentials keyCredentials)
         {
             var registration = new KeyRegistration(keyCredentials, user);
             return await service.Session.Send<AuthResponse>(() => HttpRequestMessageExtensions.Create(service.Session, "v1/register/key", HttpMethod.Post, registration));
@@ -155,7 +155,7 @@ namespace MorphicService
         /// <param name="service"></param>
         /// <param name="credentials">The username or key credentials to send</param>
         /// <returns>An authentication token and user information, or <code>null</code> if the request failed</returns>
-        public static async Task<AuthResponse?> Authenticate(this Service service, ICredentials credentials)
+        public static async Task<AuthResponse?> Authenticate(this HttpService service, ICredentials credentials)
         {
             if (credentials is UsernameCredentials usernameCredentials)
             {
@@ -174,7 +174,7 @@ namespace MorphicService
         /// <param name="service"></param>
         /// <param name="usernameCredentials">The username credentials</param>
         /// <returns>An authentication token and user information, or <code>null</code> if the request failed</returns>
-        public static async Task<AuthResponse?> AuthenticateUsername(this Service service, UsernameCredentials usernameCredentials)
+        public static async Task<AuthResponse?> AuthenticateUsername(this HttpService service, UsernameCredentials usernameCredentials)
         {
             var body = new AuthUsernameRequest(usernameCredentials.Username, usernameCredentials.Password);
             return await service.Session.Send<AuthResponse>(() => HttpRequestMessageExtensions.Create(service.Session, "v1/auth/username", HttpMethod.Post, body));
@@ -200,7 +200,7 @@ namespace MorphicService
         /// <param name="service"></param>
         /// <param name="keyCredentials">The key credentials</param>
         /// <returns>An authentication token and user information, or <code>null</code> if the request failed</returns>
-        public static async Task<AuthResponse?> AuthenticateKey(this Service service, KeyCredentials keyCredentials)
+        public static async Task<AuthResponse?> AuthenticateKey(this HttpService service, KeyCredentials keyCredentials)
         {
             var body = new AuthKeyRequest(keyCredentials.Key);
             return await service.Session.Send<AuthResponse>(() => HttpRequestMessageExtensions.Create(service.Session, "v1/auth/key", HttpMethod.Post, body));

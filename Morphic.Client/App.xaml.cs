@@ -31,7 +31,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using MorphicService;
+using Morphic.Service;
 using Morphic.Core;
 using Morphic.Settings;
 using System.IO;
