@@ -2,7 +2,8 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:MorphicWin"
-             ShutdownMode="OnExplicitShutdown">
+             ShutdownMode="OnExplicitShutdown"
+             DispatcherUnhandledException="App_DispatcherUnhandledException">
     <Application.Resources>
         <ContextMenu x:Key="ContextMenu">
             <MenuItem x:Name="showQuickStripItem" Header="Show Quick Strip" Click="ShowQuickStrip"/>

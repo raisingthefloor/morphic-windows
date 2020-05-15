@@ -26,6 +26,7 @@ using System.Windows;
 using System.Threading.Tasks;
 using System.Text.Json;
 using System.Collections.Generic;
+using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -114,7 +115,6 @@ namespace MorphicWin
             CountlyConfig cc = new CountlyConfig();
             cc.appKey = section["AppKey"];
             cc.serverUrl = section["ServerUrl"];
-            // @TODO is there some type of compile time we could stick in here? Or something real?
             var assembly = Assembly.GetExecutingAssembly();
             var informationVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
                 .InformationalVersion;
@@ -122,6 +122,31 @@ namespace MorphicWin
 
             Countly.Instance.Init(cc);
             Countly.Instance.SessionBegin();
+            Countly.IsLoggingEnabled = true;
+        }
+        
+        private void RecordedException(Task task)
+        {
+            if (task.Exception is Exception e)
+            {
+                logger.LogError("exception thrown while countly recording exception: {msg}", e.Message);
+                throw e;
+            }
+            logger.LogDebug("successfully recorded countly exception");
+        }
+
+        void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+        {
+            Exception ex = e.Exception;
+            logger.LogError("handled uncaught exception: {msg}", ex.Message);
+
+            Dictionary<String, String> extraData = new Dictionary<string, string>();
+            Countly.RecordException(ex.Message, ex.StackTrace, extraData, true)
+                .ContinueWith(RecordedException, TaskScheduler.FromCurrentSynchronizationContext());
+
+            MessageBox.Show("An unhandled exception just occurred: " + e.Exception.Message, "Exception Sample", MessageBoxButton.OK, MessageBoxImage.Warning);
+            // This prevents the exception from crashing the application
+            e.Handled = true;
         }
 
         /// <summary>
