@@ -32,7 +32,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace Morphic.Client
+namespace Morphic.Client.Login
 {
     /// <summary>
     /// Login window for authenticating users and applying their settings

@@ -35,17 +35,17 @@ using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 using CountlySDK;
 
-namespace Morphic.Client
+namespace Morphic.Client.QuickStrip
 {
     /// <summary>
-    /// Interaction logic for QuickStrip.xaml
+    /// Interaction logic for QuickStripWindow.xaml
     /// </summary>
-    public partial class QuickStrip : Window
+    public partial class QuickStripWindow : Window
     {
 
         #region Initialization
 
-        public QuickStrip(Session session)
+        public QuickStripWindow(Session session)
         {
             this.session = session;
             session.UserChanged += Session_UserChanged;
@@ -190,7 +190,7 @@ namespace Morphic.Client
             /// Get the control that should appear on the quick strip for this item, or <code>null</code> if no valid control exists
             /// </summary>
             /// <returns></returns>
-            virtual public QuickStripItemControl? GetControl(QuickStrip quickStrip)
+            virtual public QuickStripItemControl? GetControl(QuickStripWindow quickStrip)
             {
                 return null;
             }
@@ -262,7 +262,7 @@ namespace Morphic.Client
 
             public string Feature { get; private set; } = "";
 
-            public override QuickStripItemControl? GetControl(QuickStrip quickStrip)
+            public override QuickStripItemControl? GetControl(QuickStripWindow quickStrip)
             {
                 switch (Feature)
                 {
@@ -496,7 +496,7 @@ namespace Morphic.Client
         /// <summary>
         /// The preferred position of the quick strip
         /// </summary>
-        private FixedPosition position = QuickStrip.FixedPosition.BottomRight;
+        private FixedPosition position = QuickStripWindow.FixedPosition.BottomRight;
 
         /// <summary>
         /// The preferred position of the quick strip
