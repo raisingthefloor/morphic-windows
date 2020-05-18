@@ -39,6 +39,7 @@ using Morphic.Settings.Registry;
 using Morphic.Settings.Spi;
 using Morphic.Settings.SystemSettings;
 using Morphic.Client.Travel;
+using Morphic.Client.Login;
 using System.IO;
 using System.Reflection;
 using CountlySDK;
