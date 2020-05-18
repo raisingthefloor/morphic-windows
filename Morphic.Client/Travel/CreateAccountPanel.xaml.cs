@@ -30,7 +30,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 
-namespace Morphic.Client
+namespace Morphic.Client.Travel
 {
     /// <summary>
     /// A panel shown when the user needs to create an account in order to save their captured settings

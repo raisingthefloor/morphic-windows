@@ -38,6 +38,7 @@ using Morphic.Settings.Ini;
 using Morphic.Settings.Registry;
 using Morphic.Settings.Spi;
 using Morphic.Settings.SystemSettings;
+using Morphic.Client.Travel;
 using System.IO;
 using System.Reflection;
 using CountlySDK;
