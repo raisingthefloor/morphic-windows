@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Timers;
 using Microsoft.Extensions.Logging;
@@ -321,6 +322,28 @@ namespace Morphic.Service
 
         public async Task Signin(User user, Preferences? preferences = null)
         {
+            if (User == null)
+            {
+                // If we are going from no user to a logged in user, capture the computer's current settings as the
+                // default preferences that will be applied back when the user logs out.
+                //
+                // If we are going from one user to another user, we don't want to do anything because the computer's
+                // current settings are the first user's rather than whatever the computer was before that user logged in
+                if (Preferences is Preferences defaultPreferences)
+                {
+                    if (defaultPreferences.Id == "__default__")
+                    {
+                        var capture = new CaptureSession(SettingsManager, defaultPreferences);
+                        capture.AddAllSolutions();
+                        await capture.Run();
+                        await Storage.Save(defaultPreferences);
+                    }
+                    else
+                    {
+                        logger.LogError("User is null, but Preferences.Id != '__default__'; not capturing default settings on signin");
+                    }
+                }
+            }
             User = user;
             if (preferences == null)
             {
@@ -340,6 +363,8 @@ namespace Morphic.Service
         {
             User = null;
             Preferences = await Storage.Load<Preferences>("__default__");
+            var apply = new ApplySession(SettingsManager, Preferences!);
+            await apply.Run();
             UserChanged?.Invoke(this, new EventArgs());
         }
 
