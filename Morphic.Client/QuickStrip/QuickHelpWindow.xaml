@@ -5,7 +5,20 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Morphic.Client"
         mc:Ignorable="d"
-        Title="QuickHelpWindow" Height="160" Width="750" Background="#CC000000" BorderBrush="White" BorderThickness="1" HorizontalAlignment="Center" VerticalAlignment="Center" WindowStyle="None" ResizeMode="NoResize" IsHitTestVisible="False" ShowInTaskbar="False" AllowsTransparency="True">
+        Title="QuickHelpWindow"
+        Height="160"
+        Width="750" 
+        Background="#CC000000"
+        BorderBrush="White"
+        BorderThickness="1"
+        HorizontalAlignment="Center"
+        VerticalAlignment="Center"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        IsHitTestVisible="False"
+        ShowInTaskbar="False"
+        AllowsTransparency="True"
+        ShowActivated="False">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="85"/>
