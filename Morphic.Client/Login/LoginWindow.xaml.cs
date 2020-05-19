@@ -94,6 +94,7 @@ namespace Morphic.Client.Login
             if (!success)
             {
                 ErrorLabel.Visibility = Visibility.Visible;
+                ErrorLabel.Focus(); // Makes narrator read the error label
                 SetFieldsEnabled(true);
             }
             else

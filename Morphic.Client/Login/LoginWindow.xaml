@@ -24,12 +24,12 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Image Grid.Row="0" Grid.ColumnSpan="2" Source="../Icon.png" HorizontalAlignment="Center" Width="60" Margin="0,20"/>
-        <Label Grid.Row="1" Grid.Column="0" FontSize="17" Margin="0,4">Email Address</Label>
-        <TextBox Grid.Column="1" Grid.Row="1" Margin="0,4" x:Name="UsernameField" AcceptsReturn="False" AcceptsTab="False" MaxLines="1" TextWrapping="NoWrap" TextChanged="UsernameField_TextChanged" FontSize="17" VerticalAlignment="Center" Padding="0,4,0,4" AutomationProperties.HelpText="Enter your email address" AutomationProperties.IsRequiredForForm="True" AutomationProperties.Name="Email Field" />
-        <Label Grid.Row="2" Grid.Column="0" FontSize="17" Margin="0,4">Password</Label>
-        <PasswordBox Grid.Column="1" Grid.Row="2" Margin="0,4" x:Name="PasswordField" PasswordChanged="PasswordField_PasswordChanged" FontSize="17" VerticalAlignment="Center" Padding="0,4,0,4" AutomationProperties.Name="Morphic Password Field" AutomationProperties.IsRequiredForForm="True" AutomationProperties.HelpText="Enter your Morphic password"/>
-        <Label x:Name="ErrorLabel" Grid.Row="3" Grid.ColumnSpan="2" HorizontalAlignment="Center" FontSize="17" FontWeight="SemiBold" Foreground="#ffcc0000" Visibility="Hidden">We did not recognize your login.  Please try again.</Label>
-        <Button x:Name="LoginButton" Grid.Row="4" Grid.ColumnSpan="2" Width="Auto" HorizontalAlignment="Center" FontSize="17" FontWeight="Bold" Margin="0,5,0,10" Click="OnLogin" IsEnabled="False" AutomationProperties.HelpText="Login and apply your settings" AutomationProperties.Name="Login Button">
+        <Label x:Name="EmailFieldLabel" Grid.Row="1" Grid.Column="0" FontSize="17" Margin="0,4">Email Address</Label>
+        <TextBox Grid.Column="1" Grid.Row="1" Margin="0,4" x:Name="UsernameField" AcceptsReturn="False" AcceptsTab="False" MaxLines="1" TextWrapping="NoWrap" TextChanged="UsernameField_TextChanged" FontSize="17" VerticalAlignment="Center" Padding="0,4,0,4" AutomationProperties.HelpText="Enter your email address" AutomationProperties.IsRequiredForForm="True" AutomationProperties.LabeledBy="{Binding ElementName=EmailFieldLabel}" />
+        <Label x:Name="PasswordFieldLabel" Grid.Row="2" Grid.Column="0" FontSize="17" Margin="0,4">Password</Label>
+        <PasswordBox Grid.Column="1" Grid.Row="2" Margin="0,4" x:Name="PasswordField" PasswordChanged="PasswordField_PasswordChanged" FontSize="17" VerticalAlignment="Center" Padding="0,4,0,4" AutomationProperties.IsRequiredForForm="True" AutomationProperties.HelpText="Enter your Morphic password" AutomationProperties.LabeledBy="{Binding ElementName=PasswordFieldLabel}"/>
+        <Label x:Name="ErrorLabel" Grid.Row="3" Grid.ColumnSpan="2" HorizontalAlignment="Center" FontSize="17" FontWeight="SemiBold" Foreground="#ffcc0000" Visibility="Hidden" AutomationProperties.AutomationId="ErrorLabel" Focusable="True">We did not recognize your login.  Please try again.</Label>
+        <Button x:Name="LoginButton" Grid.Row="4" Grid.ColumnSpan="2" Width="Auto" HorizontalAlignment="Center" FontSize="17" FontWeight="Bold" Margin="0,5,0,10" Click="OnLogin" IsEnabled="False" AutomationProperties.HelpText="Login and apply your settings">
             <Button.Style>
                 <Style TargetType="{x:Type Button}">
                     <Setter Property="Background" Value="#FF008145"/>
