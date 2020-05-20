@@ -30,7 +30,7 @@ namespace Morphic.Settings.Ini
     /// <summary>
     /// A settings handler for ini files
     /// </summary>
-    class IniSettingHandler : SettingHandler
+    public class IniSettingHandler : SettingHandler
     {
 
         /// <summary>

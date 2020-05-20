@@ -52,6 +52,9 @@ namespace Morphic.Settings.Tests
                 ClientSettingHandlerDescription client = (ClientSettingHandlerDescription)handler;
                 Assert.Equal(solution, client.Key.Solution);
                 Assert.Equal(preference, client.Key.Preference);
+                //test equal operator
+                ClientSettingHandlerDescription other = new ClientSettingHandlerDescription(new Preferences.Key(solution, preference));
+                Assert.Equal(other, client);
             }
             else
             {
@@ -84,6 +87,9 @@ namespace Morphic.Settings.Tests
                 Assert.Equal(keyName, registry.KeyName);
                 Assert.Equal(valueName, registry.ValueName);
                 Assert.Equal(valueKind, registry.ValueKind);
+                //test equal operator
+                RegistrySettingHandlerDescription other = new RegistrySettingHandlerDescription(keyName, valueName, valueKind);
+                Assert.Equal(other, registry);
             }
             else
             {
@@ -116,6 +122,9 @@ namespace Morphic.Settings.Tests
                 Assert.Equal(filename, ini.Filename);
                 Assert.Equal(section, ini.Section);
                 Assert.Equal(key, ini.Key);
+                //test equal operator
+                IniSettingHandlerDescription other = new IniSettingHandlerDescription(filename, section, key);
+                Assert.Equal(other, ini);
             }
             else
             {
@@ -144,6 +153,9 @@ namespace Morphic.Settings.Tests
                 Assert.IsType<SystemSettingHandlerDescription>(handler);
                 SystemSettingHandlerDescription system = (SystemSettingHandlerDescription)handler;
                 Assert.Equal(settingId, system.SettingId);
+                //test equal operator
+                SystemSettingHandlerDescription other = new SystemSettingHandlerDescription(settingId);
+                Assert.Equal(other, system);
             }
             else
             {

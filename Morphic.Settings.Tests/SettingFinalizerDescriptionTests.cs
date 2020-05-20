@@ -58,6 +58,11 @@ namespace Morphic.Settings.Tests
                     Assert.Equal(sendChange, spi.SendChange);
                 if (updateUserProfile != null)
                     Assert.Equal(updateUserProfile, spi.UpdateUserProfile);
+                //test equals operator
+                SystemParametersInfoSettingFinalizerDescription other = new SystemParametersInfoSettingFinalizerDescription(action);
+                other.SendChange = spi.SendChange;
+                other.UpdateUserProfile = spi.UpdateUserProfile;
+                Assert.Equal(other, spi);
             }
             else
             {
