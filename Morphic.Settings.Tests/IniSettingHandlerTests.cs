@@ -1,4 +1,4 @@
-﻿// Copyright 2020 Raising the Floor - International
+// Copyright 2020 Raising the Floor - International
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -21,15 +21,11 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
+using Microsoft.Extensions.Logging;
+using Morphic.Settings.Ini;
 using System;
 using System.Threading.Tasks;
-using Microsoft.Win32;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using System.Collections;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Morphic.Settings.Ini;
 
 #nullable enable
 

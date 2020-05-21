@@ -21,15 +21,12 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
+using Microsoft.Extensions.Logging;
+using Microsoft.Win32;
+using Morphic.Settings.Registry;
 using System;
 using System.Threading.Tasks;
-using Microsoft.Win32;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using System.Collections;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Morphic.Settings.Registry;
 
 #nullable enable
 
