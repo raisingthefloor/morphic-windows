@@ -1,4 +1,4 @@
-// Copyright 2020 Raising the Floor - International
+﻿// Copyright 2020 Raising the Floor - International
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -34,25 +34,35 @@ namespace Morphic.Settings.Tests
 
     public class IniSettingHandlerTests
     {
+        //PASS = everything worked normally
+        //FAIL = it didn't work (get returns null) but it didn't throw an exception
+        //CRASH = it threw an exception
+        public enum pf
+        {
+            PASS,
+            FAIL,
+            CRASH
+        }
         private static int openCount = 0;
         private static int getCount = 0;
         private static int setCount = 0;
         private static object? iniValue = null;
+        private static pf passfail;
 
         private class MockIniFile : IIniFile
         {
             public object? GetValue(string section, string key)
             {
                 ++getCount;
-                if (key == "PASS") return iniValue;
-                else if (key == "FAIL") return null;
+                if (passfail == pf.PASS) return iniValue;
+                else if (passfail == pf.FAIL) return null;
                 else throw new ArgumentException();
             }
 
             public void SetValue(string section, string key, string value)
             {
                 ++setCount;
-                if (key != "PASS" && key != "FAIL") throw new ArgumentException();
+                if (passfail == pf.CRASH) throw new ArgumentException();
             }
         }
 
@@ -66,11 +76,19 @@ namespace Morphic.Settings.Tests
         }
 
         [Theory]
-        [InlineData(Setting.ValueKind.String, typeof(string), "Hello", "PASS", true)]
-        [InlineData(Setting.ValueKind.Integer, typeof(Int64), 52L, "PASS", true)]
-        [InlineData(Setting.ValueKind.Double, typeof(double), 3.14159d, "PASS", true)]
-        [InlineData(Setting.ValueKind.Boolean, typeof(bool), true, "PASS", true)]
-        public async Task TestCapture(Setting.ValueKind kind, System.Type type, object value, string passfail, bool success)
+        [InlineData(Setting.ValueKind.String, "Hello", pf.PASS)]
+        [InlineData(Setting.ValueKind.String, "Hello", pf.FAIL)]
+        [InlineData(Setting.ValueKind.String, "Hello", pf.CRASH)]
+        [InlineData(Setting.ValueKind.Integer, 52L, pf.PASS)]
+        [InlineData(Setting.ValueKind.Integer, 52L, pf.FAIL)]
+        [InlineData(Setting.ValueKind.Integer, 52L, pf.CRASH)]
+        [InlineData(Setting.ValueKind.Double, 3.14159d, pf.PASS)]
+        [InlineData(Setting.ValueKind.Double, 3.14159d, pf.FAIL)]
+        [InlineData(Setting.ValueKind.Double, 3.14159d, pf.CRASH)]
+        [InlineData(Setting.ValueKind.Boolean, true, pf.PASS)]
+        [InlineData(Setting.ValueKind.Boolean, true, pf.FAIL)]
+        [InlineData(Setting.ValueKind.Boolean, true, pf.CRASH)]
+        public async Task TestCapture(Setting.ValueKind kind, object value, pf passfail)
         {
             var mockFactory = new MockIniFactory();
             var loggerFactory = new LoggerFactory();
@@ -79,12 +97,13 @@ namespace Morphic.Settings.Tests
             getCount = 0;
             setCount = 0;
             iniValue = value;
+            IniSettingHandlerTests.passfail = passfail;
 
             var setting = new Setting()
             {
                 Name = "test",
                 Kind = kind,
-                HandlerDescription = new IniSettingHandlerDescription("thefile", "thesection", passfail)
+                HandlerDescription = new IniSettingHandlerDescription("thefile", "thesection", "thekey")
             };
             var handler = new IniSettingHandler(setting, mockFactory, logger);
 
@@ -92,12 +111,16 @@ namespace Morphic.Settings.Tests
             Assert.Equal(1, openCount);
             Assert.Equal(1, getCount);
             Assert.Equal(0, setCount);
-            if (success)
+            if (passfail == pf.PASS)
             {
                 Assert.True(result.Success);
                 Assert.NotNull(result.Value);
-                Assert.Equal(result.Value!.GetType(), type);
                 Assert.Equal(value, result.Value);
+            }
+            else if(passfail == pf.FAIL)
+            {
+                Assert.True(result.Success);
+                Assert.Null(result.Value);
             }
             else
             {
@@ -107,13 +130,19 @@ namespace Morphic.Settings.Tests
         }
 
         [Theory]
-        [InlineData(Setting.ValueKind.String, "Hello", "PASS", true)]
-        [InlineData(Setting.ValueKind.Integer, 52L, "PASS", true)]
-        [InlineData(Setting.ValueKind.Boolean, true, "PASS", true)]
-        [InlineData(Setting.ValueKind.Double, 3.14159d, "PASS", true)]
-        [InlineData(Setting.ValueKind.Double, 3.14159d, "FAIL", true)]
-        [InlineData(Setting.ValueKind.Double, 3.14159d, "CRASH", false)]
-        public async Task TestApply(Setting.ValueKind kind, object value, string passfail, bool success)
+        [InlineData(Setting.ValueKind.String, "Hello", pf.PASS, true)]
+        [InlineData(Setting.ValueKind.String, "Hello", pf.FAIL, true)]
+        [InlineData(Setting.ValueKind.String, "Hello", pf.CRASH, false)]
+        [InlineData(Setting.ValueKind.Integer, 52L, pf.PASS, true)]
+        [InlineData(Setting.ValueKind.Integer, 52L, pf.FAIL, true)]
+        [InlineData(Setting.ValueKind.Integer, 52L, pf.CRASH, false)]
+        [InlineData(Setting.ValueKind.Boolean, true, pf.PASS, true)]
+        [InlineData(Setting.ValueKind.Boolean, true, pf.FAIL, true)]
+        [InlineData(Setting.ValueKind.Boolean, true, pf.CRASH, false)]
+        [InlineData(Setting.ValueKind.Double, 3.14159d, pf.PASS, true)]
+        [InlineData(Setting.ValueKind.Double, 3.14159d, pf.FAIL, true)]
+        [InlineData(Setting.ValueKind.Double, 3.14159d, pf.CRASH, false)]
+        public async Task TestApply(Setting.ValueKind kind, object value, pf passfail, bool success)
         {
             var mockFactory = new MockIniFactory();
             var loggerFactory = new LoggerFactory();
@@ -121,12 +150,13 @@ namespace Morphic.Settings.Tests
             openCount = 0;
             getCount = 0;
             setCount = 0;
+            IniSettingHandlerTests.passfail = passfail;
 
             var setting = new Setting()
             {
                 Name = "test",
                 Kind = kind,
-                HandlerDescription = new IniSettingHandlerDescription("thefile", "thesection", passfail)
+                HandlerDescription = new IniSettingHandlerDescription("thefile", "thesection", "thekey")
             };
             var handler = new IniSettingHandler(setting, mockFactory, logger);
 
