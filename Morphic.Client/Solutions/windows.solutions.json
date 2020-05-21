@@ -217,21 +217,5 @@
         }
       }
     ]
-  },
-  {
-    "id": "com.freedomscientific.jaws",
-    "settings": [
-      {
-        "name": "braille.cursor.all.dots",
-        "type": "boolean",
-        "default": false,
-        "handler": {
-          "type": "com.microsoft.windows.ini",
-          "filename": "$(APPDATA)\\Freedom Scientific\\JAWS\\2019\\Settings\\enu\\DEFAULT.JCF",
-          "section": "Braille",
-          "key": "AllDotsBrailleCursor"
-        }
-      }
-    ]
   }
 ]

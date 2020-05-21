@@ -219,7 +219,8 @@ namespace Morphic.Client
         private async Task OpenSession()
         {
             await CopyDefaultPreferences();
-            await Session.SettingsManager.Populate("Solutions.json");
+            await Session.SettingsManager.Populate(Path.Combine("Solutions", "windows.solutions.json"));
+            await Session.SettingsManager.Populate(Path.Combine("Solutions", "jaws2019.solutions.json"));
             await Session.Open();
         }
 
