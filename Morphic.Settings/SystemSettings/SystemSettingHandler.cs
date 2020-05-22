@@ -96,7 +96,7 @@ namespace Morphic.Settings.SystemSettings
         /// <returns></returns>
         public override async Task<bool> Apply(object? value)
         {
-            if (TryConvertToSystem(value, systemSetting.SettingType, out var systemValue))
+            if (TryConvertToSystem(value, Description.Kind, out var systemValue))
             {
                 try
                 {
@@ -131,13 +131,13 @@ namespace Morphic.Settings.SystemSettings
 
         }
 
-        public bool TryConvertToSystem(object? value, SettingType systemSettingType, out object? systemValue)
+        public bool TryConvertToSystem(object? value, SystemValueKind systemValueKind, out object? systemValue)
         {
             if (value is string stringValue)
             {
-                switch (systemSettingType)
+                switch (systemValueKind)
                 {
-                    case SettingType.String:
+                    case SystemValueKind.String:
                         systemValue = stringValue;
                         return true;
                 }
@@ -146,10 +146,32 @@ namespace Morphic.Settings.SystemSettings
             }
             if (value is bool boolValue)
             {
-                switch (systemSettingType)
+                switch (systemValueKind)
                 {
-                    case SettingType.Boolean:
+                    case SystemValueKind.Boolean:
                         systemValue = boolValue;
+                        return true;
+                }
+                systemValue = null;
+                return false;
+            }
+            if (value is long longValue)
+            {
+                switch (systemValueKind)
+                {
+                    case SystemValueKind.Integer:
+                        systemValue = longValue;
+                        return true;
+                }
+                systemValue = null;
+                return false;
+            }
+            if (value is double doubleValue)
+            {
+                switch (systemValueKind)
+                {
+                    case SystemValueKind.Double:
+                        systemValue = doubleValue;
                         return true;
                 }
                 systemValue = null;
@@ -178,6 +200,39 @@ namespace Morphic.Settings.SystemSettings
                 {
                     case Setting.ValueKind.Boolean:
                         resultValue = boolValue;
+                        return true;
+                }
+                resultValue = null;
+                return false;
+            }
+            if (systemValue is long longValue)
+            {
+                switch (valueKind)
+                {
+                    case Setting.ValueKind.Integer:
+                        resultValue = longValue;
+                        return true;
+                }
+                resultValue = null;
+                return false;
+            }
+            if (systemValue is int intValue)
+            {
+                switch (valueKind)
+                {
+                    case Setting.ValueKind.Integer:
+                        resultValue = (long)intValue;
+                        return true;
+                }
+                resultValue = null;
+                return false;
+            }
+            if (systemValue is double doubleValue)
+            {
+                switch (valueKind)
+                {
+                    case Setting.ValueKind.Integer:
+                        resultValue = doubleValue;
                         return true;
                 }
                 resultValue = null;

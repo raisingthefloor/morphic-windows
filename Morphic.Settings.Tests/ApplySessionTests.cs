@@ -91,7 +91,7 @@ namespace Morphic.Settings.Tests
                         Name = "second",
                         Kind = Setting.ValueKind.Integer,
                         Default = 0,
-                        HandlerDescription = new SystemSettingHandlerDescription("SystemSetting_Morhpic_Test")
+                        HandlerDescription = new SystemSettingHandlerDescription("SystemSetting_Morhpic_Test", SystemValueKind.Integer)
                     }
                 }
             });
