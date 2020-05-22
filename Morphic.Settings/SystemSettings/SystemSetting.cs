@@ -50,7 +50,7 @@ namespace Morphic.Settings.SystemSettings
     /// The result of calling GetSetting("SomeSettingId") is an object that has GetValue() and SetValue() methods,
     /// which read and write the setting, respectively.
     /// </remarks>
-    class SystemSetting: ISystemSetting
+    public class SystemSetting: ISystemSetting
     {
 
         public string Id { get; private set; }

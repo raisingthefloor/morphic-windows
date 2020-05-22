@@ -21,29 +21,12 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System.Threading.Tasks;
-
 namespace Morphic.Settings.SystemSettings
 {
-
-    /// <summary>
-    /// Interface for manipulating System Settings
-    /// </summary>
-    public interface ISystemSetting
+    public enum SystemValueKind
     {
-
-        /// <summary>
-        /// Set the setting's value
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public Task SetValue(object value);
-
-
-        /// <summary>
-        /// Get the setting's value
-        /// </summary>
-        /// <returns></returns>
-        public Task<object?> GetValue();
+        String,
+        Boolean,
+        Integer
     }
 }
