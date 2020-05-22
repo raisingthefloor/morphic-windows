@@ -55,6 +55,14 @@ namespace Morphic.Settings.SystemSettings
 
         public string Id { get; private set; }
 
+        public SettingType SettingType
+        {
+            get
+            {
+                return settingItem?.Type ?? SettingType.Custom;
+            }
+        }
+
         /// <summary>
         /// The registry key name for this setting's information
         /// </summary>

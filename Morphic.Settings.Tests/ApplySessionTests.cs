@@ -106,9 +106,12 @@ namespace Morphic.Settings.Tests
         {
             public string Id { get; private set; }
 
+            public SettingType SettingType { get; private set; }
+
             public MockSystemSetting(string id)
             {
                 Id = id;
+                SettingType = SettingType.Boolean;
             }
 
             public async Task SetValue(object value)

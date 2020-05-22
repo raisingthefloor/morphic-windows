@@ -36,7 +36,7 @@ namespace Morphic.Settings.Ini
         /// <param name="section"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-        public object? GetValue(string section, string key);
+        public string? GetValue(string section, string key);
 
         /// <summary>
         /// Set the value for the given section and key pair

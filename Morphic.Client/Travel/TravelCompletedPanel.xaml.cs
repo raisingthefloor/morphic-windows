@@ -28,7 +28,7 @@ using System.Windows.Controls;
 using Microsoft.Extensions.Logging;
 using Morphic.Service;
 
-namespace Morphic.Client
+namespace Morphic.Client.Travel
 {
     /// <summary>
     /// Shown at the end of the capture process as a review for the user

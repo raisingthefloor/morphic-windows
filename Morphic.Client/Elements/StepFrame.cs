@@ -27,7 +27,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 
-namespace Morphic.Client
+namespace Morphic.Client.Elements
 {
     /// <summary>
     /// Contains a single page at time, but animates when switching to a new page

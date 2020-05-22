@@ -22,6 +22,7 @@
 // * Consumer Electronics Association Foundation
 
 using System;
+using System.Reflection.Metadata.Ecma335;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
@@ -98,13 +99,11 @@ namespace Morphic.Settings.Ini
         /// <returns></returns>
         public override Task<bool> Apply(object? value)
         {
-            // FIXME: ToString() probably isn't correct for all types
-            if (value?.ToString() is string stringValue)
+            if (TryConvertToIni(value, out var iniValue))
             {
                 try
                 {
-                    logger.LogDebug("Writing {0}:{1}.{2}", Description.Filename, Description.Section, Description.Key);
-                    iniFile.SetValue(Description.Section, Description.Key, stringValue);
+                    iniFile.SetValue(Description.Section, Description.Key, iniValue);
                     return Task.FromResult(true);
                 }
                 catch (Exception e)
@@ -124,15 +123,76 @@ namespace Morphic.Settings.Ini
             var result = new CaptureResult();
             try
             {
-                // FIXME: need to parse correct type from string
-                result.Value = iniFile.GetValue(Description.Section, Description.Key);
-                result.Success = true;
+                var iniValue = iniFile.GetValue(Description.Section, Description.Key);
+                result.Success = TryConvertFromIni(iniValue, Setting.Kind, out result.Value);
             }
             catch (Exception e)
             {
                 logger.LogError(e, "Failed to capture ini value");
             }
             return Task.FromResult(result);
+        }
+
+        public bool TryConvertToIni(object? value, out string iniValue)
+        {
+            if (value is string stringValue)
+            {
+                iniValue = stringValue;
+                return true;
+            }
+            if (value is long longValue)
+            {
+                iniValue = longValue.ToString();
+                return true;
+            }
+            if (value is bool boolValue)
+            {
+                iniValue = boolValue ? "1" : "0";
+                return true;
+            }
+            if (value is double doubleValue)
+            {
+                iniValue = doubleValue.ToString();
+                return true;
+            }
+            iniValue = "";
+            return false;
+        }
+
+        public bool TryConvertFromIni(string? iniValue, Setting.ValueKind valueKind, out object? resultValue)
+        {
+            if (iniValue == null)
+            {
+                resultValue = null;
+                return false;
+            }
+            switch (valueKind)
+            {
+                case Setting.ValueKind.String:
+                    resultValue = iniValue;
+                    return true;
+                case Setting.ValueKind.Boolean:
+                    resultValue = iniValue == "1";
+                    return true;
+                case Setting.ValueKind.Integer:
+                    if (Int64.TryParse(iniValue, out var longValue))
+                    {
+                        resultValue = longValue;
+                        return true;
+                    }
+                    resultValue = null;
+                    return false;
+                case Setting.ValueKind.Double:
+                    if (Double.TryParse(iniValue, out var doubleValue))
+                    {
+                        resultValue = doubleValue;
+                        return true;
+                    }
+                    resultValue = null;
+                    return false;
+            }
+            resultValue = null;
+            return false;
         }
     }
 }
