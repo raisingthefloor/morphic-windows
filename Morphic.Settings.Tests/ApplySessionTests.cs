@@ -70,7 +70,7 @@ namespace Morphic.Settings.Tests
 
         private class MockIniFile : IIniFile
         {
-            public object GetValue(string section, string key)
+            public string GetValue(string section, string key)
             {
                 ++getCount;
                 if (failList.Contains(key)) return null;

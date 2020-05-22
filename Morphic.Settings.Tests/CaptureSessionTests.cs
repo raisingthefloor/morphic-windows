@@ -68,7 +68,7 @@ namespace Morphic.Settings.Tests
 
         private class MockIniFile : IIniFile
         {
-            public object? GetValue(string section, string key)
+            public string? GetValue(string section, string key)
             {
                 ++getCount;
                 if (failList.Contains(key)) return null;
@@ -104,9 +104,12 @@ namespace Morphic.Settings.Tests
         {
             public string Id { get; private set; }
 
+            public SettingType SettingType { get; private set; }
+
             public MockSystemSetting(string id)
             {
                 Id = id;
+                SettingType = SettingType.String;
             }
 
             public async Task SetValue(object value)
