@@ -286,16 +286,16 @@ namespace Morphic.Settings
         /// <summary>
         /// The kind of value expected for this setting
         /// </summary>
-        public SystemValueKind Kind;
+        public SystemValueKind ValueKind;
 
         /// <summary>
         /// Create a new ini file handler
         /// </summary>
         /// <param name="settingId"></param>
-        public SystemSettingHandlerDescription(string settingId, SystemValueKind kind) : base(HandlerKind.System)
+        public SystemSettingHandlerDescription(string settingId, SystemValueKind valueKind) : base(HandlerKind.System)
         {
             SettingId = settingId;
-            Kind = kind;
+            ValueKind = valueKind;
         }
 
         public override bool Equals(object? obj)

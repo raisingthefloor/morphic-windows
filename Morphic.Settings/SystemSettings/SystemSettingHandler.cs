@@ -96,7 +96,7 @@ namespace Morphic.Settings.SystemSettings
         /// <returns></returns>
         public override async Task<bool> Apply(object? value)
         {
-            if (TryConvertToSystem(value, Description.Kind, out var systemValue))
+            if (TryConvertToSystem(value, Description.ValueKind, out var systemValue))
             {
                 try
                 {
