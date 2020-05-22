@@ -160,18 +160,7 @@ namespace Morphic.Settings.SystemSettings
                 switch (systemValueKind)
                 {
                     case SystemValueKind.Integer:
-                        systemValue = longValue;
-                        return true;
-                }
-                systemValue = null;
-                return false;
-            }
-            if (value is double doubleValue)
-            {
-                switch (systemValueKind)
-                {
-                    case SystemValueKind.Double:
-                        systemValue = doubleValue;
+                        systemValue = (UInt32)longValue;
                         return true;
                 }
                 systemValue = null;
@@ -205,34 +194,12 @@ namespace Morphic.Settings.SystemSettings
                 resultValue = null;
                 return false;
             }
-            if (systemValue is long longValue)
-            {
-                switch (valueKind)
-                {
-                    case Setting.ValueKind.Integer:
-                        resultValue = longValue;
-                        return true;
-                }
-                resultValue = null;
-                return false;
-            }
-            if (systemValue is int intValue)
+            if (systemValue is UInt32 intValue)
             {
                 switch (valueKind)
                 {
                     case Setting.ValueKind.Integer:
                         resultValue = (long)intValue;
-                        return true;
-                }
-                resultValue = null;
-                return false;
-            }
-            if (systemValue is double doubleValue)
-            {
-                switch (valueKind)
-                {
-                    case Setting.ValueKind.Integer:
-                        resultValue = doubleValue;
                         return true;
                 }
                 resultValue = null;
