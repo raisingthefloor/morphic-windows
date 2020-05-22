@@ -27,7 +27,6 @@ namespace Morphic.Settings.SystemSettings
     {
         String,
         Boolean,
-        Integer,
-        Double
+        Integer
     }
 }
