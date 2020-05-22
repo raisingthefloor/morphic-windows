@@ -131,6 +131,7 @@
       {
         "name": "flash.verbosity",
         "type": "integer",
+        "default": 0,
         "handler": {
           "type": "com.microsoft.windows.ini",
           "filename": "$(APPDATA)\\Freedom Scientific\\JAWS\\2019\\Settings\\enu\\DEFAULT.JCF",

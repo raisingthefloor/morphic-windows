@@ -54,7 +54,7 @@ namespace Morphic.Settings
         /// <summary>
         /// The logger to user
         /// </summary>
-        private readonly ILogger<SettingsManager> logger;
+        public readonly ILogger<SettingsManager> logger;
 
         /// <summary>
         /// The service provider to use when creating settings handlers

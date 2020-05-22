@@ -132,7 +132,27 @@ namespace Morphic.Settings
                                 var settingId = element.GetProperty("setting_id").GetString();
                                 var valueType = element.GetProperty("value_type").GetString();
                                 var valueKind = Enum.Parse<SystemValueKind>(valueType, ignoreCase: true);
-                                return new SystemSettingHandlerDescription(settingId, valueKind);
+                                var handler = new SystemSettingHandlerDescription(settingId, valueKind);
+                                try
+                                {
+                                    var enumerator = element.GetProperty("integer_map").EnumerateArray();
+                                    var list = new List<string>();
+                                    var reverse = new Dictionary<string, long>();
+                                    long i = 0;
+                                    foreach (var child in enumerator)
+                                    {
+                                        var str = child.GetString();
+                                        list.Add(str);
+                                        reverse.Add(str, i);
+                                        ++i;
+                                    }
+                                    handler.IntegerMap = list.ToArray();
+                                    handler.ReverseIntegerMap = reverse;
+                                }
+                                catch
+                                {
+                                }
+                                return handler;
                             }
                     }
                 }
@@ -286,16 +306,26 @@ namespace Morphic.Settings
         /// <summary>
         /// The kind of value expected for this setting
         /// </summary>
-        public SystemValueKind Kind;
+        public SystemValueKind ValueKind;
+
+        /// <summary>
+        /// Mapping from integer values to string values
+        /// </summary>
+        public string[]? IntegerMap;
+
+        /// <summary>
+        /// Mapping from string values to integer values
+        /// </summary>
+        public Dictionary<string, long>? ReverseIntegerMap;
 
         /// <summary>
         /// Create a new ini file handler
         /// </summary>
         /// <param name="settingId"></param>
-        public SystemSettingHandlerDescription(string settingId, SystemValueKind kind) : base(HandlerKind.System)
+        public SystemSettingHandlerDescription(string settingId, SystemValueKind valueKind) : base(HandlerKind.System)
         {
             SettingId = settingId;
-            Kind = kind;
+            ValueKind = valueKind;
         }
 
         public override bool Equals(object? obj)
