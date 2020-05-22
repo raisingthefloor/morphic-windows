@@ -114,10 +114,10 @@ namespace Morphic.Settings.Tests
         }
 
         [Theory]
-        [InlineData(Setting.ValueKind.String, RegistryValueKind.String, typeof(string), "Hello", "Hello", true)]
-        [InlineData(Setting.ValueKind.Integer, RegistryValueKind.DWord, typeof(Int64), 52L, 52L, true)]
-        [InlineData(Setting.ValueKind.Boolean, RegistryValueKind.DWord, typeof(Int64), "whoopsie", true, false)]
-        public async Task TestApply(Setting.ValueKind kind, RegistryValueKind rkind, System.Type type, object initval, object registryval, bool success)
+        [InlineData(Setting.ValueKind.String, RegistryValueKind.String, "Hello", "Hello", true)]
+        [InlineData(Setting.ValueKind.Integer, RegistryValueKind.DWord, 52L, 52L, true)]
+        [InlineData(Setting.ValueKind.Boolean, RegistryValueKind.DWord, "whoopsie", true, false)]
+        public async Task TestApply(Setting.ValueKind kind, RegistryValueKind rkind, object initval, object registryval, bool success)
         {
             var registry = new MockRegistry();
             var loggerFactory = new LoggerFactory();

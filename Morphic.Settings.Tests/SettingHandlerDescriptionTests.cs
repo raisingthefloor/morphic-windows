@@ -1,4 +1,4 @@
-﻿// Copyright 2020 Raising the Floor - International
+// Copyright 2020 Raising the Floor - International
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -38,7 +38,7 @@ namespace Morphic.Settings.Tests
             options.Converters.Add(new JsonElementInferredTypeConverter());
             options.Converters.Add(new SettingHandlerDescription.JsonConverter());
 
-            var json = JsonSerializer.Serialize(new Dictionary<string, object?>()
+            var json = JsonSerializer.Serialize(new Dictionary<string, object>()
             {
                 { "type", "invalid" }
             });
@@ -52,13 +52,13 @@ namespace Morphic.Settings.Tests
         [InlineData(null, "lmao", true)]
         [InlineData("ayy", null, true)]
         [InlineData(null, null, true)]
-        public void TestJsonDeserializeClient(string? solution, string? preference, bool success)
+        public void TestJsonDeserializeClient(string solution, string preference, bool success)
         {
             var options = new JsonSerializerOptions();
             options.Converters.Add(new JsonElementInferredTypeConverter());
             options.Converters.Add(new SettingHandlerDescription.JsonConverter());
 
-            var json = JsonSerializer.Serialize(new Dictionary<string, object?>()
+            var json = JsonSerializer.Serialize(new Dictionary<string, object>()
             {
                 { "type", "org.raisingthefloor.morphic.client" },
                 { "solution", solution },
@@ -85,13 +85,13 @@ namespace Morphic.Settings.Tests
 
         [Theory]
         [InlineData("thekey", "thevalue", "binary", RegistryValueKind.Binary, true)]
-        public void TestJsonDeserializeRegistry(string? keyName, string? valueName, string? valueType, RegistryValueKind valueKind, bool success)
+        public void TestJsonDeserializeRegistry(string keyName, string valueName, string valueType, RegistryValueKind valueKind, bool success)
         {
             var options = new JsonSerializerOptions();
             options.Converters.Add(new JsonElementInferredTypeConverter());
             options.Converters.Add(new SettingHandlerDescription.JsonConverter());
 
-            var json = JsonSerializer.Serialize(new Dictionary<string, object?>()
+            var json = JsonSerializer.Serialize(new Dictionary<string, object>()
             {
                 { "type", "com.microsoft.windows.registry" },
                 { "key_name", keyName },
@@ -120,13 +120,13 @@ namespace Morphic.Settings.Tests
 
         [Theory]
         [InlineData(null, null, null, true)]
-        public void TestJsonDeserializeINI(string? filename, string? section, string? key, bool success)
+        public void TestJsonDeserializeINI(string filename, string section, string key, bool success)
         {
             var options = new JsonSerializerOptions();
             options.Converters.Add(new JsonElementInferredTypeConverter());
             options.Converters.Add(new SettingHandlerDescription.JsonConverter());
 
-            var json = JsonSerializer.Serialize(new Dictionary<string, object?>()
+            var json = JsonSerializer.Serialize(new Dictionary<string, object>()
             {
                 { "type", "com.microsoft.windows.ini" },
                 { "filename", filename },
@@ -155,13 +155,13 @@ namespace Morphic.Settings.Tests
 
         [Theory]
         [InlineData(null, true)]
-        public void TestJsonDeserializeSystem( string? settingId, bool success)
+        public void TestJsonDeserializeSystem( string settingId, bool success)
         {
             var options = new JsonSerializerOptions();
             options.Converters.Add(new JsonElementInferredTypeConverter());
             options.Converters.Add(new SettingHandlerDescription.JsonConverter());
 
-            var json = JsonSerializer.Serialize(new Dictionary<string, object?>()
+            var json = JsonSerializer.Serialize(new Dictionary<string, object>()
             {
                 { "type", "com.microsoft.windows.system" },
                 { "setting_id", settingId }

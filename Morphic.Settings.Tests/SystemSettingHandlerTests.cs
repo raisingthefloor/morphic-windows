@@ -97,6 +97,7 @@ namespace Morphic.Settings.Tests
             services.AddSingleton<IServiceProvider>(provider => provider);
             services.AddSingleton<ISystemSettingFactory, MockSystemSettingFactory>();
             var mockFactory = new MockSystemSettingFactory();
+            var serviceProvider = services.BuildServiceProvider();
             var loggerFactory = new LoggerFactory();
             var logger = loggerFactory.CreateLogger<SystemSettingHandler>();
             createCount = 0;
@@ -111,7 +112,7 @@ namespace Morphic.Settings.Tests
                 Kind = kind,
                 HandlerDescription = new SystemSettingHandlerDescription("thesetting")
             };
-            var handler = new SystemSettingHandler(setting, mockFactory, null, logger);
+            var handler = new SystemSettingHandler(setting, mockFactory, serviceProvider, logger);
 
             var result = await handler.Capture();
             Assert.Equal(1, createCount);
@@ -151,7 +152,12 @@ namespace Morphic.Settings.Tests
         [InlineData(Setting.ValueKind.Double, 3.14159d, pf.CRASH, false)]
         public async Task TestApply(Setting.ValueKind kind, object value, pf passfail, bool success)
         {
+            var services = new ServiceCollection();
+            services.AddLogging();
+            services.AddSingleton<IServiceProvider>(provider => provider);
+            services.AddSingleton<ISystemSettingFactory, MockSystemSettingFactory>();
             var mockFactory = new MockSystemSettingFactory();
+            var serviceProvider = services.BuildServiceProvider();
             var loggerFactory = new LoggerFactory();
             var logger = loggerFactory.CreateLogger<SystemSettingHandler>();
             createCount = 0;
@@ -165,7 +171,7 @@ namespace Morphic.Settings.Tests
                 Kind = kind,
                 HandlerDescription = new SystemSettingHandlerDescription("thesetting")
             };
-            var handler = new SystemSettingHandler(setting, mockFactory, null, logger);
+            var handler = new SystemSettingHandler(setting, mockFactory, serviceProvider, logger);
 
             var pass = await handler.Apply(value);
             if (success)

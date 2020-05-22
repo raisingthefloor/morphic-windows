@@ -32,43 +32,43 @@ namespace Morphic.Settings.Tests
     {
         public static IEnumerable<object[]> TestData()
         {
-            var handler = new Dictionary<string, object?>();
+            var handler = new Dictionary<string, object>();
             handler.Add("type", "com.microsoft.windows.registry");
             handler.Add("key_name", "thekey");
             handler.Add("value_name", "thevalue");
             handler.Add("value_type", "String");
-            var finalizer = new Dictionary<string, object?>();
+            var finalizer = new Dictionary<string, object>();
             finalizer.Add("type", "com.microsoft.windows.systemParametersInfo");
             finalizer.Add("action", "SetCursors");
             yield return new object[] { Setting.ValueKind.String, "ayylmao", handler, finalizer, SettingHandlerDescription.HandlerKind.Registry, SettingFinalizerDescription.HandlerKind.SystemParametersInfo };
-            handler = new Dictionary<string, object?>();
+            handler = new Dictionary<string, object>();
             handler.Add("type", "com.microsoft.windows.ini");
             handler.Add("filename", "thefile");
             handler.Add("section", "thesection");
             handler.Add("key", "thekey");
-            finalizer = new Dictionary<string, object?>();
+            finalizer = new Dictionary<string, object>();
             finalizer.Add("type", "com.microsoft.windows.systemParametersInfo");
             finalizer.Add("action", "SetSomethingThatIsntCursors");
             yield return new object[] { Setting.ValueKind.Double, 3.14159d, handler, finalizer, SettingHandlerDescription.HandlerKind.Ini, SettingFinalizerDescription.HandlerKind.Unknown };
-            handler = new Dictionary<string, object?>();
+            handler = new Dictionary<string, object>();
             handler.Add("type", "org.raisingthefloor.morphic.client");
             handler.Add("solution", "thesolution");
             handler.Add("preference", "thepreference");
-            finalizer = new Dictionary<string, object?>();
+            finalizer = new Dictionary<string, object>();
             finalizer.Add("type", "com.microsoft.windows.systemParametersInfo");
             finalizer.Add("action", "SetCursors");
             yield return new object[] { Setting.ValueKind.Boolean, true, handler, finalizer, SettingHandlerDescription.HandlerKind.Client, SettingFinalizerDescription.HandlerKind.SystemParametersInfo };
-            handler = new Dictionary<string, object?>();
+            handler = new Dictionary<string, object>();
             handler.Add("type", "com.microsoft.windows.system");
             handler.Add("setting_id", "thesetting");
-            finalizer = new Dictionary<string, object?>();
+            finalizer = new Dictionary<string, object>();
             finalizer.Add("type", "com.microsoft.windows.systemParametersInfo");
             yield return new object[] { Setting.ValueKind.Integer, 52L, handler, finalizer, SettingHandlerDescription.HandlerKind.System, SettingFinalizerDescription.HandlerKind.Unknown };
         }
 
         [Theory]
         [MemberData(nameof(TestData))]
-        public void TestJsonDeserialize(Setting.ValueKind kind, object? defval, Dictionary<string, object?> handler, Dictionary<string, object?> finalizer, SettingHandlerDescription.HandlerKind handlerKind, SettingFinalizerDescription.HandlerKind finalizerKind)
+        public void TestJsonDeserialize(Setting.ValueKind kind, object defval, Dictionary<string, object> handler, Dictionary<string, object> finalizer, SettingHandlerDescription.HandlerKind handlerKind, SettingFinalizerDescription.HandlerKind finalizerKind)
         {
             var options = new JsonSerializerOptions();
             options.Converters.Add(new JsonElementInferredTypeConverter());
@@ -76,7 +76,7 @@ namespace Morphic.Settings.Tests
             options.Converters.Add(new SettingFinalizerDescription.JsonConverter());
 
             //minimum number of fields
-            var json = JsonSerializer.Serialize(new Dictionary<string, object?>()
+            var json = JsonSerializer.Serialize(new Dictionary<string, object>()
             {
                 { "name", "settingname" },
                 { "type", kind }
@@ -90,7 +90,7 @@ namespace Morphic.Settings.Tests
             Assert.Null(setting.FinalizerDescription);
             Assert.Null(setting.Default);
 
-            json = JsonSerializer.Serialize(new Dictionary<string, object?>()
+            json = JsonSerializer.Serialize(new Dictionary<string, object>()
             {
                 { "name", "settingname" },
                 { "type", kind },

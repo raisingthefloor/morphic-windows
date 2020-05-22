@@ -48,6 +48,7 @@ namespace Morphic.Settings.Tests
         {
             public bool Call(SystemParametersInfo.Action action, int parameter1, object? parameter2, bool updateUserProfile = false, bool sendChange = false)
             {
+                ++callCount;
                 if (passfail == pf.PASS) return true;
                 else if (passfail == pf.FAIL) return false;
                 else throw new ArgumentException();
@@ -70,6 +71,7 @@ namespace Morphic.Settings.Tests
 
             if (passfail == pf.PASS) Assert.True(result);
             else Assert.False(result);
+            Assert.Equal(1, callCount);
         }
     }
 }

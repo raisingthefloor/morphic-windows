@@ -38,7 +38,7 @@ namespace Morphic.Settings.Tests
             options.Converters.Add(new JsonElementInferredTypeConverter());
             options.Converters.Add(new SettingFinalizerDescription.JsonConverter());
 
-            var json = JsonSerializer.Serialize(new Dictionary<string, object?>()
+            var json = JsonSerializer.Serialize(new Dictionary<string, object>()
             {
                 { "type", "invalid" }
             });
@@ -60,7 +60,7 @@ namespace Morphic.Settings.Tests
             options.Converters.Add(new JsonElementInferredTypeConverter());
             options.Converters.Add(new SettingFinalizerDescription.JsonConverter());
 
-            var json = JsonSerializer.Serialize(new Dictionary<string, object?>()
+            var json = JsonSerializer.Serialize(new Dictionary<string, object>()
             {
                 { "type", "com.microsoft.windows.systemParametersInfo" },
                 { "action", actionString },

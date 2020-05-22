@@ -34,7 +34,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
-#nullable enable
 
 namespace Morphic.Settings.Tests
 {
@@ -48,6 +47,7 @@ namespace Morphic.Settings.Tests
         private static string[] failList = new string[0];
         private static string[] crashList = new string[0];
 
+#nullable enable
         private class MockRegistry : IRegistry
         {
             public object? GetValue(string keyName, string valueName, object? defaultValue)
@@ -66,10 +66,11 @@ namespace Morphic.Settings.Tests
                 else return true;
             }
         }
+#nullable disable
 
         private class MockIniFile : IIniFile
         {
-            public object? GetValue(string section, string key)
+            public object GetValue(string section, string key)
             {
                 ++getCount;
                 if (failList.Contains(key)) return null;
@@ -94,7 +95,7 @@ namespace Morphic.Settings.Tests
 
         private class MockSystemParametersInfo : ISystemParametersInfo
         {
-            public bool Call(SystemParametersInfo.Action action, int parameter1, object? parameter2, bool updateUserProfile = false, bool sendChange = false)
+            public bool Call(SystemParametersInfo.Action action, int parameter1, object parameter2, bool updateUserProfile = false, bool sendChange = false)
             {
                 ++callCount;
                 throw new ArgumentException();
@@ -117,7 +118,7 @@ namespace Morphic.Settings.Tests
                 if (crashList.Contains(this.Id)) throw new ArgumentException();
             }
 
-            public async Task<object?> GetValue()
+            public async Task<object> GetValue()
             {
                 ++getCount;
                 await Task.Delay(0);
@@ -254,7 +255,7 @@ namespace Morphic.Settings.Tests
             var sysa = new Preferences.Key("org.raisingthefloor.test", "System Alpha");
             var sysb = new Preferences.Key("org.raisingthefloor.test", "System Beta");
             var sysc = new Preferences.Key("org.raisingthefloor.test", "System Gamma");
-            var prefdict = new Dictionary<Preferences.Key, object?>()
+            var prefdict = new Dictionary<Preferences.Key, object>()
             {
                 { rega, true },
                 { regb, 13L },
@@ -316,5 +317,3 @@ namespace Morphic.Settings.Tests
         }
     }
 }
-
-#nullable disable

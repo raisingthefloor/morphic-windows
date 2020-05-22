@@ -200,7 +200,7 @@ namespace Morphic.Settings.SystemSettings
                 var value = Microsoft.Win32.Registry.GetValue(registryKeyName, valueName, RegistryValueKind.String);
                 return value as string;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 throw new SettingNotFoundException(String.Format("Failed to read registry value for {0}.{1}", Id, valueName));
             }
