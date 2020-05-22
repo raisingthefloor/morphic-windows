@@ -106,12 +106,9 @@ namespace Morphic.Settings.Tests
         {
             public string Id { get; private set; }
 
-            public SettingType SettingType { get; private set; }
-
             public MockSystemSetting(string id)
             {
                 Id = id;
-                SettingType = SettingType.Boolean;
             }
 
             public async Task SetValue(object value)
@@ -229,21 +226,21 @@ namespace Morphic.Settings.Tests
                         Name = "System Alpha",
                         Kind = Setting.ValueKind.Boolean,
                         Default = true,
-                        HandlerDescription = new SystemSettingHandlerDescription("System Alpha")
+                        HandlerDescription = new SystemSettingHandlerDescription("System Alpha", SystemValueKind.Boolean)
                     },
                     new Setting
                     {
                         Name = "System Beta",
                         Kind = Setting.ValueKind.Integer,
                         Default = 52L,
-                        HandlerDescription = new SystemSettingHandlerDescription("System Beta")
+                        HandlerDescription = new SystemSettingHandlerDescription("System Beta", SystemValueKind.Integer)
                     },
                     new Setting
                     {
                         Name = "System Gamma",
                         Kind = Setting.ValueKind.String,
                         Default = "default",
-                        HandlerDescription = new SystemSettingHandlerDescription("System Gamma"),
+                        HandlerDescription = new SystemSettingHandlerDescription("System Gamma", SystemValueKind.String),
                         FinalizerDescription = new SystemParametersInfoSettingFinalizerDescription(SystemParametersInfo.Action.SetCursors)
                     }
                 }

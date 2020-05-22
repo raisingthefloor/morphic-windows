@@ -30,6 +30,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Morphic.Core;
 using Microsoft.Win32;
+using Morphic.Settings.SystemSettings;
 
 namespace Morphic.Settings
 {
@@ -129,7 +130,9 @@ namespace Morphic.Settings
                         case "com.microsoft.windows.system":
                             {
                                 var settingId = element.GetProperty("setting_id").GetString();
-                                return new SystemSettingHandlerDescription(settingId);
+                                var valueType = element.GetProperty("value_type").GetString();
+                                var valueKind = Enum.Parse<SystemValueKind>(valueType, ignoreCase: true);
+                                return new SystemSettingHandlerDescription(settingId, valueKind);
                             }
                     }
                 }
@@ -281,12 +284,18 @@ namespace Morphic.Settings
         public string SettingId;
 
         /// <summary>
+        /// The kind of value expected for this setting
+        /// </summary>
+        public SystemValueKind ValueKind;
+
+        /// <summary>
         /// Create a new ini file handler
         /// </summary>
         /// <param name="settingId"></param>
-        public SystemSettingHandlerDescription(string settingId) : base(HandlerKind.System)
+        public SystemSettingHandlerDescription(string settingId, SystemValueKind valueKind) : base(HandlerKind.System)
         {
             SettingId = settingId;
+            ValueKind = valueKind;
         }
 
         public override bool Equals(object? obj)

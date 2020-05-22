@@ -50,18 +50,10 @@ namespace Morphic.Settings.SystemSettings
     /// The result of calling GetSetting("SomeSettingId") is an object that has GetValue() and SetValue() methods,
     /// which read and write the setting, respectively.
     /// </remarks>
-    class SystemSetting: ISystemSetting
+    public class SystemSetting: ISystemSetting
     {
 
         public string Id { get; private set; }
-
-        public SettingType SettingType
-        {
-            get
-            {
-                return settingItem?.Type ?? SettingType.Custom;
-            }
-        }
 
         /// <summary>
         /// The registry key name for this setting's information
