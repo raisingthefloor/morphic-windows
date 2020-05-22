@@ -28,7 +28,7 @@ using Morphic.Service;
 using System;
 using System.Windows;
 
-namespace Morphic.Client
+namespace Morphic.Client.Travel
 {
     /// <summary>
     /// Window that walks the user the the capture and, if necessary, account creation process.

@@ -34,7 +34,7 @@ using Morphic.Core;
 using System.Threading.Tasks;
 using System.Security.Cryptography;
 
-namespace Morphic.Client
+namespace Morphic.Client.Travel
 {
     /// <summary>
     /// The Capture panel is one of the steps shown when the user is walked through the process of taking their settings with them.

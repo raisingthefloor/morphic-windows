@@ -38,6 +38,9 @@ using Morphic.Settings.Ini;
 using Morphic.Settings.Registry;
 using Morphic.Settings.Spi;
 using Morphic.Settings.SystemSettings;
+using Morphic.Client.Travel;
+using Morphic.Client.Login;
+using Morphic.Client.QuickStrip;
 using System.IO;
 using System.Reflection;
 using CountlySDK;
@@ -108,7 +111,7 @@ namespace Morphic.Client
             services.AddTransient<CreateAccountPanel>();
             services.AddTransient<CapturePanel>();
             services.AddTransient<TravelCompletedPanel>();
-            services.AddTransient<QuickStrip>();
+            services.AddTransient<QuickStripWindow>();
             services.AddTransient<LoginWindow>();
             services.AddMorphicSettingsHandlers(ConfigureSettingsHandlers);
         }
@@ -216,7 +219,8 @@ namespace Morphic.Client
         private async Task OpenSession()
         {
             await CopyDefaultPreferences();
-            await Session.SettingsManager.Populate("Solutions.json");
+            await Session.SettingsManager.Populate(Path.Combine("Solutions", "windows.solutions.json"));
+            await Session.SettingsManager.Populate(Path.Combine("Solutions", "jaws2019.solutions.json"));
             await Session.Open();
         }
 
@@ -259,7 +263,7 @@ namespace Morphic.Client
                 throw e;
             }
             logger.LogInformation("Session Open");
-            if (Session.GetBool(Client.QuickStrip.PreferenceKeys.Visible) ?? true)
+            if (Session.GetBool(QuickStrip.QuickStripWindow.PreferenceKeys.Visible) ?? true)
             {
                 ShowQuickStrip(skippingSave: true);
             }
@@ -406,14 +410,14 @@ namespace Morphic.Client
         /// <summary>
         ///  The Quick Strip Window, if visible
         /// </summary>
-        private Window? QuickStrip = null;
+        private QuickStripWindow? QuickStripWindow = null;
 
         /// <summary>
         /// Toggle the Quick Strip window based on its current visibility
         /// </summary>
         public void ToggleQuickStrip()
         {
-            if (QuickStrip != null)
+            if (QuickStripWindow != null)
             {
                 HideQuickStrip();
             }
@@ -428,13 +432,13 @@ namespace Morphic.Client
         /// </summary>
         public void ShowQuickStrip(bool skippingSave = false)
         {
-            if (QuickStrip == null)
+            if (QuickStripWindow == null)
             {
-                QuickStrip = ServiceProvider.GetRequiredService<QuickStrip>();
-                QuickStrip.Closed += QuickStripClosed;
-                QuickStrip.Show();
+                QuickStripWindow = ServiceProvider.GetRequiredService<QuickStripWindow>();
+                QuickStripWindow.Closed += QuickStripClosed;
+                QuickStripWindow.Show();
             }
-            QuickStrip.Activate();
+            QuickStripWindow.Activate();
             if (showQuickStripItem != null)
             {
                 showQuickStripItem.Visibility = Visibility.Collapsed;
@@ -445,7 +449,7 @@ namespace Morphic.Client
             }
             if (!skippingSave)
             {
-                Session.SetPreference(Client.QuickStrip.PreferenceKeys.Visible, true);
+                Session.SetPreference(QuickStrip.QuickStripWindow.PreferenceKeys.Visible, true);
             }
         }
 
@@ -454,9 +458,9 @@ namespace Morphic.Client
         /// </summary>
         public void HideQuickStrip()
         {
-            if (QuickStrip != null)
+            if (QuickStripWindow != null)
             {
-                QuickStrip.Close();
+                QuickStripWindow.Close();
             }
             if (showQuickStripItem != null)
             {
@@ -466,7 +470,7 @@ namespace Morphic.Client
             {
                 hideQuickStripItem.Visibility = Visibility.Collapsed;
             }
-            Session.SetPreference(Client.QuickStrip.PreferenceKeys.Visible, false);
+            Session.SetPreference(QuickStrip.QuickStripWindow.PreferenceKeys.Visible, false);
         }
 
         /// <summary>
@@ -476,7 +480,7 @@ namespace Morphic.Client
         /// <param name="e"></param>
         private void QuickStripClosed(object? sender, EventArgs e)
         {
-            QuickStrip = null;
+            QuickStripWindow = null;
         }
 
         #endregion

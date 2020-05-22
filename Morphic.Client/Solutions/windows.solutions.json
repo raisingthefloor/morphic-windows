@@ -1,0 +1,478 @@
+﻿[
+  {
+    "id": "com.microsoft.windows.display",
+    "settings": [
+      {
+        "name": "zoom",
+        "type": "double",
+        "default": 1,
+        "handler": {
+          "type": "org.raisingthefloor.morphic.client",
+          "solution": "com.microsoft.windows.display",
+          "preference": "zoom"
+        }
+      },
+      {
+        "name": "contrast.enabled",
+        "type": "boolean",
+        "default": false,
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_CoreHighContrast_IsEnabled",
+          "value_type": "boolean"
+        }
+      }
+    ]
+  },
+  {
+    "id": "com.microsoft.windows.cursor",
+    "settings": [
+      {
+        "name": "arrow",
+        "type": "string",
+        "default": "%SystemRoot%\\cursors\\aero_arrow.cur",
+        "handler": {
+          "type": "com.microsoft.windows.registry",
+          "key_name": "HKEY_CURRENT_USER\\Control Panel\\Cursors",
+          "value_name": "Arrow",
+          "value_type": "expandString"
+        },
+        "finalizer": {
+          "type": "com.microsoft.windows.systemParametersInfo",
+          "action": "setcursors"
+        }
+      },
+      {
+        "name": "wait",
+        "type": "string",
+        "default": "%SystemRoot%\\cursors\\aero_busy.ani",
+        "handler": {
+          "type": "com.microsoft.windows.registry",
+          "key_name": "HKEY_CURRENT_USER\\Control Panel\\Cursors",
+          "value_name": "Wait",
+          "value_type": "expandString"
+        },
+        "finalizer": {
+          "type": "com.microsoft.windows.systemParametersInfo",
+          "action": "setcursors"
+        }
+      }
+    ]
+  },
+  {
+    "id": "com.microsoft.windows.magnifier",
+    "settings": [
+      {
+        "name": "enabled",
+        "type": "boolean",
+        "default": false,
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_Magnifier_IsEnabled",
+          "value_type": "boolean"
+        }
+      },
+      {
+        "name": "mode",
+        "type": "integer",
+        "default": 2,
+        "handler": {
+          "type": "com.microsoft.windows.registry",
+          "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
+          "value_name": "MagnificationMode",
+          "value_type": "dword"
+        }
+      },
+      {
+        "name": "magnification",
+        "type": "integer",
+        "default": 200,
+        "handler": {
+          "type": "com.microsoft.windows.registry",
+          "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
+          "value_name": "Magnification",
+          "value_type": "dword"
+        }
+      },
+      {
+        "name": "increment",
+        "type": "integer",
+        "default": 100,
+        "handler": {
+          "type": "com.microsoft.windows.registry",
+          "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
+          "value_name": "ZoomIncrement",
+          "value_type": "dword"
+        }
+      },
+      {
+        "name": "smoothing",
+        "type": "boolean",
+        "default": true,
+        "handler": {
+          "type": "com.microsoft.windows.registry",
+          "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
+          "value_name": "UseBitmapSmoothing",
+          "value_type": "dword"
+        }
+      },
+      {
+        "name": "lens.height",
+        "type": "integer",
+        "default": 10,
+        "handler": {
+          "type": "com.microsoft.windows.registry",
+          "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
+          "value_name": "LensHeight",
+          "value_type": "dword"
+        }
+      },
+      {
+        "name": "lens.width",
+        "type": "integer",
+        "default": 10,
+        "handler": {
+          "type": "com.microsoft.windows.registry",
+          "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
+          "value_name": "LensWidth",
+          "value_type": "dword"
+        }
+      },
+      {
+        "name": "follow.mouse",
+        "type": "boolean",
+        "default": true,
+        "handler": {
+          "type": "com.microsoft.windows.registry",
+          "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
+          "value_name": "FollowMouse",
+          "value_type": "dword"
+        }
+      },
+      {
+        "name": "follow.focus",
+        "type": "boolean",
+        "default": true,
+        "handler": {
+          "type": "com.microsoft.windows.registry",
+          "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
+          "value_name": "FollowFocus",
+          "value_type": "dword"
+        }
+      },
+      {
+        "name": "follow.caret",
+        "type": "boolean",
+        "default": true,
+        "handler": {
+          "type": "com.microsoft.windows.registry",
+          "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
+          "value_name": "FollowCaret",
+          "value_type": "dword"
+        }
+      },
+      {
+        "name": "follow.narrator",
+        "type": "boolean",
+        "default": true,
+        "handler": {
+          "type": "com.microsoft.windows.registry",
+          "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
+          "value_name": "FollowNarrator",
+          "value_type": "dword"
+        }
+      },
+      {
+        "name": "invert",
+        "type": "boolean",
+        "default": false,
+        "handler": {
+          "type": "com.microsoft.windows.registry",
+          "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
+          "value_name": "Invert",
+          "value_type": "dword"
+        }
+      },
+      {
+        "name": "fade",
+        "type": "boolean",
+        "default": false,
+        "handler": {
+          "type": "com.microsoft.windows.registry",
+          "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
+          "value_name": "FadeToMagIcon",
+          "value_type": "dword"
+        }
+      }
+    ]
+  },
+  {
+    "id": "com.microsoft.windows.narrator",
+    "settings": [
+      {
+        "name": "enabled",
+        "type": "boolean",
+        "default": false,
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_Narrator_IsEnabled",
+          "value_type": "boolean"
+        }
+      },
+      {
+        "name": "follow.keyboard",
+        "type": "boolean",
+        "default": true,
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_Narrator_IsFollowKeyboardFocusEnabled",
+          "value_type": "boolean"
+        }
+      },
+      {
+        "name": "follow.pointer",
+        "type": "boolean",
+        "default": false,
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_Narrator_IsFollowMouseEnabled",
+          "value_type": "boolean"
+        }
+      },
+      {
+        "name": "follow.insertion",
+        "type": "boolean",
+        "default": true,
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_Narrator_IsFollowInsertionEnabled",
+          "value_type": "boolean"
+        }
+      },
+      {
+        "name": "echo.characters",
+        "type": "boolean",
+        "default": true,
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_Narrator_IsEchoCharacterEnabled",
+          "value_type": "boolean"
+        }
+      },
+      {
+        "name": "echo.words",
+        "type": "boolean",
+        "default": true,
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_Narrator_IsEchoWordEnabled",
+          "value_type": "boolean"
+        }
+      },
+      {
+        "name": "voice-errors",
+        "type": "boolean",
+        "default": true,
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_Narrator_AreNarratorErrorsVoiced",
+          "value_type": "boolean"
+        }
+      },
+      {
+        "name": "fastkey",
+        "type": "boolean",
+        "default": true,
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_Narrator_IsFastKeyEntryEnabled",
+          "value_type": "boolean"
+        }
+      },
+      {
+        "name": "intonation-pause",
+        "type": "boolean",
+        "default": true,
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_Narrator_IsIntonationPauseEnabled",
+          "value_type": "boolean"
+        }
+      },
+      {
+        "name": "lock-key",
+        "type": "boolean",
+        "default": false,
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_Narrator_IsNarratorKeyLocked",
+          "value_type": "boolean"
+        }
+      },
+      {
+        "name": "highlight-cursor",
+        "type": "boolean",
+        "default": false,
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_Narrator_IsHighlightCursorEnabled",
+          "value_type": "boolean"
+        }
+      },
+      {
+        "name": "audio-cues",
+        "type": "boolean",
+        "default": true,
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_Narrator_IsPlayAudioCuesEnabled",
+          "value_type": "boolean"
+        }
+      },
+      {
+        "name": "read.intent",
+        "type": "boolean",
+        "default": false,
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_Narrator_IsReadingWithIntentEnabled",
+          "value_type": "boolean"
+        }
+      },
+      {
+        "name": "read.hints",
+        "type": "boolean",
+        "default": false,
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_Narrator_IsReadHintsEnabled",
+          "value_type": "boolean"
+        }
+      },
+      {
+        "name": "read.pointer",
+        "type": "boolean",
+        "default": true,
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_Narrator_IsReadMouseEnabled",
+          "value_type": "boolean"
+        }
+      },
+      {
+        "name": "speech.speed",
+        "type": "integer",
+        "default": 10,
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_Narrator_SpeechSpeed",
+          "value_type": "integer"
+        }
+      },
+      {
+        "name": "speech.pitch",
+        "type": "integer",
+        "default": 10,
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_Narrator_SpeechPitch",
+          "value_type": "integer"
+        }
+      },
+      {
+        "name": "speech.volume",
+        "type": "integer",
+        "default": 100,
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_Narrator_SpeechVolume",
+          "value_type": "integer"
+        }
+      },
+      {
+        "name": "context.amount",
+        "type": "integer",
+        "default": 2,
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_Narrator_ContextualReadingAmount",
+          "value_type": "idPrefixedEnum"
+        }
+      },
+      {
+        "name": "context.order",
+        "type": "integer",
+        "default": 1,
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_Narrator_ContextualReadingOrder",
+          "value_type": "string",
+          "integer_map": [
+            "SystemSettings_Accessibility_Narrator_ContextualReadingOrderBefore",
+            "SystemSettings_Accessibility_Narrator_ContextualReadingOrderAfter"
+          ]
+        }
+      },
+      {
+        "name": "duck",
+        "type": "boolean",
+        "default": true,
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_Narrator_IsDuckAudioEnabled",
+          "value_type": "boolean"
+        }
+      },
+      {
+        "name": "shortcut.enabled",
+        "type": "boolean",
+        "default": true,
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_Narrator_IsShortcutKeyEnabled",
+          "value_type": "boolean"
+        }
+      },
+      {
+        "name": "verbosity",
+        "type": "integer",
+        "default": 1,
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_Narrator_UserVerbosityAmount",
+          "value_type": "idPrefixedEnum"
+        }
+      },
+      {
+        "name": "deatailed-feedback",
+        "type": "boolean",
+        "default": true,
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_Narrator_IsAlwaysLoggingEnabled",
+          "value_type": "boolean"
+        }
+      },
+      {
+        "name": "autostart.after-signin",
+        "type": "boolean",
+        "default": false,
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_Narrator_IsAutoStartEnabled",
+          "value_type": "boolean"
+        }
+      },
+      {
+        "name": "autostart.before-signin",
+        "type": "boolean",
+        "default": false,
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_Narrator_IsAutoStartOnLogonDesktopEnabled",
+          "value_type": "boolean"
+        }
+      }
+    ]
+  }
+]

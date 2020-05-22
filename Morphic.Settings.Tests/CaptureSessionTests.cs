@@ -68,7 +68,7 @@ namespace Morphic.Settings.Tests
 
         private class MockIniFile : IIniFile
         {
-            public object? GetValue(string section, string key)
+            public string? GetValue(string section, string key)
             {
                 ++getCount;
                 if (failList.Contains(key)) return null;
@@ -229,21 +229,21 @@ namespace Morphic.Settings.Tests
                         Name = "System Alpha",
                         Kind = Setting.ValueKind.Boolean,
                         Default = true,
-                        HandlerDescription = new SystemSettingHandlerDescription("System Alpha")
+                        HandlerDescription = new SystemSettingHandlerDescription("System Alpha", SystemValueKind.Boolean)
                     },
                     new Setting
                     {
                         Name = "System Beta",
                         Kind = Setting.ValueKind.Integer,
                         Default = 52L,
-                        HandlerDescription = new SystemSettingHandlerDescription("System Beta")
+                        HandlerDescription = new SystemSettingHandlerDescription("System Beta", SystemValueKind.Integer)
                     },
                     new Setting
                     {
                         Name = "System Gamma",
                         Kind = Setting.ValueKind.String,
                         Default = "default",
-                        HandlerDescription = new SystemSettingHandlerDescription("System Gamma"),
+                        HandlerDescription = new SystemSettingHandlerDescription("System Gamma", SystemValueKind.String),
                         FinalizerDescription = new SystemParametersInfoSettingFinalizerDescription(SystemParametersInfo.Action.SetCursors)
                     }
                 }
