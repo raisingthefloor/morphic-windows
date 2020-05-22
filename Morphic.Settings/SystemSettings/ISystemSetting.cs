@@ -32,6 +32,8 @@ namespace Morphic.Settings.SystemSettings
     public interface ISystemSetting
     {
 
+        public SettingType SettingType { get; }
+
         /// <summary>
         /// Set the setting's value
         /// </summary>

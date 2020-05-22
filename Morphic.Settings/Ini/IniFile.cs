@@ -46,7 +46,7 @@ namespace Morphic.Settings.Ini
             readerWriter = new IniFileReaderWriter(path);
         }
 
-        public object? GetValue(string section, string key)
+        public string? GetValue(string section, string key)
         {
             return readerWriter.ReadValue(key, section);
         }

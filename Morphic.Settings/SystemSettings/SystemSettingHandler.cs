@@ -33,6 +33,7 @@ using System.Reflection;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Microsoft.Win32;
 using System.Threading;
+using System.Runtime.InteropServices.ComTypes;
 
 namespace Morphic.Settings.SystemSettings
 {
@@ -95,11 +96,11 @@ namespace Morphic.Settings.SystemSettings
         /// <returns></returns>
         public override async Task<bool> Apply(object? value)
         {
-            if (value != null)
+            if (TryConvertToSystem(value, systemSetting.SettingType, out var systemValue))
             {
                 try
                 {
-                    await systemSetting.SetValue(value);
+                    await systemSetting.SetValue(systemValue!);
                     return true;
                 }catch (Exception e)
                 {
@@ -119,8 +120,8 @@ namespace Morphic.Settings.SystemSettings
             var result = new CaptureResult();
             try
             {
-                result.Value = await systemSetting.GetValue();
-                result.Success = true;
+                var systemValue = await systemSetting.GetValue();
+                result.Success = TryConvertFromSystem(systemValue, Setting.Kind, out result.Value);
             }
             catch(Exception e)
             {
@@ -128,6 +129,62 @@ namespace Morphic.Settings.SystemSettings
             }
             return result;
 
+        }
+
+        public bool TryConvertToSystem(object? value, SettingType systemSettingType, out object? systemValue)
+        {
+            if (value is string stringValue)
+            {
+                switch (systemSettingType)
+                {
+                    case SettingType.String:
+                        systemValue = stringValue;
+                        return true;
+                }
+                systemValue = null;
+                return false;
+            }
+            if (value is bool boolValue)
+            {
+                switch (systemSettingType)
+                {
+                    case SettingType.Boolean:
+                        systemValue = boolValue;
+                        return true;
+                }
+                systemValue = null;
+                return false;
+            }
+            systemValue = null;
+            return false;
+        }
+
+        public bool TryConvertFromSystem(object? systemValue, Setting.ValueKind valueKind, out object? resultValue)
+        {
+            if (systemValue is string stringValue)
+            {
+                switch (valueKind)
+                {
+                    case Setting.ValueKind.String:
+                        resultValue = stringValue;
+                        return true;
+                }
+                resultValue = null;
+                return false;
+            }
+            if (systemValue is bool boolValue)
+            {
+                switch (valueKind)
+                {
+                    case Setting.ValueKind.Boolean:
+                        resultValue = boolValue;
+                        return true;
+                }
+                resultValue = null;
+                return false;
+            }
+            resultValue = null;
+            return false;
         }
 
     }
