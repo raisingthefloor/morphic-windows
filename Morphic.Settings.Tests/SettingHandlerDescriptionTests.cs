@@ -1,4 +1,4 @@
-// Copyright 2020 Raising the Floor - International
+﻿// Copyright 2020 Raising the Floor - International
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -73,9 +73,6 @@ namespace Morphic.Settings.Tests
                 ClientSettingHandlerDescription client = (ClientSettingHandlerDescription)handler;
                 Assert.Equal(solution, client.Key.Solution);
                 Assert.Equal(preference, client.Key.Preference);
-                //test equal operator
-                ClientSettingHandlerDescription other = new ClientSettingHandlerDescription(new Preferences.Key(solution, preference));
-                Assert.Equal(other, client);
             }
             else
             {
@@ -83,8 +80,58 @@ namespace Morphic.Settings.Tests
             }
         }
 
+        [Fact]
+        public void TestEqualityOperatorClient()
+        {
+            var options = new JsonSerializerOptions();
+            options.Converters.Add(new JsonElementInferredTypeConverter());
+            options.Converters.Add(new SettingHandlerDescription.JsonConverter());
+
+            var json = JsonSerializer.Serialize(new Dictionary<string, object>()
+            {
+                { "type", "org.raisingthefloor.morphic.client" },
+                { "solution", "thesolution" },
+                { "preference", "thepreference" }
+            });
+            ClientSettingHandlerDescription client = (ClientSettingHandlerDescription)JsonSerializer.Deserialize<SettingHandlerDescription>(json, options);
+            ClientSettingHandlerDescription sameclient = new ClientSettingHandlerDescription(new Preferences.Key("thesolution", "thepreference"));
+            ClientSettingHandlerDescription differentclient1 = new ClientSettingHandlerDescription(new Preferences.Key("differentsolution", "thepreference"));
+            ClientSettingHandlerDescription differentclient2 = new ClientSettingHandlerDescription(new Preferences.Key("thesolution", "differentpreference"));
+            Assert.NotNull(client);
+            Assert.NotNull(sameclient);
+            Assert.NotNull(differentclient1);
+            Assert.NotNull(differentclient2);
+            Assert.Equal(client, sameclient);
+            Assert.NotEqual(client, differentclient1);
+            Assert.NotEqual(client, differentclient2);
+        }
+
         [Theory]
         [InlineData("thekey", "thevalue", "binary", RegistryValueKind.Binary, true)]
+        [InlineData("ThEkEy", "ThEvAlUe", "BiNaRy", RegistryValueKind.Binary, true)]
+        [InlineData("tHeKeY", "tHeVaLuE", "bInArY", RegistryValueKind.Binary, true)]
+        [InlineData("THEKEY", "THEVALUE", "BINARY", RegistryValueKind.Binary, true)]
+        [InlineData("thekey", "thevalue", "dword", RegistryValueKind.DWord, true)]
+        [InlineData("thekey", "thevalue", "DwOrD", RegistryValueKind.DWord, true)]
+        [InlineData("thekey", "thevalue", "dWoRd", RegistryValueKind.DWord, true)]
+        [InlineData("thekey", "thevalue", "DWORD", RegistryValueKind.DWord, true)]
+        [InlineData("thekey", "thevalue", "qword", RegistryValueKind.QWord, true)]
+        [InlineData("thekey", "thevalue", "QwOrD", RegistryValueKind.QWord, true)]
+        [InlineData("thekey", "thevalue", "qWoRd", RegistryValueKind.QWord, true)]
+        [InlineData("thekey", "thevalue", "QWORD", RegistryValueKind.QWord, true)]
+        [InlineData("thekey", "thevalue", "string", RegistryValueKind.String, true)]
+        [InlineData("thekey", "thevalue", "StRiNg", RegistryValueKind.String, true)]
+        [InlineData("thekey", "thevalue", "sTrInG", RegistryValueKind.String, true)]
+        [InlineData("thekey", "thevalue", "STRING", RegistryValueKind.String, true)]
+        [InlineData("thekey", "thevalue", "expandstring", RegistryValueKind.ExpandString, true)]
+        [InlineData("thekey", "thevalue", "ExPaNdStRiNg", RegistryValueKind.ExpandString, true)]
+        [InlineData("thekey", "thevalue", "eXpAnDsTrInG", RegistryValueKind.ExpandString, true)]
+        [InlineData("thekey", "thevalue", "EXPANDSTRING", RegistryValueKind.ExpandString, true)]
+        [InlineData("thekey", "thevalue", "multistring", RegistryValueKind.MultiString, true)]
+        [InlineData("thekey", "thevalue", "MuLtIsTrInG", RegistryValueKind.MultiString, true)]
+        [InlineData("thekey", "thevalue", "mUlTiStRiNg", RegistryValueKind.MultiString, true)]
+        [InlineData("thekey", "thevalue", "MULTISTRING", RegistryValueKind.MultiString, true)]
+        [InlineData("thekey", "thevalue", "notathing", RegistryValueKind.MultiString, false)]
         public void TestJsonDeserializeRegistry(string keyName, string valueName, string valueType, RegistryValueKind valueKind, bool success)
         {
             var options = new JsonSerializerOptions();
@@ -108,9 +155,6 @@ namespace Morphic.Settings.Tests
                 Assert.Equal(keyName, registry.KeyName);
                 Assert.Equal(valueName, registry.ValueName);
                 Assert.Equal(valueKind, registry.ValueKind);
-                //test equal operator
-                RegistrySettingHandlerDescription other = new RegistrySettingHandlerDescription(keyName, valueName, valueKind);
-                Assert.Equal(other, registry);
             }
             else
             {
@@ -118,9 +162,40 @@ namespace Morphic.Settings.Tests
             }
         }
 
+        [Fact]
+        public void TestEqualityOperatorRegistry()
+        {
+            var options = new JsonSerializerOptions();
+            options.Converters.Add(new JsonElementInferredTypeConverter());
+            options.Converters.Add(new SettingHandlerDescription.JsonConverter());
+
+            var json = JsonSerializer.Serialize(new Dictionary<string, object>()
+            {
+                { "type", "com.microsoft.windows.registry" },
+                { "key_name", "thekey" },
+                { "value_name", "thevalue" },
+                { "value_type", "binary" }
+            });
+            RegistrySettingHandlerDescription registry = (RegistrySettingHandlerDescription)JsonSerializer.Deserialize<SettingHandlerDescription>(json, options);
+            RegistrySettingHandlerDescription sameregistry = new RegistrySettingHandlerDescription("thekey", "thevalue", RegistryValueKind.Binary);
+            RegistrySettingHandlerDescription differentregistry1 = new RegistrySettingHandlerDescription("differentkey", "thevalue", RegistryValueKind.Binary);
+            RegistrySettingHandlerDescription differentregistry2 = new RegistrySettingHandlerDescription("thekey", "differentvalue", RegistryValueKind.Binary);
+            //RegistrySettingHandlerDescription differentregistry3 = new RegistrySettingHandlerDescription("thekey", "thevalue", RegistryValueKind.DWord);
+            Assert.NotNull(registry);
+            Assert.NotNull(sameregistry);
+            Assert.NotNull(differentregistry1);
+            Assert.NotNull(differentregistry2);
+            //Assert.NotNull(differentregistry3);
+            Assert.Equal(registry, sameregistry);
+            Assert.NotEqual(registry, differentregistry1);
+            Assert.NotEqual(registry, differentregistry2);
+            //Assert.NotEqual(registry, differentregistry3);
+        }
+
         [Theory]
         [InlineData(null, null, null, true)]
-        public void TestJsonDeserializeINI(string filename, string section, string key, bool success)
+        [InlineData("thefile", "thesection", "thekey", true)]
+        public void TestJsonDeserializeIni(string filename, string section, string key, bool success)
         {
             var options = new JsonSerializerOptions();
             options.Converters.Add(new JsonElementInferredTypeConverter());
@@ -143,9 +218,6 @@ namespace Morphic.Settings.Tests
                 Assert.Equal(filename, ini.Filename);
                 Assert.Equal(section, ini.Section);
                 Assert.Equal(key, ini.Key);
-                //test equal operator
-                IniSettingHandlerDescription other = new IniSettingHandlerDescription(filename, section, key);
-                Assert.Equal(other, ini);
             }
             else
             {
@@ -153,8 +225,39 @@ namespace Morphic.Settings.Tests
             }
         }
 
+        [Fact]
+        public void TestEqualityOperatorIni()
+        {
+            var options = new JsonSerializerOptions();
+            options.Converters.Add(new JsonElementInferredTypeConverter());
+            options.Converters.Add(new SettingHandlerDescription.JsonConverter());
+
+            var json = JsonSerializer.Serialize(new Dictionary<string, object>()
+            {
+                { "type", "com.microsoft.windows.ini" },
+                { "filename", "thefile" },
+                { "section", "thesection" },
+                { "key", "thekey" }
+            });
+            IniSettingHandlerDescription ini = (IniSettingHandlerDescription)JsonSerializer.Deserialize<SettingHandlerDescription>(json, options);
+            IniSettingHandlerDescription sameini = new IniSettingHandlerDescription("thefile", "thesection", "thekey");
+            IniSettingHandlerDescription differentini1 = new IniSettingHandlerDescription("differentfile", "thesection", "thekey");
+            IniSettingHandlerDescription differentini2 = new IniSettingHandlerDescription("thefile", "differentsection", "thekey");
+            IniSettingHandlerDescription differentini3 = new IniSettingHandlerDescription("thefile", "thesection", "differentkey");
+            Assert.NotNull(ini);
+            Assert.NotNull(sameini);
+            Assert.NotNull(differentini1);
+            Assert.NotNull(differentini2);
+            Assert.NotNull(differentini3);
+            Assert.Equal(ini, sameini);
+            Assert.NotEqual(ini, differentini1);
+            Assert.NotEqual(ini, differentini2);
+            Assert.NotEqual(ini, differentini3);
+        }
+
         [Theory]
         [InlineData(null, true)]
+        [InlineData("thesetting", true)]
         public void TestJsonDeserializeSystem( string settingId, bool success)
         {
             var options = new JsonSerializerOptions();
@@ -182,6 +285,28 @@ namespace Morphic.Settings.Tests
             {
                 Assert.Equal(SettingHandlerDescription.HandlerKind.Unknown, handler.Kind);
             }
+        }
+
+        [Fact]
+        public void TestEqualityOperatorSystem()
+        {
+            var options = new JsonSerializerOptions();
+            options.Converters.Add(new JsonElementInferredTypeConverter());
+            options.Converters.Add(new SettingHandlerDescription.JsonConverter());
+
+            var json = JsonSerializer.Serialize(new Dictionary<string, object>()
+            {
+                { "type", "com.microsoft.windows.system" },
+                { "setting_id", "thesetting" }
+            });
+            SystemSettingHandlerDescription system = (SystemSettingHandlerDescription)JsonSerializer.Deserialize<SettingHandlerDescription>(json, options);
+            SystemSettingHandlerDescription samesystem = new SystemSettingHandlerDescription("thesetting");
+            SystemSettingHandlerDescription differentsystem = new SystemSettingHandlerDescription("differentsetting");
+            Assert.NotNull(system);
+            Assert.NotNull(samesystem);
+            Assert.NotNull(differentsystem);
+            Assert.Equal(system, samesystem);
+            Assert.NotEqual(system, differentsystem);
         }
     }
 }
