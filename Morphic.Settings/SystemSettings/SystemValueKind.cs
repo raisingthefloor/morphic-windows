@@ -27,6 +27,7 @@ namespace Morphic.Settings.SystemSettings
     {
         String,
         Boolean,
-        Integer
+        Integer,
+        IdPrefixedEnum
     }
 }

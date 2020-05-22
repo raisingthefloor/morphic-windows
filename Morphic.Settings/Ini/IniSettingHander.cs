@@ -97,40 +97,43 @@ namespace Morphic.Settings.Ini
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public override Task<bool> Apply(object? value)
+        public override async Task<bool> Apply(object? value)
         {
             if (TryConvertToIni(value, out var iniValue))
             {
                 try
                 {
-                    iniFile.SetValue(Description.Section, Description.Key, iniValue);
-                    return Task.FromResult(true);
+                    await Task.Run(() =>
+                    {
+                        iniFile.SetValue(Description.Section, Description.Key, iniValue);
+                    });
+                    return true;
                 }
                 catch (Exception e)
                 {
                     logger.LogError(e, "Failed to set ini value");
                 }
             }
-            return Task.FromResult(false);
+            return false;
         }
 
         /// <summary>
         /// Read the value from the section+key
         /// </summary>
         /// <returns></returns>
-        public override Task<CaptureResult> Capture()
+        public override async Task<CaptureResult> Capture()
         {
             var result = new CaptureResult();
             try
             {
-                var iniValue = iniFile.GetValue(Description.Section, Description.Key);
+                var iniValue = await Task.Run(() => iniFile.GetValue(Description.Section, Description.Key));
                 result.Success = TryConvertFromIni(iniValue, Setting.Kind, out result.Value);
             }
             catch (Exception e)
             {
                 logger.LogError(e, "Failed to capture ini value");
             }
-            return Task.FromResult(result);
+            return result;
         }
 
         public bool TryConvertToIni(object? value, out string iniValue)

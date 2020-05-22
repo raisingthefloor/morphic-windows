@@ -110,7 +110,7 @@ namespace Morphic.Settings.SystemSettings
             }
             else
             {
-                logger.LogError("null value");
+                logger.LogError("Type mismatch on Apply for {0}", Description.SettingId);
                 return false;
             }
         }
@@ -162,6 +162,20 @@ namespace Morphic.Settings.SystemSettings
                     case SystemValueKind.Integer:
                         systemValue = (UInt32)longValue;
                         return true;
+                    case SystemValueKind.IdPrefixedEnum:
+                        systemValue = String.Format("{0}{1}", Description.SettingId, longValue);
+                        return true;
+                    case SystemValueKind.String:
+                        if (Description.IntegerMap is string[] map)
+                        {
+                            if (longValue >= 0 && longValue < map.Length)
+                            {
+                                systemValue = map[longValue];
+                                return true;
+                            }
+                        }
+                        systemValue = null;
+                        return false;
                 }
                 systemValue = null;
                 return false;
@@ -179,6 +193,28 @@ namespace Morphic.Settings.SystemSettings
                     case Setting.ValueKind.String:
                         resultValue = stringValue;
                         return true;
+                    case Setting.ValueKind.Integer:
+                        if (Description.ValueKind == SystemValueKind.IdPrefixedEnum)
+                        {
+                            if (stringValue.StartsWith(Description.SettingId))
+                            {
+                                if (long.TryParse(stringValue.Substring(Description.SettingId.Length), out var longValue))
+                                {
+                                    resultValue = longValue;
+                                    return true;
+                                }
+                            }
+                        }
+                        else if (Description.ReverseIntegerMap is Dictionary<string, long> map)
+                        {
+                            if (map.TryGetValue(stringValue, out long longValue))
+                            {
+                                resultValue = longValue;
+                                return true;
+                            }
+                        }
+                        resultValue = null;
+                        return false;
                 }
                 resultValue = null;
                 return false;
@@ -204,6 +240,14 @@ namespace Morphic.Settings.SystemSettings
                 }
                 resultValue = null;
                 return false;
+            }
+            if (systemValue != null)
+            {
+                logger.LogDebug("Got type {0} from system for {1}", systemValue.GetType().Name, Description.SettingId);
+            }
+            else
+            {
+                logger.LogDebug("Got null from system for {1}", Description.SettingId);
             }
             resultValue = null;
             return false;
