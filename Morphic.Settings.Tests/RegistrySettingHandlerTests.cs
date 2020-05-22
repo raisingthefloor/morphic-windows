@@ -28,14 +28,13 @@ using System;
 using System.Threading.Tasks;
 using Xunit;
 
-#nullable enable
-
 namespace Morphic.Settings.Tests
 {
 
     public class RegistrySettingHandlerTests
     {
 
+#nullable enable
         private class MockRegistry : IRegistry
         {
 
@@ -62,6 +61,7 @@ namespace Morphic.Settings.Tests
                 return NextSetResponder(keyName, valueName, value, valueKind);
             }
         }
+#nullable disable
 
         [Theory]
         [InlineData(Setting.ValueKind.String, RegistryValueKind.String, typeof(string), "Hello", "Hello", true)]
@@ -171,5 +171,3 @@ namespace Morphic.Settings.Tests
         }
     }
 }
-
-#nullable disable

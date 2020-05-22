@@ -48,7 +48,10 @@ namespace Morphic.Settings.Tests
         }
 
         [Theory]
-        [InlineData("setCursors", SystemParametersInfo.Action.SetCursors, null, null, true)]
+        [InlineData("setcursors", SystemParametersInfo.Action.SetCursors, null, null, true)]
+        [InlineData("SeTcUrSoRs", SystemParametersInfo.Action.SetCursors, null, null, true)]
+        [InlineData("sEtCuRsOrS", SystemParametersInfo.Action.SetCursors, null, null, true)]
+        [InlineData("SETCURSORS", SystemParametersInfo.Action.SetCursors, null, null, true)]
         [InlineData("setCursors", SystemParametersInfo.Action.SetCursors, false, false, true)]
         [InlineData("setCursors", SystemParametersInfo.Action.SetCursors, false, true, true)]
         [InlineData("setCursors", SystemParametersInfo.Action.SetCursors, true, false, true)]
@@ -76,9 +79,13 @@ namespace Morphic.Settings.Tests
                 SystemParametersInfoSettingFinalizerDescription spi = (SystemParametersInfoSettingFinalizerDescription)finalizer;
                 Assert.Equal(action, spi.Action);
                 if (sendChange != null)
+                {
                     Assert.Equal(sendChange, spi.SendChange);
+                }
                 if (updateUserProfile != null)
+                {
                     Assert.Equal(updateUserProfile, spi.UpdateUserProfile);
+                }
                 //test equals operator
                 SystemParametersInfoSettingFinalizerDescription other = new SystemParametersInfoSettingFinalizerDescription(action);
                 other.SendChange = spi.SendChange;

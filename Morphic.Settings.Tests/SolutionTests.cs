@@ -25,6 +25,7 @@ using Morphic.Core;
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Xunit;
 
 namespace Morphic.Settings.Tests
@@ -63,6 +64,9 @@ namespace Morphic.Settings.Tests
         {
             var options = new JsonSerializerOptions();
             options.Converters.Add(new JsonElementInferredTypeConverter());
+            options.Converters.Add(new SettingHandlerDescription.JsonConverter());
+            options.Converters.Add(new SettingFinalizerDescription.JsonConverter());
+            options.Converters.Add(new JsonStringEnumConverter());
             var id = Guid.NewGuid().ToString();
             var json = JsonSerializer.Serialize(new Dictionary<string, object>()
             {
@@ -73,25 +77,57 @@ namespace Morphic.Settings.Tests
             Assert.NotNull(solution);
             Assert.Equal(id, solution.Id);
             Assert.NotNull(solution.Settings[0]);
-            Assert.Equal(msettings[0]["default"], solution.Settings[0].Default);
+            Assert.Equal("thisisastring", solution.Settings[0].Name);
+            Assert.Equal(Setting.ValueKind.String, solution.Settings[0].Kind);
+            Assert.Equal("ayylmao", solution.Settings[0].Default);
             Assert.NotNull(solution.Settings[1]);
-            Assert.Equal(msettings[1]["default"], solution.Settings[1].Default);
+            Assert.Equal("thisisaboolean", solution.Settings[1].Name);
+            Assert.Equal(Setting.ValueKind.Boolean, solution.Settings[1].Kind);
+            Assert.Equal(true, solution.Settings[1].Default);
             Assert.NotNull(solution.Settings[2]);
-            Assert.Equal(msettings[2]["default"], solution.Settings[2].Default);
+            Assert.Equal("thisisanint", solution.Settings[2].Name);
+            Assert.Equal(Setting.ValueKind.Integer, solution.Settings[2].Kind);
+            Assert.Equal(12345L, solution.Settings[2].Default);
             Assert.NotNull(solution.Settings[3]);
-            Assert.Equal(msettings[3]["default"], solution.Settings[3].Default);
+            Assert.Equal("thisisadouble", solution.Settings[3].Name);
+            Assert.Equal(Setting.ValueKind.Double, solution.Settings[3].Kind);
+            Assert.Equal(3.14159d, solution.Settings[3].Default);
             Assert.NotNull(solution.Settings[4]);
+            Assert.Equal("thisisnull", solution.Settings[4].Name);
+            Assert.Equal(Setting.ValueKind.String, solution.Settings[4].Kind);
             Assert.Null(msettings[4]["default"]);
-            //TEST SETTINGSBYNAME
+        }
+
+        [Fact]
+        public void TestSettingsByName()
+        {
+            var options = new JsonSerializerOptions();
+            options.Converters.Add(new JsonElementInferredTypeConverter());
+            options.Converters.Add(new SettingHandlerDescription.JsonConverter());
+            options.Converters.Add(new SettingFinalizerDescription.JsonConverter());
+            options.Converters.Add(new JsonStringEnumConverter());
+            var json = JsonSerializer.Serialize(new Dictionary<string, object>()
+            {
+                { "id", "org.raisingthefloor.test" },
+                { "settings", msettings }
+            });
+            var solution = JsonSerializer.Deserialize<Solution>(json, options);
+            Assert.NotNull(solution);
+            Assert.Equal(id, solution.Id);
             Assert.NotNull(solution.SettingsByName["thisisastring"]);
-            Assert.Equal(msettings[0]["default"], solution.SettingsByName["thisisastring"].Default);
+            Assert.Equal(Setting.ValueKind.String, solution.SettingsByName["thisisastring"].Kind);
+            Assert.Equal("ayylmao", solution.SettingsByName["thisisastring"].Default);
             Assert.NotNull(solution.SettingsByName["thisisaboolean"]);
-            Assert.Equal(msettings[1]["default"], solution.SettingsByName["thisisaboolean"].Default);
+            Assert.Equal(Setting.ValueKind.Boolean, solution.SettingsByName["thisisaboolean"].Kind);
+            Assert.Equal(true, solution.SettingsByName["thisisaboolean"].Default);
             Assert.NotNull(solution.SettingsByName["thisisanint"]);
-            Assert.Equal(msettings[2]["default"], solution.SettingsByName["thisisanint"].Default);
+            Assert.Equal(Setting.ValueKind.Integer, solution.SettingsByName["thisisanint"].Kind);
+            Assert.Equal(12345L, solution.SettingsByName["thisisanint"].Default);
             Assert.NotNull(solution.SettingsByName["thisisadouble"]);
-            Assert.Equal(msettings[3]["default"], solution.SettingsByName["thisisadouble"].Default);
+            Assert.Equal(Setting.ValueKind.Double, solution.SettingsByName["thisisadouble"].Kind);
+            Assert.Equal(3.14159d, solution.SettingsByName["thisisadouble"].Default);
             Assert.NotNull(solution.SettingsByName["thisisnull"]);
+            Assert.Equal(Setting.ValueKind.String, solution.SettingsByName["thisisnull"].Kind);
             Assert.Null(solution.SettingsByName["thisisnull"].Default);
         }
     }
