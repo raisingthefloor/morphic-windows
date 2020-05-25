@@ -22,3 +22,5 @@ cat > $INFO_FILE << EOF
   "commit": "${COMMIT}"
 }
 EOF
+
+cat $INFO_FILE
