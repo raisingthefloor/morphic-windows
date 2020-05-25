@@ -44,13 +44,23 @@ stages:
           inputs:
             restoreSolution: '$(projects)'
         
+        - task: Bash@3
+          displayName: "write build info"
+          env:
+            BRANCH: $(Build.SourceBranch)
+            BRANCH_NAME: $(Build.SourceBranchName)
+            COMMIT: $(Build.SourceVersion)
+            BUILD_NUM: $(Build.BuildNumber)
+          inputs:
+            targetType: 'filePath'
+            filePath: set-build-info.sh
+        
         - task: VSBuild@1
           displayName: "build solutions"
           inputs:
             solution: '$(solution)'
             platform: '$(buildPlatform)'
             configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:InformationalVersion=$(Build.BuildNumber) --version-suffix=$(Build.BuildNumber'
         
         - task: VSTest@2
           displayName: "execute tests"
@@ -64,7 +74,6 @@ stages:
             solution: 'Morphic.Setup\Morphic.Setup.wixproj'
             platform: 'x64'
             configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:InformationalVersion=$(Build.BuildNumber) --version-suffix=$(Build.BuildNumber'
         
         - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicSetup.msi
           displayName: "save x64 installer for later"

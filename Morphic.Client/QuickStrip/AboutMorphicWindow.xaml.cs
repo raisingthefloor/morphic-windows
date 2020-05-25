@@ -1,5 +1,6 @@
-﻿using System.Reflection;
+﻿using System.IO;
 using System.Windows;
+using System.Text.Json;
 
 namespace Morphic.Client.QuickStrip
 {
@@ -8,14 +9,15 @@ namespace Morphic.Client.QuickStrip
         public AboutMorphicWindow()
         {
             InitializeComponent();
-
-            var assembly = Assembly.GetExecutingAssembly();
-            var informationVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
-                .InformationalVersion;
-
-            var location = assembly.Location;
             
-            AboutLabel.Content = "Version: " + informationVersion;
+            var jsonData = File.ReadAllText("build-info.json");
+            
+            var doc = JsonDocument.Parse(jsonData).RootElement;
+
+            AboutLabel.Text = "Version: " + doc.GetProperty("version").GetString();
+            AboutLabel.Text += "\nBuild Time: " + doc.GetProperty("buildTime").GetString();
+            AboutLabel.Text += "\nGit commit: " + doc.GetProperty("commit").GetString();
+            //AboutLabel.Text = jsonData;
         }
     }
 }

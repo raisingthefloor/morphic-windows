@@ -5,13 +5,13 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:local="clr-namespace:Morphic.Client.QuickStrip"
         mc:Ignorable="d"
-        Title="About Morphic" Height="200" Width="300">
+        Title="About Morphic" Height="400" Width="300">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="85"/>
-            <RowDefinition Height="43"/>
+            <RowDefinition Height="200"/>
         </Grid.RowDefinitions>
         <Image Source="/Icon.png"/>
-        <Label x:Name="AboutLabel" Grid.Row="1" Content="Message" HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Top" FontSize="25" FontWeight="Bold" Foreground="Black"/> 
+        <TextBlock x:Name="AboutLabel" Grid.Row="1"  HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Top" FontSize="20" FontWeight="Bold" Foreground="Black"/> 
     </Grid>
 </Window>
