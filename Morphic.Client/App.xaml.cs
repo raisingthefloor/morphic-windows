@@ -123,10 +123,10 @@ namespace Morphic.Client
             CountlyConfig cc = new CountlyConfig();
             cc.appKey = section["AppKey"];
             cc.serverUrl = section["ServerUrl"];
-            var assembly = Assembly.GetExecutingAssembly();
-            var informationVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
-                .InformationalVersion;
-            cc.appVersion = informationVersion;
+            
+            var jsonData = File.ReadAllText("build-info.json");
+            var buildInfoDoc = JsonDocument.Parse(jsonData).RootElement;
+            cc.appVersion = buildInfoDoc.GetProperty("version").GetString();
 
             Countly.Instance.Init(cc);
             Countly.Instance.SessionBegin();
@@ -534,10 +534,16 @@ namespace Morphic.Client
             {
                 AboutWindow = ServiceProvider.GetRequiredService<AboutMorphicWindow>();
                 AboutWindow.Show();
-                AboutWindow.Closed += OnTravelWindowClosed;
+                AboutWindow.Closed += OnAboutWindowClosed;
             }
             AboutWindow.Activate();
         }
+        
+        private void OnAboutWindowClosed(object? sender, EventArgs e)
+        {
+            AboutWindow = null;
+        }
+        
         #endregion
 
         #region Login Window

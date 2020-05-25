@@ -12,6 +12,6 @@
             <RowDefinition Height="200"/>
         </Grid.RowDefinitions>
         <Image Source="/Icon.png"/>
-        <TextBlock x:Name="AboutLabel" Grid.Row="1"  HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Top" FontSize="20" FontWeight="Bold" Foreground="Black"/> 
+        <TextBlock x:Name="AboutText" Grid.Row="1"  HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Top" FontSize="16" FontWeight="Bold" Foreground="Black"/> 
     </Grid>
 </Window>

@@ -14,9 +14,9 @@ namespace Morphic.Client.QuickStrip
             
             var doc = JsonDocument.Parse(jsonData).RootElement;
 
-            AboutLabel.Text = "Version: " + doc.GetProperty("version").GetString();
-            AboutLabel.Text += "\nBuild Time: " + doc.GetProperty("buildTime").GetString();
-            AboutLabel.Text += "\nGit commit: " + doc.GetProperty("commit").GetString();
+            AboutText.Text = "Version: " + doc.GetProperty("version").GetString();
+            AboutText.Text += "\nBuild Time: " + doc.GetProperty("buildTime").GetString();
+            AboutText.Text += "\nGit commit: " + doc.GetProperty("commit").GetString();
             //AboutLabel.Text = jsonData;
         }
     }
