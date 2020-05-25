@@ -16,8 +16,8 @@ fi
 
 cat > $INFO_FILE << EOF
 {
-  "Version": "${FINAL_VERSION}",
-  "Build Time": "$(date -u)",
-  "Git Commit": "${COMMIT}"
+  "version": "${FINAL_VERSION}",
+  "buildTime": "$(date -u)",
+  "commit": "${COMMIT}"
 }
 EOF
