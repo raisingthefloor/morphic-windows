@@ -46,7 +46,7 @@ namespace Morphic.Settings.Tests
         private static int openCount = 0;
         private static int getCount = 0;
         private static int setCount = 0;
-        private static object? iniValue = null;
+        private static string? iniValue = null;
         private static pf passfail;
 
         private class MockIniFile : IIniFile
@@ -76,19 +76,19 @@ namespace Morphic.Settings.Tests
         }
 
         [Theory]
-        [InlineData(Setting.ValueKind.String, "Hello", pf.PASS)]
-        [InlineData(Setting.ValueKind.String, "Hello", pf.FAIL)]
-        [InlineData(Setting.ValueKind.String, "Hello", pf.CRASH)]
-        [InlineData(Setting.ValueKind.Integer, 52L, pf.PASS)]
-        [InlineData(Setting.ValueKind.Integer, 52L, pf.FAIL)]
-        [InlineData(Setting.ValueKind.Integer, 52L, pf.CRASH)]
-        [InlineData(Setting.ValueKind.Double, 3.14159d, pf.PASS)]
-        [InlineData(Setting.ValueKind.Double, 3.14159d, pf.FAIL)]
-        [InlineData(Setting.ValueKind.Double, 3.14159d, pf.CRASH)]
-        [InlineData(Setting.ValueKind.Boolean, true, pf.PASS)]
-        [InlineData(Setting.ValueKind.Boolean, true, pf.FAIL)]
-        [InlineData(Setting.ValueKind.Boolean, true, pf.CRASH)]
-        public async Task TestCapture(Setting.ValueKind kind, object value, pf passfail)
+        [InlineData(Setting.ValueKind.String, "Hello", "Hello", pf.PASS)]
+        [InlineData(Setting.ValueKind.String, "Hello", "Hello", pf.FAIL)]
+        [InlineData(Setting.ValueKind.String, "Hello", "Hello", pf.CRASH)]
+        [InlineData(Setting.ValueKind.Integer, "52", 52L, pf.PASS)]
+        [InlineData(Setting.ValueKind.Integer, "52", 52L, pf.FAIL)]
+        [InlineData(Setting.ValueKind.Integer, "52", 52L, pf.CRASH)]
+        [InlineData(Setting.ValueKind.Double, "3.14159", 3.14159d, pf.PASS)]
+        [InlineData(Setting.ValueKind.Double, "3.14159", 3.14159d, pf.FAIL)]
+        [InlineData(Setting.ValueKind.Double, "3.14159", 3.14159d, pf.CRASH)]
+        [InlineData(Setting.ValueKind.Boolean, "true", true, pf.PASS)]
+        [InlineData(Setting.ValueKind.Boolean, "true", true, pf.FAIL)]
+        [InlineData(Setting.ValueKind.Boolean, "true", true, pf.CRASH)]
+        public async Task TestCapture(Setting.ValueKind kind, string storedvalue, object value, pf passfail)
         {
             var mockFactory = new MockIniFactory();
             var loggerFactory = new LoggerFactory();
@@ -96,7 +96,7 @@ namespace Morphic.Settings.Tests
             openCount = 0;
             getCount = 0;
             setCount = 0;
-            iniValue = value;
+            iniValue = storedvalue;
             IniSettingHandlerTests.passfail = passfail;
 
             var setting = new Setting()

@@ -61,6 +61,7 @@ namespace Morphic.Settings.Tests
             handler = new Dictionary<string, object>();
             handler.Add("type", "com.microsoft.windows.system");
             handler.Add("setting_id", "thesetting");
+            handler.Add("value_type", "integer");
             finalizer = new Dictionary<string, object>();
             finalizer.Add("type", "com.microsoft.windows.systemParametersInfo");
             yield return new object[] { Setting.ValueKind.Integer, 52L, handler, finalizer, SettingHandlerDescription.HandlerKind.System, SettingFinalizerDescription.HandlerKind.Unknown };

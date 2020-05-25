@@ -113,7 +113,7 @@ namespace Morphic.Settings.Tests
             });
             var solution = JsonSerializer.Deserialize<Solution>(json, options);
             Assert.NotNull(solution);
-            Assert.Equal(id, solution.Id);
+            Assert.Equal("org.raisingthefloor.test", solution.Id);
             Assert.NotNull(solution.SettingsByName["thisisastring"]);
             Assert.Equal(Setting.ValueKind.String, solution.SettingsByName["thisisastring"].Kind);
             Assert.Equal("ayylmao", solution.SettingsByName["thisisastring"].Default);

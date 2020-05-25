@@ -110,7 +110,7 @@ namespace Morphic.Settings.Tests
             {
                 Name = "test",
                 Kind = kind,
-                HandlerDescription = new SystemSettingHandlerDescription("thesetting")
+                HandlerDescription = new SystemSettingHandlerDescription("thesetting", SystemValueKind.Boolean)
             };
             var handler = new SystemSettingHandler(setting, mockFactory, serviceProvider, logger);
 
@@ -169,7 +169,7 @@ namespace Morphic.Settings.Tests
             {
                 Name = "test",
                 Kind = kind,
-                HandlerDescription = new SystemSettingHandlerDescription("thesetting")
+                HandlerDescription = new SystemSettingHandlerDescription("thesetting", SystemValueKind.Boolean)
             };
             var handler = new SystemSettingHandler(setting, mockFactory, serviceProvider, logger);
 

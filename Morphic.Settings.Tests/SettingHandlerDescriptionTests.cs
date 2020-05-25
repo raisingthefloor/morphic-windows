@@ -23,6 +23,7 @@
 
 using Microsoft.Win32;
 using Morphic.Core;
+using Morphic.Settings.SystemSettings;
 using System.Collections.Generic;
 using System.Text.Json;
 using Xunit;
@@ -256,9 +257,9 @@ namespace Morphic.Settings.Tests
         }
 
         [Theory]
-        [InlineData(null, true)]
-        [InlineData("thesetting", true)]
-        public void TestJsonDeserializeSystem( string settingId, bool success)
+        [InlineData(null, "boolean", SystemValueKind.Boolean, true)]
+        [InlineData("thesetting", "boolean", SystemValueKind.Boolean, true)]
+        public void TestJsonDeserializeSystem( string settingId, string valueType, SystemValueKind valueKind, bool success)
         {
             var options = new JsonSerializerOptions();
             options.Converters.Add(new JsonElementInferredTypeConverter());
@@ -267,7 +268,8 @@ namespace Morphic.Settings.Tests
             var json = JsonSerializer.Serialize(new Dictionary<string, object>()
             {
                 { "type", "com.microsoft.windows.system" },
-                { "setting_id", settingId }
+                { "setting_id", settingId },
+                { "value_type", valueType }
             });
             var handler = JsonSerializer.Deserialize<SettingHandlerDescription>(json, options);
             Assert.NotNull(handler);
@@ -277,9 +279,7 @@ namespace Morphic.Settings.Tests
                 Assert.IsType<SystemSettingHandlerDescription>(handler);
                 SystemSettingHandlerDescription system = (SystemSettingHandlerDescription)handler;
                 Assert.Equal(settingId, system.SettingId);
-                //test equal operator
-                SystemSettingHandlerDescription other = new SystemSettingHandlerDescription(settingId);
-                Assert.Equal(other, system);
+                Assert.Equal(valueKind, system.ValueKind);
             }
             else
             {
@@ -297,16 +297,20 @@ namespace Morphic.Settings.Tests
             var json = JsonSerializer.Serialize(new Dictionary<string, object>()
             {
                 { "type", "com.microsoft.windows.system" },
-                { "setting_id", "thesetting" }
+                { "setting_id", "thesetting" },
+                { "value_type", "boolean" }
             });
             SystemSettingHandlerDescription system = (SystemSettingHandlerDescription)JsonSerializer.Deserialize<SettingHandlerDescription>(json, options);
-            SystemSettingHandlerDescription samesystem = new SystemSettingHandlerDescription("thesetting");
-            SystemSettingHandlerDescription differentsystem = new SystemSettingHandlerDescription("differentsetting");
+            SystemSettingHandlerDescription samesystem = new SystemSettingHandlerDescription("thesetting", SystemSettings.SystemValueKind.Boolean);
+            SystemSettingHandlerDescription differentsystem = new SystemSettingHandlerDescription("differentsetting", SystemSettings.SystemValueKind.Boolean);
+            SystemSettingHandlerDescription wrongtype = new SystemSettingHandlerDescription("differentsetting", SystemSettings.SystemValueKind.Integer);
             Assert.NotNull(system);
             Assert.NotNull(samesystem);
+            Assert.NotNull(wrongtype);
             Assert.NotNull(differentsystem);
             Assert.Equal(system, samesystem);
             Assert.NotEqual(system, differentsystem);
+            Assert.NotEqual(system, wrongtype);
         }
     }
 }

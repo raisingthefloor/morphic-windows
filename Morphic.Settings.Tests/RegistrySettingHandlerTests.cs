@@ -64,12 +64,12 @@ namespace Morphic.Settings.Tests
 #nullable disable
 
         [Theory]
-        [InlineData(Setting.ValueKind.String, RegistryValueKind.String, typeof(string), "Hello", "Hello", true)]
-        [InlineData(Setting.ValueKind.Integer, RegistryValueKind.DWord, typeof(Int64), 52, 52L, true)]
-        //[InlineData(Setting.ValueKind.Double, RegistryValueKind.Binary, typeof(double), 3.14159d, true)]   Does registry not do doubles?
-        [InlineData(Setting.ValueKind.Boolean, RegistryValueKind.DWord, typeof(bool), 1, true, true)]
-        [InlineData(Setting.ValueKind.Boolean, RegistryValueKind.DWord, typeof(Int64), "whoopsie", true, false)]
-        public async Task TestCapture(Setting.ValueKind kind, RegistryValueKind rkind, System.Type type, object registryval, object finalval, bool success)
+        [InlineData(Setting.ValueKind.String, RegistryValueKind.String, "Hello", "Hello")]
+        [InlineData(Setting.ValueKind.String, RegistryValueKind.ExpandString, "Hello", "Hello")]
+        [InlineData(Setting.ValueKind.Integer, RegistryValueKind.DWord, 52, 52L)]
+        [InlineData(Setting.ValueKind.Integer, RegistryValueKind.QWord, 52L, 52L)]
+        [InlineData(Setting.ValueKind.Boolean, RegistryValueKind.DWord, 1, true)]
+        public async void TestCapturePass(Setting.ValueKind kind, RegistryValueKind rkind, object registryval, object finalval)
         {
             var registry = new MockRegistry();
             var loggerFactory = new LoggerFactory();
@@ -82,11 +82,6 @@ namespace Morphic.Settings.Tests
                 HandlerDescription = new RegistrySettingHandlerDescription(@"HKEY_TEST\Test\Key", "SomeValue", rkind)
             };
             var handler = new RegistrySettingHandler(setting, registry, logger);
-
-            var result = await handler.Capture();
-            Assert.False(result.Success);   //will fail due to null
-            Assert.Null(result.Value);
-
 
             var callCount = 0;
             registry.NextGetResponder = (string keyName, string valueName, object? defaultValue) =>
@@ -97,27 +92,29 @@ namespace Morphic.Settings.Tests
                 Assert.Null(defaultValue);
                 return registryval;
             };
-            result = await handler.Capture();
+            var result = await handler.Capture();
             Assert.Equal(1, callCount);
-            if (success)
-            {
-                Assert.True(result.Success);
-                Assert.NotNull(result.Value);
-                Assert.Equal(result.Value!.GetType(), type);
-                Assert.Equal(finalval, result.Value);
-            }
-            else
-            {
-                Assert.False(result.Success);
-                Assert.Null(result.Value);
-            }
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+            Assert.Equal(finalval, result.Value);
         }
 
         [Theory]
-        [InlineData(Setting.ValueKind.String, RegistryValueKind.String, "Hello", "Hello", true)]
-        [InlineData(Setting.ValueKind.Integer, RegistryValueKind.DWord, 52L, 52L, true)]
-        [InlineData(Setting.ValueKind.Boolean, RegistryValueKind.DWord, "whoopsie", true, false)]
-        public async Task TestApply(Setting.ValueKind kind, RegistryValueKind rkind, object initval, object registryval, bool success)
+        [InlineData(Setting.ValueKind.Boolean, RegistryValueKind.String, "Hello")]
+        [InlineData(Setting.ValueKind.Double, RegistryValueKind.String, "Hello")]
+        [InlineData(Setting.ValueKind.Integer, RegistryValueKind.String, "Hello")]
+        [InlineData(Setting.ValueKind.Double, RegistryValueKind.DWord, 52)]
+        [InlineData(Setting.ValueKind.String, RegistryValueKind.DWord, 52)]
+        [InlineData(Setting.ValueKind.Double, RegistryValueKind.QWord, 52L)]
+        [InlineData(Setting.ValueKind.String, RegistryValueKind.QWord, 52L)]
+        [InlineData(Setting.ValueKind.Boolean, RegistryValueKind.DWord, 3.14159d)]
+        [InlineData(Setting.ValueKind.Integer, RegistryValueKind.DWord, 3.14159d)]
+        [InlineData(Setting.ValueKind.String, RegistryValueKind.DWord, 3.14159d)]
+        [InlineData(Setting.ValueKind.Boolean, RegistryValueKind.DWord, true)]
+        [InlineData(Setting.ValueKind.Double, RegistryValueKind.DWord, true)]
+        [InlineData(Setting.ValueKind.Integer, RegistryValueKind.DWord, true)]
+        [InlineData(Setting.ValueKind.String, RegistryValueKind.DWord, true)]
+        public async void TestCaptureFail(Setting.ValueKind kind, RegistryValueKind rkind, object registryval)
         {
             var registry = new MockRegistry();
             var loggerFactory = new LoggerFactory();
@@ -131,8 +128,118 @@ namespace Morphic.Settings.Tests
             };
             var handler = new RegistrySettingHandler(setting, registry, logger);
 
-            var pass = await handler.Apply("World");    //should fail, no callback
-            Assert.False(pass);
+            var callCount = 0;
+            registry.NextGetResponder = (string keyName, string valueName, object? defaultValue) =>
+            {
+                ++callCount;
+                Assert.Equal(@"HKEY_TEST\Test\Key", keyName);
+                Assert.Equal(@"SomeValue", valueName);
+                Assert.Null(defaultValue);
+                return registryval;
+            };
+            var result = await handler.Capture();
+            Assert.Equal(1, callCount);
+            Assert.False(result.Success);
+            Assert.Null(result.Value);
+        }
+
+        [Fact]
+        public async void TestCaptureExceptions()
+        {
+            var registry = new MockRegistry();
+            var loggerFactory = new LoggerFactory();
+            var logger = loggerFactory.CreateLogger<RegistrySettingHandler>();
+
+            var setting = new Setting()
+            {
+                Name = "test",
+                Kind = Setting.ValueKind.String,
+                HandlerDescription = new RegistrySettingHandlerDescription(@"HKEY_TEST\Test\Key", "SomeValue", RegistryValueKind.String)
+            };
+            var handler = new RegistrySettingHandler(setting, registry, logger);
+
+            var callCount = 0;
+            registry.NextGetResponder = (string keyName, string valueName, object? defaultvalue) =>
+            {
+                ++callCount;
+                throw new System.Security.SecurityException();
+            };
+            var pass = await handler.Capture();
+            Assert.Equal(1, callCount);
+            Assert.False(pass.Success);
+            Assert.Null(pass.Value);
+            callCount = 0;
+            registry.NextGetResponder = (string keyName, string valueName, object? defaultvalue) =>
+            {
+                ++callCount;
+                throw new ObjectDisposedException("ayylmao");
+            };
+            pass = await handler.Capture();
+            Assert.Equal(1, callCount);
+            Assert.False(pass.Success);
+            Assert.Null(pass.Value);
+            callCount = 0;
+            registry.NextGetResponder = (string keyName, string valueName, object? defaultvalue) =>
+            {
+                ++callCount;
+                throw new System.IO.IOException();
+            };
+            pass = await handler.Capture();
+            Assert.Equal(1, callCount);
+            Assert.False(pass.Success);
+            Assert.Null(pass.Value);
+            callCount = 0;
+            registry.NextGetResponder = (string keyName, string valueName, object? defaultvalue) =>
+            {
+                ++callCount;
+                throw new ArgumentException();
+            };
+            pass = await handler.Capture();
+            Assert.Equal(1, callCount);
+            Assert.False(pass.Success);
+            Assert.Null(pass.Value);
+            callCount = 0;
+            registry.NextGetResponder = (string keyName, string valueName, object? defaultvalue) =>
+            {
+                ++callCount;
+                throw new ArgumentNullException();
+            };
+            pass = await handler.Capture();
+            Assert.Equal(1, callCount);
+            Assert.False(pass.Success);
+            Assert.Null(pass.Value);
+            callCount = 0;
+            registry.NextGetResponder = (string keyName, string valueName, object? defaultvalue) =>
+            {
+                ++callCount;
+                throw new UnauthorizedAccessException();
+            };
+            pass = await handler.Capture();
+            Assert.Equal(1, callCount);
+            Assert.False(pass.Success);
+            Assert.Null(pass.Value);
+        }
+
+
+        [Theory]
+        [InlineData(RegistryValueKind.String, "Hello", "Hello")]
+        [InlineData(RegistryValueKind.ExpandString, "Hello", "Hello")]
+        [InlineData(RegistryValueKind.DWord, 52L, 52)]
+        [InlineData(RegistryValueKind.QWord, 52L, 52L)]
+        [InlineData(RegistryValueKind.DWord, true, 1)]
+        public async void TestApplyPass(RegistryValueKind rkind, object initval, object registryval)
+        {
+            var registry = new MockRegistry();
+            var loggerFactory = new LoggerFactory();
+            var logger = loggerFactory.CreateLogger<RegistrySettingHandler>();
+
+            var setting = new Setting()
+            {
+                Name = "test",
+                Kind = Setting.ValueKind.Boolean,
+                HandlerDescription = new RegistrySettingHandlerDescription(@"HKEY_TEST\Test\Key", "SomeValue", rkind)
+            };
+            var handler = new RegistrySettingHandler(setting, registry, logger);
 
             var callCount = 0;
             registry.NextSetResponder = (string keyName, string valueName, object? value, RegistryValueKind valueKind) =>
@@ -144,28 +251,131 @@ namespace Morphic.Settings.Tests
                 Assert.Equal(rkind, valueKind);
                 return true;
             };
-            pass = await handler.Apply(initval);
-            if (success)
-            {
-                Assert.Equal(1, callCount);
-                Assert.True(pass);
-            }
-            else
-            {
-                Assert.False(pass);
-            }
+            var pass = await handler.Apply(initval);
+            Assert.Equal(1, callCount);
+            Assert.True(pass);
+        }
 
+        [Theory]
+        [InlineData(RegistryValueKind.Binary, "Hello")]
+        [InlineData(RegistryValueKind.DWord, "Hello")]
+        [InlineData(RegistryValueKind.QWord, "Hello")]
+        [InlineData(RegistryValueKind.MultiString, "Hello")]
+        [InlineData(RegistryValueKind.None, "Hello")]
+        [InlineData(RegistryValueKind.String, 52L)]
+        [InlineData(RegistryValueKind.ExpandString, 52L)]
+        [InlineData(RegistryValueKind.MultiString, 52L)]
+        [InlineData(RegistryValueKind.Binary, 52L)]
+        [InlineData(RegistryValueKind.None, 52L)]
+        [InlineData(RegistryValueKind.DWord, 52)]
+        [InlineData(RegistryValueKind.QWord, 52)]
+        [InlineData(RegistryValueKind.Binary, 52)]
+        [InlineData(RegistryValueKind.String, 52)]
+        [InlineData(RegistryValueKind.ExpandString, 52)]
+        [InlineData(RegistryValueKind.MultiString, 52)]
+        [InlineData(RegistryValueKind.None, 52)]
+        [InlineData(RegistryValueKind.QWord, true)]
+        [InlineData(RegistryValueKind.Binary, true)]
+        [InlineData(RegistryValueKind.String, true)]
+        [InlineData(RegistryValueKind.ExpandString, true)]
+        [InlineData(RegistryValueKind.MultiString, true)]
+        [InlineData(RegistryValueKind.None, true)]
+        public async void TestApplyFail(RegistryValueKind rkind, object initval)
+        {
+            var registry = new MockRegistry();
+            var loggerFactory = new LoggerFactory();
+            var logger = loggerFactory.CreateLogger<RegistrySettingHandler>();
+
+            var setting = new Setting()
+            {
+                Name = "test",
+                Kind = Setting.ValueKind.Boolean,
+                HandlerDescription = new RegistrySettingHandlerDescription(@"HKEY_TEST\Test\Key", "SomeValue", rkind)
+            };
+            var handler = new RegistrySettingHandler(setting, registry, logger);
+
+            var callCount = 0;
+            registry.NextSetResponder = (string keyName, string valueName, object? value, RegistryValueKind valueKind) =>
+            {
+                ++callCount;/*
+                Assert.Equal(@"HKEY_TEST\Test\Key", keyName);
+                Assert.Equal(@"SomeValue", valueName);
+                Assert.Equal(registryval, value);
+                Assert.Equal(rkind, valueKind);*/
+                return true;
+            };
+            var pass = await handler.Apply(initval);
+            Assert.Equal(0, callCount);
+            Assert.False(pass);
+        }
+
+        [Fact]
+        public async void TestApplyExceptions()
+        {
+            var registry = new MockRegistry();
+            var loggerFactory = new LoggerFactory();
+            var logger = loggerFactory.CreateLogger<RegistrySettingHandler>();
+
+            var setting = new Setting()
+            {
+                Name = "test",
+                Kind = Setting.ValueKind.String,
+                HandlerDescription = new RegistrySettingHandlerDescription(@"HKEY_TEST\Test\Key", "SomeValue", RegistryValueKind.String)
+            };
+            var handler = new RegistrySettingHandler(setting, registry, logger);
+
+            var callCount = 0;
+            registry.NextSetResponder = (string keyName, string valueName, object? value, RegistryValueKind valueKind) =>
+            {
+                ++callCount;
+                throw new System.Security.SecurityException();
+            };
+            var pass = await handler.Apply("ayy");
+            Assert.Equal(1, callCount);
+            Assert.False(pass);
             callCount = 0;
             registry.NextSetResponder = (string keyName, string valueName, object? value, RegistryValueKind valueKind) =>
             {
                 ++callCount;
-                Assert.Equal(@"HKEY_TEST\Test\Key", keyName);
-                Assert.Equal(@"SomeValue", valueName);
-                Assert.Equal(1, value);
-                Assert.Equal(rkind, valueKind);
+                throw new ObjectDisposedException("ayylmao");
+            };
+            pass = await handler.Apply("ayy");
+            Assert.Equal(1, callCount);
+            Assert.False(pass);
+            callCount = 0;
+            registry.NextSetResponder = (string keyName, string valueName, object? value, RegistryValueKind valueKind) =>
+            {
+                ++callCount;
+                throw new System.IO.IOException();
+            };
+            pass = await handler.Apply("ayy");
+            Assert.Equal(1, callCount);
+            Assert.False(pass);
+            callCount = 0;
+            registry.NextSetResponder = (string keyName, string valueName, object? value, RegistryValueKind valueKind) =>
+            {
+                ++callCount;
                 throw new ArgumentException();
             };
-            pass = await handler.Apply(1);
+            pass = await handler.Apply("ayy");
+            Assert.Equal(1, callCount);
+            Assert.False(pass);
+            callCount = 0;
+            registry.NextSetResponder = (string keyName, string valueName, object? value, RegistryValueKind valueKind) =>
+            {
+                ++callCount;
+                throw new ArgumentNullException();
+            };
+            pass = await handler.Apply("ayy");
+            Assert.Equal(1, callCount);
+            Assert.False(pass);
+            callCount = 0;
+            registry.NextSetResponder = (string keyName, string valueName, object? value, RegistryValueKind valueKind) =>
+            {
+                ++callCount;
+                throw new UnauthorizedAccessException();
+            };
+            pass = await handler.Apply("ayy");
             Assert.Equal(1, callCount);
             Assert.False(pass);
         }
