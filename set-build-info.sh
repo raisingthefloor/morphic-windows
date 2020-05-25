@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -e
+set -x
 
 # To be set by the environment. This is mostly for documentation purposes.
 BUILD_NUM="${BUILD_NUM}"
