@@ -23,6 +23,7 @@
 
 using Morphic.Windows.Native;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Morphic.Settings.Ini
 {
@@ -32,10 +33,10 @@ namespace Morphic.Settings.Ini
     public class IniFile: IIniFile
     {
 
-        /// <summary>
-        /// The reader/writer that does all the work
-        /// </summary>
-        private readonly IniFileReaderWriter readerWriter;
+        private string path;
+
+        private bool needsConfigurationOpen;
+        private Configuration? configuration;
 
         /// <summary>
         /// Create an ini file from the given path
@@ -43,17 +44,53 @@ namespace Morphic.Settings.Ini
         /// <param name="path"></param>
         public IniFile(string path)
         {
-            readerWriter = new IniFileReaderWriter(path);
+            this.path = path;
+            needsConfigurationOpen = true;
         }
 
-        public string? GetValue(string section, string key)
+        public async Task<string?> GetValue(string section, string key)
         {
-            return readerWriter.ReadValue(key, section);
+            if (needsConfigurationOpen)
+            {
+                configuration = await Configuration.Open(path);
+                needsConfigurationOpen = false;
+            }
+            if (configuration != null)
+            {
+                return configuration.Get(section, key);
+            }
+            return null;
         }
 
-        public void SetValue(string section, string key, string value)
+        public async Task<bool> SetValue(string section, string key, string value)
         {
-            readerWriter.WriteValue(value, key, section);
+            if (needsConfigurationOpen)
+            {
+                configuration = await Configuration.Open(path);
+                needsConfigurationOpen = false;
+            }
+            if (configuration != null)
+            {
+                configuration.Set(section, key, value);
+                return true;
+            }
+            return false;
+        }
+
+        public bool NeedsWrite
+        {
+            get
+            {
+                return !needsConfigurationOpen && (configuration?.IsChanged ?? false);
+            }
+        }
+
+        public async Task Write()
+        {
+            if (configuration != null)
+            {
+                await configuration.Write(path);
+            }
         }
     }
 }

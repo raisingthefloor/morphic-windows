@@ -21,6 +21,8 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
+using System.Threading.Tasks;
+
 namespace Morphic.Settings.Ini
 {
 
@@ -44,6 +46,10 @@ namespace Morphic.Settings.Ini
         /// <param name="path"></param>
         /// <returns></returns>
         public IIniFile Open(string path);
+
+        public Task Begin();
+
+        public Task Commit();
 
     }
 }

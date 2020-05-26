@@ -27,6 +27,8 @@ using System.Threading.Tasks;
 using System.Text;
 using Morphic.Core;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
+using Morphic.Settings.Ini;
 
 namespace Morphic.Settings
 {
@@ -89,6 +91,9 @@ namespace Morphic.Settings
         {
             var serviceProvider = SettingsManager;
 
+            var iniFactory = serviceProvider.GetRequiredService<IIniFileFactory>();
+            await iniFactory.Begin();
+
             foreach (var key in Keys)
             {
                 if (SettingsManager.Get(key) is Setting setting)
@@ -110,6 +115,8 @@ namespace Morphic.Settings
                     }
                 }
             }
+
+            await iniFactory.Commit();
         }
 
     }
