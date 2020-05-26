@@ -48,6 +48,7 @@ using CountlySDK.Entities;
 using System.Windows.Controls;
 using System.Windows.Input;
 using NHotkey.Wpf;
+using Morphic.Client.About;
 
 namespace Morphic.Client
 {
@@ -107,13 +108,14 @@ namespace Morphic.Client
             services.AddSingleton<Keychain>();
             services.AddSingleton<Storage>();
             services.AddSingleton<Session>();
+            services.AddSingleton<BuildInfo>(BuildInfo.FromJsonFile("build-info.json"));
             services.AddTransient<TravelWindow>();
             services.AddTransient<CreateAccountPanel>();
             services.AddTransient<CapturePanel>();
             services.AddTransient<TravelCompletedPanel>();
             services.AddTransient<QuickStripWindow>();
             services.AddTransient<LoginWindow>();
-            services.AddTransient<AboutMorphicWindow>();
+            services.AddTransient<AboutWindow>();
             services.AddMorphicSettingsHandlers(ConfigureSettingsHandlers);
         }
 
@@ -395,6 +397,11 @@ namespace Morphic.Client
             _ = Session.Signout();
         }
 
+        private void About(object sender, RoutedEventArgs e)
+        {
+            OpenAboutWindow();
+        }
+
         /// <summary>
         /// Event handler for when the user selects Quit from the logo button's menu
         /// </summary>
@@ -523,7 +530,7 @@ namespace Morphic.Client
         
         #region About Window
 
-        private AboutMorphicWindow? AboutWindow = null;
+        private AboutWindow? AboutWindow = null;
         
         /// <summary>
         /// Show the Morphic Configurator window
@@ -532,7 +539,7 @@ namespace Morphic.Client
         {
             if (AboutWindow == null)
             {
-                AboutWindow = ServiceProvider.GetRequiredService<AboutMorphicWindow>();
+                AboutWindow = ServiceProvider.GetRequiredService<AboutWindow>();
                 AboutWindow.Show();
                 AboutWindow.Closed += OnAboutWindowClosed;
             }
