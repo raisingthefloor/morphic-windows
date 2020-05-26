@@ -82,9 +82,6 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>UserSettings.settings</DependentUpon>
     </Compile>
-    <Compile Update="QuickStrip\AboutMorphicWindow.xaml.cs">
-      <DependentUpon>AboutMorphic.xaml</DependentUpon>
-    </Compile>
   </ItemGroup>
 
   <ItemGroup>
@@ -102,7 +99,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Page Update="QuickStrip\AboutMorphicWindow.xaml">
+    <Page Update="About\AboutWindow.xaml">
       <Generator></Generator>
     </Page>
   </ItemGroup>

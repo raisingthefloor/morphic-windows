@@ -29,7 +29,6 @@
                 <ContextMenu>
                     <MenuItem Header="Hide Quick Strip" Click="HideQuickStrip"/>
                     <MenuItem Header="Customize Quick Strip..."  Click="CustomizeQuickStrip" IsEnabled="False"/>
-                    <MenuItem Header="About Morphic"  Click="AboutMorphic"/>
                     <Separator/>
                     <MenuItem Header="Take My Settings with Me..." Click="TravelWithSettings"/>
                     <MenuItem Header="Apply My Settings..." Click="ApplyMySettings"/>
