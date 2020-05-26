@@ -1,0 +1,17 @@
+﻿<Window x:Class="Morphic.Client.QuickStrip.AboutMorphicWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:local="clr-namespace:Morphic.Client.QuickStrip"
+        mc:Ignorable="d"
+        Title="About Morphic" Height="400" Width="500">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="85"/>
+            <RowDefinition Height="200"/>
+        </Grid.RowDefinitions>
+        <Image Source="/Icon.png"/>
+        <TextBlock x:Name="AboutText" Grid.Row="1"  HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Top" FontSize="16" FontWeight="Bold" Foreground="Black"/> 
+    </Grid>
+</Window>

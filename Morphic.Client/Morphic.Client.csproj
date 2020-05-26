@@ -39,6 +39,9 @@
     <Content Include="Solutions\windows.solutions.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="build-info.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
@@ -79,6 +82,9 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>UserSettings.settings</DependentUpon>
     </Compile>
+    <Compile Update="QuickStrip\AboutMorphicWindow.xaml.cs">
+      <DependentUpon>AboutMorphic.xaml</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
@@ -93,6 +99,12 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>UserSettings.Designer.cs</LastGenOutput>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="QuickStrip\AboutMorphicWindow.xaml">
+      <Generator></Generator>
+    </Page>
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

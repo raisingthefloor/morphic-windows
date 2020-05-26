@@ -113,6 +113,7 @@ namespace Morphic.Client
             services.AddTransient<TravelCompletedPanel>();
             services.AddTransient<QuickStripWindow>();
             services.AddTransient<LoginWindow>();
+            services.AddTransient<AboutMorphicWindow>();
             services.AddMorphicSettingsHandlers(ConfigureSettingsHandlers);
         }
 
@@ -122,10 +123,10 @@ namespace Morphic.Client
             CountlyConfig cc = new CountlyConfig();
             cc.appKey = section["AppKey"];
             cc.serverUrl = section["ServerUrl"];
-            var assembly = Assembly.GetExecutingAssembly();
-            var informationVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
-                .InformationalVersion;
-            cc.appVersion = informationVersion;
+            
+            var jsonData = File.ReadAllText("build-info.json");
+            var buildInfoDoc = JsonDocument.Parse(jsonData).RootElement;
+            cc.appVersion = buildInfoDoc.GetProperty("version").GetString();
 
             Countly.Instance.Init(cc);
             Countly.Instance.SessionBegin();
@@ -146,6 +147,7 @@ namespace Morphic.Client
         {
             Exception ex = e.Exception;
             logger.LogError("handled uncaught exception: {msg}", ex.Message);
+            logger.LogError(ex.StackTrace);
 
             Dictionary<String, String> extraData = new Dictionary<string, string>();
             Countly.RecordException(ex.Message, ex.StackTrace, extraData, true)
@@ -505,6 +507,7 @@ namespace Morphic.Client
             }
             TravelWindow.Activate();
         }
+        
 
         /// <summary>
         /// Called when the configurator window closes
@@ -516,6 +519,31 @@ namespace Morphic.Client
             TravelWindow = null;
         }
 
+        #endregion
+        
+        #region About Window
+
+        private AboutMorphicWindow? AboutWindow = null;
+        
+        /// <summary>
+        /// Show the Morphic Configurator window
+        /// </summary>
+        internal void OpenAboutWindow()
+        {
+            if (AboutWindow == null)
+            {
+                AboutWindow = ServiceProvider.GetRequiredService<AboutMorphicWindow>();
+                AboutWindow.Show();
+                AboutWindow.Closed += OnAboutWindowClosed;
+            }
+            AboutWindow.Activate();
+        }
+        
+        private void OnAboutWindowClosed(object? sender, EventArgs e)
+        {
+            AboutWindow = null;
+        }
+        
         #endregion
 
         #region Login Window
