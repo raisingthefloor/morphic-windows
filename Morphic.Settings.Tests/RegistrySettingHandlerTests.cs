@@ -84,7 +84,7 @@ namespace Morphic.Settings.Tests
             var handler = new RegistrySettingHandler(setting, registry, logger);
 
             var callCount = 0;
-            registry.NextGetResponder = (string keyName, string valueName, object? defaultValue) =>
+            registry.NextGetResponder = (string keyName, string valueName, object defaultValue) =>
             {
                 ++callCount;
                 Assert.Equal(@"HKEY_TEST\Test\Key", keyName);
@@ -129,7 +129,7 @@ namespace Morphic.Settings.Tests
             var handler = new RegistrySettingHandler(setting, registry, logger);
 
             var callCount = 0;
-            registry.NextGetResponder = (string keyName, string valueName, object? defaultValue) =>
+            registry.NextGetResponder = (string keyName, string valueName, object defaultValue) =>
             {
                 ++callCount;
                 Assert.Equal(@"HKEY_TEST\Test\Key", keyName);
@@ -159,7 +159,7 @@ namespace Morphic.Settings.Tests
             var handler = new RegistrySettingHandler(setting, registry, logger);
 
             var callCount = 0;
-            registry.NextGetResponder = (string keyName, string valueName, object? defaultvalue) =>
+            registry.NextGetResponder = (string keyName, string valueName, object defaultvalue) =>
             {
                 ++callCount;
                 throw new System.Security.SecurityException();
@@ -169,7 +169,7 @@ namespace Morphic.Settings.Tests
             Assert.False(pass.Success);
             Assert.Null(pass.Value);
             callCount = 0;
-            registry.NextGetResponder = (string keyName, string valueName, object? defaultvalue) =>
+            registry.NextGetResponder = (string keyName, string valueName, object defaultvalue) =>
             {
                 ++callCount;
                 throw new ObjectDisposedException("ayylmao");
@@ -179,7 +179,7 @@ namespace Morphic.Settings.Tests
             Assert.False(pass.Success);
             Assert.Null(pass.Value);
             callCount = 0;
-            registry.NextGetResponder = (string keyName, string valueName, object? defaultvalue) =>
+            registry.NextGetResponder = (string keyName, string valueName, object defaultvalue) =>
             {
                 ++callCount;
                 throw new System.IO.IOException();
@@ -189,7 +189,7 @@ namespace Morphic.Settings.Tests
             Assert.False(pass.Success);
             Assert.Null(pass.Value);
             callCount = 0;
-            registry.NextGetResponder = (string keyName, string valueName, object? defaultvalue) =>
+            registry.NextGetResponder = (string keyName, string valueName, object defaultvalue) =>
             {
                 ++callCount;
                 throw new ArgumentException();
@@ -199,7 +199,7 @@ namespace Morphic.Settings.Tests
             Assert.False(pass.Success);
             Assert.Null(pass.Value);
             callCount = 0;
-            registry.NextGetResponder = (string keyName, string valueName, object? defaultvalue) =>
+            registry.NextGetResponder = (string keyName, string valueName, object defaultvalue) =>
             {
                 ++callCount;
                 throw new ArgumentNullException();
@@ -209,7 +209,7 @@ namespace Morphic.Settings.Tests
             Assert.False(pass.Success);
             Assert.Null(pass.Value);
             callCount = 0;
-            registry.NextGetResponder = (string keyName, string valueName, object? defaultvalue) =>
+            registry.NextGetResponder = (string keyName, string valueName, object defaultvalue) =>
             {
                 ++callCount;
                 throw new UnauthorizedAccessException();
@@ -242,7 +242,7 @@ namespace Morphic.Settings.Tests
             var handler = new RegistrySettingHandler(setting, registry, logger);
 
             var callCount = 0;
-            registry.NextSetResponder = (string keyName, string valueName, object? value, RegistryValueKind valueKind) =>
+            registry.NextSetResponder = (string keyName, string valueName, object value, RegistryValueKind valueKind) =>
             {
                 ++callCount;
                 Assert.Equal(@"HKEY_TEST\Test\Key", keyName);
@@ -295,13 +295,9 @@ namespace Morphic.Settings.Tests
             var handler = new RegistrySettingHandler(setting, registry, logger);
 
             var callCount = 0;
-            registry.NextSetResponder = (string keyName, string valueName, object? value, RegistryValueKind valueKind) =>
+            registry.NextSetResponder = (string keyName, string valueName, object value, RegistryValueKind valueKind) =>
             {
-                ++callCount;/*
-                Assert.Equal(@"HKEY_TEST\Test\Key", keyName);
-                Assert.Equal(@"SomeValue", valueName);
-                Assert.Equal(registryval, value);
-                Assert.Equal(rkind, valueKind);*/
+                ++callCount;
                 return true;
             };
             var pass = await handler.Apply(initval);
@@ -325,7 +321,7 @@ namespace Morphic.Settings.Tests
             var handler = new RegistrySettingHandler(setting, registry, logger);
 
             var callCount = 0;
-            registry.NextSetResponder = (string keyName, string valueName, object? value, RegistryValueKind valueKind) =>
+            registry.NextSetResponder = (string keyName, string valueName, object value, RegistryValueKind valueKind) =>
             {
                 ++callCount;
                 throw new System.Security.SecurityException();
@@ -334,7 +330,7 @@ namespace Morphic.Settings.Tests
             Assert.Equal(1, callCount);
             Assert.False(pass);
             callCount = 0;
-            registry.NextSetResponder = (string keyName, string valueName, object? value, RegistryValueKind valueKind) =>
+            registry.NextSetResponder = (string keyName, string valueName, object value, RegistryValueKind valueKind) =>
             {
                 ++callCount;
                 throw new ObjectDisposedException("ayylmao");
@@ -343,7 +339,7 @@ namespace Morphic.Settings.Tests
             Assert.Equal(1, callCount);
             Assert.False(pass);
             callCount = 0;
-            registry.NextSetResponder = (string keyName, string valueName, object? value, RegistryValueKind valueKind) =>
+            registry.NextSetResponder = (string keyName, string valueName, object value, RegistryValueKind valueKind) =>
             {
                 ++callCount;
                 throw new System.IO.IOException();
@@ -352,7 +348,7 @@ namespace Morphic.Settings.Tests
             Assert.Equal(1, callCount);
             Assert.False(pass);
             callCount = 0;
-            registry.NextSetResponder = (string keyName, string valueName, object? value, RegistryValueKind valueKind) =>
+            registry.NextSetResponder = (string keyName, string valueName, object value, RegistryValueKind valueKind) =>
             {
                 ++callCount;
                 throw new ArgumentException();
@@ -361,7 +357,7 @@ namespace Morphic.Settings.Tests
             Assert.Equal(1, callCount);
             Assert.False(pass);
             callCount = 0;
-            registry.NextSetResponder = (string keyName, string valueName, object? value, RegistryValueKind valueKind) =>
+            registry.NextSetResponder = (string keyName, string valueName, object value, RegistryValueKind valueKind) =>
             {
                 ++callCount;
                 throw new ArgumentNullException();
@@ -370,7 +366,7 @@ namespace Morphic.Settings.Tests
             Assert.Equal(1, callCount);
             Assert.False(pass);
             callCount = 0;
-            registry.NextSetResponder = (string keyName, string valueName, object? value, RegistryValueKind valueKind) =>
+            registry.NextSetResponder = (string keyName, string valueName, object value, RegistryValueKind valueKind) =>
             {
                 ++callCount;
                 throw new UnauthorizedAccessException();

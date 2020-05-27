@@ -73,7 +73,7 @@ namespace Morphic.Settings.Tests
                 ++getCount;
                 if (failList.Contains(key)) return null;
                 else if (crashList.Contains(key)) throw new ArgumentException();
-                else return "correct";
+                else return "1";
             }
 
             public void SetValue(string section, string key, string value)
@@ -227,16 +227,16 @@ namespace Morphic.Settings.Tests
                     new Setting
                     {
                         Name = "System Alpha",
-                        Kind = Setting.ValueKind.Boolean,
+                        Kind = Setting.ValueKind.String,
                         Default = true,
-                        HandlerDescription = new SystemSettingHandlerDescription("System Alpha", SystemValueKind.Boolean)
+                        HandlerDescription = new SystemSettingHandlerDescription("System Alpha", SystemValueKind.String)
                     },
                     new Setting
                     {
                         Name = "System Beta",
-                        Kind = Setting.ValueKind.Integer,
+                        Kind = Setting.ValueKind.String,
                         Default = 52L,
-                        HandlerDescription = new SystemSettingHandlerDescription("System Beta", SystemValueKind.Integer)
+                        HandlerDescription = new SystemSettingHandlerDescription("System Beta", SystemValueKind.String)
                     },
                     new Setting
                     {
@@ -262,22 +262,18 @@ namespace Morphic.Settings.Tests
             prefs.Set(rega, "incorrect");
             prefs.Set(regb, "incorrect");
             prefs.Set(regc, "incorrect");
-            prefs.Set(inia, "incorrect");
-            prefs.Set(inib, "incorrect");
+            prefs.Set(inia, false);
+            prefs.Set(inib, 0L);
             prefs.Set(inic, "incorrect");
             prefs.Set(sysa, "incorrect");
             prefs.Set(sysb, "incorrect");
             prefs.Set(sysc, "incorrect");
             var session = new CaptureSession(settings, prefs);
             session.AddAllSolutions();
+            session.CaptureDefaultValues = true;
             await session.Run();
             var dict = session.Preferences.Default!["org.raisingthefloor.test"].Values;
-            if (crashList.Contains("Registry Alpha"))   //registry is unique in refusing incorrectly typed responses
-            {
-                Assert.True(dict.ContainsKey("Registry Alpha"));
-                Assert.Equal("incorrect", (string?)dict["Registry Alpha"]);
-            }
-            else if (failList.Contains("Registry Alpha"))
+            if (crashList.Contains("Registry Alpha") || failList.Contains("Registry Alpha"))
             {
                 Assert.True(dict.ContainsKey("Registry Alpha"));
                 Assert.Equal("incorrect", (string?)dict["Registry Alpha"]);
@@ -287,12 +283,7 @@ namespace Morphic.Settings.Tests
                 Assert.True(dict.ContainsKey("Registry Alpha"));
                 Assert.Equal("incorrect", (string?)dict["Registry Alpha"]);
             }
-            if (crashList.Contains("Registry Beta"))
-            {
-                Assert.True(dict.ContainsKey("Registry Beta"));
-                Assert.Equal("incorrect", (string?)dict["Registry Beta"]);
-            }
-            else if (failList.Contains("Registry Beta"))
+            if (crashList.Contains("Registry Beta") || failList.Contains("Registry Beta"))
             {
                 Assert.True(dict.ContainsKey("Registry Beta"));
                 Assert.Equal("incorrect", (string?)dict["Registry Beta"]);
@@ -302,12 +293,7 @@ namespace Morphic.Settings.Tests
                 Assert.True(dict.ContainsKey("Registry Beta"));
                 Assert.Equal("incorrect", (string?)dict["Registry Beta"]);
             }
-            if (crashList.Contains("Registry Gamma"))
-            {
-                Assert.True(dict.ContainsKey("Registry Gamma"));
-                Assert.Equal("incorrect", (string?)dict["Registry Gamma"]);
-            }
-            else if (failList.Contains("Registry Gamma"))
+            if (crashList.Contains("Registry Gamma") || failList.Contains("Registry Gamma"))
             {
                 Assert.True(dict.ContainsKey("Registry Gamma"));
                 Assert.Equal("incorrect", (string?)dict["Registry Gamma"]);
@@ -317,90 +303,60 @@ namespace Morphic.Settings.Tests
                 Assert.True(dict.ContainsKey("Registry Gamma"));
                 Assert.Equal("correct", (string?)dict["Registry Gamma"]);
             }
-            if (crashList.Contains("Ini Alpha"))
+            if (crashList.Contains("Ini Alpha") || failList.Contains("Ini Alpha"))
             {
                 Assert.True(dict.ContainsKey("Ini Alpha"));
-                Assert.Equal("incorrect", (string?)dict["Ini Alpha"]);
-            }
-            else if (failList.Contains("Ini Alpha"))
-            {
-                Assert.True(dict.ContainsKey("Ini Alpha"));
-                Assert.Null((string?)dict["Ini Alpha"]);
+                Assert.Equal(false, (bool?)dict["Ini Alpha"]);
             }
             else
             {
                 Assert.True(dict.ContainsKey("Ini Alpha"));
-                Assert.Equal("correct", (string?)dict["Ini Alpha"]);
+                Assert.Equal(true, (bool?)dict["Ini Alpha"]);
             }
-            if (crashList.Contains("Ini Beta"))
+            if (crashList.Contains("Ini Beta") || failList.Contains("Ini Beta"))
             {
                 Assert.True(dict.ContainsKey("Ini Beta"));
-                Assert.Equal("incorrect", (string?)dict["Ini Beta"]);
-            }
-            else if (failList.Contains("Ini Beta"))
-            {
-                Assert.True(dict.ContainsKey("Ini Beta"));
-                Assert.Null((string?)dict["Ini Beta"]);
+                Assert.Equal(0L, (long?)dict["Ini Beta"]);
             }
             else
             {
                 Assert.True(dict.ContainsKey("Ini Beta"));
-                Assert.Equal("correct", (string?)dict["Ini Beta"]);
+                Assert.Equal(1L, (long?)dict["Ini Beta"]);
             }
-            if (crashList.Contains("Ini Gamma"))
+            if (crashList.Contains("Ini Gamma") || failList.Contains("Ini Gamma"))
             {
                 Assert.True(dict.ContainsKey("Ini Gamma"));
                 Assert.Equal("incorrect", (string?)dict["Ini Gamma"]);
             }
-            else if (failList.Contains("Ini Gamma"))
-            {
-                Assert.True(dict.ContainsKey("Ini Gamma"));
-                Assert.Null((string?)dict["Ini Gamma"]);
-            }
             else
             {
                 Assert.True(dict.ContainsKey("Ini Gamma"));
-                Assert.Equal("correct", (string?)dict["Ini Gamma"]);
+                Assert.Equal("1", (string?)dict["Ini Gamma"]);
             }
-            if (crashList.Contains("System Alpha"))
+            if (crashList.Contains("System Alpha") || failList.Contains("System Alpha"))
             {
                 Assert.True(dict.ContainsKey("System Alpha"));
                 Assert.Equal("incorrect", (string?)dict["System Alpha"]);
-            }
-            else if (failList.Contains("System Alpha"))
-            {
-                Assert.True(dict.ContainsKey("System Alpha"));
-                Assert.Null((string?)dict["System Alpha"]);
             }
             else
             {
                 Assert.True(dict.ContainsKey("System Alpha"));
                 Assert.Equal("correct", (string?)dict["System Alpha"]);
             }
-            if (crashList.Contains("System Beta"))
+            if (crashList.Contains("System Beta") || failList.Contains("System Beta"))
             {
                 Assert.True(dict.ContainsKey("System Beta"));
                 Assert.Equal("incorrect", (string?)dict["System Beta"]);
-            }
-            else if (failList.Contains("System Beta"))
-            {
-                Assert.True(dict.ContainsKey("System Beta"));
-                Assert.Null((string?)dict["System Beta"]);
             }
             else
             {
                 Assert.True(dict.ContainsKey("System Beta"));
                 Assert.Equal("correct", (string?)dict["System Beta"]);
             }
-            if (crashList.Contains("System Gamma"))
+            if (crashList.Contains("System Gamma") || failList.Contains("System Gamma"))
             {
                 Assert.True(dict.ContainsKey("System Gamma"));
                 Assert.Equal("incorrect", (string?)dict["System Gamma"]);
-            }
-            else if (failList.Contains("System Gamma"))
-            {
-                Assert.True(dict.ContainsKey("System Gamma"));
-                Assert.Null((string?)dict["System Gamma"]);
             }
             else
             {

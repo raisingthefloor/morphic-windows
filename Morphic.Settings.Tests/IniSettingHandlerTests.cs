@@ -23,48 +23,51 @@
 
 using Microsoft.Extensions.Logging;
 using Morphic.Settings.Ini;
+using NuGet.Frameworks;
 using System;
+using System.Security;
 using System.Threading.Tasks;
 using Xunit;
 
-#nullable enable
 
 namespace Morphic.Settings.Tests
 {
 
     public class IniSettingHandlerTests
     {
-        //PASS = everything worked normally
-        //FAIL = it didn't work (get returns null) but it didn't throw an exception
-        //CRASH = it threw an exception
-        public enum pf
-        {
-            PASS,
-            FAIL,
-            CRASH
-        }
         private static int openCount = 0;
         private static int getCount = 0;
         private static int setCount = 0;
-        private static string? iniValue = null;
-        private static pf passfail;
 
+#nullable enable
         private class MockIniFile : IIniFile
         {
+            public delegate string? GetResponder(string section, string key);
+            public delegate void SetResponder(string section, string key, string value);
+
+            public static GetResponder nextGetResponder = (string section, string key) =>
+            {
+                throw new NotImplementedException();
+            };
+
+            public static SetResponder nextSetResponder = (string section, string key, string value) =>
+            {
+                throw new NotImplementedException();
+            };
+
             public string? GetValue(string section, string key)
             {
                 ++getCount;
-                if (passfail == pf.PASS) return iniValue;
-                else if (passfail == pf.FAIL) return null;
-                else throw new ArgumentException();
+                return nextGetResponder(section, key);
             }
 
             public void SetValue(string section, string key, string value)
             {
                 ++setCount;
-                if (passfail == pf.CRASH) throw new ArgumentException();
+                nextSetResponder(section, key, value);
             }
         }
+#nullable disable
 
         private class MockIniFactory : IIniFileFactory
         {
@@ -76,19 +79,13 @@ namespace Morphic.Settings.Tests
         }
 
         [Theory]
-        [InlineData(Setting.ValueKind.String, "Hello", "Hello", pf.PASS)]
-        [InlineData(Setting.ValueKind.String, "Hello", "Hello", pf.FAIL)]
-        [InlineData(Setting.ValueKind.String, "Hello", "Hello", pf.CRASH)]
-        [InlineData(Setting.ValueKind.Integer, "52", 52L, pf.PASS)]
-        [InlineData(Setting.ValueKind.Integer, "52", 52L, pf.FAIL)]
-        [InlineData(Setting.ValueKind.Integer, "52", 52L, pf.CRASH)]
-        [InlineData(Setting.ValueKind.Double, "3.14159", 3.14159d, pf.PASS)]
-        [InlineData(Setting.ValueKind.Double, "3.14159", 3.14159d, pf.FAIL)]
-        [InlineData(Setting.ValueKind.Double, "3.14159", 3.14159d, pf.CRASH)]
-        [InlineData(Setting.ValueKind.Boolean, "true", true, pf.PASS)]
-        [InlineData(Setting.ValueKind.Boolean, "true", true, pf.FAIL)]
-        [InlineData(Setting.ValueKind.Boolean, "true", true, pf.CRASH)]
-        public async Task TestCapture(Setting.ValueKind kind, string storedvalue, object value, pf passfail)
+        [InlineData(Setting.ValueKind.String, "Hello", "Hello")]
+        [InlineData(Setting.ValueKind.Integer, "52", 52L)]
+        [InlineData(Setting.ValueKind.Double, "3.14159", 3.14159d)]
+        [InlineData(Setting.ValueKind.Double, "12345", 12345.0d)]
+        [InlineData(Setting.ValueKind.Boolean, "1", true)]
+        [InlineData(Setting.ValueKind.Boolean, "0", false)]
+        public async Task TestCapturePass(Setting.ValueKind kind, string storedvalue, object value)
         {
             var mockFactory = new MockIniFactory();
             var loggerFactory = new LoggerFactory();
@@ -96,8 +93,6 @@ namespace Morphic.Settings.Tests
             openCount = 0;
             getCount = 0;
             setCount = 0;
-            iniValue = storedvalue;
-            IniSettingHandlerTests.passfail = passfail;
 
             var setting = new Setting()
             {
@@ -107,42 +102,31 @@ namespace Morphic.Settings.Tests
             };
             var handler = new IniSettingHandler(setting, mockFactory, logger);
 
+            MockIniFile.nextGetResponder = (string section, string key) =>
+            {
+                Assert.Equal("thesection", section);
+                Assert.Equal("thekey", key);
+                return storedvalue;
+            };
             var result = await handler.Capture();
             Assert.Equal(1, openCount);
             Assert.Equal(1, getCount);
             Assert.Equal(0, setCount);
-            if (passfail == pf.PASS)
-            {
-                Assert.True(result.Success);
-                Assert.NotNull(result.Value);
-                Assert.Equal(value, result.Value);
-            }
-            else if(passfail == pf.FAIL)
-            {
-                Assert.True(result.Success);
-                Assert.Null(result.Value);
-            }
-            else
-            {
-                Assert.False(result.Success);
-                Assert.Null(result.Value);
-            }
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+            Assert.Equal(value, result.Value);
         }
 
+#nullable enable
         [Theory]
-        [InlineData(Setting.ValueKind.String, "Hello", pf.PASS, true)]
-        [InlineData(Setting.ValueKind.String, "Hello", pf.FAIL, true)]
-        [InlineData(Setting.ValueKind.String, "Hello", pf.CRASH, false)]
-        [InlineData(Setting.ValueKind.Integer, 52L, pf.PASS, true)]
-        [InlineData(Setting.ValueKind.Integer, 52L, pf.FAIL, true)]
-        [InlineData(Setting.ValueKind.Integer, 52L, pf.CRASH, false)]
-        [InlineData(Setting.ValueKind.Boolean, true, pf.PASS, true)]
-        [InlineData(Setting.ValueKind.Boolean, true, pf.FAIL, true)]
-        [InlineData(Setting.ValueKind.Boolean, true, pf.CRASH, false)]
-        [InlineData(Setting.ValueKind.Double, 3.14159d, pf.PASS, true)]
-        [InlineData(Setting.ValueKind.Double, 3.14159d, pf.FAIL, true)]
-        [InlineData(Setting.ValueKind.Double, 3.14159d, pf.CRASH, false)]
-        public async Task TestApply(Setting.ValueKind kind, object value, pf passfail, bool success)
+        [InlineData(Setting.ValueKind.Integer, "ayy lmao")]
+        [InlineData(Setting.ValueKind.Integer, "3.14159")]
+        [InlineData(Setting.ValueKind.Double, "ayy lmao")]
+        [InlineData(Setting.ValueKind.String, null)]
+        [InlineData(Setting.ValueKind.Integer, null)]
+        [InlineData(Setting.ValueKind.Double, null)]
+        [InlineData(Setting.ValueKind.Boolean, null)]
+        public async Task TestCaptureFail(Setting.ValueKind kind, string? storedvalue)
         {
             var mockFactory = new MockIniFactory();
             var loggerFactory = new LoggerFactory();
@@ -150,7 +134,6 @@ namespace Morphic.Settings.Tests
             openCount = 0;
             getCount = 0;
             setCount = 0;
-            IniSettingHandlerTests.passfail = passfail;
 
             var setting = new Setting()
             {
@@ -160,20 +143,279 @@ namespace Morphic.Settings.Tests
             };
             var handler = new IniSettingHandler(setting, mockFactory, logger);
 
+            MockIniFile.nextGetResponder = (string section, string key) =>
+            {
+                Assert.Equal("thesection", section);
+                Assert.Equal("thekey", key);
+                return storedvalue;
+            };
+            var result = await handler.Capture();
+            Assert.Equal(1, openCount);
+            Assert.Equal(1, getCount);
+            Assert.Equal(0, setCount);
+            Assert.False(result.Success);
+            Assert.Null(result.Value);
+        }
+#nullable disable
+
+        [Fact]
+        public async Task TestCaptureException()
+        {
+            var mockFactory = new MockIniFactory();
+            var loggerFactory = new LoggerFactory();
+            var logger = loggerFactory.CreateLogger<IniSettingHandler>();
+
+            var setting = new Setting()
+            {
+                Name = "test",
+                Kind = Setting.ValueKind.String,
+                HandlerDescription = new IniSettingHandlerDescription("thefile", "thesection", "thekey")
+            };
+
+            openCount = 0;
+            getCount = 0;
+            setCount = 0;
+            var handler = new IniSettingHandler(setting, mockFactory, logger);
+            MockIniFile.nextGetResponder = (string section, string key) =>
+            {
+                throw new ArgumentException();
+            };
+            var result = await handler.Capture();
+            Assert.Equal(1, openCount);
+            Assert.Equal(1, getCount);
+            Assert.Equal(0, setCount);
+            Assert.False(result.Success);
+            Assert.Null(result.Value);
+            openCount = 0;
+            getCount = 0;
+            setCount = 0;
+            handler = new IniSettingHandler(setting, mockFactory, logger);
+            MockIniFile.nextGetResponder = (string section, string key) =>
+            {
+                throw new ArgumentNullException();
+            };
+            result = await handler.Capture();
+            Assert.Equal(1, openCount);
+            Assert.Equal(1, getCount);
+            Assert.Equal(0, setCount);
+            Assert.False(result.Success);
+            Assert.Null(result.Value);
+            openCount = 0;
+            getCount = 0;
+            setCount = 0;
+            handler = new IniSettingHandler(setting, mockFactory, logger);
+            MockIniFile.nextGetResponder = (string section, string key) =>
+            {
+                throw new SecurityException();
+            };
+            result = await handler.Capture();
+            Assert.Equal(1, openCount);
+            Assert.Equal(1, getCount);
+            Assert.Equal(0, setCount);
+            Assert.False(result.Success);
+            Assert.Null(result.Value);
+            openCount = 0;
+            getCount = 0;
+            setCount = 0;
+            handler = new IniSettingHandler(setting, mockFactory, logger);
+            MockIniFile.nextGetResponder = (string section, string key) =>
+            { 
+                throw new ObjectDisposedException("ayylmao");
+            };
+            result = await handler.Capture();
+            Assert.Equal(1, openCount);
+            Assert.Equal(1, getCount);
+            Assert.Equal(0, setCount);
+            Assert.False(result.Success);
+            Assert.Null(result.Value);
+            openCount = 0;
+            getCount = 0;
+            setCount = 0;
+            handler = new IniSettingHandler(setting, mockFactory, logger);
+            MockIniFile.nextGetResponder = (string section, string key) =>
+            { 
+                throw new System.IO.IOException(); 
+            };
+            result = await handler.Capture();
+            Assert.Equal(1, openCount);
+            Assert.Equal(1, getCount);
+            Assert.Equal(0, setCount);
+            Assert.False(result.Success);
+            Assert.Null(result.Value);
+            openCount = 0;
+            getCount = 0;
+            setCount = 0;
+            handler = new IniSettingHandler(setting, mockFactory, logger);
+            MockIniFile.nextGetResponder = (string section, string key) =>
+            {
+                throw new UnauthorizedAccessException();
+            };
+            result = await handler.Capture();
+            Assert.Equal(1, openCount);
+            Assert.Equal(1, getCount);
+            Assert.Equal(0, setCount);
+            Assert.False(result.Success);
+            Assert.Null(result.Value);
+        }
+
+        [Theory]
+        [InlineData(Setting.ValueKind.String, "Hello", "Hello")]
+        [InlineData(Setting.ValueKind.Integer, 52L, "52")]
+        [InlineData(Setting.ValueKind.Boolean, true, "1")]
+        [InlineData(Setting.ValueKind.Double, 3.14159d, "3.14159")]
+        public async Task TestApplyPass(Setting.ValueKind kind, object value, string filevalue)
+        {
+            var mockFactory = new MockIniFactory();
+            var loggerFactory = new LoggerFactory();
+            var logger = loggerFactory.CreateLogger<IniSettingHandler>();
+            openCount = 0;
+            getCount = 0;
+            setCount = 0;
+
+            var setting = new Setting()
+            {
+                Name = "test",
+                Kind = kind,
+                HandlerDescription = new IniSettingHandlerDescription("thefile", "thesection", "thekey")
+            };
+            var handler = new IniSettingHandler(setting, mockFactory, logger);
+
+            MockIniFile.nextSetResponder = (string section, string key, string value) =>
+            {
+                Assert.Equal("thesection", section);
+                Assert.Equal("thekey", key);
+                Assert.Equal(filevalue, value);
+            };
             var pass = await handler.Apply(value);
-            if (success)
+            Assert.Equal(1, openCount);
+            Assert.Equal(0, getCount);
+            Assert.Equal(1, setCount);
+            Assert.True(pass);
+        }
+
+        /* leaving here in case of failure case that isn't an exception
+        [Theory]
+        public async Task TestApplyFail(Setting.ValueKind kind, object? value)
+        {
+            var mockFactory = new MockIniFactory();
+            var loggerFactory = new LoggerFactory();
+            var logger = loggerFactory.CreateLogger<IniSettingHandler>();
+            openCount = 0;
+            getCount = 0;
+            setCount = 0;
+
+            var setting = new Setting()
             {
-                Assert.Equal(1, openCount);
-                Assert.Equal(0, getCount);
-                Assert.Equal(1, setCount);
-                Assert.True(pass);
-            }
-            else
+                Name = "test",
+                Kind = kind,
+                HandlerDescription = new IniSettingHandlerDescription("thefile", "thesection", "thekey")
+            };
+            var handler = new IniSettingHandler(setting, mockFactory, logger);
+            MockIniFile.nextSetResponder = (string section, string key, string value) =>
             {
-                Assert.False(pass);
-            }
+                Assert.Equal("thesection", section);
+                Assert.Equal("thekey", key);
+            };
+            var pass = await handler.Apply(value);
+            Assert.Equal(1, openCount);
+            Assert.Equal(0, getCount);
+            Assert.Equal(1, setCount);
+            Assert.False(pass);
+        }
+        */
+
+        [Fact]
+        public async Task TestApplyException()
+        {
+            var mockFactory = new MockIniFactory();
+            var loggerFactory = new LoggerFactory();
+            var logger = loggerFactory.CreateLogger<IniSettingHandler>();
+
+            var setting = new Setting()
+            {
+                Name = "test",
+                Kind = Setting.ValueKind.String,
+                HandlerDescription = new IniSettingHandlerDescription("thefile", "thesection", "thekey")
+            };
+
+            openCount = 0;
+            getCount = 0;
+            setCount = 0;
+            var handler = new IniSettingHandler(setting, mockFactory, logger);
+            MockIniFile.nextSetResponder = (string section, string key, string value) =>
+            {
+                throw new ArgumentException(); 
+            };
+            var pass = await handler.Apply("ayylmao");
+            Assert.Equal(1, openCount);
+            Assert.Equal(0, getCount);
+            Assert.Equal(1, setCount);
+            Assert.False(pass);
+            openCount = 0;
+            getCount = 0;
+            setCount = 0;
+            handler = new IniSettingHandler(setting, mockFactory, logger);
+            MockIniFile.nextSetResponder = (string section, string key, string value) => 
+            {
+                throw new ArgumentNullException();
+            };
+            pass = await handler.Apply("ayylmao");
+            Assert.Equal(1, openCount);
+            Assert.Equal(0, getCount);
+            Assert.Equal(1, setCount);
+            Assert.False(pass);
+            openCount = 0;
+            getCount = 0;
+            setCount = 0;
+            handler = new IniSettingHandler(setting, mockFactory, logger);
+            MockIniFile.nextSetResponder = (string section, string key, string value) => 
+            { 
+                throw new SecurityException(); 
+            };
+            pass = await handler.Apply("ayylmao");
+            Assert.Equal(1, openCount);
+            Assert.Equal(0, getCount);
+            Assert.Equal(1, setCount);
+            Assert.False(pass);
+            openCount = 0;
+            getCount = 0;
+            setCount = 0;
+            handler = new IniSettingHandler(setting, mockFactory, logger);
+            MockIniFile.nextSetResponder = (string section, string key, string value) => 
+            {
+                throw new ObjectDisposedException("ayylmao");
+            };
+            pass = await handler.Apply("ayylmao");
+            Assert.Equal(1, openCount);
+            Assert.Equal(0, getCount);
+            Assert.Equal(1, setCount);
+            Assert.False(pass);
+            openCount = 0;
+            getCount = 0;
+            setCount = 0;
+            handler = new IniSettingHandler(setting, mockFactory, logger);
+            MockIniFile.nextSetResponder = (string section, string key, string value) =>
+            { 
+                throw new System.IO.IOException(); 
+            };
+            pass = await handler.Apply("ayylmao");
+            Assert.Equal(1, openCount);
+            Assert.Equal(0, getCount);
+            Assert.Equal(1, setCount);
+            Assert.False(pass);
+            openCount = 0;
+            getCount = 0;
+            setCount = 0;
+            handler = new IniSettingHandler(setting, mockFactory, logger);
+            MockIniFile.nextSetResponder = (string section, string key, string value) =>
+            {
+                throw new UnauthorizedAccessException();
+            };
+            pass = await handler.Apply("ayylmao");
+            Assert.Equal(1, openCount);
+            Assert.Equal(0, getCount);
+            Assert.Equal(1, setCount);
+            Assert.False(pass);
         }
     }
 }
-
-#nullable disable
