@@ -33,7 +33,7 @@ namespace Morphic.Settings.Spi
     /// <summary>
     /// A finalizer that calls into System Parameters Info (SPI)
     /// </summary>
-    class SystemParametersInfoSettingsFinalizer : SettingFinalizer
+    public class SystemParametersInfoSettingsFinalizer : SettingFinalizer
     {
 
         /// <summary>
@@ -73,7 +73,7 @@ namespace Morphic.Settings.Spi
                 success = systemParametersInfo.Call(Description.Action, Description.Parameter1, Description.Parameter2, Description.UpdateUserProfile, Description.SendChange);
             }catch (Exception e)
             {
-                logger.LogError(e, "Failed to set sysetem parameters info");
+                logger.LogError(e, "Failed to set system parameters info");
             }
             return Task.FromResult(success);
         }

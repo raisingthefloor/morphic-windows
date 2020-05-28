@@ -55,14 +55,6 @@ namespace Morphic.Settings.SystemSettings
 
         public string Id { get; private set; }
 
-        public SettingType SettingType
-        {
-            get
-            {
-                return settingItem?.Type ?? SettingType.Custom;
-            }
-        }
-
         /// <summary>
         /// The registry key name for this setting's information
         /// </summary>
@@ -208,7 +200,7 @@ namespace Morphic.Settings.SystemSettings
                 var value = Microsoft.Win32.Registry.GetValue(registryKeyName, valueName, RegistryValueKind.String);
                 return value as string;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 throw new SettingNotFoundException(String.Format("Failed to read registry value for {0}.{1}", Id, valueName));
             }
