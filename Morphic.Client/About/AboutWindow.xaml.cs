@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows;
+using System.Windows.Navigation;
 
 namespace Morphic.Client.About
 {
@@ -19,6 +20,12 @@ namespace Morphic.Client.About
             base.OnInitialized(e);
             VersionLabel.Content = buildInfo.Version;
             BuildLabel.Content = String.Format("(build {0})", buildInfo.Commit);
+        }
+
+        public void ContactUs(object? sender, RequestNavigateEventArgs e)
+        {
+            System.Diagnostics.Process.Start("explorer.exe", e.Uri.AbsoluteUri);
+            e.Handled = true;
         }
     }
 }

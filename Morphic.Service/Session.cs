@@ -39,6 +39,16 @@ namespace Morphic.Service
     public class SessionOptions
     {
         public string Endpoint { get; set; } = "";
+
+        public string FrontEnd { get; set; } = "";
+
+        public Uri FontEndUri
+        {
+            get
+            {
+                return new Uri(FrontEnd);
+            }
+        }
     }
 
     /// <summary>
