@@ -78,12 +78,11 @@ namespace Morphic.Settings.Registry
         /// <returns></returns>
         public override Task<bool> Apply(object? value)
         {
-            if (value is object nonnullValue)
+            if (TryConvertToRegistry(value, Description.ValueKind, out var registryValue))
             {
                 try
                 {
-                    logger.LogDebug("Registry Write {0}\\{1}", Description.KeyName, Description.ValueName);
-                    registry.SetValue(Description.KeyName, Description.ValueName, nonnullValue, Description.ValueKind);
+                    registry.SetValue(Description.KeyName, Description.ValueName, registryValue, Description.ValueKind);
                     return Task.FromResult(true);
                 }
                 catch (Exception e)
@@ -104,7 +103,7 @@ namespace Morphic.Settings.Registry
             try
             {
                 var registryValue = registry.GetValue(Description.KeyName, Description.ValueName, null);
-                result.Success = TryConvert(registryValue, Setting.Kind, out result.Value);
+                result.Success = TryConvertFromRegistry(registryValue, Setting.Kind, out result.Value);
             }catch (Exception e)
             {
                 logger.LogError(e, "Failed to get registry value {0}.{1}", Description.KeyName, Description.ValueName);
@@ -112,7 +111,55 @@ namespace Morphic.Settings.Registry
             return Task.FromResult(result);
         }
 
-        public static bool TryConvert(object? registryValue, Setting.ValueKind resultValueKind, out object? resultValue)
+        public static bool TryConvertToRegistry(object? value, RegistryValueKind registryValueKind, out object? registryValue)
+        {
+            if (value == null)
+            {
+                registryValue = null;
+                return false;
+            }
+            if (value is string stringValue)
+            {
+                switch (registryValueKind)
+                {
+                    case RegistryValueKind.String:
+                    case RegistryValueKind.ExpandString:
+                        registryValue = stringValue;
+                        return true;
+                }
+                registryValue = null;
+                return false;
+            }
+            if (value is long longValue)
+            {
+                switch (registryValueKind)
+                {
+                    case RegistryValueKind.DWord:
+                        registryValue = (Int32)longValue;
+                        return true;
+                    case RegistryValueKind.QWord:
+                        registryValue = (Int64)longValue;
+                        return true;
+                }
+                registryValue = null;
+                return false;
+            }
+            if (value is bool boolValue)
+            {
+                switch (registryValueKind)
+                {
+                    case RegistryValueKind.DWord:
+                        registryValue = boolValue ? 1 : 0;
+                        return true;
+                }
+                registryValue = null;
+                return false;
+            }
+            registryValue = null;
+            return false;
+        }
+
+        public static bool TryConvertFromRegistry(object? registryValue, Setting.ValueKind resultValueKind, out object? resultValue)
         {
             if (registryValue == null)
             {

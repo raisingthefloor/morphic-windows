@@ -33,6 +33,7 @@ using System.Reflection;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Microsoft.Win32;
 using System.Threading;
+using System.Runtime.InteropServices.ComTypes;
 
 namespace Morphic.Settings.SystemSettings
 {
@@ -50,7 +51,7 @@ namespace Morphic.Settings.SystemSettings
     /// The result of calling GetSetting("SomeSettingId") is an object that has GetValue() and SetValue() methods,
     /// which read and write the setting, respectively.
     /// </remarks>
-    class SystemSettingHandler: SettingHandler
+    public class SystemSettingHandler: SettingHandler
     {
 
         public Setting Setting { get; private set; }
@@ -95,11 +96,11 @@ namespace Morphic.Settings.SystemSettings
         /// <returns></returns>
         public override async Task<bool> Apply(object? value)
         {
-            if (value != null)
+            if (TryConvertToSystem(value, Description.ValueKind, out var systemValue))
             {
                 try
                 {
-                    await systemSetting.SetValue(value);
+                    await systemSetting.SetValue(systemValue!);
                     return true;
                 }catch (Exception e)
                 {
@@ -109,7 +110,7 @@ namespace Morphic.Settings.SystemSettings
             }
             else
             {
-                logger.LogError("null value");
+                logger.LogError("Type mismatch on Apply for {0}", Description.SettingId);
                 return false;
             }
         }
@@ -119,8 +120,8 @@ namespace Morphic.Settings.SystemSettings
             var result = new CaptureResult();
             try
             {
-                result.Value = await systemSetting.GetValue();
-                result.Success = true;
+                var systemValue = await systemSetting.GetValue();
+                result.Success = TryConvertFromSystem(systemValue, Setting.Kind, out result.Value);
             }
             catch(Exception e)
             {
@@ -128,6 +129,128 @@ namespace Morphic.Settings.SystemSettings
             }
             return result;
 
+        }
+
+        public bool TryConvertToSystem(object? value, SystemValueKind systemValueKind, out object? systemValue)
+        {
+            if (value is string stringValue)
+            {
+                switch (systemValueKind)
+                {
+                    case SystemValueKind.String:
+                        systemValue = stringValue;
+                        return true;
+                }
+                systemValue = null;
+                return false;
+            }
+            if (value is bool boolValue)
+            {
+                switch (systemValueKind)
+                {
+                    case SystemValueKind.Boolean:
+                        systemValue = boolValue;
+                        return true;
+                }
+                systemValue = null;
+                return false;
+            }
+            if (value is long longValue)
+            {
+                switch (systemValueKind)
+                {
+                    case SystemValueKind.Integer:
+                        systemValue = (UInt32)longValue;
+                        return true;
+                    case SystemValueKind.IdPrefixedEnum:
+                        systemValue = String.Format("{0}{1}", Description.SettingId, longValue);
+                        return true;
+                    case SystemValueKind.String:
+                        if (Description.IntegerMap is string[] map)
+                        {
+                            if (longValue >= 0 && longValue < map.Length)
+                            {
+                                systemValue = map[longValue];
+                                return true;
+                            }
+                        }
+                        systemValue = null;
+                        return false;
+                }
+                systemValue = null;
+                return false;
+            }
+            systemValue = null;
+            return false;
+        }
+
+        public bool TryConvertFromSystem(object? systemValue, Setting.ValueKind valueKind, out object? resultValue)
+        {
+            if (systemValue is string stringValue)
+            {
+                switch (valueKind)
+                {
+                    case Setting.ValueKind.String:
+                        resultValue = stringValue;
+                        return true;
+                    case Setting.ValueKind.Integer:
+                        if (Description.ValueKind == SystemValueKind.IdPrefixedEnum)
+                        {
+                            if (stringValue.StartsWith(Description.SettingId))
+                            {
+                                if (long.TryParse(stringValue.Substring(Description.SettingId.Length), out var longValue))
+                                {
+                                    resultValue = longValue;
+                                    return true;
+                                }
+                            }
+                        }
+                        else if (Description.ReverseIntegerMap is Dictionary<string, long> map)
+                        {
+                            if (map.TryGetValue(stringValue, out long longValue))
+                            {
+                                resultValue = longValue;
+                                return true;
+                            }
+                        }
+                        resultValue = null;
+                        return false;
+                }
+                resultValue = null;
+                return false;
+            }
+            if (systemValue is bool boolValue)
+            {
+                switch (valueKind)
+                {
+                    case Setting.ValueKind.Boolean:
+                        resultValue = boolValue;
+                        return true;
+                }
+                resultValue = null;
+                return false;
+            }
+            if (systemValue is UInt32 intValue)
+            {
+                switch (valueKind)
+                {
+                    case Setting.ValueKind.Integer:
+                        resultValue = (long)intValue;
+                        return true;
+                }
+                resultValue = null;
+                return false;
+            }
+            if (systemValue != null)
+            {
+                logger.LogDebug("Got type {0} from system for {1}", systemValue.GetType().Name, Description.SettingId);
+            }
+            else
+            {
+                logger.LogDebug("Got null from system for {1}", Description.SettingId);
+            }
+            resultValue = null;
+            return false;
         }
 
     }

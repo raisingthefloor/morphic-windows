@@ -14,6 +14,7 @@
             <MenuItem Header="Apply My Settings..." Click="ApplyMySettings"/>
             <MenuItem x:Name="logoutItem" Header="Logout" Click="Logout" Visibility="Collapsed"/>
             <Separator/>
+            <MenuItem Header="About Morphic..." Click="About"/>
             <MenuItem Header="Quit Morphic" Click="Quit"/>
         </ContextMenu>
     </Application.Resources>

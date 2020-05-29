@@ -21,31 +21,13 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-namespace Morphic.Settings.Ini
+namespace Morphic.Settings.SystemSettings
 {
-
-    /// <summary>
-    /// Interface for reading and writing values in ini files
-    /// </summary>
-    public interface IIniFile
+    public enum SystemValueKind
     {
-
-        /// <summary>
-        /// Get the value for the given section and key pair
-        /// </summary>
-        /// <param name="section"></param>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        public string? GetValue(string section, string key);
-
-        /// <summary>
-        /// Set the value for the given section and key pair
-        /// </summary>
-        /// <param name="section"></param>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public void SetValue(string section, string key, string value);
-
+        String,
+        Boolean,
+        Integer,
+        IdPrefixedEnum
     }
 }
