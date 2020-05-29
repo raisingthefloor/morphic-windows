@@ -23,6 +23,7 @@
 
 using System.Timers;
 using System.Windows;
+using System.Windows.Automation.Peers;
 
 namespace Morphic.Client
 {

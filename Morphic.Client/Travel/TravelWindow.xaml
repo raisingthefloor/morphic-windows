@@ -5,6 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Morphic.Client.Elements"
         mc:Ignorable="d"
-        Title="Travel with Settings" Height="500" Width="800" WindowStartupLocation="CenterScreen">
+        Title="Travel with Settings"
+        Height="500"
+        Width="800"
+        WindowStartupLocation="CenterScreen">
     <local:StepFrame x:Name="StepFrame"></local:StepFrame>
 </Window>

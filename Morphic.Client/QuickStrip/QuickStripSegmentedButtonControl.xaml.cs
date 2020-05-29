@@ -26,6 +26,8 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Controls;
+using System.Windows.Automation.Peers;
+using System.Windows.Automation;
 
 namespace Morphic.Client
 {
@@ -161,6 +163,7 @@ namespace Morphic.Client
             button.Content = content;
             button.HelpTitle = helpTitle;
             button.HelpMessage = helpMessage;
+            AutomationProperties.SetName(button, helpTitle);
             button.Click += Button_Click;
             ActionStack.Children.Add(button);
         }
