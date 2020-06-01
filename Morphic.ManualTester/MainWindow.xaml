@@ -1,0 +1,22 @@
+﻿<Window x:Class="Morphic.ManualTester.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Morphic.ManualTester"
+        mc:Ignorable="d"
+        Title="Morphic Manual Settings Tester" Height="700" Width="800">
+    <Grid>
+        <StackPanel>
+            <DockPanel HorizontalAlignment="Stretch" Margin="0,20,0,0">
+                <TextBlock Name="LoadedFileName" HorizontalAlignment="Center">NO REGISTRY LOADED</TextBlock>
+                <Button Name="LoadRegistry" Content="Load New Registry" HorizontalAlignment="Right" Click="LoadNewRegistry" Margin="0,0,0,20"></Button>
+            </DockPanel>
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible" Height="621">
+                <StackPanel Name="SettingsList" VerticalAlignment="Stretch" HorizontalAlignment="Left">
+                    <TextBlock TextWrapping="Wrap">Please load a solution registry file</TextBlock>
+                </StackPanel>
+            </ScrollViewer>
+        </StackPanel>
+    </Grid>
+</Window>

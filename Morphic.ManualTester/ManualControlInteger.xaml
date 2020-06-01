@@ -1,0 +1,19 @@
+﻿<UserControl x:Class="Morphic.ManualTester.ManualControlInteger"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Morphic.ManualTester"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid>
+        <DockPanel Margin="0,5,0,0" HorizontalAlignment="Stretch" VerticalAlignment="Top">
+            <TextBlock Name="ControlName"/>
+            <DockPanel HorizontalAlignment="Right">
+                <TextBlock Text="Integer:" VerticalAlignment="Center"/>
+                <TextBox Name="InputField" VerticalAlignment="Center" Margin="5,0,20,0" Width="100"/>
+                <Button Content="APPLY" Click="Button_Click"/>
+            </DockPanel>
+        </DockPanel>
+    </Grid>
+</UserControl>
