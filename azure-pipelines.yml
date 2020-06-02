@@ -132,8 +132,6 @@ stages:
               targetType: 'inline'
               script: |
                 set -e
-                AGENT_BUILDDIRECTORY="agent"
-                BUCKET="testbucket"
 
                 S3_OBJECT_PREFIX="win/x64"
                 S3_PUBLISHED_HTTP_URL="https://dw2oujmdhok1n.cloudfront.net"
