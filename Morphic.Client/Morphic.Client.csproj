@@ -11,7 +11,7 @@
     <AssemblyName>Morphic</AssemblyName>
     <PublishTrimmed>true</PublishTrimmed>
     <Platforms>AnyCPU;x64</Platforms>
-    <VersionPrefix>1.0$(VersionBuildComponent)</VersionPrefix>
+    <VersionPrefix>$(VersionBuildComponent)</VersionPrefix>
     <VersionSuffix Condition="'$(Configuration)' == 'Debug'">localdev</VersionSuffix>
   </PropertyGroup>
 

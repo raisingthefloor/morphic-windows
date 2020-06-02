@@ -26,6 +26,8 @@ variables:
   value: 'Any CPU'
 - name: buildConfiguration
   value: 'Release'
+- name: buildVersion
+  value: '0.0.0.1'
 
 stages:
   - stage: build
@@ -58,7 +60,7 @@ stages:
         - task: VSBuild@1
           displayName: "build solutions"
           env:
-            VERSIONBUILDCOMPONENT: '.$(Build.BuildNumber)'
+            VERSIONBUILDCOMPONENT: '$(buildVersion)'
           inputs:
             solution: '$(solution)'
             platform: '$(buildPlatform)'
@@ -73,7 +75,7 @@ stages:
         - task: VSBuild@1
           displayName: "build x64 installer"
           env:
-            VERSIONBUILDCOMPONENT: '.$(Build.BuildNumber)'
+            VERSIONBUILDCOMPONENT: '$(buildVersion)'
           inputs:
             solution: 'Morphic.Setup\Morphic.Setup.wixproj'
             platform: 'x64'
