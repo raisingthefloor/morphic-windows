@@ -77,7 +77,7 @@ stages:
           displayName: "build solutions"
           env:
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
-            VERSIONSUFFIX: '${{ versionSuffix }}'
+            VERSIONSUFFIX: '${{ variables.versionSuffix }}'
           inputs:
             solution: '$(solution)'
             platform: '$(buildPlatform)'
@@ -93,7 +93,7 @@ stages:
           displayName: "build x64 installer"
           env:
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
-            VERSIONSUFFIX: '${{ versionSuffix }}'
+            VERSIONSUFFIX: '${{ variables.versionSuffix }}'
           inputs:
             solution: 'Morphic.Setup\Morphic.Setup.wixproj'
             platform: 'x64'
