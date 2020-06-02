@@ -3,6 +3,8 @@
 # Add steps that publish symbols, save build artifacts, and more:
 # https://docs.microsoft.com/azure/devops/pipelines/apps/windows/dot-net
 
+name: $(Date:yyyyMMdd)$(Rev:rr)
+
 trigger:
   branches:
     include:
@@ -27,7 +29,7 @@ variables:
 - name: buildConfiguration
   value: 'Release'
 - name: buildNumSuffix
-  value: '-$(Build.BuildNumber)'
+  value: '.$(Build.BuildNumber)'
 
 stages:
   - stage: build
