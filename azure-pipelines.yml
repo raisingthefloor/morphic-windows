@@ -3,7 +3,18 @@
 # Add steps that publish symbols, save build artifacts, and more:
 # https://docs.microsoft.com/azure/devops/pipelines/apps/windows/dot-net
 
-name: $(Date:yyyyMMdd)$(Rev:rr)
+# name controls the Build.BuildNumber variable
+# We'll use the BuildNumber as the final two components of our app's version number
+#
+# App version number componnents can only be 5 digits or the build fails
+# So we'll design a number using a 2 digit year and 3 digit day of year
+# 
+# NOTE: The documentation isn't clear if DayOfYear is always three digits, so
+# we'll need to watch this.
+#
+# NOTE: A two-digit year is less than ideal, but we find ourselves in year 20
+# and it's unlikely this will be around in 80 more years
+name: $(Year:yy)$(DayOfYear).$(Rev:r)
 
 trigger:
   branches:
