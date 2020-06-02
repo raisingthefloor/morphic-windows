@@ -4,3 +4,4 @@ bin/
 obj/
 Morphic.Setup/Generated.wxs
 Morphic.Client/appsettings.Local.json
+Morphic.Client/MorphicLite.xml
