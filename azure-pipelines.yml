@@ -156,5 +156,5 @@ stages:
                 #sudo apt-get install -y awscli
 
                 ls -al ${AGENT_BUILDDIRECTORY}
-                echo aws s3 cp "${LOCAL_MSI_SOURCE}" "s3://${BUCKET}/${S3_MSI_OBJECT_NAME}"
-                echo aws s3 cp "${LOCAL_APPCAST_SORUCE}" "s3://${BUCKET}/${S3_APPCAST_OBJECT_NAME}"
+                aws s3 cp "${LOCAL_MSI_SOURCE}" "s3://${BUCKET}/${S3_MSI_OBJECT_NAME}"
+                aws s3 cp "${LOCAL_APPCAST_SORUCE}" "s3://${BUCKET}/${S3_APPCAST_OBJECT_NAME}"
