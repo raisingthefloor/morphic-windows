@@ -27,7 +27,7 @@ variables:
 - name: buildConfiguration
   value: 'Release'
 - name: buildVersion
-  value: '0.0.0.1'
+  value: '0.0.0.1-$(Build.BuildNumber)'
 
 stages:
   - stage: build
