@@ -104,7 +104,7 @@ stages:
           artifact: x64-installer
           
         - publish: $(System.DefaultWorkingDirectory)\Morphic.Client\BuildVersion.txt
-          displayName: "build version number"
+          displayName: "save build version numbers"
           artifact: build-version
             
   - stage: upload
