@@ -39,8 +39,11 @@ variables:
   value: 'Any CPU'
 - name: buildConfiguration
   value: 'Release'
-- name: buildNumSuffix
+- name: versionBuildComponents
   value: '.$(Build.BuildNumber)'
+- $[eq(varaibles['Build.SourceBranch'], 'develop')]:
+    name: versionSuffix
+    value: 'internal'
 
 stages:
   - stage: build
@@ -73,7 +76,8 @@ stages:
         - task: VSBuild@1
           displayName: "build solutions"
           env:
-            VERSIONBUILDCOMPONENT: '$(buildNumSuffix)'
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
+            VERSIONSUFFIX: '${{ versionSuffix }}'
           inputs:
             solution: '$(solution)'
             platform: '$(buildPlatform)'
@@ -88,7 +92,8 @@ stages:
         - task: VSBuild@1
           displayName: "build x64 installer"
           env:
-            VERSIONBUILDCOMPONENT: '$(buildNumSuffix)'
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
+            VERSIONSUFFIX: '${{ versionSuffix }}'
           inputs:
             solution: 'Morphic.Setup\Morphic.Setup.wixproj'
             platform: 'x64'
@@ -98,9 +103,9 @@ stages:
           displayName: "save x64 installer for later"
           artifact: x64-installer
           
-        - publish: $(System.DefaultWorkingDirectory)\Morphic.Client\MorphicLite.xml
-          displayName: "archive update xml"
-          artifact: update-xml
+        - publish: $(System.DefaultWorkingDirectory)\Morphic.Client\BuildVersion.txt
+          displayName: "build version number"
+          artifact: build-version
             
   - stage: upload
     jobs:
@@ -112,6 +117,8 @@ stages:
           - checkout: none
           - download: current
             artifact: x64-installer
+          - download: current
+            artifact: build-version
           - task: Bash@3
             displayName: "upload MSI to s3"
             env:
@@ -125,27 +132,31 @@ stages:
               targetType: 'inline'
               script: |
                 set -e
-  
-                UPLOAD_NAME=""
-                if [[ "${BRANCH_NAME}" == "master" ]]; then
-                  UPLOAD_NAME="MorphicSetup.msi"
-                fi
-                if [[ "${BRANCH_NAME}" == "develop" ]]; then
-                  UPLOAD_NAME="MorphicSetup-latest.msi"
-                fi
-                if [[ "${BRANCH}" == *"tags"* ]]; then
-                  UPLOAD_NAME="MorphicSetup-${BRANCH_NAME}.msi"
-                fi
-  
-                if [[ "$UPLOAD_NAME" == "" ]]; then
-                  #echo "no client name found. will not publish to s3"
-                  #exit 0
-                  UPLOAD_NAME="MorphicSetup-test.msi"
-                fi
+                AGENT_BUILDDIRECTORY="agent"
+                BUCKET="testbucket"
+
+                S3_OBJECT_PREFIX="win/x64"
+                S3_PUBLISHED_HTTP_URL="https://dw2oujmdhok1n.cloudfront.net"
+                CLIENT_NAME_BASE="Morphic"
+                INSTALLER_NAME_BASE="${CLIENT_NAME_BASE}Setup"
+                VERSION=$(sed -n 1p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
+                ASSEMBLY_VERSION=$(sed -n 2p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
+                LOCAL_MSI_SOURCE="${AGENT_BUILDDIRECTORY}/x64-installer/MorphicSetup.msi"
+                LOCAL_APPCAST_SORUCE="${AGENT_BUILDDIRECTORY}/${INSTALLER_NAME_BASE}-v${VERSION}.appcast.xml"
+                S3_MSI_OBJECT_NAME="${S3_OBJECT_PREFIX}/${INSTALLER_NAME_BASE}-v${VERSION}.msi"
+                S3_APPCAST_OBJECT_NAME="${S3_OBJECT_PREFIX}/${INSTALLER_NAME_BASE}-v${VERSION}.appcast.xml"
+
                 set -x
-  
+
+                echo "<?xml version=\"1.0\" charset=\"utf-8\"?>" > "${LOCAL_APPCAST_SORUCE}"
+                echo "<item>" >> "${LOCAL_APPCAST_SORUCE}"
+                echo "  <version>${ASSEMBLY_VERSION}</version>" >> "${LOCAL_APPCAST_SORUCE}"
+                echo "  <url>${S3_PUBLISHED_HTTP_URL}/${S3_MSI_OBJECT_NAME}</url>" >> "${LOCAL_APPCAST_SORUCE}"
+                echo "</item>" >> "${LOCAL_APPCAST_SORUCE}"
+
                 #echo "install AWS CLI"
                 #sudo apt-get install -y awscli
-  
+
                 ls -al ${AGENT_BUILDDIRECTORY}
-                aws s3 cp ${AGENT_BUILDDIRECTORY}/x64-installer/MorphicSetup.msi s3://${BUCKET}/win/x64/$UPLOAD_NAME
+                echo aws s3 cp "${LOCAL_MSI_SOURCE}" "s3://${BUCKET}/${S3_MSI_OBJECT_NAME}"
+                echo aws s3 cp "${LOCAL_APPCAST_SORUCE}" "s3://${BUCKET}/${S3_APPCAST_OBJECT_NAME}"

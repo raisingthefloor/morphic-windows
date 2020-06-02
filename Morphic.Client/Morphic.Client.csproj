@@ -11,8 +11,9 @@
     <AssemblyName>Morphic</AssemblyName>
     <PublishTrimmed>true</PublishTrimmed>
     <Platforms>AnyCPU;x64</Platforms>
-    <VersionPrefix>1.0$(VersionBuildComponent)</VersionPrefix>
+    <VersionPrefix>1.0$(VersionBuildComponents)</VersionPrefix>
     <VersionSuffix Condition="'$(Configuration)' == 'Debug'">localdev</VersionSuffix>
+    <VersionSuffix Condition="'$(Configuration)' == 'Release'">$(VersionSuffix)</VersionSuffix>
   </PropertyGroup>
 
   <ItemGroup>
@@ -108,7 +109,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="IF &quot;$(ConfigurationName)&quot; == &quot;Debug&quot; (&#xD;&#xA;    IF EXIST &quot;appsettings.Local.json&quot; (&#xD;&#xA;        copy appsettings.Local.json $(OutDir)appsettings.Local.json&#xD;&#xA;    )&#xD;&#xA;)&#xD;&#xA;&#xD;&#xA;IF &quot;$(ConfigurationName)&quot; == &quot;Release&quot; (&#xD;&#xA;    echo ^&lt;xml version=&quot;1.0&quot; charset=&quot;UTF-8&quot;^&gt; &gt;&gt; MorphicLite.xml&#xD;&#xA;    echo ^&lt;item^&gt; &gt;&gt; MorphicLite.xml&#xD;&#xA;    echo ^&lt;version^&gt;$(AssemblyVersion)^&lt;/version^&gt; &gt;&gt; MorphicLite.xml&#xD;&#xA;    echo ^&lt;url^&gt;$(AppUploadUrl)^&lt;/url^&gt; &gt;&gt; MorphicLite.xml&#xD;&#xA;    echo ^&lt;/item^&gt; &gt;&gt; MorphicLite.xml&#xD;&#xA;)" />
+    <Exec Command="IF &quot;$(ConfigurationName)&quot; == &quot;Debug&quot; (&#xD;&#xA;    IF EXIST &quot;appsettings.Local.json&quot; (&#xD;&#xA;        copy appsettings.Local.json $(OutDir)appsettings.Local.json&#xD;&#xA;    )&#xD;&#xA;)&#xD;&#xA;&#xD;&#xA;IF &quot;$(ConfigurationName)&quot; == &quot;Debug&quot; (&#xD;&#xA;    echo $(Version) &gt; BuildVersion.txt&#xD;&#xA;    echo $(AssemblyVersion) &gt;&gt; BuildVersion.txt&#xD;&#xA;)" />
   </Target>
 
 </Project>
