@@ -11,6 +11,8 @@
     <AssemblyName>Morphic</AssemblyName>
     <PublishTrimmed>true</PublishTrimmed>
     <Platforms>AnyCPU;x64</Platforms>
+    <VersionPrefix>1.0.0$(VersionBuildComponent)</VersionPrefix>
+    <VersionSuffix Condition="'$(Configuration)' == 'Debug'">localdev</VersionSuffix>
   </PropertyGroup>
 
   <ItemGroup>
@@ -45,6 +47,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Autoupdater.NET.Official" Version="1.6.0" />
     <PackageReference Include="Countly" Version="20.5.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="3.1.3" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.1.3" />
