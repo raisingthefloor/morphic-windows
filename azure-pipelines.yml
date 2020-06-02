@@ -41,8 +41,8 @@ variables:
   value: 'Release'
 - name: versionBuildComponents
   value: '.$(Build.BuildNumber)'
-#- $[eq(varaibles['Build.SourceBranch'], 'develop')]:
-- name: versionSuffix
+- $[eq(varaibles['Build.SourceBranch'], 'develop')]:
+  name: versionSuffix
   value: 'internal'
 
 stages:
