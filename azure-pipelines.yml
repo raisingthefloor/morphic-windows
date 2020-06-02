@@ -97,6 +97,10 @@ stages:
         - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicSetup.msi
           displayName: "save x64 installer for later"
           artifact: x64-installer
+          
+        - publish: $(System.DefaultWorkingDirectory)\Morphic.Client\MorphicLite.xml
+          displayName: "archive update xml"
+          artifact: update-xml
             
   - stage: upload
     jobs:
