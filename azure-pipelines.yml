@@ -21,9 +21,6 @@ trigger:
     include:
       - master
       - develop
-  tags:
-    include:
-      - "v*"
 
 pool:
   vmImage: 'windows-latest'
@@ -41,9 +38,6 @@ variables:
   value: 'Release'
 - name: versionBuildComponents
   value: '.$(Build.BuildNumber)'
-#- $[eq(varaibles['Build.SourceBranch'], 'develop')]:
-- name: versionSuffix
-  value: 'internal'
 
 stages:
   - stage: build
@@ -77,7 +71,6 @@ stages:
           displayName: "build solutions"
           env:
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
-            VERSIONSUFFIX: '${{ variables.versionSuffix }}'
           inputs:
             solution: '$(solution)'
             platform: '$(buildPlatform)'
@@ -93,7 +86,6 @@ stages:
           displayName: "build x64 installer"
           env:
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
-            VERSIONSUFFIX: '${{ variables.versionSuffix }}'
           inputs:
             solution: 'Morphic.Setup\Morphic.Setup.wixproj'
             platform: 'x64'
@@ -133,28 +125,40 @@ stages:
               script: |
                 set -e
 
-                S3_OBJECT_PREFIX="win/x64"
+                EXTRA_ARGS=""
+                S3_OBJECT_PREFIX=""
+                if [[ "${BRANCH_NAME}" == "master" ]]; then
+                  S3_OBJECT_PREFIX="win/x64/stable"
+                fi
+                if [[ "${BRANCH_NAME}" == "develop" ]]; then
+                  S3_OBJECT_PREFIX="win/x64/edge"
+                fi
+                
+                if [[ "S3_OBJECT_PREFIX" == "" ]]; then
+                  S3_OBJECT_PREFIX="win/x64/internal"
+                  EXTRA_ARGS="--expires $(date -d '+2 days' --iso-8601=seconds)"
+                fi
+                
                 S3_PUBLISHED_HTTP_URL="https://dw2oujmdhok1n.cloudfront.net"
                 CLIENT_NAME_BASE="Morphic"
                 INSTALLER_NAME_BASE="${CLIENT_NAME_BASE}Setup"
                 VERSION=$(sed -n 1p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
                 ASSEMBLY_VERSION=$(sed -n 2p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
                 LOCAL_MSI_SOURCE="${AGENT_BUILDDIRECTORY}/x64-installer/MorphicSetup.msi"
-                LOCAL_APPCAST_SORUCE="${AGENT_BUILDDIRECTORY}/${INSTALLER_NAME_BASE}-v${VERSION}.appcast.xml"
+                LOCAL_APPCAST_SOURCE="${AGENT_BUILDDIRECTORY}/${INSTALLER_NAME_BASE}-v${VERSION}.appcast.xml"
                 S3_MSI_OBJECT_NAME="${S3_OBJECT_PREFIX}/${INSTALLER_NAME_BASE}-v${VERSION}.msi"
                 S3_APPCAST_OBJECT_NAME="${S3_OBJECT_PREFIX}/${INSTALLER_NAME_BASE}-v${VERSION}.appcast.xml"
 
                 set -x
-
-                echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>" > "${LOCAL_APPCAST_SORUCE}"
-                echo "<item>" >> "${LOCAL_APPCAST_SORUCE}"
-                echo "  <version>${ASSEMBLY_VERSION}</version>" >> "${LOCAL_APPCAST_SORUCE}"
-                echo "  <url>${S3_PUBLISHED_HTTP_URL}/${S3_MSI_OBJECT_NAME}</url>" >> "${LOCAL_APPCAST_SORUCE}"
-                echo "</item>" >> "${LOCAL_APPCAST_SORUCE}"
-
-                #echo "install AWS CLI"
-                #sudo apt-get install -y awscli
+                
+                cat > "${LOCAL_APPCAST_SOURCE}" <<EOF
+                <?xml version="1.0" encoding="utf-8"?>
+                <item>
+                  <version>${ASSEMBLY_VERSION}</version>
+                  <url>${S3_PUBLISHED_HTTP_URL}/${S3_MSI_OBJECT_NAME}</url>
+                </item>
+                EOF
 
                 ls -al ${AGENT_BUILDDIRECTORY}
-                aws s3 cp "${LOCAL_MSI_SOURCE}" "s3://${BUCKET}/${S3_MSI_OBJECT_NAME}"
-                aws s3 cp "${LOCAL_APPCAST_SORUCE}" "s3://${BUCKET}/${S3_APPCAST_OBJECT_NAME}"
+                aws s3 cp $EXTRA_ARGS "${LOCAL_MSI_SOURCE}" "s3://${BUCKET}/${S3_MSI_OBJECT_NAME}"
+                aws s3 cp $EXTRA_ARGS "${LOCAL_APPCAST_SOURCE}" "s3://${BUCKET}/${S3_APPCAST_OBJECT_NAME}"
