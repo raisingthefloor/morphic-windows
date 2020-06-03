@@ -49,6 +49,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using NHotkey.Wpf;
 using Morphic.Client.About;
+using AutoUpdaterDotNET;
 
 namespace Morphic.Client
 {
@@ -93,11 +94,13 @@ namespace Morphic.Client
         {
             services.AddLogging(ConfigureLogging);
             services.Configure<SessionOptions>(Configuration.GetSection("MorphicService"));
+            services.Configure<UpdateOptions>(Configuration.GetSection("Update"));
             services.AddSingleton<IServiceCollection>(services);
             services.AddSingleton<IServiceProvider>(provider => provider);
             services.AddSingleton<SessionOptions>(serviceProvider => serviceProvider.GetRequiredService<IOptions<SessionOptions>>().Value);
             services.AddSingleton(new StorageOptions { RootPath = Path.Combine(ApplicationDataFolderPath, "Data") });
             services.AddSingleton(new KeychainOptions { Path = Path.Combine(ApplicationDataFolderPath, "keychain") });
+            services.AddSingleton<UpdateOptions>(serviceProvider => serviceProvider.GetRequiredService<IOptions<UpdateOptions>>().Value);
             services.AddSingleton<IDataProtection, DataProtector>();
             services.AddSingleton<IUserSettings, WindowsUserSettings>();
             services.AddSingleton<IRegistry, WindowsRegistry>();
@@ -125,10 +128,9 @@ namespace Morphic.Client
             CountlyConfig cc = new CountlyConfig();
             cc.appKey = section["AppKey"];
             cc.serverUrl = section["ServerUrl"];
-            
-            var jsonData = File.ReadAllText("build-info.json");
-            var buildInfoDoc = JsonDocument.Parse(jsonData).RootElement;
-            cc.appVersion = buildInfoDoc.GetProperty("version").GetString();
+            var buildInfo = ServiceProvider.GetRequiredService<BuildInfo>();
+
+            cc.appVersion = buildInfo.InformationalVersion;
 
             Countly.Instance.Init(cc);
             Countly.Instance.SessionBegin();
@@ -191,9 +193,10 @@ namespace Morphic.Client
             CreateMainMenu();
             CreateNotifyIcon();
             RegisterGlobalHotKeys();
+            ConfigureCountly();
+            StartCheckingForUpdates();
             var task = OpenSession();
             task.ContinueWith(SessionOpened, TaskScheduler.FromCurrentSynchronizationContext());
-            ConfigureCountly();
         }
 
         private void Session_UserChanged(object? sender, EventArgs e)
@@ -571,6 +574,19 @@ namespace Morphic.Client
         private void OnLoginWindowClosed(object? sender, EventArgs e)
         {
             loginWindow = null;
+        }
+
+        #endregion
+
+        #region Updates
+
+        void StartCheckingForUpdates()
+        {
+            var options = ServiceProvider.GetRequiredService<UpdateOptions>();
+            if (options.AppCastUrl != "")
+            {
+                AutoUpdater.Start(options.AppCastUrl);
+            }
         }
 
         #endregion

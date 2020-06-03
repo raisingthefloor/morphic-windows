@@ -3,14 +3,24 @@
 # Add steps that publish symbols, save build artifacts, and more:
 # https://docs.microsoft.com/azure/devops/pipelines/apps/windows/dot-net
 
+# name controls the Build.BuildNumber variable
+# We'll use the BuildNumber as the final two components of our app's version number
+#
+# App version number componnents can only be 5 digits or the build fails
+# So we'll design a number using a 2 digit year and 3 digit day of year
+# 
+# NOTE: The documentation isn't clear if DayOfYear is always three digits, so
+# we'll need to watch this.
+#
+# NOTE: A two-digit year is less than ideal, but we find ourselves in year 20
+# and it's unlikely this will be around in 80 more years
+name: $(Year:yy)$(DayOfYear).$(Rev:r)
+
 trigger:
   branches:
     include:
       - master
       - develop
-  tags:
-    include:
-      - "v*"
 
 pool:
   vmImage: 'windows-latest'
@@ -26,6 +36,8 @@ variables:
   value: 'Any CPU'
 - name: buildConfiguration
   value: 'Release'
+- name: versionBuildComponents
+  value: '.$(Build.BuildNumber)'
 
 stages:
   - stage: build
@@ -57,6 +69,8 @@ stages:
         
         - task: VSBuild@1
           displayName: "build solutions"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
           inputs:
             solution: '$(solution)'
             platform: '$(buildPlatform)'
@@ -70,6 +84,8 @@ stages:
         
         - task: VSBuild@1
           displayName: "build x64 installer"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
           inputs:
             solution: 'Morphic.Setup\Morphic.Setup.wixproj'
             platform: 'x64'
@@ -78,6 +94,10 @@ stages:
         - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicSetup.msi
           displayName: "save x64 installer for later"
           artifact: x64-installer
+          
+        - publish: $(System.DefaultWorkingDirectory)\Morphic.Client\BuildVersion.txt
+          displayName: "save build version numbers"
+          artifact: build-version
             
   - stage: upload
     jobs:
@@ -89,6 +109,8 @@ stages:
           - checkout: none
           - download: current
             artifact: x64-installer
+          - download: current
+            artifact: build-version
           - task: Bash@3
             displayName: "upload MSI to s3"
             env:
@@ -102,27 +124,48 @@ stages:
               targetType: 'inline'
               script: |
                 set -e
-  
-                UPLOAD_NAME=""
+                set -x
+
+                EXTRA_ARGS=""
+                S3_OBJECT_PREFIX=""
                 if [[ "${BRANCH_NAME}" == "master" ]]; then
-                  UPLOAD_NAME="MorphicSetup.msi"
+                  echo "detected master build"
+                  S3_OBJECT_PREFIX="win/x64/stable"
                 fi
                 if [[ "${BRANCH_NAME}" == "develop" ]]; then
-                  UPLOAD_NAME="MorphicSetup-latest.msi"
+                  echo "detected develop build"
+                  S3_OBJECT_PREFIX="win/x64/edge"
                 fi
-                if [[ "${BRANCH}" == *"tags"* ]]; then
-                  UPLOAD_NAME="MorphicSetup-${BRANCH_NAME}.msi"
+                
+                if [[ "${S3_OBJECT_PREFIX}" == "" ]]; then
+                  echo "detected PR build"
+                  S3_OBJECT_PREFIX="win/x64/internal"
+                  EXTRA_ARGS="--expires $(date -d '+2 days' --iso-8601=seconds)"
                 fi
-  
-                if [[ "$UPLOAD_NAME" == "" ]]; then
-                  #echo "no client name found. will not publish to s3"
-                  #exit 0
-                  UPLOAD_NAME="MorphicSetup-test.msi"
-                fi
-                set -x
-  
-                #echo "install AWS CLI"
-                #sudo apt-get install -y awscli
-  
+                
+                S3_PUBLISHED_HTTP_URL="https://dw2oujmdhok1n.cloudfront.net"
+                INSTALLER_NAME_BASE="MorphicSetup"
+                VERSION=$(sed -n 1p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
+                ASSEMBLY_VERSION=$(sed -n 2p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
+                LOCAL_MSI_SOURCE="${AGENT_BUILDDIRECTORY}/x64-installer/MorphicSetup.msi"
+                LOCAL_APPCAST_SOURCE="${AGENT_BUILDDIRECTORY}/${INSTALLER_NAME_BASE}-v${VERSION}.appcast.xml"
+                S3_MSI_OBJECT_NAME="${S3_OBJECT_PREFIX}/${INSTALLER_NAME_BASE}-v${VERSION}.msi"
+                S3_APPCAST_OBJECT_NAME="${S3_OBJECT_PREFIX}/${INSTALLER_NAME_BASE}-v${VERSION}.appcast.xml"
+                
+                cat > "${LOCAL_APPCAST_SOURCE}" <<EOF
+                <?xml version="1.0" encoding="utf-8"?>
+                <item>
+                  <version>${ASSEMBLY_VERSION}</version>
+                  <url>${S3_PUBLISHED_HTTP_URL}/${S3_MSI_OBJECT_NAME}</url>
+                </item>
+                EOF
+
                 ls -al ${AGENT_BUILDDIRECTORY}
-                aws s3 cp ${AGENT_BUILDDIRECTORY}/x64-installer/MorphicSetup.msi s3://${BUCKET}/win/x64/$UPLOAD_NAME
+                aws s3 cp $EXTRA_ARGS "${LOCAL_MSI_SOURCE}" "s3://${BUCKET}/${S3_MSI_OBJECT_NAME}"
+                aws s3 cp $EXTRA_ARGS "${LOCAL_APPCAST_SOURCE}" "s3://${BUCKET}/${S3_APPCAST_OBJECT_NAME}"
+
+                if [[ "${BRANCH_NAME}" == "master" ]] || [[ "${BRANCH_NAME}" == "develop" ]]; then
+                  # upload to non-versioned paths. For now. This may go away.
+                  aws s3 cp $EXTRA_ARGS "s3://${BUCKET}/${S3_MSI_OBJECT_NAME}" "s3://${BUCKET}/${S3_OBJECT_PREFIX}/${INSTALLER_NAME_BASE}.msi"
+                  aws s3 cp $EXTRA_ARGS "s3://${BUCKET}/${S3_APPCAST_OBJECT_NAME}" "s3://${BUCKET}/${S3_OBJECT_PREFIX}/${INSTALLER_NAME_BASE}.appcast.xml"
+                fi

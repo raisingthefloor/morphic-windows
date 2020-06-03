@@ -11,6 +11,9 @@
     <AssemblyName>Morphic</AssemblyName>
     <PublishTrimmed>true</PublishTrimmed>
     <Platforms>AnyCPU;x64</Platforms>
+    <VersionPrefix>1.0$(VersionBuildComponents)</VersionPrefix>
+    <VersionSuffix Condition="'$(Configuration)' == 'Debug'">localdev</VersionSuffix>
+    <VersionSuffix Condition="'$(Configuration)' == 'Release'">$(VersionSuffix)</VersionSuffix>
   </PropertyGroup>
 
   <ItemGroup>
@@ -45,6 +48,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Autoupdater.NET.Official" Version="1.6.0" />
     <PackageReference Include="Countly" Version="20.5.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="3.1.3" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.1.3" />
@@ -105,7 +109,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="IF &quot;$(ConfigurationName)&quot; == &quot;Debug&quot; (&#xD;&#xA;    IF EXIST &quot;appsettings.Local.json&quot; (&#xD;&#xA;        copy appsettings.Local.json $(OutDir)appsettings.Local.json&#xD;&#xA;    )&#xD;&#xA;)" />
+    <Exec Command="IF &quot;$(ConfigurationName)&quot; == &quot;Debug&quot; (&#xD;&#xA;    IF EXIST &quot;appsettings.Local.json&quot; (&#xD;&#xA;        copy appsettings.Local.json $(OutDir)appsettings.Local.json&#xD;&#xA;    )&#xD;&#xA;)&#xD;&#xA;&#xD;&#xA;IF &quot;$(ConfigurationName)&quot; == &quot;Release&quot; (&#xD;&#xA;    echo $(Version) &gt; BuildVersion.txt&#xD;&#xA;    echo $(AssemblyVersion) &gt;&gt; BuildVersion.txt&#xD;&#xA;)" />
   </Target>
 
 </Project>
