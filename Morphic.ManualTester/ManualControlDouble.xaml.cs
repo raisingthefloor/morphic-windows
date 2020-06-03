@@ -1,7 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Morphic.Core;
+﻿using Morphic.Core;
 using Morphic.Settings;
-using System;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -12,14 +10,14 @@ namespace Morphic.ManualTester
     /// </summary>
     public partial class ManualControlDouble : UserControl
     {
-        public IServiceProvider ServiceProvider;
+        public SettingsManager manager;
         public string solutionId;
         public Setting setting;
         public Preferences.Key key;
-        public ManualControlDouble(IServiceProvider sp, string solutionId, Setting setting)
+        public ManualControlDouble(SettingsManager manager, string solutionId, Setting setting)
         {
             InitializeComponent();
-            this.ServiceProvider = sp;
+            this.manager = manager;
             this.solutionId = solutionId;
             this.setting = setting;
             key = new Preferences.Key(solutionId, setting.Name);
@@ -29,7 +27,6 @@ namespace Morphic.ManualTester
 
         private async void CheckValue()
         {
-            var manager = ServiceProvider.GetRequiredService<SettingsManager>();
             InputField.Text = "";
             if (await manager.Capture(key) is double value)
             {
@@ -39,7 +36,6 @@ namespace Morphic.ManualTester
 
         private async void Button_Click(object sender, RoutedEventArgs e)
         {
-            var manager = ServiceProvider.GetRequiredService<SettingsManager>();
             try
             {
                 var value = double.Parse(InputField.Text);

@@ -12,14 +12,14 @@ namespace Morphic.ManualTester
     /// </summary>
     public partial class ManualControlString : UserControl
     {
-        public IServiceProvider ServiceProvider;
+        public SettingsManager manager;
         public string solutionId;
         public Setting setting;
         public Preferences.Key key;
-        public ManualControlString(IServiceProvider sp, string solutionId, Setting setting)
+        public ManualControlString(SettingsManager manager, string solutionId, Setting setting)
         {
             InitializeComponent();
-            this.ServiceProvider = sp;
+            this.manager = manager;
             this.solutionId = solutionId;
             this.setting = setting;
             key = new Preferences.Key(solutionId, setting.Name);
@@ -29,7 +29,6 @@ namespace Morphic.ManualTester
 
         private async void CheckValue()
         {
-            var manager = ServiceProvider.GetRequiredService<SettingsManager>();
             InputField.Text = "";
             if (await manager.Capture(key) is string value)
             {
@@ -39,7 +38,6 @@ namespace Morphic.ManualTester
 
         private async void Button_Click(object sender, RoutedEventArgs e)
         {
-            var manager = ServiceProvider.GetRequiredService<SettingsManager>();
             bool success = await manager.Apply(key, InputField.Text);
             if (!success) CheckValue();
         }

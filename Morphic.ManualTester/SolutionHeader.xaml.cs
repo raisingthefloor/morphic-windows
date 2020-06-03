@@ -10,13 +10,13 @@ namespace Morphic.ManualTester
     /// </summary>
     public partial class SolutionHeader : UserControl
     {
-        public IServiceProvider ServiceProvider { get; private set; } = null!;
+        public SettingsManager manager;
         public Solution solution;
         public Boolean expanded = false;
-        public SolutionHeader(IServiceProvider sp, Solution solution)
+        public SolutionHeader(SettingsManager manager, Solution solution)
         {
             InitializeComponent();
-            ServiceProvider = sp;
+            this.manager = manager;
             this.solution = solution;
             SolutionName.Text = solution.Id;
         }
@@ -35,16 +35,16 @@ namespace Morphic.ManualTester
                     switch (setting.Kind)
                     {
                         case Setting.ValueKind.Boolean:
-                            ControlStack.Children.Add(new ManualControlBoolean(ServiceProvider, solution.Id, setting));
+                            ControlStack.Children.Add(new ManualControlBoolean(manager, solution.Id, setting));
                             break;
                         case Setting.ValueKind.Double:
-                            ControlStack.Children.Add(new ManualControlDouble(ServiceProvider, solution.Id, setting));
+                            ControlStack.Children.Add(new ManualControlDouble(manager, solution.Id, setting));
                             break;
                         case Setting.ValueKind.Integer:
-                            ControlStack.Children.Add(new ManualControlInteger(ServiceProvider, solution.Id, setting));
+                            ControlStack.Children.Add(new ManualControlInteger(manager, solution.Id, setting));
                             break;
                         case Setting.ValueKind.String:
-                            ControlStack.Children.Add(new ManualControlString(ServiceProvider, solution.Id, setting));
+                            ControlStack.Children.Add(new ManualControlString(manager, solution.Id, setting));
                             break;
                     }
                 }

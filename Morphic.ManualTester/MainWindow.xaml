@@ -8,13 +8,13 @@
         Title="Morphic Manual Settings Tester" Height="700" Width="800">
     <Grid>
         <StackPanel>
-            <DockPanel HorizontalAlignment="Stretch" Margin="0,20,0,0">
-                <TextBlock Name="LoadedFileName" HorizontalAlignment="Center">NO REGISTRY LOADED</TextBlock>
-                <Button Name="LoadRegistry" Content="Load New Registry" HorizontalAlignment="Right" Click="LoadNewRegistry" Margin="0,0,0,20"></Button>
+            <DockPanel HorizontalAlignment="Stretch" Margin="0,0,0,0" Background="DarkGreen">
+                <TextBlock Name="LoadedFileName" HorizontalAlignment="Center" Foreground="White" FontWeight="Bold" FontSize="16" VerticalAlignment="Center" Margin="10">NO REGISTRY LOADED</TextBlock>
+                <Button Name="LoadRegistry" Content=" Load New Registry " HorizontalAlignment="Right" Click="LoadNewRegistry" VerticalAlignment="Stretch"></Button>
             </DockPanel>
             <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible" Height="621">
                 <StackPanel Name="SettingsList" VerticalAlignment="Stretch" HorizontalAlignment="Left">
-                    <TextBlock TextWrapping="Wrap">Please load a solution registry file</TextBlock>
+                    <TextBlock Margin="10">Please load a solution registry file</TextBlock>
                 </StackPanel>
             </ScrollViewer>
         </StackPanel>

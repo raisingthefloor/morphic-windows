@@ -36,11 +36,8 @@ namespace Morphic.ManualTester
         public MainWindow()
         {
             InitializeComponent();
+            OnStartup();
         }
-
-        #region Configuration & Startup
-
-        private readonly string ApplicationDataFolderPath = Path.Combine(new string[] { Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MorphicLite" });
 
         /// <summary>
         /// Configure the dependency injection system with services
@@ -51,13 +48,11 @@ namespace Morphic.ManualTester
             services.AddLogging(ConfigureLogging);
             services.AddSingleton<IServiceCollection>(services);
             services.AddSingleton<IServiceProvider>(provider => provider);
-            services.AddSingleton(new StorageOptions { RootPath = Path.Combine(ApplicationDataFolderPath, "Data") });
-            services.AddSingleton(new KeychainOptions { Path = Path.Combine(ApplicationDataFolderPath, "keychain") });
             services.AddSingleton<IRegistry, WindowsRegistry>();
             services.AddSingleton<IIniFileFactory, IniFileFactory>();
             services.AddSingleton<ISystemSettingFactory, SystemSettingFactory>();
             services.AddSingleton<ISystemParametersInfo, SystemParametersInfo>();
-            services.AddSingleton<SettingsManager>();
+            services.AddTransient<SettingsManager>();
             services.AddMorphicSettingsHandlers(ConfigureSettingsHandlers);
         }
 
@@ -95,11 +90,8 @@ namespace Morphic.ManualTester
             logger = ServiceProvider.GetRequiredService<ILogger<MainWindow>>();
         }
 
-        #endregion
-
         private async void LoadNewRegistry(object sender, RoutedEventArgs e)
         {
-            OnStartup();
             var filedialog = new OpenFileDialog();
             filedialog.InitialDirectory = "Documents";
             filedialog.Filter = "json files (*.json)|*.json|All files (*.*)|*.*";
@@ -118,7 +110,7 @@ namespace Morphic.ManualTester
                     this.SettingsList.Children.Clear();
                     foreach(var solution in manager.SolutionsById)
                     {
-                        SolutionHeader header = new SolutionHeader(ServiceProvider, solution.Value);
+                        SolutionHeader header = new SolutionHeader(manager, solution.Value);
                         SettingsList.Children.Add(header);
                     }
                 }
