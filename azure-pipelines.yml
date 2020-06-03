@@ -124,17 +124,21 @@ stages:
               targetType: 'inline'
               script: |
                 set -e
+                set -x
 
                 EXTRA_ARGS=""
                 S3_OBJECT_PREFIX=""
                 if [[ "${BRANCH_NAME}" == "master" ]]; then
+                  echo "detected master build"
                   S3_OBJECT_PREFIX="win/x64/stable"
                 fi
                 if [[ "${BRANCH_NAME}" == "develop" ]]; then
+                  echo "detected develop build"
                   S3_OBJECT_PREFIX="win/x64/edge"
                 fi
                 
-                if [[ "S3_OBJECT_PREFIX" == "" ]]; then
+                if [[ "${S3_OBJECT_PREFIX}" == "" ]]; then
+                  echo "detected PR build"
                   S3_OBJECT_PREFIX="win/x64/internal"
                   EXTRA_ARGS="--expires $(date -d '+2 days' --iso-8601=seconds)"
                 fi
@@ -148,8 +152,6 @@ stages:
                 LOCAL_APPCAST_SOURCE="${AGENT_BUILDDIRECTORY}/${INSTALLER_NAME_BASE}-v${VERSION}.appcast.xml"
                 S3_MSI_OBJECT_NAME="${S3_OBJECT_PREFIX}/${INSTALLER_NAME_BASE}-v${VERSION}.msi"
                 S3_APPCAST_OBJECT_NAME="${S3_OBJECT_PREFIX}/${INSTALLER_NAME_BASE}-v${VERSION}.appcast.xml"
-
-                set -x
                 
                 cat > "${LOCAL_APPCAST_SOURCE}" <<EOF
                 <?xml version="1.0" encoding="utf-8"?>
