@@ -164,3 +164,9 @@ stages:
                 ls -al ${AGENT_BUILDDIRECTORY}
                 aws s3 cp $EXTRA_ARGS "${LOCAL_MSI_SOURCE}" "s3://${BUCKET}/${S3_MSI_OBJECT_NAME}"
                 aws s3 cp $EXTRA_ARGS "${LOCAL_APPCAST_SOURCE}" "s3://${BUCKET}/${S3_APPCAST_OBJECT_NAME}"
+
+                if [[ "${BRANCH_NAME}" == "master" ]] || [[ "${BRANCH_NAME}" == "develop" ]]; then
+                  # upload to non-versioned paths. For now. This may go away.
+                  aws s3 cp $EXTRA_ARGS "${LOCAL_MSI_SOURCE}" "s3://${BUCKET}/${S3_OBJECT_PREFIX}/${INSTALLER_NAME_BASE}.msi"
+                  aws s3 cp $EXTRA_ARGS "${LOCAL_APPCAST_SOURCE}" "s3://${BUCKET}/${S3_OBJECT_PREFIX}/${INSTALLER_NAME_BASE}.appcast.xml"
+                fi
