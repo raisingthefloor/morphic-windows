@@ -144,8 +144,7 @@ stages:
                 fi
                 
                 S3_PUBLISHED_HTTP_URL="https://dw2oujmdhok1n.cloudfront.net"
-                CLIENT_NAME_BASE="Morphic"
-                INSTALLER_NAME_BASE="${CLIENT_NAME_BASE}Setup"
+                INSTALLER_NAME_BASE="MorphicSetup"
                 VERSION=$(sed -n 1p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
                 ASSEMBLY_VERSION=$(sed -n 2p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
                 LOCAL_MSI_SOURCE="${AGENT_BUILDDIRECTORY}/x64-installer/MorphicSetup.msi"
