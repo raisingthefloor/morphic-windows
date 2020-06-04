@@ -20,7 +20,6 @@ trigger:
   branches:
     include:
       - master
-      - develop
 
 pool:
   vmImage: 'windows-latest'
@@ -128,16 +127,13 @@ stages:
 
                 EXTRA_ARGS=""
                 S3_OBJECT_PREFIX=""
+
+                # TODO: determine "stable" build from release branch...branch naming TBD
+
                 if [[ "${BRANCH_NAME}" == "master" ]]; then
                   echo "detected master build"
-                  S3_OBJECT_PREFIX="win/x64/stable"
-                fi
-                if [[ "${BRANCH_NAME}" == "develop" ]]; then
-                  echo "detected develop build"
                   S3_OBJECT_PREFIX="win/x64/edge"
-                fi
-                
-                if [[ "${S3_OBJECT_PREFIX}" == "" ]]; then
+                else
                   echo "detected PR build"
                   S3_OBJECT_PREFIX="win/x64/internal"
                   EXTRA_ARGS="--expires $(date -d '+2 days' --iso-8601=seconds)"
@@ -160,12 +156,15 @@ stages:
                 </item>
                 EOF
 
+                echo ${S3_PUBLISHED_HTTP_URL}/${S3_APPCAST_OBJECT_NAME}
+                cat "${LOCAL_APPCAST_SOURCE}"
+
                 ls -al ${AGENT_BUILDDIRECTORY}
                 aws s3 cp $EXTRA_ARGS "${LOCAL_MSI_SOURCE}" "s3://${BUCKET}/${S3_MSI_OBJECT_NAME}"
                 aws s3 cp $EXTRA_ARGS "${LOCAL_APPCAST_SOURCE}" "s3://${BUCKET}/${S3_APPCAST_OBJECT_NAME}"
 
-                if [[ "${BRANCH_NAME}" == "master" ]] || [[ "${BRANCH_NAME}" == "develop" ]]; then
-                  # upload to non-versioned paths. For now. This may go away.
-                  aws s3 cp $EXTRA_ARGS "s3://${BUCKET}/${S3_MSI_OBJECT_NAME}" "s3://${BUCKET}/${S3_OBJECT_PREFIX}/${INSTALLER_NAME_BASE}.msi"
-                  aws s3 cp $EXTRA_ARGS "s3://${BUCKET}/${S3_APPCAST_OBJECT_NAME}" "s3://${BUCKET}/${S3_OBJECT_PREFIX}/${INSTALLER_NAME_BASE}.appcast.xml"
-                fi
+                # if [[ "${BRANCH_NAME}" == "master" ]]]]; then
+                #   # upload to non-versioned paths. For now. This may go away.
+                #   aws s3 cp $EXTRA_ARGS "s3://${BUCKET}/${S3_MSI_OBJECT_NAME}" "s3://${BUCKET}/${S3_OBJECT_PREFIX}/${INSTALLER_NAME_BASE}.msi"
+                #   aws s3 cp $EXTRA_ARGS "s3://${BUCKET}/${S3_APPCAST_OBJECT_NAME}" "s3://${BUCKET}/${S3_OBJECT_PREFIX}/${INSTALLER_NAME_BASE}.appcast.xml"
+                # fi
