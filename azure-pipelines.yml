@@ -100,7 +100,7 @@ stages:
             arguments: 'install --global azuresigntool'
             
         - task: CmdLine@2
-          displayName: 'Sign outputted .exe with global AzureSignTool'
+          displayName: 'sign x64 installer'
           inputs:
             targetType: 'inline'
             script: >
