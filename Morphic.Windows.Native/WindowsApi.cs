@@ -469,6 +469,36 @@ namespace Morphic.Windows.Native
         internal const Int32 E_OUTOFMEMORY = unchecked((Int32)0x8007000E);
         internal const Int32 E_POINTER = unchecked((Int32)0x80004003);
 
+        // Shell hook messages.
+        // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-registershellhookwindow
+        internal const int HSHELL_WINDOWACTIVATED = 4;
+        internal const int HSHELL_RUDEAPPACTIVATED = 0x8004;
+
+        internal enum WindowMessages : int
+        {
+            WM_CLIPBOARDUPDATE = 0x031D
+        }
+
+        /// <summary>
+        /// The HIWORD macro.
+        /// </summary>
+        /// <param name="dwValue">The value to be converted.</param>
+        /// <returns>The high-order word of the specified value.</returns>
+        internal static short HighWord(this int dwValue)
+        {
+            return ((short)(dwValue >> 16));
+        }
+
+        /// <summary>
+        /// The LOWORD macro.
+        /// </summary>
+        /// <param name="dwValue">The value to be converted.</param>
+        /// <returns>The low-order word of the specified value.</returns>
+        internal static short LowWord(this int n)
+        {
+            return ((short)(n & 0xffff));
+        }
+
         /* user32 */
         //
         // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-changedisplaysettingsexw
@@ -506,6 +536,34 @@ namespace Morphic.Windows.Native
         // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getsystemmetricsfordpi
         [DllImport("user32.dll")]
         internal static extern Int32 GetSystemMetricsForDpi(SystemMetricIndex nIndex, UInt32 dpi);
+        //
+        // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setforegroundwindow
+        [DllImport("user32.dll")]
+        internal static extern bool SetForegroundWindow(IntPtr hWnd);
+        //
+        // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getforegroundwindow
+        [DllImport("user32.dll")]
+        internal static extern IntPtr GetForegroundWindow();
+        //
+        // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-registershellhookwindow
+        [DllImport("user32.dll")]
+        internal static extern bool RegisterShellHookWindow(IntPtr hWnd);
+        //
+        // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-registerwindowmessagea
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        internal static extern int RegisterWindowMessage(string lpString);
+        //
+        // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-addclipboardformatlistener
+        [DllImport("user32.dll")]
+        internal static extern bool AddClipboardFormatListener(IntPtr hwnd);
+        //
+        // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-removeclipboardformatlistener
+        [DllImport("user32.dll")]
+        internal static extern bool RemoveClipboardFormatListener(IntPtr hwnd);
+        //
+        // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowthreadprocessid
+        [DllImport("user32.dll", SetLastError=true)]
+        internal static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
 
     }
 }

@@ -23,6 +23,10 @@
       {
         "type": "control",
         "feature": "contrast"
+      },
+      {
+        "type": "control",
+        "feature": "speech"
       }
     ]
   }
