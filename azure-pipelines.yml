@@ -27,6 +27,8 @@ pool:
 variables:
 # must be created in the azure UI under Pipelines > Library and specify accessKey, secretKey, region, and bucket
 - group: 's3-public-bucket-upload'
+# Holds all signing-related variables. Provide them the same was as the var group above.
+- group: 'windows-code-sign'
 - name: solution
   value: '**/*.sln'
 - name: projects
@@ -97,6 +99,27 @@ stages:
         - publish: $(System.DefaultWorkingDirectory)\Morphic.Client\BuildVersion.txt
           displayName: "save build version numbers"
           artifact: build-version
+
+        - task: DotNetCoreCLI@2
+          displayName: Install AzureSignTool
+          inputs:
+            command: 'custom'
+            custom: 'tool'
+            arguments: 'install --global azuresigntool'
+            
+        - task: CmdLine@2
+          displayName: 'Sign outputted .exe with global AzureSignTool'
+          inputs:
+            targetType: 'inline'
+            script: >
+              AzureSignTool sign 
+              -du "$(SigningURL)" 
+              -kvu "$(SigningVaultURL)" 
+              -kvi "$(SigningClientId)" 
+              -kvs "$(SigningClientSecret)" 
+              -kvc "$(SigningCertName)"
+              -tr "$(TimestampUrl)"
+              -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicSetup.msi
             
   - stage: upload
     jobs:
