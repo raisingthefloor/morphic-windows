@@ -1,9 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Morphic.Core;
+﻿using Morphic.Core;
 using Morphic.Settings;
 using System;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace Morphic.ManualTester
 {
@@ -16,9 +16,12 @@ namespace Morphic.ManualTester
         public string solutionId;
         public Setting setting;
         public Preferences.Key key;
-        public ManualControlString(SettingsManager manager, string solutionId, Setting setting)
+        private MainWindow window;
+        private Boolean changed = false;
+        public ManualControlString(MainWindow window, SettingsManager manager, string solutionId, Setting setting)
         {
             InitializeComponent();
+            this.window = window;
             this.manager = manager;
             this.solutionId = solutionId;
             this.setting = setting;
@@ -36,8 +39,25 @@ namespace Morphic.ManualTester
             }
         }
 
-        private async void Button_Click(object sender, RoutedEventArgs e)
+        private void EnterCheck(object sender, System.Windows.Input.KeyEventArgs e)
         {
+            if (e.Key == Key.Enter)
+            {
+                changed = true;
+                if (window.AutoApply) ApplySetting();
+            }
+        }
+
+        private void ValueChanged(object sender, RoutedEventArgs e)
+        {
+            changed = true;
+            if (window.AutoApply) ApplySetting();
+        }
+
+        public async void ApplySetting()
+        {
+            if (!changed) return;
+            changed = false;
             bool success = await manager.Apply(key, InputField.Text);
             if (!success) CheckValue();
         }

@@ -12,45 +12,63 @@ namespace Morphic.ManualTester
     {
         public SettingsManager manager;
         public Solution solution;
-        public Boolean expanded = false;
-        public SolutionHeader(SettingsManager manager, Solution solution)
+        private MainWindow window;
+        public SolutionHeader(MainWindow window, SettingsManager manager, Solution solution)
         {
             InitializeComponent();
+            this.window = window;
             this.manager = manager;
             this.solution = solution;
-            SolutionName.Text = solution.Id;
+            ControlStack.Header = solution.Id;
+            foreach (var setting in solution.Settings)
+            {
+                switch (setting.Kind)
+                {
+                    case Setting.ValueKind.Boolean:
+                        ControlStack.Items.Add(new ManualControlBoolean(window, manager, solution.Id, setting));
+                        break;
+                    case Setting.ValueKind.Double:
+                        ControlStack.Items.Add(new ManualControlDouble(window, manager, solution.Id, setting));
+                        break;
+                    case Setting.ValueKind.Integer:
+                        ControlStack.Items.Add(new ManualControlInteger(window, manager, solution.Id, setting));
+                        break;
+                    case Setting.ValueKind.String:
+                        ControlStack.Items.Add(new ManualControlString(window, manager, solution.Id, setting));
+                        break;
+                }
+            }
         }
 
-        private void ExpandButton_Click(object sender, RoutedEventArgs e)
+        public void ApplyAllSettings()
         {
-            if(expanded)
+            foreach(var element in ControlStack.Items)
             {
-                ControlStack.Children.Clear();
-                ExpandButton.Content = "Expand";
-            }
-            else
-            {
-                foreach(var setting in solution.Settings)
+                try
                 {
-                    switch (setting.Kind)
-                    {
-                        case Setting.ValueKind.Boolean:
-                            ControlStack.Children.Add(new ManualControlBoolean(manager, solution.Id, setting));
-                            break;
-                        case Setting.ValueKind.Double:
-                            ControlStack.Children.Add(new ManualControlDouble(manager, solution.Id, setting));
-                            break;
-                        case Setting.ValueKind.Integer:
-                            ControlStack.Children.Add(new ManualControlInteger(manager, solution.Id, setting));
-                            break;
-                        case Setting.ValueKind.String:
-                            ControlStack.Children.Add(new ManualControlString(manager, solution.Id, setting));
-                            break;
-                    }
+                    var ctrl = (ManualControlBoolean?)element;
+                    if (ctrl != null) ctrl.ApplySetting();
                 }
-                ExpandButton.Content = "Collapse";
+                catch { }
+                try
+                {
+                    var ctrl = (ManualControlInteger?)element;
+                    if (ctrl != null) ctrl.ApplySetting();
+                }
+                catch { }
+                try
+                {
+                    var ctrl = (ManualControlDouble?)element;
+                    if (ctrl != null) ctrl.ApplySetting();
+                }
+                catch { }
+                try
+                {
+                    var ctrl = (ManualControlString?)element;
+                    if (ctrl != null) ctrl.ApplySetting();
+                }
+                catch { }
             }
-            expanded = !expanded;
         }
     }
 }

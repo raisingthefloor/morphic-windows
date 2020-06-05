@@ -7,13 +7,16 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
-        <DockPanel Margin="0,5,0,0" HorizontalAlignment="Stretch" VerticalAlignment="Top">
-            <TextBlock Name="ControlName"/>
-            <DockPanel HorizontalAlignment="Right">
-                <TextBlock Text="Double:" VerticalAlignment="Center"/>
-                <TextBox Name="InputField" VerticalAlignment="Center" Margin="5,0,20,0" Width="100"/>
-                <Button Content="APPLY" Click="Button_Click"/>
-            </DockPanel>
-        </DockPanel>
+        <TreeViewItem FontSize="14" FontWeight="Normal" Margin="0,5,0,0" Background="GhostWhite" Foreground="Black">
+            <TreeViewItem.Header>
+                <DockPanel Margin="0,5,0,0" HorizontalAlignment="Stretch" Width="700">
+                    <TextBlock Name="ControlName"/>
+                    <DockPanel DockPanel.Dock="Right" HorizontalAlignment="Right">
+                        <TextBlock Text="Double:" VerticalAlignment="Center"/>
+                        <TextBox Name="InputField" VerticalAlignment="Center" Margin="5,0,20,0" Width="100" LostFocus="ValueChanged" KeyDown="EnterCheck"/>
+                    </DockPanel>
+                </DockPanel>
+            </TreeViewItem.Header>
+        </TreeViewItem>
     </Grid>
 </UserControl>

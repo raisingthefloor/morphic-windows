@@ -7,16 +7,20 @@
         mc:Ignorable="d"
         Title="Morphic Manual Settings Tester" Height="700" Width="800">
     <Grid>
-        <StackPanel>
-            <DockPanel HorizontalAlignment="Stretch" Margin="0,0,0,0" Background="DarkGreen">
-                <TextBlock Name="LoadedFileName" HorizontalAlignment="Center" Foreground="White" FontWeight="Bold" FontSize="16" VerticalAlignment="Center" Margin="10">NO REGISTRY LOADED</TextBlock>
-                <Button Name="LoadRegistry" Content=" Load New Registry " HorizontalAlignment="Right" Click="LoadNewRegistry" VerticalAlignment="Stretch"></Button>
+        <StackPanel Background="DarkGreen">
+            <DockPanel HorizontalAlignment="Stretch" Margin="0,0,0,0">
+                <TextBlock HorizontalAlignment="Center" Foreground="White" FontWeight="Bold" FontSize="16" VerticalAlignment="Center" Margin="5">Manual Settings Tester</TextBlock>
+                <DockPanel DockPanel.Dock="Right" HorizontalAlignment="Right">
+                    <TextBlock Foreground="White" FontWeight="Bold" VerticalAlignment="Center">Auto-Apply Settings:</TextBlock>
+                    <CheckBox Name="AutoApplyToggle" VerticalAlignment="Center" Margin="10"/>
+                    <Button Name="ApplySettings" Content=" Apply Settings " Click="ApplyAllSettings" VerticalAlignment="Stretch"/>
+                    <Button Name="LoadRegistry" Content=" Load New Registry " Click="LoadNewRegistry" VerticalAlignment="Stretch"/>
+                </DockPanel>
             </DockPanel>
-            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible" Height="621">
-                <StackPanel Name="SettingsList" VerticalAlignment="Stretch" HorizontalAlignment="Left">
-                    <TextBlock Margin="10">Please load a solution registry file</TextBlock>
-                </StackPanel>
-            </ScrollViewer>
+            <TextBlock Name="LoadedFileName" Margin="10,0,0,0" Foreground="White" HorizontalAlignment="Stretch">NO REGISTRY LOADED</TextBlock>
+            <TreeView Name="SettingsList" Background="White" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Height="643">
+                <TextBlock Margin="10">Please load a solution registry file</TextBlock>
+            </TreeView>
         </StackPanel>
     </Grid>
 </Window>

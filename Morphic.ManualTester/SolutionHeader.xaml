@@ -7,12 +7,6 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
-        <StackPanel Margin="0,20,0,0">
-            <DockPanel HorizontalAlignment="Stretch">
-                <TextBlock Name="SolutionName"  FontWeight="Bold" FontSize="20"/>
-                <Button Name="ExpandButton" Content="Expand" Width="100" HorizontalAlignment="Right" Click="ExpandButton_Click"/>
-            </DockPanel>
-            <StackPanel Name="ControlStack" HorizontalAlignment="Stretch" Margin="0,10,0,0"/>
-        </StackPanel>
+        <TreeViewItem Name="ControlStack" Header="SOLUTION" FontSize="20" FontWeight="Bold" HorizontalAlignment="Stretch"/>
     </Grid>
 </UserControl>

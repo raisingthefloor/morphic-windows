@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="EO.WebBrowser" Version="20.1.45" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Morphic.Core\Morphic.Core.csproj" />
     <ProjectReference Include="..\Morphic.Settings\Morphic.Settings.csproj" />
     <ProjectReference Include="..\Morphic.Windows.Native\Morphic.Windows.Native.csproj" />

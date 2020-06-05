@@ -1,24 +1,19 @@
-﻿using System;
-using System.Windows;
-using System.Threading.Tasks;
-using System.Text.Json;
-using System.Collections.Generic;
-using System.Windows.Threading;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Morphic.Core;
+using Microsoft.Win32;
 using Morphic.Settings;
 using Morphic.Settings.Ini;
 using Morphic.Settings.Registry;
 using Morphic.Settings.Spi;
 using Morphic.Settings.SystemSettings;
-using System.IO;
-using System.Reflection;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
+using System.Runtime.CompilerServices;
+using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
-using Microsoft.Win32;
+using System.Windows.Threading;
 
 namespace Morphic.ManualTester
 {
@@ -32,6 +27,7 @@ namespace Morphic.ManualTester
         private ILogger<MainWindow> logger = null!;
         public string fileContent = "";
         public string filePath = "";
+        public bool AutoApply { get { return (AutoApplyToggle.IsChecked != null) ? (bool)AutoApplyToggle.IsChecked : false; } }
 
         public MainWindow()
         {
@@ -98,30 +94,46 @@ namespace Morphic.ManualTester
             if(filedialog.ShowDialog() == true)
             {
                 this.LoadedFileName.Text = "...";
-                this.SettingsList.Children.Clear();
+                this.SettingsList.Items.Clear();
                 var loadtext = new TextBlock();
                 loadtext.Text = "LOADING...";
-                this.SettingsList.Children.Add(loadtext);
+                this.SettingsList.Items.Add(loadtext);
                 var manager = ServiceProvider.GetRequiredService<SettingsManager>();
                 try
                 {
                     await manager.Populate(filedialog.FileName);
                     this.LoadedFileName.Text = "Loaded file " + filedialog.FileName;
-                    this.SettingsList.Children.Clear();
+                    this.SettingsList.Items.Clear();
                     foreach(var solution in manager.SolutionsById)
                     {
-                        SolutionHeader header = new SolutionHeader(manager, solution.Value);
-                        SettingsList.Children.Add(header);
+                        SolutionHeader header = new SolutionHeader(this, manager, solution.Value);
+                        SettingsList.Items.Add(header);
                     }
                 }
                 catch
                 {
                     this.LoadedFileName.Text = "ERROR";
-                    this.SettingsList.Children.Clear();
+                    this.SettingsList.Items.Clear();
                     var feature = new TextBlock();
                     feature.Text = "AN ERROR HAS OCCURRED. TRY A DIFFERENT FILE";
-                    this.SettingsList.Children.Add(feature);
+                    this.SettingsList.Items.Add(feature);
                 }
+            }
+        }
+
+        private void ApplyAllSettings(object sender, RoutedEventArgs e)
+        {
+            foreach(var element in this.SettingsList.Items)
+            {
+                try
+                {
+                    SolutionHeader? header = (SolutionHeader?)element;
+                    if (header != null)
+                    {
+                        header.ApplyAllSettings();
+                    }
+                }
+                catch { }
             }
         }
     }

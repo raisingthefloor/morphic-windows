@@ -14,9 +14,12 @@ namespace Morphic.ManualTester
         public string solutionId;
         public Setting setting;
         public Preferences.Key key;
-        public ManualControlBoolean(SettingsManager manager, string solutionId, Setting setting)
+        private MainWindow window;
+        private bool changed;
+        public ManualControlBoolean(MainWindow window, SettingsManager manager, string solutionId, Setting setting)
         {
             InitializeComponent();
+            this.window = window;
             this.manager = manager;
             this.solutionId = solutionId;
             this.setting = setting;
@@ -25,14 +28,22 @@ namespace Morphic.ManualTester
             CheckValue();
         }
 
+        private void ValueChanged(object sender, RoutedEventArgs e)
+        {
+            changed = true;
+            if (window.AutoApply) ApplySetting();
+        }
+
         private async void CheckValue()
         {
             bool? check = await manager.CaptureBool(key);
             ControlCheckBox.IsChecked = check;
         }
 
-        private async void Button_Click(object sender, RoutedEventArgs e)
+        public async void ApplySetting()
         {
+            if (!changed) return;
+            changed = false;
             bool success = await manager.Apply(key, ControlCheckBox.IsChecked);
             if (!success) CheckValue();
         }
