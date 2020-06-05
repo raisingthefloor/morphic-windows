@@ -91,14 +91,6 @@ stages:
             solution: 'Morphic.Setup\Morphic.Setup.wixproj'
             platform: 'x64'
             configuration: '$(buildConfiguration)'
-        
-        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicSetup.msi
-          displayName: "save x64 installer for later"
-          artifact: x64-installer
-          
-        - publish: $(System.DefaultWorkingDirectory)\Morphic.Client\BuildVersion.txt
-          displayName: "save build version numbers"
-          artifact: build-version
 
         - task: DotNetCoreCLI@2
           displayName: Install AzureSignTool
@@ -120,6 +112,14 @@ stages:
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl)"
               -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicSetup.msi
+        
+        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicSetup.msi
+          displayName: "save x64 installer for later"
+          artifact: x64-installer
+
+        - publish: $(System.DefaultWorkingDirectory)\Morphic.Client\BuildVersion.txt
+          displayName: "save build version numbers"
+          artifact: build-version
             
   - stage: upload
     jobs:
