@@ -18,9 +18,11 @@
                 </DockPanel>
             </DockPanel>
             <TextBlock Name="LoadedFileName" Margin="10,0,0,0" Foreground="White" HorizontalAlignment="Stretch">NO REGISTRY LOADED</TextBlock>
-            <TreeView Name="SettingsList" Background="White" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Height="643">
-                <TextBlock Margin="10">Please load a solution registry file</TextBlock>
-            </TreeView>
+            <DockPanel Background="White" Height="633">
+                <TreeView Name="SettingsList" VerticalAlignment="Top" HorizontalAlignment="Stretch" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" Height="600">
+                    <TextBlock Margin="10">Please load a solution registry file</TextBlock>
+                </TreeView>
+            </DockPanel>
         </StackPanel>
     </Grid>
 </Window>

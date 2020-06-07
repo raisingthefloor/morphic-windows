@@ -15,7 +15,7 @@ namespace Morphic.ManualTester
         public Setting setting;
         public Preferences.Key key;
         private MainWindow window;
-        private bool changed;
+        public bool changed;
         public ManualControlBoolean(MainWindow window, SettingsManager manager, string solutionId, Setting setting)
         {
             InitializeComponent();

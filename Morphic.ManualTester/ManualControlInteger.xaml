@@ -9,7 +9,7 @@
     <Grid>
         <TreeViewItem FontSize="14" FontWeight="Normal" Margin="0,5,0,0" Background="GhostWhite" Foreground="Black">
             <TreeViewItem.Header>
-                <DockPanel Margin="0,5,0,0" HorizontalAlignment="Stretch" Width="700">
+                <DockPanel Margin="0,5,0,0" HorizontalAlignment="Stretch" Width="600">
                     <TextBlock Name="ControlName"/>
                     <DockPanel DockPanel.Dock="Right" HorizontalAlignment="Right">
                         <TextBlock Text="Integer:" VerticalAlignment="Center"/>

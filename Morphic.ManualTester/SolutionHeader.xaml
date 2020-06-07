@@ -7,6 +7,6 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
-        <TreeViewItem Name="ControlStack" Header="SOLUTION" FontSize="20" FontWeight="Bold" HorizontalAlignment="Stretch"/>
+        <TreeViewItem Name="ControlStack" Header="SOLUTION" FontSize="20" FontWeight="Bold" HorizontalAlignment="Stretch" TreeViewItem.Expanded="ControlStack_Expanded" TreeViewItem.Collapsed="ControlStack_Collapsed"/>
     </Grid>
 </UserControl>

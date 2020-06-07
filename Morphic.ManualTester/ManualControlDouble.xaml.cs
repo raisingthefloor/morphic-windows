@@ -16,7 +16,7 @@ namespace Morphic.ManualTester
         public Setting setting;
         public Preferences.Key key;
         private MainWindow window;
-        private bool changed = false;
+        public bool changed = false;
         public ManualControlDouble(MainWindow window, SettingsManager manager, string solutionId, Setting setting)
         {
             InitializeComponent();
