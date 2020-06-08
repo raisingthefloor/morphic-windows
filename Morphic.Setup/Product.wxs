@@ -26,7 +26,7 @@
         </InstallExecuteSequence>
 
         <UIRef Id="WixUI_Minimal" />
-        <WixVariable Id="WixUILicenseRtf" Value="Morphic.Setup\License.rtf" />
+        <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
     </Product>
 
     <Fragment>
