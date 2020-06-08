@@ -104,7 +104,8 @@ stages:
           inputs:
             targetType: 'inline'
             script: >
-              AzureSignTool sign 
+              AzureSignTool sign
+              -d Morphic
               -du "$(SigningURL)" 
               -kvu "$(SigningVaultURL)" 
               -kvi "$(SigningClientId)" 
