@@ -159,7 +159,7 @@ stages:
                   echo "detected master build"
                   S3_OBJECT_PREFIX="win/x64/edge"
                   EXTRA_ARGS="--expires $(date -d '+21 days' --iso-8601=seconds)"
-                if [[ "${BRANCH_NAME}" == *"release/"* ]]; then
+                elif [[ "${BRANCH_NAME}" == *"release/"* ]]; then
                   echo "detected release build"
                   S3_OBJECT_PREFIX="win/x64/stable"
                 else
