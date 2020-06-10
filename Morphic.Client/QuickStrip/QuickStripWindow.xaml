@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Morphic.Client"
         mc:Ignorable="d"
-        Title="Morphic Quick Strip"
+        Title="MorphicBar"
         Height="60"
         Width="800"
         ShowInTaskbar="False"
@@ -27,8 +27,8 @@
             <Image Source="/Icon.png"/>
             <Button.ContextMenu>
                 <ContextMenu>
-                    <MenuItem Header="Hide Quick Strip" Click="HideQuickStrip"/>
-                    <MenuItem Header="Customize Quick Strip..."  Click="CustomizeQuickStrip" IsEnabled="False"/>
+                    <MenuItem Header="Hide MorphicBar" Click="HideQuickStrip"/>
+                    <!--<MenuItem Header="Customize MorphicBar..."  Click="CustomizeQuickStrip" IsEnabled="False"/>-->
                     <Separator/>
                     <MenuItem Header="Take My Settings with Me..." Click="TravelWithSettings"/>
                     <MenuItem Header="Apply My Settings..." Click="ApplyMySettings"/>
