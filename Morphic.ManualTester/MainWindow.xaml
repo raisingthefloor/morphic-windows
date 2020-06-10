@@ -1,0 +1,28 @@
+﻿<Window x:Class="Morphic.ManualTester.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Morphic.ManualTester"
+        mc:Ignorable="d"
+        Title="Morphic Manual Settings Tester" Height="700" Width="800">
+    <Grid>
+        <StackPanel Background="DarkGreen">
+            <DockPanel HorizontalAlignment="Stretch" Margin="0,0,0,0">
+                <TextBlock HorizontalAlignment="Center" Foreground="White" FontWeight="Bold" FontSize="16" VerticalAlignment="Center" Margin="5">Manual Settings Tester</TextBlock>
+                <DockPanel DockPanel.Dock="Right" HorizontalAlignment="Right">
+                    <TextBlock Foreground="White" FontWeight="Bold" VerticalAlignment="Center">Auto-Apply Settings:</TextBlock>
+                    <CheckBox Name="AutoApplyToggle" VerticalAlignment="Center" Margin="10"/>
+                    <Button Name="ApplySettings" Content=" Apply Settings " Click="ApplyAllSettings" VerticalAlignment="Stretch"/>
+                    <Button Name="LoadRegistry" Content=" Load New Registry " Click="LoadNewRegistry" VerticalAlignment="Stretch"/>
+                </DockPanel>
+            </DockPanel>
+            <TextBlock Name="LoadedFileName" Margin="10,0,0,0" Foreground="White" HorizontalAlignment="Stretch">NO REGISTRY LOADED</TextBlock>
+            <DockPanel Background="White" Height="633">
+                <TreeView Name="SettingsList" VerticalAlignment="Top" HorizontalAlignment="Stretch" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" Height="600">
+                    <TextBlock Margin="10">Please load a solution registry file</TextBlock>
+                </TreeView>
+            </DockPanel>
+        </StackPanel>
+    </Grid>
+</Window>

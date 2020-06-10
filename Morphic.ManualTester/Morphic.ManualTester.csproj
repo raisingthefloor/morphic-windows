@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EO.WebBrowser" Version="20.1.45" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Morphic.Core\Morphic.Core.csproj" />
+    <ProjectReference Include="..\Morphic.Settings\Morphic.Settings.csproj" />
+    <ProjectReference Include="..\Morphic.Windows.Native\Morphic.Windows.Native.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="ManualControlBoolean - Copy.xaml.cs">
+      <SubType>Code</SubType>
+      <DependentUpon>ManualControlBoolean - Copy.xaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="ManualControlInteger - Copy.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+
+</Project>

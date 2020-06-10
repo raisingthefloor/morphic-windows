@@ -31,6 +31,7 @@ using System.Media;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System;
 
 namespace Morphic.Client.Login
 {
@@ -42,10 +43,13 @@ namespace Morphic.Client.Login
 
         #region Create a Window
 
-        public LoginWindow(Session session, ILogger<LoginWindow> logger)
+        public LoginWindow(Session session, ILogger<LoginWindow> logger, SessionOptions options)
         {
             this.session = session;
             this.logger = logger;
+            var builder = new UriBuilder(options.FontEndUri);
+            builder.Path = "/password/reset";
+            ForgotPasswordUriString = builder.Uri.AbsoluteUri;
             InitializeComponent();
         }
 
@@ -94,6 +98,7 @@ namespace Morphic.Client.Login
             if (!success)
             {
                 ErrorLabel.Visibility = Visibility.Visible;
+                ErrorLabel.Focus(); // Makes narrator read the error label
                 SetFieldsEnabled(true);
             }
             else
@@ -108,6 +113,14 @@ namespace Morphic.Client.Login
             UsernameField.IsEnabled = enabled;
             PasswordField.IsEnabled = enabled;
             LoginButton.IsEnabled = enabled;
+        }
+
+        public string ForgotPasswordUriString { get; set; } = "";
+
+        private void ForgotPassword(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+        {
+            System.Diagnostics.Process.Start("explorer.exe", e.Uri.AbsoluteUri);
+            e.Handled = true;
         }
 
         #endregion
@@ -155,5 +168,6 @@ namespace Morphic.Client.Login
         }
 
         #endregion
+
     }
 }

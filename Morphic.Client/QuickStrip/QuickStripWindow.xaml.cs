@@ -135,6 +135,12 @@ namespace Morphic.Client.QuickStrip
             Countly.RecordEvent("customize-quickstrip");
         }
 
+        private void AboutMorphic(object sender, RoutedEventArgs e)
+        {
+            Countly.RecordEvent("about-morphic");
+            App.Shared.OpenAboutWindow();
+        }
+
         private void TravelWithSettings(object sender, RoutedEventArgs e)
         {
             Countly.RecordEvent("travel-with-settings");

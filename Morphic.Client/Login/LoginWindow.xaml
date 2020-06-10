@@ -1,4 +1,4 @@
-﻿<Window x:Class="Morphic.Client.Login.LoginWindow"
+﻿<Window x:Name="window" x:Class="Morphic.Client.Login.LoginWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Morphic.Client"
         mc:Ignorable="d"
         Title="Login to Morphic"
-        Height="330"
+        Height="380"
         Width="500"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
@@ -22,14 +22,15 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Image Grid.Row="0" Grid.ColumnSpan="2" Source="../Icon.png" HorizontalAlignment="Center" Width="60" Margin="0,20"/>
-        <Label Grid.Row="1" Grid.Column="0" FontSize="17" Margin="0,4">Email Address</Label>
-        <TextBox Grid.Column="1" Grid.Row="1" Margin="0,4" x:Name="UsernameField" AcceptsReturn="False" AcceptsTab="False" MaxLines="1" TextWrapping="NoWrap" TextChanged="UsernameField_TextChanged" FontSize="17" VerticalAlignment="Center" Padding="0,4,0,4" AutomationProperties.HelpText="Enter your email address" AutomationProperties.IsRequiredForForm="True" AutomationProperties.Name="Email Field" />
-        <Label Grid.Row="2" Grid.Column="0" FontSize="17" Margin="0,4">Password</Label>
-        <PasswordBox Grid.Column="1" Grid.Row="2" Margin="0,4" x:Name="PasswordField" PasswordChanged="PasswordField_PasswordChanged" FontSize="17" VerticalAlignment="Center" Padding="0,4,0,4" AutomationProperties.Name="Morphic Password Field" AutomationProperties.IsRequiredForForm="True" AutomationProperties.HelpText="Enter your Morphic password"/>
-        <Label x:Name="ErrorLabel" Grid.Row="3" Grid.ColumnSpan="2" HorizontalAlignment="Center" FontSize="17" FontWeight="SemiBold" Foreground="#ffcc0000" Visibility="Hidden">We did not recognize your login.  Please try again.</Label>
-        <Button x:Name="LoginButton" Grid.Row="4" Grid.ColumnSpan="2" Width="Auto" HorizontalAlignment="Center" FontSize="17" FontWeight="Bold" Margin="0,5,0,10" Click="OnLogin" IsEnabled="False" AutomationProperties.HelpText="Login and apply your settings" AutomationProperties.Name="Login Button">
+        <Label x:Name="EmailFieldLabel" Grid.Row="1" Grid.Column="0" FontSize="17" Margin="0,4">Email Address</Label>
+        <TextBox Grid.Column="1" Grid.Row="1" Margin="0,4" x:Name="UsernameField" AcceptsReturn="False" AcceptsTab="False" MaxLines="1" TextWrapping="NoWrap" TextChanged="UsernameField_TextChanged" FontSize="17" VerticalAlignment="Center" Padding="0,4,0,4" AutomationProperties.HelpText="Enter your email address" AutomationProperties.IsRequiredForForm="True" AutomationProperties.LabeledBy="{Binding ElementName=EmailFieldLabel}" />
+        <Label x:Name="PasswordFieldLabel" Grid.Row="2" Grid.Column="0" FontSize="17" Margin="0,4">Password</Label>
+        <PasswordBox Grid.Column="1" Grid.Row="2" Margin="0,4" x:Name="PasswordField" PasswordChanged="PasswordField_PasswordChanged" FontSize="17" VerticalAlignment="Center" Padding="0,4,0,4" AutomationProperties.IsRequiredForForm="True" AutomationProperties.HelpText="Enter your Morphic password" AutomationProperties.LabeledBy="{Binding ElementName=PasswordFieldLabel}"/>
+        <Label x:Name="ErrorLabel" Grid.Row="3" Grid.ColumnSpan="2" HorizontalAlignment="Center" FontSize="17" FontWeight="SemiBold" Foreground="#ffcc0000" Visibility="Hidden" AutomationProperties.AutomationId="ErrorLabel" Focusable="True">We did not recognize your login.  Please try again.</Label>
+        <Button x:Name="LoginButton" Grid.Row="4" Grid.ColumnSpan="2" Width="Auto" HorizontalAlignment="Center" FontSize="17" FontWeight="Bold" Margin="0,5,0,10" Click="OnLogin" IsEnabled="False" AutomationProperties.HelpText="Login and apply your settings">
             <Button.Style>
                 <Style TargetType="{x:Type Button}">
                     <Setter Property="Background" Value="#FF008145"/>
@@ -61,5 +62,8 @@
             </Button.Style>
             Apply My Settings
         </Button>
+        <Label Grid.Row="7" Grid.ColumnSpan="2" HorizontalAlignment="Center" Margin="0,20,0,0">
+            <Hyperlink NavigateUri="{Binding ForgotPasswordUriString, ElementName=window}" RequestNavigate="ForgotPassword">Forgot Password</Hyperlink>
+        </Label>
     </Grid>
 </Window>

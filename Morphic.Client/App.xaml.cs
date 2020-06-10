@@ -24,6 +24,7 @@
 using System;
 using System.Windows;
 using System.Threading.Tasks;
+using System.Threading;
 using System.Text.Json;
 using System.Collections.Generic;
 using System.Windows.Threading;
@@ -48,9 +49,30 @@ using CountlySDK.Entities;
 using System.Windows.Controls;
 using System.Windows.Input;
 using NHotkey.Wpf;
+using Morphic.Client.About;
+using AutoUpdaterDotNET;
+using System.Runtime.InteropServices;
 
 namespace Morphic.Client
 {
+
+    public class AppMain
+    {
+        [STAThread]
+        public static void Main()
+        {
+            // Writing our own Main function so we can use a mutex to enforce only one running instance of Morphic at a time
+            using (Mutex mutex = new Mutex(false, App.ApplicationId))
+            {
+                if (!mutex.WaitOne(0, false))
+                {
+                    return;
+                }
+                App.Main();
+            }
+        }
+    }
+
     /// <summary>
     /// Interaction logic for App.xaml
     /// </summary>
@@ -61,6 +83,8 @@ namespace Morphic.Client
         public IConfiguration Configuration { get; private set; } = null!;
         public Session Session { get; private set; } = null!;
         private ILogger<App> logger = null!;
+
+        public const string ApplicationId = "A6E8092B-51F4-4CAA-A874-A791152B5698";
 
         #region Configuration & Startup
 
@@ -92,11 +116,13 @@ namespace Morphic.Client
         {
             services.AddLogging(ConfigureLogging);
             services.Configure<SessionOptions>(Configuration.GetSection("MorphicService"));
+            services.Configure<UpdateOptions>(Configuration.GetSection("Update"));
             services.AddSingleton<IServiceCollection>(services);
             services.AddSingleton<IServiceProvider>(provider => provider);
             services.AddSingleton<SessionOptions>(serviceProvider => serviceProvider.GetRequiredService<IOptions<SessionOptions>>().Value);
             services.AddSingleton(new StorageOptions { RootPath = Path.Combine(ApplicationDataFolderPath, "Data") });
             services.AddSingleton(new KeychainOptions { Path = Path.Combine(ApplicationDataFolderPath, "keychain") });
+            services.AddSingleton<UpdateOptions>(serviceProvider => serviceProvider.GetRequiredService<IOptions<UpdateOptions>>().Value);
             services.AddSingleton<IDataProtection, DataProtector>();
             services.AddSingleton<IUserSettings, WindowsUserSettings>();
             services.AddSingleton<IRegistry, WindowsRegistry>();
@@ -107,12 +133,14 @@ namespace Morphic.Client
             services.AddSingleton<Keychain>();
             services.AddSingleton<Storage>();
             services.AddSingleton<Session>();
+            services.AddSingleton<BuildInfo>(BuildInfo.FromJsonFile("build-info.json"));
             services.AddTransient<TravelWindow>();
             services.AddTransient<CreateAccountPanel>();
             services.AddTransient<CapturePanel>();
             services.AddTransient<TravelCompletedPanel>();
             services.AddTransient<QuickStripWindow>();
             services.AddTransient<LoginWindow>();
+            services.AddTransient<AboutWindow>();
             services.AddMorphicSettingsHandlers(ConfigureSettingsHandlers);
         }
 
@@ -122,10 +150,9 @@ namespace Morphic.Client
             CountlyConfig cc = new CountlyConfig();
             cc.appKey = section["AppKey"];
             cc.serverUrl = section["ServerUrl"];
-            var assembly = Assembly.GetExecutingAssembly();
-            var informationVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
-                .InformationalVersion;
-            cc.appVersion = informationVersion;
+            var buildInfo = ServiceProvider.GetRequiredService<BuildInfo>();
+
+            cc.appVersion = buildInfo.InformationalVersion;
 
             Countly.Instance.Init(cc);
             Countly.Instance.SessionBegin();
@@ -146,6 +173,7 @@ namespace Morphic.Client
         {
             Exception ex = e.Exception;
             logger.LogError("handled uncaught exception: {msg}", ex.Message);
+            logger.LogError(ex.StackTrace);
 
             Dictionary<String, String> extraData = new Dictionary<string, string>();
             Countly.RecordException(ex.Message, ex.StackTrace, extraData, true)
@@ -187,9 +215,10 @@ namespace Morphic.Client
             CreateMainMenu();
             CreateNotifyIcon();
             RegisterGlobalHotKeys();
+            ConfigureCountly();
+            StartCheckingForUpdates();
             var task = OpenSession();
             task.ContinueWith(SessionOpened, TaskScheduler.FromCurrentSynchronizationContext());
-            ConfigureCountly();
         }
 
         private void Session_UserChanged(object? sender, EventArgs e)
@@ -393,6 +422,11 @@ namespace Morphic.Client
             _ = Session.Signout();
         }
 
+        private void About(object sender, RoutedEventArgs e)
+        {
+            OpenAboutWindow();
+        }
+
         /// <summary>
         /// Event handler for when the user selects Quit from the logo button's menu
         /// </summary>
@@ -505,6 +539,7 @@ namespace Morphic.Client
             }
             TravelWindow.Activate();
         }
+        
 
         /// <summary>
         /// Called when the configurator window closes
@@ -516,6 +551,31 @@ namespace Morphic.Client
             TravelWindow = null;
         }
 
+        #endregion
+        
+        #region About Window
+
+        private AboutWindow? AboutWindow = null;
+        
+        /// <summary>
+        /// Show the Morphic Configurator window
+        /// </summary>
+        internal void OpenAboutWindow()
+        {
+            if (AboutWindow == null)
+            {
+                AboutWindow = ServiceProvider.GetRequiredService<AboutWindow>();
+                AboutWindow.Show();
+                AboutWindow.Closed += OnAboutWindowClosed;
+            }
+            AboutWindow.Activate();
+        }
+        
+        private void OnAboutWindowClosed(object? sender, EventArgs e)
+        {
+            AboutWindow = null;
+        }
+        
         #endregion
 
         #region Login Window
@@ -536,6 +596,19 @@ namespace Morphic.Client
         private void OnLoginWindowClosed(object? sender, EventArgs e)
         {
             loginWindow = null;
+        }
+
+        #endregion
+
+        #region Updates
+
+        void StartCheckingForUpdates()
+        {
+            var options = ServiceProvider.GetRequiredService<UpdateOptions>();
+            if (options.AppCastUrl != "")
+            {
+                AutoUpdater.Start(options.AppCastUrl);
+            }
         }
 
         #endregion

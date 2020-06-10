@@ -132,6 +132,7 @@ namespace Morphic.Client.Travel
                 }
                 ErrorLabel.Visibility = Visibility.Visible;
                 ErrorLabel.Content = errorMessage;
+                ErrorLabel.Focus(); // Causes screen reader to read label
                 SetFieldsEnabled(true);
             }
         }

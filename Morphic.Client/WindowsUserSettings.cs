@@ -28,7 +28,7 @@ using Morphic.Core;
 
 namespace Morphic.Client
 {
-    class WindowsUserSettings : IUserSettings
+    public class WindowsUserSettings : IUserSettings
     {
         public string? UserId
         {

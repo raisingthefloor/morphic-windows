@@ -152,6 +152,7 @@ namespace Morphic.Settings
         {
             var prefs = new Preferences();
             var session = new CaptureSession(this, prefs);
+            session.CaptureDefaultValues = true;
             session.Keys.Add(key);
             await session.Run();
             return prefs.Get(key);
