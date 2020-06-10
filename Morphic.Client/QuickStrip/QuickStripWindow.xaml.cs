@@ -382,12 +382,15 @@ namespace Morphic.Client.QuickStrip
                     {SettingsManager.Keys.WindowsMagnifierEnabled, true},
                 };
 
-                // capture the current settings
-                var capture = await Task.WhenAll(settings.Select(
-                    async setting => new KeyValuePair<Preferences.Key, object?>(setting.Key,
-                        await this.session.SettingsManager.Capture(setting.Key))));
+                if (this.magnifyCapture == null)
+                {
+                    // capture the current settings
+                    var capture = await Task.WhenAll(settings.Select(
+                        async setting => new KeyValuePair<Preferences.Key, object?>(setting.Key,
+                            await this.session.SettingsManager.Capture(setting.Key))));
 
-                this.magnifyCapture = capture.ToDictionary(s => s.Key, s => s.Value);
+                    this.magnifyCapture = capture.ToDictionary(s => s.Key, s => s.Value);
+                }
 
                 await session.Apply(settings);
             }
