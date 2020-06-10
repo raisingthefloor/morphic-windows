@@ -21,40 +21,35 @@
           "setting_id": "SystemSettings_Accessibility_CoreHighContrast_IsEnabled",
           "value_type": "boolean"
         }
-      }
-    ]
-  },
-  {
-    "id": "com.microsoft.windows.cursor",
-    "settings": [
+      },
       {
-        "name": "arrow",
-        "type": "string",
-        "default": "%SystemRoot%\\cursors\\aero_arrow.cur",
+        "name": "colorfilter.enabled",
+        "type": "boolean",
+        "default": false,
         "handler": {
-          "type": "com.microsoft.windows.registry",
-          "key_name": "HKEY_CURRENT_USER\\Control Panel\\Cursors",
-          "value_name": "Arrow",
-          "value_type": "expandString"
-        },
-        "finalizer": {
-          "type": "com.microsoft.windows.systemParametersInfo",
-          "action": "setcursors"
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_ColorFiltering_IsEnabled",
+          "value_type": "boolean"
         }
       },
       {
-        "name": "wait",
-        "type": "string",
-        "default": "%SystemRoot%\\cursors\\aero_busy.ani",
+        "name": "colorfilter.shortcut.enabled",
+        "type": "boolean",
+        "default": false,
         "handler": {
-          "type": "com.microsoft.windows.registry",
-          "key_name": "HKEY_CURRENT_USER\\Control Panel\\Cursors",
-          "value_name": "Wait",
-          "value_type": "expandString"
-        },
-        "finalizer": {
-          "type": "com.microsoft.windows.systemParametersInfo",
-          "action": "setcursors"
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_ColorFiltering_IsShortcutKeyEnabled",
+          "value_type": "boolean"
+        }
+      },
+      {
+        "name": "colorfilter.type",
+        "type": "integer",
+        "default": 1,
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_ColorFiltering_FilterType",
+          "value_type": "integer"
         }
       }
     ]
