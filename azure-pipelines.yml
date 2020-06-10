@@ -20,6 +20,7 @@ trigger:
   branches:
     include:
       - master
+      - "release/*"
 
 pool:
   vmImage: 'windows-latest'
@@ -157,6 +158,10 @@ stages:
                 if [[ "${BRANCH_NAME}" == "master" ]]; then
                   echo "detected master build"
                   S3_OBJECT_PREFIX="win/x64/edge"
+                  EXTRA_ARGS="--expires $(date -d '+21 days' --iso-8601=seconds)"
+                if [[ "${BRANCH_NAME}" == *"release/"* ]]; then
+                  echo "detected release build"
+                  S3_OBJECT_PREFIX="win/x64/stable"
                 else
                   echo "detected PR build"
                   S3_OBJECT_PREFIX="win/x64/internal"
