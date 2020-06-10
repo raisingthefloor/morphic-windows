@@ -24,6 +24,7 @@
 using System;
 using System.Windows;
 using System.Threading.Tasks;
+using System.Threading;
 using System.Text.Json;
 using System.Collections.Generic;
 using System.Windows.Threading;
@@ -50,9 +51,28 @@ using System.Windows.Input;
 using NHotkey.Wpf;
 using Morphic.Client.About;
 using AutoUpdaterDotNET;
+using System.Runtime.InteropServices;
 
 namespace Morphic.Client
 {
+
+    public class AppMain
+    {
+        [STAThread]
+        public static void Main()
+        {
+            // Writing our own Main function so we can use a mutex to enforce only one running instance of Morphic at a time
+            using (Mutex mutex = new Mutex(false, App.ApplicationId))
+            {
+                if (!mutex.WaitOne(0, false))
+                {
+                    return;
+                }
+                App.Main();
+            }
+        }
+    }
+
     /// <summary>
     /// Interaction logic for App.xaml
     /// </summary>
@@ -63,6 +83,8 @@ namespace Morphic.Client
         public IConfiguration Configuration { get; private set; } = null!;
         public Session Session { get; private set; } = null!;
         private ILogger<App> logger = null!;
+
+        public const string ApplicationId = "A6E8092B-51F4-4CAA-A874-A791152B5698";
 
         #region Configuration & Startup
 
