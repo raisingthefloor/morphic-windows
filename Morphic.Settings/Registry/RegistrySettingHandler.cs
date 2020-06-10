@@ -130,6 +130,10 @@ namespace Morphic.Settings.Registry
                 registryValue = null;
                 return false;
             }
+            if (value is int intValue)
+            {
+                value = (long)intValue;
+            }
             if (value is long longValue)
             {
                 switch (registryValueKind)
