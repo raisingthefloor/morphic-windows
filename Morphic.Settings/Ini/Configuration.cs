@@ -127,7 +127,7 @@ namespace Morphic.Settings.Ini
             ConfigurationValue? configurationValue;
             if (!sectionsByName.TryGetValue(section, out configurationSection))
             {
-                configurationSection = new ConfigurationSection("", section);
+                configurationSection = new ConfigurationSection("", "", section, "", "");
                 configurationSection.Index = lines.Count;
                 sectionsByName.Add(section, configurationSection);
                 lines.Add(configurationSection);
@@ -311,13 +311,19 @@ namespace Morphic.Settings.Ini
                 if (iniLine[i] == ']')
                 {
                     ++i;
+                    var trailingWhitespace = "";
                     while (i < iniLine.Length && IsWhitespace(iniLine[i]))
                     {
+                        trailingWhitespace += iniLine[i];
                         ++i;
                     }
                     if (i == iniLine.Length)
                     {
-                        line = new ConfigurationSection(indentation, name.Trim());
+                        var trimmedName = name.TrimStart();
+                        var nameLeadingWhitespace = name.Substring(0, name.Length - trimmedName.Length);
+                        trimmedName = trimmedName.TrimEnd();
+                        var nameTrailingWhitespace = name.Substring(nameLeadingWhitespace.Length + trimmedName.Length);
+                        line = new ConfigurationSection(indentation, nameLeadingWhitespace, trimmedName, nameTrailingWhitespace, trailingWhitespace);
                         return true;
                     }
                 }
@@ -436,14 +442,20 @@ namespace Morphic.Settings.Ini
     {
 
         public string Name = "";
+        public string NameLeadingWhitespace = "";
+        public string NameTrailingWhitespace = "";
+        public string TrailingWhitespace = "";
 
         public List<ConfigurationValue> Values = new List<ConfigurationValue>();
 
         public Dictionary<string, ConfigurationValue> ValuesByKey = new Dictionary<string, ConfigurationValue>();
 
-        public ConfigurationSection(string indentation, string name): base(indentation)
+        public ConfigurationSection(string indentation, string nameLeadingWhitespace, string name, string nameTrailingWhitespace, string trailingWhitespace): base(indentation)
         {
+            NameLeadingWhitespace = nameLeadingWhitespace;
             Name = name;
+            NameTrailingWhitespace = nameTrailingWhitespace;
+            TrailingWhitespace = trailingWhitespace;
         }
 
         public void Add(ConfigurationValue value)
@@ -454,7 +466,7 @@ namespace Morphic.Settings.Ini
 
         public override string ToIniString()
         {
-            return String.Format("{0}[{1}]", Indentation, Name);
+            return String.Format("{0}[{1}{2}{3}]{4}", Indentation, NameLeadingWhitespace, Name, NameTrailingWhitespace, TrailingWhitespace);
         }
 
     }

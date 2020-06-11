@@ -238,6 +238,7 @@ namespace Morphic.Settings.Tests
             value = configuration.Get("Missing", "Second");
             Assert.Null(value);
 
+            lines = configuration.GetIniLines().ToArray();
             Assert.Equal(26, lines.Length);
             Assert.Equal("", lines[0]);
             Assert.Equal("    ", lines[1]);
