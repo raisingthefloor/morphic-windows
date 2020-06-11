@@ -55,19 +55,20 @@ namespace Morphic.Settings.Tests
                 throw new NotImplementedException();
             };
 
-            public string? GetValue(string section, string key)
+            public Task<string?> GetValue(string section, string key)
             {
                 ++getCount;
-                return nextGetResponder(section, key);
+                var result = nextGetResponder(section, key);
+                return Task.FromResult(result);
             }
 
-            public void SetValue(string section, string key, string value)
+            public Task<bool> SetValue(string section, string key, string value)
             {
                 ++setCount;
                 nextSetResponder(section, key, value);
+                return Task.FromResult(true);
             }
         }
-#nullable disable
 
         private class MockIniFactory : IIniFileFactory
         {
@@ -76,7 +77,18 @@ namespace Morphic.Settings.Tests
                 ++openCount;
                 return new MockIniFile();
             }
+
+            public Task Begin()
+            {
+                return Task.CompletedTask;
+            }
+
+            public Task Commit()
+            {
+                return Task.CompletedTask;
+            }
         }
+#nullable disable
 
         [Theory]
         [InlineData(Setting.ValueKind.String, "Hello", "Hello")]

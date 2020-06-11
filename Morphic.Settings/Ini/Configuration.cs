@@ -6,20 +6,31 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Linq;
+using Microsoft.VisualBasic;
 
 namespace Morphic.Settings.Ini
 {
+
+    /// <summary>
+    /// In-memory representation of an ini configuration file 
+    /// </summary>
     public class Configuration
     {
 
-        public static async Task<Configuration?> Open(string path)
+        #region Reading & Writing INI files
+
+        /// <summary>
+        /// Read the given path to an ini file 
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public static async Task<Configuration?> Read(string path)
         {
             try
             {
-                var iniLines = await File.ReadAllLinesAsync(path);
-                if (TryParse(iniLines, out var configuration))
+                using (var stream = File.OpenRead(path))
                 {
-                    return configuration;
+                    return await Read(stream);
                 }
             }
             catch
@@ -28,11 +39,69 @@ namespace Morphic.Settings.Ini
             return null;
         }
 
-        public async Task Write(string path)
+        /// <summary>
+        /// Create configuration by reading the ini contents from the given stream
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <returns></returns>
+        public static async Task<Configuration?> Read(Stream stream)
         {
-            await File.WriteAllLinesAsync(path, GetIniLines());
+            using (var reader = new StreamReader(stream))
+            {
+                var iniLines = new List<string>();
+                var line = await reader.ReadLineAsync();
+                while (line != null)
+                {
+                    iniLines.Add(line);
+                    line = await reader.ReadLineAsync();
+                }
+                if (TryParse(iniLines, out var configuration))
+                {
+                    return configuration;
+                }
+            }
+            return null;
         }
 
+        /// <summary>
+        /// Write the configuration in ini format to the given path
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public async Task Write(string path)
+        {
+            using (var stream = File.OpenWrite(path))
+            {
+                await Write(stream);
+            }
+        }
+
+        /// <summary>
+        /// Write the configuration to the given stream
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <returns></returns>
+        public async Task Write(Stream stream)
+        {
+            using (var writer = new StreamWriter(stream))
+            {
+                foreach (var line in GetIniLines())
+                {
+                    await writer.WriteLineAsync(line);
+                }
+            }
+        }
+
+        #endregion
+
+        #region Accessing & Updating Values
+
+        /// <summary>
+        /// Get the value for the given section/key pair
+        /// </summary>
+        /// <param name="section"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
         public string? Get(string section, string key)
         {
             if (sectionsByName.TryGetValue(section, out var configurationSection))
@@ -45,8 +114,12 @@ namespace Morphic.Settings.Ini
             return null;
         }
 
-        public bool IsChanged { get; private set; } = false;
-
+        /// <summary>
+        /// Add or update the value for the given section/key pair
+        /// </summary>
+        /// <param name="section"></param>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
         public void Set(string section, string key, string? value)
         {
             IsChanged = true;
@@ -83,35 +156,29 @@ namespace Morphic.Settings.Ini
                 configurationValue.Index = index;
                 configurationSection.Add(configurationValue);
                 lines.Insert(index, configurationValue);
-            }
-        }
-
-        public IEnumerable<string> GetIniLines()
-        {
-            foreach (var line in lines)
-            {
-                yield return line.ToIniString();
-            }
-        }
-
-        private Configuration(List<ConfigurationLine> lines)
-        {
-            this.lines = lines;
-            sectionsByName = new Dictionary<string, ConfigurationSection>();
-            foreach (var line in lines)
-            {
-                if (line is ConfigurationSection section)
+                for (var i = index + 1; i < lines.Count; ++i)
                 {
-                    sectionsByName.Add(section.Name, section);
+                    ++lines[i].Index;
                 }
             }
         }
 
-        private List<ConfigurationLine> lines;
+        /// <summary>
+        /// Indicates if any updates have been made
+        /// </summary>
+        public bool IsChanged { get; private set; } = false;
 
-        private Dictionary<string, ConfigurationSection> sectionsByName;
+        #endregion
 
-        private static bool TryParse(string[] iniLines, out Configuration? configuration)
+        #region Parsing & Formatting INI Lines
+
+        /// <summary>
+        /// Create a configuration by parsing the given ini lines
+        /// </summary>
+        /// <param name="iniLines"></param>
+        /// <param name="configuration"></param>
+        /// <returns></returns>
+        public static bool TryParse(IEnumerable<string> iniLines, out Configuration? configuration)
         {
             var lines = new List<ConfigurationLine>();
             ConfigurationLine? previousLine = null;
@@ -151,8 +218,42 @@ namespace Morphic.Settings.Ini
             return true;
         }
 
+        /// <summary>
+        /// Get the ini format as an array of lines
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<string> GetIniLines()
+        {
+            foreach (var line in lines)
+            {
+                yield return line.ToIniString();
+            }
+        }
+
+        #endregion
+
+        private Configuration(List<ConfigurationLine> lines)
+        {
+            this.lines = lines;
+            sectionsByName = new Dictionary<string, ConfigurationSection>();
+            foreach (var line in lines)
+            {
+                if (line is ConfigurationSection section)
+                {
+                    sectionsByName.Add(section.Name, section);
+                }
+            }
+        }
+
+        private List<ConfigurationLine> lines;
+
+        private Dictionary<string, ConfigurationSection> sectionsByName;
+
     }
 
+    /// <summary>
+    /// We represent the configuration as a list of <code>ConfigurationLine</code>s.  This is the base line
+    /// </summary>
     internal class ConfigurationLine
     {
 
@@ -172,6 +273,13 @@ namespace Morphic.Settings.Ini
             {
                 indentation += iniLine[i];
                 ++i;
+            }
+
+            // Empty or whitespace-only
+            if (i == iniLine.Length)
+            {
+                line = new ConfigurationLine(indentation);
+                return true;
             }
 
             // Comment
@@ -246,6 +354,7 @@ namespace Morphic.Settings.Ini
                     return false;
                 }
                 keyValueDelimiter = iniLine[i];
+                ++i;
                 while (i < iniLine.Length && IsWhitespace(iniLine[i]))
                 {
                     delimiterTrailingWhitespace += iniLine[i];
@@ -275,7 +384,7 @@ namespace Morphic.Settings.Ini
             {
                 if (indentation.Length > previousValueLine.Indentation.Length)
                 {
-                    previousValueLine.Value += " " + value;
+                    previousValueLine.Value += " " + key;
                     previousValueLine.ValueTrailingWhitespace = valueTrailingWhitespace;
                     line = previousValueLine;
                     return true;
@@ -297,6 +406,9 @@ namespace Morphic.Settings.Ini
         }
     }
 
+    /// <summary>
+    /// A comment line
+    /// </summary>
     internal class ConfigurationComment : ConfigurationLine
     {
 
@@ -317,6 +429,9 @@ namespace Morphic.Settings.Ini
         }
     }
 
+    /// <summary>
+    /// A section header line
+    /// </summary>
     internal class ConfigurationSection: ConfigurationLine
     {
 
@@ -344,6 +459,9 @@ namespace Morphic.Settings.Ini
 
     }
 
+    /// <summary>
+    /// A key/value pair line
+    /// </summary>
     internal class ConfigurationValue: ConfigurationLine
     {
         public string Key;

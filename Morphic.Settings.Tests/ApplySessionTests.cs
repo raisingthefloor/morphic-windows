@@ -66,36 +66,62 @@ namespace Morphic.Settings.Tests
                 else return true;
             }
         }
-#nullable disable
 
         private class MockIniFile : IIniFile
         {
-            public string GetValue(string section, string key)
+            public Task<string?> GetValue(string section, string key)
             {
                 ++getCount;
-                if (failList.Contains(key)) return null;
-                else if (crashList.Contains(key)) throw new ArgumentException();
-                else return "correct";
+                if (crashList.Contains(key))
+                {
+                    throw new ArgumentException();
+                }
+                string? result = null;
+                if (!failList.Contains(key))
+                {
+                    result = "correct";
+                }
+                return Task.FromResult(result);
             }
 
-            public void SetValue(string section, string key, string value)
+            public Task<bool> SetValue(string section, string key, string value)
             {
                 ++setCount;
-                if (crashList.Contains(key)) throw new ArgumentException(); 
+                if (crashList.Contains(key))
+                {
+                    throw new ArgumentException();
+                }
+                return Task.FromResult(true);
             }
         }
 
         private class MockIniFileFactory : IIniFileFactory
         {
+
+            public int beginCount = 0;
+            public int commitCount = 0;
+
             public IIniFile Open(string s)
             {
                 return new MockIniFile();
+            }
+
+            public Task Begin()
+            {
+                ++beginCount;
+                return Task.CompletedTask;
+            }
+
+            public Task Commit()
+            {
+                ++commitCount;
+                return Task.CompletedTask;
             }
         }
 
         private class MockSystemParametersInfo : ISystemParametersInfo
         {
-            public bool Call(SystemParametersInfo.Action action, int parameter1, object parameter2, bool updateUserProfile = false, bool sendChange = false)
+            public bool Call(SystemParametersInfo.Action action, int parameter1, object? parameter2, bool updateUserProfile = false, bool sendChange = false)
             {
                 ++callCount;
                 throw new ArgumentException();
@@ -118,7 +144,7 @@ namespace Morphic.Settings.Tests
                 if (crashList.Contains(this.Id)) throw new ArgumentException();
             }
 
-            public async Task<object> GetValue()
+            public async Task<object?> GetValue()
             {
                 ++getCount;
                 await Task.Delay(0);
@@ -135,6 +161,7 @@ namespace Morphic.Settings.Tests
                 return new MockSystemSetting(id);
             }
         }
+#nullable disable
 
         //NOTE: do not make cases where anything is on both lists
         [Theory]
@@ -161,12 +188,13 @@ namespace Morphic.Settings.Tests
             callCount = 0;
             ApplySessionTests.failList = failList;
             ApplySessionTests.crashList = crashList;
+            var iniFactory = new MockIniFileFactory();
             var services = new ServiceCollection();
             services.AddLogging();
             services.AddSingleton<IServiceProvider>(provider => provider);
             services.AddSingleton<SettingsManager>();
             services.AddSingleton<IRegistry, MockRegistry>();
-            services.AddSingleton<IIniFileFactory, MockIniFileFactory>();
+            services.AddSingleton<IIniFileFactory>(iniFactory);
             services.AddSingleton<ISystemParametersInfo, MockSystemParametersInfo>();
             services.AddSingleton<ISystemSettingFactory, MockSystemSettingFactory>();
             var serviceProvider = services.BuildServiceProvider();
@@ -287,6 +315,8 @@ namespace Morphic.Settings.Tests
             Assert.Equal(!crashList.Contains("System Beta"), passed);
             Assert.True(results.TryGetValue(sysc, out passed));
             Assert.Equal(!crashList.Contains("System Gamma"), passed);
+            Assert.Equal(1, iniFactory.beginCount);
+            Assert.Equal(1, iniFactory.commitCount);
 
             Assert.Equal(9, setCount);
             //finalizer only fires if tests that use it were successful

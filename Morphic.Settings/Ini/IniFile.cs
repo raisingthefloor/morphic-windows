@@ -50,11 +50,7 @@ namespace Morphic.Settings.Ini
 
         public async Task<string?> GetValue(string section, string key)
         {
-            if (needsConfigurationOpen)
-            {
-                configuration = await Configuration.Open(path);
-                needsConfigurationOpen = false;
-            }
+            await OpenConfigurationIfNeeded();
             if (configuration != null)
             {
                 return configuration.Get(section, key);
@@ -64,17 +60,22 @@ namespace Morphic.Settings.Ini
 
         public async Task<bool> SetValue(string section, string key, string value)
         {
-            if (needsConfigurationOpen)
-            {
-                configuration = await Configuration.Open(path);
-                needsConfigurationOpen = false;
-            }
+            await OpenConfigurationIfNeeded();
             if (configuration != null)
             {
                 configuration.Set(section, key, value);
                 return true;
             }
             return false;
+        }
+
+        private async Task OpenConfigurationIfNeeded()
+        {
+            if (needsConfigurationOpen)
+            {
+                configuration = await Configuration.Read(path);
+                needsConfigurationOpen = false;
+            }
         }
 
         public bool NeedsWrite
