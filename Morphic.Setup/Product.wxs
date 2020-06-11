@@ -25,7 +25,7 @@
             <Custom Action="LaunchApplication" After="InstallFinalize">NOT Installed</Custom>
         </InstallExecuteSequence>
 
-        <UIRef Id="WixUI_Mondo" />
+        <UIRef Id="WixUI_Minimal" />
         <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
     </Product>
 
