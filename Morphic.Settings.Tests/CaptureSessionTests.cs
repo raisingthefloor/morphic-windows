@@ -68,18 +68,29 @@ namespace Morphic.Settings.Tests
 
         private class MockIniFile : IIniFile
         {
-            public string? GetValue(string section, string key)
+            public Task<string?> GetValue(string section, string key)
             {
                 ++getCount;
-                if (failList.Contains(key)) return null;
-                else if (crashList.Contains(key)) throw new ArgumentException();
-                else return "1";
+                if (crashList.Contains(key))
+                {
+                    throw new ArgumentException();
+                }
+                string? result = null;
+                if (!failList.Contains(key))
+                {
+                    result = "1";
+                }
+                return Task.FromResult(result);
             }
 
-            public void SetValue(string section, string key, string value)
+            public Task<bool> SetValue(string section, string key, string value)
             {
                 ++setCount;
-                if (crashList.Contains(key)) throw new ArgumentException();
+                if (crashList.Contains(key))
+                {
+                    throw new ArgumentException();
+                }
+                return Task.FromResult(true);
             }
         }
 
@@ -88,6 +99,16 @@ namespace Morphic.Settings.Tests
             public IIniFile Open(string s)
             {
                 return new MockIniFile();
+            }
+
+            public Task Begin()
+            {
+                return Task.CompletedTask;
+            }
+
+            public Task Commit()
+            {
+                return Task.CompletedTask;
             }
         }
 

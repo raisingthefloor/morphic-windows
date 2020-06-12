@@ -21,6 +21,8 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
+using System.Threading.Tasks;
+
 namespace Morphic.Settings.Ini
 {
 
@@ -36,7 +38,7 @@ namespace Morphic.Settings.Ini
         /// <param name="section"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-        public string? GetValue(string section, string key);
+        public Task<string?> GetValue(string section, string key);
 
         /// <summary>
         /// Set the value for the given section and key pair
@@ -45,7 +47,7 @@ namespace Morphic.Settings.Ini
         /// <param name="key"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public void SetValue(string section, string key, string value);
+        public Task<bool> SetValue(string section, string key, string value);
 
     }
 }

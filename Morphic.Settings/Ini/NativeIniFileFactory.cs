@@ -25,31 +25,25 @@ using System.Threading.Tasks;
 
 namespace Morphic.Settings.Ini
 {
-
     /// <summary>
-    /// An interface for creating ini files
+    /// A factory that creates <code>IniFile</code> instances
     /// </summary>
-    /// <remarks>
-    /// Since ini files are created with a given path, they can't be easily created directly
-    /// from a <code>ServiceProvider</code>.  So instead, the <code>ServiceProvider</code>
-    /// creates a factory that knows how to create a specific kind of ini file.
-    /// 
-    /// Typically if you create a new kind of ini file implementation, you'll also have to
-    /// create a factory for it.
-    /// </remarks>
-    public interface IIniFileFactory
+    public class NativeIniFileFactory: IIniFileFactory
     {
 
-        /// <summary>
-        /// Create a new ini file by opening the given path
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        public IIniFile Open(string path);
+        public IIniFile Open(string path)
+        {
+            return new NativeIniFile(path);
+        }
 
-        public Task Begin();
+        public Task Begin()
+        {
+            return Task.CompletedTask;
+        }
 
-        public Task Commit();
-
+        public Task Commit()
+        {
+            return Task.CompletedTask;
+        }
     }
 }

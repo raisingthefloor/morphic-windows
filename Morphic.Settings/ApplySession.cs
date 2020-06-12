@@ -28,6 +28,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using System.Text;
 using Morphic.Core;
+using Morphic.Settings.Ini;
 
 namespace Morphic.Settings
 {
@@ -106,7 +107,9 @@ namespace Morphic.Settings
 
             var logger = serviceProvider.GetService<ILogger<ApplySession>>();
 
-            // Loop over all requested settings and apply values, collecting a dictionary of results
+            var iniFactory = serviceProvider.GetRequiredService<IIniFileFactory>();
+            await iniFactory.Begin();
+
             // Keep track of any unique finalizers that need to run
             // TODO: enforce any order dependency among settings (currently no known dependencies, but
             // some are expected)
@@ -143,6 +146,8 @@ namespace Morphic.Settings
                     resultsByKey.Add(pair.Key, false);
                 }
             }
+
+            await iniFactory.Commit();
 
             if (uniqueFinalizerDescriptions.Count > 0)
             {

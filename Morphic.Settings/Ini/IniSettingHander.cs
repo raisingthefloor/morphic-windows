@@ -103,11 +103,7 @@ namespace Morphic.Settings.Ini
             {
                 try
                 {
-                    await Task.Run(() =>
-                    {
-                        iniFile.SetValue(Description.Section, Description.Key, iniValue);
-                    });
-                    return true;
+                    return await iniFile.SetValue(Description.Section, Description.Key, iniValue);
                 }
                 catch (Exception e)
                 {
@@ -126,7 +122,7 @@ namespace Morphic.Settings.Ini
             var result = new CaptureResult();
             try
             {
-                var iniValue = await Task.Run(() => iniFile.GetValue(Description.Section, Description.Key));
+                var iniValue = await iniFile.GetValue(Description.Section, Description.Key);
                 result.Success = TryConvertFromIni(iniValue, Setting.Kind, out result.Value);
             }
             catch (Exception e)
