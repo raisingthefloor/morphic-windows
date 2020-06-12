@@ -70,10 +70,12 @@ namespace Morphic.Settings.Ini
         /// <returns></returns>
         public async Task Write(string path)
         {
-            using (var stream = File.OpenWrite(path))
+            var temppath = Path.GetTempFileName();
+            using (var stream = File.OpenWrite(temppath))
             {
                 await Write(stream);
             }
+            File.Move(temppath, path, true);
         }
 
         /// <summary>
