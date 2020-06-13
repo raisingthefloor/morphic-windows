@@ -64,25 +64,6 @@ namespace Morphic.Settings.Ini
         }
 
         /// <summary>
-        /// Expand certain whitelisted environmental variables in a path template
-        /// </summary>
-        /// <param name="templatePath"></param>
-        /// <returns></returns>
-        private static string ExpandedPath(string templatePath)
-        {
-            var allowedVariables = new string[]
-            {
-                "APPDATA"
-            };
-            var path = templatePath;
-            foreach (var varname in allowedVariables)
-            {
-                path = path.Replace($"$({varname})", Environment.GetEnvironmentVariable(varname), StringComparison.OrdinalIgnoreCase);
-            }
-            return path;
-        }
-
-        /// <summary>
         /// The logger to user
         /// </summary>
         private readonly ILogger<IniSettingHandler> logger;

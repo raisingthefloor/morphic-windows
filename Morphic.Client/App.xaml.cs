@@ -52,6 +52,7 @@ using NHotkey.Wpf;
 using Morphic.Client.About;
 using AutoUpdaterDotNET;
 using System.Runtime.InteropServices;
+using Morphic.Settings.Files;
 
 namespace Morphic.Client
 {
@@ -129,6 +130,7 @@ namespace Morphic.Client
             services.AddSingleton<IIniFileFactory, IniFileFactory>();
             services.AddSingleton<ISystemSettingFactory, SystemSettingFactory>();
             services.AddSingleton<ISystemParametersInfo, SystemParametersInfo>();
+            services.AddSingleton<IFileManager, FileManager>();
             services.AddSingleton<SettingsManager>();
             services.AddSingleton<Keychain>();
             services.AddSingleton<Storage>();
@@ -249,7 +251,7 @@ namespace Morphic.Client
         {
             await CopyDefaultPreferences();
             await Session.SettingsManager.Populate(Path.Combine("Solutions", "windows.solutions.json"));
-            await Session.SettingsManager.Populate(Path.Combine("Solutions", "jaws2019.solutions.json"));
+            await Session.SettingsManager.Populate(Path.Combine("Solutions", "jaws2020.solutions.json"));
             await Session.Open();
         }
 
