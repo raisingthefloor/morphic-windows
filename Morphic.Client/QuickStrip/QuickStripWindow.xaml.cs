@@ -306,9 +306,10 @@ namespace Morphic.Client.QuickStrip
                     case "reader":
                         {
                             var control = new QuickStripSegmentedButtonControl();
-                            control.TitleLabel.Content = Properties.Resources.QuickStrip_Reader_Title;
-                            control.AddButton(Properties.Resources.QuickStrip_Reader_On_Title, Properties.Resources.QuickStrip_Reader_On_HelpTitle, Properties.Resources.QuickStrip_Reader_On_HelpMessage, isPrimary: true);
-                            control.AddButton(Properties.Resources.QuickStrip_Reader_Off_Title, Properties.Resources.QuickStrip_Reader_Off_HelpTitle, Properties.Resources.QuickStrip_Reader_Off_HelpMessage, isPrimary: false);
+                            control.TitleLabel.Content = "Read text";
+                            control.AddButton("\u25b6", "Speak the selected text", "Select some text, and click the button to read it aloud.", isPrimary: true);
+                            control.AddButton("\u25a0", "Stop speech", "Stop the current speech.", isPrimary: false);
+                            control.EnableButton(1, false);
                             control.Action += quickStrip.OnReader;
                             return control;
                         }
@@ -338,16 +339,6 @@ namespace Morphic.Client.QuickStrip
                             control.AddButton("White", "Make the cursor white", "White is the default for your computer", isPrimary: true);
                             control.AddButton("Black", "Make the cursor black", "Black can be easier to see for some people", isPrimary: false);
                             control.Action += quickStrip.OnCursorColor;
-                            return control;
-                        }
-                    case "speech":
-                        {
-                            var control = new QuickStripSegmentedButtonControl();
-                            control.TitleLabel.Content = "Read text";
-                            control.AddButton("\u25b6", "Speak the selected text", "Select some text, and click the button to read it aloud.", isPrimary: true);
-                            control.AddButton("\u25a0", "Stop speech", "Stop the current speech.", isPrimary: false);
-                            control.EnableButton(1, false);
-                            control.Action += quickStrip.OnSpeakSelection;
                             return control;
                         }
                     default:
@@ -402,16 +393,53 @@ namespace Morphic.Client.QuickStrip
             }
         }
 
-        private void OnReader(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
+        private async void OnReader(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
         {
-            Countly.RecordEvent("toggle-reader");
+            SelectionReader reader = SelectionReader.Default;
+            Speech speech = Speech.Default;
+            
+            // Play/Pause
             if (e.SelectedIndex == 0)
             {
-                _ = session.Apply(SettingsManager.Keys.WindowsNarratorEnabled, true);
+
+                if (speech.Active)
+                {
+                    // Pause or resume it
+                    speech.TogglePause();
+                }
+                else
+                {
+                    QuickStripSegmentedButtonControl itemControl = (QuickStripSegmentedButtonControl)sender;
+                    itemControl.EnableButton(1, true);
+                    
+                    // Store the clipboard
+                    IDataObject clipboadData = Clipboard.GetDataObject();
+                    Dictionary<string, object> dataStored = clipboadData.GetFormats()
+                        .ToDictionary(format => format, format => clipboadData.GetData(format, false));
+                    Clipboard.Clear();
+
+                    // Get the selection
+                    await reader.GetSelectedText(SendKeys.SendWait);
+                    string text = Clipboard.GetText();
+
+                    // Restore the clipboard
+                    Clipboard.Clear();
+                    dataStored.Where(kv => kv.Value != null).ToList()
+                        .ForEach(kv => Clipboard.SetData(kv.Key, kv.Value));
+                    Clipboard.Flush();
+
+                    if (!string.IsNullOrEmpty(text))
+                    {
+                        await speech.SpeakText(text);
+                    }
+
+                    itemControl.EnableButton(1, false);
+                }
             }
-            else if (e.SelectedIndex == 1)
+            else
             {
-                _ = session.Apply(SettingsManager.Keys.WindowsNarratorEnabled, false);
+                // Stop
+                speech.StopSpeaking();
             }
         }
 
@@ -478,56 +506,6 @@ namespace Morphic.Client.QuickStrip
                     { SettingsManager.Keys.WindowsCursorArrow, "%SystemRoot%\\cursors\\arrow_r.cur" },
                     { SettingsManager.Keys.WindowsCursorWait, "%SystemRoot%\\cursors\\busy_r.cur" },
                 });
-            }
-        }
-
-        private async void OnSpeakSelection(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
-        {
-            SelectionReader reader = SelectionReader.Default;
-            Speech speech = Speech.Default;
-            
-            // Play/Pause
-            if (e.SelectedIndex == 0)
-            {
-
-                if (speech.Active)
-                {
-                    // Pause or resume it
-                    speech.TogglePause();
-                }
-                else
-                {
-                    QuickStripSegmentedButtonControl itemControl = (QuickStripSegmentedButtonControl)sender;
-                    itemControl.EnableButton(1, true);
-                    
-                    // Store the clipboard
-                    IDataObject clipboadData = Clipboard.GetDataObject();
-                    Dictionary<string, object> dataStored = clipboadData.GetFormats()
-                        .ToDictionary(format => format, format => clipboadData.GetData(format, false));
-                    Clipboard.Clear();
-
-                    // Get the selection
-                    await reader.GetSelectedText(SendKeys.SendWait);
-                    string text = Clipboard.GetText();
-
-                        // Restore the clipboard
-                        Clipboard.Clear();
-                        dataStored.Where(kv => kv.Value != null).ToList()
-                            .ForEach(kv => Clipboard.SetData(kv.Key, kv.Value));
-                        Clipboard.Flush();
-
-                    if (!string.IsNullOrEmpty(text))
-                    {
-                        await speech.SpeakText(text);
-                    }
-
-                    itemControl.EnableButton(1, false);
-                }
-            }
-            else
-            {
-                // Stop
-                speech.StopSpeaking();
             }
         }
 
