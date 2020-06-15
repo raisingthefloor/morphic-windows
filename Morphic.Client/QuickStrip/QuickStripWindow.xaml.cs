@@ -1,4 +1,4 @@
-﻿// Copyright 2020 Raising the Floor - International
+// Copyright 2020 Raising the Floor - International
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -377,8 +377,8 @@ namespace Morphic.Client.QuickStrip
                 // Enable lens mode at 200%
                 Dictionary<Preferences.Key, object?> settings = new Dictionary<Preferences.Key, object?>
                 {
-                    {SettingsManager.Keys.WindowsMagnifierMode, 3},
-                    {SettingsManager.Keys.WindowsMagnifierMagnification, 200},
+                    {SettingsManager.Keys.WindowsMagnifierMode, (long)3},
+                    {SettingsManager.Keys.WindowsMagnifierMagnification, (long)200},
                     {SettingsManager.Keys.WindowsMagnifierEnabled, true},
                 };
 
