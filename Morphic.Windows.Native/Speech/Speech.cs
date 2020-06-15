@@ -65,7 +65,7 @@ namespace Morphic.Windows.Native
                 "Add-Type -AssemblyName System.speech;"
                 + "$speech = New-Object System.Speech.Synthesis.SpeechSynthesizer;"
                 + "$semaphor = [System.Threading.EventWaitHandle]::OpenExisting(\"morphic-speech\");"
-                + $"$speech.SpeakAsync(\"{text}\");"
+                + "$speech.SpeakAsync($Env:MORPHIC_SPEECH);"
                 + "while($speech.State -ne [System.Speech.Synthesis.SynthesizerState]::Ready)"
                 + "{"
                 + "    if ($semaphor.WaitOne(200)) {"
@@ -84,6 +84,7 @@ namespace Morphic.Windows.Native
                     "-ExecutionPolicy", "bypass",
                     "-NoProfile", "-NonInteractive", "-Command", script
                 },
+                Environment = { {"MORPHIC_SPEECH", text} },
                 CreateNoWindow = true,
             });
             
