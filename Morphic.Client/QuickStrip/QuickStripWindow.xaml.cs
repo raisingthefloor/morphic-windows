@@ -1,4 +1,4 @@
-// Copyright 2020 Raising the Floor - International
+﻿// Copyright 2020 Raising the Floor - International
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -385,11 +385,7 @@ namespace Morphic.Client.QuickStrip
                 if (this.magnifyCapture == null)
                 {
                     // capture the current settings
-                    var capture = await Task.WhenAll(settings.Select(
-                        async setting => new KeyValuePair<Preferences.Key, object?>(setting.Key,
-                            await this.session.SettingsManager.Capture(setting.Key))));
-
-                    this.magnifyCapture = capture.ToDictionary(s => s.Key, s => s.Value);
+                    this.magnifyCapture = await this.session.SettingsManager.Capture(settings.Keys);
                 }
 
                 await session.Apply(settings);
