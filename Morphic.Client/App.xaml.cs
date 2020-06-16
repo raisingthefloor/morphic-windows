@@ -374,6 +374,7 @@ namespace Morphic.Client
         /// <param name="e"></param>
         private void OnNotifyIconClicked(object? sender, EventArgs e)
         {
+            Countly.RecordEvent("Tray Menu");
             mainMenu.IsOpen = true;
         }
 
@@ -384,6 +385,7 @@ namespace Morphic.Client
         /// <param name="e"></param>
         private void ShowQuickStrip(object sender, RoutedEventArgs e)
         {
+            Countly.RecordEvent("Show MorphicBar");
             ShowQuickStrip();
         }
 
@@ -394,6 +396,7 @@ namespace Morphic.Client
         /// <param name="e"></param>
         private void HideQuickStrip(object sender, RoutedEventArgs e)
         {
+            Countly.RecordEvent("Hide MorphicBar");
             HideQuickStrip();
         }
 
@@ -404,28 +407,30 @@ namespace Morphic.Client
         /// <param name="e"></param>
         private void CustomizeQuickStrip(object sender, RoutedEventArgs e)
         {
-            Countly.RecordEvent("customize-quickstrip");
+            Countly.RecordEvent("Customize MorphicBar");
         }
 
         private void TravelWithSettings(object sender, RoutedEventArgs e)
         {
-            Countly.RecordEvent("travel-with-settings");
+            Countly.RecordEvent("Travel");
             OpenTravelWindow();
         }
 
         private void ApplyMySettings(object sender, RoutedEventArgs e)
         {
-            Countly.RecordEvent("apply-my-settings");
+            Countly.RecordEvent("Login");
             OpenLoginWindow();
         }
 
         private void Logout(object sender, RoutedEventArgs e)
         {
+            Countly.RecordEvent("Logout");
             _ = Session.Signout();
         }
 
         private void About(object sender, RoutedEventArgs e)
         {
+            Countly.RecordEvent("About");
             OpenAboutWindow();
         }
 
@@ -436,6 +441,7 @@ namespace Morphic.Client
         /// <param name="e"></param>
         private void Quit(object sender, RoutedEventArgs e)
         {
+            Countly.RecordEvent("Quit");
             App.Shared.Shutdown();
         }
 
