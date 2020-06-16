@@ -48,7 +48,8 @@ namespace Morphic.Settings
             String,
             Boolean,
             Integer,
-            Double
+            Double,
+            Files
         }
 
         /// <summary>

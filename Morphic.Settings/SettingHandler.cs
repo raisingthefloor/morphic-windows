@@ -31,6 +31,7 @@ using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Text;
+using Morphic.Settings.Files;
 
 namespace Morphic.Settings
 {
@@ -78,6 +79,25 @@ namespace Morphic.Settings
             clientHandlerTypesByKey[key] = type;
         }
 
+        /// <summary>
+        /// Expand certain whitelisted environmental variables in a path template
+        /// </summary>
+        /// <param name="templatePath"></param>
+        /// <returns></returns>
+        protected static string ExpandedPath(string templatePath)
+        {
+            var allowedVariables = new string[]
+            {
+                "APPDATA"
+            };
+            var path = templatePath;
+            foreach (var varname in allowedVariables)
+            {
+                path = path.Replace($"$({varname})", Environment.GetEnvironmentVariable(varname), StringComparison.OrdinalIgnoreCase);
+            }
+            return path;
+        }
+
     }
 
     public static class HandlerDescriptionExtensions
@@ -113,6 +133,12 @@ namespace Morphic.Settings
                 var logger = serviceProvider.GetRequiredService<ILogger<IniSettingHandler>>();
                 var iniFactory = serviceProvider.GetRequiredService<IIniFileFactory>();
                 return new IniSettingHandler(setting, iniFactory, logger);
+            }
+            else if (setting.HandlerDescription is FilesSettingHandlerDescription)
+            {
+                var logger = serviceProvider.GetRequiredService<ILogger<FilesSettingHandler>>();
+                var fileManager = serviceProvider.GetRequiredService<IFileManager>();
+                return new FilesSettingHandler(setting, fileManager, logger);
             }
             return null;
         }
