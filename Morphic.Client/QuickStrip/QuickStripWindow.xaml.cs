@@ -366,16 +366,39 @@ namespace Morphic.Client.QuickStrip
             _ = session.Apply(SettingsManager.Keys.WindowsDisplayZoom, percentage);
         }
 
-        private void OnMagnify(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
+        /// <summary>Original magnifier settings.</summary>
+        private Dictionary<Preferences.Key, object?> magnifyCapture;
+        
+        private async void OnMagnify(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
         {
             Countly.RecordEvent("toggle-magnify");
             if (e.SelectedIndex == 0)
             {
-                _ = session.Apply(SettingsManager.Keys.WindowsMagnifierEnabled, true);
+                // Enable lens mode at 200%
+                Dictionary<Preferences.Key, object?> settings = new Dictionary<Preferences.Key, object?>
+                {
+                    {SettingsManager.Keys.WindowsMagnifierMode, (long)3},
+                    {SettingsManager.Keys.WindowsMagnifierMagnification, (long)200},
+                    {SettingsManager.Keys.WindowsMagnifierEnabled, true},
+                };
+
+                if (this.magnifyCapture == null)
+                {
+                    // capture the current settings
+                    this.magnifyCapture = await this.session.SettingsManager.Capture(settings.Keys);
+                }
+
+                await session.Apply(settings);
             }
             else if (e.SelectedIndex == 1)
             {
-                _ = session.Apply(SettingsManager.Keys.WindowsMagnifierEnabled, false);
+                // restore settings
+                await session.Apply(SettingsManager.Keys.WindowsMagnifierEnabled, false);
+                if (this.magnifyCapture != null)
+                {
+                    await this.session.Apply(this.magnifyCapture);
+                    this.magnifyCapture = null;
+                }
             }
         }
 
