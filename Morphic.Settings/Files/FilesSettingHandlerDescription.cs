@@ -38,5 +38,24 @@ namespace Morphic.Settings.Files
 
         public string Root { get; }
         public string[] Files { get; }
+
+        public override int GetHashCode()
+        {
+            return Root.GetHashCode() ^ Files.GetHashCode();
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (obj is FilesSettingHandlerDescription other)
+            {
+                if (Root != other.Root || Files.Length != other.Files.Length)
+                {
+                    return false;
+                }
+                var set1 = new HashSet<string>(Files);
+                return set1.SetEquals(other.Files);
+            }
+            return false;
+        }
     }
 }

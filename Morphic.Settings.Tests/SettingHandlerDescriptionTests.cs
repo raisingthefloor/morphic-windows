@@ -23,6 +23,7 @@
 
 using Microsoft.Win32;
 using Morphic.Core;
+using Morphic.Settings.Files;
 using Morphic.Settings.SystemSettings;
 using System.Collections.Generic;
 using System.Text.Json;
@@ -311,6 +312,55 @@ namespace Morphic.Settings.Tests
             Assert.Equal(system, samesystem);
             Assert.NotEqual(system, differentsystem);
             Assert.NotEqual(system, wrongtype);
+        }
+
+        [Theory]
+        [InlineData(@"C:\Program Files\App\Config", new string[] { @"test.cfg", @"*.ini" }, true)]
+        [InlineData(@"$(APPDATA)\App\Config", new string[] { @"test.*", @"settings\*.ini" }, true)]
+        public void TestJsonDeserializeFiles(string root, string[] files, bool success)
+        {
+            var options = new JsonSerializerOptions();
+            options.Converters.Add(new JsonElementInferredTypeConverter());
+            options.Converters.Add(new SettingHandlerDescription.JsonConverter());
+
+            var json = JsonSerializer.Serialize(new Dictionary<string, object>()
+            {
+                { "type", "com.microsoft.windows.files" },
+                { "root", root },
+                { "files", files }
+            });
+            var handler = JsonSerializer.Deserialize<SettingHandlerDescription>(json, options);
+            Assert.NotNull(handler);
+            if (success)
+            {
+                Assert.Equal(SettingHandlerDescription.HandlerKind.Files, handler.Kind);
+                Assert.IsType<FilesSettingHandlerDescription>(handler);
+                FilesSettingHandlerDescription filesHandler = (FilesSettingHandlerDescription)handler;
+                Assert.Equal(root, filesHandler.Root);
+                Assert.Equal(files.Length, filesHandler.Files.Length);
+                for (var i = 0; i < files.Length; ++i)
+                {
+                    Assert.Equal(files[i], filesHandler.Files[i]);
+                }
+            }
+            else
+            {
+                Assert.Equal(SettingHandlerDescription.HandlerKind.Unknown, handler.Kind);
+            }
+        }
+
+        [Fact]
+        public void TestEqualityOperatorFiles()
+        {
+            var handler = new FilesSettingHandlerDescription(@"$(APPDATA)\App\Config", new string[] { @"test.*", @"settings\*.ini" });
+            var handler2 = new FilesSettingHandlerDescription(@"$(APPDATA)\App\Config", new string[] { @"test.*", @"settings\*.ini" });
+            Assert.Equal(handler, handler2);
+            handler2 = new FilesSettingHandlerDescription(@"$(APPDATA)\App", new string[] { @"test.*", @"settings\*.ini" });
+            Assert.NotEqual(handler, handler2);
+            handler2 = new FilesSettingHandlerDescription(@"$(APPDATA)\App\Config", new string[] { @"settings\*.ini" });
+            Assert.NotEqual(handler, handler2);
+            handler2 = new FilesSettingHandlerDescription(@"$(APPDATA)\App\Config", new string[] { @"settings\*.ini", @"test.*" });
+            Assert.Equal(handler, handler2);
         }
     }
 }

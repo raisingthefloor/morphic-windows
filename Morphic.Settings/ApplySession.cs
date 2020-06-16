@@ -97,6 +97,10 @@ namespace Morphic.Settings
                                 valuesByKey.Add(key, defaultValue);
                             }
                         }
+                        else
+                        {
+                            SettingsManager.logger.LogWarning("null default value, skipping");
+                        }
                     }
                 }
             }

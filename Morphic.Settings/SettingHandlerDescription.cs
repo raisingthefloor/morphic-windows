@@ -164,7 +164,7 @@ namespace Morphic.Settings
                         case "com.microsoft.windows.files":
                             {
                                 var root = element.GetProperty("root").GetString();
-                                var files = element.GetProperty("file").EnumerateArray().Select(element => element.GetString()).ToArray();
+                                var files = element.GetProperty("files").EnumerateArray().Select(element => element.GetString()).ToArray();
                                 var handler = new FilesSettingHandlerDescription(root, files);
                                 return handler;
                             }

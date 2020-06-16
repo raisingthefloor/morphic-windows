@@ -113,6 +113,10 @@ namespace Morphic.Settings
                             }
                         }
                     }
+                    else
+                    {
+                        SettingsManager.logger.LogWarning("Could not create handler for setting: {0}.{1}", key.Solution, key.Preference);
+                    }
                 }
             }
 
