@@ -71,6 +71,12 @@ namespace Morphic.Client
             style.Setters.Add(new Setter { Property = ActionButton.FontFamilyProperty, Value = SystemFonts.MessageFontFamily });
             style.Setters.Add(new Setter { Property = ActionButton.FontSizeProperty, Value = 14.0 });
             style.Setters.Add(new Setter { Property = ActionButton.FontWeightProperty, Value = FontWeight.FromOpenTypeWeight(700) });
+            
+            // Fade the button if it's disabled.
+            var trigger = new Trigger { Property = ActionButton.IsEnabledProperty, Value = false };
+            trigger.Setters.Add(new Setter{ Property =  ActionButton.OpacityProperty, Value = 0.5});
+            style.Triggers.Add(trigger);
+
             return style;
         }
 
@@ -116,6 +122,16 @@ namespace Morphic.Client
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Toggles the enabled state of a button.
+        /// </summary>
+        /// <param name="index">The button index.</param>
+        /// <param name="enabled">The enabled state.</param>
+        public void EnableButton(int index, bool enabled)
+        {
+            this.ActionStack.Children[index].IsEnabled = enabled;
         }
 
         /// <summary>
