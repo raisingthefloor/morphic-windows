@@ -125,6 +125,7 @@ namespace Morphic.Client.QuickStrip
         /// <param name="e"></param>
         private void LogoButtonClicked(object sender, RoutedEventArgs e)
         {
+            Countly.RecordEvent("Main Menu");
             LogoButton.ContextMenu.IsOpen = true;
         }
 
@@ -135,6 +136,7 @@ namespace Morphic.Client.QuickStrip
         /// <param name="e"></param>
         private void HideQuickStrip(object sender, RoutedEventArgs e)
         {
+            Countly.RecordEvent("Hide MorphicBar");
             App.Shared.HideQuickStrip();
         }
 
@@ -145,29 +147,30 @@ namespace Morphic.Client.QuickStrip
         /// <param name="e"></param>
         private void CustomizeQuickStrip(object sender, RoutedEventArgs e)
         {
-            Countly.RecordEvent("customize-quickstrip");
+            Countly.RecordEvent("Customize MorphicBar");
         }
 
         private void AboutMorphic(object sender, RoutedEventArgs e)
         {
-            Countly.RecordEvent("about-morphic");
+            Countly.RecordEvent("About");
             App.Shared.OpenAboutWindow();
         }
 
         private void TravelWithSettings(object sender, RoutedEventArgs e)
         {
-            Countly.RecordEvent("travel-with-settings");
+            Countly.RecordEvent("Travel");
             App.Shared.OpenTravelWindow();
         }
 
         private void ApplyMySettings(object sender, RoutedEventArgs e)
         {
-            Countly.RecordEvent("apply-my-settings");
+            Countly.RecordEvent("Login");
             App.Shared.OpenLoginWindow();
         }
 
         private void Logout(object sender, RoutedEventArgs e)
         {
+            Countly.RecordEvent("Logout");
             _ = session.Signout();
         }
 
@@ -178,6 +181,7 @@ namespace Morphic.Client.QuickStrip
         /// <param name="e"></param>
         private void Quit(object sender, RoutedEventArgs e)
         {
+            Countly.RecordEvent("Quit");
             App.Shared.Shutdown();
         }
 
@@ -367,14 +371,15 @@ namespace Morphic.Client.QuickStrip
 
         private void Zoom(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
         {
-            Countly.RecordEvent("change-zoom");
             double percentage = 1.0;
             if (e.SelectedIndex == 0)
             {
+                Countly.RecordEvent("Text Larger");
                 percentage = Display.Primary.PercentageForZoomingIn;
             }
             else
             {
+                Countly.RecordEvent("Text Smaller");
                 percentage = Display.Primary.PercentageForZoomingOut;
             }
             _ = session.Apply(SettingsManager.Keys.WindowsDisplayZoom, percentage);
@@ -385,9 +390,9 @@ namespace Morphic.Client.QuickStrip
         
         private async void OnMagnify(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
         {
-            Countly.RecordEvent("toggle-magnify");
             if (e.SelectedIndex == 0)
             {
+                _ = Countly.RecordEvent("Show Magnifier");
                 // Enable lens mode at 200%
                 Dictionary<Preferences.Key, object?> settings = new Dictionary<Preferences.Key, object?>
                 {
@@ -406,6 +411,7 @@ namespace Morphic.Client.QuickStrip
             }
             else if (e.SelectedIndex == 1)
             {
+                _ = Countly.RecordEvent("Hide Magnifier");
                 // restore settings
                 await session.Apply(SettingsManager.Keys.WindowsMagnifierEnabled, false);
                 if (this.magnifyCapture != null)
@@ -424,7 +430,7 @@ namespace Morphic.Client.QuickStrip
             // Play/Pause
             if (e.SelectedIndex == 0)
             {
-
+                _ = Countly.RecordEvent("Read Selection");
                 if (speech.Active)
                 {
                     // Pause or resume it
@@ -461,6 +467,7 @@ namespace Morphic.Client.QuickStrip
             }
             else
             {
+                _ = Countly.RecordEvent("Stop Reading");
                 // Stop
                 speech.StopSpeaking();
             }
@@ -468,10 +475,10 @@ namespace Morphic.Client.QuickStrip
 
         private void OnVolume(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
         {
-            Countly.RecordEvent("change-volume");
             var endpoint = Audio.DefaultOutputEndpoint;
             if (e.SelectedIndex == 0)
             {
+                _ = Countly.RecordEvent("Volume Up");
                 if (endpoint.GetMasterMuteState() == true)
                 {
                     endpoint.SetMasterMuteState(false);
@@ -483,6 +490,7 @@ namespace Morphic.Client.QuickStrip
             }
             else if (e.SelectedIndex == 1)
             {
+                _ = Countly.RecordEvent("Volume Down");
                 if (endpoint.GetMasterMuteState() == true)
                 {
                     endpoint.SetMasterMuteState(false);
@@ -500,13 +508,14 @@ namespace Morphic.Client.QuickStrip
 
         private void OnContrast(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
         {
-            Countly.RecordEvent("toggle-contrast");
             if (e.SelectedIndex == 0)
             {
+                Countly.RecordEvent("Contrast On");
                 _ = session.Apply(SettingsManager.Keys.WindowsDisplayContrastEnabled, true);
             }
             else if (e.SelectedIndex == 1)
             {
+                Countly.RecordEvent("Contrast Off");
                 _ = session.Apply(SettingsManager.Keys.WindowsDisplayContrastEnabled, false);
             }
         }
@@ -704,7 +713,7 @@ namespace Morphic.Client.QuickStrip
         /// <param name="e"></param>
         private void Window_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            Countly.RecordEvent("window-moved");
+            Countly.RecordEvent("Move MorphicBar");
             if (e.ChangedButton == System.Windows.Input.MouseButton.Left)
             {
                 Position = NearestPosition;
