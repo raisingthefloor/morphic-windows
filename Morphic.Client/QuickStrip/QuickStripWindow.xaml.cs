@@ -386,7 +386,7 @@ namespace Morphic.Client.QuickStrip
         }
 
         /// <summary>Original magnifier settings.</summary>
-        private Dictionary<Preferences.Key, object?> magnifyCapture;
+        private Dictionary<Preferences.Key, object?>? magnifyCapture;
         
         private async void OnMagnify(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
         {
@@ -401,10 +401,11 @@ namespace Morphic.Client.QuickStrip
                     {SettingsManager.Keys.WindowsMagnifierEnabled, true},
                 };
 
-                if (this.magnifyCapture == null)
+                if (magnifyCapture == null)
                 {
                     // capture the current settings
-                    this.magnifyCapture = await this.session.SettingsManager.Capture(settings.Keys);
+                    magnifyCapture = await session.SettingsManager.Capture(settings.Keys);
+                    magnifyCapture[SettingsManager.Keys.WindowsMagnifierEnabled] = false;
                 }
 
                 await session.Apply(settings);
@@ -413,11 +414,14 @@ namespace Morphic.Client.QuickStrip
             {
                 _ = Countly.RecordEvent("Hide Magnifier");
                 // restore settings
-                await session.Apply(SettingsManager.Keys.WindowsMagnifierEnabled, false);
-                if (this.magnifyCapture != null)
+                if (magnifyCapture != null)
                 {
-                    await this.session.Apply(this.magnifyCapture);
-                    this.magnifyCapture = null;
+                    await session.Apply(magnifyCapture);
+                    magnifyCapture = null;
+                }
+                else
+                {
+                    await session.Apply(SettingsManager.Keys.WindowsMagnifierEnabled, false);
                 }
             }
         }

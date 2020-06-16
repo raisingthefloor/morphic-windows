@@ -72,10 +72,15 @@
         "type": "integer",
         "default": 2,
         "handler": {
-          "type": "com.microsoft.windows.registry",
-          "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
-          "value_name": "MagnificationMode",
-          "value_type": "dword"
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_Magnifier_Mode",
+          "value_type": "string",
+          "integer_map": [
+            "",
+            "SystemSettings_Accessibility_Magnifier_ModeDocked",
+            "SystemSettings_Accessibility_Magnifier_ModeFullScreen",
+            "SystemSettings_Accessibility_Magnifier_ModeLens"
+          ]
         }
       },
       {
@@ -83,10 +88,9 @@
         "type": "integer",
         "default": 200,
         "handler": {
-          "type": "com.microsoft.windows.registry",
-          "key_name": "HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier",
-          "value_name": "Magnification",
-          "value_type": "dword"
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Accessibility_Magnifier_Magnification",
+          "value_type": "integer"
         }
       },
       {
