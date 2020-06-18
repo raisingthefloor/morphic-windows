@@ -96,6 +96,26 @@ namespace Morphic.Settings
 
         #region Zoom Level
 
+        public int NumberOfZoomLevels
+        {
+            get
+            {
+                return PossibleSettings.Count;
+            }
+        }
+
+        public int CurrentZoomLevel
+        {
+            get
+            {
+                if (CurrentSettings is Native.Display.DisplaySettings current)
+                {
+                    return PossibleSettings.FindIndex(setting => setting.widthInPixels == current.widthInPixels);
+                }
+                return -1;
+            }
+        }
+
         public double CurrentZoomPercentage
         {
             get
@@ -198,6 +218,30 @@ namespace Morphic.Settings
                 }
             }
             return null;
+        }
+
+        public bool CanZoomOut
+        {
+            get
+            {
+                if (CurrentSettings is Native.Display.DisplaySettings current)
+                {
+                    return PossibleSettings.Count > 0 && PossibleSettings.Last().widthInPixels != current.widthInPixels;
+                }
+                return false;
+            }
+        }
+
+        public bool CanZoomIn
+        {
+            get
+            {
+                if (CurrentSettings is Native.Display.DisplaySettings current)
+                {
+                    return PossibleSettings.Count > 0 && PossibleSettings[0].widthInPixels != current.widthInPixels;
+                }
+                return false;
+            }
         }
 
         #endregion
