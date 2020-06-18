@@ -42,18 +42,20 @@ namespace Morphic.Client.QuickStrip
 
         public UserControl Build()
         {
-            var textControl = new QuickHelpTextControl();
+            var zoomControl = new QuickHelpTextZoomControl();
+            zoomControl.PagerControl.NumberOfPages = Display.NumberOfZoomLevels;
+            zoomControl.PagerControl.CurrentPage = Display.CurrentZoomLevel;
             if (Display.CanZoomIn)
             {
-                textControl.TitleLabel.Content = Properties.Resources.QuickStrip_Resolution_Bigger_HelpTitle;
-                textControl.MessageLabel.Content = Properties.Resources.QuickStrip_Resolution_Bigger_HelpMessage;
+                zoomControl.TitleLabel.Content = Properties.Resources.QuickStrip_Resolution_Bigger_HelpTitle;
+                zoomControl.MessageLabel.Content = Properties.Resources.QuickStrip_Resolution_Bigger_HelpMessage;
             }
             else
             {
-                textControl.TitleLabel.Content = Properties.Resources.QuickStrip_Resolution_Bigger_LimitTitle;
-                textControl.MessageLabel.Content = Properties.Resources.QuickStrip_Resolution_Bigger_LimitMessage;
+                zoomControl.TitleLabel.Content = Properties.Resources.QuickStrip_Resolution_Bigger_LimitTitle;
+                zoomControl.MessageLabel.Content = Properties.Resources.QuickStrip_Resolution_Bigger_LimitMessage;
             }
-            return textControl;
+            return zoomControl;
         }
 
     }
@@ -70,18 +72,20 @@ namespace Morphic.Client.QuickStrip
 
         public UserControl Build()
         {
-            var textControl = new QuickHelpTextControl();
+            var zoomControl = new QuickHelpTextZoomControl();
+            zoomControl.PagerControl.NumberOfPages = Display.NumberOfZoomLevels;
+            zoomControl.PagerControl.CurrentPage = Display.CurrentZoomLevel;
             if (Display.CanZoomOut)
             {
-                textControl.TitleLabel.Content = Properties.Resources.QuickStrip_Resolution_Smaller_HelpTitle;
-                textControl.MessageLabel.Content = Properties.Resources.QuickStrip_Resolution_Smaller_HelpMessage;
+                zoomControl.TitleLabel.Content = Properties.Resources.QuickStrip_Resolution_Smaller_HelpTitle;
+                zoomControl.MessageLabel.Content = Properties.Resources.QuickStrip_Resolution_Smaller_HelpMessage;
             }
             else
             {
-                textControl.TitleLabel.Content = Properties.Resources.QuickStrip_Resolution_Smaller_LimitTitle;
-                textControl.MessageLabel.Content = Properties.Resources.QuickStrip_Resolution_Smaller_LimitMessage;
+                zoomControl.TitleLabel.Content = Properties.Resources.QuickStrip_Resolution_Smaller_LimitTitle;
+                zoomControl.MessageLabel.Content = Properties.Resources.QuickStrip_Resolution_Smaller_LimitMessage;
             }
-            return textControl;
+            return zoomControl;
         }
 
     }

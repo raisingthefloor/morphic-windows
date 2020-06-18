@@ -96,6 +96,26 @@ namespace Morphic.Settings
 
         #region Zoom Level
 
+        public int NumberOfZoomLevels
+        {
+            get
+            {
+                return PossibleSettings.Count;
+            }
+        }
+
+        public int CurrentZoomLevel
+        {
+            get
+            {
+                if (CurrentSettings is Native.Display.DisplaySettings current)
+                {
+                    return PossibleSettings.FindIndex(setting => setting.widthInPixels == current.widthInPixels);
+                }
+                return -1;
+            }
+        }
+
         public double CurrentZoomPercentage
         {
             get
