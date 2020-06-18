@@ -21,6 +21,7 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
+using Morphic.Client.QuickStrip;
 using System.Timers;
 using System.Windows;
 using System.Windows.Automation.Peers;
@@ -42,19 +43,14 @@ namespace Morphic.Client
         /// </summary>
         private static QuickHelpWindow? shared = null;
 
-        /// <summary>
-        /// Show the given help text in the shared Quick Help Window
-        /// </summary>
-        /// <param name="title">The title to show</param>
-        /// <param name="message">The message to show</param>
-        public static void Show(string title, string message)
+        public static void Show(IQuickHelpControlBuilder controlBuilder)
         {
             if (shared == null)
             {
                 shared = new QuickHelpWindow();
             }
-            shared.TitleLabel.Content = title;
-            shared.MessageLabel.Content = message;
+            var control = controlBuilder.Build();
+            shared.Content = control;
             shared.Reposition();
             shared.Show();
             hideTimer?.Stop();

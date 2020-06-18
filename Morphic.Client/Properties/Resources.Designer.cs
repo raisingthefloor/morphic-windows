@@ -224,61 +224,43 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The computer will read aloud text you&apos;ve selected.
+        /// </summary>
+        internal static string QuickStrip_Reader_Start_HelpMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_Reader_Start_HelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Read the Selected Text.
+        /// </summary>
+        internal static string QuickStrip_Reader_Start_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_Reader_Start_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Stop the computer from reading text aloud.
         /// </summary>
-        internal static string QuickStrip_Reader_Off_HelpMessage {
+        internal static string QuickStrip_Reader_Stop_HelpMessage {
             get {
-                return ResourceManager.GetString("QuickStrip_Reader_Off_HelpMessage", resourceCulture);
+                return ResourceManager.GetString("QuickStrip_Reader_Stop_HelpMessage", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Turn Off Screen Reader.
+        ///   Looks up a localized string similar to Stop Reading.
         /// </summary>
-        internal static string QuickStrip_Reader_Off_HelpTitle {
+        internal static string QuickStrip_Reader_Stop_HelpTitle {
             get {
-                return ResourceManager.GetString("QuickStrip_Reader_Off_HelpTitle", resourceCulture);
+                return ResourceManager.GetString("QuickStrip_Reader_Stop_HelpTitle", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Off.
-        /// </summary>
-        internal static string QuickStrip_Reader_Off_Title {
-            get {
-                return ResourceManager.GetString("QuickStrip_Reader_Off_Title", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Have the computer read text aloud.
-        /// </summary>
-        internal static string QuickStrip_Reader_On_HelpMessage {
-            get {
-                return ResourceManager.GetString("QuickStrip_Reader_On_HelpMessage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Turn On Screen Reader.
-        /// </summary>
-        internal static string QuickStrip_Reader_On_HelpTitle {
-            get {
-                return ResourceManager.GetString("QuickStrip_Reader_On_HelpTitle", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to On.
-        /// </summary>
-        internal static string QuickStrip_Reader_On_Title {
-            get {
-                return ResourceManager.GetString("QuickStrip_Reader_On_Title", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Screen Reader.
+        ///   Looks up a localized string similar to Read Text.
         /// </summary>
         internal static string QuickStrip_Reader_Title {
             get {
@@ -305,6 +287,24 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The text and icons are as large as they can be.
+        /// </summary>
+        internal static string QuickStrip_Resolution_Bigger_LimitMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_Resolution_Bigger_LimitMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot Go Any Bigger.
+        /// </summary>
+        internal static string QuickStrip_Resolution_Bigger_LimitTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_Resolution_Bigger_LimitTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Make all the text and icons smaller.
         /// </summary>
         internal static string QuickStrip_Resolution_Smaller_HelpMessage {
@@ -319,6 +319,24 @@ namespace Morphic.Client.Properties {
         internal static string QuickStrip_Resolution_Smaller_HelpTitle {
             get {
                 return ResourceManager.GetString("QuickStrip_Resolution_Smaller_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The text and icons are as small as they can be.
+        /// </summary>
+        internal static string QuickStrip_Resolution_Smaller_LimitMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_Resolution_Smaller_LimitMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot Go Any Smaller.
+        /// </summary>
+        internal static string QuickStrip_Resolution_Smaller_LimitTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_Resolution_Smaller_LimitTitle", resourceCulture);
             }
         }
         
@@ -350,6 +368,24 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The volume is all the way down.
+        /// </summary>
+        internal static string QuickStrip_Volume_Down_LimitMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_Volume_Down_LimitMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot Go Any Quieter.
+        /// </summary>
+        internal static string QuickStrip_Volume_Down_LimitTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_Volume_Down_LimitTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Turn off all sounds from the computer.
         /// </summary>
         internal static string QuickStrip_Volume_Mute_HelpMessage {
@@ -364,6 +400,24 @@ namespace Morphic.Client.Properties {
         internal static string QuickStrip_Volume_Mute_HelpTitle {
             get {
                 return ResourceManager.GetString("QuickStrip_Volume_Mute_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unmute by pressing the volume up or down button.
+        /// </summary>
+        internal static string QuickStrip_Volume_Mute_MutedMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_Volume_Mute_MutedMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sounds Are Muted.
+        /// </summary>
+        internal static string QuickStrip_Volume_Mute_MutedTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_Volume_Mute_MutedTitle", resourceCulture);
             }
         }
         
@@ -400,6 +454,24 @@ namespace Morphic.Client.Properties {
         internal static string QuickStrip_Volume_Up_HelpTitle {
             get {
                 return ResourceManager.GetString("QuickStrip_Volume_Up_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The volume is all the way up.
+        /// </summary>
+        internal static string QuickStrip_Volume_Up_LimitMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_Volume_Up_LimitMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot Go Any Louder.
+        /// </summary>
+        internal static string QuickStrip_Volume_Up_LimitTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_Volume_Up_LimitTitle", resourceCulture);
             }
         }
     }

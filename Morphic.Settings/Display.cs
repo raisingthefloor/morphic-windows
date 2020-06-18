@@ -200,6 +200,30 @@ namespace Morphic.Settings
             return null;
         }
 
+        public bool CanZoomOut
+        {
+            get
+            {
+                if (CurrentSettings is Native.Display.DisplaySettings current)
+                {
+                    return PossibleSettings.Count > 0 && PossibleSettings.Last().widthInPixels != current.widthInPixels;
+                }
+                return false;
+            }
+        }
+
+        public bool CanZoomIn
+        {
+            get
+            {
+                if (CurrentSettings is Native.Display.DisplaySettings current)
+                {
+                    return PossibleSettings.Count > 0 && PossibleSettings[0].widthInPixels != current.widthInPixels;
+                }
+                return false;
+            }
+        }
+
         #endregion
 
     }

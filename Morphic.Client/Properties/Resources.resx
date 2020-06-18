@@ -172,26 +172,20 @@
   <data name="QuickStrip_Magnifier_Title" xml:space="preserve">
     <value>Magnifier</value>
   </data>
-  <data name="QuickStrip_Reader_Off_HelpMessage" xml:space="preserve">
+  <data name="QuickStrip_Reader_Start_HelpMessage" xml:space="preserve">
+    <value>The computer will read aloud text you've selected</value>
+  </data>
+  <data name="QuickStrip_Reader_Start_HelpTitle" xml:space="preserve">
+    <value>Read the Selected Text</value>
+  </data>
+  <data name="QuickStrip_Reader_Stop_HelpMessage" xml:space="preserve">
     <value>Stop the computer from reading text aloud</value>
   </data>
-  <data name="QuickStrip_Reader_Off_HelpTitle" xml:space="preserve">
-    <value>Turn Off Screen Reader</value>
-  </data>
-  <data name="QuickStrip_Reader_Off_Title" xml:space="preserve">
-    <value>Off</value>
-  </data>
-  <data name="QuickStrip_Reader_On_HelpMessage" xml:space="preserve">
-    <value>Have the computer read text aloud</value>
-  </data>
-  <data name="QuickStrip_Reader_On_HelpTitle" xml:space="preserve">
-    <value>Turn On Screen Reader</value>
-  </data>
-  <data name="QuickStrip_Reader_On_Title" xml:space="preserve">
-    <value>On</value>
+  <data name="QuickStrip_Reader_Stop_HelpTitle" xml:space="preserve">
+    <value>Stop Reading</value>
   </data>
   <data name="QuickStrip_Reader_Title" xml:space="preserve">
-    <value>Screen Reader</value>
+    <value>Read Text</value>
   </data>
   <data name="QuickStrip_Resolution_Bigger_HelpMessage" xml:space="preserve">
     <value>Make all the text and icons bigger</value>
@@ -199,11 +193,23 @@
   <data name="QuickStrip_Resolution_Bigger_HelpTitle" xml:space="preserve">
     <value>Increase Text Size</value>
   </data>
+  <data name="QuickStrip_Resolution_Bigger_LimitMessage" xml:space="preserve">
+    <value>The text and icons are as large as they can be</value>
+  </data>
+  <data name="QuickStrip_Resolution_Bigger_LimitTitle" xml:space="preserve">
+    <value>Cannot Go Any Bigger</value>
+  </data>
   <data name="QuickStrip_Resolution_Smaller_HelpMessage" xml:space="preserve">
     <value>Make all the text and icons smaller</value>
   </data>
   <data name="QuickStrip_Resolution_Smaller_HelpTitle" xml:space="preserve">
     <value>Decrease Text Size</value>
+  </data>
+  <data name="QuickStrip_Resolution_Smaller_LimitMessage" xml:space="preserve">
+    <value>The text and icons are as small as they can be</value>
+  </data>
+  <data name="QuickStrip_Resolution_Smaller_LimitTitle" xml:space="preserve">
+    <value>Cannot Go Any Smaller</value>
   </data>
   <data name="QuickStrip_Resolution_Title" xml:space="preserve">
     <value>Text Size</value>
@@ -214,11 +220,23 @@
   <data name="QuickStrip_Volume_Down_HelpTitle" xml:space="preserve">
     <value>Turn the Volume Down</value>
   </data>
+  <data name="QuickStrip_Volume_Down_LimitMessage" xml:space="preserve">
+    <value>The volume is all the way down</value>
+  </data>
+  <data name="QuickStrip_Volume_Down_LimitTitle" xml:space="preserve">
+    <value>Cannot Go Any Quieter</value>
+  </data>
   <data name="QuickStrip_Volume_Mute_HelpMessage" xml:space="preserve">
     <value>Turn off all sounds from the computer</value>
   </data>
   <data name="QuickStrip_Volume_Mute_HelpTitle" xml:space="preserve">
     <value>Mute All Sounds</value>
+  </data>
+  <data name="QuickStrip_Volume_Mute_MutedMessage" xml:space="preserve">
+    <value>Unmute by pressing the volume up or down button</value>
+  </data>
+  <data name="QuickStrip_Volume_Mute_MutedTitle" xml:space="preserve">
+    <value>Sounds Are Muted</value>
   </data>
   <data name="QuickStrip_Volume_Mute_Title" xml:space="preserve">
     <value>Mute</value>
@@ -231,5 +249,11 @@
   </data>
   <data name="QuickStrip_Volume_Up_HelpTitle" xml:space="preserve">
     <value>Turn the Volume Up</value>
+  </data>
+  <data name="QuickStrip_Volume_Up_LimitMessage" xml:space="preserve">
+    <value>The volume is all the way up</value>
+  </data>
+  <data name="QuickStrip_Volume_Up_LimitTitle" xml:space="preserve">
+    <value>Cannot Go Any Louder</value>
   </data>
 </root>
