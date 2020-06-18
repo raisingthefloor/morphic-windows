@@ -71,6 +71,14 @@ namespace Morphic.Settings
             ValueKind = valueKind;
         }
 
+        public RegistrySettingHandlerDescription(JsonElement element) : base(HandlerKind.Registry)
+        {
+            KeyName = element.GetProperty("key_name").GetString();
+            ValueName = element.GetProperty("value_name").GetString();
+            var valueType = element.GetProperty("value_type").GetString();
+            ValueKind = Enum.Parse<RegistryValueKind>(valueType, ignoreCase: true);
+        }
+
         public override bool Equals(object? obj)
         {
             if (obj is RegistrySettingHandlerDescription other)

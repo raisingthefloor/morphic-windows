@@ -71,6 +71,13 @@ namespace Morphic.Settings
             Key = key;
         }
 
+        public IniSettingHandlerDescription(JsonElement element) : base(HandlerKind.Ini)
+        {
+            Filename = element.GetProperty("filename").GetString();
+            Section = element.GetProperty("section").GetString();
+            Key = element.GetProperty("key").GetString();
+        }
+
         public override bool Equals(object? obj)
         {
             if (obj is IniSettingHandlerDescription other)

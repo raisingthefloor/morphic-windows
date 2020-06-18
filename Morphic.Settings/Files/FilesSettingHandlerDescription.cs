@@ -24,6 +24,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json;
+using System.Linq;
 
 namespace Morphic.Settings.Files
 {
@@ -34,6 +36,12 @@ namespace Morphic.Settings.Files
         {
             Root = root;
             Files = files;
+        }
+
+        public FilesSettingHandlerDescription(JsonElement element) : base(HandlerKind.Files)
+        {
+            Root = element.GetProperty("root").GetString();
+            Files = element.GetProperty("files").EnumerateArray().Select(element => element.GetString()).ToArray();
         }
 
         public string Root { get; }

@@ -113,61 +113,15 @@ namespace Morphic.Settings
                     switch (type)
                     {
                         case "org.raisingthefloor.morphic.client":
-                            {
-                                var solution = element.GetProperty("solution").GetString();
-                                var preference = element.GetProperty("preference").GetString();
-                                var key = new Preferences.Key(solution, preference);
-                                return new ClientSettingHandlerDescription(key);
-                            }
+                            return new ClientSettingHandlerDescription(element);
                         case "com.microsoft.windows.registry":
-                            {
-                                var keyName = element.GetProperty("key_name").GetString();
-                                var valueName = element.GetProperty("value_name").GetString();
-                                var valueType = element.GetProperty("value_type").GetString();
-                                var valueKind = Enum.Parse<RegistryValueKind>(valueType, ignoreCase: true);
-                                return new RegistrySettingHandlerDescription(keyName, valueName, valueKind);
-                            }
+                            return new RegistrySettingHandlerDescription(element);
                         case "com.microsoft.windows.ini":
-                            {
-                                var filename = element.GetProperty("filename").GetString();
-                                var section = element.GetProperty("section").GetString();
-                                var key = element.GetProperty("key").GetString();
-                                return new IniSettingHandlerDescription(filename, section, key);
-                            }
+                            return new IniSettingHandlerDescription(element);
                         case "com.microsoft.windows.system":
-                            {
-                                var settingId = element.GetProperty("setting_id").GetString();
-                                var valueType = element.GetProperty("value_type").GetString();
-                                var valueKind = Enum.Parse<SystemValueKind>(valueType, ignoreCase: true);
-                                var handler = new SystemSettingHandlerDescription(settingId, valueKind);
-                                try
-                                {
-                                    var enumerator = element.GetProperty("integer_map").EnumerateArray();
-                                    var list = new List<string>();
-                                    var reverse = new Dictionary<string, long>();
-                                    long i = 0;
-                                    foreach (var child in enumerator)
-                                    {
-                                        var str = child.GetString();
-                                        list.Add(str);
-                                        reverse.Add(str, i);
-                                        ++i;
-                                    }
-                                    handler.IntegerMap = list.ToArray();
-                                    handler.ReverseIntegerMap = reverse;
-                                }
-                                catch
-                                {
-                                }
-                                return handler;
-                            }
+                            return new SystemSettingHandlerDescription(element);
                         case "com.microsoft.windows.files":
-                            {
-                                var root = element.GetProperty("root").GetString();
-                                var files = element.GetProperty("files").EnumerateArray().Select(element => element.GetString()).ToArray();
-                                var handler = new FilesSettingHandlerDescription(root, files);
-                                return handler;
-                            }
+                            return new FilesSettingHandlerDescription(element);
                     }
                 }
                 catch
@@ -187,6 +141,13 @@ namespace Morphic.Settings
     {
 
         public Preferences.Key Key;
+
+        public ClientSettingHandlerDescription(JsonElement element) : base(HandlerKind.Client)
+        {
+            var solution = element.GetProperty("solution").GetString();
+            var preference = element.GetProperty("preference").GetString();
+            Key = new Preferences.Key(solution, preference);
+        }
 
         public ClientSettingHandlerDescription(Preferences.Key key) : base(HandlerKind.Client)
         {

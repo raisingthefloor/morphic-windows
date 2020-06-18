@@ -73,6 +73,30 @@ namespace Morphic.Settings
             ValueKind = valueKind;
         }
 
+        public SystemSettingHandlerDescription(JsonElement element) : base(HandlerKind.System)
+        {
+
+            SettingId = element.GetProperty("setting_id").GetString();
+            var valueType = element.GetProperty("value_type").GetString();
+            ValueKind = Enum.Parse<SystemValueKind>(valueType, ignoreCase: true);
+            if (element.TryGetProperty("integer_map", out var integerMap))
+            {
+                var enumerator = integerMap.EnumerateArray();
+                var list = new List<string>();
+                var reverse = new Dictionary<string, long>();
+                long i = 0;
+                foreach (var child in enumerator)
+                {
+                    var str = child.GetString();
+                    list.Add(str);
+                    reverse.Add(str, i);
+                    ++i;
+                }
+                IntegerMap = list.ToArray();
+                ReverseIntegerMap = reverse;
+            }
+        }
+
         public override bool Equals(object? obj)
         {
             if (obj is SystemSettingHandlerDescription other)
