@@ -452,7 +452,7 @@ namespace Morphic.Client
         /// <summary>
         ///  The Quick Strip Window, if visible
         /// </summary>
-        private QuickStripWindow? QuickStripWindow = null;
+        public QuickStripWindow? QuickStripWindow { get; private set; } = null;
 
         /// <summary>
         /// Toggle the Quick Strip window based on its current visibility

@@ -296,7 +296,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot Go Any Bigger.
+        ///   Looks up a localized string similar to Cannot Increase Text Size.
         /// </summary>
         internal static string QuickStrip_Resolution_Bigger_LimitTitle {
             get {
@@ -332,7 +332,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot Go Any Smaller.
+        ///   Looks up a localized string similar to Cannot Decrease Text Size.
         /// </summary>
         internal static string QuickStrip_Resolution_Smaller_LimitTitle {
             get {
@@ -377,7 +377,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot Go Any Quieter.
+        ///   Looks up a localized string similar to Cannot Turn the Volume Down.
         /// </summary>
         internal static string QuickStrip_Volume_Down_LimitTitle {
             get {
@@ -467,7 +467,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot Go Any Louder.
+        ///   Looks up a localized string similar to Cannot Turn the Volume Up.
         /// </summary>
         internal static string QuickStrip_Volume_Up_LimitTitle {
             get {

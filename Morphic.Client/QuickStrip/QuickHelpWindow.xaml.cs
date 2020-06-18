@@ -92,8 +92,30 @@ namespace Morphic.Client
         private void Reposition()
         {
             var screenSize = SystemParameters.WorkArea;
-            Left = System.Math.Round((screenSize.Width - Width) / 2.0);
-            Top = System.Math.Round((screenSize.Height - Height) / 2.0);
+            if (App.Shared.QuickStripWindow is QuickStripWindow quickStripWindow)
+            {
+                if (Height < quickStripWindow.Top - quickStripWindow.ScreenEdgeInset)
+                {
+                    Top = quickStripWindow.Top - Height - quickStripWindow.ScreenEdgeInset;
+                }
+                else
+                {
+                    Top = quickStripWindow.Top + quickStripWindow.Height + quickStripWindow.ScreenEdgeInset;
+                }
+                if (quickStripWindow.Left < screenSize.Width / 2)
+                {
+                    Left = quickStripWindow.Left;
+                }
+                else
+                {
+                    Left = quickStripWindow.Left + quickStripWindow.Width - Width;
+                }
+            }
+            else
+            {
+                Left = System.Math.Round((screenSize.Width - Width) / 2.0);
+                Top = System.Math.Round((screenSize.Height - Height) / 2.0);
+            }
         }
     }
 }

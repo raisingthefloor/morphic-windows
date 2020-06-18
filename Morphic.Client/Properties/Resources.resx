@@ -197,7 +197,7 @@
     <value>The text and icons are as large as they can be</value>
   </data>
   <data name="QuickStrip_Resolution_Bigger_LimitTitle" xml:space="preserve">
-    <value>Cannot Go Any Bigger</value>
+    <value>Cannot Increase Text Size</value>
   </data>
   <data name="QuickStrip_Resolution_Smaller_HelpMessage" xml:space="preserve">
     <value>Make all the text and icons smaller</value>
@@ -209,7 +209,7 @@
     <value>The text and icons are as small as they can be</value>
   </data>
   <data name="QuickStrip_Resolution_Smaller_LimitTitle" xml:space="preserve">
-    <value>Cannot Go Any Smaller</value>
+    <value>Cannot Decrease Text Size</value>
   </data>
   <data name="QuickStrip_Resolution_Title" xml:space="preserve">
     <value>Text Size</value>
@@ -224,7 +224,7 @@
     <value>The volume is all the way down</value>
   </data>
   <data name="QuickStrip_Volume_Down_LimitTitle" xml:space="preserve">
-    <value>Cannot Go Any Quieter</value>
+    <value>Cannot Turn the Volume Down</value>
   </data>
   <data name="QuickStrip_Volume_Mute_HelpMessage" xml:space="preserve">
     <value>Turn off all sounds from the computer</value>
@@ -254,6 +254,6 @@
     <value>The volume is all the way up</value>
   </data>
   <data name="QuickStrip_Volume_Up_LimitTitle" xml:space="preserve">
-    <value>Cannot Go Any Louder</value>
+    <value>Cannot Turn the Volume Up</value>
   </data>
 </root>
