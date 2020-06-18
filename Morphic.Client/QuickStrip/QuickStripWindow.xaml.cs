@@ -625,7 +625,7 @@ namespace Morphic.Client.QuickStrip
             {
                 case FixedPosition.BottomRight:
                     top = screenSize.Height - Height - ScreenEdgeInset;
-                    left = screenSize.Width - Width - ScreenEdgeInset;
+                    left = Math.Max(ScreenEdgeInset, screenSize.Width - Width - ScreenEdgeInset);
                     break;
                 case FixedPosition.BottomLeft:
                     top = screenSize.Height - Height - ScreenEdgeInset;
@@ -637,7 +637,7 @@ namespace Morphic.Client.QuickStrip
                     break;
                 case FixedPosition.TopRight:
                     top = ScreenEdgeInset;
-                    left = screenSize.Width - Width - ScreenEdgeInset;
+                    left = Math.Max(ScreenEdgeInset, screenSize.Width - Width - ScreenEdgeInset);
                     break;
             }
             if (animated)

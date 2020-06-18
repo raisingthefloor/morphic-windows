@@ -44,7 +44,7 @@ namespace Morphic.Client.QuickStrip
         {
             var zoomControl = new QuickHelpTextZoomControl();
             zoomControl.PagerControl.NumberOfPages = Display.NumberOfZoomLevels;
-            zoomControl.PagerControl.CurrentPage = Display.CurrentZoomLevel;
+            zoomControl.PagerControl.CurrentPage = Display.NumberOfZoomLevels - 1 - Display.CurrentZoomLevel;
             if (Display.CanZoomIn)
             {
                 zoomControl.TitleLabel.Content = Properties.Resources.QuickStrip_Resolution_Bigger_HelpTitle;
@@ -74,7 +74,7 @@ namespace Morphic.Client.QuickStrip
         {
             var zoomControl = new QuickHelpTextZoomControl();
             zoomControl.PagerControl.NumberOfPages = Display.NumberOfZoomLevels;
-            zoomControl.PagerControl.CurrentPage = Display.CurrentZoomLevel;
+            zoomControl.PagerControl.CurrentPage = Display.NumberOfZoomLevels - 1 - Display.CurrentZoomLevel;
             if (Display.CanZoomOut)
             {
                 zoomControl.TitleLabel.Content = Properties.Resources.QuickStrip_Resolution_Smaller_HelpTitle;

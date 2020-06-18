@@ -21,6 +21,7 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
+using System;
 using Morphic.Client.QuickStrip;
 using System.Timers;
 using System.Windows;
@@ -102,13 +103,13 @@ namespace Morphic.Client
                 {
                     Top = quickStripWindow.Top + quickStripWindow.Height + quickStripWindow.ScreenEdgeInset;
                 }
-                if (quickStripWindow.Left < screenSize.Width / 2)
+                if (quickStripWindow.Position == QuickStripWindow.FixedPosition.BottomLeft || quickStripWindow.Position == QuickStripWindow.FixedPosition.TopLeft)
                 {
                     Left = quickStripWindow.Left;
                 }
                 else
                 {
-                    Left = quickStripWindow.Left + quickStripWindow.Width - Width;
+                    Left = Math.Max(quickStripWindow.ScreenEdgeInset, quickStripWindow.Left + quickStripWindow.Width - Width);
                 }
             }
             else
