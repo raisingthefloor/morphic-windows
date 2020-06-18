@@ -244,6 +244,12 @@
   <data name="QuickStrip_Volume_Title" xml:space="preserve">
     <value>Volume</value>
   </data>
+  <data name="QuickStrip_Volume_Unmute_HelpMessage" xml:space="preserve">
+    <value>Return to the previous volume level</value>
+  </data>
+  <data name="QuickStrip_Volume_Unmute_HelpTitle" xml:space="preserve">
+    <value>Unmute All Sounds</value>
+  </data>
   <data name="QuickStrip_Volume_Up_HelpMessage" xml:space="preserve">
     <value>Make all the sounds louder</value>
   </data>

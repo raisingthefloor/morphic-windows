@@ -42,18 +42,31 @@ namespace Morphic.Client.QuickStrip
 
         public UserControl Build()
         {
-            var textControl = new QuickHelpTextControl();
-            if (Audio.GetMasterVolumeLevel() < 1)
+            var volumeControl = new QuickHelpVolumeControl();
+            var level = Audio.GetMasterVolumeLevel();
+            volumeControl.ProgressBar.Value = level;
+            volumeControl.PercentageLabel.Content = String.Format("{0:P0}", level);
+            if (Audio.GetMasterMuteState())
             {
-                textControl.TitleLabel.Content = Properties.Resources.QuickStrip_Volume_Up_HelpTitle;
-                textControl.MessageLabel.Content = Properties.Resources.QuickStrip_Volume_Up_HelpMessage;
+                volumeControl.ProgressBar.Opacity = 0.5;
+                volumeControl.PercentageLabel.Opacity = 0.5;
+                volumeControl.TitleLabel.Content = Properties.Resources.QuickStrip_Volume_Unmute_HelpTitle;
+                volumeControl.MessageLabel.Content = Properties.Resources.QuickStrip_Volume_Unmute_HelpMessage;
             }
             else
             {
-                textControl.TitleLabel.Content = Properties.Resources.QuickStrip_Volume_Up_LimitTitle;
-                textControl.MessageLabel.Content = Properties.Resources.QuickStrip_Volume_Up_LimitMessage;
+                if (level < 1)
+                {
+                    volumeControl.TitleLabel.Content = Properties.Resources.QuickStrip_Volume_Up_HelpTitle;
+                    volumeControl.MessageLabel.Content = Properties.Resources.QuickStrip_Volume_Up_HelpMessage;
+                }
+                else
+                {
+                    volumeControl.TitleLabel.Content = Properties.Resources.QuickStrip_Volume_Up_LimitTitle;
+                    volumeControl.MessageLabel.Content = Properties.Resources.QuickStrip_Volume_Up_LimitMessage;
+                }
             }
-            return textControl;
+            return volumeControl;
         }
 
     }
@@ -70,18 +83,31 @@ namespace Morphic.Client.QuickStrip
 
         public UserControl Build()
         {
-            var textControl = new QuickHelpTextControl();
-            if (Audio.GetMasterVolumeLevel() > 0)
+            var volumeControl = new QuickHelpVolumeControl();
+            var level = Audio.GetMasterVolumeLevel();
+            volumeControl.ProgressBar.Value = level;
+            volumeControl.PercentageLabel.Content = String.Format("{0:P0}", level);
+            if (Audio.GetMasterMuteState())
             {
-                textControl.TitleLabel.Content = Properties.Resources.QuickStrip_Volume_Down_HelpTitle;
-                textControl.MessageLabel.Content = Properties.Resources.QuickStrip_Volume_Down_HelpMessage;
+                volumeControl.ProgressBar.Opacity = 0.5;
+                volumeControl.PercentageLabel.Opacity = 0.5;
+                volumeControl.TitleLabel.Content = Properties.Resources.QuickStrip_Volume_Unmute_HelpTitle;
+                volumeControl.MessageLabel.Content = Properties.Resources.QuickStrip_Volume_Unmute_HelpMessage;
             }
             else
             {
-                textControl.TitleLabel.Content = Properties.Resources.QuickStrip_Volume_Down_LimitTitle;
-                textControl.MessageLabel.Content = Properties.Resources.QuickStrip_Volume_Down_LimitMessage;
+                if (level > 0)
+                {
+                    volumeControl.TitleLabel.Content = Properties.Resources.QuickStrip_Volume_Down_HelpTitle;
+                    volumeControl.MessageLabel.Content = Properties.Resources.QuickStrip_Volume_Down_HelpMessage;
+                }
+                else
+                {
+                    volumeControl.TitleLabel.Content = Properties.Resources.QuickStrip_Volume_Down_LimitTitle;
+                    volumeControl.MessageLabel.Content = Properties.Resources.QuickStrip_Volume_Down_LimitMessage;
+                }
             }
-            return textControl;
+            return volumeControl;
         }
 
     }

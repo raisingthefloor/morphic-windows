@@ -440,6 +440,24 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Return to the previous volume level.
+        /// </summary>
+        internal static string QuickStrip_Volume_Unmute_HelpMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_Volume_Unmute_HelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unmute All Sounds.
+        /// </summary>
+        internal static string QuickStrip_Volume_Unmute_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_Volume_Unmute_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Make all the sounds louder.
         /// </summary>
         internal static string QuickStrip_Volume_Up_HelpMessage {
