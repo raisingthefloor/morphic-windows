@@ -18,5 +18,6 @@
         IsHitTestVisible="False"
         ShowInTaskbar="False"
         AllowsTransparency="True"
-        ShowActivated="False">
+        ShowActivated="False"
+        Topmost="True">
 </Window>
