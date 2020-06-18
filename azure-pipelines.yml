@@ -168,7 +168,7 @@ stages:
                   EXTRA_ARGS="--expires $(date -d '+2 days' --iso-8601=seconds)"
                 fi
                 
-                S3_PUBLISHED_HTTP_URL="https://dw2oujmdhok1n.cloudfront.net"
+                S3_PUBLISHED_HTTP_URL="https://d23vryjv7k8eyb.cloudfront.net"
                 INSTALLER_NAME_BASE="MorphicSetup"
                 VERSION=$(sed -n 1p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
                 ASSEMBLY_VERSION=$(sed -n 2p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
