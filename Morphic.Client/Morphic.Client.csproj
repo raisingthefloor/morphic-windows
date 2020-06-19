@@ -16,11 +16,10 @@
     <VersionSuffix Condition="'$(Configuration)' == 'Release'">$(VersionSuffix)</VersionSuffix>
     <StartupObject>Morphic.Client.AppMain</StartupObject>
     <Company>Raising the Floor</Company>
+    <BuildType Condition="'$(BuildType)' == ''">Development</BuildType>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="appsettings.Development.json" />
-    <None Remove="appsettings.json" />
     <None Remove="DefaultPreferences.json" />
     <None Remove="Icon.png" />
     <None Remove="Login\LoginAnnounce.wav" />
@@ -32,15 +31,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="appsettings.Development.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="appsettings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="appsettings.Staging.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Solutions\jaws2019.solutions.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -105,6 +95,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="appsettings.Debug.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Update="appsettings.Development.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Update="appsettings.Staging.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
     <None Update="UserSettings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>UserSettings.Designer.cs</LastGenOutput>
@@ -118,7 +117,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="IF &quot;$(ConfigurationName)&quot; == &quot;Debug&quot; (&#xD;&#xA;    IF EXIST &quot;appsettings.Local.json&quot; (&#xD;&#xA;        copy appsettings.Local.json $(OutDir)appsettings.Local.json&#xD;&#xA;    )&#xD;&#xA;)&#xD;&#xA;&#xD;&#xA;IF &quot;$(ConfigurationName)&quot; == &quot;Release&quot; (&#xD;&#xA;    echo $(Version) &gt; BuildVersion.txt&#xD;&#xA;    echo $(AssemblyVersion) &gt;&gt; BuildVersion.txt&#xD;&#xA;)" />
+    <Exec Command="copy &quot;appsettings.$(BuildType).json&quot; $(OutDir)appsettings.json&#xD;&#xA;&#xD;&#xA;IF &quot;$(ConfigurationName)&quot; == &quot;Debug&quot; (&#xD;&#xA;    copy &quot;appsettings.Debug.json&quot; $(OutDir)appsettings.Debug.json&#xD;&#xA;    IF EXIST &quot;appsettings.Local.json&quot; (&#xD;&#xA;        copy appsettings.Local.json $(OutDir)appsettings.Local.json&#xD;&#xA;    )&#xD;&#xA;)&#xD;&#xA;&#xD;&#xA;IF &quot;$(ConfigurationName)&quot; == &quot;Release&quot; (&#xD;&#xA;    echo $(Version) &gt; BuildVersion.txt&#xD;&#xA;    echo $(AssemblyVersion) &gt;&gt; BuildVersion.txt&#xD;&#xA;)" />
   </Target>
 
 </Project>
