@@ -29,7 +29,7 @@
                 </DrawingImage>
             </Image.Source>
         </Image>
-        <TextBlock Margin="0,10" HorizontalAlignment="Center" FontSize="17" TextWrapping="Wrap" TextAlignment="Center">We've saved your settings in a secure area only you can access.</TextBlock>
+        <TextBlock Margin="0,10" HorizontalAlignment="Center" FontSize="17" TextWrapping="Wrap" TextAlignment="Center" Focusable="True">We've saved your settings in a secure area only you can access.</TextBlock>
         <TextBlock Margin="0,10" HorizontalAlignment="Center" FontSize="17" TextWrapping="Wrap" TextAlignment="Center">When you sit down at another computer with Morphic installed, remember to login with the email address you provided:</TextBlock>
         <Label Margin="0,10" x:Name="EmailLabel" HorizontalAlignment="Center" FontSize="17" FontWeight="Bold">test@example.com</Label>
         <Button x:Name="SubmitButton" Grid.Row="5" Margin="0,30,0,30" Grid.ColumnSpan="2" HorizontalAlignment="Center" FontSize="17" Click="OnClose" FontWeight="Bold" Padding="7">

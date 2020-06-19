@@ -27,6 +27,7 @@ using Morphic.Core;
 using Morphic.Service;
 using System;
 using System.Windows;
+using System.Windows.Automation;
 
 namespace Morphic.Client.Travel
 {

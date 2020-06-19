@@ -26,6 +26,9 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Controls;
+using System.Windows.Automation.Peers;
+using System.Windows.Automation;
+using System.Linq;
 
 namespace Morphic.Client
 {
@@ -61,7 +64,7 @@ namespace Morphic.Client
             factory.AppendChild(new FrameworkElementFactory(typeof(ContentPresenter)));
             style.Setters.Add(new Setter { Property = ActionButton.TemplateProperty, Value = template });
             style.Setters.Add(new Setter { Property = ActionButton.SnapsToDevicePixelsProperty, Value = true });
-            style.Setters.Add(new Setter { Property = ActionButton.PaddingProperty, Value = new Thickness(7, 4, 7, 4) });
+            style.Setters.Add(new Setter { Property = ActionButton.PaddingProperty, Value = new Thickness(12, 4, 12, 4) });
             style.Setters.Add(new Setter { Property = ActionButton.VerticalContentAlignmentProperty, Value = VerticalAlignment.Center });
             style.Setters.Add(new Setter { Property = ActionButton.HorizontalContentAlignmentProperty, Value = HorizontalAlignment.Center });
             style.Setters.Add(new Setter { Property = ActionButton.ForegroundProperty, Value = new SolidColorBrush(Color.FromRgb(255, 255, 255)) });
@@ -166,18 +169,20 @@ namespace Morphic.Client
         private void AddButton(object content, string? helpTitle, string? helpMessage, bool isPrimary)
         {
             var button = new ActionButton();
-            if (isPrimary)
-            {
-                button.Style = CreatePrimaryButtonStyle();
-            }
-            else
-            {
-                button.Style = CreateSecondaryButtonStyle();
-            }
+            // We started with a design that had two styles of buttons: primary and secondary
+            // They featured different background shades, but the lighter shade was too low of
+            // contrast wit the white text for users who need high contrast.  So we're now
+            // using only the primary style and adding a space in between the buttons 
+            button.Style = CreatePrimaryButtonStyle();
             button.Content = content;
             button.HelpTitle = helpTitle;
             button.HelpMessage = helpMessage;
+            AutomationProperties.SetName(button, helpTitle);
             button.Click += Button_Click;
+            if (ActionStack.Children.Count > 0)
+            {
+                button.Margin = new Thickness(1, 0, 0, 0);
+            }
             ActionStack.Children.Add(button);
         }
 

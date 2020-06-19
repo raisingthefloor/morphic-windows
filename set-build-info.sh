@@ -17,7 +17,6 @@ fi
 
 cat > $INFO_FILE << EOF
 {
-  "version": "${FINAL_VERSION}",
   "buildTime": "$(date -u)",
   "commit": "${COMMIT}"
 }

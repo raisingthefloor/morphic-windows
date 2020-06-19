@@ -18,7 +18,7 @@ namespace Morphic.Client.About
         protected override void OnInitialized(EventArgs e)
         {
             base.OnInitialized(e);
-            VersionLabel.Content = buildInfo.Version;
+            VersionLabel.Content = buildInfo.InformationalVersion;
             BuildLabel.Content = String.Format("(build {0})", buildInfo.Commit);
         }
 
