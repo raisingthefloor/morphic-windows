@@ -51,9 +51,9 @@ stages:
         # Set a $(BUILD_TYPE) variable
         - bash: |
             BUILD_TYPE="Development"
-            if [[ "${BRANCH_NAME}" == *"staging/"* ]]; then
+            if [[ "${BRANCH}" == *"staging/"* ]]; then
               BUILD_TYPE="Staging"
-            elif [[ "${BUILD_TYPE}" == *"release/"* ]]; then
+            elif [[ "${BRANCH}" == *"release/"* ]]; then
               BUILD_TYPE="Production"
             fi
             echo "##vso[task.setvariable variable=BUILD_TYPE]${BUILD_TYPE}"
