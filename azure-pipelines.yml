@@ -47,6 +47,20 @@ stages:
     jobs:
       - job: build
         steps:
+
+        # Set a $(BUILD_TYPE) variable
+        - bash: |
+            BUILD_TYPE="Development"
+            if [[ "${BRANCH_NAME}" == *"staging/"* ]]; then
+              BUILD_TYPE="Staging"
+            elif [[ "${BUILD_TYPE}" == *"release/"* ]]; then
+              BUILD_TYPE="Production"
+            fi
+            echo "##vso[task.setvariable variable=BUILD_TYPE]${BUILD_TYPE}"
+          env:
+            BRANCH: $(Build.SourceBranch)
+            BRANCH_NAME: $(Build.SourceBranchName)
+        
         - task: NuGetToolInstaller@1
         
         - task: NuGetCommand@2
@@ -78,6 +92,7 @@ stages:
             solution: '$(solution)'
             platform: '$(buildPlatform)'
             configuration: '$(buildConfiguration)'
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE)'
         
         - task: VSTest@2
           displayName: "execute tests"
@@ -93,6 +108,7 @@ stages:
             solution: 'Morphic.Setup\Morphic.Setup.wixproj'
             platform: 'x64'
             configuration: '$(buildConfiguration)'
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE)'
 
         - task: DotNetCoreCLI@2
           displayName: Install AzureSignTool
