@@ -101,11 +101,14 @@ namespace Morphic.Client
             var builder = new ConfigurationBuilder();
             builder.SetBasePath(Directory.GetCurrentDirectory());
             builder.AddJsonFile("appsettings.json", optional: false);
-            if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") is string env)
+            if (Environment.GetEnvironmentVariable("MORPHIC_DEBUG") is string debug)
             {
-                builder.AddJsonFile($"appsettings.{env}.json", optional: true);
+                if (debug == "True")
+                {
+                    builder.AddJsonFile($"appsettings.Debug.json", optional: true);
+                    builder.AddJsonFile($"appsettings.Local.json", optional: true);
+                }
             }
-            builder.AddJsonFile($"appsettings.Local.json", optional: true);
             builder.AddEnvironmentVariables();
             return builder.Build();
         }
