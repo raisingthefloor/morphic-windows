@@ -37,5 +37,21 @@ namespace Morphic.Settings.Process
 
         public Task<bool> Stop(string appPathKey);
 
+        public Task<bool> IsInstalled(string appPathKey);
+
     }
+
+    public enum ProcessAction
+    {
+        Start,
+        Stop,
+        Restart
+    }
+
+    public enum ProcessState
+    {
+        Installed,
+        Running,
+    }
+
 }

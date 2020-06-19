@@ -141,11 +141,11 @@ namespace Morphic.Settings
                 var fileManager = serviceProvider.GetRequiredService<IFileManager>();
                 return new FilesSettingHandler(setting, fileManager, logger);
             }
-            else if (setting.HandlerDescription is ProcessRunningSettingHandlerDescription)
+            else if (setting.HandlerDescription is ProcessSettingHandlerDescription)
             {
-                var logger = serviceProvider.GetRequiredService<ILogger<ProcessRunningSettingHandler>>();
+                var logger = serviceProvider.GetRequiredService<ILogger<ProcessSettingHandler>>();
                 var processManager = serviceProvider.GetRequiredService<IProcessManager>();
-                return new ProcessRunningSettingHandler(setting, processManager, logger);
+                return new ProcessSettingHandler(setting, processManager, logger);
             }
             return null;
         }

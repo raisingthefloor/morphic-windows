@@ -30,10 +30,10 @@ using System.Threading.Tasks;
 
 namespace Morphic.Settings.Process
 {
-    public class ProcessRunningSettingHandler : SettingHandler
+    public class ProcessSettingHandler : SettingHandler
     {
 
-        public ProcessRunningSettingHandler(Setting setting, IProcessManager processManager, ILogger<ProcessRunningSettingHandler> logger)
+        public ProcessSettingHandler(Setting setting, IProcessManager processManager, ILogger<ProcessSettingHandler> logger)
         {
             Setting = setting;
             this.processManager = processManager;
@@ -42,19 +42,29 @@ namespace Morphic.Settings.Process
 
         public Setting Setting { get; }
 
-        public ProcessRunningSettingHandlerDescription Description
+        public ProcessSettingHandlerDescription Description
         {
             get
             {
-                return (Setting.HandlerDescription as ProcessRunningSettingHandlerDescription)!;
+                return (Setting.HandlerDescription as ProcessSettingHandlerDescription)!;
             }
         }
 
         private readonly IProcessManager processManager;
 
-        private readonly ILogger<ProcessRunningSettingHandler> logger;
+        private readonly ILogger<ProcessSettingHandler> logger;
 
         public override async Task<bool> Apply(object? value)
+        {
+            switch (Description.State)
+            {
+                case ProcessState.Running:
+                    return await SetRunning(value);
+            }
+            return false;
+        }
+
+        public async Task<bool> SetRunning(object? value)
         {
             if (value is bool isRunning)
             {
@@ -87,7 +97,15 @@ namespace Morphic.Settings.Process
             var result = new CaptureResult();
             try
             {
-                result.Value = await processManager.IsRunning(Description.AppPathKey);
+                switch (Description.State)
+                {
+                    case ProcessState.Running:
+                        result.Value = await processManager.IsRunning(Description.AppPathKey);
+                        break;
+                    case ProcessState.Installed:
+                        result.Value = await processManager.IsInstalled(Description.AppPathKey);
+                        break;
+                }
                 result.Success = true;
             }
             catch (Exception e)

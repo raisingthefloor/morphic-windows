@@ -40,7 +40,7 @@ namespace Morphic.Settings.Tests
             var finalizer = new Dictionary<string, object>();
             finalizer.Add("type", "com.microsoft.windows.systemParametersInfo");
             finalizer.Add("action", "SetCursors");
-            yield return new object[] { Setting.ValueKind.String, "ayylmao", handler, finalizer, SettingHandlerDescription.HandlerKind.Registry, SettingFinalizerDescription.HandlerKind.SystemParametersInfo };
+            yield return new object[] { Setting.ValueKind.String, "ayylmao", handler, finalizer, SettingHandlerDescription.HandlerKind.Registry, SettingFinalizerDescription.FinalizerKind.SystemParametersInfo };
             handler = new Dictionary<string, object>();
             handler.Add("type", "com.microsoft.windows.ini");
             handler.Add("filename", "thefile");
@@ -49,7 +49,7 @@ namespace Morphic.Settings.Tests
             finalizer = new Dictionary<string, object>();
             finalizer.Add("type", "com.microsoft.windows.systemParametersInfo");
             finalizer.Add("action", "SetSomethingThatIsntCursors");
-            yield return new object[] { Setting.ValueKind.Double, 3.14159d, handler, finalizer, SettingHandlerDescription.HandlerKind.Ini, SettingFinalizerDescription.HandlerKind.Unknown };
+            yield return new object[] { Setting.ValueKind.Double, 3.14159d, handler, finalizer, SettingHandlerDescription.HandlerKind.Ini, SettingFinalizerDescription.FinalizerKind.Unknown };
             handler = new Dictionary<string, object>();
             handler.Add("type", "org.raisingthefloor.morphic.client");
             handler.Add("solution", "thesolution");
@@ -57,19 +57,19 @@ namespace Morphic.Settings.Tests
             finalizer = new Dictionary<string, object>();
             finalizer.Add("type", "com.microsoft.windows.systemParametersInfo");
             finalizer.Add("action", "SetCursors");
-            yield return new object[] { Setting.ValueKind.Boolean, true, handler, finalizer, SettingHandlerDescription.HandlerKind.Client, SettingFinalizerDescription.HandlerKind.SystemParametersInfo };
+            yield return new object[] { Setting.ValueKind.Boolean, true, handler, finalizer, SettingHandlerDescription.HandlerKind.Client, SettingFinalizerDescription.FinalizerKind.SystemParametersInfo };
             handler = new Dictionary<string, object>();
             handler.Add("type", "com.microsoft.windows.system");
             handler.Add("setting_id", "thesetting");
             handler.Add("value_type", "integer");
             finalizer = new Dictionary<string, object>();
             finalizer.Add("type", "com.microsoft.windows.systemParametersInfo");
-            yield return new object[] { Setting.ValueKind.Integer, 52L, handler, finalizer, SettingHandlerDescription.HandlerKind.System, SettingFinalizerDescription.HandlerKind.Unknown };
+            yield return new object[] { Setting.ValueKind.Integer, 52L, handler, finalizer, SettingHandlerDescription.HandlerKind.System, SettingFinalizerDescription.FinalizerKind.Unknown };
         }
 
         [Theory]
         [MemberData(nameof(TestData))]
-        public void TestJsonDeserialize(Setting.ValueKind kind, object defval, Dictionary<string, object> handler, Dictionary<string, object> finalizer, SettingHandlerDescription.HandlerKind handlerKind, SettingFinalizerDescription.HandlerKind finalizerKind)
+        public void TestJsonDeserialize(Setting.ValueKind kind, object defval, Dictionary<string, object> handler, Dictionary<string, object> finalizer, SettingHandlerDescription.HandlerKind handlerKind, SettingFinalizerDescription.FinalizerKind finalizerKind)
         {
             var options = new JsonSerializerOptions();
             options.Converters.Add(new JsonElementInferredTypeConverter());

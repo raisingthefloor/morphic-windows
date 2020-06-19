@@ -30,10 +30,12 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Morphic.Core;
 using Microsoft.Win32;
-using Morphic.Settings.Spi;
 
 namespace Morphic.Settings
 {
+
+    using Spi;
+    using Process;
 
     /// <summary>
     /// Base class for describing the handler for a setting
@@ -44,12 +46,17 @@ namespace Morphic.Settings
         /// <summary>
         /// The possible kinds of handlers
         /// </summary>
-        public enum HandlerKind
+        public enum FinalizerKind
         {
             /// <summary>
             /// A Windows System Parameter Info call
             /// </summary>
             SystemParametersInfo,
+
+            /// <summary>
+            /// A Process restart
+            /// </summary>
+            Process,
 
             /// <summary>
             /// An unknown handler is used for any unrecogized or invalid handler JSON
@@ -60,13 +67,13 @@ namespace Morphic.Settings
         /// <summary>
         /// The kind of this handler
         /// </summary>
-        public HandlerKind Kind { get; set; }
+        public FinalizerKind Kind { get; set; }
 
         /// <summary>
         /// Create a new handler for the given kind
         /// </summary>
         /// <param name="kind"></param>
-        public SettingFinalizerDescription(HandlerKind kind)
+        public SettingFinalizerDescription(FinalizerKind kind)
         {
             Kind = kind;
         }
@@ -86,87 +93,21 @@ namespace Morphic.Settings
                     switch (type)
                     {
                         case "com.microsoft.windows.systemParametersInfo":
-                            {
-                                var actionString = element.GetProperty("action").GetString();
-                                var action = Enum.Parse<SystemParametersInfo.Action>(actionString, ignoreCase: true);
-                                var description = new SystemParametersInfoSettingFinalizerDescription(action);
-                                try
-                                {
-                                    description.SendChange = element.GetProperty("send_change").GetBoolean();
-                                }
-                                catch
-                                {
-                                }
-                                try
-                                {
-                                    description.UpdateUserProfile = element.GetProperty("update_user_profile").GetBoolean();
-                                }
-                                catch
-                                {
-                                }
-                                return description;
-                            }
+                            return new SystemParametersInfoSettingFinalizerDescription(element);
+                        case "com.microsoft.windows.process":
+                            return new ProcessSettingFinalizerDescription(element);
                     }
                 }
                 catch
                 {
                 }
-                return new SettingFinalizerDescription(HandlerKind.Unknown);
+                return new SettingFinalizerDescription(FinalizerKind.Unknown);
             }
 
             public override void Write(Utf8JsonWriter writer, SettingFinalizerDescription value, JsonSerializerOptions options)
             {
                 throw new NotImplementedException();
             }
-        }
-    }
-
-    /// <summary>
-    /// An ini handler description that specifies which part of the ini file should be udpated
-    /// </summary>
-    public class SystemParametersInfoSettingFinalizerDescription : SettingFinalizerDescription
-    {
-
-        /// <summary>
-        /// The filename of the ini file, possibly including environmental variables
-        /// </summary>
-        public SystemParametersInfo.Action Action;
-
-        public int Parameter1 = 0;
-
-        public object? Parameter2;
-
-        /// <summary>
-        /// Should a change notification be sent to the system
-        /// </summary>
-        public bool SendChange = false;
-
-        /// <summary>
-        /// Should the user's profile be updated
-        /// </summary>
-        public bool UpdateUserProfile = false;
-
-        /// <summary>
-        /// Create a new ini file handler
-        /// </summary>
-        /// <param name="settingId"></param>
-        public SystemParametersInfoSettingFinalizerDescription(SystemParametersInfo.Action action) : base(HandlerKind.SystemParametersInfo)
-        {
-            Action = action;
-        }
-
-        public override bool Equals(object? obj)
-        {
-            if (obj is SystemParametersInfoSettingFinalizerDescription other)
-            {
-                return other.Action == Action && other.Parameter1 == Parameter1 && other.Parameter2 == Parameter2 && other.SendChange == SendChange && other.UpdateUserProfile == UpdateUserProfile;
-            }
-            return false;
-        }
-
-        public override int GetHashCode()
-        {
-            return Action.GetHashCode() ^ Parameter1 ^ (Parameter2?.GetHashCode() ?? 0) ^ SendChange.GetHashCode() ^ UpdateUserProfile.GetHashCode();
         }
     }
 }

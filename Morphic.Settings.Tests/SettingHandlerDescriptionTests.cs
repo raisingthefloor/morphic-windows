@@ -367,8 +367,12 @@ namespace Morphic.Settings.Tests
         }
 
         [Theory]
-        [InlineData(@"Test.exe", true)]
-        public void TestJsonDeserializeProcessRunning(string appPathKey, bool success)
+        [InlineData("Test.exe", "running", ProcessState.Running)]
+        [InlineData("Test.exe", "installed", ProcessState.Installed)]
+        [InlineData("Test.exe", "Running", ProcessState.Running)]
+        [InlineData("Test2.exe", "RUNNING", ProcessState.Running)]
+        [InlineData("Test2.exe", "RuNnInG", ProcessState.Running)]
+        public void TestJsonDeserializeProcess(string appPathKey, string stateString, ProcessState expectedState)
         {
             var options = new JsonSerializerOptions();
             options.Converters.Add(new JsonElementInferredTypeConverter());
@@ -377,31 +381,67 @@ namespace Morphic.Settings.Tests
             var json = JsonSerializer.Serialize(new Dictionary<string, object>()
             {
                 { "type", "com.microsoft.windows.process" },
-                { "app_path_key", appPathKey }
+                { "app_path_key", appPathKey },
+                { "state", stateString }
             });
             var handler = JsonSerializer.Deserialize<SettingHandlerDescription>(json, options);
             Assert.NotNull(handler);
-            if (success)
+            Assert.Equal(SettingHandlerDescription.HandlerKind.Process, handler.Kind);
+            Assert.IsType<ProcessSettingHandlerDescription>(handler);
+            var processHandler = (ProcessSettingHandlerDescription)handler;
+            Assert.Equal(appPathKey, processHandler.AppPathKey);
+            Assert.Equal(expectedState, processHandler.State);
+        }
+
+        [Theory]
+        [InlineData("Test.exe", "bad")]
+        [InlineData("Test.exe", null)]
+        [InlineData("Test.exe", 1)]
+        [InlineData("Test.exe", 1.2)]
+        [InlineData("Test.exe", true)]
+        [InlineData(null, "running")]
+        [InlineData(1, "running")]
+        [InlineData(1.2, "running")]
+        [InlineData(true, "running")]
+        public void TestJsonDeserializeProcessFail(object appPathKey, object stateString)
+        {
+            var options = new JsonSerializerOptions();
+            options.Converters.Add(new JsonElementInferredTypeConverter());
+            options.Converters.Add(new SettingHandlerDescription.JsonConverter());
+
+            var json = JsonSerializer.Serialize(new Dictionary<string, object>()
             {
-                Assert.Equal(SettingHandlerDescription.HandlerKind.ProcessRunning, handler.Kind);
-                Assert.IsType<ProcessRunningSettingHandlerDescription>(handler);
-                var processHandler = (ProcessRunningSettingHandlerDescription)handler;
-                Assert.Equal(appPathKey, processHandler.AppPathKey);
-            }
-            else
-            {
-                Assert.Equal(SettingHandlerDescription.HandlerKind.Unknown, handler.Kind);
-            }
+                { "type", "com.microsoft.windows.process" },
+                { "app_path_key", appPathKey },
+                { "state", stateString }
+            });
+            var handler = JsonSerializer.Deserialize<SettingHandlerDescription>(json, options);
+            Assert.NotNull(handler);
+            Assert.Equal(SettingHandlerDescription.HandlerKind.Unknown, handler.Kind);
         }
 
         [Fact]
-        public void TestEqualityOperatorProcessRunning()
+        public void TestEqualityOperatorProcess()
         {
-            var handler = new ProcessRunningSettingHandlerDescription(@"Test.exe");
-            var handler2 = new ProcessRunningSettingHandlerDescription(@"Test.exe");
-            Assert.Equal(handler, handler2);
-            handler2 = new ProcessRunningSettingHandlerDescription(@"Test2.exe");
-            Assert.NotEqual(handler, handler2);
+            var description1 = new ProcessSettingHandlerDescription(@"Test.exe", ProcessState.Running);
+            var description2 = new ProcessSettingHandlerDescription(@"Test.exe", ProcessState.Running);
+            Assert.Equal(description1, description2);
+
+            description1 = new ProcessSettingHandlerDescription(@"Test.exe", ProcessState.Running);
+            description2 = new ProcessSettingHandlerDescription(@"Test2.exe", ProcessState.Running);
+            Assert.NotEqual(description1, description2);
+
+            description1 = new ProcessSettingHandlerDescription(@"Test.exe", ProcessState.Running);
+            description2 = new ProcessSettingHandlerDescription(@"Test.exe", ProcessState.Installed);
+            Assert.NotEqual(description1, description2);
+
+            description1 = new ProcessSettingHandlerDescription(@"Test.exe", ProcessState.Running);
+            description2 = new ProcessSettingHandlerDescription(@"Test2.exe", ProcessState.Installed);
+            Assert.NotEqual(description1, description2);
+
+            description1 = new ProcessSettingHandlerDescription(@"Test.exe", ProcessState.Installed);
+            description2 = new ProcessSettingHandlerDescription(@"Test.exe", ProcessState.Installed);
+            Assert.Equal(description1, description2);
         }
     }
 }

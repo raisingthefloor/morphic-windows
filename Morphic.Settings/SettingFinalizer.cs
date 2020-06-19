@@ -27,10 +27,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Text;
-using Morphic.Settings.Spi;
 
 namespace Morphic.Settings
 {
+
+    using Spi;
+    using Process;
+
     public abstract class SettingFinalizer
     {
         public abstract Task<bool> Run();
@@ -46,6 +49,12 @@ namespace Morphic.Settings
                 var logger = serviceProvider.GetRequiredService<ILogger<SystemParametersInfoSettingsFinalizer>>();
                 var spi = serviceProvider.GetRequiredService<ISystemParametersInfo>();
                 return new SystemParametersInfoSettingsFinalizer(spiDescription, spi, logger);
+            }
+            if (description is ProcessSettingFinalizerDescription processDescription)
+            {
+                var logger = serviceProvider.GetRequiredService<ILogger<ProcessSettingFinalizer>>();
+                var processManager = serviceProvider.GetRequiredService<IProcessManager>();
+                return new ProcessSettingFinalizer(processDescription, processManager, logger);
             }
             return null;
         }

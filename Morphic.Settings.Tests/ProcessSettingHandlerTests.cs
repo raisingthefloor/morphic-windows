@@ -33,7 +33,7 @@ using Xunit;
 namespace Morphic.Settings.Tests
 {
 
-    public class ProcessRunningSettingHandlerTests
+    public class ProcessSettingHandlerTests
     {
 
 #nullable enable
@@ -44,6 +44,11 @@ namespace Morphic.Settings.Tests
             public Responder NextIsRunningResponder = null!;
             public Responder NextStartResponder = null!;
             public Responder NextStopResponder = null!;
+
+            public Task<bool> IsInstalled(string appPathKey)
+            {
+                return Task.FromResult(true);
+            }
 
             public Task<bool> IsRunning(string appPathKey)
             {
@@ -66,19 +71,19 @@ namespace Morphic.Settings.Tests
         [Theory]
         [InlineData("test", "test.exe", true, true)]
         [InlineData("test2", "test2.exe", true, false)]
-        public async Task TestCapture(string name, string appKeyPath, bool success, bool resultValue)
+        public async Task TestCaptureRunning(string name, string appKeyPath, bool success, bool resultValue)
         {
             var loggerFactory = new LoggerFactory();
-            var logger = loggerFactory.CreateLogger<ProcessRunningSettingHandler>();
+            var logger = loggerFactory.CreateLogger<ProcessSettingHandler>();
             var processManager = new MockProcessManager();
             var setting = new Setting()
             {
                 Name = name,
                 Kind = Setting.ValueKind.Boolean,
                 Default = false,
-                HandlerDescription = new ProcessRunningSettingHandlerDescription(appKeyPath)
+                HandlerDescription = new ProcessSettingHandlerDescription(appKeyPath, ProcessState.Running)
             };
-            var handler = new ProcessRunningSettingHandler(setting, processManager, logger);
+            var handler = new ProcessSettingHandler(setting, processManager, logger);
 
             var count = 0;
             processManager.NextIsRunningResponder = (string appKeyPath_) =>
@@ -97,19 +102,19 @@ namespace Morphic.Settings.Tests
         [Theory]
         [InlineData("test", "test.exe", typeof(Exception))]
         [InlineData("test", "test.exe", typeof(ArgumentException))]
-        public async Task TestCaptureException(string name, string appKeyPath, Type exceptionType)
+        public async Task TestCaptureRunningException(string name, string appKeyPath, Type exceptionType)
         {
             var loggerFactory = new LoggerFactory();
-            var logger = loggerFactory.CreateLogger<ProcessRunningSettingHandler>();
+            var logger = loggerFactory.CreateLogger<ProcessSettingHandler>();
             var processManager = new MockProcessManager();
             var setting = new Setting()
             {
                 Name = name,
                 Kind = Setting.ValueKind.Boolean,
                 Default = false,
-                HandlerDescription = new ProcessRunningSettingHandlerDescription(appKeyPath)
+                HandlerDescription = new ProcessSettingHandlerDescription(appKeyPath, ProcessState.Running)
             };
-            var handler = new ProcessRunningSettingHandler(setting, processManager, logger);
+            var handler = new ProcessSettingHandler(setting, processManager, logger);
 
             var count = 0;
             processManager.NextIsRunningResponder = (string appKeyPath_) =>
@@ -128,19 +133,19 @@ namespace Morphic.Settings.Tests
         [InlineData("test", "test.exe", true, false, 1, 0)]
         [InlineData("test2", "test2.exe", false, true, 0, 1)]
         [InlineData("test2", "test2.exe", false, false, 0, 0)]
-        public async Task TestApply(string name, string appKeyPath, bool value, bool isRunning, int expectedStartCount, int expectedStopCount)
+        public async Task TestApplyRunning(string name, string appKeyPath, bool value, bool isRunning, int expectedStartCount, int expectedStopCount)
         {
             var loggerFactory = new LoggerFactory();
-            var logger = loggerFactory.CreateLogger<ProcessRunningSettingHandler>();
+            var logger = loggerFactory.CreateLogger<ProcessSettingHandler>();
             var processManager = new MockProcessManager();
             var setting = new Setting()
             {
                 Name = name,
                 Kind = Setting.ValueKind.Boolean,
                 Default = false,
-                HandlerDescription = new ProcessRunningSettingHandlerDescription(appKeyPath)
+                HandlerDescription = new ProcessSettingHandlerDescription(appKeyPath, ProcessState.Running)
             };
-            var handler = new ProcessRunningSettingHandler(setting, processManager, logger);
+            var handler = new ProcessSettingHandler(setting, processManager, logger);
 
             processManager.NextIsRunningResponder = (string appKeyPath_) =>
             {
@@ -173,19 +178,19 @@ namespace Morphic.Settings.Tests
         [InlineData("test", "test.exe", true, false, 1, 0)]
         [InlineData("test2", "test2.exe", false, true, 0, 1)]
         [InlineData("test2", "test2.exe", false, false, 0, 0)]
-        public async Task TestApplyFail(string name, string appKeyPath, bool value, bool isRunning, int expectedStartCount, int expectedStopCount)
+        public async Task TestApplyRunningFail(string name, string appKeyPath, bool value, bool isRunning, int expectedStartCount, int expectedStopCount)
         {
             var loggerFactory = new LoggerFactory();
-            var logger = loggerFactory.CreateLogger<ProcessRunningSettingHandler>();
+            var logger = loggerFactory.CreateLogger<ProcessSettingHandler>();
             var processManager = new MockProcessManager();
             var setting = new Setting()
             {
                 Name = name,
                 Kind = Setting.ValueKind.Boolean,
                 Default = false,
-                HandlerDescription = new ProcessRunningSettingHandlerDescription(appKeyPath)
+                HandlerDescription = new ProcessSettingHandlerDescription(appKeyPath, ProcessState.Running)
             };
-            var handler = new ProcessRunningSettingHandler(setting, processManager, logger);
+            var handler = new ProcessSettingHandler(setting, processManager, logger);
 
             processManager.NextIsRunningResponder = (string appKeyPath_) =>
             {
@@ -220,19 +225,19 @@ namespace Morphic.Settings.Tests
         [InlineData("test2", "test2.exe", "test", true)]
         [InlineData("test2", "test2.exe", 1.3, false)]
         [InlineData("test2", "test2.exe", 1.3f, false)]
-        public async Task TestApplyInvalidType(string name, string appKeyPath, object value, bool isRunning)
+        public async Task TestApplyRunningInvalidType(string name, string appKeyPath, object value, bool isRunning)
         {
             var loggerFactory = new LoggerFactory();
-            var logger = loggerFactory.CreateLogger<ProcessRunningSettingHandler>();
+            var logger = loggerFactory.CreateLogger<ProcessSettingHandler>();
             var processManager = new MockProcessManager();
             var setting = new Setting()
             {
                 Name = name,
                 Kind = Setting.ValueKind.Boolean,
                 Default = false,
-                HandlerDescription = new ProcessRunningSettingHandlerDescription(appKeyPath)
+                HandlerDescription = new ProcessSettingHandlerDescription(appKeyPath, ProcessState.Running)
             };
-            var handler = new ProcessRunningSettingHandler(setting, processManager, logger);
+            var handler = new ProcessSettingHandler(setting, processManager, logger);
 
             processManager.NextIsRunningResponder = (string appKeyPath_) =>
             {
@@ -263,19 +268,19 @@ namespace Morphic.Settings.Tests
         [Theory]
         [InlineData("test", "test.exe", true, typeof(Exception))]
         [InlineData("test", "test.exe", false, typeof(ArgumentException))]
-        public async Task TestApplyException(string name, string appKeyPath, bool value, Type exceptionType)
+        public async Task TestApplyRunningException(string name, string appKeyPath, bool value, Type exceptionType)
         {
             var loggerFactory = new LoggerFactory();
-            var logger = loggerFactory.CreateLogger<ProcessRunningSettingHandler>();
+            var logger = loggerFactory.CreateLogger<ProcessSettingHandler>();
             var processManager = new MockProcessManager();
             var setting = new Setting()
             {
                 Name = name,
                 Kind = Setting.ValueKind.Boolean,
                 Default = false,
-                HandlerDescription = new ProcessRunningSettingHandlerDescription(appKeyPath)
+                HandlerDescription = new ProcessSettingHandlerDescription(appKeyPath, ProcessState.Running)
             };
-            var handler = new ProcessRunningSettingHandler(setting, processManager, logger);
+            var handler = new ProcessSettingHandler(setting, processManager, logger);
 
             var count = 0;
             processManager.NextIsRunningResponder = (string appKeyPath_) =>

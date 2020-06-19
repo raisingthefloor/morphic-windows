@@ -86,7 +86,7 @@ namespace Morphic.Settings
             /// <summary>
             /// A handler that checks if process is running
             /// </summary>
-            ProcessRunning,
+            Process,
 
             /// <summary>
             /// An unknown handler is used for any unrecogized or invalid handler JSON
@@ -133,7 +133,7 @@ namespace Morphic.Settings
                         case "com.microsoft.windows.files":
                             return new FilesSettingHandlerDescription(element);
                         case "com.microsoft.windows.process":
-                            return new ProcessRunningSettingHandlerDescription(element);
+                            return new ProcessSettingHandlerDescription(element);
                     }
                 }
                 catch

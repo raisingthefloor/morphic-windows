@@ -28,37 +28,43 @@ using System.Text.Json;
 
 namespace Morphic.Settings.Process
 {
-    public class ProcessRunningSettingHandlerDescription : SettingHandlerDescription
+    public class ProcessSettingFinalizerDescription: SettingFinalizerDescription
     {
 
-        public string AppPathKey { get; set; }
-
-        public ProcessRunningSettingHandlerDescription(string appPathKey) : base(HandlerKind.ProcessRunning)
+        public ProcessSettingFinalizerDescription(string appKeyPath, ProcessAction action): base(FinalizerKind.Process)
         {
-            AppPathKey = appPathKey;
+            AppPathKey = appKeyPath;
+            Action = action;
         }
 
-        public ProcessRunningSettingHandlerDescription(JsonElement element) : base(HandlerKind.ProcessRunning)
+        public ProcessSettingFinalizerDescription(JsonElement element): base(FinalizerKind.Process)
         {
             AppPathKey = element.GetProperty("app_path_key").GetString();
+            if (AppPathKey == null)
+            {
+                throw new JsonException();
+            }
+            var actionString = element.GetProperty("action").GetString();
+            Action = Enum.Parse<ProcessAction>(actionString, ignoreCase: true);
         }
+
+        public string AppPathKey { get; }
+
+        public ProcessAction Action;
 
         public override bool Equals(object? obj)
         {
-            if (obj is ProcessRunningSettingHandlerDescription other)
+            if (obj is ProcessSettingFinalizerDescription other)
             {
-                return AppPathKey == other.AppPathKey;
+                return AppPathKey == other.AppPathKey && Action == other.Action;
             }
             return false;
         }
 
         public override int GetHashCode()
         {
-            if (AppPathKey is string key)
-            {
-                return key.GetHashCode();
-            }
-            return base.GetHashCode();
+            return AppPathKey.GetHashCode() ^ Action.GetHashCode();
         }
+
     }
 }

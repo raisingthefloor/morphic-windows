@@ -33,6 +33,12 @@ namespace Morphic.Settings.Process
 {
     public class ProcessManager : IProcessManager
     {
+
+        public Task<bool> IsInstalled(string appPathKey)
+        {
+            return Task.FromResult(GetRegistryKey(appPathKey) != null);
+        }
+
         public Task<bool> IsRunning(string appPathKey)
         {
             foreach (var process in GetRunningProcesses(appPathKey))
@@ -63,10 +69,19 @@ namespace Morphic.Settings.Process
             return Task.FromResult(true);
         }
 
+        private RegistryKey? GetRegistryKey(string appPathKey)
+        {
+            var local = Microsoft.Win32.Registry.LocalMachine;
+            if (local.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths") is RegistryKey parent)
+            {
+                return parent.OpenSubKey(appPathKey);
+            }
+            return null;
+        }
+
         private string? GetExecutablePath(string appPathKey)
         {
-            var registryKey = @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\" + appPathKey;
-            return Microsoft.Win32.Registry.GetValue(appPathKey, "(Default)", null) as string;
+            return GetRegistryKey(appPathKey)?.GetValue("(Default)") as string;
         }
 
         private IEnumerable<System.Diagnostics.Process> GetRunningProcesses(string appPathKey)
