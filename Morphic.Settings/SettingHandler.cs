@@ -32,6 +32,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Text;
 using Morphic.Settings.Files;
+using Morphic.Settings.Process;
 
 namespace Morphic.Settings
 {
@@ -139,6 +140,12 @@ namespace Morphic.Settings
                 var logger = serviceProvider.GetRequiredService<ILogger<FilesSettingHandler>>();
                 var fileManager = serviceProvider.GetRequiredService<IFileManager>();
                 return new FilesSettingHandler(setting, fileManager, logger);
+            }
+            else if (setting.HandlerDescription is ProcessRunningSettingHandlerDescription)
+            {
+                var logger = serviceProvider.GetRequiredService<ILogger<ProcessRunningSettingHandler>>();
+                var processManager = serviceProvider.GetRequiredService<IProcessManager>();
+                return new ProcessRunningSettingHandler(setting, processManager, logger);
             }
             return null;
         }

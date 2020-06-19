@@ -53,6 +53,7 @@ using Morphic.Client.About;
 using AutoUpdaterDotNET;
 using System.Runtime.InteropServices;
 using Morphic.Settings.Files;
+using Morphic.Settings.Process;
 
 namespace Morphic.Client
 {
@@ -131,6 +132,7 @@ namespace Morphic.Client
             services.AddSingleton<ISystemSettingFactory, SystemSettingFactory>();
             services.AddSingleton<ISystemParametersInfo, SystemParametersInfo>();
             services.AddSingleton<IFileManager, FileManager>();
+            services.AddSingleton<IProcessManager, ProcessManager>();
             services.AddSingleton<SettingsManager>();
             services.AddSingleton<Keychain>();
             services.AddSingleton<Storage>();

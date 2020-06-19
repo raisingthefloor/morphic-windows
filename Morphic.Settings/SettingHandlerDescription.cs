@@ -32,10 +32,15 @@ using Morphic.Core;
 using Microsoft.Win32;
 using Morphic.Settings.SystemSettings;
 using System.Linq;
-using Morphic.Settings.Files;
 
 namespace Morphic.Settings
 {
+
+    using Files;
+    using Ini;
+    using Registry;
+    using SystemSettings;
+    using Process;
 
     /// <summary>
     /// Base class for describing the handler for a setting
@@ -77,6 +82,11 @@ namespace Morphic.Settings
             /// A handler that copies files from disk
             /// </summary>
             Files,
+
+            /// <summary>
+            /// A handler that checks if process is running
+            /// </summary>
+            ProcessRunning,
 
             /// <summary>
             /// An unknown handler is used for any unrecogized or invalid handler JSON
@@ -122,6 +132,8 @@ namespace Morphic.Settings
                             return new SystemSettingHandlerDescription(element);
                         case "com.microsoft.windows.files":
                             return new FilesSettingHandlerDescription(element);
+                        case "com.microsoft.windows.process":
+                            return new ProcessRunningSettingHandlerDescription(element);
                     }
                 }
                 catch

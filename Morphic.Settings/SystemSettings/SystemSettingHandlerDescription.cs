@@ -34,7 +34,7 @@ using Morphic.Settings.SystemSettings;
 using System.Linq;
 using Morphic.Settings.Files;
 
-namespace Morphic.Settings
+namespace Morphic.Settings.SystemSettings
 {
 
     /// <summary>
