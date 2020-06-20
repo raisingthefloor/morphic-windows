@@ -28,6 +28,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Win32;
 using System.IO;
+using Microsoft.Extensions.Logging.Abstractions;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace Morphic.Settings.Process
 {
@@ -52,7 +55,9 @@ namespace Morphic.Settings.Process
         {
             if (GetExecutablePath(exe) is string exePath)
             {
-                var process = System.Diagnostics.Process.Start(exePath);
+                var info = new ProcessStartInfo(exePath);
+                info.UseShellExecute = true;
+                var process = System.Diagnostics.Process.Start(info);
                 return Task.FromResult(!process.HasExited);
             }
             return Task.FromResult(false);
@@ -81,7 +86,12 @@ namespace Morphic.Settings.Process
 
         private string? GetExecutablePath(string exe)
         {
-            return GetAppPathRegistryKey(exe)?.GetValue("(Default)") as string;
+            if (GetAppPathRegistryKey(exe) is RegistryKey key)
+            {
+                var value = key.GetValue("");
+                return value as string;
+            }
+            return null;
         }
 
         private IEnumerable<System.Diagnostics.Process> GetRunningProcesses(string exe)
@@ -93,13 +103,41 @@ namespace Morphic.Settings.Process
                     var processes = System.Diagnostics.Process.GetProcessesByName(name);
                     foreach (var process in processes)
                     {
-                        if (process.MainModule.FileName == exePath)
+                        if (process.GetProcessFilename() == exePath)
                         {
                             yield return process;
                         }
                     }
                 }
             }
+        }
+    }
+
+    internal static class ProcessExtensions
+    {
+
+        [Flags]
+        private enum ProcessAccessFlags : uint
+        {
+            QueryLimitedInformation = 0x00001000
+        }
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool QueryFullProcessImageName([In] IntPtr hProcess, [In] int dwFlags, [Out] StringBuilder lpExeName, ref int lpdwSize);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern IntPtr OpenProcess(ProcessAccessFlags processAccess, bool bInheritHandle, int processId);
+
+        public static string? GetProcessFilename(this System.Diagnostics.Process process)
+        {
+            var size = 1014;
+            var name = new StringBuilder(size);
+            var ptr = OpenProcess(ProcessAccessFlags.QueryLimitedInformation, false, process.Id);
+            if (QueryFullProcessImageName(ptr, 0, name, ref size))
+            {
+                return name.ToString();
+            }
+            return null;
         }
     }
 }

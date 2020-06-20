@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using Morphic.Settings;
 using Morphic.Settings.Ini;
+using Morphic.Settings.Process;
 using Morphic.Settings.Registry;
 using Morphic.Settings.Spi;
 using Morphic.Settings.SystemSettings;
@@ -48,6 +49,7 @@ namespace Morphic.ManualTester
             services.AddSingleton<IIniFileFactory, IniFileFactory>();
             services.AddSingleton<ISystemSettingFactory, SystemSettingFactory>();
             services.AddSingleton<ISystemParametersInfo, SystemParametersInfo>();
+            services.AddSingleton<IProcessManager, ProcessManager>();
             services.AddTransient<SettingsManager>();
             services.AddMorphicSettingsHandlers(ConfigureSettingsHandlers);
         }
