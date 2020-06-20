@@ -31,13 +31,13 @@ namespace Morphic.Settings.Process
     public interface IProcessManager
     {
 
-        public Task<bool> IsRunning(string appPathKey);
+        public Task<bool> IsRunning(string exe);
 
-        public Task<bool> Start(string appPathKey);
+        public Task<bool> Start(string exe);
 
-        public Task<bool> Stop(string appPathKey);
+        public Task<bool> Stop(string exe);
 
-        public Task<bool> IsInstalled(string appPathKey);
+        public Task<bool> IsInstalled(string exe);
 
     }
 

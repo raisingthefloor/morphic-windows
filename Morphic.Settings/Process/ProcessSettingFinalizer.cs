@@ -68,34 +68,34 @@ namespace Morphic.Settings.Process
 
         private async Task<bool> Start()
         {
-            var isRunning = await processManager.IsRunning(Description.AppPathKey);
+            var isRunning = await processManager.IsRunning(Description.Exe);
             if (!isRunning)
             {
-                return await processManager.Start(Description.AppPathKey);
+                return await processManager.Start(Description.Exe);
             }
             return true;
         }
 
         private async Task<bool> Stop()
         {
-            var isRunning = await processManager.IsRunning(Description.AppPathKey);
+            var isRunning = await processManager.IsRunning(Description.Exe);
             if (isRunning)
             {
-                return await processManager.Stop(Description.AppPathKey);
+                return await processManager.Stop(Description.Exe);
             }
             return true;
         }
 
         private async Task<bool> Restart()
         {
-            var isRunning = await processManager.IsRunning(Description.AppPathKey);
+            var isRunning = await processManager.IsRunning(Description.Exe);
             if (isRunning)
             {
-                if (!await processManager.Stop(Description.AppPathKey))
+                if (!await processManager.Stop(Description.Exe))
                 {
                     return false;
                 }
-                return await processManager.Start(Description.AppPathKey);
+                return await processManager.Start(Description.Exe);
             }
             return true;
         }

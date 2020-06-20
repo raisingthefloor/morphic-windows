@@ -372,7 +372,7 @@ namespace Morphic.Settings.Tests
         [InlineData("Test.exe", "Running", ProcessState.Running)]
         [InlineData("Test2.exe", "RUNNING", ProcessState.Running)]
         [InlineData("Test2.exe", "RuNnInG", ProcessState.Running)]
-        public void TestJsonDeserializeProcess(string appPathKey, string stateString, ProcessState expectedState)
+        public void TestJsonDeserializeProcess(string exe, string stateString, ProcessState expectedState)
         {
             var options = new JsonSerializerOptions();
             options.Converters.Add(new JsonElementInferredTypeConverter());
@@ -381,7 +381,7 @@ namespace Morphic.Settings.Tests
             var json = JsonSerializer.Serialize(new Dictionary<string, object>()
             {
                 { "type", "com.microsoft.windows.process" },
-                { "app_path_key", appPathKey },
+                { "exe", exe },
                 { "state", stateString }
             });
             var handler = JsonSerializer.Deserialize<SettingHandlerDescription>(json, options);
@@ -389,7 +389,7 @@ namespace Morphic.Settings.Tests
             Assert.Equal(SettingHandlerDescription.HandlerKind.Process, handler.Kind);
             Assert.IsType<ProcessSettingHandlerDescription>(handler);
             var processHandler = (ProcessSettingHandlerDescription)handler;
-            Assert.Equal(appPathKey, processHandler.AppPathKey);
+            Assert.Equal(exe, processHandler.Exe);
             Assert.Equal(expectedState, processHandler.State);
         }
 
@@ -403,7 +403,7 @@ namespace Morphic.Settings.Tests
         [InlineData(1, "running")]
         [InlineData(1.2, "running")]
         [InlineData(true, "running")]
-        public void TestJsonDeserializeProcessFail(object appPathKey, object stateString)
+        public void TestJsonDeserializeProcessFail(object exe, object stateString)
         {
             var options = new JsonSerializerOptions();
             options.Converters.Add(new JsonElementInferredTypeConverter());
@@ -412,7 +412,7 @@ namespace Morphic.Settings.Tests
             var json = JsonSerializer.Serialize(new Dictionary<string, object>()
             {
                 { "type", "com.microsoft.windows.process" },
-                { "app_path_key", appPathKey },
+                { "exe", exe },
                 { "state", stateString }
             });
             var handler = JsonSerializer.Deserialize<SettingHandlerDescription>(json, options);

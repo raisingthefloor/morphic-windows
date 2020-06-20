@@ -31,16 +31,16 @@ namespace Morphic.Settings.Process
     public class ProcessSettingFinalizerDescription: SettingFinalizerDescription
     {
 
-        public ProcessSettingFinalizerDescription(string appKeyPath, ProcessAction action): base(FinalizerKind.Process)
+        public ProcessSettingFinalizerDescription(string exe, ProcessAction action): base(FinalizerKind.Process)
         {
-            AppPathKey = appKeyPath;
+            Exe = exe;
             Action = action;
         }
 
         public ProcessSettingFinalizerDescription(JsonElement element): base(FinalizerKind.Process)
         {
-            AppPathKey = element.GetProperty("app_path_key").GetString();
-            if (AppPathKey == null)
+            Exe = element.GetProperty("exe").GetString();
+            if (Exe == null)
             {
                 throw new JsonException();
             }
@@ -48,7 +48,7 @@ namespace Morphic.Settings.Process
             Action = Enum.Parse<ProcessAction>(actionString, ignoreCase: true);
         }
 
-        public string AppPathKey { get; }
+        public string Exe { get; }
 
         public ProcessAction Action;
 
@@ -56,14 +56,14 @@ namespace Morphic.Settings.Process
         {
             if (obj is ProcessSettingFinalizerDescription other)
             {
-                return AppPathKey == other.AppPathKey && Action == other.Action;
+                return Exe == other.Exe && Action == other.Action;
             }
             return false;
         }
 
         public override int GetHashCode()
         {
-            return AppPathKey.GetHashCode() ^ Action.GetHashCode();
+            return Exe.GetHashCode() ^ Action.GetHashCode();
         }
 
     }

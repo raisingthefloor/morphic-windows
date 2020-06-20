@@ -72,15 +72,15 @@ namespace Morphic.Settings.Process
                 {
                     if (isRunning)
                     {
-                        if (!await processManager.IsRunning(Description.AppPathKey))
+                        if (!await processManager.IsRunning(Description.Exe))
                         {
-                            return await processManager.Start(Description.AppPathKey);
+                            return await processManager.Start(Description.Exe);
                         }
                         return true;
                     }
-                    if (await processManager.IsRunning(Description.AppPathKey))
+                    if (await processManager.IsRunning(Description.Exe))
                     {
-                        return await processManager.Stop(Description.AppPathKey);
+                        return await processManager.Stop(Description.Exe);
                     }
                     return true;
                 }
@@ -100,10 +100,10 @@ namespace Morphic.Settings.Process
                 switch (Description.State)
                 {
                     case ProcessState.Running:
-                        result.Value = await processManager.IsRunning(Description.AppPathKey);
+                        result.Value = await processManager.IsRunning(Description.Exe);
                         break;
                     case ProcessState.Installed:
-                        result.Value = await processManager.IsInstalled(Description.AppPathKey);
+                        result.Value = await processManager.IsInstalled(Description.Exe);
                         break;
                 }
                 result.Success = true;

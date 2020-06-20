@@ -152,7 +152,7 @@ namespace Morphic.Settings.Tests
         [InlineData("test.exe", "Start", ProcessAction.Start)]
         [InlineData("test.exe", "START", ProcessAction.Start)]
         [InlineData("test.exe", "StArT", ProcessAction.Start)]
-        public void TestJsonDeserializeProcess(string appKeyPath, string actionString, ProcessAction action)
+        public void TestJsonDeserializeProcess(string exe, string actionString, ProcessAction action)
         {
             var options = new JsonSerializerOptions();
             options.Converters.Add(new JsonElementInferredTypeConverter());
@@ -161,7 +161,7 @@ namespace Morphic.Settings.Tests
             var json = JsonSerializer.Serialize(new Dictionary<string, object>()
             {
                 { "type", "com.microsoft.windows.process" },
-                { "app_path_key", appKeyPath },
+                { "exe", exe },
                 { "action", actionString }
             });
             var finalizer = JsonSerializer.Deserialize<SettingFinalizerDescription>(json, options);
@@ -169,7 +169,7 @@ namespace Morphic.Settings.Tests
             Assert.Equal(SettingFinalizerDescription.FinalizerKind.Process, finalizer.Kind);
             Assert.IsType<ProcessSettingFinalizerDescription>(finalizer);
             var process = (ProcessSettingFinalizerDescription)finalizer;
-            Assert.Equal(appKeyPath, process.AppPathKey);
+            Assert.Equal(exe, process.Exe);
             Assert.Equal(action, process.Action);
         }
 
@@ -183,7 +183,7 @@ namespace Morphic.Settings.Tests
         [InlineData(1, "start")]
         [InlineData(1.2, "start")]
         [InlineData(true, "start")]
-        public void TestJsonDeserializeProcessFail(object appKeyPath, object actionString)
+        public void TestJsonDeserializeProcessFail(object exe, object actionString)
         {
             var options = new JsonSerializerOptions();
             options.Converters.Add(new JsonElementInferredTypeConverter());
@@ -192,7 +192,7 @@ namespace Morphic.Settings.Tests
             var json = JsonSerializer.Serialize(new Dictionary<string, object>()
             {
                 { "type", "com.microsoft.windows.process" },
-                { "app_path_key", appKeyPath },
+                { "exe", exe },
                 { "action", actionString }
             });
             var finalizer = JsonSerializer.Deserialize<SettingFinalizerDescription>(json, options);

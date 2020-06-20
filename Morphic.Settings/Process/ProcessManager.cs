@@ -34,23 +34,23 @@ namespace Morphic.Settings.Process
     public class ProcessManager : IProcessManager
     {
 
-        public Task<bool> IsInstalled(string appPathKey)
+        public Task<bool> IsInstalled(string exe)
         {
-            return Task.FromResult(GetRegistryKey(appPathKey) != null);
+            return Task.FromResult(GetAppPathRegistryKey(exe) != null);
         }
 
-        public Task<bool> IsRunning(string appPathKey)
+        public Task<bool> IsRunning(string exe)
         {
-            foreach (var process in GetRunningProcesses(appPathKey))
+            foreach (var process in GetRunningProcesses(exe))
             {
                 return Task.FromResult(true);
             }
             return Task.FromResult(false);
         }
 
-        public Task<bool> Start(string appPathKey)
+        public Task<bool> Start(string exe)
         {
-            if (GetExecutablePath(appPathKey) is string exePath)
+            if (GetExecutablePath(exe) is string exePath)
             {
                 var process = System.Diagnostics.Process.Start(exePath);
                 return Task.FromResult(!process.HasExited);
@@ -58,9 +58,9 @@ namespace Morphic.Settings.Process
             return Task.FromResult(false);
         }
 
-        public Task<bool> Stop(string appPathKey)
+        public Task<bool> Stop(string exe)
         {
-            var processes = GetRunningProcesses(appPathKey);
+            var processes = GetRunningProcesses(exe);
             foreach (var process in processes)
             {
                 process.CloseMainWindow();
@@ -69,24 +69,24 @@ namespace Morphic.Settings.Process
             return Task.FromResult(true);
         }
 
-        private RegistryKey? GetRegistryKey(string appPathKey)
+        private RegistryKey? GetAppPathRegistryKey(string exe)
         {
             var local = Microsoft.Win32.Registry.LocalMachine;
             if (local.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths") is RegistryKey parent)
             {
-                return parent.OpenSubKey(appPathKey);
+                return parent.OpenSubKey(exe);
             }
             return null;
         }
 
-        private string? GetExecutablePath(string appPathKey)
+        private string? GetExecutablePath(string exe)
         {
-            return GetRegistryKey(appPathKey)?.GetValue("(Default)") as string;
+            return GetAppPathRegistryKey(exe)?.GetValue("(Default)") as string;
         }
 
-        private IEnumerable<System.Diagnostics.Process> GetRunningProcesses(string appPathKey)
+        private IEnumerable<System.Diagnostics.Process> GetRunningProcesses(string exe)
         {
-            if (GetExecutablePath(appPathKey) is string exePath)
+            if (GetExecutablePath(exe) is string exePath)
             {
                 if (Path.GetFileNameWithoutExtension(exePath) is string name)
                 {

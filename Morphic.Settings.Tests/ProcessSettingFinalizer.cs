@@ -39,30 +39,30 @@ namespace Morphic.Settings.Tests
 #nullable enable
         private class MockProcessManager : IProcessManager
         {
-            public delegate bool Responder(string appPathKey);
+            public delegate bool Responder(string exe);
 
             public Responder NextIsRunningResponder = null!;
             public Responder NextStartResponder = null!;
             public Responder NextStopResponder = null!;
 
-            public Task<bool> IsInstalled(string appPathKey)
+            public Task<bool> IsInstalled(string exe)
             {
                 return Task.FromResult(true);
             }
 
-            public Task<bool> IsRunning(string appPathKey)
+            public Task<bool> IsRunning(string exe)
             {
-                return Task.FromResult(NextIsRunningResponder.Invoke(appPathKey));
+                return Task.FromResult(NextIsRunningResponder.Invoke(exe));
             }
 
-            public Task<bool> Start(string appPathKey)
+            public Task<bool> Start(string exe)
             {
-                return Task.FromResult(NextStartResponder.Invoke(appPathKey));
+                return Task.FromResult(NextStartResponder.Invoke(exe));
             }
 
-            public Task<bool> Stop(string appPathKey)
+            public Task<bool> Stop(string exe)
             {
-                return Task.FromResult(NextStopResponder.Invoke(appPathKey));
+                return Task.FromResult(NextStopResponder.Invoke(exe));
             }
         }
 
@@ -81,31 +81,31 @@ namespace Morphic.Settings.Tests
         [InlineData("test2.exe", ProcessAction.Stop, false, false, false, true, 0, 0)]
         [InlineData("test.exe", ProcessAction.Restart, true, false, false, false, 0, 1)]
         [InlineData("test2.exe", ProcessAction.Restart, false, false, false, true, 0, 0)]
-        public async Task TestRun(string appKeyPath, ProcessAction action, bool isRunning, bool startResult, bool stopResult, bool expectedSuccess, int expectedStartCount, int expectedStopCount)
+        public async Task TestRun(string exe, ProcessAction action, bool isRunning, bool startResult, bool stopResult, bool expectedSuccess, int expectedStartCount, int expectedStopCount)
         {
             var loggerFactory = new LoggerFactory();
             var logger = loggerFactory.CreateLogger<ProcessSettingFinalizer>();
             var processManager = new MockProcessManager();
-            var description = new ProcessSettingFinalizerDescription(appKeyPath, action);
+            var description = new ProcessSettingFinalizerDescription(exe, action);
             var finalizer = new ProcessSettingFinalizer(description, processManager, logger);
 
-            processManager.NextIsRunningResponder = (string appKeyPath_) =>
+            processManager.NextIsRunningResponder = (string exe_) =>
             {
-                Assert.Equal(appKeyPath, appKeyPath_);
+                Assert.Equal(exe, exe_);
                 return isRunning;
             };
 
             var startCount = 0;
-            processManager.NextStartResponder = (string appKeyPath_) =>
+            processManager.NextStartResponder = (string exe_) =>
             {
-                Assert.Equal(appKeyPath, appKeyPath_);
+                Assert.Equal(exe, exe_);
                 ++startCount;
                 return startResult;
             };
             var stopCount = 0;
-            processManager.NextStopResponder = (string appKeyPath_) =>
+            processManager.NextStopResponder = (string exe_) =>
             {
-                Assert.Equal(appKeyPath, appKeyPath_);
+                Assert.Equal(exe, exe_);
                 ++stopCount;
                 return stopResult;
             };
@@ -123,18 +123,18 @@ namespace Morphic.Settings.Tests
         [InlineData("test.exe", ProcessAction.Stop, typeof(ArgumentException))]
         [InlineData("test.exe", ProcessAction.Restart, typeof(Exception))]
         [InlineData("test.exe", ProcessAction.Restart, typeof(ArgumentException))]
-        public async Task TestRunException(string appKeyPath, ProcessAction action, Type exceptionType)
+        public async Task TestRunException(string exe, ProcessAction action, Type exceptionType)
         {
             var loggerFactory = new LoggerFactory();
             var logger = loggerFactory.CreateLogger<ProcessSettingFinalizer>();
             var processManager = new MockProcessManager();
-            var description = new ProcessSettingFinalizerDescription(appKeyPath, action);
+            var description = new ProcessSettingFinalizerDescription(exe, action);
             var finalizer = new ProcessSettingFinalizer(description, processManager, logger);
 
             var count = 0;
-            processManager.NextIsRunningResponder = (string appKeyPath_) =>
+            processManager.NextIsRunningResponder = (string exe_) =>
             {
-                Assert.Equal(appKeyPath, appKeyPath_);
+                Assert.Equal(exe, exe_);
                 ++count;
                 throw (Exception)Activator.CreateInstance(exceptionType);
             };

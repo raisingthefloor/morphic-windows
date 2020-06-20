@@ -31,19 +31,19 @@ namespace Morphic.Settings.Process
     public class ProcessSettingHandlerDescription : SettingHandlerDescription
     {
 
-        public string AppPathKey { get; set; }
+        public string Exe { get; set; }
         public ProcessState State { get; set; }
 
-        public ProcessSettingHandlerDescription(string appPathKey, ProcessState state) : base(HandlerKind.Process)
+        public ProcessSettingHandlerDescription(string exe, ProcessState state) : base(HandlerKind.Process)
         {
-            AppPathKey = appPathKey;
+            Exe = exe;
             State = state;
         }
 
         public ProcessSettingHandlerDescription(JsonElement element) : base(HandlerKind.Process)
         {
-            AppPathKey = element.GetProperty("app_path_key").GetString();
-            if (AppPathKey == null)
+            Exe = element.GetProperty("exe").GetString();
+            if (Exe == null)
             {
                 throw new JsonException();
             }
@@ -55,14 +55,14 @@ namespace Morphic.Settings.Process
         {
             if (obj is ProcessSettingHandlerDescription other)
             {
-                return AppPathKey == other.AppPathKey && State == other.State;
+                return Exe == other.Exe && State == other.State;
             }
             return false;
         }
 
         public override int GetHashCode()
         {
-            return AppPathKey.GetHashCode() ^ State.GetHashCode();
+            return Exe.GetHashCode() ^ State.GetHashCode();
         }
     }
 }

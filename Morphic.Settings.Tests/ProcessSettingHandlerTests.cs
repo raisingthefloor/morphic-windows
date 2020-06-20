@@ -39,30 +39,30 @@ namespace Morphic.Settings.Tests
 #nullable enable
         private class MockProcessManager : IProcessManager
         {
-            public delegate bool Responder(string appPathKey);
+            public delegate bool Responder(string exe);
 
             public Responder NextIsRunningResponder = null!;
             public Responder NextStartResponder = null!;
             public Responder NextStopResponder = null!;
 
-            public Task<bool> IsInstalled(string appPathKey)
+            public Task<bool> IsInstalled(string exe)
             {
                 return Task.FromResult(true);
             }
 
-            public Task<bool> IsRunning(string appPathKey)
+            public Task<bool> IsRunning(string exe)
             {
-                return Task.FromResult(NextIsRunningResponder.Invoke(appPathKey));
+                return Task.FromResult(NextIsRunningResponder.Invoke(exe));
             }
 
-            public Task<bool> Start(string appPathKey)
+            public Task<bool> Start(string exe)
             {
-                return Task.FromResult(NextStartResponder.Invoke(appPathKey));
+                return Task.FromResult(NextStartResponder.Invoke(exe));
             }
 
-            public Task<bool> Stop(string appPathKey)
+            public Task<bool> Stop(string exe)
             {
-                return Task.FromResult(NextStopResponder.Invoke(appPathKey));
+                return Task.FromResult(NextStopResponder.Invoke(exe));
             }
         }
 
@@ -71,7 +71,7 @@ namespace Morphic.Settings.Tests
         [Theory]
         [InlineData("test", "test.exe", true, true)]
         [InlineData("test2", "test2.exe", true, false)]
-        public async Task TestCaptureRunning(string name, string appKeyPath, bool success, bool resultValue)
+        public async Task TestCaptureRunning(string name, string exe, bool success, bool resultValue)
         {
             var loggerFactory = new LoggerFactory();
             var logger = loggerFactory.CreateLogger<ProcessSettingHandler>();
@@ -81,14 +81,14 @@ namespace Morphic.Settings.Tests
                 Name = name,
                 Kind = Setting.ValueKind.Boolean,
                 Default = false,
-                HandlerDescription = new ProcessSettingHandlerDescription(appKeyPath, ProcessState.Running)
+                HandlerDescription = new ProcessSettingHandlerDescription(exe, ProcessState.Running)
             };
             var handler = new ProcessSettingHandler(setting, processManager, logger);
 
             var count = 0;
-            processManager.NextIsRunningResponder = (string appKeyPath_) =>
+            processManager.NextIsRunningResponder = (string exe_) =>
             {
-                Assert.Equal(appKeyPath, appKeyPath_);
+                Assert.Equal(exe, exe_);
                 ++count;
                 return resultValue;
             };
@@ -102,7 +102,7 @@ namespace Morphic.Settings.Tests
         [Theory]
         [InlineData("test", "test.exe", typeof(Exception))]
         [InlineData("test", "test.exe", typeof(ArgumentException))]
-        public async Task TestCaptureRunningException(string name, string appKeyPath, Type exceptionType)
+        public async Task TestCaptureRunningException(string name, string exe, Type exceptionType)
         {
             var loggerFactory = new LoggerFactory();
             var logger = loggerFactory.CreateLogger<ProcessSettingHandler>();
@@ -112,14 +112,14 @@ namespace Morphic.Settings.Tests
                 Name = name,
                 Kind = Setting.ValueKind.Boolean,
                 Default = false,
-                HandlerDescription = new ProcessSettingHandlerDescription(appKeyPath, ProcessState.Running)
+                HandlerDescription = new ProcessSettingHandlerDescription(exe, ProcessState.Running)
             };
             var handler = new ProcessSettingHandler(setting, processManager, logger);
 
             var count = 0;
-            processManager.NextIsRunningResponder = (string appKeyPath_) =>
+            processManager.NextIsRunningResponder = (string exe_) =>
             {
-                Assert.Equal(appKeyPath, appKeyPath_);
+                Assert.Equal(exe, exe_);
                 ++count;
                 throw (Exception)Activator.CreateInstance(exceptionType);
             };
@@ -133,7 +133,7 @@ namespace Morphic.Settings.Tests
         [InlineData("test", "test.exe", true, false, 1, 0)]
         [InlineData("test2", "test2.exe", false, true, 0, 1)]
         [InlineData("test2", "test2.exe", false, false, 0, 0)]
-        public async Task TestApplyRunning(string name, string appKeyPath, bool value, bool isRunning, int expectedStartCount, int expectedStopCount)
+        public async Task TestApplyRunning(string name, string exe, bool value, bool isRunning, int expectedStartCount, int expectedStopCount)
         {
             var loggerFactory = new LoggerFactory();
             var logger = loggerFactory.CreateLogger<ProcessSettingHandler>();
@@ -143,27 +143,27 @@ namespace Morphic.Settings.Tests
                 Name = name,
                 Kind = Setting.ValueKind.Boolean,
                 Default = false,
-                HandlerDescription = new ProcessSettingHandlerDescription(appKeyPath, ProcessState.Running)
+                HandlerDescription = new ProcessSettingHandlerDescription(exe, ProcessState.Running)
             };
             var handler = new ProcessSettingHandler(setting, processManager, logger);
 
-            processManager.NextIsRunningResponder = (string appKeyPath_) =>
+            processManager.NextIsRunningResponder = (string exe_) =>
             {
-                Assert.Equal(appKeyPath, appKeyPath_);
+                Assert.Equal(exe, exe_);
                 return isRunning;
             };
 
             var startCount = 0;
-            processManager.NextStartResponder = (string appKeyPath_) =>
+            processManager.NextStartResponder = (string exe_) =>
             {
-                Assert.Equal(appKeyPath, appKeyPath_);
+                Assert.Equal(exe, exe_);
                 ++startCount;
                 return true;
             };
             var stopCount = 0;
-            processManager.NextStopResponder = (string appKeyPath_) =>
+            processManager.NextStopResponder = (string exe_) =>
             {
-                Assert.Equal(appKeyPath, appKeyPath_);
+                Assert.Equal(exe, exe_);
                 ++stopCount;
                 return true;
             };
@@ -178,7 +178,7 @@ namespace Morphic.Settings.Tests
         [InlineData("test", "test.exe", true, false, 1, 0)]
         [InlineData("test2", "test2.exe", false, true, 0, 1)]
         [InlineData("test2", "test2.exe", false, false, 0, 0)]
-        public async Task TestApplyRunningFail(string name, string appKeyPath, bool value, bool isRunning, int expectedStartCount, int expectedStopCount)
+        public async Task TestApplyRunningFail(string name, string exe, bool value, bool isRunning, int expectedStartCount, int expectedStopCount)
         {
             var loggerFactory = new LoggerFactory();
             var logger = loggerFactory.CreateLogger<ProcessSettingHandler>();
@@ -188,27 +188,27 @@ namespace Morphic.Settings.Tests
                 Name = name,
                 Kind = Setting.ValueKind.Boolean,
                 Default = false,
-                HandlerDescription = new ProcessSettingHandlerDescription(appKeyPath, ProcessState.Running)
+                HandlerDescription = new ProcessSettingHandlerDescription(exe, ProcessState.Running)
             };
             var handler = new ProcessSettingHandler(setting, processManager, logger);
 
-            processManager.NextIsRunningResponder = (string appKeyPath_) =>
+            processManager.NextIsRunningResponder = (string exe_) =>
             {
-                Assert.Equal(appKeyPath, appKeyPath_);
+                Assert.Equal(exe, exe_);
                 return isRunning;
             };
 
             var startCount = 0;
-            processManager.NextStartResponder = (string appKeyPath_) =>
+            processManager.NextStartResponder = (string exe_) =>
             {
-                Assert.Equal(appKeyPath, appKeyPath_);
+                Assert.Equal(exe, exe_);
                 ++startCount;
                 return false;
             };
             var stopCount = 0;
-            processManager.NextStopResponder = (string appKeyPath_) =>
+            processManager.NextStopResponder = (string exe_) =>
             {
-                Assert.Equal(appKeyPath, appKeyPath_);
+                Assert.Equal(exe, exe_);
                 ++stopCount;
                 return false;
             };
@@ -225,7 +225,7 @@ namespace Morphic.Settings.Tests
         [InlineData("test2", "test2.exe", "test", true)]
         [InlineData("test2", "test2.exe", 1.3, false)]
         [InlineData("test2", "test2.exe", 1.3f, false)]
-        public async Task TestApplyRunningInvalidType(string name, string appKeyPath, object value, bool isRunning)
+        public async Task TestApplyRunningInvalidType(string name, string exe, object value, bool isRunning)
         {
             var loggerFactory = new LoggerFactory();
             var logger = loggerFactory.CreateLogger<ProcessSettingHandler>();
@@ -235,27 +235,27 @@ namespace Morphic.Settings.Tests
                 Name = name,
                 Kind = Setting.ValueKind.Boolean,
                 Default = false,
-                HandlerDescription = new ProcessSettingHandlerDescription(appKeyPath, ProcessState.Running)
+                HandlerDescription = new ProcessSettingHandlerDescription(exe, ProcessState.Running)
             };
             var handler = new ProcessSettingHandler(setting, processManager, logger);
 
-            processManager.NextIsRunningResponder = (string appKeyPath_) =>
+            processManager.NextIsRunningResponder = (string exe_) =>
             {
-                Assert.Equal(appKeyPath, appKeyPath_);
+                Assert.Equal(exe, exe_);
                 return isRunning;
             };
 
             var startCount = 0;
-            processManager.NextStartResponder = (string appKeyPath_) =>
+            processManager.NextStartResponder = (string exe_) =>
             {
-                Assert.Equal(appKeyPath, appKeyPath_);
+                Assert.Equal(exe, exe_);
                 ++startCount;
                 return false;
             };
             var stopCount = 0;
-            processManager.NextStopResponder = (string appKeyPath_) =>
+            processManager.NextStopResponder = (string exe_) =>
             {
-                Assert.Equal(appKeyPath, appKeyPath_);
+                Assert.Equal(exe, exe_);
                 ++stopCount;
                 return false;
             };
@@ -268,7 +268,7 @@ namespace Morphic.Settings.Tests
         [Theory]
         [InlineData("test", "test.exe", true, typeof(Exception))]
         [InlineData("test", "test.exe", false, typeof(ArgumentException))]
-        public async Task TestApplyRunningException(string name, string appKeyPath, bool value, Type exceptionType)
+        public async Task TestApplyRunningException(string name, string exe, bool value, Type exceptionType)
         {
             var loggerFactory = new LoggerFactory();
             var logger = loggerFactory.CreateLogger<ProcessSettingHandler>();
@@ -278,14 +278,14 @@ namespace Morphic.Settings.Tests
                 Name = name,
                 Kind = Setting.ValueKind.Boolean,
                 Default = false,
-                HandlerDescription = new ProcessSettingHandlerDescription(appKeyPath, ProcessState.Running)
+                HandlerDescription = new ProcessSettingHandlerDescription(exe, ProcessState.Running)
             };
             var handler = new ProcessSettingHandler(setting, processManager, logger);
 
             var count = 0;
-            processManager.NextIsRunningResponder = (string appKeyPath_) =>
+            processManager.NextIsRunningResponder = (string exe_) =>
             {
-                Assert.Equal(appKeyPath, appKeyPath_);
+                Assert.Equal(exe, exe_);
                 ++count;
                 throw (Exception)Activator.CreateInstance(exceptionType);
             };
