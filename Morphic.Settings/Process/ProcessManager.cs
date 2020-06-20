@@ -31,6 +31,7 @@ using System.IO;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Reflection.Metadata.Ecma335;
 
 namespace Morphic.Settings.Process
 {
@@ -51,27 +52,42 @@ namespace Morphic.Settings.Process
             return Task.FromResult(false);
         }
 
-        public Task<bool> Start(string exe)
+        public async Task<bool> Start(string exe)
         {
             if (GetExecutablePath(exe) is string exePath)
             {
                 var info = new ProcessStartInfo(exePath);
                 info.UseShellExecute = true;
-                var process = System.Diagnostics.Process.Start(info);
-                return Task.FromResult(!process.HasExited);
+                using (var process = System.Diagnostics.Process.Start(info))
+                {
+                    return await Task.Run(() =>
+                    {
+                        try
+                        {
+                            return process.WaitForInputIdle(3000);
+                        }
+                        catch (Exception e)
+                        {
+                            return false;
+                        }
+                    });
+                }
             }
-            return Task.FromResult(false);
+            return false;
         }
 
-        public Task<bool> Stop(string exe)
+        public async Task<bool> Stop(string exe)
         {
             var processes = GetRunningProcesses(exe);
             foreach (var process in processes)
             {
-                process.CloseMainWindow();
-                process.Close();
+                var success = await process.MorphicStop();
+                if (!success)
+                {
+                    return false;
+                }
             }
-            return Task.FromResult(true);
+            return true;
         }
 
         private RegistryKey? GetAppPathRegistryKey(string exe)
@@ -89,7 +105,14 @@ namespace Morphic.Settings.Process
             if (GetAppPathRegistryKey(exe) is RegistryKey key)
             {
                 var value = key.GetValue("");
-                return value as string;
+                if (value is string path)
+                {
+                    if (path.StartsWith("\"") && path.EndsWith("\""))
+                    {
+                        path = path.Substring(1, path.Length - 2);
+                    }
+                    return path;
+                }
             }
             return null;
         }
@@ -103,7 +126,7 @@ namespace Morphic.Settings.Process
                     var processes = System.Diagnostics.Process.GetProcessesByName(name);
                     foreach (var process in processes)
                     {
-                        if (process.GetProcessFilename() == exePath)
+                        if (process.GetProcessFilename()?.ToLower() == exePath.ToLower())
                         {
                             yield return process;
                         }
@@ -138,6 +161,38 @@ namespace Morphic.Settings.Process
                 return name.ToString();
             }
             return null;
+        }
+
+        public static async Task<bool> MorphicStop(this System.Diagnostics.Process process)
+        {
+            try
+            {
+                if (process.CloseMainWindow())
+                {
+                    return await Task.Run(() =>
+                    {
+                        try
+                        {
+                            if (process.WaitForExit(5000))
+                            {
+                                return true;
+                            }
+                            process.Kill(entireProcessTree: true);
+                            return true;
+                        }
+                        catch (Exception e)
+                        {
+                            return false;
+                        }
+                    });
+                }
+                process.Kill(entireProcessTree: true);
+                return true;
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
         }
     }
 }
