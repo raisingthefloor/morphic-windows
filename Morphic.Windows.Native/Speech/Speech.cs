@@ -21,6 +21,9 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
+using System.IO;
+using System.Reflection;
+
 namespace Morphic.Windows.Native
 {
     using System.Diagnostics;
@@ -57,33 +60,13 @@ namespace Morphic.Windows.Native
             {
                 this.StopSpeaking();
             }
-            
-            // The speech API is only available for .NET framework, so access it via powershell.
-            // This script invokes the speech synthesizer, waiting for a signal from this process to pause/resume
-            // the speech.
-            string script =             
-                "Add-Type -AssemblyName System.speech;"
-                + "$speech = New-Object System.Speech.Synthesis.SpeechSynthesizer;"
-                + "$semaphor = [System.Threading.EventWaitHandle]::OpenExisting(\"morphic-speech\");"
-                + "$speech.SpeakAsync($Env:MORPHIC_SPEECH);"
-                + "while($speech.State -ne [System.Speech.Synthesis.SynthesizerState]::Ready)"
-                + "{"
-                + "    if ($semaphor.WaitOne(200)) {"
-                + "        if ($speech.State -eq [System.Speech.Synthesis.SynthesizerState]::Paused) {"
-                + "            $speech.Resume();"
-                + "        } else {"
-                + "            $speech.Pause();"
-                + "        }"
-                + "    }"
-                + "};";
-            
+
+            string speechExe = Path.Combine(
+                Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Morphic.Speech.exe");
+
             Process process = Process.Start(new ProcessStartInfo()
             {
-                FileName = "powershell.exe",
-                ArgumentList = {
-                    "-ExecutionPolicy", "bypass",
-                    "-NoProfile", "-NonInteractive", "-Command", script
-                },
+                FileName = speechExe,
                 Environment = { {"MORPHIC_SPEECH", text} },
                 CreateNoWindow = true,
             });

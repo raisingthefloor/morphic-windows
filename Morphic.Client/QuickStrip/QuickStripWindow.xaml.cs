@@ -396,7 +396,7 @@ namespace Morphic.Client.QuickStrip
         private async void OnReader(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
         {
             SelectionReader reader = SelectionReader.Default;
-            Speech speech = Speech.Default;
+            Windows.Native.Speech speech = Windows.Native.Speech.Default;
             
             // Play/Pause
             if (e.SelectedIndex == 0)
