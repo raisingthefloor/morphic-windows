@@ -29,6 +29,7 @@ using System.Windows.Controls;
 using System.Windows.Automation.Peers;
 using System.Windows.Automation;
 using System.Linq;
+using Morphic.Client.QuickStrip;
 
 namespace Morphic.Client
 {
@@ -141,9 +142,9 @@ namespace Morphic.Client
         /// <param name="helpTitle">The title of the help window that appears on hover</param>
         /// <param name="helpMessage">The message in the help window that appears on hover</param>
         /// <param name="isPrimary">Indicates how the button should be styled</param>
-        public void AddButton(string title, string? helpTitle, string? helpMessage, bool isPrimary)
+        public void AddButton(string title, string automationName, IQuickHelpControlBuilder? helpBuilder, bool isPrimary)
         {
-            AddButton(title as object, helpTitle, helpMessage, isPrimary);
+            AddButton(title as object, automationName, helpBuilder, isPrimary);
         }
 
         /// <summary>
@@ -153,10 +154,10 @@ namespace Morphic.Client
         /// <param name="helpTitle">The title of the help window that appears on hover</param>
         /// <param name="helpMessage">The message in the help window that appears on hover</param>
         /// <param name="isPrimary">Indicates how the button should be styled</param>
-        public void AddButton(Image image, string? helpTitle, string? helpMessage, bool isPrimary)
+        public void AddButton(Image image, string automationName, IQuickHelpControlBuilder? helpBuilder, bool isPrimary)
         {
             image.Stretch = Stretch.None;
-            AddButton(image as object, helpTitle, helpMessage, isPrimary);
+            AddButton(image as object, automationName, helpBuilder, isPrimary);
         }
 
         /// <summary>
@@ -166,7 +167,7 @@ namespace Morphic.Client
         /// <param name="helpTitle">The title of the help window that appears on hover</param>
         /// <param name="helpMessage">The message in the help window that appears on hover</param>
         /// <param name="isPrimary">Indicates how the button should be styled</param>
-        private void AddButton(object content, string? helpTitle, string? helpMessage, bool isPrimary)
+        private void AddButton(object content, string automationName, IQuickHelpControlBuilder? helpBuilder, bool isPrimary)
         {
             var button = new ActionButton();
             // We started with a design that had two styles of buttons: primary and secondary
@@ -175,9 +176,8 @@ namespace Morphic.Client
             // using only the primary style and adding a space in between the buttons 
             button.Style = CreatePrimaryButtonStyle();
             button.Content = content;
-            button.HelpTitle = helpTitle;
-            button.HelpMessage = helpMessage;
-            AutomationProperties.SetName(button, helpTitle);
+            button.HelpBuilder = helpBuilder;
+            AutomationProperties.SetName(button, automationName);
             button.Click += Button_Click;
             if (ActionStack.Children.Count > 0)
             {
@@ -198,6 +198,7 @@ namespace Morphic.Client
                 var index = ActionStack.Children.IndexOf(button);
                 var args = new ActionEventArgs(index);
                 Action?.Invoke(this, args);
+                button.UpdateHelp();
             }
         }
 
@@ -242,12 +243,7 @@ namespace Morphic.Client
             /// <summary>
             /// The title to show in the help window
             /// </summary>
-            public string? HelpTitle { get; set; }
-
-            /// <summary>
-            /// The message to show in the help window
-            /// </summary>
-            public string? HelpMessage { get; set; }
+            public IQuickHelpControlBuilder? HelpBuilder { get; set; }
 
             /// <summary>
             /// Indicates if the help window should be shown on hover
@@ -270,14 +266,16 @@ namespace Morphic.Client
             /// <param name="e"></param>
             private void OnMouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
             {
+                UpdateHelp();
+            }
+
+            internal void UpdateHelp()
+            {
                 if (ShowsHelp)
                 {
-                    if (HelpTitle is string title)
+                    if (HelpBuilder is IQuickHelpControlBuilder builder)
                     {
-                        if (HelpMessage is string message)
-                        {
-                            QuickHelpWindow.Show(title, message);
-                        }
+                        QuickHelpWindow.Show(builder);
                     }
                 }
             }

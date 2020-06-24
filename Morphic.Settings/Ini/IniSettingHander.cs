@@ -64,25 +64,6 @@ namespace Morphic.Settings.Ini
         }
 
         /// <summary>
-        /// Expand certain whitelisted environmental variables in a path template
-        /// </summary>
-        /// <param name="templatePath"></param>
-        /// <returns></returns>
-        private static string ExpandedPath(string templatePath)
-        {
-            var allowedVariables = new string[]
-            {
-                "APPDATA"
-            };
-            var path = templatePath;
-            foreach (var varname in allowedVariables)
-            {
-                path = path.Replace($"$({varname})", Environment.GetEnvironmentVariable(varname), StringComparison.OrdinalIgnoreCase);
-            }
-            return path;
-        }
-
-        /// <summary>
         /// The logger to user
         /// </summary>
         private readonly ILogger<IniSettingHandler> logger;
@@ -103,11 +84,7 @@ namespace Morphic.Settings.Ini
             {
                 try
                 {
-                    await Task.Run(() =>
-                    {
-                        iniFile.SetValue(Description.Section, Description.Key, iniValue);
-                    });
-                    return true;
+                    return await iniFile.SetValue(Description.Section, Description.Key, iniValue);
                 }
                 catch (Exception e)
                 {
@@ -126,7 +103,7 @@ namespace Morphic.Settings.Ini
             var result = new CaptureResult();
             try
             {
-                var iniValue = await Task.Run(() => iniFile.GetValue(Description.Section, Description.Key));
+                var iniValue = await iniFile.GetValue(Description.Section, Description.Key);
                 result.Success = TryConvertFromIni(iniValue, Setting.Kind, out result.Value);
             }
             catch (Exception e)

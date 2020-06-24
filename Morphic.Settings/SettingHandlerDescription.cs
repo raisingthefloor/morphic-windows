@@ -31,6 +31,8 @@ using System.Text.Json.Serialization;
 using Morphic.Core;
 using Microsoft.Win32;
 using Morphic.Settings.SystemSettings;
+using System.Linq;
+using Morphic.Settings.Files;
 
 namespace Morphic.Settings
 {
@@ -70,6 +72,11 @@ namespace Morphic.Settings
             /// A Windows System Parameter Info call
             /// </summary>
             SystemParametersInfo,
+
+            /// <summary>
+            /// A handler that copies files from disk
+            /// </summary>
+            Files,
 
             /// <summary>
             /// An unknown handler is used for any unrecogized or invalid handler JSON
@@ -152,6 +159,13 @@ namespace Morphic.Settings
                                 catch
                                 {
                                 }
+                                return handler;
+                            }
+                        case "com.microsoft.windows.files":
+                            {
+                                var root = element.GetProperty("root").GetString();
+                                var files = element.GetProperty("files").EnumerateArray().Select(element => element.GetString()).ToArray();
+                                var handler = new FilesSettingHandlerDescription(root, files);
                                 return handler;
                             }
                     }

@@ -24,6 +24,7 @@
 using System;
 using System.Windows;
 using System.Threading.Tasks;
+using System.Threading;
 using System.Text.Json;
 using System.Collections.Generic;
 using System.Windows.Threading;
@@ -50,9 +51,29 @@ using System.Windows.Input;
 using NHotkey.Wpf;
 using Morphic.Client.About;
 using AutoUpdaterDotNET;
+using System.Runtime.InteropServices;
+using Morphic.Settings.Files;
 
 namespace Morphic.Client
 {
+
+    public class AppMain
+    {
+        [STAThread]
+        public static void Main()
+        {
+            // Writing our own Main function so we can use a mutex to enforce only one running instance of Morphic at a time
+            using (Mutex mutex = new Mutex(false, App.ApplicationId))
+            {
+                if (!mutex.WaitOne(0, false))
+                {
+                    return;
+                }
+                App.Main();
+            }
+        }
+    }
+
     /// <summary>
     /// Interaction logic for App.xaml
     /// </summary>
@@ -63,6 +84,8 @@ namespace Morphic.Client
         public IConfiguration Configuration { get; private set; } = null!;
         public Session Session { get; private set; } = null!;
         private ILogger<App> logger = null!;
+
+        public const string ApplicationId = "A6E8092B-51F4-4CAA-A874-A791152B5698";
 
         #region Configuration & Startup
 
@@ -107,6 +130,7 @@ namespace Morphic.Client
             services.AddSingleton<IIniFileFactory, IniFileFactory>();
             services.AddSingleton<ISystemSettingFactory, SystemSettingFactory>();
             services.AddSingleton<ISystemParametersInfo, SystemParametersInfo>();
+            services.AddSingleton<IFileManager, FileManager>();
             services.AddSingleton<SettingsManager>();
             services.AddSingleton<Keychain>();
             services.AddSingleton<Storage>();
@@ -227,7 +251,7 @@ namespace Morphic.Client
         {
             await CopyDefaultPreferences();
             await Session.SettingsManager.Populate(Path.Combine("Solutions", "windows.solutions.json"));
-            await Session.SettingsManager.Populate(Path.Combine("Solutions", "jaws2019.solutions.json"));
+            await Session.SettingsManager.Populate(Path.Combine("Solutions", "jaws2020.solutions.json"));
             await Session.Open();
         }
 
@@ -350,6 +374,7 @@ namespace Morphic.Client
         /// <param name="e"></param>
         private void OnNotifyIconClicked(object? sender, EventArgs e)
         {
+            Countly.RecordEvent("Tray Menu");
             mainMenu.IsOpen = true;
         }
 
@@ -360,6 +385,7 @@ namespace Morphic.Client
         /// <param name="e"></param>
         private void ShowQuickStrip(object sender, RoutedEventArgs e)
         {
+            Countly.RecordEvent("Show MorphicBar");
             ShowQuickStrip();
         }
 
@@ -370,6 +396,7 @@ namespace Morphic.Client
         /// <param name="e"></param>
         private void HideQuickStrip(object sender, RoutedEventArgs e)
         {
+            Countly.RecordEvent("Hide MorphicBar");
             HideQuickStrip();
         }
 
@@ -380,28 +407,30 @@ namespace Morphic.Client
         /// <param name="e"></param>
         private void CustomizeQuickStrip(object sender, RoutedEventArgs e)
         {
-            Countly.RecordEvent("customize-quickstrip");
+            Countly.RecordEvent("Customize MorphicBar");
         }
 
         private void TravelWithSettings(object sender, RoutedEventArgs e)
         {
-            Countly.RecordEvent("travel-with-settings");
+            Countly.RecordEvent("Travel");
             OpenTravelWindow();
         }
 
         private void ApplyMySettings(object sender, RoutedEventArgs e)
         {
-            Countly.RecordEvent("apply-my-settings");
+            Countly.RecordEvent("Login");
             OpenLoginWindow();
         }
 
         private void Logout(object sender, RoutedEventArgs e)
         {
+            Countly.RecordEvent("Logout");
             _ = Session.Signout();
         }
 
         private void About(object sender, RoutedEventArgs e)
         {
+            Countly.RecordEvent("About");
             OpenAboutWindow();
         }
 
@@ -412,6 +441,7 @@ namespace Morphic.Client
         /// <param name="e"></param>
         private void Quit(object sender, RoutedEventArgs e)
         {
+            Countly.RecordEvent("Quit");
             App.Shared.Shutdown();
         }
 
@@ -422,7 +452,7 @@ namespace Morphic.Client
         /// <summary>
         ///  The Quick Strip Window, if visible
         /// </summary>
-        private QuickStripWindow? QuickStripWindow = null;
+        public QuickStripWindow? QuickStripWindow { get; private set; } = null;
 
         /// <summary>
         /// Toggle the Quick Strip window based on its current visibility

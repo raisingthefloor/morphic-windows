@@ -14,6 +14,8 @@
     <VersionPrefix>1.0$(VersionBuildComponents)</VersionPrefix>
     <VersionSuffix Condition="'$(Configuration)' == 'Debug'">localdev</VersionSuffix>
     <VersionSuffix Condition="'$(Configuration)' == 'Release'">$(VersionSuffix)</VersionSuffix>
+    <StartupObject>Morphic.Client.AppMain</StartupObject>
+    <Company>Raising the Floor</Company>
   </PropertyGroup>
 
   <ItemGroup>
@@ -26,6 +28,7 @@
     <None Remove="Plus.png" />
     <None Remove="Solutions.json" />
     <None Remove="Solutions\jaws2019.solutions.json" />
+    <None Remove="Solutions\jaws2020.solutions.json" />
   </ItemGroup>
 
   <ItemGroup>
@@ -36,6 +39,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Solutions\jaws2019.solutions.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Solutions\jaws2020.solutions.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Resource Include="Login\LoginAnnounce.wav" />

@@ -21,35 +21,41 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System.Threading.Tasks;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
-namespace Morphic.Settings.Ini
+namespace Morphic.Settings.Files
 {
-
-    /// <summary>
-    /// An interface for creating ini files
-    /// </summary>
-    /// <remarks>
-    /// Since ini files are created with a given path, they can't be easily created directly
-    /// from a <code>ServiceProvider</code>.  So instead, the <code>ServiceProvider</code>
-    /// creates a factory that knows how to create a specific kind of ini file.
-    /// 
-    /// Typically if you create a new kind of ini file implementation, you'll also have to
-    /// create a factory for it.
-    /// </remarks>
-    public interface IIniFileFactory
+    public class FilesSettingHandlerDescription: SettingHandlerDescription
     {
 
-        /// <summary>
-        /// Create a new ini file by opening the given path
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        public IIniFile Open(string path);
+        public FilesSettingHandlerDescription(string root, string[] files): base(HandlerKind.Files)
+        {
+            Root = root;
+            Files = files;
+        }
 
-        public Task Begin();
+        public string Root { get; }
+        public string[] Files { get; }
 
-        public Task Commit();
+        public override int GetHashCode()
+        {
+            return Root.GetHashCode() ^ Files.GetHashCode();
+        }
 
+        public override bool Equals(object? obj)
+        {
+            if (obj is FilesSettingHandlerDescription other)
+            {
+                if (Root != other.Root || Files.Length != other.Files.Length)
+                {
+                    return false;
+                }
+                var set1 = new HashSet<string>(Files);
+                return set1.SetEquals(other.Files);
+            }
+            return false;
+        }
     }
 }

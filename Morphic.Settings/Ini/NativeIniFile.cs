@@ -21,35 +21,50 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
+using Morphic.Windows.Native;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace Morphic.Settings.Ini
 {
-
     /// <summary>
-    /// An interface for creating ini files
+    /// Implementation of <code>IIniFile</code> that uses <code>IniFileReaderWriter</code>
     /// </summary>
-    /// <remarks>
-    /// Since ini files are created with a given path, they can't be easily created directly
-    /// from a <code>ServiceProvider</code>.  So instead, the <code>ServiceProvider</code>
-    /// creates a factory that knows how to create a specific kind of ini file.
-    /// 
-    /// Typically if you create a new kind of ini file implementation, you'll also have to
-    /// create a factory for it.
-    /// </remarks>
-    public interface IIniFileFactory
+    public class NativeIniFile: IIniFile
     {
 
+        private IniFileReaderWriter iniReaderWriter;
+        private bool exists;
+
         /// <summary>
-        /// Create a new ini file by opening the given path
+        /// Create an ini file from the given path
         /// </summary>
         /// <param name="path"></param>
-        /// <returns></returns>
-        public IIniFile Open(string path);
+        public NativeIniFile(string path)
+        {
+            iniReaderWriter = new IniFileReaderWriter(path);
+            exists = File.Exists(path);
+        }
 
-        public Task Begin();
+        public Task<string?> GetValue(string section, string key)
+        {
+            string? result = null;
+            if (exists)
+            {
+                result = iniReaderWriter.ReadValue(key, section);
+            }
+            return Task.FromResult(result);
+        }
 
-        public Task Commit();
+        public Task<bool> SetValue(string section, string key, string value)
+        {
+            if (exists)
+            {
+                iniReaderWriter.WriteValue(value, key, section);
+                return Task.FromResult(true);
+            }
+            return Task.FromResult(false);
+        }
 
     }
 }

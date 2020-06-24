@@ -158,6 +158,22 @@ namespace Morphic.Settings
             return prefs.Get(key);
         }
 
+        public async Task<Dictionary<Preferences.Key, object?>> Capture(IEnumerable<Preferences.Key> keys)
+        {
+            var prefs = new Preferences();
+            var session = new CaptureSession(this, prefs);
+            session.CaptureDefaultValues = true;
+
+            foreach (Preferences.Key key in keys)
+            {
+                session.Keys.Add(key);
+            }
+            
+            await session.Run();
+
+            return prefs.GetValuesByKey();
+        }
+        
         public async Task<bool?> CaptureBool(Preferences.Key key)
         {
             return await Capture(key) as bool?;
@@ -176,6 +192,8 @@ namespace Morphic.Settings
             public static Preferences.Key WindowsDisplayContrastEnabled = new Preferences.Key("com.microsoft.windows.display", "contrast.enabled");
 
             public static Preferences.Key WindowsMagnifierEnabled = new Preferences.Key("com.microsoft.windows.magnifier", "enabled");
+            public static Preferences.Key WindowsMagnifierMode = new Preferences.Key("com.microsoft.windows.magnifier", "mode");
+            public static Preferences.Key WindowsMagnifierMagnification = new Preferences.Key("com.microsoft.windows.magnifier", "magnification");
 
             public static Preferences.Key WindowsNarratorEnabled = new Preferences.Key("com.microsoft.windows.narrator", "enabled");
 

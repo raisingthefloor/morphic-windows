@@ -126,6 +126,7 @@ namespace Morphic.Client.QuickStrip
         /// <param name="e"></param>
         private void LogoButtonClicked(object sender, RoutedEventArgs e)
         {
+            Countly.RecordEvent("Main Menu");
             LogoButton.ContextMenu.IsOpen = true;
         }
 
@@ -136,6 +137,7 @@ namespace Morphic.Client.QuickStrip
         /// <param name="e"></param>
         private void HideQuickStrip(object sender, RoutedEventArgs e)
         {
+            Countly.RecordEvent("Hide MorphicBar");
             App.Shared.HideQuickStrip();
         }
 
@@ -146,29 +148,30 @@ namespace Morphic.Client.QuickStrip
         /// <param name="e"></param>
         private void CustomizeQuickStrip(object sender, RoutedEventArgs e)
         {
-            Countly.RecordEvent("customize-quickstrip");
+            Countly.RecordEvent("Customize MorphicBar");
         }
 
         private void AboutMorphic(object sender, RoutedEventArgs e)
         {
-            Countly.RecordEvent("about-morphic");
+            Countly.RecordEvent("About");
             App.Shared.OpenAboutWindow();
         }
 
         private void TravelWithSettings(object sender, RoutedEventArgs e)
         {
-            Countly.RecordEvent("travel-with-settings");
+            Countly.RecordEvent("Travel");
             App.Shared.OpenTravelWindow();
         }
 
         private void ApplyMySettings(object sender, RoutedEventArgs e)
         {
-            Countly.RecordEvent("apply-my-settings");
+            Countly.RecordEvent("Login");
             App.Shared.OpenLoginWindow();
         }
 
         private void Logout(object sender, RoutedEventArgs e)
         {
+            Countly.RecordEvent("Logout");
             _ = session.Signout();
         }
 
@@ -179,6 +182,7 @@ namespace Morphic.Client.QuickStrip
         /// <param name="e"></param>
         private void Quit(object sender, RoutedEventArgs e)
         {
+            Countly.RecordEvent("Quit");
             App.Shared.Shutdown();
         }
 
@@ -289,67 +293,60 @@ namespace Morphic.Client.QuickStrip
                     case "resolution":
                         {
                             var control = new QuickStripSegmentedButtonControl();
+                            var biggerHelp = new TextZoomInHelpControlBuilder(Display.Primary);
+                            var smallerHelp = new TextZoomOutHelpControlBuilder(Display.Primary);
                             control.TitleLabel.Content = Properties.Resources.QuickStrip_Resolution_Title;
-                            control.AddButton(new Image() { Source = new BitmapImage(new Uri("Plus.png", UriKind.Relative)) }, Properties.Resources.QuickStrip_Resolution_Bigger_HelpTitle, Properties.Resources.QuickStrip_Resolution_Bigger_HelpMessage, isPrimary: true);
-                            control.AddButton(new Image() { Source = new BitmapImage(new Uri("Minus.png", UriKind.Relative)) }, Properties.Resources.QuickStrip_Resolution_Smaller_HelpTitle, Properties.Resources.QuickStrip_Resolution_Smaller_HelpMessage, isPrimary: false);
+                            control.AddButton(new Image() { Source = new BitmapImage(new Uri("Plus.png", UriKind.Relative)) }, Properties.Resources.QuickStrip_Resolution_Bigger_HelpTitle, biggerHelp, isPrimary: true);
+                            control.AddButton(new Image() { Source = new BitmapImage(new Uri("Minus.png", UriKind.Relative)) }, Properties.Resources.QuickStrip_Resolution_Smaller_HelpTitle, smallerHelp, isPrimary: false);
                             control.Action += quickStrip.Zoom;
                             return control;
                         }
                     case "magnifier":
                         {
                             var control = new QuickStripSegmentedButtonControl();
+                            var showHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Magnifier_Show_HelpTitle, Properties.Resources.QuickStrip_Magnifier_Show_HelpMessage);
+                            var hideHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Magnifier_Hide_HelpTitle, Properties.Resources.QuickStrip_Magnifier_Hide_HelpMessage);
                             control.TitleLabel.Content = Properties.Resources.QuickStrip_Magnifier_Title;
-                            control.AddButton(Properties.Resources.QuickStrip_Magnifier_Show_Title, Properties.Resources.QuickStrip_Magnifier_Show_HelpTitle, Properties.Resources.QuickStrip_Magnifier_Show_HelpMessage, isPrimary: true);
-                            control.AddButton(Properties.Resources.QuickStrip_Magnifier_Hide_Title, Properties.Resources.QuickStrip_Magnifier_Hide_HelpTitle, Properties.Resources.QuickStrip_Magnifier_Hide_HelpMessage, isPrimary: false);
+                            control.AddButton(Properties.Resources.QuickStrip_Magnifier_Show_Title, showHelp.Title, showHelp, isPrimary: true);
+                            control.AddButton(Properties.Resources.QuickStrip_Magnifier_Hide_Title, hideHelp.Title, hideHelp, isPrimary: false);
                             control.Action += quickStrip.OnMagnify;
                             return control;
                         }
                     case "reader":
                         {
                             var control = new QuickStripSegmentedButtonControl();
-                            control.TitleLabel.Content = "Read text";
-                            control.AddButton("\u25b6", "Speak the selected text", "Select some text, and click the button to read it aloud.", isPrimary: true);
-                            control.AddButton("||", "Pause speech", "Pause or resume the current speech.", isPrimary: false);
-                            control.AddButton("\u25a0", "Stop speech", "Stop the current speech.", isPrimary: true);
-                            control.EnableButton(1, false);
-                            control.EnableButton(2, false);
+                            var startHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Reader_Start_HelpTitle, Properties.Resources.QuickStrip_Reader_Start_HelpMessage);
+                            var pauseHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Reader_Stop_HelpTitle, Properties.Resources.QuickStrip_Reader_Stop_HelpMessage);
+                            var stopHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Reader_Stop_HelpTitle, Properties.Resources.QuickStrip_Reader_Stop_HelpMessage);
+                            control.TitleLabel.Content = Properties.Resources.QuickStrip_Reader_Title;
+                            control.AddButton("\u25b6", startHelp.Title, startHelp, isPrimary: true);
+                            control.AddButton("||", pauseHelp.Title, pauseHelp, isPrimary: false);
+                            control.AddButton("\u25a0", stopHelp.Title, stopHelp, isPrimary: false);
                             control.Action += quickStrip.OnReader;
-                            Speech.Default.StateChanged += (sender, active) =>
-                            {
-                                control.Dispatcher.Invoke(() =>
-                                {
-                                    control.EnableButton(1, active);
-                                    control.EnableButton(2, active);
-                                });
-                            };
                             return control;
                         }
                     case "volume":
                         {
                             var control = new QuickStripSegmentedButtonControl();
+                            var upHelp = new VolumeUpHelpControlBuilder(Audio.DefaultOutputEndpoint);
+                            var downHelp = new VolumeDownHelpControlBuilder(Audio.DefaultOutputEndpoint);
+                            var muteHelp = new VolumeMuteHelpControlBuilder(Audio.DefaultOutputEndpoint);
                             control.TitleLabel.Content = Properties.Resources.QuickStrip_Volume_Title;
-                            control.AddButton(new Image() { Source = new BitmapImage(new Uri("Plus.png", UriKind.Relative)) }, Properties.Resources.QuickStrip_Volume_Up_HelpTitle, Properties.Resources.QuickStrip_Volume_Up_HelpMessage, isPrimary: true);
-                            control.AddButton(new Image() { Source = new BitmapImage(new Uri("Minus.png", UriKind.Relative)) }, Properties.Resources.QuickStrip_Volume_Down_HelpTitle, Properties.Resources.QuickStrip_Volume_Down_HelpMessage, isPrimary: false);
-                            control.AddButton(Properties.Resources.QuickStrip_Volume_Mute_Title, Properties.Resources.QuickStrip_Volume_Mute_HelpTitle, Properties.Resources.QuickStrip_Volume_Mute_HelpMessage, isPrimary: true);
+                            control.AddButton(new Image() { Source = new BitmapImage(new Uri("Plus.png", UriKind.Relative)) }, Properties.Resources.QuickStrip_Volume_Up_HelpTitle, upHelp, isPrimary: true);
+                            control.AddButton(new Image() { Source = new BitmapImage(new Uri("Minus.png", UriKind.Relative)) }, Properties.Resources.QuickStrip_Volume_Down_HelpTitle, downHelp, isPrimary: false);
+                            control.AddButton(Properties.Resources.QuickStrip_Volume_Mute_Title, Properties.Resources.QuickStrip_Volume_Mute_HelpTitle, muteHelp, isPrimary: true);
                             control.Action += quickStrip.OnVolume;
                             return control;
                         }
                     case "contrast":
                         {
                             var control = new QuickStripSegmentedButtonControl();
+                            var onHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Contrast_On_HelpTitle, Properties.Resources.QuickStrip_Contrast_On_HelpMessage);
+                            var offHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Contrast_Off_HelpTitle, Properties.Resources.QuickStrip_Contrast_Off_HelpMessage);
                             control.TitleLabel.Content = Properties.Resources.QuickStrip_Contrast_Title;
-                            control.AddButton(Properties.Resources.QuickStrip_Contrast_On_Title, Properties.Resources.QuickStrip_Contrast_On_HelpTitle, Properties.Resources.QuickStrip_Contrast_On_HelpMessage, isPrimary: true);
-                            control.AddButton(Properties.Resources.QuickStrip_Contrast_Off_Title, Properties.Resources.QuickStrip_Contrast_Off_HelpTitle, Properties.Resources.QuickStrip_Contrast_Off_HelpMessage, isPrimary: false);
+                            control.AddButton(Properties.Resources.QuickStrip_Contrast_On_Title, onHelp.Title, onHelp, isPrimary: true);
+                            control.AddButton(Properties.Resources.QuickStrip_Contrast_Off_Title, offHelp.Title, offHelp, isPrimary: false);
                             control.Action += quickStrip.OnContrast;
-                            return control;
-                        }
-                    case "cursor":
-                        {
-                            var control = new QuickStripSegmentedButtonControl();
-                            control.TitleLabel.Content = "Cursor";
-                            control.AddButton("White", "Make the cursor white", "White is the default for your computer", isPrimary: true);
-                            control.AddButton("Black", "Make the cursor black", "Black can be easier to see for some people", isPrimary: false);
-                            control.Action += quickStrip.OnCursorColor;
                             return control;
                         }
                     default:
@@ -378,29 +375,54 @@ namespace Morphic.Client.QuickStrip
 
         private void Zoom(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
         {
-            Countly.RecordEvent("change-zoom");
             double percentage = 1.0;
             if (e.SelectedIndex == 0)
             {
+                Countly.RecordEvent("Text Larger");
                 percentage = Display.Primary.PercentageForZoomingIn;
             }
             else
             {
+                Countly.RecordEvent("Text Smaller");
                 percentage = Display.Primary.PercentageForZoomingOut;
             }
             _ = session.Apply(SettingsManager.Keys.WindowsDisplayZoom, percentage);
         }
 
-        private void OnMagnify(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
+        /// <summary>Original magnifier settings.</summary>
+        private Dictionary<Preferences.Key, object?> magnifyCapture;
+        
+        private async void OnMagnify(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
         {
-            Countly.RecordEvent("toggle-magnify");
             if (e.SelectedIndex == 0)
             {
-                _ = session.Apply(SettingsManager.Keys.WindowsMagnifierEnabled, true);
+                _ = Countly.RecordEvent("Show Magnifier");
+                // Enable lens mode at 200%
+                Dictionary<Preferences.Key, object?> settings = new Dictionary<Preferences.Key, object?>
+                {
+                    {SettingsManager.Keys.WindowsMagnifierMode, (long)3},
+                    {SettingsManager.Keys.WindowsMagnifierMagnification, (long)200},
+                    {SettingsManager.Keys.WindowsMagnifierEnabled, true},
+                };
+
+                if (this.magnifyCapture == null)
+                {
+                    // capture the current settings
+                    this.magnifyCapture = await this.session.SettingsManager.Capture(settings.Keys);
+                }
+
+                await session.Apply(settings);
             }
             else if (e.SelectedIndex == 1)
             {
-                _ = session.Apply(SettingsManager.Keys.WindowsMagnifierEnabled, false);
+                _ = Countly.RecordEvent("Hide Magnifier");
+                // restore settings
+                await session.Apply(SettingsManager.Keys.WindowsMagnifierEnabled, false);
+                if (this.magnifyCapture != null)
+                {
+                    await this.session.Apply(this.magnifyCapture);
+                    this.magnifyCapture = null;
+                }
             }
         }
 
@@ -414,6 +436,7 @@ namespace Morphic.Client.QuickStrip
             {
                 // Play
                 case 0:
+                    _ = Countly.RecordEvent("Read Selection");
                     speech.StopSpeaking();
                     
                     // Store the clipboard
@@ -440,10 +463,12 @@ namespace Morphic.Client.QuickStrip
                     break;
                 // Pause
                 case 1 when speech.Active:
+                    _ = Countly.RecordEvent("Pause Reading");
                     speech.TogglePause();
                     break;
                 // Stop
                 case 2 when speech.Active:
+                    _ = Countly.RecordEvent("Stop Reading");
                     speech.StopSpeaking();
                     break;
             }
@@ -451,10 +476,10 @@ namespace Morphic.Client.QuickStrip
 
         private void OnVolume(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
         {
-            Countly.RecordEvent("change-volume");
             var endpoint = Audio.DefaultOutputEndpoint;
             if (e.SelectedIndex == 0)
             {
+                _ = Countly.RecordEvent("Volume Up");
                 if (endpoint.GetMasterMuteState() == true)
                 {
                     endpoint.SetMasterMuteState(false);
@@ -466,6 +491,7 @@ namespace Morphic.Client.QuickStrip
             }
             else if (e.SelectedIndex == 1)
             {
+                _ = Countly.RecordEvent("Volume Down");
                 if (endpoint.GetMasterMuteState() == true)
                 {
                     endpoint.SetMasterMuteState(false);
@@ -483,13 +509,14 @@ namespace Morphic.Client.QuickStrip
 
         private void OnContrast(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
         {
-            Countly.RecordEvent("toggle-contrast");
             if (e.SelectedIndex == 0)
             {
+                Countly.RecordEvent("Contrast On");
                 _ = session.Apply(SettingsManager.Keys.WindowsDisplayContrastEnabled, true);
             }
             else if (e.SelectedIndex == 1)
             {
+                Countly.RecordEvent("Contrast Off");
                 _ = session.Apply(SettingsManager.Keys.WindowsDisplayContrastEnabled, false);
             }
         }
@@ -594,7 +621,7 @@ namespace Morphic.Client.QuickStrip
             {
                 case FixedPosition.BottomRight:
                     top = screenSize.Height - Height - ScreenEdgeInset;
-                    left = screenSize.Width - Width - ScreenEdgeInset;
+                    left = Math.Max(ScreenEdgeInset, screenSize.Width - Width - ScreenEdgeInset);
                     break;
                 case FixedPosition.BottomLeft:
                     top = screenSize.Height - Height - ScreenEdgeInset;
@@ -606,7 +633,7 @@ namespace Morphic.Client.QuickStrip
                     break;
                 case FixedPosition.TopRight:
                     top = ScreenEdgeInset;
-                    left = screenSize.Width - Width - ScreenEdgeInset;
+                    left = Math.Max(ScreenEdgeInset, screenSize.Width - Width - ScreenEdgeInset);
                     break;
             }
             if (animated)
@@ -687,7 +714,7 @@ namespace Morphic.Client.QuickStrip
         /// <param name="e"></param>
         private void Window_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            Countly.RecordEvent("window-moved");
+            Countly.RecordEvent("Move MorphicBar");
             if (e.ChangedButton == System.Windows.Input.MouseButton.Left)
             {
                 Position = NearestPosition;
@@ -698,7 +725,8 @@ namespace Morphic.Client.QuickStrip
 
         private void LogoButton_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            QuickHelpWindow.Show(Properties.Resources.QuickStrip_Advanced_HelpTitle, Properties.Resources.QuickStrip_Advanced_HelpMessage);
+            var help = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Advanced_HelpTitle, Properties.Resources.QuickStrip_Advanced_HelpMessage);
+            QuickHelpWindow.Show(help);
         }
 
         private void LogoButton_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)

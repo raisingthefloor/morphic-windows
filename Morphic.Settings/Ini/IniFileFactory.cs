@@ -21,6 +21,9 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
+using System.Collections.Concurrent;
+using System.Threading.Tasks;
+
 namespace Morphic.Settings.Ini
 {
     /// <summary>
@@ -31,8 +34,38 @@ namespace Morphic.Settings.Ini
 
         public IIniFile Open(string path)
         {
-            return new IniFile(path);
+            IniFile? file = null;
+            while (file == null)
+            {
+                if (!iniFilesByPath.TryGetValue(path, out file))
+                {
+                    file = new IniFile(path);
+                    if (!iniFilesByPath.TryAdd(path, file))
+                    {
+                        file = null;
+                    }
+                }
+            }
+            return file;
         }
 
+        public Task Begin()
+        {
+            return Task.CompletedTask;
+        }
+
+        public async Task Commit()
+        {
+            foreach (var file in iniFilesByPath.Values)
+            {
+                if (file.NeedsWrite)
+                {
+                    await file.Write();
+                }
+            }
+            iniFilesByPath.Clear();
+        }
+
+        private ConcurrentDictionary<string, IniFile> iniFilesByPath = new ConcurrentDictionary<string, IniFile>();
     }
 }

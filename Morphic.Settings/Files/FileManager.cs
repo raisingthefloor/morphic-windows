@@ -21,35 +21,48 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
+using System;
+using System.IO;
+using System.Collections.Generic;
+using System.Text;
 using System.Threading.Tasks;
+using System.Linq;
+using System.Text.RegularExpressions;
 
-namespace Morphic.Settings.Ini
+namespace Morphic.Settings.Files
 {
-
-    /// <summary>
-    /// An interface for creating ini files
-    /// </summary>
-    /// <remarks>
-    /// Since ini files are created with a given path, they can't be easily created directly
-    /// from a <code>ServiceProvider</code>.  So instead, the <code>ServiceProvider</code>
-    /// creates a factory that knows how to create a specific kind of ini file.
-    /// 
-    /// Typically if you create a new kind of ini file implementation, you'll also have to
-    /// create a factory for it.
-    /// </remarks>
-    public interface IIniFileFactory
+    public class FileManager : IFileManager
     {
 
-        /// <summary>
-        /// Create a new ini file by opening the given path
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        public IIniFile Open(string path);
+        public bool Exists(string path)
+        {
+            return File.Exists(path) || Directory.Exists(path);
+        }
 
-        public Task Begin();
+        public string[] FilenamesInDirectory(string path)
+        {
+            return Directory.GetFiles(path);
+        }
 
-        public Task Commit();
+        public async Task<byte[]> ReadAllBytes(string path)
+        {
+            return await File.ReadAllBytesAsync(path);
+        }
 
+        public async Task WriteAllBytes(string path, byte[] contents)
+        {
+            await File.WriteAllBytesAsync(path, contents);
+        }
+
+        public Task Delete(string path)
+        {
+            File.Delete(path);
+            return Task.CompletedTask;
+        }
+
+        public void CreateDirectory(string path)
+        {
+            Directory.CreateDirectory(path);
+        }
     }
 }

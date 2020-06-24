@@ -1,0 +1,20 @@
+﻿[
+  {
+    "id": "com.freedomscientific.jaws2020",
+    "settings": [
+      {
+        "name": "configuration",
+        "type": "files",
+        "default": null,
+        "handler": {
+          "type": "com.microsoft.windows.files",
+          "root": "$(APPDATA)\\Freedom Scientific\\JAWS\\2020\\Settings",
+          "files": [
+            "enu\\*.JCF",
+            "VoiceProfiles\\*.VPF"
+          ]
+        }
+      }
+    ]
+  }
+]

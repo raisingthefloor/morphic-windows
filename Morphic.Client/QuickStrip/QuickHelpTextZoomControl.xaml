@@ -1,0 +1,30 @@
+﻿<UserControl x:Class="Morphic.Client.QuickStrip.QuickHelpTextZoomControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Morphic.Client.QuickStrip"
+             xmlns:elements="clr-namespace:Morphic.Client.Elements"
+             mc:Ignorable="d" 
+             d:DesignHeight="160" d:DesignWidth="750">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="85"/>
+            <RowDefinition Height="43"/>
+            <RowDefinition Height="32"/>
+        </Grid.RowDefinitions>
+        <Label x:Name="TitleLabel" Grid.Row="0" Content="Title" HorizontalAlignment="Center" Margin="0,15,0,0" VerticalAlignment="Top" FontSize="50" FontWeight="Bold" Foreground="White" Padding="0,0,0,0">
+            <Label.Effect>
+                <DropShadowEffect BlurRadius="0" ShadowDepth="2"/>
+            </Label.Effect>
+        </Label>
+        <Label x:Name="MessageLabel" Grid.Row="1" Content="Message" HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Top" FontSize="25  " FontWeight="Bold" Foreground="White">
+            <Label.Effect>
+                <DropShadowEffect BlurRadius="0" ShadowDepth="2"/>
+            </Label.Effect>
+        </Label>
+        <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="center" VerticalAlignment="center">
+            <elements:PagerControl x:Name="PagerControl" Height="12"></elements:PagerControl>
+        </StackPanel>
+    </Grid>
+</UserControl>

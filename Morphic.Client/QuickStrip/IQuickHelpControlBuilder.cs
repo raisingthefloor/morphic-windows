@@ -21,35 +21,16 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System.Threading.Tasks;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
 
-namespace Morphic.Settings.Ini
+namespace Morphic.Client.QuickStrip
 {
-
-    /// <summary>
-    /// An interface for creating ini files
-    /// </summary>
-    /// <remarks>
-    /// Since ini files are created with a given path, they can't be easily created directly
-    /// from a <code>ServiceProvider</code>.  So instead, the <code>ServiceProvider</code>
-    /// creates a factory that knows how to create a specific kind of ini file.
-    /// 
-    /// Typically if you create a new kind of ini file implementation, you'll also have to
-    /// create a factory for it.
-    /// </remarks>
-    public interface IIniFileFactory
+    public interface IQuickHelpControlBuilder
     {
-
-        /// <summary>
-        /// Create a new ini file by opening the given path
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        public IIniFile Open(string path);
-
-        public Task Begin();
-
-        public Task Commit();
-
+        UserControl Build();
     }
 }
