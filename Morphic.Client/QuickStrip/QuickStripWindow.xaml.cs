@@ -316,8 +316,8 @@ namespace Morphic.Client.QuickStrip
                         {
                             var control = new QuickStripSegmentedButtonControl();
                             var startHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Reader_Start_HelpTitle, Properties.Resources.QuickStrip_Reader_Start_HelpMessage);
-                            var pauseHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Reader_Stop_HelpTitle, Properties.Resources.QuickStrip_Reader_Stop_HelpMessage);
                             var stopHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Reader_Stop_HelpTitle, Properties.Resources.QuickStrip_Reader_Stop_HelpMessage);
+                            var pauseHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Reader_Pause_HelpTitle, Properties.Resources.QuickStrip_Reader_Pause_HelpMessage);
                             control.TitleLabel.Content = Properties.Resources.QuickStrip_Reader_Title;
                             control.AddButton("\u25b6", startHelp.Title, startHelp, isPrimary: true);
                             control.AddButton("||", pauseHelp.Title, pauseHelp, isPrimary: false);

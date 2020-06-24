@@ -224,6 +224,24 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Pauses or continues reading text aloud.
+        /// </summary>
+        internal static string QuickStrip_Reader_Pause_HelpMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_Reader_Pause_HelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pause or continue Reading.
+        /// </summary>
+        internal static string QuickStrip_Reader_Pause_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_Reader_Pause_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The computer will read aloud text you&apos;ve selected.
         /// </summary>
         internal static string QuickStrip_Reader_Start_HelpMessage {

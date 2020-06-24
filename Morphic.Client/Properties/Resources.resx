@@ -184,6 +184,12 @@
   <data name="QuickStrip_Reader_Stop_HelpTitle" xml:space="preserve">
     <value>Stop Reading</value>
   </data>
+  <data name="QuickStrip_Reader_Pause_HelpMessage" xml:space="preserve">
+    <value>Pauses or continues reading text aloud</value>
+  </data>
+  <data name="QuickStrip_Reader_Pause_HelpTitle" xml:space="preserve">
+    <value>Pause or continue Reading</value>
+  </data>
   <data name="QuickStrip_Reader_Title" xml:space="preserve">
     <value>Read Text</value>
   </data>
