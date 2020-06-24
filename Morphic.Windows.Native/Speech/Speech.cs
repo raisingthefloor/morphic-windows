@@ -26,6 +26,7 @@ using System.Reflection;
 
 namespace Morphic.Windows.Native
 {
+    using System;
     using System.Diagnostics;
     using System.Threading;
     using System.Threading.Tasks;
@@ -37,14 +38,17 @@ namespace Morphic.Windows.Native
     {
         public static readonly Speech Default = new Speech();
         
-        /// <summary>Used to tell the speech process to pause/resume.</summary>
-        private EventWaitHandle toggleSpeech = new EventWaitHandle(false, EventResetMode.AutoReset, "morphic-speech");
         /// <summary>Cancellation for the speech process.</summary>
         private CancellationTokenSource? cancellation;
+
+        /// <summary>Speech process standard input</summary>
+        private StreamWriter speechStream;
 
         /// <summary>true if currently speaking.</summary>
         public bool Active => this.cancellation != null;
 
+        public event EventHandler<bool> StateChanged;
+        
         private Speech()
         {
         }
@@ -55,21 +59,27 @@ namespace Morphic.Windows.Native
         /// <param name="text">The text to say.</param>
         /// <returns>Task, completing when the speech is done.</returns>
         public Task<bool> SpeakText(string text)
-        {
+        {    
             if (this.cancellation != null)
             {
                 this.StopSpeaking();
             }
 
+            // The speech synthesizer is only available in .NET Framework 4, so it is accessed in a separate process.
             string speechExe = Path.Combine(
                 Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Morphic.Speech.exe");
 
+            this.OnStateChanged(true);
+            
             Process process = Process.Start(new ProcessStartInfo()
             {
                 FileName = speechExe,
                 Environment = { {"MORPHIC_SPEECH", text} },
                 CreateNoWindow = true,
+                RedirectStandardInput = true
             });
+
+            this.speechStream = process.StandardInput;
             
             this.cancellation = new CancellationTokenSource();
             TaskCompletionSource<bool> task = new TaskCompletionSource<bool>();
@@ -86,6 +96,7 @@ namespace Morphic.Windows.Native
                 process.EnableRaisingEvents = true;
                 process.Exited += (sender, args) =>
                 {
+                    this.OnStateChanged(false);
                     task.SetResult(process.ExitCode == 0);
                     this.cancellation = null;
                     process.Dispose();
@@ -109,7 +120,12 @@ namespace Morphic.Windows.Native
         /// <summary>Pause or resume the speech.</summary>
         public void TogglePause()
         {
-            this.toggleSpeech.Set();
+            this.speechStream.WriteLineAsync("toggle");
+        }
+
+        protected virtual void OnStateChanged(bool e)
+        {
+            this.StateChanged?.Invoke(this, e);
         }
     }
 }

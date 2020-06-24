@@ -43,6 +43,7 @@ namespace Morphic.Client.QuickStrip
     using System.Windows.Forms;
     using Clipboard = System.Windows.Clipboard;
     using IDataObject = System.Windows.IDataObject;
+    using Speech = Windows.Native.Speech;
 
     /// <summary>
     /// Interaction logic for QuickStripWindow.xaml
@@ -308,9 +309,19 @@ namespace Morphic.Client.QuickStrip
                             var control = new QuickStripSegmentedButtonControl();
                             control.TitleLabel.Content = "Read text";
                             control.AddButton("\u25b6", "Speak the selected text", "Select some text, and click the button to read it aloud.", isPrimary: true);
-                            control.AddButton("\u25a0", "Stop speech", "Stop the current speech.", isPrimary: false);
+                            control.AddButton("||", "Pause speech", "Pause or resume the current speech.", isPrimary: false);
+                            control.AddButton("\u25a0", "Stop speech", "Stop the current speech.", isPrimary: true);
                             control.EnableButton(1, false);
+                            control.EnableButton(2, false);
                             control.Action += quickStrip.OnReader;
+                            Speech.Default.StateChanged += (sender, active) =>
+                            {
+                                control.Dispatcher.Invoke(() =>
+                                {
+                                    control.EnableButton(1, active);
+                                    control.EnableButton(2, active);
+                                });
+                            };
                             return control;
                         }
                     case "volume":
@@ -397,20 +408,13 @@ namespace Morphic.Client.QuickStrip
         {
             SelectionReader reader = SelectionReader.Default;
             Windows.Native.Speech speech = Windows.Native.Speech.Default;
-            
-            // Play/Pause
-            if (e.SelectedIndex == 0)
-            {
+            QuickStripSegmentedButtonControl itemControl = (QuickStripSegmentedButtonControl)sender;
 
-                if (speech.Active)
-                {
-                    // Pause or resume it
-                    speech.TogglePause();
-                }
-                else
-                {
-                    QuickStripSegmentedButtonControl itemControl = (QuickStripSegmentedButtonControl)sender;
-                    itemControl.EnableButton(1, true);
+            switch (e.SelectedIndex)
+            {
+                // Play
+                case 0:
+                    speech.StopSpeaking();
                     
                     // Store the clipboard
                     IDataObject clipboadData = Clipboard.GetDataObject();
@@ -433,13 +437,15 @@ namespace Morphic.Client.QuickStrip
                         await speech.SpeakText(text);
                     }
 
-                    itemControl.EnableButton(1, false);
-                }
-            }
-            else
-            {
+                    break;
+                // Pause
+                case 1 when speech.Active:
+                    speech.TogglePause();
+                    break;
                 // Stop
-                speech.StopSpeaking();
+                case 2 when speech.Active:
+                    speech.StopSpeaking();
+                    break;
             }
         }
 

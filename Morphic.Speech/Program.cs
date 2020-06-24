@@ -30,45 +30,73 @@ namespace Morphic.Speech
     /**
      * Helper program for Morphic.Client. This needs to be in a separate process, because System.Speech.Synthesis
      * is only available in .NET Framework 4.
+     *
+     * Start with the MORPHIC_SPEECH environment variable set to the text to speak. Speech can be controlled on stdin
+     * using "pause", "resume", "toggle", or "stop".
      */
     internal class Program
     {
         public static void Main(string[] args)
         {
             string text = Environment.GetEnvironmentVariable("MORPHIC_SPEECH");
-            if (!string.IsNullOrEmpty(text))
+            if (string.IsNullOrEmpty(text))
+            {
+                Console.WriteLine("MORPHIC_SPEECH is not set");
+                Environment.ExitCode = 1;
+            }
+            else
             {
                 Speak(text);
             }
         }
 
+        private static SpeechSynthesizer speech;
+
+
+        /// <summary>
+        /// Handles the control commands coming from stdin.
+        /// </summary>
+        private static void GetInput()
+        {
+            do
+            {
+                string command = Console.ReadLine();
+                switch (command)
+                {
+                    case "resume" when speech.State == SynthesizerState.Paused:
+                    case "toggle" when speech.State == SynthesizerState.Paused:
+                        speech.Resume();
+                        break;
+                    case "pause" when speech.State == SynthesizerState.Speaking:
+                    case "toggle" when speech.State == SynthesizerState.Speaking:
+                        speech.Pause();
+                        break;
+                    case "stop":
+                        speech.SpeakAsyncCancelAll();
+                        return;
+                }
+            } while (speech.State != SynthesizerState.Ready);
+        }
+
+        /// <summary>
+        /// Start speaking the given text.
+        /// </summary>
+        /// <param name="text">What to say.</param>
         private static void Speak(string text)
         {
-            SpeechSynthesizer speech = new SpeechSynthesizer();
-            speech.SetOutputToDefaultAudioDevice();
+            speech = new SpeechSynthesizer();
 
-            if (EventWaitHandle.TryOpenExisting("morphic-speech", out EventWaitHandle semaphore))
+            speech.SetOutputToDefaultAudioDevice();
+            speech.SpeakAsync(text);
+            speech.SpeakCompleted += (sender, args) => { Environment.Exit(0); };
+
+            Thread inputThread = new Thread(GetInput)
             {
-                Prompt s = speech.SpeakAsync(text);
-                while (!s.IsCompleted)
-                {
-                    if (semaphore.WaitOne(200))
-                    {
-                        if (speech.State == SynthesizerState.Paused)
-                        {
-                            speech.Resume();
-                        }
-                        else
-                        {
-                            speech.Pause();
-                        }
-                    }
-                }
-            }
-            else
-            {
-                speech.Speak(text);
-            }
+                IsBackground = true
+            };
+
+            inputThread.Start();
+            inputThread.Join();
         }
 
     }
