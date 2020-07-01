@@ -269,7 +269,7 @@ namespace Morphic.Service
             return false;
         }
 
-        public virtual async Task<bool> Authenticate(UsernameCredentials credentials)
+        public async Task<bool> Authenticate(UsernameCredentials credentials)
         {
             var auth = await Service.Authenticate(credentials);
             if (auth != null)
@@ -453,7 +453,7 @@ namespace Morphic.Service
         /// Create and run an apply session for the current user's preferences
         /// </summary>
         /// <returns></returns>
-        public virtual async Task ApplyAllPreferences()
+        public async Task ApplyAllPreferences()
         {
             if (Preferences is Preferences preferences)
             {

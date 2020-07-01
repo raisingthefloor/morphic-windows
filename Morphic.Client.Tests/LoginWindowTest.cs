@@ -29,8 +29,8 @@ namespace Morphic.Client.Tests
             options.FrontEnd = "https://www.morphic.world";
             var logger = new NullLogger<LoginWindow>();
             mockSession = new Mock<Session>(options, null, null, null, null, null);
-            mockSession.Setup(x => x.ApplyAllPreferences());
-            mockSession.Setup(x => x.Authenticate(It.IsAny<Core.UsernameCredentials>())).ReturnsAsync((Core.UsernameCredentials credentials) => { return (credentials.Username == "correct" && credentials.Password == "correct"); });
+            //mockSession.Setup(x => x.ApplyAllPreferences());
+            //mockSession.Setup(x => x.Authenticate(It.IsAny<Core.UsernameCredentials>())).ReturnsAsync((Core.UsernameCredentials credentials) => { return (credentials.Username == "correct" && credentials.Password == "correct"); });
             window = new LoginWindow(mockSession.Object, logger, options);
             window.Show();
         }
@@ -141,6 +141,7 @@ namespace Morphic.Client.Tests
         [StaFact]
         public void TestLoginButtonFirstTry()
         {
+            Assert.Equal("Needs an override", "Session");
             var wpeer = new WindowAutomationPeer(window);
             var kids = new List<AutomationPeer>();
             LabelAutomationPeer errorLabel = null;
@@ -212,6 +213,7 @@ namespace Morphic.Client.Tests
         [StaFact]
         public void TestLoginButtonManyTries()
         {
+            Assert.Equal("Needs an override", "Session");
             var wpeer = new WindowAutomationPeer(window);
             var kids = new List<AutomationPeer>();
             LabelAutomationPeer errorLabel = null;
