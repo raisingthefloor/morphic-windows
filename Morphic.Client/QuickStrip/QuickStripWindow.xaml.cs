@@ -40,6 +40,7 @@ using Display = Morphic.Settings.Display;
 
 namespace Morphic.Client.QuickStrip
 {
+    using System.Runtime.InteropServices;
     using System.Windows.Forms;
     using Clipboard = System.Windows.Clipboard;
     using IDataObject = System.Windows.IDataObject;
@@ -445,8 +446,18 @@ namespace Morphic.Client.QuickStrip
                     
                     // Store the clipboard
                     IDataObject clipboadData = Clipboard.GetDataObject();
-                    Dictionary<string, object> dataStored = clipboadData.GetFormats()
-                        .ToDictionary(format => format, format => clipboadData.GetData(format, false));
+                    Dictionary<string, object?> dataStored = clipboadData.GetFormats()
+                        .ToDictionary(format => format, format =>
+                        {
+                            try
+                            {
+                                return clipboadData.GetData(format, false);
+                            }
+                            catch (COMException)
+                            {
+                                return null;
+                            }
+                        });
                     Clipboard.Clear();
 
                     // Get the selection
