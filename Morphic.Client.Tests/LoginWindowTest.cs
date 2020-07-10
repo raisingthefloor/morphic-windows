@@ -11,9 +11,6 @@ using System.Windows.Automation.Peers;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using Xunit;
-using Button = System.Windows.Controls.Button;
-using Label = System.Windows.Controls.Label;
-using TextBox = System.Windows.Controls.TextBox;
 
 namespace Morphic.Client.Tests
 {
@@ -63,7 +60,7 @@ namespace Morphic.Client.Tests
             GetAllChildren(wpeer, kids);
             foreach (var peer in kids)
             {
-                if (peer.GetType() == typeof(LabelAutomationPeer))
+                if (peer is LabelAutomationPeer)
                 {
                     var labelPeer = (LabelAutomationPeer)peer;
                     Assert.IsType<Label>(labelPeer.Owner);
@@ -85,7 +82,7 @@ namespace Morphic.Client.Tests
                         Assert.Equal(System.Windows.Visibility.Hidden, label.Visibility);
                     }
                 }
-                else if (peer.GetType() == typeof(HyperlinkAutomationPeer))
+                else if (peer is HyperlinkAutomationPeer)
                 {
                     var linkPeer = (HyperlinkAutomationPeer)peer;
                     Assert.IsType<Hyperlink>(linkPeer.Owner);
@@ -95,7 +92,7 @@ namespace Morphic.Client.Tests
                         hasForgotPassword = true;
                     }
                 }
-                else if (peer.GetType() == typeof(TextBoxAutomationPeer))
+                else if (peer is TextBoxAutomationPeer)
                 {
                     var tboxPeer = (TextBoxAutomationPeer)peer;
                     Assert.IsType<TextBox>(tboxPeer.Owner);
@@ -106,7 +103,7 @@ namespace Morphic.Client.Tests
                         Assert.Equal("", tbox.Text);
                     }
                 }
-                else if (peer.GetType() == typeof(PasswordBoxAutomationPeer))
+                else if (peer is PasswordBoxAutomationPeer)
                 {
                     var pboxPeer = (PasswordBoxAutomationPeer)peer;
                     Assert.IsType<PasswordBox>(pboxPeer.Owner);
@@ -117,7 +114,7 @@ namespace Morphic.Client.Tests
                         Assert.Equal("", pbox.Password);
                     }
                 }
-                else if (peer.GetType() == typeof(ButtonAutomationPeer))
+                else if (peer is ButtonAutomationPeer)
                 {
                     var buttonPeer = (ButtonAutomationPeer)peer;
                     Assert.IsType<Button>(buttonPeer.Owner);
@@ -151,7 +148,7 @@ namespace Morphic.Client.Tests
             GetAllChildren(wpeer, kids);
             foreach (var peer in kids)
             {
-                if (peer.GetType() == typeof(LabelAutomationPeer))
+                if (peer is LabelAutomationPeer)
                 {
                     var labelPeer = (LabelAutomationPeer)peer;
                     Assert.IsType<Label>(labelPeer.Owner);
@@ -161,7 +158,7 @@ namespace Morphic.Client.Tests
                         errorLabel = labelPeer;
                     }
                 }
-                else if (peer.GetType() == typeof(TextBoxAutomationPeer))
+                else if (peer is TextBoxAutomationPeer)
                 {
                     var tboxPeer = (TextBoxAutomationPeer)peer;
                     Assert.IsType<TextBox>(tboxPeer.Owner);
@@ -171,7 +168,7 @@ namespace Morphic.Client.Tests
                         usernameBox = tboxPeer;
                     }
                 }
-                else if (peer.GetType() == typeof(PasswordBoxAutomationPeer))
+                else if (peer is PasswordBoxAutomationPeer)
                 {
                     var pboxPeer = (PasswordBoxAutomationPeer)peer;
                     Assert.IsType<PasswordBox>(pboxPeer.Owner);
@@ -181,7 +178,7 @@ namespace Morphic.Client.Tests
                         passwordBox = pboxPeer;
                     }
                 }
-                else if (peer.GetType() == typeof(ButtonAutomationPeer))
+                else if (peer is ButtonAutomationPeer)
                 {
                     var buttonPeer = (ButtonAutomationPeer)peer;
                     Assert.IsType<Button>(buttonPeer.Owner);
@@ -223,7 +220,7 @@ namespace Morphic.Client.Tests
             GetAllChildren(wpeer, kids);
             foreach (var peer in kids)
             {
-                if (peer.GetType() == typeof(LabelAutomationPeer))
+                if (peer is LabelAutomationPeer)
                 {
                     var labelPeer = (LabelAutomationPeer)peer;
                     Assert.IsType<Label>(labelPeer.Owner);
@@ -233,7 +230,7 @@ namespace Morphic.Client.Tests
                         errorLabel = labelPeer;
                     }
                 }
-                else if (peer.GetType() == typeof(TextBoxAutomationPeer))
+                else if (peer is TextBoxAutomationPeer)
                 {
                     var tboxPeer = (TextBoxAutomationPeer)peer;
                     Assert.IsType<TextBox>(tboxPeer.Owner);
@@ -243,7 +240,7 @@ namespace Morphic.Client.Tests
                         usernameBox = tboxPeer;
                     }
                 }
-                else if (peer.GetType() == typeof(PasswordBoxAutomationPeer))
+                else if (peer is PasswordBoxAutomationPeer)
                 {
                     var pboxPeer = (PasswordBoxAutomationPeer)peer;
                     Assert.IsType<PasswordBox>(pboxPeer.Owner);
@@ -253,7 +250,7 @@ namespace Morphic.Client.Tests
                         passwordBox = pboxPeer;
                     }
                 }
-                else if (peer.GetType() == typeof(ButtonAutomationPeer))
+                else if (peer is ButtonAutomationPeer)
                 {
                     var buttonPeer = (ButtonAutomationPeer)peer;
                     Assert.IsType<Button>(buttonPeer.Owner);
