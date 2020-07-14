@@ -17,6 +17,7 @@
     <StartupObject>Morphic.Client.AppMain</StartupObject>
     <Company>Raising the Floor</Company>
     <BuildType Condition="'$(BuildType)' == ''">Development</BuildType>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <ItemGroup>
