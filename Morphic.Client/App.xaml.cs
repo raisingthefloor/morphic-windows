@@ -312,7 +312,7 @@ namespace Morphic.Client
         /// </summary>
         private void CreateNotifyIcon()
         {
-            notifyIcon = new System.Windows.Forms.NotifyIcon();
+            notifyIcon = new TrayButton();
             notifyIcon.Click += OnNotifyIconClicked;
             notifyIcon.Icon = Client.Properties.Resources.Icon;
             notifyIcon.Text = "Morphic";
@@ -348,7 +348,7 @@ namespace Morphic.Client
         /// <summary>
         /// The icon in the system tray
         /// </summary>
-        private System.Windows.Forms.NotifyIcon? notifyIcon = null;
+        private TrayButton? notifyIcon = null;
 
         /// <summary>
         /// The main menu shown from the system tray icon
@@ -632,7 +632,7 @@ namespace Morphic.Client
             // Windows doesn't seem to clean up the system tray icon until the user
             // hovers over it after the application closes.  So, we need to make it
             // invisible on app exit ourselves.
-            if (notifyIcon is System.Windows.Forms.NotifyIcon icon)
+            if (notifyIcon is TrayButton icon)
             {
                 icon.Visible = false;
             }
