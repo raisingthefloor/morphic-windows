@@ -19,7 +19,7 @@ namespace Morphic.Client.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -278,7 +278,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Increase Text Size.
+        ///   Looks up a localized string similar to Increase Screen Zoom.
         /// </summary>
         internal static string QuickStrip_Resolution_Bigger_HelpTitle {
             get {
@@ -296,7 +296,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot Increase Text Size.
+        ///   Looks up a localized string similar to Cannot Increase Screen Zoom.
         /// </summary>
         internal static string QuickStrip_Resolution_Bigger_LimitTitle {
             get {
@@ -314,7 +314,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Decrease Text Size.
+        ///   Looks up a localized string similar to Decrease Screen Zoom.
         /// </summary>
         internal static string QuickStrip_Resolution_Smaller_HelpTitle {
             get {
@@ -332,7 +332,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot Decrease Text Size.
+        ///   Looks up a localized string similar to Cannot Decrease Screen Zoom.
         /// </summary>
         internal static string QuickStrip_Resolution_Smaller_LimitTitle {
             get {
@@ -341,7 +341,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Text Size.
+        ///   Looks up a localized string similar to Screen Zoom.
         /// </summary>
         internal static string QuickStrip_Resolution_Title {
             get {
