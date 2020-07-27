@@ -260,7 +260,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Read Text.
+        ///   Looks up a localized string similar to Read Selected.
         /// </summary>
         internal static string QuickStrip_Reader_Title {
             get {
