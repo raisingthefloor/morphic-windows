@@ -263,7 +263,12 @@ namespace Morphic.Client
             morphicKey.SetValue("AutoRun", enabled ? "1" : "0", RegistryValueKind.String);
             if (enabled)
             {
-                runKey.SetValue("Morphic", Process.GetCurrentProcess().MainModule.FileName);
+                string processPath = Process.GetCurrentProcess().MainModule.FileName;
+                // Only add it to the auto-run if running a release.
+                if (!processPath.EndsWith("dotnet.exe"))
+                {
+                    runKey.SetValue("Morphic", processPath);
+                }
             }
             else
             {
