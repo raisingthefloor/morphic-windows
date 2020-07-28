@@ -33,6 +33,8 @@ using Morphic.Client.QuickStrip;
 
 namespace Morphic.Client
 {
+    using System.Windows.Input;
+
     /// <summary>
     /// Interaction logic for QuickStripSegmentedButtonControl.xaml
     /// </summary>
@@ -257,6 +259,12 @@ namespace Morphic.Client
             {
                 MouseEnter += OnMouseEnter;
                 MouseLeave += OnMouseLeave;
+                GotKeyboardFocus += OnGotKeyboardFocus;
+            }
+
+            private void OnGotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+            {
+                UpdateHelp();
             }
 
             /// <summary>
