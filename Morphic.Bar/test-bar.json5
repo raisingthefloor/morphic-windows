@@ -1,0 +1,168 @@
+{
+  id: "the id",
+  name: "not the name",
+  position: {
+    docked: null,
+    x: "Left",
+    y: "Middle"
+  },
+  barTheme: {
+    background: "#fff",
+    borderColor: "#000",
+    borderSize: 1
+  },
+  itemTheme: {
+    color: "white",
+    background: "#002957",
+    focus: {
+      borderColor: '#008145',
+      borderSize: 5
+    },
+    hover: {
+      borderColor: '#00E078',
+      background: "#005BC1"
+    },
+    active: {
+      background: "#2B8FFF"
+    }
+  },
+  items: [
+    {
+      id: "dropbox-homedir-button",
+      category: "cloud-drive-home-location",
+      kind: "button",
+      label: "Dropbox Home Folder",
+      popupText: "Opens your Dropbox",
+      description: "",
+      value: {
+        icon: "",
+        action: {
+          type: "web",
+          data: "https://www.dropbox.com/h"
+        }
+      }
+    },
+    {
+      id: "googledrive-homedir-button",
+      category: "cloud-drive-home-location",
+      kind: "button",
+      // platform specific values
+      label: "unknown platform",
+      label$win: "Google Drive Home",
+      label$mac: "mac implementation is ready",
+      popupText: "popupText",
+      description: "description",
+      theme: {
+        color: "black",
+        background: "#f00",
+        hover: {
+          background: "#0ff",
+          borderSize: 5,
+          borderColor: "red"
+        },
+        active: {
+          borderColor: "gold"
+        }
+      },
+      value: {
+        icon: "",
+        action$win: {
+          type: "web",
+          data: "https://drive.google.com/drive/my-drive"
+        },
+        action: {
+          type: "web",
+          data: "unknown platform"
+        }
+      }
+    },
+    {
+      id: "icloudfiles-homedir-button",
+      category: "icloudfiles-home-location",
+      kind: "button",
+      label: "iCloud Files Home Folder",
+      popupText: "Opens your iCloud Files",
+      description: "",
+      value: {
+        icon: "",
+        action: {
+          type: "web",
+          data: "https://www.icloud.com/iclouddrive/"
+        }
+      }
+    },
+    {
+      id: "box-homedir-button",
+      category: "box-home-location",
+      kind: "button",
+      label: "Box Home Folder",
+      popupText: "Opens your Box Home Folder",
+      description: "",
+      value: {
+        icon: "",
+        action: {
+          type: "web",
+          data: "https://www.box.com"
+          // TODO This URL needs to be more specific
+        }
+      }
+    },
+    {
+      id: "onedrive-homedir-button",
+      category: "onedrive-home-location",
+      kind: "button",
+      label: "One Drive Folder",
+      popupText: "Opens your Microsoft One Drive Home Folder",
+      description: "",
+      value: {
+        icon: "",
+        action: {
+          type: "web",
+          data: "https://onedrive.live.com/?id=root"
+        }
+      }
+    },
+    {
+      kind: "button",
+      label: "DPI high (gpii)",
+      description: "",
+      value: {
+        icon: "",
+        action: {
+          type: "gpii",
+          data: {
+            "type": "modelChanged",
+            value: {
+              settingControls: {
+                "http://registry\\.gpii\\.net/common/DPIScale": {
+                  value: 2
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      kind: "button",
+      label: "DPI low (gpii)",
+      description: "",
+      value: {
+        icon: "",
+        action: {
+          type: "gpii",
+          data: {
+            "type": "modelChanged",
+            value: {
+              settingControls: {
+                "http://registry\\.gpii\\.net/common/DPIScale": {
+                  value: 0
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

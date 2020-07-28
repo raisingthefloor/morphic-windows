@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <UseWPF>true</UseWPF>
+        <Nullable>enable</Nullable>
+        <AssemblyName>Morphic.Bar</AssemblyName>
+        <PublishTrimmed>true</PublishTrimmed>
+        <Platforms>AnyCPU;x64</Platforms>
+        <VersionPrefix>1.0$(VersionBuildComponents)</VersionPrefix>
+        <Company>Raising the Floor</Company>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Content Include="test-bar.json5">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    </ItemGroup>
+
+</Project>
