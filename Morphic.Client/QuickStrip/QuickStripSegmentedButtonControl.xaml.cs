@@ -177,6 +177,7 @@ namespace Morphic.Client
             // contrast wit the white text for users who need high contrast.  So we're now
             // using only the primary style and adding a space in between the buttons 
             button.Style = CreatePrimaryButtonStyle();
+            button.FocusVisualStyle = this.Resources["ButtonFocusStyle"] as Style;
             button.Content = content;
             button.HelpBuilder = helpBuilder;
             AutomationProperties.SetName(button, automationName);
