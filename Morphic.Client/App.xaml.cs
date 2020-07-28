@@ -56,6 +56,8 @@ using Morphic.Settings.Files;
 
 namespace Morphic.Client
 {
+    using System.Diagnostics;
+    using Microsoft.Win32;
 
     public class AppMain
     {
@@ -224,6 +226,51 @@ namespace Morphic.Client
             StartCheckingForUpdates();
             var task = OpenSession();
             task.ContinueWith(SessionOpened, TaskScheduler.FromCurrentSynchronizationContext());
+        }
+
+        /// <summary>
+        /// Makes the application automatically start at login.
+        /// </summary>
+        /// <param name="itemIsChecked"></param>
+        private bool ConfigureAutoRun(bool? newValue = null)
+        {
+            bool enabled;
+            using RegistryKey morphicKey =
+                Registry.CurrentUser.CreateSubKey(@"Software\Raising the Floor\Morphic")!;
+            using RegistryKey runKey =
+                Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run")!;
+
+            if (newValue == null)
+            {
+                // Get the configured value
+                object value = morphicKey.GetValue("AutoRun");
+                if (value == null)
+                {
+                    // This might be the first time running, enable auto-run by default.
+                    enabled = true;
+                }
+                else
+                {
+                    // Respect the system setting (it was probably removed on purpose).
+                    enabled = runKey.GetValue("Morphic") != null;
+                }
+            }
+            else
+            {
+                enabled = (bool)newValue;
+            }
+
+            morphicKey.SetValue("AutoRun", enabled ? "1" : "0", RegistryValueKind.String);
+            if (enabled)
+            {
+                runKey.SetValue("Morphic", Process.GetCurrentProcess().MainModule.FileName);
+            }
+            else
+            {
+                runKey.DeleteValue("Morphic", false);
+            }
+
+            return enabled;
         }
 
         private void Session_UserChanged(object? sender, EventArgs e)
@@ -446,6 +493,22 @@ namespace Morphic.Client
         {
             Countly.RecordEvent("Quit");
             App.Shared.Shutdown();
+        }
+
+        private void AutoRunInit(object? sender, EventArgs e)
+        {
+            if (sender is MenuItem item)
+            {
+                item.IsChecked = this.ConfigureAutoRun();
+            }
+        }
+
+        private void AutoRunToggle(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem item)
+            {
+                this.ConfigureAutoRun(item.IsChecked);
+            };
         }
 
         #endregion
