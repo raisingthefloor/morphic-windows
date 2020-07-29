@@ -1,0 +1,45 @@
+{
+  position: {
+    docked: null,
+    x: "Left",
+    y: "Middle"
+  },
+  barTheme: {
+    background: "#0f0",
+    borderColor: "#000",
+    borderSize: 1,
+  },
+  itemTheme: {
+    color: 'white',
+    background: "#002957",
+    focus: {
+      borderColor: '#008145',
+      borderSize: 5
+    },
+    hover: {
+      borderColor: '#00E078',
+      background: "#005BC1"
+    },
+    active: {
+      background: "#2B8FFF"
+    }
+  },
+  items: [
+    {
+      id: "dropbox-homedir-button2",
+      category: "cloud-drive-home-location",
+      kind: "button",
+      label: "Dropbox Home Folder 2",
+      popupText: "Opens your Dropbox",
+      description: "",
+      priority: -10,
+      value: {
+        icon: "",
+        action: {
+          type: "web",
+          data: "https://www.dropbox.com/h"
+        }
+      }
+    },
+  ]
+}

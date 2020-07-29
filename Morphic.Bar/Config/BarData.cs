@@ -40,14 +40,14 @@ namespace Morphic.Bar.Config
         /// <summary>
         /// Base theme for bar items - items will take values from this if they haven't got their own.
         /// </summary>
-        [JsonProperty("itemTheme", ObjectCreationHandling = ObjectCreationHandling.Replace)]
-        public BarItemTheme DefaultTheme { get; set; } = new BarItemTheme(Theme.Undefined());
+        [JsonProperty("itemTheme", ObjectCreationHandling = ObjectCreationHandling.Reuse)]
+        public BarItemTheme DefaultTheme { get; set; } = new BarItemTheme();
         
         /// <summary>
         /// Theme for the bar.
         /// </summary>
-        [JsonProperty("barTheme", ObjectCreationHandling = ObjectCreationHandling.Replace)]
-        public Theme BarTheme { get; set; } = Theme.Undefined();
+        [JsonProperty("barTheme", ObjectCreationHandling = ObjectCreationHandling.Reuse)]
+        public Theme BarTheme { get; set; } = new Theme();
         
         /// <summary>
         /// Gets all items.
@@ -58,26 +58,32 @@ namespace Morphic.Bar.Config
         /// <summary>
         /// Gets the items for the main bar.
         /// </summary>
-        public IEnumerable<BarItem> BarItems => this.AllItems.Where(item => !item.Hidden && !item.IsExtra);
+        public IEnumerable<BarItem> BarItems => this.AllItems.Where(item => !item.Hidden && !item.IsExtra).OrderByDescending(item => item.Priority);
         
         /// <summary>
         /// Gets the items for the additional buttons.
         /// </summary>
-        public IEnumerable<BarItem> ExtraItems => this.AllItems.Where(item => !item.Hidden && item.IsExtra);
+        public IEnumerable<BarItem> ExtraItems => this.AllItems.Where(item => !item.Hidden && item.IsExtra).OrderByDescending(item => item.Priority);
 
         /// <summary>
         /// Generates the bar from a json string.
         /// </summary>
         /// <param name="json"></param>
+        /// <param name="includeDefault">true to also include the default bar data.</param>
         /// <returns></returns>
-        public static BarData FromJson(string json)
+        public static BarData FromJson(string json, bool includeDefault = true)
         {
-            return BarJson.FromJson(json);
+            string defaultFile = App.GetFile("default-bar.json5");
+            
+            BarData? defaultBar = includeDefault && File.Exists(defaultFile)
+                ? BarData.FromFile(defaultFile, false)
+                : null;
+            return BarJson.FromJson(json, defaultBar);
         }
 
-        public static BarData FromFile(string jsonFile)
+        public static BarData FromFile(string jsonFile, bool includeDefault = true)
         {
-            return BarData.FromJson(File.ReadAllText(jsonFile));
+            return BarData.FromJson(File.ReadAllText(jsonFile), includeDefault);
         }
     }
 }

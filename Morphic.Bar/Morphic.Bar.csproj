@@ -13,6 +13,9 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <Content Include="default-bar.json5">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
       <Content Include="test-bar.json5">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>

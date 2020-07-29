@@ -20,11 +20,23 @@ namespace Morphic.Bar.Config
 
     public static class BarJson
     {
-        public static BarData FromJson(string json)
+        public static BarData FromJson(string json, BarData? existingBar = null)
         {
             JsonSerializerSettings settings = new JsonSerializerSettings();
-            BarData bar = JsonSerializer.Create(settings)
-                .Deserialize<BarData>(new BarJsonTextReader(new StringReader(json), "win"))!;
+            
+            JsonSerializer jsonSerializer = JsonSerializer.Create(settings);
+            BarJsonTextReader barJsonTextReader = new BarJsonTextReader(new StringReader(json), "win");
+
+            BarData bar;
+            if (existingBar == null)
+            {
+                bar = jsonSerializer.Deserialize<BarData>(barJsonTextReader)!;
+            }
+            else
+            {
+                bar = existingBar;
+                jsonSerializer.Populate(barJsonTextReader, bar);
+            }
 
             bar.BarTheme.Apply(Theme.DefaultBar());
             
@@ -186,7 +198,7 @@ namespace Morphic.Bar.Config
         {
             JsonPropertyAttribute attribute = property.GetCustomAttributes<JsonPropertyAttribute>(true)
                 .FirstOrDefault();
-            return attribute.PropertyName ?? property.Name;
+            return attribute?.PropertyName ?? property.Name;
         }
 
         /// <summary>

@@ -23,15 +23,15 @@ namespace Morphic.Bar.Config
     {
         /// <summary>The theme for when the mouse is over the item.</summary>
         [JsonProperty("hover", ObjectCreationHandling = ObjectCreationHandling.Replace)]
-        public Theme Hover { get; set; } = Theme.Undefined();
+        public Theme Hover { get; set; } = new Theme();
         
         /// <summary>The theme for when the item has keyboard focus.</summary>
         [JsonProperty("focus", ObjectCreationHandling = ObjectCreationHandling.Replace)]
-        public Theme Focus { get; set; } = Theme.Undefined();
+        public Theme Focus { get; set; } = new Theme();
 
         /// <summary>The theme for when the item is being clicked (mouse is down).</summary>
         [JsonProperty("active", ObjectCreationHandling = ObjectCreationHandling.Replace)]
-        public Theme Active { get; set; } = Theme.Undefined();
+        public Theme Active { get; set; } = new Theme();
 
         public BarItemTheme()
         {
@@ -104,11 +104,6 @@ namespace Morphic.Bar.Config
                 Background = ColorConverter.ConvertFromString("#002957") as Color?,
                 TextColor = Colors.White
             };
-        }
-
-        public static Theme Undefined()
-        {
-            return new Theme() {IsUndefined = true};
         }
 
         /// <summary>

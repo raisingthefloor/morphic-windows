@@ -59,6 +59,12 @@ namespace Morphic.Bar.Config
         public BarItemTheme Theme { get; set; } = new BarItemTheme();
 
         /// <summary>
+        /// Items are sorted by this.
+        /// </summary>
+        [JsonProperty("priority")]
+        public int Priority { get; set; }
+
+        /// <summary>
         /// The type of control used. This is specified by using BarControl attribute in a subclass of this.
         /// </summary>
         public Type ControlType => this.GetType().GetCustomAttribute<BarControlAttribute>()?.Type!;
