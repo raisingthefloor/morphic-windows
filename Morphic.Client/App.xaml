@@ -15,6 +15,7 @@
             <MenuItem x:Name="logoutItem" Header="Logout" Click="Logout" Visibility="Collapsed"/>
             <Separator/>
             <MenuItem Header="About Morphic..." Click="About"/>
+            <MenuItem Header="Always start Morphic" Unchecked="AutoRunToggle" Checked="AutoRunToggle" IsCheckable="True" Initialized="AutoRunInit" />
             <MenuItem Header="Quit Morphic" Click="Quit"/>
         </ContextMenu>
     </Application.Resources>
