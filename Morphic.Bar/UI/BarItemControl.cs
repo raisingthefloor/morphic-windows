@@ -14,7 +14,7 @@ namespace Morphic.Bar.UI
     using System.ComponentModel;
     using System.Runtime.CompilerServices;
     using System.Windows.Input;
-    using Config;
+    using Bar;
     using UserControl = System.Windows.Controls.UserControl;
 
     /// <summary>

@@ -8,7 +8,7 @@
 // You may obtain a copy of the License at
 // https://github.com/GPII/universal/blob/master/LICENSE.txt
 
-namespace Morphic.Bar.Config
+namespace Morphic.Bar.Bar
 {
     using System;
     using System.Runtime.CompilerServices;
@@ -16,7 +16,7 @@ namespace Morphic.Bar.Config
     using System.Windows.Controls;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Converters;
-    using UI.AppBar;
+    using UI.AppBarWindow;
 
     /// <summary>
     /// The position of a bar.

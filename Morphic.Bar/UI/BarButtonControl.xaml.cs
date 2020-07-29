@@ -11,7 +11,7 @@
 namespace Morphic.Bar.UI
 {
     using System.Windows;
-    using Config;
+    using Bar;
 
     /// <summary>
     /// The control for Button bar items.

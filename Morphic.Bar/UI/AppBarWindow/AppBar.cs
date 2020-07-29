@@ -1,3 +1,5 @@
+// AppBar.cs: Lets a window be dragged and docked.
+//
 // Copyright 2020 Raising the Floor - International
 //
 // Licensed under the New BSD license. You may not use this file except in
@@ -6,7 +8,7 @@
 // You may obtain a copy of the License at
 // https://github.com/GPII/universal/blob/master/LICENSE.txt
 
-namespace Morphic.Bar.UI.AppBar
+namespace Morphic.Bar.UI.AppBarWindow
 {
     using System;
     using System.Collections.Generic;
@@ -15,6 +17,9 @@ namespace Morphic.Bar.UI.AppBar
     using System.Windows.Controls;
     using System.Windows.Input;
 
+    /// <summary>
+    /// Makes a Window become a draggable "app bar" window which can be snapped or docked to the desktop edges.
+    /// </summary>
     public class AppBar
     {
         private readonly Window window;
@@ -26,11 +31,6 @@ namespace Morphic.Bar.UI.AppBar
         public Edge AppBarEdge { get; private set; } = Edge.None;
         public bool EnableDocking { get; set; } = true;
 
-        /// <summary>A callback that returns a good height from a given width.</summary>
-        public Func<double, double>? GetHeightFromWidth { get; set; }
-        /// <summary>A callback that returns a good width from a given height.</summary>
-        public Func<double, double>? GetWidthFromHeight { get; set; }
-
         public bool SnapToEdges { get; set; } = true;
 
         public event EventHandler<EdgeChangedEventArgs>? EdgeChanged;
@@ -41,6 +41,11 @@ namespace Morphic.Bar.UI.AppBar
         
         public AppBar(Window window, WindowMovement windowMovement)
         {
+            if (!(window is IAppBarWindow))
+            {
+                throw new ArgumentException($"The window must implement {nameof(IAppBarWindow)}.", nameof(window));
+            }
+            
             this.window = window;
             this.windowMovement = windowMovement;
             this.api = new AppBarApi(this.windowMovement);
@@ -78,47 +83,43 @@ namespace Morphic.Bar.UI.AppBar
         public Size GetGoodSize(Size size, Orientation priority, bool inPixels = false)
         {
             bool changed = false;
-            Size newSize;
-            if (this.GetHeightFromWidth != null || this.GetWidthFromHeight != null)
+            Size newSize = inPixels ? this.FromPixels(size) : size;
+
+            void GetHeight()
             {
-                newSize = inPixels ? this.FromPixels(size) : size;
-
-                void GetHeight()
+                if (this.AppBarEdge != Edge.Left)
                 {
-                    if (this.GetHeightFromWidth != null && this.AppBarEdge != Edge.Left)
+                    double newHeight = ((IAppBarWindow)this.window).GetHeightFromWidth(newSize.Width);
+                    if (!double.IsNaN(newHeight))
                     {
-                        double newHeight = this.GetHeightFromWidth(newSize.Width);
-                        if (!double.IsNaN(newHeight))
-                        {
-                            newSize.Height = newHeight;
-                            changed = true;
-                        }
+                        newSize.Height = newHeight;
+                        changed = true;
                     }
                 }
+            }
 
-                void GetWidth()
+            void GetWidth()
+            {
+                if (this.AppBarEdge != Edge.Top)
                 {
-                    if (this.GetWidthFromHeight != null)
+                    double newWidth = ((IAppBarWindow)this.window).GetWidthFromHeight(newSize.Height);
+                    if (!double.IsNaN(newWidth))
                     {
-                        double newWidth = this.GetWidthFromHeight(newSize.Height);
-                        if (!double.IsNaN(newWidth))
-                        {
-                            newSize.Width = newWidth;
-                            changed = true;
-                        }
+                        newSize.Width = newWidth;
+                        changed = true;
                     }
                 }
+            }
 
-                if (priority == Orientation.Horizontal)
-                {
-                    GetHeight();
-                    GetWidth();
-                }
-                else
-                {
-                    GetWidth();
-                    GetHeight();
-                }
+            if (priority == Orientation.Horizontal)
+            {
+                GetHeight();
+                GetWidth();
+            }
+            else
+            {
+                GetWidth();
+                GetHeight();
             }
 
             return changed
@@ -434,6 +435,16 @@ namespace Morphic.Bar.UI.AppBar
         }
     }
 
+    public interface IAppBarWindow
+    {
+        /// <summary>A callback that returns a good height from a given width.</summary>
+        public double GetHeightFromWidth(double width);
+
+        /// <summary>A callback that returns a good width from a given height.</summary>
+        public double GetWidthFromHeight(double height);
+
+    }
+    
     public class EdgeChangedEventArgs : EventArgs
     {
         public EdgeChangedEventArgs(Edge edge, bool preview)
@@ -450,7 +461,5 @@ namespace Morphic.Bar.UI.AppBar
         /// true if the current change is only a preview, the desktop reservation has not yet been applied.
         /// </summary>
         public bool Preview { get; }
-        
-        
     }
 }

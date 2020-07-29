@@ -23,15 +23,15 @@ namespace Morphic.Bar.UI
     using System.Windows.Data;
     using System.Windows.Media;
     using System.Windows.Shell;
-    using AppBar;
-    using Config;
+    using AppBarWindow;
+    using Bar;
 
     /// <summary>
     /// The window for the main bar.
     /// </summary>
-    public partial class BarWindow : Window, INotifyPropertyChanged
+    public partial class BarWindow : Window, INotifyPropertyChanged, IAppBarWindow
     {
-        private readonly AppBar.AppBar appBar;
+        private readonly AppBar appBar;
         private BarData bar;
 
         private string barFile = string.Empty;
@@ -44,17 +44,17 @@ namespace Morphic.Bar.UI
         public BarWindow(BarData? barData, bool isPullout)
         {
             this.IsPullout = isPullout;
-            this.appBar = new AppBar.AppBar(this)
+            this.appBar = new AppBar(this)
             {
                 EnableDocking = !this.IsPullout
             };
 
             this.bar = barData ?? new BarData();
             this.DataContext = this;
-            
+
             // Move it off the screen until it's loaded.
             this.Left = -0xffff;
-            
+
             this.InitializeComponent();
 
             // Accept bar files to be dropped.
@@ -69,12 +69,6 @@ namespace Morphic.Bar.UI
                 }
             };
 
-            // Tell the app bar to ask the bar control for a good size.
-            this.appBar.GetHeightFromWidth = (width)
-                => this.BarControl.GetHeightFromWidth(width - this.ExtraWidth) + this.ExtraHeight;
-            this.appBar.GetWidthFromHeight = (height)
-                => this.BarControl.GetWidthFromHeight(height - this.ExtraHeight) + this.ExtraWidth;
-
             this.BarControl.BarLoaded += this.OnBarLoaded;
             this.appBar.EdgeChanged += this.AppBarOnEdgeChanged;
 
@@ -88,8 +82,14 @@ namespace Morphic.Bar.UI
                     "test-bar.json5"));
         }
 
+        /// <summary>
+        /// true if this is the pullout bar.
+        /// </summary>
         public bool IsPullout { get; }
 
+        /// <summary>
+        /// The bar for which this bar window is displaying.
+        /// </summary>
         public BarData Bar
         {
             get => this.bar;
@@ -143,7 +143,7 @@ namespace Morphic.Bar.UI
         private Orientation GetBestOrientation(Edge appBarEdge)
         {
             Orientation orientation = Orientation.Horizontal;
-            
+
             if (appBarEdge == Edge.Left || appBarEdge == Edge.Right)
             {
                 // Always vertical when docked on a side.
@@ -162,11 +162,13 @@ namespace Morphic.Bar.UI
             else
             {
                 // Guess a direction, if it's touching an edge
-                if (this.Bar.Position.X == 0 || (this.Bar.Position.XIsRelative && Math.Abs(this.Bar.Position.X - 1) < 0.1))
+                if (this.Bar.Position.X == 0 ||
+                    (this.Bar.Position.XIsRelative && Math.Abs(this.Bar.Position.X - 1) < 0.1))
                 {
                     orientation = Orientation.Vertical;
                 }
-                else if (this.Bar.Position.Y == 0 || (this.Bar.Position.YIsRelative && Math.Abs(this.Bar.Position.Y - 1) < 0.1))
+                else if (this.Bar.Position.Y == 0 ||
+                         (this.Bar.Position.YIsRelative && Math.Abs(this.Bar.Position.Y - 1) < 0.1))
                 {
                     orientation = Orientation.Horizontal;
                 }
@@ -187,7 +189,7 @@ namespace Morphic.Bar.UI
             // Remove the resizable area, and window borders, on the sides which are against the screen edges.
             WindowChrome chrome = WindowChrome.GetWindowChrome(this);
             this.initialResizeBorder ??= chrome.ResizeBorderThickness;
-            
+
             // Make sure the size is not below the system defined width.
             Thickness resize = this.initialResizeBorder.Value;
             resize.Left = Math.Max(resize.Left, this.BorderThickness.Left + 1);
@@ -277,8 +279,18 @@ namespace Morphic.Bar.UI
         {
             this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+        double IAppBarWindow.GetHeightFromWidth(double width)
+        {
+            return this.BarControl.GetHeightFromWidth(width - this.ExtraWidth) + this.ExtraHeight;
+        }
+
+        double IAppBarWindow.GetWidthFromHeight(double height)
+        {
+            return this.BarControl.GetWidthFromHeight(height - this.ExtraHeight) + this.ExtraWidth;
+        }
     }
-    
+
     /// <summary>
     /// Converter which returns a value depending on whether or not the input value is false/null.
     /// </summary>

@@ -17,7 +17,7 @@ namespace Morphic.Bar.UI
     using System.Runtime.CompilerServices;
     using System.Windows;
     using System.Windows.Controls;
-    using Config;
+    using Bar;
 
     /// <summary>
     /// This is the thing that contains bar items.
@@ -72,7 +72,7 @@ namespace Morphic.Bar.UI
         {
             this.RemoveItems();
             this.Bar = bar;
-            this.LoadItems(this.Bar.AllItems);
+            this.LoadItems(this.Bar.BarItems);
         }
 
         public void RemoveItems()

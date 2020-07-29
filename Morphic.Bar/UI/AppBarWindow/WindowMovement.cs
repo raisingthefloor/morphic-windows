@@ -8,7 +8,7 @@
 // You may obtain a copy of the License at
 // https://github.com/GPII/universal/blob/master/LICENSE.txt
 
-namespace Morphic.Bar.UI.AppBar
+namespace Morphic.Bar.UI.AppBarWindow
 {
     using System;
     using System.Windows;
