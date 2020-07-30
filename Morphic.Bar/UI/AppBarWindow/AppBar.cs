@@ -33,6 +33,7 @@ namespace Morphic.Bar.UI.AppBarWindow
         public bool EnableDocking { get; set; } = true;
 
         public bool SnapToEdges { get; set; } = true;
+        public bool Draggable { get; set; } = true;
 
         public event EventHandler<EdgeChangedEventArgs>? EdgeChanged;
         
@@ -403,7 +404,7 @@ namespace Morphic.Bar.UI.AppBarWindow
         /// <param name="args"></param>
         private void OnPreviewMouseMove(object sender, MouseEventArgs args)
         {
-            if (args.LeftButton == MouseButtonState.Pressed)
+            if (this.Draggable && args.LeftButton == MouseButtonState.Pressed)
             {
                 Point point = args.GetPosition(this.window);
 
@@ -422,7 +423,7 @@ namespace Morphic.Bar.UI.AppBarWindow
         /// <param name="args"></param>
         private void OnPreviewMouseDown(object sender, MouseButtonEventArgs args)
         {
-            if (args.LeftButton == MouseButtonState.Pressed)
+            if (this.Draggable && args.LeftButton == MouseButtonState.Pressed)
             {
                 this.mouseDownPos = args.GetPosition(this.window);
             }
