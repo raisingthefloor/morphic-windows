@@ -2,6 +2,7 @@
 using Morphic.Settings;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace Morphic.ManualTester
 {
@@ -16,6 +17,8 @@ namespace Morphic.ManualTester
         public Preferences.Key key;
         private MainWindow window;
         public bool changed;
+        private Brush greenfield = new SolidColorBrush(Color.FromArgb(30, 0, 176, 0));
+        private Brush whitefield = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
         public ManualControlBoolean(MainWindow window, SettingsManager manager, string solutionId, Setting setting)
         {
             InitializeComponent();
@@ -25,27 +28,32 @@ namespace Morphic.ManualTester
             this.setting = setting;
             key = new Preferences.Key(solutionId, setting.Name);
             ControlName.Text = setting.Name;
-            CheckValue();
+            CaptureSetting();
         }
 
         private void ValueChanged(object sender, RoutedEventArgs e)
         {
             changed = true;
+            ControlCheckBox.Background = greenfield;
             if (window.AutoApply) ApplySetting();
         }
 
-        private async void CheckValue()
+        public async void CaptureSetting()
         {
+            LoadingIcon.Visibility = Visibility.Visible;
+            ControlCheckBox.Background = whitefield;
             bool? check = await manager.CaptureBool(key);
             ControlCheckBox.IsChecked = check;
+            LoadingIcon.Visibility = Visibility.Hidden;
         }
 
         public async void ApplySetting()
         {
             if (!changed) return;
             changed = false;
+            ControlCheckBox.Background = whitefield;
             bool success = await manager.Apply(key, ControlCheckBox.IsChecked);
-            if (!success) CheckValue();
+            if (!success) CaptureSetting();
         }
     }
 }

@@ -12,8 +12,9 @@
                 <DockPanel HorizontalAlignment="Stretch" VerticalAlignment="Top" Width="600">
                     <TextBlock Name="ControlName" DockPanel.Dock="Left"/>
                     <DockPanel DockPanel.Dock="Right" HorizontalAlignment="Right">
+                        <Image Name ="LoadingIcon" Source="pack://application:,,,/Hourglass.png" Height="20" Margin="5,0,5,0" Visibility="Hidden"/>
                         <TextBlock Text="Boolean:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
-                        <CheckBox Name="ControlCheckBox" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5,0,20,0" Checked="ValueChanged" Unchecked="ValueChanged"/>
+                        <CheckBox Name="ControlCheckBox" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5,0,20,0" Click="ValueChanged"/>
                     </DockPanel>
                 </DockPanel>
             </TreeViewItem.Header>

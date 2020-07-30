@@ -27,7 +27,7 @@ namespace Morphic.ManualTester
         private ILogger<MainWindow> logger = null!;
         public string fileContent = "";
         public string filePath = "";
-        public bool AutoApply { get { return (AutoApplyToggle.IsChecked != null) ? (bool)AutoApplyToggle.IsChecked : false; } }
+        public bool AutoApply = true;
 
         public MainWindow()
         {
@@ -84,6 +84,7 @@ namespace Morphic.ManualTester
             ConfigureServices(collection);
             ServiceProvider = collection.BuildServiceProvider();
             logger = ServiceProvider.GetRequiredService<ILogger<MainWindow>>();
+            LoadNewRegistry(new object(), new RoutedEventArgs());
         }
 
         private async void LoadNewRegistry(object sender, RoutedEventArgs e)
@@ -117,6 +118,23 @@ namespace Morphic.ManualTester
                     var feature = new TextBlock();
                     feature.Text = "AN ERROR HAS OCCURRED. TRY A DIFFERENT FILE";
                     this.SettingsList.Items.Add(feature);
+                }
+            }
+        }
+
+        private void ToggleAutoApply(object sender, RoutedEventArgs e)
+        {
+            if((AutoApplyToggle.IsChecked) != null && ApplySettings != null)
+            {
+                if((bool)AutoApplyToggle.IsChecked)
+                {
+                    this.AutoApply = true;
+                    ApplySettings.Visibility = Visibility.Hidden;
+                }
+                else
+                {
+                    this.AutoApply = false;
+                    ApplySettings.Visibility = Visibility.Visible;
                 }
             }
         }
