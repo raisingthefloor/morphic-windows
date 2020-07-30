@@ -12,6 +12,7 @@
                 <DockPanel Margin="0,5,0,0" HorizontalAlignment="Stretch" Width="600">
                     <TextBlock Name="ControlName"/>
                     <DockPanel DockPanel.Dock="Right" HorizontalAlignment="Right">
+                        <Image Name ="LoadingIcon" Source="pack://application:,,,/Hourglass.png" Height="20" Margin="5,0,5,0" Visibility="Hidden"/>
                         <TextBlock Text="Integer:" VerticalAlignment="Center"/>
                         <TextBox Name="InputField" VerticalAlignment="Center" Margin="5,0,20,0" Width="100" LostFocus="ValueChanged" KeyDown="EnterCheck"/>
                     </DockPanel>

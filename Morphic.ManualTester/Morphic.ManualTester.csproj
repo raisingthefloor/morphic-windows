@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Hourglass.png" />
     <None Remove="Icon.png" />
   </ItemGroup>
 
@@ -24,6 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Hourglass.png" />
     <Resource Include="Icon.png" />
   </ItemGroup>
 

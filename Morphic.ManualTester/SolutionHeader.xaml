@@ -7,6 +7,13 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
-        <TreeViewItem Name="ControlStack" Header="SOLUTION" FontSize="20" FontWeight="Bold" HorizontalAlignment="Stretch" TreeViewItem.Expanded="ControlStack_Expanded" TreeViewItem.Collapsed="ControlStack_Collapsed"/>
+        <TreeViewItem Name="ControlStack" FontSize="20" FontWeight="Bold" HorizontalAlignment="Stretch" TreeViewItem.Expanded="ControlStack_Expanded" TreeViewItem.Collapsed="ControlStack_Collapsed">
+            <TreeViewItem.Header>
+                <DockPanel HorizontalAlignment="Stretch" Width="650">
+                    <Label Name="SolutionTitle" DockPanel.Dock="Left"  Content="SOLUTION HEADER"/>
+                    <Button Name="RefreshButton" HorizontalAlignment="Right" VerticalAlignment="Center" Content="Refresh" Click="Refresh_Click" FontSize="14" DockPanel.Dock="Right" Visibility="Hidden"/>
+                </DockPanel>
+            </TreeViewItem.Header>
+        </TreeViewItem>
     </Grid>
 </UserControl>

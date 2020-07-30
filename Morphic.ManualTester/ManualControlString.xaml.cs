@@ -4,6 +4,7 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace Morphic.ManualTester
 {
@@ -18,6 +19,8 @@ namespace Morphic.ManualTester
         public Preferences.Key key;
         private MainWindow window;
         public Boolean changed = false;
+        private Brush greenfield = new SolidColorBrush(Color.FromArgb(30, 0, 176, 0));
+        private Brush whitefield = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
         public ManualControlString(MainWindow window, SettingsManager manager, string solutionId, Setting setting)
         {
             InitializeComponent();
@@ -27,16 +30,19 @@ namespace Morphic.ManualTester
             this.setting = setting;
             key = new Preferences.Key(solutionId, setting.Name);
             ControlName.Text = setting.Name;
-            CheckValue();
+            CaptureSetting();
         }
 
-        private async void CheckValue()
+        public async void CaptureSetting()
         {
+            LoadingIcon.Visibility = Visibility.Visible;
             InputField.Text = "";
             if (await manager.Capture(key) is string value)
             {
                 InputField.Text = value;
             }
+            InputField.Background = whitefield;
+            LoadingIcon.Visibility = Visibility.Hidden;
         }
 
         private void EnterCheck(object sender, System.Windows.Input.KeyEventArgs e)
@@ -44,6 +50,7 @@ namespace Morphic.ManualTester
             if (e.Key == Key.Enter)
             {
                 changed = true;
+                InputField.Background = greenfield;
                 if (window.AutoApply) ApplySetting();
             }
         }
@@ -51,6 +58,7 @@ namespace Morphic.ManualTester
         private void ValueChanged(object sender, RoutedEventArgs e)
         {
             changed = true;
+            InputField.Background = greenfield;
             if (window.AutoApply) ApplySetting();
         }
 
@@ -58,8 +66,9 @@ namespace Morphic.ManualTester
         {
             if (!changed) return;
             changed = false;
+            InputField.Background = whitefield;
             bool success = await manager.Apply(key, InputField.Text);
-            if (!success) CheckValue();
+            if (!success) CaptureSetting();
         }
     }
 }
