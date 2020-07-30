@@ -20,17 +20,23 @@ namespace Morphic.Bar.Bar
 
     public static class BarJson
     {
-        public static BarData FromJson(string json, BarData? existingBar = null)
+        public static BarData? FromJson(string json, BarData? existingBar = null)
         {
-            JsonSerializerSettings settings = new JsonSerializerSettings();
+            JsonSerializerSettings settings = new JsonSerializerSettings()
+            {
+                Error = (sender, args) =>
+                {
+                    args.ToString();
+                }
+            };
             
             JsonSerializer jsonSerializer = JsonSerializer.Create(settings);
             BarJsonTextReader barJsonTextReader = new BarJsonTextReader(new StringReader(json), "win");
 
-            BarData bar;
+            BarData? bar;
             if (existingBar == null)
             {
-                bar = jsonSerializer.Deserialize<BarData>(barJsonTextReader)!;
+                bar = jsonSerializer.Deserialize<BarData>(barJsonTextReader);
             }
             else
             {
@@ -38,13 +44,18 @@ namespace Morphic.Bar.Bar
                 jsonSerializer.Populate(barJsonTextReader, bar);
             }
 
-            bar.BarTheme.Apply(Theme.DefaultBar());
-            
-            // Make the theme of each item inherit the default theme.
-            bar.DefaultTheme.Apply(Theme.DefaultItem());
-            foreach (BarItem item in bar.AllItems)
+            if (bar != null)
             {
-                item.Theme.Inherit(bar.DefaultTheme);
+
+                bar.BarTheme.Apply(Theme.DefaultBar());
+
+                // Make the theme of each item inherit the default theme.
+                bar.DefaultTheme.Apply(Theme.DefaultItem());
+                foreach (BarItem item in bar.AllItems)
+                {
+                    item.Theme.Inherit(bar.DefaultTheme);
+                    item.Theme.InferStateThemes();
+                }
             }
 
             return bar;
@@ -161,10 +172,12 @@ namespace Morphic.Bar.Bar
     public class TypedJsonConverter : JsonConverter
     {
         private readonly string typeFieldName;
+        private readonly string defaultValue;
 
-        public TypedJsonConverter(string typeFieldName)
+        public TypedJsonConverter(string typeFieldName, string defaultValue)
         {
             this.typeFieldName = typeFieldName;
+            this.defaultValue = defaultValue;
         }
 
         /// <summary>
@@ -174,18 +187,42 @@ namespace Morphic.Bar.Bar
         /// <param name="baseType">The base type.</param>
         /// <param name="name">The name of the type.</param>
         /// <returns>A class which inherits baseType.</returns>
-        private static object? CreateInstance(Type baseType, string? name)
+        private object CreateInstance(Type baseType, string name)
         {
             Type? type = null;
+
             if (name != null)
             {
                 // Find the class which has the JsonTypeName attribute with the given name.
-                type = baseType.Assembly.GetTypes()
-                    .Where(t => !t.IsAbstract && t.IsSubclassOf(baseType))
-                    .FirstOrDefault(t => t.GetCustomAttribute<JsonTypeNameAttribute>()?.Name == name);
+                type = GetJsonType(baseType, name);
             }
 
-            return type == null ? null : Activator.CreateInstance(type);
+            if (type == null)
+            {
+                throw new JsonSerializationException(
+                    $"Unable to get type of {baseType.Name} from '{this.typeFieldName} = ${name}'.");
+            }
+
+            object? instance = Activator.CreateInstance(type);
+            if (instance == null)
+            {
+                throw new JsonSerializationException(
+                    $"Unable to instantiate ${type.Name} from '${this.typeFieldName} = ${name}'.");
+            }
+            return instance;
+        }
+
+        /// <summary>
+        /// Finds a type which is a subclass of baseType, having a JsonTypeName attribute with the specified name. 
+        /// </summary>
+        /// <param name="baseType">The base class.</param>
+        /// <param name="name">The name in the JsonTypeName attribute.</param>
+        /// <returns>The type.</returns>
+        private static Type GetJsonType(Type baseType, string name)
+        {
+            return baseType.Assembly.GetTypes()
+                .Where(t => !t.IsAbstract && t.IsSubclassOf(baseType))
+                .FirstOrDefault(t => t.GetCustomAttribute<JsonTypeNameAttribute>()?.Name == name);
         }
 
         /// <summary>
@@ -217,7 +254,7 @@ namespace Morphic.Bar.Bar
             JObject jo = JObject.Load(reader);
 
             // Get the type of item.
-            string? kindName = jo[this.typeFieldName]?.ToString();
+            string kindName = jo[this.typeFieldName]?.ToString() ?? this.defaultValue;
             
             // Create the class for the type.
             object? target = CreateInstance(objectType, kindName);
@@ -235,14 +272,39 @@ namespace Morphic.Bar.Bar
 
                     if (token != null && token.Type != JTokenType.Null)
                     {
+                        Type? newType = this.GetNewType(jo, property);
+                        object? value = newType == null
+                            ? token.ToObject(property.PropertyType, serializer)
+                            : token.ToObject(newType);
                         // Set the property value.
-                        object? value = token.ToObject(property.PropertyType, serializer);
                         property.SetValue(target, value, null);
                     }
                 }
             }
             
             return target;
+        }
+
+        /// <summary>
+        /// Gets the actual type to use, from the property.
+        /// </summary>
+        /// <param name="jo">The current json object to look at.</param>
+        /// <param name="property">The property.</param>
+        /// <returns>The type to use, or null to use the property's own type</returns>
+        private Type? GetNewType(JObject jo, PropertyInfo property)
+        {
+            JsonConverterAttribute? converter = property.GetCustomAttribute<JsonConverterAttribute>()
+                                                ?? property.PropertyType.GetCustomAttribute<JsonConverterAttribute>();
+            if (converter?.ConverterParameters == null || converter.ConverterType != this.GetType())
+            {
+                return null;
+            }
+
+            string nameField = (string) converter.ConverterParameters[0];
+            string defaultValue = (string) converter.ConverterParameters[1];
+            string name = jo[nameField]?.ToString() ?? defaultValue;
+            return TypedJsonConverter.GetJsonType(property.PropertyType, name);
+
         }
 
         public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)

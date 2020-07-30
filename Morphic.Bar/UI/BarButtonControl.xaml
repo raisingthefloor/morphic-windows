@@ -13,6 +13,7 @@
         <SolidColorBrush x:Key="Background" Color="{Binding ActiveTheme.Background, FallbackValue=Yellow}"/>
         <SolidColorBrush x:Key="Foreground" Color="{Binding ActiveTheme.TextColor, FallbackValue=Black}"/>
         <SolidColorBrush x:Key="BorderColor" Color="{Binding ActiveTheme.BorderColor, FallbackValue=Transparent}"/>
+        <SolidColorBrush x:Key="BorderOuterColor" Color="{Binding ActiveTheme.BorderOuterColor, FallbackValue=Transparent}"/>
         <!-- Convert a boolean to a visibility -->
         <ui:Ternary x:Key="BoolVisibility" False="Collapse" True="Visible" />
 
@@ -77,9 +78,16 @@
             <!-- Main border -->
             <Border
                 Grid.Row="0" Grid.RowSpan="3"
-                BorderBrush="{DynamicResource BorderColor}"
-                BorderThickness="{Binding ActiveTheme.BorderSize, FallbackValue=0}"
+                SnapsToDevicePixels="True"
+                BorderBrush="{DynamicResource BorderOuterColor}"
+                BorderThickness="{Binding ActiveTheme.BorderOuterSize, FallbackValue=0}"
+                >
+                <Border
+                    SnapsToDevicePixels="True"
+                    BorderBrush="{DynamicResource BorderColor}"
+                    BorderThickness="{Binding ActiveTheme.BorderSize, FallbackValue=0}"
                 />
+            </Border>
         </Grid>
     </Button>
 </ui:BarItemControl>

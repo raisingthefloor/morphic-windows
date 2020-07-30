@@ -32,7 +32,7 @@ namespace Morphic.Bar.UI
                 }
             };
 #endif
-            if (barData.ExtraItems.Any())
+            if (barData.SecondaryItems.Any())
             {
                 this.secondaryWindow = new SecondaryBarWindow(this, barData);
             }

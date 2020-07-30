@@ -12,6 +12,7 @@ namespace Morphic.Bar.Bar
 {
     using System.ComponentModel;
     using System.Reflection;
+    using System.Windows.Forms;
     using System.Windows.Media;
     using Newtonsoft.Json;
 
@@ -50,6 +51,35 @@ namespace Morphic.Bar.Bar
             this.Active.Apply(theme.Active);//.Apply(this);
             return this;
         }
+
+        /// <summary>
+        /// Generate the themes for the different states that are unset, based on the colour.
+        /// </summary>
+        /// <param name="force"></param>
+        public void InferStateThemes(bool force = false)
+        {
+            if (force || this.Hover.Background == null)
+            {
+                this.Hover.Background = this.LightenColor(this.Background ?? Colors.Transparent, 0.25f);
+            }
+
+            if (force || this.Active.Background == null)
+            {
+                this.Active.Background = this.LightenColor(this.Background ?? Colors.Transparent, 0.5f);
+            }
+
+            if (force || this.Focus.Background == null)
+            {
+                this.Focus.Background = this.Hover.Background;
+            }
+        }
+
+        private Color LightenColor(Color color, float amount)
+        {
+            System.Drawing.Color c =
+                ControlPaint.Light(System.Drawing.Color.FromArgb(color.A, color.R, color.G, color.B), amount);
+            return Color.FromArgb(c.A, c.R, c.G, c.B);
+        }
     }
 
     /// <summary>
@@ -76,11 +106,15 @@ namespace Morphic.Bar.Bar
 
         [JsonProperty("borderColor")]
         public Color? BorderColor { get; set; }
+        
+        [JsonProperty("borderOuterColor")]
+        public Color? BorderOuterColor { get; set; }
 
         [JsonProperty("borderSize")]
         public double BorderSize { get; set; } = double.NaN;
 
-        public bool IsUndefined { get; private set; }
+        public double BorderOuterSize => this.BorderOuterColor == null ? 0 : this.BorderSize;
+
 
         public static Theme DefaultBar()
         {

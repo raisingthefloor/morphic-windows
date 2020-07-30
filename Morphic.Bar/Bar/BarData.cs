@@ -58,12 +58,12 @@ namespace Morphic.Bar.Bar
         /// <summary>
         /// Gets the items for the main bar.
         /// </summary>
-        public IEnumerable<BarItem> BarItems => this.AllItems.Where(item => !item.Hidden && !item.IsExtra).OrderByDescending(item => item.Priority);
+        public IEnumerable<BarItem> PrimaryItems => this.AllItems.Where(item => !item.Hidden && item.IsPrimary).OrderByDescending(item => item.Priority);
         
         /// <summary>
         /// Gets the items for the additional buttons.
         /// </summary>
-        public IEnumerable<BarItem> ExtraItems => this.AllItems.Where(item => !item.Hidden && item.IsExtra).OrderByDescending(item => item.Priority);
+        public IEnumerable<BarItem> SecondaryItems => this.AllItems.Where(item => !item.Hidden && !item.IsPrimary).OrderByDescending(item => item.Priority);
 
         /// <summary>
         /// Generates the bar from a json string.
@@ -71,7 +71,7 @@ namespace Morphic.Bar.Bar
         /// <param name="json"></param>
         /// <param name="includeDefault">true to also include the default bar data.</param>
         /// <returns></returns>
-        public static BarData FromJson(string json, bool includeDefault = true)
+        public static BarData? FromJson(string json, bool includeDefault = true)
         {
             string defaultFile = App.GetFile("default-bar.json5");
             
@@ -81,7 +81,7 @@ namespace Morphic.Bar.Bar
             return BarJson.FromJson(json, defaultBar);
         }
 
-        public static BarData FromFile(string jsonFile, bool includeDefault = true)
+        public static BarData? FromFile(string jsonFile, bool includeDefault = true)
         {
             return BarData.FromJson(File.ReadAllText(jsonFile), includeDefault);
         }

@@ -24,7 +24,6 @@ namespace Morphic.Bar.Bar
     /// An action for a bar item.
     /// </summary>
     [JsonObject(MemberSerialization.OptIn)]
-    [JsonConverter(typeof(TypedJsonConverter), "type")]
     public abstract class BarAction
     {
         public abstract Task<bool> Invoke();
@@ -42,10 +41,10 @@ namespace Morphic.Bar.Bar
     /// <summary>
     /// A web-link action.
     /// </summary>
-    [JsonTypeName("web")]
+    [JsonTypeName("link")]
     public class BarWebAction : BarAction
     {
-        [JsonProperty("data", Required = Required.Always)]
+        [JsonProperty("url", Required = Required.Always)]
         public string UrlString
         {
             // Wrapping a Uri means the URL is validated during load.
@@ -70,15 +69,31 @@ namespace Morphic.Bar.Bar
     /// <summary>
     /// Action to start an application.
     /// </summary>
-    [JsonTypeName("app")]
+    [JsonTypeName("application")]
     public class BarAppAction : BarAction
     {
-        [JsonProperty("data", Required = Required.Always)]
+        [JsonProperty("exe", Required = Required.Always)]
         public string AppName { get; set; } = null!;
 
         public override Task<bool> Invoke()
         {
             MessageBox.Show($"Opens the application {this.AppName}");
+            return Task.FromResult(true);
+        }
+    }
+
+    /// <summary>
+    /// Action to start an application.
+    /// </summary>
+    [JsonTypeName("action")]
+    public class BarBuiltinAction : BarAction
+    {
+        [JsonProperty("identifier", Required = Required.Always)]
+        public string Identifier { get; set; } = null!;
+
+        public override Task<bool> Invoke()
+        {
+            MessageBox.Show($"Run the action {this.Identifier}");
             return Task.FromResult(true);
         }
     }

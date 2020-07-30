@@ -12,6 +12,7 @@ namespace Morphic.Bar.Bar
 {
     using System;
     using System.Reflection;
+    using System.Windows.Media;
     using Newtonsoft.Json;
     using UI;
 
@@ -19,43 +20,57 @@ namespace Morphic.Bar.Bar
     /// A bar item.
     /// </summary>
     [JsonObject(MemberSerialization.OptIn)]
-    [JsonConverter(typeof(TypedJsonConverter), "kind")]
+    [JsonConverter(typeof(TypedJsonConverter), "widget", "button")]
     public class BarItem
     {
         /// <summary>
+        /// true if the item is to be displayed on the pull-out bar.
+        /// </summary>
+        [JsonProperty("is_primary")]
+        public bool IsPrimary { get; set; }
+        
+        /// <summary>
         /// The text displayed on the item.
         /// </summary>
-        [JsonProperty("label")]
+        [JsonProperty("configuration.label")]
         public string? Text { get; set; }
         
         /// <summary>
-        /// Tooltip main text.
+        /// Tooltip main text (default is the this.Text).
         /// </summary>
-        [JsonProperty("popupText")]
+        [JsonProperty("configuration.toolTipHeader")]
         public string? ToolTip { get; set; }
 
         /// <summary>
         /// Tooltip smaller text.
         /// </summary>
-        [JsonProperty("description")]
+        [JsonProperty("configuration.toolTipInfo")]
         public string? ToolTipInfo { get; set; }
-        
+
         /// <summary>
-        /// true if the item is to be displayed on the pull-out bar.
+        /// The background colour.
         /// </summary>
-        [JsonProperty("isExtra")]
-        public bool IsExtra { get; set; }
-        
+        [JsonProperty("configuration.color")]
+        public Color Color
+        {
+            get => this.Theme.Background ?? Colors.Transparent;
+            set
+            {
+                this.Theme.Background = value;
+                this.Theme.InferStateThemes(true);
+            }
+        }
+
         /// <summary>
         /// Don't display this item.
         /// </summary>
         [JsonProperty("hidden")]
         public bool Hidden { get; set; }
-
+        
         /// <summary>
         /// Theme for the item.
         /// </summary>
-        [JsonProperty("theme")]
+        [JsonProperty("theme", DefaultValueHandling = DefaultValueHandling.Populate)]
         public BarItemTheme Theme { get; set; } = new BarItemTheme();
 
         /// <summary>
@@ -77,10 +92,11 @@ namespace Morphic.Bar.Bar
     [BarControl(typeof(BarButtonControl))]
     public class BarButton : BarItem
     {
-        [JsonProperty("value.icon")]
+        [JsonProperty("configuration.image_url")]
         public string? IconValue { get; set; }
 
-        [JsonProperty("value.action")]
+        [JsonProperty("configuration", ObjectCreationHandling = ObjectCreationHandling.Replace)]
+        [JsonConverter(typeof(TypedJsonConverter), "kind", "null")]
         public BarAction Action { get; set; } = new BarNoAction();
 
         public bool ShowIcon => string.IsNullOrEmpty(this.IconPath);

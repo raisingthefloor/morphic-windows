@@ -33,9 +33,6 @@ namespace Morphic.Bar.UI
 
             this.primaryBarWindow.LocationChanged += (sender, args) => this.UpdatePosition();
             this.primaryBarWindow.SizeChanged += (sender, args) => this.UpdatePosition();
-            
-            
-
             this.primaryBarWindow.Closed += (sender, args) => this.Close();
         }
 

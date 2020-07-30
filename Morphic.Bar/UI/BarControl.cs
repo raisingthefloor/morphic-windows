@@ -72,7 +72,7 @@ namespace Morphic.Bar.UI
         {
             this.RemoveItems();
             this.Bar = bar;
-            this.LoadItems(extraItems ? this.Bar.ExtraItems : this.Bar.BarItems);
+            this.LoadItems(extraItems ? this.Bar.SecondaryItems : this.Bar.PrimaryItems);
         }
 
         public void RemoveItems()

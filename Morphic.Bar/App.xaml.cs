@@ -34,7 +34,7 @@ namespace Morphic.Bar
 
         public void LoadBar(string path)
         {
-            BarData bar = BarData.FromFile(path);
+            BarData? bar = BarData.FromFile(path);
             if (this.barWindow != null)
             {
                 this.barWindow.Close();
