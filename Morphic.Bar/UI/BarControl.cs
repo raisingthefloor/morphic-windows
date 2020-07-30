@@ -68,11 +68,11 @@ namespace Morphic.Bar.UI
             return Math.Clamp(height, this.tallestItem, this.tallestItem * itemCount);
         }
 
-        public void LoadBar(BarData bar)
+        public void LoadBar(BarData bar, bool extraItems)
         {
             this.RemoveItems();
             this.Bar = bar;
-            this.LoadItems(this.Bar.BarItems);
+            this.LoadItems(extraItems ? this.Bar.ExtraItems : this.Bar.BarItems);
         }
 
         public void RemoveItems()

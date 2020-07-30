@@ -14,6 +14,7 @@ namespace Morphic.Bar.Bar
     using System.Runtime.CompilerServices;
     using System.Windows;
     using System.Windows.Controls;
+    using System.Windows.Media;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Converters;
     using UI.AppBarWindow;

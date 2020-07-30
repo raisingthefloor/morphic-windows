@@ -16,6 +16,7 @@ namespace Morphic.Bar.UI.AppBarWindow
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Input;
+    using System.Windows.Media;
 
     /// <summary>
     /// Makes a Window become a draggable "app bar" window which can be snapped or docked to the desktop edges.
@@ -65,7 +66,7 @@ namespace Morphic.Bar.UI.AppBarWindow
         {
             // Adjust the size to match the content.
             bool horiz = (e.SizeEdge & WindowMovement.SizeEdge.Horizontal) == WindowMovement.SizeEdge.Horizontal;
-            Size newSize = this.GetGoodSize(e.Rect.Size, horiz ? Orientation.Horizontal : Orientation.Vertical, true);
+            Size newSize = this.GetGoodSize(e.Rect.Size, horiz ? Orientation.Vertical : Orientation.Horizontal, true);
             if (newSize != e.Rect.Size)
             {
                 e.Rect.Size = newSize;
@@ -77,17 +78,17 @@ namespace Morphic.Bar.UI.AppBarWindow
         /// Gets a size which better fits the content.
         /// </summary>
         /// <param name="size">The suggested size.</param>
-        /// <param name="priority">The axis which is more important (reluctant to change).</param>
+        /// <param name="orientation"></param>
         /// <param name="inPixels">true if the size is in pixels.</param>
         /// <returns>The new size.</returns>
-        public Size GetGoodSize(Size size, Orientation priority, bool inPixels = false)
+        public Size GetGoodSize(Size size, Orientation orientation, bool inPixels = false)
         {
             bool changed = false;
             Size newSize = inPixels ? this.FromPixels(size) : size;
 
             void GetHeight()
             {
-                if (this.AppBarEdge != Edge.Left)
+                if (!this.AppBarEdge.IsVertical())
                 {
                     double newHeight = ((IAppBarWindow)this.window).GetHeightFromWidth(newSize.Width);
                     if (!double.IsNaN(newHeight))
@@ -100,7 +101,7 @@ namespace Morphic.Bar.UI.AppBarWindow
 
             void GetWidth()
             {
-                if (this.AppBarEdge != Edge.Top)
+                if (!this.AppBarEdge.IsHorizontal())
                 {
                     double newWidth = ((IAppBarWindow)this.window).GetWidthFromHeight(newSize.Height);
                     if (!double.IsNaN(newWidth))
@@ -111,7 +112,7 @@ namespace Morphic.Bar.UI.AppBarWindow
                 }
             }
 
-            if (priority == Orientation.Horizontal)
+            if (orientation == Orientation.Vertical)
             {
                 GetHeight();
                 GetWidth();
@@ -165,14 +166,7 @@ namespace Morphic.Bar.UI.AppBarWindow
                 return invert ? none.Value : thickness;
             }
 
-            Edge notTouching = this.AppBarEdge switch
-            {
-                Edge.Left => Edge.Right,
-                Edge.Top => Edge.Bottom,
-                Edge.Right => Edge.Left,
-                Edge.Bottom => Edge.Top,
-                _ => Edge.None
-            };
+            Edge notTouching = this.AppBarEdge.Opposite();
 
             Dictionary<Edge, Action> actions = new Dictionary<Edge, Action>()
             {
@@ -302,19 +296,29 @@ namespace Morphic.Bar.UI.AppBarWindow
         /// </summary>
         public Size DockedSizes { get; set; } = new Size(100, 100);
 
-        private Size ToPixels(Size size) => (Size)this.ToPixels((Point) size);
-        private Size FromPixels(Size size) => (Size)this.FromPixels((Point) size);
+        public Size ToPixels(Size size) => (Size)this.ToPixels((Point) size);
+        public Size FromPixels(Size size) => (Size)this.FromPixels((Point) size);
 
-        private Point ToPixels(Point input)
+        public Point ToPixels(Point point)
         {
-            return PresentationSource.FromVisual(this.window)?.CompositionTarget.TransformToDevice.Transform(input)
-                ?? input;
+            return PresentationSource.FromVisual(this.window)?.CompositionTarget.TransformToDevice.Transform(point)
+                   ?? point;
         }
         
-        private Point FromPixels(Point input)
+        public Point FromPixels(Point point)
         {
-            return PresentationSource.FromVisual(this.window)?.CompositionTarget.TransformFromDevice.Transform(input)
-                ?? input;
+            return PresentationSource.FromVisual(this.window)?.CompositionTarget.TransformFromDevice.Transform(point)
+                ?? point;
+        }
+
+        public Rect ToPixels(Rect rect)
+        {
+            return new Rect(this.ToPixels(rect.Location), this.ToPixels(rect.Size));
+        }
+        
+        public Rect FromPixels(Rect rect)
+        {
+            return new Rect(this.FromPixels(rect.Location), this.FromPixels(rect.Size));
         }
 
         public Size DockedSizesPixels { get; set; }
@@ -461,5 +465,30 @@ namespace Morphic.Bar.UI.AppBarWindow
         /// true if the current change is only a preview, the desktop reservation has not yet been applied.
         /// </summary>
         public bool Preview { get; }
+    }
+
+    public static class AppBarExtensionMethods
+    {
+        public static Edge Opposite(this Edge edge)
+        {
+            return edge switch
+            {
+                Edge.None => Edge.None,
+                Edge.Left => Edge.Right,
+                Edge.Top => Edge.Bottom,
+                Edge.Right => Edge.Left,
+                Edge.Bottom => Edge.Top,
+                _ => Edge.None
+            };
+        }
+        
+        public static bool IsHorizontal(this Edge edge)
+        {
+            return (edge == Edge.Top || edge == Edge.Bottom);
+        }
+        public static bool IsVertical(this Edge edge)
+        {
+            return (edge == Edge.Left || edge == Edge.Right);
+        }
     }
 }

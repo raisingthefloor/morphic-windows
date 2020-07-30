@@ -31,6 +31,22 @@
       id: "dropbox-homedir-button",
       category: "cloud-drive-home-location",
       kind: "button",
+      label: "extra item",
+      popupText: "Opens your Dropbox",
+      description: "",
+      isExtra: true,
+      value: {
+        icon: "",
+        action: {
+          type: "web",
+          data: "https://www.dropbox.com/h"
+        }
+      }
+    },
+    {
+      id: "dropbox-homedir-button",
+      category: "cloud-drive-home-location",
+      kind: "button",
       label: "Dropbox Home Folder",
       popupText: "Opens your Dropbox",
       description: "",

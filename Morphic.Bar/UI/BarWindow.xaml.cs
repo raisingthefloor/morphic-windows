@@ -11,6 +11,7 @@
 namespace Morphic.Bar.UI
 {
     using System;
+    using System.Collections.Generic;
     using System.ComponentModel;
     using System.Globalization;
     using System.IO;
@@ -22,6 +23,7 @@ namespace Morphic.Bar.UI
     using System.Windows.Controls;
     using System.Windows.Data;
     using System.Windows.Media;
+    using System.Windows.Media.Animation;
     using System.Windows.Shell;
     using AppBarWindow;
     using Bar;
@@ -31,61 +33,51 @@ namespace Morphic.Bar.UI
     /// </summary>
     public partial class BarWindow : Window, INotifyPropertyChanged, IAppBarWindow
     {
-        private readonly AppBar appBar;
-        private BarData bar;
+        protected internal readonly AppBar AppBar;
+        private BarData bar = null!;
 
-        private string barFile = string.Empty;
         private Thickness? initialResizeBorder;
 
-        public BarWindow() : this(null, false)
+        private readonly bool isPrimary;
+        protected internal WindowMovement WindowMovement;
+
+        public BarWindow() : this(new BarData())
         {
         }
 
-        public BarWindow(BarData? barData, bool isPullout)
+        protected BarWindow(BarData barData)
         {
-            this.IsPullout = isPullout;
-            this.appBar = new AppBar(this)
-            {
-                EnableDocking = !this.IsPullout
-            };
+            this.isPrimary = this is PrimaryBarWindow;
 
-            this.bar = barData ?? new BarData();
             this.DataContext = this;
+
+            this.WindowMovement = new WindowMovement(this, this.isPrimary);
+            this.AppBar = new AppBar(this, this.WindowMovement)
+            {
+                EnableDocking = this.isPrimary
+            };
 
             // Move it off the screen until it's loaded.
             this.Left = -0xffff;
 
             this.InitializeComponent();
 
-            // Accept bar files to be dropped.
-            this.AllowDrop = true;
-            this.Drop += (sender, args) =>
+            this.BarControl.BarLoaded += (sender, args) =>
             {
-                if (args.Data.GetDataPresent(DataFormats.FileDrop) &&
-                    args.Data.GetData(DataFormats.FileDrop) is string[] files)
+                if (this.IsLoaded)
                 {
-                    string file = files.FirstOrDefault();
-                    this.SetBarSource(file);
+                    this.OnBarLoaded(sender, args);
+                }
+                else
+                {
+                    this.Loaded += (s, a) => this.OnBarLoaded(sender, args);
                 }
             };
 
-            this.BarControl.BarLoaded += this.OnBarLoaded;
-            this.appBar.EdgeChanged += this.AppBarOnEdgeChanged;
+            this.AppBar.EdgeChanged += this.AppBarOnEdgeChanged;
 
-            if (barData != null)
-            {
-                this.Bar = barData;
-            }
-
-            this.Loaded += (sender, args) =>
-                this.SetBarSource(Path.Join(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
-                    "test-bar.json5"));
+            this.Bar = barData;
         }
-
-        /// <summary>
-        /// true if this is the pullout bar.
-        /// </summary>
-        public bool IsPullout { get; }
 
         /// <summary>
         /// The bar for which this bar window is displaying.
@@ -93,12 +85,14 @@ namespace Morphic.Bar.UI
         public BarData Bar
         {
             get => this.bar;
-            private set
+            protected set
             {
                 this.bar = value;
                 this.OnBarChanged();
             }
         }
+
+        public Edge DockedEdge => this.AppBar.AppBarEdge;
 
         /// <summary>Additional width added to the window.</summary>
         public double ExtraWidth =>
@@ -110,29 +104,21 @@ namespace Morphic.Bar.UI
             this.BorderThickness.Top + this.BorderThickness.Bottom +
             this.Padding.Top + this.Padding.Bottom;
 
-        public event PropertyChangedEventHandler? PropertyChanged;
-
         private void OnBarLoaded(object? sender, EventArgs e)
         {
             this.SetBorder();
 
-            Orientation orientation = this.GetBestOrientation(this.Bar.Position.DockEdge);
-
-            Size size = this.GetSize(orientation);
+            Size size = this.GetSize();
             this.Height = size.Height;
             this.Width = size.Width;
+            this.SetInitialPosition(size);
+        }
 
-            if (!this.IsPullout)
-            {
-                this.appBar.ApplyAppBar(this.Bar.Position.DockEdge);
-                if (this.Bar.Position.DockEdge == Edge.None)
-                {
-                    Rect workArea = SystemParameters.WorkArea;
-                    Point pos = this.Bar.Position.GetPosition(workArea, size);
-                    this.Left = pos.X;
-                    this.Top = pos.Y;
-                }
-            }
+        /// <summary>
+        /// Sets the initial position and size.
+        /// </summary>
+        protected virtual void SetInitialPosition(Size size)
+        {
         }
 
         /// <summary>
@@ -140,7 +126,7 @@ namespace Morphic.Bar.UI
         /// </summary>
         /// <param name="appBarEdge"></param>
         /// <returns></returns>
-        private Orientation GetBestOrientation(Edge appBarEdge)
+        protected internal virtual Orientation GetBestOrientation(Edge appBarEdge)
         {
             Orientation orientation = Orientation.Horizontal;
 
@@ -183,7 +169,7 @@ namespace Morphic.Bar.UI
             //using (this.Dispatcher.DisableProcessing())
             {
                 Thickness thickness = new Thickness(this.Bar.BarTheme.BorderSize);
-                this.BorderThickness = this.appBar.AdjustThickness(thickness);
+                this.BorderThickness = this.AppBar.AdjustThickness(thickness);
             }
 
             // Remove the resizable area, and window borders, on the sides which are against the screen edges.
@@ -197,70 +183,18 @@ namespace Morphic.Bar.UI
             resize.Right = Math.Max(resize.Right, this.BorderThickness.Right + 1);
             resize.Bottom = Math.Max(resize.Bottom, this.BorderThickness.Bottom + 1);
 
-            chrome.ResizeBorderThickness = this.appBar.AdjustThickness(resize);
+            chrome.ResizeBorderThickness = this.AppBar.AdjustThickness(resize);
         }
-
-        /// <summary>
-        /// The bar has changed.
-        /// </summary>
-        public event EventHandler? BarChanged;
 
         /// <summary>
         /// Asks the bar control for a good size.
         /// This is the equivalent to setting SizeToContent, but is done manually due to the snapping during resize.
         /// </summary>
-        public Size GetSize(Orientation orientation)
+        public Size GetSize()
         {
-            Orientation o = orientation == Orientation.Horizontal ? Orientation.Vertical : Orientation.Horizontal;
-            Size size = this.appBar.GetGoodSize(new Size(100, 100), o);
+            Orientation orientation = this.GetBestOrientation(this.Bar.Position.DockEdge);
+            Size size = this.AppBar.GetGoodSize(new Size(100, 100), orientation);
             return size;
-        }
-
-        /// <summary>
-        /// Set the source of the json data, and loads it.
-        /// </summary>
-        /// <param name="path"></param>
-        private async void SetBarSource(string path)
-        {
-            try
-            {
-                this.Bar = BarData.FromFile(path);
-                this.barFile = path;
-            }
-            catch (Exception e)
-            {
-                Console.Error.WriteLine(e.Message);
-                Console.Error.WriteLine(e.ToString());
-
-                this.BarControl.RemoveItems();
-                this.BarControl.AddItem(new BarButton()
-                {
-                    Theme = new BarItemTheme()
-                    {
-                        TextColor = Colors.DarkRed,
-                        Background = Colors.White
-                    },
-                    Text = e.Message,
-                    ToolTip = e.Message,
-                    ToolTipInfo = e.ToString()
-                });
-            }
-
-            // Monitor the file for changes (not using FileSystemWatcher because it doesn't work on network mounts)
-            FileInfo lastInfo = new FileInfo(path);
-            while (this.barFile == path)
-            {
-                await Task.Delay(500);
-                FileInfo info = new FileInfo(path);
-                bool changed = info.Length != lastInfo.Length ||
-                               info.CreationTime != lastInfo.CreationTime ||
-                               info.LastWriteTime != lastInfo.LastWriteTime;
-                if (changed)
-                {
-                    this.SetBarSource(path);
-                    break;
-                }
-            }
         }
 
         private void AppBarOnEdgeChanged(object? sender, EdgeChangedEventArgs e)
@@ -270,14 +204,8 @@ namespace Morphic.Bar.UI
 
         protected virtual void OnBarChanged()
         {
-            this.BarControl.LoadBar(this.Bar);
-            this.BarChanged?.Invoke(this, EventArgs.Empty);
+            this.BarControl.LoadBar(this.Bar, !this.isPrimary);
             this.OnPropertyChanged(nameof(this.Bar));
-        }
-
-        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-        {
-            this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         double IAppBarWindow.GetHeightFromWidth(double width)
@@ -288,6 +216,13 @@ namespace Morphic.Bar.UI
         double IAppBarWindow.GetWidthFromHeight(double height)
         {
             return this.BarControl.GetWidthFromHeight(height - this.ExtraHeight) + this.ExtraWidth;
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null!)
+        {
+            this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 

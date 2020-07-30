@@ -12,6 +12,14 @@
         <Company>Raising the Floor</Company>
     </PropertyGroup>
 
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <DefineConstants>TRACE;TESTING</DefineConstants>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <DefineConstants>TRACE;TESTING</DefineConstants>
+    </PropertyGroup>
+
     <ItemGroup>
       <Content Include="default-bar.json5">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>

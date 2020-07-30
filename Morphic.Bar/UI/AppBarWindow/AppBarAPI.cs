@@ -56,9 +56,6 @@ namespace Morphic.Bar.UI.AppBarWindow
         /// </summary>
         public Edge Edge { get; private set; } = Edge.None;
 
-        public bool IsVertical => this.Edge == Edge.Left || this.Edge == Edge.Right;
-        public bool IsHorizontal => !this.IsVertical && this.Edge != Edge.None;
-
         /// <summary>
         /// Set the window to be at the given edge, and reserves desktop space for it. The window will be
         /// moved to the edge and stretched to fit. 
@@ -138,7 +135,7 @@ namespace Morphic.Bar.UI.AppBarWindow
             
             // Request the full length of the screen, at the relevant edge.
             Rect rect = screen;
-            if (this.IsHorizontal)
+            if (this.Edge.IsHorizontal())
             {
                 rect.Height = windowRect.Height;
                 if (this.Edge == Edge.Bottom)
@@ -146,7 +143,7 @@ namespace Morphic.Bar.UI.AppBarWindow
                     rect.Y = screen.Bottom - windowRect.Height;
                 }
             }
-            else if (this.IsVertical)
+            else if (this.Edge.IsVertical())
             {
                 rect.Width = windowRect.Width;
                 if (this.Edge == Edge.Right)
