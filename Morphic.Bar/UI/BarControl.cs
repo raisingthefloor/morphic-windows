@@ -17,6 +17,7 @@ namespace Morphic.Bar.UI
     using System.Runtime.CompilerServices;
     using System.Windows;
     using System.Windows.Controls;
+    using System.Windows.Media;
     using Bar;
 
     /// <summary>
@@ -34,6 +35,10 @@ namespace Morphic.Bar.UI
 
         public BarData Bar { get; private set; }
 
+        public double Scale => this.Bar.Scale;
+        public double ScaledItemWidth => this.ItemWidth * this.Scale;
+        public double ScaledItemHeight => this.ItemHeight * this.Scale;
+
         public event PropertyChangedEventHandler? PropertyChanged;
 
         public event EventHandler? BarLoaded;
@@ -45,6 +50,7 @@ namespace Morphic.Bar.UI
                     .Select(child => child.RenderSize.Height)
                     .Max()
                 : this.ItemHeight;
+            this.tallestItem *= this.Scale;
         }
 
         /// <summary>Gets a width that fits all items with the given height.</summary>
@@ -54,8 +60,8 @@ namespace Morphic.Bar.UI
         {
             int itemCount = Math.Max(1, this.Children.Count);
 
-            double width = Math.Ceiling(itemCount / Math.Floor(height / this.tallestItem)) * this.ItemWidth;
-            return Math.Clamp(width, this.ItemWidth, this.ItemWidth * itemCount);
+            double width = Math.Ceiling(itemCount / Math.Floor(height / this.tallestItem)) * this.ScaledItemWidth;
+            return Math.Clamp(width, this.ScaledItemWidth, this.ScaledItemWidth * itemCount);
         }
 
         /// <summary>Gets a height that fits all items with the given width.</summary>
@@ -64,7 +70,7 @@ namespace Morphic.Bar.UI
         public double GetHeightFromWidth(double width)
         {
             int itemCount = Math.Max(1, this.Children.Count);
-            double height = Math.Ceiling(itemCount / Math.Floor(width / this.ItemWidth)) * this.tallestItem;
+            double height = Math.Ceiling(itemCount / Math.Floor(width / this.ScaledItemWidth)) * this.tallestItem;
             return Math.Clamp(height, this.tallestItem, this.tallestItem * itemCount);
         }
 
@@ -72,6 +78,9 @@ namespace Morphic.Bar.UI
         {
             this.RemoveItems();
             this.Bar = bar;
+            
+            this.LayoutTransform = new ScaleTransform(this.Scale, this.Scale);
+            
             this.LoadItems(extraItems ? this.Bar.SecondaryItems : this.Bar.PrimaryItems);
         }
 

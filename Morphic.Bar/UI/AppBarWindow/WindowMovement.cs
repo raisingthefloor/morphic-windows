@@ -131,16 +131,15 @@ namespace Morphic.Bar.UI.AppBarWindow
 
         private WinApi.MONITORINFO MonitorInfo => WinApi.GetMonitorInfo(this.WindowHandle);
 
-        /// <summary>Raised when the window is being moved.</summary>
+        /// <summary>Raised while the window is being moved.</summary>
         public event EventHandler<MovementEventArgs>? Moving;
 
-        /// <summary>Raised when the window is being resized.</summary>
+        /// <summary>Raised while the window is being resized.</summary>
         public event EventHandler<MovementEventArgs>? Sizing;
 
         public event EventHandler? EnterSizeMove;
         public event EventHandler? MoveComplete;
         public event EventHandler? SizeComplete;
-
         public event EventHandler? Ready;
 
         private void WindowOnSourceInitialized(object? sender, EventArgs e)
@@ -402,7 +401,7 @@ namespace Morphic.Bar.UI.AppBarWindow
             this.IgnoreLock = ignored;
         }
 
-        public Point GetCursorPos()
+        public static Point GetCursorPos()
         {
             return WinApi.GetCursorPos();
         }
@@ -437,5 +436,5 @@ namespace Morphic.Bar.UI.AppBarWindow
             /// <summary>The mouse cursor position on the screen.</summary>
             public Point Cursor { get; set; }
         }
-    }
+   }
 }

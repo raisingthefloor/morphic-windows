@@ -36,7 +36,8 @@ namespace Morphic.Bar.UI.AppBarWindow
         public bool Draggable { get; set; } = true;
 
         public event EventHandler<EdgeChangedEventArgs>? EdgeChanged;
-        
+        public event EventHandler<CancelableEventArgs>? BeginDragMove; 
+
         public AppBar(Window window) : this(window, new WindowMovement(window, true))
         {
         }
@@ -145,6 +146,12 @@ namespace Morphic.Bar.UI.AppBarWindow
             // Reserve desktop space for the window.
             this.ApplyAppBar(this.AppBarEdge);
         }
+        
+        protected virtual void OnBeginDragMove(CancelableEventArgs e)
+        {
+            this.BeginDragMove?.Invoke(this, e);
+        }
+
 
         public void ApplyAppBar(Edge edge)
         {
@@ -228,7 +235,7 @@ namespace Morphic.Bar.UI.AppBarWindow
             }
 
             // Like magnifier, if the mouse pointer is on the edge then make the window an app bar on that edge.
-            Point mouse = this.windowMovement.GetCursorPos();
+            Point mouse = WindowMovement.GetCursorPos();
             Rect workArea = this.windowMovement.GetWorkArea(new Point(mouse.X, mouse.Y));
             if (this.EnableDocking)
             {
@@ -411,7 +418,12 @@ namespace Morphic.Bar.UI.AppBarWindow
                 if (Math.Abs(point.X - this.mouseDownPos.X) >= SystemParameters.MinimumHorizontalDragDistance ||
                     Math.Abs(point.Y - this.mouseDownPos.Y) >= SystemParameters.MinimumVerticalDragDistance)
                 {
-                    this.windowMovement.DragMove();
+                    CancelableEventArgs eventArgs = new CancelableEventArgs();
+                    this.OnBeginDragMove(eventArgs);
+                    if (!eventArgs.Cancel)
+                    {
+                        this.windowMovement.DragMove();
+                    }
                 }
             }
         }
@@ -483,13 +495,35 @@ namespace Morphic.Bar.UI.AppBarWindow
             };
         }
         
+        /// <summary>
+        /// Is the edge horizontal? top or bottom.
+        /// </summary>
+        /// <param name="edge"></param>
+        /// <returns></returns>
         public static bool IsHorizontal(this Edge edge)
         {
             return (edge == Edge.Top || edge == Edge.Bottom);
         }
+        
+        /// <summary>
+        /// Is the edge vertical? left or right.
+        /// </summary>
+        /// <param name="edge"></param>
+        /// <returns></returns>
         public static bool IsVertical(this Edge edge)
         {
             return (edge == Edge.Left || edge == Edge.Right);
         }
+
+        public static Rect GetRect(this Window window)
+        {
+            return new Rect(window.Left, window.Top, window.Width, window.Height);
+        }
     }
+
+    public class CancelableEventArgs : EventArgs
+    {
+        public bool Cancel { get; set; }
+    }
+
 }

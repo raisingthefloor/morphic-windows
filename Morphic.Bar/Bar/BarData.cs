@@ -33,9 +33,19 @@ namespace Morphic.Bar.Bar
         [JsonProperty("name")]
         public string? Name { get; set; }
 
-        /// <summary>Initial bar position.</summary>
-        [JsonProperty("position", ObjectCreationHandling = ObjectCreationHandling.Replace)]
+        /// <summary>
+        /// Size of everything.
+        /// </summary>
+        [JsonProperty("scale")]
+        public double Scale { get; set; } = 1;
+
+        /// <summary>Initial bar positions.</summary>
+        [JsonProperty("position", ObjectCreationHandling = ObjectCreationHandling.Reuse)]
         public BarPosition Position { get; set; } = new BarPosition();
+
+        /// <summary>Initial bar positions.</summary>
+        [JsonProperty("secondaryBar", ObjectCreationHandling = ObjectCreationHandling.Reuse)]
+        public SecondaryBar SecondaryBar { get; set; } = new SecondaryBar();
 
         /// <summary>
         /// Base theme for bar items - items will take values from this if they haven't got their own.

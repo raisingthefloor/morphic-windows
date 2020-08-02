@@ -13,9 +13,22 @@ namespace Morphic.Bar.UI
     using AppBarWindow;
     using Bar;
 
-    public class PrimaryBarWindow : BarWindow
+    public sealed class PrimaryBarWindow : BarWindow
     {
         private SecondaryBarWindow? secondaryWindow;
+        private ExpanderWindow? expanderWindow;
+
+        public event EventHandler? ExpandedChange;
+
+        public override bool IsExpanded
+        {
+            get => base.IsExpanded;
+            set
+            {
+                base.IsExpanded = value;
+                this.OnExpandedChange();
+            }
+        }
 
         public PrimaryBarWindow(BarData barData) : base(barData)
         {
@@ -32,9 +45,33 @@ namespace Morphic.Bar.UI
                 }
             };
 #endif
-            if (barData.SecondaryItems.Any())
+            this.BarChanged += this.OnBarChanged;
+            this.Bar = barData;
+        }
+
+        private void OnBarChanged(object? sender, EventArgs args)
+        {
+            if (this.Bar.SecondaryItems.Any())
             {
-                this.secondaryWindow = new SecondaryBarWindow(this, barData);
+                if (this.secondaryWindow == null)
+                {
+                    this.secondaryWindow = new SecondaryBarWindow(this, this.Bar);
+                    this.expanderWindow = new ExpanderWindow(this, this.secondaryWindow);
+
+                    this.Loaded += (s, a) => this.secondaryWindow.Show();
+                    this.secondaryWindow.Loaded += (s, a) => this.expanderWindow.Show();
+
+                    this.expanderWindow.Changed += (s, a) => this.IsExpanded = this.expanderWindow.IsExpanded;
+                }
+
+                this.secondaryWindow.OnBarChanged();
+            }
+            else
+            {
+                this.secondaryWindow?.Close();
+                this.expanderWindow?.Close();
+                this.expanderWindow = null;
+                this.secondaryWindow = null;
             }
         }
 
@@ -44,9 +81,18 @@ namespace Morphic.Bar.UI
             if (this.Bar.Position.DockEdge == Edge.None)
             {
                 Rect workArea = SystemParameters.WorkArea;
-                Point pos = this.Bar.Position.GetPosition(workArea, size);
+                Point pos = this.Bar.Position.Primary.GetPosition(workArea, size);
                 this.Left = pos.X;
                 this.Top = pos.Y;
+            }
+        }
+
+        private void ToggleSecondaryBar(bool open)
+        {
+            if (this.secondaryWindow != null)
+            {
+                this.OnExpandedChange();
+
             }
         }
 
@@ -61,7 +107,7 @@ namespace Morphic.Bar.UI
         {
             try
             {
-                this.Bar = BarData.FromFile(path);
+                this.Bar = BarData.FromFile(path)!;
                 this.barFile = path;
             }
             catch (Exception e)
@@ -101,5 +147,18 @@ namespace Morphic.Bar.UI
         }
 #endif
 
+        private void OnExpandedChange()
+        {
+            if (this.IsExpanded)
+            {
+                this.secondaryWindow?.Show();
+            }
+            else
+            {
+                this.secondaryWindow?.Hide();
+            }
+            
+            this.ExpandedChange?.Invoke(this, EventArgs.Empty);
+        }
     }
 }

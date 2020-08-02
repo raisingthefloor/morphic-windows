@@ -1,8 +1,17 @@
 {
+  scale: 1,
+  columns: 1,
   position: {
     docked: null,
     x: "Left",
-    y: "Middle"
+    y: "Middle",
+    secondary: "bottom",
+    expander: "50%",
+    expanderRelative: "secondary"
+  },
+  secondaryBar: {
+    autohide: true,
+    autohideExpander: false
   },
   barTheme: {
     background: "#fff",

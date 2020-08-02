@@ -11,10 +11,12 @@
 namespace Morphic.Bar.Bar
 {
     using System;
+    using System.Reflection;
     using System.Runtime.CompilerServices;
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Media;
+    using System.Windows.Navigation;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Converters;
     using UI.AppBarWindow;
@@ -25,6 +27,7 @@ namespace Morphic.Bar.Bar
     [JsonObject(MemberSerialization.OptIn)]
     public class BarPosition
     {
+        private ExpanderRelative expanderRelative = ExpanderRelative.Both;
         private const string LEFT = "left";
         private const string TOP = "top";
         private const string RIGHT = "right";
@@ -44,7 +47,7 @@ namespace Morphic.Bar.Bar
         /// Percentages specify the position of the middle of the bar.
         /// </summary>
         [JsonProperty("x")]
-        public string XValue
+        public string? PrimaryXValue
         {
             set => this.ParsePosition(value ?? "0");
         }
@@ -55,7 +58,7 @@ namespace Morphic.Bar.Bar
         /// Percentages specify the position of the middle of the bar.
         /// </summary>
         [JsonProperty("y")]
-        public string YValue
+        public string? PrimaryYValue
         {
             set => this.ParsePosition(value ?? "0");
         }
@@ -66,8 +69,245 @@ namespace Morphic.Bar.Bar
         [JsonProperty("orientation")]
         public Orientation? Orientation { get; set; }
 
-        private void ParsePosition(string origValue, [CallerMemberName] string? property = null)
+        /// <summary>
+        /// The horizontal/vertical position of the secondary bar, relative to the primary bar (when above or below it).
+        /// </summary>
+        [JsonProperty("secondary")]
+        public string? SecondaryXyValues
         {
+            set
+            {
+                this.SecondaryXValue = value;
+                this.SecondaryYValue = value;
+            }
+        }
+
+        /// <summary>
+        /// The horizontal position of the secondary bar, relative to the primary bar (when above or below it).
+        /// </summary>
+        [JsonProperty("secondaryX")]
+        public string? SecondaryXValue
+        {
+            set => this.ParsePosition(value ?? "0");
+        }
+        
+        /// <summary>
+        /// The vertical position of the secondary bar, relative to the primary bar (when beside it).
+        /// </summary>
+        [JsonProperty("secondaryY")]
+        public string? SecondaryYValue
+        {
+            set => this.ParsePosition(value ?? "0");
+        }
+
+        /// <summary>
+        /// The horizontal/vertical position of the expander button bar
+        /// </summary>
+        [JsonProperty("expander")]
+        public string? ExpanderXyValues
+        {
+            set
+            {
+                this.ExpanderXValue = value;
+                this.ExpanderYValue = value;
+            }
+        }
+
+        /// <summary>
+        /// The horizontal position of the expander button bar
+        /// </summary>
+        [JsonProperty("expanderX")]
+        public string? ExpanderXValue
+        {
+            set => this.ParsePosition(value ?? "0");
+        }
+        
+        /// <summary>
+        /// The vertical position of the secondary bar
+        /// </summary>
+        [JsonProperty("expanderY")]
+        public string? ExpanderYValue
+        {
+            set => this.ParsePosition(value ?? "0");
+        }
+
+        /// <summary>
+        /// The bar that the expander position is relative to.
+        /// </summary>
+        [JsonProperty("expanderRelative")]
+        [JsonConverter(typeof(StringEnumConverter))]
+        public ExpanderRelative ExpanderRelative
+        {
+            set => this.expanderRelative = value;
+            get => this.expanderRelative;
+        }
+
+        public RelativePosition Primary { get; set; } = new RelativePosition();
+        public RelativePosition Secondary { get; set; } = new RelativePosition();
+        public RelativePosition Expander { get; set; } = new RelativePosition();
+
+        /// <summary>
+        /// Gets the AxisPosition for the given json property.
+        /// </summary>
+        /// <param name="jsonPropertyName">Name of the json property (xxValue).</param>
+        /// <returns>The AxisPosition.</returns>
+        private AxisPosition GetAxisPositionFromName(string jsonPropertyName)
+        {
+            string backingPropertyName = jsonPropertyName.Substring(0, jsonPropertyName.Length - "XValue".Length);
+
+            PropertyInfo property = this.GetType().GetProperty(backingPropertyName)
+                                    ?? throw new ArgumentException(
+                                        $"json property '{jsonPropertyName}' has no backing property.",
+                                        nameof(jsonPropertyName));
+            RelativePosition axisPosition = (property.GetValue(this) as RelativePosition)!;
+
+            string axis = jsonPropertyName.Substring(backingPropertyName.Length, 1);
+            return axis switch
+            {
+                "X" => axisPosition.X,
+                "Y" => axisPosition.Y,
+                _ => throw new InvalidOperationException($"Unable to get axis from property name {jsonPropertyName}")
+            };
+        }
+
+        /// <summary>
+        /// A tuple, for "X and Y" values.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public class RelativePosition
+        {
+            public AxisPosition X { get; set; } = new AxisPosition();
+            public AxisPosition Y { get; set; } = new AxisPosition();
+
+            /// <summary>
+            /// Gets the desired initial position of a window, relative to the work area.
+            /// </summary>
+            /// <param name="workArea">The work-area for the window.</param>
+            /// <param name="size">The window size.</param>
+            /// <param name="clamp">true if setting the position of the secondary bar.</param>
+            /// <returns>The location of the window.</returns>
+            public Point GetPosition(Rect workArea, Size size)
+            {
+                Rect result = new Rect()
+                {
+                    X = this.X.GetAbsolute(workArea.Left, workArea.Right, size.Width),
+                    Y = this.Y.GetAbsolute(workArea.Top, workArea.Bottom, size.Height),
+                    Size = size
+                };
+
+                return result.Location;
+            }
+        }
+
+        public class AxisPosition
+        {
+            /// <summary>
+            /// The value.
+            /// </summary>
+            public double Value { get; set; }
+            /// <summary>
+            /// true if the number is a 0-1 percentage.
+            /// </summary>
+            public bool IsRelative { get; set; }
+
+            /// <summary>
+            /// Returns -1 or 1, depending on its sign (including -/+ zero). 
+            /// </summary>
+            public int Sign => this.Value == 0.0
+                ? double.IsNegativeInfinity(1.0 / this.Value) ? -1 : 1
+                : Math.Sign(this.Value);
+
+            public bool IsNegative => this.Sign < 0;
+
+            public AxisPosition()
+            {
+            }
+
+            public AxisPosition(double value, bool isRelative)
+            {
+                this.Value = value;
+                this.IsRelative = isRelative;
+            }
+
+            public static implicit operator double(AxisPosition axisPosition)
+            {
+                return axisPosition.Value;
+            }
+
+            /// <summary>
+            /// Get the absolute position of this position, relative to the given range.
+            /// </summary>
+            /// <param name="min">The minimum value of the range.</param>
+            /// <param name="max">The maximum value of the range.</param>
+            /// <param name="clamp">true to ensure the result is witihn the range.</param>
+            /// <returns></returns>
+            public double GetAbsolute(double min, double max, bool clamp = true)
+            {
+                // Negative values are taken from the max.
+                double offset = this.IsNegative ? max : min;
+                
+                double result = this.IsRelative
+                    ? offset + this.Value * (max - min)
+                    : offset + this.Value;
+                
+                return clamp
+                    ? Math.Clamp(result, min, max)
+                    : result;
+            }
+
+            public double GetAbsolute(double min, double max, double size)
+            {
+                double value = 0;
+                if (min > max - size)
+                {
+                    // The outer area is smaller than the inner
+                    if (this.IsRelative)
+                    {
+                        double v = Math.Abs(this.Value);
+                        if (v < 0.33)
+                        {
+                            // left/top
+                            value = min;
+                        }
+                        else if (v < 0.66)
+                        {
+                            // center
+                            value = min + max - size / 2;
+                        }
+                        else
+                        {
+                            // right/bottom
+                            value = max - size;
+                        }
+                    }
+                    else
+                    {
+                        value = this.IsNegative ? max - size : min;
+                    }
+                }
+                else
+                {
+                    value = this.GetAbsolute(min, max - size);
+
+                    if (this.IsRelative)
+                    {
+                        //value -= size / 2;
+                    }
+
+                    value = Math.Clamp(value, min, max - size);
+                }
+
+                return value;
+            }
+        }
+
+        private void ParsePosition(string origValue, [CallerMemberName] string propertyName = "")
+        {
+            if (!propertyName.EndsWith("Value"))
+            {
+                throw new ArgumentException("Property name should end with 'Value'", nameof(propertyName));
+            }
+
             string value = origValue.Trim().ToLowerInvariant() switch
             {
                 LEFT => "0",
@@ -87,7 +327,7 @@ namespace Morphic.Bar.Bar
             double num;
             if (!double.TryParse(value, out num))
             {
-                throw new JsonException($"{property}: Unrecognised positional value '{value}'.");
+                throw new JsonException($"{propertyName}: Unrecognised positional value '{value}'.");
             }
             
             if (relative)
@@ -95,79 +335,10 @@ namespace Morphic.Bar.Bar
                 num /= 100;
             }
 
-            switch (property)
-            {
-                case nameof(this.XValue):
-                    this.XIsRelative = relative;
-                    this.X = num;
-                    break;
-                case nameof(this.YValue):
-                    this.YIsRelative = relative;
-                    this.Y = num;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(property));
-            }
-        }
-
-        public bool XIsRelative { get; private set; }
-        public bool YIsRelative { get; private set; }
-        public double X { get; private set; }
-        public double Y { get; private set; }
-
-        /// <summary>
-        /// Gets the desired initial position of a window.
-        /// </summary>
-        /// <param name="workArea">The work-area for the window.</param>
-        /// <param name="size">The window size.</param>
-        /// <returns>The location of the window.</returns>
-        public Point GetPosition(Rect workArea, Size size)
-        {
-            Rect result = new Rect()
-            {
-                X = this.GetAbsolute(workArea.Left, workArea.Right, this.X, this.XIsRelative),
-                Y = this.GetAbsolute(workArea.Top, workArea.Bottom, this.Y, this.YIsRelative),
-                Size = size
-            };
-
-            if (this.XIsRelative)
-            {
-                result.X -= size.Width / 2;
-            }
-
-            if (this.YIsRelative)
-            {
-                result.Y -= size.Height / 2;
-            }
-
-            // Make sure the window is within the work area.
-            if (result.Right > workArea.Right)
-            {
-                result.X = workArea.Right - result.Width;
-            }
-            
-            if (result.Bottom > workArea.Bottom)
-            {
-                result.Y = workArea.Bottom - result.Height;
-            }
-
-            result.X = Math.Max(result.X, workArea.X);
-            result.Y = Math.Max(result.Y, workArea.Y);
-
-            return result.Location;
-        }
-
-        private double GetAbsolute(double min, double max, double value, bool percent = false)
-        {
-            // Get the sign, including negative 0.
-            int sign = value == 0.0
-                ? double.IsNegativeInfinity(1.0 / value) ? -1 : 1
-                : Math.Sign(value);
-
-            double offset = sign > 0 ? min : max;
-            return percent
-                ? offset + value * (max - min)
-                : offset + value;
+            // Set the backing property.
+            AxisPosition axisPosition = this.GetAxisPositionFromName(propertyName);
+            axisPosition.Value = num;
+            axisPosition.IsRelative = relative;
         }
     }
 
@@ -182,5 +353,12 @@ namespace Morphic.Bar.Bar
         Center = 6,
         Centre = 6,
         Middle = 6
+    }
+
+    public enum ExpanderRelative
+    {
+        Both = 0,
+        Primary = 1,
+        Secondary = 2
     }
 }

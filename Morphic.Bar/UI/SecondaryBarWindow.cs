@@ -13,7 +13,15 @@ namespace Morphic.Bar.UI
 
     public class SecondaryBarWindow : BarWindow
     {
-        private PrimaryBarWindow primaryBarWindow;
+        private readonly PrimaryBarWindow primaryBarWindow;
+
+        public override bool IsExpanded
+        {
+            get => this.primaryBarWindow.IsExpanded;
+            set => this.primaryBarWindow.IsExpanded = value;
+        }
+
+        public override BarData Bar => this.primaryBarWindow?.Bar ?? this.bar;
 
         /// <summary>
         /// The edge of the primary bar window where this window is attached to.
@@ -24,20 +32,42 @@ namespace Morphic.Bar.UI
             : base(barData)
         {
             this.primaryBarWindow = primaryBarWindow;
-            
+
             this.primaryBarWindow.Loaded += (sender, args) =>
             {
                 this.Owner = this.primaryBarWindow;
-                this.Show();
             };
-
+            
+            this.primaryBarWindow.ContentRendered += (sender, args) =>this.UpdatePosition();
             this.primaryBarWindow.LocationChanged += (sender, args) => this.UpdatePosition();
             this.primaryBarWindow.SizeChanged += (sender, args) => this.UpdatePosition();
+
+            App.Current.Deactivated += (sender, args) =>
+            {
+                if (this.Bar.SecondaryBar.AutoHide)
+                {
+                    this.IsExpanded = false;
+                }
+            };
+
+            this.BarChanged += (sender, args) => this.UpdatePosition();
+            
             this.primaryBarWindow.Closed += (sender, args) => this.Close();
+            this.AppBar.BeginDragMove += (sender, args) =>
+            {
+                this.primaryBarWindow.WindowMovement.DragMove();
+                args.Cancel = true;
+            };
         }
 
         public void UpdatePosition()
         {
+            if (!this.IsLoaded) return;
+            this.Visibility = this.IsExpanded ? Visibility.Visible : Visibility.Hidden;
+            Size size = this.GetGoodSize();
+            this.Height = size.Height;
+            this.Width = size.Width;
+
             // If docked, attach to the other side. 
             Edge edge = this.primaryBarWindow.DockedEdge.Opposite();
             bool docked = edge != Edge.None;
@@ -105,17 +135,29 @@ namespace Morphic.Bar.UI
             switch (attachedEdge)
             {
                 case Edge.Left:
-                    rect.X -= this.Width;
+                    rect.X -= this.Width - this.BorderThickness.Right;
                     break;
                 case Edge.Top:
                     rect.Y -= this.Height;
                     break;
                 case Edge.Right:
-                    rect.X += this.primaryBarWindow.Width;
+                    rect.X += this.primaryBarWindow.Width - this.BorderThickness.Left;
                     break;
                 case Edge.Bottom:
                     rect.Y += this.primaryBarWindow.Height;
                     break;
+            }
+            
+            // Align along the edge
+            if (attachedEdge.IsHorizontal())
+            {
+                rect.X = this.Bar.Position.Secondary.X.GetAbsolute(this.primaryBarWindow.Left,
+                    this.primaryBarWindow.Left + this.primaryBarWindow.Width, this.Width);
+            }
+            else
+            {
+                rect.Y = this.Bar.Position.Secondary.Y.GetAbsolute(this.primaryBarWindow.Top,
+                    this.primaryBarWindow.Top + this.primaryBarWindow.Height, this.Height);
             }
             
             // Make sure it's on the screen, and within the main bar.
@@ -154,7 +196,9 @@ namespace Morphic.Bar.UI
 
         protected internal override Orientation GetBestOrientation(Edge appBarEdge)
         {
-            return this.primaryBarWindow.GetBestOrientation(appBarEdge);
+            return this.primaryBarWindow.Width > this.primaryBarWindow.Height
+                ? Orientation.Horizontal
+                : Orientation.Vertical;
         }
     }
 }
