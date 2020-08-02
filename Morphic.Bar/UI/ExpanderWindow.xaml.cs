@@ -85,15 +85,12 @@ namespace Morphic.Bar.UI
 
             this.Topmost = this.primaryBarWindow.Topmost;
         }
-        
-        
 
         private void OnLoaded(object sender, RoutedEventArgs args)
         {
             // The events which cause this window to be repositioned.
             this.primaryBarWindow.LocationChanged += this.OnRepositionRequired;
             this.primaryBarWindow.SizeChanged += this.OnRepositionRequired;
-            this.primaryBarWindow.BarChanged += this.OnRepositionRequired;
             this.secondaryBarWindow.LocationChanged += this.OnRepositionRequired;
             this.secondaryBarWindow.SizeChanged += this.OnRepositionRequired;
             this.LocationChanged += this.OnRepositionRequired;
@@ -101,8 +98,6 @@ namespace Morphic.Bar.UI
             this.primaryBarWindow.ExpandedChange += this.UpdateExpanded;
 
             this.UpdateExpanded(sender, args);
-            this.Opacity = 1;
-            this.Visibility = Visibility.Visible;
         }
 
         public bool IsExpanded => this.Expander.IsExpanded;
@@ -114,11 +109,18 @@ namespace Morphic.Bar.UI
         /// <param name="e"></param>
         private void UpdateExpanded(object? sender, EventArgs e)
         {
-            this.Hide();
-            this.Expander.IsExpanded = this.primaryBarWindow.IsExpanded;
-            this.Owner = this.primaryBarWindow.IsExpanded ? (Window) this.secondaryBarWindow : this.primaryBarWindow;
-            this.SetPosition();
-            this.Show();
+            BarWindow owner = this.primaryBarWindow.IsExpanded
+                ? (BarWindow)this.secondaryBarWindow
+                : this.primaryBarWindow;
+                
+            if (this.IsLoaded && owner.IsLoaded && !this.primaryBarWindow.IsClosing && this.primaryBarWindow.Visibility == Visibility.Visible)
+            {
+                this.Hide();
+                this.Expander.IsExpanded = this.primaryBarWindow.IsExpanded;
+                this.Owner = owner;
+                this.SetPosition();
+                this.Show();
+            }
         }
 
         /// <summary>
@@ -175,7 +177,7 @@ namespace Morphic.Bar.UI
             }
             else
             {
-                offset.X -= this.Height / 2;
+                offset.Y -= this.Height / 2;
                 rc.X = position.Expander.X.GetAbsolute(relativeWindow.Left, relativeWindow.Right, this.Width);
                 rc.Y = (edge == Edge.Top ? ownerRect.Top : ownerRect.Bottom) + offset.Y;
             }

@@ -20,7 +20,7 @@ namespace Morphic.Bar.Bar
 
     public static class BarJson
     {
-        public static BarData? FromJson(string json, BarData? existingBar = null)
+        public static BarData? Load(TextReader reader, BarData? existingBar = null)
         {
             JsonSerializerSettings settings = new JsonSerializerSettings()
             {
@@ -31,7 +31,7 @@ namespace Morphic.Bar.Bar
             };
             
             JsonSerializer jsonSerializer = JsonSerializer.Create(settings);
-            BarJsonTextReader barJsonTextReader = new BarJsonTextReader(new StringReader(json), "win");
+            BarJsonTextReader barJsonTextReader = new BarJsonTextReader(reader, "win");
 
             BarData? bar;
             if (existingBar == null)

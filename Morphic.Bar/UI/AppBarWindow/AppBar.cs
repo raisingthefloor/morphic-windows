@@ -62,6 +62,8 @@ namespace Morphic.Bar.UI.AppBarWindow
             
             this.windowMovement.Moving += this.OnMoving;
             this.windowMovement.Sizing += this.OnSizing;
+
+            this.window.Closed += (sender, args) => this.ApplyAppBar(Edge.None);
         }
 
         private void OnSizing(object? sender, WindowMovement.MovementEventArgs e)

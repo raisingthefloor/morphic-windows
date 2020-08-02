@@ -10,17 +10,30 @@
 
 namespace Morphic.Bar.Bar
 {
+    using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Runtime.CompilerServices;
+    using System.Threading;
+    using System.Threading.Tasks;
     using Newtonsoft.Json;
 
     /// <summary>
     /// Describes a bar.
     /// </summary>
     [JsonObject(MemberSerialization.OptIn)]
-    public class BarData
+    public class BarData : IDisposable
     {
+        private List<FileSystemWatcher> fileWatchers = new List<FileSystemWatcher>();
+
+        public event EventHandler? ReloadRequired;
+        
+        /// <summary>
+        /// Where the bar data was loaded from (a url or path).
+        /// </summary>
+        public string Source { get; set; }
+
         /// <summary>
         /// Bar identifier (currently unused by the client)
         /// </summary>
@@ -75,25 +88,114 @@ namespace Morphic.Bar.Bar
         /// </summary>
         public IEnumerable<BarItem> SecondaryItems => this.AllItems.Where(item => !item.Hidden && !item.IsPrimary).OrderByDescending(item => item.Priority);
 
+
         /// <summary>
-        /// Generates the bar from a json string.
+        /// Loads bar data from either a local file, or a url.
         /// </summary>
-        /// <param name="json"></param>
+        /// <param name="barSource">The local path or remote url.</param>
         /// <param name="includeDefault">true to also include the default bar data.</param>
-        /// <returns></returns>
-        public static BarData? FromJson(string json, bool includeDefault = true)
+        /// <returns>The bar data</returns>
+        public static BarData? Load(string barSource, bool includeDefault = true)
         {
-            string defaultFile = App.GetFile("default-bar.json5");
+            BarData? defaultBar;
+            if (includeDefault)
+            {
+                defaultBar = BarData.Load(App.GetFile("default-bar.json5"), false);
+            }
+            else
+            {
+                defaultBar = null;
+            }
             
-            BarData? defaultBar = includeDefault && File.Exists(defaultFile)
-                ? BarData.FromFile(defaultFile, false)
-                : null;
-            return BarJson.FromJson(json, defaultBar);
+            Uri uri = MakeUrl(barSource);
+
+            BarData? bar;
+            
+            using (TextReader reader = uri.IsFile
+                ? File.OpenText(uri.LocalPath)
+                : throw new NotImplementedException("only local files"))
+            {
+                bar = BarJson.Load(reader, defaultBar);
+            }
+
+            if (bar != null)
+            {
+                bar.Source = barSource;
+                if (uri.IsFile)
+                {
+                    bar.AddWatcher(uri.LocalPath);
+                }
+            }
+
+            return bar;
         }
 
-        public static BarData? FromFile(string jsonFile, bool includeDefault = true)
+        /// <summary>
+        /// Makes a url from a string containing a url or a local path (absolute or relative).
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        private static Uri MakeUrl(string input)
         {
-            return BarData.FromJson(File.ReadAllText(jsonFile), includeDefault);
+            if (!Uri.TryCreate(input, UriKind.Absolute, out Uri? uri))
+            {
+                // Assume it's a relative path.
+                string fullPath = Path.GetFullPath(input);
+                uri = new Uri(fullPath);
+            }
+
+            return uri;
+        }
+
+        private void AddWatcher(string file)
+        {
+            string fullPath = Path.GetFullPath(file);
+            string dir = Path.GetDirectoryName(fullPath)!;
+            string filename = Path.GetFileName(fullPath);
+
+            FileSystemWatcher watcher = new FileSystemWatcher(dir)
+            {
+                Filter = filename,
+                NotifyFilter = NotifyFilters.CreationTime | NotifyFilters.LastWrite | NotifyFilters.Size
+                               | NotifyFilters.FileName,
+                EnableRaisingEvents = true
+            };
+
+            watcher.Changed += this.WatcherOnChanged; 
+            watcher.Created += this.WatcherOnChanged; 
+            watcher.Renamed += this.WatcherOnChanged; 
+            
+            this.fileWatchers.Add(watcher);
+        }
+
+        private CancellationTokenSource? changed;
+
+        private async void WatcherOnChanged(object sender, FileSystemEventArgs e)
+        {
+            this.changed?.Cancel();
+            this.changed = new CancellationTokenSource();
+            
+            try
+            {
+                // Wait for the change events to finish.
+                await Task.Delay(1000, this.changed.Token);
+                this.changed = null;
+                App.Current.Dispatcher.Invoke(() => this.ReloadRequired?.Invoke(this, e));
+            }
+            catch (TaskCanceledException)
+            {
+                // Do nothing.
+            }
+        }
+
+        public void Dispose()
+        {
+            this.fileWatchers.ForEach(fileWatcher =>
+            {
+                fileWatcher.EnableRaisingEvents = false;
+                fileWatcher.Dispose();
+            }); 
+            this.fileWatchers.Clear();
         }
     }
 }

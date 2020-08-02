@@ -37,10 +37,7 @@ namespace Morphic.Bar.UI
 
         public virtual bool IsExpanded { get; set; }
 
-        /// <summary>
-        /// The bar data has changed.
-        /// </summary>
-        public event EventHandler? BarChanged;
+        public event EventHandler? BarLoaded;
 
         public BarWindow() : this(new BarData())
         {
@@ -65,24 +62,24 @@ namespace Morphic.Bar.UI
             this.InitializeComponent();
             App.Current.AddMouseOverWindow(this);
 
-            this.BarChanged += (sender, args) =>
-            {
-                this.BarControl.LoadBar(this.Bar, !this.isPrimary);
-            };
-
+            // Set the size and position after the bar is loaded and window is rendered.
+            bool rendered = false;
+            this.ContentRendered += (sender, args) => rendered = true; 
             this.BarControl.BarLoaded += (sender, args) =>
             {
-                if (this.IsLoaded)
+                if (rendered)
                 {
-                    this.OnBarLoaded(sender, args);
+                    this.OnBarLoaded();
                 }
                 else
                 {
-                    this.Loaded += (s, a) => this.OnBarLoaded(sender, args);
+                    this.ContentRendered += (s, a) => this.OnBarLoaded();
                 }
             };
 
             this.AppBar.EdgeChanged += this.AppBarOnEdgeChanged;
+            
+            this.Loaded += (sender, args) => this.BarControl.LoadBar(this.bar, !this.isPrimary);
 
         }
 
@@ -111,7 +108,7 @@ namespace Morphic.Bar.UI
             this.BorderThickness.Top + this.BorderThickness.Bottom +
             this.Padding.Top + this.Padding.Bottom;
 
-        private void OnBarLoaded(object? sender, EventArgs e)
+        protected virtual void OnBarLoaded()
         {
             this.SetBorder();
 
@@ -119,6 +116,8 @@ namespace Morphic.Bar.UI
             this.Height = size.Height;
             this.Width = size.Width;
             this.SetInitialPosition(size);
+            
+            this.BarLoaded?.Invoke(this, new EventArgs());
         }
 
         /// <summary>
@@ -217,7 +216,6 @@ namespace Morphic.Bar.UI
 
         protected internal void OnBarChanged()
         {
-            this.BarChanged?.Invoke(this, new EventArgs());
             this.OnPropertyChanged(nameof(this.Bar));
         }
 

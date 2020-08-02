@@ -38,7 +38,7 @@ namespace Morphic.Bar.UI
                 this.Owner = this.primaryBarWindow;
             };
             
-            this.primaryBarWindow.ContentRendered += (sender, args) =>this.UpdatePosition();
+            this.primaryBarWindow.ContentRendered += (sender, args) => this.UpdatePosition();
             this.primaryBarWindow.LocationChanged += (sender, args) => this.UpdatePosition();
             this.primaryBarWindow.SizeChanged += (sender, args) => this.UpdatePosition();
 
@@ -50,14 +50,18 @@ namespace Morphic.Bar.UI
                 }
             };
 
-            this.BarChanged += (sender, args) => this.UpdatePosition();
-            
             this.primaryBarWindow.Closed += (sender, args) => this.Close();
             this.AppBar.BeginDragMove += (sender, args) =>
             {
                 this.primaryBarWindow.WindowMovement.DragMove();
                 args.Cancel = true;
             };
+        }
+
+        protected override void OnBarLoaded()
+        {
+            base.OnBarLoaded();
+            this.UpdatePosition();
         }
 
         public void UpdatePosition()

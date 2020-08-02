@@ -48,9 +48,8 @@ namespace Morphic.Bar.UI
             this.tallestItem = double.IsNaN(this.ItemHeight)
                 ? this.Children.OfType<UIElement>()
                     .Select(child => child.RenderSize.Height)
-                    .Max()
-                : this.ItemHeight;
-            this.tallestItem *= this.Scale;
+                    .Max() * this.Scale
+                : this.ScaledItemHeight;
         }
 
         /// <summary>Gets a width that fits all items with the given height.</summary>

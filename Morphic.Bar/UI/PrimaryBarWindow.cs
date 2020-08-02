@@ -9,6 +9,7 @@ namespace Morphic.Bar.UI
     using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Controls;
+    using System.Windows.Forms.VisualStyles;
     using System.Windows.Media;
     using AppBarWindow;
     using Bar;
@@ -41,37 +42,36 @@ namespace Morphic.Bar.UI
                     args.Data.GetData(DataFormats.FileDrop) is string[] files)
                 {
                     string file = files.FirstOrDefault();
-                    this.SetBarSource(file);
+                    this.Bar = BarData.Load(this.Bar.Source)!;
                 }
             };
 #endif
-            this.BarChanged += this.OnBarChanged;
+            this.Closed += this.OnClosed;
             this.Bar = barData;
         }
 
-        private void OnBarChanged(object? sender, EventArgs args)
+        private void OnClosed(object? sender, EventArgs e)
         {
+            this.IsClosing = true;
+            this.expanderWindow?.Close();
+            this.secondaryWindow?.Close();
+        }
+
+        public bool IsClosing { get; set; }
+
+        protected override void OnBarLoaded()
+        {
+            base.OnBarLoaded();
+            
             if (this.Bar.SecondaryItems.Any())
             {
-                if (this.secondaryWindow == null)
-                {
-                    this.secondaryWindow = new SecondaryBarWindow(this, this.Bar);
-                    this.expanderWindow = new ExpanderWindow(this, this.secondaryWindow);
+                this.secondaryWindow = new SecondaryBarWindow(this, this.Bar);
+                this.expanderWindow = new ExpanderWindow(this, this.secondaryWindow);
 
-                    this.Loaded += (s, a) => this.secondaryWindow.Show();
-                    this.secondaryWindow.Loaded += (s, a) => this.expanderWindow.Show();
-
-                    this.expanderWindow.Changed += (s, a) => this.IsExpanded = this.expanderWindow.IsExpanded;
-                }
-
-                this.secondaryWindow.OnBarChanged();
-            }
-            else
-            {
-                this.secondaryWindow?.Close();
-                this.expanderWindow?.Close();
-                this.expanderWindow = null;
-                this.secondaryWindow = null;
+                this.secondaryWindow.Loaded += (s, a) => this.expanderWindow.Show();
+                this.expanderWindow.Changed += (s, a) => this.IsExpanded = this.expanderWindow.IsExpanded;
+                
+                this.secondaryWindow.Show();
             }
         }
 
@@ -86,66 +86,6 @@ namespace Morphic.Bar.UI
                 this.Top = pos.Y;
             }
         }
-
-        private void ToggleSecondaryBar(bool open)
-        {
-            if (this.secondaryWindow != null)
-            {
-                this.OnExpandedChange();
-
-            }
-        }
-
-#if TESTING
-        private string barFile = string.Empty;
-
-        /// <summary>
-        /// Set the source of the json data, and loads it.
-        /// </summary>
-        /// <param name="path"></param>
-        private async void SetBarSource(string path)
-        {
-            try
-            {
-                this.Bar = BarData.FromFile(path)!;
-                this.barFile = path;
-            }
-            catch (Exception e)
-            {
-                Console.Error.WriteLine(e.Message);
-                Console.Error.WriteLine(e.ToString());
-
-                this.BarControl.RemoveItems();
-                this.BarControl.AddItem(new BarButton()
-                {
-                    Theme = new BarItemTheme()
-                    {
-                        TextColor = Colors.DarkRed,
-                        Background = Colors.White
-                    },
-                    Text = e.Message,
-                    ToolTip = e.Message,
-                    ToolTipInfo = e.ToString()
-                });
-            }
-
-            // Monitor the file for changes (not using FileSystemWatcher because it doesn't work on network mounts)
-            FileInfo lastInfo = new FileInfo(path);
-            while (this.barFile == path)
-            {
-                await Task.Delay(500);
-                FileInfo info = new FileInfo(path);
-                bool changed = info.Length != lastInfo.Length ||
-                               info.CreationTime != lastInfo.CreationTime ||
-                               info.LastWriteTime != lastInfo.LastWriteTime;
-                if (changed)
-                {
-                    this.SetBarSource(path);
-                    break;
-                }
-            }
-        }
-#endif
 
         private void OnExpandedChange()
         {

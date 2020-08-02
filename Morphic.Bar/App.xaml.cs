@@ -7,11 +7,13 @@ namespace Morphic.Bar
     using System.IO;
     using System.Linq;
     using System.Reflection;
+    using System.Windows.Forms;
     using System.Windows.Navigation;
     using System.Windows.Threading;
     using Bar;
     using UI;
     using UI.AppBarWindow;
+    using Application = System.Windows.Application;
 
     /// <summary>
     /// Interaction logic for App.xaml
@@ -58,15 +60,43 @@ namespace Morphic.Bar
 
         public void LoadBar(string path)
         {
-            BarData? bar = BarData.FromFile(path);
+            BarData? bar = null;
+
+            try
+            {
+                bar = BarData.Load(path);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.ToString());
+            }
+
             if (this.barWindow != null)
             {
                 this.barWindow.Close();
                 this.barWindow = null;
             }
 
-            this.barWindow = new PrimaryBarWindow(bar);
-            this.barWindow.Show();
+            if (bar != null)
+            {
+                this.barWindow = new PrimaryBarWindow(bar);
+                this.barWindow.Show();
+                bar.ReloadRequired += this.OnBarOnReloadRequired;
+            }
+        }
+
+        private void OnBarOnReloadRequired(object? sender, EventArgs args)
+        {
+            Console.WriteLine("asdsa");
+            BarData? bar = sender as BarData;
+            if (bar != null)
+            {
+                string source = bar.Source;
+                this.barWindow?.Close();
+                this.barWindow = null;
+                bar.Dispose();
+                this.LoadBar(source);
+            }
         }
 
         // The mouse is over any window in mouseOverWindows
