@@ -22,7 +22,7 @@ namespace Morphic.Bar
     {
         public new static App Current => (App)Application.Current;
 
-        private BarWindow? barWindow;
+        private PrimaryBarWindow? barWindow;
 
         /// <summary>
         /// true if the current application is active.
@@ -87,13 +87,17 @@ namespace Morphic.Bar
 
         private void OnBarOnReloadRequired(object? sender, EventArgs args)
         {
-            Console.WriteLine("asdsa");
             BarData? bar = sender as BarData;
             if (bar != null)
             {
                 string source = bar.Source;
-                this.barWindow?.Close();
-                this.barWindow = null;
+                if (this.barWindow != null)
+                {
+                    this.barWindow.IsClosing = true;
+                    this.barWindow.Close();
+                    this.barWindow = null;
+                }
+
                 bar.Dispose();
                 this.LoadBar(source);
             }

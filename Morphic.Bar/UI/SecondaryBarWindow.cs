@@ -32,6 +32,7 @@ namespace Morphic.Bar.UI
             : base(barData)
         {
             this.primaryBarWindow = primaryBarWindow;
+            base.Scale = this.primaryBarWindow.Scale;
 
             this.primaryBarWindow.Loaded += (sender, args) =>
             {
@@ -76,8 +77,7 @@ namespace Morphic.Bar.UI
             Edge edge = this.primaryBarWindow.DockedEdge.Opposite();
             bool docked = edge != Edge.None;
 
-            Rect workArea =
-                this.primaryBarWindow.AppBar.FromPixels(this.primaryBarWindow.WindowMovement.GetWorkArea());
+            Rect workArea = this.GetWorkArea();
 
             if (!docked)
             {

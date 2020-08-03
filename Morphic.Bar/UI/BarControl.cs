@@ -34,10 +34,20 @@ namespace Morphic.Bar.UI
         }
 
         public BarData Bar { get; private set; }
+        public bool IsPrimary { get; set; }
 
-        public double Scale => this.Bar.Scale;
-        public double ScaledItemWidth => this.ItemWidth * this.Scale;
-        public double ScaledItemHeight => this.ItemHeight * this.Scale;
+        public bool FixedSize => this.IsPrimary && this.Bar.Columns != 0;
+        public bool IsHorizontal { get; set; }
+
+        public double Scale { get; set; }
+
+        public void ApplyScale()
+        {
+            this.LayoutTransform = new ScaleTransform(this.Scale, this.Scale);
+        }
+        
+        public double ScaledItemWidth => Math.Ceiling(this.ItemWidth * this.Scale);
+        public double ScaledItemHeight => Math.Ceiling(this.ItemHeight * this.Scale);
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -54,33 +64,68 @@ namespace Morphic.Bar.UI
 
         /// <summary>Gets a width that fits all items with the given height.</summary>
         /// <param name="height"></param>
+        /// <param name="orientation"></param>
         /// <returns></returns>
-        public double GetWidthFromHeight(double height)
+        public double GetWidthFromHeight(double height, Orientation orientation)
         {
             int itemCount = Math.Max(1, this.Children.Count);
 
-            double width = Math.Ceiling(itemCount / Math.Floor(height / this.tallestItem)) * this.ScaledItemWidth;
-            return Math.Clamp(width, this.ScaledItemWidth, this.ScaledItemWidth * itemCount);
+            double width;
+            if (this.FixedSize && orientation == Orientation.Vertical)
+            {
+                width = this.ScaledItemWidth * this.Bar.Columns;
+            }
+            else
+            {
+                double columns = this.FixedSize ? this.Bar.Columns : Math.Floor(height / this.tallestItem);
+                width = Math.Ceiling(itemCount / columns) * this.ScaledItemWidth;
+            }
+
+            return  Math.Ceiling(Math.Clamp(width, this.ScaledItemWidth, this.ScaledItemWidth * itemCount));
         }
 
         /// <summary>Gets a height that fits all items with the given width.</summary>
         /// <param name="width"></param>
+        /// <param name="orientation"></param>
         /// <returns></returns>
-        public double GetHeightFromWidth(double width)
+        public double GetHeightFromWidth(double width, Orientation orientation)
         {
             int itemCount = Math.Max(1, this.Children.Count);
-            double height = Math.Ceiling(itemCount / Math.Floor(width / this.ScaledItemWidth)) * this.tallestItem;
-            return Math.Clamp(height, this.tallestItem, this.tallestItem * itemCount);
+            double height;
+
+            if (this.FixedSize && orientation == Orientation.Horizontal)
+            {
+                height = this.ScaledItemHeight * this.Bar.Columns;
+            }
+            else
+            {
+                double rows = this.FixedSize ? this.Bar.Columns : Math.Floor(width / this.ScaledItemWidth);
+                height = Math.Ceiling(itemCount / rows) * this.tallestItem;
+            }
+
+            return Math.Ceiling(Math.Clamp(height, this.tallestItem, this.tallestItem * itemCount)) + 1;
         }
 
-        public void LoadBar(BarData bar, bool extraItems)
+        protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
         {
+            if (this.FixedSize)
+            {
+                this.Orientation = sizeInfo.NewSize.Width > this.ScaledItemWidth * 1.5
+                    ? Orientation.Horizontal
+                    : Orientation.Vertical;
+            }
+            base.OnRenderSizeChanged(sizeInfo);
+        }
+
+        public void LoadBar(BarData bar, bool isPrimary)
+        {
+            this.IsPrimary = isPrimary;
             this.RemoveItems();
             this.Bar = bar;
             
             this.LayoutTransform = new ScaleTransform(this.Scale, this.Scale);
             
-            this.LoadItems(extraItems ? this.Bar.SecondaryItems : this.Bar.PrimaryItems);
+            this.LoadItems(isPrimary ? this.Bar.PrimaryItems : this.Bar.SecondaryItems);
         }
 
         public void RemoveItems()

@@ -246,6 +246,17 @@ namespace Morphic.Bar.UI.AppBarWindow
                         {
                             this.mouseOffset = this.mouseStart - this.initialRect.TopLeft;
                         }
+                        else
+                        {
+                                this.mouseOffset.X = this.initialRect.Width / 2;
+                                this.mouseOffset.Y = this.initialRect.Height / 2;
+                            if (Math.Abs(this.mouseOffset.X) > this.initialRect.Width)
+                            {
+                            }
+                            if (Math.Abs(this.mouseOffset.Y) > this.initialRect.Height)
+                            {
+                            }
+                        }
                     }
 
                     if (this.IsResizing && this.AnchorSizingRect && eventArgs.Handled)

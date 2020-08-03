@@ -25,41 +25,43 @@
         <WindowChrome CaptionHeight="0" ResizeBorderThickness="3"></WindowChrome>
     </WindowChrome.WindowChrome>
 
-    <ui:BarControl x:Name="BarControl" 
-               ItemWidth="100" ItemHeight="90" 
-               HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-               Margin="{Binding Path=Padding, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
-           >
-    <ui:BarControl.Resources>
-        <ui:Ternary x:Key="NullCollapsed" False="Collapsed" True="Visible" />
-        
-        <!-- Template for bar item controls, set via code behind because it targets a base class -->
-        <!-- ReSharper disable once Xaml.RedundantResource (used in code-behind) -->
-        <Style x:Key="BarItemStyle" TargetType="{x:Type ui:BarItemControl}">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type ui:BarItemControl}">
-                        <Grid d:DataContext="{d:DesignInstance ui:BarItemControl, IsDesignTimeCreatable=True}">
-                            <Grid.ToolTip>
-                                <ToolTip
-                                    Visibility="{Binding BarItem.ToolTip, Converter={StaticResource NullCollapsed}}">
-                                    <StackPanel>
-                                        <TextBlock Text="{Binding ToolTipHeader}"
-                                                   FontWeight="Bold"/>
-                                        <TextBlock Text="{Binding ToolTipText}"
-                                                   Visibility="{Binding ToolTipText, Converter={StaticResource NullCollapsed}}"/>
-                                    </StackPanel>
-                                </ToolTip>
-                            </Grid.ToolTip>
-                            <Border Margin="2">
-                                <ContentPresenter />
-                            </Border>
-                        </Grid>
-                        
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-    </ui:BarControl.Resources>
-</ui:BarControl>
+    <ScrollViewer x:Name="ScrollViewer">
+        <ui:BarControl x:Name="BarControl" 
+                       ItemWidth="100" ItemHeight="90" 
+                       HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                       Margin="{Binding Path=Padding, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
+        >
+            <ui:BarControl.Resources>
+                <ui:Ternary x:Key="NullCollapsed" False="Collapsed" True="Visible" />
+                
+                <!-- Template for bar item controls, set via code behind because it targets a base class -->
+                <!-- ReSharper disable once Xaml.RedundantResource (used in code-behind) -->
+                <Style x:Key="BarItemStyle" TargetType="{x:Type ui:BarItemControl}">
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="{x:Type ui:BarItemControl}">
+                                <Grid d:DataContext="{d:DesignInstance ui:BarItemControl, IsDesignTimeCreatable=True}">
+                                    <Grid.ToolTip>
+                                        <ToolTip
+                                            Visibility="{Binding BarItem.ToolTip, Converter={StaticResource NullCollapsed}}">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding ToolTipHeader}"
+                                                           FontWeight="Bold"/>
+                                                <TextBlock Text="{Binding ToolTipText}"
+                                                           Visibility="{Binding ToolTipText, Converter={StaticResource NullCollapsed}}"/>
+                                            </StackPanel>
+                                        </ToolTip>
+                                    </Grid.ToolTip>
+                                    <Border Margin="2">
+                                        <ContentPresenter />
+                                    </Border>
+                                </Grid>
+                                
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </ui:BarControl.Resources>
+        </ui:BarControl>
+    </ScrollViewer>
 </Window>

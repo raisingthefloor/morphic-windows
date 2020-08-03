@@ -52,6 +52,18 @@ namespace Morphic.Bar.Bar
         [JsonProperty("scale")]
         public double Scale { get; set; } = 1;
 
+        /// <summary>
+        /// Number of columns (or rows). 0 to wrap according to size, 1 to never wrap (2+ looks odd). 
+        /// </summary>
+        [JsonProperty("columns")]
+        public double Columns { get; set; } = 1;
+
+        /// <summary>
+        /// What to do if all buttons do not fit.
+        /// </summary>
+        [JsonProperty("overflow")]
+        public BarOverflow Overflow { get; set; } = BarOverflow.Scale;
+
         /// <summary>Initial bar positions.</summary>
         [JsonProperty("position", ObjectCreationHandling = ObjectCreationHandling.Reuse)]
         public BarPosition Position { get; set; } = new BarPosition();

@@ -34,6 +34,9 @@ namespace Morphic.Bar.UI.AppBarWindow
 
         public bool SnapToEdges { get; set; } = true;
         public bool Draggable { get; set; } = true;
+        public bool FixedSize { get; set; }
+        public bool FixedOrientation { get; set; }
+        
 
         public event EventHandler<EdgeChangedEventArgs>? EdgeChanged;
         public event EventHandler<CancelableEventArgs>? BeginDragMove; 
@@ -69,10 +72,24 @@ namespace Morphic.Bar.UI.AppBarWindow
         private void OnSizing(object? sender, WindowMovement.MovementEventArgs e)
         {
             // Adjust the size to match the content.
+            
             bool horiz = (e.SizeEdge & WindowMovement.SizeEdge.Horizontal) == WindowMovement.SizeEdge.Horizontal;
-            Size newSize = this.GetGoodSize(e.Rect.Size, horiz ? Orientation.Vertical : Orientation.Horizontal, true);
+            Orientation orientation = horiz ? Orientation.Vertical : Orientation.Horizontal;
+
+            Size newSize = this.GetGoodSize(e.Rect.Size, orientation, true);
+            
             if (newSize != e.Rect.Size)
             {
+                // If the size is fixed and the orientation isn't, then adjust the orientation if there's a big
+                // different between the new size and the suggested size.
+                if (this.FixedSize && !this.FixedOrientation &&
+                    (e.Rect.Width > newSize.Width * 2
+                     || e.Rect.Height > newSize.Height * 2))
+                {
+                    // Get the size based on the other orientation.
+                    newSize = this.GetGoodSize(e.Rect.Size, orientation.Opposite(), true);
+                }
+
                 e.Rect.Size = newSize;
                 e.Handled = true;
             }
@@ -90,14 +107,16 @@ namespace Morphic.Bar.UI.AppBarWindow
             bool changed = false;
             Size newSize = inPixels ? this.FromPixels(size) : size;
 
+            Rect workArea = this.FromPixels(this.windowMovement.GetWorkArea());
+
             void GetHeight()
             {
                 if (!this.AppBarEdge.IsVertical())
                 {
-                    double newHeight = ((IAppBarWindow)this.window).GetHeightFromWidth(newSize.Width);
+                    double newHeight = ((IAppBarWindow)this.window).GetHeightFromWidth(newSize.Width, orientation);
                     if (!double.IsNaN(newHeight))
                     {
-                        newSize.Height = newHeight;
+                        newSize.Height = Math.Min(newHeight, workArea.Height);
                         changed = true;
                     }
                 }
@@ -107,10 +126,10 @@ namespace Morphic.Bar.UI.AppBarWindow
             {
                 if (!this.AppBarEdge.IsHorizontal())
                 {
-                    double newWidth = ((IAppBarWindow)this.window).GetWidthFromHeight(newSize.Height);
+                    double newWidth = ((IAppBarWindow)this.window).GetWidthFromHeight(newSize.Height, orientation);
                     if (!double.IsNaN(newWidth))
                     {
-                        newSize.Width = newWidth;
+                        newSize.Width = Math.Min(newWidth, workArea.Width);
                         changed = true;
                     }
                 }
@@ -174,6 +193,10 @@ namespace Morphic.Bar.UI.AppBarWindow
             if (this.AppBarEdge == Edge.None)
             {
                 return invert ? none.Value : thickness;
+            }
+            else if (this.FixedSize)
+            {
+                return none.Value;
             }
 
             Edge notTouching = this.AppBarEdge.Opposite();
@@ -339,7 +362,7 @@ namespace Morphic.Bar.UI.AppBarWindow
         /// <param name="outer">The outer rectangle to check against.</param>
         /// <param name="rect">The inner rect to adjust.</param>
         /// <param name="distance">The distance that the edge can be, in order to snap.</param>
-        private void SnapToEdge(Rect outer, ref Rect rect, double distance)
+        private HashSet<Edge> SnapToEdge(Rect outer, ref Rect rect, double distance)
         {
             HashSet<Edge> edges = NearEdges(outer, rect, distance);
             if (!edges.Contains(Edge.None))
@@ -364,6 +387,8 @@ namespace Morphic.Bar.UI.AppBarWindow
                     rect.Y = outer.Bottom - rect.Height;
                 }
             }
+
+            return edges;
         }
 
         /// <summary>
@@ -457,10 +482,10 @@ namespace Morphic.Bar.UI.AppBarWindow
     public interface IAppBarWindow
     {
         /// <summary>A callback that returns a good height from a given width.</summary>
-        public double GetHeightFromWidth(double width);
+        public double GetHeightFromWidth(double width, Orientation orientation);
 
         /// <summary>A callback that returns a good width from a given height.</summary>
-        public double GetWidthFromHeight(double height);
+        public double GetWidthFromHeight(double height, Orientation orientation);
 
     }
     
@@ -496,7 +521,14 @@ namespace Morphic.Bar.UI.AppBarWindow
                 _ => Edge.None
             };
         }
-        
+
+        public static Orientation Opposite(this Orientation orientation)
+        {
+            return orientation == Orientation.Horizontal
+                ? Orientation.Vertical
+                : Orientation.Horizontal;
+        }
+
         /// <summary>
         /// Is the edge horizontal? top or bottom.
         /// </summary>

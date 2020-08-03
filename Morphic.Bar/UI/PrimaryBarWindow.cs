@@ -31,6 +31,20 @@ namespace Morphic.Bar.UI
             }
         }
 
+        public override double Scale
+        {
+            get => base.Scale;
+            set
+            {
+                base.Scale = value;
+                // Apply the same scale to the secondary bar.
+                if (this.secondaryWindow != null)
+                {
+                    this.secondaryWindow.Scale = value;
+                }
+            }
+        }
+
         public PrimaryBarWindow(BarData barData) : base(barData)
         {
 #if TESTING

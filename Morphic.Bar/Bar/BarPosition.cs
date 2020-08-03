@@ -62,11 +62,18 @@ namespace Morphic.Bar.Bar
         {
             set => this.ParsePosition(value ?? "0");
         }
-        
+
         /// <summary>
         /// The initial orientation of the bar. Ignored if docked.
         /// </summary>
-        [JsonProperty("orientation")]
+        [JsonProperty("horizontal")]
+        public bool Horizontal
+        {
+            get => this.Orientation == System.Windows.Controls.Orientation.Horizontal;
+            set => this.Orientation =
+                value ? System.Windows.Controls.Orientation.Horizontal : System.Windows.Controls.Orientation.Vertical;
+        }
+
         public Orientation? Orientation { get; set; }
 
         /// <summary>
@@ -340,25 +347,5 @@ namespace Morphic.Bar.Bar
             axisPosition.Value = num;
             axisPosition.IsRelative = relative;
         }
-    }
-
-    public enum Position
-    {
-        Absolute = 0,
-        Percent = 1,
-        Left = 2,
-        Top = 3,
-        Right = 4,
-        Bottom = 5,
-        Center = 6,
-        Centre = 6,
-        Middle = 6
-    }
-
-    public enum ExpanderRelative
-    {
-        Both = 0,
-        Primary = 1,
-        Secondary = 2
     }
 }
