@@ -23,6 +23,16 @@
         }
       },
       {
+        "name": "nightmode.enabled",
+        "type": "boolean",
+        "default": false,
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Display_BlueLight_ManualToggleQuickAction",
+          "value_type": "boolean"
+        }
+      },
+      {
         "name": "colorfilter.enabled",
         "type": "boolean",
         "default": false,
