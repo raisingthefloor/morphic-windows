@@ -151,6 +151,27 @@
   <data name="QuickStrip_Contrast_Title" xml:space="preserve">
     <value>High Contrast</value>
   </data>
+  <data name="QuickStrip_NightMode_Off_HelpMessage" xml:space="preserve">
+    <value>Apply color suitable for the daytime.</value>
+  </data>
+  <data name="QuickStrip_NightMode_Off_HelpTitle" xml:space="preserve">
+    <value>Turn Off Night Mode</value>
+  </data>
+  <data name="QuickStrip_NightMode_Off_Title" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="QuickStrip_NightMode_On_HelpMessage" xml:space="preserve">
+    <value>Change the screen coloring to be easier to look at in the night.</value>
+  </data>
+  <data name="QuickStrip_NightMode_On_HelpTitle" xml:space="preserve">
+    <value>Turn On Night Mode</value>
+  </data>
+  <data name="QuickStrip_NightMode_On_Title" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="QuickStrip_NightMode_Title" xml:space="preserve">
+    <value>Night mode</value>
+  </data>
   <data name="QuickStrip_Magnifier_Hide_HelpMessage" xml:space="preserve">
     <value>Stop magnifying part of the screen as you move</value>
   </data>

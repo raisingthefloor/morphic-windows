@@ -190,6 +190,7 @@ namespace Morphic.Settings
             public static Preferences.Key WindowsDisplayZoom = new Preferences.Key("com.microsoft.windows.display", "zoom");
 
             public static Preferences.Key WindowsDisplayContrastEnabled = new Preferences.Key("com.microsoft.windows.display", "contrast.enabled");
+            public static Preferences.Key WindowsDisplayNightModeEnabled = new Preferences.Key("com.microsoft.windows.display", "nightmode.enabled");
 
             public static Preferences.Key WindowsMagnifierEnabled = new Preferences.Key("com.microsoft.windows.magnifier", "enabled");
             public static Preferences.Key WindowsMagnifierMode = new Preferences.Key("com.microsoft.windows.magnifier", "mode");

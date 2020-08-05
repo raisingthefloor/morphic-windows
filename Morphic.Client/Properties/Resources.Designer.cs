@@ -19,7 +19,7 @@ namespace Morphic.Client.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -220,6 +220,69 @@ namespace Morphic.Client.Properties {
         internal static string QuickStrip_Magnifier_Title {
             get {
                 return ResourceManager.GetString("QuickStrip_Magnifier_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Apply color suitable for the daytime..
+        /// </summary>
+        internal static string QuickStrip_NightMode_Off_HelpMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_NightMode_Off_HelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Turn Off Night Mode.
+        /// </summary>
+        internal static string QuickStrip_NightMode_Off_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_NightMode_Off_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Off.
+        /// </summary>
+        internal static string QuickStrip_NightMode_Off_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_NightMode_Off_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Change the screen coloring to be easier to look at in the night..
+        /// </summary>
+        internal static string QuickStrip_NightMode_On_HelpMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_NightMode_On_HelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Turn On Night Mode.
+        /// </summary>
+        internal static string QuickStrip_NightMode_On_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_NightMode_On_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to On.
+        /// </summary>
+        internal static string QuickStrip_NightMode_On_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_NightMode_On_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Night mode.
+        /// </summary>
+        internal static string QuickStrip_NightMode_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_NightMode_Title", resourceCulture);
             }
         }
         
