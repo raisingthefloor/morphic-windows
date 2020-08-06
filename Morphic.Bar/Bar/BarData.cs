@@ -28,11 +28,11 @@ namespace Morphic.Bar.Bar
         private List<FileSystemWatcher> fileWatchers = new List<FileSystemWatcher>();
 
         public event EventHandler? ReloadRequired;
-        
+
         /// <summary>
         /// Where the bar data was loaded from (a url or path).
         /// </summary>
-        public string Source { get; set; }
+        public string Source { get; set; } = string.Empty;
 
         /// <summary>
         /// Bar identifier (currently unused by the client)
@@ -112,7 +112,7 @@ namespace Morphic.Bar.Bar
             BarData? defaultBar;
             if (includeDefault)
             {
-                defaultBar = BarData.Load(App.GetFile("default-bar.json5"), false);
+                defaultBar = BarData.Load(AppPaths.GetConfigFile("default-bar.json5", true), false);
             }
             else
             {

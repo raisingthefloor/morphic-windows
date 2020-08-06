@@ -7,10 +7,12 @@ namespace Morphic.Bar
     using System.IO;
     using System.Linq;
     using System.Reflection;
+    using System.Threading.Tasks;
     using System.Windows.Forms;
     using System.Windows.Navigation;
     using System.Windows.Threading;
     using Bar;
+    using Client;
     using UI;
     using UI.AppBarWindow;
     using Application = System.Windows.Application;
@@ -40,22 +42,20 @@ namespace Morphic.Bar
             this.Deactivated += (sender, args) => this.IsActive = false;
         }
 
-        /// <summary>
-        /// Gets a path to a file that is relative to the executable.
-        /// </summary>
-        /// <param name="filename"></param>
-        /// <returns></returns>
-        public static string GetFile(string filename)
-        {
-            return Path.GetFullPath(
-                Path.Join(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), filename));
-        }
 
-        protected override void OnStartup(StartupEventArgs e)
+        protected override async void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
-            this.LoadBar(App.GetFile("test-bar.json5"));
+            AppPaths.CreateAll();
+
+            // Get the bar.
+            MorphicService morphicService = new MorphicService("http://fred:5002/");
+            string? barJson = await morphicService.GetBar();
+            string barFile = AppPaths.GetCacheFile("last-bar.json5");
+            await File.WriteAllTextAsync(barFile, barJson);
+
+            this.LoadBar(barFile);
         }
 
         public void LoadBar(string path)

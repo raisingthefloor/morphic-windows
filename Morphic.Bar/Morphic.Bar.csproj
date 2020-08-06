@@ -22,7 +22,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Content Include="default-bar.json5">
+      <Content Include="DefaultConfig\default-bar.json5">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
       <Content Include="test-bar.json5">
@@ -31,6 +31,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="Flurl.Http" Version="2.4.2" />
       <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     </ItemGroup>
 
