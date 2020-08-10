@@ -13,13 +13,10 @@ namespace Morphic.Bar.UI
     using System;
     using System.ComponentModel;
     using System.Globalization;
-    using System.Linq;
     using System.Runtime.CompilerServices;
-    using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Data;
-    using System.Windows.Media;
     using System.Windows.Shell;
     using AppBarWindow;
     using Bar;

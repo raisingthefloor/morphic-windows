@@ -13,6 +13,8 @@ namespace Morphic.Bar
     using System;
     using System.IO;
     using System.Reflection;
+    using System.Security.Cryptography;
+    using System.Text;
 
     public class AppPaths
     {
@@ -22,6 +24,7 @@ namespace Morphic.Bar
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Morphic.Bar");
 
         public static string DefaultConfigDir = Path.Combine(AppPaths.AppDir, "DefaultConfig");
+        public static string AssetsDir = Path.Combine(AppPaths.AppDir, "Assets");
         public static string CacheDir = Path.Combine(AppPaths.ConfigDir, "cache");
 
         public static void CreateAll()
@@ -40,9 +43,56 @@ namespace Morphic.Bar
             return Path.GetFullPath(filename, AppPaths.AppDir);
         }
 
-        public static string GetCacheFile(string filename)
+        /// <summary>
+        /// Gets a path to a file in the assets directory.
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        public static string GetAssetFile(string filename)
         {
-            return Path.GetFullPath(filename, AppPaths.AppDir);
+            return Path.GetFullPath(filename, AppPaths.AssetsDir);
+        }
+
+        /// <summary>
+        /// Gets a cache file. The filename is generated based on the source of the file (like the URL), so the same
+        /// file is returned for subsequent requests.
+        /// </summary>
+        /// <param name="sourceName">The original source of the file.</param>
+        /// <param name="extension">An extension to add onto the result</param>
+        /// <returns>A path to a file in the cache directory.</returns>
+        public static string GetCacheFile(string sourceName, string? extension = null)
+        {
+            // URLs and file paths can't be expressed in a filename, so use a hash instead.
+            using MD5 md5 = MD5.Create();
+            string filename = new Guid(md5.ComputeHash(Encoding.UTF8.GetBytes(sourceName))).ToString();
+            
+            extension = extension?.TrimStart('.');
+            if (!string.IsNullOrEmpty(extension))
+            {
+                filename += "." + extension;
+            }
+            return Path.GetFullPath(filename, AppPaths.CacheDir);
+        }
+
+        /// <summary><see cref="GetCacheFile(string,string?)"/></summary>
+        /// <param name="sourceName">The original source of the file.</param>
+        /// <param name="extension">An extension to add onto the result</param>
+        /// <param name="exists">true if the file exists.</param>
+        /// <returns>A path to a file in the cache directory.</returns>
+        public static string GetCacheFile(string sourceName, string? extension, out bool exists)
+        {
+            string path = AppPaths.GetCacheFile(sourceName, extension);
+            exists = File.Exists(path);
+            return path;
+        }
+
+        /// <summary><see cref="GetCacheFile(string,string?)"/></summary>
+        /// <param name="source">The original source of the file.</param>
+        /// <param name="exists">true if the file exists.</param>
+        /// <returns>A path to a file in the cache directory.</returns>
+        public static string GetCacheFile(Uri source, out bool exists)
+        {
+            return AppPaths.GetCacheFile(source.ToString(), "", out exists);
         }
 
         /// <summary>

@@ -17,6 +17,7 @@ namespace Morphic.Bar.Bar
     using System.Threading;
     using System.Threading.Tasks;
     using System.Windows;
+    using System.Windows.Media;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
 
@@ -27,6 +28,10 @@ namespace Morphic.Bar.Bar
     public abstract class BarAction
     {
         public abstract Task<bool> Invoke();
+
+        public virtual Uri? DefaultImageUri { get; }
+        public virtual ImageSource? DefaultImageSource { get; }
+
     }
 
     [JsonTypeName("null")]
@@ -53,6 +58,11 @@ namespace Morphic.Bar.Bar
         }
 
         public Uri Uri { get; set; } = null!;
+
+        /// <summary>
+        /// Use the site's favicon as the default.
+        /// </summary>
+        public override Uri? DefaultImageUri => new Uri($"https://icons.duckduckgo.com/ip2/{this.Uri.Host}.ico");
 
         public override Task<bool> Invoke()
         {

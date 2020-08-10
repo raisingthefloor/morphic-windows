@@ -44,19 +44,7 @@ namespace Morphic.Bar.Bar
                 jsonSerializer.Populate(barJsonTextReader, bar);
             }
 
-            if (bar != null)
-            {
-
-                bar.BarTheme.Apply(Theme.DefaultBar());
-
-                // Make the theme of each item inherit the default theme.
-                bar.DefaultTheme.Apply(Theme.DefaultItem());
-                foreach (BarItem item in bar.AllItems)
-                {
-                    item.Theme.Inherit(bar.DefaultTheme);
-                    item.Theme.InferStateThemes();
-                }
-            }
+            bar?.Deserialized();
 
             return bar;
         }

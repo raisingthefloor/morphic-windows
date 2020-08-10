@@ -6,10 +6,7 @@ namespace Morphic.Bar
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-    using System.Reflection;
-    using System.Threading.Tasks;
     using System.Windows.Forms;
-    using System.Windows.Navigation;
     using System.Windows.Threading;
     using Bar;
     using Client;
@@ -42,18 +39,21 @@ namespace Morphic.Bar
             this.Deactivated += (sender, args) => this.IsActive = false;
         }
 
-
         protected override async void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
             AppPaths.CreateAll();
 
-            // Get the bar.
-            MorphicService morphicService = new MorphicService("http://fred:5002/");
-            string? barJson = await morphicService.GetBar();
-            string barFile = AppPaths.GetCacheFile("last-bar.json5");
-            await File.WriteAllTextAsync(barFile, barJson);
+            string? barFile = Options.Current.BarFile;
+            if (barFile == null)
+            {
+                MorphicService morphicService =
+                    new MorphicService("https://dev-morphic.morphiclite-oregondesignservices.org/");
+                string? barJson = await morphicService.GetBar();
+                barFile = AppPaths.GetCacheFile("last-bar.json5");
+                await File.WriteAllTextAsync(barFile, barJson);
+            }
 
             this.LoadBar(barFile);
         }

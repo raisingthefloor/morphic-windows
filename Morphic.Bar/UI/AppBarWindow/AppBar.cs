@@ -16,7 +16,6 @@ namespace Morphic.Bar.UI.AppBarWindow
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Input;
-    using System.Windows.Media;
 
     /// <summary>
     /// Makes a Window become a draggable "app bar" window which can be snapped or docked to the desktop edges.

@@ -31,8 +31,8 @@ namespace Morphic.Bar.Client
                 {
 #warning Hard-coded password
                     ServerHost = serverHost,
-                    UserName = "test-user-1",
-                    Password = "test-password1"
+                    UserName = "",
+                    Password = ""
                 };
             }
             else

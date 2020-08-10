@@ -55,7 +55,7 @@
             <!-- Icon -->
             <Image
                 Grid.Row="0" Grid.RowSpan="2"
-                Source="{Binding BarItem.IconPath}"
+                Source="{Binding BarItem.ImageSource}"
                 Visibility="{Binding BarItem.ShowIcon, Converter={StaticResource BoolVisibility}}"
                 Stretch="Uniform"
                 Width="32" Height="32"
