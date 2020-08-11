@@ -47,8 +47,8 @@ namespace Morphic.Bar.UI
                 if (args.Data.GetDataPresent(DataFormats.FileDrop) &&
                     args.Data.GetData(DataFormats.FileDrop) is string[] files)
                 {
-                    string file = files.FirstOrDefault();
-                    this.Bar = BarData.Load(this.Bar.Source)!;
+                    string file = files.FirstOrDefault() ?? this.Bar.Source;
+                    this.Bar = BarData.Load(file)!;
                 }
             };
 #endif

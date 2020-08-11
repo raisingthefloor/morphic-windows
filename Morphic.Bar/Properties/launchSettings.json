@@ -4,7 +4,7 @@
     "Morphic.Bar": {
       "commandName": "Project",
       "environmentVariables": {
-        
+        "MORPHIC_LOGLEVEL": "Debug"
       }
     }
   }

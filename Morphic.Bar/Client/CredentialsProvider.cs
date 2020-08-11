@@ -64,6 +64,15 @@ namespace Morphic.Bar.Client
             this.AuthRequest = authRequest;
         }
 
+        /// <summary>
+        /// Returns information suitable for logging.
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return this.AuthRequest.GetType().Name;
+        }
+        
         public void OnSuccess()
         {
             this.Success?.Invoke(this, EventArgs.Empty);
@@ -100,6 +109,12 @@ namespace Morphic.Bar.Client
         {
             get => this.AuthRequest.Password;
             set => this.AuthRequest.Password = value;
+        }
+
+        public override string ToString()
+        {
+            bool hasPassword = string.IsNullOrEmpty(this.Password);
+            return $"[{base.ToString()}:username={this.UserName},password={hasPassword}]";
         }
 
         public UserPasswordCredentials() : base(new AuthRequest())

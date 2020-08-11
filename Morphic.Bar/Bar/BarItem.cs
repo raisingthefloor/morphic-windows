@@ -23,6 +23,7 @@ namespace Morphic.Bar.Bar
     using System.Windows.Media;
     using System.Windows.Media.Imaging;
     using System.Xml;
+    using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
     using SharpVectors.Converters;
     using SharpVectors.Dom.Svg;
@@ -36,6 +37,8 @@ namespace Morphic.Bar.Bar
     [JsonConverter(typeof(TypedJsonConverter), "widget", "button")]
     public class BarItem
     {
+        protected ILogger Logger = LogUtil.LoggerFactory.CreateLogger("Bar");
+        
         /// <summary>
         /// true if the item is to be displayed on the pull-out bar.
         /// </summary>
@@ -161,6 +164,10 @@ namespace Morphic.Bar.Bar
                     // Download later.
                     this.RemoteImage = new Uri(this.imageValue);
                 }
+                else if (string.IsNullOrEmpty(this.imageValue))
+                {
+                    this.ImagePath = string.Empty;
+                }
                 else
                 {
                     // Check if it points to a file within the assets directory.
@@ -173,6 +180,7 @@ namespace Morphic.Bar.Bar
 
                     if (foundFile == null)
                     {
+                        this.Logger.LogInformation("No local image for '{imageValue}'", this.imageValue);
                         this.ImagePath = string.Empty;
                     }
                     else
@@ -226,7 +234,7 @@ namespace Morphic.Bar.Bar
                     try
                     {
                         await downloads.WaitAsync();
-                        Console.WriteLine(this.RemoteImage);
+                        this.Logger.LogDebug("Downloading {remoteImage}", this.RemoteImage);
                         await wc.DownloadFileTaskAsync(this.RemoteImage, tempFile);
                     }
                     finally
@@ -244,6 +252,7 @@ namespace Morphic.Bar.Bar
                 catch (Exception e) when (!(e is OutOfMemoryException))
                 {
                     // Ignore
+                    this.Logger.LogWarning(e, "Download failed {remoteImage}", this.RemoteImage);
                 }
                 finally
                 {
@@ -275,7 +284,8 @@ namespace Morphic.Bar.Bar
                     }
                     catch (Exception e) when (e is XmlException || e is SvgException)
                     {
-                        // Nothing
+                        // Do nothing
+                        this.Logger.LogInformation(e, "Unable to load image {imageFile}", this.ImagePath);
                     }
                 }
             }

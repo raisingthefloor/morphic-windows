@@ -13,8 +13,10 @@ namespace Morphic.Bar
     using System;
     using System.IO;
     using System.Reflection;
+    using System.Runtime.CompilerServices;
     using System.Security.Cryptography;
     using System.Text;
+    using Microsoft.Extensions.Logging;
 
     public class AppPaths
     {
@@ -31,6 +33,14 @@ namespace Morphic.Bar
         {
             Directory.CreateDirectory(AppPaths.ConfigDir);
             Directory.CreateDirectory(AppPaths.CacheDir);
+        }
+
+        public static void Log(ILogger logger)
+        {
+            foreach (FieldInfo fieldInfo in typeof(AppPaths).GetFields(BindingFlags.Static | BindingFlags.Public))
+            {
+                logger.LogInformation("Path for {pathName}: {path}", fieldInfo.Name, fieldInfo.GetValue(null));
+            }
         }
         
         /// <summary>

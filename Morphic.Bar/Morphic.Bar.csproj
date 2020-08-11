@@ -10,6 +10,7 @@
         <PublishTrimmed>true</PublishTrimmed>
         <Platforms>AnyCPU;x64</Platforms>
         <VersionPrefix>1.0$(VersionBuildComponents)</VersionPrefix>
+        <VersionSuffix>$([System.DateTime]::UtcNow.ToString(yyyyMMdd))</VersionSuffix>
         <Company>Raising the Floor</Company>
     </PropertyGroup>
 
@@ -39,7 +40,10 @@
     <ItemGroup>
       <PackageReference Include="CommandLineParser" Version="2.8.0" />
       <PackageReference Include="Flurl.Http" Version="2.4.2" />
+      <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.6" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.1.6" />
       <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+      <PackageReference Include="NReco.Logging.File" Version="1.0.5" />
       <PackageReference Include="SharpVectors.Reloaded" Version="1.6.0" />
     </ItemGroup>
 

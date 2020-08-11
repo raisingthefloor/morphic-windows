@@ -6,10 +6,10 @@ namespace Morphic.Bar
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-    using System.Windows.Forms;
     using System.Windows.Threading;
     using Bar;
     using Client;
+    using Microsoft.Extensions.Logging;
     using UI;
     using UI.AppBarWindow;
     using Application = System.Windows.Application;
@@ -33,8 +33,12 @@ namespace Morphic.Bar
         /// <summary>The mouse has left any window belonging to the application.</summary>
         public event EventHandler? MouseLeave;
 
+        public ILogger Logger { get; }
+
         public App()
         {
+            this.Logger = LogUtil.Init();
+
             this.Activated += (sender, args) => this.IsActive = true;
             this.Deactivated += (sender, args) => this.IsActive = false;
         }
@@ -44,6 +48,7 @@ namespace Morphic.Bar
             base.OnStartup(e);
 
             AppPaths.CreateAll();
+            AppPaths.Log(this.Logger);
 
             string? barFile = Options.Current.BarFile;
             if (barFile == null)
@@ -66,9 +71,9 @@ namespace Morphic.Bar
             {
                 bar = BarData.Load(path);
             }
-            catch (Exception e)
+            catch (Exception e) when (!(e is OutOfMemoryException))
             {
-                MessageBox.Show(e.ToString());
+                this.Logger.LogError(e, "Problem loading the bar.");
             }
 
             if (this.barWindow != null)

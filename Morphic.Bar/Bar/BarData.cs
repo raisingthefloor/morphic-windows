@@ -16,6 +16,7 @@ namespace Morphic.Bar.Bar
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
 
     /// <summary>
@@ -101,6 +102,8 @@ namespace Morphic.Bar.Bar
         public IEnumerable<BarItem> SecondaryItems => this.AllItems.Where(item => !item.Hidden && !item.IsPrimary)
             .OrderByDescending(item => item.Priority);
 
+        private ILogger logger = LogUtil.LoggerFactory.CreateLogger("Bar");
+
         /// <summary>
         /// Loads bar data from either a local file, or a url.
         /// </summary>
@@ -119,6 +122,7 @@ namespace Morphic.Bar.Bar
                 defaultBar = null;
             }
 
+            App.Current.Logger.LogInformation("Loading bar from {source}", barSource);
             Uri uri = MakeUrl(barSource);
 
             BarData? bar;
