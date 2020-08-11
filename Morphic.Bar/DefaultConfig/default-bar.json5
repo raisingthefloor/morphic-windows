@@ -31,5 +31,17 @@
     },
     active: {
     }
-  }
+  },
+  items: [
+    {
+      kind: "link",
+      widget: "image",
+      is_primary: true,
+      priority: -100,
+      configuration: {
+        image_url: "morphic-logo",
+        url: "http://morphic.world"
+      }
+    }
+  ]
 }

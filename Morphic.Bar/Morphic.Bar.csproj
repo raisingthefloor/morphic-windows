@@ -47,4 +47,28 @@
       <PackageReference Include="SharpVectors.Reloaded" Version="1.6.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Remove="Setup\build\**" />
+      <Compile Remove="Setup\build2\**" />
+      <Compile Remove="Setup\output\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Remove="Setup\build\**" />
+      <EmbeddedResource Remove="Setup\build2\**" />
+      <EmbeddedResource Remove="Setup\output\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Setup\build\**" />
+      <None Remove="Setup\build2\**" />
+      <None Remove="Setup\output\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Page Remove="Setup\build\**" />
+      <Page Remove="Setup\build2\**" />
+      <Page Remove="Setup\output\**" />
+    </ItemGroup>
+
 </Project>

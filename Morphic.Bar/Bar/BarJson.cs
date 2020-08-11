@@ -177,13 +177,8 @@ namespace Morphic.Bar.Bar
         /// <returns>A class which inherits baseType.</returns>
         private object CreateInstance(Type baseType, string name)
         {
-            Type? type = null;
-
-            if (name != null)
-            {
-                // Find the class which has the JsonTypeName attribute with the given name.
-                type = GetJsonType(baseType, name);
-            }
+            // Find the class which has the JsonTypeName attribute with the given name.
+            Type? type = GetJsonType(baseType, name);
 
             if (type == null)
             {
@@ -206,7 +201,7 @@ namespace Morphic.Bar.Bar
         /// <param name="baseType">The base class.</param>
         /// <param name="name">The name in the JsonTypeName attribute.</param>
         /// <returns>The type.</returns>
-        private static Type GetJsonType(Type baseType, string name)
+        private static Type? GetJsonType(Type baseType, string name)
         {
             return baseType.Assembly.GetTypes()
                 .Where(t => !t.IsAbstract && t.IsSubclassOf(baseType))
@@ -221,7 +216,7 @@ namespace Morphic.Bar.Bar
         /// <returns></returns>
         private static string GetFieldName(MemberInfo property)
         {
-            JsonPropertyAttribute attribute = property.GetCustomAttributes<JsonPropertyAttribute>(true)
+            JsonPropertyAttribute? attribute = property.GetCustomAttributes<JsonPropertyAttribute>(true)
                 .FirstOrDefault();
             return attribute?.PropertyName ?? property.Name;
         }
@@ -245,31 +240,28 @@ namespace Morphic.Bar.Bar
             string kindName = jo[this.typeFieldName]?.ToString() ?? this.defaultValue;
             
             // Create the class for the type.
-            object? target = CreateInstance(objectType, kindName);
+            object? target = this.CreateInstance(objectType, kindName);
 
-            if (target != null)
+            // For each property, get the value using a path rather than just the field name.
+            // (inspired by https://stackoverflow.com/a/33094930/67586)
+            foreach (PropertyInfo property in target.GetType().GetProperties()
+                .Where(p => p.CanRead && p.CanWrite))
             {
-                // For each property, get the value using a path rather than just the field name.
-                // (inspired by https://stackoverflow.com/a/33094930/67586)
-                foreach (PropertyInfo property in target.GetType().GetProperties()
-                    .Where(p => p.CanRead && p.CanWrite))
-                {
-                    // Get the value, using the path in the field name attribute.
-                    string jsonPath = GetFieldName(property);
-                    JToken? token = jo.SelectToken(jsonPath);
+                // Get the value, using the path in the field name attribute.
+                string jsonPath = GetFieldName(property);
+                JToken? token = jo.SelectToken(jsonPath);
 
-                    if (token != null && token.Type != JTokenType.Null)
-                    {
-                        Type? newType = this.GetNewType(jo, property);
-                        object? value = newType == null
-                            ? token.ToObject(property.PropertyType, serializer)
-                            : token.ToObject(newType);
-                        // Set the property value.
-                        property.SetValue(target, value, null);
-                    }
+                if (token != null && token.Type != JTokenType.Null)
+                {
+                    Type? newType = this.GetNewType(jo, property);
+                    object? value = newType == null
+                        ? token.ToObject(property.PropertyType, serializer)
+                        : token.ToObject(newType);
+                    // Set the property value.
+                    property.SetValue(target, value, null);
                 }
             }
-            
+
             return target;
         }
 
