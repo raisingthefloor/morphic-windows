@@ -11,12 +11,23 @@
       }
     },
     {
-      kind: "link",
+      kind: "action",
       is_primary: true,
       configuration: {
-        label: "Dropbox Home Folder",
-        url: "https://www.dropbox.com/h"
+        identifier: "taskManager",
+        label: "open task manager"
       }
+    },
+    {
+      "kind": "action",
+      "is_primary": true,
+      "configuration": {
+        "label": "Take Screenshot",
+        "identifier": "screenshot",
+        "color": "",
+        "image_url": ""
+      },
+      "id": "10210050-take screenshot-generic-kind-79939245"
     },
     {
       kind: "link",

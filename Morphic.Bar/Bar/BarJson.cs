@@ -18,9 +18,16 @@ namespace Morphic.Bar.Bar
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
 
+    public interface IDeserializable
+    {
+        public void Deserialized();
+    }
+
     public static class BarJson
     {
-        public static BarData? Load(TextReader reader, BarData? existingBar = null)
+        //public static BarData? Load(TextReader reader, BarData? existingBar = null)
+        public static T Load<T>(TextReader reader, T? existingBar = null)
+            where T : class, IDeserializable
         {
             JsonSerializerSettings settings = new JsonSerializerSettings()
             {
@@ -33,10 +40,10 @@ namespace Morphic.Bar.Bar
             JsonSerializer jsonSerializer = JsonSerializer.Create(settings);
             BarJsonTextReader barJsonTextReader = new BarJsonTextReader(reader, "win");
 
-            BarData? bar;
+            T? bar;
             if (existingBar == null)
             {
-                bar = jsonSerializer.Deserialize<BarData>(barJsonTextReader);
+                bar = jsonSerializer.Deserialize<T>(barJsonTextReader);
             }
             else
             {
@@ -46,7 +53,7 @@ namespace Morphic.Bar.Bar
 
             bar?.Deserialized();
 
-            return bar;
+            return bar!;
         }
 
         /// <summary>
@@ -182,8 +189,16 @@ namespace Morphic.Bar.Bar
 
             if (type == null)
             {
-                throw new JsonSerializationException(
-                    $"Unable to get type of {baseType.Name} from '{this.typeFieldName} = ${name}'.");
+                if (baseType.GetCustomAttributes<JsonTypeNameAttribute>().Any())
+                {
+                    // The type has already been resolved at the property.
+                    type = baseType;
+                }
+                else
+                {
+                    throw new JsonSerializationException(
+                        $"Unable to get type of {baseType.Name} from '{this.typeFieldName} = ${name}'.");
+                }
             }
 
             object? instance = Activator.CreateInstance(type);

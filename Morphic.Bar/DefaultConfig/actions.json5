@@ -1,0 +1,13 @@
+{
+  fileId: "actions",
+  actions: {
+    "taskManager": {
+      kind: "application",
+      exe: "taskmgr.exe"
+    },
+    "screenshot": {
+      kind: "internal",
+      func: "screenshot"
+    }
+  }
+}

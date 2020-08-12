@@ -23,7 +23,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Content Include="DefaultConfig\default-bar.json5">
+      <Content Include="DefaultConfig\**\*">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
       <Content Include="test-bar.json5">

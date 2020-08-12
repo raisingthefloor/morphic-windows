@@ -23,7 +23,7 @@ namespace Morphic.Bar.Bar
     /// Describes a bar.
     /// </summary>
     [JsonObject(MemberSerialization.OptIn)]
-    public class BarData : IDisposable
+    public class BarData : IDisposable, IDeserializable
     {
         private List<FileSystemWatcher> fileWatchers = new List<FileSystemWatcher>();
 

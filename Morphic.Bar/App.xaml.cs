@@ -50,6 +50,8 @@ namespace Morphic.Bar
             AppPaths.CreateAll();
             AppPaths.Log(this.Logger);
 
+            BarActions actions = BarActions.FromFile(AppPaths.GetConfigFile("actions.json5", true));
+
             string? barFile = Options.Current.BarFile;
             if (barFile == null)
             {

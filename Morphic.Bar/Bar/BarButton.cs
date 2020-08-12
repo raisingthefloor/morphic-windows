@@ -22,6 +22,7 @@ namespace Morphic.Bar.Bar
     using System.Windows.Media;
     using System.Windows.Media.Imaging;
     using System.Xml;
+    using Actions;
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
     using SharpVectors.Converters;
@@ -43,7 +44,7 @@ namespace Morphic.Bar.Bar
 
         [JsonProperty("configuration", ObjectCreationHandling = ObjectCreationHandling.Replace)]
         [JsonConverter(typeof(TypedJsonConverter), "kind", "null")]
-        public BarAction Action { get; set; } = new BarNoAction();
+        public BarAction Action { get; set; } = new NoOpAction();
 
         /// <summary>
         /// The original image, as defined in json.
@@ -237,7 +238,18 @@ namespace Morphic.Bar.Bar
 
         public override async void Deserialized(BarData bar)
         {
+            // Resolve the pre-set action.
+            if (this.Action is PresetAction presetAction)
+            {
+                BarAction? realAction = presetAction.GetRealAction();
+                if (realAction != null)
+                {
+                    this.Action = realAction;
+                }
+            }
+
             base.Deserialized(bar);
+
             _ = this.LoadImage();
         }
 
