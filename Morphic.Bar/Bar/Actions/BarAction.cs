@@ -16,7 +16,6 @@ namespace Morphic.Bar.Bar.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using System.Windows.Media;
-    using ActionFunctions;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
 
