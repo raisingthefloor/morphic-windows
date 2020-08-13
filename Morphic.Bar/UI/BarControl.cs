@@ -25,12 +25,9 @@ namespace Morphic.Bar.UI
     /// </summary>
     public class BarControl : WrapPanel, INotifyPropertyChanged
     {
-        private double tallestItem;
-
         public BarControl()
         {
             this.Bar = new BarData();
-            this.LayoutUpdated += this.OnLayoutUpdated;
         }
 
         public BarData Bar { get; private set; }
@@ -53,66 +50,110 @@ namespace Morphic.Bar.UI
 
         public event EventHandler? BarLoaded;
 
-        private void OnLayoutUpdated(object? sender, EventArgs e)
+        private Size GetChildSize(UIElement child)
         {
-            this.tallestItem = double.IsNaN(this.ItemHeight)
-                ? this.Children.OfType<UIElement>()
-                    .Select(child => child.RenderSize.Height)
-                    .Max() * this.Scale
-                : this.ScaledItemHeight;
+            return this.GetChildSize(child.DesiredSize);
+        }
+        private Size GetChildSize(Size desiredSize)
+        {
+            return new Size(
+                double.IsNaN(this.ItemWidth) ? desiredSize.Width : this.ItemWidth,
+                double.IsNaN(this.ItemHeight) ? desiredSize.Height : this.ItemHeight
+            );
         }
 
-        /// <summary>Gets a width that fits all items with the given height.</summary>
-        /// <param name="height"></param>
-        /// <param name="orientation"></param>
-        /// <returns></returns>
-        public double GetWidthFromHeight(double height, Orientation orientation)
+        protected override Size MeasureOverride(Size constraint)
         {
-            int itemCount = Math.Max(1, this.Children.Count);
-
-            double width;
-            if (this.FixedSize && orientation == Orientation.Vertical)
-            {
-                width = this.ScaledItemWidth * this.Bar.Columns;
-            }
-            else
-            {
-                double columns = this.FixedSize ? this.Bar.Columns : Math.Floor(height / this.tallestItem);
-                width = Math.Ceiling(itemCount / columns) * this.ScaledItemWidth;
-            }
-
-            return  Math.Ceiling(Math.Clamp(width, this.ScaledItemWidth, this.ScaledItemWidth * itemCount));
+            return this.MeasureArrange(constraint, true);
         }
 
-        /// <summary>Gets a height that fits all items with the given width.</summary>
-        /// <param name="width"></param>
-        /// <param name="orientation"></param>
-        /// <returns></returns>
-        public double GetHeightFromWidth(double width, Orientation orientation)
+        protected override Size ArrangeOverride(Size finalSize)
         {
-            int itemCount = Math.Max(1, this.Children.Count);
-            double height;
+            return this.MeasureArrange(finalSize, false);
+        }
 
-            if (this.FixedSize && orientation == Orientation.Horizontal)
+        /// <summary>
+        /// Measure or arrange the child items.
+        /// </summary>
+        /// <param name="finalSize">The suggested size.</param>
+        /// <param name="measure">true to only measure, otherwise arrange then items.</param>
+        /// <param name="orientationOverride">Override the controls orientation.</param>
+        /// <returns>A size that fits the arranged items.</returns>
+        public Size MeasureArrange(Size finalSize, bool measure, Orientation? orientationOverride = null)
+        {
+            Orientation orientation = orientationOverride ?? this.Orientation;
+
+            double x = 0;
+            double rowHeight = 0;
+
+            CorrectedCoords pos = new CorrectedCoords(0, 0, orientation);
+            CorrectedCoords size = new CorrectedCoords(finalSize, orientation);
+            CorrectedCoords actualSize = new CorrectedCoords(0, 0, orientation);
+
+            CorrectedCoords itemSize = new CorrectedCoords(this.ItemWidth, this.ItemHeight, orientation);
+
+            List<UIElement> children = this.Children.OfType<UIElement>().Where(c => c != null).ToList();
+
+            if (measure)
             {
-                height = this.ScaledItemHeight * this.Bar.Columns;
-            }
-            else
-            {
-                double rows = this.FixedSize ? this.Bar.Columns : Math.Floor(width / this.ScaledItemWidth);
-                height = Math.Ceiling(itemCount / rows) * this.tallestItem;
+                Size childAvailableSize = this.GetChildSize(finalSize);
+                children.ForEach(c => c.Measure(childAvailableSize));
             }
 
-            return Math.Ceiling(Math.Clamp(height, this.tallestItem, this.tallestItem * itemCount)) + 1;
+            // Get the widest
+            double widest = double.IsNaN(itemSize.Width)
+                ? children.Select(c => new CorrectedCoords(c.DesiredSize, orientation).Width).Max()
+                : itemSize.Width;
+
+            size.Width = Math.Max(size.Width, widest);
+
+            foreach (UIElement child in children)
+            {
+                CorrectedCoords childSize = new CorrectedCoords(this.GetChildSize(child), orientation);
+
+                if (pos.X + childSize.Width >= size.Width)
+                {
+                    // new row
+                    pos.X = 0;
+                    pos.Y += rowHeight;
+
+                    rowHeight = 0;
+                }
+
+                if (!measure)
+                {
+                    child.Arrange(new Rect(pos.ToPoint(), childSize.ToSize()));
+                }
+
+                rowHeight = Math.Max(rowHeight, childSize.Height);
+                pos.X += childSize.Width;
+
+                actualSize.Width = Math.Max(actualSize.Width, pos.X);
+                actualSize.Height = pos.Y + rowHeight;
+            }
+
+            return actualSize.ToSize();
+        }
+
+        public Size GetSize(Size size, Orientation? orientationOverride = null)
+        {
+            Size newSize = this.MeasureArrange(size, true, orientationOverride);
+            newSize.Width *= this.Scale;
+            newSize.Height *= this.Scale;
+            return newSize;
         }
 
         protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
         {
-            if (this.FixedSize)
+            if (true||this.FixedSize)
             {
                 this.Orientation = sizeInfo.NewSize.Width > this.ScaledItemWidth * 1.5
                     ? Orientation.Horizontal
                     : Orientation.Vertical;
+            }
+            else
+            {
+                this.Orientation = Orientation.Vertical;
             }
             base.OnRenderSizeChanged(sizeInfo);
         }
@@ -170,4 +211,67 @@ namespace Morphic.Bar.UI
             this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
+
+    public struct CorrectedCoords
+    {
+        public readonly Orientation Orientation;
+        private Size size;
+        private readonly bool swap;
+
+        public CorrectedCoords(Size size, Orientation orientation) : this(size.Width, size.Height, orientation)
+        {
+        }
+        public CorrectedCoords(Point size, Orientation orientation) : this(size.X, size.Y, orientation)
+        {
+        }
+        public CorrectedCoords(Orientation orientation) : this(0, 0, orientation)
+        {
+        }
+
+        public CorrectedCoords(double x, double y, Orientation orientation)
+        {
+            this.Orientation = Orientation.Horizontal;// orientation;
+            this.swap = this.Orientation == Orientation.Vertical;
+            this.X = this.swap ? y : x;
+            this.Y = this.swap ? x : y;
+        }
+
+        public static implicit operator Size(CorrectedCoords size) => size.ToSize();
+
+        public Size ToSize()
+        {
+            return this.swap
+                ? new Size(this.Height, this.Width)
+                : new Size(this.Width, this.Height);
+        }
+
+        public Point ToPoint()
+        {
+            return this.swap
+                ? new Point(this.Y, this.X)
+                : new Point(this.X, this.Y);
+        }
+
+        public double X { get; set; }
+        public double Y { get; set; }
+
+        public double Width
+        {
+            get => this.X;
+            set => this.X = value;
+        }
+
+        public double Height
+        {
+            get => this.Y;
+            set => this.Y = value;
+        }
+
+        public double CorrectedWidth => this.swap ? this.Height : this.Width;
+        public double CorrectedHeight => this.swap ? this.Width : this.Height;
+        public double CorrectedX => this.swap ? this.Y : this.X;
+        public double CorrectedY => this.swap ? this.X : this.Y;
+    }
+
+
 }

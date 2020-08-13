@@ -103,21 +103,7 @@ namespace Morphic.Bar.UI
 
         private void OnSizeChanged(object sender, SizeChangedEventArgs args)
         {
-            this.BarControl.Orientation = Orientation.Vertical;
-            if (this.Bar.Overflow != BarOverflow.Hide && this.isPrimary)
-            {
-                bool horiz = this.Width > this.BarControl.ScaledItemWidth * 3;
-
-                this.ScrollViewer.HorizontalScrollBarVisibility =
-                    horiz ? ScrollBarVisibility.Hidden : ScrollBarVisibility.Disabled;
-                this.ScrollViewer.VerticalScrollBarVisibility =
-                    horiz ? ScrollBarVisibility.Disabled : ScrollBarVisibility.Hidden;
-            }
-            else
-            {
-                this.ScrollViewer.HorizontalScrollBarVisibility =
-                    this.ScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
-            }
+            //this.BarControl.Orientation = Orientation.Vertical;
         }
 
         /// <summary>
@@ -138,12 +124,14 @@ namespace Morphic.Bar.UI
         /// <summary>Additional width added to the window.</summary>
         public double ExtraWidth =>
             this.BorderThickness.Left + this.BorderThickness.Right +
-            this.Padding.Left + this.Padding.Right;
+            this.Padding.Left + this.Padding.Right +
+            this.BarControl.Margin.Left + this.BarControl.Margin.Right;
 
         /// <summary>Additional height added to the window.</summary>
         public double ExtraHeight =>
             this.BorderThickness.Top + this.BorderThickness.Bottom +
-            this.Padding.Top + this.Padding.Bottom;
+            this.Padding.Top + this.Padding.Bottom +
+            this.BarControl.Margin.Top + this.BarControl.Margin.Bottom;
 
         protected virtual void OnBarLoaded()
         {
@@ -167,24 +155,24 @@ namespace Morphic.Bar.UI
             bool changed = false;
             if (this.Bar.Overflow == BarOverflow.Scale)
             {
-                Orientation orientation = size.Width > size.Height ? Orientation.Horizontal : Orientation.Vertical;
-                // Get the un-clipped size
-                this.BarControl.Scale = this.Bar.Scale;
-                Size bestSize = new Size(
-                    ((IAppBarWindow)this).GetWidthFromHeight(size.Height, orientation),
-                    ((IAppBarWindow)this).GetHeightFromWidth(size.Width, orientation)
-                );
-
-                if (bestSize.Width > size.Width)
-                {
-                    this.Scale = (size.Width - this.ExtraWidth) / (bestSize.Width - this.ExtraWidth);
-                    changed = true;
-                }
-                else if (bestSize.Height > size.Height)
-                {
-                    this.Scale = (size.Height - this.ExtraHeight) / (bestSize.Height - this.ExtraHeight);
-                    changed = true;
-                }
+                // Orientation orientation = size.Width > size.Height ? Orientation.Horizontal : Orientation.Vertical;
+                // // Get the un-clipped size
+                // this.BarControl.Scale = this.Bar.Scale;
+                // Size bestSize = new Size(
+                //     ((IAppBarWindow)this).GetWidthFromHeight(size.Height, orientation),
+                //     ((IAppBarWindow)this).GetHeightFromWidth(size.Width, orientation)
+                // );
+                //
+                // if (bestSize.Width > size.Width)
+                // {
+                //     this.Scale = (size.Width - this.ExtraWidth) / (bestSize.Width - this.ExtraWidth);
+                //     changed = true;
+                // }
+                // else if (bestSize.Height > size.Height)
+                // {
+                //     this.Scale = (size.Height - this.ExtraHeight) / (bestSize.Height - this.ExtraHeight);
+                //     changed = true;
+                // }
             }
 
             if (changed)
@@ -311,14 +299,25 @@ namespace Morphic.Bar.UI
             this.OnPropertyChanged(nameof(this.Bar));
         }
 
-        double IAppBarWindow.GetHeightFromWidth(double width, Orientation orientation)
+        public Size GetSize(Size availableSize, Orientation orientation)
         {
-            return this.BarControl.GetHeightFromWidth(width - this.ExtraWidth, orientation) + this.ExtraHeight;
-        }
+            if (orientation == Orientation.Horizontal)
+            {
+                availableSize.Width = double.PositiveInfinity;
+                availableSize.Height -= this.ExtraHeight;
+            }
+            else
+            {
+                availableSize.Width -= this.ExtraWidth;
+                availableSize.Height = double.PositiveInfinity;
+            }
 
-        double IAppBarWindow.GetWidthFromHeight(double height, Orientation orientation)
-        {
-            return this.BarControl.GetWidthFromHeight(height - this.ExtraHeight, orientation) + this.ExtraWidth;
+            Size newSize = this.BarControl.GetSize(availableSize, orientation);
+            newSize.Width += this.ExtraWidth;
+            newSize.Height += this.ExtraHeight;
+
+            Console.WriteLine($"{availableSize} {newSize} {orientation}");
+            return newSize;
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

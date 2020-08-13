@@ -1,7 +1,7 @@
 {
   scale: 1,
-  columns: 1,
-  overflow: "scroll",
+  columns: 0,
+  overflow: "scale",
   position: {
     docked: null,
     x: "Left",

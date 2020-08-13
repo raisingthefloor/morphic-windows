@@ -41,7 +41,7 @@
       kind: "link",
       is_primary: true,
       configuration: {
-        label: "iCloud Files Home Folder",
+        label: "iCloud Files Home Folder aaa bbbb ccccc dd e ffff ggggg",
         url: "https://www.icloud.com/iclouddrive/"
       }
     },
