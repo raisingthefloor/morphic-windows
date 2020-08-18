@@ -37,6 +37,7 @@ namespace Morphic.Bar
 
         public App()
         {
+            AppPaths.CreateAll();
             this.Logger = LogUtil.Init();
 
             this.Activated += (sender, args) => this.IsActive = true;
@@ -47,7 +48,6 @@ namespace Morphic.Bar
         {
             base.OnStartup(e);
 
-            AppPaths.CreateAll();
             AppPaths.Log(this.Logger);
 
             BarActions actions = BarActions.FromFile(AppPaths.GetConfigFile("actions.json5", true));
