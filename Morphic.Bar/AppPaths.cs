@@ -21,7 +21,7 @@ namespace Morphic.Bar
     {
         public static string AppDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? ".";
 
-        public static string ConfigDir =
+        public static string ConfigDir = Environment.GetEnvironmentVariable("MORPHIC_CONFIGDIR") ??
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Morphic.Bar");
 
         public static string DefaultConfigDir = Path.Combine(AppPaths.AppDir, "DefaultConfig");
