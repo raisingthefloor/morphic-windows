@@ -13,6 +13,7 @@
         BorderBrush="{DynamicResource BorderBrush}"
         BorderThickness="{Binding Bar.BarTheme.BorderSize, FallbackValue=0, Mode=OneWay}"
         Padding="0"
+        ContextMenu="{StaticResource MorphicMenu}"
         >
 
     <Window.Resources>

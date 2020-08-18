@@ -342,6 +342,11 @@ namespace Morphic.Bar.UI
         {
             this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+        public void ShowMenu()
+        {
+
+        }
     }
 
     /// <summary>

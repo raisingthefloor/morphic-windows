@@ -49,7 +49,7 @@ namespace Morphic.Bar.Bar.Actions
     [JsonTypeName("internal")]
     public class InternalAction : BarAction
     {
-        [JsonProperty("func")]
+        [JsonProperty("function", Required = Required.Always)]
         public string? FunctionName { get; set; }
 
         [JsonProperty("args")]
@@ -62,7 +62,6 @@ namespace Morphic.Bar.Bar.Actions
                 return Task.FromResult(true);
             }
 
-            System.Windows.Forms.MessageBox.Show($"Invoking function '{this.FunctionName}'");
             return ActionFunctions.Default.InvokeFunction(this.FunctionName, this.Arguments ?? new string[0]);
         }
     }

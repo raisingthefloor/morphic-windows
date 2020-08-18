@@ -15,16 +15,29 @@ namespace Morphic.Bar.Bar.Actions
     using System.Linq;
     using System.Reflection;
     using System.Threading.Tasks;
+    using System.Windows.Controls;
     using System.Windows.Forms;
     using Microsoft.Extensions.Logging;
 
-    [ActionFunction]
+    [HasActionFunctions]
     public class Functions
     {
         [ActionFunction("screenshot")]
         public static Task<bool> Screenshot(ActionArgs args)
         {
             MessageBox.Show("screen shot");
+            return Task.FromResult(true);
+        }
+
+        [ActionFunction("menu", "key=Morphic")]
+        public static Task<bool> ShowMenu(ActionArgs args)
+        {
+            string menuKey = args["key"] + "Menu";
+            if (App.Current.Resources[menuKey] is ContextMenu menu)
+            {
+                menu.IsOpen = true;
+            }
+
             return Task.FromResult(true);
         }
     }
@@ -41,41 +54,38 @@ namespace Morphic.Bar.Bar.Actions
         public static ActionFunctions Default = new ActionFunctions();
 
         /// <summary>All action functions.</summary>
-        private readonly Dictionary<string, ActionFunction> all;
+        private readonly Dictionary<string, ActionFunctionAttribute> all;
 
         public delegate Task<bool> ActionFunction(ActionArgs args);
 
         protected ActionFunctions()
         {
-            this.all = ActionFunctions.FindAllFunctions();
+            this.all = ActionFunctions.FindAllFunctions()
+                .ToDictionary(attr => attr.FunctionName.ToLowerInvariant(), attr => attr);
         }
 
         /// <summary>
         /// Gets the methods that handle the built-in functions.
         /// </summary>
         /// <returns></returns>
-        private static Dictionary<string, ActionFunction> FindAllFunctions()
+        private static IEnumerable<ActionFunctionAttribute> FindAllFunctions()
         {
             // Get all public static methods in all public classes in this assembly, which both have the ActionFunction
             // attribute
             IEnumerable<MethodInfo> methods = typeof(ActionFunctions).Assembly.GetTypes()
-                .Where(t => t.IsClass && t.IsPublic && t.GetCustomAttributes<ActionFunctionAttribute>().Any())
+                .Where(t => t.IsClass && t.IsPublic && t.GetCustomAttributes<HasActionFunctionsAttribute>().Any())
                 .SelectMany(t => t.GetMethods(BindingFlags.Public | BindingFlags.Static));
-
-            Dictionary<string, ActionFunction> functions = new Dictionary<string, ActionFunction>();
 
             // Add the methods decorated with [ActionFunction]
             foreach (MethodInfo method in methods)
             {
                 ActionFunctionAttribute? attr = method.GetCustomAttribute<ActionFunctionAttribute>();
-                if (attr?.FunctionName != null)
+                if (attr != null)
                 {
-                    functions.Add(attr.FunctionName,
-                        (ActionFunction)method.CreateDelegate(typeof(ActionFunction)));
+                    attr.SetFunction((ActionFunction)method.CreateDelegate(typeof(ActionFunction)));
+                    yield return attr;
                 }
             }
-
-            return functions;
         }
 
         /// <summary>
@@ -89,14 +99,37 @@ namespace Morphic.Bar.Bar.Actions
             App.Current.Logger.LogDebug($"Invoking built-in function '{functionName}'");
 
             Task<bool> result;
-            if (this.all.TryGetValue(functionName, out ActionFunction? actionFunction))
+            try
             {
-                ActionArgs args = new ActionArgs(functionName, functionArgs);
-                result = actionFunction(args);
+                if (this.all.TryGetValue(functionName.ToLowerInvariant(),
+                    out ActionFunctionAttribute? functionAttribute))
+                {
+                    try
+                    {
+                        ActionArgs args = new ActionArgs(functionAttribute, functionArgs);
+                        result = functionAttribute.Function(args);
+                    }
+                    catch (Exception e) when (!(e is ActionException || e is OutOfMemoryException))
+                    {
+                        throw new ActionException(e.Message, e);
+                    }
+                }
+                else
+                {
+                    throw new ActionException($"No internal function found for '{functionName}");
+                }
             }
-            else
+            catch (ActionException e)
             {
-                App.Current.Logger.LogWarning($"No function found for '{functionName}");
+                App.Current.Logger.LogWarning(e,
+                    $"ActionFunction error calling {functionName}({string.Join(", ", functionArgs)})");
+
+                if (e.UserMessage != null)
+                {
+                    MessageBox.Show($"There was a problem performing the '{functionName}' action:\n\n{e.UserMessage}",
+                        "Morphic Community Bar", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                }
+
                 result = Task.FromResult(false);
             }
 
@@ -107,27 +140,111 @@ namespace Morphic.Bar.Bar.Actions
     /// <summary>
     /// Marks a method (or a class containing such methods) that's a built-in function for bar actions.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
+    [AttributeUsage(AttributeTargets.Method)]
     public class ActionFunctionAttribute : Attribute
     {
-        public string? FunctionName { get; set; }
+        public string FunctionName { get; }
+        public string[] ParameterNames { get; }
+        public ActionFunctions.ActionFunction Function { get; private set; } = null!;
 
-        public ActionFunctionAttribute(string? functionName = null)
+        /// <summary>
+        /// Defines an internal function for the bar.
+        /// </summary>
+        /// <param name="functionName">Name of the function.</param>.
+        /// <param name="paramNames">Name of each parameter, if any. For optional parameters, use "name=default".</param>
+        public ActionFunctionAttribute(string functionName, params string[] paramNames)
         {
+            this.ParameterNames = paramNames;
             this.FunctionName = functionName;
         }
+
+        public void SetFunction(ActionFunctions.ActionFunction actionFunction)
+        {
+            this.Function = actionFunction;
+        }
+
+        /// <summary>
+        /// Create a dictionary of the argument values with their names.
+        /// </summary>
+        /// <param name="values">The values.</param>
+        /// <returns></returns>
+        /// <exception cref="ActionException"></exception>
+        public Dictionary<string, string> GetNamedArguments(string[] values)
+        {
+            Dictionary<string, string> result = new Dictionary<string, string>();
+
+            for (int n = 0; n < this.ParameterNames.Length; n++)
+            {
+                string[] split = this.ParameterNames[n].Split('=', 2);
+                string name = split[0];
+                string? defaultValue = split.Length > 1 ? split[1] : null;
+
+                string? value = n >= values.Length ? defaultValue : values[0];
+                if (value == null)
+                {
+                    throw new ActionException($"Action function {this.FunctionName} invoked without parameter {name}");
+                }
+
+                result.Add(name, value);
+            }
+
+            return result;
+        }
+    }
+
+    /// <summary>
+    /// Identifies a class having action functions.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Class)]
+    public class HasActionFunctionsAttribute : Attribute
+    {
     }
 
     public class ActionArgs
     {
-        public ActionArgs(string functionName, string[] functionArgs)
+        public string FunctionName { get; }
+        public string[] ArgumentsArray { get; }
+        public Dictionary<string, string> Arguments { get; }
+
+        /// <summary>
+        /// Gets an argument value by its name, or an empty string if there's no such argument.
+        /// </summary>
+        /// <param name="argumentName"></param>
+        public string this[string argumentName] => this.Arguments.TryGetValue(argumentName, out string? value)
+                ? value
+                : string.Empty;
+
+        public ActionArgs(ActionFunctionAttribute functionAttribute, string[] args)
         {
-            this.FunctionName = functionName;
-            this.FunctionArgs = functionArgs;
+            this.FunctionName = functionAttribute.FunctionName;
+            this.ArgumentsArray = args;
+
+            this.Arguments = functionAttribute.GetNamedArguments(args);
+
+        }
+    }
+
+    public class ActionException : ApplicationException
+    {
+        /// <summary>
+        /// The message displayed to the user. null to not display a message.
+        /// </summary>
+        public string? UserMessage { get; set; }
+
+        public ActionException(string? userMessage)
+            : this(userMessage, userMessage, null)
+        {
+        }
+        public ActionException(string? userMessage, Exception innerException)
+            : this(userMessage, userMessage, innerException)
+        {
         }
 
-        public string FunctionName { get; }
-        public string[] FunctionArgs { get; }
+        public ActionException(string? userMessage, string? internalMessage = null, Exception? innerException = null)
+            : base(internalMessage ?? userMessage ?? innerException?.Message, innerException)
+        {
+            this.UserMessage = userMessage;
+        }
     }
 
 }

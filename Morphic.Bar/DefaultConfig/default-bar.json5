@@ -33,13 +33,13 @@
   },
   items: [
     {
-      kind: "link",
+      kind: "internal",
       widget: "image",
       is_primary: true,
       priority: -100,
       configuration: {
+        function: "menu",
         image_url: "morphic-logo",
-        url: "http://morphic.world"
       }
     }
   ]

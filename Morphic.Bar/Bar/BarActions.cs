@@ -34,7 +34,8 @@ namespace Morphic.Bar.Bar
 
         public static BarAction? GetAction(string identifier)
         {
-            return BarActions.Default.Actions[identifier];
+            BarActions.Default.Actions.TryGetValue(identifier, out BarAction? action);
+            return action;
         }
 
         public void Deserialized()
