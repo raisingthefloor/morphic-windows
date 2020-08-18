@@ -33,7 +33,7 @@ namespace Morphic.Bar.UI
         public BarData Bar { get; private set; }
         public bool IsPrimary { get; set; }
 
-        public bool FixedSize => this.IsPrimary && this.Bar.Columns != 0;
+        public bool FixedSize => this.IsPrimary;
         public bool IsHorizontal { get; set; }
 
         public double Scale { get; set; }
@@ -83,7 +83,6 @@ namespace Morphic.Bar.UI
         {
             Orientation orientation = orientationOverride ?? this.Orientation;
 
-            double x = 0;
             double rowHeight = 0;
 
             CorrectedCoords pos = new CorrectedCoords(0, 0, orientation);
@@ -145,7 +144,7 @@ namespace Morphic.Bar.UI
 
         protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
         {
-            if (true||this.FixedSize)
+            if (this.FixedSize)
             {
                 this.Orientation = sizeInfo.NewSize.Width > this.ScaledItemWidth * 1.5
                     ? Orientation.Horizontal
@@ -230,7 +229,7 @@ namespace Morphic.Bar.UI
 
         public CorrectedCoords(double x, double y, Orientation orientation)
         {
-            this.Orientation = Orientation.Horizontal;// orientation;
+            this.Orientation = orientation;
             this.swap = this.Orientation == Orientation.Vertical;
             this.X = this.swap ? y : x;
             this.Y = this.swap ? x : y;

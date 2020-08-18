@@ -139,7 +139,6 @@ namespace Morphic.Bar.Bar
                     }
                     finally
                     {
-                        Console.WriteLine(this.RemoteImage + " done");
                         downloads.Release();
                     }
                     FileInfo fileInfo = new FileInfo(tempFile);

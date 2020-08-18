@@ -17,7 +17,7 @@ namespace Morphic.Bar.UI
             set => this.primaryBarWindow.IsExpanded = value;
         }
 
-        public override BarData Bar => this.primaryBarWindow?.Bar ?? this.bar;
+        public override BarData Bar => this.primaryBarWindow?.Bar ?? base.Bar;
 
         /// <summary>
         /// The edge of the primary bar window where this window is attached to.
@@ -168,12 +168,12 @@ namespace Morphic.Bar.UI
                     rect.Y = rect.Y + (this.Height - this.primaryBarWindow.Height) / 2;
                 }
 
-                rect.Y = Math.Clamp(rect.Y, workArea.Top, workArea.Bottom - rect.Height);
-
                 if (rect.Bottom > this.primaryBarWindow.Top + this.primaryBarWindow.Height)
                 {
                     rect.Y = this.primaryBarWindow.Top + this.primaryBarWindow.Height - rect.Height;
                 }
+
+                rect.Y = Math.Clamp(rect.Y, workArea.Top, workArea.Bottom - rect.Height);
             }
             else
             {
@@ -182,13 +182,12 @@ namespace Morphic.Bar.UI
                     rect.X = rect.X + (this.Width - this.primaryBarWindow.Width) / 2;
                 }
 
-                rect.X = Math.Clamp(rect.X, workArea.Left, workArea.Right - rect.Width);
-
                 if (rect.Right > this.primaryBarWindow.Left + this.primaryBarWindow.Width)
                 {
                     rect.X = this.primaryBarWindow.Left + this.primaryBarWindow.Width - rect.Width;
                 }
 
+                rect.X = Math.Clamp(rect.X, workArea.Left, workArea.Right - rect.Width);
             }
 
             return rect.Location;

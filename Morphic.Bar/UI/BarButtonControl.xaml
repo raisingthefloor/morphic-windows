@@ -5,7 +5,7 @@
                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                          xmlns:ui="clr-namespace:Morphic.Bar.UI"
                          mc:Ignorable="d" d:DesignWidth="100" d:DesignHeight="70"
-                         MinHeight="50"
+                         MinHeight="48"
                          d:DataContext="{d:DesignInstance ui:BarButtonControl, IsDesignTimeCreatable=True}"
                          >
     <ui:BarItemControl.Resources>
@@ -28,6 +28,141 @@
             </Setter>
         </Style>
 
+        <!-- Shared button elements -->
+
+        <!-- Item text -->
+        <TextBlock x:Key="Button.Text"
+                   Visibility="{Binding BarItem.ShowIcon, Converter={StaticResource BoolVisibility}}"
+                   Text="{Binding BarItem.Text}"
+                   TextWrapping="Wrap"
+                   FontWeight="Bold"
+                   Foreground="{DynamicResource Foreground}"
+                   HorizontalAlignment="Center"
+                   Margin="5 5 5 8"
+                   TextAlignment="Center"
+                   />
+        <!-- Border -->
+        <Border x:Key="Button.Border"
+            SnapsToDevicePixels="True"
+            BorderBrush="{DynamicResource BorderOuterColor}"
+            BorderThickness="{Binding ActiveTheme.BorderOuterSize, FallbackValue=0}"
+            >
+            <Border
+                SnapsToDevicePixels="True"
+                BorderBrush="{DynamicResource BorderColor}"
+                BorderThickness="{Binding ActiveTheme.BorderSize, FallbackValue=0}"
+                />
+        </Border>
+
+        <!-- The background colour -->
+        <Border x:Key="Button.Background"
+            Visibility="Visible"
+            Grid.Row="1" Grid.RowSpan="2"
+            CornerRadius="15"
+            Padding="0"
+            Background="{StaticResource Background}" />
+
+        <!-- The image -->
+        <Image x:Key="Button.Image"
+            Source="{Binding BarItem.ImageSource}"
+            Stretch="Uniform"
+        />
+
+
+        <!-- Buttons -->
+
+        <!-- ReSharper disable once Xaml.RedundantResource - used via ButtonResource binding
+        Small button, no picture -->
+        <Grid x:Key="TextOnlyButton">
+            <ContentControl Content="{StaticResource Button.Background}" />
+            <ContentControl Content="{StaticResource Button.Text}"
+                            VerticalAlignment="Center"/>
+            <ContentControl Content="{StaticResource Button.Border}" />
+        </Grid>
+
+        <!-- ReSharper disable once Xaml.RedundantResource - used via ButtonResource binding
+        Small button, with picture -->
+        <Grid x:Key="SmallButton">
+
+            <ContentControl Content="{StaticResource Button.Background}"
+            />
+
+            <ContentControl Content="{StaticResource Button.Image}"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            Width="24" Height="24"
+            />
+            <ContentControl Content="{StaticResource Button.Text}"
+                            Margin="24 0 12 0"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+            />
+
+            <ContentControl Content="{StaticResource Button.Border}"
+            />
+        </Grid>
+
+        <!-- ReSharper disable once Xaml.RedundantResource - used via ButtonResource binding
+        Medium sized button, picture in box -->
+        <Grid x:Key="MediumButton">
+            <Grid.RowDefinitions>
+                <!-- Contains the the icon -->
+                <RowDefinition Height="*" />
+                <!-- Contains the text -->
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <ContentControl Content="{StaticResource Button.Background}"
+                            Grid.Row="0" Grid.RowSpan="2"
+            />
+
+            <ContentControl Content="{StaticResource Button.Image}"
+                            Grid.Row="0"
+                            Width="24" Height="24"
+                            Margin="0 2 0 0"
+            />
+
+            <ContentControl Content="{StaticResource Button.Text}"
+                            Grid.Row="1"
+                            VerticalAlignment="Top"
+            />
+
+            <ContentControl Content="{StaticResource Button.Border}"
+                            Grid.Row="0" Grid.RowSpan="2"
+            />
+
+        </Grid>
+
+        <!-- ReSharper disable once Xaml.RedundantResource - used via ButtonResource binding
+        A large button with picture -->
+        <Grid x:Key="LargeButton">
+            <Grid.RowDefinitions>
+                <!-- Contains the top half of the icon -->
+                <RowDefinition Height="*" />
+                <!-- Contains the bottom half of the icon, and top half of the background -->
+                <RowDefinition Height="*" />
+                <RowDefinition Height="2*" />
+            </Grid.RowDefinitions>
+
+            <ContentControl Content="{StaticResource Button.Background}"
+                            Grid.Row="1" Grid.RowSpan="2"
+            />
+
+            <ContentControl Content="{StaticResource Button.Image}"
+                            Grid.Row="0" Grid.RowSpan="2"
+                            Width="32" Height="32"
+            />
+
+            <ContentControl Content="{StaticResource Button.Text}"
+                            Grid.Row="2"
+                            VerticalAlignment="Top"
+            />
+
+            <ContentControl Content="{StaticResource Button.Border}"
+                            Grid.Row="0" Grid.RowSpan="3"
+            />
+        </Grid>
+
     </ui:BarItemControl.Resources>
     
     <Button x:Name="Button"
@@ -35,59 +170,6 @@
             HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
             HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
             >
-        <Grid>
-            <Grid.RowDefinitions>
-                <!-- Contains the top half of the icon -->
-                <RowDefinition Height="*"></RowDefinition>
-                <!-- Contains the bottom half of the icon, and top half of the background -->
-                <RowDefinition Height="*"></RowDefinition>
-                <RowDefinition Height="2*"></RowDefinition>
-            </Grid.RowDefinitions>
-
-            <!-- The background colour -->
-            <Border
-                Visibility="Visible"
-                Grid.Row="1" Grid.RowSpan="2"
-                CornerRadius="15"
-                Padding="0"
-                Background="{StaticResource Background}" />
-            
-            <!-- Icon -->
-            <Image
-                Grid.Row="0" Grid.RowSpan="2"
-                Source="{Binding BarItem.ImageSource}"
-                Visibility="{Binding BarItem.ShowIcon, Converter={StaticResource BoolVisibility}}"
-                Stretch="Uniform"
-                Width="32" Height="32"
-                />
-            
-            <!-- Item text -->
-            <TextBlock
-                Visibility="{Binding BarItem.ShowIcon, Converter={StaticResource BoolVisibility}}"
-                Grid.Row="2"
-                Text="{Binding BarItem.Text}"
-                TextWrapping="Wrap"
-                Foreground="{DynamicResource Foreground}"
-                HorizontalAlignment="Center" VerticalAlignment="Top"
-                Background="{StaticResource Background}"
-                Margin="2 5 2 5"
-                TextAlignment="Center"
-                FontWeight="Bold"
-                />
-
-            <!-- Main border -->
-            <Border
-                Grid.Row="0" Grid.RowSpan="3"
-                SnapsToDevicePixels="True"
-                BorderBrush="{DynamicResource BorderOuterColor}"
-                BorderThickness="{Binding ActiveTheme.BorderOuterSize, FallbackValue=0}"
-                >
-                <Border
-                    SnapsToDevicePixels="True"
-                    BorderBrush="{DynamicResource BorderColor}"
-                    BorderThickness="{Binding ActiveTheme.BorderSize, FallbackValue=0}"
-                />
-            </Border>
-        </Grid>
+        <ContentControl Content="{Binding ButtonResource}"></ContentControl>
     </Button>
 </ui:BarItemControl>

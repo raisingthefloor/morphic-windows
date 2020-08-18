@@ -106,7 +106,7 @@ namespace Morphic.Bar.UI.AppBarWindow
             bool changed = false;
             Rect workArea = this.FromPixels(this.windowMovement.GetWorkArea());
 
-            Size newSize = ((IAppBarWindow)this.window).GetSize(inPixels ? this.FromPixels(size) : size, orientation);
+            Size newSize = ((IAppBarWindow)this.window).GetSize(inPixels ? this.FromPixels(size) : size, orientation, workArea);
             newSize.Width = Math.Min(newSize.Width, workArea.Width);
             newSize.Height = Math.Min(newSize.Height, workArea.Height);
 
@@ -265,7 +265,7 @@ namespace Morphic.Bar.UI.AppBarWindow
                 case Edge.Top:
                 case Edge.Bottom:
                     args.Rect.Width = workArea.Width;
-                    args.Rect.Height = this.GetGoodSize(new Size(args.Rect.Width, 100), Orientation.Horizontal, true).Height;
+                    args.Rect.Height = this.GetGoodSize(new Size(args.Rect.Width, 50), Orientation.Horizontal, true).Height;
                     args.Rect.X = workArea.X;
                     if (this.AppBarEdge == Edge.Top)
                     {
@@ -447,7 +447,7 @@ namespace Morphic.Bar.UI.AppBarWindow
 
     public interface IAppBarWindow
     {
-        public Size GetSize(Size availableSize, Orientation orientation);
+        public Size GetSize(Size availableSize, Orientation orientation, Rect workArea);
     }
     
     public class EdgeChangedEventArgs : EventArgs

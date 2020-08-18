@@ -1,7 +1,6 @@
 {
   scale: 1,
-  columns: 0,
-  overflow: "scale",
+  overflow: "wrap",
   position: {
     docked: null,
     x: "Left",

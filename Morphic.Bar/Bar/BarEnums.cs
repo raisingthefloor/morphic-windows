@@ -34,13 +34,13 @@ namespace Morphic.Bar.Bar
     public enum BarOverflow
     {
         Resize = 0,
-        Scale,
+        Wrap,
         Hide
     }
 
     public enum BarItemSize
     {
-        TextOnly,
+        TextOnly = 0,
         Small,
         Medium,
         Large

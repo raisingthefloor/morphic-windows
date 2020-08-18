@@ -11,8 +11,12 @@
 namespace Morphic.Bar.UI
 {
     using System;
+    using System.Collections.Generic;
     using System.ComponentModel;
+    using System.Linq;
     using System.Runtime.CompilerServices;
+    using System.Windows;
+    using System.Windows.Controls;
     using System.Windows.Input;
     using Bar;
     using UserControl = System.Windows.Controls.UserControl;
@@ -24,6 +28,7 @@ namespace Morphic.Bar.UI
     {
         private Theme activeTheme = null!;
         private bool isMouseDown;
+        private BarItemSize maxItemSize = BarItemSize.Large;
 
         /// <summary>
         /// Create an instance of this class, using the given bar item.
@@ -52,6 +57,23 @@ namespace Morphic.Bar.UI
                                          InputManager.Current.MostRecentInputDevice is KeyboardDevice;
                 this.UpdateTheme();
             };
+
+            this.Loaded += (sender, args) =>
+            {
+                // Override the apparent behaviour of ContentControl elements, where they make the control focusable.
+                foreach (UIElement elem in this.GetAllChildren().OfType<UIElement>())
+                {
+                    elem.Focusable = elem.Focusable && elem is Button;
+                }
+            };
+        }
+
+        private IEnumerable<DependencyObject> GetAllChildren(DependencyObject? parent = null)
+        {
+            return LogicalTreeHelper.GetChildren(parent ?? this)
+                .OfType<DependencyObject>()
+                .SelectMany(this.GetAllChildren)
+                .Append(parent ?? this);
         }
 
 
@@ -97,6 +119,25 @@ namespace Morphic.Bar.UI
                 }
             }
         }
+
+        /// <summary>
+        /// The maximum size of an item.
+        /// </summary>
+        public BarItemSize MaxItemSize
+        {
+            get => this.maxItemSize;
+            set
+            {
+                this.maxItemSize = value;
+                this.OnPropertyChanged();
+                this.OnPropertyChanged(nameof(this.ItemSize));
+            }
+        }
+
+        /// <summary>
+        /// The size of this item.
+        /// </summary>
+        public BarItemSize ItemSize => (BarItemSize)Math.Min((int)this.BarItem.Size, (int)this.maxItemSize);
 
         /// <summary>true if the last focus was performed by the keyboard.</summary>
         public bool FocusedByKeyboard { get; set; }

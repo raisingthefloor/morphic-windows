@@ -7,7 +7,8 @@
       is_primary: true,
       configuration: {
         label: "Google",
-        url: "https://google.co.uk/"
+        url: "https://google.co.uk/",
+        size: "large"
       }
     },
     {
@@ -34,7 +35,8 @@
       is_primary: true,
       configuration: {
         label: "Google Drive Home",
-        url: "https://drive.google.com/drive/my-drive"
+        url: "https://drive.google.com/drive/my-drive",
+        size: "medium"
       }
     },
     {
@@ -50,7 +52,8 @@
       is_primary: true,
       configuration: {
         label: "Box Home Folder",
-        url: "https://www.box.com"
+        url: "https://www.box.com",
+        size: "small"
       }
     },
     {
@@ -58,7 +61,8 @@
       is_primary: true,
       configuration: {
         label: "One Drive Folder",
-        url: "https://onedrive.live.com/?id=root"
+        url: "https://onedrive.live.com/?id=root",
+        size: "textonly"
       }
     },
     {
@@ -83,6 +87,199 @@
       configuration: {
         label: "BBC",
         url: "https://bbc.co.uk/"
+      }
+    },
+
+    {
+      kind: "link",
+      is_primary: false,
+      configuration: {
+        label: "Morphic Home Page",
+        url: "https://morphic.world/"
+      }
+    },
+    {
+      kind: "link",
+      is_primary: false,
+      configuration: {
+        label: "Morphic Home Page",
+        url: "https://morphic.world/"
+      }
+    },
+    {
+      kind: "link",
+      is_primary: false,
+      configuration: {
+        label: "Morphic Home Page",
+        url: "https://morphic.world/"
+      }
+    },
+    {
+      kind: "link",
+      is_primary: false,
+      configuration: {
+        label: "Morphic Home Page",
+        url: "https://morphic.world/"
+      }
+    },
+    {
+      kind: "link",
+      is_primary: false,
+      configuration: {
+        label: "Morphic Home Page",
+        url: "https://morphic.world/"
+      }
+    },
+    {
+      kind: "link",
+      is_primary: false,
+      configuration: {
+        label: "Morphic Home Page",
+        url: "https://morphic.world/"
+      }
+    },
+    {
+      kind: "link",
+      is_primary: false,
+      configuration: {
+        label: "Morphic Home Page",
+        url: "https://morphic.world/"
+      }
+    },
+    {
+      kind: "link",
+      is_primary: false,
+      configuration: {
+        label: "Morphic Home Page",
+        url: "https://morphic.world/"
+      }
+    },
+    {
+      kind: "link",
+      is_primary: false,
+      configuration: {
+        label: "Morphic Home Page",
+        url: "https://morphic.world/"
+      }
+    },
+    {
+      kind: "link",
+      is_primary: false,
+      configuration: {
+        label: "Morphic Home Page",
+        url: "https://morphic.world/"
+      }
+    },
+    {
+      kind: "link",
+      is_primary: false,
+      configuration: {
+        label: "Morphic Home Page",
+        url: "https://morphic.world/"
+      }
+    },
+    {
+      kind: "link",
+      is_primary: false,
+      configuration: {
+        label: "Morphic Home Page",
+        url: "https://morphic.world/"
+      }
+    },
+    {
+      kind: "link",
+      is_primary: false,
+      configuration: {
+        label: "Morphic Home Page",
+        url: "https://morphic.world/"
+      }
+    },
+    {
+      kind: "link",
+      is_primary: false,
+      configuration: {
+        label: "Morphic Home Page",
+        url: "https://morphic.world/"
+      }
+    },
+    {
+      kind: "link",
+      is_primary: false,
+      configuration: {
+        label: "Morphic Home Page",
+        url: "https://morphic.world/"
+      }
+    },
+    {
+      kind: "link",
+      is_primary: false,
+      configuration: {
+        label: "Morphic Home Page",
+        url: "https://morphic.world/"
+      }
+    },
+    {
+      kind: "link",
+      is_primary: false,
+      configuration: {
+        label: "Morphic Home Page",
+        url: "https://morphic.world/"
+      }
+    },
+    {
+      kind: "link",
+      is_primary: false,
+      configuration: {
+        label: "Morphic Home Page",
+        url: "https://morphic.world/"
+      }
+    },
+    {
+      kind: "link",
+      is_primary: false,
+      configuration: {
+        label: "Morphic Home Page",
+        url: "https://morphic.world/"
+      }
+    },
+    {
+      kind: "link",
+      is_primary: false,
+      configuration: {
+        label: "Morphic Home Page",
+        url: "https://morphic.world/"
+      }
+    },
+    {
+      kind: "link",
+      is_primary: false,
+      configuration: {
+        label: "Morphic Home Page",
+        url: "https://morphic.world/"
+      }
+    },
+    {
+      kind: "link",
+      is_primary: false,
+      configuration: {
+        label: "Morphic Home Page",
+        url: "https://morphic.world/"
+      }
+    },
+    {
+      kind: "link",
+      is_primary: false,
+      configuration: {
+        label: "Morphic Home Page",
+        url: "https://morphic.world/"
+      }
+    },
+    {
+      kind: "action",
+      is_primary: false,
+      configuration: {
+        identifier: "taskManager",
+        label: "open task manager"
       }
     },
   ]

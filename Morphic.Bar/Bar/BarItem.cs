@@ -100,8 +100,8 @@ namespace Morphic.Bar.Bar
         [JsonProperty("priority")]
         public int Priority { get; set; }
 
-        [JsonProperty("size")]
-        public BarItemSize Size { get; set; }
+        [JsonProperty("configuration.size")]
+        public BarItemSize Size { get; set; } = BarItemSize.Large;
 
         /// <summary>
         /// The type of control used. This is specified by using BarControl attribute in a subclass of this.

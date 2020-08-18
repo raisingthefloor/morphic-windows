@@ -13,6 +13,7 @@ namespace Morphic.Bar.UI
     using System;
     using System.ComponentModel;
     using System.Globalization;
+    using System.Linq;
     using System.Runtime.CompilerServices;
     using System.Windows;
     using System.Windows.Controls;
@@ -27,11 +28,10 @@ namespace Morphic.Bar.UI
     public partial class BarWindow : Window, INotifyPropertyChanged, IAppBarWindow
     {
         protected internal readonly AppBar AppBar;
-        protected BarData bar = null!;
+        private BarData bar;
 
         private Thickness? initialResizeBorder;
 
-        private readonly bool isPrimary;
         protected internal WindowMovement WindowMovement;
         private double scale;
 
@@ -60,15 +60,15 @@ namespace Morphic.Bar.UI
         protected BarWindow(BarData barData)
         {
             this.bar = barData;
-            this.isPrimary = this is PrimaryBarWindow;
 
             this.DataContext = this;
 
-            this.WindowMovement = new WindowMovement(this, this.isPrimary);
+            bool isPrimary = this is PrimaryBarWindow;
+            this.WindowMovement = new WindowMovement(this, isPrimary);
             this.AppBar = new AppBar(this, this.WindowMovement)
             {
-                EnableDocking = this.isPrimary,
-                FixedSize = this.bar.Columns != 0
+                EnableDocking = isPrimary,
+                FixedSize = this.bar.Overflow != BarOverflow.Wrap
             };
 
             // Move it off the screen until it's loaded.
@@ -98,7 +98,7 @@ namespace Morphic.Bar.UI
 
             this.AppBar.EdgeChanged += this.AppBarOnEdgeChanged;
             
-            this.Loaded += (sender, args) => this.BarControl.LoadBar(this.bar, this.isPrimary);
+            this.Loaded += (sender, args) => this.BarControl.LoadBar(this.Bar, isPrimary);
         }
 
         private void OnSizeChanged(object sender, SizeChangedEventArgs args)
@@ -125,20 +125,25 @@ namespace Morphic.Bar.UI
         public double ExtraWidth =>
             this.BorderThickness.Left + this.BorderThickness.Right +
             this.Padding.Left + this.Padding.Right +
-            this.BarControl.Margin.Left + this.BarControl.Margin.Right;
+            this.BarControl.Margin.Left + this.BarControl.Margin.Right + 1;
 
         /// <summary>Additional height added to the window.</summary>
         public double ExtraHeight =>
             this.BorderThickness.Top + this.BorderThickness.Bottom +
             this.Padding.Top + this.Padding.Bottom +
-            this.BarControl.Margin.Top + this.BarControl.Margin.Bottom;
+            this.BarControl.Margin.Top + this.BarControl.Margin.Bottom + 1;
 
         protected virtual void OnBarLoaded()
         {
             this.SetBorder();
 
             Size size = this.GetGoodSize();
-            size = this.Rescale(size, true);
+
+            if (this is PrimaryBarWindow)
+            {
+                size = this.Rescale(size, true);
+            }
+
             this.SetInitialPosition(size);
 
             this.BarLoaded?.Invoke(this, new EventArgs());
@@ -152,34 +157,27 @@ namespace Morphic.Bar.UI
         /// <returns></returns>
         private Size Rescale(Size size, bool apply = false)
         {
-            bool changed = false;
-            if (this.Bar.Overflow == BarOverflow.Scale)
+            Rect workArea = this.GetWorkArea();
+            bool retry;
+            do
             {
-                // Orientation orientation = size.Width > size.Height ? Orientation.Horizontal : Orientation.Vertical;
-                // // Get the un-clipped size
-                // this.BarControl.Scale = this.Bar.Scale;
-                // Size bestSize = new Size(
-                //     ((IAppBarWindow)this).GetWidthFromHeight(size.Height, orientation),
-                //     ((IAppBarWindow)this).GetHeightFromWidth(size.Width, orientation)
-                // );
-                //
-                // if (bestSize.Width > size.Width)
-                // {
-                //     this.Scale = (size.Width - this.ExtraWidth) / (bestSize.Width - this.ExtraWidth);
-                //     changed = true;
-                // }
-                // else if (bestSize.Height > size.Height)
-                // {
-                //     this.Scale = (size.Height - this.ExtraHeight) / (bestSize.Height - this.ExtraHeight);
-                //     changed = true;
-                // }
-            }
+                size = this.BarControl.GetSize(size);
+                size.Width += this.ExtraWidth;
+                size.Height += this.ExtraHeight;
 
-            if (changed)
-            {
-                size = this.GetGoodSize();
-            }
-            
+                if (size.Height > workArea.Height && this.Bar.Overflow == BarOverflow.Resize)
+                {
+                    retry = this.ReduceSize();
+                    this.BarControl.UpdateLayout();
+                }
+                else
+                {
+                    retry = false;
+                }
+
+            } while (retry);
+
+
             if (apply)
             {
                 this.Height = size.Height;
@@ -299,7 +297,7 @@ namespace Morphic.Bar.UI
             this.OnPropertyChanged(nameof(this.Bar));
         }
 
-        public Size GetSize(Size availableSize, Orientation orientation)
+        public Size GetSize(Size availableSize, Orientation orientation, Rect workArea)
         {
             if (orientation == Orientation.Horizontal)
             {
@@ -308,16 +306,34 @@ namespace Morphic.Bar.UI
             }
             else
             {
-                availableSize.Width -= this.ExtraWidth;
-                availableSize.Height = double.PositiveInfinity;
+                availableSize.Width = double.PositiveInfinity;
+                availableSize.Height = workArea.Height;
             }
 
             Size newSize = this.BarControl.GetSize(availableSize, orientation);
             newSize.Width += this.ExtraWidth;
             newSize.Height += this.ExtraHeight;
 
-            Console.WriteLine($"{availableSize} {newSize} {orientation}");
             return newSize;
+        }
+
+        /// <summary>
+        /// Attempts to reduce the size of the bar, by lowering the item size of an item.
+        /// </summary>
+        /// <returns></returns>
+        private bool ReduceSize()
+        {
+            BarItemControl largest = this.BarControl.Children.OfType<BarItemControl>()
+                .OrderByDescending(item => item.ItemSize)
+                .ThenByDescending(item => item.DesiredSize.Height)
+                .First();
+            if (largest.ItemSize <= BarItemSize.TextOnly)
+            {
+                return false;
+            }
+
+            largest.MaxItemSize = largest.ItemSize - 1;
+            return true;
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

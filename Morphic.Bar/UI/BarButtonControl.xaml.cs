@@ -10,7 +10,10 @@
 
 namespace Morphic.Bar.UI
 {
+    using System;
+    using System.ComponentModel;
     using System.Windows;
+    using System.Windows.Threading;
     using Bar;
 
     /// <summary>
@@ -24,10 +27,39 @@ namespace Morphic.Bar.UI
 
         public BarButtonControl(BarButton barItem) : base(barItem)
         {
+            this.PropertyChanged += this.OnPropertyChanged;
             this.InitializeComponent();
+
         }
 
         public new BarButton BarItem => (BarButton) base.BarItem;
+
+        /// <summary>
+        /// The control in the resource library to use for the specific size of button.
+        /// </summary>
+        public object ButtonResource
+        {
+            get
+            {
+                BarItemSize size = this.ItemSize;
+                if (this.BarItem.ImageSource == null)
+                {
+                    size = BarItemSize.TextOnly;
+                }
+                string resourceName = size + "Button";
+                object resource = this.Resources[resourceName];
+                return resource;
+            }
+        }
+
+        private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            // Update the button resource when the item size changes.
+            if (e.PropertyName == nameof(this.ItemSize))
+            {
+                this.OnPropertyChanged(nameof(this.ButtonResource));
+            }
+        }
 
         private void Button_OnClick(object sender, RoutedEventArgs e)
         {
