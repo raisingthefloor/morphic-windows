@@ -21,35 +21,19 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System;
-using System.Net.Http;
-using System.Text.Json;
-using System.Text;
 using Morphic.Core;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Morphic.Service
 {
-    internal static class HttpRequestMessageExtensions
+    public interface IHttpServiceCredentialsProvider
     {
-        internal static HttpRequestMessage Create(HttpService service, string path, HttpMethod method)
-        {
-            var uri = new Uri(service.Endpoint, path);
-            var request = new HttpRequestMessage(method, uri);
-            if (service.AuthToken is string token)
-            {
-                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-            }
-            return request;
-        }
 
-        internal static HttpRequestMessage Create<RequestBody>(HttpService service, string path, HttpMethod method, RequestBody body)
-        {
-            var request = Create(service, path, method);
-            var options = new JsonSerializerOptions();
-            options.Converters.Add(new JsonElementInferredTypeConverter());
-            var json = JsonSerializer.Serialize(body, options);
-            request.Content = new StringContent(json, Encoding.UTF8, "application/json");
-            return request;
-        }
+        public ICredentials? CredentialsForHttpService(HttpService service);
+        public void HttpServiceAuthenticatedUser(User user);
+
     }
 }

@@ -91,7 +91,7 @@ namespace Morphic.Client.Login
             {
                 success = await session.Authenticate(credentials);
             }
-            catch (Session.BadRequestException e)
+            catch (HttpService.BadRequestException e)
             {
                 logger.LogWarning(e, "Bad login request");
             }
