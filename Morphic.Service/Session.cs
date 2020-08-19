@@ -120,21 +120,6 @@ namespace Morphic.Service
         #region Authentication
 
         /// <summary>
-        /// The session's auth token
-        /// </summary>
-        public string? AuthToken
-        {
-            get
-            {
-                return Service.AuthToken;
-            }
-            set
-            {
-                Service.AuthToken = value;
-            }
-        }
-
-        /// <summary>
         /// The current user's saved credentials, if any
         /// </summary>
         private ICredentials? CurrentCredentials
@@ -172,7 +157,7 @@ namespace Morphic.Service
             if (auth != null)
             {
                 keychain.Save(credentials, Service.Endpoint);
-                AuthToken = auth.Token;
+                Service.AuthToken = auth.Token;
                 userSettings.SetUsernameForId(credentials.Username, auth.User.Id);
                 await Signin(auth.User);
                 return true;
@@ -284,7 +269,7 @@ namespace Morphic.Service
                 {
                     logger.LogError("Failed to save username creds to keychain");
                 }
-                AuthToken = auth.Token;
+                Service.AuthToken = auth.Token;
                 // The server doesn't currently send email, but we reference it immedately after creating an account,
                 // so just fill it in from the input
                 auth.User.Email = auth.User.Email ?? user.Email;
