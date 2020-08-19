@@ -22,8 +22,10 @@
 // * Consumer Electronics Association Foundation
 
 using Morphic.Core;
+using Morphic.Core.Community;
 using System.Threading.Tasks;
 using System.Net.Http;
+using System.Text.Json.Serialization;
 
 namespace Morphic.Service
 {
@@ -51,5 +53,28 @@ namespace Morphic.Service
         {
             return await service.Session.Send(() => HttpRequestMessageExtensions.Create(service.Session, string.Format("v1/users/{0}", user.Id), HttpMethod.Put, user));
         }
+
+        public static async Task<UserCommunitiesPage?> FetchUserCommunities(this HttpService service, string userIdentifier)
+        {
+            return await service.Session.Send<UserCommunitiesPage>(() => HttpRequestMessageExtensions.Create(service.Session, string.Format("v1/users/{0}/communities", userIdentifier), HttpMethod.Get));
+        }
+
+        public static async Task<UserCommunityDetail?> FetchUserCommunity(this HttpService service, string userIdentifier, string communityId)
+        {
+            return await service.Session.Send<UserCommunityDetail>(() => HttpRequestMessageExtensions.Create(service.Session, string.Format("v1/users/{0}/communities/{1}", userIdentifier, communityId), HttpMethod.Get));
+        }
+
+    }
+
+    public class UserCommunitiesPage
+    {
+        [JsonPropertyName("communities")]
+        public UserCommunity[] Communities { get; set; } = new UserCommunity[] { };
+    }
+
+    public class UserCommunityDetail
+    {
+        [JsonPropertyName("bar")]
+        public UserBar Bar { get; set; } = null!;
     }
 }
