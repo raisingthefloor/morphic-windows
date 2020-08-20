@@ -34,7 +34,7 @@ namespace Morphic.Bar.Bar
         /// <summary>
         /// The bar that owns this item (set after deserialisation).
         /// </summary>
-        public BarData Bar { get; private set; } = null!;
+        public BarData Bar { get; set; } = null!;
 
         /// <summary>
         /// true if the item is to be displayed on the pull-out bar.

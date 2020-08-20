@@ -70,6 +70,7 @@ namespace Morphic.Service
             {
                 var options = new JsonSerializerOptions();
                 options.Converters.Add(new JsonElementInferredTypeConverter());
+                options.Converters.Add(new JsonStringEnumConverter());
                 return await JsonSerializer.DeserializeAsync<T>(json, options);
             }
             catch

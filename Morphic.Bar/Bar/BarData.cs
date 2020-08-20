@@ -17,6 +17,8 @@ namespace Morphic.Bar.Bar
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
+    using Morphic.Bar.UI.AppBarWindow;
+    using Morphic.Core.Community;
     using Newtonsoft.Json;
 
     /// <summary>
