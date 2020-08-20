@@ -22,34 +22,44 @@
 // * Consumer Electronics Association Foundation
 
 using System;
-using System.Net.Http;
-using System.Text.Json;
+using System.Collections.Generic;
 using System.Text;
 using Morphic.Core;
 
-namespace Morphic.Service
+namespace Morphic.Bar
 {
-    internal static class HttpRequestMessageExtensions
+    public class WindowsUserSettings : IUserSettings
     {
-        internal static HttpRequestMessage Create(HttpService service, string path, HttpMethod method)
+        public string? UserId
         {
-            var uri = new Uri(service.Endpoint, path);
-            var request = new HttpRequestMessage(method, uri);
-            if (service.AuthToken is string token)
+            get
             {
-                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                return UserSettings.Default.UserId;
             }
-            return request;
+            set
+            {
+                UserSettings.Default.UserId = value;
+                UserSettings.Default.Save();
+            }
         }
 
-        internal static HttpRequestMessage Create<RequestBody>(HttpService service, string path, HttpMethod method, RequestBody body)
+        public string? GetUsernameForId(string userId)
         {
-            var request = Create(service, path, method);
-            var options = new JsonSerializerOptions();
-            options.Converters.Add(new JsonElementInferredTypeConverter());
-            var json = JsonSerializer.Serialize(body, options);
-            request.Content = new StringContent(json, Encoding.UTF8, "application/json");
-            return request;
+            if (UserSettings.Default.UsernamesById == null)
+            {
+                return null;
+            }
+            return UserSettings.Default.UsernamesById[UserId];
+        }
+
+        public void SetUsernameForId(string username, string userId)
+        {
+            if (UserSettings.Default.UsernamesById == null)
+            {
+                UserSettings.Default.UsernamesById = new StringDictionarySetting();
+            }
+            UserSettings.Default.UsernamesById[userId] = username;
+            UserSettings.Default.Save();
         }
     }
 }
