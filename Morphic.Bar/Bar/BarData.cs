@@ -17,6 +17,8 @@ namespace Morphic.Bar.Bar
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
+    using Morphic.Bar.UI.AppBarWindow;
+    using Morphic.Core.Community;
     using Newtonsoft.Json;
 
     /// <summary>
@@ -25,6 +27,32 @@ namespace Morphic.Bar.Bar
     [JsonObject(MemberSerialization.OptIn)]
     public class BarData : IDisposable, IDeserializable
     {
+
+        public BarData()
+        {
+        }
+
+        public BarData(Core.Community.UserBar bar)
+        {
+            this.Position.DockEdge = Edge.Right;
+            this.Overflow = BarOverflow.Hide;
+            this.BarTheme.Apply(Theme.DefaultBar());
+            this.DefaultTheme.Apply(Theme.DefaultItem());
+            foreach (var item in bar.Items)
+            {
+                switch (item.Kind)
+                {
+                    case BarItemKind.Action:
+                        // TODO: 
+                        break;
+                    case BarItemKind.Application:
+                    case BarItemKind.Link:
+                        this.AllItems.Add(new BarButton(this, item));
+                        break;
+                }
+            }
+        }
+
         private List<FileSystemWatcher> fileWatchers = new List<FileSystemWatcher>();
 
         public event EventHandler? ReloadRequired;

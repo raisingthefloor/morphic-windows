@@ -19,11 +19,13 @@ namespace Morphic.Bar.Bar
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
+    using System.Transactions;
     using System.Windows.Media;
     using System.Windows.Media.Imaging;
     using System.Xml;
     using Actions;
     using Microsoft.Extensions.Logging;
+    using Morphic.Core.Community;
     using Newtonsoft.Json;
     using SharpVectors.Converters;
     using SharpVectors.Dom.Svg;
@@ -37,6 +39,47 @@ namespace Morphic.Bar.Bar
     [BarControl(typeof(BarButtonControl))]
     public class BarButton : BarItem, INotifyPropertyChanged
     {
+
+        public BarButton()
+        {
+        }
+
+        public BarButton(BarData bar, Core.Community.BarItem item): base(bar, item)
+        {
+            this.ImageValue = item.ButtonImageUri?.ToString();
+
+            switch (item.Kind)
+            {
+                case BarItemKind.Link:
+                    if (item.LinkUri is Uri uri)
+                    {
+                        this.Action = new WebAction(uri);
+                    }
+                    break;
+                case BarItemKind.Application:
+                    if (item.DefaultApplicationName is string name)
+                    {
+                        // TODO: default app action
+                    }
+                    else if (item.ExeName is string exe)
+                    {
+                        this.Action = new ApplicationAction(exe);
+                    }
+                    break;
+            }
+
+            // Resolve the pre-set action.
+            if (this.Action is PresetAction presetAction)
+            {
+                BarAction? realAction = presetAction.GetRealAction();
+                if (realAction != null)
+                {
+                    this.Action = realAction;
+                }
+            }
+            _ = this.LoadImage();
+        }
+
         private string? imagePath;
         private string? imageValue;
         private ImageSource? imageSource;

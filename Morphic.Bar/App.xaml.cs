@@ -22,6 +22,7 @@ namespace Morphic.Bar
     using System.Windows.Threading;
     using Bar;
     using Microsoft.Extensions.Logging;
+    using Morphic.Core.Community;
     using UI;
     using UI.AppBarWindow;
     using Application = System.Windows.Application;
@@ -106,6 +107,7 @@ namespace Morphic.Bar
             services.AddSingleton<Keychain>();
             services.AddSingleton<Storage>();
             services.AddSingleton<CommunitySession>();
+            services.AddTransient<LoginWindow>();
             // TODO: build info for about window
             //services.AddSingleton<BuildInfo>(BuildInfo.FromJsonFile("build-info.json"));
 
@@ -189,6 +191,28 @@ namespace Morphic.Bar
 
         private void Session_UserChanged(object? sender, EventArgs e)
         {
+            if (Session.User != null)
+            {
+                if (Session.Bar != null)
+                {
+                    ShowBar(Session.Bar);
+                }
+                else
+                {
+                    if (Session.Communities.Length == 0)
+                    {
+                        // TODO: show "No comminities" error
+                    }
+                    else if (Session.Communities.Length == 1)
+                    {
+                        // TODO: show "Could not load bar" error
+                    }
+                    else
+                    {
+                        // TODO: show community picker
+                    }
+                }
+            }
         }
 
         private async Task OpenSession()
@@ -212,30 +236,16 @@ namespace Morphic.Bar
             Logger.LogInformation("Session Open");
             if (Session.User == null)
             {
-                // TODO: show login window
-            }
-            else if (Session.Bar == null)
-            {
-                if (Session.Communities.Length == 0)
-                {
-                    // TODO: show message indicating no communities
-                }
-                else
-                {
-                    // TODO: show community picker
-                }
-            }
-            else
-            {
-                // TODO: show Session.Bar
+                var loginWindow = ServiceProvider.GetRequiredService<LoginWindow>();
+                loginWindow.Show();
             }
         }
 
         #endregion
 
-        public void LoadBar(string path)
+        public void ShowBar(UserBar userBar)
         {
-            BarData? bar = null;
+            BarData bar = new BarData(userBar);
 
             if (this.barWindow != null)
             {
@@ -247,25 +257,6 @@ namespace Morphic.Bar
             {
                 this.barWindow = new PrimaryBarWindow(bar);
                 this.barWindow.Show();
-                bar.ReloadRequired += this.OnBarOnReloadRequired;
-            }
-        }
-
-        private void OnBarOnReloadRequired(object? sender, EventArgs args)
-        {
-            BarData? bar = sender as BarData;
-            if (bar != null)
-            {
-                string source = bar.Source;
-                if (this.barWindow != null)
-                {
-                    this.barWindow.IsClosing = true;
-                    this.barWindow.Close();
-                    this.barWindow = null;
-                }
-
-                bar.Dispose();
-                this.LoadBar(source);
             }
         }
 

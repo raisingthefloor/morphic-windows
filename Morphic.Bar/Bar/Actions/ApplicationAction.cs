@@ -28,6 +28,16 @@ namespace Morphic.Bar.Bar.Actions
     [JsonTypeName("application")]
     public class ApplicationAction : BarAction
     {
+
+        public ApplicationAction()
+        {
+        }
+
+        public ApplicationAction(string exeName)
+        {
+            this.exeName = exeName;
+        }
+
         private string? exeName;
 
         /// <summary>

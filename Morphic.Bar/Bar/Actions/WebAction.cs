@@ -21,6 +21,16 @@ namespace Morphic.Bar.Bar.Actions
     [JsonTypeName("link")]
     public class WebAction : BarAction
     {
+
+        public WebAction()
+        {
+        }
+
+        public WebAction(Uri uri)
+        {
+            this.Uri = uri;
+        }
+
         [JsonProperty("url", Required = Required.Always)]
         public string UrlString
         {

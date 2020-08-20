@@ -24,13 +24,32 @@ namespace Morphic.Bar.Bar
     [JsonConverter(typeof(TypedJsonConverter), "widget", "button")]
     public class BarItem
     {
+
+        public BarItem()
+        {
+        }
+
+        public BarItem(BarData bar, Core.Community.BarItem item)
+        {
+            this.IsPrimary = item.IsPrimary;
+            this.Text = item.ButtonLabel;
+
+            this.Bar = bar;
+            // Inherit the default theme
+            this.Theme.Inherit(bar.DefaultTheme);
+            this.Theme.InferStateThemes();
+
+            this.IsPrimaryOriginal = this.IsPrimary;
+        }
+
+
         protected ILogger Logger = LogUtil.LoggerFactory.CreateLogger("Bar");
 
 
         /// <summary>
         /// The bar that owns this item (set after deserialisation).
         /// </summary>
-        public BarData Bar { get; private set; } = null!;
+        public BarData Bar { get; set; } = null!;
 
         /// <summary>
         /// true if the item is to be displayed on the pull-out bar.
