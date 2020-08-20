@@ -27,6 +27,15 @@
     <Content Include="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Solutions\jaws2019.solutions.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Solutions\jaws2020.solutions.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Solutions\windows.solutions.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="test-bar.json5">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -70,6 +79,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Remove="appsettings.json" />
+    <None Remove="Solutions\jaws2019.solutions.json" />
+    <None Remove="Solutions\jaws2020.solutions.json" />
+    <None Remove="Solutions\windows.solutions.json" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Morphic.Core\Morphic.Core.csproj" />

@@ -49,10 +49,11 @@ namespace Morphic.Service
         /// Create a new session with the given URL
         /// </summary>
         /// <param name="endpoint">The root URL of the Morphic HTTP service</param>
-        public CommunitySession(SessionOptions options, Storage storage, Keychain keychain, IUserSettings userSettings, ILogger<CommunitySession> logger, ILogger<HttpService> httpLogger)
+        public CommunitySession(SessionOptions options, SettingsManager settingsManager, Storage storage, Keychain keychain, IUserSettings userSettings, ILogger<CommunitySession> logger, ILogger<HttpService> httpLogger)
         {
             Service = new HttpService(new Uri(options.Endpoint), this, httpLogger);
             Storage = storage;
+            SettingsManager = settingsManager;
             this.keychain = keychain;
             this.logger = logger;
             this.userSettings = userSettings;
@@ -62,6 +63,8 @@ namespace Morphic.Service
         /// The unerlying Morphic service this session talks to
         /// </summary>
         public HttpService Service { get; private set; }
+
+        public SettingsManager SettingsManager { get; private set; }
 
         private readonly Keychain keychain;
 
