@@ -18,7 +18,7 @@ Bar = {
   // Initial position
   position: {
       // Dock it to an edge, reserving desktop space
-      docked: "left", // optional. "left", "right", "top", "bottom", or "none" (default)
+      docked: "left", // "left", "right", "top", "bottom", or "none" (default)
 
       // Position of the bar. Can be "Left"/"Top", "Middle", "Right"/"Bottom", a number, or a percentage.
       // Numbers or percentages can be negative (including -0), meaning distance from the right.
@@ -53,6 +53,7 @@ Bar = {
   // What happens when all buttons do not fit.
   //  "resize": shrinks some items until it fits
   //  "wrap": Adds another column
+  //  "secondary": Move over-flow items to the secondary bar.
   //  "hide": Do nothing.
   overflow: "resize",
 
@@ -65,7 +66,28 @@ Bar = {
   // The bar items
   items: [
     {BarItem}
-  ]
+  ],
+
+  sizes: {
+    // Padding between edge of bar and items.
+    windowPadding: "10 15",
+    // Spacing between items.
+    itemSpacing: 10,
+    // Item width.
+    itemWidth: 100,
+    // Maximum Button Item title lines.
+    buttonTextLines: 2,
+    // Button Item padding between edge and title. And for the top, between circle and title.
+    buttonPadding: "10",
+    // Button Item circle image diameter (a fraction relative to the itemWidth).
+    buttonCircleDiameter: 0.66,
+    // Button Item circle overlap with rectangle (a fraction relative to buttonImageSize).
+    buttonImageOverlap: 0.33,
+    buttonFontSize: 14,
+    buttonFontWeight: "normal",
+    circleBorderWidth: 2,
+    buttonCornerRadius: 10
+  }
 }
 ```
 
@@ -76,14 +98,17 @@ Describes an individual bar item.
 ```js
 BarItem = {
   // email|calendar|videocall|photos|...
-  // Probably be ignored by the client
+  // Currently ignored by the client
   category: "calendar",
 
-  // unique identifier (probably ignored by client)
+  // unique identifier (currently ignored by client)
   id: "calendar-button",
 
   // `true` if the item is shown on the primary bar. `false` to show on the secondary bar.
   is_primary: true,
+
+  // `true` to never move this item to the secondary bar (for Bar.overflow == "secondary")
+  no_overflow: false,
 
   // Per-button theme, overrides the `Bar.itemTheme` field from above.
   // If unset, this is generated using `configuration.color`

@@ -25,13 +25,30 @@ namespace Morphic.Bar.Bar
     public class BarItem
     {
         protected ILogger Logger = LogUtil.LoggerFactory.CreateLogger("Bar");
-        
+
+
+        /// <summary>
+        /// The bar that owns this item (set after deserialisation).
+        /// </summary>
+        public BarData Bar { get; private set; } = null!;
+
         /// <summary>
         /// true if the item is to be displayed on the pull-out bar.
         /// </summary>
         [JsonProperty("is_primary")]
         public bool IsPrimary { get; set; }
-        
+
+        /// <summary>
+        /// The original value of IsPrimary (IsPrimary can change if an item over-flows)
+        /// </summary>
+        public bool IsPrimaryOriginal { get; set; }
+
+        /// <summary>
+        /// Don't over-flow this item to the secondary bar.
+        /// </summary>
+        [JsonProperty("no_overflow")]
+        public bool NoOverflow { get; set; }
+
         /// <summary>
         /// The text displayed on the item.
         /// </summary>
@@ -114,9 +131,12 @@ namespace Morphic.Bar.Bar
         /// <param name="bar"></param>
         public virtual void Deserialized(BarData bar)
         {
+            this.Bar = bar;
             // Inherit the default theme
             this.Theme.Inherit(bar.DefaultTheme);
             this.Theme.InferStateThemes();
+
+            this.IsPrimaryOriginal = this.IsPrimary;
         }
     }
 

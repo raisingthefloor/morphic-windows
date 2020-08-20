@@ -7,8 +7,8 @@
       is_primary: true,
       configuration: {
         label: "Google",
-        url: "https://google.co.uk/",
-        size: "large"
+        image_url: "test/grid",
+        url: "https://google.co.uk/"
       }
     },
     {
@@ -16,6 +16,7 @@
       is_primary: true,
       configuration: {
         identifier: "taskManager",
+        image_url: "test/grid",
         label: "open task manager"
       }
     },
@@ -26,7 +27,7 @@
         "label": "Take Screenshot",
         "identifier": "screenshot",
         "color": "",
-        "image_url": ""
+        "image_url": "images-solid"
       },
       "id": "10210050-take screenshot-generic-kind-79939245"
     },
@@ -35,8 +36,7 @@
       is_primary: true,
       configuration: {
         label: "Google Drive Home",
-        url: "https://drive.google.com/drive/my-drive",
-        size: "medium"
+        url: "https://drive.google.com/drive/my-drive"
       }
     },
     {
@@ -52,8 +52,7 @@
       is_primary: true,
       configuration: {
         label: "Box Home Folder",
-        url: "https://www.box.com",
-        size: "small"
+        url: "https://www.box.com"
       }
     },
     {
@@ -61,8 +60,7 @@
       is_primary: true,
       configuration: {
         label: "One Drive Folder",
-        url: "https://onedrive.live.com/?id=root",
-        size: "textonly"
+        url: "https://onedrive.live.com/?id=root"
       }
     },
     {

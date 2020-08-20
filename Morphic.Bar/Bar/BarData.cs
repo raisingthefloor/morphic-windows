@@ -78,6 +78,9 @@ namespace Morphic.Bar.Bar
         [JsonProperty("barTheme", ObjectCreationHandling = ObjectCreationHandling.Reuse)]
         public Theme BarTheme { get; set; } = new Theme();
 
+        [JsonProperty("sizes", ObjectCreationHandling = ObjectCreationHandling.Reuse)]
+        public BarSizes Sizes { get; set; } = new BarSizes();
+
         /// <summary>
         /// Gets all items.
         /// </summary>
@@ -94,7 +97,8 @@ namespace Morphic.Bar.Bar
         /// Gets the items for the additional buttons.
         /// </summary>
         public IEnumerable<BarItem> SecondaryItems => this.AllItems.Where(item => !item.Hidden && !item.IsPrimary)
-            .OrderByDescending(item => item.Priority);
+            .OrderByDescending(item => item.IsPrimaryOriginal)
+            .ThenByDescending(item => item.Priority);
 
         private ILogger logger = LogUtil.LoggerFactory.CreateLogger("Bar");
 

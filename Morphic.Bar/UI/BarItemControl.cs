@@ -18,6 +18,7 @@ namespace Morphic.Bar.UI
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Input;
+    using System.Windows.Media;
     using Bar;
     using UserControl = System.Windows.Controls.UserControl;
 
@@ -29,6 +30,10 @@ namespace Morphic.Bar.UI
         private Theme activeTheme = null!;
         private bool isMouseDown;
         private BarItemSize maxItemSize = BarItemSize.Large;
+
+        public BarItemControl() : this(new BarItem())
+        {
+        }
 
         /// <summary>
         /// Create an instance of this class, using the given bar item.
@@ -58,14 +63,33 @@ namespace Morphic.Bar.UI
                 this.UpdateTheme();
             };
 
-            this.Loaded += (sender, args) =>
+            this.Loaded += this.OnLoaded;
+        }
+
+        private void OnLoaded(object sender, RoutedEventArgs args)
+        {
+            // Override the apparent behaviour of ContentControl elements, where they make the control focusable.
+            foreach (UIElement elem in this.GetAllChildren().OfType<UIElement>())
             {
-                // Override the apparent behaviour of ContentControl elements, where they make the control focusable.
-                foreach (UIElement elem in this.GetAllChildren().OfType<UIElement>())
+                elem.Focusable = elem.Focusable && elem is Button;
+            }
+
+            foreach (Image image in this.GetAllChildren().OfType<Image>())
+            {
+                image.SourceUpdated += this.ImageOnSourceUpdated;
+                this.ImageOnSourceUpdated(image, null);
+            }
+        }
+
+        private void ImageOnSourceUpdated(object? sender, EventArgs? e)
+        {
+            if (sender is Image image)
+            {
+                if (image.Source is DrawingImage drawingImage)
                 {
-                    elem.Focusable = elem.Focusable && elem is Button;
+                    this.ChangeDrawingColor(drawingImage.Drawing);
                 }
-            };
+            }
         }
 
         private IEnumerable<DependencyObject> GetAllChildren(DependencyObject? parent = null)
@@ -76,15 +100,15 @@ namespace Morphic.Bar.UI
                 .Append(parent ?? this);
         }
 
-
-        public BarItemControl() : this(new BarItem())
-        {
-        }
-
         /// <summary>
         /// The bar item represented by this control.
         /// </summary>
         public BarItem BarItem { get; }
+
+        /// <summary>
+        /// The bar that contains the bar item.
+        /// </summary>
+        public BarData Bar => this.BarItem.Bar;
 
         /// <summary>Tool tip header - the name of the item, if the tooltip info isn't specified.</summary>
         public string? ToolTipHeader
@@ -181,7 +205,74 @@ namespace Morphic.Bar.UI
             }
 
             this.ActiveTheme = theme.Apply(this.BarItem.Theme);
+
+            // Update the brush used by a mono drawing image.
+            if (this.DrawingBrush != null && this.ActiveTheme.Background.HasValue)
+            {
+                this.DrawingBrush.Color = this.ActiveTheme.Background.Value;
+            }
         }
+
+        /// <summary>
+        /// The brush used for monochrome svg images.
+        /// </summary>
+        public SolidColorBrush? DrawingBrush { get; protected set; }
+
+        /// <summary>
+        /// Replaces the brushes used in a monochrome drawing with a new one, which can be set to a specific colour.
+        /// </summary>
+        /// <param name="drawing"></param>
+        private void ChangeDrawingColor(Drawing drawing)
+        {
+            List<GeometryDrawing>? geometryDrawings;
+
+            // Get all the geometries in the drawing.
+            if (drawing is DrawingGroup drawingGroup)
+            {
+                geometryDrawings = this.GetDrawings(drawingGroup)
+                    .OfType<GeometryDrawing>()
+                    .ToList();
+            }
+            else
+            {
+                geometryDrawings = new List<GeometryDrawing>();
+                if (drawing is GeometryDrawing gd)
+                {
+                    geometryDrawings.Add(gd);
+                }
+            }
+
+            bool mono = geometryDrawings.Count > 0
+                && geometryDrawings
+                    .Select(gd => gd.Brush)
+                    .OfType<SolidColorBrush>()
+                    .All(b => b.Color == Colors.Black);
+
+            if (mono)
+            {
+                this.DrawingBrush ??= new SolidColorBrush(this.BarItem.Color);
+                geometryDrawings.ForEach(gd =>
+                {
+                    if (gd.Brush is SolidColorBrush)
+                    {
+                        gd.Brush = this.DrawingBrush;
+                    }
+                });
+            }
+        }
+
+        /// <summary>
+        /// Gets all drawings within a drawing group.
+        /// </summary>
+        /// <param name="drawingGroup"></param>
+        /// <returns></returns>
+        private IEnumerable<Drawing> GetDrawings(DrawingGroup drawingGroup)
+        {
+            return drawingGroup.Children.OfType<DrawingGroup>()
+                .SelectMany(this.GetDrawings)
+                .Concat(drawingGroup.Children.OfType<GeometryDrawing>());
+        }
+
 
         #region INotifyPropertyChanged
 

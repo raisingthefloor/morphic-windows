@@ -25,6 +25,8 @@ namespace Morphic.Bar.UI
     /// </summary>
     public class BarControl : WrapPanel, INotifyPropertyChanged
     {
+        public static readonly DependencyProperty ItemSpacingProperty = DependencyProperty.Register("ItemSpacing", typeof(double), typeof(BarControl), new PropertyMetadata(default(double)));
+
         public BarControl()
         {
             this.Bar = new BarData();
@@ -33,7 +35,7 @@ namespace Morphic.Bar.UI
         public BarData Bar { get; private set; }
         public bool IsPrimary { get; set; }
 
-        public bool FixedSize => this.IsPrimary;
+        public bool FixedSize => this.IsPrimary && this.Bar.Overflow != BarOverflow.Wrap;
         public bool IsHorizontal { get; set; }
 
         public double Scale { get; set; }
@@ -42,9 +44,15 @@ namespace Morphic.Bar.UI
         {
             this.LayoutTransform = new ScaleTransform(this.Scale, this.Scale);
         }
-        
+
         public double ScaledItemWidth => Math.Ceiling(this.ItemWidth * this.Scale);
         public double ScaledItemHeight => Math.Ceiling(this.ItemHeight * this.Scale);
+
+        public double ItemSpacing
+        {
+            get => (double)this.GetValue(ItemSpacingProperty);
+            set => this.SetValue(ItemSpacingProperty, value);
+        }
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -92,6 +100,10 @@ namespace Morphic.Bar.UI
             CorrectedCoords itemSize = new CorrectedCoords(this.ItemWidth, this.ItemHeight, orientation);
 
             List<UIElement> children = this.Children.OfType<UIElement>().Where(c => c != null).ToList();
+            if (!children.Any())
+            {
+                return finalSize;
+            }
 
             if (measure)
             {
@@ -100,23 +112,30 @@ namespace Morphic.Bar.UI
             }
 
             // Get the widest
-            double widest = double.IsNaN(itemSize.Width)
-                ? children.Select(c => new CorrectedCoords(c.DesiredSize, orientation).Width).Max()
-                : itemSize.Width;
+            double widest = children.Select(c => new CorrectedCoords(c.DesiredSize, orientation).Width).Max();
 
             size.Width = Math.Max(size.Width, widest);
+
+            // first item of the row
+            bool firstItem = true;
 
             foreach (UIElement child in children)
             {
                 CorrectedCoords childSize = new CorrectedCoords(this.GetChildSize(child), orientation);
 
-                if (pos.X + childSize.Width >= size.Width)
+                if (!this.FixedSize && pos.X + childSize.Width >= size.Width)
                 {
                     // new row
+                    firstItem = true;
                     pos.X = 0;
-                    pos.Y += rowHeight;
+                    pos.Y += rowHeight + this.ItemSpacing;
 
                     rowHeight = 0;
+                }
+
+                if (!firstItem)
+                {
+                    pos.X += this.ItemSpacing;
                 }
 
                 if (!measure)
@@ -129,8 +148,12 @@ namespace Morphic.Bar.UI
 
                 actualSize.Width = Math.Max(actualSize.Width, pos.X);
                 actualSize.Height = pos.Y + rowHeight;
+
+                firstItem = false;
             }
 
+            actualSize.Width = Math.Ceiling(actualSize.Width);
+            actualSize.Height = Math.Ceiling(actualSize.Height);
             return actualSize.ToSize();
         }
 
@@ -146,7 +169,7 @@ namespace Morphic.Bar.UI
         {
             if (this.FixedSize)
             {
-                this.Orientation = sizeInfo.NewSize.Width > this.ScaledItemWidth * 1.5
+                this.Orientation = sizeInfo.NewSize.Width > sizeInfo.NewSize.Height
                     ? Orientation.Horizontal
                     : Orientation.Vertical;
             }
@@ -166,6 +189,12 @@ namespace Morphic.Bar.UI
             this.LayoutTransform = new ScaleTransform(this.Scale, this.Scale);
             
             this.LoadItems(isPrimary ? this.Bar.PrimaryItems : this.Bar.SecondaryItems);
+        }
+
+        public void ReloadItems()
+        {
+            this.RemoveItems();
+            this.LoadItems(this.IsPrimary ? this.Bar.PrimaryItems : this.Bar.SecondaryItems);
         }
 
         public void RemoveItems()
@@ -225,6 +254,11 @@ namespace Morphic.Bar.UI
         }
         public CorrectedCoords(Orientation orientation) : this(0, 0, orientation)
         {
+        }
+
+        public override string ToString()
+        {
+            return $"{this.Width}x{this.Height}{(this.swap ? "(swap)" : "")}";
         }
 
         public CorrectedCoords(double x, double y, Orientation orientation)

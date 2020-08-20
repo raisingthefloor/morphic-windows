@@ -16,6 +16,9 @@
         <SolidColorBrush x:Key="BorderOuterColor" Color="{Binding ActiveTheme.BorderOuterColor, FallbackValue=Transparent}"/>
         <!-- Convert a boolean to a visibility -->
         <ui:Ternary x:Key="BoolVisibility" False="Collapse" True="Visible" />
+        <!-- Make a top-only margin from a number -->
+        <ui:ThicknessMultiplier x:Key="NoTopMargin" Multiplier="1 0 1 1"/>
+        <ui:ThicknessMultiplier x:Key="TopMargin" Multiplier="1 0 1 1"/>
 
         <!-- Make the button style-less -->
         <Style BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" TargetType="{x:Type Button}">
@@ -31,15 +34,22 @@
         <!-- Shared button elements -->
 
         <!-- Item text -->
-        <TextBlock x:Key="Button.Text"
+        <ui:TextBlockLimited x:Key="Button.Text"
                    Visibility="{Binding BarItem.ShowIcon, Converter={StaticResource BoolVisibility}}"
                    Text="{Binding BarItem.Text}"
                    TextWrapping="Wrap"
-                   FontWeight="Bold"
+                   TextAlignment="Center"
+
+                   TextTrimming="WordEllipsis"
+                   MaxLines="{Binding Bar.Sizes.ButtonTextLines}"
+
+                   FontWeight="{Binding Bar.Sizes.ButtonFontWeight}"
+                   FontSize="{Binding Bar.Sizes.ButtonFontSize}"
+
+
                    Foreground="{DynamicResource Foreground}"
                    HorizontalAlignment="Center"
-                   Margin="5 5 5 8"
-                   TextAlignment="Center"
+                   Margin="{Binding Bar.Sizes.ButtonTextPadding}"
                    />
         <!-- Border -->
         <Border x:Key="Button.Border"
@@ -58,7 +68,7 @@
         <Border x:Key="Button.Background"
             Visibility="Visible"
             Grid.Row="1" Grid.RowSpan="2"
-            CornerRadius="15"
+            CornerRadius="10"
             Padding="0"
             Background="{StaticResource Background}" />
 
@@ -138,19 +148,30 @@
         <Grid x:Key="LargeButton">
             <Grid.RowDefinitions>
                 <!-- Contains the top half of the icon -->
-                <RowDefinition Height="*" />
+                <RowDefinition Height="{Binding Bar.Sizes.ButtonImageOffset}" />
                 <!-- Contains the bottom half of the icon, and top half of the background -->
+                <RowDefinition Height="{Binding Bar.Sizes.ButtonImageOverlap}" />
+                <!-- Contains the text label -->
                 <RowDefinition Height="*" />
-                <RowDefinition Height="2*" />
             </Grid.RowDefinitions>
 
             <ContentControl Content="{StaticResource Button.Background}"
                             Grid.Row="1" Grid.RowSpan="2"
             />
 
-            <ContentControl Content="{StaticResource Button.Image}"
-                            Grid.Row="0" Grid.RowSpan="2"
-                            Width="32" Height="32"
+            <Ellipse
+                Grid.Row="0" Grid.RowSpan="2"
+                Fill="White"
+                Width="{Binding Bar.Sizes.ButtonCircleDiameter}"
+                Stroke="{StaticResource Background}"
+                StrokeThickness="{Binding Bar.Sizes.CircleBorderWidth}"
+
+                >
+            </Ellipse>
+                <ContentControl
+                    Grid.Row="0" Grid.RowSpan="2"
+                    Content="{StaticResource Button.Image}"
+                            Width="{Binding Bar.Sizes.ButtonImageSize}" Height="{Binding Bar.Sizes.ButtonImageSize}"
             />
 
             <ContentControl Content="{StaticResource Button.Text}"

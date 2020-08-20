@@ -35,7 +35,9 @@ namespace Morphic.Bar.Bar
     {
         Resize = 0,
         Wrap,
-        Hide
+        Scale,
+        Hide,
+        Secondary
     }
 
     public enum BarItemSize

@@ -173,7 +173,9 @@ namespace Morphic.Bar.UI
                     rect.Y = this.primaryBarWindow.Top + this.primaryBarWindow.Height - rect.Height;
                 }
 
-                rect.Y = Math.Clamp(rect.Y, workArea.Top, workArea.Bottom - rect.Height);
+                rect.Y = rect.Height > workArea.Bottom
+                    ? workArea.Top
+                    : Math.Clamp(rect.Y, workArea.Top, workArea.Bottom - rect.Height);
             }
             else
             {
@@ -187,7 +189,9 @@ namespace Morphic.Bar.UI
                     rect.X = this.primaryBarWindow.Left + this.primaryBarWindow.Width - rect.Width;
                 }
 
-                rect.X = Math.Clamp(rect.X, workArea.Left, workArea.Right - rect.Width);
+                rect.X = rect.Width > workArea.Right
+                    ? workArea.Left
+                    : Math.Clamp(rect.X, workArea.Left, workArea.Right - rect.Width);
             }
 
             return rect.Location;
