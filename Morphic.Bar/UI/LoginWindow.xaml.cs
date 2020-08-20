@@ -16,31 +16,31 @@ namespace Morphic.Bar.UI
     using System.ComponentModel;
     using System.Runtime.CompilerServices;
     using System.Threading.Tasks;
-    using Client;
+    using Morphic.Service;
+    using Morphic.Core;
+    using Microsoft.Extensions.Logging;
+    using CommandLine;
 
     /// <summary>
     /// Gets the login and password from the user.
     /// </summary>
     public partial class LoginWindow : Window, INotifyPropertyChanged
     {
-        public UserPasswordCredentials Credentials { get; private set; }
-
-        private TaskCompletionSource<bool?>? gotCredentials;
         
-        public LoginWindow(UserPasswordCredentials credentials)
+        public LoginWindow(CommunitySession session, ILogger<LoginWindow> logger)
         {
-            this.Credentials = credentials;
             this.DataContext = this;
             this.InitializeComponent();
-
-            this.Credentials.Success += this.Complete;
-            this.Credentials.Cancelled += this.Complete;
+            this.session = session;
             this.Closed += this.OnClosed;
+            this.logger = logger;
         }
+
+        private readonly CommunitySession session;
+        private readonly ILogger logger;
 
         private void OnClosed(object? sender, EventArgs e)
         {
-            this.gotCredentials?.SetCanceled();
         }
 
         private void Complete(object? sender, EventArgs e)
@@ -48,20 +48,45 @@ namespace Morphic.Bar.UI
             this.Close();
         }
 
-        public Task<bool?> GetCredentials()
-        {
-            this.PasswordBox.Password = this.Credentials.Password;
-            this.Show();
-            this.OnPropertyChanged(nameof(this.Credentials));
-            this.gotCredentials = new TaskCompletionSource<bool?>();
-            return this.gotCredentials.Task;
-        }
-
         private void LoginButton_Click(object sender, RoutedEventArgs e)
         {
-            this.Credentials.Password = this.PasswordBox.Password;
-            this.gotCredentials?.SetResult(true);
-            this.gotCredentials = null;
+            _ = Login();
+        }
+        /// <summary>
+        /// Perform the method
+        /// </summary>
+        /// <returns></returns>
+        private async Task Login()
+        {
+            ErrorLabel.Visibility = Visibility.Hidden;
+            SetFieldsEnabled(false);
+            var credentials = new UsernameCredentials(UsernameBox.Text, PasswordBox.Password);
+            var success = false;
+            try
+            {
+                success = await session.Authenticate(credentials);
+            }
+            catch (HttpService.BadRequestException e)
+            {
+                logger.LogWarning(e, "Bad login request");
+            }
+            if (!success)
+            {
+                ErrorLabel.Visibility = Visibility.Visible;
+                ErrorLabel.Focus(); // Makes narrator read the error label
+                SetFieldsEnabled(true);
+            }
+            else
+            {
+                Close();
+            }
+        }
+
+        private void SetFieldsEnabled(bool enabled)
+        {
+            UsernameBox.IsEnabled = enabled;
+            PasswordBox.IsEnabled = enabled;
+            LoginButton.IsEnabled = enabled;
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
