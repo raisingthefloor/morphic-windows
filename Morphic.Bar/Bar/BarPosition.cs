@@ -269,15 +269,10 @@ namespace Morphic.Bar.Bar
                     if (this.IsRelative)
                     {
                         double v = Math.Abs(this.Value);
-                        if (v < 0.33)
+                        if (v < 0.501)
                         {
                             // left/top
                             value = min;
-                        }
-                        else if (v < 0.66)
-                        {
-                            // center
-                            value = min + max - size / 2;
                         }
                         else
                         {

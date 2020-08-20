@@ -12,12 +12,10 @@ namespace Morphic.Bar.UI
 {
     using System;
     using System.ComponentModel;
-    using System.Globalization;
     using System.Linq;
     using System.Runtime.CompilerServices;
     using System.Windows;
     using System.Windows.Controls;
-    using System.Windows.Data;
     using System.Windows.Shell;
     using AppBarWindow;
     using Bar;
@@ -125,7 +123,7 @@ namespace Morphic.Bar.UI
         public double ExtraWidth =>
             this.BorderThickness.Left + this.BorderThickness.Right +
             this.Padding.Left + this.Padding.Right +
-            this.BarControl.Margin.Left + this.BarControl.Margin.Right + 1;
+            this.BarControl.Margin.Left + this.BarControl.Margin.Right;
 
         /// <summary>Additional height added to the window.</summary>
         public double ExtraHeight =>
@@ -147,6 +145,8 @@ namespace Morphic.Bar.UI
             this.SetInitialPosition(size);
 
             this.BarLoaded?.Invoke(this, new EventArgs());
+
+            this.Opacity = 1;
         }
 
         /// <summary>
@@ -165,14 +165,28 @@ namespace Morphic.Bar.UI
                 size.Width += this.ExtraWidth;
                 size.Height += this.ExtraHeight;
 
-                if (size.Height > workArea.Height && this.Bar.Overflow == BarOverflow.Resize)
+                retry = false;
+                if (size.Height > workArea.Height)
                 {
-                    retry = this.ReduceSize();
-                    this.BarControl.UpdateLayout();
-                }
-                else
-                {
-                    retry = false;
+                    switch (this.Bar.Overflow)
+                    {
+                        case BarOverflow.Resize:
+                        case BarOverflow.Secondary:
+                            retry = this.ReduceSize();
+                            this.BarControl.UpdateLayout();
+                            break;
+                        case BarOverflow.Scale:
+                            this.Scale = workArea.Height / size.Height;
+                            this.BarControl.UpdateLayout();
+                            size = this.BarControl.GetSize(size);
+                            size.Width += this.ExtraWidth;
+                            size.Height += this.ExtraHeight;
+                            retry = false;
+                            break;
+                        default:
+                            size.Height = workArea.Height;
+                            break;
+                    }
                 }
 
             } while (retry);
@@ -201,7 +215,7 @@ namespace Morphic.Bar.UI
         /// <returns></returns>
         protected internal virtual Orientation GetBestOrientation(Edge appBarEdge)
         {
-            Orientation orientation = Orientation.Horizontal;
+            Orientation orientation = Orientation.Vertical;
 
             if (appBarEdge == Edge.Left || appBarEdge == Edge.Right)
             {
@@ -269,7 +283,7 @@ namespace Morphic.Bar.UI
             Orientation orientation = this.GetBestOrientation(this.Bar.Position.DockEdge);
 
             this.BarControl.IsHorizontal = orientation == Orientation.Horizontal;
-            Size size = this.AppBar.GetGoodSize(new Size(100, 100), orientation);
+            Size size = this.AppBar.GetGoodSize(new Size(this.ExtraWidth, this.ExtraHeight), orientation);
             return size;
         }
 
@@ -301,12 +315,20 @@ namespace Morphic.Bar.UI
         {
             if (orientation == Orientation.Horizontal)
             {
-                availableSize.Width = double.PositiveInfinity;
+                availableSize.Width = workArea.Width;
                 availableSize.Height -= this.ExtraHeight;
             }
             else
             {
-                availableSize.Width = double.PositiveInfinity;
+                if (this.BarControl.FixedSize)
+                {
+                    availableSize.Width -= this.ExtraWidth;
+                }
+                else
+                {
+                    availableSize.Width = double.PositiveInfinity;
+                }
+
                 availableSize.Height = workArea.Height;
             }
 
@@ -323,16 +345,26 @@ namespace Morphic.Bar.UI
         /// <returns></returns>
         private bool ReduceSize()
         {
-            BarItemControl largest = this.BarControl.Children.OfType<BarItemControl>()
-                .OrderByDescending(item => item.ItemSize)
-                .ThenByDescending(item => item.DesiredSize.Height)
-                .First();
-            if (largest.ItemSize <= BarItemSize.TextOnly)
+            if (this.Bar.Overflow == BarOverflow.Resize)
             {
-                return false;
+                BarItemControl largest = this.BarControl.Children.OfType<BarItemControl>()
+                    .OrderByDescending(item => item.ItemSize)
+                    .ThenByDescending(item => item.DesiredSize.Height)
+                    .First();
+                if (largest.ItemSize <= BarItemSize.TextOnly)
+                {
+                    return false;
+                }
+
+                largest.MaxItemSize = largest.ItemSize - 1;
+            }
+            else if (this.Bar.Overflow == BarOverflow.Secondary && this is PrimaryBarWindow primaryBarWindow)
+            {
+                this.Bar.PrimaryItems.Last(item => !item.NoOverflow).IsPrimary = false;
+                this.BarControl.ReloadItems();
+                primaryBarWindow.GetSecondaryWindow()?.BarControl.ReloadItems();
             }
 
-            largest.MaxItemSize = largest.ItemSize - 1;
             return true;
         }
 
@@ -346,39 +378,6 @@ namespace Morphic.Bar.UI
         public void ShowMenu()
         {
 
-        }
-    }
-
-    /// <summary>
-    /// Converter which returns a value depending on whether or not the input value is false/null.
-    /// </summary>
-    public class Ternary : IValueConverter
-    {
-        /// <summary>
-        /// The value to return if the input value is false, null, or empty string.
-        /// </summary>
-        public string? False { get; set; }
-
-        /// <summary>
-        /// The value to return if the input value is not null or false. Omit to return the input value.
-        /// </summary>
-        public string? True { get; set; }
-
-        public object? Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            if (value == null || value as bool? == false || value as string == string.Empty)
-            {
-                return parameter ?? this.False;
-            }
-            else
-            {
-                return this.True ?? value;
-            }
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
         }
     }
 }

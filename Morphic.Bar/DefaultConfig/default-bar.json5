@@ -1,13 +1,26 @@
 {
   scale: 1,
-  overflow: "wrap",
+  overflow: "hide",
   position: {
     docked: null,
-    x: "Left",
-    y: "Middle",
+    x: "Right",
+    y: "bottom",
     secondary: "bottom",
-    expander: "50%",
+    expander: "bottom",
     expanderRelative: "secondary"
+  },
+  sizes: {
+    windowPadding: "10 15",
+    itemSpacing: 10,
+    itemWidth: 100,
+    buttonTextLines: 2,
+    buttonPadding: "10 0 10 10",
+    buttonImageSize: 0.66,
+    buttonImageOverlap: 0.33,
+    buttonFontSize: 14,
+    buttonFontWeight: "normal",
+    circleBorderWidth: 2,
+    buttonCornerRadius: 10
   },
   secondaryBar: {
     autohide: true,
@@ -20,7 +33,7 @@
   },
   itemTheme: {
     color: 'white',
-    background: "#002957",
+    background: "#002951",
     focus: {
       borderColor: 'yellow',
       borderOuterColor: 'black',
@@ -36,6 +49,7 @@
       kind: "internal",
       widget: "image",
       is_primary: true,
+      no_overflow: true,
       priority: -100,
       configuration: {
         function: "menu",

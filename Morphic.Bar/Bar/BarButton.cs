@@ -71,7 +71,10 @@ namespace Morphic.Bar.Bar
                 else
                 {
                     // Check if it points to a file within the assets directory.
-                    string safe = new Regex("[^-a-zA-Z0-9.]+", RegexOptions.Compiled).Replace(this.imageValue, "_");
+                    string safe = new Regex(@"\.\.|[^-a-zA-Z0-9./]+", RegexOptions.Compiled)
+                        .Replace(this.imageValue, "_")
+                        .Trim('/')
+                        .Replace('/', Path.DirectorySeparatorChar);
                     string assetFile = AppPaths.GetAssetFile("bar-icons\\" + safe);
                     string[] extensions = {"", ".svg", ".png", ".ico", ".jpg", ".jpeg", ".gif"};
 
@@ -164,28 +167,29 @@ namespace Morphic.Bar.Bar
             {
                 try
                 {
-                    BitmapImage image = new BitmapImage();
-                    image.BeginInit();
-                    image.CacheOption = BitmapCacheOption.OnLoad;
-                    image.UriSource = new Uri(this.ImagePath);
-                    image.EndInit();
-
-                    this.ImageSource = image;
-                    success = true;
-                }
-                catch (NotSupportedException)
-                {
-                    try
+                    if (Path.GetExtension(this.ImagePath) == ".svg")
                     {
                         using FileSvgReader svg = new FileSvgReader(new WpfDrawingSettings());
-                        this.ImageSource = new DrawingImage(svg.Read(this.ImagePath));
-                        success = true;
+                        DrawingGroup drawingGroup = svg.Read(this.ImagePath);
+                        this.ImageSource = new DrawingImage(drawingGroup);
+
                     }
-                    catch (Exception e) when (e is XmlException || e is SvgException)
+                    else
                     {
-                        // Do nothing
-                        this.Logger.LogInformation(e, "Unable to load image {imageFile}", this.ImagePath);
+                        BitmapImage image = new BitmapImage();
+                        image.BeginInit();
+                        image.CacheOption = BitmapCacheOption.OnLoad;
+                        image.UriSource = new Uri(this.ImagePath);
+                        image.EndInit();
+
+                        this.ImageSource = image;
                     }
+                    success = true;
+                }
+                catch (Exception e) when (e is NotSupportedException || e is XmlException || e is SvgException)
+                {
+                    // Do nothing
+                    this.Logger.LogInformation(e, "Unable to load image {imageFile}", this.ImagePath);
                 }
             }
 

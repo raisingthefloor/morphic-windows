@@ -106,5 +106,10 @@ namespace Morphic.Bar.UI
             
             this.ExpandedChange?.Invoke(this, EventArgs.Empty);
         }
+
+        public SecondaryBarWindow? GetSecondaryWindow()
+        {
+            return this.secondaryWindow;
+        }
     }
 }

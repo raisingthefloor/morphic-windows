@@ -10,10 +10,8 @@
 
 namespace Morphic.Bar.UI
 {
-    using System;
     using System.ComponentModel;
     using System.Windows;
-    using System.Windows.Threading;
     using Bar;
 
     /// <summary>
@@ -29,7 +27,6 @@ namespace Morphic.Bar.UI
         {
             this.PropertyChanged += this.OnPropertyChanged;
             this.InitializeComponent();
-
         }
 
         public new BarButton BarItem => (BarButton) base.BarItem;
