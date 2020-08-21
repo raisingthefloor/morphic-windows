@@ -3,7 +3,8 @@
   "profiles": {
     "Morphic.Bar": {
       "commandName": "Project",
-      "commandLineArgs": "--bar ../../../test-bar.json5",
+      "x-commandLineArgs": "--bar ../../../test-bar.json5",
+      "commandLineArgs": "--bar %LOCALAPPDATA%/Morphic.Bar/last-bar.json5",
       "environmentVariables": {
         "MORPHIC_LOGLEVEL": "Debug"
       }

@@ -13,6 +13,7 @@ namespace Morphic.Bar.Bar.Actions
     using System;
     using System.Diagnostics;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
 
     /// <summary>
@@ -21,30 +22,48 @@ namespace Morphic.Bar.Bar.Actions
     [JsonTypeName("link")]
     public class WebAction : BarAction
     {
+        private string? urlString;
+
         [JsonProperty("url", Required = Required.Always)]
         public string UrlString
         {
-            // Wrapping a Uri means the URL is validated during load.
-            get => this.Uri.ToString();
-            set => this.Uri = new Uri(value);
+            get => this.Uri?.ToString() ?? this.urlString ?? string.Empty;
+            set
+            {
+                if (Uri.TryCreate(value, UriKind.Absolute, out Uri? uri))
+                {
+                    this.Uri = uri;
+                }
+                else
+                {
+                    this.urlString = value;
+                    App.Current.Logger.LogWarning($"Unable to parse url '{this.urlString}'");
+                }
+            }
         }
 
-        public Uri Uri { get; set; } = null!;
+        public Uri? Uri { get; set; }
 
         /// <summary>
         /// Use the site's favicon as the default.
         /// </summary>
-        public override Uri? DefaultImageUri => new Uri($"https://icons.duckduckgo.com/ip2/{this.Uri.Host}.ico");
+        public override Uri? DefaultImageUri =>
+            this.Uri != null ? new Uri($"https://icons.duckduckgo.com/ip2/{this.Uri.Host}.ico") : null;
 
         public override Task<bool> Invoke()
         {
-            Process.Start(new ProcessStartInfo()
+            bool success = true;
+            if (this.Uri != null)
             {
-                FileName = this.Uri.ToString(),
-                UseShellExecute = true
-            });
+                Process? process = Process.Start(new ProcessStartInfo()
+                {
+                    FileName = this.Uri?.ToString(),
+                    UseShellExecute = true
+                });
+                success = process != null;
+            }
 
-            return Task.FromResult(true);
+            return Task.FromResult(success);
         }
     }
 }

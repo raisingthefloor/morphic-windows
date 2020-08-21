@@ -242,11 +242,14 @@ namespace Morphic.Bar.UI
                 }
             }
 
+            // If there's only 1 colour, it's mono.
             bool mono = geometryDrawings.Count > 0
                 && geometryDrawings
                     .Select(gd => gd.Brush)
                     .OfType<SolidColorBrush>()
-                    .All(b => b.Color == Colors.Black);
+                    .Select(b => b.Color)
+                    .Distinct()
+                    .Count() == 1;
 
             if (mono)
             {

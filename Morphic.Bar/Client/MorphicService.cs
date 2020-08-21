@@ -17,6 +17,7 @@ namespace Morphic.Bar.Client
     using Flurl;
     using Flurl.Http;
     using Microsoft.Extensions.Logging;
+    using Newtonsoft.Json;
 
     /// <summary>
     /// A session with the morphic web app.
@@ -130,8 +131,19 @@ namespace Morphic.Bar.Client
                 }
                 catch (FlurlHttpException e)
                 {
-                    ErrorResponse? errorResponse = await e.GetResponseJsonAsync<ErrorResponse>();
-                    credentials?.OnFailure(errorResponse?.Error ?? e.Message);
+                    string message;
+                    try
+                    {
+                        ErrorResponse? errorResponse = await e.GetResponseJsonAsync<ErrorResponse>();
+                        message = errorResponse?.Error ?? e.Message;
+                    }
+                    catch (JsonException)
+                    {
+                        message = await e.GetResponseStringAsync();
+                        this.Logger.LogWarning($"Authentication failed: {message}");
+                    }
+
+                    credentials?.OnFailure(message);
                     success = false;
                 }
             } while (!success);

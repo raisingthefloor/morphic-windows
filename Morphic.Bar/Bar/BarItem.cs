@@ -44,6 +44,11 @@ namespace Morphic.Bar.Bar
         public bool IsPrimaryOriginal { get; set; }
 
         /// <summary>
+        /// true if this item is a built-in item, from the default bar json.
+        /// </summary>
+        public bool IsDefault { get; set; }
+
+        /// <summary>
         /// Don't over-flow this item to the secondary bar.
         /// </summary>
         [JsonProperty("no_overflow")]

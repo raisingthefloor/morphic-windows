@@ -25,7 +25,13 @@ namespace Morphic.Bar.Bar
 
     public static class BarJson
     {
-        //public static BarData? Load(TextReader reader, BarData? existingBar = null)
+        /// <summary>
+        /// Loads some json data.
+        /// </summary>
+        /// <param name="reader">The input json.</param>
+        /// <param name="existingBar">An existing bar to populate.</param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public static T Load<T>(TextReader reader, T? existingBar = null)
             where T : class, IDeserializable
         {

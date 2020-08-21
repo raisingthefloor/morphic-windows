@@ -53,15 +53,17 @@ namespace Morphic.Bar
 
             AppPaths.Log(this.Logger);
 
-            BarActions actions = BarActions.FromFile(AppPaths.GetConfigFile("actions.json5", true));
+            string? barFile = Options.Current.BarFile == null
+                ? null
+                : Environment.ExpandEnvironmentVariables(Options.Current.BarFile);
 
-            string? barFile = Options.Current.BarFile;
             if (barFile == null)
             {
                 MorphicService morphicService =
-                    new MorphicService("https://dev-morphic.morphiclite-oregondesignservices.org/");
+                    new MorphicService("https://dev-api-experimental.morphiclite-oregondesignservices.org/");
+                    //new MorphicService("https://dev-morphic.morphiclite-oregondesignservices.org/");
                 string? barJson = await morphicService.GetBar();
-                barFile = AppPaths.GetCacheFile("last-bar.json5");
+                barFile = AppPaths.GetConfigFile("last-bar.json5");
                 await File.WriteAllTextAsync(barFile, barJson);
             }
 

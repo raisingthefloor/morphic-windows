@@ -114,6 +114,8 @@ namespace Morphic.Bar.Bar
             if (includeDefault)
             {
                 defaultBar = BarData.Load(AppPaths.GetConfigFile("default-bar.json5", true), false);
+                // Mark the items as being from the default specification
+                defaultBar?.AllItems.ForEach(item => item.IsDefault = true);
             }
             else
             {
@@ -144,13 +146,42 @@ namespace Morphic.Bar.Bar
             return bar;
         }
 
+        private bool hasDeserialized;
+
+        /// <summary>
+        /// Called when the bar has been deserialised. This can be called twice, for the default bar and the user's bar.
+        /// </summary>
         public void Deserialized()
         {
             // Make the theme of each item inherit the default theme.
             this.BarTheme.Apply(Theme.DefaultBar());
             this.DefaultTheme.Apply(Theme.DefaultItem());
 
-            this.AllItems.ForEach(item => item.Deserialized(this));
+            if (this.hasDeserialized)
+            {
+                // If a bar has no primary items, it looks stupid. Make all the items primary, and make them over-flow to
+                // the secondary bar.
+                bool hasPrimary = this.PrimaryItems.Any(item => !item.IsDefault);
+                if (!hasPrimary)
+                {
+                    foreach (BarItem item in this.SecondaryItems)
+                    {
+                        item.IsPrimary = true;
+                    }
+
+                    this.Overflow = BarOverflow.Secondary;
+                }
+            }
+
+            this.AllItems.ForEach(item =>
+            {
+                item.IsDefault = !this.hasDeserialized;
+                item.Deserialized(this);
+            });
+
+
+
+            this.hasDeserialized = true;
         }
 
         /// <summary>
