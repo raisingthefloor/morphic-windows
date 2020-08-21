@@ -11,6 +11,8 @@
 namespace Morphic.Bar.Bar.Actions
 {
     using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
@@ -53,7 +55,7 @@ namespace Morphic.Bar.Bar.Actions
         }
 
         /// <summary>
-        /// Executable name, or the full path to it.
+        /// Executable name, or the full path to it. If also providing arguments, surround the executable path with quotes.
         /// </summary>
         [JsonProperty("exe", Required = Required.Always)]
         public string ExeName
@@ -68,6 +70,21 @@ namespace Morphic.Bar.Bar.Actions
                 }
                 else
                 {
+                    if (this.ExeName.StartsWith('"'))
+                    {
+                        int nextQuote = this.exeName.IndexOf('"', 1);
+                        if (nextQuote < 0)
+                        {
+                            App.Current.Logger.LogWarning($"Executable path [{this.ExeName}] has mismatching quote");
+                            this.AppPath = this.ExeName.Substring(1);
+                        }
+                        else
+                        {
+                            this.AppPath = this.ExeName.Substring(1, nextQuote - 1);
+                            this.ArgumentsString = this.ExeName.Substring(nextQuote + 1).Trim();
+                        }
+                    }
+
                     this.AppPath = this.ResolveAppPath(this.exeName);
                     App.Current.Logger.LogDebug($"Resolved exe file '{this.exeName}' to '{this.AppPath ?? "(null)"}'");
                 }
@@ -76,6 +93,29 @@ namespace Morphic.Bar.Bar.Actions
             }
         }
 
+        /// <summary>
+        /// Array of arguments.
+        /// </summary>
+        [JsonProperty("args")]
+        public List<string> Arguments { get; set; } = new List<string>();
+
+        /// <summary>
+        /// The arguments, if they're passed after the exe name.
+        /// </summary>
+        public string? ArgumentsString { get; set; }
+
+        /// <summary>
+        /// Environment variables to set
+        /// </summary>
+        [JsonProperty("env")]
+        public Dictionary<string, string> EnvironmentVariables { get; set; } = new Dictionary<string, string>();
+
+        /// <summary>
+        /// Resolves the path of an executable, by looking in the "App Paths" registry key or the PATH environment.
+        /// If a full path is provided, and it doesn't exist, then the path for the file name alone is resolved.
+        /// </summary>
+        /// <param name="file"></param>
+        /// <returns>Full path to the executable if found, or null.</returns>
         private string? ResolveAppPath(string file)
         {
             string? ext = Path.GetExtension(file).ToLower();
@@ -116,6 +156,11 @@ namespace Morphic.Bar.Bar.Actions
             }
         }
 
+        /// <summary>
+        /// Called by ResolveAppPath to perform the actual resolving work.
+        /// </summary>
+        /// <param name="file"></param>
+        /// <returns>Full path to the executable if found, or null.</returns>
         private string? ResolveAppPathAsIs(string file)
         {
             string? fullPath = null;
@@ -176,8 +221,30 @@ namespace Morphic.Bar.Bar.Actions
 
         public override Task<bool> Invoke()
         {
-            MessageBox.Show($"Opens the application {this.ExeName}");
-            return Task.FromResult(true);
+            ProcessStartInfo startInfo = new ProcessStartInfo()
+            {
+                FileName = this.AppPath,
+                // This is required to start taskmgr (the UAC prompt)
+                UseShellExecute = true
+            };
+
+            if (this.Arguments.Count > 0)
+            {
+                this.Arguments.ForEach(startInfo.ArgumentList.Add);
+            }
+            else
+            {
+                startInfo.Arguments = this.ArgumentsString;
+            }
+
+            foreach (var (key, value) in this.EnvironmentVariables)
+            {
+                startInfo.EnvironmentVariables.Add(key, value);
+            }
+
+            Process? process = Process.Start(startInfo);
+
+            return Task.FromResult(process != null);
         }
     }
 }

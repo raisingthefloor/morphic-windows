@@ -16,7 +16,6 @@
       is_primary: true,
       configuration: {
         identifier: "taskManager",
-        image_url: "test/grid",
         label: "open task manager"
       }
     },
