@@ -126,6 +126,8 @@ BarItem = {
   // "link", "application", "action"
   kind: "link",
 
+  widget: "button",
+
   // Specific to the item kind.
   configuration: {
     // ...
@@ -167,53 +169,67 @@ ButtonItem = {
 
 ### `kind = "link"`
 
-Opens a web page. See [LinkAction](#LinkAction).
+Opens a web page.
 
 ```js
 /** @extends ButtonItem */
 LinkButton = {
   kind: "link",
-  /** @mixes LinkAction */
-  configuration: {}
+  configuration: {
+    url: "https://example.com"
+  }
 }
 ```
 
 ### `kind = "application"`
 
-Opens an application. See [ApplicationAction](#ApplicationAction)
+Opens an application.
 
 ```js
 /** @extends ButtonItem */
 ApplicationButton = {
   kind: "application",
   /** @mixes ApplicationAction */
-  configuration: {}
+  configuration: {
+    // Executable name (or full path). Full path is discovered via `App Paths` registry or the PATH environment variable.
+    exe: "notepad.exe"
+  }
 }
 ```
 
 ### `kind = "internal"`
 
-Invokes a built-in routine. See [InternalAction](#InternalAction).
+Invokes a built-in routine.
 
 ```js
 /** @extends ButtonItem */
 InternalButton = {
   kind: "internal",
   /** @mixes InternalAction */
-  configuration: {}
+  configuration: {
+    // Name of the internal function.
+    function: "fname",
+    // Arguments to pass.
+    args: ["a1", "a2"]
+  }
 }
 ```
 
 ### `kind = "action"`
 
-Invokes a pre-defined action in [`actions.json5`](#actions.json5). See [PresetAction](#PresetAction).
+This performs a lookup of an object in [`actions.json5`](#actionsjson5), using `configuration.identifier`. The object in `actions.json5`
+will be merged onto this one.
+
+This allows for a richer set of data than what the web app provides.
 
 ```js
 /** @extends ButtonItem */
 ActionButton = {
   kind: "action",
   /** @mixes PresetAction */
-  configuration: {}
+  configuration: {
+    identifier: "example-action"
+  }
 }
 ```
 
@@ -231,7 +247,6 @@ Theme = {
   borderSize: 2
 }
 ```
-
 
 ## `ItemTheme : Theme`
 
@@ -254,17 +269,19 @@ ItemTheme = {
 
 ## actions.json5
 
-This file contains the definitions actions performed by buttons with `kind = "action"`. The value of `ButtonItem.identifier` is a key in `actions`.
+This file contains additional data for bar items with `kind = "action"`. The value of `BarItem.configuration.identifier` identifies a key in `actions`.
 
 ```js
 actions.json5 = {
   actions: {
-    "identifier": {Action},
+    "identifier": {BarItem},
 
-    // Example: start task manager
+    // start task manager
     "taskManager": {
       kind: "application",
-      exe: "taskmgr.exe"
+      configuration: {
+        exe: "taskmgr.exe"
+      }
     },
 
     // Example: invoke an internal function
@@ -273,66 +290,6 @@ actions.json5 = {
       function: "hello"
     }
   }
-}
-```
-
-```js
-Action = {
-  kind: "<link|application|internal|action>",
-  // kind-specific values ...
-}
-```
-
-### LinkAction
-
-Opens a web page
-
-```js
-/** @extends Action */
-LinkAction = {
-  kind: "link",
-  url: "https://example.com"
-}
-```
-
-### ApplicationAction
-
-Opens an application
-
-```js
-/** @extends Action */
-ApplicationAction = {
-  kind: "application",
-  // Executable name (or full path). Full path is discovered via `App Paths` registry or the PATH environment variable.
-  exe: "notepad.exe"
-}
-```
-
-### InternalAction
-
-Invokes a built-in routine.
-
-```js
-/** @extends Action */
-InternalAction = {
-  kind: "internal",
-  // Name of the internal function.
-  function: "fname",
-  // Arguments to pass.
-  args: ["a1", "a2"]
-}
-```
-
-### PresetAction
-
-Runs a pre-defined action in `actions.json5`
-
-```js
-/** @extends Action */
-PresetAction = {
-  kind: "action",
-  // The key to the item in actions.json5
-  identifier: "id"
 }
 ```
 

@@ -19,13 +19,15 @@ namespace Morphic.Bar.Bar
 
     /// <summary>
     /// A bar item.
+    ///
+    /// For items of kind == "action", configuration.identifier is used to lookup an item from actions.js. The object
+    /// from there is merged onto this, just before deserialisation.
     /// </summary>
     [JsonObject(MemberSerialization.OptIn)]
     [JsonConverter(typeof(TypedJsonConverter), "widget", "button")]
     public class BarItem
     {
         protected ILogger Logger = LogUtil.LoggerFactory.CreateLogger("Bar");
-
 
         /// <summary>
         /// The bar that owns this item (set after deserialisation).

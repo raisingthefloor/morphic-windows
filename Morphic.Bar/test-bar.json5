@@ -3,20 +3,20 @@
   name: "not the name",
   items: [
     {
+      kind: "action",
+      is_primary: true,
+      configuration: {
+        identifier: "taskManager",
+        label: "open task manager"
+      }
+    },
+    {
       kind: "link",
       is_primary: true,
       configuration: {
         label: "Google",
         image_url: "test/grid",
         url: "https://google.co.uk/"
-      }
-    },
-    {
-      kind: "action",
-      is_primary: true,
-      configuration: {
-        identifier: "taskManager",
-        label: "open task manager"
       }
     },
     {

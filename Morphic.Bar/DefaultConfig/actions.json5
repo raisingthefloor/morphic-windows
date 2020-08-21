@@ -3,7 +3,11 @@
   actions: {
     "taskManager": {
       kind: "application",
-      exe: "taskmgr.exe"
+      widget: "image",
+      configuration: {
+        exe: "taskmgr.exe",
+        aa: "hello"
+      }
     },
     "screenshot": {
       kind: "internal",

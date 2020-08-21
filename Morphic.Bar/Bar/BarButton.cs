@@ -241,16 +241,6 @@ namespace Morphic.Bar.Bar
 
         public override async void Deserialized(BarData bar)
         {
-            // Resolve the pre-set action.
-            if (this.Action is PresetAction presetAction)
-            {
-                BarAction? realAction = presetAction.GetRealAction();
-                if (realAction != null)
-                {
-                    this.Action = realAction;
-                }
-            }
-
             base.Deserialized(bar);
 
             _ = this.LoadImage();

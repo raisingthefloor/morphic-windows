@@ -65,7 +65,7 @@ namespace Morphic.Bar.Bar
         /// <summary>
         /// Customised JSON reader which handles platform specific fields. The platform for which a field is used,
         /// is identified by a '$id' suffix. A field with a platform identifier of the current platform will be
-        /// used instead of one without. 
+        /// used instead of one without.
         ///
         /// For example:
         /// 
@@ -257,8 +257,10 @@ namespace Morphic.Bar.Bar
         {
             JObject jo = JObject.Load(reader);
 
+            jo = this.MergePreset(jo);
+
             // Get the type of item.
-            string kindName = jo[this.typeFieldName]?.ToString() ?? this.defaultValue;
+            string kindName = jo.SelectToken(this.typeFieldName)?.ToString() ?? this.defaultValue;
             
             // Create the class for the type.
             object? target = this.CreateInstance(objectType, kindName);
@@ -284,6 +286,26 @@ namespace Morphic.Bar.Bar
             }
 
             return target;
+        }
+
+        private JObject MergePreset(JObject jo)
+        {
+            // Merge the predefined action object
+            bool isAction = jo.SelectToken("kind")?.ToString() == "action";
+            if (isAction)
+            {
+                string? actionId = jo.SelectToken("configuration.identifier")?.ToString();
+                if (actionId != null)
+                {
+                    JObject? preset = BarPresets.GetObject(actionId);
+                    if (preset != null)
+                    {
+                        jo.Merge(preset);
+                    }
+                }
+            }
+
+            return jo;
         }
 
         /// <summary>
