@@ -5,9 +5,9 @@
              >
     <Application.Resources>
         <ContextMenu x:Key="MorphicMenu">
-            <MenuItem Header="hello" />
+            <MenuItem Header="About" Click="MenuItem_About" />
             <Separator/>
-            <MenuItem Header="asdsd"></MenuItem>
+            <MenuItem Header="Close" Click="MenuItem_Close" />
         </ContextMenu>
     </Application.Resources>
 </Application>

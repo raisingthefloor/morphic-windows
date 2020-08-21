@@ -4,8 +4,11 @@ namespace Morphic.Bar
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
     using System.Linq;
+    using System.Reflection;
+    using System.Windows.Forms;
     using System.Windows.Threading;
     using Bar;
     using Client;
@@ -80,8 +83,7 @@ namespace Morphic.Bar
 
             if (this.barWindow != null)
             {
-                this.barWindow.Close();
-                this.barWindow = null;
+                this.CloseBar();
             }
 
             if (bar != null)
@@ -98,15 +100,21 @@ namespace Morphic.Bar
             if (bar != null)
             {
                 string source = bar.Source;
-                if (this.barWindow != null)
-                {
-                    this.barWindow.IsClosing = true;
-                    this.barWindow.Close();
-                    this.barWindow = null;
-                }
 
-                bar.Dispose();
+                this.CloseBar();
                 this.LoadBar(source);
+            }
+        }
+
+        public void CloseBar()
+        {
+            if (this.barWindow != null)
+            {
+                BarData bar = this.barWindow.Bar;
+                this.barWindow.IsClosing = true;
+                this.barWindow.Close();
+                this.barWindow = null;
+                bar.Dispose();
             }
         }
 
@@ -195,5 +203,17 @@ namespace Morphic.Bar
             }
         }
 
+        private void MenuItem_Close(object sender, RoutedEventArgs e)
+        {
+            this.CloseBar();
+            this.Shutdown();
+        }
+
+        private void MenuItem_About(object sender, RoutedEventArgs e)
+        {
+            string? ver = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).ProductVersion
+                ?? "unknown";
+            MessageBox.Show($"Morphic Community Bar\n\nVersion: {ver}");
+        }
     }
 }
