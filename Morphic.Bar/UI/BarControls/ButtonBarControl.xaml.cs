@@ -8,7 +8,7 @@
 // You may obtain a copy of the License at
 // https://github.com/GPII/universal/blob/master/LICENSE.txt
 
-namespace Morphic.Bar.UI
+namespace Morphic.Bar.UI.BarControls
 {
     using System.ComponentModel;
     using System.Windows;
@@ -17,13 +17,13 @@ namespace Morphic.Bar.UI
     /// <summary>
     /// The control for Button bar items.
     /// </summary>
-    public partial class BarButtonControl : BarItemControl
+    public partial class ButtonBarControl : BarItemControl
     {
-        public BarButtonControl() : this(new BarButton())
+        public ButtonBarControl() : this(new BarButton())
         {
         }
 
-        public BarButtonControl(BarButton barItem) : base(barItem)
+        public ButtonBarControl(BarButton barItem) : base(barItem)
         {
             this.PropertyChanged += this.OnPropertyChanged;
             this.InitializeComponent();

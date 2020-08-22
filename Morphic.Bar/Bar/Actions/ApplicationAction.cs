@@ -219,7 +219,7 @@ namespace Morphic.Bar.Bar.Actions
             return fullPath;
         }
 
-        public override Task<bool> Invoke()
+        public override Task<bool> Invoke(string? source = null)
         {
             ProcessStartInfo startInfo = new ProcessStartInfo()
             {

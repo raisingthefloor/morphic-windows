@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:ui="clr-namespace:Morphic.Bar.UI"
+        xmlns:barControls="clr-namespace:Morphic.Bar.UI.BarControls"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance ui:BarWindow, IsDesignTimeCreatable=True}"
         
@@ -39,11 +40,11 @@
 
             <!-- Template for bar item controls, set via code behind because it targets a base class -->
             <!-- ReSharper disable once Xaml.RedundantResource (used in code-behind) -->
-            <Style x:Key="BarItemStyle" TargetType="{x:Type ui:BarItemControl}">
+            <Style x:Key="BarItemStyle" TargetType="{x:Type barControls:BarItemControl}">
                 <Setter Property="Template">
                     <Setter.Value>
-                        <ControlTemplate TargetType="{x:Type ui:BarItemControl}">
-                            <Grid d:DataContext="{d:DesignInstance ui:BarItemControl, IsDesignTimeCreatable=True}">
+                        <ControlTemplate TargetType="{x:Type barControls:BarItemControl}">
+                            <Grid d:DataContext="{d:DesignInstance barControls:BarItemControl, IsDesignTimeCreatable=True}">
                                 <Grid.ToolTip>
                                     <ToolTip
                                         Visibility="{Binding BarItem.ToolTip, Converter={StaticResource NullCollapsed}}">

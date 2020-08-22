@@ -1,0 +1,87 @@
+﻿<barControls:BarItemControl x:Class="Morphic.Bar.UI.BarControls.MultiButtonBarControl"
+                         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                         xmlns:ui="clr-namespace:Morphic.Bar.UI"
+                         xmlns:barControls="clr-namespace:Morphic.Bar.UI.BarControls"
+                         mc:Ignorable="d"
+                         MinHeight="30"
+                         MaxHeight="150"
+                         d:DataContext="{d:DesignInstance barControls:MultiButtonBarControl, IsDesignTimeCreatable=True}"
+                         >
+    <barControls:BarItemControl.Resources>
+
+        <!-- Make the button style-less -->
+        <Style BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" TargetType="{x:Type Button}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <ContentPresenter />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+    </barControls:BarItemControl.Resources>
+
+    <StackPanel HorizontalAlignment="Stretch">
+        <!-- The text label -->
+        <ui:TextBlockLimited Text="{Binding BarItem.Text}"
+                             TextWrapping="Wrap"
+                             TextAlignment="Center"
+                             MaxLines="{Binding Bar.Sizes.ButtonTextLines}"
+                             Padding="{Binding Bar.Sizes.ControlLabelPadding}"/>
+
+        <!-- The buttons -->
+        <ItemsControl Name="ButtonContainer"
+                      ItemsSource="{Binding Buttons}"
+                      FontSize="{Binding Bar.Sizes.ControlItemFontSize}"
+                      Height="{Binding Bar.Sizes.ControlItemHeight}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <UniformGrid Rows="1" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Button Name="ControlButton"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                            VerticalAlignment="Stretch" VerticalContentAlignment="Center"
+                            Margin="1"
+                            Click="Button_OnClick"
+                            >
+                        <Button.Foreground>
+                            <SolidColorBrush Color="{Binding ActiveTheme.TextColor}" />
+                        </Button.Foreground>
+
+                        <!-- Outer border -->
+                        <Border SnapsToDevicePixels="True"
+                                BorderThickness="{Binding ActiveTheme.BorderOuterSize}">
+                            <Border.BorderBrush>
+                                <SolidColorBrush Color="{Binding ActiveTheme.BorderOuterColor}"/>
+                            </Border.BorderBrush>
+
+                            <!-- Inner border -->
+                            <Border SnapsToDevicePixels="True"
+                                    BorderThickness="{Binding ActiveTheme.BorderSize}">
+                                <Border.BorderBrush>
+                                    <SolidColorBrush Color="{Binding ActiveTheme.BorderColor}"/>
+                                </Border.BorderBrush>
+                                <Border.Background>
+                                    <SolidColorBrush Color="{Binding ActiveTheme.Background}" />
+                                </Border.Background>
+
+                                <!-- Button text -->
+                                <TextBlock Text="{Binding Button.Text}"
+                                           TextAlignment="Center"
+                                           VerticalAlignment="Center"
+                                />
+                            </Border>
+                        </Border>
+                    </Button>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </StackPanel>
+</barControls:BarItemControl>

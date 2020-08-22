@@ -19,6 +19,7 @@ namespace Morphic.Bar.UI
     using System.Windows.Shell;
     using AppBarWindow;
     using Bar;
+    using BarControls;
 
     /// <summary>
     /// The window for the main bar.

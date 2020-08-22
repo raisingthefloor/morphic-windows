@@ -22,29 +22,24 @@ namespace Morphic.Bar.Bar
     using System.Windows.Media;
     using System.Windows.Media.Imaging;
     using System.Xml;
-    using Actions;
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
     using SharpVectors.Converters;
     using SharpVectors.Dom.Svg;
     using SharpVectors.Renderers.Wpf;
-    using UI;
+    using UI.BarControls;
 
     /// <summary>
     /// Button bar item.
     /// </summary>
     [JsonTypeName("button")]
-    [BarControl(typeof(BarButtonControl))]
+    [BarControl(typeof(ButtonBarControl))]
     public class BarButton : BarItem, INotifyPropertyChanged
     {
         private string? imagePath;
         private string? imageValue;
         private ImageSource? imageSource;
         private Uri? remoteImage;
-
-        [JsonProperty("configuration", ObjectCreationHandling = ObjectCreationHandling.Replace)]
-        [JsonConverter(typeof(TypedJsonConverter), "kind", "null")]
-        public BarAction Action { get; set; } = new NoOpAction();
 
         /// <summary>
         /// The original image, as defined in json.

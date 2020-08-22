@@ -8,7 +8,7 @@
 // You may obtain a copy of the License at
 // https://github.com/GPII/universal/blob/master/LICENSE.txt
 
-namespace Morphic.Bar.UI
+namespace Morphic.Bar.UI.BarControls
 {
     using System.Windows;
     using Bar;
@@ -16,13 +16,13 @@ namespace Morphic.Bar.UI
     /// <summary>
     /// The control for Button bar items.
     /// </summary>
-    public partial class BarImageControl : BarItemControl
+    public partial class ImageBarControl : BarItemControl
     {
-        public BarImageControl() : this(new BarImage())
+        public ImageBarControl() : this(new BarImage())
         {
         }
 
-        public BarImageControl(BarImage barItem) : base(barItem)
+        public ImageBarControl(BarImage barItem) : base(barItem)
         {
             this.InitializeComponent();
         }

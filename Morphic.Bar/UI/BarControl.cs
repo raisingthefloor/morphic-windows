@@ -19,6 +19,7 @@ namespace Morphic.Bar.UI
     using System.Windows.Controls;
     using System.Windows.Media;
     using Bar;
+    using BarControls;
 
     /// <summary>
     /// This is the thing that contains bar items.

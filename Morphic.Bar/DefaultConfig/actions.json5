@@ -1,6 +1,25 @@
 {
   fileId: "actions",
   actions: {
+    "screen-zoom": {
+      kind: "internal",
+      widget: "multi",
+      configuration: {
+        function: "screen-zoom",
+        buttons: {
+          decrease: {
+            action: {
+              kind: "application",
+              exe: "notepad.exe",
+            },
+            label: "-"
+          },
+          increase: {
+            label: "+"
+          }
+        }
+      }
+    },
     "taskManager": {
       kind: "application",
       widget: "image",

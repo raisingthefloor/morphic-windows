@@ -69,5 +69,25 @@ namespace Morphic.Bar.Bar
 
         [JsonProperty("buttonCornerRadius")]
         public double ButtonCornerRadius { get; set; } = 10;
+
+        [JsonProperty("controlLabelFontSize")]
+        public double ControlLabelFontSize { get; set; } = 14;
+
+        [JsonProperty("controlLabelPadding")]
+        public Thickness ControlLabelPadding { get; set; } = new Thickness(0, 5, 0, 5);
+
+        [JsonProperty("controlItemMargin")]
+        public Thickness ControlItemMargin { get; set; } = new Thickness(10);
+
+        [JsonProperty("controlItemFontSize")]
+        public double ControlItemFontSize { get; set; } = 14;
+
+        [JsonProperty("controlItemHeight")]
+        public double ControlItemHeight { get; set; } = 30;
+
+        [JsonProperty("controlImageSize")]
+        public double ControlImageSize { get; set; } = 15;
+
+
     }
 }

@@ -1,16 +1,17 @@
-﻿<ui:BarItemControl x:Class="Morphic.Bar.UI.BarImageControl"
+﻿<barControls:BarItemControl x:Class="Morphic.Bar.UI.BarControls.ImageBarControl"
                          xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                          xmlns:ui="clr-namespace:Morphic.Bar.UI"
+                         xmlns:barControls="clr-namespace:Morphic.Bar.UI.BarControls"
                          mc:Ignorable="d"
                          MinHeight="30"
                          MaxHeight="70"
                          Margin="10"
-                         d:DataContext="{d:DesignInstance ui:BarButtonControl, IsDesignTimeCreatable=True}"
+                         d:DataContext="{d:DesignInstance barControls:ButtonBarControl, IsDesignTimeCreatable=True}"
                          >
-    <ui:BarItemControl.Resources>
+    <barControls:BarItemControl.Resources>
         <!-- Colours based on the active theme -->
         <SolidColorBrush x:Key="Background" Color="{Binding ActiveTheme.Background, FallbackValue=Yellow}"/>
         <SolidColorBrush x:Key="Foreground" Color="{Binding ActiveTheme.TextColor, FallbackValue=Black}"/>
@@ -30,7 +31,7 @@
             </Setter>
         </Style>
 
-    </ui:BarItemControl.Resources>
+    </barControls:BarItemControl.Resources>
     
     <Button x:Name="Button"
         Click="Button_OnClick"
@@ -47,4 +48,4 @@
 
             />
     </Button>
-</ui:BarItemControl>
+</barControls:BarItemControl>

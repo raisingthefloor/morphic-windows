@@ -29,6 +29,13 @@ namespace Morphic.Bar.Bar.Actions
             return Task.FromResult(true);
         }
 
+        [ActionFunction("screen-zoom")]
+        public static Task<bool> ScreenZoom(ActionArgs args)
+        {
+            MessageBox.Show("screen zoom");
+            return Task.FromResult(true);
+        }
+
         [ActionFunction("menu", "key=Morphic")]
         public static Task<bool> ShowMenu(ActionArgs args)
         {
@@ -92,9 +99,10 @@ namespace Morphic.Bar.Bar.Actions
         /// Invokes a built-in function.
         /// </summary>
         /// <param name="functionName">The function name.</param>
-        /// <param name="functionArgs">The parameters</param>
+        /// <param name="functionArgs">The parameters.</param>
+        /// <param name="source">The button id, for multi-button bar items.</param>
         /// <returns></returns>
-        public Task<bool> InvokeFunction(string functionName, string[] functionArgs)
+        public Task<bool> InvokeFunction(string functionName, string[] functionArgs, string? source = null)
         {
             App.Current.Logger.LogDebug($"Invoking built-in function '{functionName}'");
 
@@ -107,6 +115,7 @@ namespace Morphic.Bar.Bar.Actions
                     try
                     {
                         ActionArgs args = new ActionArgs(functionAttribute, functionArgs);
+                        args.Source = source;
                         result = functionAttribute.Function(args);
                     }
                     catch (Exception e) when (!(e is ActionException || e is OutOfMemoryException))
@@ -205,6 +214,8 @@ namespace Morphic.Bar.Bar.Actions
         public string FunctionName { get; }
         public string[] ArgumentsArray { get; }
         public Dictionary<string, string> Arguments { get; }
+        /// <summary>The button id, for multi-button bar items.</summary>
+        public string? Source { get; set; }
 
         /// <summary>
         /// Gets an argument value by its name, or an empty string if there's no such argument.

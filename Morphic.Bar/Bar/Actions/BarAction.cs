@@ -29,7 +29,12 @@ namespace Morphic.Bar.Bar.Actions
         [JsonProperty("identifier")]
         public string Id { get; set; }
 
-        public abstract Task<bool> Invoke();
+        /// <summary>
+        /// Invoked the action.
+        /// </summary>
+        /// <param name="source">Button ID, for multi-buttom bar items.</param>
+        /// <returns></returns>
+        public abstract Task<bool> Invoke(string? source = null);
 
         public virtual Uri? DefaultImageUri { get; }
         public virtual ImageSource? DefaultImageSource { get; }
@@ -40,7 +45,7 @@ namespace Morphic.Bar.Bar.Actions
     [JsonTypeName("null")]
     public class NoOpAction : BarAction
     {
-        public override Task<bool> Invoke()
+        public override Task<bool> Invoke(string? source = null)
         {
             return Task.FromResult(true);
         }
@@ -55,14 +60,14 @@ namespace Morphic.Bar.Bar.Actions
         [JsonProperty("args")]
         public string[]? Arguments { get; set; }
 
-        public override Task<bool> Invoke()
+        public override Task<bool> Invoke(string? source = null)
         {
             if (this.FunctionName == null)
             {
                 return Task.FromResult(true);
             }
 
-            return ActionFunctions.Default.InvokeFunction(this.FunctionName, this.Arguments ?? new string[0]);
+            return ActionFunctions.Default.InvokeFunction(this.FunctionName, this.Arguments ?? new string[0], source);
         }
     }
 
@@ -72,7 +77,7 @@ namespace Morphic.Bar.Bar.Actions
         [JsonProperty("data", Required = Required.Always)]
         public JObject RequestObject { get; set; } = null!;
 
-        public override async Task<bool> Invoke()
+        public override async Task<bool> Invoke(string? source = null)
         {
             ClientWebSocket socket = new ClientWebSocket();
             CancellationTokenSource cancel = new CancellationTokenSource();

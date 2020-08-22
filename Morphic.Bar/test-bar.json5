@@ -6,8 +6,8 @@
       kind: "action",
       is_primary: true,
       configuration: {
-        identifier: "taskManager",
-        label: "open task manager"
+        identifier: "screen-zoom",
+        label: "screen zoom poop poop"
       }
     },
     {

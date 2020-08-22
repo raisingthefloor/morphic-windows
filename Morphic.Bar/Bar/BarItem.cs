@@ -13,9 +13,10 @@ namespace Morphic.Bar.Bar
     using System;
     using System.Reflection;
     using System.Windows.Media;
+    using Actions;
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
-    using UI;
+    using UI.BarControls;
 
     /// <summary>
     /// A bar item.
@@ -55,6 +56,10 @@ namespace Morphic.Bar.Bar
         /// </summary>
         [JsonProperty("no_overflow")]
         public bool NoOverflow { get; set; }
+
+        [JsonProperty("configuration", ObjectCreationHandling = ObjectCreationHandling.Replace)]
+        [JsonConverter(typeof(TypedJsonConverter), "kind", "null")]
+        public BarAction Action { get; set; } = new NoOpAction();
 
         /// <summary>
         /// The text displayed on the item.
@@ -151,7 +156,7 @@ namespace Morphic.Bar.Bar
     /// Image bar item.
     /// </summary>
     [JsonTypeName("image")]
-    [BarControl(typeof(BarImageControl))]
+    [BarControl(typeof(ImageBarControl))]
     public class BarImage : BarButton
     {
     }
