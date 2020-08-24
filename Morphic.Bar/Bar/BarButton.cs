@@ -11,6 +11,7 @@
 namespace Morphic.Bar.Bar
 {
     using System;
+    using System.Collections.Generic;
     using System.ComponentModel;
     using System.IO;
     using System.Linq;
@@ -115,6 +116,7 @@ namespace Morphic.Bar.Bar
 
         // Limit the concurrent downloads.
         private static SemaphoreSlim downloads = new SemaphoreSlim(8);
+        private static HashSet<string> downloaded = new HashSet<string>();
 
         /// <summary>
         /// Loads the image specified by ImagePath.
@@ -134,8 +136,24 @@ namespace Morphic.Bar.Bar
                     try
                     {
                         await downloads.WaitAsync();
-                        this.Logger.LogDebug("Downloading {remoteImage}", this.RemoteImage);
-                        await wc.DownloadFileTaskAsync(this.RemoteImage, tempFile);
+                        bool done = false;
+                        lock (downloaded)
+                        {
+                            if (downloaded.Contains(this.ImagePath))
+                            {
+                                done = true;
+                            }
+                            else
+                            {
+                                downloaded.Add(this.ImagePath);
+                            }
+                        }
+
+                        if (!done)
+                        {
+                            this.Logger.LogDebug("Downloading {remoteImage}", this.RemoteImage);
+                            await wc.DownloadFileTaskAsync(this.RemoteImage, tempFile);
+                        }
                     }
                     finally
                     {
