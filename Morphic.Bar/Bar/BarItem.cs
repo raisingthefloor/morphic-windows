@@ -14,6 +14,7 @@ namespace Morphic.Bar.Bar
     using System.Reflection;
     using System.Windows.Media;
     using Actions;
+    using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
     using UI.BarControls;
@@ -28,7 +29,7 @@ namespace Morphic.Bar.Bar
     [JsonConverter(typeof(TypedJsonConverter), "widget", "button")]
     public class BarItem
     {
-        protected ILogger Logger = LogUtil.LoggerFactory.CreateLogger("Bar");
+        protected ILogger Logger = App.Current.ServiceProvider.GetRequiredService<ILogger<BarItem>>();
         private string? text;
 
         /// <summary>

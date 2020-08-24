@@ -9,6 +9,7 @@ namespace Morphic.Bar.Bar.Actions
     using System.Threading.Tasks;
     using System.Windows.Forms;
     using Windows.Native;
+    using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Microsoft.Win32;
     using Settings.SystemSettings;
@@ -107,7 +108,7 @@ namespace Morphic.Bar.Bar.Actions
         {
             SystemSetting systemSetting = new Settings.SystemSettings.SystemSetting(
                 "SystemSettings_Display_BlueLight_ManualToggleQuickAction",
-                LogUtil.LoggerFactory.CreateLogger<Settings.SystemSettings.SystemSetting>());
+                App.Current.ServiceProvider.GetRequiredService<ILogger<Settings.SystemSettings.SystemSetting>>());
 
             await systemSetting.SetValue(args["state"] == "on");
             return true;

@@ -16,6 +16,7 @@ namespace Morphic.Bar.Bar
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Morphic.Bar.UI.AppBarWindow;
     using Morphic.Core.Community;
@@ -102,7 +103,7 @@ namespace Morphic.Bar.Bar
             .OrderByDescending(item => item.IsPrimaryOriginal)
             .ThenByDescending(item => item.Priority);
 
-        private ILogger logger = LogUtil.LoggerFactory.CreateLogger("Bar");
+        private ILogger logger = App.Current.ServiceProvider.GetRequiredService<ILogger<BarData>>();
 
         /// <summary>
         /// Loads bar data from either a local file, or a url.

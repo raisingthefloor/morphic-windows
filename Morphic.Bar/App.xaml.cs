@@ -20,7 +20,6 @@ namespace Morphic.Bar
     using System.IO;
     using System.Linq;
     using System.Reflection;
-    using System.Windows.Forms;
     using System.Windows.Threading;
     using Bar;
     using Microsoft.Extensions.Logging;
@@ -29,6 +28,7 @@ namespace Morphic.Bar
     using UI.AppBarWindow;
     using Application = System.Windows.Application;
     using MessageBox = System.Windows.MessageBox;
+    using SystemJson = System.Text.Json;
 
     /// <summary>
     /// Interaction logic for App.xaml
@@ -180,6 +180,12 @@ namespace Morphic.Bar
             ConfigureServices(collection);
             ServiceProvider = collection.BuildServiceProvider();
             Logger = ServiceProvider.GetRequiredService<ILogger<App>>();
+            Logger.LogInformation("Started {Version}",
+                FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).ProductVersion);
+
+            System.AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
+                Logger.LogCritical(args.ExceptionObject as Exception, "Unhandled exception");
+
             base.OnStartup(e);
             AppPaths.Log(Logger);
             Session = ServiceProvider.GetRequiredService<CommunitySession>();
@@ -248,8 +254,20 @@ namespace Morphic.Bar
 
         public void ShowBar(UserBar userBar)
         {
-            BarData bar = new BarData(userBar);
+            string barFile = AppPaths.GetConfigFile("last-bar.json5");
 
+            SystemJson.JsonSerializerOptions serializerOptions = new SystemJson.JsonSerializerOptions();
+            serializerOptions.Converters.Add(new JsonElementInferredTypeConverter());
+            serializerOptions.Converters.Add(
+                new SystemJson.Serialization.JsonStringEnumConverter(SystemJson.JsonNamingPolicy.CamelCase));
+
+            File.WriteAllText(barFile, SystemJson.JsonSerializer.Serialize(userBar, serializerOptions));
+            this.LoadBar(barFile);
+        }
+
+        public void LoadBar(string path)
+        {
+            BarData? bar = null;
             try
             {
                 bar = BarData.Load(path);
