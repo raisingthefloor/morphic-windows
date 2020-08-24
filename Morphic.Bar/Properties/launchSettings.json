@@ -4,7 +4,7 @@
     "Morphic.Bar": {
       "commandName": "Project",
       "commandLineArgs": "--bar ../../../test-bar.json5",
-      "x-commandLineArgs": "--bar %LOCALAPPDATA%/Morphic.Bar/last-bar.json5",
+      "x-commandLineArgs": "--bar %LOCALAPPDATA%/MorphicCommunity/last-bar.json5",
       "environmentVariables": {
         "MORPHIC_LOGLEVEL": "Debug",
         "MORPHIC_DEBUG": "true"

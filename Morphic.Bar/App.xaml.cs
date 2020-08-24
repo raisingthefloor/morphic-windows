@@ -166,6 +166,8 @@ namespace Morphic.Bar
             logging.AddConfiguration(this.Configuration);
             logging.SetMinimumLevel(LogLevel.Debug);
             logging.AddDebug();
+            logging.AddFile(AppPaths.GetConfigFile("morphic-bar.log"));
+            logging.AddConsole();
         }
 
         private void ConfigureSettingsHandlers(SettingsHandlerBuilder settings)
@@ -192,8 +194,16 @@ namespace Morphic.Bar
             this.ConfigureCountly();
             // TODO: autoupdate
             //StartCheckingForUpdates();
-            Task task = this.OpenSession();
-            task.ContinueWith(this.SessionOpened, TaskScheduler.FromCurrentSynchronizationContext());
+
+            if (Options.Current.BarFile != null)
+            {
+                this.LoadBar(Options.Current.BarFile);
+            }
+            else
+            {
+                Task task = this.OpenSession();
+                task.ContinueWith(this.SessionOpened, TaskScheduler.FromCurrentSynchronizationContext());
+            }
         }
 
         private void Session_UserChanged(object? sender, EventArgs e)
