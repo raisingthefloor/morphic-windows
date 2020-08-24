@@ -5,6 +5,8 @@
 #define BuildPath ".\build" 
 ;#define AppVersion GetFileVersion("{#BuildPath}\{#MainExe}")
 #define AppVersion GetDateTimeString('yyyy.mm.dd', '', '')
+#define RegPath "Software\Morphic\Bar"
+
 
 [Setup]
 AppId={{3F697D51-D879-4C2E-A0DB-56AA3370597B}
@@ -45,3 +47,8 @@ Name: "{commondesktop}\{#AppName}"; Filename: "{app}\{#MainExe}"
 
 [Run]
 Filename: "{app}\{#MainExe}"; Description: "{cm:LaunchProgram,{#StringChange(AppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+
+[Registry]
+Root: "HKLM"; Subkey: {#RegPath}; ValueType: string; ValueName: "InstallerPath"; ValueData: "{srcexe}"
+Root: "HKLM"; Subkey: {#RegPath}; ValueType: string; ValueName: "UnunstallerPath"; ValueData: "{uninstallexe}"
+Root: "HKLM"; Subkey: {#RegPath}; ValueType: string; ValueName: "InstallPath"; ValueData: "{app}"
