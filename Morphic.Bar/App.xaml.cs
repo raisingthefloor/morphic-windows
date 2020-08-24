@@ -27,6 +27,7 @@ namespace Morphic.Bar
     using UI;
     using UI.AppBarWindow;
     using Application = System.Windows.Application;
+    using MessageBox = System.Windows.MessageBox;
 
     /// <summary>
     /// Interaction logic for App.xaml
