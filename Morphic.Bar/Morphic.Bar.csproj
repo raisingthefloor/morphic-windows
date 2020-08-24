@@ -13,6 +13,7 @@
     <VersionSuffix>$([System.DateTime]::UtcNow.ToString(yyyyMMdd))</VersionSuffix>
     <Company>Raising the Floor</Company>
     <UserSecretsId>10f56845-2111-422e-b6b0-01fbcb2be636</UserSecretsId>
+    <ApplicationIcon>Assets/morphic-icon.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DefineConstants>TRACE;TESTING</DefineConstants>
@@ -52,11 +53,20 @@
     <Compile Remove="Setup\build\**" />
     <Compile Remove="Setup\build2\**" />
     <Compile Remove="Setup\output\**" />
+    <Compile Update="Properties\MorphicBar.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>MorphicBar.resx</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Remove="Setup\build\**" />
     <EmbeddedResource Remove="Setup\build2\**" />
     <EmbeddedResource Remove="Setup\output\**" />
+    <EmbeddedResource Update="Properties\MorphicBar.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>MorphicBar.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <None Remove="Setup\build\**" />

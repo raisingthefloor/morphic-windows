@@ -41,7 +41,7 @@ namespace Morphic.Bar.UI
         /// </summary>
         public bool IsWanted
         {
-            get => this.wanted || !this.primaryBarWindow.Bar.SecondaryBar.AutoHideExpander;
+            get => (this.wanted || !this.primaryBarWindow.Bar.SecondaryBar.AutoHideExpander) && this.primaryBarWindow.IsVisible;
             set
             {
                 if (this.wanted != value)
@@ -90,6 +90,14 @@ namespace Morphic.Bar.UI
             this.LocationChanged += this.OnRepositionRequired;
 
             this.primaryBarWindow.ExpandedChange += this.UpdateExpanded;
+
+            this.primaryBarWindow.IsVisibleChanged += (o, eventArgs) =>
+            {
+                if (eventArgs.NewValue is bool visible)
+                {
+                    this.Visibility = (visible && this.IsWanted) ? Visibility.Visible : Visibility.Collapsed;
+                }
+            };
 
             this.UpdateExpanded(sender, args);
         }

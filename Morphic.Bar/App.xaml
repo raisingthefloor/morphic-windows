@@ -7,7 +7,14 @@
         <ContextMenu x:Key="MorphicMenu">
             <MenuItem Header="About" Click="MenuItem_About" />
             <Separator/>
-            <MenuItem Header="Close" Click="MenuItem_Close" />
+            <MenuItem Header="Hide Bar" Click="MenuItem_Close" />
+        </ContextMenu>
+        <ContextMenu x:Key="TrayMenu">
+            <MenuItem Header="Show Bar" Click="MenuItem_Show" />
+            <Separator/>
+            <MenuItem Header="About" Click="MenuItem_About" />
+            <MenuItem Header="Always start" IsCheckable="True" Initialized="MenuItem_AutoRun_Init" Checked="MenuItem_AutoRun" Unchecked="MenuItem_AutoRun" />
+            <MenuItem Header="Quit" Click="MenuItem_Quit" />
         </ContextMenu>
     </Application.Resources>
 </Application>

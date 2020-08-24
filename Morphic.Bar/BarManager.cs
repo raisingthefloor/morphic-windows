@@ -14,6 +14,7 @@ namespace Morphic.Bar
     using System;
     using System.IO;
     using System.Runtime.CompilerServices;
+    using System.Windows;
     using Bar;
     using Core;
     using Core.Community;
@@ -35,10 +36,10 @@ namespace Morphic.Bar
         }
 
         /// <summary>
-        /// Shows the bar.
+        /// Loads and shows a bar.
         /// </summary>
         /// <param name="userBar">Bar data object from Morphic.Core</param>
-        public void ShowBar(UserBar userBar)
+        public void LoadBar(UserBar userBar)
         {
 
             // Serialise the bar data so it can be loaded with a better deserialiser.
@@ -52,15 +53,15 @@ namespace Morphic.Bar
             string barFile = AppPaths.GetConfigFile("last-bar.json5");
             File.WriteAllText(barFile, barJson);
 
-            this.ShowBar(barFile, barJson);
+            this.LoadBar(barFile, barJson);
         }
 
         /// <summary>
-        /// Shows the bar.
+        /// Loads and shows a bar.
         /// </summary>
         /// <param name="path">JSON file containing the bar data.</param>
         /// <param name="content">The file content (if it's already loaded).</param>
-        public void ShowBar(string path, string? content = null)
+        public void LoadBar(string path, string? content = null)
         {
             BarData? bar = null;
             try
@@ -85,6 +86,25 @@ namespace Morphic.Bar
             }
         }
 
+        /// <summary>
+        /// Show a bar that's already loaded.
+        /// </summary>
+        public void ShowBar()
+        {
+            if (this.barWindow != null)
+            {
+                this.barWindow.Visibility = Visibility.Visible;
+                this.barWindow.Focus();
+            }
+        }
+
+        public void HideBar()
+        {
+            this.barWindow?.Hide();
+            this.barWindow?.GetSecondaryWindow()?.Hide();
+
+        }
+
         private void OnBarOnReloadRequired(object? sender, EventArgs args)
         {
             if (sender is BarData bar)
@@ -92,7 +112,7 @@ namespace Morphic.Bar
                 string source = bar.Source;
 
                 this.CloseBar();
-                this.ShowBar(source);
+                this.LoadBar(source);
             }
         }
 

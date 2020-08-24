@@ -17,15 +17,21 @@ namespace Morphic.Bar
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Drawing;
     using System.IO;
     using System.Linq;
     using System.Reflection;
+    using System.Windows.Controls;
+    using System.Windows.Forms;
     using System.Windows.Threading;
     using Microsoft.Extensions.Logging;
+    using Microsoft.Win32;
+    using Properties;
     using UI;
     using UI.AppBarWindow;
     using Application = System.Windows.Application;
     using MessageBox = System.Windows.MessageBox;
+    using Point = System.Windows.Point;
 
     /// <summary>
     /// Interaction logic for App.xaml
@@ -40,6 +46,8 @@ namespace Morphic.Bar
         /// true if the current application is active.
         /// </summary>
         public bool IsActive { get; private set; }
+
+        private bool autoRunEnabled;
 
         /// <summary>The mouse has entered any window belonging to the application.</summary>
         public event EventHandler? MouseEnter;
@@ -181,6 +189,8 @@ namespace Morphic.Bar
             this.Logger.LogInformation("Started {Version}",
                 FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).ProductVersion);
 
+            this.Exit += (sender, args) => this.Logger.LogInformation("Exited");
+
             System.AppDomain.CurrentDomain.UnhandledException += (sender, args) => this.Logger.LogCritical(args.ExceptionObject as Exception, "Unhandled exception");
 
             base.OnStartup(e);
@@ -192,11 +202,14 @@ namespace Morphic.Bar
             // TODO: autoupdate
             //StartCheckingForUpdates();
 
+            this.autoRunEnabled = this.ConfigureAutoRun();
+
             this.BarManager = new BarManager(this.Logger);
+            this.ShowTrayIcon();
 
             if (Options.Current.BarFile != null)
             {
-                this.BarManager.ShowBar(Options.Current.BarFile);
+                this.BarManager.LoadBar(Options.Current.BarFile);
             }
             else
             {
@@ -211,7 +224,7 @@ namespace Morphic.Bar
             {
                 if (this.Session.Bar != null)
                 {
-                    this.BarManager.ShowBar(this.Session.Bar);
+                    this.BarManager.LoadBar(this.Session.Bar);
                 }
                 else
                 {
@@ -258,7 +271,59 @@ namespace Morphic.Bar
             }
         }
 
+
+        /// <summary>
+        /// Makes the application automatically start at login.
+        /// </summary>
+        private bool ConfigureAutoRun(bool? newValue = null)
+        {
+            bool enabled;
+            using RegistryKey morphicKey =
+                Registry.CurrentUser.CreateSubKey(@"Software\Raising the Floor\Morphic\Bar")!;
+            using RegistryKey runKey =
+                Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run")!;
+
+            if (newValue == null)
+            {
+                // Get the configured value
+                object value = morphicKey.GetValue("AutoRun");
+                if (value == null)
+                {
+                    // This might be the first time running, enable auto-run by default.
+                    enabled = true;
+                }
+                else
+                {
+                    // Respect the system setting (it was probably removed on purpose).
+                    enabled = runKey.GetValue("MorphicBar") != null;
+                }
+            }
+            else
+            {
+                enabled = (bool)newValue;
+            }
+
+            morphicKey.SetValue("AutoRun", enabled ? "1" : "0", RegistryValueKind.String);
+            if (enabled)
+            {
+                string processPath = Process.GetCurrentProcess().MainModule.FileName;
+                // Only add it to the auto-run if running a release.
+                if (!processPath.EndsWith("dotnet.exe"))
+                {
+                    runKey.SetValue("MorphicBar", processPath);
+                }
+            }
+            else
+            {
+                runKey.DeleteValue("MorphicBar", false);
+            }
+
+            return enabled;
+        }
+
         #endregion
+
+        #region Application focus
 
          // The mouse is over any window in mouseOverWindows
         private bool mouseOver;
@@ -344,11 +409,85 @@ namespace Morphic.Bar
                 }
             }
         }
+        #endregion
+
+        #region Menu
+
+        private NotifyIcon notifyIcon = new NotifyIcon();
+
+        public void ShowTrayIcon()
+        {
+            this.notifyIcon = new NotifyIcon()
+            {
+                Icon = MorphicBar.AppIcon,
+                Text = "Morphic Community",
+                Visible = true
+            };
+
+            this.Exit += (sender, args) =>
+            {
+                this.notifyIcon.Dispose();
+            };
+
+            this.notifyIcon.MouseClick += TrayIcon_MouseClick;
+        }
+
+        private void TrayIcon_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                this.BarManager.ShowBar();
+            }
+            else if (e.Button == MouseButtons.Right)
+            {
+                this.ShowTrayMenu();
+            }
+        }
+
+        private void ShowTrayMenu()
+        {
+            if (this.Resources["TrayMenu"] is ContextMenu menu)
+            {
+                menu.IsOpen = true;
+            }
+        }
+
+        private void MenuItem_Show(object sender, RoutedEventArgs e)
+        {
+            this.BarManager.ShowBar();
+        }
 
         private void MenuItem_Close(object sender, RoutedEventArgs e)
         {
-            this.BarManager.CloseBar();
-            this.Shutdown();
+            this.BarManager.HideBar();
+            this.notifyIcon.ShowBalloonTip(1000, "Morphic", "To show the bar, click the morphic icon", ToolTipIcon.Info);
+        }
+
+        private void MenuItem_Quit(object sender, RoutedEventArgs e)
+        {
+            if (System.Windows.Forms.MessageBox.Show("Do you really want to stop using the Morphic Community Bar?",
+                "Morphic Community",
+                MessageBoxButtons.YesNo) == DialogResult.Yes)
+            {
+                this.BarManager.CloseBar();
+                this.Shutdown();
+            }
+        }
+
+        private void MenuItem_AutoRun_Init(object sender, EventArgs e)
+        {
+            if (sender is MenuItem item)
+            {
+                item.IsChecked = this.autoRunEnabled;
+            }
+        }
+
+        private void MenuItem_AutoRun(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem item)
+            {
+                this.ConfigureAutoRun(item.IsChecked);
+            }
         }
 
         private void MenuItem_About(object sender, RoutedEventArgs e)
@@ -357,5 +496,6 @@ namespace Morphic.Bar
                 ?? "unknown";
             MessageBox.Show($"Morphic Community Bar\n\nVersion: {ver}");
         }
+        #endregion
     }
 }
