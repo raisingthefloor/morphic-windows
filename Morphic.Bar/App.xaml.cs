@@ -64,18 +64,16 @@ namespace Morphic.Bar
 
         #region Configuration & Startup
 
-        private readonly string ApplicationDataFolderPath = Path.Combine(new string[] { Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MorphicCommunity" });
-
         /// <summary>
         /// Create a Configuration from appsettings.json
         /// </summary>
         /// <returns></returns>
         private IConfiguration GetConfiguration()
         {
-            var builder = new ConfigurationBuilder();
+            ConfigurationBuilder builder = new ConfigurationBuilder();
             builder.SetBasePath(Directory.GetCurrentDirectory());
             builder.AddJsonFile("appsettings.json", optional: false);
-            if (Environment.GetEnvironmentVariable("MORPHIC_DEBUG") is string debug)
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("MORPHIC_DEBUG")))
             {
                 builder.AddUserSecrets(Assembly.GetExecutingAssembly());
             }
@@ -89,16 +87,16 @@ namespace Morphic.Bar
         /// <param name="services"></param>
         private void ConfigureServices(IServiceCollection services)
         {
-            services.AddLogging(ConfigureLogging);
-            services.Configure<SessionOptions>(Configuration.GetSection("MorphicService"));
+            services.AddLogging(this.ConfigureLogging);
+            services.Configure<SessionOptions>(this.Configuration.GetSection("MorphicService"));
             // TODO: autoupdate
             //services.Configure<UpdateOptions>(Configuration.GetSection("Update"));
             //services.AddSingleton<UpdateOptions>(serviceProvider => serviceProvider.GetRequiredService<IOptions<UpdateOptions>>().Value);
             services.AddSingleton<IServiceCollection>(services);
             services.AddSingleton<IServiceProvider>(provider => provider);
             services.AddSingleton<SessionOptions>(serviceProvider => serviceProvider.GetRequiredService<IOptions<SessionOptions>>().Value);
-            services.AddSingleton(new StorageOptions { RootPath = Path.Combine(ApplicationDataFolderPath, "Data") });
-            services.AddSingleton(new KeychainOptions { Path = Path.Combine(ApplicationDataFolderPath, "keychain") });
+            services.AddSingleton(new StorageOptions { RootPath = Path.Combine(AppPaths.ConfigDir, "Data") });
+            services.AddSingleton(new KeychainOptions { Path = Path.Combine(AppPaths.ConfigDir, "keychain") });
             services.AddSingleton<IDataProtection, DataProtector>();
             services.AddSingleton<IUserSettings, WindowsUserSettings>();
             services.AddSingleton<IRegistry, WindowsRegistry>();
@@ -114,7 +112,7 @@ namespace Morphic.Bar
             // TODO: build info for about window
             //services.AddSingleton<BuildInfo>(BuildInfo.FromJsonFile("build-info.json"));
 
-            services.AddMorphicSettingsHandlers(ConfigureSettingsHandlers);
+            services.AddMorphicSettingsHandlers(this.ConfigureSettingsHandlers);
         }
 
         private void ConfigureCountly()
@@ -137,17 +135,18 @@ namespace Morphic.Bar
         {
             if (task.Exception is Exception e)
             {
-                Logger.LogError("exception thrown while countly recording exception: {msg}", e.Message);
+                this.Logger.LogError("exception thrown while countly recording exception: {msg}", e.Message);
                 throw e;
             }
-            Logger.LogDebug("successfully recorded countly exception");
+
+            this.Logger.LogDebug("successfully recorded countly exception");
         }
 
         void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
         {
             Exception ex = e.Exception;
-            Logger.LogError("handled uncaught exception: {msg}", ex.Message);
-            Logger.LogError(ex.StackTrace);
+            this.Logger.LogError("handled uncaught exception: {msg}", ex.Message);
+            this.Logger.LogError(ex.StackTrace);
 
             Dictionary<String, String> extraData = new Dictionary<string, string>();
             // TODO: countly
@@ -164,7 +163,7 @@ namespace Morphic.Bar
         /// <param name="logging"></param>
         private void ConfigureLogging(ILoggingBuilder logging)
         {
-            logging.AddConfiguration(Configuration);
+            logging.AddConfiguration(this.Configuration);
             logging.SetMinimumLevel(LogLevel.Debug);
             logging.AddDebug();
         }
@@ -175,44 +174,43 @@ namespace Morphic.Bar
 
         protected override void OnStartup(StartupEventArgs e)
         {
-            Configuration = GetConfiguration();
-            var collection = new ServiceCollection();
-            ConfigureServices(collection);
-            ServiceProvider = collection.BuildServiceProvider();
-            Logger = ServiceProvider.GetRequiredService<ILogger<App>>();
-            Logger.LogInformation("Started {Version}",
+            this.Configuration = this.GetConfiguration();
+            ServiceCollection collection = new ServiceCollection();
+            this.ConfigureServices(collection);
+            this.ServiceProvider = collection.BuildServiceProvider();
+            this.Logger = this.ServiceProvider.GetRequiredService<ILogger<App>>();
+            this.Logger.LogInformation("Started {Version}",
                 FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).ProductVersion);
 
-            System.AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
-                Logger.LogCritical(args.ExceptionObject as Exception, "Unhandled exception");
+            System.AppDomain.CurrentDomain.UnhandledException += (sender, args) => this.Logger.LogCritical(args.ExceptionObject as Exception, "Unhandled exception");
 
             base.OnStartup(e);
-            AppPaths.Log(Logger);
-            Session = ServiceProvider.GetRequiredService<CommunitySession>();
-            Session.UserChanged += Session_UserChanged;
-            Logger.LogInformation("App Started");
-            ConfigureCountly();
+            AppPaths.Log(this.Logger);
+            this.Session = this.ServiceProvider.GetRequiredService<CommunitySession>();
+            this.Session.UserChanged += this.Session_UserChanged;
+            this.Logger.LogInformation("App Started");
+            this.ConfigureCountly();
             // TODO: autoupdate
             //StartCheckingForUpdates();
-            var task = OpenSession();
-            task.ContinueWith(SessionOpened, TaskScheduler.FromCurrentSynchronizationContext());
+            Task task = this.OpenSession();
+            task.ContinueWith(this.SessionOpened, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
         private void Session_UserChanged(object? sender, EventArgs e)
         {
-            if (Session.User != null)
+            if (this.Session.User != null)
             {
-                if (Session.Bar != null)
+                if (this.Session.Bar != null)
                 {
-                    ShowBar(Session.Bar);
+                    this.ShowBar(this.Session.Bar);
                 }
                 else
                 {
-                    if (Session.Communities.Length == 0)
+                    if (this.Session.Communities.Length == 0)
                     {
                         // TODO: show "No comminities" error
                     }
-                    else if (Session.Communities.Length == 1)
+                    else if (this.Session.Communities.Length == 1)
                     {
                         // TODO: show "Could not load bar" error
                     }
@@ -229,7 +227,7 @@ namespace Morphic.Bar
             //await CopyDefaultPreferences();
             //await Session.SettingsManager.Populate(Path.Combine("Solutions", "windows.solutions.json"));
             //await Session.SettingsManager.Populate(Path.Combine("Solutions", "jaws2020.solutions.json"));
-            await Session.Open();
+            await this.Session.Open();
         }
 
         /// <summary>
@@ -242,10 +240,11 @@ namespace Morphic.Bar
             {
                 throw e;
             }
-            Logger.LogInformation("Session Open");
-            if (Session.User == null)
+
+            this.Logger.LogInformation("Session Open");
+            if (this.Session.User == null)
             {
-                var loginWindow = ServiceProvider.GetRequiredService<LoginWindow>();
+                LoginWindow? loginWindow = this.ServiceProvider.GetRequiredService<LoginWindow>();
                 loginWindow.Show();
             }
         }
@@ -292,8 +291,7 @@ namespace Morphic.Bar
 
         private void OnBarOnReloadRequired(object? sender, EventArgs args)
         {
-            BarData? bar = sender as BarData;
-            if (bar != null)
+            if (sender is BarData bar)
             {
                 string source = bar.Source;
 
@@ -315,7 +313,7 @@ namespace Morphic.Bar
         }
 
         // The mouse is over any window in mouseOverWindows
-        private bool mouseOver = false;
+        private bool mouseOver;
 
         // The windows where the mouse-over status is needed.
         private readonly List<Window> mouseOverWindows = new List<Window>();
@@ -407,7 +405,7 @@ namespace Morphic.Bar
 
         private void MenuItem_About(object sender, RoutedEventArgs e)
         {
-            string? ver = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).ProductVersion
+            string ver = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).ProductVersion
                 ?? "unknown";
             MessageBox.Show($"Morphic Community Bar\n\nVersion: {ver}");
         }
