@@ -21,14 +21,11 @@ namespace Morphic.Bar
     using System.Linq;
     using System.Reflection;
     using System.Windows.Threading;
-    using Bar;
     using Microsoft.Extensions.Logging;
-    using Morphic.Core.Community;
     using UI;
     using UI.AppBarWindow;
     using Application = System.Windows.Application;
     using MessageBox = System.Windows.MessageBox;
-    using SystemJson = System.Text.Json;
 
     /// <summary>
     /// Interaction logic for App.xaml
@@ -37,7 +34,7 @@ namespace Morphic.Bar
     {
         public new static App Current => (App)Application.Current;
 
-        private PrimaryBarWindow? barWindow;
+        public BarManager BarManager { get; private set; } = null!;
 
         /// <summary>
         /// true if the current application is active.
@@ -195,9 +192,11 @@ namespace Morphic.Bar
             // TODO: autoupdate
             //StartCheckingForUpdates();
 
+            this.BarManager = new BarManager(this.Logger);
+
             if (Options.Current.BarFile != null)
             {
-                this.LoadBar(Options.Current.BarFile);
+                this.BarManager.ShowBar(Options.Current.BarFile);
             }
             else
             {
@@ -212,7 +211,7 @@ namespace Morphic.Bar
             {
                 if (this.Session.Bar != null)
                 {
-                    this.ShowBar(this.Session.Bar);
+                    this.BarManager.ShowBar(this.Session.Bar);
                 }
                 else
                 {
@@ -261,68 +260,7 @@ namespace Morphic.Bar
 
         #endregion
 
-        public void ShowBar(UserBar userBar)
-        {
-            string barFile = AppPaths.GetConfigFile("last-bar.json5");
-
-            SystemJson.JsonSerializerOptions serializerOptions = new SystemJson.JsonSerializerOptions();
-            serializerOptions.Converters.Add(new JsonElementInferredTypeConverter());
-            serializerOptions.Converters.Add(
-                new SystemJson.Serialization.JsonStringEnumConverter(SystemJson.JsonNamingPolicy.CamelCase));
-
-            File.WriteAllText(barFile, SystemJson.JsonSerializer.Serialize(userBar, serializerOptions));
-            this.LoadBar(barFile);
-        }
-
-        public void LoadBar(string path)
-        {
-            BarData? bar = null;
-            try
-            {
-                bar = BarData.Load(path);
-            }
-            catch (Exception e) when (!(e is OutOfMemoryException))
-            {
-                this.Logger.LogError(e, "Problem loading the bar.");
-            }
-
-            if (this.barWindow != null)
-            {
-                this.CloseBar();
-            }
-
-            if (bar != null)
-            {
-                this.barWindow = new PrimaryBarWindow(bar);
-                this.barWindow.Show();
-                bar.ReloadRequired += this.OnBarOnReloadRequired;
-            }
-        }
-
-        private void OnBarOnReloadRequired(object? sender, EventArgs args)
-        {
-            if (sender is BarData bar)
-            {
-                string source = bar.Source;
-
-                this.CloseBar();
-                this.LoadBar(source);
-            }
-        }
-
-        public void CloseBar()
-        {
-            if (this.barWindow != null)
-            {
-                BarData bar = this.barWindow.Bar;
-                this.barWindow.IsClosing = true;
-                this.barWindow.Close();
-                this.barWindow = null;
-                bar.Dispose();
-            }
-        }
-
-        // The mouse is over any window in mouseOverWindows
+         // The mouse is over any window in mouseOverWindows
         private bool mouseOver;
 
         // The windows where the mouse-over status is needed.
@@ -409,7 +347,7 @@ namespace Morphic.Bar
 
         private void MenuItem_Close(object sender, RoutedEventArgs e)
         {
-            this.CloseBar();
+            this.BarManager.CloseBar();
             this.Shutdown();
         }
 

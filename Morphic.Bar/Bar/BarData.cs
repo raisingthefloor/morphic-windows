@@ -109,14 +109,15 @@ namespace Morphic.Bar.Bar
         /// Loads bar data from either a local file, or a url.
         /// </summary>
         /// <param name="barSource">The local path or remote url.</param>
+        /// <param name="content">The json content, if already loaded.</param>
         /// <param name="includeDefault">true to also include the default bar data.</param>
         /// <returns>The bar data</returns>
-        public static BarData? Load(string barSource, bool includeDefault = true)
+        public static BarData? Load(string barSource, string? content = null, bool includeDefault = true)
         {
             BarData? defaultBar;
             if (includeDefault)
             {
-                defaultBar = BarData.Load(AppPaths.GetConfigFile("default-bar.json5", true), false);
+                defaultBar = BarData.Load(AppPaths.GetConfigFile("default-bar.json5", true), null, false);
                 // Mark the items as being from the default specification
                 defaultBar?.AllItems.ForEach(item => item.IsDefault = true);
             }
@@ -126,24 +127,20 @@ namespace Morphic.Bar.Bar
             }
 
             App.Current.Logger.LogInformation("Loading bar from {source}", barSource);
-            Uri uri = MakeUrl(barSource);
 
             BarData? bar;
 
-            using (TextReader reader = uri.IsFile
-                ? File.OpenText(uri.LocalPath)
-                : throw new NotImplementedException("only local files"))
+            using (TextReader reader = content == null
+                ? (TextReader)File.OpenText(barSource)
+                : new StringReader(content))
             {
                 bar = BarJson.Load(reader, defaultBar);
             }
 
-            if (bar != null)
+            bar.Source = barSource;
+            if (File.Exists(barSource))
             {
-                bar.Source = barSource;
-                if (uri.IsFile)
-                {
-                    bar.AddWatcher(uri.LocalPath);
-                }
+                bar.AddWatcher(barSource);
             }
 
             return bar;
