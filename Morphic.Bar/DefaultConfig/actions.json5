@@ -152,7 +152,6 @@
       widget: "image",
       configuration: {
         exe: "taskmgr.exe",
-        aa: "hello"
       }
     },
     "screenshot": {

@@ -126,6 +126,7 @@ BarItem = {
   // "link", "application", "action"
   kind: "link",
 
+  // "button" (default), "image", "multi" (see Widgets below)
   widget: "button",
 
   // Specific to the item kind.
@@ -136,8 +137,6 @@ BarItem = {
 ```
 
 ## Button items
-
-Button-like items: "link", "application", "internal", "action"
 
 ```js
 /** @mixes BarItem */
@@ -233,6 +232,78 @@ ActionButton = {
 }
 ```
 
+## Widgets
+
+### `widget = "button"`
+
+Standard button.
+
+### `widget = "image"`
+
+Behaves like a button, but only displays an image. Used for the logo button.
+
+```js
+/** @extends ButtonItem */
+ImageItem = {
+  widget: "image"
+}
+```
+
+### `widget = "multi"`
+
+Displays multiple buttons in a single item. Used by the settings items.
+
+```js
+/** @extends BarItem */
+MultiButtonItem {
+  widget: "multi",
+  configuration: {
+    buttons: {
+      // First button
+      button1: {
+        // Display text
+        label: "day"
+        // A value that replaces "{button}" in any action payload.
+        value: "b1"
+      },
+      // next button
+      button2: {
+        label: "night"
+      },
+      // ...
+    }
+  }
+}
+```
+
+Example:
+
+```js
+  {
+    // Pass either ^c or ^v to the `sendKeys` internal function.
+    kind: "internal",
+    widget: "multi",
+    configuration: {
+      defaultLabel: "Clipboard",
+      function: "sendKeys",
+      args: {
+        keys: "{button}"
+      },
+      buttons: {
+        copy: {
+          label: "Copy",
+          value: "^c"
+        },
+        paste: {
+          label: "Paste",
+          value: "^v"
+        }
+      }
+    }
+  },
+```
+
+
 ## `Theme`
 
 Used to specify the theme of the bar or an item.
@@ -288,6 +359,27 @@ actions.json5 = {
     "example": {
       kind: "internal",
       function: "hello"
+    },
+
+    // Real example
+    "high-contrast": {
+      kind: "application",
+      widget: "multi",
+      configuration: {
+        defaultLabel: "High-Contrast",
+        exe: "sethc.exe",
+        args: [ "{button}" ],
+        buttons: {
+          on: {
+            label: "On",
+            value: "100"
+          },
+          off: {
+            label: "Off",
+            value: "1"
+          }
+        }
+      }
     }
   }
 }

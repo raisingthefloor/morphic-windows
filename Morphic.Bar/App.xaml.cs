@@ -17,10 +17,10 @@ namespace Morphic.Bar
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
-    using System.Drawing;
     using System.IO;
     using System.Linq;
     using System.Reflection;
+    using System.Text.RegularExpressions;
     using System.Windows.Controls;
     using System.Windows.Forms;
     using System.Windows.Threading;
@@ -473,6 +473,38 @@ namespace Morphic.Bar
                 this.Shutdown();
             }
         }
+
+        private void MenuItem_TestBars_Init(object sender, EventArgs e)
+        {
+#if TESTING
+            if (sender is MenuItem item)
+            {
+                Regex name = new Regex(@".*testbar-(.*)\.json5$");
+                foreach (string file in Directory.GetFiles(AppPaths.DefaultConfigDir, "testbar-*.json5"))
+                {
+                    MenuItem child = new MenuItem()
+                    {
+                        Header = name.Replace(file, "$1"),
+                        Tag = file
+                    };
+
+                    child.Click += MenuItem_TestBar;
+                    item.Items.Add(child);
+                }
+
+                item.Visibility = Visibility.Visible;
+            }
+#endif
+        }
+
+        private void MenuItem_TestBar(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem item && item.Tag is string path)
+            {
+                this.BarManager.LoadBar(path);
+            }
+        }
+
 
         private void MenuItem_AutoRun_Init(object sender, EventArgs e)
         {

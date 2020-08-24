@@ -1,0 +1,61 @@
+{
+  id: "testbar-actions",
+  items: [
+    {
+      kind: "action",
+      is_primary: true,
+      configuration: {
+        identifier: "screen-zoom",
+        label: "screen zoom"
+      }
+    },
+    {
+      kind: "action",
+      is_primary: true,
+      configuration: {
+        identifier: "volume",
+        label: "Volume"
+      }
+    },
+    {
+      kind: "action",
+      is_primary: true,
+      configuration: {
+        identifier: "magnify",
+        label: "Magnifier"
+      }
+    },
+    {
+      kind: "action",
+      is_primary: true,
+      configuration: {
+        identifier: "nightmode",
+        label: "Night Mode"
+      }
+    },
+    {
+      kind: "action",
+      is_primary: true,
+      configuration: {
+        identifier: "read-aloud",
+        label: "Read Aloud"
+      }
+    },
+    {
+      kind: "action",
+      is_primary: true,
+      configuration: {
+        identifier: "copy-paste",
+        label: "Copy & Paste"
+      }
+    },
+    {
+      kind: "action",
+      is_primary: true,
+      configuration: {
+        identifier: "high-contrast",
+        label: "High contrast"
+      }
+    }
+  ]
+}
