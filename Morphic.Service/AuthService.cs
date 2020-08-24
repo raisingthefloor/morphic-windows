@@ -47,9 +47,9 @@ namespace Morphic.Service
             var registration = new UsernameRegistration(usernameCredentials, user);
             try
             {
-                return await service.Send<AuthResponse>(() => HttpRequestMessageExtensions.Create(service, "v1/register/username", HttpMethod.Post, registration));
+                return await service.Session.Send<AuthResponse>(() => HttpRequestMessageExtensions.Create(service.Session, "v1/register/username", HttpMethod.Post, registration));
             }
-            catch (HttpService.BadRequestException e)
+            catch (Session.BadRequestException e)
             {
                 switch (e.Error)
                 {
@@ -78,7 +78,7 @@ namespace Morphic.Service
         public static async Task<AuthResponse?> Register(this HttpService service, User user, KeyCredentials keyCredentials)
         {
             var registration = new KeyRegistration(keyCredentials, user);
-            return await service.Send<AuthResponse>(() => HttpRequestMessageExtensions.Create(service, "v1/register/key", HttpMethod.Post, registration));
+            return await service.Session.Send<AuthResponse>(() => HttpRequestMessageExtensions.Create(service.Session, "v1/register/key", HttpMethod.Post, registration));
         }
 
         /// <summary>
@@ -177,7 +177,7 @@ namespace Morphic.Service
         public static async Task<AuthResponse?> AuthenticateUsername(this HttpService service, UsernameCredentials usernameCredentials)
         {
             var body = new AuthUsernameRequest(usernameCredentials.Username, usernameCredentials.Password);
-            return await service.Send<AuthResponse>(() => HttpRequestMessageExtensions.Create(service, "v1/auth/username", HttpMethod.Post, body));
+            return await service.Session.Send<AuthResponse>(() => HttpRequestMessageExtensions.Create(service.Session, "v1/auth/username", HttpMethod.Post, body));
         }
 
         private class AuthUsernameRequest
@@ -203,7 +203,7 @@ namespace Morphic.Service
         public static async Task<AuthResponse?> AuthenticateKey(this HttpService service, KeyCredentials keyCredentials)
         {
             var body = new AuthKeyRequest(keyCredentials.Key);
-            return await service.Send<AuthResponse>(() => HttpRequestMessageExtensions.Create(service, "v1/auth/key", HttpMethod.Post, body));
+            return await service.Session.Send<AuthResponse>(() => HttpRequestMessageExtensions.Create(service.Session, "v1/auth/key", HttpMethod.Post, body));
         }
 
         private class AuthKeyRequest

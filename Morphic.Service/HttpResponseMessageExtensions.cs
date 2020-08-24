@@ -27,7 +27,6 @@ using System;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Morphic.Core;
-using System.Text.Json.Serialization;
 
 #nullable enable
 
@@ -44,8 +43,7 @@ namespace Morphic.Service
                 {
                     var options = new JsonSerializerOptions();
                     options.Converters.Add(new JsonElementInferredTypeConverter());
-                    options.Converters.Add(new JsonStringEnumConverter());
-                    var error = await JsonSerializer.DeserializeAsync<HttpService.BadRequestException>(errorJson, options);
+                    var error = await JsonSerializer.DeserializeAsync<Session.BadRequestException>(errorJson, options);
                     throw error;
                 }
                 catch (JsonException)

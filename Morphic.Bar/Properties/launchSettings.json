@@ -5,8 +5,7 @@
       "commandName": "Project",
       "commandLineArgs": "--bar ../../../test-bar.json5",
       "environmentVariables": {
-        "MORPHIC_LOGLEVEL": "Debug",
-        "MORPHIC_DEBUG": "true"
+        "MORPHIC_LOGLEVEL": "Debug"
       }
     }
   }

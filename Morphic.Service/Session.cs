@@ -54,7 +54,7 @@ namespace Morphic.Service
     /// <summary>
     /// Manages a user's session with the morphic server
     /// </summary>
-    public class Session: IHttpServiceCredentialsProvider
+    public class Session
     {
 
         #region Creating a Session
@@ -63,9 +63,10 @@ namespace Morphic.Service
         /// Create a new session with the given URL
         /// </summary>
         /// <param name="endpoint">The root URL of the Morphic HTTP service</param>
-        public Session(SessionOptions options, SettingsManager settingsManager, Storage storage, Keychain keychain, IUserSettings userSettings, ILogger<Session> logger, ILogger<HttpService> httpLogger)
+        public Session(SessionOptions options, SettingsManager settingsManager, Storage storage, Keychain keychain, IUserSettings userSettings, ILogger<Session> logger)
         {
-            Service = new HttpService(new Uri(options.Endpoint), this, httpLogger);
+            Service = new HttpService(new Uri(options.Endpoint), this);
+            client = new HttpClient();
             this.SettingsManager = settingsManager;
             Storage = storage;
             this.keychain = keychain;
@@ -117,7 +118,115 @@ namespace Morphic.Service
 
         #endregion
 
+        #region Requests
+
+        /// <summary>
+        /// The underlying HTTP client that makes requests
+        /// </summary>
+        private readonly HttpClient client;
+
+        /// <summary>
+        /// Send a request, re-authenticating if needed
+        /// </summary>
+        /// <typeparam name="ResponseBody">The type of response expected to be decoded from JSON</typeparam>
+        /// <param name="requestFactory">A function that creates the request to send</param>
+        /// <remarks>
+        /// We use a request factory function in case we need to re-send the request after re-authenticating.
+        /// Unfortunately, an HttpRequestMessage can only be sent once.
+        /// </remarks>
+        /// <returns>The response decoded from JSON, or <code>null</code> if no valid response was provided</returns>
+        public async Task<ResponseBody?> Send<ResponseBody>(Func<HttpRequestMessage> requestFactory) where ResponseBody: class
+        {
+            try
+            {
+                var request = requestFactory.Invoke();
+                logger.LogInformation("{0} {1}", request.Method, request.RequestUri.AbsolutePath);
+                var response = await client.SendAsync(request);
+                logger.LogInformation("{0} {1}", response.StatusCode.ToString(), request.RequestUri.AbsolutePath);
+                if (response.RequiresMorphicAuthentication())
+                {
+                    var success = await Authenticate();
+                    if (!success)
+                    {
+                        logger.LogInformation("Could not authenticate user");
+                        return null;
+                    }
+                    request = requestFactory.Invoke();
+                    logger.LogInformation("{0} {1}", request.Method, request.RequestUri.AbsolutePath);
+                    response = await client.SendAsync(request);
+                    logger.LogInformation("{0} {1}", response.StatusCode.ToString(), request.RequestUri.AbsolutePath);
+                }
+                return await response.GetObject<ResponseBody>();
+            }
+            catch (BadRequestException e)
+            { 
+                throw e;
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Request failed");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Send a request that expects no response body, re-authenticating if needed
+        /// </summary>
+        /// <param name="requestFactory">A function that creates the request to send</param>
+        /// <remarks>
+        /// We use a request factory function in case we need to re-send the request after re-authenticating.
+        /// Unfortunately, an HttpRequestMessage can only be sent once.
+        /// </remarks>
+        /// <returns><code>true</code> if the request succeeds, <code>false</code> otherwise</returns>
+        public async Task<bool> Send(Func<HttpRequestMessage> requestFactory)
+        {
+            try
+            {
+                var request = requestFactory.Invoke();
+                logger.LogInformation("{0} {1}", request.Method, request.RequestUri.AbsolutePath);
+                var response = await client.SendAsync(request);
+                logger.LogInformation("{0} {1}", response.StatusCode.ToString(), request.RequestUri.AbsolutePath);
+                if (response.RequiresMorphicAuthentication())
+                {
+                    var success = await Authenticate();
+                    if (!success)
+                    {
+                        logger.LogInformation("Could not authenticate user");
+                        return false;
+                    }
+                    request = requestFactory.Invoke();
+                    logger.LogInformation("{0} {1}", request.Method, request.RequestUri.AbsolutePath);
+                    response = await client.SendAsync(request);
+                    logger.LogInformation("{0} {1}", response.StatusCode.ToString(), request.RequestUri.AbsolutePath);
+                }
+                return response.StatusCode == System.Net.HttpStatusCode.OK;
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Request failed");
+                return false;
+            }
+        }
+
+        public class BadRequestException: Exception
+        {
+
+            [JsonPropertyName("error")]
+            public string Error { get; set; } = null!;
+
+            [JsonPropertyName("details")]
+            public Dictionary<string, object?>? Details { get; set; }
+
+        }
+
+        #endregion
+
         #region Authentication
+
+        /// <summary>
+        /// The session's auth token
+        /// </summary>
+        public string? AuthToken { get; set; }
 
         /// <summary>
         /// The current user's saved credentials, if any
@@ -141,14 +250,23 @@ namespace Morphic.Service
             }
         }
 
-        public ICredentials? CredentialsForHttpService(HttpService service)
+        /// <summary>
+        /// Authenticate using the current credentials
+        /// </summary>
+        /// <returns></returns>
+        private async Task<bool> Authenticate()
         {
-            return CurrentCredentials;
-        }
-
-        public void HttpServiceAuthenticatedUser(User user)
-        {
-            User = user;
+            if (CurrentCredentials is ICredentials creds)
+            {
+                var auth = await Service.Authenticate(creds);
+                if (auth != null)
+                {
+                    AuthToken = auth.Token;
+                    User = auth.User;
+                    return true;
+                }
+            }
+            return false;
         }
 
         public async Task<bool> Authenticate(UsernameCredentials credentials)
@@ -157,7 +275,7 @@ namespace Morphic.Service
             if (auth != null)
             {
                 keychain.Save(credentials, Service.Endpoint);
-                Service.AuthToken = auth.Token;
+                AuthToken = auth.Token;
                 userSettings.SetUsernameForId(credentials.Username, auth.User.Id);
                 await Signin(auth.User);
                 return true;
@@ -269,7 +387,7 @@ namespace Morphic.Service
                 {
                     logger.LogError("Failed to save username creds to keychain");
                 }
-                Service.AuthToken = auth.Token;
+                AuthToken = auth.Token;
                 // The server doesn't currently send email, but we reference it immedately after creating an account,
                 // so just fill it in from the input
                 auth.User.Email = auth.User.Email ?? user.Email;

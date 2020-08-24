@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:client="clr-namespace:Morphic.Bar.Client"
         xmlns:ui="clr-namespace:Morphic.Bar.UI"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance ui:LoginWindow}"
@@ -10,16 +11,21 @@
     <StackPanel Margin="20">
 
         <TextBlock FontSize="20">Login</TextBlock>
-
-        <TextBlock Name="ErrorLabel" Text="Unrecognized Login" Foreground="#ff0000" HorizontalAlignment="Center" Visibility="Hidden">
+        
+        <TextBlock Background="{x:Static SystemColors.InfoBrush}" Foreground="{x:Static SystemColors.InfoTextBrush}"
+                   TextWrapping="Wrap"
+                   Text="{Binding Credentials.LastFailure}">
         </TextBlock>
 
+        <Label Content="Server"/>
+        <TextBox Text="{Binding Credentials.ServerHost}" Margin="0 0 0 10"/>
+        
         <Label Content="Username"/>
-        <TextBox Name="UsernameBox" Margin="0 0 0 10"/>
+        <TextBox Text="{Binding Credentials.UserName}" Margin="0 0 0 10"/>
         
         <Label Content="Password"/>
-        <PasswordBox Name="PasswordBox" Margin="0 0 0 10"/>
+        <PasswordBox x:Name="PasswordBox" Margin="0 0 0 10"/>
         
-        <Button Name="LoginButton" Content="Login" Click="LoginButton_Click" Margin="20" IsDefault="True" />
+        <Button Content="Login" Click="LoginButton_Click" Margin="20" IsDefault="True" />
     </StackPanel>
 </Window>

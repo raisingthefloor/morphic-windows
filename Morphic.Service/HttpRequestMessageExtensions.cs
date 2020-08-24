@@ -31,20 +31,20 @@ namespace Morphic.Service
 {
     internal static class HttpRequestMessageExtensions
     {
-        internal static HttpRequestMessage Create(HttpService service, string path, HttpMethod method)
+        internal static HttpRequestMessage Create(Session session, string path, HttpMethod method)
         {
-            var uri = new Uri(service.Endpoint, path);
+            var uri = new Uri(session.Service.Endpoint, path);
             var request = new HttpRequestMessage(method, uri);
-            if (service.AuthToken is string token)
+            if (session.AuthToken is string token)
             {
                 request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
             }
             return request;
         }
 
-        internal static HttpRequestMessage Create<RequestBody>(HttpService service, string path, HttpMethod method, RequestBody body)
+        internal static HttpRequestMessage Create<RequestBody>(Session session, string path, HttpMethod method, RequestBody body)
         {
-            var request = Create(service, path, method);
+            var request = Create(session, path, method);
             var options = new JsonSerializerOptions();
             options.Converters.Add(new JsonElementInferredTypeConverter());
             var json = JsonSerializer.Serialize(body, options);

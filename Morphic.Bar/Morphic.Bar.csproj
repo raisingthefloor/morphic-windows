@@ -1,92 +1,74 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <UseWPF>true</UseWPF>
-    <UseWindowsForms>true</UseWindowsForms>
-    <Nullable>enable</Nullable>
-    <AssemblyName>Morphic.Bar</AssemblyName>
-    <PublishTrimmed>true</PublishTrimmed>
-    <Platforms>AnyCPU;x64</Platforms>
-    <VersionPrefix>1.0$(VersionBuildComponents)</VersionPrefix>
-    <VersionSuffix>$([System.DateTime]::UtcNow.ToString(yyyyMMdd))</VersionSuffix>
-    <Company>Raising the Floor</Company>
-    <UserSecretsId>10f56845-2111-422e-b6b0-01fbcb2be636</UserSecretsId>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <DefineConstants>TRACE;TESTING</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DefineConstants>TRACE;TESTING</DefineConstants>
-  </PropertyGroup>
-  <ItemGroup>
-    <Content Include="DefaultConfig\**\*">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="appsettings.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="test-bar.json5">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Assets\**\*">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="CommandLineParser" Version="2.8.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.1.7" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="3.1.7" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="3.1.7" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.6" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.1.6" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="3.1.6" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-    <PackageReference Include="NReco.Logging.File" Version="1.0.5" />
-    <PackageReference Include="SharpVectors.Reloaded" Version="1.6.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="Setup\build\**" />
-    <Compile Remove="Setup\build2\**" />
-    <Compile Remove="Setup\output\**" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Remove="Setup\build\**" />
-    <EmbeddedResource Remove="Setup\build2\**" />
-    <EmbeddedResource Remove="Setup\output\**" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Remove="Setup\build\**" />
-    <None Remove="Setup\build2\**" />
-    <None Remove="Setup\output\**" />
-  </ItemGroup>
-  <ItemGroup>
-    <Page Remove="Setup\build\**" />
-    <Page Remove="Setup\build2\**" />
-    <Page Remove="Setup\output\**" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Remove="appsettings.json" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Morphic.Core\Morphic.Core.csproj" />
-    <ProjectReference Include="..\Morphic.Service\Morphic.Service.csproj" />
-    <ProjectReference Include="..\Morphic.Settings\Morphic.Settings.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Update="UserSettings.Designer.cs">
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <DependentUpon>UserSettings.settings</DependentUpon>
-      <AutoGen>True</AutoGen>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Update="UserSettings.settings">
-      <LastGenOutput>UserSettings.Designer.cs</LastGenOutput>
-      <Generator>SettingsSingleFileGenerator</Generator>
-    </None>
-  </ItemGroup>
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <UseWPF>true</UseWPF>
+        <UseWindowsForms>true</UseWindowsForms>
+        <Nullable>enable</Nullable>
+        <AssemblyName>Morphic.Bar</AssemblyName>
+        <PublishTrimmed>true</PublishTrimmed>
+        <Platforms>AnyCPU;x64</Platforms>
+        <VersionPrefix>1.0$(VersionBuildComponents)</VersionPrefix>
+        <VersionSuffix>$([System.DateTime]::UtcNow.ToString(yyyyMMdd))</VersionSuffix>
+        <Company>Raising the Floor</Company>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <DefineConstants>TRACE;TESTING</DefineConstants>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <DefineConstants>TRACE;TESTING</DefineConstants>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Content Include="DefaultConfig\**\*">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+      <Content Include="test-bar.json5">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="Assets\**\*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="CommandLineParser" Version="2.8.0" />
+      <PackageReference Include="Flurl.Http" Version="2.4.2" />
+      <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.6" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.1.6" />
+      <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+      <PackageReference Include="NReco.Logging.File" Version="1.0.5" />
+      <PackageReference Include="SharpVectors.Reloaded" Version="1.6.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="Setup\build\**" />
+      <Compile Remove="Setup\build2\**" />
+      <Compile Remove="Setup\output\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Remove="Setup\build\**" />
+      <EmbeddedResource Remove="Setup\build2\**" />
+      <EmbeddedResource Remove="Setup\output\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Setup\build\**" />
+      <None Remove="Setup\build2\**" />
+      <None Remove="Setup\output\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Page Remove="Setup\build\**" />
+      <Page Remove="Setup\build2\**" />
+      <Page Remove="Setup\output\**" />
+    </ItemGroup>
+
 </Project>

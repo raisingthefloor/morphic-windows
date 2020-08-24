@@ -40,7 +40,7 @@ namespace Morphic.Service
         {
             if (user.PreferencesId is string prefsId)
             {
-                return await service.Send<Preferences>(() => HttpRequestMessageExtensions.Create(service, string.Format("v1/users/{0}/preferences/{1}", user.Id, prefsId), HttpMethod.Get));
+                return await service.Session.Send<Preferences>(() => HttpRequestMessageExtensions.Create(service.Session, string.Format("v1/users/{0}/preferences/{1}", user.Id, prefsId), HttpMethod.Get));
             }
             return null;
         }
@@ -55,7 +55,7 @@ namespace Morphic.Service
         {
             if (preferences.UserId is string userId)
             {
-                return await service.Send(() => HttpRequestMessageExtensions.Create(service, string.Format("v1/users/{0}/preferences/{1}", userId, preferences.Id), HttpMethod.Put, preferences));
+                return await service.Session.Send(() => HttpRequestMessageExtensions.Create(service.Session, string.Format("v1/users/{0}/preferences/{1}", userId, preferences.Id), HttpMethod.Put, preferences));
             }
             return false;
         }
