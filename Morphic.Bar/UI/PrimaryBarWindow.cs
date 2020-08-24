@@ -3,6 +3,8 @@ namespace Morphic.Bar.UI
     using System;
     using System.Linq;
     using System.Windows;
+    using System.Windows.Interop;
+    using Windows.Native;
     using AppBarWindow;
     using Bar;
 
@@ -54,6 +56,15 @@ namespace Morphic.Bar.UI
 #endif
             this.Closed += this.OnClosed;
             this.Bar = barData;
+
+            this.SourceInitialized += (sender, args) =>
+            {
+                // Start monitoring the active window.
+                WindowInteropHelper nativeWindow = new WindowInteropHelper(this);
+                HwndSource? hwndSource = HwndSource.FromHwnd(nativeWindow.Handle);
+                SelectionReader.Default.Initialise(nativeWindow.Handle);
+                hwndSource?.AddHook(SelectionReader.Default.WindowProc);
+            };
         }
 
         private void OnClosed(object? sender, EventArgs e)

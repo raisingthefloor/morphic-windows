@@ -2,20 +2,147 @@
   fileId: "actions",
   actions: {
     "screen-zoom": {
+      // Adjusts the screen resolution.
       kind: "internal",
       widget: "multi",
       configuration: {
-        function: "screen-zoom",
+        defaultLabel: "Screen Zoom",
+        function: "screenZoom",
+        args: {
+          direction: "{button}"
+        },
         buttons: {
-          decrease: {
-            action: {
-              kind: "application",
-              exe: "notepad.exe",
-            },
+          out: {
             label: "-"
           },
-          increase: {
+          up: {
             label: "+"
+          }
+        }
+      }
+    },
+    "volume": {
+      // Adjusts the volume.
+      kind: "internal",
+      widget: "multi",
+      configuration: {
+        defaultLabel: "Volume",
+        function: "volume",
+        args: {
+          direction: "{button}"
+        },
+        buttons: {
+          down: {
+            label: "-"
+          },
+          up: {
+            label: "+"
+          }
+        }
+      }
+    },
+    "magnify": {
+      // Start the magnifier in full screen mode.
+      kind: "internal",
+      widget: "multi",
+      configuration: {
+        defaultLabel: "Magnifier",
+        function: "magnifier",
+        args: {
+          state: "{button}"
+        },
+        buttons: {
+          on: {
+            label: "On"
+          },
+          off: {
+            label: "Off"
+          }
+        }
+      }
+    },
+    "nightmode": {
+      // Enables night-mode.
+      kind: "internal",
+      widget: "multi",
+      configuration: {
+        defaultLabel: "Night Mode",
+        function: "nightMode",
+        args: {
+          state: "{button}"
+        },
+        buttons: {
+          on: {
+            label: "On"
+          },
+          off: {
+            label: "Off"
+          }
+        }
+      }
+    },
+    "read-aloud": {
+      // Reads the selected text.
+      kind: "internal",
+      widget: "multi",
+      configuration: {
+        defaultLabel: "Read Aloud",
+        function: "readAloud",
+        args: {
+          action: "{button}"
+        },
+        buttons: {
+          play: {
+            label: "|>"
+          },
+          pause: {
+            label: "||"
+          },
+          stop: {
+            label: "[]"
+          }
+        }
+      }
+    },
+    "copy-paste": {
+      // Buttons for copy and paste.
+      kind: "internal",
+      widget: "multi",
+      configuration: {
+        defaultLabel: "Clipboard",
+        // Simulates the appropriate key for the action.
+        function: "sendKeys",
+        args: {
+          keys: "{button}"
+        },
+        buttons: {
+          copy: {
+            label: "Copy",
+            value: "^c"
+          },
+          paste: {
+            label: "Paste",
+            value: "^v"
+          }
+        }
+      }
+    },
+    "high-contrast": {
+      // Toggles high-contrast.
+      kind: "application",
+      widget: "multi",
+      configuration: {
+        defaultLabel: "High-Contrast",
+        exe: "sethc.exe",
+        args: [ "{button}" ],
+        buttons: {
+          on: {
+            label: "On",
+            value: "100"
+          },
+          off: {
+            label: "Off",
+            value: "1"
           }
         }
       }

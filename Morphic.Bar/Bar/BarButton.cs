@@ -234,7 +234,7 @@ namespace Morphic.Bar.Bar
             }
         }
 
-        public override async void Deserialized(BarData bar)
+        public override void Deserialized(BarData bar)
         {
             base.Deserialized(bar);
 

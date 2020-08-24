@@ -71,4 +71,8 @@
       <Page Remove="Setup\output\**" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Morphic.Settings\Morphic.Settings.csproj" />
+    </ItemGroup>
+
 </Project>

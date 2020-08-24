@@ -11,6 +11,8 @@
 namespace Morphic.Bar.Bar.Actions
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.Net.WebSockets;
     using System.Text;
     using System.Threading;
@@ -27,14 +29,36 @@ namespace Morphic.Bar.Bar.Actions
     public abstract class BarAction
     {
         [JsonProperty("identifier")]
-        public string Id { get; set; }
+        public string Id { get; set; } = string.Empty;
 
         /// <summary>
-        /// Invoked the action.
+        /// Called by <c>Invoke</c> to perform the implementation-specific action invocation.
         /// </summary>
-        /// <param name="source">Button ID, for multi-buttom bar items.</param>
+        /// <param name="source">Button ID, for multi-button bar items.</param>
         /// <returns></returns>
-        public abstract Task<bool> Invoke(string? source = null);
+        protected abstract Task<bool> InvokeImpl(string? source = null);
+
+        /// <summary>
+        /// Invokes the action.
+        /// </summary>
+        /// <param name="source">Button ID, for multi-button bar items.</param>
+        /// <returns></returns>
+        public Task<bool> Invoke(string? source = null)
+        {
+            return this.InvokeImpl(source);
+        }
+
+        /// <summary>
+        /// Resolves "{identifiers}" in a string with its value.
+        /// </summary>
+        /// <param name="arg"></param>
+        /// <param name="source"></param>
+        /// <returns>null if arg is null</returns>
+        protected string? ResolveString(string? arg, string? source)
+        {
+            // Today, there is only "{button}".
+            return arg?.Replace("{button}", source ?? string.Empty);
+        }
 
         public virtual Uri? DefaultImageUri { get; }
         public virtual ImageSource? DefaultImageSource { get; }
@@ -45,7 +69,7 @@ namespace Morphic.Bar.Bar.Actions
     [JsonTypeName("null")]
     public class NoOpAction : BarAction
     {
-        public override Task<bool> Invoke(string? source = null)
+        protected override Task<bool> InvokeImpl(string? source = null)
         {
             return Task.FromResult(true);
         }
@@ -58,16 +82,19 @@ namespace Morphic.Bar.Bar.Actions
         public string? FunctionName { get; set; }
 
         [JsonProperty("args")]
-        public string[]? Arguments { get; set; }
+        public Dictionary<string, string> Arguments { get; set; } = new Dictionary<string, string>();
 
-        public override Task<bool> Invoke(string? source = null)
+        protected override Task<bool> InvokeImpl(string? source = null)
         {
             if (this.FunctionName == null)
             {
                 return Task.FromResult(true);
             }
 
-            return ActionFunctions.Default.InvokeFunction(this.FunctionName, this.Arguments ?? new string[0], source);
+            Dictionary<string, string> resolvedArgs = this.Arguments
+                .ToDictionary(kv => kv.Key, kv => this.ResolveString(kv.Value, source) ?? string.Empty);
+
+            return InternalFunctions.Default.InvokeFunction(this.FunctionName, resolvedArgs);
         }
     }
 
@@ -77,7 +104,7 @@ namespace Morphic.Bar.Bar.Actions
         [JsonProperty("data", Required = Required.Always)]
         public JObject RequestObject { get; set; } = null!;
 
-        public override async Task<bool> Invoke(string? source = null)
+        protected override async Task<bool> InvokeImpl(string? source = null)
         {
             ClientWebSocket socket = new ClientWebSocket();
             CancellationTokenSource cancel = new CancellationTokenSource();

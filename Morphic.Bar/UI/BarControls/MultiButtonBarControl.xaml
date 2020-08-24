@@ -6,7 +6,7 @@
                          xmlns:ui="clr-namespace:Morphic.Bar.UI"
                          xmlns:barControls="clr-namespace:Morphic.Bar.UI.BarControls"
                          mc:Ignorable="d"
-                         MinHeight="30"
+                         MinHeight="10"
                          MaxHeight="150"
                          d:DataContext="{d:DesignInstance barControls:MultiButtonBarControl, IsDesignTimeCreatable=True}"
                          >
@@ -24,6 +24,9 @@
         </Style>
 
     </barControls:BarItemControl.Resources>
+    <barControls:BarItemControl.Foreground>
+        <SolidColorBrush Color="{Binding Bar.BarTheme.TextColor}"></SolidColorBrush>
+    </barControls:BarItemControl.Foreground>
 
     <StackPanel HorizontalAlignment="Stretch">
         <!-- The text label -->
@@ -73,7 +76,7 @@
                                 </Border.Background>
 
                                 <!-- Button text -->
-                                <TextBlock Text="{Binding Button.Text}"
+                                <TextBlock Text="{Binding Text}"
                                            TextAlignment="Center"
                                            VerticalAlignment="Center"
                                 />

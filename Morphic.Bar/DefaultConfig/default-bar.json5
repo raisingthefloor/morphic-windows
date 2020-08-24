@@ -1,6 +1,6 @@
 {
   scale: 1,
-  overflow: "hide",
+  overflow: "secondary",
   position: {
     docked: null,
     x: "Right",

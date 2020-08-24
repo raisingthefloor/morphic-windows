@@ -50,14 +50,14 @@ namespace Morphic.Bar.Bar.Actions
         public override Uri? DefaultImageUri =>
             this.Uri != null ? new Uri($"https://icons.duckduckgo.com/ip2/{this.Uri.Host}.ico") : null;
 
-        public override Task<bool> Invoke(string? source = null)
+        protected override Task<bool> InvokeImpl(string? source = null)
         {
             bool success = true;
             if (this.Uri != null)
             {
                 Process? process = Process.Start(new ProcessStartInfo()
                 {
-                    FileName = this.Uri?.ToString(),
+                    FileName = this.ResolveString(this.Uri?.ToString(), source),
                     UseShellExecute = true
                 });
                 success = process != null;

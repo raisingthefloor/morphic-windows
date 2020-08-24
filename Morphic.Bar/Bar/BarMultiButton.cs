@@ -29,6 +29,8 @@ namespace Morphic.Bar.Bar
         [JsonObject(MemberSerialization.OptIn)]
         public class ButtonInfo
         {
+            private string? value = null;
+
             /// <summary>
             /// Display text.
             /// </summary>
@@ -41,8 +43,19 @@ namespace Morphic.Bar.Bar
             [JsonProperty("id")]
             public string Id { get; set; } = null!;
 
+            /// <summary>
+            /// The value to pass to the action when this button is clicked.
+            /// Used by `kind = "internal"`, specifying "{button}" as an argument value will resolve to this value
+            /// (or the id, if not set)
+            /// </summary>
+            [JsonProperty("value")]
+            public string Value
+            {
+                get => this.value ?? this.Id;
+                set => this.value = value;
+            }
+
             [JsonProperty("action")]
-            //[JsonConverter(typeof(TypedJsonConverter), "kind", "null")]
             public BarAction Action { get; set; } = new NoOpAction();
         }
 

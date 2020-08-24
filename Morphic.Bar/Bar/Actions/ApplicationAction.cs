@@ -30,7 +30,7 @@ namespace Morphic.Bar.Bar.Actions
     [JsonTypeName("application")]
     public class ApplicationAction : BarAction
     {
-        private string? exeName;
+        private string? exeNameValue;
 
         /// <summary>
         /// The actual path to the executable.
@@ -60,11 +60,11 @@ namespace Morphic.Bar.Bar.Actions
         [JsonProperty("exe", Required = Required.Always)]
         public string ExeName
         {
-            get => this.exeName ?? string.Empty;
+            get => this.exeNameValue ?? string.Empty;
             set
             {
-                this.exeName = value;
-                if (this.exeName.Length == 0)
+                this.exeNameValue = value;
+                if (this.exeNameValue.Length == 0)
                 {
                     this.AppPath = null;
                 }
@@ -72,7 +72,7 @@ namespace Morphic.Bar.Bar.Actions
                 {
                     if (this.ExeName.StartsWith('"'))
                     {
-                        int nextQuote = this.exeName.IndexOf('"', 1);
+                        int nextQuote = this.exeNameValue.IndexOf('"', 1);
                         if (nextQuote < 0)
                         {
                             App.Current.Logger.LogWarning($"Executable path [{this.ExeName}] has mismatching quote");
@@ -85,8 +85,8 @@ namespace Morphic.Bar.Bar.Actions
                         }
                     }
 
-                    this.AppPath = this.ResolveAppPath(this.exeName);
-                    App.Current.Logger.LogDebug($"Resolved exe file '{this.exeName}' to '{this.AppPath ?? "(null)"}'");
+                    this.AppPath = this.ResolveAppPath(this.exeNameValue);
+                    App.Current.Logger.LogDebug($"Resolved exe file '{this.exeNameValue}' to '{this.AppPath ?? "(null)"}'");
                 }
 
                 this.IsAvailable = this.AppPath != null;
@@ -113,11 +113,14 @@ namespace Morphic.Bar.Bar.Actions
         /// <summary>
         /// Resolves the path of an executable, by looking in the "App Paths" registry key or the PATH environment.
         /// If a full path is provided, and it doesn't exist, then the path for the file name alone is resolved.
+        ///
+        /// Environment variables in the file path are also resolved.
         /// </summary>
-        /// <param name="file"></param>
+        /// <param name="exeName">The `exeName` input value.</param>
         /// <returns>Full path to the executable if found, or null.</returns>
-        private string? ResolveAppPath(string file)
+        private string? ResolveAppPath(string exeName)
         {
+            string file = Environment.ExpandEnvironmentVariables(exeName);
             string? ext = Path.GetExtension(file).ToLower();
             string withExe, withoutExe;
 
@@ -219,7 +222,7 @@ namespace Morphic.Bar.Bar.Actions
             return fullPath;
         }
 
-        public override Task<bool> Invoke(string? source = null)
+        protected override Task<bool> InvokeImpl(string? source = null)
         {
             ProcessStartInfo startInfo = new ProcessStartInfo()
             {
@@ -230,16 +233,19 @@ namespace Morphic.Bar.Bar.Actions
 
             if (this.Arguments.Count > 0)
             {
-                this.Arguments.ForEach(startInfo.ArgumentList.Add);
+                foreach (string argument in this.Arguments)
+                {
+                    startInfo.ArgumentList.Add(this.ResolveString(argument, source));
+                }
             }
             else
             {
-                startInfo.Arguments = this.ArgumentsString;
+                startInfo.Arguments = this.ResolveString(this.ArgumentsString, source);
             }
 
             foreach (var (key, value) in this.EnvironmentVariables)
             {
-                startInfo.EnvironmentVariables.Add(key, value);
+                startInfo.EnvironmentVariables.Add(key, this.ResolveString(value, source));
             }
 
             Process? process = Process.Start(startInfo);

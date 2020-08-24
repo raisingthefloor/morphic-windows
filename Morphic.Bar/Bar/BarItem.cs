@@ -29,6 +29,7 @@ namespace Morphic.Bar.Bar
     public class BarItem
     {
         protected ILogger Logger = LogUtil.LoggerFactory.CreateLogger("Bar");
+        private string? text;
 
         /// <summary>
         /// The bar that owns this item (set after deserialisation).
@@ -65,8 +66,18 @@ namespace Morphic.Bar.Bar
         /// The text displayed on the item.
         /// </summary>
         [JsonProperty("configuration.label")]
-        public string? Text { get; set; }
-        
+        public string Text
+        {
+            get => this.text ?? this.DefaultText ?? string.Empty;
+            set => this.text = value;
+        }
+
+        /// <summary>
+        /// The text displayed on the item, if Text is not set.
+        /// </summary>
+        [JsonProperty("configuration.defaultLabel")]
+        public string? DefaultText { get; set; }
+
         /// <summary>
         /// Tooltip main text (default is the this.Text).
         /// </summary>

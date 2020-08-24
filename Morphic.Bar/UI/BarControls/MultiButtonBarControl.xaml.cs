@@ -34,7 +34,6 @@ namespace Morphic.Bar.UI.BarControls
 
             this.InitializeComponent();
 
-
             // Apply theming to the dynamic buttons when they're created.
             this.ButtonContainer.ItemContainerGenerator.StatusChanged += (sender, args) =>
             {
@@ -53,7 +52,6 @@ namespace Morphic.Bar.UI.BarControls
                     }
                 }
             };
-
         }
 
         public new BarMultiButton BarItem => (BarMultiButton) base.BarItem;
@@ -74,8 +72,26 @@ namespace Morphic.Bar.UI.BarControls
                     ? this.BarItem.Action
                     : buttonInfo.Action;
 
-                action.Invoke(buttonInfo.Id);
+                action.Invoke(buttonInfo.Value);
             }
+        }
+
+        /// <summary>
+        /// Gets the text to be displayed, based on the given text.
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        protected string GetDisplayText(string text)
+        {
+            return text switch
+            {
+                "+" => "\u2795",
+                "-" => "\u2796",
+                "||" => "\u258e \u258e",
+                "|>" => "\u25b6",
+                "[]" => "\u25a0",
+                _ => text
+            };
         }
 
         /// <summary>
@@ -92,12 +108,15 @@ namespace Morphic.Bar.UI.BarControls
 
             public Control? Control { get; set; }
 
+            public string Text { get; set; }
+
             private readonly MultiButtonBarControl itemControl;
 
             public ButtonWrapper(MultiButtonBarControl itemControl, BarMultiButton.ButtonInfo buttonInfo)
             {
                 this.itemControl = itemControl;
                 this.Button = buttonInfo;
+                this.Text = itemControl.GetDisplayText(this.Button.Text);
                 // Update the theme when the property changes.
                 this.itemControl.PropertyChanged += (sender, args) =>
                 {

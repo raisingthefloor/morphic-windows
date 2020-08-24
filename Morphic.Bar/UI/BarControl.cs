@@ -189,13 +189,14 @@ namespace Morphic.Bar.UI
             
             this.LayoutTransform = new ScaleTransform(this.Scale, this.Scale);
             
-            this.LoadItems(isPrimary ? this.Bar.PrimaryItems : this.Bar.SecondaryItems);
+            this.AddItems(isPrimary ? this.Bar.PrimaryItems : this.Bar.SecondaryItems);
+            this.OnBarLoaded();
         }
 
         public void ReloadItems()
         {
             this.RemoveItems();
-            this.LoadItems(this.IsPrimary ? this.Bar.PrimaryItems : this.Bar.SecondaryItems);
+            this.AddItems(this.IsPrimary ? this.Bar.PrimaryItems : this.Bar.SecondaryItems);
         }
 
         public void RemoveItems()
@@ -207,14 +208,12 @@ namespace Morphic.Bar.UI
         /// Load some items.
         /// </summary>
         /// <param name="items"></param>
-        public void LoadItems(IEnumerable<BarItem> items)
+        public void AddItems(IEnumerable<BarItem> items)
         {
             foreach (BarItem item in items)
             {
                 this.AddItem(item);
             }
-            
-            this.OnBarLoaded();
         }
 
         /// <summary>
@@ -244,7 +243,6 @@ namespace Morphic.Bar.UI
     public struct CorrectedCoords
     {
         public readonly Orientation Orientation;
-        private Size size;
         private readonly bool swap;
 
         public CorrectedCoords(Size size, Orientation orientation) : this(size.Width, size.Height, orientation)

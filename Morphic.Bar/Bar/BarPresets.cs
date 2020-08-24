@@ -12,7 +12,6 @@ namespace Morphic.Bar.Bar
 {
     using System.Collections.Generic;
     using System.IO;
-    using Actions;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
 

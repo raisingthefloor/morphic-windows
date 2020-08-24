@@ -27,7 +27,6 @@ namespace Morphic.Bar.UI.BarControls
     /// </summary>
     public class BarItemControl : UserControl, INotifyPropertyChanged
     {
-        private bool isMouseDown;
         private BarItemSize maxItemSize = BarItemSize.Large;
 
         /// <summary>
