@@ -23,6 +23,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Morphic.ManualTester", "Mor
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Morphic.Bar", "Morphic.Bar\Morphic.Bar.csproj", "{A96E11C5-AF96-4F58-9C33-EDB444134127}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Morphic.BarSetup", "Morphic.BarSetup\Morphic.BarSetup.wixproj", "{c0dedbad-fa93-49b8-8587-e10ce8d3cadd}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -107,6 +109,12 @@ Global
 		{A96E11C5-AF96-4F58-9C33-EDB444134127}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A96E11C5-AF96-4F58-9C33-EDB444134127}.Release|x64.ActiveCfg = Release|Any CPU
 		{A96E11C5-AF96-4F58-9C33-EDB444134127}.Release|x64.Build.0 = Release|Any CPU
+		{8B686C6D-D3DA-4019-B4B7-A0643F17A7F7}.Debug|Any CPU.Build.0 = Debug|x64
+		{8B686C6D-D3DA-4019-B4B7-A0643F17A7F7}.Debug|x64.Build.0 = Debug|x64
+		{8B686C6D-D3DA-4019-B4B7-A0643F17A7F7}.Release|Any CPU.ActiveCfg = Debug|x64
+		{8B686C6D-D3DA-4019-B4B7-A0643F17A7F7}.Release|Any CPU.Build.0 = Debug|x64
+		{8B686C6D-D3DA-4019-B4B7-A0643F17A7F7}.Release|x64.ActiveCfg = Debug|x64
+		{8B686C6D-D3DA-4019-B4B7-A0643F17A7F7}.Release|x64.Build.0 = Debug|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

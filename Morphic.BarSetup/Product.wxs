@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Product Id="*" Name="Morphic Community" Language="1033" Version="!(bind.FileVersion.fil3E4252B5622E9C01595DAC121B1D0018)"
+             Manufacturer="Raising the Floor" UpgradeCode="0db0e8e0-6916-4175-b2da-5abd5fad655d">
+        <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine"/>
+
+        <Icon Id="MorphicIcon" SourceFile="$(var.Morphic.Bar.ProjectDir)\Assets\morphic-icon.ico"/>
+        <Property Id="ARPPRODUCTICON" Value="MorphicIcon"/>
+
+        <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed."/>
+
+        <Media Id="1" Cabinet="MorphicBarSetup.cab" EmbedCab="yes"/>
+
+        <Feature Id="ProductFeature" Title="MorphicCommunityBar" Level="1">
+            <ComponentGroupRef Id="GeneratedComponents"/>
+            <ComponentRef Id="ApplicationComponent"/>
+        </Feature>
+
+
+        <CustomAction Id="LaunchApplication" Directory="INSTALLFOLDER"
+                      ExeCommand="[#fil3E4252B5622E9C01595DAC121B1D0018]" Execute="immediate" Impersonate="yes"
+                      Return="asyncNoWait"/>
+
+        <InstallExecuteSequence>
+            <Custom Action="LaunchApplication" After="InstallFinalize">NOT Installed</Custom>
+        </InstallExecuteSequence>
+
+        <UIRef Id="WixUI_Minimal" />
+        <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+    </Product>
+
+    <Fragment>
+        <Directory Id="TARGETDIR" Name="SourceDir">
+            <Directory Id="ProgramFiles64Folder">
+                <Directory Id="INSTALLFOLDER" Name="Morphic Community"/>
+            </Directory>
+            <Directory Id="ProgramMenuFolder"/>
+        </Directory>
+
+        <DirectoryRef Id="ProgramMenuFolder">
+            <Component Id="ApplicationComponent" Guid="8215b64d-ca43-4a99-b4f6-7368d0437672">
+                <Shortcut
+                        Id="MorphicStartMenuShortcut"
+                        Name="Morphic Community"
+                        Icon="MorphicIcon"
+                        Target="[#fil3E4252B5622E9C01595DAC121B1D0018]"
+                        WorkingDirectory="INSTALLFOLDER"/>
+                <RegistryValue Root="HKCU" Key="Software\Raising the Floor\Morphic\Bar" Name="installed" Type="integer"
+                               Value="1" KeyPath="yes"/>
+            </Component>
+        </DirectoryRef>
+    </Fragment>
+</Wix>
