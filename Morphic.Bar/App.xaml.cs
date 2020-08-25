@@ -30,6 +30,7 @@ namespace Morphic.Bar
     using UI;
     using UI.AppBarWindow;
     using Application = System.Windows.Application;
+    using Control = System.Windows.Controls.Control;
     using MessageBox = System.Windows.MessageBox;
     using Point = System.Windows.Point;
 
@@ -47,7 +48,7 @@ namespace Morphic.Bar
         /// </summary>
         public bool IsActive { get; private set; }
 
-        private bool autoRunEnabled;
+        public bool AutoRunEnabled;
 
         /// <summary>The mouse has entered any window belonging to the application.</summary>
         public event EventHandler? MouseEnter;
@@ -114,6 +115,8 @@ namespace Morphic.Bar
             services.AddSingleton<Storage>();
             services.AddSingleton<CommunitySession>();
             services.AddTransient<LoginWindow>();
+            services.AddSingleton<BarManager>();
+
             // TODO: build info for about window
             //services.AddSingleton<BuildInfo>(BuildInfo.FromJsonFile("build-info.json"));
 
@@ -202,9 +205,9 @@ namespace Morphic.Bar
             // TODO: autoupdate
             //StartCheckingForUpdates();
 
-            this.autoRunEnabled = this.ConfigureAutoRun();
+            this.AutoRunEnabled = this.ConfigureAutoRun();
 
-            this.BarManager = new BarManager(this.Logger);
+            this.BarManager = this.ServiceProvider.GetRequiredService<BarManager>();
             this.ShowTrayIcon();
 
             if (Options.Current.BarFile != null)
@@ -275,7 +278,7 @@ namespace Morphic.Bar
         /// <summary>
         /// Makes the application automatically start at login.
         /// </summary>
-        private bool ConfigureAutoRun(bool? newValue = null)
+        internal bool ConfigureAutoRun(bool? newValue = null)
         {
             bool enabled;
             using RegistryKey morphicKey =
@@ -414,6 +417,8 @@ namespace Morphic.Bar
         #region Menu
 
         private NotifyIcon notifyIcon = new NotifyIcon();
+        private bool trayMenuShown = false;
+        private ContextMenu? trayIconMenu;
 
         public void ShowTrayIcon()
         {
@@ -429,7 +434,10 @@ namespace Morphic.Bar
                 this.notifyIcon.Dispose();
             };
 
-            this.notifyIcon.MouseClick += TrayIcon_MouseClick;
+            this.notifyIcon.MouseClick += this.TrayIcon_MouseClick;
+
+            this.trayIconMenu = this.Resources["MorphicMenu"] as ContextMenu;
+            this.Deactivated += (sender, args) => this.trayIconMenu!.IsOpen = false;
         }
 
         private void TrayIcon_MouseClick(object sender, MouseEventArgs e)
@@ -446,23 +454,100 @@ namespace Morphic.Bar
 
         private void ShowTrayMenu()
         {
-            if (this.Resources["TrayMenu"] is ContextMenu menu)
+            if (this.trayIconMenu != null)
             {
-                menu.IsOpen = true;
+                this.trayMenuShown = true;
+                this.trayIconMenu.IsOpen = false;
+                this.trayIconMenu.IsOpen = true;
             }
         }
 
+        private void MorphicMenu_Loaded(object sender, EventArgs e)
+        {
+            // Show or hide items, depending on whether the menu is shown via the tray icon or on the bar.
+            if (sender is ContextMenu menu)
+            {
+                foreach (Control item in menu.Items.OfType<Control>())
+                {
+                    if (item.Tag is string tag && tag.Length > 0)
+                    {
+                        bool? show = tag switch
+                        {
+                            "tray" => this.trayMenuShown,
+                            "bar" => !this.trayMenuShown,
+                            _ => null
+                        };
+
+                        if (show.HasValue)
+                        {
+                            item.Visibility = show.Value ? Visibility.Visible : Visibility.Collapsed;
+                        }
+                    }
+                }
+            }
+        }
+
+        private void MorphicMenu_Closed(object sender, EventArgs e)
+        {
+            this.trayMenuShown = false;
+        }
+
+        /// <summary>
+        /// "Show bar" item clicked
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void MenuItem_Show(object sender, RoutedEventArgs e)
         {
             this.BarManager.ShowBar();
         }
 
-        private void MenuItem_Close(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// "Hide bar" item clicked
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void MenuItem_Hide(object sender, RoutedEventArgs e)
         {
             this.BarManager.HideBar();
-            this.notifyIcon.ShowBalloonTip(1000, "Morphic", "To show the bar, click the morphic icon", ToolTipIcon.Info);
+            this.notifyIcon.ShowBalloonTip(1000, "Morphic", "To show the bar again, click the morphic icon", ToolTipIcon.Info);
         }
 
+        /// <summary>
+        /// Set the correct text for the "Sign in/out" item.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void MenuItem_Signout_Loaded(object sender, EventArgs e)
+        {
+            if (sender is MenuItem item)
+            {
+                item.Header = (this.Session.User == null) ? "Sign in" : "Sign out";
+            }
+        }
+
+        /// <summary>
+        /// "Sign in/out" item clicked.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private async void MenuItem_Signout(object sender, RoutedEventArgs e)
+        {
+            if (this.Session.User != null)
+            {
+                this.BarManager.CloseBar();
+                await this.Session.Signout();
+            }
+
+            LoginWindow? loginWindow = this.ServiceProvider.GetRequiredService<LoginWindow>();
+            loginWindow.Show();
+        }
+
+        /// <summary>
+        /// "Quit" menu item clicked.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void MenuItem_Quit(object sender, RoutedEventArgs e)
         {
             if (System.Windows.Forms.MessageBox.Show("Do you really want to stop using the Morphic Community Bar?",
@@ -474,6 +559,11 @@ namespace Morphic.Bar
             }
         }
 
+        /// <summary>
+        /// Add some items to load test bars.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void MenuItem_TestBars_Init(object sender, EventArgs e)
         {
 #if TESTING
@@ -497,6 +587,11 @@ namespace Morphic.Bar
 #endif
         }
 
+        /// <summary>
+        /// Test bar item clicked.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void MenuItem_TestBar(object sender, RoutedEventArgs e)
         {
             if (sender is MenuItem item && item.Tag is string path)
@@ -505,15 +600,24 @@ namespace Morphic.Bar
             }
         }
 
-
+        /// <summary>
+        /// Set the auto-run menu item checkbox.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void MenuItem_AutoRun_Init(object sender, EventArgs e)
         {
             if (sender is MenuItem item)
             {
-                item.IsChecked = this.autoRunEnabled;
+                item.IsChecked = this.AutoRunEnabled;
             }
         }
 
+        /// <summary>
+        /// "Start on windows login" item click.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void MenuItem_AutoRun(object sender, RoutedEventArgs e)
         {
             if (sender is MenuItem item)
@@ -522,6 +626,11 @@ namespace Morphic.Bar
             }
         }
 
+        /// <summary>
+        /// "About" item click.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void MenuItem_About(object sender, RoutedEventArgs e)
         {
             string ver = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).ProductVersion
