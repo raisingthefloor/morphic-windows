@@ -110,6 +110,16 @@ stages:
             configuration: '$(buildConfiguration)'
             msbuildArgs: '/p:BuildType=$(BUILD_TYPE)'
 
+        - task: VSBuild@1
+          displayName: "build x64 community installer"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
+          inputs:
+            solution: 'Morphic.BarSetup\Morphic.BarSetup.wixproj'
+            platform: 'x64'
+            configuration: '$(buildConfiguration)'
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE)'
+
         - task: DotNetCoreCLI@2
           displayName: Install AzureSignTool
           inputs:
@@ -135,6 +145,25 @@ stages:
         - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicSetup.msi
           displayName: "save x64 installer for later"
           artifact: x64-installer
+
+        - task: CmdLine@2
+          displayName: 'sign x64 community installer'
+          inputs:
+            targetType: 'inline'
+            script: >
+              AzureSignTool sign
+              -d Morphic
+              -du "$(SigningURL)"
+              -kvu "$(SigningVaultURL)"
+              -kvi "$(SigningClientId)"
+              -kvs "$(SigningClientSecret)"
+              -kvc "$(SigningCertName)"
+              -tr "$(TimestampUrl)"
+              -v $(System.DefaultWorkingDirectory)\Morphic.BarSetup\bin\Release\x64\MorphicCommunitySetup.msi
+
+        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicCommunitySetup.msi
+          displayName: "save x64 community installer for later"
+          artifact: x64-community-installer
 
         - publish: $(System.DefaultWorkingDirectory)\Morphic.Client\BuildVersion.txt
           displayName: "save build version numbers"
