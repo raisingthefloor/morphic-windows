@@ -17,6 +17,8 @@
         ContextMenu="{StaticResource MorphicMenu}"
         AllowsTransparency="True"
         Opacity="0"
+        AutomationProperties.Name="Morphic Community Bar"
+        PreviewKeyDown="BarWindow_OnPreviewKeyDown"
         >
 
     <Window.Resources>

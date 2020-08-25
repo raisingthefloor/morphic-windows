@@ -101,7 +101,7 @@ namespace Morphic.Bar
         public void HideBar()
         {
             this.barWindow?.Hide();
-            this.barWindow?.GetSecondaryWindow()?.Hide();
+            this.barWindow?.OtherWindow?.Hide();
 
         }
 

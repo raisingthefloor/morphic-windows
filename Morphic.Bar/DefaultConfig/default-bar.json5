@@ -54,6 +54,8 @@
       configuration: {
         function: "menu",
         image_url: "morphic-logo",
+        tooltip: "Morphic Community Bar",
+        uiName: "Menu"
       }
     }
   ]

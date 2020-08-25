@@ -188,10 +188,13 @@
     </barControls:BarItemControl.Resources>
     
     <Button x:Name="Button"
+            AutomationProperties.Name="{Binding BarItem.UiName}"
+            AutomationProperties.HelpText="{Binding BarItem.ToolTipInfo}"
             Click="Button_OnClick"
             HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
             HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
             >
+
         <ContentControl Content="{Binding ButtonResource}"></ContentControl>
     </Button>
 </barControls:BarItemControl>

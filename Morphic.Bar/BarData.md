@@ -147,9 +147,12 @@ ButtonItem = {
     label: "Calendar",
 
     // Tooltip.
-    toolTipHeader: "Open the calendar",
+    tooltipHeader: "Open the calendar",
     // More details.
-    toolTipInfo: "Displays your google calendar",
+    tooltip: "Displays your google calendar",
+
+    // Automation UI name - this is used by narrator. default is the label.
+    uiName: "Calendar",
 
     // local/remote url of the icon. For values without a directory, a matching file in ./Assets/bar-icons/`) is
     // discovered. If this value is omitted (or not working), an image is detected depending on the kind of item:

@@ -52,6 +52,8 @@
                             HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                             VerticalAlignment="Stretch" VerticalContentAlignment="Center"
                             Margin="1"
+                            ToolTip="{Binding Button.Tooltip}"
+                            AutomationProperties.Name="{Binding Button.UiName}"
                             Click="Button_OnClick"
                             >
                         <Button.Foreground>

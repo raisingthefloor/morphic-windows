@@ -29,7 +29,9 @@ namespace Morphic.Bar.Bar
         [JsonObject(MemberSerialization.OptIn)]
         public class ButtonInfo
         {
-            private string? value = null;
+            private string? value;
+            private string? uiName;
+            private string? text;
 
             /// <summary>
             /// Display text.
@@ -57,6 +59,16 @@ namespace Morphic.Bar.Bar
 
             [JsonProperty("action")]
             public BarAction Action { get; set; } = new NoOpAction();
+
+            [JsonProperty("tooltip")]
+            public string? Tooltip { get; set; }
+
+            [JsonProperty("uiName")]
+            public string UiName
+            {
+                get => this.uiName ?? this.text ?? this.Tooltip ?? string.Empty;
+                set => this.uiName = value;
+            }
         }
 
         public override void Deserialized(BarData bar)

@@ -13,7 +13,11 @@ namespace Morphic.Bar.UI
         private SecondaryBarWindow? secondaryWindow;
         private ExpanderWindow? expanderWindow;
 
+        public override BarWindow? OtherWindow => this.secondaryWindow;
+
         public event EventHandler? ExpandedChange;
+
+        public override ExpanderWindow? ExpanderWindow => this.expanderWindow;
 
         public override bool IsExpanded
         {
@@ -109,18 +113,15 @@ namespace Morphic.Bar.UI
             if (this.IsExpanded)
             {
                 this.secondaryWindow?.Show();
+                this.secondaryWindow?.Activate();
             }
             else
             {
+                this.Activate();
                 this.secondaryWindow?.Hide();
             }
             
             this.ExpandedChange?.Invoke(this, EventArgs.Empty);
-        }
-
-        public SecondaryBarWindow? GetSecondaryWindow()
-        {
-            return this.secondaryWindow;
         }
     }
 }

@@ -12,7 +12,10 @@ namespace Morphic.Bar.UI
 {
     using System.Windows;
     using System;
+    using System.Threading.Tasks;
+    using System.Windows.Automation;
     using System.Windows.Controls;
+    using System.Windows.Input;
     using System.Windows.Media.Animation;
     using AppBarWindow;
     using Bar;
@@ -78,6 +81,22 @@ namespace Morphic.Bar.UI
             App.Current.Deactivated += (sender, args) => this.IsWanted = this.IsExpanded;
 
             this.Topmost = this.primaryBarWindow.Topmost;
+
+            int focusTime = 0;
+            this.Activated += (sender, args) => focusTime = Environment.TickCount;
+            // Press tab to move the focus to a bar window.
+            this.PreviewKeyDown += (sender, args) =>
+            {
+                // If focus arrives at this window via tab key, then this event gets raised
+                if (args.Key == Key.Tab && Environment.TickCount - focusTime > 100)
+                {
+                    bool toSecondary =
+                        this.IsExpanded && (Keyboard.Modifiers & ModifierKeys.Shift) != ModifierKeys.Shift;
+
+                    BarWindow window = toSecondary ? (BarWindow)this.secondaryBarWindow : this.primaryBarWindow;
+                    window.MakeActive();
+                }
+            };
         }
 
         private void OnLoaded(object sender, RoutedEventArgs args)
@@ -122,6 +141,9 @@ namespace Morphic.Bar.UI
                 this.Owner = owner;
                 this.SetPosition();
                 this.Show();
+
+                this.Expander.SetValue(AutomationProperties.NameProperty,
+                    this.Expander.IsExpanded ? "Close Secondary Bar" : "Open Secondary Bar");
             }
         }
 

@@ -31,6 +31,7 @@ namespace Morphic.Bar.Bar
     {
         protected ILogger Logger = App.Current.ServiceProvider.GetRequiredService<ILogger<BarItem>>();
         private string? text;
+        private string? uiName;
 
         /// <summary>
         /// The bar that owns this item (set after deserialisation).
@@ -74,6 +75,22 @@ namespace Morphic.Bar.Bar
         }
 
         /// <summary>
+        /// The text used by UI automation - this is what narrator reads.
+        /// </summary>
+        [JsonProperty("configuration.uiName")]
+        public string UiName
+        {
+            get
+            {
+                string name = this.uiName ?? this.Text;
+                return string.IsNullOrEmpty(name)
+                    ? this.ToolTip ?? this.ToolTipInfo ?? string.Empty
+                    : name;
+            }
+            set => this.uiName = value;
+        }
+
+        /// <summary>
         /// The text displayed on the item, if Text is not set.
         /// </summary>
         [JsonProperty("configuration.defaultLabel")]
@@ -82,13 +99,13 @@ namespace Morphic.Bar.Bar
         /// <summary>
         /// Tooltip main text (default is the this.Text).
         /// </summary>
-        [JsonProperty("configuration.toolTipHeader")]
+        [JsonProperty("configuration.tooltipHeader")]
         public string? ToolTip { get; set; }
 
         /// <summary>
         /// Tooltip smaller text.
         /// </summary>
-        [JsonProperty("configuration.toolTipInfo")]
+        [JsonProperty("configuration.tooltip")]
         public string? ToolTipInfo { get; set; }
 
         /// <summary>

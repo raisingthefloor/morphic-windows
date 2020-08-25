@@ -6,7 +6,7 @@
       is_primary: true,
       configuration: {
         tooltipHeader: "Web link",
-        tooltipInfo: "kind = 'link'",
+        tooltip: "kind = 'link'",
         label: "Google",
         image_url: "google-brands",
         url: "https://google.co.uk/"
@@ -17,7 +17,7 @@
       is_primary: true,
       configuration: {
         tooltipHeader: "Web link (no image specified)",
-        tooltipInfo: "kind = 'link'",
+        tooltip: "kind = 'link'",
         label: "Wikipedia",
         image_url: "",
         url: "https://en.wikipedia.org/"
@@ -29,7 +29,7 @@
       is_primary: true,
       configuration: {
         tooltipHeader: "Application",
-        tooltipInfo: "kind = 'application'",
+        tooltip: "kind = 'application'",
         label: "Notepad",
         exe: "notepad.exe",
       }

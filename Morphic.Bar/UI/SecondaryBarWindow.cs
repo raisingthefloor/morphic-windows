@@ -18,6 +18,8 @@ namespace Morphic.Bar.UI
         }
 
         public override BarData Bar => this.primaryBarWindow?.Bar ?? base.Bar;
+        public override ExpanderWindow? ExpanderWindow => this.primaryBarWindow.ExpanderWindow;
+        public override BarWindow? OtherWindow => this.primaryBarWindow;
 
         /// <summary>
         /// The edge of the primary bar window where this window is attached to.

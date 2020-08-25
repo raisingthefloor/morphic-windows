@@ -20,6 +20,7 @@ namespace Morphic.Bar.UI
     using System.Windows.Media;
     using Bar;
     using BarControls;
+    using MessageBox = System.Windows.Forms.MessageBox;
 
     /// <summary>
     /// This is the thing that contains bar items.
@@ -100,7 +101,7 @@ namespace Morphic.Bar.UI
 
             CorrectedCoords itemSize = new CorrectedCoords(this.ItemWidth, this.ItemHeight, orientation);
 
-            List<UIElement> children = this.Children.OfType<UIElement>().Where(c => c != null).ToList();
+            List<BarItemControl> children = this.Children.OfType<BarItemControl>().Where(c => c != null).ToList();
             if (!children.Any())
             {
                 return finalSize;
@@ -120,7 +121,7 @@ namespace Morphic.Bar.UI
             // first item of the row
             bool firstItem = true;
 
-            foreach (UIElement child in children)
+            foreach (BarItemControl child in children)
             {
                 CorrectedCoords childSize = new CorrectedCoords(this.GetChildSize(child), orientation);
 

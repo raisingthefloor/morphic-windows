@@ -16,6 +16,7 @@ namespace Morphic.Bar.UI
     using System.Runtime.CompilerServices;
     using System.Windows;
     using System.Windows.Controls;
+    using System.Windows.Input;
     using System.Windows.Shell;
     using AppBarWindow;
     using Bar;
@@ -34,7 +35,10 @@ namespace Morphic.Bar.UI
         protected internal WindowMovement WindowMovement;
         private double scale;
 
+        public virtual BarWindow? OtherWindow => null;
+
         public virtual bool IsExpanded { get; set; }
+        public virtual ExpanderWindow? ExpanderWindow => null;
 
         /// <summary>
         /// The overall scale of the items.
@@ -76,11 +80,11 @@ namespace Morphic.Bar.UI
             this.InitializeComponent();
             App.Current.AddMouseOverWindow(this);
 
-            this.Scale = 1; 
+            this.Scale = 1;
 
             // Set the size and position after the bar is loaded and window is rendered.
             bool rendered = false;
-            this.ContentRendered += (sender, args) => rendered = true; 
+            this.ContentRendered += (sender, args) => rendered = true;
             this.BarControl.BarLoaded += (sender, args) =>
             {
                 if (rendered)
@@ -91,13 +95,29 @@ namespace Morphic.Bar.UI
                 {
                     this.ContentRendered += (s, a) => this.OnBarLoaded();
                 }
-                
+
                 this.SizeChanged += this.OnSizeChanged;
             };
 
             this.AppBar.EdgeChanged += this.AppBarOnEdgeChanged;
-            
+
             this.Loaded += (sender, args) => this.BarControl.LoadBar(this.Bar, isPrimary);
+
+            // Add a secret control as the last item. This is to make the expander window become a tab stop.
+            this.BarControl.BarLoaded += (sender, args) =>
+            {
+                TextBlock tb = new TextBlock()
+                {
+                    Focusable = true,
+                    Width = 1,
+                    Height = 1,
+                };
+                tb.GotFocus += (o, a) =>
+                {
+                    this.ExpanderWindow?.Activate();
+                };
+                this.BarControl.Children.Add(tb);
+            };
         }
 
         private void OnSizeChanged(object sender, SizeChangedEventArgs args)
@@ -363,7 +383,7 @@ namespace Morphic.Bar.UI
             {
                 this.Bar.PrimaryItems.Last(item => !item.NoOverflow).IsPrimary = false;
                 this.BarControl.ReloadItems();
-                primaryBarWindow.GetSecondaryWindow()?.BarControl.ReloadItems();
+                primaryBarWindow.OtherWindow?.BarControl.ReloadItems();
             }
 
             return true;
@@ -376,9 +396,25 @@ namespace Morphic.Bar.UI
             this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        public void ShowMenu()
+        public void MakeActive()
         {
+            this.Activate();
+            this.Focus();
+        }
 
+        private void BarWindow_OnPreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            switch (e.Key)
+            {
+                case Key.Tab when (e.KeyboardDevice.Modifiers & ModifierKeys.Control) == ModifierKeys.Control:
+                    this.OtherWindow?.MakeActive();
+                    e.Handled = true;
+                    break;
+                case Key.Escape:
+                    this.IsExpanded = false;
+                    e.Handled = true;
+                    break;
+            }
         }
     }
 }
