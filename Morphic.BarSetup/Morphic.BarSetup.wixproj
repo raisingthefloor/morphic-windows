@@ -6,7 +6,7 @@
     <ProductVersion>3.10</ProductVersion>
     <ProjectGuid>c0dedbad-fa93-49b8-8587-e10ce8d3cadd</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
-    <OutputName>MorphicBarSetup</OutputName>
+    <OutputName>MorphicCommunitySetup</OutputName>
     <OutputType>Package</OutputType>
     <OutputPath>bin\$(Configuration)\$(Platform)\</OutputPath>
     <IntermediateOutputPath>obj\$(Configuration)\$(Platform)\</IntermediateOutputPath>
