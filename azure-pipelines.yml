@@ -161,7 +161,7 @@ stages:
               -tr "$(TimestampUrl)"
               -v $(System.DefaultWorkingDirectory)\Morphic.BarSetup\bin\Release\x64\MorphicCommunitySetup.msi
 
-        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicCommunitySetup.msi
+        - publish: $(System.DefaultWorkingDirectory)\Morphic.BarSetup\bin\Release\x64\MorphicCommunitySetup.msi
           displayName: "save x64 community installer for later"
           artifact: x64-community-installer
 
