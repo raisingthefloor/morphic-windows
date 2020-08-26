@@ -1,0 +1,13 @@
+﻿{
+  defaults: {
+    "calendar": {
+      run: "outlookcal:"
+    },
+    "email": {
+      run: "mailto:"
+    },
+    "quick-assist": {
+      run: "ms-quick-assist:"
+    }
+  }
+}

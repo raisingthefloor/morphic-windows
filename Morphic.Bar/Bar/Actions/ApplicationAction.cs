@@ -54,6 +54,11 @@ namespace Morphic.Bar.Bar.Actions
             }
         }
 
+        [JsonProperty("default")]
+        public string? DefaultAppName { get; set; }
+
+        public BarAction? DefaultApp { get; private set; }
+
         /// <summary>
         /// Executable name, or the full path to it. If also providing arguments, surround the executable path with quotes.
         /// </summary>
@@ -224,6 +229,11 @@ namespace Morphic.Bar.Bar.Actions
 
         protected override Task<bool> InvokeImpl(string? source = null)
         {
+            if (this.DefaultApp != null && string.IsNullOrEmpty(this.ExeName))
+            {
+                return this.DefaultApp.Invoke(source);
+            }
+
             ProcessStartInfo startInfo = new ProcessStartInfo()
             {
                 FileName = this.AppPath,
@@ -251,6 +261,15 @@ namespace Morphic.Bar.Bar.Actions
             Process? process = Process.Start(startInfo);
 
             return Task.FromResult(process != null);
+        }
+
+        public override void Deserialized()
+        {
+            base.Deserialized();
+            if (!string.IsNullOrEmpty(this.DefaultAppName))
+            {
+                this.DefaultApp = DefaultApps.GetDefaultApp(this.DefaultAppName);
+            }
         }
     }
 }

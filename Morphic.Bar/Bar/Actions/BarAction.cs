@@ -12,12 +12,15 @@ namespace Morphic.Bar.Bar.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Net.WebSockets;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
+    using System.Windows.Forms;
     using System.Windows.Media;
+    using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
 
@@ -25,8 +28,8 @@ namespace Morphic.Bar.Bar.Actions
     /// An action for a bar item.
     /// </summary>
     [JsonObject(MemberSerialization.OptIn)]
-    [JsonConverter(typeof(TypedJsonConverter), "kind", "null")]
-    public abstract class BarAction
+    [JsonConverter(typeof(TypedJsonConverter), "kind", "shellExec")]
+    public abstract class BarAction : IDeserializable
     {
         [JsonProperty("identifier")]
         public string Id { get; set; } = string.Empty;
@@ -45,7 +48,32 @@ namespace Morphic.Bar.Bar.Actions
         /// <returns></returns>
         public Task<bool> Invoke(string? source = null)
         {
-            return this.InvokeImpl(source);
+            Task<bool> result;
+            try
+            {
+                try
+                {
+                    result = this.InvokeImpl(source);
+                }
+                catch (Exception e) when (!(e is ActionException || e is OutOfMemoryException))
+                {
+                    throw new ActionException(e.Message, e);
+                }
+            }
+            catch (ActionException e)
+            {
+                App.Current.Logger.LogError(e, $"Error while invoking action for bar {this.Id} {this}");
+
+                if (e.UserMessage != null)
+                {
+                    MessageBox.Show($"There was a problem performing the action:\n\n{e.UserMessage}",
+                        "Morphic Community Bar", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                }
+
+                result = Task.FromResult(false);
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -64,6 +92,9 @@ namespace Morphic.Bar.Bar.Actions
         public virtual ImageSource? DefaultImageSource { get; }
         public virtual bool IsAvailable { get; protected set; } = true;
 
+        public virtual void Deserialized()
+        {
+        }
     }
 
     [JsonTypeName("null")]
@@ -119,4 +150,58 @@ namespace Morphic.Bar.Bar.Actions
             return true;
         }
     }
+
+    [JsonTypeName("shellExec")]
+    public class ShellExecuteAction : BarAction
+    {
+        [JsonProperty("run")]
+        public string? ShellCommand { get; set; }
+
+        protected override Task<bool> InvokeImpl(string? source = null)
+        {
+            bool success = true;
+            if (!string.IsNullOrEmpty(this.ShellCommand))
+            {
+                Process? process = Process.Start(new ProcessStartInfo()
+                {
+                    FileName = this.ResolveString(this.ShellCommand, source),
+                    UseShellExecute = true
+                });
+                success = process != null;
+            }
+
+            return Task.FromResult(success);
+        }
+
+        public override void Deserialized()
+        {
+        }
+    }
+
+    /// <summary>
+    /// Exception that gets thrown by action invokers.
+    /// </summary>
+    public class ActionException : ApplicationException
+    {
+        /// <summary>
+        /// The message displayed to the user. null to not display a message.
+        /// </summary>
+        public string? UserMessage { get; set; }
+
+        public ActionException(string? userMessage)
+            : this(userMessage, userMessage, null)
+        {
+        }
+        public ActionException(string? userMessage, Exception innerException)
+            : this(userMessage, userMessage, innerException)
+        {
+        }
+
+        public ActionException(string? userMessage, string? internalMessage = null, Exception? innerException = null)
+            : base(internalMessage ?? userMessage ?? innerException?.Message, innerException)
+        {
+            this.UserMessage = userMessage;
+        }
+    }
+
 }

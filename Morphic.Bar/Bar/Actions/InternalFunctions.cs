@@ -99,38 +99,16 @@ namespace Morphic.Bar.Bar.Actions
             App.Current.Logger.LogDebug($"Invoking built-in function '{functionName}'");
 
             Task<bool> result;
-            try
+
+            if (this.all.TryGetValue(functionName.ToLowerInvariant(),
+                out InternalFunctionAttribute? functionAttribute))
             {
-                if (this.all.TryGetValue(functionName.ToLowerInvariant(),
-                    out InternalFunctionAttribute? functionAttribute))
-                {
-                    try
-                    {
-                        FunctionArgs args = new FunctionArgs(functionAttribute, functionArgs);
-                        result = functionAttribute.Function(args);
-                    }
-                    catch (Exception e) when (!(e is FunctionException || e is OutOfMemoryException))
-                    {
-                        throw new FunctionException(e.Message, e);
-                    }
-                }
-                else
-                {
-                    throw new FunctionException($"No internal function found for '{functionName}");
-                }
+                FunctionArgs args = new FunctionArgs(functionAttribute, functionArgs);
+                result = functionAttribute.Function(args);
             }
-            catch (FunctionException e)
+            else
             {
-                App.Current.Logger.LogWarning(e,
-                    $"InternalFunction error calling {functionName}({string.Join(", ", functionArgs)})");
-
-                if (e.UserMessage != null)
-                {
-                    MessageBox.Show($"There was a problem performing the '{functionName}' action:\n\n{e.UserMessage}",
-                        "Morphic Community Bar", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                }
-
-                result = Task.FromResult(false);
+                throw new ActionException($"No internal function found for '{functionName}");
             }
 
             return result;
@@ -169,7 +147,7 @@ namespace Morphic.Bar.Bar.Actions
         /// Checks a given arguments dictionary for require values, and adding the value for those that are missing.
         /// </summary>
         /// <param name="arguments">The arguments (gets modified).</param>
-        /// <exception cref="FunctionException"></exception>
+        /// <exception cref="ActionException"></exception>
         public void CheckRequiredArguments(Dictionary<string, string> arguments)
         {
             foreach (string required in this.RequiredArguments)
@@ -182,7 +160,7 @@ namespace Morphic.Bar.Bar.Actions
                     string? defaultValue = split.Length > 1 ? split[1] : null;
                     if (defaultValue == null)
                     {
-                        throw new FunctionException(
+                        throw new ActionException(
                             $"Internal function {this.FunctionName} invoked without parameter {name}");
                     }
 
@@ -226,32 +204,6 @@ namespace Morphic.Bar.Bar.Actions
             functionAttribute.CheckRequiredArguments(this.Arguments);
         }
 
-    }
-
-    /// <summary>
-    /// Exception that gets thrown by internal functions.
-    /// </summary>
-    public class FunctionException : ApplicationException
-    {
-        /// <summary>
-        /// The message displayed to the user. null to not display a message.
-        /// </summary>
-        public string? UserMessage { get; set; }
-
-        public FunctionException(string? userMessage)
-            : this(userMessage, userMessage, null)
-        {
-        }
-        public FunctionException(string? userMessage, Exception innerException)
-            : this(userMessage, userMessage, innerException)
-        {
-        }
-
-        public FunctionException(string? userMessage, string? internalMessage = null, Exception? innerException = null)
-            : base(internalMessage ?? userMessage ?? innerException?.Message, innerException)
-        {
-            this.UserMessage = userMessage;
-        }
     }
 
 }
