@@ -1,0 +1,22 @@
+﻿<Application x:Class="Morphic.Bar.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:bar="clr-namespace:Morphic.Bar"
+             mc:Ignorable="d"
+             ShutdownMode="OnExplicitShutdown"
+             >
+    <Application.Resources>
+        <ContextMenu x:Key="MorphicMenu" Loaded="MorphicMenu_Loaded" Closed="MorphicMenu_Closed">
+            <MenuItem Header="Show Bar" FontWeight="Bold" Click="MenuItem_Show" Tag="tray"  />
+            <MenuItem Header="Hide Bar" Click="MenuItem_Hide" Tag="bar" />
+            <MenuItem Header="Test bars" Visibility="Collapsed" Initialized="MenuItem_TestBars_Init"/>
+            <MenuItem Header="About" Click="MenuItem_About" />
+            <Separator/>
+            <MenuItem Header="Always start" IsCheckable="True" Initialized="MenuItem_AutoRun_Init" Checked="MenuItem_AutoRun" Unchecked="MenuItem_AutoRun" />
+            <MenuItem Header="Logout" Click="MenuItem_Signout" Loaded="MenuItem_Signout_Loaded" />
+            <MenuItem Header="Quit" Click="MenuItem_Quit" />
+        </ContextMenu>
+    </Application.Resources>
+</Application>

@@ -1,0 +1,48 @@
+{
+  id: "testbar-all-kinds",
+  items: [
+    {
+      kind: "link",
+      is_primary: true,
+      configuration: {
+        tooltipHeader: "Web link",
+        tooltip: "kind = 'link'",
+        label: "Google",
+        image_url: "google-brands",
+        url: "https://google.co.uk/"
+      }
+    },
+    {
+      kind: "link",
+      is_primary: true,
+      configuration: {
+        tooltipHeader: "Web link (no image specified)",
+        tooltip: "kind = 'link'",
+        label: "Wikipedia",
+        image_url: "",
+        url: "https://en.wikipedia.org/"
+      }
+    },
+
+    {
+      kind: "application",
+      is_primary: true,
+      configuration: {
+        tooltipHeader: "Application",
+        tooltip: "kind = 'application'",
+        label: "Notepad",
+        exe: "notepad.exe",
+      }
+    },
+
+    {
+      kind: "action",
+      is_primary: true,
+      configuration: {
+        identifier: "volume",
+        label: "Volume"
+      }
+    },
+
+  ]
+}

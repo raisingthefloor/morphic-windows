@@ -75,19 +75,7 @@ namespace Morphic.Windows.Native
             IntPtr hwnd = windowHandle ?? this.lastWindow;
             await Task.Run(() =>
             {
-                if (hwnd != IntPtr.Zero)
-                {
-                    // Activate the window, if it's not already.
-                    IntPtr active = WindowsApi.GetForegroundWindow();
-                    if (active != hwnd)
-                    {
-                        this.gotActiveWindow.Reset();
-                        WindowsApi.SetForegroundWindow(hwnd);
-
-                        // Wait for it to be activated.
-                        this.gotActiveWindow.WaitOne(3000);
-                    }
-                }
+                this.ActivateWindow(hwnd);
 
                 // Copy the selected text to clipboard
                 this.gotClipboard.Reset();
@@ -98,6 +86,39 @@ namespace Morphic.Windows.Native
             });
 
             return;
+        }
+
+        /// <summary>
+        /// Activates the window that was active before this application.
+        /// </summary>
+        /// <returns></returns>
+        public Task ActivateLastActiveWindow()
+        {
+            return Task.Run(() =>
+            {
+                this.ActivateWindow(this.lastWindow);
+            });
+        }
+
+        /// <summary>
+        /// Activates a window, does not return until it is activated.
+        /// </summary>
+        /// <param name="hwnd">The handle of the window to activate.</param>
+        private void ActivateWindow(IntPtr hwnd)
+        {
+            if (hwnd != IntPtr.Zero)
+            {
+                // Activate the window, if it's not already.
+                IntPtr active = WindowsApi.GetForegroundWindow();
+                if (active != hwnd)
+                {
+                    this.gotActiveWindow.Reset();
+                    WindowsApi.SetForegroundWindow(hwnd);
+
+                    // Wait for it to be activated.
+                    this.gotActiveWindow.WaitOne(3000);
+                }
+            }
         }
 
         /// <summary>
