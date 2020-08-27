@@ -180,6 +180,8 @@ stages:
           - download: current
             artifact: x64-installer
           - download: current
+            artifact: x64-community-installer
+          - download: current
             artifact: build-version
           - task: Bash@3
             displayName: "upload MSI to s3"
@@ -224,6 +226,9 @@ stages:
                 LOCAL_APPCAST_SOURCE="${AGENT_BUILDDIRECTORY}/${INSTALLER_NAME_BASE}-v${VERSION}.appcast.xml"
                 S3_MSI_OBJECT_NAME="${S3_OBJECT_PREFIX}/${INSTALLER_NAME_BASE}-v${VERSION}.msi"
                 S3_APPCAST_OBJECT_NAME="${S3_OBJECT_PREFIX}/${INSTALLER_NAME_BASE}-v${VERSION}.appcast.xml"
+
+                LOCAL_COMMUNITY_MSI="${AGENT_BUILDDIRECTORY}/x64-community-installer/MorphicCommunitySetup.msi"
+                COMMUNITY_S3_TARGET="${S3_OBJECT_PREFIX}/MorphicCommunitySetup-v${VERSION}.msi"
                 
                 cat > "${LOCAL_APPCAST_SOURCE}" <<EOF
                 <?xml version="1.0" encoding="utf-8"?>
@@ -239,9 +244,4 @@ stages:
                 ls -al ${AGENT_BUILDDIRECTORY}
                 aws s3 cp $EXTRA_ARGS "${LOCAL_MSI_SOURCE}" "s3://${BUCKET}/${S3_MSI_OBJECT_NAME}"
                 aws s3 cp $EXTRA_ARGS "${LOCAL_APPCAST_SOURCE}" "s3://${BUCKET}/${S3_APPCAST_OBJECT_NAME}"
-
-                # if [[ "${BRANCH_NAME}" == "master" ]]]]; then
-                #   # upload to non-versioned paths. For now. This may go away.
-                #   aws s3 cp $EXTRA_ARGS "s3://${BUCKET}/${S3_MSI_OBJECT_NAME}" "s3://${BUCKET}/${S3_OBJECT_PREFIX}/${INSTALLER_NAME_BASE}.msi"
-                #   aws s3 cp $EXTRA_ARGS "s3://${BUCKET}/${S3_APPCAST_OBJECT_NAME}" "s3://${BUCKET}/${S3_OBJECT_PREFIX}/${INSTALLER_NAME_BASE}.appcast.xml"
-                # fi
+                aws s3 cp $EXTRA_ARGS "${LOCAL_COMMUNITY_MSI}" "s3://${BUCKET}/${COMMUNITY_S3_TARGET}"
