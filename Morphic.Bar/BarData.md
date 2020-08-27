@@ -177,6 +177,7 @@ Opens a web page.
 /** @extends ButtonItem */
 LinkButton = {
   kind: "link",
+  /** @mixes LinkAction */
   configuration: {
     url: "https://example.com"
   }
@@ -194,7 +195,21 @@ ApplicationButton = {
   /** @mixes ApplicationAction */
   configuration: {
     // Executable name (or full path). Full path is discovered via `App Paths` registry or the PATH environment variable.
-    exe: "notepad.exe"
+    exe: "notepad.exe",
+  }
+}
+```
+
+Or, run a default application. Use the `default` field to identify an entry in [`default-apps.json5`](#default-appsjson5).
+
+```js
+/** @extends ButtonItem */
+ApplicationButton = {
+  kind: "application",
+  /** @mixes ApplicationAction */
+  configuration: {
+    // The key to lookup in default-apps.json5.
+    default: "email",
   }
 }
 ```
@@ -216,6 +231,23 @@ InternalButton = {
   }
 }
 ```
+
+### `kind = "shellExec"`
+
+Executes a command via the windows shell (similar to the `start` command or the run dialog box).
+
+```js
+/** @extends ButtonItem */
+ShellExecButton = {
+  kind: "shellExec",
+  /** @mixes ApplicationAction */
+  configuration: {
+    // The command
+    default: "ms-settings:",
+  }
+}
+```
+
 
 ### `kind = "action"`
 
@@ -258,14 +290,14 @@ Displays multiple buttons in a single item. Used by the settings items.
 
 ```js
 /** @extends BarItem */
-MultiButtonItem {
+MultiButtonItem = {
   widget: "multi",
   configuration: {
     buttons: {
       // First button
       button1: {
         // Display text
-        label: "day"
+        label: "day",
         // A value that replaces "{button}" in any action payload.
         value: "b1"
       },
@@ -281,7 +313,7 @@ MultiButtonItem {
 
 Example:
 
-```js
+```json5
   {
     // Pass either ^c or ^v to the `sendKeys` internal function.
     kind: "internal",
@@ -303,7 +335,7 @@ Example:
         }
       }
     }
-  },
+  }
 ```
 
 
@@ -386,6 +418,33 @@ actions.json5 = {
     }
   }
 }
+```
+
+## default-apps.json5
+
+A lookup of application types and the action to perform to start the default one, as configured on the client.
+In most cases, this will map directly to the special protocol (like `mailto:`, `ms-settings:`) which gets invoked via the shell.
+
+```js
+
+DefaultApps = {
+  defaults: {
+    key: {Action},
+
+    // Default email client
+    email: {
+      // The kind of action ("application", "shellExec", "internal", "link", ...)
+      kind: "shellExec", // optional (default: "shellExec")
+      run: "mailto:"
+    },
+    // Default web browser
+    browser: {
+      run: "http:"
+    }
+  }
+}
+
+
 ```
 
 ## Cross-platform

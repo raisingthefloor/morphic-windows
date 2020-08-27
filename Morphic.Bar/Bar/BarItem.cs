@@ -178,6 +178,8 @@ namespace Morphic.Bar.Bar
             this.Theme.InferStateThemes();
 
             this.IsPrimaryOriginal = this.IsPrimary;
+
+            this.Action.Deserialized();
         }
     }
 

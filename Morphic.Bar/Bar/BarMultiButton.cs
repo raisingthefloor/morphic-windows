@@ -12,6 +12,7 @@
 namespace Morphic.Bar.Bar
 {
     using System.Collections.Generic;
+    using System.Windows.Media;
     using Actions;
     using Newtonsoft.Json;
     using UI.BarControls;
@@ -23,6 +24,11 @@ namespace Morphic.Bar.Bar
     [BarControl(typeof(MultiButtonBarControl))]
     public class BarMultiButton : BarItem
     {
+        public BarMultiButton()
+        {
+            this.Color = Color.FromRgb(0, 129, 69);
+        }
+
         [JsonProperty("configuration.buttons")]
         public Dictionary<string, ButtonInfo> Buttons { get; set; } = new Dictionary<string, ButtonInfo>();
 
