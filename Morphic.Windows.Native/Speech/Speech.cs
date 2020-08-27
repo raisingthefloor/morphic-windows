@@ -64,11 +64,12 @@ namespace Morphic.Windows.Native
             string script =             
                 "Add-Type -AssemblyName System.speech;"
                 + "$speech = New-Object System.Speech.Synthesis.SpeechSynthesizer;"
-                + "$semaphor = [System.Threading.EventWaitHandle]::OpenExisting(\"morphic-speech\");"
+                + "$semaphore = [System.Threading.EventWaitHandle]::OpenExisting(\"morphic-speech\");"
+                + "$speech.SetOutputToDefaultAudioDevice();"
                 + "$speech.SpeakAsync($Env:MORPHIC_SPEECH);"
                 + "while($speech.State -ne [System.Speech.Synthesis.SynthesizerState]::Ready)"
                 + "{"
-                + "    if ($semaphor.WaitOne(200)) {"
+                + "    if ($semaphore.WaitOne(200)) {"
                 + "        if ($speech.State -eq [System.Speech.Synthesis.SynthesizerState]::Paused) {"
                 + "            $speech.Resume();"
                 + "        } else {"
@@ -76,7 +77,7 @@ namespace Morphic.Windows.Native
                 + "        }"
                 + "    }"
                 + "};";
-            
+
             Process process = Process.Start(new ProcessStartInfo()
             {
                 FileName = "powershell.exe",
@@ -86,8 +87,8 @@ namespace Morphic.Windows.Native
                 },
                 Environment = { {"MORPHIC_SPEECH", text} },
                 CreateNoWindow = true,
-            });
-            
+            })!;
+
             this.cancellation = new CancellationTokenSource();
             TaskCompletionSource<bool> task = new TaskCompletionSource<bool>();
             if (process == null)

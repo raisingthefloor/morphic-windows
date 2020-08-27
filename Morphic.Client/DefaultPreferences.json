@@ -22,7 +22,7 @@
       },
       {
         "type": "control",
-        "feature": "contrast"
+        "feature": "nightmode"
       }
     ]
   }

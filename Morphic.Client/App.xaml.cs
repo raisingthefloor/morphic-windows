@@ -56,6 +56,8 @@ using Morphic.Settings.Files;
 
 namespace Morphic.Client
 {
+    using System.Diagnostics;
+    using Microsoft.Win32;
 
     public class AppMain
     {
@@ -226,6 +228,56 @@ namespace Morphic.Client
             task.ContinueWith(SessionOpened, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
+        /// <summary>
+        /// Makes the application automatically start at login.
+        /// </summary>
+        /// <param name="itemIsChecked"></param>
+        private bool ConfigureAutoRun(bool? newValue = null)
+        {
+            bool enabled;
+            using RegistryKey morphicKey =
+                Registry.CurrentUser.CreateSubKey(@"Software\Raising the Floor\Morphic")!;
+            using RegistryKey runKey =
+                Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run")!;
+
+            if (newValue == null)
+            {
+                // Get the configured value
+                object value = morphicKey.GetValue("AutoRun");
+                if (value == null)
+                {
+                    // This might be the first time running, enable auto-run by default.
+                    enabled = true;
+                }
+                else
+                {
+                    // Respect the system setting (it was probably removed on purpose).
+                    enabled = runKey.GetValue("Morphic") != null;
+                }
+            }
+            else
+            {
+                enabled = (bool)newValue;
+            }
+
+            morphicKey.SetValue("AutoRun", enabled ? "1" : "0", RegistryValueKind.String);
+            if (enabled)
+            {
+                string processPath = Process.GetCurrentProcess().MainModule.FileName;
+                // Only add it to the auto-run if running a release.
+                if (!processPath.EndsWith("dotnet.exe"))
+                {
+                    runKey.SetValue("Morphic", processPath);
+                }
+            }
+            else
+            {
+                runKey.DeleteValue("Morphic", false);
+            }
+
+            return enabled;
+        }
+
         private void Session_UserChanged(object? sender, EventArgs e)
         {
             if (logoutItem != null)
@@ -312,7 +364,7 @@ namespace Morphic.Client
         /// </summary>
         private void CreateNotifyIcon()
         {
-            notifyIcon = new System.Windows.Forms.NotifyIcon();
+            notifyIcon = new TrayButton();
             notifyIcon.Click += OnNotifyIconClicked;
             notifyIcon.Icon = Client.Properties.Resources.Icon;
             notifyIcon.Text = "Morphic";
@@ -348,7 +400,7 @@ namespace Morphic.Client
         /// <summary>
         /// The icon in the system tray
         /// </summary>
-        private System.Windows.Forms.NotifyIcon? notifyIcon = null;
+        private TrayButton? notifyIcon = null;
 
         /// <summary>
         /// The main menu shown from the system tray icon
@@ -446,6 +498,22 @@ namespace Morphic.Client
         {
             Countly.RecordEvent("Quit");
             App.Shared.Shutdown();
+        }
+
+        private void AutoRunInit(object? sender, EventArgs e)
+        {
+            if (sender is MenuItem item)
+            {
+                item.IsChecked = this.ConfigureAutoRun();
+            }
+        }
+
+        private void AutoRunToggle(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem item)
+            {
+                this.ConfigureAutoRun(item.IsChecked);
+            };
         }
 
         #endregion
@@ -632,7 +700,7 @@ namespace Morphic.Client
             // Windows doesn't seem to clean up the system tray icon until the user
             // hovers over it after the application closes.  So, we need to make it
             // invisible on app exit ourselves.
-            if (notifyIcon is System.Windows.Forms.NotifyIcon icon)
+            if (notifyIcon is TrayButton icon)
             {
                 icon.Visible = false;
             }

@@ -203,7 +203,5 @@ namespace Morphic.Bar.Bar.Actions
 
             functionAttribute.CheckRequiredArguments(this.Arguments);
         }
-
     }
-
 }

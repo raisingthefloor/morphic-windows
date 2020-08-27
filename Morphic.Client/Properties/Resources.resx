@@ -151,6 +151,27 @@
   <data name="QuickStrip_Contrast_Title" xml:space="preserve">
     <value>High Contrast</value>
   </data>
+  <data name="QuickStrip_NightMode_Off_HelpMessage" xml:space="preserve">
+    <value>Apply color suitable for the daytime.</value>
+  </data>
+  <data name="QuickStrip_NightMode_Off_HelpTitle" xml:space="preserve">
+    <value>Turn Off Night Mode</value>
+  </data>
+  <data name="QuickStrip_NightMode_Off_Title" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="QuickStrip_NightMode_On_HelpMessage" xml:space="preserve">
+    <value>Change the screen coloring to be easier to look at in the night.</value>
+  </data>
+  <data name="QuickStrip_NightMode_On_HelpTitle" xml:space="preserve">
+    <value>Turn On Night Mode</value>
+  </data>
+  <data name="QuickStrip_NightMode_On_Title" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="QuickStrip_NightMode_Title" xml:space="preserve">
+    <value>Night mode</value>
+  </data>
   <data name="QuickStrip_Magnifier_Hide_HelpMessage" xml:space="preserve">
     <value>Stop magnifying part of the screen as you move</value>
   </data>
@@ -185,34 +206,34 @@
     <value>Stop Reading</value>
   </data>
   <data name="QuickStrip_Reader_Title" xml:space="preserve">
-    <value>Read Text</value>
+    <value>Read Selected</value>
   </data>
   <data name="QuickStrip_Resolution_Bigger_HelpMessage" xml:space="preserve">
     <value>Make all the text and icons bigger</value>
   </data>
   <data name="QuickStrip_Resolution_Bigger_HelpTitle" xml:space="preserve">
-    <value>Increase Text Size</value>
+    <value>Increase Screen Zoom</value>
   </data>
   <data name="QuickStrip_Resolution_Bigger_LimitMessage" xml:space="preserve">
     <value>The text and icons are as large as they can be</value>
   </data>
   <data name="QuickStrip_Resolution_Bigger_LimitTitle" xml:space="preserve">
-    <value>Cannot Increase Text Size</value>
+    <value>Cannot Increase Screen Zoom</value>
   </data>
   <data name="QuickStrip_Resolution_Smaller_HelpMessage" xml:space="preserve">
     <value>Make all the text and icons smaller</value>
   </data>
   <data name="QuickStrip_Resolution_Smaller_HelpTitle" xml:space="preserve">
-    <value>Decrease Text Size</value>
+    <value>Decrease Screen Zoom</value>
   </data>
   <data name="QuickStrip_Resolution_Smaller_LimitMessage" xml:space="preserve">
     <value>The text and icons are as small as they can be</value>
   </data>
   <data name="QuickStrip_Resolution_Smaller_LimitTitle" xml:space="preserve">
-    <value>Cannot Decrease Text Size</value>
+    <value>Cannot Decrease Screen Zoom</value>
   </data>
   <data name="QuickStrip_Resolution_Title" xml:space="preserve">
-    <value>Text Size</value>
+    <value>Screen Zoom</value>
   </data>
   <data name="QuickStrip_Volume_Down_HelpMessage" xml:space="preserve">
     <value>Make all the sounds quieter</value>

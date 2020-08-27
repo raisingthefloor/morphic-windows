@@ -40,6 +40,7 @@ using Display = Morphic.Settings.Display;
 
 namespace Morphic.Client.QuickStrip
 {
+    using System.Runtime.InteropServices;
     using System.Windows.Forms;
     using Clipboard = System.Windows.Clipboard;
     using IDataObject = System.Windows.IDataObject;
@@ -347,6 +348,17 @@ namespace Morphic.Client.QuickStrip
                             control.Action += quickStrip.OnContrast;
                             return control;
                         }
+                    case "nightmode":
+                        {
+                            var control = new QuickStripSegmentedButtonControl();
+                            var onHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_NightMode_On_HelpTitle, Properties.Resources.QuickStrip_NightMode_On_HelpMessage);
+                            var offHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_NightMode_Off_HelpTitle, Properties.Resources.QuickStrip_NightMode_Off_HelpMessage);
+                            control.TitleLabel.Content = Properties.Resources.QuickStrip_NightMode_Title;
+                            control.AddButton(Properties.Resources.QuickStrip_NightMode_On_Title, onHelp.Title, onHelp, isPrimary: true);
+                            control.AddButton(Properties.Resources.QuickStrip_NightMode_Off_Title, offHelp.Title, offHelp, isPrimary: false);
+                            control.Action += quickStrip.OnNightMode;
+                            return control;
+                        }
                     default:
                         return null;
                 }
@@ -445,8 +457,18 @@ namespace Morphic.Client.QuickStrip
                     
                     // Store the clipboard
                     IDataObject clipboadData = Clipboard.GetDataObject();
-                    Dictionary<string, object> dataStored = clipboadData.GetFormats()
-                        .ToDictionary(format => format, format => clipboadData.GetData(format, false));
+                    Dictionary<string, object?> dataStored = clipboadData.GetFormats()
+                        .ToDictionary(format => format, format =>
+                        {
+                            try
+                            {
+                                return clipboadData.GetData(format, false);
+                            }
+                            catch (COMException)
+                            {
+                                return null;
+                            }
+                        });
                     Clipboard.Clear();
 
                     // Get the selection
@@ -522,6 +544,20 @@ namespace Morphic.Client.QuickStrip
             {
                 Countly.RecordEvent("Contrast Off");
                 _ = session.Apply(SettingsManager.Keys.WindowsDisplayContrastEnabled, false);
+            }
+        }
+        
+        private void OnNightMode(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
+        {
+            if (e.SelectedIndex == 0)
+            {
+                Countly.RecordEvent("NightMode On");
+                _ = session.Apply(SettingsManager.Keys.WindowsDisplayNightModeEnabled, true);
+            }
+            else if (e.SelectedIndex == 1)
+            {
+                Countly.RecordEvent("NightMode Off");
+                _ = session.Apply(SettingsManager.Keys.WindowsDisplayNightModeEnabled, false);
             }
         }
 
