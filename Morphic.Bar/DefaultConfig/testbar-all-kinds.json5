@@ -36,6 +36,17 @@
     },
 
     {
+      kind: "application",
+      is_primary: true,
+      configuration: {
+        tooltipHeader: "Default Application",
+        tooltip: "kind = 'application', default = 'email'",
+        label: "DefaultEmail",
+        default: "email",
+      }
+    },
+
+    {
       kind: "action",
       is_primary: true,
       configuration: {

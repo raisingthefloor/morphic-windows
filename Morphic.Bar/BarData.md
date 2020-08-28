@@ -141,7 +141,7 @@ BarItem = {
 ```js
 /** @mixes BarItem */
 ButtonItem = {
-  kind: "<link|application|internal|action>",
+  kind: "<link|application|action|internal|shellExec>",
   configuration: {
     // Displayed on the button [REQUIRED]
     label: "Calendar",
@@ -195,7 +195,18 @@ ApplicationButton = {
   /** @mixes ApplicationAction */
   configuration: {
     // Executable name (or full path). Full path is discovered via `App Paths` registry or the PATH environment variable.
+    // To pass arguments, surround the executable with quotes and append the arguments after (or use the args field)
     exe: "notepad.exe",
+    // Arguments to pass to the process
+    args: [ "arg1", "arg2" ],
+    // Extra environment variables
+    env: {
+      name: "value"
+    },
+    // Always start a new instance (otherwise, activate the existing instance if one is found)
+    newInstance: true,
+    // Initial state of the window (not all apps honour this)
+    windowStyle: "normal" // "normal" (default), "maximized", "minimized" or "hidden"
   }
 }
 ```
@@ -251,8 +262,8 @@ ShellExecButton = {
 
 ### `kind = "action"`
 
-This performs a lookup of an object in [`actions.json5`](#actionsjson5), using `configuration.identifier`. The object in `actions.json5`
-will be merged onto this one.
+This performs a lookup of an `action` object in [`presets.json5`](#presetsjson5), using `configuration.identifier`.
+The object in `presets.json5` will be merged onto this one.
 
 This allows for a richer set of data than what the web app provides.
 
@@ -373,12 +384,16 @@ ItemTheme = {
 }
 ```
 
-## actions.json5
+## presets.json5
 
-This file contains additional data for bar items with `kind = "action"`. The value of `BarItem.configuration.identifier` identifies a key in `actions`.
+This file contains additional data for certain bar items. This allows for additional bar information provided by the client.
+A bar item, from the web app, which points to an object in this file will have this object merged onto it.
+
+For bar items with `kind = "action"`, the value of `configuration.identifier` identifies a key in `actions`.
+For bar items with `kind = "application"`, the value of `configuration.default` identifies a key in `defaults`.
 
 ```js
-actions.json5 = {
+presets.json5 = {
   actions: {
     "identifier": {BarItem},
 
@@ -393,7 +408,9 @@ actions.json5 = {
     // Example: invoke an internal function
     "example": {
       kind: "internal",
-      function: "hello"
+      configuration: {
+        function: "hello"
+      }
     },
 
     // Real example
@@ -416,40 +433,24 @@ actions.json5 = {
         }
       }
     }
-  }
-}
-```
-
-## default-apps.json5
-
-A lookup of application types and the action to perform to start the default one, as configured on the client.
-In most cases, this will map directly to the special protocol (like `mailto:`, `ms-settings:`) which gets invoked via the shell.
-
-```js
-
-DefaultApps = {
+  },
+ 
   defaults: {
-    key: {Action},
+    // Same as actions.
+    "identifier": {BarItem},
 
-    // Default email client
-    email: {
-      // The kind of action ("application", "shellExec", "internal", "link", ...)
-      kind: "shellExec", // optional (default: "shellExec")
-      run: "mailto:"
-    },
-    // Default web browser
-    browser: {
-      run: "http:"
+    "email": {
+      configuration: {
+        exe: "mailto:"
+      }
     }
   }
 }
-
-
 ```
 
 ## Cross-platform
 
-All fields in the bar json and `actions.json5` can be suffixed with an OS identifier (`$mac` or `$win`), which will take precedence over the non-suffixed field. This pre-processing would be done on the client.
+All fields in the bar json and `presets.json5` can be suffixed with an OS identifier (`$mac` or `$win`), which will take precedence over the non-suffixed field. This pre-processing would be done on the client.
 
 examples:
 

@@ -12,7 +12,6 @@ namespace Morphic.Bar.UI
 {
     using System.Windows;
     using System;
-    using System.Threading.Tasks;
     using System.Windows.Automation;
     using System.Windows.Controls;
     using System.Windows.Input;

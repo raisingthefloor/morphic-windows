@@ -158,5 +158,22 @@
       kind: "internal",
       func: "screenshot"
     }
+  },
+  defaults: {
+    "calendar": {
+      configuration: {
+        exe: "outlookcal:"
+      }
+    },
+    "email": {
+      configuration: {
+        exe: "mailto:"
+      }
+    },
+    "quick-assist": {
+      configuration: {
+        exe: "ms-quick-assist:"
+      }
+    }
   }
 }

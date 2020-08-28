@@ -19,7 +19,6 @@ namespace Morphic.Bar.UI
     using Morphic.Service;
     using Morphic.Core;
     using Microsoft.Extensions.Logging;
-    using CommandLine;
 
     /// <summary>
     /// Gets the login and password from the user.

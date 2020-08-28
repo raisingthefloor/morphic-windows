@@ -257,7 +257,7 @@ namespace Morphic.Bar.Bar
         {
             JObject jo = JObject.Load(reader);
 
-            jo = this.MergePreset(jo);
+            BarPresets.Default.MergePreset(jo);
 
             // Get the type of item.
             string kindName = jo.SelectToken(this.typeFieldName)?.ToString() ?? this.defaultValue;
@@ -286,26 +286,6 @@ namespace Morphic.Bar.Bar
             }
 
             return target;
-        }
-
-        private JObject MergePreset(JObject jo)
-        {
-            // Merge the predefined action object
-            bool isAction = jo.SelectToken("kind")?.ToString() == "action";
-            if (isAction)
-            {
-                string? actionId = jo.SelectToken("configuration.identifier")?.ToString();
-                if (actionId != null)
-                {
-                    JObject? preset = BarPresets.GetObject(actionId);
-                    if (preset != null)
-                    {
-                        jo.Merge(preset);
-                    }
-                }
-            }
-
-            return jo;
         }
 
         /// <summary>

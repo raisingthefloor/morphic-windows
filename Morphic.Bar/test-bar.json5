@@ -3,6 +3,13 @@
   name: "not the name",
   items: [
     {
+      kind: "application",
+      is_primary: true,
+      configuration: {
+        exe: "notepad.exe"
+      }
+    },
+    {
       kind: "action",
       is_primary: true,
       configuration: {

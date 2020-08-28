@@ -12,6 +12,14 @@ Displays a bar containing buttons, whose items are defined in a web app.
 
 (requires Inno Setup)
 
+## Adding buttons
+
+Simple buttons (web links and most applications) can be defined by the web app. Anything beyond that will need to be
+added to [`DefaultConfig/presets.json5`](DefaultConfig/presets.json5). [More information](BarData.md#actionsjson5).
+
+
+
+
 ## Configuration
 
 See [BarData.md](BarData.md).

@@ -20,7 +20,6 @@ namespace Morphic.Bar.UI
     using System.Windows.Media;
     using Bar;
     using BarControls;
-    using MessageBox = System.Windows.Forms.MessageBox;
 
     /// <summary>
     /// This is the thing that contains bar items.

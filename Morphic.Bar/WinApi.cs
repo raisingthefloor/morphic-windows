@@ -8,7 +8,7 @@
 // You may obtain a copy of the License at
 // https://github.com/GPII/universal/blob/master/LICENSE.txt
 
-namespace Morphic.Bar.UI.AppBarWindow
+namespace Morphic.Bar
 {
     using System;
     using System.Collections.Generic;
@@ -379,6 +379,26 @@ namespace Morphic.Bar.UI.AppBarWindow
         [DllImport("dwmapi.dll")]
         internal static extern int DwmSetWindowAttribute(IntPtr hWnd, int attr, ref int attrValue, int attrSize);
 
+        #endregion
+
+        #region Window management
+
+        public static bool ActivateWindow(IntPtr hwnd)
+        {
+            if (IsIconic(hwnd))
+            {
+                ShowWindow(hwnd, 9);
+            }
+
+            return SetForegroundWindow(hwnd);
+        }
+
+        [DllImport("user32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
+        [DllImport("user32.dll")]
+        private static extern bool IsIconic(IntPtr hWnd);
+        [DllImport("user32.dll")]
+        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
         #endregion
     }
 }
