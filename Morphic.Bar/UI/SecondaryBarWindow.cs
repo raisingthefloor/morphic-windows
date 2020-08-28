@@ -3,6 +3,7 @@ namespace Morphic.Bar.UI
     using System;
     using System.Collections.Generic;
     using System.Windows;
+    using System.Windows.Automation;
     using System.Windows.Controls;
     using AppBarWindow;
     using Bar;
@@ -32,11 +33,14 @@ namespace Morphic.Bar.UI
             this.primaryBarWindow = primaryBarWindow;
             base.Scale = this.primaryBarWindow.Scale;
 
+            this.SetValue(AutomationProperties.NameProperty,
+                this.GetValue(AutomationProperties.NameProperty) + " Secondary");
+
             this.primaryBarWindow.Loaded += (sender, args) =>
             {
                 this.Owner = this.primaryBarWindow;
             };
-            
+
             this.primaryBarWindow.ContentRendered += (sender, args) => this.UpdatePosition();
             this.primaryBarWindow.LocationChanged += (sender, args) => this.UpdatePosition();
             this.primaryBarWindow.SizeChanged += (sender, args) => this.UpdatePosition();

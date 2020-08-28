@@ -400,12 +400,29 @@ namespace Morphic.Bar.UI
         {
             switch (e.Key)
             {
+                // ctrl+tab: move between bars
                 case Key.Tab when (e.KeyboardDevice.Modifiers & ModifierKeys.Control) == ModifierKeys.Control:
                     this.OtherWindow?.MakeActive();
                     e.Handled = true;
                     break;
+                // Escape: Close secondary (if active)
                 case Key.Escape:
                     this.IsExpanded = false;
+                    e.Handled = true;
+
+                    goto case Key.Home;
+
+                // Home: Move to first item
+                case Key.Home:
+
+                    BarWindow? primary = this is PrimaryBarWindow ? this : this.OtherWindow;
+                    primary?.MakeActive();
+
+                    if (Keyboard.FocusedElement is UIElement focused)
+                    {
+                        focused.MoveFocus(new TraversalRequest(FocusNavigationDirection.First));
+                    }
+
                     e.Handled = true;
                     break;
             }

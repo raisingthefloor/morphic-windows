@@ -11,11 +11,12 @@
         args: {
           direction: "{button}"
         },
+        type: "additive",
         buttons: {
           out: {
             label: "-"
           },
-          up: {
+          in: {
             label: "+"
           }
         }

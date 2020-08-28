@@ -94,7 +94,7 @@ namespace Morphic.Windows.Native
         /// <returns></returns>
         public Task ActivateLastActiveWindow()
         {
-            return Task.Run(() =>
+            return Task.Delay(500).ContinueWith(t =>
             {
                 this.ActivateWindow(this.lastWindow);
             });

@@ -48,6 +48,12 @@ namespace Morphic.Bar.Bar
         public string? Name { get; set; }
 
         /// <summary>
+        /// Title of the bar (the window caption)
+        /// </summary>
+        [JsonProperty("title")]
+        public string? Title { get; set; } = "Morphic Community Bar";
+
+        /// <summary>
         /// Size of everything.
         /// </summary>
         [JsonProperty("scale")]

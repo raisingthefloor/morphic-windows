@@ -43,9 +43,9 @@ namespace Morphic.Bar.UI.AppBarWindow
             this.windowMovement.Ready += (sender, args) =>
             {
                 // Remove it from alt+tab
-                int style = (int) WinApi.GetWindowLong(this.WindowHandle, WinApi.GWL_EXSTYLE);
-                style |= WinApi.WS_EX_TOOLWINDOW;
-                WinApi.SetWindowLong(this.WindowHandle, WinApi.GWL_EXSTYLE, (IntPtr) style);
+                // int style = (int) WinApi.GetWindowLong(this.WindowHandle, WinApi.GWL_EXSTYLE);
+                // style |= WinApi.WS_EX_TOOLWINDOW;
+                // WinApi.SetWindowLong(this.WindowHandle, WinApi.GWL_EXSTYLE, (IntPtr) style);
             };
         }
 

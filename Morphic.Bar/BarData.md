@@ -304,12 +304,17 @@ Displays multiple buttons in a single item. Used by the settings items.
 MultiButtonItem = {
   widget: "multi",
   configuration: {
+    // How the buttons are interracted with via the keyboard: "buttons", "additive", "toggle", "auto" (default)
+    // "additive" and "toggle" cause the bar item to behave as a single control (for keyboard navigation), and
+    // the button pair is accessed via -/+ keys.
+    // For "buttons", each button is a tab stop. "auto" (default) will detect, based on the button names.
+    type: "auto",
     buttons: {
       // First button
       button1: {
         // Display text
         label: "day",
-        // A value that replaces "{button}" in any action payload.
+        // A value that replaces "{button}" in any action payload (eg, `exe: "app.exe {button}"`).
         value: "b1"
       },
       // next button

@@ -6,7 +6,8 @@
       kind: "application",
       is_primary: true,
       configuration: {
-        exe: "notepad.exe"
+        exe: "notepad.exe",
+        label: "notepad"
       }
     },
     {

@@ -8,7 +8,7 @@
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance ui:BarWindow, IsDesignTimeCreatable=True}"
         
-        Title="{Binding Name}" Width="100" Height="100" 
+        Title="{Binding Bar.Title}" Width="100" Height="100"
         WindowStyle="None" ResizeMode="NoResize" SizeToContent="Manual" Topmost="True" ShowInTaskbar="False"
         Background="{DynamicResource Background}"
         BorderBrush="{DynamicResource BorderBrush}"
@@ -17,8 +17,8 @@
         ContextMenu="{StaticResource MorphicMenu}"
         AllowsTransparency="True"
         Opacity="0"
-        AutomationProperties.Name="Morphic Community Bar"
-        PreviewKeyDown="BarWindow_OnPreviewKeyDown"
+
+        AutomationProperties.Name="Morphic Bar"
         >
 
     <Window.Resources>
@@ -36,6 +36,8 @@
                    HorizontalAlignment="Left" VerticalAlignment="Top"
                    Margin="{Binding Bar.Sizes.WindowPadding}"
                    ItemSpacing="{Binding Bar.Sizes.ItemSpacing}"
+                   PreviewKeyDown="BarWindow_OnPreviewKeyDown"
+                   FocusManager.IsFocusScope="True"
     >
         <ui:BarControl.Resources>
             <ui:Ternary x:Key="NullCollapsed" False="Collapsed" True="Visible" />
