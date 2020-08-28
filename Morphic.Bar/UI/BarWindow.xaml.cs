@@ -103,21 +103,15 @@ namespace Morphic.Bar.UI
 
             this.Loaded += (sender, args) => this.BarControl.LoadBar(this.Bar, isPrimary);
 
-            // Add a secret control as the last item. This is to make the expander window become a tab stop.
-            this.BarControl.BarLoaded += (sender, args) =>
+            this.BarControl.EndTab += (sender, args) =>
             {
-                TextBlock tb = new TextBlock()
+                if (this.OtherWindow is SecondaryBarWindow)
                 {
-                    Focusable = true,
-                    Width = 1,
-                    Height = 1,
-                };
-                tb.GotFocus += (o, a) =>
-                {
-                    this.ExpanderWindow?.Activate();
-                };
-                this.BarControl.Children.Add(tb);
+                    this.IsExpanded = true;
+                }
+                this.OtherWindow?.Activate();
             };
+
         }
 
         private void OnSizeChanged(object sender, SizeChangedEventArgs args)
