@@ -150,14 +150,7 @@ namespace Morphic.Bar.UI
         {
             this.SetBorder();
 
-            Size size = this.GetGoodSize();
-
-            if (this is PrimaryBarWindow)
-            {
-                size = this.Rescale(size, true);
-            }
-
-            this.SetInitialPosition(size);
+            this.SetInitialPosition();
 
             this.BarLoaded?.Invoke(this, new EventArgs());
 
@@ -170,7 +163,7 @@ namespace Morphic.Bar.UI
         /// <param name="size"></param>
         /// <param name="apply"></param>
         /// <returns></returns>
-        private Size Rescale(Size size, bool apply = false)
+        protected Size Rescale(Size size, bool apply = false)
         {
             Rect workArea = this.GetWorkArea();
             bool retry;
@@ -219,7 +212,7 @@ namespace Morphic.Bar.UI
         /// <summary>
         /// Sets the initial position and size.
         /// </summary>
-        protected virtual void SetInitialPosition(Size size)
+        protected virtual void SetInitialPosition()
         {
         }
 

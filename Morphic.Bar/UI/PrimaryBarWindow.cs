@@ -7,6 +7,7 @@ namespace Morphic.Bar.UI
     using Windows.Native;
     using AppBarWindow;
     using Bar;
+    using Microsoft.Win32;
 
     public sealed class PrimaryBarWindow : BarWindow
     {
@@ -69,6 +70,14 @@ namespace Morphic.Bar.UI
                 SelectionReader.Default.Initialise(nativeWindow.Handle);
                 hwndSource?.AddHook(SelectionReader.Default.WindowProc);
             };
+
+            SystemEvents.DisplaySettingsChanged += this.SystemEventsOnDisplaySettingsChanged;
+            this.Closed += (sender, args) => SystemEvents.DisplaySettingsChanged -= this.SystemEventsOnDisplaySettingsChanged;
+        }
+
+        private void SystemEventsOnDisplaySettingsChanged(object? sender, EventArgs e)
+        {
+            this.SetInitialPosition();
         }
 
         private void OnClosed(object? sender, EventArgs e)
@@ -96,8 +105,11 @@ namespace Morphic.Bar.UI
             }
         }
 
-        protected override void SetInitialPosition(Size size)
+        protected override void SetInitialPosition()
         {
+            Size size = this.GetGoodSize();
+            size = this.Rescale(size, true);
+
             this.AppBar.ApplyAppBar(this.Bar.Position.DockEdge);
             if (this.Bar.Position.DockEdge == Edge.None)
             {
