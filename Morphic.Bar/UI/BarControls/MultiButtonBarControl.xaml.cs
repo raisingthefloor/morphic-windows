@@ -13,9 +13,13 @@ namespace Morphic.Bar.UI.BarControls
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.Linq;
+    using System.Threading.Tasks;
     using System.Windows;
+    using System.Windows.Automation.Peers;
+    using System.Windows.Automation.Provider;
     using System.Windows.Controls;
     using System.Windows.Controls.Primitives;
+    using System.Windows.Input;
     using Bar;
     using Bar.Actions;
 
@@ -30,6 +34,7 @@ namespace Morphic.Bar.UI.BarControls
 
         public MultiButtonBarControl(BarMultiButton barItem) : base(barItem)
         {
+            this.ApplyControlTheme(this);
             this.Buttons = this.BarItem.Buttons.Values.Select(b => new ButtonWrapper(this, b)).ToList();
 
             this.InitializeComponent();
@@ -52,6 +57,64 @@ namespace Morphic.Bar.UI.BarControls
                     }
                 }
             };
+
+            // Set the navigation modes, depending on its type.
+            bool isPair = (this.BarItem.Type == MultiButtonType.Toggle
+                || this.BarItem.Type == MultiButtonType.Additive);
+
+            // For keyboard navigation, paired buttons act as a single control
+            this.Focusable = isPair;
+            this.Panel.SetValue(FocusManager.IsFocusScopeProperty, isPair);
+            this.Panel.SetValue(KeyboardNavigation.DirectionalNavigationProperty,
+                isPair ? KeyboardNavigationMode.None : KeyboardNavigationMode.Continue);
+            this.Panel.SetValue(KeyboardNavigation.TabNavigationProperty,
+                isPair ? KeyboardNavigationMode.None : KeyboardNavigationMode.Continue);
+
+            if (isPair)
+            {
+                this.KeyDown += this.OnKeyDown_ButtonPair;
+            }
+
+        }
+
+        /// <summary>
+        /// Activate one of the buttons of a pair, if -/+ is pressed.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private async void OnKeyDown_ButtonPair(object sender, KeyEventArgs e)
+        {
+            int clickIndex = -1;
+
+            switch (e.Key)
+            {
+                case Key.Subtract:
+                case Key.OemMinus:
+                    clickIndex = 0;
+                    break;
+                case Key.Add:
+                case Key.OemPlus:
+                    clickIndex = 1;
+                    break;
+            }
+
+            if (clickIndex > -1)
+            {
+                if (this.Buttons[clickIndex].Control is Button button)
+                {
+                    // Make it look like it's being clicked.
+                    this.ControlTheme[button].IsMouseDown = true;
+                    this.UpdateTheme(button);
+
+                    // Click it
+                    ButtonAutomationPeer peer = new ButtonAutomationPeer(button);
+                    ((IInvokeProvider?)peer.GetPattern(PatternInterface.Invoke))?.Invoke();
+
+                    await Task.Delay(250);
+                    this.ControlTheme[button].IsMouseDown = false;
+                    this.UpdateTheme(button);
+                }
+            }
         }
 
         public new BarMultiButton BarItem => (BarMultiButton) base.BarItem;

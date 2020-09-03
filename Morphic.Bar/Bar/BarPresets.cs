@@ -1,4 +1,4 @@
-// BarActions.cs: Deserialised actions.json5.
+// BarActions.cs: Deserialised presets.json5.
 //
 // Copyright 2020 Raising the Floor - International
 //
@@ -16,15 +16,18 @@ namespace Morphic.Bar.Bar
     using Newtonsoft.Json.Linq;
 
     /// <summary>
-    /// Deserialised actions.json5.
+    /// Deserialised presets.json5.
     /// </summary>
     [JsonObject(MemberSerialization.OptIn)]
     public class BarPresets : IDeserializable
     {
-        private static readonly BarPresets Default = BarPresets.FromFile(AppPaths.GetConfigFile("actions.json5", true));
+        public static readonly BarPresets Default = BarPresets.FromFile(AppPaths.GetConfigFile("presets.json5", true));
 
         [JsonProperty("actions")]
-        public Dictionary<string, JObject> Actions { get; set; } = new Dictionary<string, JObject>();
+        public JsonDict Actions { get; set; } = new JsonDict();
+
+        [JsonProperty("defaults")]
+        public JsonDict Defaults { get; set; } = new JsonDict();
 
         public static BarPresets FromFile(string file)
         {
@@ -37,7 +40,7 @@ namespace Morphic.Bar.Bar
         /// </summary>
         /// <param name="identifier"></param>
         /// <returns></returns>
-        public static JObject? GetObject(string identifier)
+        public static JObject? GetActionObject(string identifier)
         {
             BarPresets.Default.Actions.TryGetValue(identifier, out JObject? jo);
             return (JObject?)jo?.DeepClone();
@@ -45,13 +48,54 @@ namespace Morphic.Bar.Bar
 
         public void Deserialized()
         {
-            foreach (var (key, action) in this.Actions)
-            {
-                // if (string.IsNullOrEmpty(action.Id))
-                // {
-                //     action.Id = key;
-                // }
-            }
         }
+
+        /// <summary>
+        /// Merges a preset into a given JSON object.
+        ///
+        /// For bar items that are of kinds "action" or "application", respectively the "identifier" or "default" fields
+        /// of their configuration block are used as a lookup in the appropriate dictionary in this class.
+        ///
+        /// The object found in the lookup is then merged over the original.
+        ///
+        /// This is performed during deserialisation, just before the class instantiation so they are unaware of
+        /// such hackery.
+        /// </summary>
+        /// <param name="jo">The BarItem JSON object.</param>
+        /// <returns></returns>
+        public JObject MergePreset(JObject jo)
+        {
+            string? kind = jo.SelectToken("kind")?.ToString();
+            bool isAction = kind == "action";
+            bool isApplication = kind == "application";
+
+            string? key = null;
+            if (isAction || isApplication)
+            {
+                string? keyField = isAction ? "configuration.identifier" : "configuration.default";
+                key = jo.SelectToken(keyField)?.ToString();
+            }
+
+            if (!string.IsNullOrEmpty(key))
+            {
+                JsonDict dict = isAction ? this.Actions : this.Defaults;
+
+                dict.TryGetValue(key, out JObject? preset);
+
+                if (preset != null)
+                {
+                    jo.Merge(preset.DeepClone());
+                }
+            }
+
+            return jo;
+        }
+    }
+
+    /// <summary>
+    /// A dictionary of JSON objects.
+    /// </summary>
+    public class JsonDict : Dictionary<string, JObject>
+    {
     }
 }

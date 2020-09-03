@@ -282,7 +282,7 @@ namespace Morphic.Bar
         {
             bool enabled;
             using RegistryKey morphicKey =
-                Registry.CurrentUser.CreateSubKey(@"Software\Raising the Floor\Morphic\Bar")!;
+                Registry.CurrentUser.CreateSubKey(AppPaths.RegistryPath)!;
             using RegistryKey runKey =
                 Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run")!;
 

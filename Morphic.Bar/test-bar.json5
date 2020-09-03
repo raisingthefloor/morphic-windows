@@ -3,6 +3,14 @@
   name: "not the name",
   items: [
     {
+      kind: "application",
+      is_primary: true,
+      configuration: {
+        exe: "notepad.exe",
+        label: "notepad"
+      }
+    },
+    {
       kind: "action",
       is_primary: true,
       configuration: {

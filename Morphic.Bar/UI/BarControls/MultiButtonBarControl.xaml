@@ -9,8 +9,13 @@
                          MinHeight="10"
                          MaxHeight="150"
                          d:DataContext="{d:DesignInstance barControls:MultiButtonBarControl, IsDesignTimeCreatable=True}"
+                         Focusable="True"
+                         IsTabStop="True"
+
                          >
     <barControls:BarItemControl.Resources>
+        <SolidColorBrush x:Key="BorderColor" Color="{Binding ActiveTheme.BorderColor, FallbackValue=Transparent}"/>
+        <SolidColorBrush x:Key="BorderOuterColor" Color="{Binding ActiveTheme.BorderOuterColor, FallbackValue=Transparent}"/>
 
         <!-- Make the button style-less -->
         <Style BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" TargetType="{x:Type Button}">
@@ -28,65 +33,82 @@
         <SolidColorBrush Color="{Binding Bar.BarTheme.TextColor}"></SolidColorBrush>
     </barControls:BarItemControl.Foreground>
 
-    <StackPanel HorizontalAlignment="Stretch">
-        <!-- The text label -->
-        <ui:TextBlockLimited Text="{Binding BarItem.Text}"
-                             TextWrapping="Wrap"
-                             TextAlignment="Center"
-                             MaxLines="{Binding Bar.Sizes.ButtonTextLines}"
-                             Padding="{Binding Bar.Sizes.ControlLabelPadding}"/>
+    <Grid>
+        <StackPanel HorizontalAlignment="Stretch"
+                    Name="Panel">
 
-        <!-- The buttons -->
-        <ItemsControl Name="ButtonContainer"
-                      ItemsSource="{Binding Buttons}"
-                      FontSize="{Binding Bar.Sizes.ControlItemFontSize}"
-                      Height="{Binding Bar.Sizes.ControlItemHeight}">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <UniformGrid Rows="1" />
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <Button Name="ControlButton"
-                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                            VerticalAlignment="Stretch" VerticalContentAlignment="Center"
-                            Margin="1"
-                            ToolTip="{Binding Button.Tooltip}"
-                            AutomationProperties.Name="{Binding Button.UiName}"
-                            Click="Button_OnClick"
-                            >
-                        <Button.Foreground>
-                            <SolidColorBrush Color="{Binding ActiveTheme.TextColor}" />
-                        </Button.Foreground>
+            <!-- The text label -->
+            <ui:TextBlockLimited Text="{Binding BarItem.Text}"
+                                 TextWrapping="Wrap"
+                                 TextAlignment="Center"
+                                 MaxLines="{Binding Bar.Sizes.ButtonTextLines}"
+                                 Padding="{Binding Bar.Sizes.ControlLabelPadding}"/>
 
-                        <!-- Outer border -->
-                        <Border SnapsToDevicePixels="True"
-                                BorderThickness="{Binding ActiveTheme.BorderOuterSize}">
-                            <Border.BorderBrush>
-                                <SolidColorBrush Color="{Binding ActiveTheme.BorderOuterColor}"/>
-                            </Border.BorderBrush>
+            <!-- The buttons -->
+            <ItemsControl Name="ButtonContainer"
+                          ItemsSource="{Binding Buttons}"
+                          FontSize="{Binding Bar.Sizes.ControlItemFontSize}"
+                          Height="{Binding Bar.Sizes.ControlItemHeight}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Rows="1" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Name="ControlButton"
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                VerticalAlignment="Stretch" VerticalContentAlignment="Center"
+                                Margin="1"
+                                ToolTip="{Binding Button.Tooltip}"
+                                AutomationProperties.Name="{Binding Button.UiName}"
+                                AutomationProperties.LabeledBy="{Binding Button.BarItem.UiName}"
+                                Click="Button_OnClick"
+                                >
+                            <Button.Foreground>
+                                <SolidColorBrush Color="{Binding ActiveTheme.TextColor}" />
+                            </Button.Foreground>
 
-                            <!-- Inner border -->
+                            <!-- Outer border -->
                             <Border SnapsToDevicePixels="True"
-                                    BorderThickness="{Binding ActiveTheme.BorderSize}">
+                                    BorderThickness="{Binding ActiveTheme.BorderOuterSize}">
                                 <Border.BorderBrush>
-                                    <SolidColorBrush Color="{Binding ActiveTheme.BorderColor}"/>
+                                    <SolidColorBrush Color="{Binding ActiveTheme.BorderOuterColor}"/>
                                 </Border.BorderBrush>
-                                <Border.Background>
-                                    <SolidColorBrush Color="{Binding ActiveTheme.Background}" />
-                                </Border.Background>
 
-                                <!-- Button text -->
-                                <TextBlock Text="{Binding Text}"
-                                           TextAlignment="Center"
-                                           VerticalAlignment="Center"
-                                />
+                                <!-- Inner border -->
+                                <Border SnapsToDevicePixels="True"
+                                        BorderThickness="{Binding ActiveTheme.BorderSize}">
+                                    <Border.BorderBrush>
+                                        <SolidColorBrush Color="{Binding ActiveTheme.BorderColor}"/>
+                                    </Border.BorderBrush>
+                                    <Border.Background>
+                                        <SolidColorBrush Color="{Binding ActiveTheme.Background}" />
+                                    </Border.Background>
+
+                                    <!-- Button text -->
+                                    <TextBlock Text="{Binding Text}"
+                                               TextAlignment="Center"
+                                               VerticalAlignment="Center"
+                                    />
+                                </Border>
                             </Border>
-                        </Border>
-                    </Button>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
-    </StackPanel>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+        <!-- Border -->
+        <Border
+            SnapsToDevicePixels="True"
+            BorderBrush="{DynamicResource BorderOuterColor}"
+            BorderThickness="{Binding ActiveTheme.BorderOuterSize, FallbackValue=0}"
+            >
+            <Border
+                SnapsToDevicePixels="True"
+                BorderBrush="{DynamicResource BorderColor}"
+                BorderThickness="{Binding ActiveTheme.BorderSize, FallbackValue=0}"
+            />
+        </Border>
+    </Grid>
 </barControls:BarItemControl>

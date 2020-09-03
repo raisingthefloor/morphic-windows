@@ -56,7 +56,7 @@ namespace Morphic.Bar.UI.BarControls
             // Override the apparent behaviour of ContentControl elements, where they make the control focusable.
             foreach (UIElement elem in this.GetAllChildren().OfType<UIElement>())
             {
-                elem.Focusable = elem.Focusable && elem is Button;
+                elem.Focusable = elem.Focusable && elem is Button || elem == this;
             }
 
             foreach (Image image in this.GetAllChildren().OfType<Image>())

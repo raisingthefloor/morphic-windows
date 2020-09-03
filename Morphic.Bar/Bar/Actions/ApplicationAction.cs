@@ -17,6 +17,7 @@ namespace Morphic.Bar.Bar.Actions
     using System.Linq;
     using System.Threading.Tasks;
     using System.Windows;
+    using System.Windows.Input;
     using System.Windows.Interop;
     using System.Windows.Media;
     using System.Windows.Media.Imaging;
@@ -54,10 +55,32 @@ namespace Morphic.Bar.Bar.Actions
             }
         }
 
+        /// <summary>
+        /// Start a default application. This value points to an entry in default-apps.json5.
+        /// </summary>
         [JsonProperty("default")]
         public string? DefaultAppName { get; set; }
 
         public BarAction? DefaultApp { get; private set; }
+
+        /// <summary>
+        /// Invoke the value in `exe` as-is, via the shell (explorer). Don't resolve the path.
+        /// </summary>
+        [JsonProperty("asIs")]
+        public bool AsIs { get; set; }
+
+        /// <summary>
+        /// true to always start a new instance. false to activate an existing instance.
+        /// </summary>
+        [JsonProperty("newInstance")]
+        public bool NewInstance { get; set; }
+
+        /// <summary>
+        /// The initial state of the window.
+        /// </summary>
+        [JsonProperty("windowStyle")]
+        public ProcessWindowStyle WindowStyle { get; set; } = ProcessWindowStyle.Normal;
+
 
         /// <summary>
         /// Executable name, or the full path to it. If also providing arguments, surround the executable path with quotes.
@@ -69,7 +92,16 @@ namespace Morphic.Bar.Bar.Actions
             set
             {
                 this.exeNameValue = value;
-                if (this.exeNameValue.Length == 0)
+
+                // A url like "mailto:"
+                bool isUrl = this.exeNameValue.Length > 3 && this.exeNameValue.EndsWith(':');
+                if (isUrl)
+                {
+                    this.AsIs = true;
+                }
+
+
+                if (this.AsIs || this.exeNameValue.Length == 0)
                 {
                     this.AppPath = null;
                 }
@@ -126,7 +158,7 @@ namespace Morphic.Bar.Bar.Actions
         private string? ResolveAppPath(string exeName)
         {
             string file = Environment.ExpandEnvironmentVariables(exeName);
-            string? ext = Path.GetExtension(file).ToLower();
+            string ext = Path.GetExtension(file).ToLower();
             string withExe, withoutExe;
 
             // Try with the .exe extension first, then without, but if the file ends with a '.', then try that first.
@@ -234,12 +266,29 @@ namespace Morphic.Bar.Bar.Actions
                 return this.DefaultApp.Invoke(source);
             }
 
+            if (!this.NewInstance && (Keyboard.Modifiers & ModifierKeys.Shift) != ModifierKeys.Shift)
+            {
+                bool activated = this.ActivateInstance();
+                if (activated)
+                {
+                    return Task.FromResult(true);
+                }
+            }
+
             ProcessStartInfo startInfo = new ProcessStartInfo()
             {
-                FileName = this.AppPath,
+                FileName = this.AppPath ?? this.ExeName,
+                ErrorDialog = true,
                 // This is required to start taskmgr (the UAC prompt)
-                UseShellExecute = true
+                UseShellExecute = true,
+                WindowStyle = this.WindowStyle
+
             };
+
+            if (this.AsIs)
+            {
+                startInfo.UseShellExecute = true;
+            }
 
             if (this.Arguments.Count > 0)
             {
@@ -263,13 +312,29 @@ namespace Morphic.Bar.Bar.Actions
             return Task.FromResult(process != null);
         }
 
+        /// <summary>
+        /// Activates a running instance of the application.
+        /// </summary>
+        /// <returns>false if it could not be done.</returns>
+        /// <exception cref="NotImplementedException"></exception>
+        private bool ActivateInstance()
+        {
+            bool success = false;
+            string? friendlyName = Path.GetFileNameWithoutExtension(this.AppPath);
+            if (!string.IsNullOrEmpty(friendlyName))
+            {
+                success = Process.GetProcessesByName(friendlyName)
+                    .Where(p => p.MainWindowHandle != IntPtr.Zero)
+                    .OrderByDescending(p => p.StartTime)
+                    .Any(process => WinApi.ActivateWindow(process.MainWindowHandle));
+            }
+
+            return success;
+        }
+
         public override void Deserialized()
         {
             base.Deserialized();
-            if (!string.IsNullOrEmpty(this.DefaultAppName))
-            {
-                this.DefaultApp = DefaultApps.GetDefaultApp(this.DefaultAppName);
-            }
         }
     }
 }

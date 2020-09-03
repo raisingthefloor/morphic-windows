@@ -103,21 +103,15 @@ namespace Morphic.Bar.UI
 
             this.Loaded += (sender, args) => this.BarControl.LoadBar(this.Bar, isPrimary);
 
-            // Add a secret control as the last item. This is to make the expander window become a tab stop.
-            this.BarControl.BarLoaded += (sender, args) =>
+            this.BarControl.EndTab += (sender, args) =>
             {
-                TextBlock tb = new TextBlock()
+                if (this.OtherWindow is SecondaryBarWindow)
                 {
-                    Focusable = true,
-                    Width = 1,
-                    Height = 1,
-                };
-                tb.GotFocus += (o, a) =>
-                {
-                    this.ExpanderWindow?.Activate();
-                };
-                this.BarControl.Children.Add(tb);
+                    this.IsExpanded = true;
+                }
+                this.OtherWindow?.Activate();
             };
+
         }
 
         private void OnSizeChanged(object sender, SizeChangedEventArgs args)
@@ -156,14 +150,7 @@ namespace Morphic.Bar.UI
         {
             this.SetBorder();
 
-            Size size = this.GetGoodSize();
-
-            if (this is PrimaryBarWindow)
-            {
-                size = this.Rescale(size, true);
-            }
-
-            this.SetInitialPosition(size);
+            this.SetInitialPosition();
 
             this.BarLoaded?.Invoke(this, new EventArgs());
 
@@ -176,7 +163,7 @@ namespace Morphic.Bar.UI
         /// <param name="size"></param>
         /// <param name="apply"></param>
         /// <returns></returns>
-        private Size Rescale(Size size, bool apply = false)
+        protected Size Rescale(Size size, bool apply = false)
         {
             Rect workArea = this.GetWorkArea();
             bool retry;
@@ -225,7 +212,7 @@ namespace Morphic.Bar.UI
         /// <summary>
         /// Sets the initial position and size.
         /// </summary>
-        protected virtual void SetInitialPosition(Size size)
+        protected virtual void SetInitialPosition()
         {
         }
 
@@ -406,12 +393,29 @@ namespace Morphic.Bar.UI
         {
             switch (e.Key)
             {
+                // ctrl+tab: move between bars
                 case Key.Tab when (e.KeyboardDevice.Modifiers & ModifierKeys.Control) == ModifierKeys.Control:
                     this.OtherWindow?.MakeActive();
                     e.Handled = true;
                     break;
+                // Escape: Close secondary (if active)
                 case Key.Escape:
                     this.IsExpanded = false;
+                    e.Handled = true;
+
+                    goto case Key.Home;
+
+                // Home: Move to first item
+                case Key.Home:
+
+                    BarWindow? primary = this is PrimaryBarWindow ? this : this.OtherWindow;
+                    primary?.MakeActive();
+
+                    if (Keyboard.FocusedElement is UIElement focused)
+                    {
+                        focused.MoveFocus(new TraversalRequest(FocusNavigationDirection.First));
+                    }
+
                     e.Handled = true;
                     break;
             }

@@ -12,6 +12,7 @@
 namespace Morphic.Bar.Bar
 {
     using System.Collections.Generic;
+    using System.Text.RegularExpressions;
     using System.Windows.Media;
     using Actions;
     using Newtonsoft.Json;
@@ -32,18 +33,30 @@ namespace Morphic.Bar.Bar
         [JsonProperty("configuration.buttons")]
         public Dictionary<string, ButtonInfo> Buttons { get; set; } = new Dictionary<string, ButtonInfo>();
 
+        /// <summary>
+        /// Provides hints for keyboard usage.
+        /// </summary>
+        [JsonProperty("configuration.type")]
+        public MultiButtonType Type { get; set; } = MultiButtonType.Auto;
+
+
         [JsonObject(MemberSerialization.OptIn)]
         public class ButtonInfo
         {
             private string? value;
             private string? uiName;
             private string? text;
+            public BarMultiButton BarItem { get; internal set; } = null!;
 
             /// <summary>
             /// Display text.
             /// </summary>
             [JsonProperty("label")]
-            public string Text { get; set; } = string.Empty;
+            public string Text
+            {
+                get => this.text ?? string.Empty;
+                set => this.text = value;
+            }
 
             /// <summary>
             /// Unique identifier. Of omitted, the key from BarMultiButton.Buttons is used.
@@ -72,7 +85,17 @@ namespace Morphic.Bar.Bar
             [JsonProperty("uiName")]
             public string UiName
             {
-                get => this.uiName ?? this.text ?? this.Tooltip ?? string.Empty;
+                get
+                {
+                    string value = this.uiName ?? this.text ?? this.Tooltip ?? string.Empty;
+                    value = value switch
+                    {
+                        "+" => "up",
+                        "-" => "down",
+                        _ => value
+                    };
+                    return value;
+                }
                 set => this.uiName = value;
             }
         }
@@ -83,11 +106,49 @@ namespace Morphic.Bar.Bar
 
             foreach (var (key, buttonInfo) in this.Buttons)
             {
+                buttonInfo.BarItem = this;
+                buttonInfo.UiName = this.UiName + " " + buttonInfo.UiName;
                 if (string.IsNullOrEmpty(buttonInfo.Id))
                 {
                     buttonInfo.Id = key;
                 }
             }
+
+            if (this.Type == MultiButtonType.Auto)
+            {
+                this.Type = MultiButtonType.Buttons;
+                if (this.Buttons.Count == 2)
+                {
+                    // Detect if it's an additive/toggle button pair, based on the text
+                    Regex additive = new Regex("^([-+]|in|out|up|down|(in|de)c(rease)?)$", RegexOptions.IgnoreCase);
+                    Regex toggle = new Regex("^(on|off|yes|no|true|false|(en|dis)abled?)$", RegexOptions.IgnoreCase);
+
+                    foreach (ButtonInfo buttonInfo in this.Buttons.Values)
+                    {
+                        if (additive.IsMatch(buttonInfo.Text) || additive.IsMatch(buttonInfo.Value))
+                        {
+                            this.Type = MultiButtonType.Additive;
+                            break;
+                        }
+                        else if (toggle.IsMatch(buttonInfo.Text) || additive.IsMatch(buttonInfo.Value))
+                        {
+                            this.Type = MultiButtonType.Toggle;
+                            break;
+                        }
+                    }
+                }
+            }
         }
+    }
+
+    public enum MultiButtonType
+    {
+        Auto,
+        /// <summary>Just buttons</summary>
+        Buttons,
+        /// <summary>-/+</summary>
+        Additive,
+        /// <summary>On/Off</summary>
+        Toggle
     }
 }

@@ -20,12 +20,10 @@ namespace Morphic.Bar.Bar
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using System.Transactions;
     using System.Windows.Media;
     using System.Windows.Media.Imaging;
     using System.Xml;
     using Microsoft.Extensions.Logging;
-    using Morphic.Core.Community;
     using Newtonsoft.Json;
     using SharpVectors.Converters;
     using SharpVectors.Dom.Svg;

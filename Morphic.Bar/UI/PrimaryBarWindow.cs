@@ -7,6 +7,7 @@ namespace Morphic.Bar.UI
     using Windows.Native;
     using AppBarWindow;
     using Bar;
+    using Microsoft.Win32;
 
     public sealed class PrimaryBarWindow : BarWindow
     {
@@ -69,6 +70,14 @@ namespace Morphic.Bar.UI
                 SelectionReader.Default.Initialise(nativeWindow.Handle);
                 hwndSource?.AddHook(SelectionReader.Default.WindowProc);
             };
+
+            SystemEvents.DisplaySettingsChanged += this.SystemEventsOnDisplaySettingsChanged;
+            this.Closed += (sender, args) => SystemEvents.DisplaySettingsChanged -= this.SystemEventsOnDisplaySettingsChanged;
+        }
+
+        private void SystemEventsOnDisplaySettingsChanged(object? sender, EventArgs e)
+        {
+            this.SetInitialPosition();
         }
 
         private void OnClosed(object? sender, EventArgs e)
@@ -83,21 +92,33 @@ namespace Morphic.Bar.UI
         protected override void OnBarLoaded()
         {
             base.OnBarLoaded();
-            
-            if (this.Bar.SecondaryItems.Any())
+            this.LoadSecondaryBar();
+        }
+
+        /// <summary>
+        /// Loads the secondary, if required.
+        /// </summary>
+        private void LoadSecondaryBar()
+        {
+            if (this.secondaryWindow == null && this.Bar.SecondaryItems.Any())
             {
                 this.secondaryWindow = new SecondaryBarWindow(this, this.Bar);
                 this.expanderWindow = new ExpanderWindow(this, this.secondaryWindow);
 
                 this.secondaryWindow.Loaded += (s, a) => this.expanderWindow.Show();
                 this.expanderWindow.Changed += (s, a) => this.IsExpanded = this.expanderWindow.IsExpanded;
-                
+
                 this.secondaryWindow.Show();
             }
         }
 
-        protected override void SetInitialPosition(Size size)
+
+        protected override void SetInitialPosition()
         {
+            Size size = this.GetGoodSize();
+            size = this.Rescale(size, true);
+            this.LoadSecondaryBar();
+
             this.AppBar.ApplyAppBar(this.Bar.Position.DockEdge);
             if (this.Bar.Position.DockEdge == Edge.None)
             {

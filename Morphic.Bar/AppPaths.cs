@@ -27,6 +27,7 @@ namespace Morphic.Bar
         public static string DefaultConfigDir = Path.Combine(AppPaths.AppDir, "DefaultConfig");
         public static string AssetsDir = Path.Combine(AppPaths.AppDir, "Assets");
         public static string CacheDir = Path.Combine(AppPaths.ConfigDir, "cache");
+        public const string RegistryPath = @"Software\Raising the Floor\Morphic\Bar";
 
         public static void CreateAll()
         {

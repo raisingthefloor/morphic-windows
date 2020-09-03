@@ -43,7 +43,7 @@ namespace Morphic.Windows.Native
         
 
         /// <summary>Set when the active window has changed.</summary>
-        private readonly AutoResetEvent gotActiveWindow = new AutoResetEvent(false);
+        private readonly AutoResetEvent activeWindowChanged = new AutoResetEvent(false);
 
         /// <summary>Set when the clipboard has been updated.</summary>
         private readonly AutoResetEvent gotClipboard = new AutoResetEvent(false);
@@ -112,11 +112,18 @@ namespace Morphic.Windows.Native
                 IntPtr active = WindowsApi.GetForegroundWindow();
                 if (active != hwnd)
                 {
-                    this.gotActiveWindow.Reset();
-                    WindowsApi.SetForegroundWindow(hwnd);
-
-                    // Wait for it to be activated.
-                    this.gotActiveWindow.WaitOne(3000);
+                    // Wait for it to be activated. For unknown reasons, activating the window the first time causes
+                    // no window to be activated. The second attempt works.
+                    const int timeout = 3000;
+                    int start = Environment.TickCount;
+                    int timespent = 0;
+                    do
+                    {
+                        WindowsApi.SetForegroundWindow(hwnd);
+                        this.activeWindowChanged.Reset();
+                        this.activeWindowChanged.WaitOne(timeout - timespent);
+                        timespent = Environment.TickCount - start;
+                    } while (this.activeWindow != hwnd && timespent <= timeout);
                 }
             }
         }
@@ -151,18 +158,19 @@ namespace Morphic.Windows.Native
                             // The activated window is passed via lParam, but this wasn't accurate
                             // for Modern UI apps.
                             IntPtr window = WindowsApi.GetForegroundWindow();
+
                             if (this.activeWindow != window)
                             {
                                 this.activeWindow = window;
 
                                 // Ignore the application's window
                                 WindowsApi.GetWindowThreadProcessId(window, out uint pid);
-                                if (pid != this.processId)
+                                if (pid != this.processId && pid != 0)
                                 {
                                     this.lastWindow = window;
                                 }
 
-                                this.gotActiveWindow.Set();
+                                this.activeWindowChanged.Set();
                             }
                         }
                     }

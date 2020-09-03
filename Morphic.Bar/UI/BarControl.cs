@@ -20,7 +20,6 @@ namespace Morphic.Bar.UI
     using System.Windows.Media;
     using Bar;
     using BarControls;
-    using MessageBox = System.Windows.Forms.MessageBox;
 
     /// <summary>
     /// This is the thing that contains bar items.
@@ -57,8 +56,12 @@ namespace Morphic.Bar.UI
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
-
         public event EventHandler? BarLoaded;
+
+        /// <summary>
+        /// Raised when tabbing through items has gone beyond the last item.
+        /// </summary>
+        public event EventHandler? EndTab;
 
         private Size GetChildSize(UIElement child)
         {
@@ -215,6 +218,8 @@ namespace Morphic.Bar.UI
             {
                 this.AddItem(item);
             }
+
+            this.AddEndTabControl();
         }
 
         /// <summary>
@@ -235,9 +240,38 @@ namespace Morphic.Bar.UI
             this.BarLoaded?.Invoke(this, EventArgs.Empty);
         }
 
+        /// <summary>
+        /// Add a secret control as the last item. This is to move focus to the other bar.
+        /// </summary>
+        private void AddEndTabControl()
+        {
+            Button tb = new Button()
+            {
+                Focusable = true,
+                IsTabStop = true,
+                TabIndex = int.MaxValue,
+                Width = 10,
+                Height = 10,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                VerticalAlignment = VerticalAlignment.Bottom
+            };
+
+            tb.GotFocus += (o, a) =>
+            {
+                this.OnEndTab();
+            };
+
+            this.Children.Add(tb);
+        }
+
         protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        protected virtual void OnEndTab()
+        {
+            this.EndTab?.Invoke(this, EventArgs.Empty);
         }
     }
 
