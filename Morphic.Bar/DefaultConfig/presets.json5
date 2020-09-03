@@ -14,10 +14,12 @@
         type: "additive",
         buttons: {
           out: {
-            label: "-"
+            label: "-",
+            tooltip: "Zoom out (make things smaller)"
           },
           in: {
-            label: "+"
+            label: "+",
+            tooltip: "Zoom in (make things larger)"
           }
         }
       }
@@ -34,10 +36,12 @@
         },
         buttons: {
           down: {
-            label: "-"
+            label: "-",
+            tooltip: "Lower the volume"
           },
           up: {
-            label: "+"
+            label: "+",
+            tooltip: "Raise the volume"
           }
         }
       }
@@ -54,10 +58,12 @@
         },
         buttons: {
           on: {
-            label: "On"
+            label: "On",
+            tooltip: "Turn on the magnifier"
           },
           off: {
-            label: "Off"
+            label: "Off",
+            tooltip: "Turn off the magnifier"
           }
         }
       }
@@ -74,10 +80,12 @@
         },
         buttons: {
           on: {
-            label: "On"
+            label: "On",
+            tooltip: "Turn on night-mode"
           },
           off: {
-            label: "Off"
+            label: "Off",
+            tooltip: "Turn off night-mode"
           }
         }
       }
@@ -94,13 +102,16 @@
         },
         buttons: {
           play: {
-            label: "|>"
+            label: "|>",
+            tooltip: "Read out the selected text"
           },
           pause: {
-            label: "||"
+            label: "||",
+            tooltip: "Pause reading the text"
           },
           stop: {
-            label: "[]"
+            label: "[]",
+            tooltip: "Stop the text reading"
           }
         }
       }
@@ -119,11 +130,13 @@
         buttons: {
           copy: {
             label: "Copy",
-            value: "^c"
+            value: "^c",
+            tooltip: "Copy the selection to the clipboard"
           },
           paste: {
             label: "Paste",
-            value: "^v"
+            value: "^v",
+            tooltip: "Paste the content of the clipboard to the active window"
           }
         }
       }
@@ -139,11 +152,13 @@
         buttons: {
           on: {
             label: "On",
-            value: "100"
+            value: "100",
+            tooltip: "Turn on high-contrast"
           },
           off: {
             label: "Off",
-            value: "1"
+            value: "1",
+            tooltip: "Turn off high-contrast"
           }
         }
       }
