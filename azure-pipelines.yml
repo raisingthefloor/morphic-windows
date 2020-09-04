@@ -234,7 +234,7 @@ stages:
                     <version>${ASSEMBLY_VERSION}</version>
                     <url>${S3_PUBLISHED_HTTP_URL}/${S3_MSI_OBJECT_NAME}</url>
                   </item>
-                  EOF
+                EOF
 
                   echo ${S3_PUBLISHED_HTTP_URL}/${S3_APPCAST_OBJECT_NAME}
                   cat "${LOCAL_APPCAST_SOURCE}"
