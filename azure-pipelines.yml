@@ -223,7 +223,7 @@ stages:
                 publishInstaller() {
                   VERSION=$(sed -n 1p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
                   ASSEMBLY_VERSION=$(sed -n 2p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
-                  LOCAL_MSI_SOURCE="${AGENT_BUILDDIRECTORY}/${LOCAL_MSI_DIR}}/${INSTALLER_NAME_BASE}.msi"
+                  LOCAL_MSI_SOURCE="${AGENT_BUILDDIRECTORY}/${LOCAL_MSI_DIR}/${INSTALLER_NAME_BASE}.msi"
                   LOCAL_APPCAST_SOURCE="${AGENT_BUILDDIRECTORY}/${INSTALLER_NAME_BASE}-v${VERSION}.appcast.xml"
                   S3_MSI_OBJECT_NAME="${S3_OBJECT_PREFIX}/${INSTALLER_NAME_BASE}-v${VERSION}.msi"
                   S3_APPCAST_OBJECT_NAME="${S3_OBJECT_PREFIX}/${INSTALLER_NAME_BASE}-v${VERSION}.appcast.xml"
