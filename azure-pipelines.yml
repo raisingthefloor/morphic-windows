@@ -229,11 +229,11 @@ stages:
                   S3_APPCAST_OBJECT_NAME="${S3_OBJECT_PREFIX}/${INSTALLER_NAME_BASE}-v${VERSION}.appcast.xml"
 
                   cat > "${LOCAL_APPCAST_SOURCE}" <<EOF
-                  <?xml version="1.0" encoding="utf-8"?>
-                  <item>
-                    <version>${ASSEMBLY_VERSION}</version>
-                    <url>${S3_PUBLISHED_HTTP_URL}/${S3_MSI_OBJECT_NAME}</url>
-                  </item>
+                <?xml version="1.0" encoding="utf-8"?>
+                <item>
+                  <version>${ASSEMBLY_VERSION}</version>
+                  <url>${S3_PUBLISHED_HTTP_URL}/${S3_MSI_OBJECT_NAME}</url>
+                </item>
                 EOF
 
                   echo ${S3_PUBLISHED_HTTP_URL}/${S3_APPCAST_OBJECT_NAME}
