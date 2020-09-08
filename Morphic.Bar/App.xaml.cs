@@ -24,6 +24,7 @@ namespace Morphic.Bar
     using System.Windows.Controls;
     using System.Windows.Forms;
     using System.Windows.Threading;
+    using AutoUpdaterDotNET;
     using Microsoft.Extensions.Logging;
     using Microsoft.Win32;
     using Properties;
@@ -96,8 +97,8 @@ namespace Morphic.Bar
             services.AddLogging(this.ConfigureLogging);
             services.Configure<SessionOptions>(this.Configuration.GetSection("MorphicService"));
             // TODO: autoupdate
-            //services.Configure<UpdateOptions>(Configuration.GetSection("Update"));
-            //services.AddSingleton<UpdateOptions>(serviceProvider => serviceProvider.GetRequiredService<IOptions<UpdateOptions>>().Value);
+            services.Configure<UpdateOptions>(Configuration.GetSection("Update"));
+            services.AddSingleton<UpdateOptions>(serviceProvider => serviceProvider.GetRequiredService<IOptions<UpdateOptions>>().Value);
             services.AddSingleton<IServiceCollection>(services);
             services.AddSingleton<IServiceProvider>(provider => provider);
             services.AddSingleton<SessionOptions>(serviceProvider => serviceProvider.GetRequiredService<IOptions<SessionOptions>>().Value);
@@ -202,8 +203,7 @@ namespace Morphic.Bar
             this.Session.UserChanged += this.Session_UserChanged;
             this.Logger.LogInformation("App Started");
             this.ConfigureCountly();
-            // TODO: autoupdate
-            //StartCheckingForUpdates();
+            this.StartCheckingForUpdates();
 
             this.AutoRunEnabled = this.ConfigureAutoRun();
 
@@ -218,6 +218,15 @@ namespace Morphic.Bar
             {
                 Task task = this.OpenSession();
                 task.ContinueWith(this.SessionOpened, TaskScheduler.FromCurrentSynchronizationContext());
+            }
+        }
+
+        private void StartCheckingForUpdates()
+        {
+            UpdateOptions options = this.ServiceProvider.GetRequiredService<UpdateOptions>();
+            if (!string.IsNullOrEmpty(options.AppCastUrl))
+            {
+                AutoUpdater.Start(options.AppCastUrl);
             }
         }
 
@@ -638,5 +647,10 @@ namespace Morphic.Bar
             MessageBox.Show($"Morphic Community Bar\n\nVersion: {ver}");
         }
         #endregion
+    }
+
+    public class UpdateOptions
+    {
+        public string AppCastUrl { get; set; } = "";
     }
 }
