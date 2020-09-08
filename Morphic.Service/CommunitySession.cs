@@ -195,7 +195,7 @@ namespace Morphic.Service
             {
                 Communities = communitiesPage.Communities;
             }
-            if (Communities.Length == 1)
+            if (Communities.Length >= 1)
             {
                 var community = await Service.FetchUserCommunity(user.Id, Communities[0].Id);
                 if (community != null)
