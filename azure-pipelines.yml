@@ -260,7 +260,7 @@ stages:
                 if [[ "${BRANCH_NAME}" != "master" ]]; then
                   echo "updating dev environment urls"
                   # azure checks out headlessly, so we need to swap to the branch
-                  git checkout ${BRANCH}
+                  git checkout master
                   
                   # client
                   go run update-env-var.go environments/dev/patches/set-env.yaml "MORPHIC_WINDOWS_DOWNLOAD_URL" "${S3_PUBLISHED_HTTP_URL}/${S3_MSI_OBJECT_NAME}"
