@@ -183,17 +183,16 @@ stages:
         pool:
           vmImage: "ubuntu-18.04"
         steps:
-          # do not checkout code. we only need to upload the published artifact
-          - checkout: none
+          # We actually want to operate in the web project so we can update URLs (when necessary)
+          - checkout: deploy-morphicweb
+            persistCredentials: true
+            path: deploy-morphicweb
           - download: current
             artifact: x64-installer
           - download: current
             artifact: x64-community-installer
           - download: current
             artifact: build-version
-          - checkout: deploy-morphicweb
-            persistCredentials: true
-            path: deploy-morphicweb
           - task: Bash@3
             displayName: "upload MSI to s3"
             env:
@@ -260,7 +259,6 @@ stages:
                 # TODO: do we want this to update staging and prod automatically, depending on branch?
                 if [[ "${BRANCH_NAME}" != "master" ]]; then
                   echo "updating dev environment urls"
-                  cd deploy-morphicweb
                   
                   # client
                   go run update-env-var.go environments/dev/patches/set-env.yaml "MORPHIC_WINDOWS_DOWNLOAD_URL" "${S3_PUBLISHED_HTTP_URL}/${S3_MSI_OBJECT_NAME}"
