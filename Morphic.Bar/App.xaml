@@ -11,7 +11,7 @@
         <ContextMenu x:Key="MorphicMenu" Loaded="MorphicMenu_Loaded" Closed="MorphicMenu_Closed">
             <MenuItem Header="Show Bar" FontWeight="Bold" Click="MenuItem_Show" Tag="tray"  />
             <MenuItem Header="Hide Bar" Click="MenuItem_Hide" Tag="bar" />
-            <MenuItem Header="Test bars" Visibility="Collapsed" Initialized="MenuItem_TestBars_Init"/>
+            <MenuItem Header="Communities" Visibility="Collapsed" Initialized="MenuItem_Communities_Init"/>
             <MenuItem Header="About" Click="MenuItem_About" />
             <Separator/>
             <MenuItem Header="Always start" IsCheckable="True" Initialized="MenuItem_AutoRun_Init" Checked="MenuItem_AutoRun" Unchecked="MenuItem_AutoRun" />
