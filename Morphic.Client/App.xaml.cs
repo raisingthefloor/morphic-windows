@@ -208,6 +208,12 @@ namespace Morphic.Client
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            Shared = this;
+            Configuration = GetConfiguration();
+            var collection = new ServiceCollection();
+            ConfigureServices(collection);
+            ServiceProvider = collection.BuildServiceProvider();
+
             // Determine if this is the first instance since installation, by checking the last version written to the
             // registry.
             using RegistryKey morphicKey = Registry.CurrentUser.CreateSubKey(@"Software\Raising the Floor\Morphic")!;
@@ -222,11 +228,6 @@ namespace Morphic.Client
                 morphicKey.SetValue("version", buildInfo.Version);
             }
 
-            Shared = this;
-            Configuration = GetConfiguration();
-            var collection = new ServiceCollection();
-            ConfigureServices(collection);
-            ServiceProvider = collection.BuildServiceProvider();
             base.OnStartup(e);
             logger = ServiceProvider.GetRequiredService<ILogger<App>>();
             Session = ServiceProvider.GetRequiredService<Session>();
@@ -238,19 +239,15 @@ namespace Morphic.Client
             RegisterGlobalHotKeys();
             ConfigureCountly();
             StartCheckingForUpdates();
+
+            if (this.FirstRun)
+            {
+                this.OnFirstRun();
+            }
+
             var task = OpenSession();
             task.ContinueWith(SessionOpened, TaskScheduler.FromCurrentSynchronizationContext());
         }
-
-        /// <summary>
-        /// true if this instance is the first since installation.
-        /// </summary>
-        public bool FirstRun { get; set; }
-
-        /// <summary>
-        /// true if FirstRun, and the installation was an upgrade.
-        /// </summary>
-        public bool FirstRunUpgrade { get; set; }
 
         /// <summary>
         /// Makes the application automatically start at login.
@@ -301,6 +298,28 @@ namespace Morphic.Client
 
             return enabled;
         }
+
+        /// <summary>
+        /// Actions to perform when this instance is the first since installation.
+        /// </summary>
+        private void OnFirstRun()
+        {
+            this.logger.LogInformation("Performing first-run tasks");
+
+            // Set the magnifier to lens mode at 200%
+            Registry.SetValue("HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier", "Magnification", 200);
+            Registry.SetValue("HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier", "MagnificationMode", 3);
+        }
+
+        /// <summary>
+        /// true if this instance is the first since installation.
+        /// </summary>
+        public bool FirstRun { get; set; }
+
+        /// <summary>
+        /// true if FirstRun, and the installation was an upgrade.
+        /// </summary>
+        public bool FirstRunUpgrade { get; set; }
 
         private void Session_UserChanged(object? sender, EventArgs e)
         {
@@ -376,6 +395,11 @@ namespace Morphic.Client
             if (Session.GetBool(QuickStrip.QuickStripWindow.PreferenceKeys.Visible) ?? true)
             {
                 ShowQuickStrip(skippingSave: true);
+            }
+
+            if (this.FirstRun)
+            {
+                this.OnFirstRun();
             }
         }
 
