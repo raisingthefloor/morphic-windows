@@ -208,6 +208,20 @@ namespace Morphic.Client
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            // Determine if this is the first instance since installation, by checking the last version written to the
+            // registry.
+            using RegistryKey morphicKey = Registry.CurrentUser.CreateSubKey(@"Software\Raising the Floor\Morphic")!;
+            string? lastVersion = morphicKey.GetValue("version", string.Empty) as string;
+            BuildInfo buildInfo = this.ServiceProvider.GetRequiredService<BuildInfo>();
+
+            if (lastVersion != buildInfo.Version)
+            {
+                this.FirstRun = true;
+                this.FirstRunUpgrade = lastVersion != null;
+                // Let the next instance know the version of its previous instance (this one).
+                morphicKey.SetValue("version", buildInfo.Version);
+            }
+
             Shared = this;
             Configuration = GetConfiguration();
             var collection = new ServiceCollection();
@@ -227,6 +241,16 @@ namespace Morphic.Client
             var task = OpenSession();
             task.ContinueWith(SessionOpened, TaskScheduler.FromCurrentSynchronizationContext());
         }
+
+        /// <summary>
+        /// true if this instance is the first since installation.
+        /// </summary>
+        public bool FirstRun { get; set; }
+
+        /// <summary>
+        /// true if FirstRun, and the installation was an upgrade.
+        /// </summary>
+        public bool FirstRunUpgrade { get; set; }
 
         /// <summary>
         /// Makes the application automatically start at login.
