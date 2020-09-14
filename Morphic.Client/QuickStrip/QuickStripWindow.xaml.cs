@@ -40,7 +40,10 @@ using Display = Morphic.Settings.Display;
 
 namespace Morphic.Client.QuickStrip
 {
+    using System.IO;
     using System.Runtime.InteropServices;
+    using System.Text.Json;
+    using System.Text.Json.Serialization;
     using System.Windows.Forms;
     using Clipboard = System.Windows.Clipboard;
     using IDataObject = System.Windows.IDataObject;
@@ -101,10 +104,10 @@ namespace Morphic.Client.QuickStrip
             {
                 this.position = position;
             }
-            if (session.GetArray(PreferenceKeys.Items) is object?[] items)
-            {
-                Items = Item.CreateItems(items);
-            }
+
+            QuickStripJson qs = QuickStripJson.FromFile("quickstrip.json");
+            Items = Item.CreateItems(qs.Items);
+
             if (session.User == null)
             {
                 logoutItem.Visibility = Visibility.Collapsed;
@@ -224,7 +227,7 @@ namespace Morphic.Client.QuickStrip
             /// </summary>
             /// <param name="descriptions"></param>
             /// <returns></returns>
-            public static List<Item> CreateItems(object?[] descriptions)
+            public static List<Item> CreateItems(IEnumerable<object?> descriptions)
             {
                 var items = new List<Item>();
                 foreach (var obj in descriptions)
@@ -789,6 +792,23 @@ namespace Morphic.Client.QuickStrip
             public static Preferences.Key Position = new Preferences.Key("org.raisingthefloor.morphic.quickstrip", "position.win");
             public static Preferences.Key ShowsHelp = new Preferences.Key("org.raisingthefloor.morphic.quickstrip", "showsHelp");
             public static Preferences.Key Items = new Preferences.Key("org.raisingthefloor.morphic.quickstrip", "items");
+        }
+
+        /// <summary>
+        /// Static configuration for the quick strip
+        /// </summary>
+        public class QuickStripJson
+        {
+            public static QuickStripJson FromFile(string file)
+            {
+                string json = File.ReadAllText(file);
+                JsonSerializerOptions options = new JsonSerializerOptions();
+                options.Converters.Add(new JsonElementInferredTypeConverter());
+                return JsonSerializer.Deserialize<QuickStripJson>(json, options);
+            }
+
+            [JsonPropertyName("items")]
+            public List<Dictionary<string, object>> Items { get; set; }
         }
     }
 }

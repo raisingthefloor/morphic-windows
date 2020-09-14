@@ -355,7 +355,7 @@ namespace Morphic.Client
 
         private async Task CopyDefaultPreferences()
         {
-            if (!Session.Storage.Exists<Preferences>("__default__"))
+            if ((this.FirstRun && !this.FirstRunUpgrade) || !Session.Storage.Exists<Preferences>("__default__"))
             {
                 logger.LogInformation("Saving default preferences");
                 var prefs = new Preferences();
