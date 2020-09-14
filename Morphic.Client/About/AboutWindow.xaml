@@ -5,14 +5,21 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:local="clr-namespace:Morphic.Client.About"
         mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance local:BuildInfo}"
         Title="About Morphic" Height="280" Width="300" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
     <StackPanel Orientation="Vertical">
         <Image Source="/Icon.png" Width="60" Margin="30"/>
-        <Label x:Name="AppName" HorizontalAlignment="Center" FontWeight="Bold">Morphic for Windows</Label>
-        <Label x:Name="VersionLabel" HorizontalAlignment="Center">Version</Label>
-        <Label x:Name="BuildLabel" HorizontalAlignment="Center">Build</Label>
-        <Label HorizontalAlignment="Center" FontSize="10">
-            <Hyperlink NavigateUri="mailto:support@morphic.org" RequestNavigate="ContactUs">Contact Us</Hyperlink>
-        </Label>
+        <TextBlock x:Name="AppName" HorizontalAlignment="Center" FontWeight="Bold"
+                   Text="Morphic™ © 2020 Raising the Floor"/>
+        <TextBlock x:Name="VersionLabel" HorizontalAlignment="Center"
+                   Text="{Binding Path=Version, StringFormat='Version {0}'}" />
+        <TextBlock x:Name="BuildLabel" HorizontalAlignment="Center"
+                   Text="{Binding Path=Commit, StringFormat='Build {0}'}"/>
+        <TextBlock HorizontalAlignment="Center" FontSize="10">
+            <Hyperlink RequestNavigate="CheckUpdate_OnClick" NavigateUri="#update">Check for Update</Hyperlink>
+        </TextBlock>
+        <TextBlock HorizontalAlignment="Center" FontSize="10">
+            <Hyperlink RequestNavigate="WebLink_OnClick" NavigateUri="https://morphic.world/">Learn More About Morphic</Hyperlink>
+        </TextBlock>
     </StackPanel>
 </Window>
