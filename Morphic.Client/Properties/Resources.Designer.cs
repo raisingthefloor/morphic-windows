@@ -98,6 +98,51 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Color.
+        /// </summary>
+        internal static string QuickStrip_Colors_Color_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_Colors_Color_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Contrast.
+        /// </summary>
+        internal static string QuickStrip_Colors_Contrast_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_Colors_Contrast_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Dark.
+        /// </summary>
+        internal static string QuickStrip_Colors_Dark_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_Colors_Dark_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Night.
+        /// </summary>
+        internal static string QuickStrip_Colors_Night_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_Colors_Night_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Adjust contrast and color.
+        /// </summary>
+        internal static string QuickStrip_Colors_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_Colors_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Make it harder to distinguish items.
         /// </summary>
         internal static string QuickStrip_Contrast_Off_HelpMessage {

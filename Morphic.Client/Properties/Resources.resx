@@ -172,6 +172,26 @@
   <data name="QuickStrip_NightMode_Title" xml:space="preserve">
     <value>Night mode</value>
   </data>
+
+  <data name="QuickStrip_Colors_Title" xml:space="preserve">
+    <value>Adjust contrast and color</value>
+  </data>
+
+  <data name="QuickStrip_Colors_Contrast_Title" xml:space="preserve">
+    <value>Contrast</value>
+  </data>
+
+
+  <data name="QuickStrip_Colors_Color_Title" xml:space="preserve">
+    <value>Color</value>
+  </data>
+  <data name="QuickStrip_Colors_Dark_Title" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="QuickStrip_Colors_Night_Title" xml:space="preserve">
+    <value>Night</value>
+  </data>
+
   <data name="QuickStrip_Magnifier_Hide_HelpMessage" xml:space="preserve">
     <value>Stop magnifying part of the screen as you move</value>
   </data>

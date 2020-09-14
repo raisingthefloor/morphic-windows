@@ -362,6 +362,22 @@ namespace Morphic.Client.QuickStrip
                             control.Action += quickStrip.OnNightMode;
                             return control;
                         }
+                    case "colors":
+                        {
+                            var control = new QuickStripSegmentedButtonControl();
+                            var contrastHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Contrast_On_HelpTitle, Properties.Resources.QuickStrip_Contrast_On_HelpMessage);
+                            var colorHelp = new QuickHelpTextControlBuilder("color", "change the color");
+                            var darkHelp = new QuickHelpTextControlBuilder("dark", "change dark mode");
+                            var nightHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_NightMode_On_HelpTitle, Properties.Resources.QuickStrip_NightMode_On_HelpMessage);
+
+                            control.TitleLabel.Content = Properties.Resources.QuickStrip_Colors_Title;
+                            control.AddButton(Properties.Resources.QuickStrip_Colors_Contrast_Title, contrastHelp.Title, contrastHelp, isPrimary: true);
+                            control.AddButton(Properties.Resources.QuickStrip_Colors_Color_Title, colorHelp.Title, colorHelp, isPrimary: true);
+                            control.AddButton(Properties.Resources.QuickStrip_Colors_Dark_Title, darkHelp.Title, darkHelp, isPrimary: true);
+                            control.AddButton(Properties.Resources.QuickStrip_Colors_Night_Title, nightHelp.Title, nightHelp, isPrimary: true);
+                            control.Action += quickStrip.OnColors;
+                            return control;
+                        }
                     default:
                         return null;
                 }
@@ -561,6 +577,41 @@ namespace Morphic.Client.QuickStrip
             {
                 Countly.RecordEvent("NightMode Off");
                 _ = session.Apply(SettingsManager.Keys.WindowsDisplayNightModeEnabled, false);
+            }
+        }
+
+        private async void OnColors(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
+        {
+            switch (e.SelectedIndex)
+            {
+                case 0: // Contrast
+                    bool contrastEnabled =
+                        await this.session.SettingsManager.CaptureBool(
+                            SettingsManager.Keys.WindowsDisplayContrastEnabled) == true;
+                    this.OnContrast(sender, new QuickStripSegmentedButtonControl.ActionEventArgs(contrastEnabled ? 1 : 0));
+                    break;
+
+                case 1: // Color
+                    bool colorFilterEnabled =
+                        await this.session.SettingsManager.CaptureBool(
+                            SettingsManager.Keys.WindowsDisplayColorFilterEnabled) == true;
+                    _ = session.Apply(SettingsManager.Keys.WindowsDisplayColorFilterEnabled, !colorFilterEnabled);
+
+                    break;
+
+                case 2: // Dark mode
+                    bool lightModeEnabled =
+                        await this.session.SettingsManager.CaptureBool(
+                            SettingsManager.Keys.WindowsDisplayLightThemeEnabled) == true;
+                    _ = session.Apply(SettingsManager.Keys.WindowsDisplayLightThemeEnabled, !lightModeEnabled);
+                    break;
+
+                case 3: // Night mode
+                    bool nightEnabled =
+                        await this.session.SettingsManager.CaptureBool(
+                            SettingsManager.Keys.WindowsDisplayNightModeEnabled) == true;
+                    this.OnNightMode(sender, new QuickStripSegmentedButtonControl.ActionEventArgs(nightEnabled ? 1 : 0));
+                    break;
             }
         }
 
