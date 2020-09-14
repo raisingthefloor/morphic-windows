@@ -80,7 +80,7 @@ namespace Morphic.Bar.Bar.Actions
             if (args["state"] == "on")
             {
                 Registry.SetValue("HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier", "Magnification", 200);
-                Process? process = Process.Start(new ProcessStartInfo("magnify.exe", "/fullscreen")
+                Process? process = Process.Start(new ProcessStartInfo("magnify.exe", "/lens")
                 {
                     UseShellExecute = true
                 });
