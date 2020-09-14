@@ -24,6 +24,8 @@ namespace Morphic.Bar
     using System.Windows.Controls;
     using System.Windows.Forms;
     using System.Windows.Threading;
+    using AutoUpdaterDotNET;
+    using Core.Community;
     using Microsoft.Extensions.Logging;
     using Microsoft.Win32;
     using Properties;
@@ -96,8 +98,8 @@ namespace Morphic.Bar
             services.AddLogging(this.ConfigureLogging);
             services.Configure<SessionOptions>(this.Configuration.GetSection("MorphicService"));
             // TODO: autoupdate
-            //services.Configure<UpdateOptions>(Configuration.GetSection("Update"));
-            //services.AddSingleton<UpdateOptions>(serviceProvider => serviceProvider.GetRequiredService<IOptions<UpdateOptions>>().Value);
+            services.Configure<UpdateOptions>(Configuration.GetSection("Update"));
+            services.AddSingleton<UpdateOptions>(serviceProvider => serviceProvider.GetRequiredService<IOptions<UpdateOptions>>().Value);
             services.AddSingleton<IServiceCollection>(services);
             services.AddSingleton<IServiceProvider>(provider => provider);
             services.AddSingleton<SessionOptions>(serviceProvider => serviceProvider.GetRequiredService<IOptions<SessionOptions>>().Value);
@@ -116,6 +118,7 @@ namespace Morphic.Bar
             services.AddSingleton<CommunitySession>();
             services.AddTransient<LoginWindow>();
             services.AddSingleton<BarManager>();
+            services.AddSingleton<RegistrySettings>();
 
             // TODO: build info for about window
             //services.AddSingleton<BuildInfo>(BuildInfo.FromJsonFile("build-info.json"));
@@ -202,8 +205,7 @@ namespace Morphic.Bar
             this.Session.UserChanged += this.Session_UserChanged;
             this.Logger.LogInformation("App Started");
             this.ConfigureCountly();
-            // TODO: autoupdate
-            //StartCheckingForUpdates();
+            this.StartCheckingForUpdates();
 
             this.AutoRunEnabled = this.ConfigureAutoRun();
 
@@ -212,7 +214,7 @@ namespace Morphic.Bar
 
             if (Options.Current.BarFile != null)
             {
-                this.BarManager.LoadBar(Options.Current.BarFile);
+                this.BarManager.LoadFromBarJson(Options.Current.BarFile);
             }
             else
             {
@@ -221,29 +223,20 @@ namespace Morphic.Bar
             }
         }
 
+        private void StartCheckingForUpdates()
+        {
+            UpdateOptions options = this.ServiceProvider.GetRequiredService<UpdateOptions>();
+            if (!string.IsNullOrEmpty(options.AppCastUrl))
+            {
+                AutoUpdater.Start(options.AppCastUrl);
+            }
+        }
+
         private void Session_UserChanged(object? sender, EventArgs e)
         {
             if (this.Session.User != null)
             {
-                if (this.Session.Bar != null)
-                {
-                    this.BarManager.LoadBar(this.Session.Bar);
-                }
-                else
-                {
-                    if (this.Session.Communities.Length == 0)
-                    {
-                        // TODO: show "No comminities" error
-                    }
-                    else if (this.Session.Communities.Length == 1)
-                    {
-                        // TODO: show "Could not load bar" error
-                    }
-                    else
-                    {
-                        // TODO: show community picker
-                    }
-                }
+                this.BarManager.LoadSessionBar(this.Session);
             }
         }
 
@@ -564,27 +557,48 @@ namespace Morphic.Bar
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void MenuItem_TestBars_Init(object sender, EventArgs e)
+        private void MenuItem_Communities_Init(object sender, EventArgs e)
         {
-#if TESTING
             if (sender is MenuItem item)
             {
-                Regex name = new Regex(@".*testbar-(.*)\.json5$");
-                foreach (string file in Directory.GetFiles(AppPaths.DefaultConfigDir, "testbar-*.json5"))
+                this.Session.UserChanged += (o, args) =>
                 {
-                    MenuItem child = new MenuItem()
-                    {
-                        Header = name.Replace(file, "$1"),
-                        Tag = file
-                    };
+                    this.CreateCommunitiesMenu(item);
+                };
 
-                    child.Click += MenuItem_TestBar;
-                    item.Items.Add(child);
-                }
+                this.BarManager.BarLoaded += (o, args) =>
+                {
+                    this.CreateCommunitiesMenu(item, args.Bar.CommunityId);
+                };
 
-                item.Visibility = Visibility.Visible;
+                this.BarManager.BarUnloaded += (o, args) =>
+                {
+                    this.CreateCommunitiesMenu(item);
+                };
+
+                this.CreateCommunitiesMenu(item);
             }
-#endif
+        }
+
+        private void CreateCommunitiesMenu(MenuItem communitiesMenu, string? currentCommunityId = null)
+        {
+            communitiesMenu.Items.Clear();
+
+            foreach (UserCommunity community in this.Session.Communities)
+            {
+                MenuItem item = new MenuItem()
+                {
+                    Header = community.Name,
+                    Tag = community.Id,
+                    IsChecked = currentCommunityId == community.Id
+                };
+                item.Click += this.MenuItem_Community;
+                communitiesMenu.Items.Add(item);
+            }
+
+            communitiesMenu.Visibility = communitiesMenu.Items.Count > 0
+                ? Visibility.Visible
+                : Visibility.Collapsed;
         }
 
         /// <summary>
@@ -592,11 +606,11 @@ namespace Morphic.Bar
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void MenuItem_TestBar(object sender, RoutedEventArgs e)
+        private async void MenuItem_Community(object sender, RoutedEventArgs e)
         {
-            if (sender is MenuItem item && item.Tag is string path)
+            if (sender is MenuItem item && item.Tag is string communityId)
             {
-                this.BarManager.LoadBar(path);
+                this.BarManager.LoadSessionBar(this.Session, communityId);
             }
         }
 
@@ -638,5 +652,10 @@ namespace Morphic.Bar
             MessageBox.Show($"Morphic Community Bar\n\nVersion: {ver}");
         }
         #endregion
+    }
+
+    public class UpdateOptions
+    {
+        public string AppCastUrl { get; set; } = "";
     }
 }

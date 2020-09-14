@@ -227,51 +227,63 @@ stages:
                   S3_OBJECT_PREFIX="win/x64/internal"
                   EXTRA_ARGS="--expires $(date -d '+2 days' --iso-8601=seconds)"
                 fi
-                
-                S3_PUBLISHED_HTTP_URL="https://d23vryjv7k8eyb.cloudfront.net"
-                INSTALLER_NAME_BASE="MorphicSetup"
-                VERSION=$(sed -n 1p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
-                ASSEMBLY_VERSION=$(sed -n 2p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
-                LOCAL_MSI_SOURCE="${AGENT_BUILDDIRECTORY}/x64-installer/MorphicSetup.msi"
-                LOCAL_APPCAST_SOURCE="${AGENT_BUILDDIRECTORY}/${INSTALLER_NAME_BASE}-v${VERSION}.appcast.xml"
-                S3_MSI_OBJECT_NAME="${S3_OBJECT_PREFIX}/${INSTALLER_NAME_BASE}-v${VERSION}.msi"
-                S3_APPCAST_OBJECT_NAME="${S3_OBJECT_PREFIX}/${INSTALLER_NAME_BASE}-v${VERSION}.appcast.xml"
 
-                LOCAL_COMMUNITY_MSI="${AGENT_BUILDDIRECTORY}/x64-community-installer/MorphicCommunitySetup.msi"
-                COMMUNITY_S3_TARGET="${S3_OBJECT_PREFIX}/MorphicCommunitySetup-v${VERSION}.msi"
-                
-                cat > "${LOCAL_APPCAST_SOURCE}" <<EOF
+                S3_PUBLISHED_HTTP_URL="https://d23vryjv7k8eyb.cloudfront.net"
+
+                publishInstaller() {
+                  VERSION=$(sed -n 1p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
+                  ASSEMBLY_VERSION=$(sed -n 2p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
+                  LOCAL_MSI_SOURCE="${AGENT_BUILDDIRECTORY}/${LOCAL_MSI_DIR}/${INSTALLER_NAME_BASE}.msi"
+                  LOCAL_APPCAST_SOURCE="${AGENT_BUILDDIRECTORY}/${INSTALLER_NAME_BASE}-v${VERSION}.appcast.xml"
+                  S3_MSI_OBJECT_NAME="${S3_OBJECT_PREFIX}/${INSTALLER_NAME_BASE}-v${VERSION}.msi"
+                  S3_APPCAST_OBJECT_NAME="${S3_OBJECT_PREFIX}/${INSTALLER_NAME_BASE}-v${VERSION}.appcast.xml"
+
+                  cat > "${LOCAL_APPCAST_SOURCE}" <<EOF
                 <?xml version="1.0" encoding="utf-8"?>
                 <item>
-                  <version>${ASSEMBLY_VERSION}</version>
-                  <url>${S3_PUBLISHED_HTTP_URL}/${S3_MSI_OBJECT_NAME}</url>
+                    <version>${ASSEMBLY_VERSION}</version>
+                    <url>${S3_PUBLISHED_HTTP_URL}/${S3_MSI_OBJECT_NAME}</url>
                 </item>
                 EOF
 
-                echo ${S3_PUBLISHED_HTTP_URL}/${S3_APPCAST_OBJECT_NAME}
-                cat "${LOCAL_APPCAST_SOURCE}"
+                  echo ${S3_PUBLISHED_HTTP_URL}/${S3_APPCAST_OBJECT_NAME}
+                  cat "${LOCAL_APPCAST_SOURCE}"
 
-                ls -al ${AGENT_BUILDDIRECTORY}
-                aws s3 cp $EXTRA_ARGS "${LOCAL_MSI_SOURCE}" "s3://${BUCKET}/${S3_MSI_OBJECT_NAME}"
-                aws s3 cp $EXTRA_ARGS "${LOCAL_APPCAST_SOURCE}" "s3://${BUCKET}/${S3_APPCAST_OBJECT_NAME}"
-                aws s3 cp $EXTRA_ARGS "${LOCAL_COMMUNITY_MSI}" "s3://${BUCKET}/${COMMUNITY_S3_TARGET}"
+                  ls -al ${AGENT_BUILDDIRECTORY}
+                  aws s3 cp $EXTRA_ARGS "${LOCAL_MSI_SOURCE}" "s3://${BUCKET}/${S3_MSI_OBJECT_NAME}"
+                  aws s3 cp $EXTRA_ARGS "${LOCAL_APPCAST_SOURCE}" "s3://${BUCKET}/${S3_APPCAST_OBJECT_NAME}"
+                }
+
+                INSTALLER_NAME_BASE="MorphicSetup"
+                LOCAL_MSI_DIR="x64-installer"
+                publishInstaller
+
+                MORPHIC_S3_MSI_OBJECT_NAME=$S3_MSI_OBJECT_NAME
+                MORPHIC_S3_APPCAST_OBJECT_NAME=$S3_APPCAST_OBJECT_NAME
+
+                INSTALLER_NAME_BASE="MorphicCommunitySetup"
+                LOCAL_MSI_DIR="x64-community-installer"
+                publishInstaller
+
+                COMMUNITY_S3_MSI_OBJECT_NAME=$S3_MSI_OBJECT_NAME
+                COMMUNITY_S3_APPCAST_OBJECT_NAME=$S3_APPCAST_OBJECT_NAME
+
 
                 # TODO: do we want this to update staging and prod automatically, depending on branch?
                 if [[ "${BRANCH_NAME}" == "master" ]]; then
                   echo "updating dev environment urls"
                   # azure checks out headlessly, so we need to swap to the branch
                   git checkout ${BRANCH_NAME}
-                
+
                   TO_EDIT=environments/dev/patches/set-env.yaml
-                  
+
                   # client
-                  go run update-env-var.go ${TO_EDIT} "MORPHIC_WINDOWS_DOWNLOAD_URL" "${S3_PUBLISHED_HTTP_URL}/${S3_MSI_OBJECT_NAME}"
-                  go run update-env-var.go ${TO_EDIT} "MORPHIC_WINDOWS_APPCAST_URL" "${S3_PUBLISHED_HTTP_URL}/${S3_APPCAST_OBJECT_NAME}"
+                  go run update-env-var.go ${TO_EDIT} "MORPHIC_WINDOWS_DOWNLOAD_URL" "${S3_PUBLISHED_HTTP_URL}/${MORPHIC_S3_MSI_OBJECT_NAME}"
+                  go run update-env-var.go ${TO_EDIT} "MORPHIC_WINDOWS_APPCAST_URL" "${S3_PUBLISHED_HTTP_URL}/${MORPHIC_S3_APPCAST_OBJECT_NAME}"
 
                   # community client
-                  go run update-env-var.go ${TO_EDIT} "MORPHIC_WINDOWS_COMMUNITY_DOWNLOAD_URL" "${S3_PUBLISHED_HTTP_URL}/${COMMUNITY_S3_TARGET}"
-                  # TODO: need to figure out the appcast url here
-                  #go run update-env-var.go ${TO_EDIT} "MORPHIC_WINDOWS_COMMUNITY_APPCAST_URL" "${S3_PUBLISHED_HTTP_URL}/${S3_APPCAST_OBJECT_NAME}"
+                  go run update-env-var.go ${TO_EDIT} "MORPHIC_WINDOWS_COMMUNITY_DOWNLOAD_URL" "${S3_PUBLISHED_HTTP_URL}/${COMMUNITY_S3_MSI_OBJECT_NAME}"
+                  go run update-env-var.go ${TO_EDIT} "MORPHIC_WINDOWS_COMMUNITY_APPCAST_URL" "${S3_PUBLISHED_HTTP_URL}/${COMMUNITY_S3_APPCAST_OBJECT_NAME}"
 
                   git config --global user.email "buildmaster@raisingthefloor.org"
                   git config --global user.name "buildmaster"
