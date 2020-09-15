@@ -172,21 +172,29 @@
   <data name="QuickStrip_NightMode_Title" xml:space="preserve">
     <value>Night mode</value>
   </data>
-
   <data name="QuickStrip_Colors_Title" xml:space="preserve">
     <value>Adjust contrast and color</value>
   </data>
-
   <data name="QuickStrip_Colors_Contrast_Title" xml:space="preserve">
     <value>Contrast</value>
   </data>
-
-
   <data name="QuickStrip_Colors_Color_Title" xml:space="preserve">
-    <value>Color</value>
+    <value>Color filter</value>
+  </data>
+  <data name="QuickStrip_Colors_Color_HelpTitle" xml:space="preserve">
+    <value>Enable colour filter</value>
+  </data>
+  <data name="QuickStrip_Colors_Color_HelpMessage" xml:space="preserve">
+    <value>Make photos and colors easier to see by applying a color filter to your screen.</value>
   </data>
   <data name="QuickStrip_Colors_Dark_Title" xml:space="preserve">
     <value>Dark</value>
+  </data>
+  <data name="QuickStrip_Colors_Dark_HelpTitle" xml:space="preserve">
+    <value>Enable Dark Mode</value>
+  </data>
+  <data name="QuickStrip_Colors_Dark_HelpMessage" xml:space="preserve">
+    <value>Enable a dark theme for some apps</value>
   </data>
   <data name="QuickStrip_Colors_Night_Title" xml:space="preserve">
     <value>Night</value>

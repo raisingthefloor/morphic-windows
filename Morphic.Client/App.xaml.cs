@@ -186,7 +186,9 @@ namespace Morphic.Client
             Countly.RecordException(ex.Message, ex.StackTrace, extraData, true)
                 .ContinueWith(RecordedException, TaskScheduler.FromCurrentSynchronizationContext());
 
-            MessageBox.Show("An unhandled exception just occurred: " + e.Exception.Message, "Exception Sample", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Console.WriteLine(ex);
+
+            //MessageBox.Show("An unhandled exception just occurred: " + e.Exception.Message, "Exception Sample", MessageBoxButton.OK, MessageBoxImage.Warning);
             // This prevents the exception from crashing the application
             e.Handled = true;
         }
@@ -239,6 +241,8 @@ namespace Morphic.Client
             RegisterGlobalHotKeys();
             ConfigureCountly();
             StartCheckingForUpdates();
+
+            this.AddSettingsListener();
 
             if (this.FirstRun)
             {
@@ -753,6 +757,53 @@ namespace Morphic.Client
                 icon.Visible = false;
             }
             base.OnExit(e);
+        }
+
+        #endregion
+
+        #region SystemEvents
+
+        public event EventHandler? SystemSettingChanged;
+
+        private bool addedSystemEvents = false;
+        private DispatcherTimer? systemSettingTimer;
+
+        /// <summary>
+        /// Start listening to some changes to system settings.
+        /// </summary>
+        private void AddSettingsListener()
+        {
+            if (this.addedSystemEvents)
+            {
+                return;
+            }
+
+            this.addedSystemEvents = true;
+            this.systemSettingTimer = new DispatcherTimer(DispatcherPriority.Render)
+            {
+                Interval = TimeSpan.FromMilliseconds(500)
+            };
+
+            this.systemSettingTimer.Tick += (sender, args) =>
+            {
+                this.systemSettingTimer.Stop();
+                this.SystemSettingChanged?.Invoke(this, EventArgs.Empty);
+            };
+
+            SystemEvents.DisplaySettingsChanged += this.SystemEventsOnDisplaySettingsChanged;
+            SystemEvents.UserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
+
+            this.Exit += (sender, args) =>
+            {
+                SystemEvents.DisplaySettingsChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                SystemEvents.UserPreferenceChanged -= this.SystemEventsOnDisplaySettingsChanged;
+            };
+        }
+
+        private void SystemEventsOnDisplaySettingsChanged(object? sender, EventArgs e)
+        {
+            // Wait a bit, to see if any other events have been raised.
+            this.systemSettingTimer.Start();
         }
 
         #endregion

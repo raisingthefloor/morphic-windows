@@ -98,7 +98,25 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Color.
+        ///   Looks up a localized string similar to Make photos and colors easier to see by applying a color filter to your screen..
+        /// </summary>
+        internal static string QuickStrip_Colors_Color_HelpMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_Colors_Color_HelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enable colour filter.
+        /// </summary>
+        internal static string QuickStrip_Colors_Color_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_Colors_Color_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Color filter.
         /// </summary>
         internal static string QuickStrip_Colors_Color_Title {
             get {
@@ -112,6 +130,24 @@ namespace Morphic.Client.Properties {
         internal static string QuickStrip_Colors_Contrast_Title {
             get {
                 return ResourceManager.GetString("QuickStrip_Colors_Contrast_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enable a dark theme for some apps.
+        /// </summary>
+        internal static string QuickStrip_Colors_Dark_HelpMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_Colors_Dark_HelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enable Dark Mode.
+        /// </summary>
+        internal static string QuickStrip_Colors_Dark_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_Colors_Dark_HelpTitle", resourceCulture);
             }
         }
         

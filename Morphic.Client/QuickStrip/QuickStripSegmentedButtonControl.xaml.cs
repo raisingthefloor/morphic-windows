@@ -33,7 +33,10 @@ using Morphic.Client.QuickStrip;
 
 namespace Morphic.Client
 {
+    using System.Windows.Controls.Primitives;
     using System.Windows.Input;
+    using Core;
+    using Service;
 
     /// <summary>
     /// Interaction logic for QuickStripSegmentedButtonControl.xaml
@@ -59,26 +62,32 @@ namespace Morphic.Client
         private Style CreateBaseButtonStyle()
         {
             var style = new Style();
-            var template = new ControlTemplate(typeof(ActionButton));
+            var template = new ControlTemplate(typeof(ButtonBase));
             var factory = new FrameworkElementFactory(typeof(Border));
             factory.SetBinding(Border.BackgroundProperty, new Binding { RelativeSource = RelativeSource.TemplatedParent, Path = new PropertyPath("Background") });
             factory.SetBinding(Border.PaddingProperty, new Binding { RelativeSource = RelativeSource.TemplatedParent, Path = new PropertyPath("Padding") });
             template.VisualTree = factory;
             factory.AppendChild(new FrameworkElementFactory(typeof(ContentPresenter)));
-            style.Setters.Add(new Setter { Property = ActionButton.TemplateProperty, Value = template });
-            style.Setters.Add(new Setter { Property = ActionButton.SnapsToDevicePixelsProperty, Value = true });
-            style.Setters.Add(new Setter { Property = ActionButton.PaddingProperty, Value = new Thickness(12, 4, 12, 4) });
-            style.Setters.Add(new Setter { Property = ActionButton.VerticalContentAlignmentProperty, Value = VerticalAlignment.Center });
-            style.Setters.Add(new Setter { Property = ActionButton.HorizontalContentAlignmentProperty, Value = HorizontalAlignment.Center });
-            style.Setters.Add(new Setter { Property = ActionButton.ForegroundProperty, Value = new SolidColorBrush(Color.FromRgb(255, 255, 255)) });
-            style.Setters.Add(new Setter { Property = ActionButton.FontFamilyProperty, Value = SystemFonts.MessageFontFamily });
-            style.Setters.Add(new Setter { Property = ActionButton.FontSizeProperty, Value = 14.0 });
-            style.Setters.Add(new Setter { Property = ActionButton.FontWeightProperty, Value = FontWeight.FromOpenTypeWeight(700) });
+            style.Setters.Add(new Setter { Property = ButtonBase.TemplateProperty, Value = template });
+            style.Setters.Add(new Setter { Property = ButtonBase.SnapsToDevicePixelsProperty, Value = true });
+            style.Setters.Add(new Setter { Property = ButtonBase.PaddingProperty, Value = new Thickness(12, 4, 12, 4) });
+            style.Setters.Add(new Setter { Property = ButtonBase.VerticalContentAlignmentProperty, Value = VerticalAlignment.Center });
+            style.Setters.Add(new Setter { Property = ButtonBase.HorizontalContentAlignmentProperty, Value = HorizontalAlignment.Center });
+            style.Setters.Add(new Setter { Property = ButtonBase.ForegroundProperty, Value = new SolidColorBrush(Color.FromRgb(255, 255, 255)) });
+            style.Setters.Add(new Setter { Property = ButtonBase.FontFamilyProperty, Value = SystemFonts.MessageFontFamily });
+            style.Setters.Add(new Setter { Property = ButtonBase.FontSizeProperty, Value = 14.0 });
+            style.Setters.Add(new Setter { Property = ButtonBase.FontWeightProperty, Value = FontWeight.FromOpenTypeWeight(700) });
             
             // Fade the button if it's disabled.
-            var trigger = new Trigger { Property = ActionButton.IsEnabledProperty, Value = false };
-            trigger.Setters.Add(new Setter{ Property =  ActionButton.OpacityProperty, Value = 0.5});
+            var trigger = new Trigger { Property = ButtonBase.IsEnabledProperty, Value = false };
+            trigger.Setters.Add(new Setter{ Property =  ButtonBase.OpacityProperty, Value = 0.5});
             style.Triggers.Add(trigger);
+
+            // Colour the button if it's checked.
+            var triggerChecked = new Trigger { Property = ToggleButton.IsCheckedProperty, Value = true };
+            triggerChecked.Setters.Add(new Setter{ Property =  ButtonBase.BackgroundProperty, Value = new SolidColorBrush(Colors.Black) });
+            triggerChecked.Setters.Add(new Setter{ Property =  ButtonBase.ForegroundProperty, Value = this.PrimaryButtonBackground });
+            style.Triggers.Add(triggerChecked);
 
             return style;
         }
@@ -86,9 +95,18 @@ namespace Morphic.Client
         private Style CreatePrimaryButtonStyle()
         {
             var style = CreateBaseButtonStyle();
-            style.Setters.Add(new Setter { Property = ActionButton.BackgroundProperty, Value = PrimaryButtonBackground });
-            var trigger = new Trigger { Property = ActionButton.IsPressedProperty, Value = true };
-            trigger.Setters.Add(new Setter { Property = ActionButton.BackgroundProperty, Value = PrimaryButtonBackground.DarkenedByPercentage(0.4) });
+            style.Setters.Add(new Setter { Property = ButtonBase.BackgroundProperty, Value = PrimaryButtonBackground });
+            var trigger = new Trigger { Property = ButtonBase.IsPressedProperty, Value = true };
+            trigger.Setters.Add(new Setter { Property = ButtonBase.BackgroundProperty, Value = PrimaryButtonBackground.DarkenedByPercentage(0.4) });
+            style.Triggers.Add(trigger);
+            return style;
+        }
+        private Style CreatePrimaryToggleStyle()
+        {
+            var style = CreateBaseButtonStyle();
+            style.Setters.Add(new Setter { Property = ToggleButton.BackgroundProperty, Value = PrimaryButtonBackground });
+            var trigger = new Trigger { Property = ToggleButton.IsPressedProperty, Value = true };
+            trigger.Setters.Add(new Setter { Property = ToggleButton.BackgroundProperty, Value = PrimaryButtonBackground.DarkenedByPercentage(0.4) });
             style.Triggers.Add(trigger);
             return style;
         }
@@ -119,9 +137,9 @@ namespace Morphic.Client
                 showsHelp = value;
                 foreach (var element in ActionStack.Children)
                 {
-                    if (element is ActionButton button)
+                    if (element is IActionControl button)
                     {
-                        button.ShowsHelp = showsHelp;
+                        button.Helper.ShowsHelp = showsHelp;
                     }
                 }
             }
@@ -138,6 +156,22 @@ namespace Morphic.Client
         }
 
         /// <summary>
+        /// Updates the state of the buttons.
+        /// </summary>
+        public void UpdateStates()
+        {
+            foreach (QsToggleButton toggleButton in this.ActionStack.Children.OfType<QsToggleButton>())
+            {
+                toggleButton.UpdateState();
+            }
+        }
+
+        public QsToggleButton AddToggle(string title, string automationName, IQuickHelpControlBuilder? helpBuilder)
+        {
+            return (QsToggleButton)this.AddButton(title as object, automationName, helpBuilder, true);
+        }
+
+        /// <summary>
         /// Add a text button segment to the control
         /// </summary>
         /// <param name="title">The title of the button</param>
@@ -146,8 +180,9 @@ namespace Morphic.Client
         /// <param name="isPrimary">Indicates how the button should be styled</param>
         public void AddButton(string title, string automationName, IQuickHelpControlBuilder? helpBuilder, bool isPrimary)
         {
-            AddButton(title as object, automationName, helpBuilder, isPrimary);
+            this.AddButton(title as object, automationName, helpBuilder);
         }
+
 
         /// <summary>
         /// Add an image button segment to the control
@@ -159,7 +194,7 @@ namespace Morphic.Client
         public void AddButton(Image image, string automationName, IQuickHelpControlBuilder? helpBuilder, bool isPrimary)
         {
             image.Stretch = Stretch.None;
-            AddButton(image as object, automationName, helpBuilder, isPrimary);
+            this.AddButton(image as object, automationName, helpBuilder);
         }
 
         /// <summary>
@@ -168,25 +203,43 @@ namespace Morphic.Client
         /// <param name="content">The content of the button, either text or image</param>
         /// <param name="helpTitle">The title of the help window that appears on hover</param>
         /// <param name="helpMessage">The message in the help window that appears on hover</param>
-        /// <param name="isPrimary">Indicates how the button should be styled</param>
-        private void AddButton(object content, string automationName, IQuickHelpControlBuilder? helpBuilder, bool isPrimary)
+        /// <param name="isToggle">true if this button is a toggle button.</param>
+        private ButtonBase AddButton(object content, string automationName, IQuickHelpControlBuilder? helpBuilder, bool isToggle = false)
         {
-            var button = new ActionButton();
+            ButtonBase button = isToggle ? (ButtonBase)new QsToggleButton(helpBuilder) : new ActionButton(helpBuilder);
+
             // We started with a design that had two styles of buttons: primary and secondary
             // They featured different background shades, but the lighter shade was too low of
             // contrast wit the white text for users who need high contrast.  So we're now
             // using only the primary style and adding a space in between the buttons 
-            button.Style = CreatePrimaryButtonStyle();
+            button.Style = isToggle ? CreatePrimaryToggleStyle() : CreatePrimaryButtonStyle();
             button.FocusVisualStyle = this.Resources["ButtonFocusStyle"] as Style;
             button.Content = content;
-            button.HelpBuilder = helpBuilder;
             AutomationProperties.SetName(button, automationName);
             button.Click += Button_Click;
+
+            if (button is ToggleButton toggleButton)
+            {
+                toggleButton.Checked += Button_Toggled;
+                toggleButton.Unchecked += Button_Toggled;
+            }
+
             if (ActionStack.Children.Count > 0)
             {
                 button.Margin = new Thickness(1, 0, 0, 0);
             }
             ActionStack.Children.Add(button);
+            return button;
+        }
+
+        private void Button_Toggled(object sender, RoutedEventArgs e)
+        {
+            if (sender is ToggleButton button)
+            {
+                var index = ActionStack.Children.IndexOf(button);
+                var args = new ActionEventArgs(index, button.IsChecked == true);
+                Toggled?.Invoke(this, args);
+            }
         }
 
         /// <summary>
@@ -196,12 +249,15 @@ namespace Morphic.Client
         /// <param name="e">The event arguments</param>
         private void Button_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            if (sender is ActionButton button)
+            if (sender is ButtonBase button)
             {
                 var index = ActionStack.Children.IndexOf(button);
-                var args = new ActionEventArgs(index);
+                var args = new ActionEventArgs(index, (button as ToggleButton)?.IsChecked == true);
                 Action?.Invoke(this, args);
-                button.UpdateHelp();
+                if (button is IActionControl actionControl)
+                {
+                    actionControl.Helper.UpdateHelp();
+                }
             }
         }
 
@@ -216,12 +272,19 @@ namespace Morphic.Client
             public int SelectedIndex { get; }
 
             /// <summary>
+            /// The toggle state, for toggle buttons.
+            /// </summary>
+            public bool ToggleState { get; }
+
+            /// <summary>
             /// Create a new args object with the given selected index
             /// </summary>
             /// <param name="selectedIndex">The selected segment index, indicating which action button was clicked</param>
-            public ActionEventArgs(int selectedIndex)
+            /// <param name="toggleState">true if the button is 'on'</param>
+            public ActionEventArgs(int selectedIndex, bool toggleState = false)
             {
                 SelectedIndex = selectedIndex;
+                ToggleState = toggleState;
             }
         }
 
@@ -238,9 +301,90 @@ namespace Morphic.Client
         public event ActionHandler? Action;
 
         /// <summary>
+        /// The event that is dispatched when any toggle button segment is toggled
+        /// </summary>
+        public event ActionHandler? Toggled;
+
+        /// <summary>
         /// A custom Button subclass that can show help text in a large window on hover
         /// </summary>
-        private class ActionButton: Button
+        public class ActionButton : Button, IActionControl
+        {
+            public ActionButton(IQuickHelpControlBuilder? helpBuilder)
+            {
+                this.Helper = new ActionControlHelper(this, helpBuilder);
+            }
+
+            public ActionControlHelper Helper { get; set; }
+        }
+
+        public class QsToggleButton : ToggleButton, IActionControl
+        {
+            /// <summary>The setting.</summary>
+            public Preferences.Key PreferenceKey { get; set; }
+            /// <summary>The session.</summary>
+            public Session? Session { get; set; }
+            public bool AutoUpdate { get; set; }
+
+            /// <summary>The value to use when the button is checked.</summary>
+            public object OnValue { get; set; }
+            /// <summary>The value to use when the button is unchecked.</summary>
+            public object OffValue { get; set; }
+
+            public ActionControlHelper Helper { get; set; }
+
+            public QsToggleButton(IQuickHelpControlBuilder? helpBuilder)
+            {
+                this.Helper = new ActionControlHelper(this, helpBuilder);
+            }
+
+            public async void UpdateState()
+            {
+                if (this.AutoUpdate && this.Session != null)
+                {
+                    object value = await this.Session.SettingsManager.Capture(this.PreferenceKey) ?? false;
+
+                    bool check = value.Equals(this.OnValue);
+
+                    if (this.IsChecked != check)
+                    {
+                        this.IsChecked = check;
+                    }
+                }
+            }
+
+            public void Automate(Session session, Preferences.Key pref, bool autoUpdate = true, object? onValue = null, object? offValue = null)
+            {
+                this.OnValue = onValue ?? true;
+                this.OffValue = offValue ?? false;
+                this.Session = session;
+                this.PreferenceKey = pref;
+                this.AutoUpdate = autoUpdate;
+
+                this.Click += this.OnClick;
+                this.UpdateState();
+            }
+
+            private async void OnClick(object sender, RoutedEventArgs e)
+            {
+                if (this.Session != null)
+                {
+                    object value = this.IsChecked == true ? this.OnValue : this.OffValue;
+                    await this.Session.Apply(this.PreferenceKey, value);
+                    this.UpdateState();
+                }
+            }
+        }
+
+        public interface IActionControl
+        {
+            ActionControlHelper Helper { get; }
+        }
+
+        /// <summary>
+        /// Used by the qs controls to display the help pop-up.
+        /// </summary>
+        public class ActionControlHelper
         {
 
             /// <summary>
@@ -256,11 +400,12 @@ namespace Morphic.Client
             /// <summary>
             /// Create an action button
             /// </summary>
-            public ActionButton(): base()
+            public ActionControlHelper(Control actionControl, IQuickHelpControlBuilder? helpBuilder): base()
             {
-                MouseEnter += OnMouseEnter;
-                MouseLeave += OnMouseLeave;
-                GotKeyboardFocus += OnGotKeyboardFocus;
+                this.HelpBuilder = helpBuilder;
+                actionControl.MouseEnter += OnMouseEnter;
+                actionControl.MouseLeave += OnMouseLeave;
+                actionControl.GotKeyboardFocus += OnGotKeyboardFocus;
             }
 
             private void OnGotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
