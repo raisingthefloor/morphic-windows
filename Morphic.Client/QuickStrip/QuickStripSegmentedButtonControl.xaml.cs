@@ -86,7 +86,6 @@ namespace Morphic.Client
             // Colour the button if it's checked.
             var triggerChecked = new Trigger { Property = ToggleButton.IsCheckedProperty, Value = true };
             triggerChecked.Setters.Add(new Setter{ Property =  ButtonBase.BackgroundProperty, Value = new SolidColorBrush(Colors.Black) });
-            triggerChecked.Setters.Add(new Setter{ Property =  ButtonBase.ForegroundProperty, Value = this.PrimaryButtonBackground });
             style.Triggers.Add(triggerChecked);
 
             return style;
@@ -410,7 +409,10 @@ namespace Morphic.Client
 
             private void OnGotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
             {
-                UpdateHelp();
+                if (InputManager.Current.MostRecentInputDevice is KeyboardDevice)
+                {
+                    UpdateHelp();
+                }
             }
 
             /// <summary>

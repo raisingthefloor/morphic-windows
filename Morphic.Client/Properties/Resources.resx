@@ -185,7 +185,7 @@
     <value>Snip</value>
   </data>
   <data name="QuickStrip_Colors_Title" xml:space="preserve">
-    <value>Adjust contrast and color</value>
+    <value>Contrast &amp; color</value>
   </data>
   <data name="QuickStrip_Colors_Contrast_Title" xml:space="preserve">
     <value>Contrast</value>
@@ -273,7 +273,7 @@
     <value>Cannot Decrease Screen Zoom</value>
   </data>
   <data name="QuickStrip_Resolution_Title" xml:space="preserve">
-    <value>Screen Zoom</value>
+    <value>Text Size</value>
   </data>
   <data name="QuickStrip_Volume_Down_HelpMessage" xml:space="preserve">
     <value>Make all the sounds quieter</value>

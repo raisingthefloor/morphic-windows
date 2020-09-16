@@ -170,7 +170,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Adjust contrast and color.
+        ///   Looks up a localized string similar to Contrast &amp; color.
         /// </summary>
         internal static string QuickStrip_Colors_Title {
             get {
@@ -485,7 +485,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Screen Zoom.
+        ///   Looks up a localized string similar to Text Size.
         /// </summary>
         internal static string QuickStrip_Resolution_Title {
             get {

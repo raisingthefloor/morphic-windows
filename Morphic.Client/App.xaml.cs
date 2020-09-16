@@ -664,6 +664,7 @@ namespace Morphic.Client
 
             this.QuickStripWindow.Show();
             this.QuickStripWindow.Activate();
+            this.QuickStripWindow.FocusFirstItem();
 
             if (showQuickStripItem != null)
             {

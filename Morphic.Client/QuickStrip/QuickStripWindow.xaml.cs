@@ -46,8 +46,10 @@ namespace Morphic.Client.QuickStrip
     using System.Text.Json;
     using System.Text.Json.Serialization;
     using System.Windows.Forms;
+    using System.Windows.Input;
     using Clipboard = System.Windows.Clipboard;
     using IDataObject = System.Windows.IDataObject;
+    using Keyboard = Windows.Native.Keyboard;
 
     /// <summary>
     /// Interaction logic for QuickStripWindow.xaml
@@ -108,6 +110,8 @@ namespace Morphic.Client.QuickStrip
             HwndSource hwndSource = HwndSource.FromHwnd(nativeWindow.Handle);
             SelectionReader.Default.Initialise(nativeWindow.Handle);
             hwndSource?.AddHook(SelectionReader.Default.WindowProc);
+
+            this.FocusFirstItem();
         }
 
         private readonly Session session;
@@ -878,6 +882,11 @@ namespace Morphic.Client.QuickStrip
         public void Dispose()
         {
             this.Messages.Dispose();
+        }
+
+        public void FocusFirstItem()
+        {
+            this.MoveFocus(new TraversalRequest(FocusNavigationDirection.First));
         }
     }
 }
