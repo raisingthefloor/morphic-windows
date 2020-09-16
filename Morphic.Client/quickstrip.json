@@ -10,11 +10,11 @@
     },
     {
       "type": "control",
-      "feature": "reader"
+      "feature": "snip"
     },
     {
       "type": "control",
-      "feature": "volume"
+      "feature": "reader"
     },
     {
       "type": "control",

@@ -564,6 +564,10 @@ namespace Morphic.Windows.Native
         // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowthreadprocessid
         [DllImport("user32.dll", SetLastError=true)]
         internal static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+        //
+        // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-keybd_event
+        [DllImport("user32.dll")]
+        internal static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
 
     }
 }

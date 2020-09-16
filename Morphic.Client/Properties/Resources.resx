@@ -172,6 +172,18 @@
   <data name="QuickStrip_NightMode_Title" xml:space="preserve">
     <value>Night mode</value>
   </data>
+  <data name="QuickStrip_Snip_HelpMessage" xml:space="preserve">
+    <value>Copy a part of the screen to the clipboard.</value>
+  </data>
+  <data name="QuickStrip_Snip_HelpTitle" xml:space="preserve">
+    <value>Snip</value>
+  </data>
+  <data name="QuickStrip_Snip_Button_Title" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="QuickStrip_Snip_Title" xml:space="preserve">
+    <value>Snip</value>
+  </data>
   <data name="QuickStrip_Colors_Title" xml:space="preserve">
     <value>Adjust contrast and color</value>
   </data>

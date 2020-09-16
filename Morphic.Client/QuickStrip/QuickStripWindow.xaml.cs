@@ -40,6 +40,7 @@ using Display = Morphic.Settings.Display;
 
 namespace Morphic.Client.QuickStrip
 {
+    using System.Diagnostics;
     using System.IO;
     using System.Runtime.InteropServices;
     using System.Text.Json;
@@ -376,6 +377,15 @@ namespace Morphic.Client.QuickStrip
                             control.Action += quickStrip.OnNightMode;
                             return control;
                         }
+                    case "snip":
+                        {
+                            var control = new QuickStripSegmentedButtonControl();
+                            var copyButtonHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Snip_HelpTitle, Properties.Resources.QuickStrip_Snip_HelpMessage);
+                            control.TitleLabel.Content = Properties.Resources.QuickStrip_Snip_Title;
+                            control.AddButton(Properties.Resources.QuickStrip_Snip_Title, copyButtonHelp.Title, copyButtonHelp, isPrimary: false);
+                            control.Action += quickStrip.OnSnip;
+                            return control;
+                        }
                     case "colors":
                         {
                             var control = new QuickStripSegmentedButtonControl();
@@ -602,38 +612,16 @@ namespace Morphic.Client.QuickStrip
             }
         }
 
-        private async void OnColors(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
+        private void OnSnip(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
         {
-            switch (e.SelectedIndex)
+            if (e.SelectedIndex == 0)
             {
-                case 0: // Contrast
-                    bool contrastEnabled =
-                        await this.session.SettingsManager.CaptureBool(
-                            SettingsManager.Keys.WindowsDisplayContrastEnabled) == true;
-                    this.OnContrast(sender, new QuickStripSegmentedButtonControl.ActionEventArgs(contrastEnabled ? 1 : 0));
-                    break;
-
-                case 1: // Color
-                    bool colorFilterEnabled =
-                        await this.session.SettingsManager.CaptureBool(
-                            SettingsManager.Keys.WindowsDisplayColorFilterEnabled) == true;
-                    _ = session.Apply(SettingsManager.Keys.WindowsDisplayColorFilterEnabled, !colorFilterEnabled);
-
-                    break;
-
-                case 2: // Dark mode
-                    bool lightModeEnabled =
-                        await this.session.SettingsManager.CaptureBool(
-                            SettingsManager.Keys.WindowsDisplayLightThemeEnabled) == true;
-                    _ = session.Apply(SettingsManager.Keys.WindowsDisplayLightThemeEnabled, !lightModeEnabled);
-                    break;
-
-                case 3: // Night mode
-                    bool nightEnabled =
-                        await this.session.SettingsManager.CaptureBool(
-                            SettingsManager.Keys.WindowsDisplayNightModeEnabled) == true;
-                    this.OnNightMode(sender, new QuickStripSegmentedButtonControl.ActionEventArgs(nightEnabled ? 1 : 0));
-                    break;
+                Countly.RecordEvent("Snip Copy");
+                // Hold down the windows key while pressing shift + s
+                const uint windowsKey = 0x5b; // VK_LWIN
+                Keyboard.PressKey(windowsKey, true);
+                SendKeys.SendWait("+s");
+                Keyboard.PressKey(windowsKey, false);
             }
         }
 

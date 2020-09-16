@@ -494,6 +494,42 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Copy.
+        /// </summary>
+        internal static string QuickStrip_Snip_Button_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_Snip_Button_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Copy a part of the screen to the clipboard..
+        /// </summary>
+        internal static string QuickStrip_Snip_HelpMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_Snip_HelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Snip.
+        /// </summary>
+        internal static string QuickStrip_Snip_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_Snip_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Snip.
+        /// </summary>
+        internal static string QuickStrip_Snip_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_Snip_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Make all the sounds quieter.
         /// </summary>
         internal static string QuickStrip_Volume_Down_HelpMessage {
