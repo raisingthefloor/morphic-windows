@@ -237,7 +237,7 @@ namespace Morphic.Client
             logger.LogInformation("App Started");
             logger.LogInformation("Creating Tray Icon");
             CreateMainMenu();
-            CreateNotifyIcon();
+            RegisterGlobalHotKeys();
             RegisterGlobalHotKeys();
             ConfigureCountly();
             StartCheckingForUpdates();
@@ -396,6 +396,9 @@ namespace Morphic.Client
                 throw e;
             }
             logger.LogInformation("Session Open");
+
+            this.LoadQuickStrip();
+
             if (Session.GetBool(QuickStrip.QuickStripWindow.PreferenceKeys.Visible) ?? true)
             {
                 ShowQuickStrip(skippingSave: true);
@@ -416,8 +419,15 @@ namespace Morphic.Client
         /// </summary>
         private void CreateNotifyIcon()
         {
-            notifyIcon = new TrayButton();
+            if (this.QuickStripWindow == null)
+            {
+                throw new InvalidOperationException("Attempted to create the tray button before the quickstrip was loaded");
+            }
+
+            notifyIcon = new TrayButton(this.QuickStripWindow);
             notifyIcon.Click += OnNotifyIconClicked;
+            notifyIcon.SecondaryClick += OnNotifyIconRightClicked;
+            notifyIcon.DoubleClick += OnNotifyIconDoubleClicked;
             notifyIcon.Icon = Client.Properties.Resources.Icon;
             notifyIcon.Text = "Morphic";
             notifyIcon.Visible = true;
@@ -481,8 +491,37 @@ namespace Morphic.Client
         /// <param name="e"></param>
         private void OnNotifyIconClicked(object? sender, EventArgs e)
         {
-            Countly.RecordEvent("Tray Menu");
+            Countly.RecordEvent("Tray Click");
+            if (this.QuickStripWindow?.Visibility != Visibility.Visible)
+            {
+                this.ShowQuickStrip();
+            }
+            else
+            {
+                this.HideQuickStrip();
+            }
+        }
+
+        /// <summary>
+        /// Called when the system tray icon is right-clicked
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OnNotifyIconRightClicked(object? sender, EventArgs e)
+        {
+            Countly.RecordEvent("Tray double-click");
             mainMenu.IsOpen = true;
+        }
+
+        /// <summary>
+        /// Called when the system tray icon is double-clicked
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OnNotifyIconDoubleClicked(object? sender, EventArgs e)
+        {
+            Countly.RecordEvent("Tray Menu");
+            this.ShowQuickStrip();
         }
 
         /// <summary>
@@ -593,17 +632,39 @@ namespace Morphic.Client
         }
 
         /// <summary>
-        /// Ensure the Quick Strip window is shown
+        /// Loads the quick strip.
         /// </summary>
-        public void ShowQuickStrip(bool skippingSave = false)
+        public void LoadQuickStrip()
         {
             if (QuickStripWindow == null)
             {
                 QuickStripWindow = ServiceProvider.GetRequiredService<QuickStripWindow>();
                 QuickStripWindow.Closed += QuickStripClosed;
+                QuickStripWindow.SourceInitialized += (sender, args) => this.CreateNotifyIcon();
+                // So the tray button works, the window needs to be shown (to create the window), but not displayed.
+                QuickStripWindow.AllowsTransparency = true;
+                QuickStripWindow.Opacity = 0;
                 QuickStripWindow.Show();
+                QuickStripWindow.Hide();
             }
-            QuickStripWindow.Activate();
+        }
+
+        /// <summary>
+        /// Ensure the Quick Strip window is shown
+        /// </summary>
+        public void ShowQuickStrip(bool skippingSave = false)
+        {
+            this.LoadQuickStrip();
+            if (this.QuickStripWindow == null)
+            {
+                throw new ApplicationException("The quickstrip was not loaded");
+            }
+
+            QuickStripWindow.Opacity = 1;
+
+            this.QuickStripWindow.Show();
+            this.QuickStripWindow.Activate();
+
             if (showQuickStripItem != null)
             {
                 showQuickStripItem.Visibility = Visibility.Collapsed;
@@ -623,10 +684,8 @@ namespace Morphic.Client
         /// </summary>
         public void HideQuickStrip()
         {
-            if (QuickStripWindow != null)
-            {
-                QuickStripWindow.Close();
-            }
+            this.QuickStripWindow?.Hide();
+
             if (showQuickStripItem != null)
             {
                 showQuickStripItem.Visibility = Visibility.Visible;

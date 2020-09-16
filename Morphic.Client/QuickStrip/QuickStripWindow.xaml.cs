@@ -52,13 +52,16 @@ namespace Morphic.Client.QuickStrip
     /// <summary>
     /// Interaction logic for QuickStripWindow.xaml
     /// </summary>
-    public partial class QuickStripWindow : Window
+    public partial class QuickStripWindow : Window, IMessageHook
     {
+
+        public WindowMessageHook Messages { get; }
 
         #region Initialization
 
         public QuickStripWindow(Session session)
         {
+            this.Messages = new WindowMessageHook(this);
             this.session = session;
             session.UserChanged += Session_UserChanged;
             InitializeComponent();
@@ -870,6 +873,11 @@ namespace Morphic.Client.QuickStrip
 
             [JsonPropertyName("items")]
             public List<Dictionary<string, object>> Items { get; set; }
+        }
+
+        public void Dispose()
+        {
+            this.Messages.Dispose();
         }
     }
 }
