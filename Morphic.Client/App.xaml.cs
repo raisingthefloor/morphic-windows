@@ -57,6 +57,7 @@ using Morphic.Settings.Files;
 namespace Morphic.Client
 {
     using System.Diagnostics;
+    using System.Windows.Controls.Primitives;
     using Microsoft.Win32;
 
     public class AppMain
@@ -304,6 +305,31 @@ namespace Morphic.Client
         }
 
         /// <summary>
+        /// Makes the QS automatically show at start.
+        /// </summary>
+        /// <param name="itemIsChecked"></param>
+        private bool ConfigureAutoShow(bool? newValue = null)
+        {
+            bool enabled;
+            using RegistryKey morphicKey =
+                Registry.CurrentUser.CreateSubKey(@"Software\Raising the Floor\Morphic")!;
+
+            if (newValue == null)
+            {
+                // Get the configured value
+                string? value = morphicKey.GetValue("AutoShow") as string;
+                enabled = value != "0";
+            }
+            else
+            {
+                enabled = newValue == true;
+            }
+
+            morphicKey.SetValue("AutoShow", enabled ? "1" : "0", RegistryValueKind.String);
+            return enabled;
+        }
+
+        /// <summary>
         /// Actions to perform when this instance is the first since installation.
         /// </summary>
         private void OnFirstRun()
@@ -403,9 +429,9 @@ namespace Morphic.Client
 
             this.LoadQuickStrip();
 
-            if (Session.GetBool(QuickStrip.QuickStripWindow.PreferenceKeys.Visible) ?? true)
+            if (this.ConfigureAutoShow())
             {
-                ShowQuickStrip(skippingSave: true);
+                this.ShowQuickStrip();
             }
 
             if (this.FirstRun)
@@ -514,6 +540,22 @@ namespace Morphic.Client
         private void OnNotifyIconRightClicked(object? sender, EventArgs e)
         {
             Countly.RecordEvent("Tray double-click");
+            this.ShowMenu();
+        }
+
+        public void ShowMenu(Control? control = null)
+        {
+            if (control == null)
+            {
+                this.mainMenu.Placement = PlacementMode.Mouse;
+                this.mainMenu.PlacementTarget = null;
+            }
+            else
+            {
+                this.mainMenu.Placement = PlacementMode.Top;
+                this.mainMenu.PlacementTarget = control;
+            }
+
             mainMenu.IsOpen = true;
         }
 
@@ -584,6 +626,18 @@ namespace Morphic.Client
             OpenAboutWindow();
         }
 
+        private void MenuLink(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem item)
+            {
+                Countly.RecordEvent("Menu:" + item.Header);
+                Process.Start(new ProcessStartInfo(item.Tag as string)
+                {
+                    UseShellExecute = true
+                });
+            }
+        }
+
         /// <summary>
         /// Event handler for when the user selects Quit from the logo button's menu
         /// </summary>
@@ -608,6 +662,27 @@ namespace Morphic.Client
             if (sender is MenuItem item)
             {
                 this.ConfigureAutoRun(item.IsChecked);
+            };
+        }
+
+        /// <summary>
+        /// Initia
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void AutoShowInit(object? sender, EventArgs e)
+        {
+            if (sender is MenuItem item)
+            {
+                item.IsChecked = this.ConfigureAutoShow();
+            }
+        }
+
+        private void AutoShowToggle(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem item)
+            {
+                this.ConfigureAutoShow(item.IsChecked);
             };
         }
 

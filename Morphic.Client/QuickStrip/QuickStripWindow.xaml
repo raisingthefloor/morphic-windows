@@ -26,24 +26,14 @@
         <Button x:Name="LogoButton" BorderBrush="{x:Null}"
                 HorizontalAlignment="Left" Width="44" Height="44" Grid.Column="1" Background="{x:Null}"
                 AutomationProperties.Name="Main Menu"
-                Click="LogoButtonClicked"
+                Click="LogoButton_MouseUp"
+                MouseUp="LogoButton_MouseUp"
+                KeyDown="LogoButton_KeyDown"
                 MouseEnter="LogoButton_MouseEnter"
                 MouseLeave="LogoButton_MouseLeave"
                 GotFocus="LogoButton_GotFocus"
                 >
             <Image Source="/Icon.png"/>
-            <Button.ContextMenu>
-                <ContextMenu>
-                    <MenuItem Header="Hide MorphicBar" Click="HideQuickStrip"/>
-                    <!--<MenuItem Header="Customize MorphicBar..."  Click="CustomizeQuickStrip" IsEnabled="False"/>-->
-                    <Separator/>
-                    <MenuItem Header="Take My Settings with Me..." Click="TravelWithSettings"/>
-                    <MenuItem Header="Apply My Settings..." Click="ApplyMySettings"/>
-                    <MenuItem x:Name="logoutItem" Header="Logout" Click="Logout" Visibility="Collapsed"/>
-                    <Separator/>
-                    <MenuItem Header="Quit Morphic" Click="Quit"/>
-                </ContextMenu>
-            </Button.ContextMenu>
         </Button>
     </StackPanel>
 </Window>

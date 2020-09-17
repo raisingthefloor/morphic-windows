@@ -10,12 +10,17 @@
             <MenuItem x:Name="hideQuickStripItem" Header="Hide MorphicBar" Click="HideQuickStrip" Visibility="Collapsed"/>
             <!--<MenuItem Header="Customize MorphicBar..."  Click="CustomizeQuickStrip" IsEnabled="False"/>-->
             <Separator/>
-            <MenuItem Header="Take My Settings with Me..." Click="TravelWithSettings"/>
-            <MenuItem Header="Apply My Settings..." Click="ApplyMySettings"/>
-            <MenuItem x:Name="logoutItem" Header="Logout" Click="Logout" Visibility="Collapsed"/>
+            <MenuItem Header="Learn about Morphic..." Click="MenuLink" Tag="https://morphic.world/" />
+            <MenuItem Header="Quick Demo movies" Click="MenuLink" Tag="https://morphic.world/demos" />
+            <MenuItem Header="Settings to make the computer easier" Click="MenuLink" Tag="ms-settings:easeofaccess-display" />
+            <MenuItem Header="Other Helpful Things" Click="MenuLink" Tag="https://morphic.world/demos" />
+            <Separator/>
+            <MenuItem Header="Copy settings between computers" Click="TravelWithSettings"/>
+            <Separator/>
+            <MenuItem Header="Automatically start Morphic" Unchecked="AutoRunToggle" Checked="AutoRunToggle" IsCheckable="True" Initialized="AutoRunInit" />
+            <MenuItem Header="Show Morphic Bar at start" Unchecked="AutoShowToggle" Checked="AutoShowToggle" IsCheckable="True" Initialized="AutoShowInit" />
             <Separator/>
             <MenuItem Header="About Morphic..." Click="About"/>
-            <MenuItem Header="Always start Morphic" Unchecked="AutoRunToggle" Checked="AutoRunToggle" IsCheckable="True" Initialized="AutoRunInit" />
             <MenuItem Header="Quit Morphic" Click="Quit"/>
         </ContextMenu>
     </Application.Resources>

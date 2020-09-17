@@ -21,26 +21,23 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using Morphic.Core;
-using Morphic.Service;
-using Morphic.Settings;
-using System.Windows.Media.Animation;
-using System.Collections.Generic;
-using System.Linq;
-using System.Windows.Interop;
-using System.Windows.Media.Imaging;
-using Microsoft.Win32;
-using CountlySDK;
-using Morphic.Windows.Native;
-using Display = Morphic.Settings.Display;
 
 namespace Morphic.Client.QuickStrip
 {
-    using System.Diagnostics;
+    using System;
+    using System.Threading.Tasks;
+    using System.Windows;
+    using System.Windows.Controls;
+    using Morphic.Core;
+    using Morphic.Service;
+    using Morphic.Settings;
+    using System.Windows.Media.Animation;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Windows.Interop;
+    using System.Windows.Media.Imaging;
+    using Microsoft.Win32;
+    using CountlySDK;
     using System.IO;
     using System.Media;
     using System.Runtime.InteropServices;
@@ -48,10 +45,13 @@ namespace Morphic.Client.QuickStrip
     using System.Text.Json.Serialization;
     using System.Windows.Forms;
     using System.Windows.Input;
+    using Windows.Native;
     using Clipboard = System.Windows.Clipboard;
+    using Control = System.Windows.Controls.Control;
     using IDataObject = System.Windows.IDataObject;
-    using Keyboard = Windows.Native.Keyboard;
+    using Keyboard = System.Windows.Input.Keyboard;
     using KeyEventArgs = System.Windows.Input.KeyEventArgs;
+    using Display = Morphic.Settings.Display;
 
     /// <summary>
     /// Interaction logic for QuickStripWindow.xaml
@@ -137,15 +137,6 @@ namespace Morphic.Client.QuickStrip
 
             QuickStripJson qs = QuickStripJson.FromFile("quickstrip.json");
             Items = Item.CreateItems(qs.Items);
-
-            if (session.User == null)
-            {
-                logoutItem.Visibility = Visibility.Collapsed;
-            }
-            else
-            {
-                logoutItem.Visibility = Visibility.Visible;
-            }
         }
 
         #endregion
@@ -157,67 +148,32 @@ namespace Morphic.Client.QuickStrip
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void LogoButtonClicked(object sender, RoutedEventArgs e)
+        private void LogoButton_MouseUp(object sender, RoutedEventArgs e)
         {
             Countly.RecordEvent("Main Menu");
-            LogoButton.ContextMenu.IsOpen = true;
+            App.Shared.ShowMenu(sender as Control);
         }
 
         /// <summary>
-        /// Event handler for when the user selects Hide Quick Strip from the logo button's menu
+        /// Event handler for when the user clicks on the logo button
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void HideQuickStrip(object sender, RoutedEventArgs e)
+        private void LogoButton_KeyDown(object sender, KeyEventArgs e)
         {
-            Countly.RecordEvent("Hide MorphicBar");
-            App.Shared.HideQuickStrip();
+            switch (e.Key)
+            {
+                case Key.Apps:
+                case Key.F10 when Keyboard.Modifiers == ModifierKeys.Shift:
+                case Key.Space when Keyboard.Modifiers == ModifierKeys.Shift:
+                case Key.Enter when Keyboard.Modifiers == ModifierKeys.Shift:
+                    Countly.RecordEvent("Main Menu");
+                    App.Shared.ShowMenu();
+                    e.Handled = true;
+                    break;
+            }
         }
 
-        /// <summary>
-        /// Event handler for when the user selects Customize Quick Strip from the logo button's menu
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void CustomizeQuickStrip(object sender, RoutedEventArgs e)
-        {
-            Countly.RecordEvent("Customize MorphicBar");
-        }
-
-        private void AboutMorphic(object sender, RoutedEventArgs e)
-        {
-            Countly.RecordEvent("About");
-            App.Shared.OpenAboutWindow();
-        }
-
-        private void TravelWithSettings(object sender, RoutedEventArgs e)
-        {
-            Countly.RecordEvent("Travel");
-            App.Shared.OpenTravelWindow();
-        }
-
-        private void ApplyMySettings(object sender, RoutedEventArgs e)
-        {
-            Countly.RecordEvent("Login");
-            App.Shared.OpenLoginWindow();
-        }
-
-        private void Logout(object sender, RoutedEventArgs e)
-        {
-            Countly.RecordEvent("Logout");
-            _ = session.Signout();
-        }
-
-        /// <summary>
-        /// Event handler for when the user selects Quit from the logo button's menu
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Quit(object sender, RoutedEventArgs e)
-        {
-            Countly.RecordEvent("Quit");
-            App.Shared.Shutdown();
-        }
 
         #endregion
 
@@ -648,9 +604,9 @@ namespace Morphic.Client.QuickStrip
 
                 // Hold down the windows key while pressing shift + s
                 const uint windowsKey = 0x5b; // VK_LWIN
-                Keyboard.PressKey(windowsKey, true);
+                Morphic.Windows.Native.Keyboard.PressKey(windowsKey, true);
                 SendKeys.SendWait("+s");
-                Keyboard.PressKey(windowsKey, false);
+                Morphic.Windows.Native.Keyboard.PressKey(windowsKey, false);
 
                 // Show the qs again
                 Task.Delay(3000).ContinueWith(task => this.Dispatcher.Invoke(() => this.Opacity = 1));
