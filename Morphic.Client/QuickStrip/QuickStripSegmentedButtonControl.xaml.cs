@@ -33,10 +33,17 @@ using Morphic.Client.QuickStrip;
 
 namespace Morphic.Client
 {
+    using System.Diagnostics;
     using System.Windows.Controls.Primitives;
     using System.Windows.Input;
     using Core;
     using Service;
+    using Binding = System.Windows.Data.Binding;
+    using Button = System.Windows.Controls.Button;
+    using ButtonBase = System.Windows.Controls.Primitives.ButtonBase;
+    using Control = System.Windows.Controls.Control;
+    using HorizontalAlignment = System.Windows.HorizontalAlignment;
+    using VerticalAlignment = System.Windows.VerticalAlignment;
 
     /// <summary>
     /// Interaction logic for QuickStripSegmentedButtonControl.xaml
@@ -177,9 +184,9 @@ namespace Morphic.Client
         /// <param name="helpTitle">The title of the help window that appears on hover</param>
         /// <param name="helpMessage">The message in the help window that appears on hover</param>
         /// <param name="isPrimary">Indicates how the button should be styled</param>
-        public void AddButton(string title, string automationName, IQuickHelpControlBuilder? helpBuilder, bool isPrimary)
+        public ActionButton AddButton(string title, string automationName, IQuickHelpControlBuilder? helpBuilder, bool isPrimary)
         {
-            this.AddButton(title as object, automationName, helpBuilder);
+            return (ActionButton)this.AddButton(title as object, automationName, helpBuilder);
         }
 
 
@@ -190,10 +197,10 @@ namespace Morphic.Client
         /// <param name="helpTitle">The title of the help window that appears on hover</param>
         /// <param name="helpMessage">The message in the help window that appears on hover</param>
         /// <param name="isPrimary">Indicates how the button should be styled</param>
-        public void AddButton(Image image, string automationName, IQuickHelpControlBuilder? helpBuilder, bool isPrimary)
+        public ActionButton AddButton(Image image, string automationName, IQuickHelpControlBuilder? helpBuilder, bool isPrimary)
         {
             image.Stretch = Stretch.None;
-            this.AddButton(image as object, automationName, helpBuilder);
+            return (ActionButton)this.AddButton(image as object, automationName, helpBuilder);
         }
 
         /// <summary>
@@ -228,6 +235,8 @@ namespace Morphic.Client
                 button.Margin = new Thickness(1, 0, 0, 0);
             }
             ActionStack.Children.Add(button);
+
+            ((IActionControl)button).Helper.SetContextItems(this.Settings, this.LearnMore, this.Demo);
             return button;
         }
 
@@ -311,10 +320,10 @@ namespace Morphic.Client
         {
             public ActionButton(IQuickHelpControlBuilder? helpBuilder)
             {
-                this.Helper = new ActionControlHelper(this, helpBuilder);
+                this.Helper = new QsControlHelper(this, helpBuilder);
             }
 
-            public ActionControlHelper Helper { get; set; }
+            public QsControlHelper Helper { get; set; }
         }
 
         public class QsToggleButton : ToggleButton, IActionControl
@@ -330,13 +339,16 @@ namespace Morphic.Client
             /// <summary>The value to use when the button is unchecked.</summary>
             public object OffValue { get; set; }
 
-            public ActionControlHelper Helper { get; set; }
+            public QsControlHelper Helper { get; set; }
 
             public QsToggleButton(IQuickHelpControlBuilder? helpBuilder)
             {
-                this.Helper = new ActionControlHelper(this, helpBuilder);
+                this.Helper = new QsControlHelper(this, helpBuilder);
             }
 
+            /// <summary>
+            /// Update the value of the toggle button.
+            /// </summary>
             public async void UpdateState()
             {
                 if (this.AutoUpdate && this.Session != null)
@@ -352,7 +364,10 @@ namespace Morphic.Client
                 }
             }
 
-            public void Automate(Session session, Preferences.Key pref, bool autoUpdate = true, object? onValue = null, object? offValue = null)
+            /// <summary>
+            /// Automatically set a setting for the toggle button.
+            /// </summary>
+            public QsToggleButton Automate(Session session, Preferences.Key pref, bool autoUpdate = true, object? onValue = null, object? offValue = null)
             {
                 this.OnValue = onValue ?? true;
                 this.OffValue = offValue ?? false;
@@ -362,6 +377,8 @@ namespace Morphic.Client
 
                 this.Click += this.OnClick;
                 this.UpdateState();
+
+                return this;
             }
 
             private async void OnClick(object sender, RoutedEventArgs e)
@@ -377,13 +394,13 @@ namespace Morphic.Client
 
         public interface IActionControl
         {
-            ActionControlHelper Helper { get; }
+            QsControlHelper Helper { get; }
         }
 
         /// <summary>
-        /// Used by the qs controls to display the help pop-up.
+        /// Used by the qs controls to display the help pop-up, and context menu.
         /// </summary>
-        public class ActionControlHelper
+        public class QsControlHelper
         {
 
             /// <summary>
@@ -395,17 +412,20 @@ namespace Morphic.Client
             /// Indicates if the help window should be shown on hover
             /// </summary>
             public bool ShowsHelp { get; set; } = true;
+            public Control Control { get; set; }
 
             /// <summary>
             /// Create an action button
             /// </summary>
-            public ActionControlHelper(Control actionControl, IQuickHelpControlBuilder? helpBuilder): base()
+            public QsControlHelper(Control control, IQuickHelpControlBuilder? helpBuilder): base()
             {
+                this.Control = control;
                 this.HelpBuilder = helpBuilder;
-                actionControl.MouseEnter += OnMouseEnter;
-                actionControl.MouseLeave += OnMouseLeave;
-                actionControl.GotKeyboardFocus += OnGotKeyboardFocus;
+                control.MouseEnter += OnMouseEnter;
+                control.MouseLeave += OnMouseLeave;
+                control.GotKeyboardFocus += OnGotKeyboardFocus;
             }
+
 
             private void OnGotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
             {
@@ -448,6 +468,156 @@ namespace Morphic.Client
                     QuickHelpWindow.Dismiss();
                 }
             }
+
+            #region Context menu
+
+            public string? Settings { get; set; }
+            public string? Demo { get; set; }
+            public string? LearnMore { get; set; }
+
+            private static readonly string SettingsBase = "ms-settings:";
+            private static readonly string DemoBase = "https://morphic.world/demo/";
+            private static readonly string LearnMoreBase = "https://morphic.world/basics/learn-more-about-quickstrip#";
+
+            public void SetContextItems(string? settings = null, string? learnMore = null, string? demo = null)
+            {
+                if (settings == null && learnMore == null && demo == null)
+                {
+                    this.Control.ContextMenu = null;
+                    return;
+                }
+
+                if (learnMore != null)
+                {
+                    this.LearnMore = learnMore;
+                }
+                if (demo != null)
+                {
+                    this.Demo = demo;
+                }
+                if (settings != null)
+                {
+                    this.Settings = settings;
+                }
+
+                ContextMenu menu = new ContextMenu();
+
+                MenuItem NewItem(string header, string? value)
+                {
+                    MenuItem item = new MenuItem()
+                    {
+                        Header = header,
+                        Tag = value
+                    };
+
+                    menu.Items.Add(item);
+                    return item;
+                };
+
+                NewItem("Learn more", learnMore).Click += this.LearnMore_Click;
+                NewItem("Quick demo video", demo).Click += this.Demo_Click;
+                NewItem("Settings", settings).Click += this.Settings_Click;
+
+                bool hasEnabled = false;
+
+                foreach (MenuItem item in menu.Items.OfType<MenuItem>())
+                {
+                    item.IsEnabled = item.Tag != null;
+                    if (item.IsEnabled)
+                    {
+                        hasEnabled = true;
+                    }
+                }
+                
+                if (hasEnabled)
+                {
+                    this.Control.ContextMenu = menu;
+                }
+                else
+                {
+                    this.Control.ContextMenu = null;
+                }
+
+            }
+
+            /// <summary>
+            /// Show the context menu for this control.
+            /// </summary>
+            public void ShowContextMenu()
+            {
+                if (this.Control.ContextMenu != null)
+                {
+                    this.Control.ContextMenu.IsOpen = true;
+                }
+            }
+
+            /// <summary>
+            /// "Learn more" menu item click.
+            /// </summary>
+            private void LearnMore_Click(object sender, RoutedEventArgs e)
+            {
+                this.OpenUrl(QsControlHelper.LearnMoreBase, this.LearnMore);
+            }
+
+            /// <summary>
+            /// "Quick demo video" menu item click.
+            /// </summary>
+            private void Demo_Click(object sender, RoutedEventArgs e)
+            {
+                this.OpenUrl(QsControlHelper.DemoBase, this.Demo);
+            }
+
+            /// <summary>
+            /// "Settings" menu item click.
+            /// </summary>
+            private void Settings_Click(object sender, RoutedEventArgs e)
+            {
+                this.OpenUrl(QsControlHelper.SettingsBase, this.Settings);
+            }
+
+            /// <summary>
+            /// Opens a url (by executing it via the shell)
+            /// </summary>
+            /// <param name="baseUrl"></param>
+            /// <param name="extra"></param>
+            private void OpenUrl(string baseUrl, string? extra)
+            {
+                if (!string.IsNullOrEmpty(extra))
+                {
+                    string finalUrl = extra.StartsWith('!')
+                        ? extra.Substring(1)
+                        : baseUrl + extra;
+                    Process.Start(new ProcessStartInfo(finalUrl)
+                    {
+                        UseShellExecute = true
+                    });
+                }
+            }
+
+            #endregion
+        }
+
+        public string? Settings { get; set; }
+        public string? Demo { get; set; }
+        public string? LearnMore { get; set; }
+
+        /// <summary>
+        /// Sets the context items for the child controls
+        /// </summary>
+        /// <param name="settings"></param>
+        /// <param name="learnMore"></param>
+        /// <param name="demo"></param>
+        public void SetContextItems(string? settings = null, string? learnMore = null, string? demo = null)
+        {
+            this.LearnMore = learnMore;
+            this.Demo = demo;
+            this.Settings = settings;
+
+            foreach (IActionControl control in this.ActionStack.Children.OfType<IActionControl>())
+            {
+                control.Helper.SetContextItems(settings, learnMore, demo);
+            }
+
         }
     }
 
