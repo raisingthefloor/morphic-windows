@@ -17,7 +17,7 @@
         MouseMove="Window_MouseMove"
         MouseDown="Window_MouseDown"
         MouseEnter="Window_MouseEnter"
-        MouseLeave="Window_MouseLeave"
+        KeyDown="Window_KeyDown"
         BorderBrush="Black"
         BorderThickness="1">
     <StackPanel Height="44" Margin="7,7,7,7" Orientation="Horizontal">

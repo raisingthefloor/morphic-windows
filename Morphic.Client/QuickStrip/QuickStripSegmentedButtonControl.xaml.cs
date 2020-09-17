@@ -244,9 +244,17 @@ namespace Morphic.Client
         {
             if (sender is ToggleButton button)
             {
-                var index = ActionStack.Children.IndexOf(button);
-                var args = new ActionEventArgs(index, button.IsChecked == true);
-                Toggled?.Invoke(this, args);
+                if ((Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift)
+                {
+                    // ignore shift-click
+                    button.IsChecked = !button.IsChecked;
+                }
+                else
+                {
+                    var index = ActionStack.Children.IndexOf(button);
+                    var args = new ActionEventArgs(index, button.IsChecked == true);
+                    Toggled?.Invoke(this, args);
+                }
             }
         }
 
@@ -259,12 +267,20 @@ namespace Morphic.Client
         {
             if (sender is ButtonBase button)
             {
-                var index = ActionStack.Children.IndexOf(button);
-                var args = new ActionEventArgs(index, (button as ToggleButton)?.IsChecked == true);
-                Action?.Invoke(this, args);
-                if (button is IActionControl actionControl)
+                QsControlHelper? helper = (button is IActionControl qsControl)
+                    ? qsControl.Helper
+                    : null;
+
+                if ((Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift)
                 {
-                    actionControl.Helper.UpdateHelp();
+                    helper?.ShowContextMenu();
+                }
+                else
+                {
+                    var index = ActionStack.Children.IndexOf(button);
+                    var args = new ActionEventArgs(index, (button as ToggleButton)?.IsChecked == true);
+                    Action?.Invoke(this, args);
+                    helper?.UpdateHelp();
                 }
             }
         }
@@ -383,7 +399,11 @@ namespace Morphic.Client
 
             private async void OnClick(object sender, RoutedEventArgs e)
             {
-                if (this.Session != null)
+                if ((Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift)
+                {
+                    this.Helper.ShowContextMenu();
+                }
+                else if (this.Session != null)
                 {
                     object value = this.IsChecked == true ? this.OnValue : this.OffValue;
                     await this.Session.Apply(this.PreferenceKey, value);
@@ -423,7 +443,23 @@ namespace Morphic.Client
                 this.HelpBuilder = helpBuilder;
                 control.MouseEnter += OnMouseEnter;
                 control.MouseLeave += OnMouseLeave;
+                control.MouseUp += OnMouseUp;
                 control.GotKeyboardFocus += OnGotKeyboardFocus;
+                control.KeyDown += OnKeyDown;
+            }
+
+            private void OnKeyDown(object sender, KeyEventArgs e)
+            {
+                switch (e.Key)
+                {
+                    case Key.Apps:
+                    case Key.F10 when Keyboard.Modifiers == ModifierKeys.Shift:
+                    case Key.Space when Keyboard.Modifiers == ModifierKeys.Shift:
+                    case Key.Enter when Keyboard.Modifiers == ModifierKeys.Shift:
+                        this.ShowContextMenu();
+                        e.Handled = true;
+                        break;
+                }
             }
 
 
@@ -469,8 +505,18 @@ namespace Morphic.Client
                 }
             }
 
+            private void OnMouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+            {
+                if (e.ChangedButton == MouseButton.Right)
+                {
+                    this.ShowContextMenu();
+                    e.Handled = true;
+                }
+            }
+
             #region Context menu
 
+            public ContextMenu? ContextMenu { get; private set; }
             public string? Settings { get; set; }
             public string? Demo { get; set; }
             public string? LearnMore { get; set; }
@@ -483,7 +529,7 @@ namespace Morphic.Client
             {
                 if (settings == null && learnMore == null && demo == null)
                 {
-                    this.Control.ContextMenu = null;
+                    this.ContextMenu = null;
                     return;
                 }
 
@@ -531,13 +577,14 @@ namespace Morphic.Client
                 
                 if (hasEnabled)
                 {
-                    this.Control.ContextMenu = menu;
+                    this.ContextMenu = menu;
+                    this.ContextMenu.Placement = PlacementMode.Top;
+                    this.ContextMenu.PlacementTarget = this.Control;
                 }
                 else
                 {
-                    this.Control.ContextMenu = null;
+                    this.ContextMenu = null;
                 }
-
             }
 
             /// <summary>
@@ -545,9 +592,9 @@ namespace Morphic.Client
             /// </summary>
             public void ShowContextMenu()
             {
-                if (this.Control.ContextMenu != null)
+                if (this.ContextMenu != null)
                 {
-                    this.Control.ContextMenu.IsOpen = true;
+                    this.ContextMenu.IsOpen = true;
                 }
             }
 

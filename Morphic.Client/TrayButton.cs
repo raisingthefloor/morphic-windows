@@ -151,7 +151,7 @@ namespace Morphic.Client
                 };
                 startInfo.EnvironmentVariables.Add("GPII_HWND", this.messageHook.Handle.ToString());
 
-                Process? process =  Process.Start(startInfo);
+                Process? process = Process.Start(startInfo);
                 if (process != null)
                 {
                     success = true;
@@ -176,7 +176,17 @@ namespace Morphic.Client
                 this.buttonProcess = null;
                 this.fallbackIcon = new NotifyIcon();
                 this.Update();
-                //this.fallbackIcon.Click += (sender, args) => this.Click?.Invoke(this, args);
+                this.fallbackIcon.MouseUp += (sender, args) =>
+                {
+                    if (args.Button == MouseButtons.Right)
+                    {
+                        this.SecondaryClick?.Invoke(this, args);
+                    }
+                    else if (args.Button == MouseButtons.Left)
+                    {
+                        this.Click?.Invoke(this, args);
+                    }
+                };
             }
         }
 

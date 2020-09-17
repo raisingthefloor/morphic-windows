@@ -347,6 +347,10 @@ namespace Morphic.Client
                 OpenLoginWindow();
                 loginWindow?.Announce();
             });
+            HotkeyManager.Current.AddOrReplace("Show Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift | ModifierKeys.Alt, (sender, e) =>
+            {
+                this.ShowQuickStrip(true);
+            });
         }
 
         private async Task OpenSession()
@@ -650,9 +654,14 @@ namespace Morphic.Client
         }
 
         /// <summary>
+        /// true if the quick-strip has been shown before.
+        /// </summary>
+        private bool quickStripShown = false;
+
+        /// <summary>
         /// Ensure the Quick Strip window is shown
         /// </summary>
-        public void ShowQuickStrip(bool skippingSave = false)
+        public void ShowQuickStrip(bool skippingSave = false, bool keyboardFocus = false)
         {
             this.LoadQuickStrip();
             if (this.QuickStripWindow == null)
@@ -663,8 +672,21 @@ namespace Morphic.Client
             QuickStripWindow.Opacity = 1;
 
             this.QuickStripWindow.Show();
-            this.QuickStripWindow.Activate();
-            this.QuickStripWindow.FocusFirstItem();
+
+            if (!this.quickStripShown)
+            {
+                this.QuickStripWindow.FocusFirstItem(keyboardFocus);
+                this.quickStripShown = true;
+            }
+            else
+            {
+                FocusManager.SetFocusedElement(this.QuickStripWindow, this.focusedElement);
+            }
+
+            if (keyboardFocus)
+            {
+                this.QuickStripWindow.SetKeyboardFocus();
+            }
 
             if (showQuickStripItem != null)
             {
@@ -680,12 +702,17 @@ namespace Morphic.Client
             }
         }
 
+        private IInputElement focusedElement;
+
         /// <summary>
         /// Ensure the Quick Strip window is hidden
         /// </summary>
         public void HideQuickStrip()
         {
             this.QuickStripWindow?.Hide();
+
+            // Re-focus the same control when the qs is re-shown.
+            this.focusedElement = FocusManager.GetFocusedElement(this.QuickStripWindow);
 
             if (showQuickStripItem != null)
             {

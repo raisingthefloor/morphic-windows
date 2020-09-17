@@ -50,6 +50,7 @@ namespace Morphic.Client.QuickStrip
     using Clipboard = System.Windows.Clipboard;
     using IDataObject = System.Windows.IDataObject;
     using Keyboard = Windows.Native.Keyboard;
+    using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 
     /// <summary>
     /// Interaction logic for QuickStripWindow.xaml
@@ -117,8 +118,6 @@ namespace Morphic.Client.QuickStrip
             HwndSource hwndSource = HwndSource.FromHwnd(nativeWindow.Handle);
             SelectionReader.Default.Initialise(nativeWindow.Handle);
             hwndSource?.AddHook(SelectionReader.Default.WindowProc);
-
-            this.FocusFirstItem();
         }
 
         private readonly Session session;
@@ -476,7 +475,7 @@ namespace Morphic.Client.QuickStrip
 
         /// <summary>Original magnifier settings.</summary>
         private Dictionary<Preferences.Key, object?> magnifyCapture;
-        
+
         private async void OnMagnify(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
         {
             if (e.SelectedIndex == 0)
@@ -515,7 +514,7 @@ namespace Morphic.Client.QuickStrip
         {
             SelectionReader reader = SelectionReader.Default;
             Speech speech = Speech.Default;
-            
+
             // Play/Pause
             if (e.SelectedIndex == 0)
             {
@@ -529,7 +528,7 @@ namespace Morphic.Client.QuickStrip
                 {
                     //QuickStripSegmentedButtonControl itemControl = (QuickStripSegmentedButtonControl)sender;
                     //itemControl.EnableButton(1, true);
-                    
+
                     // Store the clipboard
                     IDataObject clipboadData = Clipboard.GetDataObject();
                     Dictionary<string, object?> dataStored = clipboadData.GetFormats()
@@ -621,7 +620,7 @@ namespace Morphic.Client.QuickStrip
                 _ = session.Apply(SettingsManager.Keys.WindowsDisplayContrastEnabled, false);
             }
         }
-        
+
         private void OnNightMode(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
         {
             if (e.SelectedIndex == 0)
@@ -717,7 +716,7 @@ namespace Morphic.Client.QuickStrip
         public double ScreenEdgeInset = 4;
 
         /// <summary>
-        /// The possible positions for the quick strip 
+        /// The possible positions for the quick strip
         /// </summary>
         public enum FixedPosition
         {
@@ -892,8 +891,24 @@ namespace Morphic.Client.QuickStrip
             Activate();
         }
 
-        private void Window_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
+        private void Window_KeyDown(object sender, KeyEventArgs e)
         {
+            switch (e.Key)
+            {
+                // Make the up and down arrows move focus like left/right
+                case Key.Up:
+                case Key.Down:
+                    if (FocusManager.GetFocusedElement(this) is FrameworkElement elem)
+                    {
+                        FocusNavigationDirection direction = e.Key == Key.Up
+                            ? FocusNavigationDirection.Left
+                            : FocusNavigationDirection.Right;
+                        elem.MoveFocus(new TraversalRequest(direction));
+                    }
+
+                    e.Handled = true;
+                    break;
+            }
         }
 
         public static class PreferenceKeys
@@ -926,9 +941,23 @@ namespace Morphic.Client.QuickStrip
             this.Messages.Dispose();
         }
 
-        public void FocusFirstItem()
+        /// <summary>
+        /// Ensure the first item is focused.
+        /// </summary>
+        /// <param name="keyboard"></param>
+        public void FocusFirstItem(bool keyboard = false)
         {
             this.MoveFocus(new TraversalRequest(FocusNavigationDirection.First));
+            if (keyboard)
+            {
+                this.SetKeyboardFocus();
+            }
+        }
+
+        public void SetKeyboardFocus()
+        {
+            this.MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
+            this.MoveFocus(new TraversalRequest(FocusNavigationDirection.Previous));
         }
     }
 }
