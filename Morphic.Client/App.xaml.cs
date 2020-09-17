@@ -188,7 +188,7 @@ namespace Morphic.Client
 
             Console.WriteLine(ex);
 
-            //MessageBox.Show("An unhandled exception just occurred: " + e.Exception.Message, "Exception Sample", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show("An unhandled exception just occurred: " + e.Exception.Message, "Exception Sample", MessageBoxButton.OK, MessageBoxImage.Warning);
             // This prevents the exception from crashing the application
             e.Handled = true;
         }
