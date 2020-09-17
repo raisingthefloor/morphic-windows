@@ -69,21 +69,31 @@ namespace Morphic.Client
         /// <remarks>
         /// Will hide after a short delay to minimize flickering when hovering between two controls
         /// </remarks>
-        public static void Dismiss()
+        /// <param name="instant">true to hide with no delay.</param>
+        public static void Dismiss(bool instant = false)
         {
-            hideTimer = new Timer(200);
-            hideTimer.AutoReset = false;
-            var mainContext = System.Threading.SynchronizationContext.Current;
-            hideTimer.Elapsed += (sender, e) =>
+            if (instant)
             {
-                mainContext?.Send(state => {
-                    hideTimer.Dispose();
-                    hideTimer = null;
-                    shared?.Close();
-                    shared = null;
-                }, null);
-            };
-            hideTimer.Start();
+                shared?.Close();
+                shared = null;
+            }
+            else
+            {
+                hideTimer = new Timer(200);
+                hideTimer.AutoReset = false;
+                var mainContext = System.Threading.SynchronizationContext.Current;
+                hideTimer.Elapsed += (sender, e) =>
+                {
+                    mainContext?.Send(state =>
+                    {
+                        hideTimer?.Dispose();
+                        hideTimer = null;
+                        shared?.Close();
+                        shared = null;
+                    }, null);
+                };
+                hideTimer.Start();
+            }
         }
 
         /// <summary>

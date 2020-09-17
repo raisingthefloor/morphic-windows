@@ -71,6 +71,13 @@ namespace Morphic.Client.QuickStrip
             SystemEvents.DisplaySettingsChanged += SystemEvents_DisplaySettingsChanged;
             App.Shared.SystemSettingChanged += (sender, args) => { this.UpdateState(); };
             this.MouseEnter += (sender, args) => this.UpdateState();
+            this.IsVisibleChanged += (sender, args) =>
+            {
+                if (this.IsVisible == false)
+                {
+                    this.HideHelp();
+                }
+            };
         }
 
         /// <summary>
@@ -118,6 +125,7 @@ namespace Morphic.Client.QuickStrip
 
         private void OnDeactivated(object? sender, EventArgs e)
         {
+            this.HideHelp();
         }
 
         private void Update()
@@ -389,7 +397,7 @@ namespace Morphic.Client.QuickStrip
                             var control = new QuickStripSegmentedButtonControl();
                             var copyButtonHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Snip_HelpTitle, Properties.Resources.QuickStrip_Snip_HelpMessage);
                             control.TitleLabel.Content = Properties.Resources.QuickStrip_Snip_Title;
-                            control.AddButton(Properties.Resources.QuickStrip_Snip_Title, copyButtonHelp.Title, copyButtonHelp, isPrimary: false);
+                            control.AddButton(Properties.Resources.QuickStrip_Snip_Button_Title, copyButtonHelp.Title, copyButtonHelp, isPrimary: false);
                             control.Action += quickStrip.OnSnip;
                             return control;
                         }
@@ -624,11 +632,19 @@ namespace Morphic.Client.QuickStrip
             if (e.SelectedIndex == 0)
             {
                 Countly.RecordEvent("Snip Copy");
+
+                // Hide the qs while the snipper tool captures the screen.
+                this.Opacity = 0;
+                QuickHelpWindow.Dismiss(true);
+
                 // Hold down the windows key while pressing shift + s
                 const uint windowsKey = 0x5b; // VK_LWIN
                 Keyboard.PressKey(windowsKey, true);
                 SendKeys.SendWait("+s");
                 Keyboard.PressKey(windowsKey, false);
+
+                // Show the qs again
+                Task.Delay(3000).ContinueWith(task => this.Dispatcher.Invoke(() => this.Opacity = 1));
             }
         }
 
@@ -672,6 +688,14 @@ namespace Morphic.Client.QuickStrip
                     ControlStack.Children.Add(control);
                 }
             }
+        }
+
+        /// <summary>
+        /// Hides the help window.
+        /// </summary>
+        public void HideHelp()
+        {
+            QuickHelpWindow.Dismiss();
         }
 
         #endregion
