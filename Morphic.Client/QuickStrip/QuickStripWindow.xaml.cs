@@ -365,6 +365,7 @@ namespace Morphic.Client.QuickStrip
                     case "colors":
                         {
                             var control = new QuickStripSegmentedButtonControl();
+                            control.ItemCount = 4;
 
                             control.TitleLabel.Content = Properties.Resources.QuickStrip_Colors_Title;
 
@@ -387,6 +388,8 @@ namespace Morphic.Client.QuickStrip
                             control.AddToggle(Properties.Resources.QuickStrip_Colors_Night_Title, nightHelp.Title, nightHelp)
                                 .Automate(quickStrip.session, SettingsManager.Keys.WindowsDisplayNightModeEnabled, false)
                                 .Helper.SetContextItems("nightlight");
+
+                            control.SpaceButtons();
 
                             return control;
                         }

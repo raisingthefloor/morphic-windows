@@ -66,6 +66,8 @@ namespace Morphic.Client
         /// </summary>
         public Brush SecondaryButtonBackground = new SolidColorBrush(Color.FromRgb(102, 181, 90));
 
+        public int ItemCount = 2;
+
         private Style CreateBaseButtonStyle()
         {
             var style = new Style();
@@ -94,6 +96,19 @@ namespace Morphic.Client
             var triggerChecked = new Trigger { Property = ToggleButton.IsCheckedProperty, Value = true };
             triggerChecked.Setters.Add(new Setter{ Property =  ButtonBase.BackgroundProperty, Value = new SolidColorBrush(Colors.Black) });
             style.Triggers.Add(triggerChecked);
+
+            CornerRadius radius = new CornerRadius(0);
+            double radiusSize = 5;
+            if (this.ActionStack.Children.Count == 0)
+            {
+                radius.TopLeft = radius.BottomLeft = radiusSize;
+            }
+            if (this.ActionStack.Children.Count == this.ItemCount - 1)
+            {
+                radius.TopRight = radius.BottomRight = radiusSize;
+            }
+
+            factory.SetValue(Border.CornerRadiusProperty, radius);
 
             return style;
         }
@@ -665,6 +680,20 @@ namespace Morphic.Client
                 control.Helper.SetContextItems(settings, learnMore, demo);
             }
 
+        }
+
+        /// <summary>
+        /// Add some space between the buttons
+        /// </summary>
+        /// <exception cref="NotImplementedException"></exception>
+        public void SpaceButtons()
+        {
+            foreach (ButtonBase control in this.ActionStack.Children.OfType<ButtonBase>().Skip(1))
+            {
+                Thickness margin = control.Margin;
+                margin.Left++;
+                control.Margin = margin;
+            }
         }
     }
 
