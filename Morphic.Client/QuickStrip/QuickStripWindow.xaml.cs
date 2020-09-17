@@ -42,6 +42,7 @@ namespace Morphic.Client.QuickStrip
 {
     using System.Diagnostics;
     using System.IO;
+    using System.Media;
     using System.Runtime.InteropServices;
     using System.Text.Json;
     using System.Text.Json.Serialization;
@@ -884,6 +885,14 @@ namespace Morphic.Client.QuickStrip
         private void LogoButton_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
         {
             QuickHelpWindow.Dismiss();
+        }
+
+        private void LogoButton_GotFocus(object sender, EventArgs e)
+        {
+            if (InputManager.Current.MostRecentInputDevice is KeyboardDevice)
+            {
+                SystemSounds.Beep.Play();
+            }
         }
 
         private void Window_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)

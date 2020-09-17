@@ -23,7 +23,14 @@
     <StackPanel Height="44" Margin="7,7,7,7" Orientation="Horizontal">
         <StackPanel x:Name="ControlStack" Grid.Column="0" Orientation="Horizontal">
         </StackPanel>
-        <Button x:Name="LogoButton" BorderBrush="{x:Null}" Click="LogoButtonClicked" HorizontalAlignment="Left" Width="44" Height="44" Grid.Column="1" Background="{x:Null}" MouseEnter="LogoButton_MouseEnter" MouseLeave="LogoButton_MouseLeave" AutomationProperties.Name="Main Menu">
+        <Button x:Name="LogoButton" BorderBrush="{x:Null}"
+                HorizontalAlignment="Left" Width="44" Height="44" Grid.Column="1" Background="{x:Null}"
+                AutomationProperties.Name="Main Menu"
+                Click="LogoButtonClicked"
+                MouseEnter="LogoButton_MouseEnter"
+                MouseLeave="LogoButton_MouseLeave"
+                GotFocus="LogoButton_GotFocus"
+                >
             <Image Source="/Icon.png"/>
             <Button.ContextMenu>
                 <ContextMenu>
