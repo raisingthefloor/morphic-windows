@@ -816,8 +816,8 @@ namespace Morphic.Client.QuickStrip
             get
             {
                 var screenSize = SystemParameters.WorkArea;
-                if (Left < screenSize.Width / 2){
-                    if (Top < screenSize.Height / 2)
+                if (Left + Width / 2 < screenSize.Width / 2){
+                    if (Top + Height / 2 < screenSize.Height / 2)
                     {
                         return FixedPosition.TopLeft;
                     }
@@ -825,7 +825,7 @@ namespace Morphic.Client.QuickStrip
                 }
                 else
                 {
-                    if (Top < screenSize.Height / 2)
+                    if (Top + Height / 2 < screenSize.Height / 2)
                     {
                         return FixedPosition.TopRight;
                     }
@@ -838,6 +838,8 @@ namespace Morphic.Client.QuickStrip
 
         #region Events
 
+        private Point mouseDownPos;
+
         /// <summary>
         /// Event handler for mouse down to move the window
         /// </summary>
@@ -845,23 +847,30 @@ namespace Morphic.Client.QuickStrip
         /// <param name="e"></param>
         private void Window_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            if (e.ChangedButton == System.Windows.Input.MouseButton.Left)
+            if (e.LeftButton == MouseButtonState.Pressed)
             {
-                DragMove();
+                this.mouseDownPos = e.GetPosition(this);
             }
         }
 
         /// <summary>
-        /// Event handler for mouse up to snap into place after moving the window
+        /// Move the window when the mouse moves enough for it to be a drag action.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void Window_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void Window_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            Countly.RecordEvent("Move MorphicBar");
-            if (e.ChangedButton == System.Windows.Input.MouseButton.Left)
+            if (e.LeftButton == MouseButtonState.Pressed)
             {
-                Position = NearestPosition;
+                Point point = e.GetPosition(this);
+
+                if (Math.Abs(point.X - this.mouseDownPos.X) >= SystemParameters.MinimumHorizontalDragDistance ||
+                    Math.Abs(point.Y - this.mouseDownPos.Y) >= SystemParameters.MinimumVerticalDragDistance)
+                {
+                    this.DragMove();
+                    Countly.RecordEvent("Move MorphicBar");
+                    Position = NearestPosition;
+                }
             }
         }
 
