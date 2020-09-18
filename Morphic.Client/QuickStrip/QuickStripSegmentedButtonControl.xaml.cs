@@ -79,7 +79,7 @@ namespace Morphic.Client
             factory.AppendChild(new FrameworkElementFactory(typeof(ContentPresenter)));
             style.Setters.Add(new Setter { Property = ButtonBase.TemplateProperty, Value = template });
             style.Setters.Add(new Setter { Property = ButtonBase.SnapsToDevicePixelsProperty, Value = true });
-            style.Setters.Add(new Setter { Property = ButtonBase.PaddingProperty, Value = new Thickness(12, 4, 12, 4) });
+            style.Setters.Add(new Setter { Property = ButtonBase.PaddingProperty, Value = new Thickness(9, 1, 9, 1) });
             style.Setters.Add(new Setter { Property = ButtonBase.VerticalContentAlignmentProperty, Value = VerticalAlignment.Center });
             style.Setters.Add(new Setter { Property = ButtonBase.HorizontalContentAlignmentProperty, Value = HorizontalAlignment.Center });
             style.Setters.Add(new Setter { Property = ButtonBase.ForegroundProperty, Value = new SolidColorBrush(Color.FromRgb(255, 255, 255)) });
@@ -94,7 +94,8 @@ namespace Morphic.Client
 
             // Colour the button if it's checked.
             var triggerChecked = new Trigger { Property = ToggleButton.IsCheckedProperty, Value = true };
-            triggerChecked.Setters.Add(new Setter{ Property =  ButtonBase.BackgroundProperty, Value = new SolidColorBrush(Colors.Black) });
+            triggerChecked.Setters.Add(new Setter{ Property =  ButtonBase.BackgroundProperty, Value = new SolidColorBrush(Colors.White) });
+            triggerChecked.Setters.Add(new Setter{ Property =  ButtonBase.ForegroundProperty, Value = new SolidColorBrush(Colors.Black) });
             style.Triggers.Add(triggerChecked);
 
             CornerRadius radius = new CornerRadius(0);
@@ -109,6 +110,8 @@ namespace Morphic.Client
             }
 
             factory.SetValue(Border.CornerRadiusProperty, radius);
+            factory.SetValue(Border.BorderThicknessProperty, new Thickness(2));
+            factory.SetValue(Border.BorderBrushProperty, this.PrimaryButtonBackground);
 
             return style;
         }
