@@ -561,8 +561,8 @@ namespace Morphic.Client
             public string? LearnMore { get; set; }
 
             private static readonly string SettingsBase = "ms-settings:";
-            private static readonly string DemoBase = "https://morphic.world/demo/";
-            private static readonly string LearnMoreBase = "https://morphic.world/basics/learn-more-about-quickstrip#";
+            private static readonly string DemoBase = "https://morphic.org/demo/";
+            private static readonly string LearnMoreBase = "https://morphic.org/basics/learn-more-about-quickstrip#";
 
             public void SetContextItems(string? settings = null, string? learnMore = null, string? demo = null)
             {

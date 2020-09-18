@@ -25,7 +25,7 @@ namespace Morphic.Core.Tests
             var encrypt = new MockEncrypter();
             var options = new KeychainOptions();
             options.Path = Path.Combine(directoryName, "testsave.json");
-            var uri = new Uri("http://www.morphic.world");
+            var uri = new Uri("http://www.morphic.org");
             var wronguri = new Uri("http://www.gpii.net");
             var username = new UsernameCredentials("passuser", "password");
             var key = new KeyCredentials("key");

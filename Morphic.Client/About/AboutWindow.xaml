@@ -19,7 +19,7 @@
             <Hyperlink RequestNavigate="CheckUpdate_OnClick" NavigateUri="#update">Check for Update</Hyperlink>
         </TextBlock>
         <TextBlock HorizontalAlignment="Center" FontSize="10">
-            <Hyperlink RequestNavigate="WebLink_OnClick" NavigateUri="https://morphic.world/">Learn More About Morphic</Hyperlink>
+            <Hyperlink RequestNavigate="WebLink_OnClick" NavigateUri="https://morphic.org/">Learn More About Morphic</Hyperlink>
         </TextBlock>
     </StackPanel>
 </Window>

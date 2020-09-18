@@ -1,5 +1,5 @@
 #define AppName "Morphic Community Bar"
-#define WebSite "https://morphic.world/"
+#define WebSite "https://morphic.org/"
 #define Company "Raising the Floor"
 #define MainExe "Morphic.Bar.exe"
 #define BuildPath ".\build" 
