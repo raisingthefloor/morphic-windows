@@ -293,6 +293,7 @@ namespace Morphic.Client.QuickStrip
                             {
                                 ("setting", "display"),
                                 ("learn", "textsize"),
+                                ("demo", "textsize")
                             });
                             return control;
                         }
@@ -309,6 +310,7 @@ namespace Morphic.Client.QuickStrip
                             {
                                 ("setting", "easeofaccess-magnifier"),
                                 ("learn", "magnifier"),
+                                ("demo", "magnifier")
                             });
                             return control;
                         }
@@ -326,6 +328,7 @@ namespace Morphic.Client.QuickStrip
                             {
                                 ("setting", "speech"),
                                 ("learn", "readsel-pc"),
+                                ("demo", "readsel-pc")
                             });
 
                             return control;
@@ -376,6 +379,7 @@ namespace Morphic.Client.QuickStrip
                             control.SetContextItems(new[]
                             {
                                 ("learn", "snip"),
+                                ("demo", "snip")
                             });
                             return control;
                         }
@@ -393,6 +397,7 @@ namespace Morphic.Client.QuickStrip
                                 {
                                     ("setting", "easeofaccess-highcontrast"),
                                     ("learn", "contrast"),
+                                    ("demo", "contrast")
                                 });
 
                             var colorHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Colors_Color_HelpTitle, Properties.Resources.QuickStrip_Colors_Color_HelpMessage);
@@ -402,6 +407,7 @@ namespace Morphic.Client.QuickStrip
                                 {
                                     ("setting", "easeofaccess-colorfilter"),
                                     ("learn", "colorvision"),
+                                    ("demo", "colorvision")
                                 });
 
                             var darkHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Colors_Dark_HelpTitle, Properties.Resources.QuickStrip_Colors_Dark_HelpMessage);
@@ -412,6 +418,7 @@ namespace Morphic.Client.QuickStrip
                                 {
                                     ("setting", "colors"),
                                     ("learn", "darkmode"),
+                                    ("demo", "darkmode")
                                 });
 
                             var nightHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_NightMode_On_HelpTitle, Properties.Resources.QuickStrip_NightMode_On_HelpMessage);
@@ -421,6 +428,7 @@ namespace Morphic.Client.QuickStrip
                                 {
                                     ("setting", "nightlight"),
                                     ("learn", "nightmode"),
+                                    ("demo", "nightmode")
                                 });
 
                             //control.SpaceButtons();
