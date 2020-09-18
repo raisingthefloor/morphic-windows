@@ -11,15 +11,19 @@
             <RowDefinition Height="85"/>
             <RowDefinition Height="43"/>
         </Grid.RowDefinitions>
-        <Label x:Name="TitleLabel" Grid.Row="0" Content="Title" HorizontalAlignment="Center" Margin="0,15,0,0" VerticalAlignment="Top" FontSize="50" FontWeight="Bold" Foreground="White" Padding="0,0,0,0">
-            <Label.Effect>
-                <DropShadowEffect BlurRadius="0" ShadowDepth="2"/>
-            </Label.Effect>
-        </Label>
-        <Label x:Name="MessageLabel" Grid.Row="1" Content="Message" HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Top" FontSize="25  " FontWeight="Bold" Foreground="White">
-            <Label.Effect>
-                <DropShadowEffect BlurRadius="0" ShadowDepth="2"/>
-            </Label.Effect>
-        </Label>
+        <Viewbox Grid.Row="0" Stretch="Uniform">
+            <Label x:Name="TitleLabel" Content="Title" HorizontalAlignment="Center" Margin="15" VerticalAlignment="Center" FontSize="50" FontWeight="Bold" Foreground="White" Padding="0,0,0,0">
+                <Label.Effect>
+                    <DropShadowEffect BlurRadius="0" ShadowDepth="2"/>
+                </Label.Effect>
+            </Label>
+        </Viewbox>
+        <Viewbox Grid.Row="1" Stretch="Uniform">
+            <Label x:Name="MessageLabel" Content="Message" HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Top" FontSize="25  " FontWeight="Bold" Foreground="White">
+                <Label.Effect>
+                    <DropShadowEffect BlurRadius="0" ShadowDepth="2"/>
+                </Label.Effect>
+            </Label>
+        </Viewbox>
     </Grid>
 </UserControl>
