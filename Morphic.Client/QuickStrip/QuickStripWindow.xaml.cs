@@ -33,6 +33,7 @@ namespace Morphic.Client.QuickStrip
     using Morphic.Settings;
     using System.Windows.Media.Animation;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Windows.Interop;
     using System.Windows.Media.Imaging;
@@ -442,31 +443,17 @@ namespace Morphic.Client.QuickStrip
             if (e.SelectedIndex == 0)
             {
                 _ = Countly.RecordEvent("Show Magnifier");
-                // Enable lens mode at 200%
-                Dictionary<Preferences.Key, object?> settings = new Dictionary<Preferences.Key, object?>
+                Process? process = Process.Start(new ProcessStartInfo("magnify.exe", "/lens")
                 {
-                    {SettingsManager.Keys.WindowsMagnifierMode, (long)3},
-                    {SettingsManager.Keys.WindowsMagnifierMagnification, (long)200},
-                    {SettingsManager.Keys.WindowsMagnifierEnabled, true},
-                };
-
-                if (this.magnifyCapture == null)
-                {
-                    // capture the current settings
-                    this.magnifyCapture = await this.session.SettingsManager.Capture(settings.Keys);
-                }
-
-                await session.Apply(settings);
+                    UseShellExecute = true
+                });
             }
             else if (e.SelectedIndex == 1)
             {
                 _ = Countly.RecordEvent("Hide Magnifier");
-                // restore settings
-                await session.Apply(SettingsManager.Keys.WindowsMagnifierEnabled, false);
-                if (this.magnifyCapture != null)
+                foreach (Process process in Process.GetProcessesByName("magnify"))
                 {
-                    await this.session.Apply(this.magnifyCapture);
-                    this.magnifyCapture = null;
+                    process.Kill();
                 }
             }
         }

@@ -98,7 +98,7 @@ namespace Morphic.Client
             style.Triggers.Add(triggerChecked);
 
             CornerRadius radius = new CornerRadius(0);
-            double radiusSize = 5;
+            double radiusSize = 3;
             if (this.ActionStack.Children.Count == 0)
             {
                 radius.TopLeft = radius.BottomLeft = radiusSize;
