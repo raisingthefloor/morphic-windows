@@ -286,8 +286,8 @@ namespace Morphic.Client.QuickStrip
                             var biggerHelp = new TextZoomInHelpControlBuilder(Display.Primary);
                             var smallerHelp = new TextZoomOutHelpControlBuilder(Display.Primary);
                             control.TitleLabel.Content = Properties.Resources.QuickStrip_Resolution_Title;
-                            control.AddButton(new Image() { Source = new BitmapImage(new Uri("Plus.png", UriKind.Relative)) }, Properties.Resources.QuickStrip_Resolution_Bigger_HelpTitle, biggerHelp, isPrimary: true);
-                            control.AddButton(new Image() { Source = new BitmapImage(new Uri("Minus.png", UriKind.Relative)) }, Properties.Resources.QuickStrip_Resolution_Smaller_HelpTitle, smallerHelp, isPrimary: false);
+                            control.AddButton(new Image() { Source = new BitmapImage(new Uri("Plus.png", UriKind.Relative)) }, Properties.Resources.QuickStrip_Resolution_Bigger_Name, biggerHelp, isPrimary: true);
+                            control.AddButton(new Image() { Source = new BitmapImage(new Uri("Minus.png", UriKind.Relative)) }, Properties.Resources.QuickStrip_Resolution_Smaller_Name, smallerHelp, isPrimary: false);
                             control.Action += quickStrip.Zoom;
                             control.SetContextItems("display", "screenzoom", "");
                             return control;
@@ -298,8 +298,8 @@ namespace Morphic.Client.QuickStrip
                             var showHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Magnifier_Show_HelpTitle, Properties.Resources.QuickStrip_Magnifier_Show_HelpMessage);
                             var hideHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Magnifier_Hide_HelpTitle, Properties.Resources.QuickStrip_Magnifier_Hide_HelpMessage);
                             control.TitleLabel.Content = Properties.Resources.QuickStrip_Magnifier_Title;
-                            control.AddButton(Properties.Resources.QuickStrip_Magnifier_Show_Title, showHelp.Title, showHelp, isPrimary: true);
-                            control.AddButton(Properties.Resources.QuickStrip_Magnifier_Hide_Title, hideHelp.Title, hideHelp, isPrimary: false);
+                            control.AddButton(Properties.Resources.QuickStrip_Magnifier_Show_Title, Properties.Resources.QuickStrip_Magnifier_Show_Name, showHelp, isPrimary: true);
+                            control.AddButton(Properties.Resources.QuickStrip_Magnifier_Hide_Title, Properties.Resources.QuickStrip_Magnifier_Hide_Name, hideHelp, isPrimary: false);
                             control.Action += quickStrip.OnMagnify;
                             control.SetContextItems("easeofaccess-magnifier", null, null);
                             return control;
@@ -310,8 +310,8 @@ namespace Morphic.Client.QuickStrip
                             var startHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Reader_Start_HelpTitle, Properties.Resources.QuickStrip_Reader_Start_HelpMessage);
                             var stopHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Reader_Stop_HelpTitle, Properties.Resources.QuickStrip_Reader_Stop_HelpMessage);
                             control.TitleLabel.Content = Properties.Resources.QuickStrip_Reader_Title;
-                            control.AddButton("\u25b6", startHelp.Title, startHelp, isPrimary: true);
-                            control.AddButton("\u25a0", stopHelp.Title, stopHelp, isPrimary: false);
+                            control.AddButton("\u25b6", Properties.Resources.QuickStrip_Reader_Start_Name, startHelp, isPrimary: true);
+                            control.AddButton("\u25a0", Properties.Resources.QuickStrip_Reader_Stop_Name, stopHelp, isPrimary: false);
                             //control.EnableButton(1, false);
                             control.Action += quickStrip.OnReader;
                             control.SetContextItems("speech");
@@ -359,7 +359,7 @@ namespace Morphic.Client.QuickStrip
                             control.ItemCount = 1;
                             var copyButtonHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Snip_HelpTitle, Properties.Resources.QuickStrip_Snip_HelpMessage);
                             control.TitleLabel.Content = Properties.Resources.QuickStrip_Snip_Title;
-                            control.AddButton(Properties.Resources.QuickStrip_Snip_Button_Title, copyButtonHelp.Title, copyButtonHelp, isPrimary: false);
+                            control.AddButton(Properties.Resources.QuickStrip_Snip_Button_Title, Properties.Resources.QuickStrip_Snip_Name, copyButtonHelp, isPrimary: false);
                             control.Action += quickStrip.OnSnip;
                             control.SetContextItems(null, "screen_snip", null);
                             return control;
@@ -372,22 +372,22 @@ namespace Morphic.Client.QuickStrip
                             control.TitleLabel.Content = Properties.Resources.QuickStrip_Colors_Title;
 
                             var contrastHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Contrast_On_HelpTitle, Properties.Resources.QuickStrip_Contrast_On_HelpMessage);
-                            control.AddToggle(Properties.Resources.QuickStrip_Colors_Contrast_Title, contrastHelp.Title, contrastHelp)
+                            control.AddToggle(Properties.Resources.QuickStrip_Colors_Contrast_Title, Properties.Resources.QuickStrip_Colors_Contrast_Name, contrastHelp)
                                 .Automate(quickStrip.session, SettingsManager.Keys.WindowsDisplayContrastEnabled)
                                 .Helper.SetContextItems("easeofaccess-highcontrast", "contrast");
 
                             var colorHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Colors_Color_HelpTitle, Properties.Resources.QuickStrip_Colors_Color_HelpMessage);
-                            control.AddToggle(Properties.Resources.QuickStrip_Colors_Color_Title, colorHelp.Title, colorHelp)
+                            control.AddToggle(Properties.Resources.QuickStrip_Colors_Color_Title, Properties.Resources.QuickStrip_Colors_Color_Name, colorHelp)
                                 .Automate(quickStrip.session, SettingsManager.Keys.WindowsDisplayColorFilterEnabled)
                                 .Helper.SetContextItems("easeofaccess-colorfilter");
 
                             var darkHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Colors_Dark_HelpTitle, Properties.Resources.QuickStrip_Colors_Dark_HelpMessage);
-                            control.AddToggle(Properties.Resources.QuickStrip_Colors_Dark_Title, darkHelp.Title, darkHelp)
+                            control.AddToggle(Properties.Resources.QuickStrip_Colors_Dark_Title, Properties.Resources.QuickStrip_Colors_Dark_Name, darkHelp)
                                 .Automate(quickStrip.session, SettingsManager.Keys.WindowsDisplayLightThemeEnabled, true, false, true)
                                 .Helper.SetContextItems("colors");
 
                             var nightHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_NightMode_On_HelpTitle, Properties.Resources.QuickStrip_NightMode_On_HelpMessage);
-                            control.AddToggle(Properties.Resources.QuickStrip_Colors_Night_Title, nightHelp.Title, nightHelp)
+                            control.AddToggle(Properties.Resources.QuickStrip_Colors_Night_Title, Properties.Resources.QuickStrip_Colors_Night_Name, nightHelp)
                                 .Automate(quickStrip.session, SettingsManager.Keys.WindowsDisplayNightModeEnabled, false)
                                 .Helper.SetContextItems("nightlight");
 

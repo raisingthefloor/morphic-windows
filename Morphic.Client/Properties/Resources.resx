@@ -140,13 +140,16 @@
     <value>Off</value>
   </data>
   <data name="QuickStrip_Contrast_On_HelpMessage" xml:space="preserve">
-    <value>Make it easier to distinguish items</value>
+    <value>Makes screen easier to read for some (Right-click to adjust contrast)</value>
   </data>
   <data name="QuickStrip_Contrast_On_HelpTitle" xml:space="preserve">
-    <value>Turn On High Contrast</value>
+    <value>Turn Contrast on and off</value>
   </data>
   <data name="QuickStrip_Contrast_On_Title" xml:space="preserve">
     <value>On</value>
+  </data>
+  <data name="QuickStrip_Colors_Contrast_Name" xml:space="preserve">
+    <value>Contrast on, off</value>
   </data>
   <data name="QuickStrip_Contrast_Title" xml:space="preserve">
     <value>High Contrast</value>
@@ -161,10 +164,10 @@
     <value>Off</value>
   </data>
   <data name="QuickStrip_NightMode_On_HelpMessage" xml:space="preserve">
-    <value>Change the screen coloring to be easier to look at in the night.</value>
+    <value>Reduces eye strain and makes it easier to fall asleep at night</value>
   </data>
   <data name="QuickStrip_NightMode_On_HelpTitle" xml:space="preserve">
-    <value>Turn On Night Mode</value>
+    <value>Turn 'Night Light' feature on and off</value>
   </data>
   <data name="QuickStrip_NightMode_On_Title" xml:space="preserve">
     <value>On</value>
@@ -173,16 +176,19 @@
     <value>Night mode</value>
   </data>
   <data name="QuickStrip_Snip_HelpMessage" xml:space="preserve">
-    <value>Copy a part of the screen to the clipboard.</value>
+    <value>Drag with your mouse to copy a part of screen. Paste into any document.</value>
   </data>
   <data name="QuickStrip_Snip_HelpTitle" xml:space="preserve">
-    <value>Snip</value>
+    <value>Copies a selected part of the screen</value>
   </data>
   <data name="QuickStrip_Snip_Button_Title" xml:space="preserve">
     <value>Copy</value>
   </data>
   <data name="QuickStrip_Snip_Title" xml:space="preserve">
     <value>Snip</value>
+  </data>
+  <data name="QuickStrip_Snip_Name" xml:space="preserve">
+    <value>Snip a copy of part of screen</value>
   </data>
   <data name="QuickStrip_Colors_Title" xml:space="preserve">
     <value>Contrast &amp; color</value>
@@ -193,39 +199,49 @@
   <data name="QuickStrip_Colors_Color_Title" xml:space="preserve">
     <value>Color filter</value>
   </data>
+  <data name="QuickStrip_Colors_Color_Name" xml:space="preserve">
+    <value>Color Vision</value>
+  </data>
   <data name="QuickStrip_Colors_Color_HelpTitle" xml:space="preserve">
-    <value>Enable colour filter</value>
+    <value>Turn color vision filters on and off</value>
   </data>
   <data name="QuickStrip_Colors_Color_HelpMessage" xml:space="preserve">
-    <value>Make photos and colors easier to see by applying a color filter to your screen.</value>
+    <value>Changes colors to adapt for color blindness (Right-click to choose type)</value>
   </data>
   <data name="QuickStrip_Colors_Dark_Title" xml:space="preserve">
     <value>Dark</value>
   </data>
   <data name="QuickStrip_Colors_Dark_HelpTitle" xml:space="preserve">
-    <value>Enable Dark Mode</value>
+    <value>Turn Dark mode on and off</value>
   </data>
   <data name="QuickStrip_Colors_Dark_HelpMessage" xml:space="preserve">
-    <value>Enable a dark theme for some apps</value>
+    <value>Toggles dark mode on and off (Right-click to adjust)</value>
   </data>
+  <data name="QuickStrip_Colors_Dark_Name" xml:space="preserve">
+    <value>Dark mode</value>
+  </data>
+
   <data name="QuickStrip_Colors_Night_Title" xml:space="preserve">
     <value>Night</value>
   </data>
+  <data name="QuickStrip_Colors_Night_Name" xml:space="preserve">
+    <value>Night Light</value>
+  </data>
 
   <data name="QuickStrip_Magnifier_Hide_HelpMessage" xml:space="preserve">
-    <value>Stop magnifying part of the screen as you move</value>
+    <value>(Right-click to change magnifier settings)</value>
   </data>
   <data name="QuickStrip_Magnifier_Hide_HelpTitle" xml:space="preserve">
-    <value>Hide the Magnifying Glass</value>
+    <value>Turn off Magnifier</value>
   </data>
   <data name="QuickStrip_Magnifier_Hide_Title" xml:space="preserve">
     <value>Hide</value>
   </data>
   <data name="QuickStrip_Magnifier_Show_HelpMessage" xml:space="preserve">
-    <value>Magnify a part of the screen as you move around</value>
+    <value>Turns on a Magnifying Lens (Right-click to change settings)</value>
   </data>
   <data name="QuickStrip_Magnifier_Show_HelpTitle" xml:space="preserve">
-    <value>Show a Magnifying Glass</value>
+    <value>Turn on Magnifier that Follows Mouse</value>
   </data>
   <data name="QuickStrip_Magnifier_Show_Title" xml:space="preserve">
     <value>Show</value>
@@ -233,26 +249,41 @@
   <data name="QuickStrip_Magnifier_Title" xml:space="preserve">
     <value>Magnifier</value>
   </data>
+  <data name="QuickStrip_Magnifier_Show_Name" xml:space="preserve">
+    <value>Show Magnifier</value>
+  </data>
+  <data name="QuickStrip_Magnifier_Hide_Name" xml:space="preserve">
+    <value>Hide Magnifier</value>
+  </data>
   <data name="QuickStrip_Reader_Start_HelpMessage" xml:space="preserve">
-    <value>The computer will read aloud text you've selected</value>
+    <value>Select any text and then click to have it read</value>
   </data>
   <data name="QuickStrip_Reader_Start_HelpTitle" xml:space="preserve">
-    <value>Read the Selected Text</value>
+    <value>Read the text that is selected</value>
   </data>
   <data name="QuickStrip_Reader_Stop_HelpMessage" xml:space="preserve">
-    <value>Stop the computer from reading text aloud</value>
+    <value>(Right-click to adjust speed and voice)</value>
   </data>
   <data name="QuickStrip_Reader_Stop_HelpTitle" xml:space="preserve">
     <value>Stop Reading</value>
+  </data>
+  <data name="QuickStrip_Reader_Stop_Name" xml:space="preserve">
+    <value>Stop Reading Select Text</value>
+  </data>
+  <data name="QuickStrip_Reader_Start_Name" xml:space="preserve">
+    <value>Read Selected Text</value>
   </data>
   <data name="QuickStrip_Reader_Title" xml:space="preserve">
     <value>Read Selected</value>
   </data>
   <data name="QuickStrip_Resolution_Bigger_HelpMessage" xml:space="preserve">
-    <value>Make all the text and icons bigger</value>
+    <value>Makes everything on screen larger</value>
   </data>
   <data name="QuickStrip_Resolution_Bigger_HelpTitle" xml:space="preserve">
-    <value>Increase Screen Zoom</value>
+    <value>Increase Text Size Everywhere</value>
+  </data>
+  <data name="QuickStrip_Resolution_Bigger_Name" xml:space="preserve">
+    <value>Increase Text Size</value>
   </data>
   <data name="QuickStrip_Resolution_Bigger_LimitMessage" xml:space="preserve">
     <value>The text and icons are as large as they can be</value>
@@ -261,10 +292,13 @@
     <value>Cannot Increase Screen Zoom</value>
   </data>
   <data name="QuickStrip_Resolution_Smaller_HelpMessage" xml:space="preserve">
-    <value>Make all the text and icons smaller</value>
+    <value>Makes everything on screen smaller</value>
   </data>
   <data name="QuickStrip_Resolution_Smaller_HelpTitle" xml:space="preserve">
-    <value>Decrease Screen Zoom</value>
+    <value>Decrease Text Size Everywhere</value>
+  </data>
+  <data name="QuickStrip_Resolution_Smaller_Name" xml:space="preserve">
+    <value>Decrease Text Size</value>
   </data>
   <data name="QuickStrip_Resolution_Smaller_LimitMessage" xml:space="preserve">
     <value>The text and icons are as small as they can be</value>
