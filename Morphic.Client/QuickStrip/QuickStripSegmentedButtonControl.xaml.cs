@@ -33,6 +33,7 @@ using Morphic.Client.QuickStrip;
 
 namespace Morphic.Client
 {
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Windows.Controls.Primitives;
     using System.Windows.Input;
@@ -270,7 +271,8 @@ namespace Morphic.Client
                 else
                 {
                     var index = ActionStack.Children.IndexOf(button);
-                    var args = new ActionEventArgs(index, button.IsChecked == true);
+                    var args = new ActionEventArgs(index, AutomationProperties.GetName(button),
+                        button.IsChecked == true);
                     Toggled?.Invoke(this, args);
                 }
             }
@@ -296,7 +298,8 @@ namespace Morphic.Client
                 else
                 {
                     var index = ActionStack.Children.IndexOf(button);
-                    var args = new ActionEventArgs(index, (button as ToggleButton)?.IsChecked == true);
+                    var args = new ActionEventArgs(index, AutomationProperties.GetName(button),
+                        (button as ToggleButton)?.IsChecked == true);
                     Action?.Invoke(this, args);
                     helper?.UpdateHelp();
                 }
@@ -314,6 +317,11 @@ namespace Morphic.Client
             public int SelectedIndex { get; }
 
             /// <summary>
+            /// The automation name of the segment, indicating which action button was clicked
+            /// </summary>
+            public string SelectedName { get; }
+
+            /// <summary>
             /// The toggle state, for toggle buttons.
             /// </summary>
             public bool ToggleState { get; }
@@ -322,10 +330,12 @@ namespace Morphic.Client
             /// Create a new args object with the given selected index
             /// </summary>
             /// <param name="selectedIndex">The selected segment index, indicating which action button was clicked</param>
+            /// <param name="selectedName">The automation name of the segment, indicating which action button was clicked</param>
             /// <param name="toggleState">true if the button is 'on'</param>
-            public ActionEventArgs(int selectedIndex, bool toggleState = false)
+            public ActionEventArgs(int selectedIndex, string selectedName, bool toggleState = false)
             {
                 SelectedIndex = selectedIndex;
+                SelectedName = selectedName;
                 ToggleState = toggleState;
             }
         }
@@ -367,6 +377,7 @@ namespace Morphic.Client
             /// <summary>The session.</summary>
             public Session? Session { get; set; }
             public bool AutoUpdate { get; set; }
+            public bool ApplySetting { get; set; }
 
             /// <summary>The value to use when the button is checked.</summary>
             public object OnValue { get; set; }
@@ -401,13 +412,23 @@ namespace Morphic.Client
             /// <summary>
             /// Automatically set a setting for the toggle button.
             /// </summary>
-            public QsToggleButton Automate(Session session, Preferences.Key pref, bool autoUpdate = true, object? onValue = null, object? offValue = null)
+            /// <param name="session">The session.</param>
+            /// <param name="pref">The preference to read the state from (and to set, if prefsToSet is null)</param>
+            /// <param name="autoUpdate">Automatically update the button</param>
+            /// <param name="applySetting">Apply the setting, when toggled</param>
+            /// <param name="onValue">The value to apply, when the button is checked</param>
+            /// <param name="offValue">The value to apply, when the button is unchecked</param>
+            /// <returns></returns>
+            public QsToggleButton Automate(Session session, Preferences.Key pref, bool autoUpdate = true,
+                bool applySetting = true,
+                object? onValue = null, object? offValue = null)
             {
                 this.OnValue = onValue ?? true;
                 this.OffValue = offValue ?? false;
                 this.Session = session;
                 this.PreferenceKey = pref;
                 this.AutoUpdate = autoUpdate;
+                this.ApplySetting = applySetting;
 
                 this.Click += this.OnClick;
                 this.UpdateState();
@@ -421,7 +442,7 @@ namespace Morphic.Client
                 {
                     this.Helper.ShowContextMenu();
                 }
-                else if (this.Session != null)
+                else if (this.Session != null && this.ApplySetting)
                 {
                     object value = this.IsChecked == true ? this.OnValue : this.OffValue;
                     await this.Session.Apply(this.PreferenceKey, value);

@@ -383,7 +383,8 @@ namespace Morphic.Client.QuickStrip
 
                             var darkHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Colors_Dark_HelpTitle, Properties.Resources.QuickStrip_Colors_Dark_HelpMessage);
                             control.AddToggle(Properties.Resources.QuickStrip_Colors_Dark_Title, Properties.Resources.QuickStrip_Colors_Dark_Name, darkHelp)
-                                .Automate(quickStrip.session, SettingsManager.Keys.WindowsDisplayLightThemeEnabled, true, false, true)
+                                .Automate(quickStrip.session, SettingsManager.Keys.WindowsDisplayLightAppsThemeEnabled,
+                                    applySetting: false, onValue: false, offValue: true)
                                 .Helper.SetContextItems("colors");
 
                             var nightHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_NightMode_On_HelpTitle, Properties.Resources.QuickStrip_NightMode_On_HelpMessage);
@@ -392,6 +393,7 @@ namespace Morphic.Client.QuickStrip
                                 .Helper.SetContextItems("nightlight");
 
                             control.SpaceButtons();
+                            control.Action += quickStrip.OnColors;
 
                             return control;
                         }
@@ -580,6 +582,41 @@ namespace Morphic.Client.QuickStrip
             {
                 Countly.RecordEvent("NightMode Off");
                 _ = session.Apply(SettingsManager.Keys.WindowsDisplayNightModeEnabled, false);
+            }
+        }
+
+        private bool? initialAppsLight;
+        private bool? initialWindowsLight;
+        private bool? initialDarkMode;
+
+        private async void OnColors(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
+        {
+            if (e.SelectedName == Properties.Resources.QuickStrip_Colors_Dark_Name)
+            {
+                Countly.RecordEvent("Darkmode toggle");
+
+                bool newValue = !e.ToggleState;
+
+                Preferences.Key lightAppsSetting = SettingsManager.Keys.WindowsDisplayLightAppsThemeEnabled;
+                Preferences.Key lightWindowsSetting = SettingsManager.Keys.WindowsDisplayLightWindowsThemeEnabled;
+
+                this.initialDarkMode ??= !e.ToggleState;
+                this.initialAppsLight ??= await this.session.SettingsManager.CaptureBool(lightAppsSetting)
+                    ?? false;
+                this.initialWindowsLight ??= await this.session.SettingsManager.CaptureBool(lightWindowsSetting)
+                    ?? false;
+
+                // Turning the toggle back to its initial state puts the settings back to their original value.
+                if (e.ToggleState == this.initialDarkMode)
+                {
+                    _ = session.Apply(lightAppsSetting, this.initialAppsLight);
+                    _ = session.Apply(lightWindowsSetting, this.initialWindowsLight);
+                }
+                else
+                {
+                    _ = session.Apply(lightAppsSetting, newValue);
+                    _ = session.Apply(lightWindowsSetting, newValue);
+                }
             }
         }
 
