@@ -355,6 +355,7 @@ namespace Morphic.Client.QuickStrip
                     case "snip":
                         {
                             var control = new QuickStripSegmentedButtonControl();
+                            control.ItemCount = 1;
                             var copyButtonHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Snip_HelpTitle, Properties.Resources.QuickStrip_Snip_HelpMessage);
                             control.TitleLabel.Content = Properties.Resources.QuickStrip_Snip_Title;
                             control.AddButton(Properties.Resources.QuickStrip_Snip_Button_Title, copyButtonHelp.Title, copyButtonHelp, isPrimary: false);
