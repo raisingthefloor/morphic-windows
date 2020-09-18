@@ -55,6 +55,7 @@ namespace Morphic.Client
         public QuickStripSegmentedButtonControl()
         {
             InitializeComponent();
+            this.MouseUp += this.OnMouseUp;
         }
 
         /// <summary>
@@ -255,7 +256,11 @@ namespace Morphic.Client
             }
             ActionStack.Children.Add(button);
 
-            ((IActionControl)button).Helper.SetContextItems(this.Settings, this.LearnMore, this.Demo);
+            if (this.ContextItems != null)
+            {
+                ((IActionControl)button).Helper.SetContextItems(this.ContextItems);
+            }
+
             return button;
         }
 
@@ -471,12 +476,12 @@ namespace Morphic.Client
             /// Indicates if the help window should be shown on hover
             /// </summary>
             public bool ShowsHelp { get; set; } = true;
-            public Control Control { get; set; }
+            public ButtonBase Control { get; set; }
 
             /// <summary>
             /// Create an action button
             /// </summary>
-            public QsControlHelper(Control control, IQuickHelpControlBuilder? helpBuilder): base()
+            public QsControlHelper(ButtonBase control, IQuickHelpControlBuilder? helpBuilder): base()
             {
                 this.Control = control;
                 this.HelpBuilder = helpBuilder;
@@ -556,75 +561,16 @@ namespace Morphic.Client
             #region Context menu
 
             public ContextMenu? ContextMenu { get; private set; }
-            public string? Settings { get; set; }
-            public string? Demo { get; set; }
-            public string? LearnMore { get; set; }
 
-            private static readonly string SettingsBase = "ms-settings:";
-            private static readonly string DemoBase = "https://morphic.org/demo/";
-            private static readonly string LearnMoreBase = "https://morphic.org/basics/learn-more-about-quickstrip#";
-
-            public void SetContextItems(string? settings = null, string? learnMore = null, string? demo = null)
+            /// <summary>
+            /// Set the context menu items.
+            /// </summary>
+            /// <param name="items">The items.</param>
+            public void SetContextItems(IEnumerable<(string text, string target)> items)
             {
-                if (settings == null && learnMore == null && demo == null)
-                {
-                    this.ContextMenu = null;
-                    return;
-                }
-
-                if (learnMore != null)
-                {
-                    this.LearnMore = learnMore;
-                }
-                if (demo != null)
-                {
-                    this.Demo = demo;
-                }
-                if (settings != null)
-                {
-                    this.Settings = settings;
-                }
-
-                ContextMenu menu = new ContextMenu();
-
-                MenuItem NewItem(string header, string? value)
-                {
-                    MenuItem item = new MenuItem()
-                    {
-                        Header = header,
-                        Tag = value
-                    };
-
-                    menu.Items.Add(item);
-                    return item;
-                };
-
-                NewItem("Learn more", learnMore).Click += this.LearnMore_Click;
-                NewItem("Quick demo video", demo).Click += this.Demo_Click;
-                NewItem("Settings", settings).Click += this.Settings_Click;
-
-                bool hasEnabled = false;
-
-                foreach (MenuItem item in menu.Items.OfType<MenuItem>())
-                {
-                    item.IsEnabled = item.Tag != null;
-                    if (item.IsEnabled)
-                    {
-                        hasEnabled = true;
-                    }
-                }
-                
-                if (hasEnabled)
-                {
-                    this.ContextMenu = menu;
-                    this.ContextMenu.Placement = PlacementMode.Top;
-                    this.ContextMenu.PlacementTarget = this.Control;
-                }
-                else
-                {
-                    this.ContextMenu = null;
-                }
+                this.ContextMenu = QuickStripSegmentedButtonControl.CreateContextMenu(this.Control, items);
             }
+
 
             /// <summary>
             /// Show the context menu for this control.
@@ -637,73 +583,121 @@ namespace Morphic.Client
                 }
             }
 
-            /// <summary>
-            /// "Learn more" menu item click.
-            /// </summary>
-            private void LearnMore_Click(object sender, RoutedEventArgs e)
-            {
-                this.OpenUrl(QsControlHelper.LearnMoreBase, this.LearnMore);
-            }
-
-            /// <summary>
-            /// "Quick demo video" menu item click.
-            /// </summary>
-            private void Demo_Click(object sender, RoutedEventArgs e)
-            {
-                this.OpenUrl(QsControlHelper.DemoBase, this.Demo);
-            }
-
-            /// <summary>
-            /// "Settings" menu item click.
-            /// </summary>
-            private void Settings_Click(object sender, RoutedEventArgs e)
-            {
-                this.OpenUrl(QsControlHelper.SettingsBase, this.Settings);
-            }
-
-            /// <summary>
-            /// Opens a url (by executing it via the shell)
-            /// </summary>
-            /// <param name="baseUrl"></param>
-            /// <param name="extra"></param>
-            private void OpenUrl(string baseUrl, string? extra)
-            {
-                if (!string.IsNullOrEmpty(extra))
-                {
-                    string finalUrl = extra.StartsWith('!')
-                        ? extra.Substring(1)
-                        : baseUrl + extra;
-                    Process.Start(new ProcessStartInfo(finalUrl)
-                    {
-                        UseShellExecute = true
-                    });
-                }
-            }
-
             #endregion
         }
 
-        public string? Settings { get; set; }
-        public string? Demo { get; set; }
-        public string? LearnMore { get; set; }
+        public IEnumerable<(string text, string target)>? ContextItems;
+        private static readonly string SettingsFormat = "ms-settings:{0}";
+        private static readonly string DemoFormat = "https://morphic.org/ln/{0}-vid";
+        private static readonly string LearnMoreFormat = "https://morphic.org/lm/{0}";
 
         /// <summary>
-        /// Sets the context items for the child controls
+        /// Sets the context items for this control, and the child controls.
         /// </summary>
-        /// <param name="settings"></param>
-        /// <param name="learnMore"></param>
-        /// <param name="demo"></param>
-        public void SetContextItems(string? settings = null, string? learnMore = null, string? demo = null)
+        /// <param name="items">The items</param>
+        public void SetContextItems(IEnumerable<(string text, string target)> items)
         {
-            this.LearnMore = learnMore;
-            this.Demo = demo;
-            this.Settings = settings;
-
+            this.ContextItems = items.ToArray();
             foreach (IActionControl control in this.ActionStack.Children.OfType<IActionControl>())
             {
-                control.Helper.SetContextItems(settings, learnMore, demo);
+                control.Helper.SetContextItems(this.ContextItems);
             }
 
+            this.Menu = CreateContextMenu(this, this.ContextItems);
+        }
+
+        public ContextMenu? Menu { get; set; }
+
+        private void OnMouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == MouseButton.Right)
+            {
+                if (this.Menu != null)
+                {
+                    this.Menu.IsOpen = true;
+                    e.Handled = true;
+                }
+            }
+        }
+
+        public static ContextMenu? CreateContextMenu(Control control, IEnumerable<(string text, string target)> items)
+        {
+            ContextMenu menu = new ContextMenu();
+
+            MenuItem NewItem(string header, string? value)
+            {
+                MenuItem item = new MenuItem()
+                {
+                    Header = header,
+                    Tag = value
+                };
+
+                menu.Items.Add(item);
+                return item;
+            }
+
+            foreach (var (name, target) in items)
+            {
+                if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(target))
+                {
+                    continue;
+                }
+
+                string? format;
+                string finalName = name;
+
+                switch (name)
+                {
+                    case "learn":
+                        format = QuickStripSegmentedButtonControl.LearnMoreFormat;
+                        finalName = "_Learn more";
+                        break;
+                    case "demo":
+                        format = QuickStripSegmentedButtonControl.DemoFormat;
+                        finalName = "Quick _Demo video";
+                        break;
+                    case "settings":
+                    case "setting":
+                        format = QuickStripSegmentedButtonControl.SettingsFormat;
+                        finalName = "_Settings";
+                        break;
+                    default:
+                        format = null;
+                        break;
+                }
+
+                string finalTarget = format != null && !target.StartsWith("!")
+                    ? string.Format(format, target)
+                    : target;
+
+                NewItem(finalName, finalTarget).Click += QuickStripSegmentedButtonControl.ContextItemClick;
+
+            }
+
+            if (menu.Items.Count > 0)
+            {
+                menu.Placement = PlacementMode.Top;
+                menu.PlacementTarget = control;
+                return menu;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// "Learn more" menu item click.
+        /// </summary>
+        private static void ContextItemClick(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem item)
+            {
+                Process.Start(new ProcessStartInfo(item.Tag as string)
+                {
+                    UseShellExecute = true
+                });
+            }
         }
 
         /// <summary>
