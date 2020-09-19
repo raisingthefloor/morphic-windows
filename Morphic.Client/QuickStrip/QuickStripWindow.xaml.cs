@@ -392,7 +392,7 @@ namespace Morphic.Client.QuickStrip
 
                             var contrastHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Contrast_On_HelpTitle, Properties.Resources.QuickStrip_Contrast_On_HelpMessage);
                             control.AddToggle(Properties.Resources.QuickStrip_Colors_Contrast_Title, Properties.Resources.QuickStrip_Colors_Contrast_Name, contrastHelp)
-                                .Automate(quickStrip.session, SettingsManager.Keys.WindowsDisplayContrastEnabled)
+                                .Automate(quickStrip.session, SettingsManager.Keys.WindowsDisplayContrastEnabled, applySetting: false)
                                 .Helper.SetContextItems(new []
                                 {
                                     ("setting", "easeofaccess-highcontrast"),
@@ -630,7 +630,22 @@ namespace Morphic.Client.QuickStrip
 
         private async void OnColors(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
         {
-            if (e.SelectedName == Properties.Resources.QuickStrip_Colors_Dark_Name)
+            if (e.SelectedName == Properties.Resources.QuickStrip_Colors_Contrast_Name)
+            {
+                // Setting via the system settings method doesn't respect the high-contrast theme set during
+                // first run - running sethc directly instead.
+                ProcessStartInfo startInfo = new ProcessStartInfo("sethc.exe")
+                {
+                    UseShellExecute = true,
+                };
+
+                startInfo.ArgumentList.Add(e.ToggleState ? "100" : "1");
+
+                Process.Start(startInfo);
+
+                Countly.RecordEvent("Contrast toggle");
+
+            } else if (e.SelectedName == Properties.Resources.QuickStrip_Colors_Dark_Name)
             {
                 Countly.RecordEvent("Darkmode toggle");
 

@@ -245,11 +245,6 @@ namespace Morphic.Client
 
             this.AddSettingsListener();
 
-            if (this.FirstRun)
-            {
-                this.OnFirstRun();
-            }
-
             var task = OpenSession();
             task.ContinueWith(SessionOpened, TaskScheduler.FromCurrentSynchronizationContext());
         }
@@ -337,8 +332,30 @@ namespace Morphic.Client
             this.logger.LogInformation("Performing first-run tasks");
 
             // Set the magnifier to lens mode at 200%
-            Registry.SetValue("HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier", "Magnification", 200);
-            Registry.SetValue("HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier", "MagnificationMode", 3);
+            Registry.SetValue(@"HKEY_CURRENT_USER\Software\Microsoft\ScreenMagnifier", "Magnification", 200);
+            Registry.SetValue(@"HKEY_CURRENT_USER\Software\Microsoft\ScreenMagnifier", "MagnificationMode", 3);
+
+            // Set the colour filter type - if it's not currently enabled.
+            bool filterOn = this.Session.GetBool(SettingsManager.Keys.WindowsDisplayColorFilterEnabled) == true;
+            if (!filterOn)
+            {
+                SystemSetting filterType = new SystemSetting("SystemSettings_Accessibility_ColorFiltering_FilterType",
+                    new LoggerFactory().CreateLogger<SystemSetting>());
+                filterType.SetValue(5);
+            }
+
+            // Set the high-contrast theme, if high-contrast is off.
+            bool highcontrastOn = this.Session.GetBool(SettingsManager.Keys.WindowsDisplayContrastEnabled) == true;
+            if (!highcontrastOn)
+            {
+                Registry.SetValue(@"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes",
+                    "LastHighContrastTheme", @"%SystemRoot\resources\Ease of Access Themes\hcwhite.theme",
+                    RegistryValueKind.ExpandString);
+
+                // For windows 10 1809+
+                Registry.SetValue(@"HKEY_CURRENT_USER\Control Panel\Accessibility\HighContrast",
+                    "High Contrast Scheme", "High Contrast White");
+            }
         }
 
         /// <summary>
