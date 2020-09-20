@@ -58,11 +58,11 @@
         },
         buttons: {
           on: {
-            label: "On",
+            label: "Show",
             tooltip: "Turn on the magnifier"
           },
           off: {
-            label: "Off",
+            label: "Hide",
             tooltip: "Turn off the magnifier"
           }
         }

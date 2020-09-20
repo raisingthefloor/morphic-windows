@@ -107,6 +107,8 @@ namespace Morphic.Bar.Bar
             .OrderByDescending(item => item.IsPrimaryOriginal)
             .ThenByDescending(item => item.Priority);
 
+        public string? CommunityId { get; set; }
+
         private ILogger logger = App.Current.ServiceProvider.GetRequiredService<ILogger<BarData>>();
 
         /// <summary>

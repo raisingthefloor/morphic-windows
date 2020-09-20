@@ -36,6 +36,7 @@ using Morphic.Settings;
 
 namespace Morphic.Service
 {
+    using System.Linq;
 
     /// <summary>
     /// Manages a user's session with the morphic server
@@ -186,7 +187,6 @@ namespace Morphic.Service
 
         public async Task Signin(User user)
         {
-            Bar = null;
             Communities = new UserCommunity[] { };
             User = user;
             await Storage.Save(user);
@@ -194,14 +194,6 @@ namespace Morphic.Service
             if (communitiesPage != null)
             {
                 Communities = communitiesPage.Communities;
-            }
-            if (Communities.Length == 1)
-            {
-                var community = await Service.FetchUserCommunity(user.Id, Communities[0].Id);
-                if (community != null)
-                {
-                    Bar = community.Bar;
-                }
             }
             UserChanged?.Invoke(this, new EventArgs());
         }
@@ -219,7 +211,39 @@ namespace Morphic.Service
 
         public UserCommunity[] Communities = new UserCommunity[] { };
 
-        public UserBar? Bar;
+        /// <summary>
+        /// Gets a bar for a community.
+        /// </summary>
+        /// <param name="communityId"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        /// <exception cref="InvalidOperationException"></exception>
+        /// <exception cref="ApplicationException"></exception>
+        public async Task<UserBar> GetBar(string communityId)
+        {
+            this.logger.LogInformation($"Getting bar for {communityId}");
+
+            UserBar? bar = null;
+
+            bool knownCommunity = this.Communities.Any(c => c.Id == communityId);
+            if (!knownCommunity)
+            {
+                throw new ArgumentOutOfRangeException(nameof(communityId), "Unknown community ID for the current session");
+            }
+
+            if (this.User == null)
+            {
+                throw new InvalidOperationException("Unable to get a bar while logged out");
+            }
+
+            if (this.Communities.Length == 0)
+            {
+                throw new ApplicationException("Unable to get a bar for a user in no communities");
+            }
+
+            UserCommunityDetail? community = await this.Service.FetchUserCommunity(this.User.Id, communityId);
+            return community?.Bar ?? throw new ApplicationException("Unable to retrieve the bar");
+        }
 
         #endregion
     }
