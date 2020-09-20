@@ -801,6 +801,7 @@ namespace Morphic.Client
         /// </summary>
         public void HideQuickStrip()
         {
+            QuickHelpWindow.Dismiss(true);
             this.QuickStripWindow?.Hide();
 
             // Re-focus the same control when the qs is re-shown.

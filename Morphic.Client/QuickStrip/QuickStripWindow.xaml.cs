@@ -76,11 +76,10 @@ namespace Morphic.Client.QuickStrip
             this.MouseEnter += (sender, args) => this.UpdateState();
             this.IsVisibleChanged += (sender, args) =>
             {
-                if (this.IsVisible == false)
-                {
-                    this.HideHelp();
-                }
+                this.HideHelp();
             };
+
+            this.Closing += (sender, args) => this.HideHelp();
         }
 
         /// <summary>
@@ -955,6 +954,11 @@ namespace Morphic.Client.QuickStrip
 
                     e.Handled = true;
                     break;
+                case Key.System when e.SystemKey == Key.F4:
+                    e.Handled = true;
+                    App.Shared.HideQuickStrip();
+                    break;
+
             }
         }
 
