@@ -25,6 +25,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Morphic.Bar", "Morphic.Bar\
 EndProject
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "Morphic.BarSetup", "Morphic.BarSetup\Morphic.BarSetup.wixproj", "{C0DEDBAD-FA93-49B8-8587-E10CE8D3CADD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Morphic.Speech", "Morphic.Speech\Morphic.Speech.csproj", "{B3C25A13-80D3-4CE5-AC02-9B8F38FB331E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -119,6 +121,14 @@ Global
 		{C0DEDBAD-FA93-49B8-8587-E10CE8D3CADD}.Release|Any CPU.ActiveCfg = Release|x64
 		{C0DEDBAD-FA93-49B8-8587-E10CE8D3CADD}.Release|x64.ActiveCfg = Release|x64
 		{C0DEDBAD-FA93-49B8-8587-E10CE8D3CADD}.Release|x64.Build.0 = Release|x64
+		{B3C25A13-80D3-4CE5-AC02-9B8F38FB331E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B3C25A13-80D3-4CE5-AC02-9B8F38FB331E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B3C25A13-80D3-4CE5-AC02-9B8F38FB331E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B3C25A13-80D3-4CE5-AC02-9B8F38FB331E}.Debug|x64.Build.0 = Debug|Any CPU
+		{B3C25A13-80D3-4CE5-AC02-9B8F38FB331E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B3C25A13-80D3-4CE5-AC02-9B8F38FB331E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B3C25A13-80D3-4CE5-AC02-9B8F38FB331E}.Release|x64.ActiveCfg = Release|Any CPU
+		{B3C25A13-80D3-4CE5-AC02-9B8F38FB331E}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
