@@ -507,7 +507,8 @@ namespace Morphic.Client.QuickStrip
             if (e.SelectedIndex == 0)
             {
                 _ = Countly.RecordEvent("Read Selection");
-                if (speech.Active)
+                string text = await QuickStripWindow.GetSelectedText(reader);
+                if (speech.Active && this.currentTextReading == text)
                 {
                     // Pause or resume it
                     speech.TogglePause();
@@ -517,34 +518,9 @@ namespace Morphic.Client.QuickStrip
                     //QuickStripSegmentedButtonControl itemControl = (QuickStripSegmentedButtonControl)sender;
                     //itemControl.EnableButton(1, true);
 
-                    // Store the clipboard
-                    IDataObject clipboadData = Clipboard.GetDataObject();
-                    Dictionary<string, object?> dataStored = clipboadData.GetFormats()
-                        .ToDictionary(format => format, format =>
-                        {
-                            try
-                            {
-                                return clipboadData.GetData(format, false);
-                            }
-                            catch (COMException)
-                            {
-                                return null;
-                            }
-                        });
-                    Clipboard.Clear();
-
-                    // Get the selection
-                    await reader.GetSelectedText(SendKeys.SendWait);
-                    string text = Clipboard.GetText();
-
-                    // Restore the clipboard
-                    Clipboard.Clear();
-                    dataStored.Where(kv => kv.Value != null).ToList()
-                        .ForEach(kv => Clipboard.SetData(kv.Key, kv.Value));
-                    Clipboard.Flush();
-
                     if (!string.IsNullOrEmpty(text))
                     {
+                        this.currentTextReading = text;
                         await speech.SpeakText(text);
                     }
 
@@ -560,6 +536,38 @@ namespace Morphic.Client.QuickStrip
                     speech.StopSpeaking();
                 }
             }
+        }
+
+        private string currentTextReading;
+
+        private static async Task<string> GetSelectedText(SelectionReader reader)
+        {
+            // Store the clipboard
+            IDataObject clipboadData = Clipboard.GetDataObject();
+            Dictionary<string, object?> dataStored = clipboadData.GetFormats()
+                .ToDictionary(format => format, format =>
+                {
+                    try
+                    {
+                        return clipboadData.GetData(format, false);
+                    }
+                    catch (COMException)
+                    {
+                        return null;
+                    }
+                });
+            Clipboard.Clear();
+
+            // Get the selection
+            await reader.GetSelectedText(SendKeys.SendWait);
+            string text = Clipboard.GetText();
+
+            // Restore the clipboard
+            Clipboard.Clear();
+            dataStored.Where(kv => kv.Value != null).ToList()
+                .ForEach(kv => Clipboard.SetData(kv.Key, kv.Value));
+            Clipboard.Flush();
+            return text;
         }
 
         private void OnVolume(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
