@@ -4,11 +4,14 @@ namespace Morphic.Bar.Bar.Actions
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
+    using System.IO;
     using System.Linq;
+    using System.Media;
     using System.Runtime.InteropServices;
     using System.Threading.Tasks;
     using System.Windows.Forms;
     using Windows.Native;
+    using global::Windows.Media.SpeechSynthesis;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Microsoft.Win32;
@@ -114,6 +117,9 @@ namespace Morphic.Bar.Bar.Actions
             return true;
         }
 
+        // Plays the speech sound.
+        private static SoundPlayer? speechPlayer;
+
         /// <summary>
         /// Reads the selected text.
         /// </summary>
@@ -122,19 +128,23 @@ namespace Morphic.Bar.Bar.Actions
         [InternalFunction("readAloud", "action")]
         public static async Task<bool> ReadAloud(FunctionArgs args)
         {
-            SelectionReader reader = SelectionReader.Default;
-            Speech speech = Speech.Default;
-
-            switch (args["action"])
+            string action = args["action"];
+            switch (action)
             {
                 case "pause":
-                    if (speech.Active)
-                    {
-                        speech.TogglePause();
-                    }
+                    App.Current.Logger.LogError("ReadAloud: pause not supported");
                     break;
 
+                case "stop":
                 case "play":
+                    Personal.speechPlayer?.Stop();
+                    Personal.speechPlayer?.Dispose();
+                    Personal.speechPlayer = null;
+
+                    if (action == "stop")
+                    {
+                        break;
+                    }
 
                     App.Current.Logger.LogDebug("ReadAloud: Storing clipboard");
                     IDataObject? clipboardData = Clipboard.GetDataObject();
@@ -149,7 +159,7 @@ namespace Morphic.Bar.Bar.Actions
 
                     // Get the selection
                     App.Current.Logger.LogDebug("ReadAloud: Getting selected text");
-                    await reader.GetSelectedText(System.Windows.Forms.SendKeys.SendWait);
+                    await SelectionReader.Default.GetSelectedText(System.Windows.Forms.SendKeys.SendWait);
                     string text = Clipboard.GetText();
 
                     // Restore the clipboard
@@ -159,17 +169,18 @@ namespace Morphic.Bar.Bar.Actions
                         .ForEach(kv => Clipboard.SetData(kv.Key, kv.Value));
 
                     // Talk the talk
-                    if (!string.IsNullOrEmpty(text))
+                    SpeechSynthesizer synth = new SpeechSynthesizer();
+                    SpeechSynthesisStream stream = await synth.SynthesizeTextToStreamAsync(text);
+                    speechPlayer = new SoundPlayer(stream.AsStream());
+                    speechPlayer.LoadCompleted += (o, args) =>
                     {
-                        App.Current.Logger.LogDebug("ReadAloud: Speaking");
-                        await speech.SpeakText(text);
-                    }
+                        speechPlayer.Play();
+                    };
+
+                    speechPlayer.LoadAsync();
 
                     break;
 
-                case "stop":
-                    speech.StopSpeaking();
-                    break;
             }
 
             return true;

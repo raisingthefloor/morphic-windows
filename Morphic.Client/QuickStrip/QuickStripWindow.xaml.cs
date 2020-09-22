@@ -47,6 +47,7 @@ namespace Morphic.Client.QuickStrip
     using System.Windows.Forms;
     using System.Windows.Input;
     using Windows.Native;
+    using global::Windows.Media.SpeechSynthesis;
     using Clipboard = System.Windows.Clipboard;
     using Control = System.Windows.Controls.Control;
     using IDataObject = System.Windows.IDataObject;
@@ -79,7 +80,15 @@ namespace Morphic.Client.QuickStrip
                 this.HideHelp();
             };
 
-            this.Closing += (sender, args) => this.HideHelp();
+            this.Closing += (sender, args) =>
+            {
+                this.HideHelp();
+                this.speechPlayer.Stop();
+            };
+            this.speechPlayer.LoadCompleted += (o, args) =>
+            {
+                this.speechPlayer.Play();
+            };
         }
 
         /// <summary>
@@ -498,63 +507,56 @@ namespace Morphic.Client.QuickStrip
             }
         }
 
+        private readonly SoundPlayer speechPlayer = new SoundPlayer();
+
         private async void OnReader(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
         {
-            SelectionReader reader = SelectionReader.Default;
-            Windows.Native.Speech speech = Windows.Native.Speech.Default;
             // Play/Pause
             if (e.SelectedIndex == 0)
             {
                 _ = Countly.RecordEvent("Read Selection");
-                string text = await QuickStripWindow.GetSelectedText(reader);
-                if (speech.Active && this.currentTextReading == text)
-                {
-                    // Pause or resume it
-                    speech.TogglePause();
-                }
-                else
-                {
-                    //QuickStripSegmentedButtonControl itemControl = (QuickStripSegmentedButtonControl)sender;
-                    //itemControl.EnableButton(1, true);
+                string text = await QuickStripWindow.GetSelectedText(SelectionReader.Default);
 
-                    if (!string.IsNullOrEmpty(text))
-                    {
-                        this.currentTextReading = text;
-                        await speech.SpeakText(text);
-                    }
+                this.speechPlayer.Stop();
 
-                    //itemControl.EnableButton(1, false);
-                }
+                using SpeechSynthesizer synth = new SpeechSynthesizer();
+                using SpeechSynthesisStream stream = await synth.SynthesizeTextToStreamAsync(text);
+
+                this.speechPlayer.Stream = stream.AsStream();
+                this.speechPlayer.LoadAsync();
             }
             else
             {
                 _ = Countly.RecordEvent("Stop Reading");
-                if (speech.Active)
-                {
-                    // Stop
-                    speech.StopSpeaking();
-                }
+                this.speechPlayer.Stop();
             }
         }
 
-        private string currentTextReading;
-
         private static async Task<string> GetSelectedText(SelectionReader reader)
         {
-            // Store the clipboard
-            IDataObject clipboadData = Clipboard.GetDataObject();
-            Dictionary<string, object?> dataStored = clipboadData.GetFormats()
-                .ToDictionary(format => format, format =>
-                {
-                    try
+            Dictionary<string, object?>? dataStored = null;
+            try
+            {
+                // Store the clipboard
+                IDataObject? clipboardData = Clipboard.GetDataObject();
+                dataStored = clipboardData?.GetFormats()
+                    .ToDictionary(format => format, format =>
                     {
-                        return clipboadData.GetData(format, false);
-                    }
-                    catch (COMException)
-                    {
-                        return null;
-                    }
-                });
+                        try
+                        {
+                            return clipboardData.GetData(format, false);
+                        }
+                        catch (COMException)
+                        {
+                            return null;
+                        }
+                    });
+            }
+            catch (Exception e) when (!(e is OutOfMemoryException))
+            {
+                // ignore
+            }
+
             Clipboard.Clear();
 
             // Get the selection
@@ -563,9 +565,17 @@ namespace Morphic.Client.QuickStrip
 
             // Restore the clipboard
             Clipboard.Clear();
-            dataStored.Where(kv => kv.Value != null).ToList()
-                .ForEach(kv => Clipboard.SetData(kv.Key, kv.Value));
-            Clipboard.Flush();
+            try
+            {
+                dataStored?.Where(kv => kv.Value != null).ToList()
+                    .ForEach(kv => Clipboard.SetData(kv.Key, kv.Value!));
+                Clipboard.Flush();
+            }
+            catch (Exception e) when (!(e is OutOfMemoryException))
+            {
+                // ignore
+            }
+
             return text;
         }
 
@@ -996,6 +1006,7 @@ namespace Morphic.Client.QuickStrip
 
         public void Dispose()
         {
+            this.speechPlayer.Dispose();
             this.Messages.Dispose();
         }
 
