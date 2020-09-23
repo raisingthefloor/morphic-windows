@@ -76,7 +76,6 @@
     <ProjectReference Include="..\Morphic.Core\Morphic.Core.csproj" />
     <ProjectReference Include="..\Morphic.Service\Morphic.Service.csproj" />
     <ProjectReference Include="..\Morphic.Settings\Morphic.Settings.csproj" />
-    <ProjectReference Include="..\Morphic.Speech\Morphic.Speech.csproj" />
   </ItemGroup>
 
   <ItemGroup>

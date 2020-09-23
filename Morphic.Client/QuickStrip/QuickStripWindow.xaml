@@ -27,7 +27,7 @@
         CornerRadius="5"
         Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
     >
-        <StackPanel Height="44" Margin="7,7,7,7" Orientation="Horizontal">
+        <StackPanel x:Name="StackPanel" Height="44" Margin="7,7,7,7" Orientation="Horizontal" HorizontalAlignment="Stretch">
             <StackPanel x:Name="ControlStack" Grid.Column="0" Orientation="Horizontal">
             </StackPanel>
             <Button x:Name="LogoButton" BorderBrush="{x:Null}"

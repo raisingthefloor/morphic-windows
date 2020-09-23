@@ -815,6 +815,9 @@ namespace Morphic.Client.QuickStrip
             var screenSize = SystemParameters.WorkArea;
             double top = Top;
             double left = Left;
+
+            this.SizeToContent = SizeToContent.Width;
+
             switch (position)
             {
                 case FixedPosition.BottomRight:
