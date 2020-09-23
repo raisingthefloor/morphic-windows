@@ -86,7 +86,10 @@ namespace Morphic.Client.QuickStrip
         /// </summary>
         private void RemoveHook()
         {
-            this.hwndSource?.RemoveHook(this.WindowProc);
+            if (this.hwndSource?.IsDisposed == false)
+            {
+                this.hwndSource.RemoveHook(this.WindowProc);
+            }
         }
 
         /// <summary>
@@ -109,7 +112,11 @@ namespace Morphic.Client.QuickStrip
 
         public void Dispose()
         {
-            this.hwndSource?.Dispose();
+            if (this.hwndSource?.IsDisposed == false)
+            {
+                this.hwndSource.Dispose();
+                this.hwndSource = null;
+            }
         }
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
