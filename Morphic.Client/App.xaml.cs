@@ -655,6 +655,22 @@ namespace Morphic.Client
             }
         }
 
+        private void StopKeyRepeatInit(object sender, EventArgs e)
+        {
+            if (sender is MenuItem menuItem)
+            {
+                menuItem.IsChecked = Morphic.Windows.Native.Keyboard.KeyRepeat();
+            }
+        }
+        private void StopKeyRepeatToggle(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem menuItem)
+            {
+                menuItem.IsChecked = Morphic.Windows.Native.Keyboard.KeyRepeat(menuItem.IsChecked);
+            }
+        }
+
+
         /// <summary>
         /// Event handler for when the user selects Quit from the logo button's menu
         /// </summary>

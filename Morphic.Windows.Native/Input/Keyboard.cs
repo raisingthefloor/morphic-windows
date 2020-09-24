@@ -13,6 +13,7 @@ namespace Morphic.Windows.Native
     using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Text;
 
     public class Keyboard
@@ -27,5 +28,40 @@ namespace Morphic.Windows.Native
             const uint KEYEVENTF_KEYUP = 0x2;
             WindowsApi.keybd_event((byte)virtualKey, 0, pressed ? 0 : KEYEVENTF_KEYUP, UIntPtr.Zero);
         }
+
+        /// <summary>
+        /// Gets or sets the current value of filter keys setting.
+        /// </summary>
+        /// <param name="newvalue"></param>
+        /// <returns></returns>
+        public static bool KeyRepeat(bool? newvalue = null)
+        {
+            WindowsApi.FILTERKEYS filterKeys = new WindowsApi.FILTERKEYS
+            {
+                cbSize = Marshal.SizeOf<WindowsApi.FILTERKEYS>()
+            };
+
+            WindowsApi.SystemParametersInfoFilterKeys(
+                WindowsApi.SPI_GETFILTERKEYS, filterKeys.cbSize, ref filterKeys, 0);
+
+            if (newvalue != null)
+            {
+                if (newvalue == true)
+                {
+                    filterKeys.dwFlags |= WindowsApi.FILTERKEYS.FKF_FILTERKEYSON;
+                }
+                else
+                {
+                    filterKeys.dwFlags &= ~WindowsApi.FILTERKEYS.FKF_FILTERKEYSON;
+                }
+
+                WindowsApi.SystemParametersInfoFilterKeys(
+                    WindowsApi.SPI_SETFILTERKEYS, filterKeys.cbSize, ref filterKeys, 3);
+            }
+
+            return (filterKeys.dwFlags & WindowsApi.FILTERKEYS.FKF_FILTERKEYSON)
+                == WindowsApi.FILTERKEYS.FKF_FILTERKEYSON;
+        }
+
     }
 }

@@ -125,7 +125,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Color filter.
+        ///   Looks up a localized string similar to Color.
         /// </summary>
         internal static string QuickStrip_Colors_Color_Title {
             get {

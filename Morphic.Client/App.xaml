@@ -30,6 +30,7 @@
                 <MenuItem Header="_Night Mode Settings" Click="MenuLink" Tag="ms-settings:nightlight" />
                 <MenuItem Header="_Dark Mode Settings" Click="MenuLink" Tag="ms-settings:colors" />
                 <MenuItem Header="_Contrast Settings" Click="MenuLink" Tag="ms-settings:easeofaccess-highcontrast" />
+
                 <Separator>
                     <Separator.Template>
                         <ControlTemplate TargetType="Separator">
@@ -42,10 +43,27 @@
                 </Separator>
                 <MenuItem Header="M_ouse Settings" Click="MenuLink" Tag="ms-settings:mousetouchpad" />
                 <MenuItem Header="_Pointer Size" Click="MenuLink" Tag="ms-settings:easeofaccess-cursorandpointersize" />
-                <MenuItem Header="_Stop Key-repeat" Click="MenuLink" Tag="ms-settings:easeofaccess-keyboard" />
+                <MenuItem Header="_Keyboard Settings" Click="MenuLink" Tag="ms-settings:easeofaccess-keyboard" />
                 <!-- <MenuItem Header="Brightness" Click="MenuLink" Tag="" /> -->
                 <MenuItem Header="_Language" Click="MenuLink" Tag="ms-settings:regionlanguage" />
                 <MenuItem Header="_All Accessibility Options" Click="MenuLink" Tag="ms-settings:easeofaccess-display" />
+
+                <Separator>
+                    <Separator.Template>
+                        <ControlTemplate TargetType="Separator">
+                            <Label Content="Direct actions" FontWeight="Bold"
+                                   Foreground="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"
+                                   Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}"
+                            />
+                        </ControlTemplate>
+                    </Separator.Template>
+                </Separator>
+                <MenuItem Header="_Stop Key-repeat" IsCheckable="True"
+                          Click="StopKeyRepeatToggle"
+
+                          Loaded="StopKeyRepeatInit"
+                          />
+
 
             </MenuItem>
             <MenuItem Header="_Other Helpful Things" Click="MenuLink" Tag="https://morphic.org/demos" />
