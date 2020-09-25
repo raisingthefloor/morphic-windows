@@ -690,7 +690,7 @@ namespace Morphic.Client.QuickStrip
             }
         }
 
-        private void OnSnip(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
+        private async void OnSnip(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
         {
             if (e.SelectedIndex == 0)
             {
@@ -698,16 +698,27 @@ namespace Morphic.Client.QuickStrip
 
                 // Hide the qs while the snipper tool captures the screen.
                 this.Opacity = 0;
+                bool wasDisabled = QuickHelpWindow.Disabled;
+                QuickHelpWindow.Disabled = true;
                 QuickHelpWindow.Dismiss(true);
+                await Task.Delay(500);
 
-                // Hold down the windows key while pressing shift + s
-                const uint windowsKey = 0x5b; // VK_LWIN
-                Morphic.Windows.Native.Keyboard.PressKey(windowsKey, true);
-                SendKeys.SendWait("+s");
-                Morphic.Windows.Native.Keyboard.PressKey(windowsKey, false);
+                try
+                {
+                    // Hold down the windows key while pressing shift + s
+                    const uint windowsKey = 0x5b; // VK_LWIN
+                    Morphic.Windows.Native.Keyboard.PressKey(windowsKey, true);
+                    SendKeys.SendWait("+s");
+                    Morphic.Windows.Native.Keyboard.PressKey(windowsKey, false);
 
-                // Show the qs again
-                Task.Delay(3000).ContinueWith(task => this.Dispatcher.Invoke(() => this.Opacity = 1));
+                }
+                finally
+                {
+                    // Show the qs again
+                    await Task.Delay(3000);
+                    QuickHelpWindow.Disabled = wasDisabled;
+                    this.Opacity = 1;
+                }
             }
         }
 

@@ -44,18 +44,27 @@ namespace Morphic.Client
         /// </summary>
         private static QuickHelpWindow? shared = null;
 
+        /// <summary>
+        /// Never show the help window.
+        /// </summary>
+        public static bool Disabled { get; set; }
+
         public static void Show(IQuickHelpControlBuilder controlBuilder)
         {
-            if (shared == null)
+            if (!Disabled)
             {
-                shared = new QuickHelpWindow();
+                if (shared == null)
+                {
+                    shared = new QuickHelpWindow();
+                }
+
+                var control = controlBuilder.Build();
+                shared.Content = control;
+                shared.Reposition();
+                shared.Show();
+                hideTimer?.Stop();
+                hideTimer = null;
             }
-            var control = controlBuilder.Build();
-            shared.Content = control;
-            shared.Reposition();
-            shared.Show();
-            hideTimer?.Stop();
-            hideTimer = null;
         }
 
         /// <summary>
