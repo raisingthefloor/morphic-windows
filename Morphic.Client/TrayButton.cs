@@ -29,6 +29,7 @@ namespace Morphic.Client
     using System.Drawing;
     using System.IO;
     using System.Reflection;
+    using System.Runtime.CompilerServices;
     using System.Runtime.InteropServices;
     using System.Windows.Controls;
     using System.Windows.Forms;
@@ -53,7 +54,7 @@ namespace Morphic.Client
         private NotifyIcon? fallbackIcon;
 
         // The message sent from the tray button process;
-        private const string BUTTON_MESSAGE_NAME = "GPII-TrayButton-Message";
+        public const string ButtonMessageName = "GPII-TrayButton-Message";
         private readonly int buttonMessage;
 
         private enum TrayCommand
@@ -72,6 +73,18 @@ namespace Morphic.Client
             ShowMenu = 2,
             MouseEnter = 3,
             MouseLeave = 4,
+            Activate = 5,
+        }
+
+        /// <summary>
+        /// Used by a second instance of this application to sends a message to the first instance telling
+        /// it to activate the window.
+        /// </summary>
+        public static void SendActivate()
+        {
+            const int HWND_BROADCAST = 0xffff;
+            int message = WindowMessageHook.RegisterMessage(ButtonMessageName);
+            SendMessage((IntPtr)HWND_BROADCAST, message, (int)TrayNotification.Activate, IntPtr.Zero);
         }
 
         /// <summary>The icon on the button.</summary>
@@ -130,7 +143,7 @@ namespace Morphic.Client
         public TrayButton(WindowMessageHook messageHook)
         {
             this.messageHook = messageHook;
-            this.buttonMessage = this.messageHook.AddMessage(BUTTON_MESSAGE_NAME);
+            this.buttonMessage = this.messageHook.AddMessage(ButtonMessageName);
             this.messageHook.GotMessage += this.GotMessage;
         }
 
@@ -218,21 +231,24 @@ namespace Morphic.Client
                         break;
                     case TrayNotification.MouseLeave:
                         break;
+                    case TrayNotification.Activate:
+                        this.OnClick(true);
+                        break;
                 }
             }
         }
 
         private int lastClick;
-        private void OnClick()
+        private void OnClick(bool doubleClick = false)
         {
             int span = Environment.TickCount - this.lastClick;
-            if (span > SystemInformation.DoubleClickTime)
+            if (doubleClick || span <= SystemInformation.DoubleClickTime)
             {
-                this.Click?.Invoke(this, new EventArgs());
+                this.DoubleClick?.Invoke(this, new EventArgs());
             }
             else
             {
-                this.DoubleClick?.Invoke(this, new EventArgs());
+                this.Click?.Invoke(this, new EventArgs());
             }
 
             this.lastClick = Environment.TickCount;
@@ -262,7 +278,7 @@ namespace Morphic.Client
         {
             const int WM_COPYDATA = 0x4a;
             COPYDATASTRUCT data = new COPYDATASTRUCT((int)command, commandData ?? string.Empty);
-            TrayButton.SendMessage(this.buttonWindow, WM_COPYDATA, (int)this.messageHook.Handle, ref data);
+            TrayButton.SendMessageCopyData(this.buttonWindow, WM_COPYDATA, (int)this.messageHook.Handle, ref data);
         }
         
         /// <summary>Sends the configuration to the button.</summary>
@@ -313,8 +329,10 @@ namespace Morphic.Client
             }
         }
 
+        [DllImport("user32.dll", EntryPoint = "SendMessage")]
+        private static extern IntPtr SendMessageCopyData(IntPtr hWnd, int Msg, int wParam, ref COPYDATASTRUCT lParam);
         [DllImport("user32.dll")]
-        private static extern IntPtr SendMessage(IntPtr hWnd, int Msg, int wParam, ref COPYDATASTRUCT lParam);
+        private static extern IntPtr SendMessage(IntPtr hWnd, int Msg, int wParam, IntPtr lParam);
 
         // ReSharper disable InconsistentNaming
         // ReSharper disable IdentifierTypo

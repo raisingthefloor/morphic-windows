@@ -70,6 +70,7 @@ namespace Morphic.Client
             {
                 if (!mutex.WaitOne(0, false))
                 {
+                    TrayButton.SendActivate();
                     return;
                 }
                 App.Main();

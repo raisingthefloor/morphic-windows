@@ -56,7 +56,7 @@ namespace Morphic.Client.QuickStrip
         /// <param name="messageName">Name of the window message.</param>
         public int AddMessage(string messageName)
         {
-            return this.AddMessage(this.RegisterMessage(messageName));
+            return this.AddMessage(RegisterMessage(messageName));
         }
 
         /// <summary>
@@ -64,7 +64,7 @@ namespace Morphic.Client.QuickStrip
         /// </summary>
         /// <param name="messageName">The name.</param>
         /// <returns>The message identifier.</returns>
-        public int RegisterMessage(string messageName)
+        public static int RegisterMessage(string messageName)
         {
             return RegisterWindowMessage(messageName);
         }
