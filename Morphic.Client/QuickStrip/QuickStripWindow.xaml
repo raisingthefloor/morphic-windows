@@ -20,6 +20,7 @@
         MouseDown="Window_MouseDown"
         MouseEnter="Window_MouseEnter"
         KeyDown="Window_KeyDown"
+        Icon="/Icon.png"
         >
     <Border
         BorderBrush="Black"

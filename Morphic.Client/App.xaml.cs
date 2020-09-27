@@ -540,7 +540,7 @@ namespace Morphic.Client
         private void OnNotifyIconClicked(object? sender, EventArgs e)
         {
             Countly.RecordEvent("Tray Click");
-            if (this.QuickStripWindow?.Visibility != Visibility.Visible)
+            if (this.QuickStripWindow?.Visibility != Visibility.Visible || this.QuickStripWindow?.WindowState == WindowState.Minimized)
             {
                 this.ShowQuickStrip();
             }
@@ -725,9 +725,14 @@ namespace Morphic.Client
         #region Quick Strip Window
 
         /// <summary>
-        ///  The Quick Strip Window, if visible
+        ///  The Quick Strip Window
         /// </summary>
         public QuickStripWindow? QuickStripWindow { get; private set; } = null;
+
+        /// <summary>
+        /// true to always show in the alt+tab list, even when hidden.
+        /// </summary>
+        public bool AlwaysAltTab { get; set; } = true;
 
         /// <summary>
         /// Toggle the Quick Strip window based on its current visibility
@@ -757,8 +762,16 @@ namespace Morphic.Client
                 // So the tray button works, the window needs to be shown (to create the window), but not displayed.
                 QuickStripWindow.AllowsTransparency = true;
                 QuickStripWindow.Opacity = 0;
-                QuickStripWindow.Show();
-                QuickStripWindow.Hide();
+                if (this.AlwaysAltTab)
+                {
+                    this.ShowQuickStrip();
+                    QuickStripWindow.WindowState = WindowState.Minimized;
+                }
+                else
+                {
+                    QuickStripWindow.Show();
+                    QuickStripWindow.Hide();
+                }
             }
         }
 
@@ -778,9 +791,9 @@ namespace Morphic.Client
                 throw new ApplicationException("The quickstrip was not loaded");
             }
 
-            QuickStripWindow.Opacity = 1;
-
+            this.QuickStripWindow.WindowState = WindowState.Normal;
             this.QuickStripWindow.Show();
+            this.QuickStripWindow.Activate();
 
             if (!this.quickStripShown)
             {
@@ -819,7 +832,17 @@ namespace Morphic.Client
         public void HideQuickStrip()
         {
             QuickHelpWindow.Dismiss(true);
-            this.QuickStripWindow?.Hide();
+            if (this.QuickStripWindow != null)
+            {
+                if (this.AlwaysAltTab)
+                {
+                    this.QuickStripWindow.WindowState = WindowState.Minimized;
+                }
+                else
+                {
+                    this.QuickStripWindow?.Hide();
+                }
+            }
 
             // Re-focus the same control when the qs is re-shown.
             this.focusedElement = FocusManager.GetFocusedElement(this.QuickStripWindow);

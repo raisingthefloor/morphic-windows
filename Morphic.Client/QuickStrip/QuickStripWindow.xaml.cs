@@ -89,6 +89,23 @@ namespace Morphic.Client.QuickStrip
             {
                 this.speechPlayer.Play();
             };
+            this.StateChanged += (sender, args) =>
+            {
+                this.Opacity = this.WindowState == WindowState.Minimized ? 0 : 1;
+            };
+        }
+
+        /// <summary>
+        /// Hide the window before minimizing it, to avoid the minimised window flicker.
+        /// </summary>
+        public new WindowState WindowState
+        {
+            get => base.WindowState;
+            set
+            {
+                this.Opacity = value == WindowState.Minimized ? 0 : 1;
+                base.WindowState = value;
+            }
         }
 
         /// <summary>

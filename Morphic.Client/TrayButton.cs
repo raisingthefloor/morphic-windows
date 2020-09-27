@@ -51,7 +51,9 @@ namespace Morphic.Client
         public event EventHandler<EventArgs>? SecondaryClick;
 
         /// <summary>Used if there was a problem starting the tray-button process.</summary>
-        private NotifyIcon? fallbackIcon;
+        private NotifyIcon? notifyIcon;
+
+        public bool UseNotificationIcon { get; set; }
 
         // The message sent from the tray button process;
         public const string ButtonMessageName = "GPII-TrayButton-Message";
@@ -154,42 +156,45 @@ namespace Morphic.Client
         {
             bool success = false;
 
-            try
+            //if (!this.UseNotificationIcon)
             {
-                ProcessStartInfo startInfo = new ProcessStartInfo()
+                try
                 {
-                    // https://github.com/stegru/Morphic.TrayButton/releases/latest
-                    FileName = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "",
-                        "tray-button.exe")
-                };
-                startInfo.EnvironmentVariables.Add("GPII_HWND", this.messageHook.Handle.ToString());
-
-                Process? process = Process.Start(startInfo);
-                if (process != null)
-                {
-                    success = true;
-                    this.buttonProcess = process;
-                    this.buttonProcess.EnableRaisingEvents = true;
-                    this.buttonProcess.Exited += (sender, args) =>
+                    ProcessStartInfo startInfo = new ProcessStartInfo()
                     {
-                        if (this.Visible)
-                        {
-                            this.ShowIcon();
-                        }
+                        UseShellExecute = false,
+                        // https://github.com/stegru/Morphic.TrayButton/releases/latest
+                        FileName = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "",
+                            "tray-button.exe")
                     };
+                    startInfo.EnvironmentVariables.Add("GPII_HWND", this.messageHook.Handle.ToString());
+
+                    Process? process = Process.Start(startInfo);
+
+                    if (process != null)
+                    {
+                        success = true;
+                        this.buttonProcess = process;
+                        this.buttonProcess.EnableRaisingEvents = true;
+                        this.buttonProcess.Exited += (sender, args) =>
+                        {
+                            if (this.Visible)
+                            {
+                                this.ShowIcon();
+                            }
+                        };
+                    }
+                }
+                catch (Win32Exception e)
+                {
+                    this.UseNotificationIcon = true;
                 }
             }
-            catch (Win32Exception e)
-            {
-                success = false;
-            }
 
-            if (!success)
+            if (this.UseNotificationIcon && this.notifyIcon == null)
             {
-                this.buttonProcess = null;
-                this.fallbackIcon = new NotifyIcon();
-                this.Update();
-                this.fallbackIcon.MouseUp += (sender, args) =>
+                this.notifyIcon = new NotifyIcon();
+                this.notifyIcon.MouseUp += (sender, args) =>
                 {
                     if (args.Button == MouseButtons.Right)
                     {
@@ -197,10 +202,15 @@ namespace Morphic.Client
                     }
                     else if (args.Button == MouseButtons.Left)
                     {
-                        this.Click?.Invoke(this, args);
+                        this.OnClick();
                     }
                 };
+
+                this.notifyIcon.DoubleClick += (sender, args) => this.OnClick(true);
+
             }
+
+            this.Update();
         }
 
         /// <summary>
@@ -257,9 +267,9 @@ namespace Morphic.Client
         /// <summary>Hides the button, by terminating the process.</summary>
         private void HideIcon()
         {
-            if (this.fallbackIcon != null)
+            if (this.notifyIcon != null)
             {
-                this.fallbackIcon.Visible = true;
+                this.notifyIcon.Visible = false;
             }
             
             if (this.buttonProcess != null)
@@ -286,9 +296,9 @@ namespace Morphic.Client
         {
             this.UpdateText();
             this.UpdateIcon();
-            if (this.fallbackIcon != null)
+            if (this.notifyIcon != null)
             {
-                this.fallbackIcon.Visible = this.Visible;
+                this.notifyIcon.Visible = this.Visible;
             }
         }
 
@@ -297,13 +307,14 @@ namespace Morphic.Client
         /// </summary>
         private void UpdateText()
         {
-            if (this.fallbackIcon == null)
+            if (this.notifyIcon != null)
+            {
+                this.notifyIcon.Text = this.text;
+            }
+
+            if (this.buttonProcess != null)
             {
                 this.SendCommand(TrayCommand.Tooltip, this.text);
-            }
-            else
-            {
-                this.fallbackIcon.Text = this.text;
             }
         }
 
@@ -312,20 +323,20 @@ namespace Morphic.Client
         /// </summary>
         private void UpdateIcon()
         {
-            if (this.fallbackIcon == null)
+            if (this.notifyIcon != null)
             {
+                this.notifyIcon.Icon = this.Icon;
+            }
+
+            if (this.buttonProcess != null) {
                 // Store the icon to a file, and tell the tray-button to load it.
                 this.iconFile ??= System.IO.Path.GetTempFileName();
                 using (FileStream fs = new FileStream(this.iconFile, FileMode.Truncate))
                 {
-                    this.Icon.Save(fs);
+                    this.Icon?.Save(fs);
                 }
 
                 this.SendCommand(TrayCommand.Icon, this.iconFile);
-            }
-            else
-            {
-                this.fallbackIcon.Icon = this.Icon;
             }
         }
 
@@ -364,7 +375,7 @@ namespace Morphic.Client
         {
             this.HideIcon();
             this.buttonProcess?.Dispose();
-            this.fallbackIcon?.Dispose();
+            this.notifyIcon?.Dispose();
         }
     }
 }
