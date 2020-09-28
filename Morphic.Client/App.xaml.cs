@@ -465,12 +465,14 @@ namespace Morphic.Client
         /// <summary>
         /// Create an icon in the system tray
         /// </summary>
-        private void CreateNotifyIcon()
+        private async void CreateNotifyIcon()
         {
             if (this.QuickStripWindow == null)
             {
                 throw new InvalidOperationException("Attempted to create the tray button before the quickstrip was loaded");
             }
+
+            bool allNotificationIconsShown = await this.GetShowIconsOnTaskbar();
 
             notifyIcon = new TrayButton(this.QuickStripWindow);
             notifyIcon.Click += OnNotifyIconClicked;
@@ -478,7 +480,19 @@ namespace Morphic.Client
             notifyIcon.DoubleClick += OnNotifyIconDoubleClicked;
             notifyIcon.Icon = Client.Properties.Resources.Icon;
             notifyIcon.Text = "Morphic";
+            notifyIcon.UseNotificationIcon = allNotificationIconsShown;
             notifyIcon.Visible = true;
+        }
+
+        /// <summary>
+        /// Determines if the tray icons are always visible on the task tray.
+        /// </summary>
+        /// <returns></returns>
+        private async Task<bool> GetShowIconsOnTaskbar()
+        {
+            SystemSetting filterType = new SystemSetting("SystemSettings_Notifications_ShowIconsOnTaskbar",
+                new LoggerFactory().CreateLogger<SystemSetting>());
+            return await filterType.GetValue() as bool? == true;
         }
 
         /// <summary>

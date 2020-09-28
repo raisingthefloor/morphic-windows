@@ -156,7 +156,7 @@ namespace Morphic.Client
         {
             bool success = false;
 
-            //if (!this.UseNotificationIcon)
+            if (!this.UseNotificationIcon)
             {
                 try
                 {
