@@ -410,8 +410,15 @@ namespace Morphic.Client.QuickStrip
                         }
                     case "colors":
                         {
+                            string? releaseId = Registry.GetValue(
+                                @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion", "ReleaseId", "")?
+                            .ToString();
+
+                            bool darkModeSupported = Convert.ToInt32(releaseId) >= 1903;
+
+
                             var control = new QuickStripSegmentedButtonControl();
-                            control.ItemCount = 4;
+                            control.ItemCount = darkModeSupported ? 4 : 3;
 
                             control.TitleLabel.Content = Properties.Resources.QuickStrip_Colors_Title;
 
@@ -435,16 +442,23 @@ namespace Morphic.Client.QuickStrip
                                     ("demo", "colorvision")
                                 });
 
-                            var darkHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Colors_Dark_HelpTitle, Properties.Resources.QuickStrip_Colors_Dark_HelpMessage);
-                            control.AddToggle(Properties.Resources.QuickStrip_Colors_Dark_Title, Properties.Resources.QuickStrip_Colors_Dark_Name, darkHelp)
-                                .Automate(quickStrip.session, SettingsManager.Keys.WindowsDisplayLightAppsThemeEnabled,
-                                    applySetting: false, onValue: false, offValue: true)
-                                .Helper.SetContextItems(new []
-                                {
-                                    ("setting", "colors"),
-                                    ("learn", "darkmode"),
-                                    ("demo", "darkmode")
-                                });
+                            if (darkModeSupported)
+                            {
+                                var darkHelp = new QuickHelpTextControlBuilder(
+                                    Properties.Resources.QuickStrip_Colors_Dark_HelpTitle,
+                                    Properties.Resources.QuickStrip_Colors_Dark_HelpMessage);
+                                control.AddToggle(Properties.Resources.QuickStrip_Colors_Dark_Title,
+                                        Properties.Resources.QuickStrip_Colors_Dark_Name, darkHelp)
+                                    .Automate(quickStrip.session,
+                                        SettingsManager.Keys.WindowsDisplayLightAppsThemeEnabled,
+                                        applySetting: false, onValue: false, offValue: true)
+                                    .Helper.SetContextItems(new[]
+                                    {
+                                        ("setting", "colors"),
+                                        ("learn", "darkmode"),
+                                        ("demo", "darkmode")
+                                    });
+                            }
 
                             var nightHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_NightMode_On_HelpTitle, Properties.Resources.QuickStrip_NightMode_On_HelpMessage);
                             control.AddToggle(Properties.Resources.QuickStrip_Colors_Night_Title, Properties.Resources.QuickStrip_Colors_Night_Name, nightHelp)

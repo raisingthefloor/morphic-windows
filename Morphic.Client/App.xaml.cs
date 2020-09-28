@@ -181,16 +181,23 @@ namespace Morphic.Client
         void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
         {
             Exception ex = e.Exception;
-            logger.LogError("handled uncaught exception: {msg}", ex.Message);
-            logger.LogError(ex.StackTrace);
-
-            Dictionary<String, String> extraData = new Dictionary<string, string>();
-            Countly.RecordException(ex.Message, ex.StackTrace, extraData, true)
-                .ContinueWith(RecordedException, TaskScheduler.FromCurrentSynchronizationContext());
-
+            MessageBox.Show($"Morphic ran into a problem:\n\n{e.Exception.Message}\n\nFurther information:\n{e.Exception.ToString()}", "Morphic", MessageBoxButton.OK, MessageBoxImage.Warning);
             Console.WriteLine(ex);
 
-            MessageBox.Show("An unhandled exception just occurred: " + e.Exception.Message, "Exception Sample", MessageBoxButton.OK, MessageBoxImage.Warning);
+            try
+            {
+                logger.LogError("handled uncaught exception: {msg}", ex.Message);
+                logger.LogError(ex.StackTrace);
+
+                Dictionary<String, String> extraData = new Dictionary<string, string>();
+                Countly.RecordException(ex.Message, ex.StackTrace, extraData, true)
+                    .ContinueWith(RecordedException, TaskScheduler.FromCurrentSynchronizationContext());
+            }
+            catch (Exception)
+            {
+                // ignore
+            }
+
             // This prevents the exception from crashing the application
             e.Handled = true;
         }
@@ -212,6 +219,8 @@ namespace Morphic.Client
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            this.Dispatcher.UnhandledException += this.App_DispatcherUnhandledException;
+
             Shared = this;
             Configuration = GetConfiguration();
             var collection = new ServiceCollection();
