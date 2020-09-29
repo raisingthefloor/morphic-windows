@@ -73,6 +73,10 @@ namespace Morphic.Client
                     TrayButton.SendActivate();
                     return;
                 }
+
+                // Ensure the current directory is the same as the executable, so relative paths work.
+                Directory.SetCurrentDirectory(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
+
                 App.Main();
             }
         }
