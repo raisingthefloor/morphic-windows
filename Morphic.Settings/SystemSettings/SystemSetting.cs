@@ -50,7 +50,7 @@ namespace Morphic.Settings.SystemSettings
     /// The result of calling GetSetting("SomeSettingId") is an object that has GetValue() and SetValue() methods,
     /// which read and write the setting, respectively.
     /// </remarks>
-    public class SystemSetting: ISystemSetting
+    public class SystemSetting : ISystemSetting
     {
 
         public string Id { get; private set; }
@@ -145,6 +145,16 @@ namespace Morphic.Settings.SystemSettings
         {
             if (settingItem is ISettingItem item)
             {
+                // Wait for the setting to become available.
+                for (int i = 0; i < 10; i++)
+                {
+                    if (item.IsEnabled)
+                    {
+                        break;
+                    }
+                    Thread.Sleep(100);
+                }
+
                 var result = item.SetValue("Value", value);
                 if (result != 0)
                 {
