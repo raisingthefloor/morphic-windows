@@ -466,9 +466,12 @@ namespace Morphic.Windows.Native
              * CDS_UPDATEREGISTRY               // save the display change in the system registry (for the user, unless also using CDS_GLOBAL)
              * CDS_DISABLE_UNSAFE_MODES         // prohibits us from accidentally using unsafe display modes
              */
+            const uint CDS_UPDATEREGISTRY = 1;
+
             var displayAdapterNameAsCharArray = ConvertStringToNullTerminatedCharArray(displayAdapterName);
             var devmode = settings.devmode;
-            var result = WindowsApi.ChangeDisplaySettingsEx(displayAdapterNameAsCharArray, ref devmode, IntPtr.Zero, 0, IntPtr.Zero);
+            uint flags = CDS_UPDATEREGISTRY;
+            var result = WindowsApi.ChangeDisplaySettingsEx(displayAdapterNameAsCharArray, ref devmode, IntPtr.Zero, flags, IntPtr.Zero);
             switch (result)
             {
                 case WindowsApi.DISP_CHANGE_RESULT.DISP_CHANGE_SUCCESSFUL:
