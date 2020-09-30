@@ -77,6 +77,10 @@
     <ProjectReference Include="..\Morphic.Service\Morphic.Service.csproj" />
     <ProjectReference Include="..\Morphic.Settings\Morphic.Settings.csproj" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <TrimmerRootAssembly Include="System.Resources.Extensions"/>
+  </ItemGroup>
 
   <ItemGroup>
     <Content Include="DefaultPreferences.json">
