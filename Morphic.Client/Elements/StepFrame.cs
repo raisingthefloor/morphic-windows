@@ -29,6 +29,9 @@ using System.Windows.Media.Animation;
 
 namespace Morphic.Client.Elements
 {
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
+
     /// <summary>
     /// Contains a single page at time, but animates when switching to a new page
     /// </summary>
@@ -47,6 +50,14 @@ namespace Morphic.Client.Elements
         /// </summary>
         public double PushAnimationDurationInSeconds = 0.3;
 
+        public T PushPanel<T>(bool animated = true)
+            where T : Panel, IStepPanel
+        {
+            T panel = App.Shared.ServiceProvider.GetService<T>();
+            this.PushPanel(panel);
+            return panel;
+        }
+
         /// <summary>
         /// Show a new page by pushing it in from the right
         /// </summary>
@@ -54,6 +65,11 @@ namespace Morphic.Client.Elements
         /// <param name="animated"></param>
         public void PushPanel(Panel panel, bool animated = true)
         {
+            if (panel is IStepPanel stepPanel)
+            {
+                stepPanel.StepFrame = this;
+            }
+
             dismissedPanel = CurrentPanel;
             CurrentPanel = panel;
             AddVisualChild(panel);
@@ -145,5 +161,16 @@ namespace Morphic.Client.Elements
             return finalSize;
         }
 
+
+        public void CloseWindow()
+        {
+            Window.GetWindow(this)?.Close();
+        }
+    }
+
+    public interface IStepPanel
+    {
+        StepFrame StepFrame { get; set; }
+        event EventHandler? Completed;
     }
 }

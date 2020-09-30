@@ -38,41 +38,44 @@ namespace Morphic.Client.Travel
 {
     using Elements;
 
-    /// <summary>
-    /// The Capture panel is one of the steps shown when the user is walked through the process of taking their settings with them.
-    /// It shows a progress indicator while a <code>CaptureSession</code> is run behind the scenes.  No user interaction is required.
-    /// </summary>
-    public partial class CapturePanel : StackPanel, IStepPanel
+    public partial class ApplyPanel : StackPanel, IStepPanel
     {
-
         #region Creating a Panel
 
-        public CapturePanel(Session session, ILogger<CapturePanel> logger, IServiceProvider serviceProvider)
+        public ApplyPanel(Session session, ILogger<ApplyPanel> logger, IServiceProvider serviceProvider)
         {
             this.session = session;
             this.logger = logger;
             this.InitializeComponent();
-            this.Loaded += this.OnLoaded;
         }
 
         /// <summary>
         /// A logger to use
         /// </summary>
-        private readonly ILogger<CapturePanel> logger;
+        private readonly ILogger<ApplyPanel> logger;
 
         #endregion
 
-        public async void OnSave(object sender, EventArgs args)
+        public async void OnApply(object sender, EventArgs args)
         {
-            await this.session.Service.Save(this.Preferences);
-            this.CompletePanel.Visibility = Visibility.Collapsed;
-            this.SavedPanel.Visibility = Visibility.Visible;
+            this.ReadyPanel.Visibility = Visibility.Collapsed;
+            this.ApplyingPanel.Visibility = Visibility.Visible;
+
+            int startTime = Environment.TickCount;
+            int minTime = 5000;
+
+            await this.session.ApplyAllPreferences();
+
+            await Task.Delay(Math.Max(minTime - (Environment.TickCount - startTime), 1));
+
+            this.ApplyingPanel.Visibility = Visibility.Collapsed;
+            this.CompletePanel.Visibility = Visibility.Visible;
         }
 
         public void OnCancel(object sender, EventArgs args)
         {
             MessageBoxResult result = MessageBox.Show(Window.GetWindow(this)!, "Do you really want to cancel?",
-                "Saving Morphic Cloud Vault", MessageBoxButton.YesNo);
+                "Apply from Morphic Cloud Vault", MessageBoxButton.YesNo);
 
             if (result == MessageBoxResult.Yes)
             {
@@ -85,9 +88,6 @@ namespace Morphic.Client.Travel
             this.Completed?.Invoke(this, EventArgs.Empty);
         }
 
-
-        #region Completion Events
-
         public StepFrame StepFrame { get; set; }
 
         /// <summary>
@@ -95,55 +95,10 @@ namespace Morphic.Client.Travel
         /// </summary>
         public event EventHandler? Completed;
 
-        #endregion
-
-        #region Lifecycle
-
-        private void OnLoaded(object sender, RoutedEventArgs e)
-        {
-            _ = this.RunCapture();
-        }
-
-        #endregion
-
-        #region Capture
-
         /// <summary>
         /// The Morphic Session to use for making requests
         /// </summary>
         private readonly Session session;
 
-        /// <summary>
-        /// The preferences where captured values will be stored
-        /// </summary>
-        public Preferences Preferences { get; set; } = null!;
-
-        /// <summary>
-        /// Create and run a capture session
-        /// </summary>
-        /// <returns></returns>
-        private async Task RunCapture()
-        {
-            int startTime = Environment.TickCount;
-            int minTime = 5000;
-            this.Preferences = this.session.Preferences!;
-            CaptureSession captureSession = new CaptureSession(this.session.SettingsManager, this.Preferences);
-            captureSession.AddAllSolutions();
-            try
-            {
-                await captureSession.Run();
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(Window.GetWindow(this), "Morphic ran into a problem while capturing the settings");
-            }
-
-            await Task.Delay(Math.Max(minTime - (Environment.TickCount - startTime), 1));
-
-            this.CollectingPanel.Visibility = Visibility.Collapsed;
-            this.CompletePanel.Visibility = Visibility.Visible;
-        }
-
-        #endregion
     }
 }

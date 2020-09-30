@@ -1,4 +1,4 @@
-﻿<StackPanel x:Class="Morphic.Client.Travel.CapturePanel"
+﻿<StackPanel x:Class="Morphic.Client.Travel.ApplyPanel"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -7,9 +7,30 @@
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800">
 
-    <StackPanel x:Name="CollectingPanel" MaxWidth="500">
-        <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0">Collecting settings from your computer...</Label>
-        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,10,0,10">So you can securely take them anywhere</TextBlock>
+    <StackPanel x:Name="ReadyPanel" Visibility="Visible">
+        <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0">Apply my settings from my Cloud Vault</Label>
+        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,20">
+            Clicking the <Bold>Apply Saved Settings</Bold> button will cause the assistive
+            technology and system setting in your Morphic Cloud Vault to be applied to this computer.
+        </TextBlock>
+        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,20">
+            Note: The current settings on this computer will be backed up on this computer -- so you can revert back to
+            the current settings later.
+        </TextBlock>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <UniformGrid Grid.Column="1" Columns="2">
+                <Button x:Name="CancelButton" Width="Auto" HorizontalAlignment="Left" FontWeight="Bold" Margin="10,5,0,10" Click="OnCancel" IsEnabled="True" Content="Cancel"/>
+                <Button x:Name="ApplyButton" Width="Auto" HorizontalAlignment="Right" FontWeight="Bold" Margin="10,5,0,10" Click="OnApply" IsEnabled="True" Content="Apply"/>
+            </UniformGrid>
+        </Grid>
+    </StackPanel>
+    <StackPanel x:Name="ApplyingPanel" MaxWidth="500" Visibility="Collapsed">
+        <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0">Applying settings on your computer...</Label>
         <Image Height="270" Margin="0,30,0,0">
             <Image.RenderTransform>
                 <RotateTransform Angle="0" CenterX="135" CenterY="135"/>
@@ -60,30 +81,13 @@
         </Image>
     </StackPanel>
     <StackPanel x:Name="CompletePanel" Visibility="Collapsed">
-        <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0">Confirm saving to your Morphic Cloud Vault</Label>
-        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,20">
-            We have collected the settings of your assistive technologies
-            and of the accessibility and usability settings of your computer.
-        </TextBlock>
-        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,20">
-            Clicking save will save them to your secure Cloud Vault.
-        </TextBlock>
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition />
-                <ColumnDefinition />
-                <ColumnDefinition />
-            </Grid.ColumnDefinitions>
-            <UniformGrid Grid.Column="1" Columns="2">
-                <Button x:Name="CancelButton" Width="Auto" FontWeight="Bold" Margin="10,5,0,10" Click="OnCancel" IsEnabled="True" Content="Cancel"/>
-                <Button x:Name="SaveButton" Width="Auto" FontWeight="Bold" Margin="10,5,0,10" Click="OnSave" IsEnabled="True" Content="Save" IsDefault="True"/>
-            </UniformGrid>
-        </Grid>
-    </StackPanel>
-    <StackPanel x:Name="SavedPanel" Visibility="Collapsed">
-        <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0">Settings Saved to Cloud Vault</Label>
+        <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0">Your Settings have been applied</Label>
         <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,10">
-            You can now use Morphic to apply these settings to another computer that has Morphic installed.
+            The settings on from your cloud vault have been applied to this Computer.
+        </TextBlock>
+        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,10">
+            Before they were applied, the old settings were backed up on this computer. To revert back to those settings
+            use the <Bold>"Restore settings from backup"</Bold> command in the Morphic menu.
         </TextBlock>
         <Button x:Name="OkButton" Width="Auto" HorizontalAlignment="Center" FontWeight="Bold" Margin="10,20,0,10" Click="OnOk" IsEnabled="True" Content="OK"/>
     </StackPanel>

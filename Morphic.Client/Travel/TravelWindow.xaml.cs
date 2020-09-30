@@ -31,6 +31,8 @@ using System.Windows.Automation;
 
 namespace Morphic.Client.Travel
 {
+    using Login;
+
     /// <summary>
     /// Window that walks the user the the capture and, if necessary, account creation process.
     /// Loads each panel one at time depending on what steps are required
@@ -65,111 +67,17 @@ namespace Morphic.Client.Travel
 
         #endregion
 
-        #region Lifecycle
-
         protected override void OnInitialized(EventArgs e)
         {
             base.OnInitialized(e);
-            if (session.User != null)
-            {
-                // If the user is logged in, we'll just capture to their preferences directly
-                preferences = session.Preferences!;
-            }
-            else
-            {
-                // If we'll be creating a new user, start with a copy of the default preferences
-                // so we don't actually change the defaults
-                preferences = new Preferences(session.Preferences!);
-            }
-            ShowCapturePanel(animated: false);
+            this.ShowStartPanel();
         }
 
-        #endregion
-
-        #region Capture
-
-        /// <summary>
-        /// Show the capture panel and listen for its completion event
-        /// </summary>
-        /// <param name="animated"></param>
-        private void ShowCapturePanel(bool animated = true)
+        private void ShowStartPanel()
         {
-            var capturePage = serviceProvider.GetRequiredService<CapturePanel>();
-            capturePage.Preferences = preferences;
-            capturePage.Completed += CaptureCompleted;
-            StepFrame.PushPanel(capturePage, animated: animated);
+            CopyStartPanel copyStartPanel = this.StepFrame.PushPanel<CopyStartPanel>();
+            copyStartPanel.Completed += (sender, args) => this.Close();
         }
 
-        /// <summary>
-        /// Called when the capture panel has completed
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void CaptureCompleted(object? sender, EventArgs e)
-        {
-            if (session.User == null)
-            {
-                ShowCreateAccountPanel();
-            }
-            else
-            {
-                ShowCompletedPanel();
-            }
-        }
-
-        #endregion
-
-        #region Create Account
-
-        private Preferences preferences = null!;
-
-        /// <summary>
-        /// Show the account creation panel
-        /// </summary>
-        /// <param name="animated"></param>
-        private void ShowCreateAccountPanel(bool animated = true)
-        {
-            var accountPanel = serviceProvider.GetRequiredService<CreateAccountPanel>();
-            accountPanel.Preferences = preferences;
-            accountPanel.Completed += AccountCreationCompleted;
-            StepFrame.PushPanel(accountPanel, animated: animated);
-        }
-
-        /// <summary>
-        /// Called when the account creation panel is complete
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void AccountCreationCompleted(object? sender, EventArgs e)
-        {
-            ShowCompletedPanel();
-        }
-
-        #endregion
-
-        #region Completed
-
-        /// <summary>
-        /// Show the completed panel
-        /// </summary>
-        /// <param name="animated"></param>
-        private void ShowCompletedPanel(bool animated = true)
-        {
-            var completedPage = serviceProvider.GetRequiredService<TravelCompletedPanel>();
-            completedPage.Completed += CompletedCompleted;
-            StepFrame.PushPanel(completedPage, animated: animated);
-        }
-
-        /// <summary>
-        /// Called when the completed panel is complete
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void CompletedCompleted(object? sender, EventArgs e)
-        {
-            Close();
-        }
-
-        #endregion
     }
 }

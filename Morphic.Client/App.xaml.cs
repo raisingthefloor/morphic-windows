@@ -153,7 +153,11 @@ namespace Morphic.Client
             services.AddTransient<TravelCompletedPanel>();
             services.AddTransient<QuickStripWindow>();
             services.AddTransient<LoginWindow>();
+            services.AddTransient<LoginPanel>();
+            services.AddTransient<CreateAccountPanel>();
             services.AddTransient<AboutWindow>();
+            services.AddTransient<CopyStartPanel>();
+            services.AddTransient<ApplyPanel>();
             services.AddMorphicSettingsHandlers(ConfigureSettingsHandlers);
         }
 
@@ -402,7 +406,6 @@ namespace Morphic.Client
             HotkeyManager.Current.AddOrReplace("Login with Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift, (sender, e) =>
             {
                 OpenLoginWindow();
-                loginWindow?.Announce();
             });
             HotkeyManager.Current.AddOrReplace("Show Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift | ModifierKeys.Alt, (sender, e) =>
             {
@@ -907,8 +910,17 @@ namespace Morphic.Client
         /// <summary>
         /// Show the Morphic Configurator window
         /// </summary>
-        internal void OpenTravelWindow()
+        internal async void OpenTravelWindow()
         {
+            // if (this.Session.User == null)
+            // {
+            //     await this.OpenLoginWindow();
+            //     if (this.Session.User == null)
+            //     {
+            //         return;
+            //     }
+            // }
+
             if (TravelWindow == null)
             {
                 TravelWindow = ServiceProvider.GetRequiredService<TravelWindow>();
@@ -960,15 +972,22 @@ namespace Morphic.Client
 
         private LoginWindow? loginWindow;
 
-        public void OpenLoginWindow()
+        public Task<bool> OpenLoginWindow()
         {
+            TaskCompletionSource<bool> taskCompletionSource = new TaskCompletionSource<bool>();
+
             if (loginWindow == null)
             {
                 loginWindow = ServiceProvider.GetRequiredService<LoginWindow>();
                 loginWindow.Show();
-                loginWindow.Closed += OnLoginWindowClosed;
+                loginWindow.Closed += (sender, args) =>
+                {
+                    this.OnLoginWindowClosed(sender, args);
+                    taskCompletionSource.SetResult(true);
+                };
             }
             loginWindow.Activate();
+            return taskCompletionSource.Task;
         }
 
         private void OnLoginWindowClosed(object? sender, EventArgs e)
