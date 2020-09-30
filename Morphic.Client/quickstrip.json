@@ -1,0 +1,24 @@
+{
+  "items": [
+    {
+      "type": "control",
+      "feature": "resolution"
+    },
+    {
+      "type": "control",
+      "feature": "magnifier"
+    },
+    {
+      "type": "control",
+      "feature": "snip"
+    },
+    {
+      "type": "control",
+      "feature": "reader"
+    },
+    {
+      "type": "control",
+      "feature": "colors"
+    }
+  ]
+}

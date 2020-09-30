@@ -5,7 +5,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Morphic.Client"
              mc:Ignorable="d" 
-             d:DesignHeight="44" d:DesignWidth="100">
+             d:DesignHeight="44" d:DesignWidth="100"
+             >
     <local:QuickStripItemControl.Resources>
         <Style x:Key="ButtonFocusStyle">
             <Setter Property="Control.Template">
@@ -23,11 +24,11 @@
     </local:QuickStripItemControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="13"/>
-            <RowDefinition Height="4"/>
+            <RowDefinition Height="17"/>
+            <RowDefinition Height="0"/>
             <RowDefinition Height="27"/>
         </Grid.RowDefinitions>
-        <Label Grid.Row="0" Name="TitleLabel" FontSize="14" FontFamily="{x:Static SystemFonts.MessageFontFamily}" FontWeight="Bold" Content="Text Size" VerticalAlignment="Top" Padding="0,0,0,0" HorizontalAlignment="Center" Height="17" Margin="0,-4,0,0"/>
+        <Label Grid.Row="0" Name="TitleLabel" FontSize="14" FontFamily="{x:Static SystemFonts.MessageFontFamily}" FontWeight="Bold" Content="Text Size" VerticalAlignment="Top" Padding="0,0,0,0" HorizontalAlignment="Center" Margin="0,-4,0,0"/>
         <StackPanel Grid.Row="2" Name="ActionStack" Orientation="Horizontal" HorizontalAlignment="Center">
         </StackPanel>
     </Grid>

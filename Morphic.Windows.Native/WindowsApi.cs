@@ -415,6 +415,23 @@ namespace Morphic.Windows.Native
             public Int32 bottom;
         }
 
+        // ReSharper disable InconsistentNaming
+        [StructLayout(LayoutKind.Sequential)]
+        public struct FILTERKEYS
+        {
+            public int cbSize { get; set; }
+            public int dwFlags {get;set;}
+            public int iWaitMSec {get;set;}
+            public int iDelayMSec {get;set;}
+            public int iRepeatMSec {get;set;}
+            public int iBounceMSec {get;set;}
+
+            public const int FKF_FILTERKEYSON = 0x1;
+        }
+
+        public const int SPI_GETFILTERKEYS = 0x32;
+        public const int SPI_SETFILTERKEYS = 0x33;
+
         // NOTE: this delegate is used as a callback by EnumDisplayMonitors
         // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nc-winuser-monitorenumproc
         internal delegate Boolean MonitorEnumProcDelegate(IntPtr hMonitor, IntPtr hdcMonitor, ref RECT lprcMonitor, IntPtr dwData);
@@ -564,6 +581,13 @@ namespace Morphic.Windows.Native
         // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowthreadprocessid
         [DllImport("user32.dll", SetLastError=true)]
         internal static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+        //
+        // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-keybd_event
+        [DllImport("user32.dll")]
+        internal static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
+
+        [DllImport("user32.dll", EntryPoint = "SystemParametersInfoW", SetLastError = true)]
+        public static extern bool SystemParametersInfoFilterKeys(int uiAction, int uiParam, ref FILTERKEYS pvParam, int fWinIni);
 
     }
 }

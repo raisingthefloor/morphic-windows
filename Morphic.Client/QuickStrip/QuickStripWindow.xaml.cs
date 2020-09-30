@@ -21,45 +21,103 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using Morphic.Core;
-using Morphic.Service;
-using Morphic.Settings;
-using System.Windows.Media.Animation;
-using System.Collections.Generic;
-using System.Linq;
-using System.Windows.Interop;
-using System.Windows.Media.Imaging;
-using Microsoft.Win32;
-using CountlySDK;
-using Morphic.Windows.Native;
-using Display = Morphic.Settings.Display;
 
 namespace Morphic.Client.QuickStrip
 {
+    using System;
+    using System.Threading.Tasks;
+    using System.Windows;
+    using System.Windows.Controls;
+    using Morphic.Core;
+    using Morphic.Service;
+    using Morphic.Settings;
+    using System.Windows.Media.Animation;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.Linq;
+    using System.Windows.Interop;
+    using System.Windows.Media.Imaging;
+    using Microsoft.Win32;
+    using CountlySDK;
+    using System.IO;
+    using System.Media;
     using System.Runtime.InteropServices;
+    using System.Text.Json;
+    using System.Text.Json.Serialization;
     using System.Windows.Forms;
+    using System.Windows.Input;
+    using Windows.Native;
+    using global::Windows.Media.SpeechSynthesis;
     using Clipboard = System.Windows.Clipboard;
+    using Control = System.Windows.Controls.Control;
     using IDataObject = System.Windows.IDataObject;
+    using Keyboard = System.Windows.Input.Keyboard;
+    using KeyEventArgs = System.Windows.Input.KeyEventArgs;
+    using Display = Morphic.Settings.Display;
 
     /// <summary>
     /// Interaction logic for QuickStripWindow.xaml
     /// </summary>
-    public partial class QuickStripWindow : Window
+    public partial class QuickStripWindow : Window, IMessageHook
     {
+
+        public WindowMessageHook Messages { get; }
 
         #region Initialization
 
         public QuickStripWindow(Session session)
         {
+            this.Messages = new WindowMessageHook(this);
             this.session = session;
             session.UserChanged += Session_UserChanged;
             InitializeComponent();
             Deactivated += OnDeactivated;
             SystemEvents.DisplaySettingsChanged += SystemEvents_DisplaySettingsChanged;
+            App.Shared.SystemSettingChanged += (sender, args) => { this.UpdateState(); };
+            this.MouseEnter += (sender, args) => this.UpdateState();
+            this.IsVisibleChanged += (sender, args) =>
+            {
+                this.HideHelp();
+            };
+
+            this.Closing += (sender, args) =>
+            {
+                this.HideHelp();
+                this.speechPlayer.Stop();
+            };
+            this.speechPlayer.LoadCompleted += (o, args) =>
+            {
+                this.speechPlayer.Play();
+            };
+            this.StateChanged += (sender, args) =>
+            {
+                this.Opacity = this.WindowState == WindowState.Minimized ? 0 : 1;
+            };
+        }
+
+        /// <summary>
+        /// Hide the window before minimizing it, to avoid the minimised window flicker.
+        /// </summary>
+        public new WindowState WindowState
+        {
+            get => base.WindowState;
+            set
+            {
+                this.Opacity = value == WindowState.Minimized ? 0 : 1;
+                base.WindowState = value;
+            }
+        }
+
+        /// <summary>
+        /// Makes the controls update their state, to reflect an external change.
+        /// </summary>
+        public void UpdateState()
+        {
+            foreach (QuickStripSegmentedButtonControl control in this.ControlStack.Children
+                .OfType<QuickStripSegmentedButtonControl>())
+            {
+                control.UpdateStates();
+            }
         }
 
         private void Session_UserChanged(object? sender, EventArgs e)
@@ -93,6 +151,7 @@ namespace Morphic.Client.QuickStrip
 
         private void OnDeactivated(object? sender, EventArgs e)
         {
+            this.HideHelp();
         }
 
         private void Update()
@@ -101,18 +160,9 @@ namespace Morphic.Client.QuickStrip
             {
                 this.position = position;
             }
-            if (session.GetArray(PreferenceKeys.Items) is object?[] items)
-            {
-                Items = Item.CreateItems(items);
-            }
-            if (session.User == null)
-            {
-                logoutItem.Visibility = Visibility.Collapsed;
-            }
-            else
-            {
-                logoutItem.Visibility = Visibility.Visible;
-            }
+
+            QuickStripJson qs = QuickStripJson.FromFile("quickstrip.json");
+            Items = Item.CreateItems(qs.Items);
         }
 
         #endregion
@@ -124,67 +174,32 @@ namespace Morphic.Client.QuickStrip
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void LogoButtonClicked(object sender, RoutedEventArgs e)
+        private void LogoButton_MouseUp(object sender, RoutedEventArgs e)
         {
             Countly.RecordEvent("Main Menu");
-            LogoButton.ContextMenu.IsOpen = true;
+            App.Shared.ShowMenu(sender as Control);
         }
 
         /// <summary>
-        /// Event handler for when the user selects Hide Quick Strip from the logo button's menu
+        /// Event handler for when the user clicks on the logo button
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void HideQuickStrip(object sender, RoutedEventArgs e)
+        private void LogoButton_KeyDown(object sender, KeyEventArgs e)
         {
-            Countly.RecordEvent("Hide MorphicBar");
-            App.Shared.HideQuickStrip();
+            switch (e.Key)
+            {
+                case Key.Apps:
+                case Key.F10 when Keyboard.Modifiers == ModifierKeys.Shift:
+                case Key.Space when Keyboard.Modifiers == ModifierKeys.Shift:
+                case Key.Enter when Keyboard.Modifiers == ModifierKeys.Shift:
+                    Countly.RecordEvent("Main Menu");
+                    App.Shared.ShowMenu();
+                    e.Handled = true;
+                    break;
+            }
         }
 
-        /// <summary>
-        /// Event handler for when the user selects Customize Quick Strip from the logo button's menu
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void CustomizeQuickStrip(object sender, RoutedEventArgs e)
-        {
-            Countly.RecordEvent("Customize MorphicBar");
-        }
-
-        private void AboutMorphic(object sender, RoutedEventArgs e)
-        {
-            Countly.RecordEvent("About");
-            App.Shared.OpenAboutWindow();
-        }
-
-        private void TravelWithSettings(object sender, RoutedEventArgs e)
-        {
-            Countly.RecordEvent("Travel");
-            App.Shared.OpenTravelWindow();
-        }
-
-        private void ApplyMySettings(object sender, RoutedEventArgs e)
-        {
-            Countly.RecordEvent("Login");
-            App.Shared.OpenLoginWindow();
-        }
-
-        private void Logout(object sender, RoutedEventArgs e)
-        {
-            Countly.RecordEvent("Logout");
-            _ = session.Signout();
-        }
-
-        /// <summary>
-        /// Event handler for when the user selects Quit from the logo button's menu
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Quit(object sender, RoutedEventArgs e)
-        {
-            Countly.RecordEvent("Quit");
-            App.Shared.Shutdown();
-        }
 
         #endregion
 
@@ -224,7 +239,7 @@ namespace Morphic.Client.QuickStrip
             /// </summary>
             /// <param name="descriptions"></param>
             /// <returns></returns>
-            public static List<Item> CreateItems(object?[] descriptions)
+            public static List<Item> CreateItems(IEnumerable<object?> descriptions)
             {
                 var items = new List<Item>();
                 foreach (var obj in descriptions)
@@ -296,9 +311,15 @@ namespace Morphic.Client.QuickStrip
                             var biggerHelp = new TextZoomInHelpControlBuilder(Display.Primary);
                             var smallerHelp = new TextZoomOutHelpControlBuilder(Display.Primary);
                             control.TitleLabel.Content = Properties.Resources.QuickStrip_Resolution_Title;
-                            control.AddButton(new Image() { Source = new BitmapImage(new Uri("Plus.png", UriKind.Relative)) }, Properties.Resources.QuickStrip_Resolution_Bigger_HelpTitle, biggerHelp, isPrimary: true);
-                            control.AddButton(new Image() { Source = new BitmapImage(new Uri("Minus.png", UriKind.Relative)) }, Properties.Resources.QuickStrip_Resolution_Smaller_HelpTitle, smallerHelp, isPrimary: false);
+                            control.AddButton(new Image() { Source = new BitmapImage(new Uri("Plus.png", UriKind.Relative)) }, Properties.Resources.QuickStrip_Resolution_Bigger_Name, biggerHelp, isPrimary: true);
+                            control.AddButton(new Image() { Source = new BitmapImage(new Uri("Minus.png", UriKind.Relative)) }, Properties.Resources.QuickStrip_Resolution_Smaller_Name, smallerHelp, isPrimary: false);
                             control.Action += quickStrip.Zoom;
+                            control.SetContextItems(new []
+                            {
+                                ("setting", "display"),
+                                ("learn", "textsize"),
+                                ("demo", "textsize")
+                            });
                             return control;
                         }
                     case "magnifier":
@@ -307,9 +328,15 @@ namespace Morphic.Client.QuickStrip
                             var showHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Magnifier_Show_HelpTitle, Properties.Resources.QuickStrip_Magnifier_Show_HelpMessage);
                             var hideHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Magnifier_Hide_HelpTitle, Properties.Resources.QuickStrip_Magnifier_Hide_HelpMessage);
                             control.TitleLabel.Content = Properties.Resources.QuickStrip_Magnifier_Title;
-                            control.AddButton(Properties.Resources.QuickStrip_Magnifier_Show_Title, showHelp.Title, showHelp, isPrimary: true);
-                            control.AddButton(Properties.Resources.QuickStrip_Magnifier_Hide_Title, hideHelp.Title, hideHelp, isPrimary: false);
+                            control.AddButton(Properties.Resources.QuickStrip_Magnifier_Show_Title, Properties.Resources.QuickStrip_Magnifier_Show_Name, showHelp, isPrimary: true);
+                            control.AddButton(Properties.Resources.QuickStrip_Magnifier_Hide_Title, Properties.Resources.QuickStrip_Magnifier_Hide_Name, hideHelp, isPrimary: false);
                             control.Action += quickStrip.OnMagnify;
+                            control.SetContextItems(new []
+                            {
+                                ("setting", "easeofaccess-magnifier"),
+                                ("learn", "magnifier"),
+                                ("demo", "magnifier")
+                            });
                             return control;
                         }
                     case "reader":
@@ -318,10 +345,17 @@ namespace Morphic.Client.QuickStrip
                             var startHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Reader_Start_HelpTitle, Properties.Resources.QuickStrip_Reader_Start_HelpMessage);
                             var stopHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Reader_Stop_HelpTitle, Properties.Resources.QuickStrip_Reader_Stop_HelpMessage);
                             control.TitleLabel.Content = Properties.Resources.QuickStrip_Reader_Title;
-                            control.AddButton("\u25b6", startHelp.Title, startHelp, isPrimary: true);
-                            control.AddButton("\u25a0", stopHelp.Title, stopHelp, isPrimary: false);
+                            control.AddButton("\u25b6", Properties.Resources.QuickStrip_Reader_Start_Name, startHelp, isPrimary: true);
+                            control.AddButton("\u25a0", Properties.Resources.QuickStrip_Reader_Stop_Name, stopHelp, isPrimary: false);
                             //control.EnableButton(1, false);
                             control.Action += quickStrip.OnReader;
+                            control.SetContextItems(new []
+                            {
+                                ("setting", "speech"),
+                                ("learn", "readsel-pc"),
+                                ("demo", "readsel-pc")
+                            });
+
                             return control;
                         }
                     case "volume":
@@ -357,6 +391,88 @@ namespace Morphic.Client.QuickStrip
                             control.AddButton(Properties.Resources.QuickStrip_NightMode_On_Title, onHelp.Title, onHelp, isPrimary: true);
                             control.AddButton(Properties.Resources.QuickStrip_NightMode_Off_Title, offHelp.Title, offHelp, isPrimary: false);
                             control.Action += quickStrip.OnNightMode;
+                            return control;
+                        }
+                    case "snip":
+                        {
+                            var control = new QuickStripSegmentedButtonControl();
+                            control.ItemCount = 1;
+                            var copyButtonHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Snip_HelpTitle, Properties.Resources.QuickStrip_Snip_HelpMessage);
+                            control.TitleLabel.Content = Properties.Resources.QuickStrip_Snip_Title;
+                            control.AddButton(Properties.Resources.QuickStrip_Snip_Button_Title, Properties.Resources.QuickStrip_Snip_Name, copyButtonHelp, isPrimary: false);
+                            control.Action += quickStrip.OnSnip;
+                            control.SetContextItems(new[]
+                            {
+                                ("learn", "snip"),
+                                ("demo", "snip")
+                            });
+                            return control;
+                        }
+                    case "colors":
+                        {
+                            string? releaseId = Registry.GetValue(
+                                @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion", "ReleaseId", "")?
+                            .ToString();
+
+                            bool darkModeSupported = Convert.ToInt32(releaseId) >= 1903;
+
+
+                            var control = new QuickStripSegmentedButtonControl();
+                            control.ItemCount = darkModeSupported ? 4 : 3;
+
+                            control.TitleLabel.Content = Properties.Resources.QuickStrip_Colors_Title;
+
+                            var contrastHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Contrast_On_HelpTitle, Properties.Resources.QuickStrip_Contrast_On_HelpMessage);
+                            control.AddToggle(Properties.Resources.QuickStrip_Colors_Contrast_Title, Properties.Resources.QuickStrip_Colors_Contrast_Name, contrastHelp)
+                                .Automate(quickStrip.session, SettingsManager.Keys.WindowsDisplayContrastEnabled, applySetting: false)
+                                .Helper.SetContextItems(new []
+                                {
+                                    ("setting", "easeofaccess-highcontrast"),
+                                    ("learn", "contrast"),
+                                    ("demo", "contrast")
+                                });
+
+                            var colorHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Colors_Color_HelpTitle, Properties.Resources.QuickStrip_Colors_Color_HelpMessage);
+                            control.AddToggle(Properties.Resources.QuickStrip_Colors_Color_Title, Properties.Resources.QuickStrip_Colors_Color_Name, colorHelp)
+                                .Automate(quickStrip.session, SettingsManager.Keys.WindowsDisplayColorFilterEnabled)
+                                .Helper.SetContextItems(new []
+                                {
+                                    ("setting", "easeofaccess-colorfilter"),
+                                    ("learn", "colorvision"),
+                                    ("demo", "colorvision")
+                                });
+
+                            if (darkModeSupported)
+                            {
+                                var darkHelp = new QuickHelpTextControlBuilder(
+                                    Properties.Resources.QuickStrip_Colors_Dark_HelpTitle,
+                                    Properties.Resources.QuickStrip_Colors_Dark_HelpMessage);
+                                control.AddToggle(Properties.Resources.QuickStrip_Colors_Dark_Title,
+                                        Properties.Resources.QuickStrip_Colors_Dark_Name, darkHelp)
+                                    .Automate(quickStrip.session,
+                                        SettingsManager.Keys.WindowsDisplayLightAppsThemeEnabled,
+                                        applySetting: false, onValue: false, offValue: true)
+                                    .Helper.SetContextItems(new[]
+                                    {
+                                        ("setting", "colors"),
+                                        ("learn", "darkmode"),
+                                        ("demo", "darkmode")
+                                    });
+                            }
+
+                            var nightHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_NightMode_On_HelpTitle, Properties.Resources.QuickStrip_NightMode_On_HelpMessage);
+                            control.AddToggle(Properties.Resources.QuickStrip_Colors_Night_Title, Properties.Resources.QuickStrip_Colors_Night_Name, nightHelp)
+                                .Automate(quickStrip.session, SettingsManager.Keys.WindowsDisplayNightModeEnabled, false)
+                                .Helper.SetContextItems(new []
+                                {
+                                    ("setting", "nightlight"),
+                                    ("learn", "nightmode"),
+                                    ("demo", "nightmode")
+                                });
+
+                            //control.SpaceButtons();
+                            control.Action += quickStrip.OnColors;
+
                             return control;
                         }
                     default:
@@ -401,103 +517,97 @@ namespace Morphic.Client.QuickStrip
 
         /// <summary>Original magnifier settings.</summary>
         private Dictionary<Preferences.Key, object?> magnifyCapture;
-        
+
         private async void OnMagnify(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
         {
             if (e.SelectedIndex == 0)
             {
                 _ = Countly.RecordEvent("Show Magnifier");
-                // Enable lens mode at 200%
-                Dictionary<Preferences.Key, object?> settings = new Dictionary<Preferences.Key, object?>
+                Process? process = Process.Start(new ProcessStartInfo("magnify.exe", "/lens")
                 {
-                    {SettingsManager.Keys.WindowsMagnifierMode, (long)3},
-                    {SettingsManager.Keys.WindowsMagnifierMagnification, (long)200},
-                    {SettingsManager.Keys.WindowsMagnifierEnabled, true},
-                };
-
-                if (this.magnifyCapture == null)
-                {
-                    // capture the current settings
-                    this.magnifyCapture = await this.session.SettingsManager.Capture(settings.Keys);
-                }
-
-                await session.Apply(settings);
+                    UseShellExecute = true
+                });
             }
             else if (e.SelectedIndex == 1)
             {
                 _ = Countly.RecordEvent("Hide Magnifier");
-                // restore settings
-                await session.Apply(SettingsManager.Keys.WindowsMagnifierEnabled, false);
-                if (this.magnifyCapture != null)
+                foreach (Process process in Process.GetProcessesByName("magnify"))
                 {
-                    await this.session.Apply(this.magnifyCapture);
-                    this.magnifyCapture = null;
+                    process.Kill();
                 }
             }
         }
 
+        private readonly SoundPlayer speechPlayer = new SoundPlayer();
+
         private async void OnReader(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
         {
-            SelectionReader reader = SelectionReader.Default;
-            Speech speech = Speech.Default;
-            
             // Play/Pause
             if (e.SelectedIndex == 0)
             {
                 _ = Countly.RecordEvent("Read Selection");
-                if (speech.Active)
-                {
-                    // Pause or resume it
-                    speech.TogglePause();
-                }
-                else
-                {
-                    //QuickStripSegmentedButtonControl itemControl = (QuickStripSegmentedButtonControl)sender;
-                    //itemControl.EnableButton(1, true);
-                    
-                    // Store the clipboard
-                    IDataObject clipboadData = Clipboard.GetDataObject();
-                    Dictionary<string, object?> dataStored = clipboadData.GetFormats()
-                        .ToDictionary(format => format, format =>
-                        {
-                            try
-                            {
-                                return clipboadData.GetData(format, false);
-                            }
-                            catch (COMException)
-                            {
-                                return null;
-                            }
-                        });
-                    Clipboard.Clear();
+                string text = await QuickStripWindow.GetSelectedText(SelectionReader.Default);
 
-                    // Get the selection
-                    await reader.GetSelectedText(SendKeys.SendWait);
-                    string text = Clipboard.GetText();
+                this.speechPlayer.Stop();
 
-                    // Restore the clipboard
-                    Clipboard.Clear();
-                    dataStored.Where(kv => kv.Value != null).ToList()
-                        .ForEach(kv => Clipboard.SetData(kv.Key, kv.Value));
-                    Clipboard.Flush();
+                using SpeechSynthesizer synth = new SpeechSynthesizer();
+                using SpeechSynthesisStream stream = await synth.SynthesizeTextToStreamAsync(text);
 
-                    if (!string.IsNullOrEmpty(text))
-                    {
-                        await speech.SpeakText(text);
-                    }
-
-                    //itemControl.EnableButton(1, false);
-                }
+                this.speechPlayer.Stream = stream.AsStream();
+                this.speechPlayer.LoadAsync();
             }
             else
             {
                 _ = Countly.RecordEvent("Stop Reading");
-                if (speech.Active)
-                {
-                    // Stop
-                    speech.StopSpeaking();
-                }
+                this.speechPlayer.Stop();
             }
+        }
+
+        private static async Task<string> GetSelectedText(SelectionReader reader)
+        {
+            Dictionary<string, object?>? dataStored = null;
+            try
+            {
+                // Store the clipboard
+                IDataObject? clipboardData = Clipboard.GetDataObject();
+                dataStored = clipboardData?.GetFormats()
+                    .ToDictionary(format => format, format =>
+                    {
+                        try
+                        {
+                            return clipboardData.GetData(format, false);
+                        }
+                        catch (COMException)
+                        {
+                            return null;
+                        }
+                    });
+            }
+            catch (Exception e) when (!(e is OutOfMemoryException))
+            {
+                // ignore
+            }
+
+            Clipboard.Clear();
+
+            // Get the selection
+            await reader.GetSelectedText(SendKeys.SendWait);
+            string text = Clipboard.GetText();
+
+            // Restore the clipboard
+            Clipboard.Clear();
+            try
+            {
+                dataStored?.Where(kv => kv.Value != null).ToList()
+                    .ForEach(kv => Clipboard.SetData(kv.Key, kv.Value!));
+                Clipboard.Flush();
+            }
+            catch (Exception e) when (!(e is OutOfMemoryException))
+            {
+                // ignore
+            }
+
+            return text;
         }
 
         private void OnVolume(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
@@ -546,7 +656,7 @@ namespace Morphic.Client.QuickStrip
                 _ = session.Apply(SettingsManager.Keys.WindowsDisplayContrastEnabled, false);
             }
         }
-        
+
         private void OnNightMode(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
         {
             if (e.SelectedIndex == 0)
@@ -558,6 +668,88 @@ namespace Morphic.Client.QuickStrip
             {
                 Countly.RecordEvent("NightMode Off");
                 _ = session.Apply(SettingsManager.Keys.WindowsDisplayNightModeEnabled, false);
+            }
+        }
+
+        private bool? initialAppsLight;
+        private bool? initialWindowsLight;
+        private bool? initialDarkMode;
+
+        private async void OnColors(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
+        {
+            if (e.SelectedName == Properties.Resources.QuickStrip_Colors_Contrast_Name)
+            {
+                // Setting via the system settings method doesn't respect the high-contrast theme set during
+                // first run - running sethc directly instead.
+                ProcessStartInfo startInfo = new ProcessStartInfo("sethc.exe")
+                {
+                    UseShellExecute = true,
+                };
+
+                startInfo.ArgumentList.Add(e.ToggleState ? "100" : "1");
+
+                Process.Start(startInfo);
+
+                Countly.RecordEvent("Contrast toggle");
+
+            } else if (e.SelectedName == Properties.Resources.QuickStrip_Colors_Dark_Name)
+            {
+                Countly.RecordEvent("Darkmode toggle");
+
+                bool newValue = !e.ToggleState;
+
+                Preferences.Key lightAppsSetting = SettingsManager.Keys.WindowsDisplayLightAppsThemeEnabled;
+                Preferences.Key lightWindowsSetting = SettingsManager.Keys.WindowsDisplayLightWindowsThemeEnabled;
+
+                this.initialDarkMode ??= !e.ToggleState;
+                this.initialAppsLight ??= await this.session.SettingsManager.CaptureBool(lightAppsSetting)
+                    ?? false;
+                this.initialWindowsLight ??= await this.session.SettingsManager.CaptureBool(lightWindowsSetting)
+                    ?? false;
+
+                // Turning the toggle back to its initial state puts the settings back to their original value.
+                if (e.ToggleState == this.initialDarkMode)
+                {
+                    _ = session.Apply(lightAppsSetting, this.initialAppsLight);
+                    _ = session.Apply(lightWindowsSetting, this.initialWindowsLight);
+                }
+                else
+                {
+                    _ = session.Apply(lightAppsSetting, newValue);
+                    _ = session.Apply(lightWindowsSetting, newValue);
+                }
+            }
+        }
+
+        private async void OnSnip(object sender, QuickStripSegmentedButtonControl.ActionEventArgs e)
+        {
+            if (e.SelectedIndex == 0)
+            {
+                Countly.RecordEvent("Snip Copy");
+
+                // Hide the qs while the snipper tool captures the screen.
+                this.Opacity = 0;
+                bool wasDisabled = QuickHelpWindow.Disabled;
+                QuickHelpWindow.Disabled = true;
+                QuickHelpWindow.Dismiss(true);
+                await Task.Delay(500);
+
+                try
+                {
+                    // Hold down the windows key while pressing shift + s
+                    const uint windowsKey = 0x5b; // VK_LWIN
+                    Morphic.Windows.Native.Keyboard.PressKey(windowsKey, true);
+                    SendKeys.SendWait("+s");
+                    Morphic.Windows.Native.Keyboard.PressKey(windowsKey, false);
+
+                }
+                finally
+                {
+                    // Show the qs again
+                    await Task.Delay(3000);
+                    QuickHelpWindow.Disabled = wasDisabled;
+                    this.Opacity = 1;
+                }
             }
         }
 
@@ -603,6 +795,14 @@ namespace Morphic.Client.QuickStrip
             }
         }
 
+        /// <summary>
+        /// Hides the help window.
+        /// </summary>
+        public void HideHelp()
+        {
+            QuickHelpWindow.Dismiss();
+        }
+
         #endregion
 
         #region Layout & Position
@@ -613,7 +813,7 @@ namespace Morphic.Client.QuickStrip
         public double ScreenEdgeInset = 4;
 
         /// <summary>
-        /// The possible positions for the quick strip 
+        /// The possible positions for the quick strip
         /// </summary>
         public enum FixedPosition
         {
@@ -657,6 +857,9 @@ namespace Morphic.Client.QuickStrip
             var screenSize = SystemParameters.WorkArea;
             double top = Top;
             double left = Left;
+
+            this.SizeToContent = SizeToContent.Width;
+
             switch (position)
             {
                 case FixedPosition.BottomRight:
@@ -712,8 +915,8 @@ namespace Morphic.Client.QuickStrip
             get
             {
                 var screenSize = SystemParameters.WorkArea;
-                if (Left < screenSize.Width / 2){
-                    if (Top < screenSize.Height / 2)
+                if (Left + Width / 2 < screenSize.Width / 2){
+                    if (Top + Height / 2 < screenSize.Height / 2)
                     {
                         return FixedPosition.TopLeft;
                     }
@@ -721,7 +924,7 @@ namespace Morphic.Client.QuickStrip
                 }
                 else
                 {
-                    if (Top < screenSize.Height / 2)
+                    if (Top + Height / 2 < screenSize.Height / 2)
                     {
                         return FixedPosition.TopRight;
                     }
@@ -734,6 +937,8 @@ namespace Morphic.Client.QuickStrip
 
         #region Events
 
+        private Point mouseDownPos;
+
         /// <summary>
         /// Event handler for mouse down to move the window
         /// </summary>
@@ -741,23 +946,30 @@ namespace Morphic.Client.QuickStrip
         /// <param name="e"></param>
         private void Window_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            if (e.ChangedButton == System.Windows.Input.MouseButton.Left)
+            if (e.LeftButton == MouseButtonState.Pressed)
             {
-                DragMove();
+                this.mouseDownPos = e.GetPosition(this);
             }
         }
 
         /// <summary>
-        /// Event handler for mouse up to snap into place after moving the window
+        /// Move the window when the mouse moves enough for it to be a drag action.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void Window_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void Window_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            Countly.RecordEvent("Move MorphicBar");
-            if (e.ChangedButton == System.Windows.Input.MouseButton.Left)
+            if (e.LeftButton == MouseButtonState.Pressed)
             {
-                Position = NearestPosition;
+                Point point = e.GetPosition(this);
+
+                if (Math.Abs(point.X - this.mouseDownPos.X) >= SystemParameters.MinimumHorizontalDragDistance ||
+                    Math.Abs(point.Y - this.mouseDownPos.Y) >= SystemParameters.MinimumVerticalDragDistance)
+                {
+                    this.DragMove();
+                    Countly.RecordEvent("Move MorphicBar");
+                    Position = NearestPosition;
+                }
             }
         }
 
@@ -774,13 +986,42 @@ namespace Morphic.Client.QuickStrip
             QuickHelpWindow.Dismiss();
         }
 
+        private void LogoButton_GotFocus(object sender, EventArgs e)
+        {
+            if (InputManager.Current.MostRecentInputDevice is KeyboardDevice)
+            {
+                SystemSounds.Beep.Play();
+            }
+        }
+
         private void Window_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
         {
             Activate();
         }
 
-        private void Window_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
+        private void Window_KeyDown(object sender, KeyEventArgs e)
         {
+            switch (e.Key)
+            {
+                // Make the up and down arrows move focus like left/right
+                case Key.Up:
+                case Key.Down:
+                    if (FocusManager.GetFocusedElement(this) is FrameworkElement elem)
+                    {
+                        FocusNavigationDirection direction = e.Key == Key.Up
+                            ? FocusNavigationDirection.Left
+                            : FocusNavigationDirection.Right;
+                        elem.MoveFocus(new TraversalRequest(direction));
+                    }
+
+                    e.Handled = true;
+                    break;
+                case Key.System when e.SystemKey == Key.F4:
+                    e.Handled = true;
+                    App.Shared.HideQuickStrip();
+                    break;
+
+            }
         }
 
         public static class PreferenceKeys
@@ -789,6 +1030,48 @@ namespace Morphic.Client.QuickStrip
             public static Preferences.Key Position = new Preferences.Key("org.raisingthefloor.morphic.quickstrip", "position.win");
             public static Preferences.Key ShowsHelp = new Preferences.Key("org.raisingthefloor.morphic.quickstrip", "showsHelp");
             public static Preferences.Key Items = new Preferences.Key("org.raisingthefloor.morphic.quickstrip", "items");
+        }
+
+        /// <summary>
+        /// Static configuration for the quick strip
+        /// </summary>
+        public class QuickStripJson
+        {
+            public static QuickStripJson FromFile(string file)
+            {
+                string json = File.ReadAllText(file);
+                JsonSerializerOptions options = new JsonSerializerOptions();
+                options.Converters.Add(new JsonElementInferredTypeConverter());
+                return JsonSerializer.Deserialize<QuickStripJson>(json, options);
+            }
+
+            [JsonPropertyName("items")]
+            public List<Dictionary<string, object>> Items { get; set; }
+        }
+
+        public void Dispose()
+        {
+            this.speechPlayer.Dispose();
+            this.Messages.Dispose();
+        }
+
+        /// <summary>
+        /// Ensure the first item is focused.
+        /// </summary>
+        /// <param name="keyboard"></param>
+        public void FocusFirstItem(bool keyboard = false)
+        {
+            this.MoveFocus(new TraversalRequest(FocusNavigationDirection.First));
+            if (keyboard)
+            {
+                this.SetKeyboardFocus();
+            }
+        }
+
+        public void SetKeyboardFocus()
+        {
+            this.MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
+            this.MoveFocus(new TraversalRequest(FocusNavigationDirection.Previous));
         }
     }
 }

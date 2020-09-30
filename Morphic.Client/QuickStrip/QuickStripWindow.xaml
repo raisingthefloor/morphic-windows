@@ -11,32 +11,38 @@
         ShowInTaskbar="False"
         WindowStyle="None"
         ResizeMode="NoResize"
+        AllowsTransparency="True"
+        Background="Transparent"
         Topmost="True"
         SizeToContent="Width"
         Loaded="OnLoaded"
+        MouseMove="Window_MouseMove"
         MouseDown="Window_MouseDown"
-        MouseUp="Window_MouseUp"
         MouseEnter="Window_MouseEnter"
-        MouseLeave="Window_MouseLeave"
+        KeyDown="Window_KeyDown"
+        Icon="/Icon.png"
+        >
+    <Border
         BorderBrush="Black"
-        BorderThickness="1">
-    <StackPanel Height="44" Margin="7,7,7,7" Orientation="Horizontal">
-        <StackPanel x:Name="ControlStack" Grid.Column="0" Orientation="Horizontal">
+        BorderThickness="1"
+        CornerRadius="5"
+        Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
+    >
+        <StackPanel x:Name="StackPanel" Height="44" Margin="7,7,7,7" Orientation="Horizontal" HorizontalAlignment="Stretch">
+            <StackPanel x:Name="ControlStack" Grid.Column="0" Orientation="Horizontal">
+            </StackPanel>
+            <Button x:Name="LogoButton" BorderBrush="{x:Null}"
+                    HorizontalAlignment="Left" Width="44" Height="44" Grid.Column="1" Background="{x:Null}"
+                    AutomationProperties.Name="Main Menu"
+                    Click="LogoButton_MouseUp"
+                    MouseUp="LogoButton_MouseUp"
+                    KeyDown="LogoButton_KeyDown"
+                    MouseEnter="LogoButton_MouseEnter"
+                    MouseLeave="LogoButton_MouseLeave"
+                    GotFocus="LogoButton_GotFocus"
+                    >
+                <Image Source="/Icon.png"/>
+            </Button>
         </StackPanel>
-        <Button x:Name="LogoButton" BorderBrush="{x:Null}" Click="LogoButtonClicked" HorizontalAlignment="Left" Width="44" Height="44" Grid.Column="1" Background="{x:Null}" MouseEnter="LogoButton_MouseEnter" MouseLeave="LogoButton_MouseLeave" AutomationProperties.Name="Main Menu">
-            <Image Source="/Icon.png"/>
-            <Button.ContextMenu>
-                <ContextMenu>
-                    <MenuItem Header="Hide MorphicBar" Click="HideQuickStrip"/>
-                    <!--<MenuItem Header="Customize MorphicBar..."  Click="CustomizeQuickStrip" IsEnabled="False"/>-->
-                    <Separator/>
-                    <MenuItem Header="Take My Settings with Me..." Click="TravelWithSettings"/>
-                    <MenuItem Header="Apply My Settings..." Click="ApplyMySettings"/>
-                    <MenuItem x:Name="logoutItem" Header="Logout" Click="Logout" Visibility="Collapsed"/>
-                    <Separator/>
-                    <MenuItem Header="Quit Morphic" Click="Quit"/>
-                </ContextMenu>
-            </Button.ContextMenu>
-        </Button>
-    </StackPanel>
+    </Border>
 </Window>

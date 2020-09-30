@@ -28,15 +28,12 @@ namespace Morphic.Client
     using System.Diagnostics;
     using System.Drawing;
     using System.IO;
-    using System.Linq;
     using System.Reflection;
-    using System.Text;
-    using System.Threading.Tasks;
-    using System.Windows;
+    using System.Runtime.CompilerServices;
+    using System.Runtime.InteropServices;
     using System.Windows.Controls;
     using System.Windows.Forms;
-    using System.Windows.Interop;
-    using Path = System.IO.Path;
+    using QuickStrip;
 
     /// <summary>
     /// Displays a button next to the notification area on the taskbar, which is always visible.
@@ -44,17 +41,56 @@ namespace Morphic.Client
     /// </summary>
     public class TrayButton : IDisposable
     {
+        private readonly WindowMessageHook messageHook;
+
         /// <summary>Raised when the button is clicked.</summary>
-        public event EventHandler<EventArgs> Click = null!;
-        
-        /// <summary>A menu to show when the button is right-clicked.</summary>
-        public ContextMenu? ContextMenu { get; set; }
+        public event EventHandler<EventArgs>? Click;
+        /// <summary>Raised when the button is double-clicked.</summary>
+        public event EventHandler<EventArgs>? DoubleClick;
+        /// <summary>Raised when the button is right-clicked.</summary>
+        public event EventHandler<EventArgs>? SecondaryClick;
 
         /// <summary>Used if there was a problem starting the tray-button process.</summary>
-        private NotifyIcon? fallbackIcon;
-        
+        private NotifyIcon? notifyIcon;
+
+        public bool UseNotificationIcon { get; set; }
+
+        // The message sent from the tray button process;
+        public const string ButtonMessageName = "GPII-TrayButton-Message";
+        private readonly int buttonMessage;
+
+        private enum TrayCommand
+        {
+            Icon = 1,
+            IconHc = 2,
+            Tooltip = 3,
+            Destroy = 4,
+            State = 5
+        }
+
+        private enum TrayNotification
+        {
+            Update = 0,
+            Click = 1,
+            ShowMenu = 2,
+            MouseEnter = 3,
+            MouseLeave = 4,
+            Activate = 5,
+        }
+
+        /// <summary>
+        /// Used by a second instance of this application to sends a message to the first instance telling
+        /// it to activate the window.
+        /// </summary>
+        public static void SendActivate()
+        {
+            const int HWND_BROADCAST = 0xffff;
+            int message = WindowMessageHook.RegisterMessage(ButtonMessageName);
+            SendMessage((IntPtr)HWND_BROADCAST, message, (int)TrayNotification.Activate, IntPtr.Zero);
+        }
+
         /// <summary>The icon on the button.</summary>
-        public Icon Icon
+        public Icon? Icon
         {
             get => this.icon;
             set
@@ -97,160 +133,188 @@ namespace Morphic.Client
         private Process? buttonProcess;
         private string? text;
         private string? iconFile;
-        private Icon icon;
+        private Icon? icon;
         private bool visible;
+
+        private IntPtr buttonWindow;
+
+        public TrayButton(IMessageHook messageWindow) : this(messageWindow.Messages)
+        {
+        }
+
+        public TrayButton(WindowMessageHook messageHook)
+        {
+            this.messageHook = messageHook;
+            this.buttonMessage = this.messageHook.AddMessage(ButtonMessageName);
+            this.messageHook.GotMessage += this.GotMessage;
+        }
 
         /// <summary>
         /// Shows the button - starts the button process.
         /// </summary>
         private void ShowIcon()
         {
-            try
-            {
-                this.buttonProcess = Process.Start(new ProcessStartInfo()
-                {
-                    // https://github.com/stegru/Morphic.TrayButton/releases/latest
-                    FileName = 
-                        Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "",
-                            "tray-button.exe"),
-                    RedirectStandardInput = true,
-                    RedirectStandardOutput = true,
-                    StandardInputEncoding = Encoding.Unicode
-                });
+            bool success = false;
 
-                this.buttonProcess.EnableRaisingEvents = true;
-                this.buttonProcess.Exited += (sender, args) =>
+            if (!this.UseNotificationIcon)
+            {
+                try
                 {
-                    if (this.Visible)
+                    ProcessStartInfo startInfo = new ProcessStartInfo()
                     {
-                        this.ShowIcon();
+                        UseShellExecute = false,
+                        // https://github.com/stegru/Morphic.TrayButton/releases/latest
+                        FileName = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "",
+                            "tray-button.exe")
+                    };
+                    startInfo.EnvironmentVariables.Add("GPII_HWND", this.messageHook.Handle.ToString());
+
+                    Process? process = Process.Start(startInfo);
+
+                    if (process != null)
+                    {
+                        success = true;
+                        this.buttonProcess = process;
+                        this.buttonProcess.EnableRaisingEvents = true;
+                        this.buttonProcess.Exited += (sender, args) =>
+                        {
+                            if (this.Visible)
+                            {
+                                this.ShowIcon();
+                            }
+                        };
+                    }
+                }
+                catch (Win32Exception e)
+                {
+                    this.UseNotificationIcon = true;
+                }
+            }
+
+            if (this.UseNotificationIcon && this.notifyIcon == null)
+            {
+                this.notifyIcon = new NotifyIcon();
+                this.notifyIcon.MouseUp += (sender, args) =>
+                {
+                    if (args.Button == MouseButtons.Right)
+                    {
+                        this.SecondaryClick?.Invoke(this, args);
+                    }
+                    else if (args.Button == MouseButtons.Left)
+                    {
+                        this.OnClick();
                     }
                 };
-                
-                this.buttonProcess.StandardInput.AutoFlush = true;
-                this.GetInput();
-            }
-            catch (Win32Exception e)
-            {
-                this.buttonProcess = null;
-                this.fallbackIcon = new NotifyIcon();
-                this.Update();
-                this.fallbackIcon.Click += this.Click.Invoke;
+
+                this.notifyIcon.DoubleClick += (sender, args) => this.OnClick(true);
+
             }
 
+            this.Update();
         }
 
         /// <summary>
-        /// Reads input from the menu button process.
+        /// A Window message was received.
         /// </summary>
-        private async void GetInput()
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void GotMessage(object? sender, MessageEventArgs e)
         {
-            string? line;
-            while ((line = await this.buttonProcess?.StandardOutput.ReadLineAsync()!) != null)
+            if (e.Msg == this.buttonMessage)
             {
-                string[] parts = line.Split(' ', 3);
-                string command = parts[0];
-                switch (command)
+                switch ((TrayNotification)e.WParam)
                 {
-                    case "UPDATE":
+                    case TrayNotification.Update:
                         // Button wants to know the settings.
+                        this.buttonWindow = e.LParam;
                         this.Update();
                         break;
-                    
-                    case "CLICK":
+                    case TrayNotification.Click:
                         // Left button click.
-                        this.Click.Invoke(this, new EventArgs());
+                        this.OnClick();
                         break;
-                    
-                    case "SHOWMENU":
+                    case TrayNotification.ShowMenu:
                         // Right button click.
-                        if (this.ContextMenu != null)
-                        {
-                            this.ContextMenu.IsOpen = true;
-                        }
-
+                        this.SecondaryClick?.Invoke(this, new EventArgs());
                         break;
-                    
-                    case "MOUSEENTER":
-                    case "MOUSELEAVE":
+                    case TrayNotification.MouseEnter:
                         break;
-                    case "POSITION":
+                    case TrayNotification.MouseLeave:
+                        break;
+                    case TrayNotification.Activate:
+                        this.OnClick(true);
                         break;
                 }
-            };
+            }
+        }
+
+        private int lastClick;
+        private void OnClick(bool doubleClick = false)
+        {
+            int span = Environment.TickCount - this.lastClick;
+            if (doubleClick || span <= SystemInformation.DoubleClickTime)
+            {
+                this.DoubleClick?.Invoke(this, new EventArgs());
+            }
+            else
+            {
+                this.Click?.Invoke(this, new EventArgs());
+            }
+
+            this.lastClick = Environment.TickCount;
         }
 
         /// <summary>Hides the button, by terminating the process.</summary>
         private void HideIcon()
         {
-            if (this.fallbackIcon != null)
+            if (this.notifyIcon != null)
             {
-                this.fallbackIcon.Visible = true;
+                this.notifyIcon.Visible = false;
             }
             
             if (this.buttonProcess != null)
             {
-                this.SendCommand("DESTROY");
+                this.SendCommand(TrayCommand.Destroy);
             }
         }
+
 
         /// <summary>
         /// Sends a command to the button process.
         /// </summary>
         /// <param name="command">The command name.</param>
-        /// <param name="data">Command data.</param>
-        private void SendCommand(string command, string? data = null)
+        /// <param name="commandData">Command commandData.</param>
+        private void SendCommand(TrayCommand command, string? commandData = null)
         {
-            if (string.IsNullOrEmpty(data))
-            {
-                this.buttonProcess?.StandardInput.WriteLine(command);
-            }
-            else
-            {
-                this.buttonProcess?.StandardInput.WriteLine("{0} {1}", command, data);
-            }
+            const int WM_COPYDATA = 0x4a;
+            COPYDATASTRUCT data = new COPYDATASTRUCT((int)command, commandData ?? string.Empty);
+            TrayButton.SendMessageCopyData(this.buttonWindow, WM_COPYDATA, (int)this.messageHook.Handle, ref data);
         }
         
         /// <summary>Sends the configuration to the button.</summary>
         private void Update()
         {
-            this.UpdateWindow();
             this.UpdateText();
             this.UpdateIcon();
-            if (this.fallbackIcon != null)
+            if (this.notifyIcon != null)
             {
-                this.fallbackIcon.Visible = this.Visible;
+                this.notifyIcon.Visible = this.Visible;
             }
         }
 
-        /// <summary>
-        /// Provides the button process with a window that can be activated when the button is clicked.
-        /// This is needed so the popup menu can capture the focus.
-        /// </summary>
-        private async void UpdateWindow()
-        {
-            while (App.Current.Windows.Count == 0)
-            {
-                await Task.Delay(1000);
-            }
-
-            Window window = App.Current.Windows[0];
-            WindowInteropHelper nativeWindow = new WindowInteropHelper(window);
-            this.SendCommand("HWND", nativeWindow.Handle.ToString());
-        }
-        
         /// <summary>
         /// Updates the tooltip text.
         /// </summary>
         private void UpdateText()
         {
-            if (this.fallbackIcon == null)
+            if (this.notifyIcon != null)
             {
-                this.SendCommand("TOOLTIP", this.text);
+                this.notifyIcon.Text = this.text;
             }
-            else
+
+            if (this.buttonProcess != null)
             {
-                this.fallbackIcon.Text = this.text;
+                this.SendCommand(TrayCommand.Tooltip, this.text);
             }
         }
 
@@ -259,28 +323,59 @@ namespace Morphic.Client
         /// </summary>
         private void UpdateIcon()
         {
-            if (this.fallbackIcon == null)
+            if (this.notifyIcon != null)
             {
+                this.notifyIcon.Icon = this.Icon;
+            }
+
+            if (this.buttonProcess != null) {
                 // Store the icon to a file, and tell the tray-button to load it.
                 this.iconFile ??= System.IO.Path.GetTempFileName();
                 using (FileStream fs = new FileStream(this.iconFile, FileMode.Truncate))
                 {
-                    this.Icon.Save(fs);
+                    this.Icon?.Save(fs);
                 }
 
-                this.SendCommand("ICON", this.iconFile);
-            }
-            else
-            {
-                this.fallbackIcon.Icon = this.Icon;
+                this.SendCommand(TrayCommand.Icon, this.iconFile);
             }
         }
+
+        [DllImport("user32.dll", EntryPoint = "SendMessage")]
+        private static extern IntPtr SendMessageCopyData(IntPtr hWnd, int Msg, int wParam, ref COPYDATASTRUCT lParam);
+        [DllImport("user32.dll")]
+        private static extern IntPtr SendMessage(IntPtr hWnd, int Msg, int wParam, IntPtr lParam);
+
+        // ReSharper disable InconsistentNaming
+        // ReSharper disable IdentifierTypo
+        private struct COPYDATASTRUCT
+        {
+            public readonly IntPtr dwData;
+            public readonly int cbData;
+            [MarshalAs(UnmanagedType.LPWStr)]
+            public readonly string lpData;
+
+            public COPYDATASTRUCT(int dwData, string lpData)
+                : this(new IntPtr(dwData), lpData)
+            {
+
+            }
+
+            public COPYDATASTRUCT(IntPtr dwData, string lpData)
+            {
+                this.dwData = dwData;
+                this.lpData = lpData + "\0";
+                this.cbData = (lpData.Length + 1) * 2;
+            }
+        }
+        // ReSharper restore IdentifierTypo
+        // ReSharper restore InconsistentNaming
+
 
         public void Dispose()
         {
             this.HideIcon();
             this.buttonProcess?.Dispose();
-            this.fallbackIcon?.Dispose();
+            this.notifyIcon?.Dispose();
         }
     }
 }

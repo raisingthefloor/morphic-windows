@@ -192,13 +192,20 @@ namespace Morphic.Settings
 
         private List<Native.Display.DisplaySettings> FindPossibleSettings()
         {
-            var settings = Native.Display.GetAllDisplaySettingsForDisplayAdapter(Name);
+            IEnumerable<Native.Display.DisplaySettings> settings =
+                Native.Display.GetAllDisplaySettingsForDisplayAdapter(Name);
+
             if (Native.Display.GetCurrentDisplaySettingsForDisplayAdapter(Name) is Native.Display.DisplaySettings current)
             {
                 settings = settings.Where(setting => setting.refreshRateInHertz == current.refreshRateInHertz && setting.orientation == current.orientation && (setting.fixedOutputOption ?? Native.Display.DisplaySettings.FixedResolutionOutputOption.Default) == Native.Display.DisplaySettings.FixedResolutionOutputOption.Default && setting.MatchesAspectRatio(current)).ToList();
+
+                // remove the very similar resolutions (favouring the one closest to the current ratio)
+                double currentRatio = current.GetAspectRatio();
+                settings = settings.GroupBy(s => s.widthInPixels)
+                    .Select(g => g.OrderBy(s => Math.Abs(currentRatio - s.GetAspectRatio())).First());
             }
-            settings.Sort((a, b) => (int)a.widthInPixels - (int)b.widthInPixels);
-            return settings;
+
+            return settings.OrderBy(s => s.widthInPixels * s.heightInPixels).ToList();
         }
 
         private Native.Display.DisplaySettings? GetDisplaySettingsForZoomPercentage(double percentage)

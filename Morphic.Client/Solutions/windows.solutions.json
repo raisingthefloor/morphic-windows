@@ -33,6 +33,26 @@
         }
       },
       {
+        "name": "lighttheme-apps.enabled",
+        "type": "boolean",
+        "default": true,
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Personalize_Color_AppsUseLightTheme",
+          "value_type": "boolean"
+        }
+      },
+      {
+        "name": "lighttheme-windows.enabled",
+        "type": "boolean",
+        "default": true,
+        "handler": {
+          "type": "com.microsoft.windows.system",
+          "setting_id": "SystemSettings_Personalize_Color_SystemUsesLightTheme",
+          "value_type": "boolean"
+        }
+      },
+      {
         "name": "colorfilter.enabled",
         "type": "boolean",
         "default": false,
