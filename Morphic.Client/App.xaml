@@ -68,6 +68,7 @@
             <MenuItem Header="_Other Helpful Things" Click="MenuLink" Tag="https://morphic.org/demos" />
             <Separator/>
             <MenuItem Header="_Copy settings between computers" Click="TravelWithSettings"/>
+            <MenuItem Header="_Restore settings from backup" Click="RestoreSettings"/>
             <Separator/>
             <MenuItem Header="_Automatically start Morphic" Unchecked="AutoRunToggle" Checked="AutoRunToggle" IsCheckable="True" Initialized="AutoRunInit" />
             <MenuItem Header="_Show Morphic Bar at start" Unchecked="AutoShowToggle" Checked="AutoShowToggle" IsCheckable="True" Initialized="AutoShowInit" />

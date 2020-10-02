@@ -97,7 +97,7 @@ namespace Morphic.Client
 
         #region Configuration & Startup
 
-        private readonly string ApplicationDataFolderPath = Path.Combine(new string[] { Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MorphicLite" });
+        public readonly string ApplicationDataFolderPath = Path.Combine(new string[] { Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MorphicLite" });
 
         /// <summary>
         /// Create a Configuration from appsettings.json
@@ -158,6 +158,8 @@ namespace Morphic.Client
             services.AddTransient<AboutWindow>();
             services.AddTransient<CopyStartPanel>();
             services.AddTransient<ApplyPanel>();
+            services.AddTransient<RestoreWindow>();
+            services.AddSingleton<Backups>();
             services.AddMorphicSettingsHandlers(ConfigureSettingsHandlers);
         }
 
@@ -656,10 +658,10 @@ namespace Morphic.Client
             OpenTravelWindow();
         }
 
-        private void ApplyMySettings(object sender, RoutedEventArgs e)
+        private void RestoreSettings(object sender, RoutedEventArgs e)
         {
-            Countly.RecordEvent("Login");
-            OpenLoginWindow();
+            Countly.RecordEvent("Restore");
+            this.OpenRestoreWindow();
         }
 
         private void Logout(object sender, RoutedEventArgs e)
@@ -906,21 +908,13 @@ namespace Morphic.Client
         /// The Configurator window, if visible
         /// </summary>
         private TravelWindow? TravelWindow;
+        private RestoreWindow? RestoreWindow;
 
         /// <summary>
         /// Show the Morphic Configurator window
         /// </summary>
         internal async void OpenTravelWindow()
         {
-            // if (this.Session.User == null)
-            // {
-            //     await this.OpenLoginWindow();
-            //     if (this.Session.User == null)
-            //     {
-            //         return;
-            //     }
-            // }
-
             if (TravelWindow == null)
             {
                 TravelWindow = ServiceProvider.GetRequiredService<TravelWindow>();
@@ -929,7 +923,20 @@ namespace Morphic.Client
             }
             TravelWindow.Activate();
         }
-        
+
+        /// <summary>
+        /// Show the Restore backups
+        /// </summary>
+        internal void OpenRestoreWindow()
+        {
+            if (this.RestoreWindow == null)
+            {
+                this.RestoreWindow = this.ServiceProvider.GetRequiredService<RestoreWindow>();
+                this.RestoreWindow.Closed += (sender, args) => this.RestoreWindow = null;
+            }
+            this.RestoreWindow?.Show();
+            this.RestoreWindow?.Activate();
+        }
 
         /// <summary>
         /// Called when the configurator window closes

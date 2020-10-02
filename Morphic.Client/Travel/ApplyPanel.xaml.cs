@@ -24,15 +24,9 @@
 using Microsoft.Extensions.Logging;
 using Morphic.Service;
 using System;
-using System.Threading;
-using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
-using Morphic.Settings;
-using System.Text.RegularExpressions;
-using Morphic.Core;
 using System.Threading.Tasks;
-using System.Security.Cryptography;
 
 namespace Morphic.Client.Travel
 {
@@ -42,10 +36,11 @@ namespace Morphic.Client.Travel
     {
         #region Creating a Panel
 
-        public ApplyPanel(Session session, ILogger<ApplyPanel> logger, IServiceProvider serviceProvider)
+        public ApplyPanel(Session session, ILogger<ApplyPanel> logger, Backups backups)
         {
             this.session = session;
             this.logger = logger;
+            this.backups = backups;
             this.InitializeComponent();
         }
 
@@ -53,6 +48,8 @@ namespace Morphic.Client.Travel
         /// A logger to use
         /// </summary>
         private readonly ILogger<ApplyPanel> logger;
+
+        private readonly Backups backups;
 
         #endregion
 
@@ -63,6 +60,8 @@ namespace Morphic.Client.Travel
 
             int startTime = Environment.TickCount;
             int minTime = 5000;
+
+            await this.backups.Store();
 
             await this.session.ApplyAllPreferences();
 
@@ -88,7 +87,7 @@ namespace Morphic.Client.Travel
             this.Completed?.Invoke(this, EventArgs.Empty);
         }
 
-        public StepFrame StepFrame { get; set; }
+        public StepFrame StepFrame { get; set; } = null!;
 
         /// <summary>
         /// Dispatched when the capture process is complete and the minimum time has elapsed
