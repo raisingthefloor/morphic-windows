@@ -2,6 +2,10 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:Morphic.Client"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance local:App}"
              ShutdownMode="OnExplicitShutdown">
     <Application.Resources>
         <ContextMenu x:Key="ContextMenu">
@@ -70,8 +74,9 @@
             <MenuItem Header="_Copy settings between computers" Click="TravelWithSettings"/>
             <MenuItem Header="_Restore settings from backup" Click="RestoreSettings"/>
             <Separator/>
+            <MenuItem Header="_Hide QuickHelp (except with Alt key)" IsCheckable="True" IsChecked="{Binding AppOptions.HideQuickHelp}" />
             <MenuItem Header="_Automatically start Morphic" Unchecked="AutoRunToggle" Checked="AutoRunToggle" IsCheckable="True" Initialized="AutoRunInit" />
-            <MenuItem Header="_Show Morphic Bar at start" Unchecked="AutoShowToggle" Checked="AutoShowToggle" IsCheckable="True" Initialized="AutoShowInit" />
+            <MenuItem Header="_Show Morphic Bar at start" IsCheckable="True" IsChecked="{Binding AppOptions.AutoShow}" />
             <Separator/>
             <MenuItem Header="_About Morphic..." Click="About"/>
             <MenuItem Header="_Quit Morphic" Click="Quit"/>

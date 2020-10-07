@@ -29,6 +29,8 @@ using System.Windows.Automation.Peers;
 
 namespace Morphic.Client
 {
+    using System.Windows.Input;
+
     /// <summary>
     /// A large window that behaves similar to a tooltip, but shows up immediately when hovering over quick strip controls
     /// </summary>
@@ -51,7 +53,14 @@ namespace Morphic.Client
 
         public static void Show(IQuickHelpControlBuilder controlBuilder)
         {
-            if (!Disabled)
+            bool show = !Disabled;
+
+            if (show && AppOptions.Current.HideQuickHelp)
+            {
+                show = Keyboard.IsKeyDown(Key.LeftAlt) || Keyboard.IsKeyDown(Key.RightAlt);
+            }
+
+            if (show)
             {
                 if (shared == null)
                 {
