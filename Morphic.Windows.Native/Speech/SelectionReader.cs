@@ -82,7 +82,7 @@ namespace Morphic.Windows.Native
                 sendKeys("^c");
 
                 // Wait for the clipboard update.
-                this.gotClipboard.WaitOne(3000);
+                this.gotClipboard.WaitOne(1500);
             });
 
             return;
@@ -114,7 +114,7 @@ namespace Morphic.Windows.Native
                 {
                     // Wait for it to be activated. For unknown reasons, activating the window the first time causes
                     // no window to be activated. The second attempt works.
-                    const int timeout = 3000;
+                    const int timeout = 2000;
                     int start = Environment.TickCount;
                     int timespent = 0;
                     do
