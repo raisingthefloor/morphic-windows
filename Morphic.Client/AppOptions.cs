@@ -40,7 +40,7 @@
         /// Open the registry key for this application.
         /// </summary>
         /// <returns></returns>
-        private RegistryKey OpenKey()
+        public static RegistryKey OpenKey()
         {
             return Registry.CurrentUser.CreateSubKey(@"Software\Raising the Floor\Morphic")!;
         }
@@ -54,7 +54,7 @@
             object? value;
             if (!this.cache.TryGetValue(name, out value))
             {
-                using RegistryKey key = this.OpenKey();
+                using RegistryKey key = AppOptions.OpenKey();
                 value = key.GetValue(name, defaultValue);
             }
 
@@ -84,7 +84,7 @@
         /// </summary>
         protected virtual void SetValue(object value, [CallerMemberName] string? name = null)
         {
-            using RegistryKey key = this.OpenKey();
+            using RegistryKey key = AppOptions.OpenKey();
             if (value is bool b)
             {
                 key.SetValue(name, b ? 1 : 0, RegistryValueKind.DWord);
