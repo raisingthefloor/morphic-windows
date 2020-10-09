@@ -352,8 +352,8 @@ namespace Morphic.Client.QuickStrip
                             control.SetContextItems(new []
                             {
                                 ("setting", "speech"),
-                                ("learn", "readsel-pc"),
-                                ("demo", "readsel-pc")
+                                ("learn", "read-selected-pc"),
+                                ("demo", "read-selected-pc")
                             });
 
                             return control;
@@ -438,8 +438,8 @@ namespace Morphic.Client.QuickStrip
                                 .Helper.SetContextItems(new []
                                 {
                                     ("setting", "easeofaccess-colorfilter"),
-                                    ("learn", "colorvision"),
-                                    ("demo", "colorvision")
+                                    ("learn", "color"),
+                                    ("demo", "color")
                                 });
 
                             if (darkModeSupported)
