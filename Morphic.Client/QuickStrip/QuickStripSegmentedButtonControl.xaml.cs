@@ -588,8 +588,9 @@ namespace Morphic.Client
 
         public IEnumerable<(string text, string target)>? ContextItems;
         private static readonly string SettingsFormat = "ms-settings:{0}";
-        private static readonly string DemoFormat = "https://morphic.org/ln/{0}-vid";
-        private static readonly string LearnMoreFormat = "https://morphic.org/lm/{0}";
+        private static readonly string DemoFormat = "https://morphic.org/rd/{0}-vid";
+        private static readonly string LearnMoreFormat = "https://morphic.org/rd/{0}";
+
 
         /// <summary>
         /// Sets the context items for this control, and the child controls.

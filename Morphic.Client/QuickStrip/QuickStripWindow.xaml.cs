@@ -352,8 +352,8 @@ namespace Morphic.Client.QuickStrip
                             control.SetContextItems(new []
                             {
                                 ("setting", "speech"),
-                                ("learn", "readsel-pc"),
-                                ("demo", "readsel-pc")
+                                ("learn", "read-selected-pc"),
+                                ("demo", "read-selected-pc")
                             });
 
                             return control;
@@ -438,8 +438,8 @@ namespace Morphic.Client.QuickStrip
                                 .Helper.SetContextItems(new []
                                 {
                                     ("setting", "easeofaccess-colorfilter"),
-                                    ("learn", "colorvision"),
-                                    ("demo", "colorvision")
+                                    ("learn", "color"),
+                                    ("demo", "color")
                                 });
 
                             if (darkModeSupported)
@@ -701,11 +701,46 @@ namespace Morphic.Client.QuickStrip
                 Preferences.Key lightAppsSetting = SettingsManager.Keys.WindowsDisplayLightAppsThemeEnabled;
                 Preferences.Key lightWindowsSetting = SettingsManager.Keys.WindowsDisplayLightWindowsThemeEnabled;
 
-                this.initialDarkMode ??= !e.ToggleState;
-                this.initialAppsLight ??= await this.session.SettingsManager.CaptureBool(lightAppsSetting)
-                    ?? false;
-                this.initialWindowsLight ??= await this.session.SettingsManager.CaptureBool(lightWindowsSetting)
-                    ?? false;
+                if (this.initialDarkMode == null)
+                {
+                    // Store the very first values of the themes, so the original is applied even after reboot.
+                    using RegistryKey key = AppOptions.OpenKey();
+
+                    string? dark = key.GetValue("DarkMode", string.Empty).ToString();
+                    if (dark == string.Empty)
+                    {
+                        this.initialDarkMode = !e.ToggleState;
+                        key.SetValue("DarkMode", this.initialAppsLight == true ? "1" : "0");
+                    }
+                    else
+                    {
+                        this.initialDarkMode = dark == "1";
+                    }
+
+                    string? apps = key.GetValue("AppsLight", string.Empty).ToString();
+                    if (apps == string.Empty)
+                    {
+                        this.initialAppsLight = await this.session.SettingsManager.CaptureBool(lightAppsSetting)
+                            ?? false;
+                        key.SetValue("AppsLight", this.initialAppsLight == true ? "1" : "0");
+                    }
+                    else
+                    {
+                        this.initialAppsLight = apps == "1";
+                    }
+
+                    string? windows = key.GetValue("WindowsLight", string.Empty).ToString();
+                    if (windows == string.Empty)
+                    {
+                        this.initialAppsLight = await this.session.SettingsManager.CaptureBool(lightWindowsSetting)
+                            ?? false;
+                        key.SetValue("WindowsLight", this.initialAppsLight == true ? "1" : "0");
+                    }
+                    else
+                    {
+                        this.initialAppsLight = windows == "1";
+                    }
+                }
 
                 // Turning the toggle back to its initial state puts the settings back to their original value.
                 if (e.ToggleState == this.initialDarkMode)

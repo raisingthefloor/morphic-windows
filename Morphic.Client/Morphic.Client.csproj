@@ -79,7 +79,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <TrimmerRootAssembly Include="System.Resources.Extensions"/>
+    <TrimmerRootAssembly Include="System.Resources.Extensions" />
   </ItemGroup>
 
   <ItemGroup>

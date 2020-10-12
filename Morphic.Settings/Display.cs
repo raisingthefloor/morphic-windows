@@ -205,7 +205,7 @@ namespace Morphic.Settings
                     .Select(g => g.OrderBy(s => Math.Abs(currentRatio - s.GetAspectRatio())).First());
             }
 
-            return settings.OrderBy(s => s.widthInPixels * s.heightInPixels).ToList();
+            return settings.OrderBy(s => s.heightInPixels).ToList();
         }
 
         private Native.Display.DisplaySettings? GetDisplaySettingsForZoomPercentage(double percentage)

@@ -36,21 +36,23 @@ using System.Security.Cryptography;
 
 namespace Morphic.Client.Travel
 {
+    using Elements;
+
     /// <summary>
     /// The Capture panel is one of the steps shown when the user is walked through the process of taking their settings with them.
     /// It shows a progress indicator while a <code>CaptureSession</code> is run behind the scenes.  No user interaction is required.
     /// </summary>
-    public partial class CapturePanel : StackPanel
+    public partial class CapturePanel : StackPanel, IStepPanel
     {
 
         #region Creating a Panel
 
-        public CapturePanel(Session session, ILogger<CapturePanel> logger)
+        public CapturePanel(Session session, ILogger<CapturePanel> logger, IServiceProvider serviceProvider)
         {
             this.session = session;
             this.logger = logger;
-            InitializeComponent();
-            Loaded += OnLoaded;
+            this.InitializeComponent();
+            this.Loaded += this.OnLoaded;
         }
 
         /// <summary>
@@ -60,23 +62,38 @@ namespace Morphic.Client.Travel
 
         #endregion
 
+        public async void OnSave(object sender, EventArgs args)
+        {
+            await this.session.Service.Save(this.Preferences);
+            this.CompletePanel.Visibility = Visibility.Collapsed;
+            this.SavedPanel.Visibility = Visibility.Visible;
+        }
+
+        public void OnCancel(object sender, EventArgs args)
+        {
+            MessageBoxResult result = MessageBox.Show(Window.GetWindow(this)!, "Do you really want to cancel?",
+                "Saving Morphic Cloud Vault", MessageBoxButton.YesNo);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                this.StepFrame.CloseWindow();
+            }
+        }
+
+        public void OnOk(object sender, EventArgs args)
+        {
+            this.Completed?.Invoke(this, EventArgs.Empty);
+        }
+
+
         #region Completion Events
+
+        public StepFrame StepFrame { get; set; }
 
         /// <summary>
         /// Dispatched when the capture process is complete and the minimum time has elapsed
         /// </summary>
         public event EventHandler? Completed;
-
-        /// <summary>
-        /// Will invoke the Completed event if the capture is done and the minimum time has elapsed
-        /// </summary>
-        private void CompleteIfAllDone()
-        {
-            if (hasCompletedCapture && hasReachedMinimumTime)
-            {
-                Completed?.Invoke(this, new EventArgs());
-            }
-        }
 
         #endregion
 
@@ -84,65 +101,7 @@ namespace Morphic.Client.Travel
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            StartMinimumTimer();
-            _ = RunCapture();
-        }
-
-        #endregion
-
-        #region Minimum Time
-
-        /// <summary>
-        /// The capture panel is shown for a minimum amount of time regardless of how quickly the capture session runs.
-        /// This gives the user enough time to read the screen and understand what is going on.
-        /// </summary>
-        private System.Timers.Timer? minimumIntervalTimer;
-
-        /// <summary>
-        /// The minimum time to wait before continuing
-        /// </summary>
-        private const int minimumWaitTimeInSeconds = 10;
-
-        /// <summary>
-        /// Used to get back to the main thread when the timer fires
-        /// </summary>
-        private SynchronizationContext? timerSynchronizatinContext;
-
-        /// <summary>
-        /// Set to true when the minimim time has elapsed
-        /// </summary>
-        private bool hasReachedMinimumTime = false;
-
-        /// <summary>
-        /// Create and start timer to wait for a minimum amount of time
-        /// </summary>
-        private void StartMinimumTimer()
-        {
-            timerSynchronizatinContext = SynchronizationContext.Current;
-            minimumIntervalTimer = new System.Timers.Timer(minimumWaitTimeInSeconds * 1000);
-            minimumIntervalTimer.AutoReset = false;
-            minimumIntervalTimer.Elapsed += OnTimerElapsed;
-            minimumIntervalTimer.Start();
-        }
-
-        /// <summary>
-        /// Called when the minimum time has elapsed
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void OnTimerElapsed(object? sender, EventArgs e)
-        {
-            minimumIntervalTimer = null;
-            if (timerSynchronizatinContext is SynchronizationContext context)
-            {
-                timerSynchronizatinContext = null;
-                context.Post(state =>
-                {
-                    hasReachedMinimumTime = true;
-                    CompleteIfAllDone();
-                }, null);
-            }
-            
+            _ = this.RunCapture();
         }
 
         #endregion
@@ -155,11 +114,6 @@ namespace Morphic.Client.Travel
         private readonly Session session;
 
         /// <summary>
-        /// Set to true when the capture has completed
-        /// </summary>
-        private bool hasCompletedCapture = false;
-
-        /// <summary>
         /// The preferences where captured values will be stored
         /// </summary>
         public Preferences Preferences { get; set; } = null!;
@@ -170,16 +124,24 @@ namespace Morphic.Client.Travel
         /// <returns></returns>
         private async Task RunCapture()
         {
-
-            var captureSession = new CaptureSession(session.SettingsManager, Preferences);
+            int startTime = Environment.TickCount;
+            int minTime = 5000;
+            this.Preferences = this.session.Preferences!;
+            CaptureSession captureSession = new CaptureSession(this.session.SettingsManager, this.Preferences);
             captureSession.AddAllSolutions();
-            await captureSession.Run();
-            hasCompletedCapture = true;
-            if (session.User != null)
+            try
             {
-                await session.Service.Save(Preferences);
+                await captureSession.Run();
             }
-            CompleteIfAllDone();
+            catch (Exception e)
+            {
+                MessageBox.Show(Window.GetWindow(this), "Morphic ran into a problem while capturing the settings");
+            }
+
+            await Task.Delay(Math.Max(minTime - (Environment.TickCount - startTime), 1));
+
+            this.CollectingPanel.Visibility = Visibility.Collapsed;
+            this.CompletePanel.Visibility = Visibility.Visible;
         }
 
         #endregion

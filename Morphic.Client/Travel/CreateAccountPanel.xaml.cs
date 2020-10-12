@@ -32,18 +32,23 @@ using System.Windows.Controls;
 
 namespace Morphic.Client.Travel
 {
+    using System.Windows.Forms;
+    using Elements;
+    using Login;
+
     /// <summary>
     /// A panel shown when the user needs to create an account in order to save their captured settings
     /// </summary>
-    public partial class CreateAccountPanel : StackPanel
+    public partial class CreateAccountPanel : StackPanel, IStepPanel
     {
 
         #region Creating a Panel
 
-        public CreateAccountPanel(Session session, ILogger<CreateAccountPanel> logger)
+        public CreateAccountPanel(Session session, ILogger<CreateAccountPanel> logger, IServiceProvider serviceProvider)
         {
             this.session = session;
             this.logger = logger;
+            this.serviceProvider = serviceProvider;
             InitializeComponent();
         }
 
@@ -52,6 +57,8 @@ namespace Morphic.Client.Travel
         /// </summary>
         private readonly ILogger<CreateAccountPanel> logger;
 
+        private readonly IServiceProvider serviceProvider;
+
         #endregion
 
         #region Completion Events
@@ -59,7 +66,7 @@ namespace Morphic.Client.Travel
         /// <summary>
         /// Dispatched when the user's accout is successfully created
         /// </summary>
-        public EventHandler? Completed;
+        public event EventHandler? Completed;
 
         #endregion
 
@@ -122,6 +129,7 @@ namespace Morphic.Client.Travel
             }
             if (success)
             {
+                MessageBox.Show("Your account was created.\n\nPlease check your email for further instructions.");
                 Completed?.Invoke(this, new EventArgs());
             }
             else
@@ -308,9 +316,11 @@ namespace Morphic.Client.Travel
         /// <param name="e"></param>
         public void OnAlreadyHaveAccount(object? sender, RoutedEventArgs e)
         {
-            // TODO: show login
+            this.StepFrame.PushPanel<LoginPanel>();
         }
 
         #endregion
+
+        public StepFrame StepFrame { get; set; }
     }
 }

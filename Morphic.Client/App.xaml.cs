@@ -92,12 +92,13 @@ namespace Morphic.Client
         public IConfiguration Configuration { get; private set; } = null!;
         public Session Session { get; private set; } = null!;
         private ILogger<App> logger = null!;
+        public AppOptions AppOptions { get; set; } = null!;
 
         public const string ApplicationId = "A6E8092B-51F4-4CAA-A874-A791152B5698";
 
         #region Configuration & Startup
 
-        private readonly string ApplicationDataFolderPath = Path.Combine(new string[] { Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MorphicLite" });
+        public readonly string ApplicationDataFolderPath = Path.Combine(new string[] { Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MorphicLite" });
 
         /// <summary>
         /// Create a Configuration from appsettings.json
@@ -153,7 +154,14 @@ namespace Morphic.Client
             services.AddTransient<TravelCompletedPanel>();
             services.AddTransient<QuickStripWindow>();
             services.AddTransient<LoginWindow>();
+            services.AddTransient<LoginPanel>();
+            services.AddTransient<CreateAccountPanel>();
             services.AddTransient<AboutWindow>();
+            services.AddTransient<CopyStartPanel>();
+            services.AddTransient<ApplyPanel>();
+            services.AddTransient<RestoreWindow>();
+            services.AddSingleton<Backups>();
+            services.AddSingleton<AppOptions>();
             services.AddMorphicSettingsHandlers(ConfigureSettingsHandlers);
         }
 
@@ -230,6 +238,9 @@ namespace Morphic.Client
             var collection = new ServiceCollection();
             ConfigureServices(collection);
             ServiceProvider = collection.BuildServiceProvider();
+
+            this.AppOptions = this.ServiceProvider.GetRequiredService<AppOptions>();
+
 
             // Determine if this is the first instance since installation, by checking the last version written to the
             // registry.
@@ -314,31 +325,6 @@ namespace Morphic.Client
         }
 
         /// <summary>
-        /// Makes the QS automatically show at start.
-        /// </summary>
-        /// <param name="itemIsChecked"></param>
-        private bool ConfigureAutoShow(bool? newValue = null)
-        {
-            bool enabled;
-            using RegistryKey morphicKey =
-                Registry.CurrentUser.CreateSubKey(@"Software\Raising the Floor\Morphic")!;
-
-            if (newValue == null)
-            {
-                // Get the configured value
-                string? value = morphicKey.GetValue("AutoShow") as string;
-                enabled = value != "0";
-            }
-            else
-            {
-                enabled = newValue == true;
-            }
-
-            morphicKey.SetValue("AutoShow", enabled ? "1" : "0", RegistryValueKind.String);
-            return enabled;
-        }
-
-        /// <summary>
         /// Actions to perform when this instance is the first since installation.
         /// </summary>
         private void OnFirstRun()
@@ -402,7 +388,6 @@ namespace Morphic.Client
             HotkeyManager.Current.AddOrReplace("Login with Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift, (sender, e) =>
             {
                 OpenLoginWindow();
-                loginWindow?.Announce();
             });
             HotkeyManager.Current.AddOrReplace("Show Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift | ModifierKeys.Alt, (sender, e) =>
             {
@@ -460,7 +445,7 @@ namespace Morphic.Client
 
             this.LoadQuickStrip();
 
-            if (this.ConfigureAutoShow())
+            if (this.AppOptions.AutoShow)
             {
                 this.ShowQuickStrip();
             }
@@ -514,6 +499,7 @@ namespace Morphic.Client
         private void CreateMainMenu()
         {
             mainMenu = (Resources["ContextMenu"] as ContextMenu)!;
+            this.mainMenu.DataContext = this;
             foreach (var item in mainMenu.Items)
             {
                 if (item is MenuItem menuItem)
@@ -653,10 +639,10 @@ namespace Morphic.Client
             OpenTravelWindow();
         }
 
-        private void ApplyMySettings(object sender, RoutedEventArgs e)
+        private void RestoreSettings(object sender, RoutedEventArgs e)
         {
-            Countly.RecordEvent("Login");
-            OpenLoginWindow();
+            Countly.RecordEvent("Restore");
+            this.OpenRestoreWindow();
         }
 
         private void Logout(object sender, RoutedEventArgs e)
@@ -723,27 +709,6 @@ namespace Morphic.Client
             if (sender is MenuItem item)
             {
                 this.ConfigureAutoRun(item.IsChecked);
-            };
-        }
-
-        /// <summary>
-        /// Initia
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void AutoShowInit(object? sender, EventArgs e)
-        {
-            if (sender is MenuItem item)
-            {
-                item.IsChecked = this.ConfigureAutoShow();
-            }
-        }
-
-        private void AutoShowToggle(object sender, RoutedEventArgs e)
-        {
-            if (sender is MenuItem item)
-            {
-                this.ConfigureAutoShow(item.IsChecked);
             };
         }
 
@@ -903,11 +868,12 @@ namespace Morphic.Client
         /// The Configurator window, if visible
         /// </summary>
         private TravelWindow? TravelWindow;
+        private RestoreWindow? RestoreWindow;
 
         /// <summary>
         /// Show the Morphic Configurator window
         /// </summary>
-        internal void OpenTravelWindow()
+        internal async void OpenTravelWindow()
         {
             if (TravelWindow == null)
             {
@@ -917,7 +883,20 @@ namespace Morphic.Client
             }
             TravelWindow.Activate();
         }
-        
+
+        /// <summary>
+        /// Show the Restore backups
+        /// </summary>
+        internal void OpenRestoreWindow()
+        {
+            if (this.RestoreWindow == null)
+            {
+                this.RestoreWindow = this.ServiceProvider.GetRequiredService<RestoreWindow>();
+                this.RestoreWindow.Closed += (sender, args) => this.RestoreWindow = null;
+            }
+            this.RestoreWindow?.Show();
+            this.RestoreWindow?.Activate();
+        }
 
         /// <summary>
         /// Called when the configurator window closes
@@ -960,15 +939,22 @@ namespace Morphic.Client
 
         private LoginWindow? loginWindow;
 
-        public void OpenLoginWindow()
+        public Task<bool> OpenLoginWindow()
         {
+            TaskCompletionSource<bool> taskCompletionSource = new TaskCompletionSource<bool>();
+
             if (loginWindow == null)
             {
                 loginWindow = ServiceProvider.GetRequiredService<LoginWindow>();
                 loginWindow.Show();
-                loginWindow.Closed += OnLoginWindowClosed;
+                loginWindow.Closed += (sender, args) =>
+                {
+                    this.OnLoginWindowClosed(sender, args);
+                    taskCompletionSource.SetResult(true);
+                };
             }
             loginWindow.Activate();
+            return taskCompletionSource.Task;
         }
 
         private void OnLoginWindowClosed(object? sender, EventArgs e)
