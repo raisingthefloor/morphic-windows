@@ -20,12 +20,11 @@ namespace Morphic.Bar.UI.BarControls
     using System.Windows.Input;
     using System.Windows.Media;
     using Bar;
-    using UserControl = System.Windows.Controls.UserControl;
 
     /// <summary>
     /// A bar item control.
     /// </summary>
-    public class BarItemControl : UserControl, INotifyPropertyChanged
+    public class BarItemControl : ContentControl, INotifyPropertyChanged
     {
         private BarItemSize maxItemSize = BarItemSize.Large;
 
@@ -33,7 +32,7 @@ namespace Morphic.Bar.UI.BarControls
         /// Theming info for child controls.
         /// </summary>
         protected Dictionary<Control, ControlThemeState> ControlTheme = new Dictionary<Control, ControlThemeState>();
-                                                    
+
         public BarItemControl() : this(new BarItem())
         {
         }
@@ -152,7 +151,7 @@ namespace Morphic.Bar.UI.BarControls
         /// </summary>
         /// <param name="item"></param>
         /// <returns>The control for the item, the type depends on the item.</returns>
-        public static BarItemControl From(BarItem item)
+        public static BarItemControl FromItem(BarItem item)
         {
             return (Activator.CreateInstance(item.ControlType, item) as BarItemControl)!;
         }
@@ -309,7 +308,6 @@ namespace Morphic.Bar.UI.BarControls
                 .SelectMany(this.GetDrawings)
                 .Concat(drawingGroup.Children.OfType<GeometryDrawing>());
         }
-
 
         #region INotifyPropertyChanged
 

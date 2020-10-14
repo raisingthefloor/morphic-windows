@@ -72,7 +72,7 @@ namespace Morphic.Bar.Bar
                 value ? System.Windows.Controls.Orientation.Horizontal : System.Windows.Controls.Orientation.Vertical;
         }
 
-        public Orientation? Orientation { get; set; }
+        public Orientation Orientation { get; set; } = Orientation.Vertical;
 
         /// <summary>
         /// The horizontal/vertical position of the secondary bar, relative to the primary bar (when above or below it).

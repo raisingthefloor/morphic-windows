@@ -7,7 +7,6 @@ namespace Morphic.Bar.UI
     using Windows.Native;
     using AppBarWindow;
     using Bar;
-    using Microsoft.Win32;
 
     public sealed class PrimaryBarWindow : BarWindow
     {
@@ -61,6 +60,7 @@ namespace Morphic.Bar.UI
 #endif
             this.Closed += this.OnClosed;
             this.Bar = barData;
+            this.Scale = 1;
 
             this.SourceInitialized += (sender, args) =>
             {
@@ -70,14 +70,6 @@ namespace Morphic.Bar.UI
                 SelectionReader.Default.Initialise(nativeWindow.Handle);
                 hwndSource?.AddHook(SelectionReader.Default.WindowProc);
             };
-
-            SystemEvents.DisplaySettingsChanged += this.SystemEventsOnDisplaySettingsChanged;
-            this.Closed += (sender, args) => SystemEvents.DisplaySettingsChanged -= this.SystemEventsOnDisplaySettingsChanged;
-        }
-
-        private void SystemEventsOnDisplaySettingsChanged(object? sender, EventArgs e)
-        {
-            this.SetInitialPosition();
         }
 
         private void OnClosed(object? sender, EventArgs e)
@@ -112,20 +104,22 @@ namespace Morphic.Bar.UI
             }
         }
 
-
         protected override void SetInitialPosition()
         {
-            Size size = this.GetGoodSize();
-            size = this.Rescale(size, true);
-            this.LoadSecondaryBar();
+            base.SetInitialPosition();
+            Size size = new Size(this.Width, this.Height);
+            //size = this.Rescale(size, true);
 
-            this.AppBar.ApplyAppBar(this.Bar.Position.DockEdge);
             if (this.Bar.Position.DockEdge == Edge.None)
             {
                 Rect workArea = SystemParameters.WorkArea;
                 Point pos = this.Bar.Position.Primary.GetPosition(workArea, size);
                 this.Left = pos.X;
                 this.Top = pos.Y;
+            }
+            else
+            {
+                this.AppBar.ApplyAppBar(this.Bar.Position.DockEdge);
             }
         }
 

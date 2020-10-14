@@ -1,0 +1,58 @@
+{
+  scale: 1,
+  overflow: "secondary",
+  position: {
+    docked: null,
+    horizontal: true,
+    x: -1,
+    y: "bottom",
+    secondary: "bottom",
+    expander: "bottom",
+    expanderRelative: "secondary"
+  },
+  xsizes: {
+    windowPadding: "10 15",
+    itemSpacing: 10,
+    itemWidth: 100,
+    buttonTextLines: 2,
+    buttonPadding: "10 0 10 10",
+    buttonImageSize: 0.66,
+    buttonImageOverlap: 0.33,
+    buttonFontSize: 14,
+    buttonFontWeight: "normal",
+    circleBorderWidth: 2,
+    buttonCornerRadius: 10
+  },
+  secondaryBar: {
+    autohide: true,
+    autohideExpander: false
+  },
+  barTheme: {
+    background: "#fff",
+    borderColor: "#000",
+    borderSize: 1,
+  },
+  itemTheme: {
+    color: 'white',
+    background: "#002951",
+    focus: {
+      borderColor: 'yellow',
+      borderOuterColor: 'black',
+      borderSize: 3
+    },
+    hover: {
+    },
+    active: {
+    }
+  },
+  items: [
+    {
+      kind: "action",
+      is_primary: true,
+      configuration: {
+        identifier: "screen-zoom",
+        label: "screen zoom"
+      }
+    }
+  ]
+}

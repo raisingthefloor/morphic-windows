@@ -11,6 +11,7 @@
 namespace Morphic.Bar.UI
 {
     using System;
+    using System.Collections.Generic;
     using System.ComponentModel;
     using System.Linq;
     using System.Runtime.CompilerServices;
@@ -21,6 +22,7 @@ namespace Morphic.Bar.UI
     using AppBarWindow;
     using Bar;
     using BarControls;
+    using Microsoft.Win32;
 
     /// <summary>
     /// The window for the main bar.
@@ -28,7 +30,6 @@ namespace Morphic.Bar.UI
     public partial class BarWindow : Window, INotifyPropertyChanged, IAppBarWindow
     {
         protected internal readonly AppBar AppBar;
-        private BarData bar;
 
         private Thickness? initialResizeBorder;
 
@@ -39,6 +40,20 @@ namespace Morphic.Bar.UI
 
         public virtual bool IsExpanded { get; set; }
         public virtual ExpanderWindow? ExpanderWindow => null;
+
+        private Orientation orientationValue;
+        public virtual Orientation Orientation
+        {
+            get => this.orientationValue;
+            set
+            {
+                this.orientationValue = this.BarControl.Orientation = value;
+                this.OrientationChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        public event EventHandler? OrientationChanged;
+
 
         /// <summary>
         /// The overall scale of the items.
@@ -62,47 +77,28 @@ namespace Morphic.Bar.UI
 
         protected BarWindow(BarData barData)
         {
-            this.bar = barData;
+            bool isPrimary = this is PrimaryBarWindow;
+            this.Bar = barData;
+
+            IEnumerable<BarItem> items = isPrimary ? this.Bar.PrimaryItems : this.Bar.SecondaryItems;
+            this.BarItems = items.ToList();
 
             this.DataContext = this;
 
-            bool isPrimary = this is PrimaryBarWindow;
-            this.WindowMovement = new WindowMovement(this, isPrimary);
+            this.WindowMovement = new WindowMovement(this);
             this.AppBar = new AppBar(this, this.WindowMovement)
             {
-                EnableDocking = isPrimary,
-                FixedSize = this.bar.Overflow != BarOverflow.Wrap
+                EnableDocking = isPrimary
             };
 
             // Move it off the screen until it's loaded.
             this.Left = -0xffff;
 
+            this.orientationValue = this.GetOrientation(this.Bar.Position.DockEdge);
             this.InitializeComponent();
-            App.Current.AddMouseOverWindow(this);
 
-            this.Scale = 1;
-
-            // Set the size and position after the bar is loaded and window is rendered.
-            bool rendered = false;
-            this.ContentRendered += (sender, args) => rendered = true;
-            this.BarControl.BarLoaded += (sender, args) =>
-            {
-                if (rendered)
-                {
-                    this.OnBarLoaded();
-                }
-                else
-                {
-                    this.ContentRendered += (s, a) => this.OnBarLoaded();
-                }
-
-                this.SizeChanged += this.OnSizeChanged;
-            };
-
-            this.AppBar.EdgeChanged += this.AppBarOnEdgeChanged;
-
-            this.Loaded += (sender, args) => this.BarControl.LoadBar(this.Bar, isPrimary);
-
+            this.BarControl.Bar = this.Bar;
+            this.BarControl.IsPrimary = this is PrimaryBarWindow;
             this.BarControl.EndTab += (sender, args) =>
             {
                 if (this.OtherWindow is SecondaryBarWindow)
@@ -112,25 +108,33 @@ namespace Morphic.Bar.UI
                 this.OtherWindow?.Activate();
             };
 
+            //this.Loaded += (sender, args) => this.OnBarLoaded();
+
+            App.Current.AddMouseOverWindow(this);
+
+            this.AppBar.EdgeChanged += this.AppBarOnEdgeChanged;
+
+            SystemEvents.DisplaySettingsChanged += this.SystemEventsOnDisplaySettingsChanged;
+            this.Closed += (sender, args) => SystemEvents.DisplaySettingsChanged -= this.SystemEventsOnDisplaySettingsChanged;
         }
 
-        private void OnSizeChanged(object sender, SizeChangedEventArgs args)
+        protected override void OnContentRendered(EventArgs e)
         {
-            //this.BarControl.Orientation = Orientation.Vertical;
+            base.OnContentRendered(e);
+            this.OnBarLoaded();
+        }
+
+        protected virtual void SystemEventsOnDisplaySettingsChanged(object? sender, EventArgs e)
+        {
+            this.SetInitialPosition();
         }
 
         /// <summary>
         /// The bar for which this bar window is displaying.
         /// </summary>
-        public virtual BarData Bar
-        {
-            get => this.bar;
-            protected set
-            {
-                this.bar = value;
-                this.OnBarChanged();
-            }
-        }
+        public BarData Bar { get; set; }
+
+        public List<BarItem> BarItems { get; set; }
 
         public Edge DockedEdge => this.AppBar.AppBarEdge;
 
@@ -148,13 +152,19 @@ namespace Morphic.Bar.UI
 
         protected virtual void OnBarLoaded()
         {
+            Console.WriteLine($"{this.Width}x{this.Height}");
             this.SetBorder();
-
+            this.SetBorder();
+            this.SetInitialPosition();
             this.SetInitialPosition();
 
             this.BarLoaded?.Invoke(this, new EventArgs());
 
             this.Opacity = 1;
+        }
+
+        private void BarControl_Loaded(object sender, RoutedEventArgs e)
+        {
         }
 
         /// <summary>
@@ -214,6 +224,7 @@ namespace Morphic.Bar.UI
         /// </summary>
         protected virtual void SetInitialPosition()
         {
+            this.SetMaxSize(this.DockedEdge);
         }
 
         /// <summary>
@@ -221,9 +232,11 @@ namespace Morphic.Bar.UI
         /// </summary>
         /// <param name="appBarEdge"></param>
         /// <returns></returns>
-        protected internal virtual Orientation GetBestOrientation(Edge appBarEdge)
+        protected internal Orientation GetOrientation(Edge? appBarEdge = null)
         {
-            Orientation orientation = Orientation.Vertical;
+            Orientation orientation;
+
+            appBarEdge ??= this.AppBar.AppBarEdge;
 
             if (appBarEdge == Edge.Left || appBarEdge == Edge.Right)
             {
@@ -235,25 +248,10 @@ namespace Morphic.Bar.UI
                 // Always horizontal when docked on top or bottom.
                 orientation = Orientation.Horizontal;
             }
-            else if (this.Bar.Position.Orientation != null)
-            {
-                // Use the configured direction
-                orientation = (Orientation) this.Bar.Position.Orientation;
-            }
             else
             {
-                BarPosition.RelativePosition barPosition = this.Bar.Position.Primary;
-                // Guess a direction, if it's touching an edge
-                if (barPosition.X == 0 ||
-                    (barPosition.X.IsRelative && Math.Abs(barPosition.X - 1) < 0.1))
-                {
-                    orientation = Orientation.Vertical;
-                }
-                else if (barPosition.Y == 0 ||
-                         (barPosition.Y.IsRelative && Math.Abs(barPosition.Y - 1) < 0.1))
-                {
-                    orientation = Orientation.Horizontal;
-                }
+                // Use the configured direction
+                orientation = this.Bar.Position.Orientation;
             }
 
             return orientation;
@@ -282,19 +280,6 @@ namespace Morphic.Bar.UI
             chrome.ResizeBorderThickness = this.AppBar.AdjustThickness(resize);
         }
 
-        /// <summary>
-        /// Asks the bar control for a good size.
-        /// This is the equivalent to setting SizeToContent, but is done manually due to the snapping during resize.
-        /// </summary>
-        public Size GetGoodSize()
-        {
-            Orientation orientation = this.GetBestOrientation(this.Bar.Position.DockEdge);
-
-            this.BarControl.IsHorizontal = orientation == Orientation.Horizontal;
-            Size size = this.AppBar.GetGoodSize(new Size(this.ExtraWidth, this.ExtraHeight), orientation);
-            return size;
-        }
-
         public Rect GetRect()
         {
             return new Rect(this.Left, this.Top, this.Width, this.Height);
@@ -311,7 +296,26 @@ namespace Morphic.Bar.UI
 
         private void AppBarOnEdgeChanged(object? sender, EdgeChangedEventArgs e)
         {
+            this.Orientation = this.GetOrientation(e.Edge);
+            this.SetMaxSize(e.Edge);
             this.SetBorder();
+        }
+
+        private void SetMaxSize(Edge edge)
+        {
+            if (edge == Edge.None)
+            {
+                Rect workArea = this.GetWorkArea();
+                this.MaxWidth = workArea.Width;
+                this.MaxHeight = workArea.Height;
+                this.BarControl.MaxWidth = this.MaxWidth - this.ExtraWidth;
+                this.BarControl.MaxHeight = this.MaxHeight - this.ExtraHeight;
+            }
+            else
+            {
+                this.MaxWidth = double.PositiveInfinity;
+                this.MaxHeight = double.PositiveInfinity;
+            }
         }
 
         protected internal void OnBarChanged()
@@ -328,7 +332,7 @@ namespace Morphic.Bar.UI
             }
             else
             {
-                if (this.BarControl.FixedSize)
+                if (this.BarControl.NoWrap)
                 {
                     availableSize.Width -= this.ExtraWidth;
                 }
@@ -369,8 +373,9 @@ namespace Morphic.Bar.UI
             else if (this.Bar.Overflow == BarOverflow.Secondary && this is PrimaryBarWindow primaryBarWindow)
             {
                 this.Bar.PrimaryItems.Last(item => !item.NoOverflow).IsPrimary = false;
-                this.BarControl.ReloadItems();
-                primaryBarWindow.OtherWindow?.BarControl.ReloadItems();
+                // TODO: reload items
+                // this.BarControl.ReloadItems();
+                // primaryBarWindow.OtherWindow?.BarControl.ReloadItems();
             }
 
             return true;

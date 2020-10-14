@@ -20,7 +20,6 @@ namespace Morphic.Bar
     using System.IO;
     using System.Linq;
     using System.Reflection;
-    using System.Text.RegularExpressions;
     using System.Windows.Controls;
     using System.Windows.Forms;
     using System.Windows.Threading;

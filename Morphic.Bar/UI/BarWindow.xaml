@@ -7,9 +7,9 @@
         xmlns:barControls="clr-namespace:Morphic.Bar.UI.BarControls"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance ui:BarWindow, IsDesignTimeCreatable=True}"
-        
+
         Title="{Binding Bar.Title}" Width="100" Height="100"
-        WindowStyle="None" ResizeMode="NoResize" SizeToContent="Manual" Topmost="True" ShowInTaskbar="False"
+        WindowStyle="None" ResizeMode="NoResize" SizeToContent="WidthAndHeight" Topmost="True" ShowInTaskbar="False"
         Background="{DynamicResource Background}"
         BorderBrush="{DynamicResource BorderBrush}"
         BorderThickness="{Binding Bar.BarTheme.BorderSize, FallbackValue=0, Mode=OneWay}"
@@ -25,20 +25,22 @@
         <SolidColorBrush x:Key="Background" Color="{Binding Bar.BarTheme.Background, FallbackValue=White, Mode=OneWay}"/>
         <SolidColorBrush x:Key="BorderBrush" Color="{Binding Bar.BarTheme.BorderColor, FallbackValue=Black, Mode=OneWay}"/>
     </Window.Resources>
-    
+
     <!-- Remove the white bar at the top -->
     <WindowChrome.WindowChrome>
-        <WindowChrome CaptionHeight="0" ResizeBorderThickness="3"></WindowChrome>
+        <WindowChrome CaptionHeight="0" ResizeBorderThickness="3" />
     </WindowChrome.WindowChrome>
 
     <ui:BarControl x:Name="BarControl"
+                   ItemsSource="{Binding BarItems}"
                    ItemWidth="{Binding Bar.Sizes.ItemWidth}"
+                   Orientation="{Binding Orientation}"
                    HorizontalAlignment="Left" VerticalAlignment="Top"
                    Margin="{Binding Bar.Sizes.WindowPadding}"
                    ItemSpacing="{Binding Bar.Sizes.ItemSpacing}"
+                   Loaded="BarControl_Loaded"
                    PreviewKeyDown="BarWindow_OnPreviewKeyDown"
-                   FocusManager.IsFocusScope="True"
-    >
+                   FocusManager.IsFocusScope="True">
         <ui:BarControl.Resources>
             <ui:Ternary x:Key="NullCollapsed" False="Collapsed" True="Visible" />
 

@@ -27,17 +27,22 @@ namespace Morphic.Bar.UI
     public class BarControl : WrapPanel, INotifyPropertyChanged
     {
         public static readonly DependencyProperty ItemSpacingProperty = DependencyProperty.Register("ItemSpacing", typeof(double), typeof(BarControl), new PropertyMetadata(default(double)));
+        public new static readonly DependencyProperty ItemWidthProperty = DependencyProperty.Register("ItemWidth", typeof(double), typeof(BarControl), new PropertyMetadata(default(double)));
+        public new static readonly DependencyProperty ItemHeightProperty = DependencyProperty.Register("ItemHeight", typeof(double), typeof(BarControl), new PropertyMetadata(default(double)));
+        public static readonly DependencyProperty ItemsSourceProperty = DependencyProperty.Register("ItemsSource", typeof(List<BarItem>), typeof(BarControl), new PropertyMetadata(default(List<BarItem>)));
 
         public BarControl()
         {
             this.Bar = new BarData();
         }
 
-        public BarData Bar { get; private set; }
+        public BarData Bar { get; set; }
         public bool IsPrimary { get; set; }
 
-        public bool FixedSize => this.IsPrimary && this.Bar.Overflow != BarOverflow.Wrap;
-        public bool IsHorizontal { get; set; }
+        /// <summary>
+        /// Disable wrapping of the child controls.
+        /// </summary>
+        public bool NoWrap => this.IsPrimary && this.Bar.Overflow != BarOverflow.Wrap;
 
         public double Scale { get; set; }
 
@@ -55,8 +60,13 @@ namespace Morphic.Bar.UI
             set => this.SetValue(ItemSpacingProperty, value);
         }
 
+        public List<BarItem> ItemsSource
+        {
+            get => (List<BarItem>)this.GetValue(ItemsSourceProperty);
+            set => this.SetValue(ItemsSourceProperty, value);
+        }
+
         public event PropertyChangedEventHandler? PropertyChanged;
-        public event EventHandler? BarLoaded;
 
         /// <summary>
         /// Raised when tabbing through items has gone beyond the last item.
@@ -67,12 +77,28 @@ namespace Morphic.Bar.UI
         {
             return this.GetChildSize(child.DesiredSize);
         }
+
         private Size GetChildSize(Size desiredSize)
         {
             return new Size(
                 double.IsNaN(this.ItemWidth) ? desiredSize.Width : this.ItemWidth,
                 double.IsNaN(this.ItemHeight) ? desiredSize.Height : this.ItemHeight
             );
+        }
+
+        /// <summary>
+        /// Create the controls for the items.
+        /// </summary>
+        protected override UIElementCollection CreateUIElementCollection(FrameworkElement logicalParent)
+        {
+            UIElementCollection uiElementCollection = base.CreateUIElementCollection(logicalParent);
+            foreach (BarItem item in this.ItemsSource)
+            {
+                uiElementCollection.Add(this.CreateItem(item));
+            }
+
+            uiElementCollection.Add(this.CreateEndTabControl());
+            return uiElementCollection;
         }
 
         protected override Size MeasureOverride(Size constraint)
@@ -86,7 +112,8 @@ namespace Morphic.Bar.UI
         }
 
         /// <summary>
-        /// Measure or arrange the child items.
+        /// Measure or arrange the child items - slightly different to the default implementation, where it allows
+        /// wrapping to be turned off.
         /// </summary>
         /// <param name="finalSize">The suggested size.</param>
         /// <param name="measure">true to only measure, otherwise arrange then items.</param>
@@ -102,9 +129,7 @@ namespace Morphic.Bar.UI
             CorrectedCoords size = new CorrectedCoords(finalSize, orientation);
             CorrectedCoords actualSize = new CorrectedCoords(0, 0, orientation);
 
-            CorrectedCoords itemSize = new CorrectedCoords(this.ItemWidth, this.ItemHeight, orientation);
-
-            List<BarItemControl> children = this.Children.OfType<BarItemControl>().Where(c => c != null).ToList();
+            List<BarItemControl> children = this.InternalChildren.OfType<BarItemControl>().Where(c => c != null).ToList();
             if (!children.Any())
             {
                 return finalSize;
@@ -128,14 +153,17 @@ namespace Morphic.Bar.UI
             {
                 CorrectedCoords childSize = new CorrectedCoords(this.GetChildSize(child), orientation);
 
-                if (!this.FixedSize && pos.X + childSize.Width >= size.Width)
+                if (pos.X + childSize.Width >= size.Width)
                 {
-                    // new row
-                    firstItem = true;
-                    pos.X = 0;
-                    pos.Y += rowHeight + this.ItemSpacing;
+                    if (!this.NoWrap)
+                    {
+                        // new row
+                        firstItem = true;
+                        pos.X = 0;
+                        pos.Y += rowHeight + this.ItemSpacing;
 
-                    rowHeight = 0;
+                        rowHeight = 0;
+                    }
                 }
 
                 if (!firstItem)
@@ -164,62 +192,11 @@ namespace Morphic.Bar.UI
 
         public Size GetSize(Size size, Orientation? orientationOverride = null)
         {
-            Size newSize = this.MeasureArrange(size, true, orientationOverride);
+            Size newSize = this.MeasureOverride(size);
+            // this.MeasureArrange(size, true, orientationOverride);
             newSize.Width *= this.Scale;
             newSize.Height *= this.Scale;
             return newSize;
-        }
-
-        protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
-        {
-            if (this.FixedSize)
-            {
-                this.Orientation = sizeInfo.NewSize.Width > sizeInfo.NewSize.Height
-                    ? Orientation.Horizontal
-                    : Orientation.Vertical;
-            }
-            else
-            {
-                this.Orientation = Orientation.Vertical;
-            }
-            base.OnRenderSizeChanged(sizeInfo);
-        }
-
-        public void LoadBar(BarData bar, bool isPrimary)
-        {
-            this.IsPrimary = isPrimary;
-            this.RemoveItems();
-            this.Bar = bar;
-            
-            this.LayoutTransform = new ScaleTransform(this.Scale, this.Scale);
-            
-            this.AddItems(isPrimary ? this.Bar.PrimaryItems : this.Bar.SecondaryItems);
-            this.OnBarLoaded();
-        }
-
-        public void ReloadItems()
-        {
-            this.RemoveItems();
-            this.AddItems(this.IsPrimary ? this.Bar.PrimaryItems : this.Bar.SecondaryItems);
-        }
-
-        public void RemoveItems()
-        {
-            this.Children.Clear();
-        }
-
-        /// <summary>
-        /// Load some items.
-        /// </summary>
-        /// <param name="items"></param>
-        public void AddItems(IEnumerable<BarItem> items)
-        {
-            foreach (BarItem item in items)
-            {
-                this.AddItem(item);
-            }
-
-            this.AddEndTabControl();
         }
 
         /// <summary>
@@ -227,23 +204,17 @@ namespace Morphic.Bar.UI
         /// </summary>
         /// <param name="item"></param>
         /// <returns>The bar item control.</returns>
-        public BarItemControl AddItem(BarItem item)
+        public BarItemControl CreateItem(BarItem item)
         {
-            BarItemControl control = BarItemControl.From(item);
+            BarItemControl control = BarItemControl.FromItem(item);
             control.Style = new Style(control.GetType(), this.Resources["BarItemStyle"] as Style);
-            this.Children.Add(control);
             return control;
-        }
-
-        protected virtual void OnBarLoaded()
-        {
-            this.BarLoaded?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
         /// Add a secret control as the last item. This is to move focus to the other bar.
         /// </summary>
-        private void AddEndTabControl()
+        private Control CreateEndTabControl()
         {
             Button tb = new Button()
             {
@@ -261,7 +232,7 @@ namespace Morphic.Bar.UI
                 this.OnEndTab();
             };
 
-            this.Children.Add(tb);
+            return tb;
         }
 
         protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
@@ -275,6 +246,11 @@ namespace Morphic.Bar.UI
         }
     }
 
+    /// <summary>
+    /// A wrapper for <see cref="Size"/> or <see cref="Point"/>, where the coordinated get swapped depending on an
+    /// orientation. This simplifies the positioning algorithms, so they do not need to be concerned about the
+    /// orientation.
+    /// </summary>
     public struct CorrectedCoords
     {
         public readonly Orientation Orientation;
@@ -333,12 +309,5 @@ namespace Morphic.Bar.UI
             get => this.Y;
             set => this.Y = value;
         }
-
-        public double CorrectedWidth => this.swap ? this.Height : this.Width;
-        public double CorrectedHeight => this.swap ? this.Width : this.Height;
-        public double CorrectedX => this.swap ? this.Y : this.X;
-        public double CorrectedY => this.swap ? this.X : this.Y;
     }
-
-
 }

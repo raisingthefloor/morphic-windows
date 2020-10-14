@@ -1,7 +1,6 @@
 namespace Morphic.Bar.UI
 {
     using System;
-    using System.Collections.Generic;
     using System.Windows;
     using System.Windows.Automation;
     using System.Windows.Controls;
@@ -18,9 +17,8 @@ namespace Morphic.Bar.UI
             set => this.primaryBarWindow.IsExpanded = value;
         }
 
-        public override BarData Bar => this.primaryBarWindow?.Bar ?? base.Bar;
         public override ExpanderWindow? ExpanderWindow => this.primaryBarWindow.ExpanderWindow;
-        public override BarWindow? OtherWindow => this.primaryBarWindow;
+        public override BarWindow OtherWindow => this.primaryBarWindow;
 
         /// <summary>
         /// The edge of the primary bar window where this window is attached to.
@@ -44,6 +42,8 @@ namespace Morphic.Bar.UI
             this.primaryBarWindow.ContentRendered += (sender, args) => this.UpdatePosition();
             this.primaryBarWindow.LocationChanged += (sender, args) => this.UpdatePosition();
             this.primaryBarWindow.SizeChanged += (sender, args) => this.UpdatePosition();
+            this.primaryBarWindow.OrientationChanged +=
+                (sender, args) => this.Orientation = this.primaryBarWindow.Orientation;
 
             App.Current.Deactivated += (sender, args) =>
             {
@@ -70,28 +70,19 @@ namespace Morphic.Bar.UI
         public void UpdatePosition()
         {
             if (!this.IsLoaded) return;
+            Rect workArea = this.GetWorkArea();
+            this.MaxWidth = workArea.Width;
+            this.MaxHeight = workArea.Height;
             this.Visibility = this.IsExpanded ? Visibility.Visible : Visibility.Hidden;
-            Size size = this.GetGoodSize();
-            this.Height = size.Height;
-            this.Width = size.Width;
 
             // If docked, attach to the other side. 
             Edge edge = this.primaryBarWindow.DockedEdge.Opposite();
             bool docked = edge != Edge.None;
 
-            Rect workArea = this.GetWorkArea();
-
             if (!docked)
             {
-                Orientation orientation = this.primaryBarWindow.Width > this.primaryBarWindow.Height
-                    ? Orientation.Horizontal
-                    : Orientation.Vertical;
-
                 // Prefer attaching to where there is most room
-                edge = orientation == Orientation.Horizontal
-                    ? Edge.Top
-                    : Edge.Right;
-                if (orientation == Orientation.Horizontal)
+                if (this.primaryBarWindow.Orientation == Orientation.Horizontal)
                 {
                     edge = this.primaryBarWindow.Top - workArea.Top >
                            workArea.Bottom - (this.primaryBarWindow.Top + this.primaryBarWindow.Height)
@@ -107,28 +98,8 @@ namespace Morphic.Bar.UI
                 }
             }
 
-            // Edges, in order of preference.
-            List<Edge> preferred = new List<Edge>();
-            preferred.Add(edge);
-            preferred.Add(edge.Opposite());
-            Edge other = edge.IsHorizontal() ? Edge.Right : Edge.Top;
-            preferred.Add(other);
-            preferred.Add(other.Opposite());
-            
-            // Find the first edge that the bar can fit on.
-            Point pos = this.GetPosition(edge, workArea);
-            foreach (Edge e in preferred)
-            {
-                Rect rc = new Rect(this.GetPosition(e, workArea), new Size(this.Width, this.Height));
-                if (workArea.Contains(rc))
-                {
-                    edge = e;
-                    pos = rc.Location;
-                    break;
-                }
-            }
-
             this.AttachedEdge = edge;
+            Point pos = this.GetPosition(edge, workArea);
             this.Left = pos.X;
             this.Top = pos.Y;
         }
@@ -201,13 +172,6 @@ namespace Morphic.Bar.UI
             }
 
             return rect.Location;
-        }
-
-        protected internal override Orientation GetBestOrientation(Edge appBarEdge)
-        {
-            return this.primaryBarWindow.Width > this.primaryBarWindow.Height
-                ? Orientation.Horizontal
-                : Orientation.Vertical;
         }
     }
 }
