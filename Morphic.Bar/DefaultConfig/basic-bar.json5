@@ -51,8 +51,61 @@
       is_primary: true,
       configuration: {
         identifier: "screen-zoom",
-        label: "screen zoom"
+        label: "Text Size"
       }
-    }
+    },
+    {
+      kind: "action",
+      is_primary: true,
+      configuration: {
+        identifier: "magnify",
+        label: "Magnifier"
+      }
+    },
+    {
+      kind: "internal",
+      widget: "multi",
+      is_primary: true,
+      configuration: {
+        function: "screenshot",
+        label: "Snip",
+        buttons: {
+          copy: {
+            label: "Copy"
+          }
+        }
+      }
+    },
+    {
+      kind: "action",
+      is_primary: true,
+      configuration: {
+        identifier: "read-aloud",
+        label: "Read Selected"
+      }
+    },
+    {
+      kind: "internal",
+      widget: "multi",
+      is_primary: true,
+      configuration: {
+        function: "contrastColor",
+        label: "Read Selected",
+        buttons: {
+          contrast: {
+            label: "Contrast",
+          },
+          color: {
+            label: "Color",
+          },
+          dark: {
+            label: "Dark",
+          },
+          night: {
+            label: "Night",
+          },
+        }
+      }
+    },
   ]
 }
