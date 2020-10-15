@@ -608,7 +608,7 @@ namespace Morphic.Client
         private void Logout(object sender, RoutedEventArgs e)
         {
             CountlyBase.RecordEvent("Logout");
-            _ = this.MorphicSession.Signout();
+            _ = this.MorphicSession.SignOut();
         }
 
         private void About(object sender, RoutedEventArgs e)
