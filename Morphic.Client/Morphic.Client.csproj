@@ -32,6 +32,13 @@
     <None Remove="Solutions\jaws2020.solutions.json" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+    <!-- copy the feature files for debug sessions, so one can be specified via MORPHIC_FEATURES -->
+    <None Update="Properties\features.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
   <ItemGroup>
     <Content Include="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

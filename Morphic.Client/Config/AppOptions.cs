@@ -17,35 +17,15 @@
     {
         public static AppOptions Current { get; } = new AppOptions();
 
-        public static InvocationOptions InvocationOptions => AppOptions.Current.Invocation;
+        public static LaunchOptions LaunchOptions => AppOptions.Current.Launch;
 
-        public InvocationOptions Invocation { get; } = InvocationOptions.Get();
+        public LaunchOptions Launch { get; } = LaunchOptions.Get();
 
         private Dictionary<string, object> cache = new Dictionary<string, object>();
 
         protected AppOptions()
         {
-            // Detect if this is the first instance since installation.
-
-            // ReSharper disable ExplicitCallerInfoArgument
-            // ReSharper disable VirtualMemberCallInConstructor
-            string lastVersion = this.GetValue(string.Empty, "version");
-            if (lastVersion != BuildInfo.Current.Version)
-            {
-                this.FirstRun = true;
-                this.FirstRunUpgrade = !string.IsNullOrEmpty(lastVersion);
-
-                // Let the next instance know the version of its previous instance (this one).
-                this.SetValue(BuildInfo.Current.Version, "version");
-            }
-            // ReSharper restore VirtualMemberCallInConstructor
         }
-
-        /// <summary>true if this is the first run after an upgrade installation.</summary>
-        public bool FirstRunUpgrade { get; set; }
-
-        /// <summary>true if this is the first run after installation.</summary>
-        public bool FirstRun { get; set; }
 
         /// <summary>
         /// Prevents the help pop-ups from appearing.
@@ -85,6 +65,60 @@
                 return value.Length == 0 ? null : value;
             }
             set => this.SetValue(value ?? string.Empty);
+        }
+
+        public bool? firstRun;
+        public bool? firstRunUpgrade;
+
+        /// <summary>true if this is the first run after an upgrade installation.</summary>
+        public bool FirstRunUpgrade
+        {
+            get
+            {
+                if (this.firstRunUpgrade == null)
+                {
+                    this.CheckFirstRun();
+                }
+
+                return this.firstRunUpgrade == true;
+            }
+        }
+
+        /// <summary>true if this is the first run after installation.</summary>
+        public bool FirstRun
+        {
+            get
+            {
+                if (this.firstRun == null)
+                {
+                    this.CheckFirstRun();
+                }
+
+                return this.firstRun == true;
+            }
+        }
+
+        /// <summary>Check if this instance is the first since installation.</summary>
+        private void CheckFirstRun()
+        {
+            if (this.firstRun == null)
+            {
+                // ReSharper disable ExplicitCallerInfoArgument
+                string lastVersion = this.GetValue(string.Empty, "version");
+                if (lastVersion == BuildInfo.Current.Version)
+                {
+                    this.firstRun = this.firstRunUpgrade = false;
+                }
+                else
+                {
+                    this.firstRun = true;
+                    this.firstRunUpgrade = !string.IsNullOrEmpty(lastVersion);
+
+                    // Let the next instance know the version of its previous instance (this one).
+                    this.SetValue(BuildInfo.Current.Version, "version");
+                }
+                // ReSharper restore VirtualMemberCallInConstructor
+            }
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -151,16 +185,16 @@
     }
 
     /// <summary>
-    /// Options set during the process invocation - via the command-line or environment variables.
+    /// Options set during the process launch - via the command-line or environment variables.
     ///
     /// The name of the option is specified in the [Option] attribute. For environment variables, "MORPHIC_" is
     /// prefixed to the name. For duplicate definitions, the command-line takes over the environment.
     /// </summary>
-    public class InvocationOptions
+    public class LaunchOptions
     {
         private const string EnvironmentPrefix = "MORPHIC_";
 
-        protected InvocationOptions()
+        protected LaunchOptions()
         {
             IDictionary envObjects = Environment.GetEnvironmentVariables();
             Dictionary<string, string> env = new Dictionary<string, string>(envObjects.Count);
@@ -200,14 +234,14 @@
             }
         }
 
-        public static InvocationOptions Get()
+        public static LaunchOptions Get()
         {
-            InvocationOptions? result = null;
+            LaunchOptions? result = null;
             Parser.Default
-                .ParseArguments(() => new InvocationOptions(), Environment.GetCommandLineArgs())
+                .ParseArguments(() => new LaunchOptions(), Environment.GetCommandLineArgs())
                 .WithParsed(o => result = o);
 
-            return result ?? new InvocationOptions();
+            return result ?? new LaunchOptions();
         }
 
         /// <summary>

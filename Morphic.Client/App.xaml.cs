@@ -99,7 +99,6 @@ namespace Morphic.Client
         public DialogManager Dialogs { get; } = new DialogManager();
         public BarManager BarManager { get; } = new BarManager();
 
-
         public const string ApplicationId = "A6E8092B-51F4-4CAA-A874-A791152B5698";
 
         #region Configuration & Startup
@@ -118,7 +117,7 @@ namespace Morphic.Client
             ConfigurationBuilder builder = new ConfigurationBuilder();
             builder.SetBasePath(Directory.GetCurrentDirectory());
             builder.AddJsonFile("appsettings.json", optional: false);
-            if (this.AppOptions.Invocation.Debug)
+            if (this.AppOptions.Launch.Debug)
             {
                 builder.AddJsonFile("appsettings.Debug.json", optional: true);
                 builder.AddJsonFile("appsettings.Local.json", optional: true);

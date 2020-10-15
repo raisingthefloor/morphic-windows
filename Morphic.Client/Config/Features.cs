@@ -12,7 +12,7 @@
     public class Features
     {
         private readonly string featureFile =
-            AppOptions.Current.Invocation.FeaturesFile ?? AppPaths.GetAppFile("features");
+            AppOptions.Current.Launch.FeaturesFile ?? AppPaths.GetAppFile("features");
 
         public Features()
         {
