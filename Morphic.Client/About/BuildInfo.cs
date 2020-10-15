@@ -7,22 +7,13 @@ namespace Morphic.Client.About
 {
     public class BuildInfo
     {
+        public static BuildInfo Current { get; } = BuildInfo.FromJsonFile("build-info.json");
 
-        public string Version
-        {
-            get
-            {
-                return Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "unknown version";
-            }
-        }
+        public string Version => Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "unknown version";
 
-        public string InformationalVersion
-        {
-            get
-            {
-                return Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "unknown version";
-            }
-        }
+        public string InformationalVersion =>
+            Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+                .InformationalVersion ?? "unknown version";
 
         [JsonPropertyName("buildTime")]
         public string BuildTime { get; set; } = null!;
@@ -30,6 +21,10 @@ namespace Morphic.Client.About
         [JsonPropertyName("commit")]
         public string Commit { get; set; } = null!;
 
+        protected BuildInfo()
+        {
+        }
+        
         public static BuildInfo FromJsonFile(string path)
         {
             var json = File.ReadAllText(path);

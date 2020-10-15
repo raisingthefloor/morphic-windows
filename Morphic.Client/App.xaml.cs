@@ -57,6 +57,7 @@ namespace Morphic.Client
 {
     using System.Diagnostics;
     using System.Windows.Controls.Primitives;
+    using CountlySDK.CountlyCommon;
     using Microsoft.Win32;
 
     public class AppMain
@@ -65,19 +66,17 @@ namespace Morphic.Client
         public static void Main()
         {
             // Writing our own Main function so we can use a mutex to enforce only one running instance of Morphic at a time
-            using (Mutex mutex = new Mutex(false, App.ApplicationId))
+            using Mutex mutex = new Mutex(false, App.ApplicationId);
+            if (!mutex.WaitOne(0, false))
             {
-                if (!mutex.WaitOne(0, false))
-                {
-                    TrayButton.SendActivate();
-                    return;
-                }
-
-                // Ensure the current directory is the same as the executable, so relative paths work.
-                Directory.SetCurrentDirectory(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
-
-                App.Main();
+                TrayButton.SendActivate();
+                return;
             }
+
+            // Ensure the current directory is the same as the executable, so relative paths work.
+            Directory.SetCurrentDirectory(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
+
+            App.Main();
         }
     }
 
@@ -86,18 +85,19 @@ namespace Morphic.Client
     /// </summary>
     public partial class App : Application
     {
+        /// <summary>Current application instance.</summary>
         public new static App Current { get; private set; } = null!;
+
         public IServiceProvider ServiceProvider { get; private set; } = null!;
         public IConfiguration Configuration { get; private set; } = null!;
-        public Session Session { get; private set; } = null!;
         public ILogger<App> Logger { get; private set; } = null!;
-        public AppOptions AppOptions { get; set; } = null!;
+
+        public Session Session { get; private set; } = null!;
+        public AppOptions AppOptions => AppOptions.Current;
 
         public const string ApplicationId = "A6E8092B-51F4-4CAA-A874-A791152B5698";
 
         #region Configuration & Startup
-
-        public readonly string ApplicationDataFolderPath = Path.Combine(new string[] { Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MorphicLite" });
 
         public App()
         {
@@ -110,16 +110,13 @@ namespace Morphic.Client
         /// <returns></returns>
         private IConfiguration GetConfiguration()
         {
-            var builder = new ConfigurationBuilder();
+            ConfigurationBuilder builder = new ConfigurationBuilder();
             builder.SetBasePath(Directory.GetCurrentDirectory());
             builder.AddJsonFile("appsettings.json", optional: false);
-            if (Environment.GetEnvironmentVariable("MORPHIC_DEBUG") is string debug)
+            if (this.AppOptions.Invocation.Debug)
             {
-                if (debug == "True")
-                {
-                    builder.AddJsonFile($"appsettings.Debug.json", optional: true);
-                    builder.AddJsonFile($"appsettings.Local.json", optional: true);
-                }
+                builder.AddJsonFile("appsettings.Debug.json", optional: true);
+                builder.AddJsonFile("appsettings.Local.json", optional: true);
             }
             builder.AddEnvironmentVariables();
             return builder.Build();
@@ -131,14 +128,14 @@ namespace Morphic.Client
         /// <param name="services"></param>
         private void ConfigureServices(IServiceCollection services)
         {
-            services.AddLogging(ConfigureLogging);
-            services.Configure<SessionOptions>(Configuration.GetSection("MorphicService"));
-            services.Configure<UpdateOptions>(Configuration.GetSection("Update"));
+            services.AddLogging(this.ConfigureLogging);
+            services.Configure<SessionOptions>(this.Configuration.GetSection("MorphicService"));
+            services.Configure<UpdateOptions>(this.Configuration.GetSection("Update"));
             services.AddSingleton<IServiceCollection>(services);
             services.AddSingleton<IServiceProvider>(provider => provider);
             services.AddSingleton<SessionOptions>(serviceProvider => serviceProvider.GetRequiredService<IOptions<SessionOptions>>().Value);
-            services.AddSingleton(new StorageOptions { RootPath = Path.Combine(ApplicationDataFolderPath, "Data") });
-            services.AddSingleton(new KeychainOptions { Path = Path.Combine(ApplicationDataFolderPath, "keychain") });
+            services.AddSingleton(new StorageOptions { RootPath = AppPaths.GetConfigDir("Data") });
+            services.AddSingleton(new KeychainOptions { Path = AppPaths.GetConfigDir("keychain") });
             services.AddSingleton<UpdateOptions>(serviceProvider => serviceProvider.GetRequiredService<IOptions<UpdateOptions>>().Value);
             services.AddSingleton<IDataProtection, DataProtector>();
             services.AddSingleton<IUserSettings, WindowsUserSettings>();
@@ -151,7 +148,6 @@ namespace Morphic.Client
             services.AddSingleton<Keychain>();
             services.AddSingleton<Storage>();
             services.AddSingleton<Session>();
-            services.AddSingleton<BuildInfo>(BuildInfo.FromJsonFile("build-info.json"));
             services.AddTransient<TravelWindow>();
             services.AddTransient<CreateAccountPanel>();
             services.AddTransient<CapturePanel>();
@@ -165,25 +161,25 @@ namespace Morphic.Client
             services.AddTransient<ApplyPanel>();
             services.AddTransient<RestoreWindow>();
             services.AddSingleton<Backups>();
-            services.AddSingleton<AppOptions>();
-            services.AddMorphicSettingsHandlers(ConfigureSettingsHandlers);
+            services.AddMorphicSettingsHandlers(this.ConfigureSettingsHandlers);
         }
 
         private void ConfigureCountly()
         {
-            var section = Configuration.GetSection("Countly");
-            CountlyConfig cc = new CountlyConfig();
-            cc.appKey = section["AppKey"];
-            cc.serverUrl = section["ServerUrl"];
-            var buildInfo = ServiceProvider.GetRequiredService<BuildInfo>();
-
-            cc.appVersion = buildInfo.InformationalVersion;
+            // TODO: Move metrics related things to own class.
+            IConfigurationSection? section = this.Configuration.GetSection("Countly");
+            CountlyConfig cc = new CountlyConfig
+            {
+                appKey = section["AppKey"],
+                serverUrl = section["ServerUrl"],
+                appVersion = BuildInfo.Current.InformationalVersion
+            };
 
             Countly.Instance.Init(cc);
             Countly.Instance.SessionBegin();
-            Countly.IsLoggingEnabled = true;
+            CountlyBase.IsLoggingEnabled = true;
         }
-        
+
         private void RecordedException(Task task)
         {
             if (task.Exception is Exception e)
@@ -196,8 +192,9 @@ namespace Morphic.Client
 
         void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
         {
+            // TODO: Improve error logging/reporting.
             Exception ex = e.Exception;
-            MessageBox.Show($"Morphic ran into a problem:\n\n{e.Exception.Message}\n\nFurther information:\n{e.Exception.ToString()}", "Morphic", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show($"Morphic ran into a problem:\n\n{e.Exception.Message}\n\nFurther information:\n{e.Exception}", "Morphic", MessageBoxButton.OK, MessageBoxImage.Warning);
             Console.WriteLine(ex);
 
             try
@@ -206,8 +203,8 @@ namespace Morphic.Client
                 this.Logger.LogError(ex.StackTrace);
 
                 Dictionary<String, String> extraData = new Dictionary<string, string>();
-                Countly.RecordException(ex.Message, ex.StackTrace, extraData, true)
-                    .ContinueWith(RecordedException, TaskScheduler.FromCurrentSynchronizationContext());
+                CountlyBase.RecordException(ex.Message, ex.StackTrace, extraData, true)
+                    .ContinueWith(this.RecordedException, TaskScheduler.FromCurrentSynchronizationContext());
             }
             catch (Exception)
             {
@@ -224,7 +221,7 @@ namespace Morphic.Client
         /// <param name="logging"></param>
         private void ConfigureLogging(ILoggingBuilder logging)
         {
-            logging.AddConfiguration(Configuration);
+            logging.AddConfiguration(this.Configuration);
             logging.SetMinimumLevel(LogLevel.Debug);
             logging.AddDebug();
         }
@@ -237,50 +234,31 @@ namespace Morphic.Client
         {
             this.Dispatcher.UnhandledException += this.App_DispatcherUnhandledException;
 
-            Configuration = GetConfiguration();
-            var collection = new ServiceCollection();
-            ConfigureServices(collection);
-            ServiceProvider = collection.BuildServiceProvider();
-
-            this.AppOptions = this.ServiceProvider.GetRequiredService<AppOptions>();
-
-
-            // Determine if this is the first instance since installation, by checking the last version written to the
-            // registry.
-            using RegistryKey morphicKey = Registry.CurrentUser.CreateSubKey(@"Software\Raising the Floor\Morphic")!;
-            string? lastVersion = morphicKey.GetValue("version", string.Empty) as string;
-            BuildInfo buildInfo = this.ServiceProvider.GetRequiredService<BuildInfo>();
-
-            if (lastVersion != buildInfo.Version)
-            {
-                this.FirstRun = true;
-                this.FirstRunUpgrade = lastVersion != null;
-                // Let the next instance know the version of its previous instance (this one).
-                morphicKey.SetValue("version", buildInfo.Version);
-            }
+            this.Configuration = this.GetConfiguration();
+            ServiceCollection collection = new ServiceCollection();
+            this.ConfigureServices(collection);
+            this.ServiceProvider = collection.BuildServiceProvider();
 
             base.OnStartup(e);
-            this.Logger = ServiceProvider.GetRequiredService<ILogger<App>>();
-            Session = ServiceProvider.GetRequiredService<Session>();
-            Session.UserChanged += Session_UserChanged;
+            this.Logger = this.ServiceProvider.GetRequiredService<ILogger<App>>();
+            this.Session = this.ServiceProvider.GetRequiredService<Session>();
+            this.Session.UserChanged += this.Session_UserChanged;
             this.Logger.LogInformation("App Started");
-            this.Logger.LogInformation("Creating Tray Icon");
-            CreateMainMenu();
-            RegisterGlobalHotKeys();
-            RegisterGlobalHotKeys();
-            ConfigureCountly();
-            StartCheckingForUpdates();
+
+            this.CreateMainMenu();
+            this.RegisterGlobalHotKeys();
+            this.ConfigureCountly();
+            this.StartCheckingForUpdates();
 
             this.AddSettingsListener();
 
-            var task = OpenSession();
-            task.ContinueWith(SessionOpened, TaskScheduler.FromCurrentSynchronizationContext());
+            Task task = this.OpenSession();
+            task.ContinueWith(this.SessionOpened, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
         /// <summary>
         /// Makes the application automatically start at login.
         /// </summary>
-        /// <param name="itemIsChecked"></param>
         private bool ConfigureAutoRun(bool? newValue = null)
         {
             bool enabled;
@@ -361,28 +339,13 @@ namespace Morphic.Client
             }
         }
 
-        /// <summary>
-        /// true if this instance is the first since installation.
-        /// </summary>
-        public bool FirstRun { get; set; }
-
-        /// <summary>
-        /// true if FirstRun, and the installation was an upgrade.
-        /// </summary>
-        public bool FirstRunUpgrade { get; set; }
-
         private void Session_UserChanged(object? sender, EventArgs e)
         {
-            if (logoutItem != null)
+            if (this.logoutItem != null)
             {
-                if (Session.User == null)
-                {
-                    logoutItem.Visibility = Visibility.Collapsed;
-                }
-                else
-                {
-                    logoutItem.Visibility = Visibility.Visible;
-                }
+                this.logoutItem.Visibility = this.Session.User == null
+                    ? Visibility.Collapsed
+                    : Visibility.Visible;
             }
         }
 
@@ -390,7 +353,7 @@ namespace Morphic.Client
         {
             HotkeyManager.Current.AddOrReplace("Login with Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift, (sender, e) =>
             {
-                OpenLoginWindow();
+                this.OpenLoginWindow();
             });
             HotkeyManager.Current.AddOrReplace("Show Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift | ModifierKeys.Alt, (sender, e) =>
             {
@@ -400,34 +363,34 @@ namespace Morphic.Client
 
         private async Task OpenSession()
         {
-            await CopyDefaultPreferences();
-            await Session.SettingsManager.Populate(Path.Combine("Solutions", "windows.solutions.json"));
-            await Session.SettingsManager.Populate(Path.Combine("Solutions", "jaws2020.solutions.json"));
-            await Session.Open();
+            await this.CopyDefaultPreferences();
+            await this.Session.SettingsManager.Populate(Path.Combine("Solutions", "windows.solutions.json"));
+            await this.Session.SettingsManager.Populate(Path.Combine("Solutions", "jaws2020.solutions.json"));
+            await this.Session.Open();
         }
 
         private async Task CopyDefaultPreferences()
         {
-            if ((this.FirstRun && !this.FirstRunUpgrade) || !Session.Storage.Exists<Preferences>("__default__"))
+            if ((this.AppOptions.FirstRun && !this.AppOptions.FirstRunUpgrade)
+                || !this.Session.Storage.Exists<Preferences>("__default__"))
             {
                 this.Logger.LogInformation("Saving default preferences");
-                var prefs = new Preferences();
-                prefs.Id = "__default__";
+                Preferences prefs = new Preferences { Id = "__default__" };
                 try
                 {
-                    using (var stream = File.OpenRead("DefaultPreferences.json"))
-                    {
-                        var options = new JsonSerializerOptions();
-                        options.Converters.Add(new JsonElementInferredTypeConverter());
-                        prefs.Default = await JsonSerializer.DeserializeAsync<Dictionary<string, SolutionPreferences>>(stream, options);
-                    }
+                    await using FileStream? stream = File.OpenRead("DefaultPreferences.json");
+                    JsonSerializerOptions options = new JsonSerializerOptions();
+                    options.Converters.Add(new JsonElementInferredTypeConverter());
+                    prefs.Default =
+                        await JsonSerializer.DeserializeAsync<Dictionary<string, SolutionPreferences>>(stream, options);
                 }
                 catch (Exception e)
                 {
                     this.Logger.LogError(e, "Failed to read default preferences");
                     return;
                 }
-                if (!await Session.Storage.Save(prefs))
+
+                if (!await this.Session.Storage.Save(prefs))
                 {
                     this.Logger.LogError("Failed to save default preferences");
                 }
@@ -453,7 +416,7 @@ namespace Morphic.Client
                 this.ShowQuickStrip();
             }
 
-            if (this.FirstRun)
+            if (this.AppOptions.FirstRun)
             {
                 this.OnFirstRun();
             }
@@ -475,14 +438,14 @@ namespace Morphic.Client
 
             bool allNotificationIconsShown = await this.GetShowIconsOnTaskbar();
 
-            notifyIcon = new TrayButton(this.QuickStripWindow);
-            notifyIcon.Click += OnNotifyIconClicked;
-            notifyIcon.SecondaryClick += OnNotifyIconRightClicked;
-            notifyIcon.DoubleClick += OnNotifyIconDoubleClicked;
-            notifyIcon.Icon = Client.Properties.Resources.Icon;
-            notifyIcon.Text = "Morphic";
-            notifyIcon.UseNotificationIcon = allNotificationIconsShown;
-            notifyIcon.Visible = true;
+            this.notifyIcon = new TrayButton(this.QuickStripWindow);
+            this.notifyIcon.Click += this.OnNotifyIconClicked;
+            this.notifyIcon.SecondaryClick += this.OnNotifyIconRightClicked;
+            this.notifyIcon.DoubleClick += this.OnNotifyIconDoubleClicked;
+            this.notifyIcon.Icon = Client.Properties.Resources.Icon;
+            this.notifyIcon.Text = "Morphic";
+            this.notifyIcon.UseNotificationIcon = allNotificationIconsShown;
+            this.notifyIcon.Visible = true;
         }
 
         /// <summary>
@@ -501,23 +464,23 @@ namespace Morphic.Client
         /// </summary>
         private void CreateMainMenu()
         {
-            mainMenu = (Resources["ContextMenu"] as ContextMenu)!;
+            this.mainMenu = (this.Resources["ContextMenu"] as ContextMenu)!;
             this.mainMenu.DataContext = this;
-            foreach (var item in mainMenu.Items)
+            foreach (object? item in this.mainMenu.Items)
             {
                 if (item is MenuItem menuItem)
                 {
                     if (menuItem.Name == "showQuickStripItem")
                     {
-                        showQuickStripItem = menuItem;
+                        this.showQuickStripItem = menuItem;
                     }
                     else if (menuItem.Name == "hideQuickStripItem")
                     {
-                        hideQuickStripItem = menuItem;
+                        this.hideQuickStripItem = menuItem;
                     }
                     else if (menuItem.Name == "logoutItem")
                     {
-                        logoutItem = menuItem;
+                        this.logoutItem = menuItem;
                     }
                 }
             }
@@ -526,7 +489,7 @@ namespace Morphic.Client
         /// <summary>
         /// The icon in the system tray
         /// </summary>
-        private TrayButton? notifyIcon = null;
+        private TrayButton? notifyIcon;
 
         /// <summary>
         /// The main menu shown from the system tray icon
@@ -555,7 +518,7 @@ namespace Morphic.Client
         /// <param name="e"></param>
         private void OnNotifyIconClicked(object? sender, EventArgs e)
         {
-            Countly.RecordEvent("Tray Click");
+            CountlyBase.RecordEvent("Tray Click");
             if (this.QuickStripWindow?.Visibility != Visibility.Visible || this.QuickStripWindow?.WindowState == WindowState.Minimized)
             {
                 this.ShowQuickStrip();
@@ -573,7 +536,7 @@ namespace Morphic.Client
         /// <param name="e"></param>
         private void OnNotifyIconRightClicked(object? sender, EventArgs e)
         {
-            Countly.RecordEvent("Tray double-click");
+            CountlyBase.RecordEvent("Tray double-click");
             this.ShowMenu();
         }
 
@@ -590,7 +553,7 @@ namespace Morphic.Client
                 this.mainMenu.PlacementTarget = control;
             }
 
-            mainMenu.IsOpen = true;
+            this.mainMenu.IsOpen = true;
         }
 
         /// <summary>
@@ -600,7 +563,7 @@ namespace Morphic.Client
         /// <param name="e"></param>
         private void OnNotifyIconDoubleClicked(object? sender, EventArgs e)
         {
-            Countly.RecordEvent("Tray Menu");
+            CountlyBase.RecordEvent("Tray Menu");
             this.ShowQuickStrip();
         }
 
@@ -611,8 +574,8 @@ namespace Morphic.Client
         /// <param name="e"></param>
         private void ShowQuickStrip(object sender, RoutedEventArgs e)
         {
-            Countly.RecordEvent("Show MorphicBar");
-            ShowQuickStrip();
+            CountlyBase.RecordEvent("Show MorphicBar");
+            this.ShowQuickStrip();
         }
 
         /// <summary>
@@ -622,49 +585,39 @@ namespace Morphic.Client
         /// <param name="e"></param>
         private void HideQuickStrip(object sender, RoutedEventArgs e)
         {
-            Countly.RecordEvent("Hide MorphicBar");
-            HideQuickStrip();
-        }
-
-        /// <summary>
-        /// Event handler for when the user selects Customize Quick Strip from the main menu
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void CustomizeQuickStrip(object sender, RoutedEventArgs e)
-        {
-            Countly.RecordEvent("Customize MorphicBar");
+            CountlyBase.RecordEvent("Hide MorphicBar");
+            this.HideQuickStrip();
         }
 
         private void TravelWithSettings(object sender, RoutedEventArgs e)
         {
-            Countly.RecordEvent("Travel");
-            OpenTravelWindow();
+            CountlyBase.RecordEvent("Travel");
+            this.OpenTravelWindow();
         }
 
         private void RestoreSettings(object sender, RoutedEventArgs e)
         {
-            Countly.RecordEvent("Restore");
+            CountlyBase.RecordEvent("Restore");
             this.OpenRestoreWindow();
         }
 
         private void Logout(object sender, RoutedEventArgs e)
         {
-            Countly.RecordEvent("Logout");
-            _ = Session.Signout();
+            CountlyBase.RecordEvent("Logout");
+            _ = this.Session.Signout();
         }
 
         private void About(object sender, RoutedEventArgs e)
         {
-            Countly.RecordEvent("About");
-            OpenAboutWindow();
+            CountlyBase.RecordEvent("About");
+            this.OpenAboutWindow();
         }
 
         private void MenuLink(object sender, RoutedEventArgs e)
         {
             if (sender is MenuItem item)
             {
-                Countly.RecordEvent("Menu:" + item.Header);
+                CountlyBase.RecordEvent("Menu:" + item.Header);
                 Process.Start(new ProcessStartInfo(item.Tag as string)
                 {
                     UseShellExecute = true
@@ -695,7 +648,7 @@ namespace Morphic.Client
         /// <param name="e"></param>
         private void Quit(object sender, RoutedEventArgs e)
         {
-            Countly.RecordEvent("Quit");
+            CountlyBase.RecordEvent("Quit");
             App.Current.Shutdown();
         }
 
@@ -712,7 +665,7 @@ namespace Morphic.Client
             if (sender is MenuItem item)
             {
                 this.ConfigureAutoRun(item.IsChecked);
-            };
+            }
         }
 
         #endregion
@@ -722,7 +675,7 @@ namespace Morphic.Client
         /// <summary>
         ///  The Quick Strip Window
         /// </summary>
-        public QuickStripWindow? QuickStripWindow { get; private set; } = null;
+        public QuickStripWindow? QuickStripWindow { get; private set; }
 
         /// <summary>
         /// true to always show in the alt+tab list, even when hidden.
@@ -734,13 +687,13 @@ namespace Morphic.Client
         /// </summary>
         public void ToggleQuickStrip()
         {
-            if (QuickStripWindow != null)
+            if (this.QuickStripWindow != null)
             {
-                HideQuickStrip();
+                this.HideQuickStrip();
             }
             else
             {
-                ShowQuickStrip();
+                this.ShowQuickStrip();
             }
         }
 
@@ -749,23 +702,23 @@ namespace Morphic.Client
         /// </summary>
         public void LoadQuickStrip()
         {
-            if (QuickStripWindow == null)
+            if (this.QuickStripWindow == null)
             {
-                QuickStripWindow = ServiceProvider.GetRequiredService<QuickStripWindow>();
-                QuickStripWindow.Closed += QuickStripClosed;
-                QuickStripWindow.SourceInitialized += (sender, args) => this.CreateNotifyIcon();
+                this.QuickStripWindow = this.ServiceProvider.GetRequiredService<QuickStripWindow>();
+                this.QuickStripWindow.Closed += this.QuickStripClosed;
+                this.QuickStripWindow.SourceInitialized += (sender, args) => this.CreateNotifyIcon();
                 // So the tray button works, the window needs to be shown (to create the window), but not displayed.
-                QuickStripWindow.AllowsTransparency = true;
-                QuickStripWindow.Opacity = 0;
+                this.QuickStripWindow.AllowsTransparency = true;
+                this.QuickStripWindow.Opacity = 0;
                 if (this.AlwaysAltTab)
                 {
                     this.ShowQuickStrip();
-                    QuickStripWindow.WindowState = WindowState.Minimized;
+                    this.QuickStripWindow.WindowState = WindowState.Minimized;
                 }
                 else
                 {
-                    QuickStripWindow.Show();
-                    QuickStripWindow.Hide();
+                    this.QuickStripWindow.Show();
+                    this.QuickStripWindow.Hide();
                 }
             }
         }
@@ -773,7 +726,7 @@ namespace Morphic.Client
         /// <summary>
         /// true if the quick-strip has been shown before.
         /// </summary>
-        private bool quickStripShown = false;
+        private bool quickStripShown;
 
         /// <summary>
         /// Ensure the Quick Strip window is shown
@@ -797,7 +750,10 @@ namespace Morphic.Client
             }
             else
             {
-                FocusManager.SetFocusedElement(this.QuickStripWindow, this.focusedElement);
+                if (this.focusedElement != null)
+                {
+                    FocusManager.SetFocusedElement(this.QuickStripWindow, this.focusedElement);
+                }
             }
 
             if (keyboardFocus)
@@ -805,21 +761,21 @@ namespace Morphic.Client
                 this.QuickStripWindow.SetKeyboardFocus();
             }
 
-            if (showQuickStripItem != null)
+            if (this.showQuickStripItem != null)
             {
-                showQuickStripItem.Visibility = Visibility.Collapsed;
+                this.showQuickStripItem.Visibility = Visibility.Collapsed;
             }
-            if (hideQuickStripItem != null)
+            if (this.hideQuickStripItem != null)
             {
-                hideQuickStripItem.Visibility = Visibility.Visible;
+                this.hideQuickStripItem.Visibility = Visibility.Visible;
             }
             if (!skippingSave)
             {
-                Session.SetPreference(QuickStrip.QuickStripWindow.PreferenceKeys.Visible, true);
+                this.Session.SetPreference(QuickStrip.QuickStripWindow.PreferenceKeys.Visible, true);
             }
         }
 
-        private IInputElement focusedElement;
+        private IInputElement? focusedElement;
 
         /// <summary>
         /// Ensure the Quick Strip window is hidden
@@ -835,22 +791,23 @@ namespace Morphic.Client
                 }
                 else
                 {
-                    this.QuickStripWindow?.Hide();
+                    this.QuickStripWindow.Hide();
                 }
+
+                // Re-focus the same control when the qs is re-shown.
+                this.focusedElement = FocusManager.GetFocusedElement(this.QuickStripWindow);
             }
 
-            // Re-focus the same control when the qs is re-shown.
-            this.focusedElement = FocusManager.GetFocusedElement(this.QuickStripWindow);
+            if (this.showQuickStripItem != null)
+            {
+                this.showQuickStripItem.Visibility = Visibility.Visible;
+            }
+            if (this.hideQuickStripItem != null)
+            {
+                this.hideQuickStripItem.Visibility = Visibility.Collapsed;
+            }
 
-            if (showQuickStripItem != null)
-            {
-                showQuickStripItem.Visibility = Visibility.Visible;
-            }
-            if (hideQuickStripItem != null)
-            {
-                hideQuickStripItem.Visibility = Visibility.Collapsed;
-            }
-            Session.SetPreference(QuickStrip.QuickStripWindow.PreferenceKeys.Visible, false);
+            this.Session.SetPreference(QuickStrip.QuickStripWindow.PreferenceKeys.Visible, false);
         }
 
         /// <summary>
@@ -860,7 +817,7 @@ namespace Morphic.Client
         /// <param name="e"></param>
         private void QuickStripClosed(object? sender, EventArgs e)
         {
-            QuickStripWindow = null;
+            this.QuickStripWindow = null;
         }
 
         #endregion
@@ -870,21 +827,22 @@ namespace Morphic.Client
         /// <summary>
         /// The Configurator window, if visible
         /// </summary>
-        private TravelWindow? TravelWindow;
-        private RestoreWindow? RestoreWindow;
+        private TravelWindow? travelWindow;
+        private RestoreWindow? restoreWindow;
 
         /// <summary>
         /// Show the Morphic Configurator window
         /// </summary>
-        internal async void OpenTravelWindow()
+        internal void OpenTravelWindow()
         {
-            if (TravelWindow == null)
+            if (this.travelWindow == null)
             {
-                TravelWindow = ServiceProvider.GetRequiredService<TravelWindow>();
-                TravelWindow.Show();
-                TravelWindow.Closed += OnTravelWindowClosed;
+                this.travelWindow = this.ServiceProvider.GetRequiredService<TravelWindow>();
+                this.travelWindow.Show();
+                this.travelWindow.Closed += this.OnTravelWindowClosed;
             }
-            TravelWindow.Activate();
+
+            this.travelWindow.Activate();
         }
 
         /// <summary>
@@ -892,13 +850,13 @@ namespace Morphic.Client
         /// </summary>
         internal void OpenRestoreWindow()
         {
-            if (this.RestoreWindow == null)
+            if (this.restoreWindow == null)
             {
-                this.RestoreWindow = this.ServiceProvider.GetRequiredService<RestoreWindow>();
-                this.RestoreWindow.Closed += (sender, args) => this.RestoreWindow = null;
+                this.restoreWindow = this.ServiceProvider.GetRequiredService<RestoreWindow>();
+                this.restoreWindow.Closed += (sender, args) => this.restoreWindow = null;
             }
-            this.RestoreWindow?.Show();
-            this.RestoreWindow?.Activate();
+            this.restoreWindow?.Show();
+            this.restoreWindow?.Activate();
         }
 
         /// <summary>
@@ -908,34 +866,35 @@ namespace Morphic.Client
         /// <param name="e"></param>
         private void OnTravelWindowClosed(object? sender, EventArgs e)
         {
-            TravelWindow = null;
+            this.travelWindow = null;
         }
 
         #endregion
-        
+
         #region About Window
 
-        private AboutWindow? AboutWindow = null;
-        
+        private AboutWindow? aboutWindow;
+
         /// <summary>
         /// Show the Morphic Configurator window
         /// </summary>
         internal void OpenAboutWindow()
         {
-            if (AboutWindow == null)
+            if (this.aboutWindow == null)
             {
-                AboutWindow = ServiceProvider.GetRequiredService<AboutWindow>();
-                AboutWindow.Show();
-                AboutWindow.Closed += OnAboutWindowClosed;
+                this.aboutWindow = this.ServiceProvider.GetRequiredService<AboutWindow>();
+                this.aboutWindow.Show();
+                this.aboutWindow.Closed += this.OnAboutWindowClosed;
             }
-            AboutWindow.Activate();
+
+            this.aboutWindow.Activate();
         }
-        
+
         private void OnAboutWindowClosed(object? sender, EventArgs e)
         {
-            AboutWindow = null;
+            this.aboutWindow = null;
         }
-        
+
         #endregion
 
         #region Login Window
@@ -946,23 +905,24 @@ namespace Morphic.Client
         {
             TaskCompletionSource<bool> taskCompletionSource = new TaskCompletionSource<bool>();
 
-            if (loginWindow == null)
+            if (this.loginWindow == null)
             {
-                loginWindow = ServiceProvider.GetRequiredService<LoginWindow>();
-                loginWindow.Show();
-                loginWindow.Closed += (sender, args) =>
+                this.loginWindow = this.ServiceProvider.GetRequiredService<LoginWindow>();
+                this.loginWindow.Show();
+                this.loginWindow.Closed += (sender, args) =>
                 {
                     this.OnLoginWindowClosed(sender, args);
                     taskCompletionSource.SetResult(true);
                 };
             }
-            loginWindow.Activate();
+
+            this.loginWindow.Activate();
             return taskCompletionSource.Task;
         }
 
         private void OnLoginWindowClosed(object? sender, EventArgs e)
         {
-            loginWindow = null;
+            this.loginWindow = null;
         }
 
         #endregion
@@ -971,7 +931,7 @@ namespace Morphic.Client
 
         void StartCheckingForUpdates()
         {
-            var options = ServiceProvider.GetRequiredService<UpdateOptions>();
+            UpdateOptions? options = this.ServiceProvider.GetRequiredService<UpdateOptions>();
             if (options.AppCastUrl != "")
             {
                 AutoUpdater.Start(options.AppCastUrl);
@@ -988,10 +948,11 @@ namespace Morphic.Client
             // Windows doesn't seem to clean up the system tray icon until the user
             // hovers over it after the application closes.  So, we need to make it
             // invisible on app exit ourselves.
-            if (notifyIcon is TrayButton icon)
+            if (this.notifyIcon != null)
             {
-                icon.Visible = false;
+                this.notifyIcon.Visible = false;
             }
+
             base.OnExit(e);
         }
 
@@ -1001,7 +962,7 @@ namespace Morphic.Client
 
         public event EventHandler? SystemSettingChanged;
 
-        private bool addedSystemEvents = false;
+        private bool addedSystemEvents;
         private DispatcherTimer? systemSettingTimer;
 
         /// <summary>
@@ -1039,7 +1000,7 @@ namespace Morphic.Client
         private void SystemEventsOnDisplaySettingsChanged(object? sender, EventArgs e)
         {
             // Wait a bit, to see if any other events have been raised.
-            this.systemSettingTimer.Start();
+            this.systemSettingTimer?.Start();
         }
 
         #endregion

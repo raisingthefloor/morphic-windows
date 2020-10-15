@@ -24,9 +24,9 @@ namespace Morphic.Client
         public static string ConfigDir = Environment.GetEnvironmentVariable("MORPHIC_CONFIGDIR") ??
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MorphicCommunity");
 
-        public static string DefaultConfigDir = Path.Combine(AppPaths.AppDir, "DefaultConfig");
-        public static string AssetsDir = Path.Combine(AppPaths.AppDir, "Assets");
-        public static string CacheDir = Path.Combine(AppPaths.ConfigDir, "cache");
+        public static string DefaultConfigDir = AppPaths.GetConfigDir("DefaultConfig");
+        public static string AssetsDir = AppPaths.GetAppDir("Assets");
+        public static string CacheDir = AppPaths.GetConfigDir("cache", true);
         public const string RegistryPath = @"Software\Raising the Floor\Morphic\Bar";
 
         public static void CreateAll()
@@ -136,5 +136,33 @@ namespace Morphic.Client
 
             return path;
         }
+
+        /// <summary>
+        /// Returns a sub-directory in the application directory (where the executable is)
+        /// </summary>
+        /// <param name="dirName">Name of the subdirectory.</param>
+        /// <returns>The full path to the sub-directory</returns>
+        public static string GetAppDir(string dirName)
+        {
+            return Path.GetFullPath(dirName, AppPaths.AppDir);
+        }
+
+        /// <summary>
+        /// Returns a sub-directory in the user-writable config directory (within %LOCALAPPDATA%).
+        /// </summary>
+        /// <param name="dirName">The sub-directory name.</param>
+        /// <param name="create">true to create the directory if it does not exist.</param>
+        /// <returns>Full path to the sub-directory.</returns>
+        public static string GetConfigDir(string dirName, bool create = false)
+        {
+            string path = Path.GetFullPath(dirName, AppPaths.ConfigDir);
+            if (create)
+            {
+                Directory.CreateDirectory(path);
+            }
+
+            return path;
+        }
+
     }
 }

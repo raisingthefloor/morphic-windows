@@ -12,14 +12,11 @@ namespace Morphic.Client.About
     public partial class AboutWindow : Window
     {
 
-        public AboutWindow(BuildInfo buildInfo)
+        public AboutWindow()
         {
-            this.buildInfo = buildInfo;
-            this.DataContext = buildInfo;
+            this.DataContext = BuildInfo.Current;
             InitializeComponent();
         }
-
-        private readonly BuildInfo buildInfo;
 
         private void CheckUpdate_OnClick(object sender, RequestNavigateEventArgs e)
         {

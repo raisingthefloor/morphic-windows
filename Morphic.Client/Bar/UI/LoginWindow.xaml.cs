@@ -24,7 +24,7 @@ namespace Morphic.Client.Bar.UI
     /// </summary>
     public partial class LoginWindow : Window, INotifyPropertyChanged
     {
-        
+
         public LoginWindow(CommunitySession session, ILogger<LoginWindow> logger)
         {
             this.DataContext = this;

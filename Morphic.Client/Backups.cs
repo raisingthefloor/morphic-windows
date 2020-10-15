@@ -18,7 +18,7 @@
         private readonly ILogger<Backups> logger;
         private readonly IServiceProvider serviceProvider;
 
-        public static string BackupDirectory => Path.Combine(App.Current.ApplicationDataFolderPath, "backups");
+        public static string BackupDirectory => AppPaths.GetConfigDir("backups");
         private static readonly string BackupExtension = ".preferences";
 
         public Backups(Session session, ILogger<Backups> logger, IServiceProvider serviceProvider)
