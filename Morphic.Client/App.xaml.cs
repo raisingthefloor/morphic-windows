@@ -51,7 +51,6 @@ using System.Windows.Input;
 using NHotkey.Wpf;
 using Morphic.Client.About;
 using AutoUpdaterDotNET;
-using System.Runtime.InteropServices;
 using Morphic.Settings.Files;
 
 namespace Morphic.Client
@@ -87,11 +86,11 @@ namespace Morphic.Client
     /// </summary>
     public partial class App : Application
     {
-        public static App Shared { get; private set; } = null!;
+        public new static App Current { get; private set; } = null!;
         public IServiceProvider ServiceProvider { get; private set; } = null!;
         public IConfiguration Configuration { get; private set; } = null!;
         public Session Session { get; private set; } = null!;
-        private ILogger<App> logger = null!;
+        public ILogger<App> Logger { get; private set; } = null!;
         public AppOptions AppOptions { get; set; } = null!;
 
         public const string ApplicationId = "A6E8092B-51F4-4CAA-A874-A791152B5698";
@@ -99,6 +98,11 @@ namespace Morphic.Client
         #region Configuration & Startup
 
         public readonly string ApplicationDataFolderPath = Path.Combine(new string[] { Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MorphicLite" });
+
+        public App()
+        {
+            App.Current = this;
+        }
 
         /// <summary>
         /// Create a Configuration from appsettings.json
@@ -184,10 +188,10 @@ namespace Morphic.Client
         {
             if (task.Exception is Exception e)
             {
-                logger.LogError("exception thrown while countly recording exception: {msg}", e.Message);
+                this.Logger.LogError("exception thrown while countly recording exception: {msg}", e.Message);
                 throw e;
             }
-            logger.LogDebug("successfully recorded countly exception");
+            this.Logger.LogDebug("successfully recorded countly exception");
         }
 
         void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
@@ -198,8 +202,8 @@ namespace Morphic.Client
 
             try
             {
-                logger.LogError("handled uncaught exception: {msg}", ex.Message);
-                logger.LogError(ex.StackTrace);
+                this.Logger.LogError("handled uncaught exception: {msg}", ex.Message);
+                this.Logger.LogError(ex.StackTrace);
 
                 Dictionary<String, String> extraData = new Dictionary<string, string>();
                 Countly.RecordException(ex.Message, ex.StackTrace, extraData, true)
@@ -233,7 +237,6 @@ namespace Morphic.Client
         {
             this.Dispatcher.UnhandledException += this.App_DispatcherUnhandledException;
 
-            Shared = this;
             Configuration = GetConfiguration();
             var collection = new ServiceCollection();
             ConfigureServices(collection);
@@ -257,11 +260,11 @@ namespace Morphic.Client
             }
 
             base.OnStartup(e);
-            logger = ServiceProvider.GetRequiredService<ILogger<App>>();
+            this.Logger = ServiceProvider.GetRequiredService<ILogger<App>>();
             Session = ServiceProvider.GetRequiredService<Session>();
             Session.UserChanged += Session_UserChanged;
-            logger.LogInformation("App Started");
-            logger.LogInformation("Creating Tray Icon");
+            this.Logger.LogInformation("App Started");
+            this.Logger.LogInformation("Creating Tray Icon");
             CreateMainMenu();
             RegisterGlobalHotKeys();
             RegisterGlobalHotKeys();
@@ -329,7 +332,7 @@ namespace Morphic.Client
         /// </summary>
         private void OnFirstRun()
         {
-            this.logger.LogInformation("Performing first-run tasks");
+            this.Logger.LogInformation("Performing first-run tasks");
 
             // Set the magnifier to lens mode at 200%
             Registry.SetValue(@"HKEY_CURRENT_USER\Software\Microsoft\ScreenMagnifier", "Magnification", 200);
@@ -407,7 +410,7 @@ namespace Morphic.Client
         {
             if ((this.FirstRun && !this.FirstRunUpgrade) || !Session.Storage.Exists<Preferences>("__default__"))
             {
-                logger.LogInformation("Saving default preferences");
+                this.Logger.LogInformation("Saving default preferences");
                 var prefs = new Preferences();
                 prefs.Id = "__default__";
                 try
@@ -421,12 +424,12 @@ namespace Morphic.Client
                 }
                 catch (Exception e)
                 {
-                    logger.LogError(e, "Failed to read default preferences");
+                    this.Logger.LogError(e, "Failed to read default preferences");
                     return;
                 }
                 if (!await Session.Storage.Save(prefs))
                 {
-                    logger.LogError("Failed to save default preferences");
+                    this.Logger.LogError("Failed to save default preferences");
                 }
             }
         }
@@ -441,7 +444,7 @@ namespace Morphic.Client
             {
                 throw e;
             }
-            logger.LogInformation("Session Open");
+            this.Logger.LogInformation("Session Open");
 
             this.LoadQuickStrip();
 
@@ -693,7 +696,7 @@ namespace Morphic.Client
         private void Quit(object sender, RoutedEventArgs e)
         {
             Countly.RecordEvent("Quit");
-            App.Shared.Shutdown();
+            App.Current.Shutdown();
         }
 
         private void AutoRunInit(object? sender, EventArgs e)

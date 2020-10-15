@@ -18,7 +18,7 @@
         private readonly ILogger<Backups> logger;
         private readonly IServiceProvider serviceProvider;
 
-        public static string BackupDirectory => Path.Combine(App.Shared.ApplicationDataFolderPath, "backups");
+        public static string BackupDirectory => Path.Combine(App.Current.ApplicationDataFolderPath, "backups");
         private static readonly string BackupExtension = ".preferences";
 
         public Backups(Session session, ILogger<Backups> logger, IServiceProvider serviceProvider)
@@ -40,7 +40,7 @@
             if (preferences == null)
             {
                 preferences = new Preferences();
-                CaptureSession captureSession = new CaptureSession(App.Shared.Session.SettingsManager, preferences);
+                CaptureSession captureSession = new CaptureSession(App.Current.Session.SettingsManager, preferences);
                 captureSession.AddAllSolutions();
                 await captureSession.Run();
             }

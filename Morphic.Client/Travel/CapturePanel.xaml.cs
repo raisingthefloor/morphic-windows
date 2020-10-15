@@ -24,15 +24,11 @@
 using Microsoft.Extensions.Logging;
 using Morphic.Service;
 using System;
-using System.Threading;
-using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
 using Morphic.Settings;
-using System.Text.RegularExpressions;
 using Morphic.Core;
 using System.Threading.Tasks;
-using System.Security.Cryptography;
 
 namespace Morphic.Client.Travel
 {

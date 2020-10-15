@@ -11,7 +11,7 @@
     /// </summary>
     public class AppOptions : INotifyPropertyChanged
     {
-        public static AppOptions Current => App.Shared.AppOptions;
+        public static AppOptions Current => App.Current.AppOptions;
 
         private Dictionary<string, object> cache = new Dictionary<string, object>();
 
@@ -33,6 +33,27 @@
             set => this.SetValue(value);
         }
 
+        /// <summary>
+        /// The communities the user is in.
+        /// </summary>
+        public string[] Communities
+        {
+            get => this.GetValue(string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries);
+            set => this.SetValue(string.Join(',', value));
+        }
+
+        /// <summary>
+        /// The community ID for which the last bar was shown.
+        /// </summary>
+        public string? LastCommunity
+        {
+            get
+            {
+                string value = this.GetValue(string.Empty);
+                return value.Length == 0 ? null : value;
+            }
+            set => this.SetValue(value ?? string.Empty);
+        }
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -49,7 +70,6 @@
         /// Get a value from the registry.
         /// </summary>
         protected virtual T GetValue<T>(T defaultValue, [CallerMemberName] string name = null!)
-            where T : struct
         {
             object? value;
             if (!this.cache.TryGetValue(name, out value))

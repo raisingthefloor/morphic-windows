@@ -1,5 +1,4 @@
-﻿using System;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Navigation;
 
 namespace Morphic.Client.About
@@ -29,7 +28,7 @@ namespace Morphic.Client.About
             Mouse.OverrideCursor = Cursors.Wait;
             Task.Delay(3000).ContinueWith(t => this.Dispatcher.Invoke(() => Mouse.OverrideCursor = oldCursor));
 
-            UpdateOptions? updateOptions = App.Shared.ServiceProvider.GetRequiredService<UpdateOptions>();
+            UpdateOptions? updateOptions = App.Current.ServiceProvider.GetRequiredService<UpdateOptions>();
             if (!string.IsNullOrEmpty(updateOptions?.AppCastUrl))
             {
                 AutoUpdater.Start(updateOptions.AppCastUrl);

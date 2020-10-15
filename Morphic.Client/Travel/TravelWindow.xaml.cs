@@ -21,18 +21,13 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Morphic.Core;
 using Morphic.Service;
 using System;
 using System.Windows;
-using System.Windows.Automation;
 
 namespace Morphic.Client.Travel
 {
-    using Login;
-
     /// <summary>
     /// Window that walks the user the the capture and, if necessary, account creation process.
     /// Loads each panel one at time depending on what steps are required

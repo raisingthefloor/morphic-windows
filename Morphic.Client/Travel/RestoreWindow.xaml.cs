@@ -10,8 +10,6 @@
 
 namespace Morphic.Client.Travel
 {
-    using Microsoft.Extensions.Logging;
-    using Morphic.Service;
     using System;
     using System.Windows;
     using System.Collections.Generic;
@@ -58,7 +56,7 @@ namespace Morphic.Client.Travel
             {
                 this.Loaded += (sender, args) =>
                 {
-                    MessageBox.Show(App.Shared.QuickStripWindow!,
+                    MessageBox.Show(App.Current.QuickStripWindow!,
                         "You currently don't have a back-up to restore.\n\nA back-up is created when you apply the settings from your Morphic Vault");
                     this.Close();
                 };

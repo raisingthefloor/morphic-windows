@@ -29,9 +29,7 @@ namespace Morphic.Client
     using System.Drawing;
     using System.IO;
     using System.Reflection;
-    using System.Runtime.CompilerServices;
     using System.Runtime.InteropServices;
-    using System.Windows.Controls;
     using System.Windows.Forms;
     using QuickStrip;
 

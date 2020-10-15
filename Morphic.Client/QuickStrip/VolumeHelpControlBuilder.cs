@@ -22,10 +22,7 @@
 // * Consumer Electronics Association Foundation
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Windows.Controls;
-using System.Windows.Documents;
 using Morphic.Windows.Native;
 
 namespace Morphic.Client.QuickStrip

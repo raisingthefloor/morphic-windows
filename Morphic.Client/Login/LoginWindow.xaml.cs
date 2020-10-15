@@ -3,7 +3,6 @@
 namespace Morphic.Client.Login
 {
     using System;
-    using Microsoft.Extensions.DependencyInjection;
 
     public partial class LoginWindow : Window
     {

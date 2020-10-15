@@ -25,7 +25,6 @@ using System;
 using Morphic.Client.QuickStrip;
 using System.Timers;
 using System.Windows;
-using System.Windows.Automation.Peers;
 
 namespace Morphic.Client
 {
@@ -121,7 +120,7 @@ namespace Morphic.Client
         private void Reposition()
         {
             var screenSize = SystemParameters.WorkArea;
-            if (App.Shared.QuickStripWindow is QuickStripWindow quickStripWindow)
+            if (App.Current.QuickStripWindow is QuickStripWindow quickStripWindow)
             {
                 if (Height < quickStripWindow.Top - quickStripWindow.ScreenEdgeInset)
                 {

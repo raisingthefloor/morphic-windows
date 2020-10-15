@@ -29,7 +29,6 @@ using System.Windows.Media.Animation;
 
 namespace Morphic.Client.Elements
 {
-    using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
 
     /// <summary>
@@ -53,7 +52,7 @@ namespace Morphic.Client.Elements
         public T PushPanel<T>(bool animated = true)
             where T : Panel, IStepPanel
         {
-            T panel = App.Shared.ServiceProvider.GetService<T>();
+            T panel = App.Current.ServiceProvider.GetService<T>();
             this.PushPanel(panel);
             return panel;
         }

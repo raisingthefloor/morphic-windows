@@ -73,7 +73,7 @@ namespace Morphic.Client.QuickStrip
             InitializeComponent();
             Deactivated += OnDeactivated;
             SystemEvents.DisplaySettingsChanged += SystemEvents_DisplaySettingsChanged;
-            App.Shared.SystemSettingChanged += (sender, args) => { this.UpdateState(); };
+            App.Current.SystemSettingChanged += (sender, args) => { this.UpdateState(); };
             this.MouseEnter += (sender, args) => this.UpdateState();
             this.IsVisibleChanged += (sender, args) =>
             {
@@ -177,7 +177,7 @@ namespace Morphic.Client.QuickStrip
         private void LogoButton_MouseUp(object sender, RoutedEventArgs e)
         {
             Countly.RecordEvent("Main Menu");
-            App.Shared.ShowMenu(sender as Control);
+            App.Current.ShowMenu(sender as Control);
         }
 
         /// <summary>
@@ -194,7 +194,7 @@ namespace Morphic.Client.QuickStrip
                 case Key.Space when Keyboard.Modifiers == ModifierKeys.Shift:
                 case Key.Enter when Keyboard.Modifiers == ModifierKeys.Shift:
                     Countly.RecordEvent("Main Menu");
-                    App.Shared.ShowMenu();
+                    App.Current.ShowMenu();
                     e.Handled = true;
                     break;
             }
@@ -1053,7 +1053,7 @@ namespace Morphic.Client.QuickStrip
                     break;
                 case Key.System when e.SystemKey == Key.F4:
                     e.Handled = true;
-                    App.Shared.HideQuickStrip();
+                    App.Current.HideQuickStrip();
                     break;
 
             }
