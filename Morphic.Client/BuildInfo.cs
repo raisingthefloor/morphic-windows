@@ -1,10 +1,10 @@
-﻿using System.IO;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Reflection;
-
-namespace Morphic.Client.About
+﻿namespace Morphic.Client
 {
+    using System.IO;
+    using System.Reflection;
+    using System.Text.Json;
+    using System.Text.Json.Serialization;
+
     public class BuildInfo
     {
         public static BuildInfo Current { get; } = BuildInfo.FromJsonFile("build-info.json");

@@ -32,14 +32,14 @@ namespace Morphic.Client.Bar
     public class BarManager
     {
         private PrimaryBarWindow? barWindow;
-        private readonly ILogger Logger;
+        private readonly ILogger logger;
 
         public event EventHandler<BarEventArgs>? BarLoaded;
         public event EventHandler<BarEventArgs>? BarUnloaded;
 
-        public BarManager(ILogger<BarManager> logger)
+        public BarManager()
         {
-            this.Logger = logger;
+            this.logger = App.Current.Logger;
         }
 
         /// <summary>
@@ -76,7 +76,7 @@ namespace Morphic.Client.Bar
             }
             catch (Exception e) when (!(e is OutOfMemoryException))
             {
-                this.Logger.LogError(e, "Problem loading the bar.");
+                this.logger.LogError(e, "Problem loading the bar.");
             }
 
             if (this.barWindow != null)
@@ -148,7 +148,7 @@ namespace Morphic.Client.Bar
         /// <param name="showCommunityId">Force this community to show.</param>
         public async void LoadSessionBar(CommunitySession session, string? showCommunityId = null)
         {
-            this.Logger.LogInformation($"Loading a bar ({session.Communities.Length} communities)");
+            this.logger.LogInformation($"Loading a bar ({session.Communities.Length} communities)");
 
             UserBar? bar;
 
@@ -187,7 +187,7 @@ namespace Morphic.Client.Bar
 
                 if (community == null)
                 {
-                    this.Logger.LogInformation("Showing community picker");
+                    this.logger.LogInformation("Showing community picker");
 
                     // Load the bars while the picker is shown
                     Dictionary<string, Task<UserBar>> bars =
@@ -209,7 +209,7 @@ namespace Morphic.Client.Bar
             {
                 userBar ??= await session.GetBar(community.Id);
 
-                this.Logger.LogInformation($"Showing bar for community {community.Id} {community.Name}");
+                this.logger.LogInformation($"Showing bar for community {community.Id} {community.Name}");
                 BarData? barData = this.LoadFromUserBar(userBar);
                 if (barData != null)
                 {

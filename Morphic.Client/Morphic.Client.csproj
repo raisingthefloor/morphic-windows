@@ -24,7 +24,7 @@
     <None Remove="appsettings.json" />
     <None Remove="DefaultPreferences.json" />
     <None Remove="Icon.png" />
-    <None Remove="Login\LoginAnnounce.wav" />
+    <None Remove="Dialogs\LoginAnnounce.wav" />
     <None Remove="Minus.png" />
     <None Remove="Plus.png" />
     <None Remove="Solutions.json" />
@@ -86,7 +86,6 @@
     <Content Include="Solutions\jaws2020.solutions.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Resource Include="Login\LoginAnnounce.wav" />
     <Content Include="Solutions\windows.solutions.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -129,6 +128,7 @@
     <Content Include="DefaultPreferences.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Resource Include="Dialogs\LoginAnnounce.wav" />
     <Resource Include="Icon.png" />
     <Resource Include="QuickStrip\Minus.png" />
     <Resource Include="QuickStrip\Plus.png" />
@@ -168,12 +168,6 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>UserSettings.Designer.cs</LastGenOutput>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Page Update="About\AboutWindow.xaml">
-      <Generator></Generator>
-    </Page>
   </ItemGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">

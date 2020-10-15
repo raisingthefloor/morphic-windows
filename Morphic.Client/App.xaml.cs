@@ -39,8 +39,6 @@ using Morphic.Settings.Ini;
 using Morphic.Settings.Registry;
 using Morphic.Settings.Spi;
 using Morphic.Settings.SystemSettings;
-using Morphic.Client.Travel;
-using Morphic.Client.Login;
 using Morphic.Client.QuickStrip;
 using System.IO;
 using System.Reflection;
@@ -49,7 +47,6 @@ using CountlySDK.Entities;
 using System.Windows.Controls;
 using System.Windows.Input;
 using NHotkey.Wpf;
-using Morphic.Client.About;
 using AutoUpdaterDotNET;
 using Morphic.Settings.Files;
 
@@ -57,7 +54,10 @@ namespace Morphic.Client
 {
     using System.Diagnostics;
     using System.Windows.Controls.Primitives;
+    using Bar;
     using CountlySDK.CountlyCommon;
+    using Dialogs;
+    using Dialogs.Travel;
     using Microsoft.Win32;
 
     public class AppMain
@@ -94,6 +94,10 @@ namespace Morphic.Client
 
         public Session Session { get; private set; } = null!;
         public AppOptions AppOptions => AppOptions.Current;
+
+        public DialogManager Dialogs { get; } = new DialogManager();
+        public BarManager BarManager { get; } = new BarManager();
+
 
         public const string ApplicationId = "A6E8092B-51F4-4CAA-A874-A791152B5698";
 
@@ -353,7 +357,7 @@ namespace Morphic.Client
         {
             HotkeyManager.Current.AddOrReplace("Login with Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift, (sender, e) =>
             {
-                this.OpenLoginWindow();
+                this.Dialogs.OpenDialog<LoginWindow>();
             });
             HotkeyManager.Current.AddOrReplace("Show Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift | ModifierKeys.Alt, (sender, e) =>
             {
@@ -592,13 +596,13 @@ namespace Morphic.Client
         private void TravelWithSettings(object sender, RoutedEventArgs e)
         {
             CountlyBase.RecordEvent("Travel");
-            this.OpenTravelWindow();
+            this.Dialogs.OpenDialog<TravelWindow>();
         }
 
         private void RestoreSettings(object sender, RoutedEventArgs e)
         {
             CountlyBase.RecordEvent("Restore");
-            this.OpenRestoreWindow();
+            this.Dialogs.OpenDialog<RestoreWindow>();
         }
 
         private void Logout(object sender, RoutedEventArgs e)
@@ -610,7 +614,7 @@ namespace Morphic.Client
         private void About(object sender, RoutedEventArgs e)
         {
             CountlyBase.RecordEvent("About");
-            this.OpenAboutWindow();
+            this.Dialogs.OpenDialog<AboutWindow>();
         }
 
         private void MenuLink(object sender, RoutedEventArgs e)
@@ -822,80 +826,6 @@ namespace Morphic.Client
 
         #endregion
 
-        #region Travel Window
-
-        /// <summary>
-        /// The Configurator window, if visible
-        /// </summary>
-        private TravelWindow? travelWindow;
-        private RestoreWindow? restoreWindow;
-
-        /// <summary>
-        /// Show the Morphic Configurator window
-        /// </summary>
-        internal void OpenTravelWindow()
-        {
-            if (this.travelWindow == null)
-            {
-                this.travelWindow = this.ServiceProvider.GetRequiredService<TravelWindow>();
-                this.travelWindow.Show();
-                this.travelWindow.Closed += this.OnTravelWindowClosed;
-            }
-
-            this.travelWindow.Activate();
-        }
-
-        /// <summary>
-        /// Show the Restore backups
-        /// </summary>
-        internal void OpenRestoreWindow()
-        {
-            if (this.restoreWindow == null)
-            {
-                this.restoreWindow = this.ServiceProvider.GetRequiredService<RestoreWindow>();
-                this.restoreWindow.Closed += (sender, args) => this.restoreWindow = null;
-            }
-            this.restoreWindow?.Show();
-            this.restoreWindow?.Activate();
-        }
-
-        /// <summary>
-        /// Called when the configurator window closes
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void OnTravelWindowClosed(object? sender, EventArgs e)
-        {
-            this.travelWindow = null;
-        }
-
-        #endregion
-
-        #region About Window
-
-        private AboutWindow? aboutWindow;
-
-        /// <summary>
-        /// Show the Morphic Configurator window
-        /// </summary>
-        internal void OpenAboutWindow()
-        {
-            if (this.aboutWindow == null)
-            {
-                this.aboutWindow = this.ServiceProvider.GetRequiredService<AboutWindow>();
-                this.aboutWindow.Show();
-                this.aboutWindow.Closed += this.OnAboutWindowClosed;
-            }
-
-            this.aboutWindow.Activate();
-        }
-
-        private void OnAboutWindowClosed(object? sender, EventArgs e)
-        {
-            this.aboutWindow = null;
-        }
-
-        #endregion
 
         #region Login Window
 

@@ -21,13 +21,11 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System;
-using Morphic.Client.QuickStrip;
-using System.Timers;
-using System.Windows;
-
-namespace Morphic.Client
+namespace Morphic.Client.QuickStrip
 {
+    using System;
+    using System.Timers;
+    using System.Windows;
     using System.Windows.Input;
 
     /// <summary>
@@ -37,7 +35,7 @@ namespace Morphic.Client
     {
         public QuickHelpWindow()
         {
-            InitializeComponent();
+            this.InitializeComponent();
         }
 
         /// <summary>
@@ -122,27 +120,27 @@ namespace Morphic.Client
             var screenSize = SystemParameters.WorkArea;
             if (App.Current.QuickStripWindow is QuickStripWindow quickStripWindow)
             {
-                if (Height < quickStripWindow.Top - quickStripWindow.ScreenEdgeInset)
+                if (this.Height < quickStripWindow.Top - quickStripWindow.ScreenEdgeInset)
                 {
-                    Top = quickStripWindow.Top - Height - quickStripWindow.ScreenEdgeInset;
+                    this.Top = quickStripWindow.Top - this.Height - quickStripWindow.ScreenEdgeInset;
                 }
                 else
                 {
-                    Top = quickStripWindow.Top + quickStripWindow.Height + quickStripWindow.ScreenEdgeInset;
+                    this.Top = quickStripWindow.Top + quickStripWindow.Height + quickStripWindow.ScreenEdgeInset;
                 }
                 if (quickStripWindow.Position == QuickStripWindow.FixedPosition.BottomLeft || quickStripWindow.Position == QuickStripWindow.FixedPosition.TopLeft)
                 {
-                    Left = quickStripWindow.Left;
+                    this.Left = quickStripWindow.Left;
                 }
                 else
                 {
-                    Left = Math.Max(quickStripWindow.ScreenEdgeInset, quickStripWindow.Left + quickStripWindow.Width - Width);
+                    this.Left = Math.Max(quickStripWindow.ScreenEdgeInset, quickStripWindow.Left + quickStripWindow.Width - this.Width);
                 }
             }
             else
             {
-                Left = System.Math.Round((screenSize.Width - Width) / 2.0);
-                Top = System.Math.Round((screenSize.Height - Height) / 2.0);
+                this.Left = System.Math.Round((screenSize.Width - this.Width) / 2.0);
+                this.Top = System.Math.Round((screenSize.Height - this.Height) / 2.0);
             }
         }
     }

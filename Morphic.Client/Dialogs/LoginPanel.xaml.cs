@@ -21,19 +21,18 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using Microsoft.Extensions.Logging;
-using Morphic.Core;
-using Morphic.Settings;
-using Morphic.Service;
-using System.Media;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System;
-
-namespace Morphic.Client.Login
+namespace Morphic.Client.Dialogs
 {
+    using System;
+    using System.Media;
+    using System.Threading.Tasks;
+    using System.Windows;
+    using System.Windows.Controls;
+    using Core;
     using Elements;
+    using Microsoft.Extensions.Logging;
+    using Service;
+    using Settings;
     using Travel;
 
     /// <summary>
@@ -51,8 +50,8 @@ namespace Morphic.Client.Login
             this.serviceProvider = serviceProvider;
             var builder = new UriBuilder(options.FontEndUri);
             builder.Path = "/password/reset";
-            ForgotPasswordUriString = builder.Uri.AbsoluteUri;
-            InitializeComponent();
+            this.ForgotPasswordUriString = builder.Uri.AbsoluteUri;
+            this.InitializeComponent();
         }
 
         /// <summary>
@@ -80,7 +79,7 @@ namespace Morphic.Client.Login
         /// <param name="e"></param>
         private void OnLogin(object sender, RoutedEventArgs e)
         {
-            _ = Login();
+            _ = this.Login();
         }
 
         private void OnCancel(object sender, RoutedEventArgs e)
@@ -94,28 +93,28 @@ namespace Morphic.Client.Login
         /// <returns></returns>
         private async Task Login()
         {
-            ErrorLabel.Visibility = Visibility.Hidden;
-            SetFieldsEnabled(false);
-            var credentials = new UsernameCredentials(UsernameField.Text, PasswordField.Password);
+            this.ErrorLabel.Visibility = Visibility.Hidden;
+            this.SetFieldsEnabled(false);
+            var credentials = new UsernameCredentials(this.UsernameField.Text, this.PasswordField.Password);
             var success = false;
             try
             {
-                success = await session.Authenticate(credentials);
+                success = await this.session.Authenticate(credentials);
             }
             catch (HttpService.BadRequestException e)
             {
-                logger.LogWarning(e, "Bad login request");
+                this.logger.LogWarning(e, "Bad login request");
             }
             if (!success)
             {
-                ErrorLabel.Visibility = Visibility.Visible;
-                ErrorLabel.Focus(); // Makes narrator read the error label
-                SetFieldsEnabled(true);
+                this.ErrorLabel.Visibility = Visibility.Visible;
+                this.ErrorLabel.Focus(); // Makes narrator read the error label
+                this.SetFieldsEnabled(true);
             }
             else if (this.ApplyPreferences)
             {
-                _ = session.ApplyAllPreferences();
-                Close();
+                _ = this.session.ApplyAllPreferences();
+                this.Close();
             }
             else
             {
@@ -125,9 +124,9 @@ namespace Morphic.Client.Login
 
         private void SetFieldsEnabled(bool enabled)
         {
-            UsernameField.IsEnabled = enabled;
-            PasswordField.IsEnabled = enabled;
-            LoginButton.IsEnabled = enabled;
+            this.UsernameField.IsEnabled = enabled;
+            this.PasswordField.IsEnabled = enabled;
+            this.LoginButton.IsEnabled = enabled;
         }
 
         public string ForgotPasswordUriString { get; set; } = "";
@@ -151,22 +150,22 @@ namespace Morphic.Client.Login
 
         private void UsernameField_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (UsernameField.Text == " ")
+            if (this.UsernameField.Text == " ")
             {
-                _ = EnableNarrator();
-                UsernameField.Text = "";
+                _ = this.EnableNarrator();
+                this.UsernameField.Text = "";
             }
-            UpdateValidation();
+            this.UpdateValidation();
         }
 
         private void PasswordField_PasswordChanged(object sender, RoutedEventArgs e)
         {
-            UpdateValidation();
+            this.UpdateValidation();
         }
 
         private void UpdateValidation()
         {
-            LoginButton.IsEnabled = UsernameField.Text.Length > 0 && PasswordField.Password.Length > 0;
+            this.LoginButton.IsEnabled = this.UsernameField.Text.Length > 0 && this.PasswordField.Password.Length > 0;
         }
 
         #endregion
@@ -175,7 +174,7 @@ namespace Morphic.Client.Login
 
         public async Task Announce()
         {
-            var isNarratorEnabled = await session.SettingsManager.CaptureBool(SettingsManager.Keys.WindowsNarratorEnabled) ?? false;
+            var isNarratorEnabled = await this.session.SettingsManager.CaptureBool(SettingsManager.Keys.WindowsNarratorEnabled) ?? false;
             if (!isNarratorEnabled)
             {
                 var player = new SoundPlayer(Properties.Resources.LoginAnnounce);
@@ -186,7 +185,7 @@ namespace Morphic.Client.Login
 
         public async Task EnableNarrator()
         {
-            _ = await session.SettingsManager.Apply(SettingsManager.Keys.WindowsNarratorEnabled, true);
+            _ = await this.session.SettingsManager.Apply(SettingsManager.Keys.WindowsNarratorEnabled, true);
         }
 
         #endregion

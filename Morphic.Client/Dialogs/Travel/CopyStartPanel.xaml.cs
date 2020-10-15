@@ -1,12 +1,10 @@
-﻿using System.Windows;
-
-namespace Morphic.Client.Travel
+﻿namespace Morphic.Client.Dialogs.Travel
 {
     using System;
     using System.Threading.Tasks;
+    using System.Windows;
     using System.Windows.Controls;
     using Elements;
-    using Login;
     using Service;
 
     public partial class CopyStartPanel : StackPanel, IStepPanel
@@ -18,7 +16,7 @@ namespace Morphic.Client.Travel
         {
             this.session = session;
             this.serviceProvider = serviceProvider;
-            InitializeComponent();
+            this.InitializeComponent();
         }
 
         private Task<bool> EnsureLoggedOn()

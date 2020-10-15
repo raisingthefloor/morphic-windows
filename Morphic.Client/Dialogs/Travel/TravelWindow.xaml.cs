@@ -21,74 +21,58 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System;
-using System.Windows;
-using System.Windows.Controls;
-using Microsoft.Extensions.Logging;
-using Morphic.Service;
-
-namespace Morphic.Client.Travel
+namespace Morphic.Client.Dialogs.Travel
 {
+    using System;
+    using System.Windows;
+    using Microsoft.Extensions.Logging;
+    using Service;
+
     /// <summary>
-    /// Shown at the end of the capture process as a review for the user
+    /// Window that walks the user the the capture and, if necessary, account creation process.
+    /// Loads each panel one at time depending on what steps are required
     /// </summary>
-    public partial class TravelCompletedPanel : StackPanel
+    public partial class TravelWindow : Window
     {
 
-        #region Creating a Panel
+        #region Create a Window
 
-        public TravelCompletedPanel(Session session, ILogger<TravelCompletedPanel> logger)
+        public TravelWindow(Session session, ILogger<TravelWindow> logger, IServiceProvider serviceProvider)
         {
             this.session = session;
             this.logger = logger;
-            InitializeComponent();
+            this.serviceProvider = serviceProvider;
+            this.InitializeComponent();
         }
+
+        /// <summary>
+        /// The Morphic session to consult when making decisions
+        /// </summary>
+        private readonly Session session;
 
         /// <summary>
         /// A logger to use
         /// </summary>
-        private readonly ILogger<TravelCompletedPanel> logger;
-
-        #endregion
-
-        #region Completion Events
+        private readonly ILogger<TravelWindow> logger;
 
         /// <summary>
-        /// The event that is dispatched when the user clicks the Close button
+        /// A service provider to use when creating panels
         /// </summary>
-        public event EventHandler? Completed;
+        private readonly IServiceProvider serviceProvider;
 
         #endregion
-
-        #region Lifecycle
-
-        private readonly Session session;
 
         protected override void OnInitialized(EventArgs e)
         {
             base.OnInitialized(e);
-            Loaded += OnLoaded;
+            this.ShowStartPanel();
         }
 
-        private void OnLoaded(object sender, RoutedEventArgs e)
+        private void ShowStartPanel()
         {
-            EmailLabel.Content = session.User?.Email;
+            CopyStartPanel copyStartPanel = this.StepFrame.PushPanel<CopyStartPanel>();
+            copyStartPanel.Completed += (sender, args) => this.Close();
         }
 
-        #endregion
-
-        #region Actions
-
-        /// <summary>
-        /// Handler for when the user clicks the Close button
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void OnClose(object? sender, RoutedEventArgs e)
-        {
-            Completed?.Invoke(this, new EventArgs());
-        }
-
-        #endregion
     }
 }

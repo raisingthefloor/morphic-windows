@@ -21,18 +21,17 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using Microsoft.Extensions.Logging;
-using Morphic.Service;
-using System;
-using System.Windows;
-using System.Windows.Controls;
-using Morphic.Settings;
-using Morphic.Core;
-using System.Threading.Tasks;
-
-namespace Morphic.Client.Travel
+namespace Morphic.Client.Dialogs.Travel
 {
+    using System;
+    using System.Threading.Tasks;
+    using System.Windows;
+    using System.Windows.Controls;
+    using Core;
     using Elements;
+    using Microsoft.Extensions.Logging;
+    using Service;
+    using Settings;
 
     /// <summary>
     /// The Capture panel is one of the steps shown when the user is walked through the process of taking their settings with them.

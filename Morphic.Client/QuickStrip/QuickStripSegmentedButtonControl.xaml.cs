@@ -21,21 +21,19 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System;
-using System.Windows;
-using System.Windows.Data;
-using System.Windows.Media;
-using System.Windows.Controls;
-using System.Windows.Automation;
-using System.Linq;
-using Morphic.Client.QuickStrip;
-
-namespace Morphic.Client
+namespace Morphic.Client.QuickStrip
 {
+    using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Linq;
+    using System.Windows;
+    using System.Windows.Automation;
+    using System.Windows.Controls;
     using System.Windows.Controls.Primitives;
+    using System.Windows.Data;
     using System.Windows.Input;
+    using System.Windows.Media;
     using Core;
     using Service;
     using Binding = System.Windows.Data.Binding;
@@ -53,7 +51,7 @@ namespace Morphic.Client
 
         public QuickStripSegmentedButtonControl()
         {
-            InitializeComponent();
+            this.InitializeComponent();
             this.MouseUp += this.OnMouseUp;
         }
 
@@ -119,29 +117,29 @@ namespace Morphic.Client
 
         private Style CreatePrimaryButtonStyle()
         {
-            var style = CreateBaseButtonStyle();
-            style.Setters.Add(new Setter { Property = ButtonBase.BackgroundProperty, Value = PrimaryButtonBackground });
+            var style = this.CreateBaseButtonStyle();
+            style.Setters.Add(new Setter { Property = ButtonBase.BackgroundProperty, Value = this.PrimaryButtonBackground });
             var trigger = new Trigger { Property = ButtonBase.IsPressedProperty, Value = true };
-            trigger.Setters.Add(new Setter { Property = ButtonBase.BackgroundProperty, Value = PrimaryButtonBackground.DarkenedByPercentage(0.4) });
+            trigger.Setters.Add(new Setter { Property = ButtonBase.BackgroundProperty, Value = this.PrimaryButtonBackground.DarkenedByPercentage(0.4) });
             style.Triggers.Add(trigger);
             return style;
         }
         private Style CreatePrimaryToggleStyle()
         {
-            var style = CreateBaseButtonStyle();
-            style.Setters.Add(new Setter { Property = ToggleButton.BackgroundProperty, Value = PrimaryButtonBackground });
+            var style = this.CreateBaseButtonStyle();
+            style.Setters.Add(new Setter { Property = ToggleButton.BackgroundProperty, Value = this.PrimaryButtonBackground });
             var trigger = new Trigger { Property = ToggleButton.IsPressedProperty, Value = true };
-            trigger.Setters.Add(new Setter { Property = ToggleButton.BackgroundProperty, Value = PrimaryButtonBackground.DarkenedByPercentage(0.4) });
+            trigger.Setters.Add(new Setter { Property = ToggleButton.BackgroundProperty, Value = this.PrimaryButtonBackground.DarkenedByPercentage(0.4) });
             style.Triggers.Add(trigger);
             return style;
         }
 
         private Style CreateSecondaryButtonStyle()
         {
-            var style = CreateBaseButtonStyle();
-            style.Setters.Add(new Setter { Property = ActionButton.BackgroundProperty, Value = SecondaryButtonBackground });
+            var style = this.CreateBaseButtonStyle();
+            style.Setters.Add(new Setter { Property = ActionButton.BackgroundProperty, Value = this.SecondaryButtonBackground });
             var trigger = new Trigger { Property = ActionButton.IsPressedProperty, Value = true };
-            trigger.Setters.Add(new Setter { Property = ActionButton.BackgroundProperty, Value = SecondaryButtonBackground.DarkenedByPercentage(0.4) });
+            trigger.Setters.Add(new Setter { Property = ActionButton.BackgroundProperty, Value = this.SecondaryButtonBackground.DarkenedByPercentage(0.4) });
             style.Triggers.Add(trigger);
             return style;
         }
@@ -155,16 +153,16 @@ namespace Morphic.Client
         {
             get
             {
-                return showsHelp;
+                return this.showsHelp;
             }
             set
             {
-                showsHelp = value;
-                foreach (var element in ActionStack.Children)
+                this.showsHelp = value;
+                foreach (var element in this.ActionStack.Children)
                 {
                     if (element is IActionControl button)
                     {
-                        button.Helper.ShowsHelp = showsHelp;
+                        button.Helper.ShowsHelp = this.showsHelp;
                     }
                 }
             }
@@ -237,23 +235,23 @@ namespace Morphic.Client
             // They featured different background shades, but the lighter shade was too low of
             // contrast wit the white text for users who need high contrast.  So we're now
             // using only the primary style and adding a space in between the buttons 
-            button.Style = isToggle ? CreatePrimaryToggleStyle() : CreatePrimaryButtonStyle();
+            button.Style = isToggle ? this.CreatePrimaryToggleStyle() : this.CreatePrimaryButtonStyle();
             button.FocusVisualStyle = this.Resources["ButtonFocusStyle"] as Style;
             button.Content = content;
             AutomationProperties.SetName(button, automationName);
-            button.Click += Button_Click;
+            button.Click += this.Button_Click;
 
             if (button is ToggleButton toggleButton)
             {
-                toggleButton.Checked += Button_Toggled;
-                toggleButton.Unchecked += Button_Toggled;
+                toggleButton.Checked += this.Button_Toggled;
+                toggleButton.Unchecked += this.Button_Toggled;
             }
 
-            if (ActionStack.Children.Count > 0)
+            if (this.ActionStack.Children.Count > 0)
             {
                 button.Margin = new Thickness(1, 0, 0, 0);
             }
-            ActionStack.Children.Add(button);
+            this.ActionStack.Children.Add(button);
 
             if (this.ContextItems != null)
             {
@@ -274,10 +272,10 @@ namespace Morphic.Client
                 }
                 else
                 {
-                    var index = ActionStack.Children.IndexOf(button);
+                    var index = this.ActionStack.Children.IndexOf(button);
                     var args = new ActionEventArgs(index, AutomationProperties.GetName(button),
                         button.IsChecked == true);
-                    Toggled?.Invoke(this, args);
+                    this.Toggled?.Invoke(this, args);
                 }
             }
         }
@@ -301,10 +299,10 @@ namespace Morphic.Client
                 }
                 else
                 {
-                    var index = ActionStack.Children.IndexOf(button);
+                    var index = this.ActionStack.Children.IndexOf(button);
                     var args = new ActionEventArgs(index, AutomationProperties.GetName(button),
                         (button as ToggleButton)?.IsChecked == true);
-                    Action?.Invoke(this, args);
+                    this.Action?.Invoke(this, args);
                     helper?.UpdateHelp();
                 }
             }
@@ -338,9 +336,9 @@ namespace Morphic.Client
             /// <param name="toggleState">true if the button is 'on'</param>
             public ActionEventArgs(int selectedIndex, string selectedName, bool toggleState = false)
             {
-                SelectedIndex = selectedIndex;
-                SelectedName = selectedName;
-                ToggleState = toggleState;
+                this.SelectedIndex = selectedIndex;
+                this.SelectedName = selectedName;
+                this.ToggleState = toggleState;
             }
         }
 
@@ -484,11 +482,11 @@ namespace Morphic.Client
             {
                 this.Control = control;
                 this.HelpBuilder = helpBuilder;
-                control.MouseEnter += OnMouseEnter;
-                control.MouseLeave += OnMouseLeave;
-                control.MouseUp += OnMouseUp;
-                control.GotKeyboardFocus += OnGotKeyboardFocus;
-                control.KeyDown += OnKeyDown;
+                control.MouseEnter += this.OnMouseEnter;
+                control.MouseLeave += this.OnMouseLeave;
+                control.MouseUp += this.OnMouseUp;
+                control.GotKeyboardFocus += this.OnGotKeyboardFocus;
+                control.KeyDown += this.OnKeyDown;
             }
 
             private void OnKeyDown(object sender, KeyEventArgs e)
@@ -510,7 +508,7 @@ namespace Morphic.Client
             {
                 if (InputManager.Current.MostRecentInputDevice is KeyboardDevice)
                 {
-                    UpdateHelp();
+                    this.UpdateHelp();
                 }
             }
 
@@ -521,14 +519,14 @@ namespace Morphic.Client
             /// <param name="e"></param>
             private void OnMouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
             {
-                UpdateHelp();
+                this.UpdateHelp();
             }
 
             internal void UpdateHelp()
             {
-                if (ShowsHelp)
+                if (this.ShowsHelp)
                 {
-                    if (HelpBuilder is IQuickHelpControlBuilder builder)
+                    if (this.HelpBuilder is IQuickHelpControlBuilder builder)
                     {
                         QuickHelpWindow.Show(builder);
                     }
@@ -542,7 +540,7 @@ namespace Morphic.Client
             /// <param name="e"></param>
             private void OnMouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
             {
-                if (ShowsHelp)
+                if (this.ShowsHelp)
                 {
                     QuickHelpWindow.Dismiss();
                 }

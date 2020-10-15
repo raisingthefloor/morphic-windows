@@ -1,13 +1,14 @@
-﻿<local:QuickStripItemControl x:Class="Morphic.Client.QuickStripSegmentedButtonControl"
+﻿<quickStrip:QuickStripItemControl x:Class="Morphic.Client.QuickStrip.QuickStripSegmentedButtonControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Morphic.Client"
+             xmlns:quickStrip="clr-namespace:Morphic.Client.QuickStrip"
              mc:Ignorable="d" 
              d:DesignHeight="44" d:DesignWidth="100"
              >
-    <local:QuickStripItemControl.Resources>
+    <quickStrip:QuickStripItemControl.Resources>
         <Style x:Key="ButtonFocusStyle">
             <Setter Property="Control.Template">
                 <Setter.Value>
@@ -21,7 +22,7 @@
                 </Setter.Value>
             </Setter>
         </Style>
-    </local:QuickStripItemControl.Resources>
+    </quickStrip:QuickStripItemControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="17"/>
@@ -32,4 +33,4 @@
         <StackPanel Grid.Row="2" Name="ActionStack" Orientation="Horizontal" HorizontalAlignment="Center">
         </StackPanel>
     </Grid>
-</local:QuickStripItemControl>
+</quickStrip:QuickStripItemControl>

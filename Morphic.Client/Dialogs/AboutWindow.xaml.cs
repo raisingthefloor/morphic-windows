@@ -1,11 +1,10 @@
-﻿using System.Windows;
-using System.Windows.Navigation;
-
-namespace Morphic.Client.About
+﻿namespace Morphic.Client.Dialogs
 {
     using System.Diagnostics;
     using System.Threading.Tasks;
+    using System.Windows;
     using System.Windows.Input;
+    using System.Windows.Navigation;
     using AutoUpdaterDotNET;
     using Microsoft.Extensions.DependencyInjection;
 
@@ -15,7 +14,7 @@ namespace Morphic.Client.About
         public AboutWindow()
         {
             this.DataContext = BuildInfo.Current;
-            InitializeComponent();
+            this.InitializeComponent();
         }
 
         private void CheckUpdate_OnClick(object sender, RequestNavigateEventArgs e)

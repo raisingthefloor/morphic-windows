@@ -21,16 +21,15 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using Microsoft.Extensions.Logging;
-using Morphic.Service;
-using System;
-using System.Windows;
-using System.Windows.Controls;
-using System.Threading.Tasks;
-
-namespace Morphic.Client.Travel
+namespace Morphic.Client.Dialogs.Travel
 {
+    using System;
+    using System.Threading.Tasks;
+    using System.Windows;
+    using System.Windows.Controls;
     using Elements;
+    using Microsoft.Extensions.Logging;
+    using Service;
 
     public partial class ApplyPanel : StackPanel, IStepPanel
     {

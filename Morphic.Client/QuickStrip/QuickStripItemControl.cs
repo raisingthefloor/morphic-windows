@@ -21,10 +21,10 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System.Windows.Controls;
-
-namespace Morphic.Client
+namespace Morphic.Client.QuickStrip
 {
+    using System.Windows.Controls;
+
     /// <summary>
     /// The abstract base class for any control shown on the quick strip
     /// </summary>

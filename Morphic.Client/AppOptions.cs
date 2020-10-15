@@ -7,7 +7,7 @@
     using System.Reflection;
     using System.Runtime.CompilerServices;
     using System.Text.RegularExpressions;
-    using About;
+    using Dialogs;
     using global::CommandLine;
     using Microsoft.Win32;
 

@@ -21,20 +21,18 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using Microsoft.Extensions.Logging;
-using Morphic.Core;
-using Morphic.Service;
-using System;
-using System.Windows;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Windows.Controls;
-
-namespace Morphic.Client.Travel
+namespace Morphic.Client.Dialogs.Travel
 {
-    using System.Windows.Forms;
+    using System;
+    using System.Text.RegularExpressions;
+    using System.Threading.Tasks;
+    using System.Windows;
+    using System.Windows.Controls;
+    using Core;
     using Elements;
-    using Login;
+    using Microsoft.Extensions.Logging;
+    using Service;
+    using MessageBox = System.Windows.Forms.MessageBox;
 
     /// <summary>
     /// A panel shown when the user needs to create an account in order to save their captured settings
@@ -49,7 +47,7 @@ namespace Morphic.Client.Travel
             this.session = session;
             this.logger = logger;
             this.serviceProvider = serviceProvider;
-            InitializeComponent();
+            this.InitializeComponent();
         }
 
         /// <summary>
@@ -90,7 +88,7 @@ namespace Morphic.Client.Travel
         /// <param name="e"></param>
         public void OnSubmit(object? sender, RoutedEventArgs e)
         {
-            _ = Submit();
+            _ = this.Submit();
         }
 
         /// <summary>
@@ -100,16 +98,16 @@ namespace Morphic.Client.Travel
         private async Task Submit()
         {
             // TODO: show activity indicator
-            UpdateValidation();
-            SetFieldsEnabled(false);
+            this.UpdateValidation();
+            this.SetFieldsEnabled(false);
             var user = new User();
-            user.Email = UsernameField.Text;
-            var credentials = new UsernameCredentials(UsernameField.Text, PasswordField.Password);
+            user.Email = this.UsernameField.Text;
+            var credentials = new UsernameCredentials(this.UsernameField.Text, this.PasswordField.Password);
             var success = false;
             var errorMessage = "";
             try
             {
-                success = await session.RegisterUser(user, credentials, Preferences);
+                success = await this.session.RegisterUser(user, credentials, this.Preferences);
             }
             catch (AuthService.BadPasswordException)
             {
@@ -130,7 +128,7 @@ namespace Morphic.Client.Travel
             if (success)
             {
                 MessageBox.Show("Your account was created.\n\nPlease check your email for further instructions.");
-                Completed?.Invoke(this, new EventArgs());
+                this.Completed?.Invoke(this, new EventArgs());
             }
             else
             {
@@ -138,10 +136,10 @@ namespace Morphic.Client.Travel
                 {
                     errorMessage = "We could not complete the request.  Please try again.";
                 }
-                ErrorLabel.Visibility = Visibility.Visible;
-                ErrorLabel.Content = errorMessage;
-                ErrorLabel.Focus(); // Causes screen reader to read label
-                SetFieldsEnabled(true);
+                this.ErrorLabel.Visibility = Visibility.Visible;
+                this.ErrorLabel.Content = errorMessage;
+                this.ErrorLabel.Focus(); // Causes screen reader to read label
+                this.SetFieldsEnabled(true);
             }
         }
 
@@ -169,10 +167,10 @@ namespace Morphic.Client.Travel
         private ValidationError inputError {
             get
             {
-                var username = UsernameField.Text;
-                var password = PasswordField.Password;
-                var confirmation = ConfirmPasswordField.Password;
-                if (!hasTypedUsername)
+                var username = this.UsernameField.Text;
+                var password = this.PasswordField.Password;
+                var confirmation = this.ConfirmPasswordField.Password;
+                if (!this.hasTypedUsername)
                 {
                     return ValidationError.EmptyUsername;
                 }
@@ -180,7 +178,7 @@ namespace Morphic.Client.Travel
                 {
                     return ValidationError.UsernameTooShort;
                 }
-                if (!hasTypedPassword)
+                if (!this.hasTypedPassword)
                 {
                     return ValidationError.EmptyPassword;
                 }
@@ -188,7 +186,7 @@ namespace Morphic.Client.Travel
                 {
                     return ValidationError.PasswordTooShort;
                 }
-                if (!hasTypedConfirmation)
+                if (!this.hasTypedConfirmation)
                 {
                     return ValidationError.EmptyConfirmation;
                 }
@@ -231,9 +229,9 @@ namespace Morphic.Client.Travel
         /// <param name="enabled"></param>
         private void SetFieldsEnabled(bool enabled)
         {
-            UsernameField.IsEnabled = enabled;
-            PasswordField.IsEnabled = enabled;
-            SubmitButton.IsEnabled = enabled;
+            this.UsernameField.IsEnabled = enabled;
+            this.PasswordField.IsEnabled = enabled;
+            this.SubmitButton.IsEnabled = enabled;
         }
 
         /// <summary>
@@ -241,23 +239,23 @@ namespace Morphic.Client.Travel
         /// </summary>
         private void UpdateValidation()
         {
-            var error = inputError;
-            SubmitButton.IsEnabled = error == ValidationError.None;
+            var error = this.inputError;
+            this.SubmitButton.IsEnabled = error == ValidationError.None;
             switch (error) {
                 case ValidationError.UsernameTooShort:
-                    ErrorLabel.Content = String.Format("Your username needs to be at least {0} letters", minimumUsernameLength);
-                    ErrorLabel.Visibility = Visibility.Visible;
+                    this.ErrorLabel.Content = String.Format("Your username needs to be at least {0} letters", minimumUsernameLength);
+                    this.ErrorLabel.Visibility = Visibility.Visible;
                     break;
                 case ValidationError.PasswordTooShort:
-                    ErrorLabel.Content = String.Format("Your password needs to be at least {0} letters", minimumPasswordLength);
-                    ErrorLabel.Visibility = Visibility.Visible;
+                    this.ErrorLabel.Content = String.Format("Your password needs to be at least {0} letters", minimumPasswordLength);
+                    this.ErrorLabel.Visibility = Visibility.Visible;
                     break;
                 case ValidationError.PasswordsDontMatch:
-                    ErrorLabel.Content = "Your passwords don't match";
-                    ErrorLabel.Visibility = Visibility.Visible;
+                    this.ErrorLabel.Content = "Your passwords don't match";
+                    this.ErrorLabel.Visibility = Visibility.Visible;
                     break;
                 default:
-                    ErrorLabel.Visibility = Visibility.Hidden;
+                    this.ErrorLabel.Visibility = Visibility.Hidden;
                     break;
             }
 
@@ -270,39 +268,39 @@ namespace Morphic.Client.Travel
 
         private void UsernameField_TextChanged(object sender, TextChangedEventArgs e)
         {
-            UsernameField.Text = whitespaceExpression.Replace(UsernameField.Text, "");
-            UsernameField.SelectionStart = UsernameField.Text.Length;
-            UsernameField.SelectionLength = 0;
-            UpdateValidation();
+            this.UsernameField.Text = whitespaceExpression.Replace(this.UsernameField.Text, "");
+            this.UsernameField.SelectionStart = this.UsernameField.Text.Length;
+            this.UsernameField.SelectionLength = 0;
+            this.UpdateValidation();
         }
 
         private void PasswordField_PasswordChanged(object sender, RoutedEventArgs e)
         {
-            UpdateValidation();
+            this.UpdateValidation();
         }
 
         private void UsernameField_LostFocus(object sender, RoutedEventArgs e)
         {
-            hasTypedUsername = UsernameField.Text.Length > 0;
-            UpdateValidation();
+            this.hasTypedUsername = this.UsernameField.Text.Length > 0;
+            this.UpdateValidation();
         }
 
         private void PasswordField_LostFocus(object sender, RoutedEventArgs e)
         {
-            hasTypedPassword = PasswordField.Password.Length > 0;
-            UpdateValidation();
+            this.hasTypedPassword = this.PasswordField.Password.Length > 0;
+            this.UpdateValidation();
         }
 
         private void ConfirmPasswordField_PasswordChanged(object sender, RoutedEventArgs e)
         {
-            hasTypedConfirmation = ConfirmPasswordField.Password == PasswordField.Password;
-            UpdateValidation();
+            this.hasTypedConfirmation = this.ConfirmPasswordField.Password == this.PasswordField.Password;
+            this.UpdateValidation();
         }
 
         private void ConfirmPasswordField_LostFocus(object sender, RoutedEventArgs e)
         {
-            hasTypedConfirmation = ConfirmPasswordField.Password.Length > 0;
-            UpdateValidation();
+            this.hasTypedConfirmation = this.ConfirmPasswordField.Password.Length > 0;
+            this.UpdateValidation();
         }
 
         #endregion

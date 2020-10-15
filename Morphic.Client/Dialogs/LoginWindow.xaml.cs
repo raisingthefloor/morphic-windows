@@ -1,8 +1,7 @@
-﻿using System.Windows;
-
-namespace Morphic.Client.Login
+﻿namespace Morphic.Client.Dialogs
 {
     using System;
+    using System.Windows;
 
     public partial class LoginWindow : Window
     {
@@ -11,7 +10,7 @@ namespace Morphic.Client.Login
         public LoginWindow(IServiceProvider serviceProvider)
         {
             this.serviceProvider = serviceProvider;
-            InitializeComponent();
+            this.InitializeComponent();
             this.ShowLoginPanel();
         }
 
