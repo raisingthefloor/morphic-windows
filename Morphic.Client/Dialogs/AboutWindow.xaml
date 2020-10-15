@@ -4,8 +4,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:client="clr-namespace:Morphic.Client"
+        xmlns:config="clr-namespace:Morphic.Client.Config"
         mc:Ignorable="d"
-        d:DataContext="{d:DesignInstance client:BuildInfo}"
+        d:DataContext="{d:DesignInstance config:BuildInfo}"
         Title="About Morphic" Height="280" Width="300" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
     <StackPanel Orientation="Vertical">
         <Image Source="/Icon.png" Width="60" Margin="30"/>

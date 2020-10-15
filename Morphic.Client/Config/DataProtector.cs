@@ -21,12 +21,11 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System;
-using Morphic.Core;
-using System.Security.Cryptography;
-
-namespace Morphic.Client
+namespace Morphic.Client.Config
 {
+    using System;
+    using System.Security.Cryptography;
+    using Core;
 
     class DataProtector : IDataProtection
     {

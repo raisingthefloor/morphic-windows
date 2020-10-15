@@ -47,6 +47,7 @@ namespace Morphic.Client.QuickStrip
     using System.Windows.Forms;
     using System.Windows.Input;
     using Windows.Native;
+    using Config;
     using global::Windows.Media.SpeechSynthesis;
     using Clipboard = System.Windows.Clipboard;
     using Control = System.Windows.Controls.Control;
@@ -65,11 +66,11 @@ namespace Morphic.Client.QuickStrip
 
         #region Initialization
 
-        public QuickStripWindow(Session session)
+        public QuickStripWindow(MorphicSession morphicSession)
         {
             this.Messages = new WindowMessageHook(this);
-            this.session = session;
-            session.UserChanged += Session_UserChanged;
+            this.morphicSession = morphicSession;
+            morphicSession.UserChanged += Session_UserChanged;
             InitializeComponent();
             Deactivated += OnDeactivated;
             SystemEvents.DisplaySettingsChanged += SystemEvents_DisplaySettingsChanged;
@@ -147,7 +148,7 @@ namespace Morphic.Client.QuickStrip
             hwndSource?.AddHook(SelectionReader.Default.WindowProc);
         }
 
-        private readonly Session session;
+        private readonly MorphicSession morphicSession;
 
         private void OnDeactivated(object? sender, EventArgs e)
         {
@@ -156,7 +157,7 @@ namespace Morphic.Client.QuickStrip
 
         private void Update()
         {
-            if (Enum.TryParse<FixedPosition>(session.GetString(PreferenceKeys.Position), out var position))
+            if (Enum.TryParse<FixedPosition>(this.morphicSession.GetString(PreferenceKeys.Position), out var position))
             {
                 this.position = position;
             }
@@ -424,7 +425,7 @@ namespace Morphic.Client.QuickStrip
 
                             var contrastHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Contrast_On_HelpTitle, Properties.Resources.QuickStrip_Contrast_On_HelpMessage);
                             control.AddToggle(Properties.Resources.QuickStrip_Colors_Contrast_Title, Properties.Resources.QuickStrip_Colors_Contrast_Name, contrastHelp)
-                                .Automate(quickStrip.session, SettingsManager.Keys.WindowsDisplayContrastEnabled, applySetting: false)
+                                .Automate(quickStrip.morphicSession, SettingsManager.Keys.WindowsDisplayContrastEnabled, applySetting: false)
                                 .Helper.SetContextItems(new []
                                 {
                                     ("setting", "easeofaccess-highcontrast"),
@@ -434,7 +435,7 @@ namespace Morphic.Client.QuickStrip
 
                             var colorHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_Colors_Color_HelpTitle, Properties.Resources.QuickStrip_Colors_Color_HelpMessage);
                             control.AddToggle(Properties.Resources.QuickStrip_Colors_Color_Title, Properties.Resources.QuickStrip_Colors_Color_Name, colorHelp)
-                                .Automate(quickStrip.session, SettingsManager.Keys.WindowsDisplayColorFilterEnabled)
+                                .Automate(quickStrip.morphicSession, SettingsManager.Keys.WindowsDisplayColorFilterEnabled)
                                 .Helper.SetContextItems(new []
                                 {
                                     ("setting", "easeofaccess-colorfilter"),
@@ -449,7 +450,7 @@ namespace Morphic.Client.QuickStrip
                                     Properties.Resources.QuickStrip_Colors_Dark_HelpMessage);
                                 control.AddToggle(Properties.Resources.QuickStrip_Colors_Dark_Title,
                                         Properties.Resources.QuickStrip_Colors_Dark_Name, darkHelp)
-                                    .Automate(quickStrip.session,
+                                    .Automate(quickStrip.morphicSession,
                                         SettingsManager.Keys.WindowsDisplayLightAppsThemeEnabled,
                                         applySetting: false, onValue: false, offValue: true)
                                     .Helper.SetContextItems(new[]
@@ -462,7 +463,7 @@ namespace Morphic.Client.QuickStrip
 
                             var nightHelp = new QuickHelpTextControlBuilder(Properties.Resources.QuickStrip_NightMode_On_HelpTitle, Properties.Resources.QuickStrip_NightMode_On_HelpMessage);
                             control.AddToggle(Properties.Resources.QuickStrip_Colors_Night_Title, Properties.Resources.QuickStrip_Colors_Night_Name, nightHelp)
-                                .Automate(quickStrip.session, SettingsManager.Keys.WindowsDisplayNightModeEnabled, false)
+                                .Automate(quickStrip.morphicSession, SettingsManager.Keys.WindowsDisplayNightModeEnabled, false)
                                 .Helper.SetContextItems(new []
                                 {
                                     ("setting", "nightlight"),
@@ -512,7 +513,7 @@ namespace Morphic.Client.QuickStrip
                 Countly.RecordEvent("Text Smaller");
                 percentage = Display.Primary.PercentageForZoomingOut;
             }
-            _ = session.Apply(SettingsManager.Keys.WindowsDisplayZoom, percentage);
+            _ = this.morphicSession.Apply(SettingsManager.Keys.WindowsDisplayZoom, percentage);
         }
 
         /// <summary>Original magnifier settings.</summary>
@@ -648,12 +649,12 @@ namespace Morphic.Client.QuickStrip
             if (e.SelectedIndex == 0)
             {
                 Countly.RecordEvent("Contrast On");
-                _ = session.Apply(SettingsManager.Keys.WindowsDisplayContrastEnabled, true);
+                _ = this.morphicSession.Apply(SettingsManager.Keys.WindowsDisplayContrastEnabled, true);
             }
             else if (e.SelectedIndex == 1)
             {
                 Countly.RecordEvent("Contrast Off");
-                _ = session.Apply(SettingsManager.Keys.WindowsDisplayContrastEnabled, false);
+                _ = this.morphicSession.Apply(SettingsManager.Keys.WindowsDisplayContrastEnabled, false);
             }
         }
 
@@ -662,12 +663,12 @@ namespace Morphic.Client.QuickStrip
             if (e.SelectedIndex == 0)
             {
                 Countly.RecordEvent("NightMode On");
-                _ = session.Apply(SettingsManager.Keys.WindowsDisplayNightModeEnabled, true);
+                _ = this.morphicSession.Apply(SettingsManager.Keys.WindowsDisplayNightModeEnabled, true);
             }
             else if (e.SelectedIndex == 1)
             {
                 Countly.RecordEvent("NightMode Off");
-                _ = session.Apply(SettingsManager.Keys.WindowsDisplayNightModeEnabled, false);
+                _ = this.morphicSession.Apply(SettingsManager.Keys.WindowsDisplayNightModeEnabled, false);
             }
         }
 
@@ -720,7 +721,7 @@ namespace Morphic.Client.QuickStrip
                     string? apps = key.GetValue("AppsLight", string.Empty).ToString();
                     if (apps == string.Empty)
                     {
-                        this.initialAppsLight = await this.session.SettingsManager.CaptureBool(lightAppsSetting)
+                        this.initialAppsLight = await this.morphicSession.SettingsManager.CaptureBool(lightAppsSetting)
                             ?? false;
                         key.SetValue("AppsLight", this.initialAppsLight == true ? "1" : "0");
                     }
@@ -732,7 +733,7 @@ namespace Morphic.Client.QuickStrip
                     string? windows = key.GetValue("WindowsLight", string.Empty).ToString();
                     if (windows == string.Empty)
                     {
-                        this.initialAppsLight = await this.session.SettingsManager.CaptureBool(lightWindowsSetting)
+                        this.initialAppsLight = await this.morphicSession.SettingsManager.CaptureBool(lightWindowsSetting)
                             ?? false;
                         key.SetValue("WindowsLight", this.initialAppsLight == true ? "1" : "0");
                     }
@@ -745,13 +746,13 @@ namespace Morphic.Client.QuickStrip
                 // Turning the toggle back to its initial state puts the settings back to their original value.
                 if (e.ToggleState == this.initialDarkMode)
                 {
-                    _ = session.Apply(lightAppsSetting, this.initialAppsLight);
-                    _ = session.Apply(lightWindowsSetting, this.initialWindowsLight);
+                    _ = this.morphicSession.Apply(lightAppsSetting, this.initialAppsLight);
+                    _ = this.morphicSession.Apply(lightWindowsSetting, this.initialWindowsLight);
                 }
                 else
                 {
-                    _ = session.Apply(lightAppsSetting, newValue);
-                    _ = session.Apply(lightWindowsSetting, newValue);
+                    _ = this.morphicSession.Apply(lightAppsSetting, newValue);
+                    _ = this.morphicSession.Apply(lightWindowsSetting, newValue);
                 }
             }
         }
@@ -793,7 +794,7 @@ namespace Morphic.Client.QuickStrip
             // FIXME: incomplete, for demo purposes only
             if (e.SelectedIndex == 0)
             {
-                _ = session.Apply(new Dictionary<Preferences.Key, object?>
+                _ = this.morphicSession.Apply(new Dictionary<Preferences.Key, object?>
                 {
                     { SettingsManager.Keys.WindowsCursorArrow, "%SystemRoot%\\cursors\\aero_arrow.cur" },
                     { SettingsManager.Keys.WindowsCursorWait, "%SystemRoot%\\cursors\\aero_busy.ani" },
@@ -801,7 +802,7 @@ namespace Morphic.Client.QuickStrip
             }
             else
             {
-                _ = session.Apply(new Dictionary<Preferences.Key, object?>
+                _ = this.morphicSession.Apply(new Dictionary<Preferences.Key, object?>
                 {
                     { SettingsManager.Keys.WindowsCursorArrow, "%SystemRoot%\\cursors\\arrow_r.cur" },
                     { SettingsManager.Keys.WindowsCursorWait, "%SystemRoot%\\cursors\\busy_r.cur" },
@@ -877,7 +878,7 @@ namespace Morphic.Client.QuickStrip
                 if (value != position)
                 {
                     position = value;
-                    session.SetPreference(PreferenceKeys.Position, position.ToString());
+                    this.morphicSession.SetPreference(PreferenceKeys.Position, position.ToString());
                 }
                 Reposition(animated: true);
             }

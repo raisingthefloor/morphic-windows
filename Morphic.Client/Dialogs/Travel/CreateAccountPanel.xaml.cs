@@ -42,9 +42,9 @@ namespace Morphic.Client.Dialogs.Travel
 
         #region Creating a Panel
 
-        public CreateAccountPanel(Session session, ILogger<CreateAccountPanel> logger, IServiceProvider serviceProvider)
+        public CreateAccountPanel(MorphicSession morphicSession, ILogger<CreateAccountPanel> logger, IServiceProvider serviceProvider)
         {
-            this.session = session;
+            this.morphicSession = morphicSession;
             this.logger = logger;
             this.serviceProvider = serviceProvider;
             this.InitializeComponent();
@@ -79,7 +79,7 @@ namespace Morphic.Client.Dialogs.Travel
         /// <summary>
         /// The session to use for making requests
         /// </summary>
-        private readonly Session session;
+        private readonly MorphicSession morphicSession;
 
         /// <summary>
         /// Event handler for the submit button click
@@ -107,7 +107,7 @@ namespace Morphic.Client.Dialogs.Travel
             var errorMessage = "";
             try
             {
-                success = await this.session.RegisterUser(user, credentials, this.Preferences);
+                success = await this.morphicSession.RegisterUser(user, credentials, this.Preferences);
             }
             catch (AuthService.BadPasswordException)
             {

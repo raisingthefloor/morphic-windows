@@ -1,4 +1,4 @@
-﻿namespace Morphic.Client
+﻿namespace Morphic.Client.Config
 {
     using System.IO;
     using System.Reflection;
@@ -7,10 +7,15 @@
 
     public class BuildInfo
     {
-        public static BuildInfo Current { get; } = BuildInfo.FromJsonFile("build-info.json");
+        public static BuildInfo Current { get; } = BuildInfo.FromJsonFile(AppPaths.GetAppFile("build-info.json"));
 
+        [JsonIgnore]
+        public Features Features { get; } = new Features();
+
+        [JsonIgnore]
         public string Version => Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "unknown version";
 
+        [JsonIgnore]
         public string InformationalVersion =>
             Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
                 .InformationalVersion ?? "unknown version";

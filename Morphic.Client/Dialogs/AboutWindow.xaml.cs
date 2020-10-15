@@ -6,6 +6,7 @@
     using System.Windows.Input;
     using System.Windows.Navigation;
     using AutoUpdaterDotNET;
+    using Config;
     using Microsoft.Extensions.DependencyInjection;
 
     public partial class AboutWindow : Window

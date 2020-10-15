@@ -1,8 +1,7 @@
-﻿namespace Morphic.Client
+﻿namespace Morphic.Client.Config
 {
-    class UpdateOptions
+    internal class UpdateOptions
     {
-
         public string AppCastUrl { get; set; } = "";
     }
 }

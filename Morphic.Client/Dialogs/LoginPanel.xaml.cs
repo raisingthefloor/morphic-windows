@@ -43,9 +43,9 @@ namespace Morphic.Client.Dialogs
 
         #region Create a Window
 
-        public LoginPanel(Session session, ILogger<LoginPanel> logger, SessionOptions options, IServiceProvider serviceProvider)
+        public LoginPanel(MorphicSession morphicSession, ILogger<LoginPanel> logger, SessionOptions options, IServiceProvider serviceProvider)
         {
-            this.session = session;
+            this.morphicSession = morphicSession;
             this.logger = logger;
             this.serviceProvider = serviceProvider;
             var builder = new UriBuilder(options.FontEndUri);
@@ -57,7 +57,7 @@ namespace Morphic.Client.Dialogs
         /// <summary>
         /// The session to use
         /// </summary>
-        private readonly Session session;
+        private readonly MorphicSession morphicSession;
 
         /// <summary>
         /// A logger to use
@@ -99,7 +99,7 @@ namespace Morphic.Client.Dialogs
             var success = false;
             try
             {
-                success = await this.session.Authenticate(credentials);
+                success = await this.morphicSession.Authenticate(credentials);
             }
             catch (HttpService.BadRequestException e)
             {
@@ -113,7 +113,7 @@ namespace Morphic.Client.Dialogs
             }
             else if (this.ApplyPreferences)
             {
-                _ = this.session.ApplyAllPreferences();
+                _ = this.morphicSession.ApplyAllPreferences();
                 this.Close();
             }
             else
@@ -174,7 +174,7 @@ namespace Morphic.Client.Dialogs
 
         public async Task Announce()
         {
-            var isNarratorEnabled = await this.session.SettingsManager.CaptureBool(SettingsManager.Keys.WindowsNarratorEnabled) ?? false;
+            var isNarratorEnabled = await this.morphicSession.SettingsManager.CaptureBool(SettingsManager.Keys.WindowsNarratorEnabled) ?? false;
             if (!isNarratorEnabled)
             {
                 var player = new SoundPlayer(Properties.Resources.LoginAnnounce);
@@ -185,7 +185,7 @@ namespace Morphic.Client.Dialogs
 
         public async Task EnableNarrator()
         {
-            _ = await this.session.SettingsManager.Apply(SettingsManager.Keys.WindowsNarratorEnabled, true);
+            _ = await this.morphicSession.SettingsManager.Apply(SettingsManager.Keys.WindowsNarratorEnabled, true);
         }
 
         #endregion

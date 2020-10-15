@@ -23,6 +23,7 @@ namespace Morphic.Client.Bar.Data
     using System.Windows.Media;
     using System.Windows.Media.Imaging;
     using System.Xml;
+    using Config;
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
     using SharpVectors.Converters;

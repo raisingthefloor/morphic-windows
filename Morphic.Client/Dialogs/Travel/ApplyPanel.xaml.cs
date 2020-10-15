@@ -35,9 +35,9 @@ namespace Morphic.Client.Dialogs.Travel
     {
         #region Creating a Panel
 
-        public ApplyPanel(Session session, ILogger<ApplyPanel> logger, Backups backups)
+        public ApplyPanel(MorphicSession morphicSession, ILogger<ApplyPanel> logger, Backups backups)
         {
-            this.session = session;
+            this.morphicSession = morphicSession;
             this.logger = logger;
             this.backups = backups;
             this.InitializeComponent();
@@ -62,7 +62,7 @@ namespace Morphic.Client.Dialogs.Travel
 
             await this.backups.Store();
 
-            await this.session.ApplyAllPreferences();
+            await this.morphicSession.ApplyAllPreferences();
 
             await Task.Delay(Math.Max(minTime - (Environment.TickCount - startTime), 1));
 
@@ -96,7 +96,7 @@ namespace Morphic.Client.Dialogs.Travel
         /// <summary>
         /// The Morphic Session to use for making requests
         /// </summary>
-        private readonly Session session;
+        private readonly MorphicSession morphicSession;
 
     }
 }

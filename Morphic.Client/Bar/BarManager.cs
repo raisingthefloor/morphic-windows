@@ -17,6 +17,7 @@ namespace Morphic.Client.Bar
     using System.Linq;
     using System.Threading.Tasks;
     using System.Windows;
+    using Config;
     using Core;
     using Core.Community;
     using Data;

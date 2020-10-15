@@ -1,4 +1,4 @@
-﻿namespace Morphic.Client
+﻿namespace Morphic.Client.Config
 {
     using System;
     using System.Collections;
@@ -7,8 +7,7 @@
     using System.Reflection;
     using System.Runtime.CompilerServices;
     using System.Text.RegularExpressions;
-    using Dialogs;
-    using global::CommandLine;
+    using CommandLine;
     using Microsoft.Win32;
 
     /// <summary>
@@ -222,5 +221,8 @@
         /// </summary>
         [Option("debug")]
         public bool Debug { get; set; }
+
+        [Option("features")]
+        public string? FeaturesFile { get; set; }
     }
 }

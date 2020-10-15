@@ -37,9 +37,9 @@ namespace Morphic.Client.Dialogs.Travel
 
         #region Create a Window
 
-        public TravelWindow(Session session, ILogger<TravelWindow> logger, IServiceProvider serviceProvider)
+        public TravelWindow(MorphicSession morphicSession, ILogger<TravelWindow> logger, IServiceProvider serviceProvider)
         {
-            this.session = session;
+            this.morphicSession = morphicSession;
             this.logger = logger;
             this.serviceProvider = serviceProvider;
             this.InitializeComponent();
@@ -48,7 +48,7 @@ namespace Morphic.Client.Dialogs.Travel
         /// <summary>
         /// The Morphic session to consult when making decisions
         /// </summary>
-        private readonly Session session;
+        private readonly MorphicSession morphicSession;
 
         /// <summary>
         /// A logger to use

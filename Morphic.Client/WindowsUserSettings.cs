@@ -29,10 +29,7 @@ namespace Morphic.Client
     {
         public string? UserId
         {
-            get
-            {
-                return UserSettings.Default.UserId;
-            }
+            get => UserSettings.Default.UserId;
             set
             {
                 UserSettings.Default.UserId = value;

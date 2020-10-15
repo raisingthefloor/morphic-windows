@@ -377,7 +377,7 @@ namespace Morphic.Client.QuickStrip
             /// <summary>The setting.</summary>
             public Preferences.Key PreferenceKey { get; set; }
             /// <summary>The session.</summary>
-            public Session? Session { get; set; }
+            public MorphicSession? Session { get; set; }
             public bool AutoUpdate { get; set; }
             public bool ApplySetting { get; set; }
 
@@ -414,20 +414,20 @@ namespace Morphic.Client.QuickStrip
             /// <summary>
             /// Automatically set a setting for the toggle button.
             /// </summary>
-            /// <param name="session">The session.</param>
+            /// <param name="morphicSession">The session.</param>
             /// <param name="pref">The preference to read the state from (and to set, if prefsToSet is null)</param>
             /// <param name="autoUpdate">Automatically update the button</param>
             /// <param name="applySetting">Apply the setting, when toggled</param>
             /// <param name="onValue">The value to apply, when the button is checked</param>
             /// <param name="offValue">The value to apply, when the button is unchecked</param>
             /// <returns></returns>
-            public QsToggleButton Automate(Session session, Preferences.Key pref, bool autoUpdate = true,
+            public QsToggleButton Automate(MorphicSession morphicSession, Preferences.Key pref, bool autoUpdate = true,
                 bool applySetting = true,
                 object? onValue = null, object? offValue = null)
             {
                 this.OnValue = onValue ?? true;
                 this.OffValue = offValue ?? false;
-                this.Session = session;
+                this.Session = morphicSession;
                 this.PreferenceKey = pref;
                 this.AutoUpdate = autoUpdate;
                 this.ApplySetting = applySetting;

@@ -27,6 +27,7 @@ namespace Morphic.Client.QuickStrip
     using System.Timers;
     using System.Windows;
     using System.Windows.Input;
+    using Config;
 
     /// <summary>
     /// A large window that behaves similar to a tooltip, but shows up immediately when hovering over quick strip controls

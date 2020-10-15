@@ -12,6 +12,7 @@ namespace Morphic.Client.Bar.Data
 {
     using System.Collections.Generic;
     using System.IO;
+    using Config;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
 

@@ -37,9 +37,9 @@ namespace Morphic.Client.Dialogs.Travel
 
         #region Creating a Panel
 
-        public TravelCompletedPanel(Session session, ILogger<TravelCompletedPanel> logger)
+        public TravelCompletedPanel(MorphicSession morphicSession, ILogger<TravelCompletedPanel> logger)
         {
-            this.session = session;
+            this.morphicSession = morphicSession;
             this.logger = logger;
             this.InitializeComponent();
         }
@@ -62,7 +62,7 @@ namespace Morphic.Client.Dialogs.Travel
 
         #region Lifecycle
 
-        private readonly Session session;
+        private readonly MorphicSession morphicSession;
 
         protected override void OnInitialized(EventArgs e)
         {
@@ -72,7 +72,7 @@ namespace Morphic.Client.Dialogs.Travel
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            this.EmailLabel.Content = this.session.User?.Email;
+            this.EmailLabel.Content = this.morphicSession.User?.Email;
         }
 
         #endregion

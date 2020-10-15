@@ -9,12 +9,12 @@
 
     public partial class CopyStartPanel : StackPanel, IStepPanel
     {
-        private readonly Session session;
+        private readonly MorphicSession morphicSession;
         private readonly IServiceProvider serviceProvider;
 
-        public CopyStartPanel(Session session, IServiceProvider serviceProvider)
+        public CopyStartPanel(MorphicSession morphicSession, IServiceProvider serviceProvider)
         {
-            this.session = session;
+            this.morphicSession = morphicSession;
             this.serviceProvider = serviceProvider;
             this.InitializeComponent();
         }
@@ -23,7 +23,7 @@
         {
             Task<bool> task;
 
-            if (this.session.User == null)
+            if (this.morphicSession.User == null)
             {
                 TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
                 task = completionSource.Task;

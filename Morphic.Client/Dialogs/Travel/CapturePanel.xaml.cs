@@ -42,9 +42,9 @@ namespace Morphic.Client.Dialogs.Travel
 
         #region Creating a Panel
 
-        public CapturePanel(Session session, ILogger<CapturePanel> logger, IServiceProvider serviceProvider)
+        public CapturePanel(MorphicSession morphicSession, ILogger<CapturePanel> logger, IServiceProvider serviceProvider)
         {
-            this.session = session;
+            this.morphicSession = morphicSession;
             this.logger = logger;
             this.InitializeComponent();
             this.Loaded += this.OnLoaded;
@@ -59,7 +59,7 @@ namespace Morphic.Client.Dialogs.Travel
 
         public async void OnSave(object sender, EventArgs args)
         {
-            await this.session.Service.Save(this.Preferences);
+            await this.morphicSession.Service.Save(this.Preferences);
             this.CompletePanel.Visibility = Visibility.Collapsed;
             this.SavedPanel.Visibility = Visibility.Visible;
         }
@@ -106,7 +106,7 @@ namespace Morphic.Client.Dialogs.Travel
         /// <summary>
         /// The Morphic Session to use for making requests
         /// </summary>
-        private readonly Session session;
+        private readonly MorphicSession morphicSession;
 
         /// <summary>
         /// The preferences where captured values will be stored
@@ -121,8 +121,8 @@ namespace Morphic.Client.Dialogs.Travel
         {
             int startTime = Environment.TickCount;
             int minTime = 5000;
-            this.Preferences = this.session.Preferences!;
-            CaptureSession captureSession = new CaptureSession(this.session.SettingsManager, this.Preferences);
+            this.Preferences = this.morphicSession.Preferences!;
+            CaptureSession captureSession = new CaptureSession(this.morphicSession.SettingsManager, this.Preferences);
             captureSession.AddAllSolutions();
             try
             {

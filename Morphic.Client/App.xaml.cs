@@ -55,6 +55,7 @@ namespace Morphic.Client
     using System.Diagnostics;
     using System.Windows.Controls.Primitives;
     using Bar;
+    using Config;
     using CountlySDK.CountlyCommon;
     using Dialogs;
     using Dialogs.Travel;
@@ -92,7 +93,7 @@ namespace Morphic.Client
         public IConfiguration Configuration { get; private set; } = null!;
         public ILogger<App> Logger { get; private set; } = null!;
 
-        public Session Session { get; private set; } = null!;
+        public MorphicSession MorphicSession { get; private set; } = null!;
         public AppOptions AppOptions => AppOptions.Current;
 
         public DialogManager Dialogs { get; } = new DialogManager();
@@ -151,7 +152,7 @@ namespace Morphic.Client
             services.AddSingleton<SettingsManager>();
             services.AddSingleton<Keychain>();
             services.AddSingleton<Storage>();
-            services.AddSingleton<Session>();
+            services.AddSingleton<MorphicSession>();
             services.AddTransient<TravelWindow>();
             services.AddTransient<CreateAccountPanel>();
             services.AddTransient<CapturePanel>();
@@ -245,8 +246,8 @@ namespace Morphic.Client
 
             base.OnStartup(e);
             this.Logger = this.ServiceProvider.GetRequiredService<ILogger<App>>();
-            this.Session = this.ServiceProvider.GetRequiredService<Session>();
-            this.Session.UserChanged += this.Session_UserChanged;
+            this.MorphicSession = this.ServiceProvider.GetRequiredService<MorphicSession>();
+            this.MorphicSession.UserChanged += this.Session_UserChanged;
             this.Logger.LogInformation("App Started");
 
             this.CreateMainMenu();
@@ -321,7 +322,7 @@ namespace Morphic.Client
             Registry.SetValue(@"HKEY_CURRENT_USER\Software\Microsoft\ScreenMagnifier", "MagnificationMode", 3);
 
             // Set the colour filter type - if it's not currently enabled.
-            bool filterOn = this.Session.GetBool(SettingsManager.Keys.WindowsDisplayColorFilterEnabled) == true;
+            bool filterOn = this.MorphicSession.GetBool(SettingsManager.Keys.WindowsDisplayColorFilterEnabled) == true;
             if (!filterOn)
             {
                 SystemSetting filterType = new SystemSetting("SystemSettings_Accessibility_ColorFiltering_FilterType",
@@ -330,7 +331,7 @@ namespace Morphic.Client
             }
 
             // Set the high-contrast theme, if high-contrast is off.
-            bool highcontrastOn = this.Session.GetBool(SettingsManager.Keys.WindowsDisplayContrastEnabled) == true;
+            bool highcontrastOn = this.MorphicSession.GetBool(SettingsManager.Keys.WindowsDisplayContrastEnabled) == true;
             if (!highcontrastOn)
             {
                 Registry.SetValue(@"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes",
@@ -347,7 +348,7 @@ namespace Morphic.Client
         {
             if (this.logoutItem != null)
             {
-                this.logoutItem.Visibility = this.Session.User == null
+                this.logoutItem.Visibility = this.MorphicSession.User == null
                     ? Visibility.Collapsed
                     : Visibility.Visible;
             }
@@ -368,15 +369,15 @@ namespace Morphic.Client
         private async Task OpenSession()
         {
             await this.CopyDefaultPreferences();
-            await this.Session.SettingsManager.Populate(Path.Combine("Solutions", "windows.solutions.json"));
-            await this.Session.SettingsManager.Populate(Path.Combine("Solutions", "jaws2020.solutions.json"));
-            await this.Session.Open();
+            await this.MorphicSession.SettingsManager.Populate(Path.Combine("Solutions", "windows.solutions.json"));
+            await this.MorphicSession.SettingsManager.Populate(Path.Combine("Solutions", "jaws2020.solutions.json"));
+            await this.MorphicSession.Open();
         }
 
         private async Task CopyDefaultPreferences()
         {
             if ((this.AppOptions.FirstRun && !this.AppOptions.FirstRunUpgrade)
-                || !this.Session.Storage.Exists<Preferences>("__default__"))
+                || !this.MorphicSession.Storage.Exists<Preferences>("__default__"))
             {
                 this.Logger.LogInformation("Saving default preferences");
                 Preferences prefs = new Preferences { Id = "__default__" };
@@ -394,7 +395,7 @@ namespace Morphic.Client
                     return;
                 }
 
-                if (!await this.Session.Storage.Save(prefs))
+                if (!await this.MorphicSession.Storage.Save(prefs))
                 {
                     this.Logger.LogError("Failed to save default preferences");
                 }
@@ -608,7 +609,7 @@ namespace Morphic.Client
         private void Logout(object sender, RoutedEventArgs e)
         {
             CountlyBase.RecordEvent("Logout");
-            _ = this.Session.Signout();
+            _ = this.MorphicSession.Signout();
         }
 
         private void About(object sender, RoutedEventArgs e)
@@ -775,7 +776,7 @@ namespace Morphic.Client
             }
             if (!skippingSave)
             {
-                this.Session.SetPreference(QuickStrip.QuickStripWindow.PreferenceKeys.Visible, true);
+                this.MorphicSession.SetPreference(QuickStrip.QuickStripWindow.PreferenceKeys.Visible, true);
             }
         }
 
@@ -811,7 +812,7 @@ namespace Morphic.Client
                 this.hideQuickStripItem.Visibility = Visibility.Collapsed;
             }
 
-            this.Session.SetPreference(QuickStrip.QuickStripWindow.PreferenceKeys.Visible, false);
+            this.MorphicSession.SetPreference(QuickStrip.QuickStripWindow.PreferenceKeys.Visible, false);
         }
 
         /// <summary>

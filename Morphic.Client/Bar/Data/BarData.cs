@@ -16,6 +16,7 @@ namespace Morphic.Client.Bar.Data
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Config;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
