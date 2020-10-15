@@ -10,7 +10,7 @@
     expanderRelative: "secondary"
   },
   sizes: {
-    windowPadding: "10 15",
+    windowPadding: "5 1 5 0",
     itemSpacing: 10,
     itemWidth: 100,
     buttonTextLines: 2,
@@ -18,9 +18,20 @@
     buttonImageSize: 0.66,
     buttonImageOverlap: 0.33,
     buttonFontSize: 14,
-    buttonFontWeight: "normal",
+    buttonFontWeight: "Bold",
+
     circleBorderWidth: 2,
-    buttonCornerRadius: 10
+    buttonCornerRadius: 10,
+
+    controlItemMargin: 1,
+    controlLabelFontSize: 14,
+    controlLabelFontWeight: "Bold",
+    controlLabelMargin: "0 0 0 2",
+
+    controlButtonFontSize: 14,
+    controlButtonFontWeight: "Bold",
+    controlButtonHeight: 27,
+    controlButtonPadding: 10
   },
   secondaryBar: {
     autohide: true,

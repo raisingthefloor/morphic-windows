@@ -33,57 +33,6 @@ namespace Morphic.Bar.UI.BarControls
         /// </summary>
         protected Dictionary<Control, ControlThemeState> ControlTheme = new Dictionary<Control, ControlThemeState>();
 
-        public BarItemControl() : this(new BarItem())
-        {
-        }
-
-        /// <summary>
-        /// Create an instance of this class, using the given bar item.
-        /// </summary>
-        /// <param name="barItem">The bar item that this control displays.</param>
-        public BarItemControl(BarItem barItem)
-        {
-            this.DataContext = this;
-            this.BarItem = barItem;
-
-            this.Loaded += this.OnLoaded;
-        }
-
-        private void OnLoaded(object sender, RoutedEventArgs args)
-        {
-            this.ApplyTheming();
-            // Override the apparent behaviour of ContentControl elements, where they make the control focusable.
-            foreach (UIElement elem in this.GetAllChildren().OfType<UIElement>())
-            {
-                elem.Focusable = elem.Focusable && elem is Button || elem == this;
-            }
-
-            foreach (Image image in this.GetAllChildren().OfType<Image>())
-            {
-                image.SourceUpdated += this.ImageOnSourceUpdated;
-                this.ImageOnSourceUpdated(image, null);
-            }
-        }
-
-        private void ImageOnSourceUpdated(object? sender, EventArgs? e)
-        {
-            if (sender is Image image)
-            {
-                if (image.Source is DrawingImage drawingImage)
-                {
-                    this.ChangeDrawingColor(drawingImage.Drawing);
-                }
-            }
-        }
-
-        protected IEnumerable<DependencyObject> GetAllChildren(DependencyObject? parent = null)
-        {
-            return LogicalTreeHelper.GetChildren(parent ?? this)
-                .OfType<DependencyObject>()
-                .SelectMany(this.GetAllChildren)
-                .Append(parent ?? this);
-        }
-
         /// <summary>
         /// The bar item represented by this control.
         /// </summary>
@@ -134,6 +83,74 @@ namespace Morphic.Bar.UI.BarControls
 
         /// <summary>true if the last focus was performed by the keyboard.</summary>
         public bool FocusedByKeyboard { get; set; }
+
+        public static readonly DependencyProperty OrientationProperty = DependencyProperty.Register("Orientation",
+            typeof(Orientation), typeof(MultiButtonBarControl), new PropertyMetadata(default(Orientation), (o, args) =>
+            {
+                if (o is BarItemControl control)
+                {
+                    control.OnOrientationChanged();
+                }
+            }));
+
+        public Orientation Orientation
+        {
+            get => (Orientation)this.GetValue(OrientationProperty);
+            set => this.SetValue(OrientationProperty, value);
+        }
+
+        public event EventHandler? OrientationChanged;
+
+        public BarItemControl() : this(new BarItem())
+        {
+        }
+
+        /// <summary>
+        /// Create an instance of this class, using the given bar item.
+        /// </summary>
+        /// <param name="barItem">The bar item that this control displays.</param>
+        public BarItemControl(BarItem barItem)
+        {
+            this.DataContext = this;
+            this.BarItem = barItem;
+
+            this.Loaded += this.OnLoaded;
+        }
+
+        private void OnLoaded(object sender, RoutedEventArgs args)
+        {
+            this.ApplyTheming();
+            // Override the apparent behaviour of ContentControl elements, where they make the control focusable.
+            foreach (UIElement elem in this.GetAllChildren().OfType<UIElement>())
+            {
+                elem.Focusable = elem.Focusable && elem is Button || elem == this;
+            }
+
+            foreach (Image image in this.GetAllChildren().OfType<Image>())
+            {
+                image.SourceUpdated += this.ImageOnSourceUpdated;
+                this.ImageOnSourceUpdated(image, null);
+            }
+        }
+
+        private void ImageOnSourceUpdated(object? sender, EventArgs? e)
+        {
+            if (sender is Image image)
+            {
+                if (image.Source is DrawingImage drawingImage)
+                {
+                    this.ChangeDrawingColor(drawingImage.Drawing);
+                }
+            }
+        }
+
+        protected IEnumerable<DependencyObject> GetAllChildren(DependencyObject? parent = null)
+        {
+            return LogicalTreeHelper.GetChildren(parent ?? this)
+                .OfType<DependencyObject>()
+                .SelectMany(this.GetAllChildren)
+                .Append(parent ?? this);
+        }
 
         private void CheckMouseState(object sender, MouseEventArgs mouseEventArgs)
         {
@@ -331,6 +348,12 @@ namespace Morphic.Bar.UI.BarControls
             public bool IsMouseDown { get;set;}
             public bool FocusedByKeyboard { get;set;}
 
+        }
+
+        protected virtual void OnOrientationChanged()
+        {
+            this.OnPropertyChanged(nameof(this.Orientation));
+            this.OrientationChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 }

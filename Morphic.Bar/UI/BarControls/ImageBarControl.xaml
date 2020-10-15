@@ -6,9 +6,11 @@
                          xmlns:ui="clr-namespace:Morphic.Bar.UI"
                          xmlns:barControls="clr-namespace:Morphic.Bar.UI.BarControls"
                          mc:Ignorable="d"
-                         MinHeight="30"
-                         MaxHeight="70"
-                         Margin="10"
+                         MinHeight="25"
+                         MaxHeight="50"
+                         MinWidth="25"
+                         MaxWidth="50"
+                         Margin="5"
                          d:DataContext="{d:DesignInstance barControls:ButtonBarControl, IsDesignTimeCreatable=True}"
                          >
     <barControls:BarItemControl.Resources>
@@ -45,7 +47,6 @@
             Stretch="Uniform"
             MaxHeight="50"
             MaxWidth="50"
-
-            />
+        />
     </Button>
 </barControls:BarItemControl>

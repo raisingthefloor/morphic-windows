@@ -10,9 +10,7 @@
 
         Title="{Binding Bar.Title}" Width="100" Height="100"
         WindowStyle="None" ResizeMode="NoResize" SizeToContent="WidthAndHeight" Topmost="True" ShowInTaskbar="False"
-        Background="{DynamicResource Background}"
-        BorderBrush="{DynamicResource BorderBrush}"
-        BorderThickness="{Binding Bar.BarTheme.BorderSize, FallbackValue=0, Mode=OneWay}"
+        Background="Transparent"
         Padding="0"
         ContextMenu="{StaticResource MorphicMenu}"
         AllowsTransparency="True"
@@ -24,6 +22,8 @@
     <Window.Resources>
         <SolidColorBrush x:Key="Background" Color="{Binding Bar.BarTheme.Background, FallbackValue=White, Mode=OneWay}"/>
         <SolidColorBrush x:Key="BorderBrush" Color="{Binding Bar.BarTheme.BorderColor, FallbackValue=Black, Mode=OneWay}"/>
+        <!-- Convert a boolean to a visibility -->
+        <ui:Ternary x:Key="CornerRadius" False="5" True="0" />
     </Window.Resources>
 
     <!-- Remove the white bar at the top -->
@@ -31,16 +31,19 @@
         <WindowChrome CaptionHeight="0" ResizeBorderThickness="3" />
     </WindowChrome.WindowChrome>
 
+    <Border x:Name="WindowBorder"
+            CornerRadius="{Binding IsDocked, Converter={StaticResource CornerRadius}}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="{Binding Bar.BarTheme.BorderSize, FallbackValue=0, Mode=OneWay}"
+            Background="{DynamicResource Background}">
     <ui:BarControl x:Name="BarControl"
-                   ItemsSource="{Binding BarItems}"
-                   ItemWidth="{Binding Bar.Sizes.ItemWidth}"
-                   Orientation="{Binding Orientation}"
-                   HorizontalAlignment="Left" VerticalAlignment="Top"
-                   Margin="{Binding Bar.Sizes.WindowPadding}"
-                   ItemSpacing="{Binding Bar.Sizes.ItemSpacing}"
-                   Loaded="BarControl_Loaded"
-                   PreviewKeyDown="BarWindow_OnPreviewKeyDown"
-                   FocusManager.IsFocusScope="True">
+                       ItemsSource="{Binding BarItems}"
+                       HorizontalAlignment="Left" VerticalAlignment="Top"
+                       Margin="{Binding Bar.Sizes.WindowPadding}"
+                       ItemSpacing="{Binding Bar.Sizes.ItemSpacing}"
+                       Loaded="BarControl_Loaded"
+                       PreviewKeyDown="BarWindow_OnPreviewKeyDown"
+                       FocusManager.IsFocusScope="True">
         <ui:BarControl.Resources>
             <ui:Ternary x:Key="NullCollapsed" False="Collapsed" True="Visible" />
 
@@ -73,4 +76,5 @@
             </Style>
         </ui:BarControl.Resources>
     </ui:BarControl>
+    </Border>
 </Window>

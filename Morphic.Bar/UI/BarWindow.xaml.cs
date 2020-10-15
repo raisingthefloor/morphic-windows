@@ -42,12 +42,14 @@ namespace Morphic.Bar.UI
         public virtual ExpanderWindow? ExpanderWindow => null;
 
         private Orientation orientationValue;
-        public virtual Orientation Orientation
+        public static readonly DependencyProperty IsDockedProperty = DependencyProperty.Register("IsDocked", typeof(bool), typeof(BarWindow), new PropertyMetadata(default(bool)));
+
+        public Orientation Orientation
         {
             get => this.orientationValue;
             set
             {
-                this.orientationValue = this.BarControl.Orientation = value;
+                this.orientationValue = value;
                 this.OrientationChanged?.Invoke(this, EventArgs.Empty);
             }
         }
@@ -94,8 +96,11 @@ namespace Morphic.Bar.UI
             // Move it off the screen until it's loaded.
             this.Left = -0xffff;
 
-            this.orientationValue = this.GetOrientation(this.Bar.Position.DockEdge);
+
             this.InitializeComponent();
+
+            this.OrientationChanged += this.OnOrientationChanged;
+            this.Orientation = this.GetOrientation(this.Bar.Position.DockEdge);
 
             this.BarControl.Bar = this.Bar;
             this.BarControl.IsPrimary = this is PrimaryBarWindow;
@@ -116,6 +121,24 @@ namespace Morphic.Bar.UI
 
             SystemEvents.DisplaySettingsChanged += this.SystemEventsOnDisplaySettingsChanged;
             this.Closed += (sender, args) => SystemEvents.DisplaySettingsChanged -= this.SystemEventsOnDisplaySettingsChanged;
+        }
+
+        private void OnOrientationChanged(object? sender, EventArgs e)
+        {
+            this.BarControl.Orientation = this.Orientation;
+            if (this.Orientation == Orientation.Horizontal)
+            {
+                this.BarControl.ItemWidth = double.NaN;
+            }
+            else
+            {
+                this.BarControl.ItemWidth = this.Bar.Sizes.ItemWidth;
+            }
+
+            foreach (BarItemControl itemControl in this.BarControl.ItemControls)
+            {
+                itemControl.Orientation = this.Orientation;
+            }
         }
 
         protected override void OnContentRendered(EventArgs e)
@@ -149,6 +172,12 @@ namespace Morphic.Bar.UI
             this.BorderThickness.Top + this.BorderThickness.Bottom +
             this.Padding.Top + this.Padding.Bottom +
             this.BarControl.Margin.Top + this.BarControl.Margin.Bottom + 1;
+
+        public bool IsDocked
+        {
+            get => (bool)this.GetValue(IsDockedProperty);
+            protected set => this.SetValue(IsDockedProperty, value);
+        }
 
         protected virtual void OnBarLoaded()
         {
@@ -299,6 +328,7 @@ namespace Morphic.Bar.UI
             this.Orientation = this.GetOrientation(e.Edge);
             this.SetMaxSize(e.Edge);
             this.SetBorder();
+            this.IsDocked = e.Edge != Edge.None;
         }
 
         private void SetMaxSize(Edge edge)

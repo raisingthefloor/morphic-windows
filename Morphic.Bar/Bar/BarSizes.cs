@@ -11,6 +11,7 @@
 namespace Morphic.Bar.Bar
 {
     using System;
+    using System.ComponentModel;
     using System.Windows;
     using Newtonsoft.Json;
 
@@ -70,23 +71,38 @@ namespace Morphic.Bar.Bar
         [JsonProperty("buttonCornerRadius")]
         public double ButtonCornerRadius { get; set; } = 10;
 
+        /// <summary>Size of the label text.</summary>
         [JsonProperty("controlLabelFontSize")]
         public double ControlLabelFontSize { get; set; } = 14;
 
-        [JsonProperty("controlLabelPadding")]
-        public Thickness ControlLabelPadding { get; set; } = new Thickness(0, 5, 0, 5);
+        /// <summary>Weight of the label text.</summary>
+        [JsonProperty("controlLabelFontWeight")]
+        public FontWeight ControlLabelFontWeight { get; set; } = FontWeights.Bold;
 
-        [JsonProperty("controlItemMargin")]
-        public Thickness ControlItemMargin { get; set; } = new Thickness(10);
+        /// <summary>Space around the label.</summary>
+        [JsonProperty("controlLabelMargin")]
+        public Thickness ControlLabelMargin { get; set; } = new Thickness(0, 5, 0, 5);
 
-        [JsonProperty("controlItemFontSize")]
-        public double ControlItemFontSize { get; set; } = 14;
+        public Thickness ControlButtonMargin { get; set; } = new Thickness(0.5);
 
-        [JsonProperty("controlItemHeight")]
-        public double ControlItemHeight { get; set; } = 30;
+        /// <summary>Size of the button text.</summary>
+        [JsonProperty("controlButtonFontSize")]
+        public double ControlButtonFontSize { get; set; } = 14;
 
-        [JsonProperty("controlImageSize")]
-        public double ControlImageSize { get; set; } = 15;
+        /// <summary>Weight of the button text.</summary>
+        [JsonProperty("controlButtonFontWeight")]
+        public FontWeight ControlButtonFontWeight { get; set; } = FontWeights.Bold;
+
+        /// <summary>Space within the button.</summary>
+        [JsonProperty("controlButtonPadding")]
+        public Thickness ControlButtonPadding { get; set; } = new Thickness(5, 5, 5, 5);
+
+        [JsonProperty("controlCornerRadius")]
+        public double ControlCornerRadius { get; set; } = 5;
+
+        [TypeConverter(typeof(LengthConverter))]
+        [JsonProperty("controlButtonHeight")]
+        public double ControlButtonHeight { get; set; } = 30;
 
 
     }

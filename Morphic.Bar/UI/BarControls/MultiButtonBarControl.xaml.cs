@@ -10,6 +10,7 @@
 
 namespace Morphic.Bar.UI.BarControls
 {
+    using System;
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.Linq;
@@ -28,10 +29,6 @@ namespace Morphic.Bar.UI.BarControls
     /// </summary>
     public partial class MultiButtonBarControl : BarItemControl
     {
-        public MultiButtonBarControl() : this(new BarMultiButton())
-        {
-        }
-
         public MultiButtonBarControl(BarMultiButton barItem) : base(barItem)
         {
             this.ApplyControlTheme(this);
@@ -74,7 +71,6 @@ namespace Morphic.Bar.UI.BarControls
             {
                 this.KeyDown += this.OnKeyDown_ButtonPair;
             }
-
         }
 
         /// <summary>
@@ -163,6 +159,7 @@ namespace Morphic.Bar.UI.BarControls
         public class ButtonWrapper : INotifyPropertyChanged
         {
             public BarMultiButton.ButtonInfo Button { get; set; }
+            public BarData Bar => this.Button.BarItem.Bar;
 
             public Theme ActiveTheme =>
                 this.Control == null
@@ -191,6 +188,140 @@ namespace Morphic.Bar.UI.BarControls
             }
 
             public event PropertyChangedEventHandler? PropertyChanged;
+        }
+    }
+
+    /// <summary>
+    /// Panel for the buttons of a <see cref="MultiButtonBarControl"/>. Child items can either have the same size (of
+    /// the widest), or their own size.
+    /// </summary>
+    public class MultiButtonPanel : WrapPanel
+    {
+        public static readonly DependencyProperty VariableWidthProperty = DependencyProperty.Register("VariableWidth", typeof(bool), typeof(MultiButtonPanel), new PropertyMetadata(default(bool)));
+
+        public static readonly DependencyProperty ParentOrientationProperty =
+            DependencyProperty.Register("ParentOrientation", typeof(Orientation), typeof(MultiButtonPanel),
+                new PropertyMetadata(default(Orientation), (o, args) => ((MultiButtonPanel)o).OnOrientationChanged()));
+
+        public static readonly DependencyProperty CornerRadiusProperty = DependencyProperty.Register("CornerRadius", typeof(double), typeof(MultiButtonPanel), new PropertyMetadata(default(double)));
+
+        public Orientation ParentOrientation
+        {
+            get => (Orientation)this.GetValue(ParentOrientationProperty);
+            set => this.SetValue(ParentOrientationProperty, value);
+        }
+
+        public bool VariableWidth
+        {
+            get => (bool)this.GetValue(VariableWidthProperty);
+            set => this.SetValue(VariableWidthProperty, value);
+        }
+
+        public double CornerRadius
+        {
+            get => (double)this.GetValue(CornerRadiusProperty);
+            set => this.SetValue(CornerRadiusProperty, value);
+        }
+
+        protected void OnOrientationChanged()
+        {
+        }
+
+        protected override Size MeasureOverride(Size availableSize)
+        {
+            if (!this.VariableWidth || this.ParentOrientation == Orientation.Vertical)
+            {
+                // Make all child items the width of the largest.
+                this.ItemWidth = this.Children.OfType<FrameworkElement>().Select(c =>
+                {
+                    c.Measure(availableSize);
+                    return c.DesiredSize.Width;
+                }).Max();
+            }
+            else
+            {
+                this.ItemWidth = double.NaN;
+            }
+
+            Size size = base.MeasureOverride(availableSize);
+            return size;
+        }
+
+        protected override Size ArrangeOverride(Size finalSize)
+        {
+            Size arrangeOverride = base.ArrangeOverride(finalSize);
+            this.ApplyButtonBorders();
+            return arrangeOverride;
+        }
+
+        /// <summary>
+        /// Applies the rounded corners to the buttons, according to where they are positioned.
+        /// </summary>
+        private void ApplyButtonBorders()
+        {
+            if (this.CornerRadius > 0)
+            {
+                // Get the positions of the buttons.
+                Dictionary<ContentPresenter, Point> positions = this.InternalChildren.OfType<ContentPresenter>()
+                    .Where(c => c.Content is MultiButtonBarControl.ButtonWrapper)
+                    .ToDictionary(c => c, c => c.TranslatePoint(default, this));
+
+                // Sets the border of a button.
+                static void SetBorder(ContentPresenter? presenter, Func<CornerRadius, CornerRadius> apply)
+                {
+                    if ((presenter?.Content as MultiButtonBarControl.ButtonWrapper)?
+                        .Control?.FindName("ButtonBorder") is Border border)
+                    {
+                        border.CornerRadius = apply(border.CornerRadius);
+                    }
+                }
+
+                // Reset all the borders.
+                foreach (ContentPresenter contentPresenter in positions.Keys)
+                {
+                    SetBorder(contentPresenter, c => default);
+                }
+
+                // Top-left.
+                SetBorder(positions
+                    .OrderBy(p => p.Value.X)
+                    .ThenBy(p => p.Value.Y)
+                    .FirstOrDefault().Key, cr =>
+                {
+                    cr.TopLeft = this.CornerRadius;
+                    return cr;
+                });
+
+                // Top-right.
+                SetBorder(positions
+                    .OrderByDescending(p => p.Value.X)
+                    .ThenBy(p => p.Value.Y)
+                    .FirstOrDefault().Key, cr =>
+                {
+                    cr.TopRight = this.CornerRadius;
+                    return cr;
+                });
+
+                // Bottom-left.
+                SetBorder(positions
+                    .OrderBy(p => p.Value.X)
+                    .ThenByDescending(p => p.Value.Y)
+                    .FirstOrDefault().Key, cr =>
+                {
+                    cr.BottomLeft = this.CornerRadius;
+                    return cr;
+                });
+
+                // Bottom-right.
+                SetBorder(positions
+                    .OrderByDescending(p => p.Value.X)
+                    .ThenByDescending(p => p.Value.Y)
+                    .FirstOrDefault().Key, cr =>
+                {
+                    cr.BottomRight = this.CornerRadius;
+                    return cr;
+                });
+            }
         }
     }
 }

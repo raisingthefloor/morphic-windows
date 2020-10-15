@@ -33,6 +33,9 @@ namespace Morphic.Bar.Bar
         [JsonProperty("configuration.buttons")]
         public Dictionary<string, ButtonInfo> Buttons { get; set; } = new Dictionary<string, ButtonInfo>();
 
+        [JsonProperty("configuration.autoSize")]
+        public bool AutoSize { get; set; }
+
         /// <summary>
         /// Provides hints for keyboard usage.
         /// </summary>

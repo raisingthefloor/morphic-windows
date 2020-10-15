@@ -13,6 +13,7 @@ namespace Morphic.Bar.UI
     using System;
     using System.Globalization;
     using System.Windows;
+    using System.Windows.Controls;
     using System.Windows.Data;
 
     /// <summary>
@@ -32,7 +33,8 @@ namespace Morphic.Bar.UI
 
         public object? Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value == null || value as bool? == false || value as string == string.Empty)
+            if (value == null || value as bool? == false || value as string == string.Empty
+                || value as Orientation? == Orientation.Horizontal)
             {
                 return parameter ?? this.False;
             }

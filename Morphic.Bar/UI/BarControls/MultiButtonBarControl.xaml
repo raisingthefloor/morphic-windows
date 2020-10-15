@@ -7,7 +7,7 @@
                          xmlns:barControls="clr-namespace:Morphic.Bar.UI.BarControls"
                          mc:Ignorable="d"
                          MinHeight="10"
-                         MaxHeight="150"
+                         d:xMaxHeight="150"
                          d:DataContext="{d:DesignInstance barControls:MultiButtonBarControl, IsDesignTimeCreatable=True}"
                          Focusable="True"
                          IsTabStop="True"
@@ -29,6 +29,7 @@
         </Style>
 
     </barControls:BarItemControl.Resources>
+
     <barControls:BarItemControl.Foreground>
         <SolidColorBrush Color="{Binding Bar.BarTheme.TextColor}"></SolidColorBrush>
     </barControls:BarItemControl.Foreground>
@@ -40,18 +41,26 @@
             <!-- The text label -->
             <ui:TextBlockLimited Text="{Binding BarItem.Text}"
                                  TextWrapping="Wrap"
+                                 FontSize="{Binding Bar.Sizes.ControlLabelFontSize}"
+                                 FontWeight="{Binding Bar.Sizes.ControlLabelFontWeight}"
                                  TextAlignment="Center"
                                  MaxLines="{Binding Bar.Sizes.ButtonTextLines}"
-                                 Padding="{Binding Bar.Sizes.ControlLabelPadding}"/>
+                                 Margin="{Binding Bar.Sizes.ControlLabelMargin}"/>
 
             <!-- The buttons -->
-            <ItemsControl Name="ButtonContainer"
+            <ItemsControl x:Name="ButtonContainer"
+                          HorizontalAlignment="Center"
                           ItemsSource="{Binding Buttons}"
-                          FontSize="{Binding Bar.Sizes.ControlItemFontSize}"
-                          Height="{Binding Bar.Sizes.ControlItemHeight}">
+                          FontSize="{Binding Bar.Sizes.ControlButtonFontSize}"
+                          FontWeight="{Binding Bar.Sizes.ControlButtonFontWeight}"
+                          >
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <UniformGrid Rows="1" />
+                        <barControls:MultiButtonPanel
+                            ParentOrientation="{Binding Orientation}"
+                            VariableWidth="{Binding BarItem.AutoSize}"
+                            CornerRadius="{Binding Bar.Sizes.ControlCornerRadius}"
+                            />
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
@@ -59,7 +68,8 @@
                         <Button Name="ControlButton"
                                 HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                                 VerticalAlignment="Stretch" VerticalContentAlignment="Center"
-                                Margin="1"
+                                Margin="{Binding Bar.Sizes.ControlButtonMargin}"
+                                Height="{Binding Bar.Sizes.ControlButtonHeight}"
                                 ToolTip="{Binding Button.Tooltip}"
                                 AutomationProperties.Name="{Binding Button.UiName}"
                                 AutomationProperties.LabeledBy="{Binding Button.BarItem.UiName}"
@@ -77,7 +87,8 @@
                                 </Border.BorderBrush>
 
                                 <!-- Inner border -->
-                                <Border SnapsToDevicePixels="True"
+                                <Border x:Name="ButtonBorder"
+                                        SnapsToDevicePixels="True"
                                         BorderThickness="{Binding ActiveTheme.BorderSize}">
                                     <Border.BorderBrush>
                                         <SolidColorBrush Color="{Binding ActiveTheme.BorderColor}"/>
@@ -88,6 +99,7 @@
 
                                     <!-- Button text -->
                                     <TextBlock Text="{Binding Text}"
+                                               Padding="{Binding Button.BarItem.Bar.Sizes.ControlButtonPadding}"
                                                TextAlignment="Center"
                                                VerticalAlignment="Center"
                                     />
