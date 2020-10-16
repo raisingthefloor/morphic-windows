@@ -21,7 +21,7 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-namespace Morphic.Client
+namespace Morphic.Client.Menu
 {
     using System;
     using System.ComponentModel;
@@ -135,10 +135,6 @@ namespace Morphic.Client
         private bool visible;
 
         private IntPtr buttonWindow;
-
-        public TrayButton(IMessageHook messageWindow) : this(messageWindow.Messages)
-        {
-        }
 
         public TrayButton(WindowMessageHook messageHook)
         {

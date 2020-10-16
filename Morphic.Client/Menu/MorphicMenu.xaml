@@ -1,0 +1,57 @@
+﻿<ContextMenu x:Class="Morphic.Client.Menu.MorphicMenu"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:menu="clr-namespace:Morphic.Client.Menu"
+             xmlns:dialogs="clr-namespace:Morphic.Client.Dialogs"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance menu:MorphicMenu}">
+
+
+    <menu:MorphicMenuItem Header="Show MorphicBar" x:Name="ShowBar" Click="ShowBarClick" />
+    <menu:MorphicMenuItem Header="Hide MorphicBar" x:Name="HideBar" Click="HideBarClick" />
+
+    <Separator/>
+
+    <menu:MorphicMenuItem Header="_Learn about Morphic..." Open="https://morphic.org/" />
+    <menu:MorphicMenuItem Header="Quick _Demo movies" Open="https://morphic.org/demos" />
+
+    <menu:MorphicMenuItem Header="Settings to make the computer easier">
+
+        <menu:MorphicMenuHeader Header="Windows Settings for MorphicBar Controls"/>
+        <menu:MorphicMenuItem Header="_Magnifier Settings" Open="ms-settings:easeofaccess-magnifier" />
+        <menu:MorphicMenuItem Header="_Read Aloud Settings" Open="ms-settings:speech" />
+        <menu:MorphicMenuItem Header="_Color Vision Settings" Open="ms-settings:easeofaccess-colorfilter" />
+        <menu:MorphicMenuItem Header="_Night Mode Settings" Open="ms-settings:nightlight" />
+        <menu:MorphicMenuItem Header="_Dark Mode Settings" Open="ms-settings:colors" />
+        <menu:MorphicMenuItem Header="_Contrast Settings" Open="ms-settings:easeofaccess-highcontrast" />
+
+        <menu:MorphicMenuHeader Header="Other Key Windows Settings"/>
+        <menu:MorphicMenuItem Header="M_ouse Settings" Open="ms-settings:mousetouchpad" />
+        <menu:MorphicMenuItem Header="_Pointer Size" Open="ms-settings:easeofaccess-cursorandpointersize" />
+        <menu:MorphicMenuItem Header="_Keyboard Settings" Open="ms-settings:easeofaccess-keyboard" />
+        <!-- <l:MorphicMenuItem Header="Brightness" Shell="" /> -->
+        <menu:MorphicMenuItem Header="_Language" Open="ms-settings:regionlanguage" />
+        <menu:MorphicMenuItem Header="_All Accessibility Options" Open="ms-settings:easeofaccess-display" />
+
+        <menu:MorphicMenuHeader Header="Direct actions"/>
+        <menu:MorphicMenuItem Header="_Stop Key-repeat" IsCheckable="True" Click="StopKeyRepeatToggle" Loaded="StopKeyRepeatInit" />
+
+
+    </menu:MorphicMenuItem>
+
+    <menu:MorphicMenuItem Header="_Other Helpful Things" Open="https://morphic.org/demos" />
+
+    <Separator />
+
+    <menu:MorphicMenuItem Header="_Copy settings between computers" Dialog="dialogs:TravelWindow"/>
+    <menu:MorphicMenuItem Header="_Restore settings from backup" Dialog="dialogs:RestoreWindow"/>
+    <Separator/>
+    <menu:MorphicMenuItem Header="_Hide QuickHelp (except with Alt key)" IsCheckable="True" IsChecked="{Binding App.AppOptions.HideQuickHelp}" />
+    <menu:MorphicMenuItem Header="_Automatically start Morphic" IsCheckable="True" IsChecked="{Binding App.AppOptions.AutoRun}" />
+    <menu:MorphicMenuItem Header="_Show Morphic Bar at start" IsCheckable="True" IsChecked="{Binding App.AppOptions.AutoShow}" />
+    <Separator/>
+    <menu:MorphicMenuItem Header="_About Morphic..." Dialog="dialogs:AboutWindow" />
+    <menu:MorphicMenuItem Header="_Quit Morphic" Click="QuitClick"/>
+</ContextMenu>

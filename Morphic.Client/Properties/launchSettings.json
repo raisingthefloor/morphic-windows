@@ -3,7 +3,7 @@
     "Morphic.Client": {
       "commandName": "Project",
       "environmentVariables": {
-        "MORPHIC_FEATURES": "Properties/features.basic",
+        "MORPHIC_FEATURES": "Properties/features.basic.txt",
         "MORPHIC_DEBUG": "True"
       }
     }

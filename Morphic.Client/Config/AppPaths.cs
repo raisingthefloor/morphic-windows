@@ -24,7 +24,7 @@ namespace Morphic.Client.Config
         public static string ConfigDir = Environment.GetEnvironmentVariable("MORPHIC_CONFIGDIR") ??
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MorphicCommunity");
 
-        public static string DefaultConfigDir = AppPaths.GetConfigDir("DefaultConfig");
+        public static string DefaultConfigDir = AppPaths.GetAppDir("DefaultConfig");
         public static string AssetsDir = AppPaths.GetAppDir("Assets");
         public static string CacheDir = AppPaths.GetConfigDir("cache", true);
         public const string RegistryPath = @"Software\Raising the Floor\Morphic\Bar";

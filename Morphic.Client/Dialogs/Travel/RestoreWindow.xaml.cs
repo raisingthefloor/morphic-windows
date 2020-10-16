@@ -8,7 +8,7 @@
 // You may obtain a copy of the License at
 // https://github.com/GPII/universal/blob/master/LICENSE.txt
 
-namespace Morphic.Client.Dialogs.Travel
+namespace Morphic.Client.Dialogs
 {
     using System;
     using System.Collections.Generic;
@@ -56,7 +56,7 @@ namespace Morphic.Client.Dialogs.Travel
             {
                 this.Loaded += (sender, args) =>
                 {
-                    MessageBox.Show(App.Current.QuickStripWindow!,
+                    MessageBox.Show(//TODO: App.Current.QuickStripWindow!,
                         "You currently don't have a back-up to restore.\n\nA back-up is created when you apply the settings from your Morphic Vault");
                     this.Close();
                 };

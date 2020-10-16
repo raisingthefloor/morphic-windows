@@ -21,7 +21,7 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-namespace Morphic.Client.Dialogs.Travel
+namespace Morphic.Client.Dialogs
 {
     using System;
     using System.Threading.Tasks;

@@ -13,8 +13,10 @@ namespace Morphic.Client.Bar
 {
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel;
     using System.IO;
     using System.Linq;
+    using System.Runtime.CompilerServices;
     using System.Threading.Tasks;
     using System.Windows;
     using Config;
@@ -30,7 +32,7 @@ namespace Morphic.Client.Bar
     /// <summary>
     /// Looks after the bar.
     /// </summary>
-    public class BarManager
+    public class BarManager : INotifyPropertyChanged
     {
         private PrimaryBarWindow? barWindow;
         private ILogger Logger => App.Current.Logger;
@@ -38,28 +40,100 @@ namespace Morphic.Client.Bar
         public event EventHandler<BarEventArgs>? BarLoaded;
         public event EventHandler<BarEventArgs>? BarUnloaded;
 
+        private bool firstBar = true;
+
+        public bool BarVisible => this.barWindow?.Visibility == Visibility.Visible;
+
         public BarManager()
         {
         }
 
         /// <summary>
-        /// Loads and shows a bar.
+        /// Show a bar that's already loaded.
         /// </summary>
-        /// <param name="userBar">Bar data object from Morphic.Core</param>
-        public BarData? LoadFromUserBar(UserBar userBar)
+        public void ShowBar()
         {
-            // Serialise the bar data so it can be loaded with a better deserialiser.
-            SystemJson.JsonSerializerOptions serializerOptions = new SystemJson.JsonSerializerOptions();
-            serializerOptions.Converters.Add(new JsonElementInferredTypeConverter());
-            serializerOptions.Converters.Add(
-                new SystemJson.Serialization.JsonStringEnumConverter(SystemJson.JsonNamingPolicy.CamelCase));
-            string barJson = SystemJson.JsonSerializer.Serialize(userBar, serializerOptions);
+            if (this.barWindow != null)
+            {
+                this.barWindow.Visibility = Visibility.Visible;
+                this.barWindow.Focus();
+            }
+        }
 
-            // Dump to a file, for debugging.
-            string barFile = AppPaths.GetConfigFile("last-bar.json5");
-            File.WriteAllText(barFile, barJson);
+        public void HideBar()
+        {
+            this.barWindow?.Hide();
+            this.barWindow?.OtherWindow?.Hide();
+        }
 
-            return this.LoadFromBarJson(userBar.Id, barJson);
+        /// <summary>
+        /// Closes the bar.
+        /// </summary>
+        public void CloseBar()
+        {
+            if (this.barWindow != null)
+            {
+                this.OnBarUnloaded(this.barWindow);
+                BarData bar = this.barWindow.Bar;
+                this.barWindow.IsClosing = true;
+                this.barWindow.Close();
+                this.barWindow = null;
+                bar.Dispose();
+            }
+        }
+
+        public BarWindow CreateBarWindow(BarData bar)
+        {
+            this.barWindow = new PrimaryBarWindow(bar);
+            this.barWindow.BarLoaded += this.OnBarLoaded;
+            this.barWindow.IsVisibleChanged += this.BarWindowOnIsVisibleChanged;
+
+            if (AppOptions.Current.AutoShow || !this.firstBar)
+            {
+                this.barWindow.Show();
+            }
+
+            this.firstBar = false;
+            return this.barWindow;
+        }
+
+        private void BarWindowOnIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            this.OnPropertyChanged(nameof(this.BarVisible));
+        }
+
+        /// <summary>
+        /// Called when a bar has loaded.
+        /// </summary>
+        protected virtual void OnBarLoaded(object sender, EventArgs? args = null)
+        {
+            if (sender is PrimaryBarWindow window)
+            {
+                this.BarLoaded?.Invoke(this, new BarEventArgs(window));
+            }
+        }
+
+        /// <summary>
+        /// Called when a bar has closed.
+        /// </summary>
+        protected virtual void OnBarUnloaded(object sender, EventArgs? args = null)
+        {
+            if (sender is PrimaryBarWindow window)
+            {
+                this.BarUnloaded?.Invoke(this, new BarEventArgs(window));
+            }
+        }
+
+        #region DataLoading
+        private void OnBarOnReloadRequired(object? sender, EventArgs args)
+        {
+            if (sender is BarData bar)
+            {
+                string source = bar.Source;
+
+                this.CloseBar();
+                this.LoadFromBarJson(source);
+            }
         }
 
         /// <summary>
@@ -86,58 +160,11 @@ namespace Morphic.Client.Bar
 
             if (bar != null)
             {
-                this.barWindow = new PrimaryBarWindow(bar);
-                this.barWindow.BarLoaded += this.OnBarLoaded;
-                this.barWindow.Show();
+                this.CreateBarWindow(bar);
                 bar.ReloadRequired += this.OnBarOnReloadRequired;
             }
 
             return bar;
-        }
-
-        /// <summary>
-        /// Show a bar that's already loaded.
-        /// </summary>
-        public void ShowBar()
-        {
-            if (this.barWindow != null)
-            {
-                this.barWindow.Visibility = Visibility.Visible;
-                this.barWindow.Focus();
-            }
-        }
-
-        public void HideBar()
-        {
-            this.barWindow?.Hide();
-            this.barWindow?.OtherWindow?.Hide();
-        }
-
-        private void OnBarOnReloadRequired(object? sender, EventArgs args)
-        {
-            if (sender is BarData bar)
-            {
-                string source = bar.Source;
-
-                this.CloseBar();
-                this.LoadFromBarJson(source);
-            }
-        }
-
-        /// <summary>
-        /// Closes the bar.
-        /// </summary>
-        public void CloseBar()
-        {
-            if (this.barWindow != null)
-            {
-                this.OnBarUnloaded(this.barWindow);
-                BarData bar = this.barWindow.Bar;
-                this.barWindow.IsClosing = true;
-                this.barWindow.Close();
-                this.barWindow = null;
-                bar.Dispose();
-            }
         }
 
         /// <summary>
@@ -210,7 +237,8 @@ namespace Morphic.Client.Bar
                 userBar ??= await session.GetBar(community.Id);
 
                 this.Logger.LogInformation($"Showing bar for community {community.Id} {community.Name}");
-                BarData? barData = this.LoadFromUserBar(userBar);
+                string barJson = this.GetUserBarJson(userBar);
+                BarData? barData = this.LoadFromBarJson(userBar.Id, barJson);
                 if (barData != null)
                 {
                     barData.CommunityId = community.Id;
@@ -222,26 +250,36 @@ namespace Morphic.Client.Bar
         }
 
         /// <summary>
-        /// Called when a bar has loaded.
+        /// Gets the json for a <see cref="UserBar"/>, so it can be loaded with a better deserialiser.
         /// </summary>
-        protected virtual void OnBarLoaded(object sender, EventArgs? args = null)
+        /// <param name="userBar">Bar data object from Morphic.Core</param>
+        private string GetUserBarJson(UserBar userBar)
         {
-            if (sender is PrimaryBarWindow window)
-            {
-                this.BarLoaded?.Invoke(this, new BarEventArgs(window));
-            }
+            // Serialise the bar data so it can be loaded with a better deserialiser.
+            SystemJson.JsonSerializerOptions serializerOptions = new SystemJson.JsonSerializerOptions();
+            serializerOptions.Converters.Add(new JsonElementInferredTypeConverter());
+            serializerOptions.Converters.Add(
+                new SystemJson.Serialization.JsonStringEnumConverter(SystemJson.JsonNamingPolicy.CamelCase));
+            string barJson = SystemJson.JsonSerializer.Serialize(userBar, serializerOptions);
+
+            // Dump to a file, for debugging.
+            string barFile = AppPaths.GetConfigFile("last-bar.json5");
+            File.WriteAllText(barFile, barJson);
+
+            return barJson;
         }
 
-        /// <summary>
-        /// Called when a bar has closed.
-        /// </summary>
-        protected virtual void OnBarUnloaded(object sender, EventArgs? args = null)
+        #endregion
+
+        #region INotifyPropertyChanged
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
-            if (sender is PrimaryBarWindow window)
-            {
-                this.BarUnloaded?.Invoke(this, new BarEventArgs(window));
-            }
+            this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+        #endregion
+
     }
 
     public class BarEventArgs : EventArgs

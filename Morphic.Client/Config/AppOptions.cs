@@ -4,6 +4,7 @@
     using System.Collections;
     using System.Collections.Generic;
     using System.ComponentModel;
+    using System.Diagnostics;
     using System.Reflection;
     using System.Runtime.CompilerServices;
     using System.Text.RegularExpressions;
@@ -16,8 +17,6 @@
     public class AppOptions : INotifyPropertyChanged
     {
         public static AppOptions Current { get; } = new AppOptions();
-
-        public static LaunchOptions LaunchOptions => AppOptions.Current.Launch;
 
         public LaunchOptions Launch { get; } = LaunchOptions.Get();
 
@@ -67,8 +66,8 @@
             set => this.SetValue(value ?? string.Empty);
         }
 
-        public bool? firstRun;
-        public bool? firstRunUpgrade;
+        private bool? firstRun;
+        private bool? firstRunUpgrade;
 
         /// <summary>true if this is the first run after an upgrade installation.</summary>
         public bool FirstRunUpgrade
@@ -119,6 +118,61 @@
                 }
                 // ReSharper restore VirtualMemberCallInConstructor
             }
+        }
+
+        public bool AutoRun
+        {
+            get => this.HandleAutoRun();
+            set => this.HandleAutoRun(value);
+        }
+
+        /// <summary>
+        /// Makes the application automatically start at login.
+        /// </summary>
+        private bool HandleAutoRun(bool? newValue = null)
+        {
+            bool enabled;
+            using RegistryKey morphicKey =
+                Registry.CurrentUser.CreateSubKey(@"Software\Raising the Floor\Morphic")!;
+            using RegistryKey runKey =
+                Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run")!;
+
+            if (newValue == null)
+            {
+                // Get the configured value
+                object value = morphicKey.GetValue("AutoRun");
+                if (value == null)
+                {
+                    // This might be the first time running, enable auto-run by default.
+                    enabled = true;
+                }
+                else
+                {
+                    // Respect the system setting (it was probably removed on purpose).
+                    enabled = runKey.GetValue("Morphic") != null;
+                }
+            }
+            else
+            {
+                enabled = (bool)newValue;
+            }
+
+            morphicKey.SetValue("AutoRun", enabled ? "1" : "0", RegistryValueKind.String);
+            if (enabled)
+            {
+                string processPath = Process.GetCurrentProcess().MainModule.FileName;
+                // Only add it to the auto-run if running a release.
+                if (!processPath.EndsWith("dotnet.exe"))
+                {
+                    runKey.SetValue("Morphic", processPath);
+                }
+            }
+            else
+            {
+                runKey.DeleteValue("Morphic", false);
+            }
+
+            return enabled;
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

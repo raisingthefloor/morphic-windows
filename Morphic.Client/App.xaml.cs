@@ -52,13 +52,11 @@ using Morphic.Settings.Files;
 
 namespace Morphic.Client
 {
-    using System.Diagnostics;
-    using System.Windows.Controls.Primitives;
     using Bar;
     using Config;
     using CountlySDK.CountlyCommon;
     using Dialogs;
-    using Dialogs.Travel;
+    using Menu;
     using Microsoft.Win32;
 
     public class AppMain
@@ -94,6 +92,8 @@ namespace Morphic.Client
         public ILogger<App> Logger { get; private set; } = null!;
 
         public MorphicSession MorphicSession { get; private set; } = null!;
+        public CommunitySession CommunitySession { get; private set; } = null!;
+
         public AppOptions AppOptions => AppOptions.Current;
 
         public DialogManager Dialogs { get; } = new DialogManager();
@@ -245,11 +245,23 @@ namespace Morphic.Client
 
             base.OnStartup(e);
             this.Logger = this.ServiceProvider.GetRequiredService<ILogger<App>>();
-            this.MorphicSession = this.ServiceProvider.GetRequiredService<MorphicSession>();
-            this.MorphicSession.UserChanged += this.Session_UserChanged;
+
+            if (Features.Basic.IsEnabled())
+            {
+                this.MorphicSession = this.ServiceProvider.GetRequiredService<MorphicSession>();
+                this.MorphicSession.UserChanged += this.Session_UserChanged;
+            }
+
+            if (Features.Community.IsEnabled())
+            {
+                this.CommunitySession = this.ServiceProvider.GetRequiredService<CommunitySession>();
+                this.MorphicSession.UserChanged += this.Session_UserChanged;
+            }
+
             this.Logger.LogInformation("App Started");
 
-            this.CreateMainMenu();
+            this.morphicMenu = new MorphicMenu();
+
             this.RegisterGlobalHotKeys();
             this.ConfigureCountly();
             this.StartCheckingForUpdates();
@@ -258,55 +270,6 @@ namespace Morphic.Client
 
             Task task = this.OpenSession();
             task.ContinueWith(this.SessionOpened, TaskScheduler.FromCurrentSynchronizationContext());
-        }
-
-        /// <summary>
-        /// Makes the application automatically start at login.
-        /// </summary>
-        private bool ConfigureAutoRun(bool? newValue = null)
-        {
-            bool enabled;
-            using RegistryKey morphicKey =
-                Registry.CurrentUser.CreateSubKey(@"Software\Raising the Floor\Morphic")!;
-            using RegistryKey runKey =
-                Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run")!;
-
-            if (newValue == null)
-            {
-                // Get the configured value
-                object value = morphicKey.GetValue("AutoRun");
-                if (value == null)
-                {
-                    // This might be the first time running, enable auto-run by default.
-                    enabled = true;
-                }
-                else
-                {
-                    // Respect the system setting (it was probably removed on purpose).
-                    enabled = runKey.GetValue("Morphic") != null;
-                }
-            }
-            else
-            {
-                enabled = (bool)newValue;
-            }
-
-            morphicKey.SetValue("AutoRun", enabled ? "1" : "0", RegistryValueKind.String);
-            if (enabled)
-            {
-                string processPath = Process.GetCurrentProcess().MainModule.FileName;
-                // Only add it to the auto-run if running a release.
-                if (!processPath.EndsWith("dotnet.exe"))
-                {
-                    runKey.SetValue("Morphic", processPath);
-                }
-            }
-            else
-            {
-                runKey.DeleteValue("Morphic", false);
-            }
-
-            return enabled;
         }
 
         /// <summary>
@@ -345,11 +308,9 @@ namespace Morphic.Client
 
         private void Session_UserChanged(object? sender, EventArgs e)
         {
-            if (this.logoutItem != null)
+            if (sender is CommunitySession communitySession)
             {
-                this.logoutItem.Visibility = this.MorphicSession.User == null
-                    ? Visibility.Collapsed
-                    : Visibility.Visible;
+                this.BarManager.LoadSessionBar(communitySession);
             }
         }
 
@@ -361,16 +322,25 @@ namespace Morphic.Client
             });
             HotkeyManager.Current.AddOrReplace("Show Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift | ModifierKeys.Alt, (sender, e) =>
             {
-                this.ShowQuickStrip(true);
+                this.BarManager.ShowBar();
             });
         }
 
         private async Task OpenSession()
         {
-            await this.CopyDefaultPreferences();
-            await this.MorphicSession.SettingsManager.Populate(Path.Combine("Solutions", "windows.solutions.json"));
-            await this.MorphicSession.SettingsManager.Populate(Path.Combine("Solutions", "jaws2020.solutions.json"));
-            await this.MorphicSession.Open();
+            if (Features.Basic.IsEnabled())
+            {
+                await this.CopyDefaultPreferences();
+                await this.MorphicSession.SettingsManager.Populate(Path.Combine("Solutions", "windows.solutions.json"));
+                await this.MorphicSession.SettingsManager.Populate(Path.Combine("Solutions",
+                    "jaws2020.solutions.json"));
+                await this.MorphicSession.Open();
+            }
+
+            if (Features.Community.IsEnabled())
+            {
+                await this.CommunitySession.Open();
+            }
         }
 
         private async Task CopyDefaultPreferences()
@@ -413,449 +383,28 @@ namespace Morphic.Client
             }
             this.Logger.LogInformation("Session Open");
 
-            this.LoadQuickStrip();
-
-            if (this.AppOptions.AutoShow)
-            {
-                this.ShowQuickStrip();
-            }
-
             if (this.AppOptions.FirstRun)
             {
                 this.OnFirstRun();
             }
+
+            if (Features.Basic.IsEnabled())
+            {
+                this.BarManager.LoadFromBarJson(AppPaths.GetConfigFile("basic-bar.json5", true));
+            }
         }
 
         #endregion
-
-        #region System Tray Icon
-
-        /// <summary>
-        /// Create an icon in the system tray
-        /// </summary>
-        private async void CreateNotifyIcon()
-        {
-            if (this.QuickStripWindow == null)
-            {
-                throw new InvalidOperationException("Attempted to create the tray button before the quickstrip was loaded");
-            }
-
-            bool allNotificationIconsShown = await this.GetShowIconsOnTaskbar();
-
-            this.notifyIcon = new TrayButton(this.QuickStripWindow);
-            this.notifyIcon.Click += this.OnNotifyIconClicked;
-            this.notifyIcon.SecondaryClick += this.OnNotifyIconRightClicked;
-            this.notifyIcon.DoubleClick += this.OnNotifyIconDoubleClicked;
-            this.notifyIcon.Icon = Client.Properties.Resources.Icon;
-            this.notifyIcon.Text = "Morphic";
-            this.notifyIcon.UseNotificationIcon = allNotificationIconsShown;
-            this.notifyIcon.Visible = true;
-        }
-
-        /// <summary>
-        /// Determines if the tray icons are always visible on the task tray.
-        /// </summary>
-        /// <returns></returns>
-        private async Task<bool> GetShowIconsOnTaskbar()
-        {
-            SystemSetting filterType = new SystemSetting("SystemSettings_Notifications_ShowIconsOnTaskbar",
-                new LoggerFactory().CreateLogger<SystemSetting>());
-            return await filterType.GetValue() as bool? == true;
-        }
-
-        /// <summary>
-        /// Create the main menu that is displayed from the system tray icon
-        /// </summary>
-        private void CreateMainMenu()
-        {
-            this.mainMenu = (this.Resources["ContextMenu"] as ContextMenu)!;
-            this.mainMenu.DataContext = this;
-            foreach (object? item in this.mainMenu.Items)
-            {
-                if (item is MenuItem menuItem)
-                {
-                    if (menuItem.Name == "showQuickStripItem")
-                    {
-                        this.showQuickStripItem = menuItem;
-                    }
-                    else if (menuItem.Name == "hideQuickStripItem")
-                    {
-                        this.hideQuickStripItem = menuItem;
-                    }
-                    else if (menuItem.Name == "logoutItem")
-                    {
-                        this.logoutItem = menuItem;
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// The icon in the system tray
-        /// </summary>
-        private TrayButton? notifyIcon;
 
         /// <summary>
         /// The main menu shown from the system tray icon
         /// </summary>
-        private ContextMenu mainMenu = new ContextMenu();
-
-        /// <summary>
-        /// The main menu item for showing the quick strip
-        /// </summary>
-        private MenuItem? showQuickStripItem;
-
-        /// <summary>
-        /// The main menu item for hiding the quick strip
-        /// </summary>
-        private MenuItem? hideQuickStripItem;
-
-        /// <summary>
-        /// The main menu item for logging out
-        /// </summary>
-        private MenuItem? logoutItem;
-
-        /// <summary>
-        /// Called when the system tray icon is clicked
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void OnNotifyIconClicked(object? sender, EventArgs e)
-        {
-            CountlyBase.RecordEvent("Tray Click");
-            if (this.QuickStripWindow?.Visibility != Visibility.Visible || this.QuickStripWindow?.WindowState == WindowState.Minimized)
-            {
-                this.ShowQuickStrip();
-            }
-            else
-            {
-                this.HideQuickStrip();
-            }
-        }
-
-        /// <summary>
-        /// Called when the system tray icon is right-clicked
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void OnNotifyIconRightClicked(object? sender, EventArgs e)
-        {
-            CountlyBase.RecordEvent("Tray double-click");
-            this.ShowMenu();
-        }
+        private MorphicMenu? morphicMenu;
 
         public void ShowMenu(Control? control = null)
         {
-            if (control == null)
-            {
-                this.mainMenu.Placement = PlacementMode.Mouse;
-                this.mainMenu.PlacementTarget = null;
-            }
-            else
-            {
-                this.mainMenu.Placement = PlacementMode.Top;
-                this.mainMenu.PlacementTarget = control;
-            }
-
-            this.mainMenu.IsOpen = true;
+            this.morphicMenu?.Show(control);
         }
-
-        /// <summary>
-        /// Called when the system tray icon is double-clicked
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void OnNotifyIconDoubleClicked(object? sender, EventArgs e)
-        {
-            CountlyBase.RecordEvent("Tray Menu");
-            this.ShowQuickStrip();
-        }
-
-        /// <summary>
-        /// Event handler for when the user selects Show Quick Strip from the main menu
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void ShowQuickStrip(object sender, RoutedEventArgs e)
-        {
-            CountlyBase.RecordEvent("Show MorphicBar");
-            this.ShowQuickStrip();
-        }
-
-        /// <summary>
-        /// Event handler for when the user selects Hide Quick Strip from the main menu
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void HideQuickStrip(object sender, RoutedEventArgs e)
-        {
-            CountlyBase.RecordEvent("Hide MorphicBar");
-            this.HideQuickStrip();
-        }
-
-        private void TravelWithSettings(object sender, RoutedEventArgs e)
-        {
-            CountlyBase.RecordEvent("Travel");
-            this.Dialogs.OpenDialog<TravelWindow>();
-        }
-
-        private void RestoreSettings(object sender, RoutedEventArgs e)
-        {
-            CountlyBase.RecordEvent("Restore");
-            this.Dialogs.OpenDialog<RestoreWindow>();
-        }
-
-        private void Logout(object sender, RoutedEventArgs e)
-        {
-            CountlyBase.RecordEvent("Logout");
-            _ = this.MorphicSession.SignOut();
-        }
-
-        private void About(object sender, RoutedEventArgs e)
-        {
-            CountlyBase.RecordEvent("About");
-            this.Dialogs.OpenDialog<AboutWindow>();
-        }
-
-        private void MenuLink(object sender, RoutedEventArgs e)
-        {
-            if (sender is MenuItem item)
-            {
-                CountlyBase.RecordEvent("Menu:" + item.Header);
-                Process.Start(new ProcessStartInfo(item.Tag as string)
-                {
-                    UseShellExecute = true
-                });
-            }
-        }
-
-        private void StopKeyRepeatInit(object sender, EventArgs e)
-        {
-            if (sender is MenuItem menuItem)
-            {
-                menuItem.IsChecked = Morphic.Windows.Native.Keyboard.KeyRepeat();
-            }
-        }
-        private void StopKeyRepeatToggle(object sender, RoutedEventArgs e)
-        {
-            if (sender is MenuItem menuItem)
-            {
-                menuItem.IsChecked = Morphic.Windows.Native.Keyboard.KeyRepeat(menuItem.IsChecked);
-            }
-        }
-
-
-        /// <summary>
-        /// Event handler for when the user selects Quit from the logo button's menu
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Quit(object sender, RoutedEventArgs e)
-        {
-            CountlyBase.RecordEvent("Quit");
-            App.Current.Shutdown();
-        }
-
-        private void AutoRunInit(object? sender, EventArgs e)
-        {
-            if (sender is MenuItem item)
-            {
-                item.IsChecked = this.ConfigureAutoRun();
-            }
-        }
-
-        private void AutoRunToggle(object sender, RoutedEventArgs e)
-        {
-            if (sender is MenuItem item)
-            {
-                this.ConfigureAutoRun(item.IsChecked);
-            }
-        }
-
-        #endregion
-
-        #region Quick Strip Window
-
-        /// <summary>
-        ///  The Quick Strip Window
-        /// </summary>
-        public QuickStripWindow? QuickStripWindow { get; private set; }
-
-        /// <summary>
-        /// true to always show in the alt+tab list, even when hidden.
-        /// </summary>
-        public bool AlwaysAltTab { get; set; } = true;
-
-        /// <summary>
-        /// Toggle the Quick Strip window based on its current visibility
-        /// </summary>
-        public void ToggleQuickStrip()
-        {
-            if (this.QuickStripWindow != null)
-            {
-                this.HideQuickStrip();
-            }
-            else
-            {
-                this.ShowQuickStrip();
-            }
-        }
-
-        /// <summary>
-        /// Loads the quick strip.
-        /// </summary>
-        public void LoadQuickStrip()
-        {
-            if (this.QuickStripWindow == null)
-            {
-                this.QuickStripWindow = this.ServiceProvider.GetRequiredService<QuickStripWindow>();
-                this.QuickStripWindow.Closed += this.QuickStripClosed;
-                this.QuickStripWindow.SourceInitialized += (sender, args) => this.CreateNotifyIcon();
-                // So the tray button works, the window needs to be shown (to create the window), but not displayed.
-                this.QuickStripWindow.AllowsTransparency = true;
-                this.QuickStripWindow.Opacity = 0;
-                if (this.AlwaysAltTab)
-                {
-                    this.ShowQuickStrip();
-                    this.QuickStripWindow.WindowState = WindowState.Minimized;
-                }
-                else
-                {
-                    this.QuickStripWindow.Show();
-                    this.QuickStripWindow.Hide();
-                }
-            }
-        }
-
-        /// <summary>
-        /// true if the quick-strip has been shown before.
-        /// </summary>
-        private bool quickStripShown;
-
-        /// <summary>
-        /// Ensure the Quick Strip window is shown
-        /// </summary>
-        public void ShowQuickStrip(bool skippingSave = false, bool keyboardFocus = false)
-        {
-            this.LoadQuickStrip();
-            if (this.QuickStripWindow == null)
-            {
-                throw new ApplicationException("The quickstrip was not loaded");
-            }
-
-            this.QuickStripWindow.WindowState = WindowState.Normal;
-            this.QuickStripWindow.Show();
-            this.QuickStripWindow.Activate();
-
-            if (!this.quickStripShown)
-            {
-                this.QuickStripWindow.FocusFirstItem(keyboardFocus);
-                this.quickStripShown = true;
-            }
-            else
-            {
-                if (this.focusedElement != null)
-                {
-                    FocusManager.SetFocusedElement(this.QuickStripWindow, this.focusedElement);
-                }
-            }
-
-            if (keyboardFocus)
-            {
-                this.QuickStripWindow.SetKeyboardFocus();
-            }
-
-            if (this.showQuickStripItem != null)
-            {
-                this.showQuickStripItem.Visibility = Visibility.Collapsed;
-            }
-            if (this.hideQuickStripItem != null)
-            {
-                this.hideQuickStripItem.Visibility = Visibility.Visible;
-            }
-            if (!skippingSave)
-            {
-                this.MorphicSession.SetPreference(QuickStrip.QuickStripWindow.PreferenceKeys.Visible, true);
-            }
-        }
-
-        private IInputElement? focusedElement;
-
-        /// <summary>
-        /// Ensure the Quick Strip window is hidden
-        /// </summary>
-        public void HideQuickStrip()
-        {
-            QuickHelpWindow.Dismiss(true);
-            if (this.QuickStripWindow != null)
-            {
-                if (this.AlwaysAltTab)
-                {
-                    this.QuickStripWindow.WindowState = WindowState.Minimized;
-                }
-                else
-                {
-                    this.QuickStripWindow.Hide();
-                }
-
-                // Re-focus the same control when the qs is re-shown.
-                this.focusedElement = FocusManager.GetFocusedElement(this.QuickStripWindow);
-            }
-
-            if (this.showQuickStripItem != null)
-            {
-                this.showQuickStripItem.Visibility = Visibility.Visible;
-            }
-            if (this.hideQuickStripItem != null)
-            {
-                this.hideQuickStripItem.Visibility = Visibility.Collapsed;
-            }
-
-            this.MorphicSession.SetPreference(QuickStrip.QuickStripWindow.PreferenceKeys.Visible, false);
-        }
-
-        /// <summary>
-        /// Called when the Quick Strip window closes
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void QuickStripClosed(object? sender, EventArgs e)
-        {
-            this.QuickStripWindow = null;
-        }
-
-        #endregion
-
-
-        #region Login Window
-
-        private LoginWindow? loginWindow;
-
-        public Task<bool> OpenLoginWindow()
-        {
-            TaskCompletionSource<bool> taskCompletionSource = new TaskCompletionSource<bool>();
-
-            if (this.loginWindow == null)
-            {
-                this.loginWindow = this.ServiceProvider.GetRequiredService<LoginWindow>();
-                this.loginWindow.Show();
-                this.loginWindow.Closed += (sender, args) =>
-                {
-                    this.OnLoginWindowClosed(sender, args);
-                    taskCompletionSource.SetResult(true);
-                };
-            }
-
-            this.loginWindow.Activate();
-            return taskCompletionSource.Task;
-        }
-
-        private void OnLoginWindowClosed(object? sender, EventArgs e)
-        {
-            this.loginWindow = null;
-        }
-
-        #endregion
 
         #region Updates
 
@@ -875,14 +424,6 @@ namespace Morphic.Client
         protected override void OnExit(ExitEventArgs e)
         {
             Countly.Instance.SessionEnd();
-            // Windows doesn't seem to clean up the system tray icon until the user
-            // hovers over it after the application closes.  So, we need to make it
-            // invisible on app exit ourselves.
-            if (this.notifyIcon != null)
-            {
-                this.notifyIcon.Visible = false;
-            }
-
             base.OnExit(e);
         }
 

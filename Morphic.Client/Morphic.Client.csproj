@@ -38,52 +38,21 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  
+  <ItemGroup>
+    <Content Include="DefaultConfig\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 
   <ItemGroup>
     <Content Include="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\bar-icons\amazon-brands.svg" />
-    <Content Include="Assets\bar-icons\calendar-solid.svg" />
-    <Content Include="Assets\bar-icons\camera-solid.svg" />
-    <Content Include="Assets\bar-icons\comment-solid.svg" />
-    <Content Include="Assets\bar-icons\envelope-open-text.svg" />
-    <Content Include="Assets\bar-icons\envelope-open.svg" />
-    <Content Include="Assets\bar-icons\envelope-outline-open.svg" />
-    <Content Include="Assets\bar-icons\envelope-outline.svg" />
-    <Content Include="Assets\bar-icons\envelope-solid.svg" />
-    <Content Include="Assets\bar-icons\envelope.svg" />
-    <Content Include="Assets\bar-icons\facebook.svg" />
-    <Content Include="Assets\bar-icons\gmail.svg" />
-    <Content Include="Assets\bar-icons\google-brands.svg" />
-    <Content Include="Assets\bar-icons\google-drive-brands.svg" />
-    <Content Include="Assets\bar-icons\images-solid.svg" />
-    <Content Include="Assets\bar-icons\instagram.svg" />
-    <Content Include="Assets\bar-icons\link-solid.svg" />
-    <Content Include="Assets\bar-icons\morphic-logo.svg" />
-    <Content Include="Assets\bar-icons\music-solid.svg" />
-    <Content Include="Assets\bar-icons\newspaper-solid.svg" />
-    <Content Include="Assets\bar-icons\outlook.svg" />
-    <Content Include="Assets\bar-icons\paypal.svg" />
-    <Content Include="Assets\bar-icons\question-solid.svg" />
-    <Content Include="Assets\bar-icons\reddit.svg" />
-    <Content Include="Assets\bar-icons\shopping-cart-solid.svg" />
-    <Content Include="Assets\bar-icons\skype-brands.svg" />
-    <Content Include="Assets\bar-icons\skype.svg" />
-    <Content Include="Assets\bar-icons\telegram.svg" />
-    <Content Include="Assets\bar-icons\test\grid.svg" />
-    <Content Include="Assets\bar-icons\twitter.svg" />
-    <Content Include="Assets\bar-icons\viber.svg" />
-    <Content Include="Assets\bar-icons\video-solid.svg" />
-    <Content Include="Assets\bar-icons\whatsapp.svg" />
-    <Content Include="Assets\bar-icons\yahoo-mail.svg" />
-    <Content Include="Assets\bar-icons\youtube.svg" />
-    <Content Include="Assets\morphic-icon.ico" />
-    <Content Include="DefaultConfig\basic-bar.json5" />
-    <Content Include="DefaultConfig\default-bar.json5" />
-    <Content Include="DefaultConfig\presets.json5" />
-    <Content Include="DefaultConfig\testbar-actions.json5" />
-    <Content Include="DefaultConfig\testbar-all-kinds.json5" />
+
+    <Content Include="Assets\*" CopyToOutputDirectory="PreserveNewest"/>
+    <Content Include="Assets\bar-icons\*" CopyToOutputDirectory="PreserveNewest"/>
+
     <Content Include="quickstrip.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

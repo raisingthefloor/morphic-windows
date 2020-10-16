@@ -33,7 +33,6 @@ namespace Morphic.Client.Dialogs
     using Microsoft.Extensions.Logging;
     using Service;
     using Settings;
-    using Travel;
 
     /// <summary>
     /// Login window for authenticating users and applying their settings

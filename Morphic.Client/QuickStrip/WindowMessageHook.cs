@@ -28,16 +28,20 @@ namespace Morphic.Client.QuickStrip
 
         public IntPtr Handle { get; private set; }
 
-        public WindowMessageHook(Window window)
-        {
-            if (!(window is IMessageHook))
-            {
-                throw new ArgumentException(
-                    $"{nameof(window)} is expected implement the {nameof(IMessageHook)} interface.");
-            }
+        private bool isMessageWindow = false;
 
+        public WindowMessageHook(Window window, bool isMessageWindow = false)
+        {
             this.Window = window;
-            window.SourceInitialized += (sender, args) => this.AddHook();
+            this.isMessageWindow = isMessageWindow;
+            if (this.isMessageWindow)
+            {
+                this.AddHook();
+            }
+            else
+            {
+                window.SourceInitialized += (sender, args) => this.AddHook();
+            }
         }
 
         /// <summary>
@@ -75,6 +79,10 @@ namespace Morphic.Client.QuickStrip
         private void AddHook()
         {
             WindowInteropHelper nativeWindow = new WindowInteropHelper(this.Window);
+            if (this.isMessageWindow)
+            {
+                nativeWindow.EnsureHandle();
+            }
             this.Handle = nativeWindow.Handle;
             this.hwndSource = HwndSource.FromHwnd(this.Handle);
             this.hwndSource?.AddHook(this.WindowProc);
@@ -97,6 +105,13 @@ namespace Morphic.Client.QuickStrip
         /// </summary>
         private IntPtr WindowProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
+            if (this.isMessageWindow)
+            {
+                if (msg == 0x18)
+                {
+                    handled = true;
+                }
+            }
             if (this.messagesWanted.Contains(msg))
             {
                 MessageEventArgs eventArgs = new MessageEventArgs(hwnd, msg, wParam, lParam);
@@ -122,14 +137,6 @@ namespace Morphic.Client.QuickStrip
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         private static extern int RegisterWindowMessage(string lpString);
 
-    }
-
-    /// <summary>
-    /// Identifies a class (Window) that has a message hook.
-    /// </summary>
-    public interface IMessageHook : IDisposable
-    {
-        WindowMessageHook Messages { get; }
     }
 
     /// <summary>

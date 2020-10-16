@@ -12,7 +12,6 @@
         WindowStyle="None" ResizeMode="NoResize" SizeToContent="WidthAndHeight" Topmost="True" ShowInTaskbar="False"
         Background="Transparent"
         Padding="0"
-        ContextMenu="{StaticResource MorphicMenu}"
         AllowsTransparency="True"
         Opacity="0"
 

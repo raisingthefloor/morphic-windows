@@ -10,7 +10,10 @@
         public static BuildInfo Current { get; } = BuildInfo.FromJsonFile(AppPaths.GetAppFile("build-info.json"));
 
         [JsonIgnore]
-        public Features Features { get; } = new Features();
+        public string EditionName => BuildFeatures.EditionName;
+
+        [JsonIgnore]
+        public Features Features => BuildFeatures.EnabledFeatures;
 
         [JsonIgnore]
         public string Version => Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "unknown version";

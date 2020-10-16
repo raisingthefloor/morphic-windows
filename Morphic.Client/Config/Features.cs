@@ -4,70 +4,75 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-    using System.Reflection;
+    using System.Runtime.CompilerServices;
+
+    [Flags]
+    public enum Features : uint
+    {
+        None = 0,
+        Basic = 1 << 0,
+        Community = 1 << 1,
+        All = ~0u
+    }
 
     /// <summary>
-    /// Specifies what features are enabled for this build.
+    /// Reads the features that are enabled for this build.
     /// </summary>
-    public class Features
+    public static class BuildFeatures
     {
-        private readonly string featureFile =
+        private static readonly string FeatureFile =
             AppOptions.Current.Launch.FeaturesFile ?? AppPaths.GetAppFile("features");
 
-        public Features()
+        public static Features EnabledFeatures { get; private set; } = Features.None;
+
+        public static string EditionName { get; private set; } = "internal";
+
+        static BuildFeatures()
         {
-            this.LoadFeatures();
+            BuildFeatures.LoadFeatures();
         }
 
-        public string EditionName { get; protected set; } = "internal";
-
-        [Feature("Community")]
-        public bool Community { get; protected set; }
-
-        [Feature("Basic")]
-        public bool Basic { get; protected set; }
-
         /// <summary>
-        /// Loads the features file, which is a list of features which point to one or more properties in this class.
+        /// Loads the features file, which is a list of features which are enabled for this build.
         /// A line in the file that starts with "name=" specifies the name of the edition of the build (eg, "Basic").
-        /// The [Feature] attribute is used to specify one or more features that set it to true.
         /// </summary>
-        private void LoadFeatures()
+        private static void LoadFeatures()
         {
-            List<string> featuresEnabled = File.ReadAllLines(this.featureFile)
-                .Select(l => l.Trim().ToUpperInvariant())
+            IEnumerable<string> lines = File.ReadAllLines(BuildFeatures.FeatureFile)
+                .Select(l => l.Trim())
                 .Where(l => !l.StartsWith('#'))
                 .ToList();
 
-            string? editionLine = featuresEnabled.FirstOrDefault(l => l.StartsWith("NAME="));
+            Features features = 0;
 
-            if (!string.IsNullOrEmpty(editionLine))
+            foreach (string line in lines)
             {
-                this.EditionName = editionLine.Substring(editionLine.IndexOf('=') + 1);
-            }
-
-            foreach (PropertyInfo property in this.GetType().GetProperties())
-            {
-                foreach (FeatureAttribute attr in property.GetCustomAttributes<FeatureAttribute>(true))
+                if (line.StartsWith("name=", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    string featureName = attr.Name.ToUpperInvariant();
-                    if (featuresEnabled.Contains(featureName))
-                    {
-                        property.SetValue(this, true);
-                    }
+                    BuildFeatures.EditionName = line.Substring(line.IndexOf('=') + 1);
+                }
+
+                if (Enum.TryParse(line, true, out Features feature))
+                {
+                    features |= feature;
                 }
             }
+
+            BuildFeatures.EnabledFeatures = features;
         }
-    }
 
-    [AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
-    internal sealed class FeatureAttribute : Attribute
-    {
-        public string Name { get; }
-
-        public FeatureAttribute(string name)
+        /// <summary>Checks if all the given features are enabled.</summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsEnabled(this Features input)
         {
-            this.Name = name;
+            return (EnabledFeatures & input) == input;
+        }
+
+        /// <summary>Checks if any of the given features are enabled.</summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool AnyEnabled(this Features input)
+        {
+            return (EnabledFeatures & input) != 0;
         }
     }
 }

@@ -59,7 +59,7 @@ namespace Morphic.Client.QuickStrip
     /// <summary>
     /// Interaction logic for QuickStripWindow.xaml
     /// </summary>
-    public partial class QuickStripWindow : Window, IMessageHook
+    public partial class QuickStripWindow : Window
     {
 
         public WindowMessageHook Messages { get; }
@@ -1054,7 +1054,7 @@ namespace Morphic.Client.QuickStrip
                     break;
                 case Key.System when e.SystemKey == Key.F4:
                     e.Handled = true;
-                    App.Current.HideQuickStrip();
+                    //App.Current.HideQuickStrip();
                     break;
 
             }
