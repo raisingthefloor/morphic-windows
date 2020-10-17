@@ -189,7 +189,7 @@
     
     <Button x:Name="Button"
             AutomationProperties.Name="{Binding BarItem.UiName}"
-            AutomationProperties.HelpText="{Binding BarItem.ToolTipInfo}"
+            AutomationProperties.HelpText="{Binding BarItem.ToolTip}"
             Click="Button_OnClick"
             HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
             HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"

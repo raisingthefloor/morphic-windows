@@ -8,7 +8,7 @@
 // You may obtain a copy of the License at
 // https://github.com/GPII/universal/blob/master/LICENSE.txt
 
-namespace Morphic.Client.Bar.UI
+namespace Morphic.Client.Dialogs
 {
     using System;
     using System.ComponentModel;
@@ -22,10 +22,10 @@ namespace Morphic.Client.Bar.UI
     /// <summary>
     /// Gets the login and password from the user.
     /// </summary>
-    public partial class LoginWindow : Window, INotifyPropertyChanged
+    public partial class CommunityLoginWindow : Window, INotifyPropertyChanged
     {
 
-        public LoginWindow(CommunitySession session, ILogger<LoginWindow> logger)
+        public CommunityLoginWindow(CommunitySession session, ILogger<CommunityLoginWindow> logger)
         {
             this.DataContext = this;
             this.InitializeComponent();

@@ -15,6 +15,7 @@ namespace Morphic.Client.Bar.UI
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Data;
+    using System.Windows.Media;
 
     /// <summary>
     /// Converter which returns a value depending on whether or not the input value is false/null.
@@ -70,6 +71,31 @@ namespace Morphic.Client.Bar.UI
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
+        }
+    }
+
+    public static class UiExtensions
+    {
+        public static T? FindVisualParent<T>(this DependencyObject child) where T : DependencyObject
+        {
+            DependencyObject? parent;
+            do
+            {
+                parent = VisualTreeHelper.GetParent(child);
+                if (parent != null)
+                {
+                    if (parent is T p)
+                    {
+                        return p;
+                    }
+                    else
+                    {
+                        child = parent;
+                    }
+                }
+            } while (parent != null);
+
+            return null;
         }
     }
 }

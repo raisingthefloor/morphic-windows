@@ -43,13 +43,11 @@ namespace Morphic.Client.Bar.UI.BarControls
         /// </summary>
         public BarData Bar => this.BarItem.Bar;
 
-        /// <summary>Tool tip header - the name of the item, if the tooltip info isn't specified.</summary>
-        public string? ToolTipHeader
-            => string.IsNullOrEmpty(this.BarItem.ToolTipInfo) ? this.BarItem.Text : this.BarItem.ToolTip;
+        /// <summary>Tool tip header.</summary>
+        public string? ToolTipHeader => this.BarItem.ToolTipHeader;
 
         /// <summary>Tool tip text.</summary>
-        public string? ToolTipText
-            => string.IsNullOrEmpty(this.BarItem.ToolTipInfo) ? this.BarItem.ToolTip : this.BarItem.ToolTipInfo;
+        public string? ToolTipText => this.BarItem.ToolTip;
 
         /// <summary>
         /// Current theme to use, depending on the state (normal/hover/focus).
@@ -113,6 +111,8 @@ namespace Morphic.Client.Bar.UI.BarControls
         {
             this.DataContext = this;
             this.BarItem = barItem;
+
+            this.ToolTip = $"{this.ToolTipHeader}|{this.ToolTipText}";
 
             this.Loaded += this.OnLoaded;
         }

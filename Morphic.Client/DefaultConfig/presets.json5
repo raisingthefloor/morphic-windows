@@ -15,11 +15,13 @@
         buttons: {
           out: {
             label: "-",
-            tooltip: "Zoom out (make things smaller)"
+            tooltip: "Increase Text Size everywhere|Makes everything on the screen larger.",
+            uiName: "Increase Text Size"
           },
           in: {
             label: "+",
-            tooltip: "Zoom in (make things larger)"
+            tooltip: "Decrease Text Size everywhere|Makes everything on the screen smaller.",
+            uiName: "Decrease Text Size"
           }
         }
       }
@@ -31,6 +33,8 @@
       configuration: {
         defaultLabel: "Volume",
         function: "volume",
+        tooltip: "Volume tooltip",
+        tooltipHeader: "Volume tooltip header",
         args: {
           direction: "{button}"
         },
@@ -41,7 +45,7 @@
           },
           up: {
             label: "+",
-            tooltip: "Raise the volume"
+            xtooltip: "Raise the volume"
           }
         }
       }
@@ -59,11 +63,13 @@
         buttons: {
           on: {
             label: "Show",
-            tooltip: "Turn on the magnifier"
+            uiName: "Show Magnifier",
+            tooltip: "Turn on Magnifier that follows mouse|Turns on a Magnifying Lens. (Right-click to change settings)",
           },
           off: {
             label: "Hide",
-            tooltip: "Turn off the magnifier"
+            uiName: "Hide Magnifier",
+            tooltip: "Turn off the magnifier|(Right-click to change magnifier settings)"
           }
         }
       }
@@ -103,15 +109,13 @@
         buttons: {
           play: {
             label: "|>",
-            tooltip: "Read out the selected text"
-          },
-          pause: {
-            label: "||",
-            tooltip: "Pause reading the text"
+            uiName: "Read selected text",
+            tooltip: "Read text that is selected|Select any text, and then click to have it read",
           },
           stop: {
             label: "[]",
-            tooltip: "Stop the text reading"
+            uiName: "Stop reading selected text",
+            tooltip: "Stop Reading|(Right-click to adjust speed and voice"
           }
         }
       }

@@ -165,6 +165,10 @@ ButtonItem = {
 
     // Size of the item. "textonly", "small", "medium", or "large" (default)
     size: "large",
+
+    // Context menu
+    menu: {ContextMenu}
+
   }
 }
 ```
@@ -315,7 +319,11 @@ MultiButtonItem = {
         // Display text
         label: "day",
         // A value that replaces "{button}" in any action payload (eg, `exe: "app.exe {button}"`).
-        value: "b1"
+        value: "b1",
+
+        tooltip: "Tooltip header|Tooltip text",
+        uiName: "Button one",
+        menu: {ContextMenu}
       },
       // next button
       button2: {
@@ -387,6 +395,17 @@ ItemTheme = {
   focus: {Theme}, // Item has keyboard focus.
   active: {Theme} // Item is being clicked (mouse is down).
 }
+```
+
+## `ContextMenu`
+
+```js
+ContextMenu = {
+    "setting": "easeofaccess-colorfilter",
+    "learn": "color",
+    "demo": "color"
+}
+
 ```
 
 ## presets.json5

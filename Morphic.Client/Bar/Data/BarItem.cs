@@ -84,7 +84,7 @@ namespace Morphic.Client.Bar.Data
             {
                 string name = this.uiName ?? this.Text;
                 return string.IsNullOrEmpty(name)
-                    ? this.ToolTip ?? this.ToolTipInfo ?? string.Empty
+                    ? this.ToolTipHeader ?? this.ToolTip ?? string.Empty
                     : name;
             }
             set => this.uiName = value;
@@ -97,16 +97,16 @@ namespace Morphic.Client.Bar.Data
         public string? DefaultText { get; set; }
 
         /// <summary>
-        /// Tooltip main text (default is the this.Text).
+        /// Tooltip header text (default is the this.Text).
         /// </summary>
         [JsonProperty("configuration.tooltipHeader")]
-        public string? ToolTip { get; set; }
+        public string? ToolTipHeader { get; set; }
 
         /// <summary>
         /// Tooltip smaller text.
         /// </summary>
         [JsonProperty("configuration.tooltip")]
-        public string? ToolTipInfo { get; set; }
+        public string? ToolTip { get; set; }
 
         /// <summary>
         /// The background colour (setter from json to allow empty strings).

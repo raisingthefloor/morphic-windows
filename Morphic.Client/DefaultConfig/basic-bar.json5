@@ -58,7 +58,9 @@
         label: "Snip",
         buttons: {
           copy: {
-            label: "Copy"
+            label: "Copy",
+            uiName: "Snip copy of part of the screen",
+            tooltip: "Drag with your mouse to copy part of screen. Paste into any document"
           }
         }
       }
@@ -82,16 +84,24 @@
         buttons: {
           contrast: {
             label: "Contrast",
+            uiName: "Contrast on, off",
+            tooltip: "Turn Contrast on and off|Makes screen easier to read for some. (Right-click to adjust contrast)",
           },
           color: {
             label: "Color",
+            uiName: "Color Vision on, off",
+            tooltip: "Turn Color Vision filters on and off|Changes color to adapt for color blindness. (Right-click to choose type)",
           },
           dark: {
             label: "Dark",
+            uiName: "Dark Mode on, off",
+            tooltip: "Turn Dark Mode on and off|Toggles Dark mode on and off. (Right-click to adjust)",
           },
           night: {
             label: "Night",
-          },
+            uiName: "Night Light on, off",
+            tooltip: "Turn 'Night Light' feature on and off|Reduces eye strain and makes it easier to fall asleep at night",
+          }
         }
       }
     },

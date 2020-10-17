@@ -23,6 +23,7 @@ namespace Morphic.Client.Bar
     using Core;
     using Core.Community;
     using Data;
+    using Dialogs;
     using Microsoft.Extensions.Logging;
     using Service;
     using UI;
@@ -143,6 +144,11 @@ namespace Morphic.Client.Bar
         /// <param name="content">The file content (if it's already loaded).</param>
         public BarData? LoadFromBarJson(string path, string? content = null)
         {
+            if (this.firstBar && AppOptions.Current.Launch.BarFile != null)
+            {
+                path = AppOptions.Current.Launch.BarFile;
+            }
+
             BarData? bar = null;
             try
             {
@@ -175,6 +181,12 @@ namespace Morphic.Client.Bar
         /// <param name="showCommunityId">Force this community to show.</param>
         public async void LoadSessionBar(CommunitySession session, string? showCommunityId = null)
         {
+            if (this.firstBar && AppOptions.Current.Launch.BarFile != null)
+            {
+                this.LoadFromBarJson(AppOptions.Current.Launch.BarFile);
+                return;
+            }
+
             this.Logger.LogInformation($"Loading a bar ({session.Communities.Length} communities)");
 
             UserBar? bar;

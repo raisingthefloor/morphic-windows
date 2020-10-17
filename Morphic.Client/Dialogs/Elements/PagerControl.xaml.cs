@@ -1,9 +1,9 @@
-﻿using System.Windows.Controls;
-using System.Windows.Media;
-using System.Windows.Shapes;
-
-namespace Morphic.Client.Elements
+﻿namespace Morphic.Client.Dialogs.Elements
 {
+    using System.Windows.Controls;
+    using System.Windows.Media;
+    using System.Windows.Shapes;
+
     /// <summary>
     /// Interaction logic for PagerControl.xaml
     /// </summary>
@@ -11,7 +11,7 @@ namespace Morphic.Client.Elements
     {
         public PagerControl()
         {
-            InitializeComponent();
+            this.InitializeComponent();
         }
 
         private int numberOfPages = 1;
@@ -19,12 +19,12 @@ namespace Morphic.Client.Elements
         {
             get
             {
-                return numberOfPages;
+                return this.numberOfPages;
             }
             set
             {
-                numberOfPages = value;
-                UpdateItems();
+                this.numberOfPages = value;
+                this.UpdateItems();
             }
         }
 
@@ -33,12 +33,12 @@ namespace Morphic.Client.Elements
         {
             get
             {
-                return currentPage;
+                return this.currentPage;
             }
             set
             {
-                currentPage = value;
-                UpdateItems();
+                this.currentPage = value;
+                this.UpdateItems();
             }
         }
 
@@ -47,47 +47,47 @@ namespace Morphic.Client.Elements
         {
             get
             {
-                return color;
+                return this.color;
             }
             set
             {
-                color = value;
-                UpdateItems();
+                this.color = value;
+                this.UpdateItems();
             }
         }
 
         private void UpdateItems()
         {
-            StackPanel.Children.Clear();
-            for (var i = 0; i < NumberOfPages; ++i)
+            this.StackPanel.Children.Clear();
+            for (var i = 0; i < this.NumberOfPages; ++i)
             {
                 if (i > 0)
                 {
-                    StackPanel.Children.Add(CreateLine());
+                    this.StackPanel.Children.Add(this.CreateLine());
                 }
-                StackPanel.Children.Add(CreateDot(i == CurrentPage));
+                this.StackPanel.Children.Add(this.CreateDot(i == this.CurrentPage));
             }
-            InvalidateMeasure();
+            this.InvalidateMeasure();
         }
 
         private Rectangle CreateLine()
         {
             var rect = new Rectangle();
-            rect.Width = Height;
+            rect.Width = this.Height;
             rect.Height = 1;
-            rect.Fill = Color;
+            rect.Fill = this.Color;
             return rect;
         }
 
         private Ellipse CreateDot(bool selected)
         {
             var ellipse = new Ellipse();
-            ellipse.Width = Height;
+            ellipse.Width = this.Height;
             ellipse.Height = ellipse.Width;
-            ellipse.Stroke = Color;
+            ellipse.Stroke = this.Color;
             if (selected)
             {
-                ellipse.Fill = Color;
+                ellipse.Fill = this.Color;
             }
             return ellipse;
         }

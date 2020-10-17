@@ -35,6 +35,10 @@ namespace Morphic.Client.Bar.UI.BarControls
             this.Buttons = this.BarItem.Buttons.Values.Select(b => new ButtonWrapper(this, b)).ToList();
 
             this.InitializeComponent();
+            this.ToolTipOpening += (o, eventArgs) =>
+            {
+                Console.WriteLine($"tooltip: {eventArgs.Source} xxx");
+            };
 
             // Apply theming to the dynamic buttons when they're created.
             this.ButtonContainer.ItemContainerGenerator.StatusChanged += (sender, args) =>
@@ -48,6 +52,10 @@ namespace Morphic.Client.Bar.UI.BarControls
 
                         if (content.ContentTemplate.FindName("ControlButton", content) is Button control)
                         {
+                            control.ToolTipOpening += (o, eventArgs) =>
+                            {
+                                Console.WriteLine($"tooltip: {control} {control.ToolTip}");
+                            };
                             b.Control = control;
                             this.ApplyControlTheme(b.Control);
                         }

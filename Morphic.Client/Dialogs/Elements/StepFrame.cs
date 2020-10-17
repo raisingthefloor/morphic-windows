@@ -21,14 +21,13 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-
-namespace Morphic.Client.Elements
+namespace Morphic.Client.Dialogs.Elements
 {
+    using System;
+    using System.Windows;
+    using System.Windows.Controls;
+    using System.Windows.Media;
+    using System.Windows.Media.Animation;
     using Microsoft.Extensions.DependencyInjection;
 
     /// <summary>
@@ -69,30 +68,30 @@ namespace Morphic.Client.Elements
                 stepPanel.StepFrame = this;
             }
 
-            dismissedPanel = CurrentPanel;
-            CurrentPanel = panel;
-            AddVisualChild(panel);
-            InvalidateVisual();
-            if (animated && dismissedPanel != null)
+            this.dismissedPanel = this.CurrentPanel;
+            this.CurrentPanel = panel;
+            this.AddVisualChild(panel);
+            this.InvalidateVisual();
+            if (animated && this.dismissedPanel != null)
             {
 
-                var duration = new Duration(TimeSpan.FromSeconds(PushAnimationDurationInSeconds));
+                var duration = new Duration(TimeSpan.FromSeconds(this.PushAnimationDurationInSeconds));
 
                 var dismissAnimation = new DoubleAnimation();
                 var dismissTranslate = new TranslateTransform(0, 0);
-                dismissedPanel.RenderTransform = dismissTranslate;
+                this.dismissedPanel.RenderTransform = dismissTranslate;
                 dismissAnimation.Duration = duration;
                 dismissAnimation.FillBehavior = FillBehavior.Stop;
                 dismissAnimation.From = dismissTranslate.X;
-                dismissAnimation.To = -dismissedPanel.ActualWidth;
+                dismissAnimation.To = -this.dismissedPanel.ActualWidth;
                 dismissAnimation.Completed += (object? sender, EventArgs e) =>
                 {
-                    CleanupDimissedPanel();
+                    this.CleanupDimissedPanel();
                 };
                 dismissTranslate.BeginAnimation(TranslateTransform.XProperty, dismissAnimation);
 
                 var presentAnimation = new DoubleAnimation();
-                var presentTransform = new TranslateTransform(dismissedPanel.ActualWidth, 0);
+                var presentTransform = new TranslateTransform(this.dismissedPanel.ActualWidth, 0);
                 panel.RenderTransform = presentTransform;
                 presentAnimation.Duration = duration;
                 presentAnimation.FillBehavior = FillBehavior.Stop;
@@ -106,19 +105,19 @@ namespace Morphic.Client.Elements
             }
             else
             {
-                CleanupDimissedPanel();
+                this.CleanupDimissedPanel();
             }
         }
 
         /// <summary>
-        /// Remove the dismissed page 
+        /// Remove the dismissed page
         /// </summary>
         private void CleanupDimissedPanel()
         {
-            if (dismissedPanel is Panel panel)
+            if (this.dismissedPanel is Panel panel)
             {
-                dismissedPanel = null;
-                RemoveVisualChild(panel);
+                this.dismissedPanel = null;
+                this.RemoveVisualChild(panel);
             }
         }
 
@@ -126,11 +125,11 @@ namespace Morphic.Client.Elements
             get
             {
                 var count = 0;
-                if (dismissedPanel != null)
+                if (this.dismissedPanel != null)
                 {
                     ++count;
                 }
-                if (CurrentPanel != null)
+                if (this.CurrentPanel != null)
                 {
                     ++count;
                 }
@@ -142,18 +141,18 @@ namespace Morphic.Client.Elements
         {
             if (index == 0)
             {
-                return CurrentPanel!;
+                return this.CurrentPanel!;
             }
-            return dismissedPanel!;
+            return this.dismissedPanel!;
         }
 
         protected override Size ArrangeOverride(Size finalSize)
         {
-            if (dismissedPanel is Panel dismissed)
+            if (this.dismissedPanel is Panel dismissed)
             {
                 dismissed.Arrange(new Rect(finalSize));
             }
-            if (CurrentPanel is Panel current)
+            if (this.CurrentPanel is Panel current)
             {
                 current.Arrange(new Rect(finalSize));
             }

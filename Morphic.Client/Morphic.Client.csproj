@@ -50,8 +50,8 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
 
-    <Content Include="Assets\*" CopyToOutputDirectory="PreserveNewest"/>
-    <Content Include="Assets\bar-icons\*" CopyToOutputDirectory="PreserveNewest"/>
+    <Content Include="Assets\*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\bar-icons\*" CopyToOutputDirectory="PreserveNewest" />
 
     <Content Include="quickstrip.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -69,6 +69,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Remove="tray-button.exe" />
+    <Content Include="test-bar.json5">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="tray-button.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Morphic.Client.Elements"
+        xmlns:elements="clr-namespace:Morphic.Client.Dialogs.Elements"
         mc:Ignorable="d"
         Title="Travel with Settings"
         Height="500"
@@ -41,5 +41,5 @@
             </Style.Triggers>
         </Style>
     </Window.Resources>
-    <local:StepFrame x:Name="StepFrame" Margin="20"></local:StepFrame>
+    <elements:StepFrame x:Name="StepFrame" Margin="20"></elements:StepFrame>
 </Window>

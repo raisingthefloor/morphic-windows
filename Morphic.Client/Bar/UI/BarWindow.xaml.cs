@@ -79,6 +79,7 @@ namespace Morphic.Client.Bar.UI
 
         protected BarWindow(BarData barData)
         {
+            this.QuickHelpWindow = QuickHelpWindow.AddBar(this);
             bool isPrimary = this is PrimaryBarWindow;
             this.Bar = barData;
 
@@ -95,7 +96,6 @@ namespace Morphic.Client.Bar.UI
 
             // Move it off the screen until it's loaded.
             this.Left = -0xffff;
-
 
             this.InitializeComponent();
 
@@ -122,6 +122,8 @@ namespace Morphic.Client.Bar.UI
             SystemEvents.DisplaySettingsChanged += this.SystemEventsOnDisplaySettingsChanged;
             this.Closed += (sender, args) => SystemEvents.DisplaySettingsChanged -= this.SystemEventsOnDisplaySettingsChanged;
         }
+
+        public QuickHelpWindow QuickHelpWindow { get; set; }
 
         private void OnOrientationChanged(object? sender, EventArgs e)
         {
@@ -454,6 +456,12 @@ namespace Morphic.Client.Bar.UI
                     e.Handled = true;
                     break;
             }
+        }
+
+        public BarItem? GetBarItemFromElement(FrameworkElement element)
+        {
+            BarItemControl? control = element.FindVisualParent<BarItemControl>();
+            return control?.BarItem;
         }
     }
 }
