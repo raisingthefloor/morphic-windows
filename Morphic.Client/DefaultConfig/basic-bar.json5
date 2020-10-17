@@ -56,6 +56,10 @@
       configuration: {
         function: "screenshot",
         label: "Snip",
+        menu: {
+          learn: "snip",
+          demo: "snip"
+        },
         buttons: {
           copy: {
             label: "Copy",
@@ -70,7 +74,7 @@
       is_primary: true,
       configuration: {
         identifier: "read-aloud",
-        label: "Read Selected"
+        label: "Read Selected",
       }
     },
     {
@@ -86,21 +90,41 @@
             label: "Contrast",
             uiName: "Contrast on, off",
             tooltip: "Turn Contrast on and off|Makes screen easier to read for some. (Right-click to adjust contrast)",
+            menu: {
+              setting: "easeofaccess-highcontrast",
+              learn: "contrast",
+              demo: "contrast"
+            }
           },
           color: {
             label: "Color",
             uiName: "Color Vision on, off",
             tooltip: "Turn Color Vision filters on and off|Changes color to adapt for color blindness. (Right-click to choose type)",
+            menu: {
+              setting: "easeofaccess-colorfilter",
+              learn: "color",
+              demo: "color"
+            }
           },
           dark: {
             label: "Dark",
             uiName: "Dark Mode on, off",
             tooltip: "Turn Dark Mode on and off|Toggles Dark mode on and off. (Right-click to adjust)",
+            menu: {
+              setting: "colors",
+              learn: "darkmode",
+              demo: "darkmode"
+            }
           },
           night: {
             label: "Night",
             uiName: "Night Light on, off",
             tooltip: "Turn 'Night Light' feature on and off|Reduces eye strain and makes it easier to fall asleep at night",
+            menu: {
+              setting: "nightlight",
+              learn: "nightmode",
+              demo: "nightmode"
+            }
           }
         }
       }

@@ -85,6 +85,9 @@ namespace Morphic.Client.Bar.Data
             [JsonProperty("tooltip")]
             public string? Tooltip { get; set; }
 
+            [JsonProperty("menu")]
+            public Dictionary<string, string> Menu { get; set; } = new Dictionary<string, string>();
+
             [JsonProperty("uiName")]
             public string UiName
             {

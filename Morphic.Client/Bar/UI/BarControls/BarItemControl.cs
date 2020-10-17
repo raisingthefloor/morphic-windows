@@ -17,6 +17,7 @@ namespace Morphic.Client.Bar.UI.BarControls
     using System.Runtime.CompilerServices;
     using System.Windows;
     using System.Windows.Controls;
+    using System.Windows.Controls.Primitives;
     using System.Windows.Input;
     using System.Windows.Media;
     using Data;
@@ -115,6 +116,30 @@ namespace Morphic.Client.Bar.UI.BarControls
             this.ToolTip = $"{this.ToolTipHeader}|{this.ToolTipText}";
 
             this.Loaded += this.OnLoaded;
+            this.MouseRightButtonUp += (sender, args) =>
+            {
+                args.Handled = this.OpenContextMenu(sender);
+            };
+        }
+
+        /// <summary>
+        /// Open a context menu.
+        /// </summary>
+        /// <param name="control"></param>
+        /// <param name="items"></param>
+        /// <returns></returns>
+        protected bool OpenContextMenu(object? control, Dictionary<string,string>? items = null)
+        {
+            ContextMenu? menu = BarContextMenu.CreateContextMenu(items ?? this.BarItem.Menu);
+            if (menu != null)
+            {
+                menu.Placement = PlacementMode.Top;
+                menu.PlacementTarget = control as UIElement ?? this;
+                menu.IsOpen = true;
+                return true;
+            }
+
+            return false;
         }
 
         private void OnLoaded(object sender, RoutedEventArgs args)

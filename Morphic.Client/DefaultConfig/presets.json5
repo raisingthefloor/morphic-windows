@@ -11,6 +11,11 @@
         args: {
           direction: "{button}"
         },
+        menu: {
+          setting: "display",
+          learn: "textsize",
+          demo: "textsize"
+        },
         type: "additive",
         buttons: {
           out: {
@@ -60,6 +65,11 @@
         args: {
           state: "{button}"
         },
+        menu: {
+          setting: "easeofaccess-magnifier",
+          learn: "magnifier",
+          demo: "magnifier"
+        },
         buttons: {
           on: {
             label: "Show",
@@ -105,6 +115,11 @@
         function: "readAloud",
         args: {
           action: "{button}"
+        },
+        menu: {
+          setting: "speech",
+          learn: "read-selected-pc",
+          demo: "read-selected-pc"
         },
         buttons: {
           play: {

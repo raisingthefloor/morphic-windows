@@ -74,6 +74,7 @@
                                 AutomationProperties.Name="{Binding Button.UiName}"
                                 AutomationProperties.LabeledBy="{Binding Button.BarItem.UiName}"
                                 Click="Button_OnClick"
+                                MouseRightButtonUp="Button_OnRightClick"
                                 >
                             <Button.Foreground>
                                 <SolidColorBrush Color="{Binding ActiveTheme.TextColor}" />

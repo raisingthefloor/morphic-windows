@@ -11,6 +11,7 @@
 namespace Morphic.Client.Bar.Data
 {
     using System;
+    using System.Collections.Generic;
     using System.Reflection;
     using System.Windows.Media;
     using Actions;
@@ -160,6 +161,9 @@ namespace Morphic.Client.Bar.Data
 
         [JsonProperty("configuration.size")]
         public BarItemSize Size { get; set; } = BarItemSize.Large;
+
+        [JsonProperty("configuration.menu")]
+        public Dictionary<string, string> Menu { get; set; } = new Dictionary<string, string>();
 
         /// <summary>
         /// The type of control used. This is specified by using BarControl attribute in a subclass of this.

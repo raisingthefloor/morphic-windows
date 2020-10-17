@@ -125,6 +125,19 @@ namespace Morphic.Client.Bar.UI.BarControls
 
         public List<ButtonWrapper> Buttons { get; set; }
 
+        private void Button_OnRightClick(object sender, MouseEventArgs e)
+        {
+            BarMultiButton.ButtonInfo? buttonInfo =
+                this.Buttons.Where(b => b.Control == sender)
+                    .Select(b => b.Button)
+                    .FirstOrDefault();
+
+            if (buttonInfo != null)
+            {
+                e.Handled = this.OpenContextMenu(sender, buttonInfo.Menu);
+            }
+
+        }
         private void Button_OnClick(object sender, RoutedEventArgs e)
         {
             BarMultiButton.ButtonInfo? buttonInfo =
