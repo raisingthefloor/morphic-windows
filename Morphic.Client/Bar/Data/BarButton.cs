@@ -14,21 +14,14 @@ namespace Morphic.Client.Bar.Data
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.IO;
-    using System.Linq;
     using System.Net;
     using System.Runtime.CompilerServices;
-    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using System.Windows.Media;
-    using System.Windows.Media.Imaging;
-    using System.Xml;
     using Config;
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
-    using SharpVectors.Converters;
-    using SharpVectors.Dom.Svg;
-    using SharpVectors.Renderers.Wpf;
     using UI.BarControls;
 
     /// <summary>
@@ -67,26 +60,7 @@ namespace Morphic.Client.Bar.Data
                 }
                 else
                 {
-                    // Check if it points to a file within the assets directory.
-                    string safe = new Regex(@"\.\.|[^-a-zA-Z0-9./]+", RegexOptions.Compiled)
-                        .Replace(this.imageValue, "_")
-                        .Trim('/')
-                        .Replace('/', Path.DirectorySeparatorChar);
-                    string assetFile = AppPaths.GetAssetFile("bar-icons\\" + safe);
-                    string[] extensions = {"", ".svg", ".png", ".ico", ".jpg", ".jpeg", ".gif"};
-
-                    string? foundFile = extensions.Select(extension => assetFile + extension)
-                        .FirstOrDefault(File.Exists);
-
-                    if (foundFile == null)
-                    {
-                        this.Logger.LogInformation("No local image for '{imageValue}'", this.imageValue);
-                        this.ImagePath = string.Empty;
-                    }
-                    else
-                    {
-                        this.ImagePath = foundFile;
-                    }
+                    this.ImagePath = BarImages.GetBarIconFile(this.imageValue) ?? String.Empty;
                 }
             }
         }
@@ -179,32 +153,8 @@ namespace Morphic.Client.Bar.Data
             // Load the local image.
             if (!string.IsNullOrEmpty(this.ImagePath) && File.Exists(this.ImagePath))
             {
-                try
-                {
-                    if (Path.GetExtension(this.ImagePath) == ".svg")
-                    {
-                        using FileSvgReader svg = new FileSvgReader(new WpfDrawingSettings());
-                        DrawingGroup drawingGroup = svg.Read(this.ImagePath);
-                        this.ImageSource = new DrawingImage(drawingGroup);
-
-                    }
-                    else
-                    {
-                        BitmapImage image = new BitmapImage();
-                        image.BeginInit();
-                        image.CacheOption = BitmapCacheOption.OnLoad;
-                        image.UriSource = new Uri(this.ImagePath);
-                        image.EndInit();
-
-                        this.ImageSource = image;
-                    }
-                    success = true;
-                }
-                catch (Exception e) when (e is NotSupportedException || e is XmlException || e is SvgException)
-                {
-                    // Do nothing
-                    this.Logger.LogInformation(e, "Unable to load image {imageFile}", this.ImagePath);
-                }
+                this.ImageSource = BarImages.CreateImageSource(this.ImagePath);
+                success = this.ImageValue != null;
             }
 
             // Fallback to a default image.

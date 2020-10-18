@@ -183,7 +183,6 @@ namespace Morphic.Client.Bar.UI
 
         protected virtual void OnBarLoaded()
         {
-            Console.WriteLine($"{this.Width}x{this.Height}");
             this.SetBorder();
             this.SetBorder();
             this.SetInitialPosition();

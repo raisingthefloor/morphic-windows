@@ -46,7 +46,7 @@ namespace Morphic.Client.QuickStrip
     using System.Text.Json.Serialization;
     using System.Windows.Forms;
     using System.Windows.Input;
-    using Windows.Native;
+    using Bar.UI;
     using Config;
     using global::Windows.Media.SpeechSynthesis;
     using Clipboard = System.Windows.Clipboard;

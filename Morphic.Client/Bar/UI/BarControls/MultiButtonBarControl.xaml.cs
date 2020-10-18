@@ -21,6 +21,7 @@ namespace Morphic.Client.Bar.UI.BarControls
     using System.Windows.Controls;
     using System.Windows.Controls.Primitives;
     using System.Windows.Input;
+    using System.Windows.Media;
     using Data;
     using Data.Actions;
 
@@ -35,10 +36,6 @@ namespace Morphic.Client.Bar.UI.BarControls
             this.Buttons = this.BarItem.Buttons.Values.Select(b => new ButtonWrapper(this, b)).ToList();
 
             this.InitializeComponent();
-            this.ToolTipOpening += (o, eventArgs) =>
-            {
-                Console.WriteLine($"tooltip: {eventArgs.Source} xxx");
-            };
 
             // Apply theming to the dynamic buttons when they're created.
             this.ButtonContainer.ItemContainerGenerator.StatusChanged += (sender, args) =>
@@ -52,10 +49,6 @@ namespace Morphic.Client.Bar.UI.BarControls
 
                         if (content.ContentTemplate.FindName("ControlButton", content) is Button control)
                         {
-                            control.ToolTipOpening += (o, eventArgs) =>
-                            {
-                                Console.WriteLine($"tooltip: {control} {control.ToolTip}");
-                            };
                             b.Control = control;
                             this.ApplyControlTheme(b.Control);
                         }
@@ -157,21 +150,31 @@ namespace Morphic.Client.Bar.UI.BarControls
         }
 
         /// <summary>
-        /// Gets the text to be displayed, based on the given text.
+        /// Gets the text or icon to be displayed, based on the given text. This allows symbols to be easily expressed
+        /// in the json.
+        /// May also return a string prefixed with "icon:", where the rest of the text is the bar icon.
         /// </summary>
         /// <param name="text"></param>
         /// <returns></returns>
         protected string GetDisplayText(string text)
         {
-            return text switch
+            var (finalText, icon) = text switch
             {
-                "+" => "\u2795",
-                "-" => "\u2796",
-                "||" => "\u258e \u258e",
-                "|>" => "\u25b6",
-                "[]" => "\u25a0",
-                _ => text
+                "+" => ("\u2795", "plus"),
+                "-" => ("\u2796", "minus"),
+                "||" => ("\u258e \u258e", ""),
+                "|>" => ("\u25b6", ""),
+                "[]" => ("\u25a0", ""),
+                _ => (text, null)
             };
+
+            string? iconPath = string.IsNullOrEmpty(icon)
+                ? null
+                : BarImages.GetBarIconFile(icon);
+
+            return iconPath != null
+                ? $"icon:{iconPath}"
+                : finalText;
         }
 
         /// <summary>
@@ -189,7 +192,8 @@ namespace Morphic.Client.Bar.UI.BarControls
 
             public Control? Control { get; set; }
 
-            public string Text { get; set; }
+            public string? Text { get; set; }
+            public ImageSource? ImageSource { get; set; }
 
             private readonly MultiButtonBarControl itemControl;
 
@@ -197,13 +201,32 @@ namespace Morphic.Client.Bar.UI.BarControls
             {
                 this.itemControl = itemControl;
                 this.Button = buttonInfo;
-                this.Text = itemControl.GetDisplayText(this.Button.Text);
+                string text = itemControl.GetDisplayText(this.Button.Text);
+                SolidColorBrush? imageBrush = null;
+                if (text.StartsWith("icon:"))
+                {
+                    string icon = text.Substring(text.IndexOf(':') + 1);
+                    this.ImageSource = BarImages.CreateImageSource(icon);
+                    if (this.ImageSource is DrawingImage di)
+                    {
+                        imageBrush = BarImages.ChangeDrawingColor(di.Drawing, this.ActiveTheme.TextColor ?? Colors.White);
+                    }
+                }
+                else
+                {
+                    this.Text = text;
+                }
+
                 // Update the theme when the property changes.
                 this.itemControl.PropertyChanged += (sender, args) =>
                 {
                     if (args.PropertyName == nameof(this.itemControl.ActiveTheme))
                     {
                         this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(args.PropertyName));
+                        if (imageBrush != null && this.ActiveTheme.TextColor.HasValue)
+                        {
+                            imageBrush.Color = this.ActiveTheme.TextColor.Value;
+                        }
                     }
                 };
             }

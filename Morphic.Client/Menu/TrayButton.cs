@@ -31,7 +31,7 @@ namespace Morphic.Client.Menu
     using System.Reflection;
     using System.Runtime.InteropServices;
     using System.Windows.Forms;
-    using QuickStrip;
+    using Bar.UI;
 
     /// <summary>
     /// Displays a button next to the notification area on the taskbar, which is always visible.

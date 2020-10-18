@@ -17,6 +17,8 @@
         <SolidColorBrush x:Key="BorderColor" Color="{Binding ActiveTheme.BorderColor, FallbackValue=Transparent}"/>
         <SolidColorBrush x:Key="BorderOuterColor" Color="{Binding ActiveTheme.BorderOuterColor, FallbackValue=Transparent}"/>
 
+        <ui:Ternary x:Key="BoolVisibility" False="Collapse" True="Visible" />
+
         <!-- Make the button style-less -->
         <Style BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" TargetType="{x:Type Button}">
             <Setter Property="Template">
@@ -98,12 +100,23 @@
                                         <SolidColorBrush Color="{Binding ActiveTheme.Background}" />
                                     </Border.Background>
 
-                                    <!-- Button text -->
-                                    <TextBlock Text="{Binding Text}"
-                                               Padding="{Binding Button.BarItem.Bar.Sizes.ControlButtonPadding}"
-                                               TextAlignment="Center"
-                                               VerticalAlignment="Center"
-                                    />
+                                    <Grid>
+                                        <!-- Button text -->
+                                        <TextBlock Visibility="{Binding Text, Converter={StaticResource BoolVisibility}}"
+                                                   Text="{Binding Text}"
+                                                   Padding="{Binding Button.BarItem.Bar.Sizes.ControlButtonPadding}"
+                                                   TextAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   />
+                                        <!-- Button image -->
+                                        <Image Visibility="{Binding ImageSource, Converter={StaticResource BoolVisibility}}"
+                                               Margin="{Binding Button.BarItem.Bar.Sizes.ControlButtonPadding}"
+                                               Height="{Binding Button.BarItem.Bar.Sizes.ControlButtonFontSize}"
+                                               Source="{Binding ImageSource}"
+                                               Stretch="Uniform"
+                                               />
+                                    </Grid>
+
                                 </Border>
                             </Border>
                         </Button>

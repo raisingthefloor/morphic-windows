@@ -95,6 +95,12 @@ namespace Morphic.Client.Bar.Data
 
         /// <summary>Space within the button.</summary>
         [JsonProperty("controlButtonPadding")]
+        public double ControlButtonPaddingValue
+        {
+            get => this.ControlButtonPadding.Left;
+            set => this.ControlButtonPadding = new Thickness(value, 0, value, 0);
+        }
+
         public Thickness ControlButtonPadding { get; set; } = new Thickness(5, 5, 5, 5);
 
         [JsonProperty("controlCornerRadius")]

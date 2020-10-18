@@ -4,8 +4,8 @@
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Controls.Primitives;
+    using Bar.UI;
     using Microsoft.Extensions.Logging;
-    using QuickStrip;
     using Settings.SystemSettings;
 
     public partial class MorphicMenu : ContextMenu

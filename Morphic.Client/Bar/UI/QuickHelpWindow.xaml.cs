@@ -3,15 +3,11 @@
 namespace Morphic.Client.Bar.UI
 {
     using System;
-    using System.Collections.Generic;
     using System.Threading.Tasks;
     using System.Windows.Controls;
-    using System.Windows.Input;
     using System.Windows.Media.Animation;
-    using AppBarWindow;
     using BarControls;
     using Data;
-    using global::Windows.Security.Authentication.Web.Provider;
 
     public partial class QuickHelpWindow : Window
     {
@@ -170,8 +166,6 @@ namespace Morphic.Client.Bar.UI
             (string? header, string? text) = this.GetHelpText(barItem, element.ToolTip?.ToString());
             this.HeaderText = header ?? string.Empty;
             this.MessageText = text ?? string.Empty;
-
-            Console.WriteLine($"{this.HeaderText} # {this.MessageText}");
 
             this.wanted = true;
             this.BeginAnimation(Window.OpacityProperty, null);

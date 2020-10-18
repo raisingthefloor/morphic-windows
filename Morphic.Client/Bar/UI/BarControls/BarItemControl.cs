@@ -164,7 +164,8 @@ namespace Morphic.Client.Bar.UI.BarControls
             {
                 if (image.Source is DrawingImage drawingImage)
                 {
-                    this.ChangeDrawingColor(drawingImage.Drawing);
+                    this.DrawingBrush =
+                        BarImages.ChangeDrawingColor(drawingImage.Drawing, this.BarItem.Color, this.DrawingBrush);
                 }
             }
         }
@@ -292,64 +293,6 @@ namespace Morphic.Client.Bar.UI.BarControls
         /// The brush used for monochrome svg images.
         /// </summary>
         public SolidColorBrush? DrawingBrush { get; protected set; }
-
-        /// <summary>
-        /// Replaces the brushes used in a monochrome drawing with a new one, which can be set to a specific colour.
-        /// </summary>
-        /// <param name="drawing"></param>
-        private void ChangeDrawingColor(Drawing drawing)
-        {
-            List<GeometryDrawing>? geometryDrawings;
-
-            // Get all the geometries in the drawing.
-            if (drawing is DrawingGroup drawingGroup)
-            {
-                geometryDrawings = this.GetDrawings(drawingGroup)
-                    .OfType<GeometryDrawing>()
-                    .ToList();
-            }
-            else
-            {
-                geometryDrawings = new List<GeometryDrawing>();
-                if (drawing is GeometryDrawing gd)
-                {
-                    geometryDrawings.Add(gd);
-                }
-            }
-
-            // If there's only 1 colour, it's mono.
-            bool mono = geometryDrawings.Count > 0
-                && geometryDrawings
-                    .Select(gd => gd.Brush)
-                    .OfType<SolidColorBrush>()
-                    .Select(b => b.Color)
-                    .Distinct()
-                    .Count() == 1;
-
-            if (mono)
-            {
-                this.DrawingBrush ??= new SolidColorBrush(this.BarItem.Color);
-                geometryDrawings.ForEach(gd =>
-                {
-                    if (gd.Brush is SolidColorBrush)
-                    {
-                        gd.Brush = this.DrawingBrush;
-                    }
-                });
-            }
-        }
-
-        /// <summary>
-        /// Gets all drawings within a drawing group.
-        /// </summary>
-        /// <param name="drawingGroup"></param>
-        /// <returns></returns>
-        private IEnumerable<Drawing> GetDrawings(DrawingGroup drawingGroup)
-        {
-            return drawingGroup.Children.OfType<DrawingGroup>()
-                .SelectMany(this.GetDrawings)
-                .Concat(drawingGroup.Children.OfType<GeometryDrawing>());
-        }
 
         #region INotifyPropertyChanged
 

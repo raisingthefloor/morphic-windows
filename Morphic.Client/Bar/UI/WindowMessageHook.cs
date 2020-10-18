@@ -6,7 +6,7 @@
 // You may obtain a copy of the License at
 // https://github.com/GPII/universal/blob/master/LICENSE.txt
 
-namespace Morphic.Client.QuickStrip
+namespace Morphic.Client.Bar.UI
 {
     using System;
     using System.Collections.Generic;

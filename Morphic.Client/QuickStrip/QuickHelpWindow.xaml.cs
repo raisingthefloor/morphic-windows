@@ -25,7 +25,6 @@ namespace Morphic.Client.QuickStrip
 {
     using System;
     using System.Timers;
-    using System.Transactions;
     using System.Windows;
     using System.Windows.Input;
     using Config;

@@ -109,8 +109,6 @@
     </Content>
     <Resource Include="Dialogs\LoginAnnounce.wav" />
     <Resource Include="Icon.png" />
-    <Resource Include="QuickStrip\Minus.png" />
-    <Resource Include="QuickStrip\Plus.png" />
   </ItemGroup>
 
   <ItemGroup>

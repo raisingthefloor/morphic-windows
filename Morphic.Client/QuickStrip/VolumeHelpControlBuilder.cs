@@ -23,7 +23,6 @@
 
 using System;
 using System.Windows.Controls;
-using Morphic.Windows.Native;
 
 namespace Morphic.Client.QuickStrip
 {
