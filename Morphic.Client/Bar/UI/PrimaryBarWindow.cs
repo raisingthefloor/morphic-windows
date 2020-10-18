@@ -4,6 +4,7 @@ namespace Morphic.Client.Bar.UI
     using System.Linq;
     using System.Windows;
     using System.Windows.Interop;
+    using Windows.Native;
     using AppBarWindow;
     using Data;
 

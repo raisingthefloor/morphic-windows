@@ -10,6 +10,7 @@ namespace Morphic.Client.Bar.Data.Actions
     using System.Runtime.InteropServices;
     using System.Threading.Tasks;
     using System.Windows.Forms;
+    using Windows.Native;
     using global::Windows.Media.SpeechSynthesis;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;

@@ -39,7 +39,6 @@ using Morphic.Settings.Ini;
 using Morphic.Settings.Registry;
 using Morphic.Settings.Spi;
 using Morphic.Settings.SystemSettings;
-using Morphic.Client.QuickStrip;
 using System.IO;
 using System.Reflection;
 using CountlySDK;
@@ -156,7 +155,6 @@ namespace Morphic.Client
             services.AddTransient<CreateAccountPanel>();
             services.AddTransient<CapturePanel>();
             services.AddTransient<TravelCompletedPanel>();
-            services.AddTransient<QuickStripWindow>();
             services.AddTransient<LoginWindow>();
             services.AddTransient<LoginPanel>();
             services.AddTransient<CreateAccountPanel>();
