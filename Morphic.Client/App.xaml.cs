@@ -98,7 +98,7 @@ namespace Morphic.Client
 
         #region Configuration & Startup
 
-        public readonly string ApplicationDataFolderPath = Path.Combine(new string[] { Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MorphicLite" });
+        public readonly string ApplicationDataFolderPath = Path.Combine(new string[] { Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Morphic" });
 
         /// <summary>
         /// Create a Configuration from appsettings.json
