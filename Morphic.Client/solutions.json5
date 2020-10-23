@@ -1,0 +1,36 @@
+﻿{
+  solutionId: {
+    settings: [
+      // settings
+    ],
+    platform: {
+      os: "windows",
+      ver: "123+"
+    }
+  },
+  "com.microsoft.windows.magnifier": {
+    settings: [
+      {
+        type: "registry",
+        path: "HKCU\\Software\\Microsoft\\ScreenMagnifier",
+        settings: {
+          magnification: {
+            name: "Magnification",
+            dataType: "REG_SZ"
+          }
+        }
+      }
+    ]
+  },
+  "com.microsoft.windows.colorFilters": {
+    settings: [
+      {
+        type: "systemSettings",
+        settings: {
+          enabled: "SystemSettings_Accessibility_ColorFiltering_IsEnabled",
+          filterType: "SystemSettings_Accessibility_ColorFiltering_FilterType"
+        }
+      }
+    ]
+  }
+}
