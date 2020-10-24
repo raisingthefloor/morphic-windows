@@ -32,7 +32,7 @@ namespace Morphic.Client.Dialogs
     using Elements;
     using Microsoft.Extensions.Logging;
     using Service;
-    using Settings;
+    using Settings.SolutionsRegistry;
 
     /// <summary>
     /// Login window for authenticating users and applying their settings
@@ -47,7 +47,7 @@ namespace Morphic.Client.Dialogs
             this.morphicSession = morphicSession;
             this.logger = logger;
             this.serviceProvider = serviceProvider;
-            var builder = new UriBuilder(options.FontEndUri);
+            UriBuilder? builder = new UriBuilder(options.FontEndUri);
             builder.Path = "/password/reset";
             this.ForgotPasswordUriString = builder.Uri.AbsoluteUri;
             this.InitializeComponent();
@@ -94,8 +94,8 @@ namespace Morphic.Client.Dialogs
         {
             this.ErrorLabel.Visibility = Visibility.Hidden;
             this.SetFieldsEnabled(false);
-            var credentials = new UsernameCredentials(this.UsernameField.Text, this.PasswordField.Password);
-            var success = false;
+            UsernameCredentials? credentials = new UsernameCredentials(this.UsernameField.Text, this.PasswordField.Password);
+            bool success = false;
             try
             {
                 success = await this.morphicSession.Authenticate(credentials);
@@ -173,7 +173,7 @@ namespace Morphic.Client.Dialogs
 
         public async Task Announce()
         {
-            var isNarratorEnabled = await this.morphicSession.SettingsManager.CaptureBool(SettingsManager.Keys.WindowsNarratorEnabled) ?? false;
+            bool isNarratorEnabled = await this.morphicSession.GetSetting<bool>(SettingId.NarratorEnabled);
             if (!isNarratorEnabled)
             {
                 var player = new SoundPlayer(Properties.Resources.LoginAnnounce);
@@ -184,7 +184,7 @@ namespace Morphic.Client.Dialogs
 
         public async Task EnableNarrator()
         {
-            _ = await this.morphicSession.SettingsManager.Apply(SettingsManager.Keys.WindowsNarratorEnabled, true);
+            await this.morphicSession.SetSetting(SettingId.NarratorEnabled, true);
         }
 
         #endregion

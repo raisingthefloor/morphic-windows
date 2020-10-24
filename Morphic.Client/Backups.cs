@@ -10,7 +10,6 @@
     using Core;
     using Microsoft.Extensions.Logging;
     using Service;
-    using Settings;
     using Path = System.IO.Path;
 
     public class Backups
@@ -41,9 +40,7 @@
             if (preferences == null)
             {
                 preferences = new Preferences();
-                CaptureSession captureSession = new CaptureSession(App.Current.MorphicSession.SettingsManager, preferences);
-                captureSession.AddAllSolutions();
-                await captureSession.Run();
+                await this.morphicSession.Solutions.CapturePreferences(preferences);
             }
 
             string json = JsonSerializer.Serialize(preferences);

@@ -32,5 +32,25 @@
         }
       }
     ]
+  },
+  "com.microsoft.windows.highContrast": {
+    settings: [
+      {
+        type: "systemSettings",
+        settings: {
+          enabled: "SystemSettings_Accessibility_CoreHighContrast_IsEnabled"
+        }
+      }
+    ]
+  },
+  "com.microsoft.windows.narrator": {
+    settings: [
+      {
+        type: "systemSettings",
+        settings: {
+          enabled: "SystemSettings_Accessibility_Narrator_IsEnabled"
+        }
+      }
+    ]
   }
 }

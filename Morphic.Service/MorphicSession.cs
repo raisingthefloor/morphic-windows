@@ -30,6 +30,7 @@ namespace Morphic.Service
     using Microsoft.Extensions.Logging;
     using Morphic.Core;
     using Morphic.Settings;
+    using Settings.SolutionsRegistry;
 
     /// <summary>
     /// Manages a user's session with the morphic server
@@ -42,12 +43,11 @@ namespace Morphic.Service
         /// <summary>
         /// Create a new session with the given URL
         /// </summary>
-        public MorphicSession(SessionOptions options, SettingsManager settingsManager, Storage storage,
+        public MorphicSession(SessionOptions options, Storage storage,
             Keychain keychain, IUserSettings userSettings, ILogger<MorphicSession> logger,
-            ILogger<HttpService> httpLogger)
-            : base(options, storage, keychain, userSettings, logger, httpLogger)
+            ILogger<HttpService> httpLogger, Solutions solutions)
+            : base(options, storage, keychain, userSettings, logger, httpLogger, solutions)
         {
-            this.SettingsManager = settingsManager;
         }
 
         /// <summary>
@@ -88,29 +88,6 @@ namespace Morphic.Service
 
         public async Task Signin(User user, Preferences? preferences)
         {
-            if (this.User == null)
-            {
-                // If we are going from no user to a logged in user, capture the computer's current settings as the
-                // default preferences that will be applied back when the user logs out.
-                //
-                // If we are going from one user to another user, we don't want to do anything because the computer's
-                // current settings are the first user's rather than whatever the computer was before that user logged in
-                if (this.Preferences != null)
-                {
-                    if (this.Preferences.Id == "__default__")
-                    {
-                        CaptureSession capture = new CaptureSession(this.SettingsManager, this.Preferences);
-                        capture.AddAllSolutions();
-                        await capture.Run();
-                        await this.Storage.Save(this.Preferences);
-                    }
-                    else
-                    {
-                        this.logger.LogError("User is null, but Preferences.Id != '__default__'; not capturing default settings on signin");
-                    }
-                }
-            }
-
             this.User = user;
             if (preferences == null)
             {
@@ -132,8 +109,7 @@ namespace Morphic.Service
         {
             this.User = null;
             this.Preferences = await this.Storage.Load<Preferences>("__default__");
-            ApplySession apply = new ApplySession(this.SettingsManager, this.Preferences!);
-            await apply.Run();
+            await this.Solutions.ApplyPreferences(this.Preferences!);
             this.UserChanged?.Invoke(this, new EventArgs());
         }
 
@@ -169,30 +145,6 @@ namespace Morphic.Service
         #region Preferences
 
         /// <summary>
-        /// The Settings object that applies settings to the system
-        /// </summary>
-        public readonly SettingsManager SettingsManager;
-
-        /// <summary>
-        /// Set the specified preference to the given value
-        /// </summary>
-        /// <remarks>
-        /// Calls <code>SetNeedsPreferencesSave()</code> to queue a save after a timeout.
-        /// </remarks>
-        /// <param name="key">The preference lookup key</param>
-        /// <param name="value">The preference value</param>
-        /// <returns>Whether the preference was successfully applied to the system</returns>
-        public async Task<bool> Apply(Preferences.Key key, object? value)
-        {
-            return await this.SettingsManager.Apply(key, value);
-        }
-
-        public async Task<Dictionary<Preferences.Key, bool>> Apply(Dictionary<Preferences.Key, object?> valuesByKey)
-        {
-            return await this.SettingsManager.Apply(valuesByKey);
-        }
-
-        /// <summary>
         /// Set the specified preference to the given value
         /// </summary>
         /// <remarks>
@@ -217,8 +169,7 @@ namespace Morphic.Service
         {
             if (this.Preferences != null)
             {
-                ApplySession applySession = new ApplySession(this.SettingsManager, this.Preferences);
-                await applySession.Run();
+                await this.Solutions.ApplyPreferences(this.Preferences, true);
             }
         }
 

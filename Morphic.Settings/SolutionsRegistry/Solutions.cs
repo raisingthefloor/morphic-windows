@@ -85,6 +85,11 @@
             return this.GetSolution(solutionId).GetSetting(settingId);
         }
 
+        public Setting GetSetting(SettingId settingId)
+        {
+            return this.GetSolution(settingId.Solution).GetSetting(settingId.Setting);
+        }
+
         private static (string solutionId, string settingId) ParseSettingPath(string settingPath)
         {
             string[] parts = settingPath.Split('/', 2);
@@ -125,7 +130,7 @@
             }
         }
 
-        public async Task ApplyPreferences(Preferences preferences, bool async = false)
+        public async Task ApplyPreferences(Preferences preferences, bool captureCurrent = false, bool async = false)
         {
             if (preferences.Default == null)
             {
@@ -136,9 +141,19 @@
             {
                 if (this.All.TryGetValue(solutionId, out Solution? solution))
                 {
+                    if (captureCurrent)
+                    {
+                        solutionPreferences.Previous ??= new Dictionary<string, object?>();
+                    }
+
                     await solution.Apply(solutionPreferences);
                 }
             }
+        }
+
+        public async Task RestorePreferences(Preferences preferences, bool async = false)
+        {
+
         }
     }
 

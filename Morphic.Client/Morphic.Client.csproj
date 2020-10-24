@@ -43,6 +43,10 @@
     <Content Include="DefaultConfig\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Remove="solutions.json5" />
+    <Content Include="solutions.json5">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>

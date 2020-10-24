@@ -1,5 +1,4 @@
-﻿﻿#nullable enable
-#nullable enable
+﻿#nullable enable
 namespace Morphic.Settings.Tests
 {
     using System;

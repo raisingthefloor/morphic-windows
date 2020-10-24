@@ -29,6 +29,7 @@ namespace Morphic.Service
     using Morphic.Core;
     using Morphic.Core.Community;
     using System.Linq;
+    using Settings.SolutionsRegistry;
 
     /// <summary>
     /// Manages a user's session with the morphic server
@@ -42,8 +43,8 @@ namespace Morphic.Service
         /// Create a new session with the given URL
         /// </summary>
         public CommunitySession(SessionOptions options, Storage storage, Keychain keychain, IUserSettings userSettings,
-            ILogger<CommunitySession> logger, ILogger<HttpService> httpLogger)
-            : base(options, storage, keychain, userSettings, logger, httpLogger)
+            ILogger<CommunitySession> logger, ILogger<HttpService> httpLogger, Solutions solutions)
+            : base(options, storage, keychain, userSettings, logger, httpLogger, solutions)
         {
         }
 

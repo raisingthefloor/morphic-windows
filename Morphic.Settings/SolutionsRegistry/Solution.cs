@@ -49,17 +49,24 @@
         /// <summary>Applies the preferences to this solution.</summary>
         public async Task Apply(SolutionPreferences solutionPreferences)
         {
-            string[] settingIds = solutionPreferences.Values.Keys.ToArray();
-
+            bool captureCurrent = solutionPreferences.Previous != null;
             foreach (SettingGroup group in this.SettingGroups)
             {
                 Values values = new Values();
+                List<Setting>? settings = captureCurrent ? null : new List<Setting>();
+
                 foreach ((string settingId, object? value) in solutionPreferences.Values)
                 {
                     if (group.TryGetSetting(settingId, out Setting? setting))
                     {
+                        settings?.Add(setting);
                         values.Add(setting!, value);
                     }
+                }
+
+                if (settings != null)
+                {
+                    await group.SettingsHandler.Get(group, settings);
                 }
 
                 await group.SettingsHandler.Set(group, values);

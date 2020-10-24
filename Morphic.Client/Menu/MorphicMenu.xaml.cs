@@ -6,7 +6,6 @@
     using System.Windows.Controls.Primitives;
     using Bar.UI;
     using Microsoft.Extensions.Logging;
-    using Settings.SystemSettings;
 
     public partial class MorphicMenu : ContextMenu
     {
@@ -101,9 +100,10 @@
 
         private async void ShowTrayButton()
         {
-            SystemSetting filterType = new SystemSetting("SystemSettings_Notifications_ShowIconsOnTaskbar",
-                new LoggerFactory().CreateLogger<SystemSetting>());
-            bool allNotificationIconsShown = await filterType.GetValue() as bool? == true;
+            // TODO: re-implement using solutions registry.
+            // SystemSetting filterType = new SystemSetting("SystemSettings_Notifications_ShowIconsOnTaskbar",
+            //     new LoggerFactory().CreateLogger<SystemSetting>());
+            // bool allNotificationIconsShown = await filterType.GetValue() as bool? == true;
 
             Window window = new Window();
             WindowMessageHook windowMessageHook = new WindowMessageHook(window, true);
@@ -113,7 +113,7 @@
             this.trayButton.DoubleClick += this.OnTrayButtonDoubleClicked;
             this.trayButton.Icon = Client.Properties.Resources.Icon;
             this.trayButton.Text = "Morphic";
-            this.trayButton.UseNotificationIcon = allNotificationIconsShown;
+            //this.trayButton.UseNotificationIcon = allNotificationIconsShown;
             this.trayButton.Visible = true;
             this.App.Exit += (sender, args) =>
             {

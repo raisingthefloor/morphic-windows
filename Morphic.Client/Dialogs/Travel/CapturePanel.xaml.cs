@@ -31,7 +31,6 @@ namespace Morphic.Client.Dialogs
     using Elements;
     using Microsoft.Extensions.Logging;
     using Service;
-    using Settings;
 
     /// <summary>
     /// The Capture panel is one of the steps shown when the user is walked through the process of taking their settings with them.
@@ -122,11 +121,10 @@ namespace Morphic.Client.Dialogs
             int startTime = Environment.TickCount;
             int minTime = 5000;
             this.Preferences = this.morphicSession.Preferences!;
-            CaptureSession captureSession = new CaptureSession(this.morphicSession.SettingsManager, this.Preferences);
-            captureSession.AddAllSolutions();
+
             try
             {
-                await captureSession.Run();
+                await this.morphicSession.Solutions.CapturePreferences(this.morphicSession.Preferences!);
             }
             catch (Exception e)
             {

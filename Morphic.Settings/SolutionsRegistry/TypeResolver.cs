@@ -28,14 +28,14 @@
         {
             foreach (Type type in typeof(TypeResolver).Assembly.GetTypes())
             {
-                foreach (SrTypeAttribute attr in type.GetCustomAttributes<SrTypeAttribute>(false))
-                {
-                    SrTypes.Add(attr.TypeName, type);
-                }
-
                 foreach (SrServiceAttribute attr in type.GetCustomAttributes<SrServiceAttribute>())
                 {
                     SrServices.Add(type, attr);
+                }
+
+                foreach (SrTypeAttribute attr in type.GetCustomAttributes<SrTypeAttribute>(false))
+                {
+                    SrTypes.Add(attr.TypeName, type);
                 }
 
                 foreach (SettingsHandlerTypeAttribute attr in type.GetCustomAttributes<SettingsHandlerTypeAttribute>())

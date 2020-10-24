@@ -22,11 +22,9 @@
 // * Consumer Electronics Association Foundation
 
 using System;
-using System.Threading.Tasks;
 using Native = Morphic.Windows.Native;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Extensions.Logging;
 
 namespace Morphic.Settings
 {
@@ -271,46 +269,6 @@ namespace Morphic.Settings
         public static bool MatchesAspectRatio(this Native.Display.DisplaySettings settings, Native.Display.DisplaySettings other)
         {
             return Math.Abs(settings.GetAspectRatio() - other.GetAspectRatio()) < 0.1;
-        }
-    }
-
-    public class DisplayZoomHandler: SettingHandler
-    {
-
-        public DisplayZoomHandler(ILogger<DisplayZoomHandler> logger)
-        {
-            this.logger = logger;
-        }
-
-        private readonly ILogger<DisplayZoomHandler> logger;
-
-        public override Task<bool> Apply(object? value)
-        {
-            if (value is double percentage)
-            {
-                var result = Display.Primary.Zoom(percentage);
-                return Task.FromResult(result);
-            }
-            else
-            {
-                if (value is object obj)
-                {
-                    logger.LogError("Invalid data type for display zoom: {0}", obj.GetType().Name);
-                }
-                else
-                {
-                    logger.LogError("Invalid data type for display zoom: null");
-                }
-                return Task.FromResult(false);
-            }
-        }
-
-        public override Task<CaptureResult> Capture()
-        {
-            var result = new CaptureResult();
-            result.Value = Display.Primary.CurrentZoomPercentage;
-            result.Success = true;
-            return Task.FromResult(result);
         }
     }
 }

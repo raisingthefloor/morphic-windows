@@ -173,6 +173,9 @@ namespace Morphic.Core
         [JsonExtensionData]
         public Dictionary<string, object?> Values { get; set; } = new Dictionary<string, object?>();
 
+        [JsonIgnore]
+        public Dictionary<string, object?>? Previous { get; set; }
+
         /// <summary>
         /// Default constructor
         /// </summary>

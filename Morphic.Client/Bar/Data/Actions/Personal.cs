@@ -15,7 +15,6 @@ namespace Morphic.Client.Bar.Data.Actions
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Microsoft.Win32;
-    using Settings.SystemSettings;
     using Settings = Settings;
 
     [HasInternalFunctions]
@@ -109,11 +108,11 @@ namespace Morphic.Client.Bar.Data.Actions
         [InternalFunction("nightMode", "state")]
         public static async Task<bool> NightMode(FunctionArgs args)
         {
-            SystemSetting systemSetting = new Settings.SystemSettings.SystemSetting(
-                "SystemSettings_Display_BlueLight_ManualToggleQuickAction",
-                App.Current.ServiceProvider.GetRequiredService<ILogger<Settings.SystemSettings.SystemSetting>>());
-
-            await systemSetting.SetValue(args["state"] == "on");
+            // TODO: re-implement using solutions registry.
+            // SystemSetting systemSetting = new Settings.SystemSettings.SystemSetting(
+            //     "SystemSettings_Display_BlueLight_ManualToggleQuickAction",
+            //     App.Current.ServiceProvider.GetRequiredService<ILogger<Settings.SystemSettings.SystemSetting>>());
+            //await systemSetting.SetValue(args["state"] == "on");
             return true;
         }
 

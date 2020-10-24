@@ -25,7 +25,6 @@ using System;
 using System.Windows;
 using System.Threading.Tasks;
 using System.Threading;
-using System.Text.Json;
 using System.Collections.Generic;
 using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,10 +34,6 @@ using Microsoft.Extensions.Options;
 using Morphic.Service;
 using Morphic.Core;
 using Morphic.Settings;
-using Morphic.Settings.Ini;
-using Morphic.Settings.Registry;
-using Morphic.Settings.Spi;
-using Morphic.Settings.SystemSettings;
 using System.IO;
 using System.Reflection;
 using CountlySDK;
@@ -47,7 +42,6 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using NHotkey.Wpf;
 using AutoUpdaterDotNET;
-using Morphic.Settings.Files;
 
 namespace Morphic.Client
 {
@@ -57,6 +51,7 @@ namespace Morphic.Client
     using Dialogs;
     using Menu;
     using Microsoft.Win32;
+    using Settings.SolutionsRegistry;
 
     public class AppMain
     {
@@ -142,12 +137,7 @@ namespace Morphic.Client
             services.AddSingleton<UpdateOptions>(serviceProvider => serviceProvider.GetRequiredService<IOptions<UpdateOptions>>().Value);
             services.AddSingleton<IDataProtection, DataProtector>();
             services.AddSingleton<IUserSettings, WindowsUserSettings>();
-            services.AddSingleton<IRegistry, WindowsRegistry>();
-            services.AddSingleton<IIniFileFactory, IniFileFactory>();
-            services.AddSingleton<ISystemSettingFactory, SystemSettingFactory>();
-            services.AddSingleton<ISystemParametersInfo, SystemParametersInfo>();
-            services.AddSingleton<IFileManager, FileManager>();
-            services.AddSingleton<SettingsManager>();
+            services.AddSingleton<Solutions>();
             services.AddSingleton<Keychain>();
             services.AddSingleton<Storage>();
             services.AddSingleton<MorphicSession>();
@@ -163,7 +153,8 @@ namespace Morphic.Client
             services.AddTransient<ApplyPanel>();
             services.AddTransient<RestoreWindow>();
             services.AddSingleton<Backups>();
-            services.AddMorphicSettingsHandlers(this.ConfigureSettingsHandlers);
+            services.AddSolutionsRegistryServices();
+            services.AddSingleton<Solutions>(s => Solutions.FromFile(s, AppPaths.GetAppFile("solutions.json5")));
         }
 
         private void ConfigureCountly()
@@ -228,10 +219,6 @@ namespace Morphic.Client
             logging.AddDebug();
         }
 
-        private void ConfigureSettingsHandlers(SettingsHandlerBuilder settings)
-        {
-        }
-
         protected override void OnStartup(StartupEventArgs e)
         {
             this.Dispatcher.UnhandledException += this.App_DispatcherUnhandledException;
@@ -273,7 +260,7 @@ namespace Morphic.Client
         /// <summary>
         /// Actions to perform when this instance is the first since installation.
         /// </summary>
-        private void OnFirstRun()
+        private async Task OnFirstRun()
         {
             this.Logger.LogInformation("Performing first-run tasks");
 
@@ -282,16 +269,16 @@ namespace Morphic.Client
             Registry.SetValue(@"HKEY_CURRENT_USER\Software\Microsoft\ScreenMagnifier", "MagnificationMode", 3);
 
             // Set the colour filter type - if it's not currently enabled.
-            bool filterOn = this.MorphicSession.GetBool(SettingsManager.Keys.WindowsDisplayColorFilterEnabled) == true;
+            //bool filterOn = this.MorphicSession.GetBool(SettingsManager.Keys.WindowsDisplayColorFilterEnabled) == true;
+            bool filterOn =
+                await this.MorphicSession.GetSetting<bool>(SettingId.ColorFiltersEnabled);
             if (!filterOn)
             {
-                SystemSetting filterType = new SystemSetting("SystemSettings_Accessibility_ColorFiltering_FilterType",
-                    new LoggerFactory().CreateLogger<SystemSetting>());
-                filterType.SetValue(5);
+                await this.MorphicSession.SetSetting(SettingId.ColorFiltersFilterType, 5);
             }
 
             // Set the high-contrast theme, if high-contrast is off.
-            bool highcontrastOn = this.MorphicSession.GetBool(SettingsManager.Keys.WindowsDisplayContrastEnabled) == true;
+            bool highcontrastOn = await this.MorphicSession.GetSetting<bool>(SettingId.HighContrastEnabled);
             if (!highcontrastOn)
             {
                 Registry.SetValue(@"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes",
@@ -328,10 +315,6 @@ namespace Morphic.Client
         {
             if (Features.Basic.IsEnabled())
             {
-                await this.CopyDefaultPreferences();
-                await this.MorphicSession.SettingsManager.Populate(Path.Combine("Solutions", "windows.solutions.json"));
-                await this.MorphicSession.SettingsManager.Populate(Path.Combine("Solutions",
-                    "jaws2020.solutions.json"));
                 await this.MorphicSession.Open();
             }
 
@@ -341,39 +324,11 @@ namespace Morphic.Client
             }
         }
 
-        private async Task CopyDefaultPreferences()
-        {
-            if ((this.AppOptions.FirstRun && !this.AppOptions.FirstRunUpgrade)
-                || !this.MorphicSession.Storage.Exists<Preferences>("__default__"))
-            {
-                this.Logger.LogInformation("Saving default preferences");
-                Preferences prefs = new Preferences { Id = "__default__" };
-                try
-                {
-                    await using FileStream? stream = File.OpenRead("DefaultPreferences.json");
-                    JsonSerializerOptions options = new JsonSerializerOptions();
-                    options.Converters.Add(new JsonElementInferredTypeConverter());
-                    prefs.Default =
-                        await JsonSerializer.DeserializeAsync<Dictionary<string, SolutionPreferences>>(stream, options);
-                }
-                catch (Exception e)
-                {
-                    this.Logger.LogError(e, "Failed to read default preferences");
-                    return;
-                }
-
-                if (!await this.MorphicSession.Storage.Save(prefs))
-                {
-                    this.Logger.LogError("Failed to save default preferences");
-                }
-            }
-        }
-
         /// <summary>
         /// Called when the session open task completes
         /// </summary>
         /// <param name="task"></param>
-        private void SessionOpened(Task task)
+        private async void SessionOpened(Task task)
         {
             if (task.Exception is Exception e)
             {
@@ -383,7 +338,7 @@ namespace Morphic.Client
 
             if (this.AppOptions.FirstRun)
             {
-                this.OnFirstRun();
+                await this.OnFirstRun();
             }
 
             if (Features.Basic.IsEnabled())

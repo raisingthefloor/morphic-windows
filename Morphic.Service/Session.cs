@@ -4,6 +4,7 @@
     using System.Threading.Tasks;
     using Core;
     using Microsoft.Extensions.Logging;
+    using Settings.SolutionsRegistry;
 
     public class SessionOptions
     {
@@ -20,12 +21,13 @@
         /// Create a new session with the given URL
         /// </summary>
         protected Session(SessionOptions options, Storage storage, Keychain keychain, IUserSettings userSettings,
-            ILogger logger, ILogger<HttpService> httpLogger)
+            ILogger logger, ILogger<HttpService> httpLogger, Solutions solutions)
         {
             this.Service = new HttpService(new Uri(options.Endpoint), this, httpLogger);
             this.Storage = storage;
             this.keychain = keychain;
             this.logger = logger;
+            this.Solutions = solutions;
             this.userSettings = userSettings;
         }
 
@@ -41,6 +43,8 @@
         protected readonly IUserSettings userSettings;
 
         protected readonly ILogger logger;
+
+        public Solutions Solutions { get; }
 
         /// <summary>
         /// Open the session by trying to login with the saved user information, if any
@@ -129,6 +133,23 @@
 
         #endregion
 
+        /// <summary>Gets a setting value.</summary>
+        public Task<T> GetSetting<T>(SettingId settingId, T defaultValue = default)
+        {
+            return this.Solutions.GetSetting(settingId).GetValue<T>(defaultValue);
+        }
+
+        /// <summary>Gets a setting value.</summary>
+        public Task<object?> GetSetting(SettingId settingId)
+        {
+            return this.Solutions.GetSetting(settingId).GetValue();
+        }
+
+        /// <summary>Sets the value of a setting.</summary>
+        public Task<bool> SetSetting(SettingId settingId, object? newValue)
+        {
+            return this.Solutions.GetSetting(settingId).SetValue(newValue);
+        }
 
     }
 }
