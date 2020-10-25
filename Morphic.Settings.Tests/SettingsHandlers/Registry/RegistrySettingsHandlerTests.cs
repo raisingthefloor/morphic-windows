@@ -1,15 +1,12 @@
 ﻿#nullable enable
-namespace Morphic.Settings.Tests.SolutionsRegistry.SettingsHandlers
+namespace Morphic.Settings.Tests.SettingsHandlers.Registry
 {
     using System;
-    using System.Threading.Tasks;
-    using Core;
     using DotNetWindowsRegistry;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.DependencyInjection.Extensions;
     using Microsoft.Win32;
+    using Settings.SettingsHandlers;
     using Settings.SolutionsRegistry;
-    using Settings.SolutionsRegistry.SettingsHandlers;
     using Xunit;
 
     public class RegistrySettingsHandlerTests
@@ -26,7 +23,7 @@ namespace Morphic.Settings.Tests.SolutionsRegistry.SettingsHandlers
             services.ReplaceSingleton<IRegistry>(p => registry);
             IServiceProvider serviceProvider = services.BuildServiceProvider();
 
-            Solutions sr = Solutions.FromFile(serviceProvider, TestUtil.GetLocalFile("test-solutions.json5"));
+            Solutions sr = Solutions.FromFile(serviceProvider, TestUtil.GetLocalFile("../test-solutions.json5"));
 
             // Test reading, with some values set
             string input = @"HKEY_CURRENT_USER
@@ -69,7 +66,7 @@ namespace Morphic.Settings.Tests.SolutionsRegistry.SettingsHandlers
             services.ReplaceSingleton<IRegistry>(p => registry);
             IServiceProvider serviceProvider = services.BuildServiceProvider();
 
-            Solutions sr = Solutions.FromFile(serviceProvider, TestUtil.GetLocalFile("test-solutions.json5"));
+            Solutions sr = Solutions.FromFile(serviceProvider, TestUtil.GetLocalFile("../test-solutions.json5"));
 
             // Test reading, with some values set
             const string input = @"HKEY_CURRENT_USER

@@ -1,10 +1,10 @@
-﻿namespace Morphic.Settings.Tests.SolutionsRegistry.SettingsHandlers.Ini
+﻿namespace Morphic.Settings.Tests.SettingsHandlers.Ini
 {
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using System.Text.RegularExpressions;
-    using Settings.SolutionsRegistry.SettingsHandlers.Ini;
+    using Settings.SettingsHandlers.Ini;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -20,13 +20,13 @@
         [Fact]
         public void IniFileReadLf()
         {
-            DoReadTest("\n");
+            this.DoReadTest("\n");
         }
 
         [Fact]
         public void IniFileReadCrLf()
         {
-            DoReadTest("\r\n");
+            this.DoReadTest("\r\n");
         }
 
         public void DoReadTest(string eol)

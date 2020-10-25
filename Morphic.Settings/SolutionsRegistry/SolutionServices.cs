@@ -1,6 +1,7 @@
 ﻿namespace Morphic.Settings.SolutionsRegistry
 {
     using System;
+    using Windows.Native.Display;
     using DotNetWindowsRegistry;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -13,6 +14,8 @@
         public static IServiceCollection AddSolutionsRegistryServices(this IServiceCollection serviceCollection)
         {
             serviceCollection.AddSingleton<IRegistry>(s => new WindowsRegistry());
+            serviceCollection.AddSingleton<Display>();
+
             foreach ((Type? type, SrServiceAttribute? attr) in TypeResolver.GetSolutionServices())
             {
                 Type serviceType = attr.ServiceType ?? type;

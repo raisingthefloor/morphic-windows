@@ -1,15 +1,14 @@
 ﻿#nullable enable
-namespace Morphic.Settings.Tests.SolutionsRegistry.SettingsHandlers.Ini
+namespace Morphic.Settings.Tests.SettingsHandlers.Ini
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
     using Core;
     using Microsoft.Extensions.DependencyInjection;
+    using Settings.SettingsHandlers.Ini;
     using Settings.SolutionsRegistry;
-    using Settings.SolutionsRegistry.SettingsHandlers.Ini;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -94,9 +93,13 @@ settingL=valueT3
             TestIniFileWriter writer = new TestIniFileWriter() {
                 ContentOverride = TestUtil.ReadLocalFile("handler-test.ini")
             };
+            TestIniFileReader reader = new TestIniFileReader() {
+                ContentOverride = TestUtil.ReadLocalFile("handler-test.ini")
+            };
 
             ServiceProvider serviceProvider = TestUtil.GetTestServices()
                 .ReplaceTransient<IniFileWriter>(s => writer)
+                .ReplaceTransient<IniFileReader>(s => reader)
                 .BuildServiceProvider();
 
             Solutions sr = Solutions.FromFile(serviceProvider, TestUtil.GetLocalFile("..\\test-solutions.json5"));

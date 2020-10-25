@@ -87,5 +87,34 @@
                 }
             }
         }
+
+        /// <summary>
+        /// Resolves a setting from a settingId, which can be either a full path to the setting or just the ID of a
+        /// setting in this solution.
+        /// </summary>
+        /// <param name="settingPath">Path to the setting (solutionId/settingId), or just the settingId.</param>
+        /// <returns></returns>
+        public Setting? ResolveSettingId(string? settingPath)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(settingPath))
+                {
+                    return null;
+                }
+                else if (settingPath.Contains('/'))
+                {
+                    return this.Solutions.GetSetting(settingPath);
+                }
+                else
+                {
+                    return this.GetSetting(settingPath);
+                }
+            }
+            catch (KeyNotFoundException)
+            {
+                return null;
+            }
+        }
     }
 }
