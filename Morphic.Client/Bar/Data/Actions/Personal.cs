@@ -28,17 +28,17 @@ namespace Morphic.Client.Bar.Data.Actions
         [InternalFunction("screenZoom", "direction")]
         public static Task<bool> ScreenZoom(FunctionArgs args)
         {
-            double amount = args["direction"] switch
-            {
-                "in" => Settings.Display.Primary.PercentageForZoomingIn,
-                "out" => Settings.Display.Primary.PercentageForZoomingOut,
-                _ => double.NaN
-            };
-
-            if (!double.IsNaN(amount))
-            {
-                Settings.Display.Primary.Zoom(amount);
-            }
+            // double amount = args["direction"] switch
+            // {
+            //     "in" => Settings.Display.Primary.PercentageForZoomingIn,
+            //     "out" => Settings.Display.Primary.PercentageForZoomingOut,
+            //     _ => double.NaN
+            // };
+            //
+            // if (!double.IsNaN(amount))
+            // {
+            //     Settings.Display.Primary.Zoom(amount);
+            // }
 
             return Task.FromResult(true);
         }

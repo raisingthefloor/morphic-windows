@@ -52,5 +52,19 @@
         }
       }
     ]
+  },
+  "com.microsoft.windows.display": {
+    settings: [
+      {
+        type: "displaySettings",
+        settings: {
+          count: "resolutionCount",
+          zoom: {
+            name: "zoom",
+            range: { from: 0, to: "count" }
+          }
+        }
+      }
+    ]
   }
 }

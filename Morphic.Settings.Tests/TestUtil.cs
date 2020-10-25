@@ -44,7 +44,7 @@ namespace Morphic.Settings.Tests
         {
             ServiceCollection services = new ServiceCollection();
             services.AddLogging();
-            SolutionServices.AddSolutionsRegistryServices(services);
+            services.AddSolutionsRegistryServices();
             services.AddSingleton<IServiceProvider>(provider => provider);
 
             // Replace with test implementations
