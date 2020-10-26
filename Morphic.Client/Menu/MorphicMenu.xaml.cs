@@ -5,7 +5,6 @@
     using System.Windows.Controls;
     using System.Windows.Controls.Primitives;
     using Bar.UI;
-    using Microsoft.Extensions.Logging;
 
     public partial class MorphicMenu : ContextMenu
     {

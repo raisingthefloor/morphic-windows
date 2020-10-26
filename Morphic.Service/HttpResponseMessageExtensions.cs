@@ -22,8 +22,6 @@
 // * Consumer Electronics Association Foundation
 
 using System.Net.Http;
-using System.Linq;
-using System;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Morphic.Core;

@@ -2,7 +2,6 @@
 {
     using System.Collections;
     using System.Collections.Generic;
-    using System.Dynamic;
 
     public class Values : IEnumerable<KeyValuePair<Setting, object>>
     {

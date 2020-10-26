@@ -1,15 +1,10 @@
 ﻿namespace Morphic.Settings.SolutionsRegistry
 {
     using System;
-    using System.Collections;
     using System.Collections.Generic;
-    using System.Linq;
-    using System.Runtime.Serialization;
-    using System.Text;
     using System.Threading.Tasks;
     using Core;
     using Newtonsoft.Json;
-    using Newtonsoft.Json.Serialization;
     using SettingsHandlers;
 
     [JsonObject(MemberSerialization.OptIn)]

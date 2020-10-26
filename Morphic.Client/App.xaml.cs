@@ -33,7 +33,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Morphic.Service;
 using Morphic.Core;
-using Morphic.Settings;
 using System.IO;
 using System.Reflection;
 using CountlySDK;

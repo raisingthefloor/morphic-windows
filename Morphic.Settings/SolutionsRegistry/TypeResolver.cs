@@ -1,14 +1,9 @@
 ﻿namespace Morphic.Settings.SolutionsRegistry
 {
     using System;
-    using System.Collections;
     using System.Collections.Generic;
-    using System.Collections.Immutable;
-    using System.Linq;
     using System.Reflection;
-    using System.Text;
     using Microsoft.Extensions.DependencyInjection;
-    using Newtonsoft.Json;
     using Newtonsoft.Json.Serialization;
     using SettingsHandlers;
 

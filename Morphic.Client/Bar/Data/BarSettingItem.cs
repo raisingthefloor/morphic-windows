@@ -1,16 +1,14 @@
 ﻿namespace Morphic.Client.Bar.Data
 {
-    using System;
-    using System.Collections;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json;
     using Settings.SettingsHandlers;
     using Settings.SolutionsRegistry;
     using UI.BarControls;
 
+    /// <summary>
+    /// A bar item that handles a setting in the solutions registry.
+    /// </summary>
     [JsonTypeName("setting")]
     [BarControl(typeof(MultiButtonBarControl))]
     public class BarSettingItem : BarMultiButton
@@ -50,17 +48,15 @@
             else if (this.SettingId.EndsWith("enabled"))
             {
                 this.Type = MultiButtonType.Toggle;
-                this.Buttons["off"] = new ButtonInfo()
-                {
-                    Text = "Off"
-                };
                 this.Buttons["on"] = new ButtonInfo()
                 {
                     Text = "On"
                 };
+                this.Buttons["off"] = new ButtonInfo()
+                {
+                    Text = "Off"
+                };
             }
-
-
         }
 
         public override void Deserialized()

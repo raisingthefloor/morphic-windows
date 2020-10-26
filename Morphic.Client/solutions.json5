@@ -11,6 +11,13 @@
   "com.microsoft.windows.magnifier": {
     settings: [
       {
+        type: "process",
+        path: "magnify.exe",
+        settings: {
+          enabled: "isRunning"
+        }
+      },
+      {
         type: "registry",
         path: "HKCU\\Software\\Microsoft\\ScreenMagnifier",
         settings: {
@@ -61,6 +68,7 @@
           count: "resolutionCount",
           zoom: {
             name: "zoom",
+            local: true,
             range: { min: 0, max: "count" }
           }
         }

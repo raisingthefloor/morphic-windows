@@ -7,6 +7,12 @@
         settingId: "com.microsoft.windows.display/zoom"
       }
     },
+    "magnify": {
+      kind: "setting",
+      configuration: {
+        settingId: "com.microsoft.windows.magnifier/enabled"
+      }
+    },
     "screen-zoomX": {
       // Adjusts the screen resolution.
       kind: "internal",
@@ -61,7 +67,7 @@
         }
       }
     },
-    "magnify": {
+    "magnify-old": {
       // Start the magnifier in full screen mode.
       kind: "internal",
       widget: "multi",

@@ -22,10 +22,6 @@
 // * Consumer Electronics Association Foundation
 
 using Morphic.Core;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Morphic.Service
 {
