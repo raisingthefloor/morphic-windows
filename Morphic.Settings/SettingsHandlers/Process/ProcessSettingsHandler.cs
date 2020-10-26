@@ -1,4 +1,4 @@
-﻿namespace Morphic.Settings.SettingsHandlers
+﻿namespace Morphic.Settings.SettingsHandlers.Process
 {
     using System;
     using System.Collections.Generic;

@@ -30,14 +30,19 @@ namespace Morphic.Client.Bar.Data
     [JsonConverter(typeof(TypedJsonConverter), "widget", "button")]
     public class BarItem
     {
+        public BarItem(BarData bar)
+        {
+            this.Bar = bar;
+        }
+
         protected ILogger Logger = App.Current.ServiceProvider.GetRequiredService<ILogger<BarItem>>();
         private string? text;
         private string? uiName;
 
         /// <summary>
-        /// The bar that owns this item (set after deserialisation).
+        /// The bar that owns this item.
         /// </summary>
-        public BarData Bar { get; set; } = null!;
+        public BarData Bar { get; set; }
 
         /// <summary>
         /// true if the item is to be displayed on the pull-out bar.
@@ -173,17 +178,15 @@ namespace Morphic.Client.Bar.Data
         /// <summary>
         /// Called when the bar has loaded.
         /// </summary>
-        /// <param name="bar"></param>
-        public virtual void Deserialized(BarData bar)
+        public virtual void Deserialized()
         {
-            this.Bar = bar;
             // Inherit the default theme
-            this.Theme.Inherit(bar.DefaultTheme);
+            this.Theme.Inherit(this.Bar.DefaultTheme);
             this.Theme.InferStateThemes();
 
             this.IsPrimaryOriginal = this.IsPrimary;
 
-            this.Action.Deserialized();
+            this.Action.Deserialized(this.Bar);
         }
     }
 
@@ -194,6 +197,9 @@ namespace Morphic.Client.Bar.Data
     [BarControl(typeof(ImageBarControl))]
     public class BarImage : BarButton
     {
+        public BarImage(BarData bar) : base(bar)
+        {
+        }
     }
     
     /// <summary>

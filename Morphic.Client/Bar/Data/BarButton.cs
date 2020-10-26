@@ -36,6 +36,10 @@ namespace Morphic.Client.Bar.Data
         private ImageSource? imageSource;
         private Uri? remoteImage;
 
+        public BarButton(BarData bar) : base(bar)
+        {
+        }
+
         /// <summary>
         /// The original image, as defined in json.
         /// </summary>
@@ -203,9 +207,9 @@ namespace Morphic.Client.Bar.Data
             }
         }
 
-        public override void Deserialized(BarData bar)
+        public override void Deserialized()
         {
-            base.Deserialized(bar);
+            base.Deserialized();
 
             _ = this.LoadImage();
         }
@@ -218,6 +222,5 @@ namespace Morphic.Client.Bar.Data
         {
             this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-
     }
 }

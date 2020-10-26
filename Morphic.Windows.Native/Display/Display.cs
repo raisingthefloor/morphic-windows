@@ -56,6 +56,8 @@ namespace Morphic.Windows.Native.Display
             if (newSize.HasValue)
             {
                 const uint CDS_UPDATEREGISTRY = 1;
+                mode.dmPelsWidth = (uint)newSize.Value.Width;
+                mode.dmPelsHeight = (uint)newSize.Value.Height;
                 WindowsApi.ChangeDisplaySettingsEx(deviceName, ref mode, IntPtr.Zero, CDS_UPDATEREGISTRY, IntPtr.Zero);
             }
 

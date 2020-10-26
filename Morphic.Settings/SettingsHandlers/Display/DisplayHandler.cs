@@ -1,6 +1,5 @@
-﻿namespace Morphic.Settings.SettingsHandlers.SystemSettings
+﻿namespace Morphic.Settings.SettingsHandlers.Display
 {
-    using System;
     using System.Collections.Generic;
     using System.Drawing;
     using System.Linq;
@@ -23,7 +22,7 @@
             this.display = display;
         }
 
-        [SetterAttribute("zoom")]
+        [Setter("zoom")]
         public Task<bool> SetZoom(Setting setting, object? newValue)
         {
             if (newValue is int index)
@@ -38,14 +37,14 @@
             return Task.FromResult(true);
         }
 
-        [GetterAttribute("zoom")]
+        [Getter("zoom")]
         public async Task<object?> GetZoom(Setting settingGroup)
         {
             List<Size> all = this.display.GetResolutions().ToList();
             return all.IndexOf(this.display.GetResolution());
         }
 
-        [GetterAttribute("resolutionCount")]
+        [Getter("resolutionCount")]
         public Task<object?> GetResolutionCount(Setting settingGroup)
         {
             return Task.FromResult<object?>(this.display.GetResolutions().Count());

@@ -46,6 +46,7 @@ using AutoUpdaterDotNET;
 namespace Morphic.Client
 {
     using Bar;
+    using Bar.Data;
     using Config;
     using CountlySDK.CountlyCommon;
     using Dialogs;
@@ -153,6 +154,8 @@ namespace Morphic.Client
             services.AddTransient<ApplyPanel>();
             services.AddTransient<RestoreWindow>();
             services.AddSingleton<Backups>();
+            services.AddTransient<BarData>();
+            services.AddSingleton<BarPresets>(s => BarPresets.Default);
             services.AddSolutionsRegistryServices();
             services.AddSingleton<Solutions>(s => Solutions.FromFile(s, AppPaths.GetAppFile("solutions.json5")));
         }

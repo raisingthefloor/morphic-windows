@@ -331,10 +331,5 @@ namespace Morphic.Client.Bar.Data.Actions
 
             return success;
         }
-
-        public override void Deserialized()
-        {
-            base.Deserialized();
-        }
     }
 }

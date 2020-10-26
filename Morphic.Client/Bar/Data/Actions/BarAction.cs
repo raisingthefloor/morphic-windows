@@ -29,7 +29,7 @@ namespace Morphic.Client.Bar.Data.Actions
     /// </summary>
     [JsonObject(MemberSerialization.OptIn)]
     [JsonConverter(typeof(TypedJsonConverter), "kind", "shellExec")]
-    public abstract class BarAction : IDeserializable
+    public abstract class BarAction
     {
         [JsonProperty("identifier")]
         public string Id { get; set; } = string.Empty;
@@ -92,7 +92,7 @@ namespace Morphic.Client.Bar.Data.Actions
         public virtual ImageSource? DefaultImageSource { get; }
         public virtual bool IsAvailable { get; protected set; } = true;
 
-        public virtual void Deserialized()
+        public virtual void Deserialized(BarData barData)
         {
         }
     }
@@ -173,7 +173,7 @@ namespace Morphic.Client.Bar.Data.Actions
             return Task.FromResult(success);
         }
 
-        public override void Deserialized()
+        public override void Deserialized(BarData barData)
         {
         }
     }

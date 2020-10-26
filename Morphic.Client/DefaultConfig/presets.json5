@@ -2,6 +2,12 @@
   fileId: "actions",
   actions: {
     "screen-zoom": {
+      kind: "setting",
+      configuration: {
+        settingId: "com.microsoft.windows.display/zoom"
+      }
+    },
+    "screen-zoomX": {
       // Adjusts the screen resolution.
       kind: "internal",
       widget: "multi",

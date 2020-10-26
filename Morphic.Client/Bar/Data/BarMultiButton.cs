@@ -25,7 +25,7 @@ namespace Morphic.Client.Bar.Data
     [BarControl(typeof(MultiButtonBarControl))]
     public class BarMultiButton : BarItem
     {
-        public BarMultiButton()
+        public BarMultiButton(BarData bar) : base(bar)
         {
             this.Color = Color.FromRgb(0, 129, 69);
         }
@@ -106,9 +106,9 @@ namespace Morphic.Client.Bar.Data
             }
         }
 
-        public override void Deserialized(BarData bar)
+        public override void Deserialized()
         {
-            base.Deserialized(bar);
+            base.Deserialized();
 
             foreach (var (key, buttonInfo) in this.Buttons)
             {

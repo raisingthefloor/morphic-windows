@@ -31,6 +31,17 @@ namespace Morphic.Client.Bar.Data
 
         public event EventHandler? ReloadRequired;
 
+        public BarData() : this(null)
+        {
+        }
+
+        public BarData(IServiceProvider? serviceProvider)
+        {
+            this.ServiceProvider = serviceProvider ?? App.Current.ServiceProvider;
+        }
+
+        public IServiceProvider ServiceProvider { get; set; }
+
         /// <summary>
         /// Where the bar data was loaded from (a url or path).
         /// </summary>
@@ -115,16 +126,17 @@ namespace Morphic.Client.Bar.Data
         /// <summary>
         /// Loads bar data from either a local file, or a url.
         /// </summary>
+        /// <param name="serviceProvider">The service provider/</param>
         /// <param name="barSource">The local path or remote url.</param>
         /// <param name="content">The json content, if already loaded.</param>
         /// <param name="includeDefault">true to also include the default bar data.</param>
         /// <returns>The bar data</returns>
-        public static BarData? Load(string barSource, string? content = null, bool includeDefault = true)
+        public static BarData? Load(IServiceProvider serviceProvider, string barSource, string? content = null, bool includeDefault = true)
         {
             BarData? defaultBar;
             if (includeDefault)
             {
-                defaultBar = BarData.Load(AppPaths.GetConfigFile("default-bar.json5", true), null, false);
+                defaultBar = BarData.Load(serviceProvider, AppPaths.GetConfigFile("default-bar.json5", true), null, false);
                 // Mark the items as being from the default specification
                 defaultBar?.AllItems.ForEach(item => item.IsDefault = true);
             }
@@ -141,7 +153,7 @@ namespace Morphic.Client.Bar.Data
                 ? (TextReader)File.OpenText(barSource)
                 : new StringReader(content))
             {
-                bar = BarJson.Load(reader, defaultBar);
+                bar = BarJson.Load(serviceProvider, reader, defaultBar);
             }
 
             bar.Source = barSource;
@@ -183,7 +195,7 @@ namespace Morphic.Client.Bar.Data
             this.AllItems.ForEach(item =>
             {
                 item.IsDefault = !this.hasDeserialized;
-                item.Deserialized(this);
+                item.Deserialized();
             });
 
 

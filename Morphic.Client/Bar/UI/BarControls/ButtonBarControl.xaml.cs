@@ -19,10 +19,6 @@ namespace Morphic.Client.Bar.UI.BarControls
     /// </summary>
     public partial class ButtonBarControl : BarItemControl
     {
-        public ButtonBarControl() : this(new BarButton())
-        {
-        }
-
         public ButtonBarControl(BarButton barItem) : base(barItem)
         {
             this.PropertyChanged += this.OnPropertyChanged;

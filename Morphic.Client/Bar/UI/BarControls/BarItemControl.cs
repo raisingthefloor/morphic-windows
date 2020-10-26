@@ -100,10 +100,6 @@ namespace Morphic.Client.Bar.UI.BarControls
 
         public event EventHandler? OrientationChanged;
 
-        public BarItemControl() : this(new BarItem())
-        {
-        }
-
         /// <summary>
         /// Create an instance of this class, using the given bar item.
         /// </summary>

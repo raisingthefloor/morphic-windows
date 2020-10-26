@@ -33,7 +33,7 @@ namespace Morphic.Client.Bar.Data
         public static BarPresets FromFile(string file)
         {
             using StreamReader? reader = File.OpenText(file);
-            return BarJson.Load<BarPresets>(reader);
+            return BarJson.Load<BarPresets>(App.Current.ServiceProvider, reader);
         }
 
         /// <summary>
@@ -86,6 +86,16 @@ namespace Morphic.Client.Bar.Data
                 if (preset != null)
                 {
                     jo.Merge(preset.DeepClone());
+                }
+            }
+
+            // Make "kind = setting" items imply "widget = setting"
+            string? newKind = jo.SelectToken("kind")?.ToString();
+            if (newKind == "setting")
+            {
+                if (!jo.ContainsKey("widget"))
+                {
+                    jo.Add("widget", "setting");
                 }
             }
 

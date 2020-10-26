@@ -48,6 +48,21 @@
             return this.SettingGroup.SettingsHandler.Set(this, newValue);
         }
 
+        public async Task<bool> Increment(int direction)
+        {
+            if (this.Range != null)
+            {
+                int current = await this.GetValue<int>();
+                current += Math.Sign(direction) * this.Range.IncrementValue;
+                if (current > await this.Range.GetMin() && current < await this.Range.GetMax())
+                {
+                    return await this.SetValue(current);
+                }
+            }
+
+            return false;
+        }
+
         public virtual void Deserialized(SettingGroup settingGroup, string settingId)
         {
             this.SettingGroup = settingGroup;
@@ -79,22 +94,39 @@
     [JsonObject(MemberSerialization.OptIn)]
     public class SettingRange
     {
-        [JsonProperty("from", Required = Required.Always)]
-        private Limit From { get; set; } = null!;
+        private int? minValue;
+        private int? maxValue;
 
-        [JsonProperty("to", Required = Required.Always)]
-        private Limit To { get; set; } = null!;
+        [JsonProperty("min", Required = Required.Always)]
+        private Limit Min { get; set; } = null!;
+
+        [JsonProperty("max", Required = Required.Always)]
+        private Limit Max { get; set; } = null!;
 
         [JsonProperty("inc")]
-        public int Increment { get; private set; }
+        public int IncrementValue { get; private set; } = 1;
 
-        public Task<int> GetMin(int defaultResult = 0)
+        [JsonProperty("live")]
+        public bool Live { get; private set; }
+
+        public async Task<int> GetMin(int defaultResult = 0)
         {
-            return this.From.Get(defaultResult);
+            if (this.Live || !this.minValue.HasValue)
+            {
+                this.minValue = await this.Min.Get(defaultResult);
+            }
+
+            return this.minValue.Value;
         }
-        public Task<int> GetMax(int defaultResult = 0)
+
+        public async Task<int> GetMax(int defaultResult = 0)
         {
-            return this.To.Get(defaultResult);
+            if (this.Live || !this.maxValue.HasValue)
+            {
+                this.maxValue = await this.Max.Get(defaultResult);
+            }
+
+            return this.maxValue.Value;
         }
 
         public Setting Setting { get; private set; } = null!;
@@ -102,12 +134,15 @@
         public void Deserialized(Setting setting)
         {
             this.Setting = setting;
-            this.From.Deserialized(this.Setting);
+            this.Min.Deserialized(this.Setting);
+            this.Max.Deserialized(this.Setting);
         }
 
         private class Limit
         {
             private Setting? setting;
+            private Setting? parentSetting;
+            private string? settingId;
             private string? expression;
             private int? value;
             private int increment;
@@ -116,6 +151,7 @@
             // "settingId [ (+|-) increment] [ ? default]"
             private readonly Regex parseLimit = new Regex(@"^(?<setting>\S+)(\s+(?<sign>[-+])\s*(?<increment>\S+)?(\s*\?\s*(?<default>\S+)))?$",
                 RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
 
             protected Limit()
             {
@@ -126,6 +162,11 @@
                 if (this.value.HasValue)
                 {
                     return this.value.Value;
+                }
+
+                if (this.settingId != null && this.setting == null)
+                {
+                    this.setting = this.parentSetting?.SettingGroup.Solution.ResolveSettingId(this.settingId);
                 }
 
                 if (this.setting != null)
@@ -159,13 +200,14 @@
             public static implicit operator Limit(long number) => new Limit() { value = (int)number };
             public static implicit operator Limit(string expr) => FromString(expr);
 
-            public void Deserialized(Setting parentSetting)
+            public void Deserialized(Setting parent)
             {
+                this.parentSetting = parent;
                 if (this.expression != null)
                 {
                     // Parse the expression.
                     Match match = this.parseLimit.Match(this.expression.Trim());
-                    string settingPath = match.Groups["setting"].Value;
+                    this.settingId = match.Groups["setting"].Value;
                     if (match.Groups["increment"].Success)
                     {
                         this.increment = ((IConvertible)match.Groups["increment"].Value).ToInt32(null);
@@ -179,8 +221,6 @@
                             this.defaultValue = FromString(match.Groups["default"].Value);
                         }
                     }
-
-                    this.setting = parentSetting.SettingGroup.Solution.ResolveSettingId(settingPath);
                 }
             }
         }

@@ -15,6 +15,8 @@ namespace Morphic.Client.Bar.Data
     using System.IO;
     using System.Linq;
     using System.Reflection;
+    using System.Runtime.Serialization;
+    using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
 
@@ -28,15 +30,20 @@ namespace Morphic.Client.Bar.Data
         /// <summary>
         /// Loads some json data.
         /// </summary>
+        /// <param name="serviceProvider">The service provider.</param>
         /// <param name="reader">The input json.</param>
         /// <param name="existingBar">An existing bar to populate.</param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static T Load<T>(TextReader reader, T? existingBar = null)
-            where T : class, IDeserializable
+        public static T Load<T>(IServiceProvider serviceProvider, TextReader reader, T? existingBar = null)
+            where T : class, IDeserializable, new()
         {
+
+            T? bar = existingBar ?? serviceProvider.GetService<T>() ?? new T();
+
             JsonSerializerSettings settings = new JsonSerializerSettings()
             {
+                Context = new StreamingContext(StreamingContextStates.Other, bar),
                 Error = (sender, args) =>
                 {
                     args.ToString();
@@ -46,16 +53,8 @@ namespace Morphic.Client.Bar.Data
             JsonSerializer jsonSerializer = JsonSerializer.Create(settings);
             BarJsonTextReader barJsonTextReader = new BarJsonTextReader(reader, "win");
 
-            T? bar;
-            if (existingBar == null)
-            {
-                bar = jsonSerializer.Deserialize<T>(barJsonTextReader);
-            }
-            else
-            {
-                bar = existingBar;
-                jsonSerializer.Populate(barJsonTextReader, bar);
-            }
+            jsonSerializer.Populate(barJsonTextReader, bar);
+
 
             bar?.Deserialized();
 
@@ -185,10 +184,12 @@ namespace Morphic.Client.Bar.Data
         /// Creates an instance of the class inheriting <c>baseType</c> which has the JsonTypeName attribute
         /// with the specified name.
         /// </summary>
+        /// <param name="jObject"></param>
         /// <param name="baseType">The base type.</param>
         /// <param name="name">The name of the type.</param>
+        /// <param name="barData"></param>
         /// <returns>A class which inherits baseType.</returns>
-        private object CreateInstance(Type baseType, string name)
+        private object CreateInstance(JObject jObject, Type baseType, string name, BarData? barData)
         {
             // Find the class which has the JsonTypeName attribute with the given name.
             Type? type = GetJsonType(baseType, name);
@@ -207,7 +208,39 @@ namespace Morphic.Client.Bar.Data
                 }
             }
 
-            object? instance = Activator.CreateInstance(type);
+            List<object?> ctorArgs = new List<object?>();
+            bool gotCtor = false;
+            if (barData != null)
+            {
+                ctorArgs.Add(barData);
+
+                // Find a constructor of (BarData, string)
+                ConstructorInfo? ctor = type.GetConstructor(new[] { barData.GetType(), typeof(string) });
+                if (ctor != null)
+                {
+                    // Get the property for the string argument.
+                    ParameterInfo param = ctor.GetParameters().Last();
+                    JsonPropertyAttribute? attr = param.GetCustomAttribute<JsonPropertyAttribute>();
+                    string? propertyName = attr?.PropertyName;
+                    if (propertyName != null)
+                    {
+                        gotCtor = true;
+                        string? value = jObject.SelectToken(propertyName)?.ToString();
+                        ctorArgs.Add(value);
+                    }
+                }
+
+                // Find a constructor of (BarData)
+                if (!gotCtor)
+                {
+                    gotCtor = type.GetConstructor(new[] { barData.GetType() }) != null;
+                }
+            }
+
+            object? instance = gotCtor
+                ? Activator.CreateInstance(type, ctorArgs.ToArray())
+                : Activator.CreateInstance(type);
+
             if (instance == null)
             {
                 throw new JsonSerializationException(
@@ -259,11 +292,13 @@ namespace Morphic.Client.Bar.Data
 
             BarPresets.Default.MergePreset(jo);
 
+            BarData? bar = serializer.Context.Context as BarData;
+
             // Get the type of item.
             string kindName = jo.SelectToken(this.typeFieldName)?.ToString() ?? this.defaultValue;
             
             // Create the class for the type.
-            object? target = this.CreateInstance(objectType, kindName);
+            object? target = this.CreateInstance(jo, objectType, kindName, bar);
 
             // For each property, get the value using a path rather than just the field name.
             // (inspired by https://stackoverflow.com/a/33094930/67586)

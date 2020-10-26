@@ -142,7 +142,8 @@ namespace Morphic.Client.Bar
         /// </summary>
         /// <param name="path">JSON file containing the bar data.</param>
         /// <param name="content">The file content (if it's already loaded).</param>
-        public BarData? LoadFromBarJson(string path, string? content = null)
+        /// <param name="serviceProvider"></param>
+        public BarData? LoadFromBarJson(string path, string? content = null, IServiceProvider? serviceProvider = null)
         {
             if (this.firstBar && AppOptions.Current.Launch.BarFile != null)
             {
@@ -152,7 +153,7 @@ namespace Morphic.Client.Bar
             BarData? bar = null;
             try
             {
-                bar = BarData.Load(path, content);
+                bar = BarData.Load(serviceProvider ?? App.Current.ServiceProvider, path, content);
             }
             catch (Exception e) when (!(e is OutOfMemoryException))
             {

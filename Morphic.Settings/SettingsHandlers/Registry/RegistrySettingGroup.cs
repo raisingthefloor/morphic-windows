@@ -1,4 +1,4 @@
-﻿namespace Morphic.Settings.SettingsHandlers
+﻿namespace Morphic.Settings.SettingsHandlers.Registry
 {
     using System;
     using SolutionsRegistry;

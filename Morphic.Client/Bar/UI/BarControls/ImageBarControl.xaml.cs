@@ -18,10 +18,6 @@ namespace Morphic.Client.Bar.UI.BarControls
     /// </summary>
     public partial class ImageBarControl : BarItemControl
     {
-        public ImageBarControl() : this(new BarImage())
-        {
-        }
-
         public ImageBarControl(BarImage barItem) : base(barItem)
         {
             this.InitializeComponent();

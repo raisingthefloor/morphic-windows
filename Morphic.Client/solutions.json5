@@ -61,7 +61,7 @@
           count: "resolutionCount",
           zoom: {
             name: "zoom",
-            range: { from: 0, to: "count" }
+            range: { min: 0, max: "count" }
           }
         }
       }
