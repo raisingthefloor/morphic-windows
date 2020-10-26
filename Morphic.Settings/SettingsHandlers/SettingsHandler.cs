@@ -3,8 +3,8 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Reflection;
     using System.Threading.Tasks;
+    using Newtonsoft.Json.Bson;
 
     public abstract class SettingsHandler
     {
@@ -36,118 +36,61 @@
         {
             return Task.FromResult(Range.All);
         }
-    }
 
-    /// <summary>
-    /// A settings handler which uses methods decorated with [Setter] or [Getter] attributes to apply settings.
-    /// </summary>
-    public abstract class FixedSettingsHandler : SettingsHandler
-    {
-        protected delegate Task<object?> Getter(Setting setting);
-        protected delegate Task<bool> Setter(Setting setting, object? newValue);
+        private Dictionary<Setting, List<ISettingChangeListener>> changeListeners =
+            new Dictionary<Setting, List<ISettingChangeListener>>();
 
-        private readonly Dictionary<string, Setter> setters = new Dictionary<string, Setter>();
-        private readonly Dictionary<string, Getter> getters = new Dictionary<string, Getter>();
-
-        protected FixedSettingsHandler()
+        public bool IsListening(Setting setting)
         {
-            // Find the setting getter and setters.
-            foreach (MethodInfo method in this.GetType()
-                .GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+            return this.changeListeners.ContainsKey(setting);
+        }
+
+        /// <summary>
+        /// Listens for changes to a setting.
+        /// </summary>
+        /// <returns>true if sucessful, false for failure or if the setting does not support change listening.</returns>
+        public bool AddChangeListener(Setting setting, ISettingChangeListener listener)
+        {
+            if (!this.changeListeners.TryGetValue(setting, out List<ISettingChangeListener>? listeners))
             {
-                GetterAttribute? getAttr = method.GetCustomAttribute<GetterAttribute>();
-                if (getAttr != null)
+                if (!this.OnChangeListenerRequired(setting))
                 {
-                    if (Delegate.CreateDelegate(typeof(Getter), this, method, false) is Getter d)
-                    {
-                        this.getters.Add(getAttr.SettingName, d);
-                    }
+                    return false;
                 }
-                else
-                {
-                    SetterAttribute? setAttr = method.GetCustomAttribute<SetterAttribute>();
-                    if (setAttr != null)
-                    {
-                        if (Delegate.CreateDelegate(typeof(Setter), this, method, true) is Setter d)
-                        {
-                            this.setters.Add(setAttr.SettingName, d);
-                        }
-                    }
-                }
-            }
-        }
 
-        /// <summary>Gets the values of the given settings.</summary>
-        public override async Task<Values> Get(SettingGroup settingGroup, IEnumerable<Setting> settings)
-        {
-            Values values = new Values();
-            foreach (Setting setting in settings)
-            {
-                object? value = await this.Get(setting);
-                if (!(value is NoValue))
-                {
-                    values.Add(setting, value);
-                }
+                listeners = new List<ISettingChangeListener>();
+                this.changeListeners.Add(setting, listeners);
             }
 
-            return values;
-        }
-
-        /// <summary>Gets the value of a setting.</summary>
-        public override async Task<object?> Get(Setting setting)
-        {
-            if (this.getters.TryGetValue(setting.Name, out Getter? getter))
-            {
-                return await getter(setting);
-            }
-
-            return new NoValue();
-        }
-
-        /// <summary>Sets the values of settings.</summary>
-        public override async Task<bool> Set(SettingGroup settingGroup, Values values)
-        {
-            bool success = true;
-            foreach ((Setting? setting, object? value) in values)
-            {
-                success = await this.Set(setting, value) && success;
-            }
-
-            return success;
-        }
-
-        /// <summary>Set the value of a setting.</summary>
-        public override async Task<bool> Set(Setting setting, object? newValue)
-        {
-            if (this.setters.TryGetValue(setting.Name, out Setter? setter))
-            {
-                await setter(setting, newValue);
-            }
-
+            listeners.Add(listener);
             return true;
         }
 
-        [AttributeUsage(AttributeTargets.Method)]
-        protected class SetterAttribute : Attribute
+        public void RemoveChangeListener(Setting setting, ISettingChangeListener listener)
         {
-            public string SettingName { get; }
-
-            public SetterAttribute(string settingName)
+            if (this.changeListeners.TryGetValue(setting, out List<ISettingChangeListener>? listeners))
             {
-                this.SettingName = settingName;
+                listeners.Remove(listener);
+
+                if (listeners.Count == 0)
+                {
+                    this.OnChangeListenerNotRequired(setting);
+                    this.changeListeners.Remove(setting);
+                }
             }
         }
 
-        [AttributeUsage(AttributeTargets.Method)]
-        protected class GetterAttribute : Attribute
+        /// <summary>Called when listening for changes to a setting is needed.</summary>
+        protected virtual bool OnChangeListenerRequired(Setting setting)
         {
-            public string SettingName { get; }
-
-            public GetterAttribute(string settingName)
-            {
-                this.SettingName = settingName;
-            }
+            return false;
         }
+
+        /// <summary>Called when listening for changes to a setting is no longer needed.</summary>
+        protected virtual void OnChangeListenerNotRequired(Setting setting)
+        {
+        }
+
     }
 }
 

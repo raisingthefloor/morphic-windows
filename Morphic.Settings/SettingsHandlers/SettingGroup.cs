@@ -34,7 +34,7 @@
         }
 
         /// <summary>Gets the current values of the settings in this group.</summary>
-        public Task<Values> GetAll()
+        public Task<Values> GetAll(bool includeLocal = false)
         {
             return this.SettingsHandler.Get(this);
         }

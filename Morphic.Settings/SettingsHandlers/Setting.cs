@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Reflection;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
     using Newtonsoft.Json;
@@ -13,11 +14,16 @@
         public SettingGroup SettingGroup { get; private set; } = null!;
         public string Id { get; private set; } = null!;
 
+        /// <summary>Name of the setting, used by the setting handler.</summary>
         [JsonProperty("name")]
         public string Name { get; private set; } = string.Empty;
 
         [JsonProperty("dataType")]
         public string? Type { get; private set; }
+
+        /// <summary>Don't copy this setting to/from another computer.</summary>
+        [JsonProperty("local")]
+        public bool Local { get; private set; }
 
         [JsonProperty("range")]
         public SettingRange? Range { get; private set; }
@@ -59,8 +65,16 @@
                     return await this.SetValue(current);
                 }
             }
-
             return false;
+        }
+
+        public void AddChangeListener(ISettingChangeListener listener)
+        {
+            this.SettingGroup.SettingsHandler.AddChangeListener(this, listener);
+        }
+        public void RemoveChangeListener(ISettingChangeListener listener)
+        {
+            this.SettingGroup.SettingsHandler.RemoveChangeListener(this, listener);
         }
 
         public virtual void Deserialized(SettingGroup settingGroup, string settingId)
@@ -233,5 +247,10 @@
         {
             return settings.ToDictionary(setting => setting.Name, setting => setting);
         }
+    }
+
+    public interface ISettingChangeListener
+    {
+        void SettingChanged(Setting setting);
     }
 }
