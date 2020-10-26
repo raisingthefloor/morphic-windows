@@ -141,7 +141,7 @@ BarItem = {
 ```js
 /** @mixes BarItem */
 ButtonItem = {
-  kind: "<link|application|action|internal|shellExec>",
+  kind: "<link|application|action|internal|shellExec|setting>",
   configuration: {
     // Displayed on the button [REQUIRED]
     label: "Calendar",
@@ -258,7 +258,23 @@ ShellExecButton = {
   /** @mixes ApplicationAction */
   configuration: {
     // The command
-    default: "ms-settings:",
+    default: "ms-settings:"
+  }
+}
+```
+
+### `kind = "setting"`
+
+Changes a setting. Currently, only boolean or integer settings are supported.
+
+```js
+/** @extends ButtonItem */
+SettingButton = {
+  kind: "setting",
+  /** @mixes SettingAction */
+  configuration: {
+    // The setting path
+    settingId: "com.microsoft.windows.magnifier/enabled"
   }
 }
 ```
