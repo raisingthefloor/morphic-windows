@@ -55,6 +55,16 @@
     active: {
     }
   },
+  controlTheme: {
+    color: 'white',
+    background: '#008145',
+    checked: {
+      borderSize: 2,
+      background: 'white',
+      borderColor: '#008145',
+      color: '#008145',
+    }
+  },
   items: [
     {
       kind: "internal",

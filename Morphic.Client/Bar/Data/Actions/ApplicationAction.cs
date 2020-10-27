@@ -259,7 +259,7 @@ namespace Morphic.Client.Bar.Data.Actions
             return fullPath;
         }
 
-        protected override Task<bool> InvokeImpl(string? source = null)
+        protected override Task<bool> InvokeImpl(string? source = null, bool? toggleState = null)
         {
             if (this.DefaultApp != null && string.IsNullOrEmpty(this.ExeName))
             {

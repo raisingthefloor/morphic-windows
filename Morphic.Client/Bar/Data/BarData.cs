@@ -92,6 +92,12 @@ namespace Morphic.Client.Bar.Data
         public BarItemTheme DefaultTheme { get; set; } = new BarItemTheme();
 
         /// <summary>
+        /// Base theme for the buttons in the multi-button bar items.
+        /// </summary>
+        [JsonProperty("controlTheme", ObjectCreationHandling = ObjectCreationHandling.Reuse)]
+        public BarItemTheme ControlTheme { get; set; } = new BarItemTheme();
+
+        /// <summary>
         /// Theme for the bar.
         /// </summary>
         [JsonProperty("barTheme", ObjectCreationHandling = ObjectCreationHandling.Reuse)]
@@ -175,6 +181,7 @@ namespace Morphic.Client.Bar.Data
             // Make the theme of each item inherit the default theme.
             this.BarTheme.Apply(Theme.DefaultBar());
             this.DefaultTheme.Apply(Theme.DefaultItem());
+            this.ControlTheme.Apply(Theme.DefaultControl()).Apply(this.DefaultTheme);
 
             if (this.hasDeserialized)
             {

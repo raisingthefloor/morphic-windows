@@ -14,9 +14,7 @@
     public class BarSettingItem : BarMultiButton
     {
         [JsonProperty("configuration.settingId", Required = Required.Always)]
-        public string SettingId { get; }
-
-        public Setting Setting { get; private set; }
+        public string? SettingId { get; }
 
         protected Solutions Solutions { get; private set; }
 
@@ -31,37 +29,53 @@
 
         private void ApplySetting()
         {
-            this.Setting = this.Solutions.GetSetting(this.SettingId);
+            if (!string.IsNullOrEmpty(this.SettingId))
+            {
+                // Bar item is a pair of on/off or up/down buttons for a single setting.
+                Setting setting = this.Solutions.GetSetting(this.SettingId);
 
-            if (this.Setting.Range != null)
-            {
-                this.Type = MultiButtonType.Additive;
-                this.Buttons["dec"] = new ButtonInfo()
+                if (setting.Range != null)
                 {
-                    Text = "+"
-                };
-                this.Buttons["inc"] = new ButtonInfo()
+                    this.Type = MultiButtonType.Additive;
+                    this.Buttons["dec"] = new ButtonInfo()
+                    {
+                        Text = "+"
+                    };
+                    this.Buttons["inc"] = new ButtonInfo()
+                    {
+                        Text = "-"
+                    };
+                }
+                else
                 {
-                    Text = "-"
-                };
+                    this.Type = MultiButtonType.Toggle;
+                    this.Buttons["on"] = new ButtonInfo()
+                    {
+                        Text = "On"
+                    };
+                    this.Buttons["off"] = new ButtonInfo()
+                    {
+                        Text = "Off"
+                    };
+                }
             }
-            else if (this.SettingId.EndsWith("enabled"))
+        }
+
+        private void ToggleButtons()
+        {
+            foreach ((string? key, ButtonInfo? value) in this.Buttons)
             {
-                this.Type = MultiButtonType.Toggle;
-                this.Buttons["on"] = new ButtonInfo()
-                {
-                    Text = "On"
-                };
-                this.Buttons["off"] = new ButtonInfo()
-                {
-                    Text = "Off"
-                };
+                value.Toggle = true;
             }
         }
 
         public override void Deserialized()
         {
             base.Deserialized();
+            if (string.IsNullOrEmpty(this.SettingId))
+            {
+                this.ToggleButtons();
+            }
 
         }
     }

@@ -20,10 +20,10 @@
         <ui:Ternary x:Key="BoolVisibility" False="Collapse" True="Visible" />
 
         <!-- Make the button style-less -->
-        <Style BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" TargetType="{x:Type Button}">
+        <Style BasedOn="{StaticResource {x:Static ToolBar.ToggleButtonStyleKey}}" TargetType="{x:Type ToggleButton}">
             <Setter Property="Template">
                 <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type Button}">
+                    <ControlTemplate TargetType="{x:Type ToggleButton}">
                         <ContentPresenter />
                     </ControlTemplate>
                 </Setter.Value>
@@ -67,20 +67,21 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Button Name="ControlButton"
-                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                                VerticalAlignment="Stretch" VerticalContentAlignment="Center"
-                                Margin="{Binding Bar.Sizes.ControlButtonMargin}"
-                                Height="{Binding Bar.Sizes.ControlButtonHeight}"
-                                ToolTip="{Binding Button.Tooltip}"
-                                AutomationProperties.Name="{Binding Button.UiName}"
-                                AutomationProperties.LabeledBy="{Binding Button.BarItem.UiName}"
-                                Click="Button_OnClick"
-                                MouseRightButtonUp="Button_OnRightClick"
-                                >
-                            <Button.Foreground>
+                        <ToggleButton Name="ControlButton"
+                                      HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                      VerticalAlignment="Stretch" VerticalContentAlignment="Center"
+                                      Margin="{Binding Bar.Sizes.ControlButtonMargin}"
+                                      Height="{Binding Bar.Sizes.ControlButtonHeight}"
+                                      ToolTip="{Binding Button.Tooltip}"
+                                      AutomationProperties.Name="{Binding Button.UiName}"
+                                      AutomationProperties.LabeledBy="{Binding Button.BarItem.UiName}"
+                                      Click="Button_OnClick"
+                                      MouseRightButtonUp="Button_OnRightClick"
+                                      Checked="Button_Checked"
+                        >
+                            <ToggleButton.Foreground>
                                 <SolidColorBrush Color="{Binding ActiveTheme.TextColor}" />
-                            </Button.Foreground>
+                            </ToggleButton.Foreground>
 
                             <!-- Outer border -->
                             <Border SnapsToDevicePixels="True"
@@ -89,18 +90,19 @@
                                     <SolidColorBrush Color="{Binding ActiveTheme.BorderOuterColor}"/>
                                 </Border.BorderBrush>
 
-                                <!-- Inner border -->
-                                <Border x:Name="ButtonBorder"
-                                        SnapsToDevicePixels="True"
-                                        BorderThickness="{Binding ActiveTheme.BorderSize}">
-                                    <Border.BorderBrush>
-                                        <SolidColorBrush Color="{Binding ActiveTheme.BorderColor}"/>
-                                    </Border.BorderBrush>
-                                    <Border.Background>
-                                        <SolidColorBrush Color="{Binding ActiveTheme.Background}" />
-                                    </Border.Background>
+                                <Grid>
+                                    <!-- Inner border -->
+                                    <Border x:Name="ButtonBorder"
+                                            SnapsToDevicePixels="True"
+                                            BorderThickness="{Binding ActiveTheme.BorderSize}">
+                                        <Border.BorderBrush>
+                                            <SolidColorBrush Color="{Binding ActiveTheme.BorderColor}"/>
+                                        </Border.BorderBrush>
+                                        <Border.Background>
+                                            <SolidColorBrush Color="{Binding ActiveTheme.Background}" />
+                                        </Border.Background>
+                                    </Border>
 
-                                    <Grid>
                                         <!-- Button text -->
                                         <TextBlock Visibility="{Binding Text, Converter={StaticResource BoolVisibility}}"
                                                    Text="{Binding Text}"
@@ -115,11 +117,10 @@
                                                Source="{Binding ImageSource}"
                                                Stretch="Uniform"
                                                />
-                                    </Grid>
 
-                                </Border>
+                                    </Grid>
                             </Border>
-                        </Button>
+                        </ToggleButton>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>

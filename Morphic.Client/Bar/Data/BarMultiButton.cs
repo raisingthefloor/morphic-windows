@@ -27,7 +27,7 @@ namespace Morphic.Client.Bar.Data
     {
         public BarMultiButton(BarData bar) : base(bar)
         {
-            this.Color = Color.FromRgb(0, 129, 69);
+
         }
 
         [JsonProperty("configuration.buttons")]
@@ -104,6 +104,8 @@ namespace Morphic.Client.Bar.Data
                 }
                 set => this.uiName = value;
             }
+
+            public bool Toggle { get; set; }
         }
 
         public override void Deserialized()

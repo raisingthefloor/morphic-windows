@@ -38,22 +38,24 @@ namespace Morphic.Client.Bar.Data.Actions
         /// Called by <c>Invoke</c> to perform the implementation-specific action invocation.
         /// </summary>
         /// <param name="source">Button ID, for multi-button bar items.</param>
+        /// <param name="toggleState">New state, if the button is a toggle.</param>
         /// <returns></returns>
-        protected abstract Task<bool> InvokeImpl(string? source = null);
+        protected abstract Task<bool> InvokeImpl(string? source = null, bool? toggleState = null);
 
         /// <summary>
         /// Invokes the action.
         /// </summary>
         /// <param name="source">Button ID, for multi-button bar items.</param>
+        /// <param name="toggleState">New state, if the button is a toggle.</param>
         /// <returns></returns>
-        public Task<bool> Invoke(string? source = null)
+        public Task<bool> Invoke(string? source = null, bool? toggleState = null)
         {
             Task<bool> result;
             try
             {
                 try
                 {
-                    result = this.InvokeImpl(source);
+                    result = this.InvokeImpl(source, toggleState);
                 }
                 catch (Exception e) when (!(e is ActionException || e is OutOfMemoryException))
                 {
@@ -100,7 +102,7 @@ namespace Morphic.Client.Bar.Data.Actions
     [JsonTypeName("null")]
     public class NoOpAction : BarAction
     {
-        protected override Task<bool> InvokeImpl(string? source = null)
+        protected override Task<bool> InvokeImpl(string? source = null, bool? toggleState = null)
         {
             return Task.FromResult(true);
         }
@@ -115,7 +117,7 @@ namespace Morphic.Client.Bar.Data.Actions
         [JsonProperty("args")]
         public Dictionary<string, string> Arguments { get; set; } = new Dictionary<string, string>();
 
-        protected override Task<bool> InvokeImpl(string? source = null)
+        protected override Task<bool> InvokeImpl(string? source = null, bool? toggleState = null)
         {
             if (this.FunctionName == null)
             {
@@ -135,7 +137,7 @@ namespace Morphic.Client.Bar.Data.Actions
         [JsonProperty("data", Required = Required.Always)]
         public JObject RequestObject { get; set; } = null!;
 
-        protected override async Task<bool> InvokeImpl(string? source = null)
+        protected override async Task<bool> InvokeImpl(string? source = null, bool? toggleState = null)
         {
             ClientWebSocket socket = new ClientWebSocket();
             CancellationTokenSource cancel = new CancellationTokenSource();
@@ -157,7 +159,7 @@ namespace Morphic.Client.Bar.Data.Actions
         [JsonProperty("run")]
         public string? ShellCommand { get; set; }
 
-        protected override Task<bool> InvokeImpl(string? source = null)
+        protected override Task<bool> InvokeImpl(string? source = null, bool? toggleState = null)
         {
             bool success = true;
             if (!string.IsNullOrEmpty(this.ShellCommand))

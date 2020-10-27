@@ -30,11 +30,6 @@ namespace Morphic.Client.Bar.UI.BarControls
         private BarItemSize maxItemSize = BarItemSize.Large;
 
         /// <summary>
-        /// Theming info for child controls.
-        /// </summary>
-        protected Dictionary<Control, ControlThemeState> ControlTheme = new Dictionary<Control, ControlThemeState>();
-
-        /// <summary>
         /// The bar item represented by this control.
         /// </summary>
         public BarItem BarItem { get; }
@@ -50,16 +45,7 @@ namespace Morphic.Client.Bar.UI.BarControls
         /// <summary>Tool tip text.</summary>
         public string? ToolTipText => this.BarItem.ToolTip;
 
-        /// <summary>
-        /// Current theme to use, depending on the state (normal/hover/focus).
-        /// </summary>
-        public Theme ActiveTheme
-        {
-            get =>
-                this.ControlTheme.Count == 0
-                    ? this.BarItem.Theme
-                    : this.ControlTheme.FirstOrDefault().Value.ActiveTheme;
-        }
+        protected ThemeHandler ThemeHandler { get; }
 
         /// <summary>
         /// The maximum size of an item.
@@ -92,6 +78,8 @@ namespace Morphic.Client.Bar.UI.BarControls
                 }
             }));
 
+        public static readonly DependencyProperty ActiveThemeProperty = DependencyProperty.Register("ActiveTheme", typeof(Theme), typeof(ButtonBarControl), new PropertyMetadata(default(Theme)));
+
         public Orientation Orientation
         {
             get => (Orientation)this.GetValue(OrientationProperty);
@@ -108,6 +96,7 @@ namespace Morphic.Client.Bar.UI.BarControls
         {
             this.DataContext = this;
             this.BarItem = barItem;
+            this.ThemeHandler = new ThemeHandler(this, this.BarItem.Theme);
 
             this.ToolTip = $"{this.ToolTipHeader}|{this.ToolTipText}";
 
@@ -116,6 +105,12 @@ namespace Morphic.Client.Bar.UI.BarControls
             {
                 args.Handled = this.OpenContextMenu(sender);
             };
+
+            this.ThemeHandler.ThemeStateChanged += (sender, args) =>
+            {
+                this.ActiveTheme = args.ActiveTheme;
+            };
+            this.ActiveTheme = this.BarItem.Theme;
         }
 
         /// <summary>
@@ -140,7 +135,6 @@ namespace Morphic.Client.Bar.UI.BarControls
 
         private void OnLoaded(object sender, RoutedEventArgs args)
         {
-            this.ApplyTheming();
             // Override the apparent behaviour of ContentControl elements, where they make the control focusable.
             foreach (UIElement elem in this.GetAllChildren().OfType<UIElement>())
             {
@@ -166,23 +160,12 @@ namespace Morphic.Client.Bar.UI.BarControls
             }
         }
 
-        protected IEnumerable<DependencyObject> GetAllChildren(DependencyObject? parent = null)
+        public IEnumerable<DependencyObject> GetAllChildren(DependencyObject? parent = null)
         {
             return LogicalTreeHelper.GetChildren(parent ?? this)
                 .OfType<DependencyObject>()
                 .SelectMany(this.GetAllChildren)
                 .Append(parent ?? this);
-        }
-
-        private void CheckMouseState(object sender, MouseEventArgs mouseEventArgs)
-        {
-            ControlThemeState state = this.ControlTheme[(Control)sender];
-            bool last = state.IsMouseDown;
-            state.IsMouseDown = mouseEventArgs.LeftButton == MouseButtonState.Pressed;
-            if (last != state.IsMouseDown)
-            {
-                this.UpdateTheme((Control)sender);
-            }
         }
 
         /// <summary>
@@ -196,99 +179,15 @@ namespace Morphic.Client.Bar.UI.BarControls
         }
 
         /// <summary>
-        /// Update the theme depending on the current state of the control.
-        /// </summary>
-        public void UpdateTheme(Control? control = null)
-        {
-            if (control == null)
-            {
-                foreach (Control ctrl in this.ControlTheme.Keys)
-                {
-                    this.UpdateTheme(ctrl);
-                }
-                return;
-            }
-
-            Theme theme = new Theme();
-
-            ControlThemeState state = this.ControlTheme[control];
-
-            // Apply the applicable states, most important first.
-            if (state.IsMouseDown)
-            {
-                theme.Apply(this.BarItem.Theme.Active);
-            }
-
-            if (control.IsMouseOver)
-            {
-                theme.Apply(this.BarItem.Theme.Hover);
-            }
-
-            if (control.IsKeyboardFocusWithin && state.FocusedByKeyboard)
-            {
-                theme.Apply(this.BarItem.Theme.Focus);
-            }
-
-            //this.ActiveTheme = theme.Apply(this.BarItem.Theme);
-            state.ActiveTheme = theme.Apply(this.BarItem.Theme);
-
-            this.OnPropertyChanged(nameof(this.ActiveTheme));
-
-            // Update the brush used by a mono drawing image.
-            if (this.DrawingBrush != null && this.ActiveTheme.Background.HasValue)
-            {
-                this.DrawingBrush.Color = this.ActiveTheme.Background.Value;
-            }
-        }
-
-        /// <summary>
-        /// Apply the theming to all the buttons in this control.
-        /// </summary>
-        protected virtual void ApplyTheming()
-        {
-            foreach (Button button in this.GetAllChildren().OfType<Button>())
-            {
-                this.ApplyControlTheme(button);
-            }
-        }
-
-        /// <summary>
-        /// Apply theming to a control.
-        /// </summary>
-        /// <param name="control"></param>
-        protected void ApplyControlTheme(Control control)
-        {
-            if (this.ControlTheme.ContainsKey(control))
-            {
-                return;
-            }
-
-            ControlThemeState state = new ControlThemeState(this.BarItem.Theme);
-            this.ControlTheme.Add(control, state);
-
-            // Some events to monitor the state.
-            control.MouseEnter += (sender, args) => this.UpdateTheme(control);
-            control.MouseLeave += (sender, args) =>
-            {
-                this.CheckMouseState(sender, args);
-                this.UpdateTheme(control);
-            };
-
-            control.PreviewMouseDown += this.CheckMouseState;
-            control.PreviewMouseUp += this.CheckMouseState;
-
-            control.IsKeyboardFocusWithinChanged += (sender, args) =>
-            {
-                state.FocusedByKeyboard = control.IsKeyboardFocusWithin &&
-                    InputManager.Current.MostRecentInputDevice is KeyboardDevice;
-                this.UpdateTheme(control);
-            };
-        }
-
-        /// <summary>
         /// The brush used for monochrome svg images.
         /// </summary>
         public SolidColorBrush? DrawingBrush { get; protected set; }
+
+        public Theme ActiveTheme
+        {
+            get => (Theme)this.GetValue(ActiveThemeProperty);
+            set => this.SetValue(ActiveThemeProperty, value);
+        }
 
         #region INotifyPropertyChanged
 
@@ -300,19 +199,6 @@ namespace Morphic.Client.Bar.UI.BarControls
         }
 
         #endregion
-
-        public class ControlThemeState
-        {
-            public ControlThemeState(Theme activeTheme)
-            {
-                this.ActiveTheme = activeTheme;
-            }
-
-            public Theme ActiveTheme { get;set;}
-            public bool IsMouseDown { get;set;}
-            public bool FocusedByKeyboard { get;set;}
-
-        }
 
         protected virtual void OnOrientationChanged()
         {

@@ -50,7 +50,7 @@ namespace Morphic.Client.Bar.Data.Actions
         public override Uri? DefaultImageUri =>
             this.Uri != null ? new Uri($"https://icons.duckduckgo.com/ip2/{this.Uri.Host}.ico") : null;
 
-        protected override Task<bool> InvokeImpl(string? source = null)
+        protected override Task<bool> InvokeImpl(string? source = null, bool? toggleState = null)
         {
             bool success = true;
             if (this.Uri != null)

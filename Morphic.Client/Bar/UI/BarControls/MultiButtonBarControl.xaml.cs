@@ -32,7 +32,6 @@ namespace Morphic.Client.Bar.UI.BarControls
     {
         public MultiButtonBarControl(BarMultiButton barItem) : base(barItem)
         {
-            this.ApplyControlTheme(this);
             this.Buttons = this.BarItem.Buttons.Values.Select(b => new ButtonWrapper(this, b)).ToList();
 
             this.InitializeComponent();
@@ -47,10 +46,9 @@ namespace Morphic.Client.Bar.UI.BarControls
                         ContentPresenter content = (ContentPresenter)this.ButtonContainer.ItemContainerGenerator.ContainerFromItem(b);
                         content.ApplyTemplate();
 
-                        if (content.ContentTemplate.FindName("ControlButton", content) is Button control)
+                        if (content.ContentTemplate.FindName("ControlButton", content) is ButtonBase control)
                         {
-                            b.Control = control;
-                            this.ApplyControlTheme(b.Control);
+                            b.SetControl(control);
                         }
                     }
                 }
@@ -97,19 +95,27 @@ namespace Morphic.Client.Bar.UI.BarControls
 
             if (clickIndex > -1)
             {
-                if (this.Buttons[clickIndex].Control is Button button)
+                if (this.Buttons[clickIndex].Control is ButtonBase button)
                 {
-                    // Make it look like it's being clicked.
-                    this.ControlTheme[button].IsMouseDown = true;
-                    this.UpdateTheme(button);
+                    // // Make it look like it's being clicked.
+                    // this.ControlTheme[button].IsMouseDown = true;
+                    // this.UpdateTheme(button);
 
                     // Click it
-                    ButtonAutomationPeer peer = new ButtonAutomationPeer(button);
-                    ((IInvokeProvider?)peer.GetPattern(PatternInterface.Invoke))?.Invoke();
+                    FrameworkElementAutomationPeer automationPeer;
+                    if (button is ToggleButton toggle)
+                    {
+                        automationPeer = new ToggleButtonAutomationPeer(toggle);
+                    }
+                    else
+                    {
+                        automationPeer = new ButtonAutomationPeer((Button)button);
+                    }
+                    ((IInvokeProvider?)automationPeer.GetPattern(PatternInterface.Invoke))?.Invoke();
 
-                    await Task.Delay(250);
-                    this.ControlTheme[button].IsMouseDown = false;
-                    this.UpdateTheme(button);
+                    // await Task.Delay(250);
+                    // this.ControlTheme[button].IsMouseDown = false;
+                    // this.UpdateTheme(button);
                 }
             }
         }
@@ -118,6 +124,22 @@ namespace Morphic.Client.Bar.UI.BarControls
 
         public List<ButtonWrapper> Buttons { get; set; }
 
+        private void Button_Checked(object sender, RoutedEventArgs routedEventArgs)
+        {
+            if (sender is ToggleButton button)
+            {
+                BarMultiButton.ButtonInfo? buttonInfo =
+                    this.Buttons.Where(b => b.Control == button)
+                        .Select(b => b.Button)
+                        .FirstOrDefault();
+
+                if (buttonInfo != null && !buttonInfo.Toggle)
+                {
+                    button.IsChecked = false;
+                    routedEventArgs.Handled = true;
+                }
+            }
+        }
         private void Button_OnRightClick(object sender, MouseEventArgs e)
         {
             BarMultiButton.ButtonInfo? buttonInfo =
@@ -145,7 +167,8 @@ namespace Morphic.Client.Bar.UI.BarControls
                     ? this.BarItem.Action
                     : buttonInfo.Action;
 
-                action.Invoke(buttonInfo.Value);
+                bool? state = (sender as ToggleButton)?.IsChecked;
+                action.Invoke(buttonInfo.Value, state);
             }
         }
 
@@ -185,15 +208,13 @@ namespace Morphic.Client.Bar.UI.BarControls
             public BarMultiButton.ButtonInfo Button { get; set; }
             public BarData Bar => this.Button.BarItem.Bar;
 
-            public Theme ActiveTheme =>
-                this.Control == null
-                    ? this.itemControl.ActiveTheme
-                    : this.itemControl.ControlTheme[this.Control].ActiveTheme;
+            public Theme ActiveTheme { get; private set; }
 
             public Control? Control { get; set; }
 
             public string? Text { get; set; }
             public ImageSource? ImageSource { get; set; }
+            public ThemeHandler? ThemeHandler { get; set; }
 
             private readonly MultiButtonBarControl itemControl;
 
@@ -201,6 +222,7 @@ namespace Morphic.Client.Bar.UI.BarControls
             {
                 this.itemControl = itemControl;
                 this.Button = buttonInfo;
+                this.ActiveTheme = buttonInfo.BarItem.ControlTheme;
                 string text = itemControl.GetDisplayText(this.Button.Text);
                 SolidColorBrush? imageBrush = null;
                 if (text.StartsWith("icon:"))
@@ -232,6 +254,18 @@ namespace Morphic.Client.Bar.UI.BarControls
             }
 
             public event PropertyChangedEventHandler? PropertyChanged;
+
+            public void SetControl(ButtonBase control)
+            {
+                this.Control = control;
+                this.ThemeHandler = new ThemeHandler(this.Control, this.Button.BarItem.ControlTheme);
+                this.ActiveTheme = this.ThemeHandler.ActiveTheme;
+                this.ThemeHandler.ThemeStateChanged += (sender, args) =>
+                {
+                    this.ActiveTheme = args.ActiveTheme;
+                    this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(this.ActiveTheme)));
+                };
+            }
         }
     }
 

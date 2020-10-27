@@ -34,6 +34,10 @@ namespace Morphic.Client.Bar.Data
         [JsonProperty("active", ObjectCreationHandling = ObjectCreationHandling.Replace)]
         public Theme Active { get; set; } = new Theme();
 
+        /// <summary>The theme for when the item is checked (toggle buttons).</summary>
+        [JsonProperty("checked", ObjectCreationHandling = ObjectCreationHandling.Replace)]
+        public Theme Checked { get; set; } = new Theme();
+
         public BarItemTheme()
         {
         }
@@ -46,9 +50,10 @@ namespace Morphic.Client.Bar.Data
         public BarItemTheme Inherit(BarItemTheme theme)
         {
             this.Apply(theme);
-            this.Hover.Apply(theme.Hover);//.Apply(this);
-            this.Focus.Apply(theme.Focus);//.Apply(this);
-            this.Active.Apply(theme.Active);//.Apply(this);
+            this.Hover.Apply(theme.Hover);
+            this.Focus.Apply(theme.Focus);
+            this.Active.Apply(theme.Active);
+            this.Checked.Apply(theme.Checked);
             return this;
         }
 
@@ -136,6 +141,19 @@ namespace Morphic.Client.Bar.Data
             return new Theme()
             {
                 Background = ColorConverter.ConvertFromString("#002957") as Color?,
+                TextColor = Colors.White
+            };
+        }
+
+        /// <summary>
+        /// Default control button theme.
+        /// </summary>
+        /// <returns></returns>
+        public static Theme DefaultControl()
+        {
+            return new Theme()
+            {
+                Background = Color.FromRgb(0, 129, 69),
                 TextColor = Colors.White
             };
         }

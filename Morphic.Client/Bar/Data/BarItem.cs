@@ -159,6 +159,12 @@ namespace Morphic.Client.Bar.Data
         public BarItemTheme Theme { get; set; } = new BarItemTheme();
 
         /// <summary>
+        /// Theme for the control buttons.
+        /// </summary>
+        [JsonProperty("controlTheme", DefaultValueHandling = DefaultValueHandling.Populate)]
+        public BarItemTheme ControlTheme { get; set; } = new BarItemTheme();
+
+        /// <summary>
         /// Items are sorted by this.
         /// </summary>
         [JsonProperty("priority")]
@@ -183,6 +189,8 @@ namespace Morphic.Client.Bar.Data
             // Inherit the default theme
             this.Theme.Inherit(this.Bar.DefaultTheme);
             this.Theme.InferStateThemes();
+            this.ControlTheme.Inherit(this.Bar.ControlTheme).Inherit(this.Bar.DefaultTheme);
+            this.ControlTheme.InferStateThemes();
 
             this.IsPrimaryOriginal = this.IsPrimary;
 

@@ -78,15 +78,13 @@
       }
     },
     {
-      kind: "internal",
-      widget: "multi",
+      kind: "setting",
       is_primary: true,
       configuration: {
-        function: "contrastColor",
         label: "Contrast & Color",
         autoSize: true,
         buttons: {
-          contrast: {
+          "com.microsoft.windows.highContrast/enabled": {
             label: "Contrast",
             uiName: "Contrast on, off",
             tooltip: "Turn Contrast on and off|Makes screen easier to read for some. (Right-click to adjust contrast)",
@@ -96,7 +94,7 @@
               demo: "contrast"
             }
           },
-          color: {
+          "com.microsoft.windows.colorFilters/enabled": {
             label: "Color",
             uiName: "Color Vision on, off",
             tooltip: "Turn Color Vision filters on and off|Changes color to adapt for color blindness. (Right-click to choose type)",
@@ -106,17 +104,17 @@
               demo: "color"
             }
           },
-          dark: {
-            label: "Dark",
-            uiName: "Dark Mode on, off",
-            tooltip: "Turn Dark Mode on and off|Toggles Dark mode on and off. (Right-click to adjust)",
-            menu: {
-              setting: "colors",
-              learn: "darkmode",
-              demo: "darkmode"
-            }
-          },
-          night: {
+//          "": {
+//            label: "Dark",
+//            uiName: "Dark Mode on, off",
+//            tooltip: "Turn Dark Mode on and off|Toggles Dark mode on and off. (Right-click to adjust)",
+//            menu: {
+//              setting: "colors",
+//              learn: "darkmode",
+//              demo: "darkmode"
+//            }
+//          },
+          "com.microsoft.windows.nightMode/enabled": {
             label: "Night",
             uiName: "Night Light on, off",
             tooltip: "Turn 'Night Light' feature on and off|Reduces eye strain and makes it easier to fall asleep at night",

@@ -69,8 +69,21 @@
           zoom: {
             name: "zoom",
             local: true,
-            range: { min: 0, max: "count" }
+            range: {
+              min: 0,
+              max: "count"
+            }
           }
+        }
+      }
+    ]
+  },
+  "com.microsoft.windows.nightMode": {
+    settings: [
+      {
+        type: "systemSettings",
+        settings: {
+          enabled: "SystemSettings_Display_BlueLight_ManualToggleQuickAction",
         }
       }
     ]

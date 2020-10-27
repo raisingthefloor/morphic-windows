@@ -1,6 +1,9 @@
 {
   id: "the id",
   name: "not the name",
+  position: {
+    horizontal: true
+  },
   items: [
     {
       kind: "application",
