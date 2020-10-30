@@ -11,10 +11,12 @@
     [SrService]
     public class RegistrySettingsHandler : SettingsHandler
     {
-        private IRegistry registry;
+        private readonly IRegistry registry;
+        private readonly IServiceProvider serviceProvider;
 
-        public RegistrySettingsHandler(IRegistry registry)
+        public RegistrySettingsHandler(IServiceProvider serviceProvider, IRegistry registry)
         {
+            this.serviceProvider = serviceProvider;
             this.registry = registry;
         }
 

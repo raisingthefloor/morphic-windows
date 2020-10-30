@@ -51,6 +51,7 @@ namespace Morphic.Client
     using Dialogs;
     using Menu;
     using Microsoft.Win32;
+    using Settings.SettingsHandlers;
     using Settings.SolutionsRegistry;
 
     public class AppMain
@@ -257,6 +258,11 @@ namespace Morphic.Client
 
             Task task = this.OpenSession();
             task.ContinueWith(this.SessionOpened, TaskScheduler.FromCurrentSynchronizationContext());
+
+            // Make settings displayed on the UI update when a system setting has changed, or when the app is focused.
+            this.SystemSettingChanged += (sender, args) => SettingsHandler.SystemSettingChanged();
+            AppFocus.Current.MouseEnter += (sender, args) => SettingsHandler.SystemSettingChanged();
+            AppFocus.Current.Activated += (sender, args) => SettingsHandler.SystemSettingChanged();
         }
 
         /// <summary>

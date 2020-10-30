@@ -40,9 +40,20 @@ namespace Morphic.Client.Bar.UI
             }
             else
             {
+                this.Window = window;
                 window.SourceInitialized += (sender, args) => this.AddHook();
             }
         }
+
+        /// <summary>
+        /// Gets a message hook to capture global messages.
+        /// </summary>
+        public static WindowMessageHook GetGlobalMessageHook()
+        {
+            return globalMessageHook ??= new WindowMessageHook(new Window(), true);
+        }
+
+        private static WindowMessageHook? globalMessageHook;
 
         /// <summary>
         /// Add a message to the list of messages listened for.
@@ -112,7 +123,7 @@ namespace Morphic.Client.Bar.UI
                     handled = true;
                 }
             }
-            if (this.messagesWanted.Contains(msg))
+            if (this.isMessageWindow || this.messagesWanted.Contains(msg))
             {
                 MessageEventArgs eventArgs = new MessageEventArgs(hwnd, msg, wParam, lParam);
                 this.GotMessage?.Invoke(this, eventArgs);

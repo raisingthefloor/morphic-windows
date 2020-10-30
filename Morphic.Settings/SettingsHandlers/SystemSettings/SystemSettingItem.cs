@@ -95,15 +95,21 @@ namespace Morphic.Settings.SettingsHandlers.SystemSettings
         public async Task<object?> GetValue(string valueName)
         {
             // Wait for the setting to become available.
+            await this.WaitForEnabled();
+            return this.settingItem.GetValue(valueName);
+        }
+
+        internal async Task WaitForEnabled()
+        {
             for (int i = 0; i < 10; i++)
             {
                 if (this.settingItem.IsEnabled)
                 {
                     break;
                 }
-            }
 
-            return this.settingItem.GetValue(valueName);
+                await Task.Delay(100);
+            }
         }
 
         /// <summary>Sets the setting's value.</summary>
@@ -121,15 +127,7 @@ namespace Morphic.Settings.SettingsHandlers.SystemSettings
         public async Task SetValue(string valueName, object? newValue)
         {
             // Wait for the setting to become available.
-            for (int i = 0; i < 10; i++)
-            {
-                if (this.settingItem.IsEnabled)
-                {
-                    break;
-                }
-                await Task.Delay(100);
-            }
-
+            await this.WaitForEnabled();
             this.settingItem.SetValue(valueName, newValue);
         }
 

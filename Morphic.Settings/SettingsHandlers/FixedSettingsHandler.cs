@@ -116,12 +116,12 @@
             return false;
         }
 
-        protected override bool OnChangeListenerRequired(Setting setting)
+        protected override bool OnSettingListenerRequired(Setting setting)
         {
             return this.HandleListener(setting, true);
         }
 
-        protected override void OnChangeListenerNotRequired(Setting setting)
+        protected override void OnSettingListenerNotRequired(Setting setting)
         {
             this.HandleListener(setting, false);
         }

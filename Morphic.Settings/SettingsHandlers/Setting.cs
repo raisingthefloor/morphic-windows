@@ -3,7 +3,6 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Reflection;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
     using Newtonsoft.Json;
@@ -11,7 +10,34 @@
     [JsonObject(MemberSerialization.OptIn)]
     public class Setting
     {
+        public Setting()
+        {
+        }
+
+        private EventHandler<SettingEventArgs>? changedHandler;
+        public event EventHandler<SettingEventArgs>? Changed
+        {
+            add
+            {
+                if (this.changedHandler == null)
+                {
+                    this.SettingGroup.SettingsHandler.AddSettingListener(this);
+                }
+
+                this.changedHandler += value;
+            }
+            remove
+            {
+                this.changedHandler -= value;
+                if (this.changedHandler == null)
+                {
+                    this.SettingGroup.SettingsHandler.RemoveSettingListener(this);
+                }
+            }
+        }
+
         public SettingGroup SettingGroup { get; private set; } = null!;
+
         public string Id { get; private set; } = null!;
 
         /// <summary>Name of the setting, used by the setting handler.</summary>
@@ -28,30 +54,58 @@
         [JsonProperty("range")]
         public SettingRange? Range { get; private set; }
 
+        [JsonProperty("changes")]
+        public SettingChanges? SettingChanges { get; private set; }
+
+        public object? CurrentValue { get; private set; }
+
         /// <summary>Gets the value of this setting.</summary>
-        public Task<object?> GetValue()
+        public async Task<object?> GetValue()
         {
-            return this.SettingGroup.SettingsHandler.Get(this);
+            this.CurrentValue = await this.SettingGroup.SettingsHandler.Get(this);
+            return this.CurrentValue;
         }
 
         /// <summary>Gets the value of this setting.</summary>
         public async Task<T> GetValue<T>(T defaultValue = default)
         {
             object? value = await this.GetValue();
+            T result;
             if (value is T v)
             {
-                return v;
+                result = v;
             }
             else
             {
-                return defaultValue;
+                result = defaultValue;
             }
+
+            this.CurrentValue = result;
+            return result;
         }
 
         /// <summary>Sets the value of this setting.</summary>
         public Task<bool> SetValue(object? newValue)
         {
+            this.CurrentValue = newValue;
             return this.SettingGroup.SettingsHandler.Set(this, newValue);
+        }
+
+        public async Task<bool> CheckForChange()
+        {
+            object? oldValue = this.CurrentValue;
+            object? newValue = await this.GetValue();
+            bool changed = oldValue != newValue;
+            if (changed)
+            {
+                this.OnSettingChanged(newValue);
+            }
+            return changed;
+        }
+
+        private void OnSettingChanged(object? newValue)
+        {
+            this.changedHandler?.Invoke(this, new SettingEventArgs(this, newValue));
         }
 
         public async Task<bool> Increment(int direction)
@@ -66,15 +120,6 @@
                 }
             }
             return false;
-        }
-
-        public void AddChangeListener(ISettingChangeListener listener)
-        {
-            this.SettingGroup.SettingsHandler.AddChangeListener(this, listener);
-        }
-        public void RemoveChangeListener(ISettingChangeListener listener)
-        {
-            this.SettingGroup.SettingsHandler.RemoveChangeListener(this, listener);
         }
 
         public virtual void Deserialized(SettingGroup settingGroup, string settingId)
@@ -103,6 +148,40 @@
 
             return setting;
         }
+    }
+
+    public class SettingEventArgs : EventArgs
+    {
+        public SettingEventArgs(Setting setting, object? newValue)
+        {
+            this.Setting = setting;
+            this.NewValue = newValue;
+        }
+
+        public Setting Setting { get; }
+        public object? NewValue { get; }
+
+
+    }
+
+    public class SettingChanges
+    {
+        [JsonProperty("path")]
+        public string Path { get; private set; } = string.Empty;
+        [JsonProperty("monitorType")]
+        public string MonitorType { get; private set; } = string.Empty;
+
+        public static explicit operator SettingChanges(string path)
+        {
+            string[] parts = path.Split(':', 2);
+            return new SettingChanges()
+            {
+                MonitorType = parts[0],
+                Path = parts[1]
+            };
+        }
+
+
     }
 
     [JsonObject(MemberSerialization.OptIn)]
@@ -247,10 +326,10 @@
         {
             return settings.ToDictionary(setting => setting.Name, setting => setting);
         }
-    }
 
-    public interface ISettingChangeListener
-    {
-        void SettingChanged(Setting setting);
+        public static IServiceProvider GetServiceProvider(this Setting setting)
+        {
+            return setting.SettingGroup.Solution.Solutions.ServiceProvider;
+        }
     }
 }

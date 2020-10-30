@@ -4,10 +4,17 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
-    using Newtonsoft.Json.Bson;
 
     public abstract class SettingsHandler
     {
+        public static IEnumerable<SettingsHandler> All => AllSettingsHandlers.AsReadOnly();
+        private static readonly List<SettingsHandler> AllSettingsHandlers = new List<SettingsHandler>();
+
+        protected SettingsHandler()
+        {
+            AllSettingsHandlers.Add(this);
+        }
+
         /// <summary>Gets the value of the specified settings of a group.</summary>
         public abstract Task<Values> Get(SettingGroup settingGroup, IEnumerable<Setting> settings);
 
@@ -37,60 +44,69 @@
             return Task.FromResult(Range.All);
         }
 
-        private Dictionary<Setting, List<ISettingChangeListener>> changeListeners =
-            new Dictionary<Setting, List<ISettingChangeListener>>();
+        protected readonly HashSet<Setting> listeningSettings = new HashSet<Setting>();
 
         public bool IsListening(Setting setting)
         {
-            return this.changeListeners.ContainsKey(setting);
+            return this.listeningSettings.Contains(setting);
         }
 
         /// <summary>
         /// Listens for changes to a setting.
         /// </summary>
         /// <returns>true if sucessful, false for failure or if the setting does not support change listening.</returns>
-        public bool AddChangeListener(Setting setting, ISettingChangeListener listener)
+        public bool AddSettingListener(Setting setting)
         {
-            if (!this.changeListeners.TryGetValue(setting, out List<ISettingChangeListener>? listeners))
+            if (!this.IsListening(setting))
             {
-                if (!this.OnChangeListenerRequired(setting))
-                {
-                    return false;
-                }
-
-                listeners = new List<ISettingChangeListener>();
-                this.changeListeners.Add(setting, listeners);
+                this.OnSettingListenerRequired(setting);
+                this.listeningSettings.Add(setting);
             }
-
-            listeners.Add(listener);
             return true;
         }
 
-        public void RemoveChangeListener(Setting setting, ISettingChangeListener listener)
+        public void RemoveSettingListener(Setting setting)
         {
-            if (this.changeListeners.TryGetValue(setting, out List<ISettingChangeListener>? listeners))
+            if (this.IsListening(setting))
             {
-                listeners.Remove(listener);
-
-                if (listeners.Count == 0)
-                {
-                    this.OnChangeListenerNotRequired(setting);
-                    this.changeListeners.Remove(setting);
-                }
+                this.OnSettingListenerNotRequired(setting);
+                this.listeningSettings.Remove(setting);
             }
         }
 
         /// <summary>Called when listening for changes to a setting is needed.</summary>
-        protected virtual bool OnChangeListenerRequired(Setting setting)
+        protected virtual bool OnSettingListenerRequired(Setting setting)
         {
             return false;
         }
 
         /// <summary>Called when listening for changes to a setting is no longer needed.</summary>
-        protected virtual void OnChangeListenerNotRequired(Setting setting)
+        protected virtual void OnSettingListenerNotRequired(Setting setting)
         {
         }
 
+        /// <summary>
+        /// Called when a system-wide setting has changed, and all listened settings should be checked for changes.
+        /// </summary>
+        protected virtual void OnSystemSettingChanged()
+        {
+            foreach (Setting setting in this.listeningSettings)
+            {
+                _ = setting.CheckForChange();
+            }
+        }
+
+        /// <summary>
+        /// Called when a system-wide setting has changed, and all listened settings should be checked for changes.
+        /// This causes all settings handlers to update the monitored settings.
+        /// </summary>
+        public static void SystemSettingChanged()
+        {
+            foreach (SettingsHandler settingsHandler in SettingsHandler.All)
+            {
+                settingsHandler.OnSystemSettingChanged();
+            }
+        }
     }
 }
 

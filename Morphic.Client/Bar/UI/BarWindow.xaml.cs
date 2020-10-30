@@ -23,6 +23,7 @@ namespace Morphic.Client.Bar.UI
     using BarControls;
     using Data;
     using Microsoft.Win32;
+    using Settings.SettingsHandlers;
 
     /// <summary>
     /// The window for the main bar.
@@ -43,6 +44,8 @@ namespace Morphic.Client.Bar.UI
 
         private Orientation orientationValue;
         public static readonly DependencyProperty IsDockedProperty = DependencyProperty.Register("IsDocked", typeof(bool), typeof(BarWindow), new PropertyMetadata(default(bool)));
+
+        protected WindowMessageHook messageHook;
 
         public Orientation Orientation
         {
@@ -149,9 +152,15 @@ namespace Morphic.Client.Bar.UI
             this.OnBarLoaded();
         }
 
-        protected virtual void SystemEventsOnDisplaySettingsChanged(object? sender, EventArgs e)
+        protected void SystemEventsOnSettingsChanged(object? sender, EventArgs e)
+        {
+            SettingsHandler.SystemSettingChanged();
+        }
+
+        protected void SystemEventsOnDisplaySettingsChanged(object? sender, EventArgs e)
         {
             this.SetInitialPosition();
+            this.SystemEventsOnSettingsChanged(sender, e);
         }
 
         /// <summary>

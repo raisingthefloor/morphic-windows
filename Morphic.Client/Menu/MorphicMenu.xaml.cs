@@ -104,8 +104,7 @@
             //     new LoggerFactory().CreateLogger<SystemSetting>());
             // bool allNotificationIconsShown = await filterType.GetValue() as bool? == true;
 
-            Window window = new Window();
-            WindowMessageHook windowMessageHook = new WindowMessageHook(window, true);
+            WindowMessageHook windowMessageHook = WindowMessageHook.GetGlobalMessageHook();
             this.trayButton = new TrayButton(windowMessageHook);
             this.trayButton.Click += this.OnTrayButtonClicked;
             this.trayButton.SecondaryClick += this.OnTrayButtonRightClicked;

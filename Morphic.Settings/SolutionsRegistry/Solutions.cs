@@ -151,6 +151,15 @@
         {
 
         }
+
+        /// <summary>
+        /// Called when a system-wide setting has change, like when WM_SETTINGCHANGE has been broadcast. This will
+        /// make all settings which are being listened to update themselves.
+        /// </summary>
+        public void SystemSettingChanged()
+        {
+            SettingsHandler.SystemSettingChanged();
+        }
     }
 
     /// <summary>

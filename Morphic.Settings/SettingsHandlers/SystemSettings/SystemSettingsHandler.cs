@@ -2,6 +2,7 @@
 {
     using System.Collections.Generic;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
     using SolutionsRegistry;
 
     [SettingsHandlerType("systemSettings", typeof(SystemSettingsHandler))]
@@ -9,7 +10,7 @@
     {
     }
 
-    [SrService]
+    [SrService(ServiceLifetime.Singleton)]
     public class SystemSettingsHandler : SettingsHandler
     {
         public override async Task<Values> Get(SettingGroup settingGroup, IEnumerable<Setting> settings)
@@ -39,13 +40,13 @@
 
         private static Dictionary<string, SystemSettingItem> settingCache = new Dictionary<string, SystemSettingItem>();
 
-        private SystemSettingItem GetSettingItem(string settingId)
+        private SystemSettingItem GetSettingItem(string settingName)
         {
             // Cache the instance, in case it's re-used.
-            if (!settingCache.TryGetValue(settingId, out SystemSettingItem? settingItem))
+            if (!settingCache.TryGetValue(settingName, out SystemSettingItem? settingItem))
             {
-                settingItem = new SystemSettingItem(settingId, false);
-                settingCache[settingId] = settingItem;
+                settingItem = new SystemSettingItem(settingName, false);
+                settingCache[settingName] = settingItem;
             }
 
             return settingItem;

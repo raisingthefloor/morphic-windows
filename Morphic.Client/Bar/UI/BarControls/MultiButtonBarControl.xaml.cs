@@ -24,6 +24,7 @@ namespace Morphic.Client.Bar.UI.BarControls
     using System.Windows.Media;
     using Data;
     using Data.Actions;
+    using Settings.SettingsHandlers;
 
     /// <summary>
     /// The control for Button bar items.
@@ -265,6 +266,23 @@ namespace Morphic.Client.Bar.UI.BarControls
                     this.ActiveTheme = args.ActiveTheme;
                     this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(this.ActiveTheme)));
                 };
+
+                // For settings controls, get the current value and listen for a change.
+                if (this.Button.Toggle && this.Button.BarItem is BarSettingItem settingItem)
+                {
+                    Setting setting = settingItem.Solutions.GetSetting(this.Button.Id);
+                    setting.Changed += this.SettingOnChanged;
+
+                    this.Control.Unloaded += (sender, args) => setting.Changed -= this.SettingOnChanged;
+                }
+            }
+
+            private void SettingOnChanged(object? sender, SettingEventArgs e)
+            {
+                if (this.Control is ToggleButton button)
+                {
+                    button.IsChecked = e.NewValue as bool? ?? false;
+                }
             }
         }
     }

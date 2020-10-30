@@ -16,7 +16,7 @@
         [JsonProperty("configuration.settingId", Required = Required.Always)]
         public string? SettingId { get; }
 
-        protected Solutions Solutions { get; private set; }
+        public Solutions Solutions { get; private set; }
 
         public BarSettingItem(BarData bar, [JsonProperty("configuration.settingId")] string settingId) : base(bar)
         {
@@ -24,7 +24,6 @@
             this.SettingId = settingId;
 
             this.ApplySetting();
-
         }
 
         private void ApplySetting()

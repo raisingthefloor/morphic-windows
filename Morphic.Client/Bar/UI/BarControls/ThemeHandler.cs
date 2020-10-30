@@ -32,13 +32,20 @@
             this.Control = control;
             this.Theme = theme;
             this.ActiveTheme = this.Theme;
-            this.Control.Loaded += ControlOnLoaded;
+            if (this.Control.IsLoaded)
+            {
+                this.ControlOnLoaded(this.Control, EventArgs.Empty);
+            }
+            else
+            {
+                this.Control.Loaded += this.ControlOnLoaded;
+            }
         }
 
-
-        private void ControlOnLoaded(object sender, RoutedEventArgs e)
+        private void ControlOnLoaded(object sender, EventArgs e)
         {
             this.ApplyTheme();
+            this.UpdateTheme();
         }
 
         /// <summary>
@@ -67,6 +74,7 @@
 
             if (this.Control is ToggleButton button)
             {
+                this.IsChecked = button.IsChecked == true;
                 button.Checked += this.ButtonCheckedChange;
                 button.Unchecked += this.ButtonCheckedChange;
             }
