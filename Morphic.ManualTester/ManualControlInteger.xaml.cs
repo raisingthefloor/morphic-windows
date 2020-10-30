@@ -1,8 +1,4 @@
-﻿using Microsoft.VisualBasic.FileIO;
-using Morphic.Core;
-using Morphic.Settings;
-using System;
-using System.Configuration;
+﻿using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -10,28 +6,24 @@ using System.Windows.Media;
 
 namespace Morphic.ManualTester
 {
+    using Settings.SettingsHandlers;
+
     /// <summary>
     /// Interaction logic for ManualControlInteger.xaml
     /// </summary>
     public partial class ManualControlInteger : UserControl
     {
-        public SettingsManager manager;
-        public string solutionId;
         public Setting setting;
-        public Preferences.Key key;
         private MainWindow window;
         public Boolean changed = false;
         private Brush redfield = new SolidColorBrush(Color.FromArgb(30, 255, 0, 0));
         private Brush greenfield = new SolidColorBrush(Color.FromArgb(30, 0, 176, 0));
         private Brush whitefield = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
-        public ManualControlInteger(MainWindow window, SettingsManager manager, string solutionId, Setting setting)
+        public ManualControlInteger(MainWindow window, Setting setting)
         {
             InitializeComponent();
             this.window = window;
-            this.manager = manager;
-            this.solutionId = solutionId;
             this.setting = setting;
-            key = new Preferences.Key(solutionId, setting.Name);
             ControlName.Text = setting.Name;
             CaptureSetting();
         }
@@ -54,10 +46,7 @@ namespace Morphic.ManualTester
         {
             LoadingIcon.Visibility = Visibility.Visible;
             InputField.Text = "";
-            if (await manager.Capture(key) is long value)
-            {
-                InputField.Text = value.ToString();
-            }
+            InputField.Text = (await this.setting.GetValue<int>()).ToString();
             InputField.Background = whitefield;
             LoadingIcon.Visibility = Visibility.Hidden;
         }
@@ -87,7 +76,7 @@ namespace Morphic.ManualTester
             {
                 var value = long.Parse(InputField.Text);
                 InputField.Background = whitefield;
-                bool success = await manager.Apply(key, value);
+                bool success = await this.setting.SetValue(value);
                 if (!success) CaptureSetting();
             }
             catch

@@ -2,21 +2,16 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
-using Morphic.Settings;
-using Morphic.Settings.Ini;
-using Morphic.Settings.Registry;
-using Morphic.Settings.Spi;
-using Morphic.Settings.SystemSettings;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Eventing.Reader;
-using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
 
 namespace Morphic.ManualTester
 {
+    using Settings.SolutionsRegistry;
+
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
@@ -44,12 +39,7 @@ namespace Morphic.ManualTester
             services.AddLogging(ConfigureLogging);
             services.AddSingleton<IServiceCollection>(services);
             services.AddSingleton<IServiceProvider>(provider => provider);
-            services.AddSingleton<IRegistry, WindowsRegistry>();
-            services.AddSingleton<IIniFileFactory, IniFileFactory>();
-            services.AddSingleton<ISystemSettingFactory, SystemSettingFactory>();
-            services.AddSingleton<ISystemParametersInfo, SystemParametersInfo>();
-            services.AddTransient<SettingsManager>();
-            services.AddMorphicSettingsHandlers(ConfigureSettingsHandlers);
+            services.AddSolutionsRegistryServices();
         }
 
         void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
@@ -74,10 +64,6 @@ namespace Morphic.ManualTester
             logging.SetMinimumLevel(LogLevel.Debug);
         }
 
-        private void ConfigureSettingsHandlers(SettingsHandlerBuilder settings)
-        {
-        }
-
         protected void OnStartup()
         {
             var collection = new ServiceCollection();
@@ -91,7 +77,7 @@ namespace Morphic.ManualTester
         {
             var filedialog = new OpenFileDialog();
             filedialog.InitialDirectory = "Documents";
-            filedialog.Filter = "json files (*.json)|*.json|All files (*.*)|*.*";
+            filedialog.Filter = "json files (*.json, *.json5)|*.json;*.json5|All files (*.*)|*.*";
             if(filedialog.ShowDialog() == true)
             {
                 this.LoadedFileName.Text = "...";
@@ -99,15 +85,15 @@ namespace Morphic.ManualTester
                 var loadtext = new TextBlock();
                 loadtext.Text = "LOADING...";
                 this.SettingsList.Items.Add(loadtext);
-                var manager = ServiceProvider.GetRequiredService<SettingsManager>();
+
                 try
                 {
-                    await manager.Populate(filedialog.FileName);
+                    Solutions solutions = Solutions.FromFile(this.ServiceProvider, filedialog.FileName);
                     this.LoadedFileName.Text = "Loaded file " + filedialog.FileName;
                     this.SettingsList.Items.Clear();
-                    foreach(var solution in manager.SolutionsById)
+                    foreach(var solution in solutions.All.Values)
                     {
-                        SolutionHeader header = new SolutionHeader(this, manager, solution.Value);
+                        SolutionHeader header = new SolutionHeader(this, solution);
                         SettingsList.Items.Add(header);
                     }
                 }

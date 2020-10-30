@@ -1,26 +1,25 @@
-﻿using Morphic.Settings;
-using System;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 
 namespace Morphic.ManualTester
 {
+    using Settings.SettingsHandlers;
+    using Settings.SolutionsRegistry;
+
     /// <summary>
     /// Interaction logic for SolutionHeader.xaml
     /// </summary>
     public partial class SolutionHeader : UserControl
     {
-        public SettingsManager manager;
         public Solution solution;
         private MainWindow window;
         private bool itemsLoaded = false;
-        public SolutionHeader(MainWindow window, SettingsManager manager, Solution solution)
+        public SolutionHeader(MainWindow window, Solution solution)
         {
             InitializeComponent();
             this.window = window;
-            this.manager = manager;
             this.solution = solution;
-            SolutionTitle.Content = solution.Id;
+            SolutionTitle.Content = solution.SolutionId;
             ControlStack.Items.Add(new TextBlock());
         }
 
@@ -58,21 +57,21 @@ namespace Morphic.ManualTester
             {
                 itemsLoaded = true;
                 ControlStack.Items.Clear();
-                foreach (var setting in solution.Settings)
+                foreach (var setting in solution.AllSettings.Values)
                 {
-                    switch (setting.Kind)
+                    switch (setting.DataType)
                     {
-                        case Setting.ValueKind.Boolean:
-                            ControlStack.Items.Add(new ManualControlBoolean(window, manager, solution.Id, setting));
+                        case SettingType.Bool:
+                            ControlStack.Items.Add(new ManualControlBoolean(window, setting));
                             break;
-                        case Setting.ValueKind.Double:
-                            ControlStack.Items.Add(new ManualControlDouble(window, manager, solution.Id, setting));
+                        case SettingType.Real:
+                            ControlStack.Items.Add(new ManualControlDouble(window, setting));
                             break;
-                        case Setting.ValueKind.Integer:
-                            ControlStack.Items.Add(new ManualControlInteger(window, manager, solution.Id, setting));
+                        case SettingType.Int:
+                            ControlStack.Items.Add(new ManualControlInteger(window, setting));
                             break;
-                        case Setting.ValueKind.String:
-                            ControlStack.Items.Add(new ManualControlString(window, manager, solution.Id, setting));
+                        case SettingType.String:
+                            ControlStack.Items.Add(new ManualControlString(window, setting));
                             break;
                     }
                 }

@@ -50,7 +50,8 @@
             {
                 foreach ((Setting setting, object? value) in values)
                 {
-                    RegistryValueKind valueKind = RegistrySettingsHandler.GetValueKind(setting.Type);
+                    // TODO: Infer value kind from the setting data type, or set it explicitly.
+                    RegistryValueKind valueKind = RegistryValueKind.Unknown;// RegistrySettingsHandler.GetValueKind(setting.DataType);
                     key?.SetValue(setting.Name, value, valueKind);
                 }
             }

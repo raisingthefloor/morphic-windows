@@ -23,7 +23,7 @@
         settings: {
           magnification: {
             name: "Magnification",
-            dataType: "REG_SZ"
+            dataType: "int",
           }
         }
       }
@@ -34,8 +34,8 @@
       {
         type: "systemSettings",
         settings: {
-          enabled: "SystemSettings_Accessibility_ColorFiltering_IsEnabled",
-          filterType: "SystemSettings_Accessibility_ColorFiltering_FilterType"
+          enabled: "SystemSettings_Accessibility_ColorFiltering_IsEnabled:bool",
+          filterType: "SystemSettings_Accessibility_ColorFiltering_FilterType:int"
         }
       }
     ]
@@ -45,7 +45,7 @@
       {
         type: "systemSettings",
         settings: {
-          enabled: "SystemSettings_Accessibility_CoreHighContrast_IsEnabled"
+          enabled: "SystemSettings_Accessibility_CoreHighContrast_IsEnabled:bool"
         }
       }
     ]
@@ -55,7 +55,7 @@
       {
         type: "systemSettings",
         settings: {
-          enabled: "SystemSettings_Accessibility_Narrator_IsEnabled"
+          enabled: "SystemSettings_Accessibility_Narrator_IsEnabled:bool"
         }
       }
     ]
@@ -68,6 +68,7 @@
           count: "resolutionCount",
           zoom: {
             name: "zoom",
+            dataType: "int",
             local: true,
             range: {
               min: 0,
@@ -83,7 +84,7 @@
       {
         type: "systemSettings",
         settings: {
-          enabled: "SystemSettings_Display_BlueLight_ManualToggleQuickAction",
+          enabled: "SystemSettings_Display_BlueLight_ManualToggleQuickAction:bool",
         }
       }
     ]

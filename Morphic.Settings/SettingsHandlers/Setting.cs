@@ -45,7 +45,7 @@
         public string Name { get; private set; } = string.Empty;
 
         [JsonProperty("dataType")]
-        public string? Type { get; private set; }
+        public SettingType DataType { get; private set; }
 
         /// <summary>Don't copy this setting to/from another computer.</summary>
         [JsonProperty("local")]
@@ -143,11 +143,23 @@
             };
             if (parts.Length > 1)
             {
-                setting.Type = parts[2];
+                if (Enum.TryParse(parts[1], true, out SettingType t))
+                {
+                    setting.DataType = t;
+                }
             }
 
             return setting;
         }
+    }
+
+    public enum SettingType
+    {
+        Unknown = 0,
+        Int = 1,
+        Real = 2,
+        Bool = 3,
+        String = 4
     }
 
     public class SettingEventArgs : EventArgs
