@@ -1,15 +1,14 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Threading;
-
-namespace Morphic.ManualTester
+﻿namespace Morphic.ManualTester
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Windows;
+    using System.Windows.Controls;
+    using System.Windows.Threading;
+    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+    using Microsoft.Win32;
     using Settings.SolutionsRegistry;
 
     /// <summary>
@@ -17,18 +16,19 @@ namespace Morphic.ManualTester
     /// </summary>
     public partial class MainWindow : Window
     {
-        public IServiceProvider ServiceProvider { get; private set; } = null!;
-        public IConfiguration Configuration { get; private set; } = null!;
-        private ILogger<MainWindow> logger = null!;
+        public bool AutoApply = true;
         public string fileContent = "";
         public string filePath = "";
-        public bool AutoApply = true;
+        private ILogger<MainWindow> logger = null!;
 
         public MainWindow()
         {
-            InitializeComponent();
-            OnStartup();
+            this.InitializeComponent();
+            this.OnStartup();
         }
+
+        public IServiceProvider ServiceProvider { get; private set; } = null!;
+        public IConfiguration Configuration { get; } = null!;
 
         /// <summary>
         /// Configure the dependency injection system with services
@@ -36,21 +36,22 @@ namespace Morphic.ManualTester
         /// <param name="services"></param>
         private void ConfigureServices(IServiceCollection services)
         {
-            services.AddLogging(ConfigureLogging);
-            services.AddSingleton<IServiceCollection>(services);
+            services.AddLogging(this.ConfigureLogging);
+            services.AddSingleton(services);
             services.AddSingleton<IServiceProvider>(provider => provider);
             services.AddSolutionsRegistryServices();
         }
 
-        void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+        private void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
         {
             Exception ex = e.Exception;
-            logger.LogError("handled uncaught exception: {msg}", ex.Message);
-            logger.LogError(ex.StackTrace);
+            this.logger.LogError("handled uncaught exception: {msg}", ex.Message);
+            this.logger.LogError(ex.StackTrace);
 
-            Dictionary<String, String> extraData = new Dictionary<string, string>();
+            Dictionary<string, string> extraData = new Dictionary<string, string>();
 
-            MessageBox.Show("An unhandled exception just occurred: " + e.Exception.Message, "Exception Sample", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show("An unhandled exception just occurred: " + e.Exception.Message, "Exception Sample",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
             // This prevents the exception from crashing the application
             e.Handled = true;
         }
@@ -66,23 +67,23 @@ namespace Morphic.ManualTester
 
         protected void OnStartup()
         {
-            var collection = new ServiceCollection();
-            ConfigureServices(collection);
-            ServiceProvider = collection.BuildServiceProvider();
-            logger = ServiceProvider.GetRequiredService<ILogger<MainWindow>>();
-            LoadNewRegistry(new object(), new RoutedEventArgs());
+            ServiceCollection? collection = new ServiceCollection();
+            this.ConfigureServices(collection);
+            this.ServiceProvider = collection.BuildServiceProvider();
+            this.logger = this.ServiceProvider.GetRequiredService<ILogger<MainWindow>>();
+            this.LoadNewRegistry(new object(), new RoutedEventArgs());
         }
 
         private async void LoadNewRegistry(object sender, RoutedEventArgs e)
         {
-            var filedialog = new OpenFileDialog();
+            OpenFileDialog? filedialog = new OpenFileDialog();
             filedialog.InitialDirectory = "Documents";
             filedialog.Filter = "json files (*.json, *.json5)|*.json;*.json5|All files (*.*)|*.*";
-            if(filedialog.ShowDialog() == true)
+            if (filedialog.ShowDialog() == true)
             {
                 this.LoadedFileName.Text = "...";
                 this.SettingsList.Items.Clear();
-                var loadtext = new TextBlock();
+                TextBlock? loadtext = new TextBlock();
                 loadtext.Text = "LOADING...";
                 this.SettingsList.Items.Add(loadtext);
 
@@ -91,17 +92,17 @@ namespace Morphic.ManualTester
                     Solutions solutions = Solutions.FromFile(this.ServiceProvider, filedialog.FileName);
                     this.LoadedFileName.Text = "Loaded file " + filedialog.FileName;
                     this.SettingsList.Items.Clear();
-                    foreach(var solution in solutions.All.Values)
+                    foreach (var solution in solutions.All.Values)
                     {
                         SolutionHeader header = new SolutionHeader(this, solution);
-                        SettingsList.Items.Add(header);
+                        this.SettingsList.Items.Add(header);
                     }
                 }
                 catch
                 {
                     this.LoadedFileName.Text = "ERROR";
                     this.SettingsList.Items.Clear();
-                    var feature = new TextBlock();
+                    TextBlock? feature = new TextBlock();
                     feature.Text = "AN ERROR HAS OCCURRED. TRY A DIFFERENT FILE";
                     this.SettingsList.Items.Add(feature);
                 }
@@ -110,24 +111,24 @@ namespace Morphic.ManualTester
 
         private void ToggleAutoApply(object sender, RoutedEventArgs e)
         {
-            if((AutoApplyToggle.IsChecked) != null && ApplySettings != null)
+            if (this.AutoApplyToggle.IsChecked != null && this.ApplySettings != null)
             {
-                if((bool)AutoApplyToggle.IsChecked)
+                if ((bool)this.AutoApplyToggle.IsChecked)
                 {
                     this.AutoApply = true;
-                    ApplySettings.Visibility = Visibility.Hidden;
+                    this.ApplySettings.Visibility = Visibility.Hidden;
                 }
                 else
                 {
                     this.AutoApply = false;
-                    ApplySettings.Visibility = Visibility.Visible;
+                    this.ApplySettings.Visibility = Visibility.Visible;
                 }
             }
         }
 
         private void ApplyAllSettings(object sender, RoutedEventArgs e)
         {
-            foreach(var element in this.SettingsList.Items)
+            foreach (object? element in this.SettingsList.Items)
             {
                 try
                 {
@@ -137,7 +138,9 @@ namespace Morphic.ManualTester
                         header.ApplyAllSettings();
                     }
                 }
-                catch { }
+                catch
+                {
+                }
             }
         }
     }
