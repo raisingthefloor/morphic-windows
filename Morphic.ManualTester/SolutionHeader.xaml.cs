@@ -11,14 +11,20 @@
     public partial class SolutionHeader : UserControl
     {
         private bool itemsLoaded;
-        public Solution solution;
+        public Solution Solution { get; }
         private readonly MainWindow window;
+
+        public bool IsExpanded
+        {
+            get => this.ControlStack.IsExpanded;
+            set => this.ControlStack.IsExpanded = value;
+        }
 
         public SolutionHeader(MainWindow window, Solution solution)
         {
             this.InitializeComponent();
             this.window = window;
-            this.solution = solution;
+            this.Solution = solution;
             this.SolutionTitle.Content = solution.SolutionId;
             this.ControlStack.Items.Add(new TextBlock());
         }
@@ -61,7 +67,7 @@
             {
                 this.itemsLoaded = true;
                 this.ControlStack.Items.Clear();
-                foreach (var setting in this.solution.AllSettings.Values)
+                foreach (var setting in this.Solution.AllSettings.Values)
                 {
                     switch (setting.DataType)
                     {

@@ -13,6 +13,8 @@
                     Manual Settings Tester
                 </TextBlock>
                 <DockPanel DockPanel.Dock="Right" HorizontalAlignment="Right">
+                    <CheckBox Name="AutoReloadCheckBox" Content="Auto reload"
+                              Checked="AutoReload_OnChecked" Unchecked="AutoReload_OnChecked" />
                     <Button Name="LoadRegistry" Content=" Load Another Registry " Click="LoadNewRegistry"
                             VerticalAlignment="Stretch" />
                 </DockPanel>

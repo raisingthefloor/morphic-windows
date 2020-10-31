@@ -2,8 +2,13 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Threading;
+    using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Controls;
+    using System.Windows.Controls.Primitives;
     using System.Windows.Threading;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
@@ -17,9 +22,9 @@
     public partial class MainWindow : Window
     {
         public bool AutoApply = true;
-        public string fileContent = "";
-        public string filePath = "";
+        private string? currentRegistryFile;
         private ILogger<MainWindow> logger = null!;
+        private const string RegistryPath = @"HKEY_CURRENT_USER\Software\Raising the Floor\Morphic\ManualTester";
 
         public MainWindow()
         {
@@ -30,8 +35,7 @@
         public IServiceProvider ServiceProvider { get; private set; } = null!;
         public IConfiguration Configuration { get; } = null!;
 
-        /// <summary>
-        /// Configure the dependency injection system with services
+        /// <summary>AutoReload_OnCheckedre the dependency injection system with services
         /// </summary>
         /// <param name="services"></param>
         private void ConfigureServices(IServiceCollection services)
@@ -71,7 +75,18 @@
             this.ConfigureServices(collection);
             this.ServiceProvider = collection.BuildServiceProvider();
             this.logger = this.ServiceProvider.GetRequiredService<ILogger<MainWindow>>();
-            this.LoadNewRegistry(new object(), new RoutedEventArgs());
+
+            this.AutoReload = Registry.GetValue(RegistryPath, "AutoReload", null) as string == "1";
+            string? lastFile = Registry.GetValue(RegistryPath, "LastFile", null) as string;
+            if (string.IsNullOrEmpty(lastFile))
+            {
+                this.LoadNewRegistry(new object(), new RoutedEventArgs());
+            }
+            else
+            {
+                this.LoadRegistryFile(lastFile);
+            }
+
         }
 
         private async void LoadNewRegistry(object sender, RoutedEventArgs e)
@@ -81,33 +96,95 @@
             filedialog.Filter = "json files (*.json, *.json5)|*.json;*.json5|All files (*.*)|*.*";
             if (filedialog.ShowDialog() == true)
             {
-                this.LoadedFileName.Text = "...";
-                this.SettingsList.Items.Clear();
-                TextBlock? loadtext = new TextBlock();
-                loadtext.Text = "LOADING...";
-                this.SettingsList.Items.Add(loadtext);
-
-                try
-                {
-                    Solutions solutions = Solutions.FromFile(this.ServiceProvider, filedialog.FileName);
-                    this.LoadedFileName.Text = "Loaded file " + filedialog.FileName;
-                    this.SettingsList.Items.Clear();
-                    foreach (var solution in solutions.All.Values)
-                    {
-                        SolutionHeader header = new SolutionHeader(this, solution);
-                        this.SettingsList.Items.Add(header);
-                    }
-                }
-                catch
-                {
-                    this.LoadedFileName.Text = "ERROR";
-                    this.SettingsList.Items.Clear();
-                    TextBlock? feature = new TextBlock();
-                    feature.Text = "AN ERROR HAS OCCURRED. TRY A DIFFERENT FILE";
-                    this.SettingsList.Items.Add(feature);
-                }
+                this.LoadRegistryFile(filedialog.FileName);
             }
         }
+
+        private void LoadRegistryFile(string path)
+        {
+            this.LoadedFileName.Text = "...";
+            this.SettingsList.Items.Clear();
+            TextBlock? loadtext = new TextBlock();
+            loadtext.Text = "LOADING...";
+            this.SettingsList.Items.Add(loadtext);
+
+            try
+            {
+                this.currentRegistryFile = path;
+                if (this.AutoReload)
+                {
+                    this.WatchFile(this.currentRegistryFile);
+                }
+
+                Solutions solutions = Solutions.FromFile(this.ServiceProvider, this.currentRegistryFile);
+                this.LoadedFileName.Text = "Loaded file " + this.currentRegistryFile;
+                this.SettingsList.Items.Clear();
+                foreach (var solution in solutions.All.Values)
+                {
+                    SolutionHeader header = new SolutionHeader(this, solution);
+                    this.SettingsList.Items.Add(header);
+                }
+
+                Registry.SetValue(RegistryPath, "LastFile", this.currentRegistryFile, RegistryValueKind.String);
+            }
+            catch (Exception e)
+            {
+                this.LoadedFileName.Text = "ERROR";
+                this.SettingsList.Items.Clear();
+                TextBlock? feature = new TextBlock();
+                feature.Text = "AN ERROR HAS OCCURRED. TRY A DIFFERENT FILE\n\n";
+                feature.Text += e.ToString();
+                this.SettingsList.Items.Add(feature);
+            }
+        }
+
+        private void Reload(string path)
+        {
+            if (path != this.currentRegistryFile)
+            {
+                this.LoadRegistryFile(path);
+                return;
+            }
+
+            HashSet<string> expanded = new HashSet<string>();
+
+            // See which nodes are expanded.
+            ItemContainerGenerator containerGenerator = this.SettingsList.ItemContainerGenerator;
+            foreach (SolutionHeader item in this.SettingsList.Items.OfType<SolutionHeader>())
+            {
+                if (item.IsExpanded)
+                {
+                    expanded.Add(item.Solution.SolutionId);
+                }
+            }
+
+            // Reload the file.
+            this.LoadRegistryFile(this.currentRegistryFile);
+
+            if (expanded.Count > 0)
+            {
+                // Expand the nodes that were expanded before the reload.
+                containerGenerator.StatusChanged += ItemsLoaded;
+            }
+
+            void ItemsLoaded(object? sender, EventArgs e)
+            {
+                if (containerGenerator.Status == GeneratorStatus.ContainersGenerated)
+                {
+                    containerGenerator.StatusChanged -= ItemsLoaded;
+
+                    foreach (SolutionHeader item in this.SettingsList.Items.OfType<SolutionHeader>())
+                    {
+                        if (expanded.Contains(item.Solution.SolutionId))
+                        {
+                            item.IsExpanded = true;
+                        }
+                    }
+                }
+            }
+
+        }
+
 
         private void ToggleAutoApply(object sender, RoutedEventArgs e)
         {
@@ -143,5 +220,96 @@
                 }
             }
         }
+
+        private FileSystemWatcher? fileWatcher = null;
+
+        private void AutoReload_OnChecked(object sender, RoutedEventArgs e)
+        {
+            this.AutoReload = this.AutoReloadCheckBox.IsChecked == true;
+        }
+
+        private bool _autoReload;
+        private bool AutoReload
+        {
+            get => this._autoReload;
+            set
+            {
+                if (this._autoReload != value)
+                {
+                    this._autoReload = value;
+                    Registry.SetValue(RegistryPath, "AutoReload", this._autoReload ? "1" : "0");
+                    if (this.currentRegistryFile != null && this._autoReload)
+                    {
+                        this.WatchFile(this.currentRegistryFile);
+                    }
+                }
+
+                this.AutoReloadCheckBox.IsChecked = this._autoReload;
+            }
+        }
+
+        private void StopWatching()
+        {
+            this.fileWatcher?.Dispose();
+            this.fileWatcher = null;
+        }
+
+        private void WatchFile(string file)
+        {
+            string fullPath = Path.GetFullPath(file);
+            string dir = Path.GetDirectoryName(fullPath)!;
+            string filename = Path.GetFileName(fullPath);
+
+            if (this.fileWatcher != null)
+            {
+                if (this.fileWatcher.Filter == filename)
+                {
+                    // The file is already being watched.
+                    return;
+                }
+
+                this.StopWatching();
+            }
+
+            this.fileWatcher = new FileSystemWatcher(dir)
+            {
+                Filter = filename,
+                NotifyFilter = NotifyFilters.CreationTime | NotifyFilters.LastWrite | NotifyFilters.Size
+                    | NotifyFilters.FileName,
+                EnableRaisingEvents = true
+            };
+
+            this.fileWatcher.Changed += this.WatcherOnChanged;
+            this.fileWatcher.Created += this.WatcherOnChanged;
+            this.fileWatcher.Renamed += this.WatcherOnChanged;
+        }
+
+        private CancellationTokenSource? changed;
+
+        private async void WatcherOnChanged(object sender, FileSystemEventArgs e)
+        {
+            this.changed?.Cancel();
+            this.changed = new CancellationTokenSource();
+
+            if (!this.AutoReload)
+            {
+                this.StopWatching();
+                return;
+            }
+
+            try
+            {
+                // Wait for the change events to finish.
+                await Task.Delay(1000, this.changed.Token);
+                this.changed = null;
+
+                Application.Current.Dispatcher.Invoke(() => this.Reload(e.FullPath));
+            }
+            catch (TaskCanceledException)
+            {
+                // Do nothing.
+            }
+        }
+
     }
 }
