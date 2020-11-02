@@ -3,11 +3,14 @@
 namespace Morphic.Client.Bar.UI
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
     using System.Windows.Controls;
     using System.Windows.Media.Animation;
     using BarControls;
     using Data;
+    using Dialogs.Elements;
+    using Settings.SettingsHandlers;
 
     public partial class QuickHelpWindow : Window
     {
@@ -127,7 +130,7 @@ namespace Morphic.Client.Bar.UI
                 controlText = null;
             }
 
-            string? header = controlHeader ?? barItem?.ToolTipHeader ?? barItem?.Text;
+            string? header = controlHeader ?? barItem?.ToolTipHeader;
             string? text = controlText ?? barItem?.ToolTip;
 
             if (header == text)
@@ -135,10 +138,14 @@ namespace Morphic.Client.Bar.UI
                 text = null;
             }
 
-            if (header == null)
+            if (header == null && text != null)
             {
-                header = text;
-                text = null;
+                header = barItem?.Text;
+                if (header == null)
+                {
+                    header = text;
+                    text = null;
+                }
             }
 
             return (header, text);
@@ -164,8 +171,17 @@ namespace Morphic.Client.Bar.UI
             BarItem barItem = control.BarItem;
 
             (string? header, string? text) = this.GetHelpText(barItem, element.ToolTip?.ToString());
+
+            if (string.IsNullOrEmpty(header))
+            {
+                this.HideHelp();
+                return;
+            }
+
             this.HeaderText = header ?? string.Empty;
             this.MessageText = text ?? string.Empty;
+
+            this.ShowRangeControl(barItem);
 
             this.wanted = true;
             this.BeginAnimation(Window.OpacityProperty, null);
@@ -181,6 +197,62 @@ namespace Morphic.Client.Bar.UI
             }
 
             this.Opacity = 1;
+        }
+
+        private void ShowRangeControl(BarItem barItem)
+        {
+            this.RangeContainer.Children.Clear();
+
+            if (barItem is BarSettingItem settingItem && settingItem.SettingId != null)
+            {
+                try
+                {
+                    Setting setting = settingItem.Solutions.GetSetting(settingItem.SettingId);
+                    if (setting.Range != null)
+                    {
+                        Control control = this.GetRangeControl(setting, setting.Range);
+                        this.RangeContainer.Children.Add(control);
+                    }
+                }
+                catch (KeyNotFoundException)
+                {
+                    // ignore
+                }
+            }
+        }
+
+        private Control GetRangeControl(Setting setting, SettingRange range)
+        {
+            PagerControl pager = new PagerControl();
+
+            pager.Height = 15;
+
+            void SettingChanged(object? sender, SettingEventArgs e)
+            {
+                this.UpdatePager(pager, setting, range);
+            }
+
+            setting.Changed += SettingChanged;
+            pager.Unloaded += (sender, args) => setting.Changed -= SettingChanged;
+
+            setting.GetValue()
+                .ContinueWith(t => this.Dispatcher.Invoke(() => this.UpdatePager(pager, setting, range)));
+
+            return pager;
+        }
+
+        private async void UpdatePager(PagerControl pager, Setting setting, SettingRange range)
+        {
+            if (pager.CurrentPage == -1)
+            {
+                var min = range.GetMin();
+                var max = range.GetMax();
+                pager.Offset = await min;
+                pager.NumberOfPages = await max;
+            }
+
+            int value = setting.CurrentValue as int? ?? default;
+            pager.CurrentPage = value;
         }
 
         /// <summary>

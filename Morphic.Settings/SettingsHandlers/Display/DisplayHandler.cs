@@ -27,7 +27,7 @@
         {
             if (newValue is int index)
             {
-                Size[] all = this.display.GetResolutions().ToArray();
+                Size[] all = this.display.GetResolutions().Reverse().ToArray();
                 if (index >= 0 && index < all.Length)
                 {
                     this.display.SetResolution(all[index]);
@@ -40,7 +40,7 @@
         [Getter("zoom")]
         public async Task<object?> GetZoom(Setting settingGroup)
         {
-            List<Size> all = this.display.GetResolutions().ToList();
+            List<Size> all = this.display.GetResolutions().Reverse().ToList();
             return all.IndexOf(this.display.GetResolution());
         }
 

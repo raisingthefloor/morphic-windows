@@ -38,11 +38,11 @@
                     this.Type = MultiButtonType.Additive;
                     this.Buttons["dec"] = new ButtonInfo()
                     {
-                        Text = "+"
+                        Text = "-"
                     };
                     this.Buttons["inc"] = new ButtonInfo()
                     {
-                        Text = "-"
+                        Text = "+"
                     };
                 }
                 else

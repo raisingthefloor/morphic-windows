@@ -31,7 +31,7 @@
                     {
                         this.getters.Add(getAttr.SettingName, d);
                     }
-                    break;
+                    continue;
                 }
 
                 SetterAttribute? setAttr = method.GetCustomAttribute<SetterAttribute>();
@@ -41,7 +41,7 @@
                     {
                         this.setters.Add(setAttr.SettingName, d);
                     }
-                    break;
+                    continue;
                 }
 
                 ListenerAttribute? listenAttr = method.GetCustomAttribute<ListenerAttribute>();
@@ -51,7 +51,6 @@
                     {
                         this.listeners.Add(listenAttr.SettingName, d);
                     }
-                    break;
                 }
             }
         }

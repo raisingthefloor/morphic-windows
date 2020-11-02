@@ -4,6 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:ui="clr-namespace:Morphic.Client.Bar.UI"
+        xmlns:elements="clr-namespace:Morphic.Client.Dialogs.Elements"
         mc:Ignorable="d"
         Title="QuickHelpWindow"
         Height="160"
@@ -27,7 +28,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="4*"/>
             <RowDefinition Height="3*"/>
-            <RowDefinition Height="1*"/>
+            <RowDefinition Height="15"/>
         </Grid.RowDefinitions>
 
         <Viewbox Grid.Row="0" Stretch="Uniform">
@@ -51,6 +52,12 @@
                     <DropShadowEffect BlurRadius="0" ShadowDepth="2"/>
                 </TextBlock.Effect>
             </TextBlock>
+        </Viewbox>
+        <Viewbox Grid.Row="2" Stretch="Uniform">
+            <StackPanel x:Name="RangeContainer"
+                        Margin="0 5 0 0"
+                        Grid.Row="2"
+                        Orientation="Horizontal" HorizontalAlignment="center" VerticalAlignment="center"/>
         </Viewbox>
 
     </Grid>

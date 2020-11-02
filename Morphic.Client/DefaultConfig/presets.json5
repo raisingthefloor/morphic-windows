@@ -4,41 +4,45 @@
     "screen-zoom": {
       kind: "setting",
       configuration: {
-        settingId: "com.microsoft.windows.display/zoom"
-      }
-    },
-    "magnify": {
-      kind: "setting",
-      configuration: {
-        settingId: "com.microsoft.windows.magnifier/enabled"
-      }
-    },
-    "screen-zoomX": {
-      // Adjusts the screen resolution.
-      kind: "internal",
-      widget: "multi",
-      configuration: {
-        defaultLabel: "Screen Zoom",
-        function: "screenZoom",
-        args: {
-          direction: "{button}"
-        },
+        settingId: "com.microsoft.windows.display/zoom",
         menu: {
           setting: "display",
           learn: "textsize",
           demo: "textsize"
         },
-        type: "additive",
         buttons: {
-          out: {
+          dec: {
             label: "-",
             tooltip: "Increase Text Size everywhere|Makes everything on the screen larger.",
             uiName: "Increase Text Size"
           },
-          in: {
+          inc: {
             label: "+",
             tooltip: "Decrease Text Size everywhere|Makes everything on the screen smaller.",
             uiName: "Decrease Text Size"
+          }
+        }
+      }
+    },
+    "magnify": {
+      kind: "setting",
+      configuration: {
+        settingId: "com.microsoft.windows.magnifier/enabled",
+        menu: {
+          setting: "easeofaccess-magnifier",
+          learn: "magnifier",
+          demo: "magnifier"
+        },
+        buttons: {
+          on: {
+            label: "Show",
+            uiName: "Show Magnifier",
+            tooltip: "Turn on Magnifier that follows mouse|Turns on a Magnifying Lens. (Right-click to change settings)",
+          },
+          off: {
+            label: "Hide",
+            uiName: "Hide Magnifier",
+            tooltip: "Turn off the magnifier|(Right-click to change magnifier settings)"
           }
         }
       }

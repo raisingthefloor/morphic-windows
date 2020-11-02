@@ -14,6 +14,8 @@
             this.InitializeComponent();
         }
 
+        public int Offset { get; set; } = 0;
+
         private int numberOfPages = 1;
         public int NumberOfPages
         {
@@ -65,7 +67,7 @@
                 {
                     this.StackPanel.Children.Add(this.CreateLine());
                 }
-                this.StackPanel.Children.Add(this.CreateDot(i == this.CurrentPage));
+                this.StackPanel.Children.Add(this.CreateDot(i == this.CurrentPage - this.Offset));
             }
             this.InvalidateMeasure();
         }
