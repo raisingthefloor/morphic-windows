@@ -13,7 +13,6 @@ namespace Morphic.Client.Bar.Data
 {
     using System.Collections.Generic;
     using System.Text.RegularExpressions;
-    using System.Windows.Media;
     using Actions;
     using Newtonsoft.Json;
     using UI.BarControls;

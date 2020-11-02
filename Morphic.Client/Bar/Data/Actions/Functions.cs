@@ -2,42 +2,82 @@ namespace Morphic.Client.Bar.Data.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Linq;
     using System.Media;
     using System.Runtime.InteropServices;
     using System.Threading.Tasks;
-    using System.Windows.Forms;
+    using System.Windows;
     using Windows.Native;
     using global::Windows.Media.SpeechSynthesis;
     using Microsoft.Extensions.Logging;
-    using Microsoft.Win32;
+    using UI;
+    using Clipboard = System.Windows.Forms.Clipboard;
+    using IDataObject = System.Windows.Forms.IDataObject;
 
     [HasInternalFunctions]
-    public class Personal
+    // ReSharper disable once UnusedType.Global - accessed via reflection.
+    public class Functions
     {
-        /// <summary>
-        /// Increases or decreases the resolution.
-        /// </summary>
-        /// <param name="args">direction: "in" (zoom in), "out" (zoom out)</param>
-        /// <returns></returns>
-        [InternalFunction("screenZoom", "direction")]
-        public static Task<bool> ScreenZoom(FunctionArgs args)
+        [InternalFunction("screenshot")]
+        public static async Task<bool> Screenshot(FunctionArgs args)
         {
-            // double amount = args["direction"] switch
-            // {
-            //     "in" => Settings.Display.Primary.PercentageForZoomingIn,
-            //     "out" => Settings.Display.Primary.PercentageForZoomingOut,
-            //     _ => double.NaN
-            // };
-            //
-            // if (!double.IsNaN(amount))
-            // {
-            //     Settings.Display.Primary.Zoom(amount);
-            // }
+            // Hide all application windows
+            Dictionary<Window, double> opacity = new Dictionary<Window, double>();
+            HashSet<Window> visible = new HashSet<Window>();
+            try
+            {
+                foreach (Window window in App.Current.Windows)
+                {
+                    if (window is BarWindow || window is QuickHelpWindow) {
+                        if (window.AllowsTransparency)
+                        {
+                            opacity[window] = window.Opacity;
+                            window.Opacity = 0;
+                        }
+                        else
+                        {
+                            visible.Add(window);
+                            window.Visibility = Visibility.Collapsed;
+                        }
+                    }
+                }
 
+                // Give enough time for the windows to disappear
+                await Task.Delay(500);
+
+                // Hold down the windows key while pressing shift + s
+                const uint windowsKey = 0x5b; // VK_LWIN
+                Morphic.Windows.Native.Keyboard.PressKey(windowsKey, true);
+                System.Windows.Forms.SendKeys.SendWait("+s");
+                Morphic.Windows.Native.Keyboard.PressKey(windowsKey, false);
+
+            }
+            finally
+            {
+                // Give enough time for snip tool to grab the screen without the morphic UI.
+                await Task.Delay(3000);
+
+                // Restore the windows
+                foreach ((Window window, double o) in opacity)
+                {
+                    window.Opacity = o;
+                }
+
+                foreach (Window window in visible)
+                {
+                    window.Visibility = Visibility.Visible;
+                }
+            }
+
+            return true;
+        }
+
+        [InternalFunction("menu", "key=Morphic")]
+        public static Task<bool> ShowMenu(FunctionArgs args)
+        {
+            App.Current.ShowMenu();
             return Task.FromResult(true);
         }
 
@@ -68,52 +108,6 @@ namespace Morphic.Client.Bar.Data.Actions
             return Task.FromResult(true);
         }
 
-        /// <summary>
-        /// Start/stop the full screen magnifier.
-        /// </summary>
-        /// <param name="args">state: "on"/"off"</param>
-        /// <returns></returns>
-        [InternalFunction("magnifier", "state")]
-        public static Task<bool> Magnifier(FunctionArgs args)
-        {
-            bool success = true;
-            if (args["state"] == "on")
-            {
-                Registry.SetValue("HKEY_CURRENT_USER\\Software\\Microsoft\\ScreenMagnifier", "Magnification", 200);
-                Process? process = Process.Start(new ProcessStartInfo("magnify.exe", "/lens")
-                {
-                    UseShellExecute = true
-                });
-
-                success = process != null;
-            }
-            else
-            {
-                foreach (Process process in Process.GetProcessesByName("magnify"))
-                {
-                    process.Kill();
-                }
-            }
-
-            return Task.FromResult(success);
-        }
-
-        /// <summary>
-        /// Enables night-mode (blue-light reduction)
-        /// </summary>
-        /// <param name="args">state: "on"/"off"</param>
-        /// <returns></returns>
-        [InternalFunction("nightMode", "state")]
-        public static async Task<bool> NightMode(FunctionArgs args)
-        {
-            // TODO: re-implement using solutions registry.
-            // SystemSetting systemSetting = new Settings.SystemSettings.SystemSetting(
-            //     "SystemSettings_Display_BlueLight_ManualToggleQuickAction",
-            //     App.Current.ServiceProvider.GetRequiredService<ILogger<Settings.SystemSettings.SystemSetting>>());
-            //await systemSetting.SetValue(args["state"] == "on");
-            return true;
-        }
-
         // Plays the speech sound.
         private static SoundPlayer? speechPlayer;
 
@@ -134,9 +128,9 @@ namespace Morphic.Client.Bar.Data.Actions
 
                 case "stop":
                 case "play":
-                    Personal.speechPlayer?.Stop();
-                    Personal.speechPlayer?.Dispose();
-                    Personal.speechPlayer = null;
+                    Functions.speechPlayer?.Stop();
+                    Functions.speechPlayer?.Dispose();
+                    Functions.speechPlayer = null;
 
                     if (action == "stop")
                     {

@@ -14,7 +14,6 @@ namespace Morphic.Client.Bar.UI.BarControls
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.Linq;
-    using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Automation.Peers;
     using System.Windows.Automation.Provider;

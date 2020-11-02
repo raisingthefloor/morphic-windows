@@ -15,78 +15,7 @@ namespace Morphic.Client.Bar.Data.Actions
     using System.Linq;
     using System.Reflection;
     using System.Threading.Tasks;
-    using System.Windows;
-    using System.Windows.Controls;
-    using System.Windows.Forms;
-    using Menu;
     using Microsoft.Extensions.Logging;
-    using UI;
-
-    // ReSharper disable once UnusedType.Global - used via reflection.
-    [HasInternalFunctions]
-    public class Functions
-    {
-        [InternalFunction("screenshot")]
-        public static async Task<bool> Screenshot(FunctionArgs args)
-        {
-            // Hide all application windows
-            Dictionary<Window, double> opacity = new Dictionary<Window, double>();
-            HashSet<Window> visible = new HashSet<Window>();
-            try
-            {
-                foreach (Window window in App.Current.Windows)
-                {
-                    if (window is BarWindow || window is QuickHelpWindow) {
-                        if (window.AllowsTransparency)
-                        {
-                            opacity[window] = window.Opacity;
-                            window.Opacity = 0;
-                        }
-                        else
-                        {
-                            visible.Add(window);
-                            window.Visibility = Visibility.Collapsed;
-                        }
-                    }
-                }
-
-                // Give enough time for the windows to disappear
-                await Task.Delay(500);
-
-                // Hold down the windows key while pressing shift + s
-                const uint windowsKey = 0x5b; // VK_LWIN
-                Morphic.Windows.Native.Keyboard.PressKey(windowsKey, true);
-                SendKeys.SendWait("+s");
-                Morphic.Windows.Native.Keyboard.PressKey(windowsKey, false);
-
-            }
-            finally
-            {
-                // Give enough time for snip tool to grab the screen without the morphic UI.
-                await Task.Delay(3000);
-
-                // Restore the windows
-                foreach ((Window window, double o) in opacity)
-                {
-                    window.Opacity = o;
-                }
-
-                foreach (Window window in visible)
-                {
-                    window.Visibility = Visibility.Visible;
-                }
-            }
-
-            return true;
-        }
-
-        [InternalFunction("menu", "key=Morphic")]
-        public static Task<bool> ShowMenu(FunctionArgs args)
-        {
-            App.Current.ShowMenu();
-            return Task.FromResult(true);
-        }
-    }
 
     /// <summary>
     /// Handles the invocation of internal functions, used by the InternalAction class.
