@@ -22,7 +22,7 @@ namespace Morphic.Client.Config
         public static string AppDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? ".";
 
         public static string ConfigDir = Environment.GetEnvironmentVariable("MORPHIC_CONFIGDIR") ??
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MorphicCommunity");
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Morphic");
 
         public static string DefaultConfigDir = AppPaths.GetAppDir("DefaultConfig");
         public static string AssetsDir = AppPaths.GetAppDir("Assets");
