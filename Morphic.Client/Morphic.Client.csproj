@@ -152,10 +152,7 @@
   </ItemGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="copy &quot;appsettings.$(BuildType).json&quot; appsettings.json" />
-  </Target>
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent" Condition="'$(Edition)' != ''">
-    <Exec Command="copy Properties\features.$(Edition).txt features" />
+    <Exec Command="copy Properties\features.$(Edition).txt features &amp; copy &quot;appsettings.$(BuildType).json&quot; appsettings.json" />
   </Target>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
