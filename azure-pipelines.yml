@@ -42,13 +42,13 @@ variables:
 - name: versionBuildComponents
   value: '.$(Build.BuildNumber)'
 
-# resources:
-#   repositories:
-#     - repository: deploy-morphicweb
-#       type: github
-#       endpoint: oregondesignservices
-#       name: oregondesignservices/deploy-morphicweb
-#       ref: master
+ resources:
+   repositories:
+     - repository: deploy-morphicweb
+       type: github
+       endpoint: raisingthefloor
+       name: raisingthefloor/deploy-morphicweb
+       ref: master
 
 stages:
   - stage: build
@@ -183,10 +183,10 @@ stages:
         pool:
           vmImage: "ubuntu-18.04"
         steps:
-#           # We actually want to operate in the web project so we can update URLs (when necessary)
-#           - checkout: deploy-morphicweb
-#             persistCredentials: true
-#             path: deploy-morphicweb
+          # We actually want to operate in the web project so we can update URLs (when necessary)
+          - checkout: deploy-morphicweb
+            persistCredentials: true
+            path: deploy-morphicweb
           - download: current
             artifact: x64-installer
           - download: current
@@ -228,7 +228,7 @@ stages:
                   EXTRA_ARGS="--expires $(date -d '+2 days' --iso-8601=seconds)"
                 fi
 
-                S3_PUBLISHED_HTTP_URL="https://d23vryjv7k8eyb.cloudfront.net"
+                S3_PUBLISHED_HTTP_URL="https://dm1p5uyv81olz.cloudfront.net"
 
                 publishInstaller() {
                   VERSION=$(sed -n 1p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
@@ -269,24 +269,24 @@ stages:
                 COMMUNITY_S3_APPCAST_OBJECT_NAME=$S3_APPCAST_OBJECT_NAME
 
 
-#                 # TODO: do we want this to update staging and prod automatically, depending on branch?
-#                 if [[ "${BRANCH_NAME}" == "master" ]]; then
-#                   echo "updating dev environment urls"
-#                   # azure checks out headlessly, so we need to swap to the branch
-#                   git checkout ${BRANCH_NAME}
-# 
-#                   TO_EDIT=environments/dev/patches/set-env.yaml
-# 
-#                   # client
-#                   go run update-env-var.go ${TO_EDIT} "MORPHIC_WINDOWS_DOWNLOAD_URL" "${S3_PUBLISHED_HTTP_URL}/${MORPHIC_S3_MSI_OBJECT_NAME}"
-#                   go run update-env-var.go ${TO_EDIT} "MORPHIC_WINDOWS_APPCAST_URL" "${S3_PUBLISHED_HTTP_URL}/${MORPHIC_S3_APPCAST_OBJECT_NAME}"
-# 
-#                   # community client
-#                   go run update-env-var.go ${TO_EDIT} "MORPHIC_WINDOWS_COMMUNITY_DOWNLOAD_URL" "${S3_PUBLISHED_HTTP_URL}/${COMMUNITY_S3_MSI_OBJECT_NAME}"
-#                   go run update-env-var.go ${TO_EDIT} "MORPHIC_WINDOWS_COMMUNITY_APPCAST_URL" "${S3_PUBLISHED_HTTP_URL}/${COMMUNITY_S3_APPCAST_OBJECT_NAME}"
-# 
-#                   git config --global user.email "buildmaster@raisingthefloor.org"
-#                   git config --global user.name "buildmaster"
-#                   git commit ${TO_EDIT} -m "buildmaster: updating windows client urls"
-#                   git push
-#                 fi
+                # TODO: do we want this to update staging and prod automatically, depending on branch?
+                if [[ "${BRANCH_NAME}" == "master" ]]; then
+                  echo "updating dev environment urls"
+                  # azure checks out headlessly, so we need to swap to the branch
+                  git checkout ${BRANCH_NAME}
+
+                  TO_EDIT=environments/dev/patches/set-env.yaml
+
+                  # client
+                  go run update-env-var.go ${TO_EDIT} "MORPHIC_WINDOWS_DOWNLOAD_URL" "${S3_PUBLISHED_HTTP_URL}/${MORPHIC_S3_MSI_OBJECT_NAME}"
+                  go run update-env-var.go ${TO_EDIT} "MORPHIC_WINDOWS_APPCAST_URL" "${S3_PUBLISHED_HTTP_URL}/${MORPHIC_S3_APPCAST_OBJECT_NAME}"
+
+                  # community client
+                  go run update-env-var.go ${TO_EDIT} "MORPHIC_WINDOWS_COMMUNITY_DOWNLOAD_URL" "${S3_PUBLISHED_HTTP_URL}/${COMMUNITY_S3_MSI_OBJECT_NAME}"
+                  go run update-env-var.go ${TO_EDIT} "MORPHIC_WINDOWS_COMMUNITY_APPCAST_URL" "${S3_PUBLISHED_HTTP_URL}/${COMMUNITY_S3_APPCAST_OBJECT_NAME}"
+
+                  git config --global user.email "buildmaster@raisingthefloor.org"
+                  git config --global user.name "buildmaster"
+                  git commit ${TO_EDIT} -m "buildmaster: updating windows client urls"
+                  git push
+                fi
