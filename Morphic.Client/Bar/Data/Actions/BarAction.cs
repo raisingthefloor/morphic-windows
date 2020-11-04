@@ -127,6 +127,8 @@ namespace Morphic.Client.Bar.Data.Actions
             Dictionary<string, string> resolvedArgs = this.Arguments
                 .ToDictionary(kv => kv.Key, kv => this.ResolveString(kv.Value, source) ?? string.Empty);
 
+            resolvedArgs.Add("state", toggleState == true ? "on" : "off");
+
             return InternalFunctions.Default.InvokeFunction(this.FunctionName, resolvedArgs);
         }
     }

@@ -104,16 +104,21 @@
               demo: "color"
             }
           },
-//          "": {
-//            label: "Dark",
-//            uiName: "Dark Mode on, off",
-//            tooltip: "Turn Dark Mode on and off|Toggles Dark mode on and off. (Right-click to adjust)",
-//            menu: {
-//              setting: "colors",
-//              learn: "darkmode",
-//              demo: "darkmode"
-//            }
-//          },
+          "dark-mode": {
+            action: {
+              kind: "internal",
+              function: "darkMode"
+            },
+            func: "menu",
+            label: "Dark",
+            uiName: "Dark Mode on, off",
+            tooltip: "Turn Dark Mode on and off|Toggles Dark mode on and off. (Right-click to adjust)",
+            menu: {
+              setting: "colors",
+              learn: "darkmode",
+              demo: "darkmode"
+            }
+          },
           "com.microsoft.windows.nightMode/enabled": {
             label: "Night",
             uiName: "Night Light on, off",

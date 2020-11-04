@@ -88,5 +88,16 @@
         }
       }
     ]
+  },
+  "com.microsoft.windows.lightTheme": {
+    settings: [
+      {
+        type: "systemSettings",
+        settings: {
+          apps: "SystemSettings_Personalize_Color_AppsUseLightTheme:bool",
+          system: "SystemSettings_Personalize_Color_SystemUsesLightTheme:bool",
+        }
+      }
+    ]
   }
 }

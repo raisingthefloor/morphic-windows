@@ -12,6 +12,8 @@ namespace Morphic.Client.Bar.Data.Actions
     using Windows.Native;
     using global::Windows.Media.SpeechSynthesis;
     using Microsoft.Extensions.Logging;
+    using Settings.SettingsHandlers;
+    using Settings.SolutionsRegistry;
     using UI;
     using Clipboard = System.Windows.Forms.Clipboard;
     using IDataObject = System.Windows.Forms.IDataObject;
@@ -187,6 +189,16 @@ namespace Morphic.Client.Bar.Data.Actions
         {
             await SelectionReader.Default.ActivateLastActiveWindow();
             System.Windows.Forms.SendKeys.SendWait(args["keys"]);
+            return true;
+        }
+
+        [InternalFunction("darkMode")]
+        public static async Task<bool> DarkMode(FunctionArgs args)
+        {
+            bool on = args["state"] == "on";
+
+            Setting appSetting = App.Current.MorphicSession.Solutions.GetSetting(SettingId.LightThemeApps);
+            await appSetting.SetValue(!on);
             return true;
         }
 

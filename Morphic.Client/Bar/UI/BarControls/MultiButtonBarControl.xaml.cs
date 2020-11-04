@@ -162,13 +162,9 @@ namespace Morphic.Client.Bar.UI.BarControls
 
             if (buttonInfo != null)
             {
-                // Call either the bar item's action, or the button's own action if it has one.
-                BarAction action = (buttonInfo.Action is NoOpAction)
-                    ? this.BarItem.Action
-                    : buttonInfo.Action;
-
+                // Call the button action.
                 bool? state = (sender as ToggleButton)?.IsChecked;
-                action.Invoke(buttonInfo.Value, state);
+                buttonInfo.Action.Invoke(buttonInfo.Value, state);
             }
         }
 
@@ -267,9 +263,9 @@ namespace Morphic.Client.Bar.UI.BarControls
                 };
 
                 // For settings controls, get the current value and listen for a change.
-                if (this.Button.Toggle && this.Button.BarItem is BarSettingItem settingItem)
+                if (this.Button.Toggle && this.Button.Action is SettingAction settingAction)
                 {
-                    Setting setting = settingItem.Solutions.GetSetting(this.Button.Id);
+                    Setting setting = settingAction.Solutions.GetSetting(this.Button.Id);
                     setting.Changed += this.SettingOnChanged;
 
                     this.Control.Unloaded += (sender, args) => setting.Changed -= this.SettingOnChanged;
