@@ -22,9 +22,7 @@
 // * Consumer Electronics Association Foundation
 
 using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Morphic.Windows.Native
 {
@@ -520,7 +518,7 @@ namespace Morphic.Windows.Native
         //
         // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-changedisplaysettingsexw
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        internal static extern DISP_CHANGE_RESULT ChangeDisplaySettingsEx(Char[] lpszDeviceName, ref DEVMODEW lpDevMode, IntPtr hwnd, UInt32 dwflags, IntPtr lParam);
+        internal static extern DISP_CHANGE_RESULT ChangeDisplaySettingsEx(string? lpszDeviceName, ref DEVMODEW lpDevMode, IntPtr hwnd, uint dwflags, IntPtr lParam);
         //
         // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-enumdisplaydevicesw
         [DllImport("user32.dll", EntryPoint = "EnumDisplayDevices", CharSet = CharSet.Unicode)]
@@ -532,7 +530,7 @@ namespace Morphic.Windows.Native
         //
         // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-enumdisplaysettingsexw
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        internal static extern Boolean EnumDisplaySettingsEx(Char[] lpszDeviceName, UInt32 iModeNum, ref DEVMODEW lpDevMode, UInt32 dwFlags);
+        internal static extern Boolean EnumDisplaySettingsEx(string? lpszDeviceName, uint iModeNum, ref DEVMODEW lpDevMode, uint dwFlags);
         //
         // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-enumdisplaymonitors
         [DllImport("user32.dll")]

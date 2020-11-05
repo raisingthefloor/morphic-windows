@@ -1,0 +1,141 @@
+﻿<barControls:BarItemControl x:Class="Morphic.Client.Bar.UI.BarControls.MultiButtonBarControl"
+                         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                         xmlns:barControls="clr-namespace:Morphic.Client.Bar.UI.BarControls"
+                         xmlns:ui="clr-namespace:Morphic.Client.Bar.UI"
+                         mc:Ignorable="d"
+                         MinHeight="10"
+                         d:xMaxHeight="150"
+                         d:DataContext="{d:DesignInstance barControls:MultiButtonBarControl, IsDesignTimeCreatable=True}"
+                         Focusable="True"
+                         IsTabStop="True"
+
+                         >
+    <barControls:BarItemControl.Resources>
+        <SolidColorBrush x:Key="BorderColor" Color="{Binding ActiveTheme.BorderColor, FallbackValue=Transparent}"/>
+        <SolidColorBrush x:Key="BorderOuterColor" Color="{Binding ActiveTheme.BorderOuterColor, FallbackValue=Transparent}"/>
+
+        <ui:Ternary x:Key="BoolVisibility" False="Collapse" True="Visible" />
+
+        <!-- Make the button style-less -->
+        <Style BasedOn="{StaticResource {x:Static ToolBar.ToggleButtonStyleKey}}" TargetType="{x:Type ToggleButton}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                        <ContentPresenter />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+    </barControls:BarItemControl.Resources>
+
+    <barControls:BarItemControl.Foreground>
+        <SolidColorBrush Color="{Binding Bar.BarTheme.TextColor}"></SolidColorBrush>
+    </barControls:BarItemControl.Foreground>
+
+    <Grid>
+        <StackPanel HorizontalAlignment="Stretch"
+                    Name="Panel">
+
+            <!-- The text label -->
+            <ui:TextBlockLimited Text="{Binding BarItem.Text}"
+                                 TextWrapping="Wrap"
+                                 FontSize="{Binding Bar.Sizes.ControlLabelFontSize}"
+                                 FontWeight="{Binding Bar.Sizes.ControlLabelFontWeight}"
+                                 TextAlignment="Center"
+                                 MaxLines="{Binding Bar.Sizes.ButtonTextLines}"
+                                 Margin="{Binding Bar.Sizes.ControlLabelMargin}"/>
+
+            <!-- The buttons -->
+            <ItemsControl x:Name="ButtonContainer"
+                          HorizontalAlignment="Center"
+                          ItemsSource="{Binding Buttons}"
+                          FontSize="{Binding Bar.Sizes.ControlButtonFontSize}"
+                          FontWeight="{Binding Bar.Sizes.ControlButtonFontWeight}"
+                          >
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <barControls:MultiButtonPanel
+                            ParentOrientation="{Binding Orientation}"
+                            VariableWidth="{Binding BarItem.AutoSize}"
+                            CornerRadius="{Binding Bar.Sizes.ControlCornerRadius}"
+                            />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <ToggleButton Name="ControlButton"
+                                      HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                      VerticalAlignment="Stretch" VerticalContentAlignment="Center"
+                                      Margin="{Binding Bar.Sizes.ControlButtonMargin}"
+                                      Height="{Binding Bar.Sizes.ControlButtonHeight}"
+                                      ToolTip="{Binding Button.Tooltip}"
+                                      AutomationProperties.Name="{Binding Button.UiName}"
+                                      AutomationProperties.LabeledBy="{Binding Button.BarItem.UiName}"
+                                      Click="Button_OnClick"
+                                      MouseRightButtonUp="Button_OnRightClick"
+                                      Checked="Button_Checked"
+                        >
+                            <ToggleButton.Foreground>
+                                <SolidColorBrush Color="{Binding ActiveTheme.TextColor}" />
+                            </ToggleButton.Foreground>
+
+                            <!-- Outer border -->
+                            <Border SnapsToDevicePixels="True"
+                                    BorderThickness="{Binding ActiveTheme.BorderOuterSize}">
+                                <Border.BorderBrush>
+                                    <SolidColorBrush Color="{Binding ActiveTheme.BorderOuterColor}"/>
+                                </Border.BorderBrush>
+
+                                <Grid>
+                                    <!-- Inner border -->
+                                    <Border x:Name="ButtonBorder"
+                                            SnapsToDevicePixels="True"
+                                            BorderThickness="{Binding ActiveTheme.BorderSize}">
+                                        <Border.BorderBrush>
+                                            <SolidColorBrush Color="{Binding ActiveTheme.BorderColor}"/>
+                                        </Border.BorderBrush>
+                                        <Border.Background>
+                                            <SolidColorBrush Color="{Binding ActiveTheme.Background}" />
+                                        </Border.Background>
+                                    </Border>
+
+                                        <!-- Button text -->
+                                        <TextBlock Visibility="{Binding Text, Converter={StaticResource BoolVisibility}}"
+                                                   Text="{Binding Text}"
+                                                   Padding="{Binding Button.BarItem.Bar.Sizes.ControlButtonPadding}"
+                                                   TextAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   />
+                                        <!-- Button image -->
+                                        <Image Visibility="{Binding ImageSource, Converter={StaticResource BoolVisibility}}"
+                                               Margin="{Binding Button.BarItem.Bar.Sizes.ControlButtonPadding}"
+                                               Height="{Binding Button.BarItem.Bar.Sizes.ControlButtonFontSize}"
+                                               Source="{Binding ImageSource}"
+                                               Stretch="Uniform"
+                                               />
+
+                                    </Grid>
+                            </Border>
+                        </ToggleButton>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+        <!-- Border -->
+        <Border
+            SnapsToDevicePixels="True"
+            BorderBrush="{DynamicResource BorderOuterColor}"
+            BorderThickness="{Binding ActiveTheme.BorderOuterSize, FallbackValue=0}"
+            >
+            <Border
+                SnapsToDevicePixels="True"
+                BorderBrush="{DynamicResource BorderColor}"
+                BorderThickness="{Binding ActiveTheme.BorderSize, FallbackValue=0}"
+            />
+        </Border>
+    </Grid>
+</barControls:BarItemControl>

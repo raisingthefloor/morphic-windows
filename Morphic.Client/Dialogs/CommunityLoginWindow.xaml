@@ -1,0 +1,25 @@
+<Window x:Class="Morphic.Client.Dialogs.CommunityLoginWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:dialogs="clr-namespace:Morphic.Client.Dialogs"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance dialogs:LoginWindow}"
+        Title="Login" SizeToContent="Height" Width="300">
+    <StackPanel Margin="20">
+
+        <TextBlock FontSize="20">Login</TextBlock>
+
+        <TextBlock Name="ErrorLabel" Text="Unrecognized Login" Foreground="#ff0000" HorizontalAlignment="Center" Visibility="Hidden">
+        </TextBlock>
+
+        <Label Content="Username"/>
+        <TextBox Name="UsernameBox" Margin="0 0 0 10"/>
+        
+        <Label Content="Password"/>
+        <PasswordBox Name="PasswordBox" Margin="0 0 0 10"/>
+        
+        <Button Name="LoginButton" Content="Login" Click="LoginButton_Click" Margin="20" IsDefault="True" />
+    </StackPanel>
+</Window>

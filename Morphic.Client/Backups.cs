@@ -6,24 +6,24 @@
     using System.Linq;
     using System.Text.Json;
     using System.Threading.Tasks;
+    using Config;
     using Core;
     using Microsoft.Extensions.Logging;
     using Service;
-    using Settings;
     using Path = System.IO.Path;
 
     public class Backups
     {
-        private readonly Session session;
+        private readonly MorphicSession morphicSession;
         private readonly ILogger<Backups> logger;
         private readonly IServiceProvider serviceProvider;
 
-        public static string BackupDirectory => Path.Combine(App.Shared.ApplicationDataFolderPath, "backups");
+        public static string BackupDirectory => AppPaths.GetConfigDir("backups");
         private static readonly string BackupExtension = ".preferences";
 
-        public Backups(Session session, ILogger<Backups> logger, IServiceProvider serviceProvider)
+        public Backups(MorphicSession morphicSession, ILogger<Backups> logger, IServiceProvider serviceProvider)
         {
-            this.session = session;
+            this.morphicSession = morphicSession;
             this.logger = logger;
             this.serviceProvider = serviceProvider;
         }
@@ -40,9 +40,7 @@
             if (preferences == null)
             {
                 preferences = new Preferences();
-                CaptureSession captureSession = new CaptureSession(App.Shared.Session.SettingsManager, preferences);
-                captureSession.AddAllSolutions();
-                await captureSession.Run();
+                await this.morphicSession.Solutions.CapturePreferences(preferences);
             }
 
             string json = JsonSerializer.Serialize(preferences);
@@ -89,8 +87,8 @@
             string json = await File.ReadAllTextAsync(path);
             JsonSerializerOptions options = new JsonSerializerOptions();
             options.Converters.Add(new JsonElementInferredTypeConverter());
-            this.session.Preferences = JsonSerializer.Deserialize<Preferences>(json, options);
-            await session.ApplyAllPreferences();
+            this.morphicSession.Preferences = JsonSerializer.Deserialize<Preferences>(json, options);
+            await this.morphicSession.ApplyAllPreferences();
         }
     }
 }

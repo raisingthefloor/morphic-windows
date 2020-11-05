@@ -95,6 +95,7 @@ stages:
         - task: VSBuild@1
           displayName: "build solutions"
           env:
+            Edition: 'Basic'
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
           inputs:
             solution: '$(solution)'
@@ -112,18 +113,9 @@ stages:
           displayName: "build x64 installer"
           env:
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
+            Edition: 'Basic'
           inputs:
             solution: 'Morphic.Setup\Morphic.Setup.wixproj'
-            platform: 'x64'
-            configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:BuildType=$(BUILD_TYPE)'
-
-        - task: VSBuild@1
-          displayName: "build x64 community installer"
-          env:
-            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
-          inputs:
-            solution: 'Morphic.BarSetup\Morphic.BarSetup.wixproj'
             platform: 'x64'
             configuration: '$(buildConfiguration)'
             msbuildArgs: '/p:BuildType=$(BUILD_TYPE)'
@@ -134,7 +126,7 @@ stages:
             command: 'custom'
             custom: 'tool'
             arguments: 'install --global azuresigntool'
-            
+
         - task: CmdLine@2
           displayName: 'sign x64 installer'
           inputs:
@@ -142,17 +134,28 @@ stages:
             script: >
               AzureSignTool sign
               -d Morphic
-              -du "$(SigningURL)" 
-              -kvu "$(SigningVaultURL)" 
-              -kvi "$(SigningClientId)" 
-              -kvs "$(SigningClientSecret)" 
+              -du "$(SigningURL)"
+              -kvu "$(SigningVaultURL)"
+              -kvi "$(SigningClientId)"
+              -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl)"
-              -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicSetup.msi
-        
-        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicSetup.msi
+              -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicBasicSetup.msi
+
+        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicBasicSetup.msi
           displayName: "save x64 installer for later"
           artifact: x64-installer
+
+        - task: VSBuild@1
+          displayName: "build x64 community installer"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
+            Edition: 'Community'
+          inputs:
+            solution: 'Morphic.Setup\Morphic.Setup.wixproj'
+            platform: 'x64'
+            configuration: '$(buildConfiguration)'
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE)'
 
         - task: CmdLine@2
           displayName: 'sign x64 community installer'
@@ -167,9 +170,9 @@ stages:
               -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl)"
-              -v $(System.DefaultWorkingDirectory)\Morphic.BarSetup\bin\Release\x64\MorphicCommunitySetup.msi
+              -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicCommunitySetup.msi
 
-        - publish: $(System.DefaultWorkingDirectory)\Morphic.BarSetup\bin\Release\x64\MorphicCommunitySetup.msi
+        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicCommunitySetup.msi
           displayName: "save x64 community installer for later"
           artifact: x64-community-installer
 
@@ -254,7 +257,7 @@ stages:
                   aws s3 cp $EXTRA_ARGS "${LOCAL_APPCAST_SOURCE}" "s3://${BUCKET}/${S3_APPCAST_OBJECT_NAME}"
                 }
 
-                INSTALLER_NAME_BASE="MorphicSetup"
+                INSTALLER_NAME_BASE="MorphicBasicSetup"
                 LOCAL_MSI_DIR="x64-installer"
                 publishInstaller
 

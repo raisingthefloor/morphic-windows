@@ -1,0 +1,103 @@
+﻿{
+  solutionId: {
+    settings: [
+      // settings
+    ],
+    platform: {
+      os: "windows",
+      ver: "123+"
+    }
+  },
+  "com.microsoft.windows.magnifier": {
+    settings: [
+      {
+        type: "process",
+        path: "magnify.exe",
+        settings: {
+          enabled: "isRunning"
+        }
+      },
+      {
+        type: "registry",
+        path: "HKCU\\Software\\Microsoft\\ScreenMagnifier",
+        settings: {
+          magnification: {
+            name: "Magnification",
+            dataType: "int",
+          }
+        }
+      }
+    ]
+  },
+  "com.microsoft.windows.colorFilters": {
+    settings: [
+      {
+        type: "systemSettings",
+        settings: {
+          enabled: "SystemSettings_Accessibility_ColorFiltering_IsEnabled:bool",
+          filterType: "SystemSettings_Accessibility_ColorFiltering_FilterType:int"
+        }
+      }
+    ]
+  },
+  "com.microsoft.windows.highContrast": {
+    settings: [
+      {
+        type: "systemSettings",
+        settings: {
+          enabled: "SystemSettings_Accessibility_CoreHighContrast_IsEnabled:bool"
+        }
+      }
+    ]
+  },
+  "com.microsoft.windows.narrator": {
+    settings: [
+      {
+        type: "systemSettings",
+        settings: {
+          enabled: "SystemSettings_Accessibility_Narrator_IsEnabled:bool"
+        }
+      }
+    ]
+  },
+  "com.microsoft.windows.display": {
+    settings: [
+      {
+        type: "displaySettings",
+        settings: {
+          count: "resolutionCount",
+          zoom: {
+            name: "zoom",
+            dataType: "int",
+            local: true,
+            range: {
+              min: 0,
+              max: "count"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "com.microsoft.windows.nightMode": {
+    settings: [
+      {
+        type: "systemSettings",
+        settings: {
+          enabled: "SystemSettings_Display_BlueLight_ManualToggleQuickAction:bool",
+        }
+      }
+    ]
+  },
+  "com.microsoft.windows.lightTheme": {
+    settings: [
+      {
+        type: "systemSettings",
+        settings: {
+          apps: "SystemSettings_Personalize_Color_AppsUseLightTheme:bool",
+          system: "SystemSettings_Personalize_Color_SystemUsesLightTheme:bool",
+        }
+      }
+    ]
+  }
+}

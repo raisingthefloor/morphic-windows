@@ -21,10 +21,6 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace Morphic.Core
 {
     /// <summary>
