@@ -228,7 +228,7 @@ stages:
                   EXTRA_ARGS="--expires $(date -d '+2 days' --iso-8601=seconds)"
                 fi
 
-                S3_PUBLISHED_HTTP_URL="https://dm1p5uyv81olz.cloudfront.net"
+                S3_PUBLISHED_HTTP_URL="https://d23vryjv7k8eyb.cloudfront.net"
 
                 publishInstaller() {
                   VERSION=$(sed -n 1p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
