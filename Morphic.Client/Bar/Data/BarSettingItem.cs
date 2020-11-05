@@ -36,13 +36,13 @@
                 if (setting.Range != null)
                 {
                     this.Type = MultiButtonType.Additive;
-                    this.Buttons["dec"] = new ButtonInfo()
-                    {
-                        Text = "-"
-                    };
                     this.Buttons["inc"] = new ButtonInfo()
                     {
                         Text = "+"
+                    };
+                    this.Buttons["dec"] = new ButtonInfo()
+                    {
+                        Text = "-"
                     };
                 }
                 else
