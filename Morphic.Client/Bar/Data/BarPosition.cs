@@ -34,10 +34,32 @@ namespace Morphic.Client.Bar.Data
 
         /// <summary>
         /// The side of the screen where the bar will be docked, reserving the desktop work area.
+        /// "disable" will prevent the user from docking it.
         /// </summary>
         [JsonProperty("docked", NullValueHandling = NullValueHandling.Ignore)]
-        [JsonConverter(typeof(StringEnumConverter))]
+        private string Docked
+        {
+            set
+            {
+                if (value.StartsWith("disable", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    this.AllowDocking = false;
+                    this.DockEdge = Edge.None;
+                }
+                else if (Enum.TryParse(value, true, out Edge edge))
+                {
+                    this.DockEdge = edge;
+                }
+            }
+        }
+
+        /// <summary>
+        /// The side of the screen where the bar will be docked, reserving the desktop work area.
+        /// </summary>
         public Edge DockEdge { get; set; } = Edge.None;
+
+        /// <summary>Bar can be docked to the edges (like the taskbar).</summary>
+        public bool AllowDocking { get; private set; } = true;
 
         /// <summary>
         /// The horizontal position of the bar. Can be "Left", "Middle", "Right", a number, or a percentage.

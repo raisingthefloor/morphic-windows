@@ -94,7 +94,7 @@ namespace Morphic.Client.Bar.UI
             this.WindowMovement = new WindowMovement(this);
             this.AppBar = new AppBar(this, this.WindowMovement)
             {
-                EnableDocking = isPrimary
+                EnableDocking = isPrimary && this.Bar.Position.AllowDocking
             };
 
             // Move it off the screen until it's loaded.
