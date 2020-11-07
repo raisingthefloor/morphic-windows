@@ -21,10 +21,10 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System;
-
-namespace Morphic.Windows.Native
+namespace Morphic.Windows.Native.Processor
 {
+    using System;
+
     public class Processor
     {
         public enum ProcessorArchitecture

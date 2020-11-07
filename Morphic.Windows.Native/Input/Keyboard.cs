@@ -7,7 +7,7 @@
 // https://github.com/GPII/universal/blob/master/LICENSE.txt
 
 
-namespace Morphic.Windows.Native
+namespace Morphic.Windows.Native.Input
 {
     using System;
     using System.Runtime.InteropServices;

@@ -21,49 +21,14 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System;
-
-namespace Morphic.Windows.Native
+namespace Morphic.Windows.Native.Input
 {
     public class Mouse
     {
-        public static Boolean? GetMouseButtonsAreSwapped()
+        /// <summary>Set the position of the mouse pointer.</summary>
+        public static void SetPosition(int x, int y)
         {
-            // first, make sure that a mouse is present
-            if (Mouse.GetMouseIsPresent() == false)
-            {
-                return null;
-            }
-
-            var mouseButtonsAreSwapped = WindowsApi.GetSystemMetrics(WindowsApi.SystemMetricIndex.SM_SWAPBUTTON);
-            return mouseButtonsAreSwapped != 0 ? true : false;
+            WindowsApi.SetCursorPos(x, y);
         }
-
-        // NOTE: historically, virtually all Windows machines will believe that a mouse is present: even if no mouse is plugged in, the presence of a "mouse port" can also register as presence of a mouse
-        public static Boolean GetMouseIsPresent()
-        {
-            var mouseIsPresent = WindowsApi.GetSystemMetrics(WindowsApi.SystemMetricIndex.SM_MOUSEPRESENT);
-            return mouseIsPresent != 0 ? true : false;
-        }
-
-        //public static Int32? GetMousePointerSpeed()
-        //{
-        //    // first, make sure that a mouse is present
-        //    if (MorphicMouse.GetMouseIsPresent() == false)
-        //    {
-        //        return null;
-        //    }
-
-        //    Int32[] mouseInfo = new Int32[3];
-        //    var getMouseInfoResult = SystemParametersInfo(SPI_GETMOUSE, 0, &mouseInfo, 0);
-        //    if (getMouseInfoResult == 0)
-        //    {
-        //        return null;
-        //    }
-
-        //    // mouse pointer speed is stored in mouseInfo at element index 2
-        //    return mouseInfo[2];
-        //}
-
     }
 }

@@ -21,10 +21,10 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System;
-
-namespace Morphic.Windows.Native.WindowsCoreAudio
+namespace Morphic.Windows.Native.WindowsCom
 {
+    using System;
+
     // https://docs.microsoft.com/en-us/windows/win32/api/wtypesbase/ne-wtypesbase-clsctx
     [Flags]
     internal enum CLSCTX: Int32
