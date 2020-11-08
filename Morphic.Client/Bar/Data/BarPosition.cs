@@ -61,6 +61,10 @@ namespace Morphic.Client.Bar.Data
         /// <summary>Bar can be docked to the edges (like the taskbar).</summary>
         public bool AllowDocking { get; private set; } = true;
 
+        /// <summary>Bar is restricted to the screen corners.</summary>
+        [JsonProperty("restricted")]
+        public bool Restricted { get; private set; }
+
         /// <summary>
         /// The horizontal position of the bar. Can be "Left", "Middle", "Right", a number, or a percentage.
         /// Numbers or percentages can be negative (including -0), meaning distance from the right.

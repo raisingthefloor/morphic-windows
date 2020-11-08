@@ -18,7 +18,10 @@ Bar = {
   // Initial position
   position: {
       // Dock it to an edge, reserving desktop space
-      docked: "left", // "left", "right", "top", "bottom", or "none" (default)
+      docked: "left", // "left", "right", "top", "bottom", "none" (default), or "disable".
+
+      horizontal: false, // true for horizontal orientation.
+      restricted: false, // true to restrict the position to just the corners
 
       // Position of the bar. Can be "Left"/"Top", "Middle", "Right"/"Bottom", a number, or a percentage.
       // Numbers or percentages can be negative (including -0), meaning distance from the right.

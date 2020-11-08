@@ -4,6 +4,7 @@
   position: {
     docked: "disable",
     horizontal: true,
+    restricted: true,
     x: -1,
     y: "bottom",
     secondary: "bottom",

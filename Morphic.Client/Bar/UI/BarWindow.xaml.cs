@@ -157,9 +157,8 @@ namespace Morphic.Client.Bar.UI
             SettingsHandler.SystemSettingChanged();
         }
 
-        protected void SystemEventsOnDisplaySettingsChanged(object? sender, EventArgs e)
+        protected virtual void SystemEventsOnDisplaySettingsChanged(object? sender, EventArgs e)
         {
-            this.SetInitialPosition();
             this.SystemEventsOnSettingsChanged(sender, e);
         }
 
