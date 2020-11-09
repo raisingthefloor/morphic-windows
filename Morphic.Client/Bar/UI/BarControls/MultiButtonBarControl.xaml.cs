@@ -58,6 +58,7 @@ namespace Morphic.Client.Bar.UI.BarControls
             bool isPair = (this.BarItem.Type == MultiButtonType.Toggle
                 || this.BarItem.Type == MultiButtonType.Additive);
 
+#if CombinePairs
             // For keyboard navigation, paired buttons act as a single control
             this.Focusable = isPair;
             this.Panel.SetValue(FocusManager.IsFocusScopeProperty, isPair);
@@ -65,6 +66,7 @@ namespace Morphic.Client.Bar.UI.BarControls
                 isPair ? KeyboardNavigationMode.None : KeyboardNavigationMode.Continue);
             this.Panel.SetValue(KeyboardNavigation.TabNavigationProperty,
                 isPair ? KeyboardNavigationMode.None : KeyboardNavigationMode.Continue);
+#endif
 
             if (isPair)
             {
