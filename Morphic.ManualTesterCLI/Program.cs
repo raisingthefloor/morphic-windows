@@ -13,7 +13,11 @@ namespace Morphic.ManualTesterCLI
             {
                 try
                 {
-                    await manager.Load(args[0]);
+                    if (!manager.Load(args[0]))
+                    {
+                        Console.WriteLine("[ERROR]: Could not load file {0} as a valid solutions registry JSON file. Check filename and try again.", args[0]);
+                        return;
+                    }
                     switch (args[1])
                     {
                         case "list":
@@ -93,7 +97,11 @@ namespace Morphic.ManualTesterCLI
                 {
                     try
                     {
-                        await manager.Load(args[0]);
+                        if (!manager.Load(args[0]))
+                        {
+                            Console.WriteLine("[ERROR]: Could not load file {0} as a valid solutions registry JSON file. Check filename and try again.", args[0]);
+                            return;
+                        }
                         Console.Clear();
                         Console.WriteLine("Solutions file loaded successfully.");
                         Console.WriteLine("Welcome to the Morphic Manual Solutions Registry Tester.");

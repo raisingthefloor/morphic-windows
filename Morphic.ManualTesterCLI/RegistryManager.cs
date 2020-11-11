@@ -1,61 +1,63 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Morphic.Core;
 using Morphic.Settings;
+using Morphic.Settings.SettingsHandlers;
+using Morphic.Settings.SolutionsRegistry;
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 
 namespace Morphic.ManualTesterCLI
 {
     public class RegistryManager
     {
-        private SettingsManager manager;
+        private ServiceProvider provider;
+        private Solutions solutions;
 
         public RegistryManager()
         {
             var services = new ServiceCollection();
             services.AddLogging();
             services.AddSingleton<IServiceProvider>(provider => provider);
-            services.AddSingleton<SettingsManager>();
             var serviceprovider = services.BuildServiceProvider();
-            manager = serviceprovider.GetRequiredService<SettingsManager>();
         }
 
-        public async Task<bool> Load(string filepath)
+        public bool Load(string filepath)
         {
-            await manager.Populate(filepath);
-            return manager.SolutionsById.Count != 0;
+            solutions = Solutions.FromFile(provider, filepath);
+            return solutions.All.Count != 0;
         }
 
         public void List()
         {
-            foreach(var solution in manager.SolutionsById.Values)
+            foreach (var solution in solutions.All.Values)
             {
-                Console.WriteLine(solution.Id + ":");
-                foreach(var setting in solution.SettingsByName.Values)
+                Console.WriteLine(solution.SolutionId + ":");
+                foreach (var setting in solution.AllSettings.Values)
                 {
-                    Console.WriteLine("\t" + setting.Name + " [" + setting.Kind.ToString() + "]");
+                    Console.WriteLine("\t" + setting.Name + " [" + setting.DataType.ToString() + "]");
                 }
             }
         }
 
         public void ListSolutions()
         {
-            foreach(var solution in manager.SolutionsById.Values)
+            foreach (var solution in solutions.All.Values)
             {
-                Console.WriteLine(solution.Id);
+                Console.WriteLine(solution.SolutionId);
             }
         }
 
-        public void ListSpecific(string solution)
+        public void ListSpecific(string solutionId)
         {
-            foreach(var sol in manager.SolutionsById.Values)
+            foreach (var solution in solutions.All.Values)
             {
-                if(sol.Id == solution)
+                if (solution.SolutionId == solutionId)
                 {
-                    Console.WriteLine(sol.Id + ":");
-                    foreach(var setting in sol.SettingsByName.Values)
+                    Console.WriteLine(solution.SolutionId + ":");
+                    foreach (var setting in solution.AllSettings.Values)
                     {
-                        Console.WriteLine("\t" + setting.Name + " [" + setting.Kind.ToString() + "]");
+                        Console.WriteLine("\t" + setting.Name + " [" + setting.DataType.ToString() + "]");
                     }
                     return;
                 }
@@ -66,8 +68,8 @@ namespace Morphic.ManualTesterCLI
         public void Info(string solution, string preference)
         {
             //not sure what to do with this command without debugdescription
-            var setting = manager.Get(new Preferences.Key(solution, preference));
-            if(setting != null)
+            var setting = solutions.GetSolution(solution).GetSetting(preference);
+            if (setting != null)
             {
                 Console.WriteLine(setting.ToString());
             }
@@ -77,15 +79,15 @@ namespace Morphic.ManualTesterCLI
         public async Task Get(string? solution = null)
         {
             bool allSolutions = (solution == null);
-            foreach(var sol in manager.SolutionsById.Values)
+            foreach (var sol in solutions.All.Values)
             {
-                if(allSolutions || solution == sol.Id)
+                if (allSolutions || solution == sol.SolutionId)
                 {
-                    Console.WriteLine(sol.Id + ":");
-                    foreach(var setting in sol.SettingsByName.Values)
+                    Console.WriteLine(sol.SolutionId + ":");
+                    foreach (var setting in sol.AllSettings.Values)
                     {
                         Console.Write("\t" + setting.Name);
-                        await Get(sol.Id, setting.Name);
+                        await Get(sol.SolutionId, setting.Name);
                     }
                 }
             }
@@ -94,16 +96,16 @@ namespace Morphic.ManualTesterCLI
 
         public async Task Get(string solution, string preference)
         {
-            var value = await manager.Capture(new Preferences.Key(solution, preference));
+            var value = await solutions.GetSolution(solution).GetSetting(preference).GetValue();
             if (value == null) return;
-            var type = manager.Get(new Preferences.Key(solution, preference)).Kind;
+            var type = solutions.GetSolution(solution).GetSetting(preference).DataType;
             Console.WriteLine("[" + type.ToString() + "] value: " + value);
         }
 
         public async Task Set(string solution, string preference, string value)
         {
-            var success = await manager.Apply(new Preferences.Key(solution, preference), value);
-            if(success)
+            var success = await solutions.GetSolution(solution).GetSetting(preference).SetValue(value);
+            if (success)
             {
                 Console.WriteLine("Value applied successfully!");
             }
