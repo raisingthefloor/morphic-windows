@@ -5,7 +5,7 @@
     using System.Drawing;
     using System.Linq;
     using System.Threading.Tasks;
-    using Windows.Native.Display;
+    using Morphic.Windows.Native.Display;
     using SolutionsRegistry;
 
     [SettingsHandlerType("displaySettings", typeof(DisplaySettingsHandler))]
@@ -61,7 +61,7 @@
             return all.IndexOf(this.display.GetResolution());
         }
 
-        [Getter("resolutionCount")]
+        [Getter("lastResolution")]
         public Task<object?> GetResolutionCount(Setting settingGroup)
         {
             return Task.FromResult<object?>(this.GetResolutions().Length);
