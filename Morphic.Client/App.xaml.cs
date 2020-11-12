@@ -218,6 +218,13 @@ namespace Morphic.Client
         private void ConfigureLogging(ILoggingBuilder logging)
         {
             logging.AddConfiguration(this.Configuration);
+            logging.AddConsole();
+            logging.AddFile(this.AppOptions.Launch.Logfile, options =>
+            {
+                options.Append = true;
+                options.FileSizeLimitBytes = 0x100000;
+                options.MaxRollingFiles = 3;
+            });
             logging.SetMinimumLevel(LogLevel.Debug);
             logging.AddDebug();
         }
