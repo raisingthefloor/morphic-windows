@@ -67,37 +67,35 @@
         /// <param name="registry"></param>
         public static IRegistryKey GetRootKey(string rootKeyName, IRegistry registry)
         {
-            RegistryHive registryHive;
+            RegistryHive registryHive = GetHive(rootKeyName)
+                ?? throw new ArgumentOutOfRangeException($"Unrecognised hKey value {rootKeyName}");
+            return registry.OpenBaseKey(registryHive, RegistryView.Default);
+        }
+
+        public static RegistryHive? GetHive(string rootKeyName)
+        {
             switch (rootKeyName.ToUpperInvariant())
             {
                 case "HKEY_CLASSES_ROOT":
                 case "HKCR":
-                    registryHive = RegistryHive.ClassesRoot;
-                    break;
+                    return RegistryHive.ClassesRoot;
                 case "HKEY_CURRENT_CONFIG":
                 case "HKCC":
-                    registryHive = RegistryHive.CurrentConfig;
-                    break;
+                    return RegistryHive.CurrentConfig;
                 case "HKEY_CURRENT_USER":
                 case "HKCU":
-                    registryHive = RegistryHive.CurrentUser;
-                    break;
+                    return RegistryHive.CurrentUser;
                 case "HKEY_LOCAL_MACHINE":
                 case "HKLM":
-                    registryHive = RegistryHive.LocalMachine;
-                    break;
+                    return RegistryHive.LocalMachine;
                 case "HKEY_PERFORMANCE_DATA":
-                    registryHive = RegistryHive.PerformanceData;
-                    break;
+                    return RegistryHive.PerformanceData;
                 case "HKEY_USERS":
                 case "HKU":
-                    registryHive = RegistryHive.Users;
-                    break;
-                default:
-                    throw new InvalidOperationException($"Unrecognised hKey value {rootKeyName}");
+                    return RegistryHive.Users;
             }
 
-            return registry.OpenBaseKey(registryHive, RegistryView.Default);
+            return null;
         }
 
         public static RegistryValueKind GetValueKind(string? kindString)

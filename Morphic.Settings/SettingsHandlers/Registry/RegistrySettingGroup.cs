@@ -1,13 +1,14 @@
 ﻿namespace Morphic.Settings.SettingsHandlers.Registry
 {
     using System;
+    using Resolvers;
     using SolutionsRegistry;
 
     [SettingsHandlerType("registry", typeof(RegistrySettingsHandler))]
     public class RegistrySettingGroup : SettingGroup
     {
-        public string RootKeyName { get; private set; } = null!;
-        public string KeyPath { get; private set; } = null!;
+        public ResolvingString RootKeyName { get; private set; } = null!;
+        public ResolvingString KeyPath { get; private set; } = null!;
 
         public override void Deserialized(IServiceProvider serviceProvider, Solution solution)
         {
