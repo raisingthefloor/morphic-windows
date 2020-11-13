@@ -15,7 +15,7 @@
             base.Deserialized(serviceProvider, solution);
 
             // Parse the path: <rootkey>\<path>\<value>
-            string path = this.Path.Replace('/', '\\');
+            string path = this.Path.ToString().Replace('/', '\\');
             string[] parts = path.Split("\\", 2);
             if (parts.Length != 2)
             {

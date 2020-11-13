@@ -43,9 +43,11 @@
   "com.microsoft.windows.highContrast": {
     settings: [
       {
-        type: "systemSettings",
+        type: "themeSettings",
+        currentTheme: "${reg:HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\CurrentTheme}",
+        savedTheme: "${folder:LocalApplicationData}\\Microsoft\\Windows\\Themes\\Morphic.theme",
         settings: {
-          enabled: "SystemSettings_Accessibility_CoreHighContrast_IsEnabled:bool"
+          enabled: "highContrastEnabled"
         }
       }
     ]
