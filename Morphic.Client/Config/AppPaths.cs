@@ -16,18 +16,26 @@ namespace Morphic.Client.Config
     using System.Security.Cryptography;
     using System.Text;
     using Microsoft.Extensions.Logging;
+    using Settings.Resolvers;
 
     public class AppPaths
     {
-        public static string AppDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? ".";
+        public static readonly string AppDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? ".";
 
-        public static string ConfigDir = Environment.GetEnvironmentVariable("MORPHIC_CONFIGDIR") ??
+        public static readonly string ConfigDir = Environment.GetEnvironmentVariable("MORPHIC_CONFIGDIR") ??
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Morphic");
 
-        public static string DefaultConfigDir = AppPaths.GetAppDir("DefaultConfig");
-        public static string AssetsDir = AppPaths.GetAppDir("Assets");
-        public static string CacheDir = AppPaths.GetConfigDir("cache", true);
+        public static readonly string DefaultConfigDir = AppPaths.GetAppDir("DefaultConfig");
+        public static readonly string AssetsDir = AppPaths.GetAppDir("Assets");
+        public static readonly string CacheDir = AppPaths.GetConfigDir("cache", true);
+
         public const string RegistryPath = @"Software\Raising the Floor\Morphic\Bar";
+
+        static AppPaths()
+        {
+            FolderResolver.AddPath("MorphicConfig", ConfigDir);
+            FolderResolver.AddPath("MorphicApp", AppDir);
+        }
 
         public static void CreateAll()
         {

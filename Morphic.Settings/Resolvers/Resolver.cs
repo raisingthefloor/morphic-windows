@@ -14,7 +14,8 @@
         private static readonly Dictionary<string, Resolver> Resolvers = new Dictionary<string, Resolver>()
         {
             { "env", new EnvironmentResolver() },
-            { "reg", new RegistryResolver() }
+            { "reg", new RegistryResolver() },
+            { "folder", new FolderResolver() }
         };
 
         /// <summary>Adds a resolver to the global resolvers.</summary>

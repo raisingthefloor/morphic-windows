@@ -7,6 +7,7 @@
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json;
+    using Resolvers;
     using SolutionsRegistry;
 
     [JsonObject(MemberSerialization.OptIn)]
@@ -17,7 +18,7 @@
         public SettingsHandler SettingsHandler { get; protected set; } = null!;
 
         [JsonProperty("path")]
-        public string Path { get; private set; } = string.Empty;
+        public ResolvingString Path { get; private set; } = string.Empty;
 
         [JsonProperty("settings")]
         private Dictionary<string, Setting> All { get; } = new Dictionary<string, Setting>();

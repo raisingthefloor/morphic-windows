@@ -1,6 +1,8 @@
 ﻿namespace Morphic.Settings.Tests.Resolvers
 {
+    using System;
     using System.Collections.Generic;
+    using System.Linq;
     using Settings.Resolvers;
     using Xunit;
 
@@ -129,5 +131,76 @@
                 Resolver.RemoveResolver("test");
             }
         }
+
+        /// <summary>Test the environment resolver, with the current environment block.</summary>
+        [Fact]
+        public void TestEnvironmentResolverAllValues()
+        {
+            foreach (string key in Environment.GetEnvironmentVariables().Keys.OfType<string>())
+            {
+                string input = $"${{env:{key}}}";
+                string? expect = Environment.GetEnvironmentVariable(key);
+
+                string? result = Resolver.Resolve(input);
+
+                Assert.Equal(expect, result);
+            }
+        }
+
+        /// <summary>Test the environment resolver, with unset values.</summary>
+        [Fact]
+        public void TestEnvironmentResolverUnsetValues()
+        {
+            // unset value
+            {
+                const string input = "${env:morphic_unset}";
+                string? expect = string.Empty;
+                string? result = Resolver.Resolve(input);
+
+                Assert.Equal(expect, result);
+            }
+            // unset value, with fallback
+            {
+                const string input = "${env:morphic_unset?fallback}";
+                string? expect = "fallback";
+                string? result = Resolver.Resolve(input);
+
+                Assert.Equal(expect, result);
+            }
+            // unset value, with another for fallback
+            {
+                const string input = "${env:morphic_unset?${env:PATH}}";
+                string? expect = Environment.GetEnvironmentVariable("PATH");
+                string? result = Resolver.Resolve(input);
+
+                Assert.Equal(expect, result);
+            }
+            // unset value, with unset for fallback
+            {
+                const string input = "${env:morphic_unset?${env:morphic_unset2}}";
+                string? expect = string.Empty;
+                string? result = Resolver.Resolve(input);
+
+                Assert.Equal(expect, result);
+            }
+        }
+
+        /// <summary>Test the special folder resolver.</summary>
+        [Fact]
+        public void TestFolderResolver()
+        {
+            foreach (string name in Enum.GetNames(typeof(Environment.SpecialFolder)))
+            {
+                Environment.SpecialFolder folder = Enum.Parse<Environment.SpecialFolder>(name);
+
+                string input = $"${{folder:{name}}}";
+                string? expect = Environment.GetFolderPath(folder);
+
+                string? result = Resolver.Resolve(input);
+
+                Assert.Equal(expect, result);
+            }
+        }
+
     }
 }
