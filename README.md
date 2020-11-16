@@ -13,3 +13,8 @@ To build the installers (add `-p:Configuration=Release` as required):
     msbuild Morphic.Setup -p:Edition=Basic
     msbuild Morphic.Setup -p:Edition=Community
 
+## Documentation
+
+* [Configuration](documentation/configuration.md)
+* [Solutions Registry](documentation/solutions.md)
+* [Bar JSON format](Morphic.Client/Bar/BarData.md)
