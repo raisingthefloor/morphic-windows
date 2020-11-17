@@ -101,11 +101,14 @@ specified by `path`.
     magnification: {
       // Name of the registry value
       name: "Magnification",
-      dataType: "int"
+      dataType: "int",
+      // One of REG_SZ, REG_EXPAND_SZ, REG_BINARY, REG_DWORD, REG_MULTI_SZ, or REG_QWORD
+      valueKind: "REG_DWORD"
     },
     mode: {
       name: "MagnificationMode",
-      dataType: "int"
+      dataType: "int",
+      valueKind: "REG_DWORD"
     }
   }
 }
