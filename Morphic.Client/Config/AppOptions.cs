@@ -344,5 +344,8 @@
 
         [Option("features")]
         public string? FeaturesFile { get; set; }
+
+        [Option("log")]
+        public string Logfile { get; } = AppPaths.GetConfigFile("morphic.log");
     }
 }

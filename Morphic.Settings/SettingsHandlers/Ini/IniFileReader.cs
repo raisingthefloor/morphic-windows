@@ -16,7 +16,7 @@
         {
             this.Parse();
             return this.Data.ToDictionary(
-                kv => kv.Key.Replace("\\", "\\\\").Replace(".", "\\.").Replace("\n", "."),
+                kv => kv.Key.Replace(".", "\\.").Replace("\n", "."),
                 kv => kv.Value);
         }
 

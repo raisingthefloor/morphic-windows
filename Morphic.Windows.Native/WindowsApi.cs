@@ -591,5 +591,10 @@ namespace Morphic.Windows.Native
         [DllImport("user32.dll", EntryPoint = "SystemParametersInfoW", SetLastError = true)]
         public static extern bool SystemParametersInfoFilterKeys(int uiAction, int uiParam, ref FILTERKEYS pvParam, int fWinIni);
 
+        [DllImport("user32.dll", EntryPoint = "SystemParametersInfoW", SetLastError = true)]
+        public static extern bool SystemParametersInfo(uint uiAction, uint uiParam, IntPtr pvParam, int fWinIni);
+        [DllImport("user32.dll", EntryPoint = "SystemParametersInfoW", SetLastError = true)]
+        public static extern bool SystemParametersInfoRef(uint uiAction, uint uiParam, ref object pvParam, int fWinIni);
+
     }
 }

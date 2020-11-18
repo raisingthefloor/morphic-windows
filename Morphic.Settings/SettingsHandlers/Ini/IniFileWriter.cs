@@ -56,7 +56,12 @@
 
         public virtual Task Save()
         {
-            return File.WriteAllTextAsync(this.FilePath, this.content);
+            return File.WriteAllTextAsync(this.FilePath, this.Result);
+        }
+
+        public void SaveAs(string path)
+        {
+            File.WriteAllText(path, this.Result);
         }
 
         /// <summary>Gets the section from a key path.</summary>
