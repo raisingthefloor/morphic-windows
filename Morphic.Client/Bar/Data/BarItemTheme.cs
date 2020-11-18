@@ -11,6 +11,7 @@
 namespace Morphic.Client.Bar.Data
 {
     using System.ComponentModel;
+    using System.Linq;
     using System.Reflection;
     using System.Windows.Forms;
     using System.Windows.Media;
@@ -112,14 +113,11 @@ namespace Morphic.Client.Bar.Data
         [JsonProperty("borderColor")]
         public Color? BorderColor { get; set; }
         
-        [JsonProperty("borderOuterColor")]
-        public Color? BorderOuterColor { get; set; }
+        [JsonProperty("focusDotColor")]
+        public Color? FocusDotColor { get; set; }
 
         [JsonProperty("borderSize")]
         public double BorderSize { get; set; } = double.NaN;
-
-        public double BorderOuterSize => this.BorderOuterColor == null ? 0 : this.BorderSize;
-
 
         public static Theme DefaultBar()
         {
@@ -165,7 +163,7 @@ namespace Morphic.Client.Bar.Data
         /// <param name="all">true to set all values, false to set only values in this instance that are null.</param>
         public Theme Apply(Theme source, bool all = false)
         {
-            foreach (PropertyInfo property in typeof(Theme).GetProperties())
+            foreach (PropertyInfo property in typeof(Theme).GetProperties().Where(p => p.CanWrite))
             {
                 object? origValue = all ? null : property.GetValue(this);
                 if (origValue == null || (origValue is double d && double.IsNaN(d)))
@@ -173,12 +171,13 @@ namespace Morphic.Client.Bar.Data
                     object? newValue = property.GetValue(source);
                     property.SetValue(this, newValue);
                 }
+
                 this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property.Name));
             }
 
             return this;
         }
-        
+
         public event PropertyChangedEventHandler? PropertyChanged;
     }
 }

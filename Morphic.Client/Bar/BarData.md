@@ -392,7 +392,7 @@ Theme = {
   background: "#002957",
   // Only used by bar items
   borderColor: "#ff0",
-  borderOuterColor: "#000",
+  focusDotColor: "#000",
   borderSize: 2
 }
 ```
@@ -406,7 +406,7 @@ ItemTheme = {
   color: "white",
   background: "#002957",
   borderColor: "#ff0",
-  borderOuterColor: "#000",
+  focusDotColor: "#000",
   borderSize: 2,
 
   // Optional, will use the above style.

@@ -25,7 +25,7 @@
     background: "#002951",
     focus: {
       borderColor: 'yellow',
-      borderOuterColor: 'black',
+      focusDotColor: 'black',
       borderSize: 3
     },
     hover: {
