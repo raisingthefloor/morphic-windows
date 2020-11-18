@@ -42,13 +42,13 @@ variables:
 - name: versionBuildComponents
   value: '.$(Build.BuildNumber)'
 
- resources:
-   repositories:
-     - repository: deploy-morphicweb
-       type: github
-       endpoint: raisingthefloor
-       name: raisingthefloor/deploy-morphicweb
-       ref: master
+resources:
+  repositories:
+    - repository: deploy-morphicweb
+      type: github
+      endpoint: raisingthefloor
+      name: raisingthefloor/deploy-morphicweb
+      ref: master
 
 stages:
   - stage: build
