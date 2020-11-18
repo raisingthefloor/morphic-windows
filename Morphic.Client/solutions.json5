@@ -24,6 +24,7 @@
           magnification: {
             name: "Magnification",
             dataType: "int",
+            valueKind: "REG_DWORD"
           }
         }
       }
