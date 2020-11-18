@@ -9,7 +9,8 @@ namespace Morphic.Client.Bar.Data.Actions
     using System.Runtime.InteropServices;
     using System.Threading.Tasks;
     using System.Windows;
-    using Windows.Native;
+    using Windows.Native.Input;
+    using Windows.Native.Speech;
     using global::Windows.Media.SpeechSynthesis;
     using Microsoft.Extensions.Logging;
     using Settings.SettingsHandlers;
@@ -51,9 +52,9 @@ namespace Morphic.Client.Bar.Data.Actions
 
                 // Hold down the windows key while pressing shift + s
                 const uint windowsKey = 0x5b; // VK_LWIN
-                Morphic.Windows.Native.Keyboard.PressKey(windowsKey, true);
+                Keyboard.PressKey(windowsKey, true);
                 System.Windows.Forms.SendKeys.SendWait("+s");
-                Morphic.Windows.Native.Keyboard.PressKey(windowsKey, false);
+                Keyboard.PressKey(windowsKey, false);
 
             }
             finally
