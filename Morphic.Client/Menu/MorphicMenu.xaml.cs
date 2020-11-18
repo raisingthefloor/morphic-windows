@@ -4,6 +4,7 @@
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Controls.Primitives;
+    using Windows.Native.Input;
     using Bar.UI;
 
     public partial class MorphicMenu : ContextMenu
@@ -80,14 +81,14 @@
         {
             if (sender is MenuItem menuItem)
             {
-                menuItem.IsChecked = Morphic.Windows.Native.Keyboard.KeyRepeat();
+                menuItem.IsChecked = Keyboard.KeyRepeat();
             }
         }
         private void StopKeyRepeatToggle(object sender, RoutedEventArgs e)
         {
             if (sender is MenuItem menuItem)
             {
-                menuItem.IsChecked = Morphic.Windows.Native.Keyboard.KeyRepeat(menuItem.IsChecked);
+                menuItem.IsChecked = Keyboard.KeyRepeat(menuItem.IsChecked);
             }
         }
 

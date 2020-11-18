@@ -24,6 +24,7 @@ namespace Morphic.Client.Bar.UI
     using Data;
     using Microsoft.Win32;
     using Settings.SettingsHandlers;
+    using Mouse = Windows.Native.Input.Mouse;
 
     /// <summary>
     /// The window for the main bar.
@@ -94,7 +95,7 @@ namespace Morphic.Client.Bar.UI
             this.WindowMovement = new WindowMovement(this);
             this.AppBar = new AppBar(this, this.WindowMovement)
             {
-                EnableDocking = isPrimary
+                EnableDocking = isPrimary && this.Bar.Position.AllowDocking
             };
 
             // Move it off the screen until it's loaded.
@@ -157,10 +158,25 @@ namespace Morphic.Client.Bar.UI
             SettingsHandler.SystemSettingChanged();
         }
 
-        protected void SystemEventsOnDisplaySettingsChanged(object? sender, EventArgs e)
+        protected virtual void SystemEventsOnDisplaySettingsChanged(object? sender, EventArgs e)
         {
-            this.SetInitialPosition();
             this.SystemEventsOnSettingsChanged(sender, e);
+
+            // If the screen resolution has changed due to a button click, put the mouse back over that button.
+            if (MultiButtonBarControl.LastClickedTime.HasValue
+                && DateTime.Now - MultiButtonBarControl.LastClickedTime.Value < TimeSpan.FromSeconds(10))
+            {
+                Control? button = MultiButtonBarControl.LastClickedControl;
+                if (button != null)
+                {
+                    Point pos = button.PointToScreen(new Point(button.RenderSize.Width / 2,
+                        button.RenderSize.Height / 2));
+
+                    Mouse.SetPosition((int)pos.X, (int)pos.Y);
+                }
+
+
+            }
         }
 
         /// <summary>

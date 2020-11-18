@@ -24,6 +24,7 @@
           magnification: {
             name: "Magnification",
             dataType: "int",
+            valueKind: "REG_DWORD"
           }
         }
       }
@@ -65,7 +66,7 @@
       {
         type: "displaySettings",
         settings: {
-          count: "resolutionCount",
+          count: "lastResolution",
           zoom: {
             name: "zoom",
             dataType: "int",

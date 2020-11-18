@@ -18,7 +18,10 @@ Bar = {
   // Initial position
   position: {
       // Dock it to an edge, reserving desktop space
-      docked: "left", // "left", "right", "top", "bottom", or "none" (default)
+      docked: "left", // "left", "right", "top", "bottom", "none" (default), or "disable".
+
+      horizontal: false, // true for horizontal orientation.
+      restricted: false, // true to restrict the position to just the corners
 
       // Position of the bar. Can be "Left"/"Top", "Middle", "Right"/"Bottom", a number, or a percentage.
       // Numbers or percentages can be negative (including -0), meaning distance from the right.
@@ -389,7 +392,7 @@ Theme = {
   background: "#002957",
   // Only used by bar items
   borderColor: "#ff0",
-  borderOuterColor: "#000",
+  focusDotColor: "#000",
   borderSize: 2
 }
 ```
@@ -403,7 +406,7 @@ ItemTheme = {
   color: "white",
   background: "#002957",
   borderColor: "#ff0",
-  borderOuterColor: "#000",
+  focusDotColor: "#000",
   borderSize: 2,
 
   // Optional, will use the above style.

@@ -21,20 +21,22 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System;
-using System.Runtime.InteropServices;
+
 
 // TODO: This code is a draft, pending QA
 
-namespace Morphic.Windows.Native
+namespace Morphic.Windows.Native.IniFile
 {
+    using System;
+    using System.Runtime.InteropServices;
+
     public class IniFileReaderWriter
     {
         private String _path;
 
         public IniFileReaderWriter(String path)
         {
-            _path = path;
+            this._path = path;
         }
 
         public String ReadValue(String key, String section)
@@ -43,7 +45,7 @@ namespace Morphic.Windows.Native
             var maxValueLength = 256;
             var value = new String(' ', maxValueLength);
 
-            var actualLength = WindowsApi.GetPrivateProfileString(section, key, "", out value, (UInt32)maxValueLength, _path);
+            var actualLength = WindowsApi.GetPrivateProfileString(section, key, "", out value, (UInt32)maxValueLength, this._path);
 
             var lastWin32Error = Marshal.GetLastWin32Error();
             if (lastWin32Error == 0x2) /* file not found*/
@@ -58,7 +60,7 @@ namespace Morphic.Windows.Native
 
         public void WriteValue(String value, String key, String section)
         {
-            var success = WindowsApi.WritePrivateProfileString(section, key, value, _path);
+            var success = WindowsApi.WritePrivateProfileString(section, key, value, this._path);
             if (success == false)
             {
                 var hresult = Marshal.GetHRForLastWin32Error();
@@ -68,7 +70,7 @@ namespace Morphic.Windows.Native
 
         public void DeleteKey(String key, String section)
         {
-            var success = WindowsApi.WritePrivateProfileString(section, key, null, _path);
+            var success = WindowsApi.WritePrivateProfileString(section, key, null, this._path);
             if (success == false)
             {
                 var hresult = Marshal.GetHRForLastWin32Error();
@@ -78,7 +80,7 @@ namespace Morphic.Windows.Native
 
         public void ClearSection(String section)
         {
-            var success = WindowsApi.WritePrivateProfileSection(section, "", _path);
+            var success = WindowsApi.WritePrivateProfileSection(section, "", this._path);
             if (success == false)
             {
                 var hresult = Marshal.GetHRForLastWin32Error();
