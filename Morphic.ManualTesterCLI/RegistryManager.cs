@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.VisualBasic.CompilerServices;
 using Morphic.Settings.SolutionsRegistry;
 using System;
 using System.IO;
@@ -123,7 +124,24 @@ namespace Morphic.ManualTesterCLI
         {
             try
             {
-                var success = await solutions.GetSetting(solution, preference).SetValue(value);
+                var setting = solutions.GetSetting(solution, preference);
+                bool success = false;
+                switch(setting.DataType)
+                {
+                    case Settings.SettingsHandlers.SettingType.Bool:
+                        if (value.ToLower() == "0" || value.ToLower() == "false") success = await setting.SetValue(false);
+                        else if (value.ToLower() == "1" || value.ToLower() == "true") success = await setting.SetValue(true);
+                        break;
+                    case Settings.SettingsHandlers.SettingType.Int:
+                        success = await setting.SetValue(int.Parse(value));
+                        break;
+                    case Settings.SettingsHandlers.SettingType.Real:
+                        success = await setting.SetValue(double.Parse(value));
+                        break;
+                    case Settings.SettingsHandlers.SettingType.String:
+                        success = await setting.SetValue(value);
+                        break;
+                }
                 if (success)
                 {
                     Console.WriteLine("Value applied successfully!");
