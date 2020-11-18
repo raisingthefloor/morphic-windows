@@ -19,6 +19,7 @@ namespace Morphic.Client.Bar.Data
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
+    using Newtonsoft.Json.Serialization;
 
     public interface IDeserializable
     {
@@ -354,6 +355,23 @@ namespace Morphic.Client.Bar.Data
         public override bool CanConvert(Type objectType)
         {
             throw new NotImplementedException();
+        }
+    }
+
+    /// <summary>Contract resolver to allow private properties to be deserialised.</summary>
+    internal class BarJsonContractResolver : DefaultContractResolver
+    {
+        protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
+        {
+            JsonProperty jsonProperty = base.CreateProperty(member, memberSerialization);
+
+            // Allow private members to be deserialised.
+            if (!jsonProperty.Writable && member is PropertyInfo propertyInfo)
+            {
+                jsonProperty.Writable = propertyInfo.GetSetMethod(true) != null;
+            }
+
+            return jsonProperty;
         }
     }
 

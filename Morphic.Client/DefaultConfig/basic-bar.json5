@@ -2,8 +2,9 @@
   scale: 1,
   overflow: "secondary",
   position: {
-    docked: null,
+    docked: "disable",
     horizontal: true,
+    restricted: true,
     x: -1,
     y: "bottom",
     secondary: "bottom",
