@@ -97,7 +97,15 @@ namespace Morphic.ManualTesterCLI
                 {
                     try
                     {
-                        if (!manager.Load(args[0]))
+                        try
+                        {
+                            if (!manager.Load(args[0]))
+                            {
+                                Console.WriteLine("[ERROR]: Could not load file {0} as a valid solutions registry JSON file. Check filename and try again.", args[0]);
+                                return;
+                            }
+                        }
+                        catch
                         {
                             Console.WriteLine("[ERROR]: Could not load file {0} as a valid solutions registry JSON file. Check filename and try again.", args[0]);
                             return;
@@ -187,7 +195,7 @@ namespace Morphic.ManualTesterCLI
                     }
                     catch
                     {
-                        Console.WriteLine("[ERROR]: Could not load file {0} as a valid solutions registry JSON file. Check filename and try again.", args[0]);
+                        Console.WriteLine("[ERROR]: There was a problem reading data from file {0}.", args[0]);
                     }
                 }
             }

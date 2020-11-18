@@ -1,10 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Morphic.Core;
-using Morphic.Settings;
-using Morphic.Settings.SettingsHandlers;
 using Morphic.Settings.SolutionsRegistry;
 using System;
-using System.ComponentModel.DataAnnotations;
+using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace Morphic.ManualTesterCLI
@@ -19,12 +17,14 @@ namespace Morphic.ManualTesterCLI
             var services = new ServiceCollection();
             services.AddLogging();
             services.AddSingleton<IServiceProvider>(provider => provider);
-            var serviceprovider = services.BuildServiceProvider();
+            services.AddSolutionsRegistryServices();
+            provider = services.BuildServiceProvider();
         }
 
         public bool Load(string filepath)
         {
-            solutions = Solutions.FromFile(provider, filepath);
+            string AppDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? ".";
+            solutions = Solutions.FromFile(provider, Path.GetFullPath(filepath, AppDir));
             return solutions.All.Count != 0;
         }
 
@@ -86,32 +86,56 @@ namespace Morphic.ManualTesterCLI
                     Console.WriteLine(sol.SolutionId + ":");
                     foreach (var setting in sol.AllSettings.Values)
                     {
-                        Console.Write("\t" + setting.Name);
-                        await Get(sol.SolutionId, setting.Name);
+                        Console.Write("\t" + setting.Id);
+                        await Get(sol.SolutionId, setting.Id);
                     }
                 }
             }
         }
-#nullable disable
 
         public async Task Get(string solution, string preference)
         {
-            var value = await solutions.GetSolution(solution).GetSetting(preference).GetValue();
-            if (value == null) return;
-            var type = solutions.GetSolution(solution).GetSetting(preference).DataType;
-            Console.WriteLine("[" + type.ToString() + "] value: " + value);
+            try
+            {
+                var setting = solutions.GetSetting(solution, preference);
+                var type = setting.DataType;
+                if(type == Settings.SettingsHandlers.SettingType.Unknown)
+                {
+                    Console.WriteLine("[UNKNOWN DATA TYPE]");
+                    return;
+                }
+                object? value = await setting.GetValue();
+                if (value == null)
+                {
+                    Console.WriteLine("[NO DATA RETURNED]");
+                    return;
+                }
+                Console.WriteLine("[" + type.ToString() + "] value: " + value.ToString());
+            }
+            catch
+            {
+                Console.WriteLine("[DATA READ FAILURE]");
+            }
         }
+#nullable disable
 
         public async Task Set(string solution, string preference, string value)
         {
-            var success = await solutions.GetSolution(solution).GetSetting(preference).SetValue(value);
-            if (success)
+            try
             {
-                Console.WriteLine("Value applied successfully!");
+                var success = await solutions.GetSetting(solution, preference).SetValue(value);
+                if (success)
+                {
+                    Console.WriteLine("Value applied successfully!");
+                }
+                else
+                {
+                    Console.WriteLine("[ERROR]: Value application failed.");
+                }
             }
-            else
+            catch
             {
-                Console.WriteLine("Value application failed.");
+                Console.WriteLine("[ERROR]: Value application encountered an error.");
             }
         }
     }

@@ -83,7 +83,7 @@
             this.changed = false;
             try
             {
-                long value = long.Parse(this.InputField.Text);
+                int value = int.Parse(this.InputField.Text);
                 this.InputField.Background = this.whitefield;
                 bool success = await this.setting.SetValue(value);
                 if (!success)
