@@ -95,7 +95,6 @@ stages:
         - task: VSBuild@1
           displayName: "build solutions"
           env:
-            Edition: 'Basic'
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
           inputs:
             solution: '$(solution)'
@@ -113,12 +112,11 @@ stages:
           displayName: "build x64 installer"
           env:
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
-            Edition: 'Basic'
           inputs:
             solution: 'Morphic.Setup\Morphic.Setup.wixproj'
             platform: 'x64'
             configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:BuildType=$(BUILD_TYPE)'
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE)' '/p:Edition:Basic'
 
         - task: DotNetCoreCLI@2
           displayName: Install AzureSignTool
@@ -150,12 +148,11 @@ stages:
           displayName: "build x64 community installer"
           env:
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
-            Edition: 'Community'
           inputs:
             solution: 'Morphic.Setup\Morphic.Setup.wixproj'
             platform: 'x64'
             configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:BuildType=$(BUILD_TYPE)'
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE)' '/p:Edition:Community'
 
         - task: CmdLine@2
           displayName: 'sign x64 community installer'

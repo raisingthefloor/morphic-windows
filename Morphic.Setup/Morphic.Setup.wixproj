@@ -46,7 +46,7 @@
     <Error Text="The WiX Toolset v3.11 (or newer) build tools must be installed to build this project. To download the WiX Toolset, see http://wixtoolset.org/releases/" />
   </Target>
   <PropertyGroup>
-    <DefineConstants>ClientOutputDirectory=..\Morphic.Client\bin\$(Configuration)\netcoreapp3.1\win-x64\publish</DefineConstants>
+    <DefineConstants>ClientOutputDirectory=..\Morphic.Client\bin\$(Configuration)\netcoreapp3.1\win-x64\publish;Edition=$(Edition)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
     <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
