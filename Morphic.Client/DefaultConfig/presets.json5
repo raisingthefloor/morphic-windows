@@ -11,13 +11,13 @@
           demo: "textsize"
         },
         buttons: {
-          dec: {
-            label: "-",
+          inc: {
+            label: "+",
             tooltip: "Increase Text Size everywhere|Makes everything on the screen larger.",
             uiName: "Increase Text Size"
           },
-          inc: {
-            label: "+",
+          dec: {
+            label: "-",
             tooltip: "Decrease Text Size everywhere|Makes everything on the screen smaller.",
             uiName: "Decrease Text Size"
           }

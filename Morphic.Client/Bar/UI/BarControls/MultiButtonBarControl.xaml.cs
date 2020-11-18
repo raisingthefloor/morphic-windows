@@ -151,8 +151,8 @@ namespace Morphic.Client.Bar.UI.BarControls
             {
                 e.Handled = this.OpenContextMenu(sender, buttonInfo.Menu);
             }
-
         }
+
         private void Button_OnClick(object sender, RoutedEventArgs e)
         {
             BarMultiButton.ButtonInfo? buttonInfo =
@@ -162,11 +162,19 @@ namespace Morphic.Client.Bar.UI.BarControls
 
             if (buttonInfo != null)
             {
+                MultiButtonBarControl.LastClickedControl = sender as Control;
+                MultiButtonBarControl.LastClickedTime = DateTime.Now;
+
                 // Call the button action.
                 bool? state = (sender as ToggleButton)?.IsChecked;
                 buttonInfo.Action.Invoke(buttonInfo.Value, state);
             }
         }
+
+        /// <summary>When a button was last clicked.</summary>
+        public static DateTime? LastClickedTime { get; private set; }
+        /// <summary>The button that was last clicked.</summary>
+        public static Control? LastClickedControl { get; private set; }
 
         /// <summary>
         /// Gets the text or icon to be displayed, based on the given text. This allows symbols to be easily expressed

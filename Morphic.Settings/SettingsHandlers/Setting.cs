@@ -114,7 +114,7 @@
             {
                 int current = await this.GetValue<int>();
                 current += Math.Sign(direction) * this.Range.IncrementValue;
-                if (current > await this.Range.GetMin() && current < await this.Range.GetMax())
+                if (current >= await this.Range.GetMin() && current <= await this.Range.GetMax())
                 {
                     return await this.SetValue(current);
                 }

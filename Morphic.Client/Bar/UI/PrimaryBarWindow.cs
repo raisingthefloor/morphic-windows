@@ -6,6 +6,7 @@ namespace Morphic.Client.Bar.UI
     using System.Windows.Interop;
     using System.Windows.Media.Animation;
     using Windows.Native;
+    using Windows.Native.Speech;
     using AppBarWindow;
     using Data;
 
