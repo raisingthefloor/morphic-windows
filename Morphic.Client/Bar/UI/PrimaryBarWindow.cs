@@ -4,7 +4,9 @@ namespace Morphic.Client.Bar.UI
     using System.Linq;
     using System.Windows;
     using System.Windows.Interop;
+    using System.Windows.Media.Animation;
     using Windows.Native;
+    using Windows.Native.Speech;
     using AppBarWindow;
     using Data;
 
@@ -12,6 +14,8 @@ namespace Morphic.Client.Bar.UI
     {
         private SecondaryBarWindow? secondaryWindow;
         private ExpanderWindow? expanderWindow;
+        private Edge snapX;
+        private Edge snapY;
 
         public override BarWindow? OtherWindow => this.secondaryWindow;
 
@@ -70,6 +74,13 @@ namespace Morphic.Client.Bar.UI
                 SelectionReader.Default.Initialise(nativeWindow.Handle);
                 hwndSource?.AddHook(SelectionReader.Default.WindowProc);
             };
+
+            this.WindowMovement.MoveComplete += this.WindowMoved;
+        }
+
+        private void WindowMoved(object? sender, EventArgs e)
+        {
+            this.CorrectPosition(true);
         }
 
         private void OnClosed(object? sender, EventArgs e)
@@ -120,6 +131,144 @@ namespace Morphic.Client.Bar.UI
             else
             {
                 this.AppBar.ApplyAppBar(this.Bar.Position.DockEdge);
+            }
+
+            this.CorrectPosition();
+        }
+
+        /// <summary>
+        /// Ensure the window is in a good position after it was moved, or the screen size changes.
+        /// </summary>
+        private void CorrectPosition(bool userMoved = false)
+        {
+            if (this.DockedEdge != Edge.None)
+            {
+                // do nothing.
+                return;
+            }
+
+            if (this.Bar.Position.Restricted)
+            {
+                this.MoveToCorner(userMoved);
+            }
+            else if (!userMoved)
+            {
+                // Move the window back to the edges, if any, it was snapped on.
+                Rect workArea = SystemParameters.WorkArea;
+                double left = this.snapX switch
+                {
+                    Edge.Left => workArea.Left,
+                    Edge.Right => workArea.Right - this.Width,
+                    _ => this.Left
+                };
+
+                double top = this.snapY switch
+                {
+                    Edge.Top => workArea.Top,
+                    Edge.Bottom => workArea.Bottom - this.Height,
+                    _ => this.Top
+                };
+
+                // Make sure it's within the work area
+                this.Left = workArea.Width > this.Width
+                    ? Math.Clamp(left, workArea.Left, workArea.Right - this.Width)
+                    : workArea.Left;
+                this.Top = workArea.Height > this.Height
+                    ? Math.Clamp(top, workArea.Top, workArea.Bottom - this.Height)
+                    : workArea.Top;
+            }
+        }
+
+        protected override void SystemEventsOnDisplaySettingsChanged(object? sender, EventArgs e)
+        {
+            base.SystemEventsOnDisplaySettingsChanged(sender, e);
+            this.CorrectPosition();
+        }
+
+        protected override void OnLocationChanged(EventArgs e)
+        {
+            base.OnLocationChanged(e);
+
+            // See if the position is snapped to an edge, so it can stick to it if the screen size changes.
+            Rect workArea = SystemParameters.WorkArea;
+            if (Math.Abs(this.Left - workArea.Left) < 3)
+            {
+                this.snapX = Edge.Left;
+            }
+            else if (Math.Abs(this.Left + this.Width - workArea.Right) < 3)
+            {
+                this.snapX = Edge.Right;
+            }
+            else
+            {
+                this.snapX = Edge.None;
+            }
+
+            if (Math.Abs(this.Top - workArea.Top) < 3)
+            {
+                this.snapY = Edge.Top;
+            }
+            else if (Math.Abs(this.Top + this.Height - workArea.Bottom) < 3)
+            {
+                this.snapY = Edge.Bottom;
+            }
+            else
+            {
+                this.snapY = Edge.None;
+            }
+        }
+
+        /// <summary>Moves the window to the nearest corner.</summary>
+        private void MoveToCorner(bool animate = false)
+        {
+            Rect workArea = SystemParameters.WorkArea;
+            workArea.Inflate(-4, -4);
+
+            Point newPos;
+            newPos.X = this.Left + this.Width / 2 < workArea.Left + workArea.Width / 2
+                ? workArea.Left
+                : workArea.Right - this.Width;
+            newPos.Y = this.Top + this.Height / 2 < workArea.Top + workArea.Height / 2
+                ? workArea.Top
+                : workArea.Bottom - this.Height;
+
+            newPos.X = Math.Max(newPos.X, workArea.Left);
+
+            if (animate)
+            {
+                Duration duration = new Duration(TimeSpan.FromMilliseconds(500));
+                DoubleAnimation xAnim = new DoubleAnimation(this.Left, newPos.X, duration, FillBehavior.Stop) {
+                    Name = "Left"
+                };
+                DoubleAnimation yAnim = new DoubleAnimation(this.Top, newPos.Y, duration, FillBehavior.Stop) {
+                    Name = "Top"
+                };
+
+                xAnim.Completed += this.WindowAnimComplete;
+                yAnim.Completed += this.WindowAnimComplete;
+
+                this.BeginAnimation(Window.LeftProperty, xAnim);
+                this.BeginAnimation(Window.TopProperty, yAnim);
+            }
+            else
+            {
+                this.Left = newPos.X;
+                this.Top = newPos.Y;
+            }
+        }
+
+        private void WindowAnimComplete(object sender, EventArgs e)
+        {
+            if (sender is AnimationClock clock && clock.Timeline is DoubleAnimation anim && anim.To.HasValue)
+            {
+                if (anim.Name == "Left")
+                {
+                    this.Left = anim.To.Value;
+                }
+                else if (anim.Name == "Top")
+                {
+                    this.Top = anim.To.Value;
+                }
             }
         }
 

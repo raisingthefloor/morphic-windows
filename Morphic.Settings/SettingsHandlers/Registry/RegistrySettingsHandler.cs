@@ -2,7 +2,9 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Reflection;
     using System.Threading.Tasks;
+    using Core;
     using DotNetWindowsRegistry;
     using Microsoft.Win32;
     using SolutionsRegistry;
@@ -46,16 +48,19 @@
         {
             using IRegistryKey? key = this.OpenKey(settingGroup.RootKeyName, settingGroup.KeyPath, true);
 
-            if (key != null)
+            if (key == null)
             {
-                foreach ((Setting setting, object? value) in values)
-                {
-                    // TODO: Infer value kind from the setting data type, or set it explicitly.
-                    RegistryValueKind valueKind = RegistryValueKind.Unknown;// RegistrySettingsHandler.GetValueKind(setting.DataType);
-                    key?.SetValue(setting.Name, value, valueKind);
-                }
+                return Task.FromResult(key != null);
             }
 
+            foreach ((Setting setting, object? value) in values)
+            {
+                if (key != null)
+                {
+                    RegistryValueKind kind = GetValueKind(setting.GetProperty("valueKind"));
+                    key.SetValue(setting.Name, value, kind);
+                }
+            }
 
             return Task.FromResult(key != null);
         }
@@ -107,9 +112,8 @@
                 case "REG_DWORD": return RegistryValueKind.DWord;
                 case "REG_MULTI_SZ": return RegistryValueKind.MultiString;
                 case "REG_QWORD": return RegistryValueKind.QWord;
-                case "REG_SZ":
-                default:
-                    return RegistryValueKind.String;
+                case "REG_SZ": return RegistryValueKind.String;
+                default: return RegistryValueKind.None;
             }
         }
 
@@ -120,6 +124,26 @@
             return writing
                 ? root.CreateSubKey(keyPath)
                 : root.OpenSubKey(keyPath);
+        }
+
+        private static RegistryValueKind GetValueKind(IRegistryKey registryKey, string name)
+        {
+            if (registryKey is WindowsRegistryKey winReg)
+            {
+                RegistryKey key = GetRealRegistryKey(winReg);
+                return key.GetValueKind(name);
+            }
+            else
+            {
+                return RegistryValueKind.String;
+            }
+        }
+
+        private static RegistryKey GetRealRegistryKey(WindowsRegistryKey registryKey)
+        {
+            return (RegistryKey)registryKey.GetType()
+                .GetField("_registryKey", BindingFlags.Instance | BindingFlags.NonPublic)?
+                .GetValue(registryKey)!;
         }
     }
 }

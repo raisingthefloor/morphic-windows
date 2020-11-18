@@ -26,6 +26,8 @@ using System.Runtime.InteropServices;
 
 namespace Morphic.Windows.Native.WindowsCoreAudio
 {
+    using WindowsCom;
+
     internal class MMDevice
     {
         private IMMDevice _immDevice;

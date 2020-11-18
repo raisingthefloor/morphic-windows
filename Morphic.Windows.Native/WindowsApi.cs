@@ -583,6 +583,10 @@ namespace Morphic.Windows.Native
         // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-keybd_event
         [DllImport("user32.dll")]
         internal static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
+        //
+        // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setcursorpos
+        [DllImport("User32.dll")]
+        internal static extern bool SetCursorPos(int X, int Y);
 
         [DllImport("user32.dll", EntryPoint = "SystemParametersInfoW", SetLastError = true)]
         public static extern bool SystemParametersInfoFilterKeys(int uiAction, int uiParam, ref FILTERKEYS pvParam, int fWinIni);

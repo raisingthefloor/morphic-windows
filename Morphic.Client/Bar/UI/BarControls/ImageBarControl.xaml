@@ -14,11 +14,6 @@
                          d:DataContext="{d:DesignInstance barControls:ButtonBarControl, IsDesignTimeCreatable=True}"
                          >
     <barControls:BarItemControl.Resources>
-        <!-- Colours based on the active theme -->
-        <SolidColorBrush x:Key="Background" Color="{Binding ActiveTheme.Background, FallbackValue=Yellow}"/>
-        <SolidColorBrush x:Key="Foreground" Color="{Binding ActiveTheme.TextColor, FallbackValue=Black}"/>
-        <SolidColorBrush x:Key="BorderColor" Color="{Binding ActiveTheme.BorderColor, FallbackValue=Transparent}"/>
-        <SolidColorBrush x:Key="BorderOuterColor" Color="{Binding ActiveTheme.BorderOuterColor, FallbackValue=Transparent}"/>
         <!-- Convert a boolean to a visibility -->
         <ui:Ternary x:Key="BoolVisibility" False="Collapse" True="Visible" />
 

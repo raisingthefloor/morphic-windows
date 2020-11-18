@@ -5,6 +5,8 @@
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.Diagnostics;
+    using System.Globalization;
+    using System.Linq;
     using System.Reflection;
     using System.Runtime.CompilerServices;
     using System.Text.RegularExpressions;
@@ -205,10 +207,40 @@
             }
             else if (typeof(T) == typeof(int))
             {
-                result = ((IConvertible)value).ToInt32(null);
+                try
+                {
+                    result = ((IConvertible)value).ToInt32(null);
+                }
+                catch (FormatException)
+                {
+                    result = defaultValue;
+                }
             }
             else if (typeof(T) == typeof(bool))
             {
+                string? text = value.ToString();
+                if (string.IsNullOrEmpty(text))
+                {
+                    result = defaultValue;
+                }
+                else
+                {
+                    // See if it's a false-like word, or a zero number.
+                    bool isFalse = new[] { "false", "no", "off" }.Contains(text.ToLowerInvariant());
+                    if (isFalse)
+                    {
+                        result = false;
+                    }
+                    else if (int.TryParse(text, NumberStyles.Any, null, out int number))
+                    {
+                        result = number != 0;
+                    }
+                    else
+                    {
+                        // Anything else is true.
+                        result = true;
+                    }
+                }
                 result = ((IConvertible)value).ToBoolean(null);
             }
             else if (typeof(T) == typeof(string))

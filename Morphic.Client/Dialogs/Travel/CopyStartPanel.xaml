@@ -11,7 +11,6 @@
         This feature allows you to move your accessibility and usability settings between computers - including the
         settings of your assistive technologies.
     </TextBlock>
-    <Button Content="hello" ToolTip="poo"></Button>
     <TextBlock HorizontalAlignment="Center" Margin="20" ><Hyperlink Click="CopyToCloud">Copy settings on this computer to my Cloud Vault</Hyperlink></TextBlock>
     <TextBlock HorizontalAlignment="Center" Margin="20" ><Hyperlink Click="CopyFromCloud">Use the settings in my Cloud Vault to set up this computer.</Hyperlink></TextBlock>
 </StackPanel>

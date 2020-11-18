@@ -5,7 +5,9 @@
     using System.Linq;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
+    using Morphic.Core;
     using Newtonsoft.Json;
+    using Newtonsoft.Json.Linq;
 
     [JsonObject(MemberSerialization.OptIn)]
     public class Setting
@@ -57,6 +59,13 @@
         [JsonProperty("changes")]
         public SettingChanges? SettingChanges { get; private set; }
 
+        /// <summary>Additional properties are deserialised into here.</summary>
+        [JsonExtensionData]
+        private IDictionary<string, JToken>? extraPropertiesJson;
+
+        /// <summary>Extra properties from the json object, that are not defined in this class.</summary>
+        private Dictionary<string, string> extraProperties = new Dictionary<string, string>();
+
         public object? CurrentValue { get; private set; }
 
         /// <summary>Gets the value of this setting.</summary>
@@ -66,22 +75,24 @@
             return this.CurrentValue;
         }
 
+        /// <summary>Gets a property that's not defined by this class, but was specified in the json object.</summary>
+        /// <param name="name">Property name.</param>
+        /// <returns>null if the property was not defined.</returns>
+        public string? GetProperty(string name)
+        {
+            return this.extraProperties.TryGetValue(name, out string? value) ? value : null;
+        }
+
         /// <summary>Gets the value of this setting.</summary>
+        /// <param name="defaultValue">
+        /// The value to return if this value is not available, or if it can't be converted to the desired type.
+        /// </param>
+        /// <typeparam name="T">The desired type</typeparam>
+        /// <returns>A task resolving to the value of the setting.</returns>
         public async Task<T> GetValue<T>(T defaultValue = default)
         {
             object? value = await this.GetValue();
-            T result;
-            if (value is T v)
-            {
-                result = v;
-            }
-            else
-            {
-                result = defaultValue;
-            }
-
-            this.CurrentValue = result;
-            return result;
+            return value.ConvertTo<T>(defaultValue);
         }
 
         /// <summary>Sets the value of this setting.</summary>
@@ -114,7 +125,7 @@
             {
                 int current = await this.GetValue<int>();
                 current += Math.Sign(direction) * this.Range.IncrementValue;
-                if (current > await this.Range.GetMin() && current < await this.Range.GetMax())
+                if (current >= await this.Range.GetMin() && current <= await this.Range.GetMax())
                 {
                     return await this.SetValue(current);
                 }
@@ -129,6 +140,12 @@
             if (string.IsNullOrEmpty(this.Name))
             {
                 this.Name = this.Id;
+            }
+
+            if (this.extraPropertiesJson != null)
+            {
+                this.extraProperties = this.extraPropertiesJson.ToDictionary(kv => kv.Key, kv => kv.Value.ToString());
+                this.extraPropertiesJson = null;
             }
 
             this.Range?.Deserialized(this);
@@ -192,8 +209,6 @@
                 Path = parts[1]
             };
         }
-
-
     }
 
     [JsonObject(MemberSerialization.OptIn)]
