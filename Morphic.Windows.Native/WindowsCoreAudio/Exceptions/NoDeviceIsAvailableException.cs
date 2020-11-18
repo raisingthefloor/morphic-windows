@@ -21,10 +21,10 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System;
-
-namespace Morphic.Windows.Native.WindowsCoreAudio
+namespace Morphic.Windows.Native.WindowsCoreAudio.Exceptions
 {
+    using System;
+
     class NoDeviceIsAvailableException : Exception
     {
     }

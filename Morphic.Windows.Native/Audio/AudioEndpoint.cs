@@ -21,19 +21,20 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using Morphic.Windows.Native.WindowsCoreAudio;
-using System;
-using System.Runtime.InteropServices;
-
-namespace Morphic.Windows.Native
+namespace Morphic.Windows.Native.Audio
 {
+    using System;
+    using System.Runtime.InteropServices;
+    using WindowsCom;
+    using WindowsCoreAudio;
+
     public class AudioEndpoint
     {
         private IAudioEndpointVolume _audioEndpointVolume;
 
         private AudioEndpoint(IAudioEndpointVolume audioEndpointVolume)
         {
-            _audioEndpointVolume = audioEndpointVolume;
+            this._audioEndpointVolume = audioEndpointVolume;
         }
 
         public static AudioEndpoint GetDefaultAudioOutputEndpoint()
@@ -65,7 +66,7 @@ namespace Morphic.Windows.Native
         {
             // get the master volume level
             Single volumeLevelScalar;
-            var result = _audioEndpointVolume.GetMasterVolumeLevelScalar(out volumeLevelScalar);
+            var result = this._audioEndpointVolume.GetMasterVolumeLevelScalar(out volumeLevelScalar);
             if (result != WindowsApi.S_OK)
             {
                 // TODO: consider throwing more granular exceptions here
@@ -83,7 +84,7 @@ namespace Morphic.Windows.Native
             }
 
             // set the master volume level
-            var result = _audioEndpointVolume.SetMasterVolumeLevelScalar(volumeLevel, IntPtr.Zero);
+            var result = this._audioEndpointVolume.SetMasterVolumeLevelScalar(volumeLevel, IntPtr.Zero);
             if (result != WindowsApi.S_OK)
             {
                 // TODO: consider throwing more granular exceptions here
@@ -95,7 +96,7 @@ namespace Morphic.Windows.Native
         {
             // get the master mute state
             Int32 isMutedAsInt32;
-            var result = _audioEndpointVolume.GetMute(out isMutedAsInt32);
+            var result = this._audioEndpointVolume.GetMute(out isMutedAsInt32);
             if (result != WindowsApi.S_OK)
             {
                 // TODO: consider throwing more granular exceptions here
@@ -108,7 +109,7 @@ namespace Morphic.Windows.Native
         public void SetMasterMuteState(Boolean muteState)
         {
             // set the master mute state
-            var result = _audioEndpointVolume.SetMute(muteState ? 1 : 0, IntPtr.Zero);
+            var result = this._audioEndpointVolume.SetMute(muteState ? 1 : 0, IntPtr.Zero);
             if (result != WindowsApi.S_OK)
             {
                 // TODO: consider throwing more granular exceptions here

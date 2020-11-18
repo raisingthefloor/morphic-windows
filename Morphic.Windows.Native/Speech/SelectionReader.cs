@@ -21,12 +21,12 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-namespace Morphic.Windows.Native
+namespace Morphic.Windows.Native.Speech
 {
     using System;
+    using System.Diagnostics;
     using System.Threading;
     using System.Threading.Tasks;
-    using System.Diagnostics;
 
     /// <summary>
     /// Reads the selected text from most windows.
