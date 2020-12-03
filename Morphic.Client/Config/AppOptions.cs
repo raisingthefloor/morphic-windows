@@ -241,7 +241,6 @@
                         result = true;
                     }
                 }
-                result = ((IConvertible)value).ToBoolean(null);
             }
             else if (typeof(T) == typeof(string))
             {
