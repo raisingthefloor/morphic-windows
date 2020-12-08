@@ -39,7 +39,7 @@ namespace Morphic.Client.Menu
     /// </summary>
     public class TrayButton : IDisposable
     {
-        private readonly WindowMessageHook messageHook;
+        //private readonly WindowMessageHook messageHook;
 
         /// <summary>Raised when the button is clicked.</summary>
         public event EventHandler<EventArgs>? Click;
@@ -51,41 +51,43 @@ namespace Morphic.Client.Menu
         /// <summary>Used if there was a problem starting the tray-button process.</summary>
         private NotifyIcon? notifyIcon;
 
+        private MorphicNotifyIcon? morphicNotifyIcon;
+
         public bool UseNotificationIcon { get; set; }
 
         // The message sent from the tray button process;
-        public const string ButtonMessageName = "GPII-TrayButton-Message";
-        private readonly int buttonMessage;
+        //public const string ButtonMessageName = "GPII-TrayButton-Message";
+        //private readonly int buttonMessage;
 
-        private enum TrayCommand
-        {
-            Icon = 1,
-            IconHc = 2,
-            Tooltip = 3,
-            Destroy = 4,
-            State = 5
-        }
+        //private enum TrayCommand
+        //{
+        //    Icon = 1,
+        //    IconHc = 2,
+        //    Tooltip = 3,
+        //    Destroy = 4,
+        //    State = 5
+        //}
 
-        private enum TrayNotification
-        {
-            Update = 0,
-            Click = 1,
-            ShowMenu = 2,
-            MouseEnter = 3,
-            MouseLeave = 4,
-            Activate = 5,
-        }
+        //private enum TrayNotification
+        //{
+        //    Update = 0,
+        //    Click = 1,
+        //    ShowMenu = 2,
+        //    MouseEnter = 3,
+        //    MouseLeave = 4,
+        //    Activate = 5,
+        //}
 
         /// <summary>
         /// Used by a second instance of this application to sends a message to the first instance telling
         /// it to activate the window.
         /// </summary>
-        public static void SendActivate()
-        {
-            const int HWND_BROADCAST = 0xffff;
-            int message = WindowMessageHook.RegisterMessage(ButtonMessageName);
-            SendMessage((IntPtr)HWND_BROADCAST, message, (int)TrayNotification.Activate, IntPtr.Zero);
-        }
+        //public static void SendActivate()
+        //{
+        //    const int HWND_BROADCAST = 0xffff;
+        //    int message = WindowMessageHook.RegisterMessage(ButtonMessageName);
+        //    SendMessage((IntPtr)HWND_BROADCAST, message, (int)TrayNotification.Activate, IntPtr.Zero);
+        //}
 
         /// <summary>The icon on the button.</summary>
         public Icon? Icon
@@ -94,6 +96,16 @@ namespace Morphic.Client.Menu
             set
             {
                 this.icon = value;
+                this.UpdateIcon();
+            }
+        }
+
+        public Icon? HighContrastIcon
+        {
+            get => this.highContrastIcon;
+            set
+            {
+                this.highContrastIcon = value;
                 this.UpdateIcon();
             }
         }
@@ -128,20 +140,21 @@ namespace Morphic.Client.Menu
             }
         }
 
-        private Process? buttonProcess;
+        //private Process? buttonProcess;
         private string? text;
-        private string? iconFile;
+        //private string? iconFile;
         private Icon? icon;
+        private Icon? highContrastIcon;
         private bool visible;
 
-        private IntPtr buttonWindow;
+        //private IntPtr buttonWindow;
 
-        public TrayButton(WindowMessageHook messageHook)
-        {
-            this.messageHook = messageHook;
-            this.buttonMessage = this.messageHook.AddMessage(ButtonMessageName);
-            this.messageHook.GotMessage += this.GotMessage;
-        }
+        //public TrayButton(WindowMessageHook messageHook)
+        //{
+        //    //this.messageHook = messageHook;
+        //    //this.buttonMessage = this.messageHook.AddMessage(ButtonMessageName);
+        //    //this.messageHook.GotMessage += this.GotMessage;
+        //}
 
         /// <summary>
         /// Shows the button - starts the button process.
@@ -154,30 +167,44 @@ namespace Morphic.Client.Menu
             {
                 try
                 {
-                    ProcessStartInfo startInfo = new ProcessStartInfo()
+                    this.morphicNotifyIcon = new MorphicNotifyIcon();
+                    this.morphicNotifyIcon.MouseUp += (sender, args) =>
                     {
-                        UseShellExecute = false,
-                        // https://github.com/stegru/Morphic.TrayButton/releases/latest
-                        FileName = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "",
-                            "tray-button.exe")
-                    };
-                    startInfo.EnvironmentVariables.Add("GPII_HWND", this.messageHook.Handle.ToString());
-
-                    Process? process = Process.Start(startInfo);
-
-                    if (process != null)
-                    {
-                        success = true;
-                        this.buttonProcess = process;
-                        this.buttonProcess.EnableRaisingEvents = true;
-                        this.buttonProcess.Exited += (sender, args) =>
+                        if (args.Button == MouseButtons.Right)
                         {
-                            if (this.Visible)
-                            {
-                                this.ShowIcon();
-                            }
-                        };
-                    }
+                            this.SecondaryClick?.Invoke(this, args);
+                        }
+                        else if (args.Button == MouseButtons.Left)
+                        {
+                            this.OnClick();
+                        }
+                    };
+
+                    this.morphicNotifyIcon.DoubleClick += (sender, args) => this.OnClick(true);
+                    //ProcessStartInfo startInfo = new ProcessStartInfo()
+                    //{
+                    //    UseShellExecute = false,
+                    //    // https://github.com/stegru/Morphic.TrayButton/releases/latest
+                    //    FileName = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "",
+                    //        "tray-button.exe")
+                    //};
+                    //startInfo.EnvironmentVariables.Add("GPII_HWND", this.messageHook.Handle.ToString());
+
+                    //Process? process = Process.Start(startInfo);
+
+                    //if (process != null)
+                    //{
+                    //    success = true;
+                    //    this.buttonProcess = process;
+                    //    this.buttonProcess.EnableRaisingEvents = true;
+                    //    this.buttonProcess.Exited += (sender, args) =>
+                    //    {
+                    //        if (this.Visible)
+                    //        {
+                    //            this.ShowIcon();
+                    //        }
+                    //    };
+                    //}
                 }
                 catch (Win32Exception e)
                 {
@@ -212,35 +239,35 @@ namespace Morphic.Client.Menu
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void GotMessage(object? sender, MessageEventArgs e)
-        {
-            if (e.Msg == this.buttonMessage)
-            {
-                switch ((TrayNotification)e.WParam)
-                {
-                    case TrayNotification.Update:
-                        // Button wants to know the settings.
-                        this.buttonWindow = e.LParam;
-                        this.Update();
-                        break;
-                    case TrayNotification.Click:
-                        // Left button click.
-                        this.OnClick();
-                        break;
-                    case TrayNotification.ShowMenu:
-                        // Right button click.
-                        this.SecondaryClick?.Invoke(this, new EventArgs());
-                        break;
-                    case TrayNotification.MouseEnter:
-                        break;
-                    case TrayNotification.MouseLeave:
-                        break;
-                    case TrayNotification.Activate:
-                        this.OnClick(true);
-                        break;
-                }
-            }
-        }
+        //private void GotMessage(object? sender, MessageEventArgs e)
+        //{
+        //    if (e.Msg == this.buttonMessage)
+        //    {
+        //        switch ((TrayNotification)e.WParam)
+        //        {
+        //            case TrayNotification.Update:
+        //                // Button wants to know the settings.
+        //                this.buttonWindow = e.LParam;
+        //                this.Update();
+        //                break;
+        //            case TrayNotification.Click:
+        //                // Left button click.
+        //                this.OnClick();
+        //                break;
+        //            case TrayNotification.ShowMenu:
+        //                // Right button click.
+        //                this.SecondaryClick?.Invoke(this, new EventArgs());
+        //                break;
+        //            case TrayNotification.MouseEnter:
+        //                break;
+        //            case TrayNotification.MouseLeave:
+        //                break;
+        //            case TrayNotification.Activate:
+        //                this.OnClick(true);
+        //                break;
+        //        }
+        //    }
+        //}
 
         private int lastClick;
         private void OnClick(bool doubleClick = false)
@@ -265,11 +292,16 @@ namespace Morphic.Client.Menu
             {
                 this.notifyIcon.Visible = false;
             }
-            
-            if (this.buttonProcess != null)
+
+            if (this.morphicNotifyIcon != null)
             {
-                this.SendCommand(TrayCommand.Destroy);
+                this.morphicNotifyIcon.Visible = false;
             }
+            
+            //if (this.buttonProcess != null)
+            //{
+            //    this.SendCommand(TrayCommand.Destroy);
+            //}
         }
 
 
@@ -278,12 +310,12 @@ namespace Morphic.Client.Menu
         /// </summary>
         /// <param name="command">The command name.</param>
         /// <param name="commandData">Command commandData.</param>
-        private void SendCommand(TrayCommand command, string? commandData = null)
-        {
-            const int WM_COPYDATA = 0x4a;
-            COPYDATASTRUCT data = new COPYDATASTRUCT((int)command, commandData ?? string.Empty);
-            TrayButton.SendMessageCopyData(this.buttonWindow, WM_COPYDATA, (int)this.messageHook.Handle, ref data);
-        }
+        //private void SendCommand(TrayCommand command, string? commandData = null)
+        //{
+        //    const int WM_COPYDATA = 0x4a;
+        //    COPYDATASTRUCT data = new COPYDATASTRUCT((int)command, commandData ?? string.Empty);
+        //    TrayButton.SendMessageCopyData(this.buttonWindow, WM_COPYDATA, (int)this.messageHook.Handle, ref data);
+        //}
         
         /// <summary>Sends the configuration to the button.</summary>
         private void Update()
@@ -293,6 +325,10 @@ namespace Morphic.Client.Menu
             if (this.notifyIcon != null)
             {
                 this.notifyIcon.Visible = this.Visible;
+            }
+            if (this.morphicNotifyIcon != null)
+            {
+                this.morphicNotifyIcon.Visible = this.Visible;
             }
         }
 
@@ -306,9 +342,9 @@ namespace Morphic.Client.Menu
                 this.notifyIcon.Text = this.text;
             }
 
-            if (this.buttonProcess != null)
+            if (this.morphicNotifyIcon != null)
             {
-                this.SendCommand(TrayCommand.Tooltip, this.text);
+                this.morphicNotifyIcon.Text = this.text;
             }
         }
 
@@ -322,45 +358,51 @@ namespace Morphic.Client.Menu
                 this.notifyIcon.Icon = this.Icon;
             }
 
-            if (this.buttonProcess != null) {
-                // Store the icon to a file, and tell the tray-button to load it.
-                this.iconFile ??= System.IO.Path.GetTempFileName();
-                using (FileStream fs = new FileStream(this.iconFile, FileMode.Truncate))
-                {
-                    this.Icon?.Save(fs);
-                }
-
-                this.SendCommand(TrayCommand.Icon, this.iconFile);
+            if (this.morphicNotifyIcon != null)
+            {
+                this.morphicNotifyIcon.Icon = this.Icon;
+                this.morphicNotifyIcon.HighContrastIcon = this.HighContrastIcon;
             }
+
+            //if (this.buttonProcess != null) {
+            //    // Store the icon to a file, and tell the tray-button to load it.
+            //    this.iconFile ??= System.IO.Path.GetTempFileName();
+            //    using (FileStream fs = new FileStream(this.iconFile, FileMode.Truncate))
+            //    {
+            //        this.Icon?.Save(fs);
+            //    }
+
+            //    this.SendCommand(TrayCommand.Icon, this.iconFile);
+            //}
         }
 
-        [DllImport("user32.dll", EntryPoint = "SendMessage")]
-        private static extern IntPtr SendMessageCopyData(IntPtr hWnd, int Msg, int wParam, ref COPYDATASTRUCT lParam);
-        [DllImport("user32.dll")]
-        private static extern IntPtr SendMessage(IntPtr hWnd, int Msg, int wParam, IntPtr lParam);
+        //[DllImport("user32.dll", EntryPoint = "SendMessage")]
+        //private static extern IntPtr SendMessageCopyData(IntPtr hWnd, int Msg, int wParam, ref COPYDATASTRUCT lParam);
+        //[DllImport("user32.dll")]
+        //private static extern IntPtr SendMessage(IntPtr hWnd, int Msg, int wParam, IntPtr lParam);
 
         // ReSharper disable InconsistentNaming
         // ReSharper disable IdentifierTypo
-        private struct COPYDATASTRUCT
-        {
-            public readonly IntPtr dwData;
-            public readonly int cbData;
-            [MarshalAs(UnmanagedType.LPWStr)]
-            public readonly string lpData;
+        //private struct COPYDATASTRUCT
+        //{
+        //    public readonly IntPtr dwData;
+        //    public readonly int cbData;
+        //    [MarshalAs(UnmanagedType.LPWStr)]
+        //    public readonly string lpData;
 
-            public COPYDATASTRUCT(int dwData, string lpData)
-                : this(new IntPtr(dwData), lpData)
-            {
+        //    public COPYDATASTRUCT(int dwData, string lpData)
+        //        : this(new IntPtr(dwData), lpData)
+        //    {
 
-            }
+        //    }
 
-            public COPYDATASTRUCT(IntPtr dwData, string lpData)
-            {
-                this.dwData = dwData;
-                this.lpData = lpData + "\0";
-                this.cbData = (lpData.Length + 1) * 2;
-            }
-        }
+        //    public COPYDATASTRUCT(IntPtr dwData, string lpData)
+        //    {
+        //        this.dwData = dwData;
+        //        this.lpData = lpData + "\0";
+        //        this.cbData = (lpData.Length + 1) * 2;
+        //    }
+        //}
         // ReSharper restore IdentifierTypo
         // ReSharper restore InconsistentNaming
 
@@ -368,8 +410,9 @@ namespace Morphic.Client.Menu
         public void Dispose()
         {
             this.HideIcon();
-            this.buttonProcess?.Dispose();
+            //this.buttonProcess?.Dispose();
             this.notifyIcon?.Dispose();
+            this.morphicNotifyIcon?.Dispose();
         }
     }
 }

@@ -63,7 +63,7 @@ namespace Morphic.Client
             using Mutex mutex = new Mutex(false, App.ApplicationId);
             if (!mutex.WaitOne(0, false))
             {
-                TrayButton.SendActivate();
+                //TrayButton.SendActivate();
                 return;
             }
 
@@ -257,7 +257,7 @@ namespace Morphic.Client
 
             this.morphicMenu = new MorphicMenu();
 
-            this.RegisterGlobalHotKeys();
+           // this.RegisterGlobalHotKeys();
             this.ConfigureCountly();
             this.StartCheckingForUpdates();
 

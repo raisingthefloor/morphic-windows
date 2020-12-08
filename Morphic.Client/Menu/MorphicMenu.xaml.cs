@@ -105,12 +105,13 @@
             //     new LoggerFactory().CreateLogger<SystemSetting>());
             // bool allNotificationIconsShown = await filterType.GetValue() as bool? == true;
 
-            WindowMessageHook windowMessageHook = WindowMessageHook.GetGlobalMessageHook();
-            this.trayButton = new TrayButton(windowMessageHook);
+            //WindowMessageHook windowMessageHook = WindowMessageHook.GetGlobalMessageHook();
+            this.trayButton = new TrayButton();
             this.trayButton.Click += this.OnTrayButtonClicked;
             this.trayButton.SecondaryClick += this.OnTrayButtonRightClicked;
             this.trayButton.DoubleClick += this.OnTrayButtonDoubleClicked;
             this.trayButton.Icon = Client.Properties.Resources.Icon;
+            this.trayButton.HighContrastIcon = Client.Properties.Resources.HighContrastIcon;
             this.trayButton.Text = "Morphic";
             //this.trayButton.UseNotificationIcon = allNotificationIconsShown;
             this.trayButton.Visible = true;
