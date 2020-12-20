@@ -63,8 +63,9 @@ namespace Morphic.Client
             using Mutex mutex = new Mutex(false, App.ApplicationId);
             if (!mutex.WaitOne(0, false))
             {
-                TrayButton.SendActivate();
-                return;
+			// TODO: implement another method of activating our already-running application (to tell it to show/activate the MorphicBar)
+            //    TrayIcon.SendActivate();
+            //    return;
             }
 
             // Ensure the current directory is the same as the executable, so relative paths work.

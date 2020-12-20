@@ -19,7 +19,7 @@
 
         protected override void OnInitialized(EventArgs e)
         {
-            this.ShowTrayButton();
+            this.ShowTrayIcon();
             base.OnInitialized(e);
         }
 
@@ -67,14 +67,8 @@
 
         private void QuitClick(object sender, RoutedEventArgs e)
         {
-            MessageBoxResult result =
-                MessageBox.Show("Do you really want to stop using Morphic?", "Quit Morphic", MessageBoxButton.YesNo);
-
-            if (result == MessageBoxResult.Yes)
-            {
-                this.App.BarManager.CloseBar();
-                this.App.Shutdown();
-            }
+            this.App.BarManager.CloseBar();
+            this.App.Shutdown();
         }
 
         private void StopKeyRepeatInit(object sender, RoutedEventArgs e)
@@ -96,43 +90,41 @@
 
         #region TrayIcon
 
-        private TrayButton trayButton = null!;
+        private MorphicHybridTrayIcon? _trayIcon = null;
 
-        private async void ShowTrayButton()
+        private async void ShowTrayIcon()
         {
             // TODO: re-implement using solutions registry.
             // SystemSetting filterType = new SystemSetting("SystemSettings_Notifications_ShowIconsOnTaskbar",
             //     new LoggerFactory().CreateLogger<SystemSetting>());
-            // bool allNotificationIconsShown = await filterType.GetValue() as bool? == true;
+            // var allNotificationIconsShown = (await filterType.GetValue() as bool? == true) ? TrayIcon.TrayIconLocationOption.NotificationTray : TrayIcon.TrayIconLocationOption.NextToNotificationTry;
 
             WindowMessageHook windowMessageHook = WindowMessageHook.GetGlobalMessageHook();
-            this.trayButton = new TrayButton(windowMessageHook);
-            this.trayButton.Click += this.OnTrayButtonClicked;
-            this.trayButton.SecondaryClick += this.OnTrayButtonRightClicked;
-            this.trayButton.DoubleClick += this.OnTrayButtonDoubleClicked;
-            this.trayButton.Icon = Client.Properties.Resources.Icon;
-            this.trayButton.Text = "Morphic";
-            //this.trayButton.UseNotificationIcon = allNotificationIconsShown;
-            this.trayButton.Visible = true;
+            MorphicHybridTrayIcon trayIcon = new MorphicHybridTrayIcon();
+            trayIcon = new MorphicHybridTrayIcon();
+            trayIcon.Click += this.OnTrayIconClicked;
+            trayIcon.SecondaryClick += this.OnTrayIconRightClicked;
+            trayIcon.Icon = Client.Properties.Resources.Icon;
+            trayIcon.Text = "Morphic";
+            //trayIcon.TrayIconLocation = allNotificationIconsShown;
+            trayIcon.TrayIconLocation = MorphicHybridTrayIcon.TrayIconLocationOption.NextToNotificationTray;
+            trayIcon.Visible = true;
+            _trayIcon = trayIcon;
+
             this.App.Exit += (sender, args) =>
             {
-                this.trayButton.Visible = false;
-                this.trayButton.Dispose();
-                this.trayButton = null!;
+                _trayIcon.Visible = false;
+                _trayIcon.Dispose();
+                _trayIcon = null;
             };
         }
 
-        private void OnTrayButtonDoubleClicked(object? sender, EventArgs e)
+        private void OnTrayIconRightClicked(object? sender, EventArgs e)
         {
-            this.App.BarManager.ShowBar();
+                this.Show();
         }
 
-        private void OnTrayButtonRightClicked(object? sender, EventArgs e)
-        {
-            this.Show();
-        }
-
-        private void OnTrayButtonClicked(object? sender, EventArgs e)
+        private void OnTrayIconClicked(object? sender, EventArgs e)
         {
             if (this.App.BarManager.BarVisible)
             {
