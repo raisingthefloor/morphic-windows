@@ -24,25 +24,40 @@
         public bool SystemParametersInfo<T>(Action action, uint uiParam, T pvParam, bool update = false)
             where T : struct
         {
+            bool result;
+
             IntPtr ptr = Marshal.AllocHGlobal(Marshal.SizeOf(pvParam));
-            Marshal.StructureToPtr(pvParam, ptr, false);
+            try
+            {
+                Marshal.StructureToPtr(pvParam, ptr, false);
 
-            bool result = WindowsApi.SystemParametersInfo((uint)action, uiParam, ptr, update ? 3 : 0);
-
-            Marshal.FreeHGlobal(ptr);
+                result = WindowsApi.SystemParametersInfo((uint)action, uiParam, ptr, update ? 3 : 0);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(ptr);
+            }
             return result;
         }
 
         public bool SystemParametersInfo<T>(Action action, uint uiParam, ref T pvParam, bool update = false)
             where T : struct
         {
+            bool result;
+
             IntPtr ptr = Marshal.AllocHGlobal(Marshal.SizeOf(pvParam));
-            Marshal.StructureToPtr(pvParam, ptr, false);
+            try
+            {
+                Marshal.StructureToPtr(pvParam, ptr, false);
 
-            bool result = WindowsApi.SystemParametersInfo((uint)action, uiParam, ptr, update ? 3 : 0);
+                result = WindowsApi.SystemParametersInfo((uint)action, uiParam, ptr, update ? 3 : 0);
 
-            pvParam = (T)Marshal.PtrToStructure(ptr, typeof(T));
-            Marshal.FreeHGlobal(ptr);
+                pvParam = (T)Marshal.PtrToStructure(ptr, typeof(T));
+            } 
+            finally
+            {
+                Marshal.FreeHGlobal(ptr);
+            }
             return result;
         }
 
