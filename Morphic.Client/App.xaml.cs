@@ -142,6 +142,7 @@ namespace Morphic.Client
             services.AddSingleton<Keychain>();
             services.AddSingleton<Storage>();
             services.AddSingleton<MorphicSession>();
+            services.AddSingleton<CommunitySession>();
             services.AddTransient<TravelWindow>();
             services.AddTransient<CreateAccountPanel>();
             services.AddTransient<CapturePanel>();
