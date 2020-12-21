@@ -131,7 +131,7 @@ stages:
           displayName: 'Use .NET Core SDK 2.1'
           inputs:
             packageType: sdk
-            version: 2.1
+            version: 2.1.811
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - task: DotNetCoreCLI@2
@@ -182,7 +182,7 @@ stages:
           displayName: 'Use .NET Core SDK 2.1'
           inputs:
             packageType: sdk
-            version: 2.1
+            version: 2.1.811
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - task: CmdLine@2
