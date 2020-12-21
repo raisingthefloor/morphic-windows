@@ -39,7 +39,14 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  
+
+  <ItemGroup Condition="'$(Configuration)' == 'Release'">
+    <!-- copy the feature files for release-mode debug sessions, so one can be specified via MORPHIC_FEATURES -->
+    <None Update="Properties\features.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
   <ItemGroup>
     <Content Include="DefaultConfig\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
