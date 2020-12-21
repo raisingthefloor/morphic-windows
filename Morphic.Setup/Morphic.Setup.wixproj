@@ -61,7 +61,7 @@
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
   </PropertyGroup>
   <Target Name="BeforeBuild">
-    <Exec Command="dotnet publish ..\Morphic.Client\Morphic.Client.csproj -r win10-x64 -c $(Configuration) -p:BuildType=$(BuildType) -p:Edition=$(Edition)" />
+    <Exec Command="dotnet publish ..\Morphic.Client\Morphic.Client.csproj -r win-x64 -c $(Configuration) -p:BuildType=$(BuildType) -p:Edition=$(Edition)" />
     <HeatDirectory Directory="..\Morphic.Client\bin\$(Configuration)\netcoreapp3.1\win-x64\publish" PreprocessorVariable="var.ClientOutputDirectory" OutputFile="Generated.wxs" ComponentGroupName="GeneratedComponents" DirectoryRefId="INSTALLFOLDER" AutogenerateGuids="true" ToolPath="$(WixToolPath)" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" />
   </Target>
   <!--
