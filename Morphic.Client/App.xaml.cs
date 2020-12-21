@@ -191,8 +191,9 @@ namespace Morphic.Client
         void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
         {
             // TODO: Improve error logging/reporting.
+
             Exception ex = e.Exception;
-            MessageBox.Show($"Morphic ran into a problem:\n\n{e.Exception.Message}\n\nFurther information:\n{e.Exception}", "Morphic", MessageBoxButton.OK, MessageBoxImage.Warning);
+
             Console.WriteLine(ex);
 
             try
@@ -208,6 +209,8 @@ namespace Morphic.Client
             {
                 // ignore
             }
+
+            MessageBox.Show($"Morphic ran into a problem:\n\n{e.Exception.Message}\n\nFurther information:\n{e.Exception}", "Morphic", MessageBoxButton.OK, MessageBoxImage.Warning);
 
             // This prevents the exception from crashing the application
             e.Handled = true;
