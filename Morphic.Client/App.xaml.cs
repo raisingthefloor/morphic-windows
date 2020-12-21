@@ -194,8 +194,6 @@ namespace Morphic.Client
 
             Exception ex = e.Exception;
 
-            Console.WriteLine(ex);
-
             try
             {
                 this.Logger.LogError("handled uncaught exception: {msg}", ex.Message);
@@ -209,6 +207,8 @@ namespace Morphic.Client
             {
                 // ignore
             }
+
+            Console.WriteLine(ex);
 
             MessageBox.Show($"Morphic ran into a problem:\n\n{e.Exception.Message}\n\nFurther information:\n{e.Exception}", "Morphic", MessageBoxButton.OK, MessageBoxImage.Warning);
 
