@@ -56,6 +56,13 @@ stages:
       - job: build
         steps:
 
+        - task: UseDotNet@2
+          displayName: 'Use .NET Core SDK 3.1.404'
+          inputs:
+            packageType: sdk
+            version: 3.1.404
+            installationPath: $(Agent.ToolsDirectory)/dotnet
+
         # Set a $(BUILD_TYPE) variable
         - bash: |
             BUILD_TYPE="Development"
