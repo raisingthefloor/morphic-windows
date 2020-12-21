@@ -17,6 +17,7 @@ namespace Morphic.Client.Bar.Data
     using System.Reflection;
     using System.Runtime.Serialization;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
     using Newtonsoft.Json.Serialization;
@@ -298,6 +299,8 @@ namespace Morphic.Client.Bar.Data
             // Get the type of item.
             string kindName = jo.SelectToken(this.typeFieldName)?.ToString() ?? this.defaultValue;
             
+            App.Current.Logger.LogInformation("CreateInstance |||\n>>> jo: " + jo.ToString() + "\n>>> objectType: " + objectType.ToString() + "\n>>> kindName: " + kindName.ToString() + "\n>>> bar: " + (bar != null ? bar.ToString() : "null"));
+
             // Create the class for the type.
             object? target = this.CreateInstance(jo, objectType, kindName, bar);
 
