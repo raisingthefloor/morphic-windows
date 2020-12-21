@@ -127,6 +127,13 @@ stages:
             configuration: '$(buildConfiguration)'
             msbuildArgs: '/p:BuildType=$(BUILD_TYPE)'
 
+        - task: UseDotNet@2
+          displayName: 'Use .NET Core SDK 2.1'
+          inputs:
+            packageType: sdk
+            version: 2.1
+            installationPath: $(Agent.ToolsDirectory)/dotnet
+
         - task: DotNetCoreCLI@2
           displayName: Install AzureSignTool
           inputs:
@@ -153,6 +160,13 @@ stages:
           displayName: "save x64 installer for later"
           artifact: x64-installer
 
+        - task: UseDotNet@2
+          displayName: 'Use .NET Core SDK 3.1.404'
+          inputs:
+            packageType: sdk
+            version: 3.1.404
+            installationPath: $(Agent.ToolsDirectory)/dotnet
+
         - task: VSBuild@1
           displayName: "build x64 community installer"
           env:
@@ -163,6 +177,13 @@ stages:
             platform: 'x64'
             configuration: '$(buildConfiguration)'
             msbuildArgs: '/p:BuildType=$(BUILD_TYPE)'
+
+        - task: UseDotNet@2
+          displayName: 'Use .NET Core SDK 2.1'
+          inputs:
+            packageType: sdk
+            version: 2.1
+            installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - task: CmdLine@2
           displayName: 'sign x64 community installer'
