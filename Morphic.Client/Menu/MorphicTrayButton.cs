@@ -190,6 +190,9 @@ namespace Morphic.Client.Menu
             private string? _tooltipText = null;
             private bool _tooltipInfoAdded = false;
 
+            private System.Threading.Timer? _trayButtonPositionCheckupTimer;
+            private int _trayButtonPositionCheckupTimerCounter = 0;
+
             [Flags]
             private enum TrayButtonVisualStateFlags
             {
@@ -243,6 +246,9 @@ namespace Morphic.Client.Menu
 
                 // create the tooltip window (although we won't provide it with any actual text until/unless the text is set
                 this.CreateTooltipWindow();
+
+                // subscribe to display settings changes (so that we know when the screen resolution changes, so that we can reposition our button)
+                Microsoft.Win32.SystemEvents.DisplaySettingsChanged += SystemEvents_DisplaySettingsChanged;
             }
 
             internal void SetText(string? text)
@@ -414,6 +420,8 @@ namespace Morphic.Client.Menu
             {
                 // TODO: if we are the topmost/leftmost next-to-tray-icon button, we should expand the task button container so it takes up our now-unoccupied space
 
+                Microsoft.Win32.SystemEvents.DisplaySettingsChanged -= SystemEvents_DisplaySettingsChanged;
+
                 this.DestroyTooltipWindow();
                 this.DestroyHandle();
             }
@@ -581,7 +589,7 @@ namespace Morphic.Client.Menu
                                 result = new IntPtr(1);
                                 break;
                             default:
-                                Debug.WriteLine("UNHANDLED SETCURSOR Mouse Message: " + mouseMsg.ToString());
+                                //Debug.WriteLine("UNHANDLED SETCURSOR Mouse Message: " + mouseMsg.ToString());
                                 break;
                         }
                         break;
@@ -607,6 +615,35 @@ namespace Morphic.Client.Menu
                 else
                 {
                     m.Result = WinApi.DefWindowProc(m.HWnd, (uint)m.Msg, m.WParam, m.LParam);
+                }
+            }
+
+            private void SystemEvents_DisplaySettingsChanged(object? sender, EventArgs e)
+            {
+                // start a timer which will verify that the button is positioned properly (and will give up after a certain number of attempts)
+                var checkupInterval = new TimeSpan(0, 0, 0, 0, 250);
+                _trayButtonPositionCheckupTimerCounter = 40; // count down for 10 seconds (0.250 x 40)
+                _trayButtonPositionCheckupTimer = new System.Threading.Timer(TrayButtonPositionCheckup, null, checkupInterval, checkupInterval);
+            }
+            private void TrayButtonPositionCheckup(object? state)
+            {
+                if (_trayButtonPositionCheckupTimerCounter <= 0) 
+                {
+                    _trayButtonPositionCheckupTimer?.Dispose();
+                    _trayButtonPositionCheckupTimer = null;
+                    return;
+                }
+                //
+                _trayButtonPositionCheckupTimerCounter = Math.Max(_trayButtonPositionCheckupTimerCounter - 1, 0);
+
+                // check the current and desired positions of the notify tray icon
+                var calculateResult = this.CalculateCurrentAndTargetRectOfTrayButton();
+                if (calculateResult != null)
+                {
+                    if (calculateResult.Value.changeToRect != null)
+                    {
+                        this.PositionTrayButton();
+                    }
                 }
             }
 
@@ -843,59 +880,168 @@ namespace Morphic.Client.Menu
 
             private void PositionTrayButton()
             {
-                // NOTE: there are scenarios we must deal with where there may be multiple "taskbar button" icons to the left of the notification tray; in those scenarios, we must:
-                // 1. Position ourself to the left of the other icon-button(s) (or in an empty space in between them)
-                // 2. Reposition our icon when the other icon-button(s) are removed from the taskbar (e.g. when their host applications close them)
-                // 3. If we detect that we and another application are writing on top of each other (or repositioning the taskbar button container on top of our icon), then we must fail
-                //    gracefully and let our host application know so it can warn the user, place the icon in the notification tray instead, etc.
-
-                // To position the tray button, we need to find three windows:
-                // 1. the taskbar itself
-                // 2. the section of the taskbar which holds the taskbar buttons (i.e. to the right of the start button and find/cortana/taskview buttons, but to the left of the notification tray) */
-                // 3. the notification tray
+                var trayButtonRects = CalculateCurrentAndTargetRectOfTrayButton();
+                if (trayButtonRects == null)
+                {
+                    // fail; abort
+                    Debug.Assert(false, "Could not calculate current and/or new rects for tray button");
+                    return;
+                }
                 //
-                // We will then resize the section of the taskbar that holds the taskbar buttons so that we can place our tray button to its right (i.e. to the left of the notification tray).
+                var currentRect = trayButtonRects.Value.currentRect;
+                var changeToRect = trayButtonRects.Value.changeToRect;
+                var taskbarOrientation = trayButtonRects.Value.orientation;
 
-                // find the taskbar and determine its orientation
+                // if changeToRect is more leftmost/topmost than the task button container's right side, then shrink the task button container appropriately
+                WinApi.RECT? newTaskButtonContainerRect = null;
+                if (changeToRect != null)
+                {
+                    var taskbarTripletHandles = this.GetTaskbarTripletHandles();
+                    var taskbarTripletRects = this.GetTaskbarTripletRects(taskbarTripletHandles.TaskbarHandle, taskbarTripletHandles.TaskButtonContainerHandle, taskbarTripletHandles.NotifyTrayHandle);
+                    if (taskbarTripletRects == null)
+                    {
+                        // failed; abort
+                        Debug.Assert(false, "could not get rects of taskbar or its important children");
+                        return;
+                    }
+                    var taskButtonContainerRect = taskbarTripletRects.Value.TaskButtonContainerRect;
+
+                    if ((taskbarOrientation == Orientation.Horizontal) && (taskButtonContainerRect.Right > changeToRect.Value.Left))
+                    {
+                        newTaskButtonContainerRect = new WinApi.RECT(new System.Windows.Rect(
+                            taskButtonContainerRect.Left,
+                            taskButtonContainerRect.Top,
+                            taskButtonContainerRect.Right - taskButtonContainerRect.Left - Math.Max(taskButtonContainerRect.Right - changeToRect.Value.Left, 0),
+                            taskButtonContainerRect.Bottom - taskButtonContainerRect.Top
+                            ));
+                    }
+                    else if ((taskbarOrientation == Orientation.Vertical) && taskButtonContainerRect.Bottom > changeToRect.Value.Top)
+                    {
+                        newTaskButtonContainerRect = new WinApi.RECT(new System.Windows.Rect(
+                            taskButtonContainerRect.Left,
+                            taskButtonContainerRect.Top,
+                            taskButtonContainerRect.Right - taskButtonContainerRect.Left,
+                            taskButtonContainerRect.Bottom - taskButtonContainerRect.Top - Math.Max(taskButtonContainerRect.Bottom - changeToRect.Value.Top, 0)
+                            ));
+                    }
+                }
+                //
+                if (newTaskButtonContainerRect != null)
+                {
+                    var taskButtonContainerHandle = MorphicTrayButtonNativeWindow.FindWindowsTaskbarTaskButtonContainerHandle();
+
+                    // shrink the task button container
+                    // NOTE: this is a blocking call, waiting until the task button container is resized; we do this intentionally so that we see its updated size synchronously
+                    var repositionTaskButtonContainerSuccess = WinApi.SetWindowPos(
+                        taskButtonContainerHandle,
+                        IntPtr.Zero,
+                        newTaskButtonContainerRect.Value.Left,
+                        newTaskButtonContainerRect.Value.Top,
+                        newTaskButtonContainerRect.Value.Right - newTaskButtonContainerRect.Value.Left,
+                        newTaskButtonContainerRect.Value.Bottom - newTaskButtonContainerRect.Value.Top,
+                            WinApi.SetWindowPosFlags.SWP_NOACTIVATE /* do not activate the window */ | 
+                            WinApi.SetWindowPosFlags.SWP_NOMOVE /* retain the current x and y position, out of an abundance of caution */ |
+                            WinApi.SetWindowPosFlags.SWP_NOZORDER /* retain the current Z order (ignoring the hWndInsertAfter parameter) */
+                        );
+
+                    if (repositionTaskButtonContainerSuccess == false)
+                    {
+                        // failed; abort
+                        Debug.Assert(false, "Could not resize taskbar's task button container");
+                        return;
+                    }
+                }
+
+                // if our button needs to move (either because we don't know the old RECT or because the new RECT is different), do so now
+                if (changeToRect != null)
+                {
+                    if (currentRect.HasValue == false || (currentRect.Value != changeToRect.Value))
+                    {
+                        var taskbarHandle = MorphicTrayButtonNativeWindow.FindWindowsTaskbarHandle();
+
+                        // convert our tray button's position from desktop coordinates to "child" coordinates within the taskbar
+                        WinApi.RECT childRect = changeToRect.Value;
+                        var mapWindowPointsResult = WinApi.MapWindowPoints(IntPtr.Zero /* use screen coordinates */, taskbarHandle, ref childRect, 2 /* 2 indicates that lpPoints is a RECT */);
+                        if (mapWindowPointsResult == 0 && Marshal.GetLastWin32Error() != WinApi.ERROR_SUCCESS)
+                        {
+                            // failed; abort
+                            Debug.Assert(false, "Could not map tray button RECT points to taskbar window handle");
+                            return;
+                        }
+
+                        var repositionTrayButtonSuccess = WinApi.SetWindowPos(
+                            this.Handle,
+                            WinApi.HWND_TOP,
+                            childRect.Left,
+                            childRect.Top,
+                            childRect.Right - childRect.Left,
+                            childRect.Bottom - childRect.Top,
+                            WinApi.SetWindowPosFlags.SWP_NOACTIVATE /* do not activate the window */ |
+                            WinApi.SetWindowPosFlags.SWP_SHOWWINDOW /* display the tray button */
+                            );
+
+                        if (repositionTrayButtonSuccess == false)
+                        {
+                            // failed; abort
+                            Debug.Assert(false, "Could not reposition and/or resize tray button");
+                            return;
+                        }
+                    }
+
+                    // as we have moved/resized, request a repaint
+                    this.RequestRedraw();
+
+                    // if we have tooltip text, update its tracking rectangle
+                    if (_tooltipText != null)
+                    {
+                        UpdateTooltipTextAndTracking();
+                    }
+                }
+            }
+
+            private (IntPtr TaskbarHandle, IntPtr TaskButtonContainerHandle, IntPtr NotifyTrayHandle) GetTaskbarTripletHandles()
+            {
                 var taskbarHandle = MorphicTrayButtonNativeWindow.FindWindowsTaskbarHandle();
+                var taskButtonContainerHandle = MorphicTrayButtonNativeWindow.FindWindowsTaskbarTaskButtonContainerHandle();
+                var notifyTrayHandle = MorphicTrayButtonNativeWindow.FindWindowsTaskbarNotificationTrayHandle();
+
+                return (taskbarHandle, taskButtonContainerHandle, notifyTrayHandle);
+            }
+
+            private (WinApi.RECT TaskbarRect, WinApi.RECT TaskButtonContainerRect, WinApi.RECT NotifyTrayRect)? GetTaskbarTripletRects(IntPtr taskbarHandle, IntPtr taskButtonContainerHandle, IntPtr notifyTrayHandle)
+            {
+                // find the taskbar and its rect
                 WinApi.RECT taskbarRect = new WinApi.RECT();
                 if (WinApi.GetWindowRect(taskbarHandle, out taskbarRect) == false)
                 {
                     // failed; abort
                     Debug.Assert(false, "Could not obtain window handle to taskbar.");
-                    return;
-                }
-                //
-                System.Windows.Forms.Orientation taskbarOrientation;
-                if ((taskbarRect.Right - taskbarRect.Left) > (taskbarRect.Bottom - taskbarRect.Top))
-                {
-                    taskbarOrientation = Orientation.Horizontal;
-                } 
-                else
-                {
-                    taskbarOrientation = Orientation.Vertical;
+                    return null;
                 }
 
                 // find the window handles and rects of the task button container and the notify tray (which are children inside of the taskbar)
                 //
-                var taskButtonContainerHandle = MorphicTrayButtonNativeWindow.FindWindowsTaskbarTaskButtonContainerHandle();
                 WinApi.RECT taskButtonContainerRect = new WinApi.RECT();
                 if (WinApi.GetWindowRect(taskButtonContainerHandle, out taskButtonContainerRect) == false)
                 {
                     // failed; abort
                     Debug.Assert(false, "Could not obtain window handle to taskbar's task button list container.");
-                    return;
+                    return null;
                 }
                 //
-                var notifyTrayHandle = MorphicTrayButtonNativeWindow.FindWindowsTaskbarNotificationTrayHandle();
                 WinApi.RECT notifyTrayRect = new WinApi.RECT();
                 if (WinApi.GetWindowRect(notifyTrayHandle, out notifyTrayRect) == false)
                 {
                     // failed; abort
                     Debug.Assert(false, "Could not obtain window handle to taskbar's notify tray.");
-                    return;
+                    return null;
                 }
 
+                return (taskbarRect, taskButtonContainerRect, notifyTrayRect);
+            }
+
+            private (WinApi.RECT availableAreaRect, List<WinApi.RECT> childRects) CalculateEmptyRectsBetweenTaskButtonContainerAndNotifyTray(IntPtr taskbarHandle, Orientation taskbarOrientation, WinApi.RECT taskbarRect, WinApi.RECT taskButtonContainerRect, WinApi.RECT notifyTrayRect) 
+            {
                 // calculate the total "free area" rectangle (the area between the task button container and the notify tray where we want to place our tray button)
                 WinApi.RECT freeAreaAvailableRect;
                 if (taskbarOrientation == Orientation.Horizontal)
@@ -915,7 +1061,8 @@ namespace Morphic.Client.Menu
                 foreach (var taskbarChildHandle in taskbarChildHandles)
                 {
                     WinApi.RECT taskbarChildRect = new WinApi.RECT();
-                    if (WinApi.GetWindowRect(taskbarChildHandle, out taskbarChildRect) == true) {
+                    if (WinApi.GetWindowRect(taskbarChildHandle, out taskbarChildRect) == true)
+                    {
                         taskbarChildHandlesWithRects.Add(taskbarChildHandle, taskbarChildRect);
                     }
                     else
@@ -956,6 +1103,53 @@ namespace Morphic.Client.Menu
                     }
                 }
 
+                return (freeAreaAvailableRect, freeAreaChildRects);
+            }
+
+            // NOTE: this function returns a newPosition IF the tray button should be moved
+            private (WinApi.RECT? currentRect, WinApi.RECT? changeToRect, Orientation orientation)? CalculateCurrentAndTargetRectOfTrayButton()
+            {
+                // NOTE: there are scenarios we must deal with where there may be multiple potential "taskbar button" icons to the left of the notification tray; in those scenarios, we must:
+                // 1. Position ourself to the left of the other icon-button(s) (or in an empty space in between them)
+                // 2. Reposition our icon when the other icon-button(s) are removed from the taskbar (e.g. when their host applications close them)
+                // 3. If we detect that we and another application are writing on top of each other (or repositioning the taskbar button container on top of our icon), then we must fail
+                //    gracefully and let our host application know so it can warn the user, place the icon in the notification tray instead, etc.
+
+                // To position the tray button, we need to find three windows:
+                // 1. the taskbar itself
+                // 2. the section of the taskbar which holds the taskbar buttons (i.e. to the right of the start button and find/cortana/taskview buttons, but to the left of the notification tray) */
+                // 3. the notification tray
+                //
+                // We will then resize the section of the taskbar that holds the taskbar buttons so that we can place our tray button to its right (i.e. to the left of the notification tray).
+
+                var taskbarTripletHandles = this.GetTaskbarTripletHandles();
+                var taskbarHandle = taskbarTripletHandles.TaskbarHandle;
+
+                var taskbarRects = this.GetTaskbarTripletRects(taskbarTripletHandles.TaskbarHandle, taskbarTripletHandles.TaskButtonContainerHandle, taskbarTripletHandles.NotifyTrayHandle);
+                if (taskbarRects == null)
+                {
+                    return null;
+                }
+                var taskbarRect = taskbarRects.Value.TaskbarRect;
+                var taskButtonContainerRect = taskbarRects.Value.TaskButtonContainerRect;
+                var notifyTrayRect = taskbarRects.Value.NotifyTrayRect;
+
+                // determine the taskbar's orientation
+                System.Windows.Forms.Orientation taskbarOrientation;
+                if ((taskbarRect.Right - taskbarRect.Left) > (taskbarRect.Bottom - taskbarRect.Top))
+                {
+                    taskbarOrientation = Orientation.Horizontal;
+                }
+                else
+                {
+                    taskbarOrientation = Orientation.Vertical;
+                }
+
+                // calculate all of the free rects between the task button container and notify tray
+                var calculateEmptyRectsResult = this.CalculateEmptyRectsBetweenTaskButtonContainerAndNotifyTray(taskbarHandle, taskbarOrientation, taskbarRect, taskButtonContainerRect, notifyTrayRect);
+                var freeAreaChildRects = calculateEmptyRectsResult.childRects;
+                var freeAreaAvailableRect = calculateEmptyRectsResult.availableAreaRect;
+
                 /* determine the rect for our tray button; based on our current positioning strategy, this will either be its existing position or the leftmost/topmost "next to tray" position.  
                  * If we are determining the leftmost/topmost "next to tray" position, we will find the available space between the task button container and the notification tray (or any 
                  * already-present controls that are already left/top of the notification tray); if there is not enough free space available in that area then we will shrink the task button
@@ -991,22 +1185,25 @@ namespace Morphic.Client.Menu
                 // get our current rect (in case we can just reuse the current position...and also to make sure it doesn't need to be resized)
                 WinApi.RECT currentRectAsNonNullable;
                 WinApi.RECT? currentRect = null;
+                WinApi.RECT? currentRectForResult = null;
                 if (WinApi.GetWindowRect(this.Handle, out currentRectAsNonNullable) == true)
                 {
                     currentRect = currentRectAsNonNullable;
+                    currentRectForResult = currentRectAsNonNullable;
                 }
 
                 // if the current position of our window isn't the right size for our icon, then set it to NULL so we don't try to reuse it.
-                if ((currentRect != null) && 
-                    ((currentRect.Value.Right - currentRect.Value.Left != trayButtonWidth) || (currentRect.Value.Bottom - currentRect.Value.Top != trayButtonHeight))) {
+                if ((currentRect != null) &&
+                    ((currentRect.Value.Right - currentRect.Value.Left != trayButtonWidth) || (currentRect.Value.Bottom - currentRect.Value.Top != trayButtonHeight)))
+                {
                     currentRect = null;
                 }
 
                 // calculate the new rect for our tray button's window
                 WinApi.RECT? newRect = null;
 
-                // if the space occupied by our already-existing rect is not overlapped by anyone else, keep using the same space
-                if (currentRect != null)
+                // if the space occupied by our already-existing rect is not overlapped by anyone else and is in the free area, keep using the same space
+                if ((currentRect != null) && (currentRect.Value.Intersects(freeAreaAvailableRect) == true))
                 {
                     // by default, assume that our currentRect is still available (i.e. not overlapped)
                     bool currentRectIsNotOverlapped = true;
@@ -1066,88 +1263,13 @@ namespace Morphic.Client.Menu
                     }
                 }
 
-                // if newRect is more leftmost/topmost than the task button container's right side, then shrink the task button container appropriately
-                WinApi.RECT? newTaskButtonContainerRect = null;
-                if ((taskbarOrientation == Orientation.Horizontal) && (taskButtonContainerRect.Right > newRect.Value.Left))
+                WinApi.RECT? changeToRect = null;
+                if (newRect != currentRectForResult)
                 {
-                    newTaskButtonContainerRect = new WinApi.RECT(new System.Windows.Rect(
-                        taskButtonContainerRect.Left,
-                        taskButtonContainerRect.Top,
-                        taskButtonContainerRect.Right - taskButtonContainerRect.Left - (taskButtonContainerRect.Right - newRect.Value.Left),
-                        taskButtonContainerRect.Bottom - taskButtonContainerRect.Top
-                        ));
-                }
-                else if ((taskbarOrientation == Orientation.Vertical) && (taskButtonContainerRect.Bottom > newRect.Value.Top))
-                {
-                    newTaskButtonContainerRect = new WinApi.RECT(new System.Windows.Rect(
-                        taskButtonContainerRect.Left,
-                        taskButtonContainerRect.Top,
-                        taskButtonContainerRect.Right - taskButtonContainerRect.Left,
-                        taskButtonContainerRect.Bottom - taskButtonContainerRect.Top - (taskButtonContainerRect.Bottom - newRect.Value.Top)
-                        ));
-                }
-                //
-                if (newTaskButtonContainerRect != null)
-                {
-                    // shrink the task button container
-                    // NOTE: this is a blocking call, waiting until the task button container is resized; we do this intentionally so that we see its updated size synchronously
-                    var repositionTaskButtonContainerSuccess = WinApi.SetWindowPos(
-                        taskButtonContainerHandle,
-                        IntPtr.Zero,
-                        newTaskButtonContainerRect.Value.Left,
-                        newTaskButtonContainerRect.Value.Top,
-                        newTaskButtonContainerRect.Value.Right - newTaskButtonContainerRect.Value.Left,
-                        newTaskButtonContainerRect.Value.Bottom - newTaskButtonContainerRect.Value.Top,
-                            WinApi.SetWindowPosFlags.SWP_NOACTIVATE /* do not activate the window */ | 
-                            WinApi.SetWindowPosFlags.SWP_NOMOVE /* retain the current x and y position, out of an abundance of caution */ |
-                            WinApi.SetWindowPosFlags.SWP_NOZORDER /* retain the current Z order (ignoring the hWndInsertAfter parameter) */
-                        );
-
-                    if (repositionTaskButtonContainerSuccess == false)
-                    {
-                        // failed; abort
-                        Debug.Assert(false, "Could not resize taskbar's task button container");
-                        return;
-                    }
+                    changeToRect = newRect;
                 }
 
-                // if our button needs to move (either because we don't know the old RECT or because the new RECT is different), do so now
-                if (currentRect.HasValue == false || (currentRect.Value != newRect.Value))
-                {
-                    // convert our tray button's position from desktop coordinates to "child" coordinates within the taskbar
-                    WinApi.RECT childRect = newRect.Value;
-                    var mapWindowPointsResult = WinApi.MapWindowPoints(IntPtr.Zero /* use screen coordinates */, taskbarHandle, ref childRect, 2 /* 2 indicates that lpPoints is a RECT */);
-                    if (mapWindowPointsResult == 0 && Marshal.GetLastWin32Error() != WinApi.ERROR_SUCCESS)
-                    {
-                        // failed; abort
-                        Debug.Assert(false, "Could not map tray button RECT points to taskbar window handle");
-                        return;
-                    }
-
-                    var repositionTrayButtonSuccess = WinApi.SetWindowPos(
-                        this.Handle,
-                        WinApi.HWND_TOP,
-                        childRect.Left,
-                        childRect.Top,
-                        childRect.Right - childRect.Left,
-                        childRect.Bottom - childRect.Top,
-                        WinApi.SetWindowPosFlags.SWP_NOACTIVATE /* do not activate the window */ |
-                        WinApi.SetWindowPosFlags.SWP_SHOWWINDOW /* display the tray button */
-                        );
-
-                    if (repositionTrayButtonSuccess == false)
-                    {
-                        // failed; abort
-                        Debug.Assert(false, "Could not reposition and/or resize tray button");
-                        return;
-                    }
-                }
-
-                // if we have tooltip text, we need to update its tracking rectangle
-                if (_tooltipText != null)
-                {
-                    UpdateTooltipTextAndTracking();
-                }
+                return (currentRectForResult, changeToRect, taskbarOrientation);
             }
 
             private bool RequestRedraw()

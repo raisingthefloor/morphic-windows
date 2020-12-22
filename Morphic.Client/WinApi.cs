@@ -109,25 +109,24 @@ namespace Morphic.Client
 
             public bool Intersects(RECT rect)
             {
+                bool overlapsHorizontally = false;
+                bool overlapsVertically = false;
+
                 // horizontal check
-                if ((this.Right <= rect.Left) || (this.Left >= rect.Right))
-                {
-                    // does not overlap at all horizontally
-                }
-                else if ((this.Right > rect.Left) && (this.Left < rect.Right))
+                if ((this.Right > rect.Left) && (this.Left < rect.Right))
                 {
                     // partially or fully overlaps horizontally
-                    return true;
+                    overlapsHorizontally = true;
                 }
 
                 // vertical check
-                if ((this.Bottom <= rect.Top) || (this.Top >= rect.Bottom))
-                {
-                    // does not overlap at all vertically
-                }
-                else if ((this.Bottom > rect.Top) && (this.Top < rect.Bottom))
+                if ((this.Bottom > rect.Top) && (this.Top < rect.Bottom))
                 {
                     // partially or fully overlaps vertically
+                    overlapsVertically = true;
+                }
+
+                if ((overlapsHorizontally == true) && (overlapsVertically == true)) {
                     return true;
                 }
 
