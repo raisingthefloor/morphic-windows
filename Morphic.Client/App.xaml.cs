@@ -56,22 +56,47 @@ namespace Morphic.Client
 
     public class AppMain
     {
+        private static Mutex _singleInstanceMutex;
+        private static uint _singleInstanceMessageId;
+
+        // NOTE: we created our own Main function so that we can use a mutex to enforce running only one instance of Morphic at a time
         [STAThread]
         public static void Main()
         {
-            // Writing our own Main function so we can use a mutex to enforce only one running instance of Morphic at a time
-            using Mutex mutex = new Mutex(false, App.ApplicationId);
-            if (!mutex.WaitOne(0, false))
+            // create a message which we can send/receive to indicate that a secondary instance has been started; use the application ID as its backing unique string
+            _singleInstanceMessageId = WinApi.RegisterWindowMessage(App.ApplicationId);
+
+            // create a mutex which we will use to make sure only one copy of Morphic runs at a time
+            bool mutexCreatedNew;
+            _singleInstanceMutex = new Mutex(true, App.ApplicationId, out mutexCreatedNew);
+
+            // if the mutex already existed (i.e. the application is already running), send a message to it now asking it to show its MorphicBar
+            if (mutexCreatedNew == false)
             {
-			// TODO: implement another method of activating our already-running application (to tell it to show/activate the MorphicBar)
-            //    TrayIcon.SendActivate();
-            //    return;
+                // send the "single instance" message to the main instance; leave both parameters as zero
+                MessageWatcherNativeWindow.PostMessage(_singleInstanceMessageId, IntPtr.Zero, IntPtr.Zero);
+
+                // shut down our application (gracefully by returning from Main)
+                return;
             }
 
             // Ensure the current directory is the same as the executable, so relative paths work.
             Directory.SetCurrentDirectory(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
 
             App.Main();
+        }
+
+        internal static void ReleaseSingleInstanceMutex()
+        {
+            _singleInstanceMutex.ReleaseMutex();
+        }
+
+        internal static uint SingleInstanceMessageId
+        {
+            get
+            {
+                return _singleInstanceMessageId;
+            }
         }
     }
 
@@ -392,10 +417,40 @@ namespace Morphic.Client
 
         #endregion
 
+        private MessageWatcherNativeWindow _messageWatcherNativeWindow;
+
+        protected override void OnActivated(EventArgs e)
+        {
+            // create a list of the messages we want to watch for
+            List<uint> messagesToWatch = new List<uint>();
+            messagesToWatch.Add(AppMain.SingleInstanceMessageId); // this is the message that lets us know that another instance of Morphic was started up
+
+            _messageWatcherNativeWindow = new MessageWatcherNativeWindow(messagesToWatch);
+            _messageWatcherNativeWindow.WatchedMessageEvent += _messageWatcherNativeWindow_WatchedMessageEvent;
+            try
+            {
+                _messageWatcherNativeWindow.Initialize();
+            }
+            catch (Exception ex)
+            {
+                this.Logger.LogError("could not create messages watcher window: {msg}", ex.Message);
+            }
+
+            base.OnActivated(e);
+        }
+
+        private void _messageWatcherNativeWindow_WatchedMessageEvent(object sender, MessageWatcherNativeWindow.WatchedMessageEventArgs args)
+        {
+            this.BarManager.ShowBar();
+        }
+
         #region Shutdown
 
         protected override void OnExit(ExitEventArgs e)
         {
+            _messageWatcherNativeWindow.Dispose();
+            AppMain.ReleaseSingleInstanceMutex();
+
             Countly.Instance.SessionEnd();
             base.OnExit(e);
         }

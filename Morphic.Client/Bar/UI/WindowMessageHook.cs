@@ -81,7 +81,7 @@ namespace Morphic.Client.Bar.UI
         /// <returns>The message identifier.</returns>
         public static int RegisterMessage(string messageName)
         {
-            return RegisterWindowMessage(messageName);
+            return (int)WinApi.RegisterWindowMessage(messageName);
         }
 
         /// <summary>
@@ -144,9 +144,6 @@ namespace Morphic.Client.Bar.UI
                 this.hwndSource = null;
             }
         }
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        private static extern int RegisterWindowMessage(string lpString);
 
     }
 

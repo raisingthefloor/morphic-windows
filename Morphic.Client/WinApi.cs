@@ -450,14 +450,20 @@ namespace Morphic.Client
             ABN_WINDOWARRANGE
         }
 
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        internal static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+
         [DllImport("SHELL32", CallingConvention = CallingConvention.StdCall)]
         internal static extern uint SHAppBarMessage(int dwMessage, ref APPBARDATA pData);
 
         [DllImport("User32.dll", CharSet = CharSet.Auto)]
-        internal static extern uint RegisterWindowMessage(string msg);
+        internal static extern uint RegisterWindowMessage(string lpString);
 
         [DllImport("dwmapi.dll")]
         internal static extern int DwmSetWindowAttribute(IntPtr hWnd, int attr, ref int attrValue, int attrSize);
+
+//        internal static readonly IntPtr HWND_BROADCAST = new IntPtr(0xffff);
+        internal static readonly IntPtr HWND_MESSAGE = new IntPtr(-3);
 
         #endregion
 
