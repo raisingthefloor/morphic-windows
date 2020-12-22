@@ -417,23 +417,26 @@ namespace Morphic.Client
 
         #endregion
 
-        private MessageWatcherNativeWindow _messageWatcherNativeWindow;
+        private MessageWatcherNativeWindow? _messageWatcherNativeWindow;
 
         protected override void OnActivated(EventArgs e)
         {
-            // create a list of the messages we want to watch for
-            List<uint> messagesToWatch = new List<uint>();
-            messagesToWatch.Add(AppMain.SingleInstanceMessageId); // this is the message that lets us know that another instance of Morphic was started up
+            if (_messageWatcherNativeWindow == null)
+            {
+                // create a list of the messages we want to watch for
+                List<uint> messagesToWatch = new List<uint>();
+                messagesToWatch.Add(AppMain.SingleInstanceMessageId); // this is the message that lets us know that another instance of Morphic was started up
 
-            _messageWatcherNativeWindow = new MessageWatcherNativeWindow(messagesToWatch);
-            _messageWatcherNativeWindow.WatchedMessageEvent += _messageWatcherNativeWindow_WatchedMessageEvent;
-            try
-            {
-                _messageWatcherNativeWindow.Initialize();
-            }
-            catch (Exception ex)
-            {
-                this.Logger.LogError("could not create messages watcher window: {msg}", ex.Message);
+                _messageWatcherNativeWindow = new MessageWatcherNativeWindow(messagesToWatch);
+                _messageWatcherNativeWindow.WatchedMessageEvent += _messageWatcherNativeWindow_WatchedMessageEvent;
+                try
+                {
+                    _messageWatcherNativeWindow.Initialize();
+                }
+                catch (Exception ex)
+                {
+                    this.Logger.LogError("could not create messages watcher window: {msg}", ex.Message);
+                }
             }
 
             base.OnActivated(e);

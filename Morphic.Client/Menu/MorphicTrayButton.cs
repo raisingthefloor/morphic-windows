@@ -900,11 +900,11 @@ namespace Morphic.Client.Menu
                 WinApi.RECT freeAreaAvailableRect;
                 if (taskbarOrientation == Orientation.Horizontal)
                 {
-                    freeAreaAvailableRect = new WinApi.RECT(new System.Windows.Rect(taskButtonContainerRect.Right, taskbarRect.Top, notifyTrayRect.Left - taskButtonContainerRect.Right, taskbarRect.Bottom - taskbarRect.Top));
+                    freeAreaAvailableRect = new WinApi.RECT(new System.Windows.Rect(taskButtonContainerRect.Right, taskbarRect.Top, Math.Max(notifyTrayRect.Left - taskButtonContainerRect.Right, 0), Math.Max(taskbarRect.Bottom - taskbarRect.Top, 0)));
                 }
                 else
                 {
-                    freeAreaAvailableRect = new WinApi.RECT(new System.Windows.Rect(taskbarRect.Left, taskButtonContainerRect.Bottom, taskbarRect.Right - taskbarRect.Left, notifyTrayRect.Top - taskButtonContainerRect.Bottom));
+                    freeAreaAvailableRect = new WinApi.RECT(new System.Windows.Rect(taskbarRect.Left, taskButtonContainerRect.Bottom, Math.Max(taskbarRect.Right - taskbarRect.Left, 0), Math.Max(notifyTrayRect.Top - taskButtonContainerRect.Bottom, 0)));
                 }
 
                 // capture a list of all child windows within the taskbar; we'll use this list to enumerate the rects of all the taskbar's children
