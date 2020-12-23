@@ -148,32 +148,34 @@ namespace Morphic.Client.Bar.Data
 
                 // if extra bar items were specified in the config file, add them to the left side of the MorphicBar now
                 var morphicBarExtraItems = ConfigurableFeatures.MorphicBarExtraItems;
-                List<BarItem> extraBarItems = new List<BarItem>();
-                foreach (var extraItemData in morphicBarExtraItems)
+                if (morphicBarExtraItems.Count > 0)
                 {
+                    List<BarItem> extraBarItems = new List<BarItem>();
+                    foreach (var extraItemData in morphicBarExtraItems)
+                    {
 
-                    BarButton extraBarItem = new BarButton(defaultBar);
-                    extraBarItem.ToolTipHeader = extraItemData.tooltipHeader;
-                    extraBarItem.ToolTip = extraItemData.tooltipText;
-                    extraBarItem.Text = extraItemData.label ?? "";
-                    extraBarItem.Action = new Morphic.Client.Bar.Data.Actions.WebAction();
-                    ((Morphic.Client.Bar.Data.Actions.WebAction)extraBarItem.Action).UrlString = extraItemData.url ?? "";
-                    //extraBarItem.ColorValue = "#00FF00";
-                    extraBarItem.IsPrimary = true;
+                        BarButton extraBarItem = new BarButton(defaultBar);
+                        extraBarItem.ToolTipHeader = extraItemData.tooltipHeader;
+                        extraBarItem.ToolTip = extraItemData.tooltipText;
+                        extraBarItem.Text = extraItemData.label ?? "";
+                        extraBarItem.Action = new Morphic.Client.Bar.Data.Actions.WebAction();
+                        ((Morphic.Client.Bar.Data.Actions.WebAction)extraBarItem.Action).UrlString = extraItemData.url ?? "";
+                        //extraBarItem.ColorValue = "#00FF00";
+                        extraBarItem.IsPrimary = true;
+                        //
+                        defaultBar?.AllItems.Add(extraBarItem);
+                    }
+
+                    // add a spacer entry
+                    BarButton spacerBarItem = new BarButton(defaultBar);
+                    spacerBarItem.ToolTipHeader = "";
+                    spacerBarItem.ToolTip = "";
+                    spacerBarItem.Text = "";
+                    spacerBarItem.ColorValue = "#FFFFFF";
+                    spacerBarItem.IsPrimary = true;
                     //
-                    defaultBar?.AllItems.Add(extraBarItem);
+                    defaultBar?.AllItems.Add(spacerBarItem);
                 }
-
-                // add a spacer entry
-                BarButton spacerBarItem = new BarButton(defaultBar);
-                spacerBarItem.ToolTipHeader = "";
-                spacerBarItem.ToolTip = "";
-                spacerBarItem.Text = "";
-                spacerBarItem.ColorValue = "#FFFFFF";
-                spacerBarItem.IsPrimary = true;
-
-                defaultBar?.AllItems.Add(spacerBarItem);
-
             }
             else
             {
