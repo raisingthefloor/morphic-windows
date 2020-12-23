@@ -6,6 +6,18 @@
     using System.Linq;
     using System.Runtime.CompilerServices;
 
+    public static class ConfigurableFeatures
+    {
+        public static bool CloudSettingsTransferIsEnabled = false;
+        public static List<Morphic.Client.App.MorphicBarExtraItem> MorphicBarExtraItems = new List<Morphic.Client.App.MorphicBarExtraItem>();
+
+        public static void SetFeatures(bool cloudSettingsTransferIsEnabled, List<Morphic.Client.App.MorphicBarExtraItem> morphicBarExtraItems)
+        {
+            ConfigurableFeatures.CloudSettingsTransferIsEnabled = cloudSettingsTransferIsEnabled;
+            ConfigurableFeatures.MorphicBarExtraItems = morphicBarExtraItems;
+        }
+    }
+
     [Flags]
     public enum Features : uint
     {

@@ -18,7 +18,7 @@
         private readonly ILogger<Backups> logger;
         private readonly IServiceProvider serviceProvider;
 
-        public static string BackupDirectory => AppPaths.GetConfigDir("backups");
+        public static string BackupDirectory => AppPaths.GetUserLocalConfigDir("backups");
         private static readonly string BackupExtension = ".preferences";
 
         public Backups(MorphicSession morphicSession, ILogger<Backups> logger, IServiceProvider serviceProvider)

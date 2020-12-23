@@ -43,10 +43,10 @@
 
     <menu:MorphicMenuItem Header="_Other Helpful Things" Open="https://morphic.org/demos" />
 
-    <Separator />
-
-    <menu:MorphicMenuItem Header="_Copy settings between computers" Dialog="dialogs:TravelWindow"/>
-    <menu:MorphicMenuItem Header="_Restore settings from backup" Dialog="dialogs:RestoreWindow"/>
+    <Separator x:Name="CloudSettingsSeparator" />
+    <menu:MorphicMenuItem x:Name="CopySettingsBetweenComputersMenuItem" Header="_Copy settings between computers" Dialog="dialogs:TravelWindow"/>
+    <menu:MorphicMenuItem x:Name="RestoreSettingsFromBackupMenuItem" Header="_Restore settings from backup" Dialog="dialogs:RestoreWindow"/>
+    
     <Separator/>
     <menu:MorphicMenuItem Header="_Hide QuickHelp (except with Alt key)" IsCheckable="True" IsChecked="{Binding App.AppOptions.HideQuickHelp}" />
     <menu:MorphicMenuItem Header="_Automatically start Morphic" IsCheckable="True" IsChecked="{Binding App.AppOptions.AutoRun}" />
