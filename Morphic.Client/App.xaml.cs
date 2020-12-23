@@ -53,6 +53,7 @@ namespace Morphic.Client
     using Microsoft.Win32;
     using Settings.SettingsHandlers;
     using Settings.SolutionsRegistry;
+    using System.Text.Json;
 
     public class AppMain
     {
@@ -129,6 +130,130 @@ namespace Morphic.Client
             App.Current = this;
         }
 
+        public class MorphicBarExtraItem
+        {
+            public string? type { get; set; }
+            public string? label { get; set; }
+            public string? tooltipHeader { get; set; }
+            public string? tooltipText { get; set; }
+            public string? url { get; set; }
+        }
+
+        public class ConfigFileContents
+        {
+            public class FeaturesConfigSection
+            {
+                public class EnabledFeature
+                {
+                    public bool? enabled { get; set; }
+                }
+                //
+                public EnabledFeature? cloudSettingsTransfer { get; set; }
+            }
+            public class MorphicBarConfigSection
+            {
+                public List<MorphicBarExtraItem> extraItems { get; set; }
+            }
+            //
+            public int? version { get; set; }
+            public FeaturesConfigSection? features { get; set; }
+            public MorphicBarConfigSection morphicBar { get; set; }
+        }
+
+        private async Task<(bool CloudSettingsTransferIsEnabled, List<MorphicBarExtraItem> ExtraMorphicBarItems)> GetCommonConfigurationAsync()
+        {
+            // TODO: allow the config file to leave out sections and fields (i.e. support null)
+            var morphicCommonConfigPath = AppPaths.GetCommonConfigDir("", true);
+            var morphicConfigFilePath = Path.Combine(morphicCommonConfigPath, "config.json");
+
+            // set up default configuration
+            var cloudSettingsTransferIsEnabled = true;
+            var extraMorphicBarItems = new List<MorphicBarExtraItem>();
+
+            if (File.Exists(morphicConfigFilePath) == false)
+            {
+                // no config file; return defaults
+                return (CloudSettingsTransferIsEnabled: cloudSettingsTransferIsEnabled, ExtraMorphicBarItems: extraMorphicBarItems);
+            }
+
+            string json;
+            try
+            {
+                json = await File.ReadAllTextAsync(morphicConfigFilePath);
+            }
+            catch (Exception ex)
+            {
+                // error reading config file; return defaults
+                // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
+                Logger?.LogError("Could not read configuration file: " + morphicConfigFilePath + "; error: " + ex.Message);
+                return (CloudSettingsTransferIsEnabled: cloudSettingsTransferIsEnabled, ExtraMorphicBarItems: extraMorphicBarItems);
+            }
+
+            ConfigFileContents deserializedJson;
+            try
+            {
+                deserializedJson = JsonSerializer.Deserialize<ConfigFileContents>(json);
+            }
+            catch (Exception ex)
+            {
+                // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
+                Logger?.LogError("Could not deserialize json configuration file: " + morphicConfigFilePath + "; error: " + ex.Message);
+                return (CloudSettingsTransferIsEnabled: cloudSettingsTransferIsEnabled, ExtraMorphicBarItems: extraMorphicBarItems);
+            }
+
+
+            if ((deserializedJson.version == null) || (deserializedJson.version.Value < 0) || (deserializedJson.version.Value > 0))
+            {
+                // sorry, we don't understand this version of the file
+                // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
+                Logger?.LogError("Unknown config file version: " + deserializedJson.version.ToString());
+                return (CloudSettingsTransferIsEnabled: cloudSettingsTransferIsEnabled, ExtraMorphicBarItems: extraMorphicBarItems);
+            }
+
+            // capture the cloud settings transfer "is enabled" setting
+            if (deserializedJson.features?.cloudSettingsTransfer?.enabled != null)
+            {
+                cloudSettingsTransferIsEnabled = deserializedJson.features.cloudSettingsTransfer.enabled.Value;
+            }
+
+            // capture any extra items (up to 3)
+            if (deserializedJson.morphicBar.extraItems != null)
+            {
+                foreach (var extraItem in deserializedJson.morphicBar.extraItems)
+                {
+                    // if we already captured 3 extra items, skip this one
+                    if (extraMorphicBarItems.Count >= 3)
+                    {
+                        continue;
+                    }
+
+                    var extraItemType = extraItem.type;
+                    var extraItemLabel = extraItem.label;
+                    var extraItemTooltipHeader = extraItem.tooltipHeader;
+                    var extraItemTooltipText = extraItem.tooltipText;
+                    var extraItemUrl = extraItem.url;
+
+                    // if the item is invalid, log the error and skip this item
+                    if ((extraItemType == null) || (extraItemLabel == null) || (extraItemTooltipHeader == null) || (extraItemUrl == null))
+                    {
+                        // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
+                        Logger?.LogError("Invalid MorphicBar item: " + extraItem.ToString());
+                        continue;
+                    }
+
+                    var extraMorphicBarItem = new MorphicBarExtraItem();
+                    extraMorphicBarItem.type = extraItemType;
+                    extraMorphicBarItem.label = extraItemLabel;
+                    extraMorphicBarItem.tooltipHeader = extraItemTooltipHeader;
+                    extraMorphicBarItem.tooltipText = extraItemTooltipText;
+                    extraMorphicBarItem.url = extraItemUrl;
+                    extraMorphicBarItems.Add(extraMorphicBarItem);
+                }
+            }
+
+            return (CloudSettingsTransferIsEnabled: cloudSettingsTransferIsEnabled, ExtraMorphicBarItems: extraMorphicBarItems);
+        }
+
         /// <summary>
         /// Create a Configuration from appsettings.json
         /// </summary>
@@ -159,8 +284,8 @@ namespace Morphic.Client
             services.AddSingleton<IServiceCollection>(services);
             services.AddSingleton<IServiceProvider>(provider => provider);
             services.AddSingleton<SessionOptions>(serviceProvider => serviceProvider.GetRequiredService<IOptions<SessionOptions>>().Value);
-            services.AddSingleton(new StorageOptions { RootPath = AppPaths.GetConfigDir("Data") });
-            services.AddSingleton(new KeychainOptions { Path = AppPaths.GetConfigDir("keychain") });
+            services.AddSingleton(new StorageOptions { RootPath = AppPaths.GetUserLocalConfigDir("Data") });
+            services.AddSingleton(new KeychainOptions { Path = AppPaths.GetUserLocalConfigDir("keychain") });
             services.AddSingleton<UpdateOptions>(serviceProvider => serviceProvider.GetRequiredService<IOptions<UpdateOptions>>().Value);
             services.AddSingleton<IDataProtection, DataProtector>();
             services.AddSingleton<IUserSettings, WindowsUserSettings>();
@@ -270,6 +395,13 @@ namespace Morphic.Client
 
             base.OnStartup(e);
             this.Logger = this.ServiceProvider.GetRequiredService<ILogger<App>>();
+
+            // load (optional) common configuration file
+            // NOTE: we currently load this AFTER setting up the logger because the GetCommonConfigurationAsync function logs config file errors to the logger
+            var commonConfiguration = this.GetCommonConfigurationAsync().GetAwaiter().GetResult();
+            ConfigurableFeatures.SetFeatures(
+                cloudSettingsTransferIsEnabled: commonConfiguration.CloudSettingsTransferIsEnabled,
+                morphicBarExtraItems: commonConfiguration.ExtraMorphicBarItems);
 
             if (Features.Basic.IsEnabled())
             {

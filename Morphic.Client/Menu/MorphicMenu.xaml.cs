@@ -6,6 +6,7 @@
     using System.Windows.Controls.Primitives;
     using Windows.Native.Input;
     using Bar.UI;
+    using Morphic.Client.Config;
 
     public partial class MorphicMenu : ContextMenu
     {
@@ -19,6 +20,14 @@
 
         protected override void OnInitialized(EventArgs e)
         {
+            // if ConfigurableFeatures.CloudSettingsTransferIsEnabled is false, then hide the settings which can transfer/restore settings
+            if (ConfigurableFeatures.CloudSettingsTransferIsEnabled == false)
+            {
+                this.CopySettingsBetweenComputersMenuItem.Visibility = Visibility.Collapsed;
+                this.RestoreSettingsFromBackupMenuItem.Visibility = Visibility.Collapsed;
+                this.CloudSettingsSeparator.Visibility = Visibility.Collapsed;
+            }
+
             this.ShowTrayIcon();
             base.OnInitialized(e);
         }

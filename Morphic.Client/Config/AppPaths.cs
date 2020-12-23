@@ -22,24 +22,27 @@ namespace Morphic.Client.Config
     {
         public static readonly string AppDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? ".";
 
-        public static readonly string ConfigDir = Environment.GetEnvironmentVariable("MORPHIC_CONFIGDIR") ??
+        public static readonly string UserLocalConfigDir = Environment.GetEnvironmentVariable("MORPHIC_CONFIGDIR") ??
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Morphic");
+
+        public static readonly string CommonConfigDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Morphic");
 
         public static readonly string DefaultConfigDir = AppPaths.GetAppDir("DefaultConfig");
         public static readonly string AssetsDir = AppPaths.GetAppDir("Assets");
-        public static readonly string CacheDir = AppPaths.GetConfigDir("cache", true);
+        public static readonly string CacheDir = AppPaths.GetUserLocalConfigDir("cache", true);
 
         public const string RegistryPath = @"Software\Raising the Floor\Morphic\Bar";
 
         static AppPaths()
         {
-            FolderResolver.AddPath("MorphicConfig", ConfigDir);
+            FolderResolver.AddPath("MorphicConfig", UserLocalConfigDir);
             FolderResolver.AddPath("MorphicApp", AppDir);
         }
 
         public static void CreateAll()
         {
-            Directory.CreateDirectory(AppPaths.ConfigDir);
+            Directory.CreateDirectory(AppPaths.CommonConfigDir);
+            Directory.CreateDirectory(AppPaths.UserLocalConfigDir);
             Directory.CreateDirectory(AppPaths.CacheDir);
         }
 
@@ -122,7 +125,7 @@ namespace Morphic.Client.Config
         /// <returns></returns>
         public static string GetConfigFile(string filename, bool useDefault = false, bool copyDefault = false)
         {
-            string path = Path.GetFullPath(filename, AppPaths.ConfigDir);
+            string path = Path.GetFullPath(filename, AppPaths.UserLocalConfigDir);
             if (useDefault || copyDefault)
             {
                 if (!File.Exists(path))
@@ -161,9 +164,26 @@ namespace Morphic.Client.Config
         /// <param name="dirName">The sub-directory name.</param>
         /// <param name="create">true to create the directory if it does not exist.</param>
         /// <returns>Full path to the sub-directory.</returns>
-        public static string GetConfigDir(string dirName, bool create = false)
+        public static string GetUserLocalConfigDir(string dirName, bool create = false)
         {
-            string path = Path.GetFullPath(dirName, AppPaths.ConfigDir);
+            string path = Path.GetFullPath(dirName, AppPaths.UserLocalConfigDir);
+            if (create)
+            {
+                Directory.CreateDirectory(path);
+            }
+
+            return path;
+        }
+
+        /// <summary>
+        /// Returns a sub-directory in the system-writable config directory (within %LOCALAPPDATA%).
+        /// </summary>
+        /// <param name="dirName">The sub-directory name.</param>
+        /// <param name="create">true to create the directory if it does not exist.</param>
+        /// <returns>Full path to the sub-directory.</returns>
+        public static string GetCommonConfigDir(string dirName, bool create = false)
+        {
+            string path = Path.GetFullPath(dirName, AppPaths.CommonConfigDir);
             if (create)
             {
                 Directory.CreateDirectory(path);

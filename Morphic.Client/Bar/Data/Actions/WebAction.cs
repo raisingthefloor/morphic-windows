@@ -47,8 +47,14 @@ namespace Morphic.Client.Bar.Data.Actions
         /// <summary>
         /// Use the site's favicon as the default.
         /// </summary>
-        public override Uri? DefaultImageUri =>
-            this.Uri != null ? new Uri($"https://icons.duckduckgo.com/ip2/{this.Uri.Host}.ico") : null;
+        public override Uri? DefaultImageUri
+        {
+            get
+            {
+                return null;
+//                this.Uri != null ? new Uri($"https://icons.duckduckgo.com/ip2/{this.Uri.Host}.ico") : null;
+            }
+        }
 
         protected override Task<bool> InvokeImpl(string? source = null, bool? toggleState = null)
         {

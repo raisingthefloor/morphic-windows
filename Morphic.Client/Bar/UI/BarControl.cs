@@ -193,6 +193,22 @@ namespace Morphic.Client.Bar.UI
 
             actualSize.Width = Math.Ceiling(actualSize.Width);
             actualSize.Height = Math.Ceiling(actualSize.Height);
+
+            // if this is a horizontal bar, re-arrange any ButtonBarControl children to be vertically centered
+            // NOTE: we should redesign/refactor our layout logic to handle all button types equally (so we don't have to special-case specific controls...nor do layout twice)
+            if ((orientation == Orientation.Horizontal) && (measure == false))
+            {
+                foreach (BarItemControl child in children)
+                {
+                    if (child is ButtonBarControl) {
+                        CorrectedCoords childSize = new CorrectedCoords(this.GetChildSize(child), orientation);
+                        var offset = VisualTreeHelper.GetOffset(child);
+                        var verticallyCenteredPosition = new Point(x: offset.X, y: offset.Y + ((actualSize.Y - childSize.Height) / 2));
+                        child.Arrange(new Rect(verticallyCenteredPosition, childSize.ToSize()));
+                    }
+                }
+            }
+
             return actualSize.ToSize();
         }
 
