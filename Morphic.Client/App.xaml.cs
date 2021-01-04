@@ -412,7 +412,7 @@ namespace Morphic.Client
             if (Features.Community.IsEnabled())
             {
                 this.CommunitySession = this.ServiceProvider.GetRequiredService<CommunitySession>();
-                this.MorphicSession.UserChanged += this.Session_UserChanged;
+                this.CommunitySession.UserChanged += this.Session_UserChanged;
             }
 
             this.Logger.LogInformation("App Started");
