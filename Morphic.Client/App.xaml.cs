@@ -445,26 +445,29 @@ namespace Morphic.Client
             Registry.SetValue(@"HKEY_CURRENT_USER\Software\Microsoft\ScreenMagnifier", "Magnification", 200);
             Registry.SetValue(@"HKEY_CURRENT_USER\Software\Microsoft\ScreenMagnifier", "MagnificationMode", 3);
 
-            // Set the colour filter type - if it's not currently enabled.
-            //bool filterOn = this.MorphicSession.GetBool(SettingsManager.Keys.WindowsDisplayColorFilterEnabled) == true;
-            bool filterOn =
-                await this.MorphicSession.GetSetting<bool>(SettingId.ColorFiltersEnabled);
-            if (!filterOn)
+            if (Features.Basic.IsEnabled())
             {
-                await this.MorphicSession.SetSetting(SettingId.ColorFiltersFilterType, 5);
-            }
+                // Set the colour filter type - if it's not currently enabled.
+                //bool filterOn = this.MorphicSession.GetBool(SettingsManager.Keys.WindowsDisplayColorFilterEnabled) == true;
+                bool filterOn =
+                    await this.MorphicSession.GetSetting<bool>(SettingId.ColorFiltersEnabled);
+                if (!filterOn)
+                {
+                    await this.MorphicSession.SetSetting(SettingId.ColorFiltersFilterType, 5);
+                }
 
-            // Set the high-contrast theme, if high-contrast is off.
-            bool highcontrastOn = await this.MorphicSession.GetSetting<bool>(SettingId.HighContrastEnabled);
-            if (!highcontrastOn)
-            {
-                Registry.SetValue(@"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes",
-                    "LastHighContrastTheme", @"%SystemRoot\resources\Ease of Access Themes\hcwhite.theme",
-                    RegistryValueKind.ExpandString);
+                // Set the high-contrast theme, if high-contrast is off.
+                bool highcontrastOn = await this.MorphicSession.GetSetting<bool>(SettingId.HighContrastEnabled);
+                if (!highcontrastOn)
+                {
+                    Registry.SetValue(@"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes",
+                        "LastHighContrastTheme", @"%SystemRoot\resources\Ease of Access Themes\hcwhite.theme",
+                        RegistryValueKind.ExpandString);
 
-                // For windows 10 1809+
-                Registry.SetValue(@"HKEY_CURRENT_USER\Control Panel\Accessibility\HighContrast",
-                    "High Contrast Scheme", "High Contrast White");
+                    // For windows 10 1809+
+                    Registry.SetValue(@"HKEY_CURRENT_USER\Control Panel\Accessibility\HighContrast",
+                        "High Contrast Scheme", "High Contrast White");
+                }
             }
         }
 
