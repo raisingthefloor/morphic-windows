@@ -8,6 +8,8 @@
 // You may obtain a copy of the License at
 // https://github.com/GPII/universal/blob/master/LICENSE.txt
 
+using Morphic.Service;
+
 namespace Morphic.Client.Bar.Data
 {
     using System;
@@ -38,9 +40,12 @@ namespace Morphic.Client.Bar.Data
         public BarData(IServiceProvider? serviceProvider)
         {
             this.ServiceProvider = serviceProvider ?? App.Current.ServiceProvider;
+            this.FrontEndUri = this.ServiceProvider.GetRequiredService<SessionOptions>().FontEndUri;
         }
 
         public IServiceProvider ServiceProvider { get; set; }
+
+        public Uri FrontEndUri { get; }
 
         /// <summary>
         /// Where the bar data was loaded from (a url or path).

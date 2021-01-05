@@ -23,6 +23,10 @@ namespace Morphic.Client.Bar.UI.BarControls
         {
             this.PropertyChanged += this.OnPropertyChanged;
             this.InitializeComponent();
+            this.BarItem.PropertyChanged += (sender, args) =>
+            {
+                this.OnPropertyChanged(nameof(this.ButtonResource));
+            };
         }
 
         public new BarButton BarItem => (BarButton) base.BarItem;

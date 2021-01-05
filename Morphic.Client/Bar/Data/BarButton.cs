@@ -40,6 +40,9 @@ namespace Morphic.Client.Bar.Data
         {
         }
 
+        [JsonProperty("configuration.image_path")]
+        public string? FrontendImagePath { get; set; }
+
         /// <summary>
         /// The original image, as defined in json.
         /// </summary>
@@ -50,21 +53,32 @@ namespace Morphic.Client.Bar.Data
             set
             {
                 this.imageValue = value ?? string.Empty;
-
-                Uri.TryCreate(this.imageValue, UriKind.Absolute, out Uri? uri);
-
-                if (uri != null && !uri.IsFile)
-                {
-                    // Download later.
-                    this.RemoteImage = new Uri(this.imageValue);
-                }
-                else if (string.IsNullOrEmpty(this.imageValue))
+                if (string.IsNullOrEmpty(this.imageValue))
                 {
                     this.ImagePath = string.Empty;
                 }
                 else
                 {
-                    this.ImagePath = BarImages.GetBarIconFile(this.imageValue) ?? String.Empty;
+                    Uri.TryCreate(this.imageValue, UriKind.Absolute, out Uri? uri);
+                    string? localPath = null;
+                    if (uri == null || uri.IsFile)
+                    {
+                        localPath = BarImages.GetBarIconFile(this.imageValue);
+                        if (localPath == null)
+                        {
+                            uri = new Uri(this.Bar.FrontEndUri, this.FrontendImagePath);
+                        }
+                    }
+
+                    if (localPath != null)
+                    {
+                        this.ImagePath = localPath;
+                    }
+                    else if (uri != null)
+                    {
+                        // Download later.
+                        this.RemoteImage = uri;
+                    }
                 }
             }
         }
@@ -93,7 +107,8 @@ namespace Morphic.Client.Bar.Data
 
         // Limit the concurrent downloads.
         private static SemaphoreSlim downloads = new SemaphoreSlim(8);
-        private static HashSet<string> downloaded = new HashSet<string>();
+        private static HashSet<string> downloading = new HashSet<string>();
+        private static HashSet<string> downloadComplete = new HashSet<string>();
 
         /// <summary>
         /// Loads the image specified by ImagePath.
@@ -113,23 +128,23 @@ namespace Morphic.Client.Bar.Data
                     try
                     {
                         await downloads.WaitAsync();
-                        bool done = false;
-                        lock (downloaded)
-                        {
-                            if (downloaded.Contains(this.ImagePath))
-                            {
-                                done = true;
-                            }
-                            else
-                            {
-                                downloaded.Add(this.ImagePath);
-                            }
-                        }
 
-                        if (!done)
+                        // Check if the image is being downloaded by another bar item.
+                        bool downloadRequired = downloading.Add(this.ImagePath);
+
+                        if (downloadRequired)
                         {
+                            // Download it
                             this.Logger.LogDebug("Downloading {remoteImage}", this.RemoteImage);
                             await wc.DownloadFileTaskAsync(this.RemoteImage, tempFile);
+                        }
+                        else
+                        {
+                            // wait for the other bar's download to complete
+                            while (!downloadComplete.Contains(this.ImagePath))
+                            {
+                                await Task.Delay(500);
+                            }
                         }
                     }
                     finally
@@ -151,6 +166,7 @@ namespace Morphic.Client.Bar.Data
                 finally
                 {
                     File.Delete(tempFile);
+                    downloadComplete.Add(this.ImagePath);
                 }
             }
 
