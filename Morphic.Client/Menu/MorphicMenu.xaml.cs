@@ -34,16 +34,11 @@
 
         protected override void OnOpened(RoutedEventArgs e)
         {
-            if (this.App.BarManager.BarVisible)
-            {
-                this.ShowBar.Visibility = Visibility.Collapsed;
-                this.HideBar.Visibility = Visibility.Visible;
-            }
-            else
-            {
-                this.ShowBar.Visibility = Visibility.Visible;
-                this.HideBar.Visibility = Visibility.Collapsed;
-            }
+            this.ShowBar.Visibility = (!this.App.BarManager.BarVisible).ToVisibility();;
+            this.HideBar.Visibility = this.App.BarManager.BarVisible.ToVisibility();
+
+            this.LoginItem.Visibility = (!this.App.CommunitySession.SignedIn).ToVisibility();
+            this.LogoutItem.Visibility = this.App.CommunitySession.SignedIn.ToVisibility();
 
             base.OnOpened(e);
         }
@@ -147,9 +142,14 @@
 
         #endregion
 
-        private void StopKeyRepeatInit2(object sender, RoutedEventArgs e)
+        private void Logout(object sender, RoutedEventArgs e)
         {
-            throw new NotImplementedException();
+            App.Current.CommunitySession.SignOut();
+        }
+
+        private void Login(object sender, RoutedEventArgs e)
+        {
+            _ = App.Current.OpenSession();
         }
     }
 

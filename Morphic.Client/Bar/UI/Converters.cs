@@ -97,5 +97,10 @@ namespace Morphic.Client.Bar.UI
 
             return null;
         }
+
+        public static Visibility ToVisibility(this bool value)
+        {
+            return value ? Visibility.Visible : Visibility.Collapsed;
+        }
     }
 }

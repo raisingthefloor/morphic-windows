@@ -131,6 +131,8 @@
             }
         }
 
+        public bool SignedIn => this.User != null;
+
         #endregion
 
         /// <summary>Gets a setting value.</summary>

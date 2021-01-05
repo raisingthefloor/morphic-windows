@@ -426,8 +426,7 @@ namespace Morphic.Client
 
             this.AddSettingsListener();
 
-            Task task = this.OpenSession();
-            task.ContinueWith(this.SessionOpened, TaskScheduler.FromCurrentSynchronizationContext());
+            this.OpenSession();
 
             // Make settings displayed on the UI update when a system setting has changed, or when the app is focused.
             this.SystemSettingChanged += (sender, args) => SettingsHandler.SystemSettingChanged();
@@ -476,7 +475,14 @@ namespace Morphic.Client
         {
             if (sender is CommunitySession communitySession)
             {
-                this.BarManager.LoadSessionBar(communitySession);
+                if (communitySession.SignedIn)
+                {
+                    this.BarManager.LoadSessionBar(communitySession);
+                }
+                else
+                {
+                    this.BarManager.CloseBar();
+                }
             }
         }
 
@@ -492,7 +498,7 @@ namespace Morphic.Client
             });
         }
 
-        private async Task OpenSession()
+        public async Task OpenSession()
         {
             if (Features.Basic.IsEnabled())
             {
@@ -508,18 +514,16 @@ namespace Morphic.Client
 
                 await this.CommunitySession.Open();
             }
+
+            this.OnSessionOpened();
         }
 
         /// <summary>
         /// Called when the session open task completes
         /// </summary>
         /// <param name="task"></param>
-        private async void SessionOpened(Task task)
+        private async void OnSessionOpened()
         {
-            if (task.Exception is Exception e)
-            {
-                throw e;
-            }
             this.Logger.LogInformation("Session Open");
 
             if (this.AppOptions.FirstRun)

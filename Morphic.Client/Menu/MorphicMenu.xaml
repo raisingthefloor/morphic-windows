@@ -46,12 +46,14 @@
     <Separator x:Name="CloudSettingsSeparator" />
     <menu:MorphicMenuItem x:Name="CopySettingsBetweenComputersMenuItem" Header="_Copy settings between computers" Dialog="dialogs:TravelWindow"/>
     <menu:MorphicMenuItem x:Name="RestoreSettingsFromBackupMenuItem" Header="_Restore settings from backup" Dialog="dialogs:RestoreWindow"/>
-    
+
     <Separator/>
     <menu:MorphicMenuItem Header="_Hide QuickHelp (except with Alt key)" IsCheckable="True" IsChecked="{Binding App.AppOptions.HideQuickHelp}" />
     <menu:MorphicMenuItem Header="_Automatically start Morphic" IsCheckable="True" IsChecked="{Binding App.AppOptions.AutoRun}" />
     <menu:MorphicMenuItem Header="_Show Morphic Bar at start" IsCheckable="True" IsChecked="{Binding App.AppOptions.AutoShow}" />
     <Separator/>
     <menu:MorphicMenuItem Header="_About Morphic..." Dialog="dialogs:AboutWindow" />
+    <menu:MorphicMenuItem Header="Log out" x:Name="LogoutItem" Click="Logout" Features="Community"  />
+    <menu:MorphicMenuItem Header="Log in" x:Name="LoginItem" Click="Login" Features="Community"  />
     <menu:MorphicMenuItem Header="_Quit Morphic" Click="QuitClick"/>
 </ContextMenu>
