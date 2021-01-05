@@ -86,7 +86,7 @@ namespace Morphic.Service
             try
             {
                 var request = requestFactory.Invoke();
-                logger.LogInformation("{0} {1}", request.Method, request.RequestUri.AbsolutePath);
+                logger.LogInformation("{0} {1}", request.Method, request.RequestUri);
                 var response = await client.SendAsync(request);
                 logger.LogInformation("{0} {1}", response.StatusCode.ToString(), request.RequestUri.AbsolutePath);
                 if (response.RequiresMorphicAuthentication())

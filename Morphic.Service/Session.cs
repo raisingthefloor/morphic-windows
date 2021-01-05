@@ -57,7 +57,7 @@
         /// <summary>
         /// The current user's saved credentials, if any
         /// </summary>
-        protected ICredentials? CurrentCredentials
+        public ICredentials? CurrentCredentials
         {
             get
             {

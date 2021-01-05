@@ -299,6 +299,7 @@ namespace Morphic.Client
             services.AddTransient<CapturePanel>();
             services.AddTransient<TravelCompletedPanel>();
             services.AddTransient<LoginWindow>();
+            services.AddTransient<CommunityLoginWindow>();
             services.AddTransient<LoginPanel>();
             services.AddTransient<CreateAccountPanel>();
             services.AddTransient<AboutWindow>();
@@ -500,6 +501,11 @@ namespace Morphic.Client
 
             if (Features.Community.IsEnabled())
             {
+                if (this.CommunitySession.CurrentCredentials == null)
+                {
+                    await this.Dialogs.OpenDialog<CommunityLoginWindow>();
+                }
+
                 await this.CommunitySession.Open();
             }
         }
