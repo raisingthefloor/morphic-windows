@@ -118,16 +118,36 @@ namespace Morphic.Client.Bar.Data
         public List<BarItem> AllItems { get; set; } = new List<BarItem>();
 
         /// <summary>
+        /// Determines if an item should be on the primary bar.
+        /// </summary>
+        /// <param name="item">The item.</param>
+        /// <returns>true if the item belongs on the primary bar.</returns>
+        private bool IsPrimaryItem(BarItem item)
+        {
+            return !item.Hidden && item.IsPrimary && !item.Overflow;
+        }
+
+        /// <summary>
+        /// Determines if an item should be on the secondary bar.
+        /// </summary>
+        /// <param name="item">The item.</param>
+        /// <returns>true if the item belongs on the secondary bar.</returns>
+        private bool IsSecondaryItem(BarItem item)
+        {
+            return !item.Hidden && !this.IsPrimaryItem(item);
+        }
+
+        /// <summary>
         /// Gets the items for the main bar.
         /// </summary>
-        public IEnumerable<BarItem> PrimaryItems => this.AllItems.Where(item => !item.Hidden && item.IsPrimary)
+        public IEnumerable<BarItem> PrimaryItems => this.AllItems.Where(this.IsPrimaryItem)
             .OrderByDescending(item => item.Priority);
 
         /// <summary>
         /// Gets the items for the additional buttons.
         /// </summary>
-        public IEnumerable<BarItem> SecondaryItems => this.AllItems.Where(item => !item.Hidden && !item.IsPrimary)
-            .OrderByDescending(item => item.IsPrimaryOriginal)
+        public IEnumerable<BarItem> SecondaryItems => this.AllItems.Where(this.IsSecondaryItem)
+            .OrderByDescending(item => item.IsPrimary)
             .ThenByDescending(item => item.Priority);
 
         public string? CommunityId { get; set; }

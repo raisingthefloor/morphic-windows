@@ -51,9 +51,9 @@ namespace Morphic.Client.Bar.Data
         public bool IsPrimary { get; set; }
 
         /// <summary>
-        /// The original value of IsPrimary (IsPrimary can change if an item over-flows)
+        /// true if the item should over-flow to the secondary bar, because it doesn't fit.
         /// </summary>
-        public bool IsPrimaryOriginal { get; set; }
+        public bool Overflow { get; set; }
 
         /// <summary>
         /// true if this item is a built-in item, from the default bar json.
@@ -191,8 +191,6 @@ namespace Morphic.Client.Bar.Data
             this.Theme.InferStateThemes();
             this.ControlTheme.Inherit(this.Bar.ControlTheme).Inherit(this.Bar.DefaultTheme);
             this.ControlTheme.InferStateThemes();
-
-            this.IsPrimaryOriginal = this.IsPrimary;
 
             this.Action.Deserialized(this.Bar);
         }

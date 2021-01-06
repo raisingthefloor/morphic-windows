@@ -87,8 +87,7 @@ namespace Morphic.Client.Bar.UI
             bool isPrimary = this is PrimaryBarWindow;
             this.Bar = barData;
 
-            IEnumerable<BarItem> items = isPrimary ? this.Bar.PrimaryItems : this.Bar.SecondaryItems;
-            this.BarItems = items.ToList();
+            this.UpdateBarItems();
 
             this.DataContext = this;
 
@@ -117,6 +116,7 @@ namespace Morphic.Client.Bar.UI
                 this.OtherWindow?.Activate();
             };
 
+            this.SizeChanged += this.OnSizeChanged;
             //this.Loaded += (sender, args) => this.OnBarLoaded();
 
             AppFocus.Current.AddMouseOverWindow(this);
@@ -125,6 +125,11 @@ namespace Morphic.Client.Bar.UI
 
             SystemEvents.DisplaySettingsChanged += this.SystemEventsOnDisplaySettingsChanged;
             this.Closed += (sender, args) => SystemEvents.DisplaySettingsChanged -= this.SystemEventsOnDisplaySettingsChanged;
+        }
+
+        private void OnSizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            this.Rescale(e.NewSize);
         }
 
         public QuickHelpWindow QuickHelpWindow { get; set; }
@@ -144,6 +149,12 @@ namespace Morphic.Client.Bar.UI
             foreach (BarItemControl itemControl in this.BarControl.ItemControls)
             {
                 itemControl.Orientation = this.Orientation;
+            }
+
+            if (this is PrimaryBarWindow)
+            {
+                this.Bar.AllItems.ForEach(item => item.Overflow = false);
+                this.UpdateBarItems();
             }
         }
 
@@ -174,8 +185,6 @@ namespace Morphic.Client.Bar.UI
 
                     Mouse.SetPosition((int)pos.X, (int)pos.Y);
                 }
-
-
             }
         }
 
@@ -184,7 +193,19 @@ namespace Morphic.Client.Bar.UI
         /// </summary>
         public BarData Bar { get; set; }
 
-        public List<BarItem> BarItems { get; set; }
+        private List<BarItem> barItems = null!;
+        public List<BarItem> BarItems
+        {
+            get => this.barItems;
+            set
+            {
+                this.barItems = value;
+                if (this.BarControl != null)
+                {
+                    this.BarControl.ItemsSource = this.barItems;
+                }
+            }
+        }
 
         public Edge DockedEdge => this.AppBar.AppBarEdge;
 
@@ -220,6 +241,25 @@ namespace Morphic.Client.Bar.UI
 
         private void BarControl_Loaded(object sender, RoutedEventArgs e)
         {
+        }
+
+        /// <summary>Reload the bar items.</summary>
+        public void UpdateBarItems()
+        {
+            IEnumerable<BarItem> items = (this is PrimaryBarWindow) ? this.Bar.PrimaryItems : this.Bar.SecondaryItems;
+            this.BarItems = items.ToList();
+            if (this is PrimaryBarWindow)
+            {
+                if (this.BarControl != null)
+                {
+                    foreach (BarItemControl control in this.BarControl.ItemControls)
+                    {
+                        control.Visibility = control.BarItem.Overflow ? Visibility.Collapsed : Visibility.Visible;
+                    }
+                }
+
+                this.OtherWindow?.UpdateBarItems();
+            }
         }
 
         /// <summary>
@@ -428,10 +468,13 @@ namespace Morphic.Client.Bar.UI
             }
             else if (this.Bar.Overflow == BarOverflow.Secondary && this is PrimaryBarWindow primaryBarWindow)
             {
-                this.Bar.PrimaryItems.Last(item => !item.NoOverflow).IsPrimary = false;
-                // TODO: reload items
-                // this.BarControl.ReloadItems();
-                // primaryBarWindow.OtherWindow?.BarControl.ReloadItems();
+                // Hide the last item
+                BarItem? last = this.Bar.PrimaryItems.LastOrDefault(item => !item.NoOverflow);
+                if (last != null)
+                {
+                    last.Overflow = true;
+                    this.UpdateBarItems();
+                }
             }
 
             return true;
