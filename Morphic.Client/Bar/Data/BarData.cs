@@ -40,7 +40,10 @@ namespace Morphic.Client.Bar.Data
         public BarData(IServiceProvider? serviceProvider)
         {
             this.ServiceProvider = serviceProvider ?? App.Current.ServiceProvider;
-            this.FrontEndUri = this.ServiceProvider.GetRequiredService<SessionOptions>().FontEndUri;
+            SessionOptions sessionOptions = this.ServiceProvider.GetRequiredService<SessionOptions>();
+            this.FrontEndUri = Features.Community.IsEnabled()
+                ? sessionOptions.FontEndUriCommunity
+                : sessionOptions.FontEndUri;
         }
 
         public IServiceProvider ServiceProvider { get; set; }

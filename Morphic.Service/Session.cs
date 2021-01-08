@@ -9,10 +9,15 @@
     public class SessionOptions
     {
         public string Endpoint { get; set; } = "";
-
         public string FrontEnd { get; set; } = "";
+        public string? EndpointCommunity { get; set; }
+        public string? FrontEndCommunity { get; set; }
+
+        public Uri EndpointUriCommunity => new Uri(this.EndpointCommunity ?? this.Endpoint);
+        public Uri EndpointUri => new Uri(this.Endpoint);
 
         public Uri FontEndUri => new Uri(this.FrontEnd);
+        public Uri FontEndUriCommunity => new Uri(this.FrontEndCommunity ?? this.FrontEnd);
     }
 
     public abstract class Session : IHttpServiceCredentialsProvider
@@ -20,10 +25,10 @@
         /// <summary>
         /// Create a new session with the given URL
         /// </summary>
-        protected Session(SessionOptions options, Storage storage, Keychain keychain, IUserSettings userSettings,
+        protected Session(Uri endpoint, Storage storage, Keychain keychain, IUserSettings userSettings,
             ILogger logger, ILogger<HttpService> httpLogger, Solutions solutions)
         {
-            this.Service = new HttpService(new Uri(options.Endpoint), this, httpLogger);
+            this.Service = new HttpService(endpoint, this, httpLogger);
             this.Storage = storage;
             this.keychain = keychain;
             this.logger = logger;
