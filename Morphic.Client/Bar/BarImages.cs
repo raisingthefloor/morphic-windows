@@ -44,14 +44,11 @@
         public static ImageSource? CreateImageSource(string imagePath, Color? color = null)
         {
             ImageSource? result;
-            try
-            {
-                if (!imagePath.Contains('/'))
-                {
-                    imagePath = GetBarIconFile(imagePath) ?? imagePath;
-                }
 
-                if (Path.GetExtension(imagePath) == ".svg")
+            // Attempt to load an SVG image.
+            ImageSource? TrySvg()
+            {
+                try
                 {
                     using FileSvgReader svg = new FileSvgReader(new WpfDrawingSettings());
                     DrawingGroup drawingGroup = svg.Read(imagePath);
@@ -59,22 +56,45 @@
                     {
                         ChangeDrawingColor(drawingGroup, color.Value);
                     }
-                    result = new DrawingImage(drawingGroup);
+
+                    return new DrawingImage(drawingGroup);
                 }
-                else
+                catch (Exception e) when (e is NotSupportedException || e is XmlException || e is SvgException)
+                {
+                    return null;
+                }
+            }
+
+            // Attempt to load a bitmap image.
+            ImageSource? TryBitmap()
+            {
+                try
                 {
                     BitmapImage image = new BitmapImage();
                     image.BeginInit();
                     image.CacheOption = BitmapCacheOption.OnLoad;
                     image.UriSource = new Uri(imagePath);
                     image.EndInit();
-
-                    result = image;
+                    return image;
+                }
+                catch (Exception e) when (e is NotSupportedException || e is XmlException || e is SvgException)
+                {
+                    return null;
                 }
             }
-            catch (Exception e) when (e is NotSupportedException || e is XmlException || e is SvgException)
+
+            if (!imagePath.Contains('/'))
             {
-                result = null;
+                imagePath = GetBarIconFile(imagePath) ?? imagePath;
+            }
+
+            if (Path.GetExtension(imagePath) == ".svg")
+            {
+                result = TrySvg() ?? TryBitmap();
+            }
+            else
+            {
+                result = TryBitmap() ?? TrySvg();
             }
 
             return result;

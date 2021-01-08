@@ -3,6 +3,7 @@
   overflow: "secondary",
   position: {
     docked: null,
+    restricted: true,
     x: "Right",
     y: "bottom",
     secondary: "bottom",

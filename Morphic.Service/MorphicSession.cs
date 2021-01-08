@@ -45,7 +45,7 @@ namespace Morphic.Service
         public MorphicSession(SessionOptions options, Storage storage,
             Keychain keychain, IUserSettings userSettings, ILogger<MorphicSession> logger,
             ILogger<HttpService> httpLogger, Solutions solutions)
-            : base(options, storage, keychain, userSettings, logger, httpLogger, solutions)
+            : base(options.EndpointUri, storage, keychain, userSettings, logger, httpLogger, solutions)
         {
         }
 

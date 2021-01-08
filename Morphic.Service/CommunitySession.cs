@@ -44,7 +44,7 @@ namespace Morphic.Service
         /// </summary>
         public CommunitySession(SessionOptions options, Storage storage, Keychain keychain, IUserSettings userSettings,
             ILogger<CommunitySession> logger, ILogger<HttpService> httpLogger, Solutions solutions)
-            : base(options, storage, keychain, userSettings, logger, httpLogger, solutions)
+            : base(options.EndpointUriCommunity, storage, keychain, userSettings, logger, httpLogger, solutions)
         {
         }
 

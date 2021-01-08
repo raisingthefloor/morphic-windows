@@ -299,6 +299,7 @@ namespace Morphic.Client
             services.AddTransient<CapturePanel>();
             services.AddTransient<TravelCompletedPanel>();
             services.AddTransient<LoginWindow>();
+            services.AddTransient<CommunityLoginWindow>();
             services.AddTransient<LoginPanel>();
             services.AddTransient<CreateAccountPanel>();
             services.AddTransient<AboutWindow>();
@@ -403,17 +404,11 @@ namespace Morphic.Client
                 cloudSettingsTransferIsEnabled: commonConfiguration.CloudSettingsTransferIsEnabled,
                 morphicBarExtraItems: commonConfiguration.ExtraMorphicBarItems);
 
-            if (Features.Basic.IsEnabled())
-            {
-                this.MorphicSession = this.ServiceProvider.GetRequiredService<MorphicSession>();
-                this.MorphicSession.UserChanged += this.Session_UserChanged;
-            }
+            this.MorphicSession = this.ServiceProvider.GetRequiredService<MorphicSession>();
+            this.MorphicSession.UserChanged += this.Session_UserChanged;
 
-            if (Features.Community.IsEnabled())
-            {
-                this.CommunitySession = this.ServiceProvider.GetRequiredService<CommunitySession>();
-                this.CommunitySession.UserChanged += this.Session_UserChanged;
-            }
+            this.CommunitySession = this.ServiceProvider.GetRequiredService<CommunitySession>();
+            this.CommunitySession.UserChanged += this.Session_UserChanged;
 
             this.Logger.LogInformation("App Started");
 
@@ -425,8 +420,7 @@ namespace Morphic.Client
 
             this.AddSettingsListener();
 
-            Task task = this.OpenSession();
-            task.ContinueWith(this.SessionOpened, TaskScheduler.FromCurrentSynchronizationContext());
+            this.OpenSession();
 
             // Make settings displayed on the UI update when a system setting has changed, or when the app is focused.
             this.SystemSettingChanged += (sender, args) => SettingsHandler.SystemSettingChanged();
@@ -475,7 +469,14 @@ namespace Morphic.Client
         {
             if (sender is CommunitySession communitySession)
             {
-                this.BarManager.LoadSessionBar(communitySession);
+                if (communitySession.SignedIn)
+                {
+                    this.BarManager.LoadSessionBar(communitySession);
+                }
+                else
+                {
+                    this.BarManager.CloseBar();
+                }
             }
         }
 
@@ -491,7 +492,7 @@ namespace Morphic.Client
             });
         }
 
-        private async Task OpenSession()
+        public async Task OpenSession()
         {
             if (Features.Basic.IsEnabled())
             {
@@ -500,20 +501,23 @@ namespace Morphic.Client
 
             if (Features.Community.IsEnabled())
             {
+                if (this.CommunitySession.CurrentCredentials == null)
+                {
+                    await this.Dialogs.OpenDialog<CommunityLoginWindow>();
+                }
+
                 await this.CommunitySession.Open();
             }
+
+            this.OnSessionOpened();
         }
 
         /// <summary>
         /// Called when the session open task completes
         /// </summary>
         /// <param name="task"></param>
-        private async void SessionOpened(Task task)
+        private async void OnSessionOpened()
         {
-            if (task.Exception is Exception e)
-            {
-                throw e;
-            }
             this.Logger.LogInformation("Session Open");
 
             if (this.AppOptions.FirstRun)
