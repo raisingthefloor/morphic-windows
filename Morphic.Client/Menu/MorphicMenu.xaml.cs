@@ -37,8 +37,11 @@
             this.ShowBar.Visibility = (!this.App.BarManager.BarVisible).ToVisibility();;
             this.HideBar.Visibility = this.App.BarManager.BarVisible.ToVisibility();
 
-            this.LoginItem.Visibility = (!this.App.CommunitySession.SignedIn).ToVisibility();
-            this.LogoutItem.Visibility = this.App.CommunitySession.SignedIn.ToVisibility();
+            if (Features.Community.IsEnabled())
+            {
+                this.LoginItem.Visibility = (!this.App.CommunitySession.SignedIn).ToVisibility();
+                this.LogoutItem.Visibility = this.App.CommunitySession.SignedIn.ToVisibility();
+            }
 
             base.OnOpened(e);
         }
