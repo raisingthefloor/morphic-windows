@@ -404,17 +404,11 @@ namespace Morphic.Client
                 cloudSettingsTransferIsEnabled: commonConfiguration.CloudSettingsTransferIsEnabled,
                 morphicBarExtraItems: commonConfiguration.ExtraMorphicBarItems);
 
-            if (Features.Basic.IsEnabled())
-            {
-                this.MorphicSession = this.ServiceProvider.GetRequiredService<MorphicSession>();
-                this.MorphicSession.UserChanged += this.Session_UserChanged;
-            }
+            this.MorphicSession = this.ServiceProvider.GetRequiredService<MorphicSession>();
+            this.MorphicSession.UserChanged += this.Session_UserChanged;
 
-            if (Features.Community.IsEnabled())
-            {
-                this.CommunitySession = this.ServiceProvider.GetRequiredService<CommunitySession>();
-                this.CommunitySession.UserChanged += this.Session_UserChanged;
-            }
+            this.CommunitySession = this.ServiceProvider.GetRequiredService<CommunitySession>();
+            this.CommunitySession.UserChanged += this.Session_UserChanged;
 
             this.Logger.LogInformation("App Started");
 
