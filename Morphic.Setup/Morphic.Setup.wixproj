@@ -61,7 +61,7 @@
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
   </PropertyGroup>
   <Target Name="BeforeBuild">
-    <Exec Command="del ..\Morphic.Client\bin\$(Configuration)\netcoreapp3.1\win-x64\publish\features" />
+    <Exec Command="if exist ..\Morphic.Client\bin\$(Configuration)\netcoreapp3.1\win-x64\publish\features del /f ..\Morphic.Client\bin\$(Configuration)\netcoreapp3.1\win-x64\publish\features" />
     <Exec Command="dotnet publish ..\Morphic.Client\Morphic.Client.csproj -r win-x64 -c $(Configuration) -p:BuildType=$(BuildType) -p:Edition=$(Edition)" />
     <HeatDirectory Directory="..\Morphic.Client\bin\$(Configuration)\netcoreapp3.1\win-x64\publish" PreprocessorVariable="var.ClientOutputDirectory" OutputFile="Generated.wxs" ComponentGroupName="GeneratedComponents" DirectoryRefId="INSTALLFOLDER" AutogenerateGuids="true" ToolPath="$(WixToolPath)" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" />
   </Target>
