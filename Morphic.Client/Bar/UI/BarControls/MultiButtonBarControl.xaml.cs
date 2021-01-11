@@ -14,6 +14,7 @@ namespace Morphic.Client.Bar.UI.BarControls
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.Linq;
+    using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Automation.Peers;
     using System.Windows.Automation.Provider;
@@ -37,7 +38,7 @@ namespace Morphic.Client.Bar.UI.BarControls
             this.InitializeComponent();
 
             // Apply theming to the dynamic buttons when they're created.
-            this.ButtonContainer.ItemContainerGenerator.StatusChanged += (sender, args) =>
+            this.ButtonContainer.ItemContainerGenerator.StatusChanged += async (sender, args) =>
             {
                 if (this.ButtonContainer.ItemContainerGenerator.Status == GeneratorStatus.ContainersGenerated)
                 {
@@ -48,7 +49,7 @@ namespace Morphic.Client.Bar.UI.BarControls
 
                         if (content.ContentTemplate.FindName("ControlButton", content) is ButtonBase control)
                         {
-                            b.SetControl(control);
+                            await b.SetControlAsync(control);
                         }
                     }
                 }
@@ -261,7 +262,7 @@ namespace Morphic.Client.Bar.UI.BarControls
 
             public event PropertyChangedEventHandler? PropertyChanged;
 
-            public void SetControl(ButtonBase control)
+            public async Task SetControlAsync(ButtonBase control)
             {
                 this.Control = control;
                 this.ThemeHandler = new ThemeHandler(this.Control, this.Button.BarItem.ControlTheme);
@@ -277,7 +278,8 @@ namespace Morphic.Client.Bar.UI.BarControls
                 {
                     Setting setting = settingAction.Solutions.GetSetting(this.Button.Id);
                     //
-                    ((ToggleButton)this.Control).IsChecked = setting.GetValue<bool>().GetAwaiter().GetResult();
+                    var settingValue = await setting.GetValue<bool>();
+                    ((ToggleButton)this.Control).IsChecked = settingValue;
                     //
                     setting.Changed += this.SettingOnChanged;
                     this.Control.Unloaded += (sender, args) => setting.Changed -= this.SettingOnChanged;
@@ -292,7 +294,9 @@ namespace Morphic.Client.Bar.UI.BarControls
                         case "darkMode":
                             Setting systemThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(Settings.SolutionsRegistry.SettingId.LightThemeSystem);
                             //
-                            ((ToggleButton)this.Control).IsChecked = !(systemThemeSetting.GetValue<bool>().GetAwaiter().GetResult());
+                            var systemThemeIsLightTheme = await systemThemeSetting.GetValue<bool>();
+                            ((ToggleButton)this.Control).IsChecked = !systemThemeIsLightTheme;
+                            //
                             //
                             systemThemeSetting.Changed += this.InverseSettingOnChanged;
                             this.Control.Unloaded += (sender, args) => systemThemeSetting.Changed -= this.InverseSettingOnChanged;
