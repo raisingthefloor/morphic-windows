@@ -276,9 +276,31 @@ namespace Morphic.Client.Bar.UI.BarControls
                 if (this.Button.Toggle && this.Button.Action is SettingAction settingAction)
                 {
                     Setting setting = settingAction.Solutions.GetSetting(this.Button.Id);
+                    //
+                    ((ToggleButton)this.Control).IsChecked = setting.GetValue<bool>().GetAwaiter().GetResult();
+                    //
                     setting.Changed += this.SettingOnChanged;
-
                     this.Control.Unloaded += (sender, args) => setting.Changed -= this.SettingOnChanged;
+                }
+
+                // For settings controls with internal actions, get the current value and listen for a change.
+                if (this.Button.Toggle && this.Button.Action is InternalAction internalAction)
+                {
+                    // NOTE: these buttons are special-cased; we should ideally create logic which wraps this functionality and is referenced via the JSON files (so that these are not hard-coded)
+                    switch (internalAction.FunctionName)
+                    {
+                        case "darkMode":
+                            Setting systemThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(Settings.SolutionsRegistry.SettingId.LightThemeSystem);
+                            //
+                            ((ToggleButton)this.Control).IsChecked = !(systemThemeSetting.GetValue<bool>().GetAwaiter().GetResult());
+                            //
+                            systemThemeSetting.Changed += this.InverseSettingOnChanged;
+                            this.Control.Unloaded += (sender, args) => systemThemeSetting.Changed -= this.InverseSettingOnChanged;
+                            break;
+                        default:
+                            // unknown internal action
+                            break;
+                    }
                 }
             }
 
@@ -287,6 +309,14 @@ namespace Morphic.Client.Bar.UI.BarControls
                 if (this.Control is ToggleButton button)
                 {
                     button.IsChecked = e.NewValue as bool? ?? false;
+                }
+            }
+
+            private void InverseSettingOnChanged(object? sender, SettingEventArgs e)
+            {
+                if (this.Control is ToggleButton button)
+                {
+                    button.IsChecked = !(e.NewValue as bool? ?? false);
                 }
             }
         }
