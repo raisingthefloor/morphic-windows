@@ -198,8 +198,25 @@ namespace Morphic.Client.Bar.Data.Actions
         {
             bool on = args["state"] == "on";
 
-            Setting appSetting = App.Current.MorphicSession.Solutions.GetSetting(SettingId.LightThemeApps);
-            await appSetting.SetValue(!on);
+            /*
+             * NOTE: in addition to the SPI implementation (in code, below), we could also turn on/off the dark theme (via powershell...or possibly via direct registry access); here are the corresponding PowerShell commands
+             * 
+             * SWITCH TO LIGHT MODE:
+             * New-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name SystemUsesLightTheme -Value 1 -Type Dword -Force
+             * New-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name AppsUseLightTheme -Value 1 -Type Dword -Force
+             * 
+             * SWITCH TO DARK MODE:
+             * New-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name SystemUsesLightTheme -Value 0 -Type Dword -Force
+             * New-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name AppsUseLightTheme -Value 0 -Type Dword -Force
+            */
+
+            // set system dark/light theme
+            Setting systemThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(SettingId.LightThemeSystem);
+            await systemThemeSetting.SetValue(!on);
+
+            // set apps dark/light theme
+            Setting appsThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(SettingId.LightThemeApps);
+            await appsThemeSetting.SetValue(!on);
             return true;
         }
 
