@@ -186,8 +186,20 @@ namespace Morphic.Client.Bar.Data
                         extraBarItem.ToolTipHeader = extraItemData.tooltipHeader;
                         extraBarItem.ToolTip = extraItemData.tooltipText;
                         extraBarItem.Text = extraItemData.label ?? "";
-                        extraBarItem.Action = new Morphic.Client.Bar.Data.Actions.WebAction();
-                        ((Morphic.Client.Bar.Data.Actions.WebAction)extraBarItem.Action).UrlString = extraItemData.url ?? "";
+                        switch (extraItemData.type)
+                        {
+                            case "link":
+                                extraBarItem.Action = new Morphic.Client.Bar.Data.Actions.WebAction();
+                                ((Morphic.Client.Bar.Data.Actions.WebAction)extraBarItem.Action).UrlString = extraItemData.url ?? "";
+                                break;
+                            case "action":
+                                extraBarItem.Action = new Morphic.Client.Bar.Data.Actions.InternalAction();
+                                ((Morphic.Client.Bar.Data.Actions.InternalAction)extraBarItem.Action).FunctionName = extraItemData.function!;
+                                break;
+                            default:
+                                // unknown type; this should be an impossible code path
+                                throw new NotImplementedException();
+                        }
                         //extraBarItem.ColorValue = "#00FF00";
                         extraBarItem.IsPrimary = true;
                         //
