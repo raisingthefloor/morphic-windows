@@ -279,6 +279,11 @@ namespace Morphic.Client.Menu
                     IntPtr.Zero,
                     IntPtr.Zero);
 
+                if (_tooltipWindowHandle == IntPtr.Zero)
+                {
+                    Debug.Assert(false, "Could not create tooltip window");
+                }
+
                 this.UpdateTooltipTextAndTracking();
             }
 
@@ -297,6 +302,7 @@ namespace Morphic.Client.Menu
                 if (_tooltipWindowHandle == IntPtr.Zero)
                 {
                     // tooltip window does not exist; failed; abort
+                    Debug.Assert(false, "Tooptip window does not exist; if this is an expected failure, remove this assert.");
                     return;
                 }
 
@@ -404,6 +410,10 @@ namespace Morphic.Client.Menu
                         );
 
                     // NOTE: in our testing, handle was sometimes IntPtr.Zero here (in which case the tray icon button's window will not exist)
+                    if (handle == IntPtr.Zero)
+                    {
+                        Debug.Assert(false, "Could not create tray button window handle");
+                    }
 
                     this.AssignHandle(handle);
                 }
@@ -458,6 +468,7 @@ namespace Morphic.Client.Menu
                             {
                                 // failed; abort
                                 Debug.Assert(false, "Could not map tray button hit point to screen coordinates");
+                                break;
                             }
                             var mouseArgs = new MouseEventArgs(MouseButtons.Left, 1, hitPoint.Value.X, hitPoint.Value.Y, 0);
                             _owner.MouseUp?.Invoke(_owner, mouseArgs);
@@ -539,6 +550,7 @@ namespace Morphic.Client.Menu
                             {
                                 // failed; abort
                                 Debug.Assert(false, "Could not map tray button hit point to screen coordinates");
+                                break;
                             }
                             var mouseArgs = new MouseEventArgs(MouseButtons.Right, 1, hitPoint.Value.X, hitPoint.Value.Y, 0);
                             _owner.MouseUp?.Invoke(_owner, mouseArgs);

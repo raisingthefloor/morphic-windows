@@ -596,5 +596,77 @@ namespace Morphic.Windows.Native
         [DllImport("user32.dll", EntryPoint = "SystemParametersInfoW", SetLastError = true)]
         public static extern bool SystemParametersInfoRef(uint uiAction, uint uiParam, ref object pvParam, int fWinIni);
 
+        // windows session APIs
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-exitwindowsex
+        [DllImport("user32.dll")]
+        public static extern bool ExitWindowsEx(ExitWindowsFlags uFlags, ShutdownReason dwReason);
+
+        // see: https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-exitwindowsex
+        [Flags]
+        public enum ExitWindowsFlags : uint
+        {
+            // method (choose one of these five)
+            LogOff = 0,
+            Shutdown = 0x00000001,
+            Reboot = 0x00000002,
+            Poweroff = 0x00000008,
+            Restartapps = 0x00000040, // shut down and restart...and restart apps which have registered with RegisterApplicationRestart
+            //
+            // optional combination flag (if desired, combine (OR) the method with one of these two force options)
+            Force = 0x04,
+            ForceIfHung = 0x10,
+            //
+            // Windows 8: combine (OR) this flag with ShutDown for a faster shutdown
+            HybridShutdown = 0x00400000
+        }
+
+        // see: https://docs.microsoft.com/en-us/windows/win32/shutdown/system-shutdown-reason-codes
+        [Flags]
+        public enum ShutdownReason : uint
+        {
+            // major reasons
+            MajorApplication = 0x00040000,
+            MajorHardware = 0x00010000,
+            MajorLegacyApi = 0x00070000,
+            MajorOperatingSystem = 0x00020000,
+            MajorOther = 0x00000000, // "unplanned shutdown"
+            MajorPower = 0x00060000,
+            MajorSoftware = 0x00030000,
+            MajorSystem = 0x00050000,
+            //
+            // minor reason (optionally combine (OR) these with a major reason)
+            MinorBluescreen = 0x0000000F,
+            MinorCordunplugged = 0x0000000b,
+            MinorDisk = 0x00000007,
+            MinorEnvironment = 0x0000000c,
+            MinorHardwareDriver = 0x0000000d,
+            MinorHotfix = 0x00000011,
+            MinorHotfixUninstall = 0x00000017,
+            MinorHung = 0x00000005,
+            MinorInstallation = 0x00000002,
+            MinorMaintenance = 0x00000001,
+            MinorMmc = 0x00000019,
+            MinorNetworkConnectivity = 0x00000014,
+            MinorNetworkcard = 0x00000009,
+            MinorOther = 0x00000000,
+            MinorOtherdriver = 0x0000000e,
+            MinorPowerSupply = 0x0000000a,
+            MinorProcessor = 0x00000008,
+            MinorReconfig = 0x00000004,
+            MinorSecurity = 0x00000013,
+            MinorSecurityfix = 0x00000012,
+            MinorSecurityfixUninstall = 0x00000018,
+            MinorServicepack = 0x00000010,
+            MinorServicepackUninstall = 0x00000016,
+            MinorTermsrv = 0x00000020,
+            MinorUnstable = 0x00000006,
+            MinorUpgrade = 0x00000006,
+            MinorWmi = 0x00000015,
+            //
+            // optional flags (combine (OR) these with a major and optional minor reason...to provide more information about the event)
+            FlagUserDefined = 0x40000000, // NOTE: this is used with user-defined shutdown reasons (which we would save to the registry)
+            FlagPlanned = 0x80000000
+        }
     }
 }

@@ -193,6 +193,13 @@ namespace Morphic.Client.Bar.Data.Actions
             return true;
         }
 
+        [InternalFunction("signOut")]
+        public static async Task<bool> SignOut(FunctionArgs args)
+        {
+            var success = Morphic.Windows.Native.WindowsSession.WindowsSession.LogOff();
+            return success;
+        }
+
         [InternalFunction("darkMode")]
         public static async Task<bool> DarkMode(FunctionArgs args)
         {

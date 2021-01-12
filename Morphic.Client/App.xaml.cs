@@ -136,7 +136,10 @@ namespace Morphic.Client
             public string? label { get; set; }
             public string? tooltipHeader { get; set; }
             public string? tooltipText { get; set; }
+            // for type: link
             public string? url { get; set; }
+            // for type: action
+            public string? function { get; set; }
         }
 
         public class ConfigFileContents
@@ -231,10 +234,29 @@ namespace Morphic.Client
                     var extraItemLabel = extraItem.label;
                     var extraItemTooltipHeader = extraItem.tooltipHeader;
                     var extraItemTooltipText = extraItem.tooltipText;
+                    // for type: link
                     var extraItemUrl = extraItem.url;
+                    // for type: action
+                    var extraItemFunction = extraItem.function;
 
                     // if the item is invalid, log the error and skip this item
-                    if ((extraItemType == null) || (extraItemLabel == null) || (extraItemTooltipHeader == null) || (extraItemUrl == null))
+                    if ((extraItemType == null) || (extraItemLabel == null) || (extraItemTooltipHeader == null))
+                    {
+                        // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
+                        Logger?.LogError("Invalid MorphicBar item: " + extraItem.ToString());
+                        continue;
+                    }
+
+                    // if the "link" is missing its url, log the error and skip this item
+                    if ((extraItemType == "link") && (extraItemUrl == null))
+                    {
+                        // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
+                        Logger?.LogError("Invalid MorphicBar item: " + extraItem.ToString());
+                        continue;
+                    }
+
+                    // if the "action" is missing its function, log the error and skip this item
+                    if ((extraItemType == "action") && (extraItemFunction == null || extraItemFunction == ""))
                     {
                         // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
                         Logger?.LogError("Invalid MorphicBar item: " + extraItem.ToString());
@@ -247,6 +269,7 @@ namespace Morphic.Client
                     extraMorphicBarItem.tooltipHeader = extraItemTooltipHeader;
                     extraMorphicBarItem.tooltipText = extraItemTooltipText;
                     extraMorphicBarItem.url = extraItemUrl;
+                    extraMorphicBarItem.function = extraItemFunction;
                     extraMorphicBarItems.Add(extraMorphicBarItem);
                 }
             }
