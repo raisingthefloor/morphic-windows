@@ -110,6 +110,13 @@
                 }
             }
 
+            // if the directory for the saveAs file doesn't exist, create it now
+            var saveAsPath = Path.GetDirectoryName(saveAs);
+            if (Directory.Exists(saveAsPath) == false)
+            {
+                Directory.CreateDirectory(saveAsPath);
+            }
+
             IniFileWriter writer = new IniFileWriter();
             writer.SetFile(currentThemeFile);
             writer.Write(themeData!);
