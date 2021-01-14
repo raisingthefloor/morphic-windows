@@ -81,8 +81,8 @@
             return all.IndexOf(scale.Value); //all.IndexOf(this.display.GetResolution());
         }
 
-        [Getter("lastResolution")]
-        public Task<object?> GetResolutionCount(Setting settingGroup)
+        [Getter("zoomLevelCount")]
+        public Task<object?> GetZoomLevelCount(Setting settingGroup)
         {
 			// method 1: get/set zoom level based on resolution
             //return Task.FromResult<object?>(this.GetResolutions().Length);

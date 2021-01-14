@@ -68,7 +68,7 @@
       {
         type: "displaySettings",
         settings: {
-          count: "lastResolution",
+          count: "zoomLevelCount",
           zoom: {
             name: "zoom",
             dataType: "int",
