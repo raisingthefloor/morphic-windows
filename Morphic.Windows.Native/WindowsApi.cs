@@ -619,7 +619,7 @@ namespace Morphic.Windows.Native
         public static extern ErrorCode DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_GET_DPI requestPacket);
 
         [DllImport("user32.dll")]
-        public static extern ErrorCode DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_SET_DPI requestPacket);
+        public static extern ErrorCode DisplayConfigSetDeviceInfo(ref DISPLAYCONFIG_SET_DPI requestPacket);
 
 		// NOTE: do _not_ do this (i.e. we should point to the top-level structure, _not_ the header, in case there are bounds safety checks)
         //[DllImport("user32.dll")]
@@ -962,6 +962,9 @@ namespace Morphic.Windows.Native
             DISPLAYCONFIG_DEVICE_INFO_GET_SDR_WHITE_LEVEL = 11,
             DISPLAYCONFIG_DEVICE_INFO_FORCE_UINT32 = 0xFFFFFFFF
         }
+
+        // Reverse-engineered DPI scaling code, utilizing the CCD APIs
+        // https://docs.microsoft.com/en-us/windows-hardware/drivers/display/ccd-apis
 
         // NOTE: this structure is undocumented and was reverse engineered as part of the Morphic Classic project
         // NOTE: all offsets are indices (relative to the recommended DPI scaling value)
