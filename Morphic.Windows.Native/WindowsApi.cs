@@ -26,7 +26,7 @@ using System.Runtime.InteropServices;
 
 namespace Morphic.Windows.Native
 {
-    internal static class WindowsApi
+    public static class WindowsApi
     {
         // NOTE: SYSTEM_INFO Is used by GetSystemInfo and GetNativeSystemInfo
         // https://docs.microsoft.com/en-us/windows/win32/api/sysinfoapi/ns-sysinfoapi-system_info
@@ -228,7 +228,7 @@ namespace Morphic.Windows.Native
         }
         //
         [StructLayout(LayoutKind.Explicit)]
-        internal struct DEVMODEW__DUMMYUNIONNAME
+        public struct DEVMODEW__DUMMYUNIONNAME
         {
             [FieldOffset(0)]
             public DEVMODEW__DUMMYUNIONNAME__DUMMYSTRUCTNAME DUMMYSTRUCTNAME;
@@ -273,7 +273,7 @@ namespace Morphic.Windows.Native
 
         // https://docs.microsoft.com/en-us/windows/win32/api/windef/ns-windef-pointl
         [StructLayout(LayoutKind.Sequential)]
-        internal struct POINTL
+        public struct POINTL
         {
             public Int32 x;
             public Int32 y;
@@ -595,6 +595,333 @@ namespace Morphic.Windows.Native
         public static extern bool SystemParametersInfo(uint uiAction, uint uiParam, IntPtr pvParam, int fWinIni);
         [DllImport("user32.dll", EntryPoint = "SystemParametersInfoW", SetLastError = true)]
         public static extern bool SystemParametersInfoRef(uint uiAction, uint uiParam, ref object pvParam, int fWinIni);
+
+        // error codes
+
+        public const int ERROR_SUCCESS = 0;
+        //
+        public const int ERROR_ACCESS_DENIED = 5;
+        public const int ERROR_GEN_FAILURE = 31;
+        public const int ERROR_INVALID_PARAMETER = 87;
+        public const int ERROR_NOT_SUPPORTED = 50;
+        public const int ERROR_INSUFFICIENT_BUFFER = 122;
+
+        // display APIs
+
+        [DllImport("user32.dll")]
+        public static extern int DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_SOURCE_DEVICE_NAME requestPacket);
+
+        [DllImport("user32.dll")]
+        public static extern int DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_GET_DPI requestPacket);
+
+        [DllImport("user32.dll")]
+        public static extern int DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_SET_DPI requestPacket);
+
+		// NOTE: do _not_ do this (i.e. we should point to the top-level structure, _not_ the header, in case there are bounds safety checks)
+        //[DllImport("user32.dll")]
+        //public static extern int DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_DEVICE_INFO_HEADER requestPacket);
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetDesktopWindow();
+
+        [DllImport("user32.dll")]
+        public static extern int GetDisplayConfigBufferSizes(QueryDisplayConfigFlags flags, out uint numPathArrayElements, out uint numModeInfoArrayElements);
+
+        [DllImport("user32.dll")]
+        public static extern int QueryDisplayConfig(QueryDisplayConfigFlags flags, ref uint numPathArrayElements, [Out] DISPLAYCONFIG_PATH_INFO[] pathInfoArray,
+            ref uint modeInfoArrayElements, [Out] DISPLAYCONFIG_MODE_INFO[] modeInfoArray, IntPtr currentTopologyId);
+
+        [Flags]
+        public enum QueryDisplayConfigFlags: uint
+        {
+            QDC_ALL_PATHS = 0x00000001,
+            QDC_ONLY_ACTIVE_PATHS = 0x00000002,
+            QDC_DATABASE_CURRENT = 0x00000004
+        }
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_PATH_INFO
+        {
+            public DISPLAYCONFIG_PATH_SOURCE_INFO sourceInfo;
+            public DISPLAYCONFIG_PATH_TARGET_INFO targetInfo;
+            public uint flags;
+        }
+        public struct DISPLAYCONFIG_PATH_SOURCE_INFO
+        {
+            public LUID adapterId;
+            public uint id;
+            public uint modeInfoIdx; // union with cloneGroupId:16 and sourceModeInfoIdx:16
+            public DISPLAYCONFIG_SOURCE_INFO_STATUS statusFlags;
+        }
+
+        [Flags]
+        public enum DISPLAYCONFIG_SOURCE_INFO_STATUS : uint
+        {
+            DISPLAYCONFIG_TARGET_IN_USE = 0x00000001,
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_PATH_TARGET_INFO
+        {
+            public LUID adapterId;
+            public uint id;
+            public uint modeInfoIdx; // union with desktopModeInfoIdx:16 and targetModeInfoIdx:16
+            public DISPLAYCONFIG_VIDEO_OUTPUT_TECHNOLOGY outputTechnology;
+            public DISPLAYCONFIG_ROTATION rotation;
+            public DISPLAYCONFIG_SCALING scaling;
+            public DISPLAYCONFIG_RATIONAL refreshRate;
+            public DISPLAYCONFIG_SCANLINE_ORDERING scanLineOrdering;
+            public bool targetAvailable;
+            public DISPLAYCONFIG_TARGET_INFO_STATUS statusFlags;
+        }
+
+        [Flags]
+        public enum DISPLAYCONFIG_TARGET_INFO_STATUS : uint
+        {
+            DISPLAYCONFIG_TARGET_IN_USE = 0x00000001,
+            DISPLAYCONFIG_TARGET_FORCIBLE = 0x00000002,
+            DISPLAYCONFIG_TARGET_FORCED_AVAILABILITY_BOOT = 0x00000004,
+            DISPLAYCONFIG_TARGET_FORCED_AVAILABILITY_PATH = 0x00000008,
+            DISPLAYCONFIG_TARGET_FORCED_AVAILABILITY_SYSTEM = 0x00000010,
+            DISPLAYCONFIG_TARGET_IS_HMD = 0x00000020
+        }
+
+        [Flags]
+        public enum DISPLAYCONFIG_VIDEO_OUTPUT_TECHNOLOGY: uint
+        {
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_OTHER = unchecked((uint)-1),
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_HD15 = 0,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_SVIDEO = 1,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_COMPOSITE_VIDEO = 2,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_COMPONENT_VIDEO = 3,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_DVI = 4,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_HDMI = 5,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_LVDS = 6,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_D_JPN = 8,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_SDI = 9,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_DISPLAYPORT_EXTERNAL = 10,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_DISPLAYPORT_EMBEDDED = 11,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_UDI_EXTERNAL = 12,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_UDI_EMBEDDED = 13,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_SDTVDONGLE = 14,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_MIRACAST = 15,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_INDIRECT_WIRED = 16,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_INDIRECT_VIRTUAL = 17,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_INTERNAL = 0x80000000,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_FORCE_UINT32 = 0xFFFFFFFF
+        }
+
+        [Flags]
+        public enum DISPLAYCONFIG_ROTATION: uint
+        {
+            DISPLAYCONFIG_ROTATION_IDENTITY = 1,
+            DISPLAYCONFIG_ROTATION_ROTATE90 = 2,
+            DISPLAYCONFIG_ROTATION_ROTATE180 = 3,
+            DISPLAYCONFIG_ROTATION_ROTATE270 = 4,
+            DISPLAYCONFIG_ROTATION_FORCE_UINT32 = 0xFFFFFFFF
+        }
+
+        [Flags]
+        public enum DISPLAYCONFIG_SCALING: uint
+        {
+            DISPLAYCONFIG_SCALING_IDENTITY = 1,
+            DISPLAYCONFIG_SCALING_CENTERED = 2,
+            DISPLAYCONFIG_SCALING_STRETCHED = 3,
+            DISPLAYCONFIG_SCALING_ASPECTRATIOCENTEREDMAX = 4,
+            DISPLAYCONFIG_SCALING_CUSTOM = 5,
+            DISPLAYCONFIG_SCALING_PREFERRED = 128,
+            DISPLAYCONFIG_SCALING_FORCE_UINT32 = 0xFFFFFFFF
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_RATIONAL
+        {
+            uint Numerator;
+            uint Denominator;
+        }
+
+        [Flags]
+        public enum DISPLAYCONFIG_SCANLINE_ORDERING: uint
+        {
+            DISPLAYCONFIG_SCANLINE_ORDERING_UNSPECIFIED = 0,
+            DISPLAYCONFIG_SCANLINE_ORDERING_PROGRESSIVE = 1,
+            DISPLAYCONFIG_SCANLINE_ORDERING_INTERLACED = 2,
+            DISPLAYCONFIG_SCANLINE_ORDERING_INTERLACED_UPPERFIELDFIRST = DISPLAYCONFIG_SCANLINE_ORDERING_INTERLACED,
+            DISPLAYCONFIG_SCANLINE_ORDERING_INTERLACED_LOWERFIELDFIRST = 3,
+            DISPLAYCONFIG_SCANLINE_ORDERING_FORCE_UINT32 = 0xFFFFFFFF
+        }
+
+        [StructLayout(LayoutKind.Explicit)]
+        public struct DISPLAYCONFIG_MODE_INFO
+        {
+            [FieldOffset(0)]
+            DISPLAYCONFIG_MODE_INFO_TYPE infoType;
+            [FieldOffset(4)]
+            uint id;
+            [FieldOffset(8)]
+            LUID adapterId;
+
+            // union
+            [FieldOffset(16)]
+            DISPLAYCONFIG_TARGET_MODE targetMode;
+            [FieldOffset(16)]
+            DISPLAYCONFIG_SOURCE_MODE sourceMode;
+            [FieldOffset(16)]
+            DISPLAYCONFIG_DESKTOP_IMAGE_INFO desktopImageInfo;
+        }
+
+        [Flags]
+        public enum DISPLAYCONFIG_MODE_INFO_TYPE: uint
+        {
+            DISPLAYCONFIG_MODE_INFO_TYPE_SOURCE = 1,
+            DISPLAYCONFIG_MODE_INFO_TYPE_TARGET = 2,
+            DISPLAYCONFIG_MODE_INFO_TYPE_DESKTOP_IMAGE = 3,
+            DISPLAYCONFIG_MODE_INFO_TYPE_FORCE_UINT32 = 0xFFFFFFFF
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_TARGET_MODE
+        {
+            public DISPLAYCONFIG_VIDEO_SIGNAL_INFO targetVideoSignalInfo;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_SOURCE_MODE
+        {
+            public uint width;
+            public uint height;
+            public DISPLAYCONFIG_PIXELFORMAT pixelFormat;
+            public POINTL position;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_DESKTOP_IMAGE_INFO
+        {
+            POINTL PathSourceSize;
+            RECT DesktopImageRegion;
+            RECT DesktopImageClip;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_VIDEO_SIGNAL_INFO
+        {
+            public long pixelRate;
+            public DISPLAYCONFIG_RATIONAL hSyncFreq;
+            public DISPLAYCONFIG_RATIONAL vSyncFreq;
+            public DISPLAYCONFIG_2DREGION activeSize;
+            public DISPLAYCONFIG_2DREGION totalSize;
+            public uint videoStandard; // union: AdditionalSignalInfo(videoStandard:16, vSyncFreqDivider:6, reserved:10)
+            // Scan line ordering (e.g. progressive, interlaced).
+            public DISPLAYCONFIG_SCANLINE_ORDERING scanLineOrdering;
+        }
+
+        [Flags]
+        public enum DISPLAYCONFIG_PIXELFORMAT: uint
+        {
+            DISPLAYCONFIG_PIXELFORMAT_8BPP = 1,
+            DISPLAYCONFIG_PIXELFORMAT_16BPP = 2,
+            DISPLAYCONFIG_PIXELFORMAT_24BPP = 3,
+            DISPLAYCONFIG_PIXELFORMAT_32BPP = 4,
+            DISPLAYCONFIG_PIXELFORMAT_NONGDI = 5,
+            DISPLAYCONFIG_PIXELFORMAT_FORCE_UINT32 = 0xffffffff
+        }
+        
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_2DREGION
+        {
+            uint cx;
+            uint cy;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct LUID
+        {
+            public uint LowPart;
+            public int HighPart;
+        }
+
+        //
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        public struct DISPLAYCONFIG_SOURCE_DEVICE_NAME
+        {
+            public DISPLAYCONFIG_DEVICE_INFO_HEADER header;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = CCHDEVICENAME)]
+            public Char[] viewGdiDeviceName;
+
+            public void Init() 
+            {
+                this.viewGdiDeviceName = new Char[CCHDEVICENAME];
+                this.header.size = (uint)Marshal.SizeOf(typeof(DISPLAYCONFIG_SOURCE_DEVICE_NAME));
+            }
+        }
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_DEVICE_INFO_HEADER
+        {
+            public DISPLAYCONFIG_DEVICE_INFO_TYPE type;
+            public uint size;
+            public LUID adapterId;
+            public uint id;
+        }
+
+        [Flags]
+        public enum DISPLAYCONFIG_DEVICE_INFO_TYPE: uint
+        {
+            // NOTE: the GET_DPI and SET_DPI values are undocumented and were reverse engineered as part of the Morphic Classic project
+            DISPLAYCONFIG_DEVICE_INFO_SET_DPI = unchecked((uint)-4),
+            DISPLAYCONFIG_DEVICE_INFO_GET_DPI = unchecked((uint)-3),
+            //
+            // NOTE: the remaining entries are publicly documented
+            DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME = 1,
+            DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_NAME = 2,
+            DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_PREFERRED_MODE = 3,
+            DISPLAYCONFIG_DEVICE_INFO_GET_ADAPTER_NAME = 4,
+            DISPLAYCONFIG_DEVICE_INFO_SET_TARGET_PERSISTENCE = 5,
+            DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_BASE_TYPE = 6,
+            DISPLAYCONFIG_DEVICE_INFO_GET_SUPPORT_VIRTUAL_RESOLUTION = 7,
+            DISPLAYCONFIG_DEVICE_INFO_SET_SUPPORT_VIRTUAL_RESOLUTION = 8,
+            DISPLAYCONFIG_DEVICE_INFO_GET_ADVANCED_COLOR_INFO = 9,
+            DISPLAYCONFIG_DEVICE_INFO_SET_ADVANCED_COLOR_STATE = 10,
+            DISPLAYCONFIG_DEVICE_INFO_GET_SDR_WHITE_LEVEL = 11,
+            DISPLAYCONFIG_DEVICE_INFO_FORCE_UINT32 = 0xFFFFFFFF
+        }
+
+        // NOTE: this structure is undocumented and was reverse engineered as part of the Morphic Classic project
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_GET_DPI
+        {
+            public DISPLAYCONFIG_DEVICE_INFO_HEADER header;
+
+            public int minDpiOffset;
+            public int dpiOffset;
+            public int maxDpiOffset;
+
+            public void Init()
+            {
+                this.header.size = (uint)Marshal.SizeOf(typeof(DISPLAYCONFIG_GET_DPI));
+            }
+        }
+
+        // NOTE: this structure is undocumented and was reverse engineered as part of the Morphic Classic project
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_SET_DPI
+        {
+            public DISPLAYCONFIG_DEVICE_INFO_HEADER header;
+
+            public int dpiOffset;
+
+            public void Init()
+            {
+                this.header.size = (uint)Marshal.SizeOf(typeof(DISPLAYCONFIG_SET_DPI));
+            }
+        }
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
+
+        public const int MONITOR_DEFAULTTONULL = 0;
+        public const int MONITOR_DEFAULTTOPRIMARY = 1;
+        public const int MONITOR_DEFAULTTONEAREST = 2;
 
         // windows session APIs
 

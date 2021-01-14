@@ -312,6 +312,7 @@ namespace Morphic.Client
             public MONITORINFO(IntPtr hMonitor) : this()
             {
                 this.cbSize = Marshal.SizeOf(this);
+                // NOTE: we are not yet checking for a failure result from this API
                 GetMonitorInfo(hMonitor, ref this);
             }
         }
