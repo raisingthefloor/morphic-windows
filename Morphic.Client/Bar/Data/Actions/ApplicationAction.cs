@@ -8,6 +8,8 @@
 // You may obtain a copy of the License at
 // https://github.com/GPII/universal/blob/master/LICENSE.txt
 
+using Morphic.Windows.Native.WindowsCom;
+
 namespace Morphic.Client.Bar.Data.Actions
 {
     using System;
@@ -66,8 +68,15 @@ namespace Morphic.Client.Bar.Data.Actions
         /// <summary>
         /// Invoke the value in `exe` as-is, via the shell (explorer). Don't resolve the path.
         /// </summary>
-        [JsonProperty("asIs")]
-        public bool AsIs { get; set; }
+        [JsonProperty("shell")]
+        public bool Shell { get; set; }
+
+        /// <summary>
+        /// This is a windows store app. The value of `exe` is the Application User Model ID of the app.
+        /// For example, `Microsoft.WindowsCalculator_8wekyb3d8bbwe!App`
+        /// </summary>
+        [JsonProperty("appx")]
+        public bool AppX { get; set; }
 
         /// <summary>
         /// true to always start a new instance. false to activate an existing instance.
@@ -97,11 +106,16 @@ namespace Morphic.Client.Bar.Data.Actions
                 bool isUrl = this.exeNameValue.Length > 3 && this.exeNameValue.EndsWith(':');
                 if (isUrl)
                 {
-                    this.AsIs = true;
+                    this.Shell = true;
                 }
 
+                if (this.exeNameValue.StartsWith("appx:", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    this.AppX = true;
+                    this.exeNameValue = this.exeNameValue.Substring(5);
+                }
 
-                if (this.AsIs || this.exeNameValue.Length == 0)
+                if (this.Shell || this.AppX || this.exeNameValue.Length == 0)
                 {
                     this.AppPath = null;
                 }
@@ -266,6 +280,12 @@ namespace Morphic.Client.Bar.Data.Actions
                 return this.DefaultApp.Invoke(source);
             }
 
+            if (this.AppX)
+            {
+                bool success = Appx.Start(this.ExeName) > 0;
+                return Task.FromResult(success) ;
+            }
+
             if (!this.NewInstance && (Keyboard.Modifiers & ModifierKeys.Shift) != ModifierKeys.Shift)
             {
                 bool activated = this.ActivateInstance();
@@ -285,7 +305,7 @@ namespace Morphic.Client.Bar.Data.Actions
 
             };
 
-            if (this.AsIs)
+            if (this.Shell)
             {
                 startInfo.UseShellExecute = true;
             }
