@@ -44,14 +44,14 @@
         {
             if (newValue is int index)
             {
-				// method 1: get/set zoom level based on resolution
-    //            Size[] all = this.GetResolutions();
-    //            if (index >= 0 && index < all.Length)
-    //            {
-    //                this.display.SetResolution(all[index]);
-    //            }
+                // method 1: get/set zoom level based on resolution
+                //Size[] all = this.GetResolutions();
+                //if (index >= 0 && index < all.Length)
+                //{
+                //    this.display.SetResolution(all[index]);
+                //}
 
-				// method 2: get/set zoom level based on scale percentage
+                // method 2: get/set zoom level based on scale percentage
                 var all = this.display.GetDPIScales();
                 if (index >= 0 && index < all.Count)
                 {
@@ -85,7 +85,7 @@
         public Task<object?> GetResolutionCount(Setting settingGroup)
         {
 			// method 1: get/set zoom level based on resolution
-            return Task.FromResult<object?>(this.GetResolutions().Length);
+            //return Task.FromResult<object?>(this.GetResolutions().Length);
 
 			// method 2: get/set zoom level based on scale percentage
             return Task.FromResult<object?>(this.display.GetDPIScales().Count);
