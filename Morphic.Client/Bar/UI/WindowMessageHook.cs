@@ -116,6 +116,23 @@ namespace Morphic.Client.Bar.UI
         /// </summary>
         private IntPtr WindowProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
+            //    // NOTE: if we wanted to capture system settings changes (such as dark/light theme changes), we could do so here as follows:
+            //    if (msg == WinApi.WM_WININICHANGE /* 0x001A */)
+            //    {
+            //        // capture the name of the updated setting
+            //        string? lParamAsString = Marshal.PtrToStringUni(lParam);
+            //        if (lParamAsString == "ImmersiveColorSet")
+            //        {
+            //            // dark/light theme was updated
+            //            var systemLightThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(Morphic.Settings.SolutionsRegistry.SettingId.LightThemeSystem).GetValue<bool>().GetAwaiter().GetResult();
+            //            var systemTheme = systemLightThemeSetting ? "Light" : "Dark";
+            //            var appsLightThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(Morphic.Settings.SolutionsRegistry.SettingId.LightThemeApps).GetValue<bool>().GetAwaiter().GetResult();
+            //            var appsTheme = appsLightThemeSetting ? "Light" : "Dark";
+
+            //            // TODO: relay the event (i.e. let our buttons know via an event that the dark/light theme state was updated)
+            //        }
+            //    }
+
             if (this.isMessageWindow)
             {
                 if (msg == 0x18)

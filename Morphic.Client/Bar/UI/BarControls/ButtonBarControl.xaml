@@ -79,8 +79,20 @@
         Small button, no picture -->
         <Grid x:Key="TextOnlyButton">
             <ContentControl Content="{StaticResource Button.Background}" />
-            <ContentControl Content="{StaticResource Button.Text}"
-                            VerticalAlignment="Center"/>
+            <ui:TextBlockLimited 
+                Visibility="{Binding BarItem.ShowIcon, Converter={StaticResource BoolVisibility}}"
+                Text="{Binding BarItem.Text}"
+                TextWrapping="Wrap"
+                TextAlignment="Center"
+                TextTrimming="WordEllipsis"
+                MaxLines="{Binding Bar.Sizes.ButtonTextLines}" 
+                FontWeight="{Binding Bar.Sizes.ButtonFontWeight}"
+                FontSize="{Binding Bar.Sizes.ButtonFontSize}"
+                Foreground="{DynamicResource Foreground}"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Padding="10 0 10 0"
+             />
             <ContentControl Content="{StaticResource Button.Border}" />
         </Grid>
 

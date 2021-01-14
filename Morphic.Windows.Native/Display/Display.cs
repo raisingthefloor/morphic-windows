@@ -31,6 +31,68 @@ namespace Morphic.Windows.Native.Display
     // ReSharper disable IdentifierTypo - Uses naming from the Windows API
     public class Display
     {
+        // NOTE: if the caller does not provide an hWnd, we use the primary monitor instead
+        // NOTE: this function returns null if it could not obtain the monitor name
+        public static String? GetMonitorName(IntPtr? hWnd)
+        {
+            IntPtr monitorHandle;
+            if (hWnd == null)
+            {
+                // get the handle of the primary monitor
+                var desktopHWnd = WindowsApi.GetDesktopWindow();
+                monitorHandle = WindowsApi.MonitorFromWindow(desktopHWnd, WindowsApi.MONITOR_DEFAULTTOPRIMARY);
+            }
+            else
+            {
+                // get the handle of the monitor which contains the majority of the specified hwnd's window
+                monitorHandle = WindowsApi.MonitorFromWindow(hWnd.Value, WindowsApi.MONITOR_DEFAULTTONEAREST);
+            }
+
+            var monitorInfo = new WindowsApi.MONITORINFOEXA();
+            monitorInfo.Init();
+            var getMonitorInfoSuccess = WindowsApi.GetMonitorInfo(monitorHandle, ref monitorInfo);
+            if (getMonitorInfoSuccess == false)
+            {
+                return null;
+            }
+
+            var lengthOfDeviceName = Array.IndexOf<char>(monitorInfo.szDevice, '\0');
+            if (lengthOfDeviceName < 0)
+            {
+                lengthOfDeviceName = monitorInfo.szDevice.Length;
+            }
+            var deviceName = new String(monitorInfo.szDevice, 0, lengthOfDeviceName);
+
+            return deviceName;
+        }
+
+        // NOTE: if the caller does not provide an hWnd, we use the primary monitor instead
+        // NOTE: this function returns null if it could not obtain the work area name
+        public static Rectangle? GetPhysicalMonitorWorkArea(IntPtr? hWnd)
+        {
+            IntPtr monitorHandle;
+            if (hWnd == null)
+            {
+                // get the handle of the primary monitor
+                var desktopHWnd = WindowsApi.GetDesktopWindow();
+                monitorHandle = WindowsApi.MonitorFromWindow(desktopHWnd, WindowsApi.MONITOR_DEFAULTTOPRIMARY);
+            }
+            else
+            {
+                // get the handle of the monitor which contains the majority of the specified hwnd's window
+                monitorHandle = WindowsApi.MonitorFromWindow(hWnd.Value, WindowsApi.MONITOR_DEFAULTTONEAREST);
+            }
+
+            var monitorInfo = new WindowsApi.MONITORINFOEXA();
+            monitorInfo.Init();
+            var getMonitorInfoSuccess = WindowsApi.GetMonitorInfo(monitorHandle, ref monitorInfo);
+            if (getMonitorInfoSuccess == false)
+            {
+                return null;
+            }
+
+            return new Rectangle(monitorInfo.rcWork.left, monitorInfo.rcWork.top, monitorInfo.rcWork.right - monitorInfo.rcWork.left, monitorInfo.rcWork.bottom - monitorInfo.rcWork.top);
+        }
         /// <summary>Gets the available resolutions for a display device.</summary>
         public IEnumerable<Size> GetResolutions(string? deviceName = null)
         {
