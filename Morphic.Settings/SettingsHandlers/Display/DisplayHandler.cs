@@ -44,10 +44,18 @@
         {
             if (newValue is int index)
             {
-                Size[] all = this.GetResolutions();
-                if (index >= 0 && index < all.Length)
+				// option 1: get/set zoom level based on resolution
+    //            Size[] all = this.GetResolutions();
+    //            if (index >= 0 && index < all.Length)
+    //            {
+    //                this.display.SetResolution(all[index]);
+    //            }
+
+				// option 2: get/set zoom level based on scale percentage
+                var all = this.display.GetDPIScales();
+                if (index >= 0 && index < all.Count)
                 {
-                    this.display.SetResolution(all[index]);
+                    this.display.SetDpiScale(all[index]);
                 }
             }
 
@@ -57,14 +65,30 @@
         [Getter("zoom")]
         public async Task<object?> GetZoom(Setting settingGroup)
         {
-            List<Size> all = this.GetResolutions().ToList();
-            return all.IndexOf(this.display.GetResolution());
+			// option 1: get/set zoom level based on resolution
+            //List<Size> all = this.GetResolutions().ToList();
+            //return all.IndexOf(this.display.GetResolution());
+
+			// option 2: get/set zoom level based on scale percentage
+            var scale = Morphic.Windows.Native.Display.Display.GetMonitorScalePercentage(null);
+            if (scale == null)
+            {
+                return null;
+            }
+
+            //List<Size> all = this.GetResolutions().ToList();
+            var all = this.display.GetDPIScales();
+            return all.IndexOf(scale.Value); //all.IndexOf(this.display.GetResolution());
         }
 
         [Getter("lastResolution")]
         public Task<object?> GetResolutionCount(Setting settingGroup)
         {
+			// option 1: get/set zoom level based on resolution
             return Task.FromResult<object?>(this.GetResolutions().Length);
+
+			// option 2: get/set zoom level based on scale percentage
+            return Task.FromResult<object?>(this.display.GetDPIScales().Count);
         }
     }
 }
