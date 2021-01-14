@@ -33,6 +33,15 @@ namespace Morphic.Client.Bar.UI
             }
         }
 
+        public enum CornerPosition
+        {
+            TopLeft,
+            TopRight,
+            BottomLeft,
+            BottomRight
+        }
+        private CornerPosition? _cornerPosition = null;
+
         public override double Scale
         {
             get => base.Scale;
@@ -123,7 +132,7 @@ namespace Morphic.Client.Bar.UI
 
             if (this.Bar.Position.DockEdge == Edge.None)
             {
-                Rect workArea = SystemParameters.WorkArea;
+                Rect workArea = this.GetCorrectedWorkArea();
                 Point pos = this.Bar.Position.Primary.GetPosition(workArea, size);
                 this.Left = pos.X;
                 this.Top = pos.Y;
@@ -149,12 +158,14 @@ namespace Morphic.Client.Bar.UI
 
             if (this.Bar.Position.Restricted)
             {
-                this.MoveToCorner(userMoved);
+                // if the user moved our bar, then animate
+                var animate = userMoved;
+                this.MoveToCorner(animate, userMoved);
             }
             else if (!userMoved)
             {
                 // Move the window back to the edges, if any, it was snapped on.
-                Rect workArea = SystemParameters.WorkArea;
+                Rect workArea = this.GetCorrectedWorkArea();
                 double left = this.snapX switch
                 {
                     Edge.Left => workArea.Left,
@@ -182,7 +193,52 @@ namespace Morphic.Client.Bar.UI
         protected override void SystemEventsOnDisplaySettingsChanged(object? sender, EventArgs e)
         {
             base.SystemEventsOnDisplaySettingsChanged(sender, e);
+            this.CorrectPositionAfterDisplaySettingsChange();
+        }
+
+        private System.Windows.Threading.DispatcherTimer? _workAreaWatchTimer;
+        private void CorrectPositionAfterDisplaySettingsChange()
+        {
+            // since it can take a few seconds for the screen to settle after a display settings change (including WPF catching up with the actual new 
+            // resolution so we have good coordinates), we keep checking for a few seconds to make sure things are stabilized before permanently moving the bar
+
+            // when screen settings change, we snap the bar into place (rather than animate it) to prevent from disconcerting animations and problematic timing issues
+            // (i.e. avoid moving and then changing course several times)
+
+            Rect previousWorkArea = this.GetCorrectedWorkArea();
+
+            // if a previous dispatcher timer is already working, stop it
+            _workAreaWatchTimer?.Stop();
+
+            // correct our position once
             this.CorrectPosition();
+
+            var watchTimerCountdown = 20; // watch for 10 seconds (20 x 500ms)
+
+            // over a period of a few seconds, keep checking to make sure our position is still correct (by checking to see if the work area has changed)
+            _workAreaWatchTimer = new System.Windows.Threading.DispatcherTimer();
+            _workAreaWatchTimer.Interval = new TimeSpan(0, 0, 0, 0, 500);
+            _workAreaWatchTimer.Tick += delegate (object? sender, EventArgs e)
+            {
+                watchTimerCountdown--;
+
+                if (watchTimerCountdown == 0)
+                {
+                    _workAreaWatchTimer.Stop();
+                }
+
+                var currentWorkArea = this.GetCorrectedWorkArea();
+                if (currentWorkArea != previousWorkArea)
+                {
+                    // update our previous work area
+                    previousWorkArea = currentWorkArea;
+
+                    // if the work area has changed, update our bar's position
+                    this.CorrectPosition();
+                }
+            };
+            _workAreaWatchTimer.Start();
+
         }
 
         protected override void OnLocationChanged(EventArgs e)
@@ -190,7 +246,7 @@ namespace Morphic.Client.Bar.UI
             base.OnLocationChanged(e);
 
             // See if the position is snapped to an edge, so it can stick to it if the screen size changes.
-            Rect workArea = SystemParameters.WorkArea;
+            Rect workArea = this.GetCorrectedWorkArea();
             if (Math.Abs(this.Left - workArea.Left) < 3)
             {
                 this.snapX = Edge.Left;
@@ -218,20 +274,135 @@ namespace Morphic.Client.Bar.UI
             }
         }
 
-        /// <summary>Moves the window to the nearest corner.</summary>
-        private void MoveToCorner(bool animate = false)
+        private double? GetWpfDisplayScale()
         {
-            Rect workArea = SystemParameters.WorkArea;
+            // get a reference to our presentation source (to measure our DPI)
+            // NOTE: this may cause problems on multi-monitor setups; we will need to revisit this in the future (but since our bar should be on the screen we're measuring...it should work well otherwise)
+            var presentationSource = PresentationSource.FromVisual(this);
+            if (presentationSource == null)
+            {
+                return null;
+            }
+
+            // get a transformation matrix to transform virtual to physical pixels (i.e. to get our current zoom level)
+            var transformationMatrix = presentationSource!.CompositionTarget.TransformToDevice;
+
+            // capture the zoom level (which should be the same in both .M11 and .M22 of the matrix
+            // NOTE: M11 should measure the width scaling, whereas M22 should measure the height scaling; we're measuring both out of an abundance of caution
+            var horizontalZoomFactor = transformationMatrix.M11;
+            var verticalZoomFactor = transformationMatrix.M22;
+
+            return horizontalZoomFactor;
+        }
+
+        private Rect GetCorrectedWorkArea()
+        {
+            Rect? workAreaAsNullable = null;
+            var physicalWorkArea = Morphic.Windows.Native.Display.Display.GetPhysicalMonitorWorkArea(null);
+            if (physicalWorkArea != null)
+            {
+                // NOTE: WPF is sometimes out of sync (longer-term) with the actual system DPI, so we have chosen not to use this (far more accurate)
+                //       method for now; WPF thinks the virtual screen is bigger or smaller than it actually is
+                //// method 1: get monitor scale percentage from Windows API (including reverse-engineered 'dpiOffset')
+                //var monitorScale = Morphic.Windows.Native.Display.Display.GetMonitorScalePercentage(null);
+                //if (monitorScale != null)
+                //{
+                //    workAreaAsNullable = new Rect(
+                //        (double)physicalWorkArea.Value.X / monitorScale.Value,
+                //        (double)physicalWorkArea.Value.Y / monitorScale.Value,
+                //        (double)physicalWorkArea.Value.Width / monitorScale.Value,
+                //        (double)physicalWorkArea.Value.Height / monitorScale.Value
+                //        );
+                //}
+
+                // method 2: get monitor scale using WPF primitives (which should match up with what WPF expects for our positioning)
+                var monitorScale = this.GetWpfDisplayScale();
+                if (monitorScale != null)
+                {
+                    workAreaAsNullable = new Rect(
+                        (double)physicalWorkArea.Value.X / monitorScale.Value,
+                        (double)physicalWorkArea.Value.Y / monitorScale.Value,
+                        (double)physicalWorkArea.Value.Width / monitorScale.Value,
+                        (double)physicalWorkArea.Value.Height / monitorScale.Value
+                        );
+                }
+            }
+
+            if (workAreaAsNullable != null)
+            {
+                return workAreaAsNullable.Value;
+            }
+            else
+            {
+                // not ideal, but we can fall back to the SystemParameters' WorkArea property (which is often wrong because of changing resolutions/zoom levels during program runtime)
+                return SystemParameters.WorkArea;
+            }
+        }
+
+        /// <summary>Moves the window to the nearest corner.</summary>
+        private void MoveToCorner(bool animate, bool userMoved)
+        {
+            Rect workArea = this.GetCorrectedWorkArea();
+
             workArea.Inflate(-4, -4);
 
-            Point newPos;
-            newPos.X = this.Left + this.Width / 2 < workArea.Left + workArea.Width / 2
-                ? workArea.Left
-                : workArea.Right - this.Width;
-            newPos.Y = this.Top + this.Height / 2 < workArea.Top + workArea.Height / 2
-                ? workArea.Top
-                : workArea.Bottom - this.Height;
+            CornerPosition targetCornerPosition;
+            if (_cornerPosition == null || userMoved == true)
+            {
+                // if the user moved our bar (or we don't have a corner yet), then determine which corner position we should occupy
+                var moveToTopCorner = (this.Top + this.Height / 2 < workArea.Top + workArea.Height / 2);
+                var moveToLeftCorner = (this.Left + this.Width / 2 < workArea.Left + workArea.Width / 2);
+                if (moveToTopCorner == true && moveToLeftCorner == true)
+                {
+                    targetCornerPosition = CornerPosition.TopLeft;
+                }
+                else if (moveToTopCorner == true && moveToLeftCorner == false)
+                {
+                    targetCornerPosition = CornerPosition.TopRight;
+                }
+                else if (moveToTopCorner == false && moveToLeftCorner == true)
+                {
+                    targetCornerPosition = CornerPosition.BottomLeft;
+                }
+                else /* if (moveToTopCorner == false && moveToLeftCorner == false) */
+                {
+                    targetCornerPosition = CornerPosition.BottomRight;
+                }
+            }
+            else
+            {
+                // if the user did not move our bar, do not change our corner position; this is especially important during scale/resolution changes
+                targetCornerPosition = _cornerPosition.Value;
+            }
 
+            // if our corner position has changed, save our new corner position
+            _cornerPosition = targetCornerPosition;
+
+            Point newPos;
+            switch (targetCornerPosition)
+            {
+                case CornerPosition.TopLeft:
+                case CornerPosition.BottomLeft:
+                    newPos.X = workArea.Left;
+                    break;
+                case CornerPosition.TopRight:
+                case CornerPosition.BottomRight:
+                    newPos.X = workArea.Right - this.Width;
+                    break;
+            }
+            switch (targetCornerPosition)
+            {
+                case CornerPosition.TopLeft:
+                case CornerPosition.TopRight:
+                    newPos.Y = workArea.Top;
+                    break;
+                case CornerPosition.BottomLeft:
+                case CornerPosition.BottomRight:
+                    newPos.Y = workArea.Bottom - this.Height;
+                    break;
+            }
+
+            // if our bar is wider than the screen and snapped to a right corner, make sure it doesn't move off the left side (but don't change its corner)
             newPos.X = Math.Max(newPos.X, workArea.Left);
 
             if (animate)
@@ -257,7 +428,7 @@ namespace Morphic.Client.Bar.UI
             }
         }
 
-        private void WindowAnimComplete(object sender, EventArgs e)
+        private void WindowAnimComplete(object? sender, EventArgs e)
         {
             if (sender is AnimationClock clock && clock.Timeline is DoubleAnimation anim && anim.To.HasValue)
             {

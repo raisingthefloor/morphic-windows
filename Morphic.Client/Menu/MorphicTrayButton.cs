@@ -923,7 +923,7 @@ namespace Morphic.Client.Menu
                         newTaskButtonContainerRect = new WinApi.RECT(new System.Windows.Rect(
                             taskButtonContainerRect.Left,
                             taskButtonContainerRect.Top,
-                            taskButtonContainerRect.Right - taskButtonContainerRect.Left - Math.Max(taskButtonContainerRect.Right - changeToRect.Value.Left, 0),
+                            Math.Max(taskButtonContainerRect.Right - taskButtonContainerRect.Left - (taskButtonContainerRect.Right - changeToRect.Value.Left), 0),
                             taskButtonContainerRect.Bottom - taskButtonContainerRect.Top
                             ));
                     }
