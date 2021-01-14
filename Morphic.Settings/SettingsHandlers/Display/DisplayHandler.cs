@@ -44,14 +44,14 @@
         {
             if (newValue is int index)
             {
-				// option 1: get/set zoom level based on resolution
+				// method 1: get/set zoom level based on resolution
     //            Size[] all = this.GetResolutions();
     //            if (index >= 0 && index < all.Length)
     //            {
     //                this.display.SetResolution(all[index]);
     //            }
 
-				// option 2: get/set zoom level based on scale percentage
+				// method 2: get/set zoom level based on scale percentage
                 var all = this.display.GetDPIScales();
                 if (index >= 0 && index < all.Count)
                 {
@@ -65,11 +65,11 @@
         [Getter("zoom")]
         public async Task<object?> GetZoom(Setting settingGroup)
         {
-			// option 1: get/set zoom level based on resolution
+			// method 1: get/set zoom level based on resolution
             //List<Size> all = this.GetResolutions().ToList();
             //return all.IndexOf(this.display.GetResolution());
 
-			// option 2: get/set zoom level based on scale percentage
+			// method 2: get/set zoom level based on scale percentage
             var scale = Morphic.Windows.Native.Display.Display.GetMonitorScalePercentage(null);
             if (scale == null)
             {
@@ -84,10 +84,10 @@
         [Getter("lastResolution")]
         public Task<object?> GetResolutionCount(Setting settingGroup)
         {
-			// option 1: get/set zoom level based on resolution
+			// method 1: get/set zoom level based on resolution
             return Task.FromResult<object?>(this.GetResolutions().Length);
 
-			// option 2: get/set zoom level based on scale percentage
+			// method 2: get/set zoom level based on scale percentage
             return Task.FromResult<object?>(this.display.GetDPIScales().Count);
         }
     }

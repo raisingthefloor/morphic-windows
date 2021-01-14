@@ -159,6 +159,20 @@ namespace Morphic.Windows.Native.Display
                 return null;
             }
 
+            // special-case: if the DPI mode is using a "custom DPI" (which may be a backwards-compatible Windows 8.1 behavior), return _only_ that custom percentage
+            if (IsCustomDpiOffset(currentDpiOffsetAndRange.Value.currentDpiOffset) == true)
+            {
+                var customFixedDpiScalePercentage = Display.GetCustomDpiAsPercentage();
+                if (customFixedDpiScalePercentage == null)
+                {
+                    return null;
+                }
+                //
+                var singleScaleResult = new List<double>();
+                singleScaleResult.Add(customFixedDpiScalePercentage.Value);
+                return singleScaleResult;
+            }
+
             var minimumScale = Display.TranslateDpiOffsetToPercentage(currentDpiOffsetAndRange.Value.minimumDpiOffset, currentDpiOffsetAndRange.Value.minimumDpiOffset, currentDpiOffsetAndRange.Value.maximumDpiOffset);
             if (minimumScale == null)
             {
@@ -425,11 +439,24 @@ namespace Morphic.Windows.Native.Display
             return minimumDpiOffset + dpiOffsetAboveMinimum;
         }
 
+        private static bool IsCustomDpiOffset(int dpiOffset)
+        {
+            // special-case: if the DPI mode is using a "custom DPI" (which may be a backwards-compatible Windows 8.1 behavior), its DPI offset will be represented by a large value (always 1234568 in our testing)
+            if (dpiOffset == 1234568)
+            {
+                return true;
+            } 
+            else
+            {
+                return false;
+            }
+        }
+
         // NOTE: if dpiOffset is out of the min<->max range or the range is too broad, this function will return null
         public static double? TranslateDpiOffsetToPercentage(int dpiOffset, int minimumDpiOffset, int maximumDpiOffset)
         {
             // special-case: if the DPI mode is using a "custom DPI" (which may be a backwards-compatible Windows 8.1 behavior), capture that value now
-            if (dpiOffset == 1234568)
+            if (IsCustomDpiOffset(dpiOffset) == true)
             {
                 return Display.GetCustomDpiAsPercentage();
             }
@@ -495,14 +522,14 @@ namespace Morphic.Windows.Native.Display
         }
 		
         // NOTE: Windows users can set a custom DPI percentage (perhaps a backwards-compatibility feature from Windows 8.1)
-        public static float? GetCustomDpiAsPercentage()
+        public static double? GetCustomDpiAsPercentage()
         {
             // method 1: read the custom DPI level out of the registry (NOTE: this is machine-wide, not per-monitor)
             object logPixelsAsObject = Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Control Panel\Desktop", "LogPixels", null);
             if (logPixelsAsObject is int)
             {
                 var logPixels = (int)logPixelsAsObject;
-                return (float)logPixels / 96;
+                return (double)logPixels / 96;
             } 
             else
             {
@@ -513,7 +540,7 @@ namespace Morphic.Windows.Native.Display
             //using (System.Drawing.Graphics graphics = System.Drawing.Graphics.FromHwnd(IntPtr.Zero))
             //{
             //    // NOTE: technically DpiX and DpiY are two separate scales, but in our testing and based on Windows usage models, they should always be the same
-            //    return (float)graphics.DpiX / 96;
+            //    return (double)graphics.DpiX / 96;
             //}
         }
 
