@@ -180,10 +180,18 @@ namespace Morphic.Client.Bar.UI
                 Control? button = MultiButtonBarControl.LastClickedControl;
                 if (button != null)
                 {
-                    Point pos = button.PointToScreen(new Point(button.RenderSize.Width / 2,
+                    try
+                    {
+                        Point pos = button.PointToScreen(new Point(button.RenderSize.Width / 2,
                         button.RenderSize.Height / 2));
 
-                    Mouse.SetPosition((int)pos.X, (int)pos.Y);
+                        Mouse.SetPosition((int)pos.X, (int)pos.Y);
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        // if the button is not connected to a presentation source, we will get this exception; 
+                        // swallow it and fail gracefully (as this is not a critical action)
+                    }
                 }
             }
         }
