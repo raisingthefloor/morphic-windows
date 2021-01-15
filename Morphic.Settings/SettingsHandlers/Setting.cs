@@ -229,9 +229,9 @@
         [JsonProperty("live")]
         public bool Live { get; private set; }
 
-        public async Task<int> GetMin(int defaultResult = 0)
+        public async Task<int> GetMin(int defaultResult = 0, bool forceReload = false)
         {
-            if (this.Live || !this.minValue.HasValue)
+            if (this.Live || !this.minValue.HasValue || forceReload)
             {
                 this.minValue = await this.Min.Get(defaultResult);
             }
@@ -239,9 +239,9 @@
             return this.minValue.Value;
         }
 
-        public async Task<int> GetMax(int defaultResult = 0)
+        public async Task<int> GetMax(int defaultResult = 0, bool forceReload = false)
         {
-            if (this.Live || !this.maxValue.HasValue)
+            if (this.Live || !this.maxValue.HasValue || forceReload)
             {
                 this.maxValue = await this.Max.Get(defaultResult);
             }
