@@ -274,6 +274,12 @@ namespace Morphic.Client.Bar.UI
             }
         }
 
+        private double GetWinFormsDisplayScale()
+        {
+            var graphics = System.Drawing.Graphics.FromHwnd(IntPtr.Zero);
+            return (double)graphics.DpiX / 96;
+        }
+
         private double? GetWpfDisplayScale()
         {
             // get a reference to our presentation source (to measure our DPI)
@@ -281,6 +287,7 @@ namespace Morphic.Client.Bar.UI
             var presentationSource = PresentationSource.FromVisual(this);
             if (presentationSource == null)
             {
+                // NOTE: presentationSource will usually be null if our window is not yet fully loaded
                 return null;
             }
 
@@ -304,28 +311,37 @@ namespace Morphic.Client.Bar.UI
                 // NOTE: WPF is sometimes out of sync (longer-term) with the actual system DPI, so we have chosen not to use this (far more accurate)
                 //       method for now; WPF thinks the virtual screen is bigger or smaller than it actually is
                 //// method 1: get monitor scale percentage from Windows API (including reverse-engineered 'dpiOffset')
-                //var monitorScale = Morphic.Windows.Native.Display.Display.GetMonitorScalePercentage(null);
-                //if (monitorScale != null)
+                //var actualMonitorScale = Morphic.Windows.Native.Display.Display.GetMonitorScalePercentage(null);
+                //if (actualMonitorScale != null)
                 //{
                 //    workAreaAsNullable = new Rect(
-                //        (double)physicalWorkArea.Value.X / monitorScale.Value,
-                //        (double)physicalWorkArea.Value.Y / monitorScale.Value,
-                //        (double)physicalWorkArea.Value.Width / monitorScale.Value,
-                //        (double)physicalWorkArea.Value.Height / monitorScale.Value
+                //        (double)physicalWorkArea.Value.X / actualMonitorScale.Value,
+                //        (double)physicalWorkArea.Value.Y / actualMonitorScale.Value,
+                //        (double)physicalWorkArea.Value.Width / actualMonitorScale.Value,
+                //        (double)physicalWorkArea.Value.Height / actualMonitorScale.Value
                 //        );
                 //}
 
                 // method 2: get monitor scale using WPF primitives (which should match up with what WPF expects for our positioning)
-                var monitorScale = this.GetWpfDisplayScale();
-                if (monitorScale != null)
+                var wpfMonitorScale = this.GetWpfDisplayScale();
+                if (wpfMonitorScale != null)
                 {
                     workAreaAsNullable = new Rect(
-                        (double)physicalWorkArea.Value.X / monitorScale.Value,
-                        (double)physicalWorkArea.Value.Y / monitorScale.Value,
-                        (double)physicalWorkArea.Value.Width / monitorScale.Value,
-                        (double)physicalWorkArea.Value.Height / monitorScale.Value
+                        (double)physicalWorkArea.Value.X / wpfMonitorScale.Value,
+                        (double)physicalWorkArea.Value.Y / wpfMonitorScale.Value,
+                        (double)physicalWorkArea.Value.Width / wpfMonitorScale.Value,
+                        (double)physicalWorkArea.Value.Height / wpfMonitorScale.Value
                         );
                 }
+
+                // method 3: get monitor scale using WinForms primitives
+                //var winformsMonitorScale = this.GetWinFormsDisplayScale();
+                //workAreaAsNullable = new Rect(
+                //    (double)physicalWorkArea.Value.X / winformsMonitorScale,
+                //    (double)physicalWorkArea.Value.Y / winformsMonitorScale,
+                //    (double)physicalWorkArea.Value.Width / winformsMonitorScale,
+                //    (double)physicalWorkArea.Value.Height / winformsMonitorScale
+                //    );
             }
 
             if (workAreaAsNullable != null)

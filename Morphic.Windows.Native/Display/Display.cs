@@ -70,6 +70,15 @@ namespace Morphic.Windows.Native.Display
         // NOTE: this function returns null if it could not obtain the work area name
         public static Rectangle? GetPhysicalMonitorWorkArea(IntPtr? hWnd)
         {
+            // NOTE: if there are any other _reliable_ ways of capturing the working area (i.e. ones which
+            // don't sometimes give us bad data), it would be useful to test them and maybe replace this
+            // algorithm with a simpler and potentially more accurate one.  That said: this seems to work.
+
+            // get the monitor resolution and work area from MonitorToWindow
+            // NOTE: in our testing, this method sometimes returns incorrect results; therefore we use its answer to 
+            // represent the relative size of the workarea to the screen area
+			// NOTE: our initial testing was without Windows 8.1/10's DPI awareness declared in the manifest, so this
+			// might now be unnecessary
             IntPtr monitorHandle;
             if (hWnd == null)
             {
@@ -90,8 +99,50 @@ namespace Morphic.Windows.Native.Display
             {
                 return null;
             }
+            var monitorInfoFullArea = new Rectangle(monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.top, monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top);
+            var monitorInfoWorkArea = new Rectangle(monitorInfo.rcWork.left, monitorInfo.rcWork.top, monitorInfo.rcWork.right - monitorInfo.rcWork.left, monitorInfo.rcWork.bottom - monitorInfo.rcWork.top);
 
-            return new Rectangle(monitorInfo.rcWork.left, monitorInfo.rcWork.top, monitorInfo.rcWork.right - monitorInfo.rcWork.left, monitorInfo.rcWork.bottom - monitorInfo.rcWork.top);
+            // get the always-correct display resolution from EnumDisplaySettingsEx...and scale the WorkArea to match
+            // NOTE: if the WorkArea specified in SystemParameters.WorkArea has the wrong proportions, we can try using
+            //       monitorInfo.rcWork instead
+            var deviceName = Display.GetMonitorName(null);
+            if (deviceName == null)
+            {
+                return null;
+            }
+
+            WindowsApi.DEVMODEW mode = new WindowsApi.DEVMODEW();
+            mode.Init();
+            // get the display's resolution
+            WindowsApi.EnumDisplaySettingsEx(deviceName, WindowsApi.ENUM_CURRENT_SETTINGS, ref mode, 0);
+            var screenWidth = mode.dmPelsWidth;
+            var screenHeight = mode.dmPelsHeight;
+
+            Rectangle workArea;
+            if ((screenWidth == monitorInfoFullArea.Width) && (screenHeight == monitorInfoFullArea.Height))
+            {
+			    // if monitorInfo reflects the actual screen resolution, trust monitorInfo's results
+                workArea = new Rectangle(
+                        monitorInfoWorkArea.Left,
+                        monitorInfoWorkArea.Top,
+                        monitorInfoWorkArea.Width,
+                        monitorInfoWorkArea.Height
+                    );
+            } 
+            else
+            {
+                // otherwise scale the monitor full area against the monitor's physical size
+				// NOTE: due to non-workArea items (such as taskbar heights that change proportionally), this may be off a little bit
+                double ratio = (double)screenWidth / (double)monitorInfoFullArea.Width;
+                workArea = new Rectangle(
+                        (int)((double)monitorInfoWorkArea.Left * ratio),
+                        (int)((double)monitorInfoWorkArea.Top * ratio),
+                        (int)((double)monitorInfoWorkArea.Width * ratio),
+                        (int)((double)monitorInfoWorkArea.Height * ratio)
+                    );
+            }
+
+            return workArea;
         }
 
         // GetMonitorScalePercentage is a helper function meant to enable us to always know the actual scaling percentage (even if WPF or our process doesn't know the true value)
