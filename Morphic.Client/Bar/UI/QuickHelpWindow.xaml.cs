@@ -243,10 +243,24 @@ namespace Morphic.Client.Bar.UI
 
         private async void UpdatePager(PagerControl pager, Setting setting, SettingRange range)
         {
-            if (pager.CurrentPage == -1)
+            // NOTE: we should add a property to the solutions registry which indicates that this needs to be refreshed every time
+            //       _and/or_ we need to have the native handler itself send us a message when it needs updated (such as after a display 
+            //       resolution change)
+            bool idRequiresCountRefresh;
+            switch (setting.Id)
             {
-                var min = range.GetMin();
-                var max = range.GetMax();
+                case "zoom":
+                    idRequiresCountRefresh = true;
+                    break;
+                default:
+                    idRequiresCountRefresh = false;
+                    break;
+            }
+
+            if ((idRequiresCountRefresh == true) || (pager.CurrentPage == -1))
+            {
+                var min = range.GetMin(0, idRequiresCountRefresh);
+                var max = range.GetMax(0, idRequiresCountRefresh);
                 pager.Offset = await min;
                 pager.NumberOfPages = await max;
             }

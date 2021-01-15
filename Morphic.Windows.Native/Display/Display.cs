@@ -245,7 +245,7 @@ namespace Morphic.Windows.Native.Display
             var incrementAmount = 0.25;
             for (var i = minimum; i <= maximum; i += incrementAmount)
             {
-                if (i >= 250)
+                if (i >= 2.50)
                     incrementAmount = 0.50;
 
                 scales.Add(i);
