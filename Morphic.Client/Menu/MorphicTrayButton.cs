@@ -106,7 +106,8 @@ namespace Morphic.Client.Menu
                     {
                         CreateNativeWindow();
                     }
-                } else if (_visible == false)
+                } 
+                else if (_visible == false)
                 {
                     if (_nativeWindow != null)
                     {
@@ -249,6 +250,15 @@ namespace Morphic.Client.Menu
 
                 // subscribe to display settings changes (so that we know when the screen resolution changes, so that we can reposition our button)
                 Microsoft.Win32.SystemEvents.DisplaySettingsChanged += SystemEvents_DisplaySettingsChanged;
+
+                // position the tray button in its initial position
+                // NOTE: the button has no icon at this point; if we want to move this logic to the Icon set routine, 
+                //       that's reasonable, but we'd need to think through any side-effects (and we'd need to do this here anyway
+                //       if an icon had already been set prior to .Initialize being called)
+                //if (_iconHandle != IntPtr.Zero)
+                //{
+                    this.PositionTrayButton();
+                //}
             }
 
             internal void SetText(string? text)
@@ -382,10 +392,12 @@ namespace Morphic.Client.Menu
                 bool mustReleaseClassNameAsIntPtr = false;
                 //
                 ushort classNameAsUInt16 = 0;
-                if (ushort.TryParse(cp.ClassName, out classNameAsUInt16) == true) {
+                if (ushort.TryParse(cp.ClassName, out classNameAsUInt16) == true) 
+				{
                     classNameAsIntPtr = (IntPtr)classNameAsUInt16;
                     mustReleaseClassNameAsIntPtr = false;
-                } else
+                } 
+                else
                 {
                     classNameAsIntPtr = Marshal.StringToHGlobalUni(cp.ClassName);
                     mustReleaseClassNameAsIntPtr = true;
