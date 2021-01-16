@@ -41,7 +41,8 @@ namespace Morphic.Client.Config
 
         public static void CreateAll()
         {
-            Directory.CreateDirectory(AppPaths.CommonConfigDir);
+            // NOTE: we have intentionally chosen not to create the CommonConfigDir (e.g. "C:\ProgramData\Morphic") since Morphic does not currently create files in this folder.
+            //Directory.CreateDirectory(AppPaths.CommonConfigDir);
             Directory.CreateDirectory(AppPaths.UserLocalConfigDir);
             Directory.CreateDirectory(AppPaths.CacheDir);
         }
@@ -176,7 +177,7 @@ namespace Morphic.Client.Config
         }
 
         /// <summary>
-        /// Returns a sub-directory in the system-writable config directory (within %LOCALAPPDATA%).
+        /// Returns a sub-directory in the system-writable config directory (within %PROGRAMDATA%).
         /// </summary>
         /// <param name="dirName">The sub-directory name.</param>
         /// <param name="create">true to create the directory if it does not exist.</param>

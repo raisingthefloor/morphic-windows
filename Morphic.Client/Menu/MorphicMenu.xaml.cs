@@ -34,7 +34,19 @@
 
         protected override void OnOpened(RoutedEventArgs e)
         {
-            this.ShowBar.Visibility = (!this.App.BarManager.BarVisible).ToVisibility();;
+            // if autorun settings are configured by config.json, do not give the user the option to enable/disable
+            if (ConfigurableFeatures.AutorunConfig != null)
+            {
+                this.AutorunAfterLoginItem.Visibility = Visibility.Collapsed;
+            }
+
+            // if morphicBarVisibilityAfterLogin settings are configured by config.json, do not give the user the option to enable/disable
+            if (ConfigurableFeatures.MorphicBarVisibilityAfterLogin != null)
+            {
+                this.ShowMorphicBarAfterLoginItem.Visibility = Visibility.Collapsed;
+            }
+
+            this.ShowBar.Visibility = (!this.App.BarManager.BarVisible).ToVisibility();
             this.HideBar.Visibility = this.App.BarManager.BarVisible.ToVisibility();
 
             if (Features.Community.IsEnabled())

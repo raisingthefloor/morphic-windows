@@ -149,34 +149,63 @@ namespace Morphic.Client
                 public class EnabledFeature
                 {
                     public bool? enabled { get; set; }
+                    public string? scope { get; set; }
                 }
                 //
+                public EnabledFeature? autorunAfterLogin { get; set; }
+                public EnabledFeature? checkForUpdates { get; set; }
                 public EnabledFeature? cloudSettingsTransfer { get; set; }
             }
             public class MorphicBarConfigSection
             {
-                public List<MorphicBarExtraItem> extraItems { get; set; }
+                public string? visibilityAfterLogin { get; set; }
+                public List<MorphicBarExtraItem>? extraItems { get; set; }
             }
             //
             public int? version { get; set; }
             public FeaturesConfigSection? features { get; set; }
-            public MorphicBarConfigSection morphicBar { get; set; }
+            public MorphicBarConfigSection? morphicBar { get; set; }
         }
 
-        private async Task<(bool CloudSettingsTransferIsEnabled, List<MorphicBarExtraItem> ExtraMorphicBarItems)> GetCommonConfigurationAsync()
+        private struct CommonConfigurationContents
         {
-            // TODO: allow the config file to leave out sections and fields (i.e. support null)
-            var morphicCommonConfigPath = AppPaths.GetCommonConfigDir("", true);
-            var morphicConfigFilePath = Path.Combine(morphicCommonConfigPath, "config.json");
-
+            public ConfigurableFeatures.AutorunConfigOption? AutorunConfig;
+            public bool CheckForUpdatesIsEnabled;
+            public bool CloudSettingsTransferIsEnabled;
+            public ConfigurableFeatures.MorphicBarVisibilityAfterLoginOption? MorphicBarVisibilityAfterLogin;
+            public List<MorphicBarExtraItem> ExtraMorphicBarItems;
+        }
+        private async Task<CommonConfigurationContents> GetCommonConfigurationAsync()
+        {
             // set up default configuration
-            var cloudSettingsTransferIsEnabled = true;
-            var extraMorphicBarItems = new List<MorphicBarExtraItem>();
+            var result = new CommonConfigurationContents();
+            //
+            // autorun
+            result.AutorunConfig = null;
+            //
+            // check for updates
+            result.CheckForUpdatesIsEnabled = true;
+            //
+            // copy settings to/from cloud
+            result.CloudSettingsTransferIsEnabled = true;
+            //
+            // morphic bar (visibility and extra items)
+            result.MorphicBarVisibilityAfterLogin = null;
+            result.ExtraMorphicBarItems = new List<MorphicBarExtraItem>();
 
+            // NOTE: we have intentionally chosen not to create the CommonConfigDir (e.g. "C:\ProgramData\Morphic") since Morphic does not currently create files in this folder.
+            var morphicCommonConfigPath = AppPaths.GetCommonConfigDir("", false);
+            if (Directory.Exists(morphicCommonConfigPath) == false)
+            {
+                // no config file; return defaults
+                return result;
+            }
+
+            var morphicConfigFilePath = Path.Combine(morphicCommonConfigPath, "config.json");
             if (File.Exists(morphicConfigFilePath) == false)
             {
                 // no config file; return defaults
-                return (CloudSettingsTransferIsEnabled: cloudSettingsTransferIsEnabled, ExtraMorphicBarItems: extraMorphicBarItems);
+                return result;
             }
 
             string json;
@@ -189,7 +218,7 @@ namespace Morphic.Client
                 // error reading config file; return defaults
                 // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
                 Logger?.LogError("Could not read configuration file: " + morphicConfigFilePath + "; error: " + ex.Message);
-                return (CloudSettingsTransferIsEnabled: cloudSettingsTransferIsEnabled, ExtraMorphicBarItems: extraMorphicBarItems);
+                return result;
             }
 
             ConfigFileContents deserializedJson;
@@ -201,31 +230,88 @@ namespace Morphic.Client
             {
                 // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
                 Logger?.LogError("Could not deserialize json configuration file: " + morphicConfigFilePath + "; error: " + ex.Message);
-                return (CloudSettingsTransferIsEnabled: cloudSettingsTransferIsEnabled, ExtraMorphicBarItems: extraMorphicBarItems);
+                return result;
             }
-
 
             if ((deserializedJson.version == null) || (deserializedJson.version.Value < 0) || (deserializedJson.version.Value > 0))
             {
                 // sorry, we don't understand this version of the file
                 // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
                 Logger?.LogError("Unknown config file version: " + deserializedJson.version.ToString());
-                return (CloudSettingsTransferIsEnabled: cloudSettingsTransferIsEnabled, ExtraMorphicBarItems: extraMorphicBarItems);
+                return result;
+            }
+
+            // capture the autorun setting
+            if (deserializedJson.features?.autorunAfterLogin?.enabled != null)
+            {
+                if (deserializedJson.features!.autorunAfterLogin!.enabled == false)
+                {
+                    result.AutorunConfig = ConfigurableFeatures.AutorunConfigOption.Disabled;
+                } 
+                else
+                {
+                    switch (deserializedJson.features!.autorunAfterLogin!.scope)
+                    {
+                        case "allLocalUsers":
+                            result.AutorunConfig = ConfigurableFeatures.AutorunConfigOption.AllLocalUsers;
+                            break;
+                        case "currentUser":
+                            result.AutorunConfig = ConfigurableFeatures.AutorunConfigOption.CurrentUser;
+                            break;
+                        case null:
+                            // no scope present; use the default scope
+                            break;
+                        default:
+                            // sorry, we don't understand this scope setting
+                            // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
+                            Logger?.LogError("Unknown autorunAfterLogin scope: " + deserializedJson.features!.autorunAfterLogin!.scope);
+                            return result;
+                    }
+                }
+            }
+
+            // capture the check for updates "is enabled" setting
+            if (deserializedJson.features?.checkForUpdates?.enabled != null)
+            {
+                result.CheckForUpdatesIsEnabled = deserializedJson.features.checkForUpdates.enabled.Value;
             }
 
             // capture the cloud settings transfer "is enabled" setting
             if (deserializedJson.features?.cloudSettingsTransfer?.enabled != null)
             {
-                cloudSettingsTransferIsEnabled = deserializedJson.features.cloudSettingsTransfer.enabled.Value;
+                result.CloudSettingsTransferIsEnabled = deserializedJson.features.cloudSettingsTransfer.enabled.Value;
             }
 
-            // capture any extra items (up to 3)
-            if (deserializedJson.morphicBar.extraItems != null)
+            // capture the desired after-login (autorun) visibility of the MorphicBar
+            switch (deserializedJson.morphicBar?.visibilityAfterLogin)
             {
-                foreach (var extraItem in deserializedJson.morphicBar.extraItems)
+                case "restore":
+                    result.MorphicBarVisibilityAfterLogin = ConfigurableFeatures.MorphicBarVisibilityAfterLoginOption.Restore;
+                    break;
+                case "show":
+                    result.MorphicBarVisibilityAfterLogin = ConfigurableFeatures.MorphicBarVisibilityAfterLoginOption.Show;
+                    break;
+                case "hide":
+                    result.MorphicBarVisibilityAfterLogin = ConfigurableFeatures.MorphicBarVisibilityAfterLoginOption.Hide;
+                    break;
+                case null:
+                    // no setting present; use the default setting
+                    break;
+                default:
+                    // sorry, we don't understand this visibility setting
+                    // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
+                    Logger?.LogError("Unknown morphicBar.visibilityAfterLogin setting: " + deserializedJson.morphicBar?.visibilityAfterLogin);
+                    return result;
+            }
+
+
+            // capture any extra items (up to 3)
+            if (deserializedJson.morphicBar?.extraItems != null)
+            {
+                foreach (var extraItem in deserializedJson.morphicBar!.extraItems)
                 {
                     // if we already captured 3 extra items, skip this one
-                    if (extraMorphicBarItems.Count >= 3)
+                    if (result.ExtraMorphicBarItems.Count >= 3)
                     {
                         continue;
                     }
@@ -270,11 +356,11 @@ namespace Morphic.Client
                     extraMorphicBarItem.tooltipText = extraItemTooltipText;
                     extraMorphicBarItem.url = extraItemUrl;
                     extraMorphicBarItem.function = extraItemFunction;
-                    extraMorphicBarItems.Add(extraMorphicBarItem);
+                    result.ExtraMorphicBarItems.Add(extraMorphicBarItem);
                 }
             }
 
-            return (CloudSettingsTransferIsEnabled: cloudSettingsTransferIsEnabled, ExtraMorphicBarItems: extraMorphicBarItems);
+            return result;
         }
 
         /// <summary>
@@ -424,8 +510,12 @@ namespace Morphic.Client
             // NOTE: we currently load this AFTER setting up the logger because the GetCommonConfigurationAsync function logs config file errors to the logger
             var commonConfiguration = this.GetCommonConfigurationAsync().GetAwaiter().GetResult();
             ConfigurableFeatures.SetFeatures(
+                autorunConfig: commonConfiguration.AutorunConfig,
+                checkForUpdatesIsEnabled: commonConfiguration.CheckForUpdatesIsEnabled,
                 cloudSettingsTransferIsEnabled: commonConfiguration.CloudSettingsTransferIsEnabled,
-                morphicBarExtraItems: commonConfiguration.ExtraMorphicBarItems);
+                morphicBarvisibilityAfterLogin: commonConfiguration.MorphicBarVisibilityAfterLogin,
+                morphicBarExtraItems: commonConfiguration.ExtraMorphicBarItems
+                );
 
             this.MorphicSession = this.ServiceProvider.GetRequiredService<MorphicSession>();
             this.MorphicSession.UserChanged += this.Session_UserChanged;
@@ -439,7 +529,11 @@ namespace Morphic.Client
 
             this.RegisterGlobalHotKeys();
             this.ConfigureCountly();
-            this.StartCheckingForUpdates();
+
+            if (ConfigurableFeatures.CheckForUpdatesIsEnabled == true)
+            {
+                this.StartCheckingForUpdates();
+            }
 
             this.AddSettingsListener();
 
