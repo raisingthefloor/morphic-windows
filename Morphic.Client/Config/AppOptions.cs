@@ -307,7 +307,7 @@
             {
                 result = value;
             }
-            else if (typeof(T) == typeof(int))
+            else if ((typeof(T) == typeof(int)) || (typeof(T) == typeof(int?)))
             {
                 try
                 {
@@ -318,7 +318,7 @@
                     result = defaultValue;
                 }
             }
-            else if (typeof(T) == typeof(bool))
+            else if ((typeof(T) == typeof(bool)) || (typeof(T) == typeof(bool?)))
             {
                 string? text = value.ToString();
                 if (string.IsNullOrEmpty(text))
