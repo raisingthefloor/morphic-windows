@@ -100,6 +100,10 @@ namespace Morphic.Client.Bar
             {
                 showMorphicBar = true;
             }
+            if (AppOptions.Current.MorphicBarIsVisible == true)
+            {
+                showMorphicBar = true;
+            }
             if (ConfigurableFeatures.MorphicBarVisibilityAfterLogin != null)
             {
                 switch (ConfigurableFeatures.MorphicBarVisibilityAfterLogin.Value)
