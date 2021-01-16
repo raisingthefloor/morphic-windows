@@ -37,13 +37,50 @@
             set => this.SetValue(value);
         }
 
+        public bool? MorphicBarIsVisible
+        {
+            get => this.GetValue<bool?>(null);
+            set
+            {
+                if (value == null)
+                {
+                    throw new Exception("MorphicBarIsVisible must be set to a non-null value.");
+                }
+
+                this.SetValue(value);
+            }
+        }
+
         /// <summary>
         /// Show the bar at startup.
         /// </summary>
         public bool AutoShow
         {
-            get => this.GetValue(false);
-            set => this.SetValue(value);
+            get
+            {
+                if (ConfigurableFeatures.MorphicBarVisibilityAfterLogin != null) { 
+                    switch (ConfigurableFeatures.MorphicBarVisibilityAfterLogin.Value)
+                    {
+                        case ConfigurableFeatures.MorphicBarVisibilityAfterLoginOption.Show:
+                            return true;
+                        case ConfigurableFeatures.MorphicBarVisibilityAfterLoginOption.Restore:
+                            return false;
+                        case ConfigurableFeatures.MorphicBarVisibilityAfterLoginOption.Hide:
+                            return false;
+                    }
+                }
+
+                return this.GetValue(false);
+            }
+            set
+            {
+                if (ConfigurableFeatures.MorphicBarVisibilityAfterLogin != null) {
+                    Debug.Assert(false, "AutoShow should never be set with a new value when the setting is already configured by config.json");
+                    return;
+                }
+
+                this.SetValue(value);
+            }
         }
 
         /// <summary>
@@ -134,44 +171,109 @@
         private bool HandleAutoRun(bool? newValue = null)
         {
             bool enabled;
-            using RegistryKey morphicKey =
-                Registry.CurrentUser.CreateSubKey(@"Software\Raising the Floor\Morphic")!;
-            using RegistryKey runKey =
-                Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run")!;
+            var limitAutorunToCurrentUser = true;
 
-            if (newValue == null)
+            RegistryKey currentUserAutorunKey = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run")!;
+            RegistryKey? localMachineAutorunKey;
+            try
             {
-                // Get the configured value
-                object value = morphicKey.GetValue("AutoRun");
-                if (value == null)
-                {
-                    // This might be the first time running, enable auto-run by default.
-                    enabled = true;
+                localMachineAutorunKey = Registry.LocalMachine.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run")!;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // if we are not running as admin, we will get this exception; this is to be expected
+                localMachineAutorunKey = null;
+            }
+
+            if (ConfigurableFeatures.AutorunConfig != null)
+            {
+                // if config.json specified our autorun config, capture that data now
+                switch (ConfigurableFeatures.AutorunConfig) {
+                    case ConfigurableFeatures.AutorunConfigOption.Disabled:
+                        enabled = false;
+                        break;
+                    case ConfigurableFeatures.AutorunConfigOption.AllLocalUsers:
+                        enabled = true;
+                        limitAutorunToCurrentUser = false;
+                        break;
+                    case ConfigurableFeatures.AutorunConfigOption.CurrentUser:
+                        enabled = true;
+                        limitAutorunToCurrentUser = true;
+                        break;
+                    default:
+                        // unreachable code
+                        throw new NotImplementedException();
                 }
-                else
+
+                if (newValue != null)
                 {
-                    // Respect the system setting (it was probably removed on purpose).
-                    enabled = runKey.GetValue("Morphic") != null;
+                    Debug.Assert(false, "HandleAutoRun should never be called with a new setting when the setting is already configured by config.json");
+                    return enabled;
                 }
             }
             else
             {
-                enabled = (bool)newValue;
+                using RegistryKey morphicKey =
+                    Registry.CurrentUser.CreateSubKey(@"Software\Raising the Floor\Morphic")!;
+
+                if (newValue == null)
+                {
+                    // Get the configured value
+                    object value = morphicKey.GetValue("AutoRun");
+                    if (value == null)
+                    {
+                        // This might be the first time running, enable auto-run by default.
+                        enabled = true;
+                    }
+                    else
+                    {
+                        // Respect the system setting (it was probably removed on purpose).
+                        enabled = currentUserAutorunKey.GetValue("Morphic") != null;
+                    }
+                }
+                else
+                {
+                    enabled = newValue.Value;
+                }
+
+                morphicKey.SetValue("AutoRun", enabled ? "1" : "0", RegistryValueKind.String);
             }
 
-            morphicKey.SetValue("AutoRun", enabled ? "1" : "0", RegistryValueKind.String);
+            // NOTE: Morphic rewrites over the autorun setting every time this function is called (as long as Morphic has the appropriate registry permissions)
             if (enabled)
             {
                 string processPath = Process.GetCurrentProcess().MainModule.FileName;
                 // Only add it to the auto-run if running a release.
                 if (!processPath.EndsWith("dotnet.exe"))
                 {
-                    runKey.SetValue("Morphic", processPath);
+                    var pathAndArguments = processPath + " --run-after-login";
+
+                    if (limitAutorunToCurrentUser == true)
+                    {
+                        currentUserAutorunKey.SetValue("Morphic", pathAndArguments);
+                    }
+                    else
+                    {
+                        // NOTE: if we do not have (administrator or other HKLM) write access, this code will not execute
+                        localMachineAutorunKey?.SetValue("Morphic", pathAndArguments);
+                    }
+                }
+                else
+                {
+                    // if we're running as a debug build, do not add the autorun key
                 }
             }
             else
             {
-                runKey.DeleteValue("Morphic", false);
+                if (limitAutorunToCurrentUser == true)
+                {
+                    currentUserAutorunKey.DeleteValue("Morphic", false);
+                }
+                else
+                {
+                    // NOTE: if we do not have (administrator or other HKLM) write access, this code will not execute
+                    localMachineAutorunKey?.DeleteValue("Morphic", false);
+                }
             }
 
             return enabled;

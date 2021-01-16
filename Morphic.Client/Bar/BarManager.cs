@@ -56,6 +56,7 @@ namespace Morphic.Client.Bar
         {
             if (this.barWindow != null)
             {
+                AppOptions.Current.MorphicBarIsVisible = true;
                 this.barWindow.Visibility = Visibility.Visible;
                 this.barWindow.Focus();
             }
@@ -63,6 +64,7 @@ namespace Morphic.Client.Bar
 
         public void HideBar()
         {
+            AppOptions.Current.MorphicBarIsVisible = false;
             this.barWindow?.Hide();
             this.barWindow?.OtherWindow?.Hide();
         }
@@ -89,8 +91,41 @@ namespace Morphic.Client.Bar
             this.barWindow.BarLoaded += this.OnBarLoaded;
             this.barWindow.IsVisibleChanged += this.BarWindowOnIsVisibleChanged;
 
-            if (AppOptions.Current.AutoShow || !this.firstBar)
+            bool showMorphicBar = false;
+            if (AppOptions.Current.AutoShow == true)
             {
+                showMorphicBar = true;
+            }
+            if (this.firstBar == false)
+            {
+                showMorphicBar = true;
+            }
+            if (ConfigurableFeatures.MorphicBarVisibilityAfterLogin != null)
+            {
+                switch (ConfigurableFeatures.MorphicBarVisibilityAfterLogin.Value)
+                {
+                    case ConfigurableFeatures.MorphicBarVisibilityAfterLoginOption.Show:
+                        showMorphicBar = true;
+                        break;
+                    case ConfigurableFeatures.MorphicBarVisibilityAfterLoginOption.Restore:
+                        // if the bar has not been shown before, show it now; if it has been shown/hidden before, use the last known visibility state
+                        showMorphicBar = AppOptions.Current.MorphicBarIsVisible ?? true;
+                        break;
+                    case ConfigurableFeatures.MorphicBarVisibilityAfterLoginOption.Hide:
+                        showMorphicBar = false;
+                        break;
+                }
+            }
+
+            // if we were started up manually, always show the MorphicBar
+            if (Environment.GetCommandLineArgs().Contains("--run-after-login") == false)
+            {
+                showMorphicBar = true;
+            }
+
+            if (showMorphicBar == true)
+            {
+                AppOptions.Current.MorphicBarIsVisible = true;
                 this.barWindow.Show();
             }
 
