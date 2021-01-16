@@ -311,7 +311,15 @@
             {
                 try
                 {
-                    result = ((IConvertible)value).ToInt32(null);
+                    if (value != null)
+                    {
+                        result = ((IConvertible)value).ToInt32(null);
+                    }
+                    else
+                    {
+                        result = defaultValue;
+
+                    }
                 }
                 catch (FormatException)
                 {
@@ -320,7 +328,7 @@
             }
             else if ((typeof(T) == typeof(bool)) || (typeof(T) == typeof(bool?)))
             {
-                string? text = value.ToString();
+                string? text = value?.ToString();
                 if (string.IsNullOrEmpty(text))
                 {
                     result = defaultValue;
