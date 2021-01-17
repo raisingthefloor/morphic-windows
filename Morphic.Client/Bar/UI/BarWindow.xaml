@@ -67,8 +67,8 @@
             Background="{DynamicResource Background}">
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="auto"></ColumnDefinition>
-                <ColumnDefinition Width="auto"></ColumnDefinition>
+                <ColumnDefinition Width="2*"></ColumnDefinition>
+                <ColumnDefinition Width="1*"></ColumnDefinition>
             </Grid.ColumnDefinitions>
             <ui:BarControl Grid.Column="0" x:Name="BarControl"
                                ItemsSource="{Binding BarItems}"
@@ -113,7 +113,9 @@
                     </Style>
                 </ui:BarControl.Resources>
             </ui:BarControl>
-            <Button Grid.Column="1" Style="{StaticResource CloseButtonStyle}" Click="CloseButton_Click" AutomationProperties.Name="Close" />
+            
+            <Button Grid.Column="1" Margin="-12 0 0 0" Style="{StaticResource CloseButtonStyle}" Click="CloseButton_Click" AutomationProperties.Name="Close" />
+            
         </Grid>
     </Border>
 </Window>
