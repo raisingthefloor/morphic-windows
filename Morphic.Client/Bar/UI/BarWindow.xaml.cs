@@ -538,5 +538,10 @@ namespace Morphic.Client.Bar.UI
             BarItemControl? control = element.FindVisualParent<BarItemControl>();
             return control?.BarItem;
         }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            App.Current.BarManager.HideBar();
+        }
     }
 }

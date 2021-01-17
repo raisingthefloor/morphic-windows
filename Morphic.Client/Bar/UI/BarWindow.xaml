@@ -24,6 +24,28 @@
         <SolidColorBrush x:Key="BorderBrush" Color="{Binding Bar.BarTheme.BorderColor, FallbackValue=Black, Mode=OneWay}"/>
         <!-- Convert a boolean to a visibility -->
         <ui:Ternary x:Key="CornerRadius" False="5" True="0" />
+
+        <Style x:Key="CloseButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid x:Name="grid" Background="White">
+                            <Path x:Name="path" Data="M0,6 L10,16 M0,16 L10,6" Stroke="Gray" Margin="1 -6 0 0" StrokeThickness="1" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" TargetName="grid" Value="Red" />
+                                <Setter Property="Stroke" TargetName="path" Value="White" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" TargetName="grid" Value="#002951" />
+                                <Setter Property="Stroke" TargetName="path" Value="White" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <!-- Remove the white bar at the top -->
@@ -36,48 +58,55 @@
             BorderBrush="{DynamicResource BorderBrush}"
             BorderThickness="{Binding Bar.BarTheme.BorderSize, FallbackValue=0, Mode=OneWay}"
             Background="{DynamicResource Background}">
-    <ui:BarControl x:Name="BarControl"
-                       ItemsSource="{Binding BarItems}"
-                       HorizontalAlignment="Left" VerticalAlignment="Top"
-                       Margin="{Binding Bar.Sizes.WindowPadding}"
-                       ItemSpacing="{Binding Bar.Sizes.ItemSpacing}"
-                       Loaded="BarControl_Loaded"
-                       PreviewKeyDown="BarWindow_OnPreviewKeyDown"
-                       ToolTipService.InitialShowDelay="0"
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto"></ColumnDefinition>
+                <ColumnDefinition Width="auto"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <ui:BarControl Grid.Column="0" x:Name="BarControl"
+                               ItemsSource="{Binding BarItems}"
+                               HorizontalAlignment="Left" VerticalAlignment="Top"
+                               Margin="{Binding Bar.Sizes.WindowPadding}"
+                               ItemSpacing="{Binding Bar.Sizes.ItemSpacing}"
+                               Loaded="BarControl_Loaded"
+                               PreviewKeyDown="BarWindow_OnPreviewKeyDown"
+                               ToolTipService.InitialShowDelay="0"
 
-                       FocusManager.IsFocusScope="True">
+                               FocusManager.IsFocusScope="True">
 
-        <ui:BarControl.Resources>
-            <ui:Ternary x:Key="NullCollapsed" False="Collapsed" True="Visible" />
+                <ui:BarControl.Resources>
+                    <ui:Ternary x:Key="NullCollapsed" False="Collapsed" True="Visible" />
 
-            <!-- Template for bar item controls, set via code behind because it targets a base class -->
-            <!-- ReSharper disable once Xaml.RedundantResource (used in code-behind) -->
-            <Style x:Key="BarItemStyle" TargetType="{x:Type barControls:BarItemControl}">
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="{x:Type barControls:BarItemControl}">
-                            <Grid d:DataContext="{d:DesignInstance barControls:BarItemControl, IsDesignTimeCreatable=True}">
-                                <!-- <Grid.ToolTip> -->
-                                <!--     <ToolTip -->
-                                <!--         Visibility="{Binding BarItem.ToolTip, Converter={StaticResource NullCollapsed}}"> -->
-                                <!--         <StackPanel> -->
-                                <!--             <TextBlock Text="{Binding ToolTipHeader}" -->
-                                <!--                        FontWeight="Bold"/> -->
-                                <!--             <TextBlock Text="{Binding ToolTipText}" -->
-                                <!--                        Visibility="{Binding ToolTipText, Converter={StaticResource NullCollapsed}}"/> -->
-                                <!--         </StackPanel> -->
-                                <!--     </ToolTip> -->
-                                <!-- </Grid.ToolTip> -->
-                                <Border Margin="2">
-                                    <ContentPresenter />
-                                </Border>
-                            </Grid>
+                    <!-- Template for bar item controls, set via code behind because it targets a base class -->
+                    <!-- ReSharper disable once Xaml.RedundantResource (used in code-behind) -->
+                    <Style x:Key="BarItemStyle" TargetType="{x:Type barControls:BarItemControl}">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="{x:Type barControls:BarItemControl}">
+                                    <Grid d:DataContext="{d:DesignInstance barControls:BarItemControl, IsDesignTimeCreatable=True}">
+                                        <!-- <Grid.ToolTip> -->
+                                        <!--     <ToolTip -->
+                                        <!--         Visibility="{Binding BarItem.ToolTip, Converter={StaticResource NullCollapsed}}"> -->
+                                        <!--         <StackPanel> -->
+                                        <!--             <TextBlock Text="{Binding ToolTipHeader}" -->
+                                        <!--                        FontWeight="Bold"/> -->
+                                        <!--             <TextBlock Text="{Binding ToolTipText}" -->
+                                        <!--                        Visibility="{Binding ToolTipText, Converter={StaticResource NullCollapsed}}"/> -->
+                                        <!--         </StackPanel> -->
+                                        <!--     </ToolTip> -->
+                                        <!-- </Grid.ToolTip> -->
+                                        <Border Margin="2">
+                                            <ContentPresenter />
+                                        </Border>
+                                    </Grid>
 
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-            </Style>
-        </ui:BarControl.Resources>
-    </ui:BarControl>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ui:BarControl.Resources>
+            </ui:BarControl>
+            <Button Grid.Column="1" Style="{StaticResource CloseButtonStyle}" Click="CloseButton_Click" AutomationProperties.Name="Close" Width="24" Height="20" HorizontalAlignment="Right" VerticalAlignment="Top" />
+        </Grid>
     </Border>
 </Window>
