@@ -26,6 +26,8 @@
         <ui:Ternary x:Key="CornerRadius" False="5" True="0" />
 
         <Style x:Key="CloseButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="Width" Value="24" />
+            <Setter Property="Height" Value="20" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -109,7 +111,7 @@
                     </Style>
                 </ui:BarControl.Resources>
             </ui:BarControl>
-            <Button Grid.Column="1" Style="{StaticResource CloseButtonStyle}" Click="CloseButton_Click" AutomationProperties.Name="Close" Width="24" Height="20" HorizontalAlignment="Right" VerticalAlignment="Top" />
+            <Button Grid.Column="1" Style="{StaticResource CloseButtonStyle}" Click="CloseButton_Click" AutomationProperties.Name="Close" HorizontalAlignment="Right" VerticalAlignment="Top" />
         </Grid>
     </Border>
 </Window>
