@@ -37,11 +37,11 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" TargetName="grid" Value="Red" />
+                                <Setter Property="Background" TargetName="grid" Value="#E4142C" />
                                 <Setter Property="Stroke" TargetName="path" Value="White" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" TargetName="grid" Value="#002951" />
+                                <Setter Property="Background" TargetName="grid" Value="#F1707A" />
                                 <Setter Property="Stroke" TargetName="path" Value="White" />
                             </Trigger>
                         </ControlTemplate.Triggers>
