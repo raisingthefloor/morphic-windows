@@ -28,6 +28,8 @@
         <Style x:Key="CloseButtonStyle" TargetType="{x:Type Button}">
             <Setter Property="Width" Value="24" />
             <Setter Property="Height" Value="20" />
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Top"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -35,7 +37,7 @@
                             <Border.CornerRadius>
                                 <CornerRadius TopRight="5"/>
                             </Border.CornerRadius>
-                            <Path x:Name="path" Data="M0,6 L10,16 M0,16 L10,6" Stroke="Gray" Margin="1 -6 0 0" StrokeThickness="1" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <Path x:Name="path" Data="M0,0 L10,10 M0,10 L10,0" Stroke="Gray" StrokeThickness="1" HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
@@ -111,7 +113,7 @@
                     </Style>
                 </ui:BarControl.Resources>
             </ui:BarControl>
-            <Button Grid.Column="1" Style="{StaticResource CloseButtonStyle}" Click="CloseButton_Click" AutomationProperties.Name="Close" HorizontalAlignment="Right" VerticalAlignment="Top" />
+            <Button Grid.Column="1" Style="{StaticResource CloseButtonStyle}" Click="CloseButton_Click" AutomationProperties.Name="Close" />
         </Grid>
     </Border>
 </Window>
