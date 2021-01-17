@@ -29,9 +29,12 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Grid x:Name="grid" Background="White">
+                        <Border x:Name="grid" Background="White">
+                            <Border.CornerRadius>
+                                <CornerRadius TopRight="5"/>
+                            </Border.CornerRadius>
                             <Path x:Name="path" Data="M0,6 L10,16 M0,16 L10,6" Stroke="Gray" Margin="1 -6 0 0" StrokeThickness="1" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Grid>
+                        </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter Property="Background" TargetName="grid" Value="Red" />
