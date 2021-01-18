@@ -58,10 +58,12 @@ namespace Morphic.Client.Bar.UI
                 _showCloseButton = value;
                 OnPropertyChanged(nameof(ShowCloseButton));
                 OnPropertyChanged(nameof(HeaderRowHeight));
+                OnPropertyChanged(nameof(CloseButtonColumnWidth));
             }
         }
 
         public double HeaderRowHeight => ShowCloseButton && Orientation == Orientation.Vertical ? 20 : 0;
+        public double CloseButtonColumnWidth => ShowCloseButton && Orientation == Orientation.Horizontal ? 20 : 0;
 
         public Orientation Orientation
         {
@@ -72,6 +74,7 @@ namespace Morphic.Client.Bar.UI
                 this.OrientationChanged?.Invoke(this, EventArgs.Empty);
                 OnPropertyChanged(nameof(Orientation));
                 OnPropertyChanged(nameof(HeaderRowHeight));
+                OnPropertyChanged(nameof(CloseButtonColumnWidth));
             }
         }
 
@@ -238,7 +241,8 @@ namespace Morphic.Client.Bar.UI
         public double ExtraWidth =>
             this.BorderThickness.Left + this.BorderThickness.Right +
             this.Padding.Left + this.Padding.Right +
-            this.BarControl.Margin.Left + this.BarControl.Margin.Right;
+            this.BarControl.Margin.Left + this.BarControl.Margin.Right +
+            CloseButtonColumnWidth;
 
         /// <summary>Additional height added to the window.</summary>
         public double ExtraHeight =>

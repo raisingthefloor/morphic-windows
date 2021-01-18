@@ -103,6 +103,13 @@ namespace Morphic.Client.Bar.UI
                 uiElementCollection.Add(this.CreateItem(item));
             }
 
+            if (Orientation == Orientation.Horizontal && uiElementCollection.Count > 0)
+            {
+                var barItemControl = (BarItemControl)uiElementCollection[uiElementCollection.Count - 1];
+                var margin = barItemControl.Margin;
+                barItemControl.Margin = new Thickness(margin.Left, margin.Top, 0, margin.Bottom);
+            }
+
             uiElementCollection.Add(this.CreateEndTabControl());
             return uiElementCollection;
         }
