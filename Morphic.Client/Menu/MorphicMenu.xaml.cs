@@ -105,8 +105,6 @@
             }
         }
 
-
-
         #region TrayIcon
 
         private MorphicHybridTrayIcon? _trayIcon = null;

@@ -21,26 +21,26 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System;
-using System.Windows;
-using System.Threading.Tasks;
-using System.Threading;
-using System.Collections.Generic;
-using System.Windows.Threading;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Morphic.Service;
-using Morphic.Core;
-using System.IO;
-using System.Reflection;
+using AutoUpdaterDotNET;
 using CountlySDK;
 using CountlySDK.Entities;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Morphic.Core;
+using Morphic.Service;
+using NHotkey.Wpf;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using NHotkey.Wpf;
-using AutoUpdaterDotNET;
+using System.Windows.Threading;
 
 namespace Morphic.Client
 {
@@ -155,6 +155,7 @@ namespace Morphic.Client
                 public EnabledFeature? autorunAfterLogin { get; set; }
                 public EnabledFeature? checkForUpdates { get; set; }
                 public EnabledFeature? cloudSettingsTransfer { get; set; }
+                public EnabledFeature? resetSettings { get; set; }
             }
             public class MorphicBarConfigSection
             {
@@ -172,6 +173,7 @@ namespace Morphic.Client
             public ConfigurableFeatures.AutorunConfigOption? AutorunConfig;
             public bool CheckForUpdatesIsEnabled;
             public bool CloudSettingsTransferIsEnabled;
+            public bool ResetSettingsIsEnabled;
             public ConfigurableFeatures.MorphicBarVisibilityAfterLoginOption? MorphicBarVisibilityAfterLogin;
             public List<MorphicBarExtraItem> ExtraMorphicBarItems;
         }
@@ -188,6 +190,9 @@ namespace Morphic.Client
             //
             // copy settings to/from cloud
             result.CloudSettingsTransferIsEnabled = true;
+            //
+            // reset settings (to standard)
+            result.ResetSettingsIsEnabled = false;
             //
             // morphic bar (visibility and extra items)
             result.MorphicBarVisibilityAfterLogin = null;
@@ -280,6 +285,12 @@ namespace Morphic.Client
             if (deserializedJson.features?.cloudSettingsTransfer?.enabled != null)
             {
                 result.CloudSettingsTransferIsEnabled = deserializedJson.features.cloudSettingsTransfer.enabled.Value;
+            }
+
+            // capture the reset settings (to standard) "is enabled" setting
+            if (deserializedJson.features?.resetSettings?.enabled != null)
+            {
+                result.ResetSettingsIsEnabled = deserializedJson.features.resetSettings.enabled.Value;
             }
 
             // capture the desired after-login (autorun) visibility of the MorphicBar
@@ -513,6 +524,7 @@ namespace Morphic.Client
                 autorunConfig: commonConfiguration.AutorunConfig,
                 checkForUpdatesIsEnabled: commonConfiguration.CheckForUpdatesIsEnabled,
                 cloudSettingsTransferIsEnabled: commonConfiguration.CloudSettingsTransferIsEnabled,
+                resetSettingsIsEnabled: commonConfiguration.ResetSettingsIsEnabled,
                 morphicBarvisibilityAfterLogin: commonConfiguration.MorphicBarVisibilityAfterLogin,
                 morphicBarExtraItems: commonConfiguration.ExtraMorphicBarItems
                 );
@@ -582,6 +594,73 @@ namespace Morphic.Client
             }
         }
 
+        private async Task ResetSettingsAsync()
+        {
+            // NOTE: we want to move these defaults to config.json, and we want to modify the solutions registry to allow _all_ settings to be specified,
+            //       with defaults, in config.json.
+
+            // default values
+            var colorFiltersEnabledDefault = false;
+            var darkModeEnabledDefault = false;
+            var highContrastEnabledDefault = false;
+            //
+            // NOTE: displayDpiOffsetDefault realistically needs to be a fixed value ("recommended value") until we have logic to adjust by a relative % 
+            int displayDpiOffsetDefault = 0;
+            //
+            var nightModeIsEnabled = false;
+
+            // verify that settings are reset to their default values; if they are not, then set them now
+            // NOTE: we do these in an order that makes sense during logout (i.e. we try to do as much as we can before Windows wants to close us, so we push
+            //       settings like screen scaling, dark mode and high contrast to the end since they take much longer to change)
+            //
+            // color filters
+            if (await this.MorphicSession.GetSetting<bool>(SettingId.ColorFiltersEnabled) != colorFiltersEnabledDefault)
+            {
+                await this.MorphicSession.SetSetting(SettingId.ColorFiltersEnabled, colorFiltersEnabledDefault);
+            }
+            //
+            // night mode
+            if (await this.MorphicSession.GetSetting<bool>(SettingId.NightModeEnabled) != nightModeIsEnabled)
+            {
+                await this.MorphicSession.SetSetting(SettingId.NightModeEnabled, nightModeIsEnabled);
+            }
+            //
+            // screen scaling
+            var monitorName = Morphic.Windows.Native.Display.Display.GetMonitorName(null);
+            if (monitorName != null)
+            {
+                // get the adapterId and sourceId for this monitor
+                var adapterIdAndSourceId = Morphic.Windows.Native.Display.Display.GetAdapterIdAndSourceId(monitorName);
+                if (adapterIdAndSourceId != null)
+                {
+                    // get the current DPI offset
+                    var currentDisplayDpiOffset = Morphic.Windows.Native.Display.Display.GetCurrentDpiOffsetAndRange(adapterIdAndSourceId.Value.adapterId, adapterIdAndSourceId.Value.sourceId);
+                    if (currentDisplayDpiOffset != null)
+                    {
+                        if (currentDisplayDpiOffset.Value.currentDpiOffset != displayDpiOffsetDefault)
+                        {
+                            _ = Morphic.Windows.Native.Display.Display.SetDpiOffset(displayDpiOffsetDefault, adapterIdAndSourceId.Value);
+                        }
+                    }
+                }
+            }
+            //
+            //
+            // high contrast
+            if (await this.MorphicSession.GetSetting<bool>(SettingId.HighContrastEnabled) != highContrastEnabledDefault)
+            {
+                await this.MorphicSession.SetSetting(SettingId.HighContrastEnabled, highContrastEnabledDefault);
+            }
+            //
+            // dark mode
+            // NOTE: due to the interrelation between high contrast and dark mode, we reset dark mode AFTER resetting high contrast mode
+            if (await this.MorphicSession.GetSetting<bool>(SettingId.LightThemeSystem) != !darkModeEnabledDefault)
+            {
+                await this.MorphicSession.SetSetting(SettingId.LightThemeSystem, !darkModeEnabledDefault);
+                await this.MorphicSession.SetSetting(SettingId.LightThemeApps, !darkModeEnabledDefault);
+            }
+        }
+
         private void Session_UserChanged(object? sender, EventArgs e)
         {
             if (sender is CommunitySession communitySession)
@@ -636,6 +715,11 @@ namespace Morphic.Client
         private async void OnSessionOpened()
         {
             this.Logger.LogInformation("Session Open");
+
+            if (ConfigurableFeatures.ResetSettingsIsEnabled == true)
+            {
+                await this.ResetSettingsAsync();
+            }
 
             if (this.AppOptions.FirstRun)
             {
@@ -707,11 +791,17 @@ namespace Morphic.Client
 
         protected override void OnExit(ExitEventArgs e)
         {
-            _messageWatcherNativeWindow.Dispose();
+            _messageWatcherNativeWindow?.Dispose();
+            Countly.Instance.SessionEnd();
+
+            if (ConfigurableFeatures.ResetSettingsIsEnabled == true)
+            {
+                this.ResetSettingsAsync().GetAwaiter().GetResult();
+            }
+
             AppMain.ReleaseSingleInstanceMutex();
 
-            Countly.Instance.SessionEnd();
-            base.OnExit(e);
+            base.OnExit(e); 
         }
 
         #endregion
@@ -748,6 +838,8 @@ namespace Morphic.Client
             SystemEvents.DisplaySettingsChanged += this.SystemEventsOnDisplaySettingsChanged;
             SystemEvents.UserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
 
+            SystemEvents.SessionEnding += SystemEvents_SessionEnding;
+
             this.Exit += (sender, args) =>
             {
                 SystemEvents.DisplaySettingsChanged -= this.SystemEventsOnDisplaySettingsChanged;
@@ -759,6 +851,18 @@ namespace Morphic.Client
         {
             // Wait a bit, to see if any other events have been raised.
             this.systemSettingTimer?.Start();
+        }
+
+        private void SystemEvents_SessionEnding(object sender, SessionEndingEventArgs e)
+        {
+            // NOTE: in our preliminary testing, we do not have enough time during shutdown
+            // to call/complete this function; we should look for a way to keep Windows from
+            // forcibly logging out until we have completed our settings reset (or at least a few
+            // critical 'reset settings' items)
+            if (ConfigurableFeatures.ResetSettingsIsEnabled == true)
+            {
+                this.ResetSettingsAsync().GetAwaiter().GetResult();
+            }
         }
 
         #endregion

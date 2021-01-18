@@ -18,6 +18,7 @@
     {
         private readonly Display display;
 
+        // TODO: convert the Display class into a class which captures a display adapter's id/name...and then returns results for that display
         public DisplaySettingsHandler(Display display)
         {
             this.display = display;
