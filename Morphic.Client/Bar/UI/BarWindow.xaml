@@ -80,8 +80,8 @@
             Background="{DynamicResource Background}">
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="2*"></ColumnDefinition>
-                <ColumnDefinition Width="1*"></ColumnDefinition>
+                <ColumnDefinition Width="auto"></ColumnDefinition>
+                <ColumnDefinition Width="{Binding CloseButtonColumnWidth}"></ColumnDefinition>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="{Binding HeaderRowHeight}"/>
