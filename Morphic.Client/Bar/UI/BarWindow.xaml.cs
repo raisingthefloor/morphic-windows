@@ -61,7 +61,7 @@ namespace Morphic.Client.Bar.UI
             }
         }
 
-        public double HeaderRowHeight => ShowCloseButton ? 20 : 0;
+        public double HeaderRowHeight => ShowCloseButton && Orientation == Orientation.Vertical ? 20 : 0;
 
         public Orientation Orientation
         {
