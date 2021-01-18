@@ -48,6 +48,21 @@ namespace Morphic.Client.Bar.UI
 
         protected WindowMessageHook messageHook;
 
+        private bool _showCloseButton = true;
+
+        public bool ShowCloseButton
+        {
+            get => this is PrimaryBarWindow && _showCloseButton;
+            set
+            {
+                _showCloseButton = value;
+                OnPropertyChanged(nameof(ShowCloseButton));
+                OnPropertyChanged(nameof(HeaderRowHeight));
+            }
+        }
+
+        public double HeaderRowHeight => ShowCloseButton && Orientation == Orientation.Vertical ? 20 : 0;
+
         public Orientation Orientation
         {
             get => this.orientationValue;
@@ -55,6 +70,8 @@ namespace Morphic.Client.Bar.UI
             {
                 this.orientationValue = value;
                 this.OrientationChanged?.Invoke(this, EventArgs.Empty);
+                OnPropertyChanged(nameof(Orientation));
+                OnPropertyChanged(nameof(HeaderRowHeight));
             }
         }
 
@@ -227,7 +244,8 @@ namespace Morphic.Client.Bar.UI
         public double ExtraHeight =>
             this.BorderThickness.Top + this.BorderThickness.Bottom +
             this.Padding.Top + this.Padding.Bottom +
-            this.BarControl.Margin.Top + this.BarControl.Margin.Bottom + 1;
+            this.BarControl.Margin.Top + this.BarControl.Margin.Bottom + 1
+            + HeaderRowHeight;
 
         public bool IsDocked
         {
@@ -537,6 +555,11 @@ namespace Morphic.Client.Bar.UI
         {
             BarItemControl? control = element.FindVisualParent<BarItemControl>();
             return control?.BarItem;
+        }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            App.Current.BarManager.HideBar();
         }
     }
 }
