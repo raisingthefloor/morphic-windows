@@ -103,7 +103,7 @@ namespace Morphic.Client.Bar.UI
                 uiElementCollection.Add(this.CreateItem(item));
             }
 
-            if (Orientation == Orientation.Horizontal)
+            if (Orientation == Orientation.Horizontal && uiElementCollection.Count > 0)
             {
                 var barItemControl = (BarItemControl)uiElementCollection[uiElementCollection.Count - 1];
                 var margin = barItemControl.Margin;
