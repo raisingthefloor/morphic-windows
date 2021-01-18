@@ -25,6 +25,8 @@
         <!-- Convert a boolean to a visibility -->
         <ui:Ternary x:Key="CornerRadius" False="5" True="0" />
 
+        <ui:Ternary x:Key="ShowCloseButton" False="Collapsed" True="Visible" />
+
         <Style x:Key="CloseButtonStyle" TargetType="{x:Type Button}">
             <Style.Triggers>
                 <DataTrigger Binding="{Binding Orientation}" Value="Vertical">
@@ -82,8 +84,8 @@
                 <ColumnDefinition Width="1*"></ColumnDefinition>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
-                <RowDefinition></RowDefinition>
-                <RowDefinition></RowDefinition>
+                <RowDefinition Height="{Binding HeaderRowHeight}"/>
+                <RowDefinition Height="auto"></RowDefinition>
             </Grid.RowDefinitions>
             <ui:BarControl Grid.Column="0" Grid.Row="1" x:Name="BarControl"
                                ItemsSource="{Binding BarItems}"
@@ -129,7 +131,7 @@
                 </ui:BarControl.Resources>
             </ui:BarControl>
 
-            <Button Style="{StaticResource CloseButtonStyle}" Click="CloseButton_Click" AutomationProperties.Name="Close" Visibility="Visible"/>
+            <Button Style="{StaticResource CloseButtonStyle}" Click="CloseButton_Click" AutomationProperties.Name="Close" Visibility="{Binding ShowCloseButton, Converter={StaticResource ShowCloseButton}}"/>
 
         </Grid>
     </Border>
