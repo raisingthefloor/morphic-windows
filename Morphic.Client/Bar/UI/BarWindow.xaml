@@ -26,6 +26,17 @@
         <ui:Ternary x:Key="CornerRadius" False="5" True="0" />
 
         <Style x:Key="CloseButtonStyle" TargetType="{x:Type Button}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Orientation}" Value="Vertical">
+                    <Setter Property="Grid.Column" Value="0"/>
+                    <Setter Property="Grid.Row" Value="0"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Orientation}" Value="Horizontal">
+                    <Setter Property="Grid.Column" Value="1"/>
+                    <Setter Property="Grid.Row" Value="1"/>
+                    <Setter Property="Margin" Value="-12 0 0 0" />
+                </DataTrigger>
+            </Style.Triggers>
             <Setter Property="Width" Value="25" />
             <Setter Property="Height" Value="20" />
             <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -70,7 +81,11 @@
                 <ColumnDefinition Width="2*"></ColumnDefinition>
                 <ColumnDefinition Width="1*"></ColumnDefinition>
             </Grid.ColumnDefinitions>
-            <ui:BarControl Grid.Column="0" x:Name="BarControl"
+            <Grid.RowDefinitions>
+                <RowDefinition></RowDefinition>
+                <RowDefinition></RowDefinition>
+            </Grid.RowDefinitions>
+            <ui:BarControl Grid.Column="0" Grid.Row="1" x:Name="BarControl"
                                ItemsSource="{Binding BarItems}"
                                HorizontalAlignment="Left" VerticalAlignment="Top"
                                Margin="{Binding Bar.Sizes.WindowPadding}"
@@ -113,9 +128,9 @@
                     </Style>
                 </ui:BarControl.Resources>
             </ui:BarControl>
-            
-            <Button Grid.Column="1" Margin="-12 0 0 0" Style="{StaticResource CloseButtonStyle}" Click="CloseButton_Click" AutomationProperties.Name="Close" />
-            
+
+            <Button Style="{StaticResource CloseButtonStyle}" Click="CloseButton_Click" AutomationProperties.Name="Close" Visibility="Visible"/>
+
         </Grid>
     </Border>
 </Window>

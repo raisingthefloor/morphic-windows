@@ -55,6 +55,7 @@ namespace Morphic.Client.Bar.UI
             {
                 this.orientationValue = value;
                 this.OrientationChanged?.Invoke(this, EventArgs.Empty);
+                OnPropertyChanged(nameof(Orientation));
             }
         }
 
