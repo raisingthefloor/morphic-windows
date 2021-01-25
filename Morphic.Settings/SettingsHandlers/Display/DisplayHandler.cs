@@ -1,12 +1,13 @@
 ﻿namespace Morphic.Settings.SettingsHandlers.Display
 {
+    using CountlySDK;
+    using Morphic.Windows.Native.Display;
+    using SolutionsRegistry;
     using System;
     using System.Collections.Generic;
     using System.Drawing;
     using System.Linq;
     using System.Threading.Tasks;
-    using Morphic.Windows.Native.Display;
-    using SolutionsRegistry;
 
     [SettingsHandlerType("displaySettings", typeof(DisplaySettingsHandler))]
     public class DisplaySettingGroup : SettingGroup
@@ -54,9 +55,26 @@
 
                 // method 2: get/set zoom level based on scale percentage
                 var all = this.display.GetDPIScales();
-                if (index >= 0 && index < all.Count)
+                double? newDpiScale = null;
+                if (all != null && index >= 0 && index < all.Count)
                 {
-                    this.display.SetDpiScale(all[index]);
+                    newDpiScale = all[index];
+                }
+                if (newDpiScale != null)
+                {
+                    // capture the current percentage
+                    var oldDpiScale = Display.GetMonitorScalePercentage(null);
+                    // set the new percentage
+                    this.display.SetDpiScale(newDpiScale.Value);
+                    // report the display percentage change
+                    if (oldDpiScale != null)
+                    {
+                        // NOTE: ideally we'd like to report both the old and new display scales
+                        var segmentation = new Segmentation();
+                        segmentation.Add("fromPercent", (oldDpiScale.Value * 100).ToString());
+                        segmentation.Add("toPercent", (newDpiScale.Value * 100).ToString());
+                        Countly.RecordEvent("changeDisplayScale", 1, segmentation);
+                    }
                 }
             }
 
