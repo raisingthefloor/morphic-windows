@@ -382,6 +382,23 @@ namespace Morphic.Windows.Native.Display
             public int currentDpiOffset;
             public int maximumDpiOffset;
         }
+        public static GetDpiOffsetResult? GetCurrentDpiOffsetAndRange()
+        {
+            // if no display adapter id info was provided, get an id to the primary monitor
+            var primaryMonitorName = Display.GetMonitorName(null);
+            if (primaryMonitorName == null)
+            {
+                return null;
+            }
+
+            var primaryMonitorIds = Display.GetAdapterIdAndSourceId(primaryMonitorName);
+            if (primaryMonitorIds == null)
+            {
+                return null;
+            }
+
+            return Display.GetCurrentDpiOffsetAndRange(primaryMonitorIds.Value.adapterId, primaryMonitorIds.Value.sourceId);
+        }
         public static GetDpiOffsetResult? GetCurrentDpiOffsetAndRange(WindowsApi.LUID adapterId, uint sourceId)
         {
             // retrieve the DPI values (min, current and max) for the monitor

@@ -15,7 +15,7 @@
         public Setting? Setting { get; private set; }
         public Solutions Solutions { get; private set; } = null!;
 
-        protected override Task<bool> InvokeImpl(string? source = null, bool? toggleState = null)
+        protected override Task<bool> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
         {
             Setting? setting;
 

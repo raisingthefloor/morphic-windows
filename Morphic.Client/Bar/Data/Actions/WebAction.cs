@@ -56,7 +56,7 @@ namespace Morphic.Client.Bar.Data.Actions
             }
         }
 
-        protected override Task<bool> InvokeImpl(string? source = null, bool? toggleState = null)
+        protected override Task<bool> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
         {
             bool success = true;
             if (this.Uri != null)
