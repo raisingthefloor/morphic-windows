@@ -10,6 +10,10 @@
 
 namespace Morphic.Client.Bar.Data.Actions
 {
+    using CountlySDK;
+    using Microsoft.Extensions.Logging;
+    using Newtonsoft.Json;
+    using Newtonsoft.Json.Linq;
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
@@ -20,9 +24,6 @@ namespace Morphic.Client.Bar.Data.Actions
     using System.Threading.Tasks;
     using System.Windows.Forms;
     using System.Windows.Media;
-    using Microsoft.Extensions.Logging;
-    using Newtonsoft.Json;
-    using Newtonsoft.Json.Linq;
 
     /// <summary>
     /// An action for a bar item.
@@ -40,7 +41,7 @@ namespace Morphic.Client.Bar.Data.Actions
         /// <param name="source">Button ID, for multi-button bar items.</param>
         /// <param name="toggleState">New state, if the button is a toggle.</param>
         /// <returns></returns>
-        protected abstract Task<bool> InvokeImpl(string? source = null, bool? toggleState = null);
+        protected abstract Task<bool> InvokeAsyncImpl(string? source = null, bool? toggleState = null);
 
         /// <summary>
         /// Invokes the action.
@@ -48,14 +49,14 @@ namespace Morphic.Client.Bar.Data.Actions
         /// <param name="source">Button ID, for multi-button bar items.</param>
         /// <param name="toggleState">New state, if the button is a toggle.</param>
         /// <returns></returns>
-        public Task<bool> Invoke(string? source = null, bool? toggleState = null)
+        public async Task<bool> InvokeAsync(string? source = null, bool? toggleState = null)
         {
-            Task<bool> result;
+            bool result;
             try
             {
                 try
                 {
-                    result = this.InvokeImpl(source, toggleState);
+                    result = await this.InvokeAsyncImpl(source, toggleState);
                 }
                 catch (Exception e) when (!(e is ActionException || e is OutOfMemoryException))
                 {
@@ -72,10 +73,126 @@ namespace Morphic.Client.Bar.Data.Actions
                         "Morphic Community Bar", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 }
 
-                result = Task.FromResult(false);
+                result = false;
+            }
+            finally
+            {
+                // record telemetry data for this action
+                await this.SendTelemetryForBarAction(source, toggleState);
             }
 
             return result;
+        }
+
+        // NOTE: we should refactor this functionality to functions attached to each button (similar to how action callbacks are invoked)
+        private async Task SendTelemetryForBarAction(string? source = null, bool? toggleState = null) 
+        {
+            // handle actions which must be filted by id
+            switch (this.Id)
+            {
+                case "magnify":
+                    {
+                        if (source == "on") 
+                        {
+                            await Countly.RecordEvent("magnifierShow");
+                        }
+                        else if (source == "off")
+                        {
+                            await Countly.RecordEvent("magnifierHide");
+                        }
+                    }
+                    break;
+                case "read-aloud":
+                    {
+                        if (source == "play")
+                        {
+                            await Countly.RecordEvent("readSelectedPlay");
+                        } 
+                        else if (source == "stop")
+                        {
+                            await Countly.RecordEvent("readSelectedStop");
+                            break;
+                        }
+                    }
+                    break;
+                case "":
+                    switch (source)
+                    {
+                        case "com.microsoft.windows.colorFilters/enabled":
+                            {
+                                if (toggleState == true)
+                                {
+                                    await Countly.RecordEvent("colorFiltersOn");
+                                    return;
+                                }
+                                else
+                                {
+                                    await Countly.RecordEvent("colorFiltersOff");
+                                    return;
+                                }
+                            }
+                            break;
+                        case "com.microsoft.windows.highContrast/enabled":
+                            {
+                                if (toggleState == true)
+                                {
+                                    await Countly.RecordEvent("highContrastOn");
+                                    return;
+                                }
+                                else
+                                {
+                                    await Countly.RecordEvent("highContrastOff");
+                                    return;
+                                }
+                            }
+                            break;
+                        case "com.microsoft.windows.nightMode/enabled":
+                            {
+                                if (toggleState == true)
+                                {
+                                    await Countly.RecordEvent("nightModeOn");
+                                    return;
+                                }
+                                else
+                                {
+                                    await Countly.RecordEvent("nightModeOff");
+                                    return;
+                                }
+                            }
+                            break;
+                        case "copy":
+                            {
+                                await Countly.RecordEvent("screenSnip");
+                            }
+                            break;
+                        case "dark-mode":
+                            {
+                                if (toggleState == true)
+                                {
+                                    await Countly.RecordEvent("darkModeOn");
+                                    return;
+                                }
+                                else
+                                {
+                                    await Countly.RecordEvent("darkModeOff");
+                                    return;
+                                }
+                            }
+                            break;
+                        default:
+                            // we do not understand this action type (for telemetry logging purposes)
+                            Debug.Assert(false, "Unknown Action ID (missing telemetry hooks)");
+                            break;
+                    }
+                    break;
+                case "screen-zoom":
+                    // this action type's telemetry is logged elsewhere
+                    break;
+                default:
+                    // we do not understand this action type (for telemetry logging purposes)
+                    Debug.Assert(false, "Unknown Action ID (missing telemetry hooks)");
+                    break;
+            }
         }
 
         /// <summary>
@@ -102,7 +219,7 @@ namespace Morphic.Client.Bar.Data.Actions
     [JsonTypeName("null")]
     public class NoOpAction : BarAction
     {
-        protected override Task<bool> InvokeImpl(string? source = null, bool? toggleState = null)
+        protected override Task<bool> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
         {
             return Task.FromResult(true);
         }
@@ -117,7 +234,7 @@ namespace Morphic.Client.Bar.Data.Actions
         [JsonProperty("args")]
         public Dictionary<string, string> Arguments { get; set; } = new Dictionary<string, string>();
 
-        protected override Task<bool> InvokeImpl(string? source = null, bool? toggleState = null)
+        protected override Task<bool> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
         {
             if (this.FunctionName == null)
             {
@@ -139,7 +256,7 @@ namespace Morphic.Client.Bar.Data.Actions
         [JsonProperty("data", Required = Required.Always)]
         public JObject RequestObject { get; set; } = null!;
 
-        protected override async Task<bool> InvokeImpl(string? source = null, bool? toggleState = null)
+        protected override async Task<bool> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
         {
             ClientWebSocket socket = new ClientWebSocket();
             CancellationTokenSource cancel = new CancellationTokenSource();
@@ -161,7 +278,7 @@ namespace Morphic.Client.Bar.Data.Actions
         [JsonProperty("run")]
         public string? ShellCommand { get; set; }
 
-        protected override Task<bool> InvokeImpl(string? source = null, bool? toggleState = null)
+        protected override Task<bool> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
         {
             bool success = true;
             if (!string.IsNullOrEmpty(this.ShellCommand))

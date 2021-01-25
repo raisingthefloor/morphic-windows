@@ -259,11 +259,11 @@ namespace Morphic.Client.Bar.Data.Actions
             return fullPath;
         }
 
-        protected override Task<bool> InvokeImpl(string? source = null, bool? toggleState = null)
+        protected override Task<bool> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
         {
             if (this.DefaultApp != null && string.IsNullOrEmpty(this.ExeName))
             {
-                return this.DefaultApp.Invoke(source);
+                return this.DefaultApp.InvokeAsync(source);
             }
 
             if (!this.NewInstance && (Keyboard.Modifiers & ModifierKeys.Shift) != ModifierKeys.Shift)

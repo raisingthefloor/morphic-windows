@@ -62,18 +62,30 @@
                 }
                 if (newDpiScale != null)
                 {
-                    // capture the current percentage
+                    // capture the current scale
                     var oldDpiScale = Display.GetMonitorScalePercentage(null);
+                    // capture the recommended scale
+                    var currentDpiOffsetAndRange = Display.GetCurrentDpiOffsetAndRange();
+                    var recommendedDpiScale = currentDpiOffsetAndRange != null ? Display.TranslateDpiOffsetToPercentage(0, currentDpiOffsetAndRange.Value.minimumDpiOffset, currentDpiOffsetAndRange.Value.maximumDpiOffset) : null;
                     // set the new percentage
                     this.display.SetDpiScale(newDpiScale.Value);
-                    // report the display percentage change
+                    // report the display scale (percentage) change
                     if (oldDpiScale != null)
                     {
-                        // NOTE: ideally we'd like to report both the old and new display scales
                         var segmentation = new Segmentation();
-                        segmentation.Add("fromPercent", (oldDpiScale.Value * 100).ToString());
-                        segmentation.Add("toPercent", (newDpiScale.Value * 100).ToString());
-                        Countly.RecordEvent("changeDisplayScale", 1, segmentation);
+                        if (recommendedDpiScale != null)
+                        {
+                            var relativePercent = newDpiScale / recommendedDpiScale;
+                            segmentation.Add("scalePercent", ((int)(relativePercent * 100)).ToString());
+                        }
+                        //
+                        if (newDpiScale > oldDpiScale) {
+                            Countly.RecordEvent("textZoomIncrease", 1, segmentation);
+                        }
+                        else
+                        {
+                            Countly.RecordEvent("textZoomDecrease", 1, segmentation);
+                        }
                     }
                 }
             }

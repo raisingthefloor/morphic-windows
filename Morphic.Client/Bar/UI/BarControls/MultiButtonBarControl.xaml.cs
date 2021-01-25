@@ -170,7 +170,7 @@ namespace Morphic.Client.Bar.UI.BarControls
 
                 // Call the button action.
                 bool? state = (sender as ToggleButton)?.IsChecked;
-                buttonInfo.Action.Invoke(buttonInfo.Value, state);
+                buttonInfo.Action.InvokeAsync(buttonInfo.Value, state);
             }
         }
 
