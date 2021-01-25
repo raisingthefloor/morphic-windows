@@ -433,19 +433,19 @@ namespace Morphic.Client
             services.AddSingleton<Solutions>(s => Solutions.FromFile(s, AppPaths.GetAppFile("solutions.json5")));
         }
 
-        private void ConfigureCountly()
+        private async Task ConfigureCountlyAsync()
         {
             // TODO: Move metrics related things to own class.
             IConfigurationSection? section = this.Configuration.GetSection("Countly");
             CountlyConfig cc = new CountlyConfig
             {
-                appKey = section["AppKey"],
                 serverUrl = section["ServerUrl"],
-                appVersion = BuildInfo.Current.InformationalVersion
+                appKey = section["AppKey"],
+                appVersion = BuildInfo.Current.InformationalVersion,
             };
 
-            Countly.Instance.Init(cc);
-            Countly.Instance.SessionBegin();
+            await Countly.Instance.Init(cc);
+            await Countly.Instance.SessionBegin();
             CountlyBase.IsLoggingEnabled = true;
         }
 
@@ -505,7 +505,7 @@ namespace Morphic.Client
             logging.AddDebug();
         }
 
-        protected override void OnStartup(StartupEventArgs e)
+        protected override async void OnStartup(StartupEventArgs e)
         {
             this.Dispatcher.UnhandledException += this.App_DispatcherUnhandledException;
 
@@ -519,7 +519,7 @@ namespace Morphic.Client
 
             // load (optional) common configuration file
             // NOTE: we currently load this AFTER setting up the logger because the GetCommonConfigurationAsync function logs config file errors to the logger
-            var commonConfiguration = this.GetCommonConfigurationAsync().GetAwaiter().GetResult();
+            var commonConfiguration = await this.GetCommonConfigurationAsync();
             ConfigurableFeatures.SetFeatures(
                 autorunConfig: commonConfiguration.AutorunConfig,
                 checkForUpdatesIsEnabled: commonConfiguration.CheckForUpdatesIsEnabled,
@@ -540,7 +540,7 @@ namespace Morphic.Client
             this.morphicMenu = new MorphicMenu();
 
             this.RegisterGlobalHotKeys();
-            this.ConfigureCountly();
+            await this.ConfigureCountlyAsync();
 
             if (ConfigurableFeatures.CheckForUpdatesIsEnabled == true)
             {
@@ -789,14 +789,14 @@ namespace Morphic.Client
 
         #region Shutdown
 
-        protected override void OnExit(ExitEventArgs e)
+        protected override async void OnExit(ExitEventArgs e)
         {
             _messageWatcherNativeWindow?.Dispose();
-            Countly.Instance.SessionEnd();
+            await Countly.Instance.SessionEnd();
 
             if (ConfigurableFeatures.ResetSettingsIsEnabled == true)
             {
-                this.ResetSettingsAsync().GetAwaiter().GetResult();
+                await this.ResetSettingsAsync();
             }
 
             AppMain.ReleaseSingleInstanceMutex();
