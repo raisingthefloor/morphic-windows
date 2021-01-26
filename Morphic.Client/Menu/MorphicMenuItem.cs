@@ -1,10 +1,11 @@
 ﻿namespace Morphic.Client.Menu
 {
+    using Config;
+    using CountlySDK;
     using System;
     using System.Diagnostics;
     using System.Windows;
     using System.Windows.Controls;
-    using Config;
 
     public class MorphicMenuItem : MenuItem
     {
@@ -42,7 +43,7 @@
             this.Click += this.OnClick;
         }
 
-        private void OnClick(object sender, RoutedEventArgs e)
+        private async void OnClick(object sender, RoutedEventArgs e)
         {
             if (sender is MorphicMenuItem item)
             {
@@ -60,6 +61,60 @@
                 }
 
             }
+
+            var segmentation = new Segmentation();
+            string? settingCategoryName = null;
+            switch (((MorphicMenuItem)sender).Open)
+            {
+                case "ms-settings:colors":
+                    settingCategoryName = "DarkMode";
+                    break;
+                case "ms-settings:display":
+                    settingCategoryName = "TextSize"; // right-click settings
+                    break;
+                case "ms-settings:easeofaccess-display":
+                    settingCategoryName = "AllAccessibility";
+                    break;
+                case "ms-settings:easeofaccess-colorfilter":
+                    settingCategoryName = "ColorFilter";
+                    break;
+                case "ms-settings:easeofaccess-cursorandpointersize":
+                    settingCategoryName = "PointerSize";
+                    break;
+                case "ms-settings:easeofaccess-highcontrast":
+                    settingCategoryName = "HighContrast";
+                    break;
+                case "ms-settings:easeofaccess-keyboard":
+                    settingCategoryName = "Keyboard";
+                    break;
+                case "ms-settings:easeofaccess-magnifier":
+                    settingCategoryName = "Magnifier";
+                    break;
+                case "ms-settings:mousetouchpad":
+                    settingCategoryName = "Mouse";
+                    break;
+                case "ms-settings:nightlight":
+                    settingCategoryName = "NightMode";
+                    break;
+                case "ms-settings:regionlanguage":
+                    settingCategoryName = "Language";
+                    break;
+                case "ms-settings:speech":
+                    settingCategoryName = "ReadAloud";
+                    break;
+                case null:
+                    // unknown (i.e. no data)
+                    break;
+                default:
+                    Debug.Assert(false, "Unknown menu item (i.e. no telemetry)");
+                    break;
+            }
+            //if (settingCategoryName != null)
+            //{
+            //    segmentation.Add("Category", settingCategoryName);
+            //}
+            //await Countly.RecordEvent("openSystemSettings", 1, segmentation);
+            await Countly.RecordEvent("openSystemSettings" + settingCategoryName);
         }
     }
 

@@ -170,14 +170,15 @@ namespace Morphic.Client.Bar.Data.Actions
                                 if (toggleState == true)
                                 {
                                     await Countly.RecordEvent("darkModeOn");
-                                    return;
                                 }
                                 else
                                 {
                                     await Countly.RecordEvent("darkModeOff");
-                                    return;
                                 }
                             }
+                            break;
+                        case null:
+                            // no tags; this is the Morphie button or another custom element with no known tags
                             break;
                         default:
                             // we do not understand this action type (for telemetry logging purposes)

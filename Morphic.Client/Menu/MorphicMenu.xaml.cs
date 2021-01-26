@@ -1,12 +1,13 @@
 ﻿namespace Morphic.Client.Menu
 {
+    using Bar.UI;
+    using CountlySDK;
+    using Morphic.Client.Config;
     using System;
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Controls.Primitives;
     using Windows.Native.Input;
-    using Bar.UI;
-    using Morphic.Client.Config;
 
     public partial class MorphicMenu : ContextMenu
     {
@@ -97,11 +98,21 @@
                 menuItem.IsChecked = Keyboard.KeyRepeat();
             }
         }
-        private void StopKeyRepeatToggle(object sender, RoutedEventArgs e)
+		//
+        private async void StopKeyRepeatToggle(object sender, RoutedEventArgs e)
         {
             if (sender is MenuItem menuItem)
             {
                 menuItem.IsChecked = Keyboard.KeyRepeat(menuItem.IsChecked);
+
+                if (menuItem.IsChecked == true)
+                {
+                    await Countly.RecordEvent("stopKeyRepeatOn");
+                }
+                else
+                {
+                    await Countly.RecordEvent("stopKeyRepeatOff");
+                }
             }
         }
 
