@@ -77,14 +77,18 @@
                         {
                             var relativePercent = newDpiScale / recommendedDpiScale;
                             segmentation.Add("scalePercent", ((int)(relativePercent * 100)).ToString());
+
+                            var recommendedDpiIndex = -currentDpiOffsetAndRange!.Value.minimumDpiOffset;
+                            var relativeDotOffset = index - recommendedDpiIndex;
+                            segmentation.Add("dotOffset", relativeDotOffset.ToString());
                         }
                         //
                         if (newDpiScale > oldDpiScale) {
-                            Countly.RecordEvent("textZoomIncrease", 1, segmentation);
+                            Countly.RecordEvent("textSizeIncrease", 1, segmentation);
                         }
                         else
                         {
-                            Countly.RecordEvent("textZoomDecrease", 1, segmentation);
+                            Countly.RecordEvent("textSizeDecrease", 1, segmentation);
                         }
                     }
                 }

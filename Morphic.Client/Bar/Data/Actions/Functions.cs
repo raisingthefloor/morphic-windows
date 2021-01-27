@@ -80,7 +80,8 @@ namespace Morphic.Client.Bar.Data.Actions
         [InternalFunction("menu", "key=Morphic")]
         public static Task<bool> ShowMenu(FunctionArgs args)
         {
-            App.Current.ShowMenu();
+            // NOTE: this internal function is only called by the MorphicBar's Morphie menu button
+            App.Current.ShowMenuAsync(null, Morphic.Client.Menu.MorphicMenu.MenuOpenedSource.morphicBarIcon);
             return Task.FromResult(true);
         }
 
