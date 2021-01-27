@@ -12,6 +12,13 @@
         /// <summary>Shell action to open when the item is clicked.</summary>
         public string Open { get; set; }
 
+        public enum MenuType
+        {
+            contextMenu,
+            mainMenu
+        }
+        public MenuType ParentMenuType = MenuType.mainMenu;
+
         public Type? Dialog { get; set; }
 
         /// <summary>Show the item only if one or more of these features are enabled.</summary>
@@ -67,40 +74,40 @@
             switch (((MorphicMenuItem)sender).Open)
             {
                 case "ms-settings:colors":
-                    settingCategoryName = "DarkMode";
+                    settingCategoryName = "darkMode";
                     break;
                 case "ms-settings:display":
-                    settingCategoryName = "TextSize"; // right-click settings
+                    settingCategoryName = "textSize";
                     break;
                 case "ms-settings:easeofaccess-display":
-                    settingCategoryName = "AllAccessibility";
+                    settingCategoryName = "allAccessibility";
                     break;
                 case "ms-settings:easeofaccess-colorfilter":
-                    settingCategoryName = "ColorFilter";
+                    settingCategoryName = "colorFilter";
                     break;
                 case "ms-settings:easeofaccess-cursorandpointersize":
-                    settingCategoryName = "PointerSize";
+                    settingCategoryName = "pointerSize";
                     break;
                 case "ms-settings:easeofaccess-highcontrast":
-                    settingCategoryName = "HighContrast";
+                    settingCategoryName = "highContrast";
                     break;
                 case "ms-settings:easeofaccess-keyboard":
-                    settingCategoryName = "Keyboard";
+                    settingCategoryName = "keyboard";
                     break;
                 case "ms-settings:easeofaccess-magnifier":
-                    settingCategoryName = "Magnifier";
+                    settingCategoryName = "magnifier";
                     break;
                 case "ms-settings:mousetouchpad":
-                    settingCategoryName = "Mouse";
+                    settingCategoryName = "mouse";
                     break;
                 case "ms-settings:nightlight":
-                    settingCategoryName = "NightMode";
+                    settingCategoryName = "nightMode";
                     break;
                 case "ms-settings:regionlanguage":
-                    settingCategoryName = "Language";
+                    settingCategoryName = "language";
                     break;
                 case "ms-settings:speech":
-                    settingCategoryName = "ReadAloud";
+                    settingCategoryName = "readAloud";
                     break;
                 case null:
                     // unknown (i.e. no data)
@@ -109,12 +116,15 @@
                     Debug.Assert(false, "Unknown menu item (i.e. no telemetry)");
                     break;
             }
-            //if (settingCategoryName != null)
-            //{
-            //    segmentation.Add("Category", settingCategoryName);
-            //}
-            //await Countly.RecordEvent("openSystemSettings", 1, segmentation);
-            await Countly.RecordEvent("openSystemSettings" + settingCategoryName);
+            if (settingCategoryName != null)
+            {
+                segmentation.Add("category", settingCategoryName);
+            }
+            //
+            segmentation.Add("menuType", this.ParentMenuType.ToString());
+            //
+            await Countly.RecordEvent("openSystemSettings", 1, segmentation);
+            //await Countly.RecordEvent("openSystemSettings" + settingCategoryName);
         }
     }
 

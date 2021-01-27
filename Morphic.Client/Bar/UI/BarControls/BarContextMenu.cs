@@ -39,14 +39,15 @@
                         break;
                 }
 
-                string finalTarget = format == null
+                string finalTarget = (format == null)
                     ? target
                     : string.Format(format, target);
 
                 MorphicMenuItem item = new MorphicMenuItem()
                 {
                     Header = finalName,
-                    Open = finalTarget
+                    Open = finalTarget,
+                    ParentMenuType = MorphicMenuItem.MenuType.contextMenu
                 };
 
                 menu.Items.Add(item);

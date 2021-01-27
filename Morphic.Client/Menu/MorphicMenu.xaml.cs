@@ -4,6 +4,7 @@
     using CountlySDK;
     using Morphic.Client.Config;
     using System;
+    using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Controls.Primitives;
@@ -11,6 +12,13 @@
 
     public partial class MorphicMenu : ContextMenu
     {
+        internal enum MenuOpenedSource
+        {
+            trayIcon,
+            morphicBarIcon
+        }
+        private MenuOpenedSource? _menuOpenedSource;
+
         public App App => App.Current;
 
         public MorphicMenu()
@@ -59,8 +67,10 @@
             base.OnOpened(e);
         }
 
-        public void Show(Control? control = null)
+        internal async Task ShowAsync(Control? control = null, MenuOpenedSource? menuOpenedSource = null)
         {
+            _menuOpenedSource = menuOpenedSource;
+
             if (control == null)
             {
                 this.Placement = PlacementMode.Mouse;
@@ -73,16 +83,35 @@
             }
 
             this.IsOpen = true;
+
+            var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
+            await Countly.RecordEvent("showMenu", 1, segmentation);
         }
 
-        private void ShowBarClick(object sender, RoutedEventArgs e)
+        private CountlySDK.Segmentation CreateMenuOpenedSourceSegmentation(MenuOpenedSource? menuOpenedSource)
+        {
+            var segmentation = new CountlySDK.Segmentation();
+            if (_menuOpenedSource != null)
+            {
+                segmentation.Add("method", _menuOpenedSource.ToString() + "Menu");
+            }
+            return segmentation;
+        }
+
+        private async void ShowBarClick(object sender, RoutedEventArgs e)
         {
             this.App.BarManager.ShowBar();
+            //
+            var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
+            await Countly.RecordEvent("showMorphicBar", 1, segmentation);
         }
 
-        private void HideBarClick(object sender, RoutedEventArgs e)
+        private async void HideBarClick(object sender, RoutedEventArgs e)
         {
             this.App.BarManager.HideBar();
+            //
+            var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
+            await Countly.RecordEvent("hideMorphicBar", 1, segmentation);
         }
 
         private void QuitClick(object sender, RoutedEventArgs e)
@@ -120,7 +149,7 @@
 
         private MorphicHybridTrayIcon? _trayIcon = null;
 
-        private async void ShowTrayIcon()
+        private void ShowTrayIcon()
         {
             // TODO: re-implement using solutions registry.
             // SystemSetting filterType = new SystemSetting("SystemSettings_Notifications_ShowIconsOnTaskbar",
@@ -147,20 +176,28 @@
             };
         }
 
-        private void OnTrayIconRightClicked(object? sender, EventArgs e)
+        private async void OnTrayIconRightClicked(object? sender, EventArgs e)
         {
-                this.Show();
+            await this.ShowAsync(null, MenuOpenedSource.trayIcon);
         }
 
-        private void OnTrayIconClicked(object? sender, EventArgs e)
+        private async void OnTrayIconClicked(object? sender, EventArgs e)
         {
             if (this.App.BarManager.BarVisible)
             {
                 this.App.BarManager.HideBar();
+                //
+                var segmentation = new CountlySDK.Segmentation();
+                segmentation.Add("method", "trayIconClick");
+                await Countly.RecordEvent("hideMorphicBar", 1, segmentation);
             }
             else
             {
                 this.App.BarManager.ShowBar();
+                //
+                var segmentation = new CountlySDK.Segmentation();
+                segmentation.Add("method", "trayIconClick");
+                await Countly.RecordEvent("showMorphicBar", 1, segmentation);
             }
         }
 

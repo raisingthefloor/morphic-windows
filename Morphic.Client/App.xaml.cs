@@ -739,9 +739,9 @@ namespace Morphic.Client
         /// </summary>
         private MorphicMenu? morphicMenu;
 
-        public void ShowMenu(Control? control = null)
+        internal async Task ShowMenuAsync(Control? control = null, MorphicMenu.MenuOpenedSource? menuOpenedSource = null)
         {
-            this.morphicMenu?.Show(control);
+            await this.morphicMenu?.ShowAsync(control, menuOpenedSource);
         }
 
         #region Updates
