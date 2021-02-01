@@ -10,6 +10,7 @@
           learn: "textsize",
           demo: "textsize"
         },
+        telemetryCategory: "textSize",
         buttons: {
           inc: {
             label: "+",
@@ -33,6 +34,7 @@
           learn: "magnifier",
           demo: "magnifier"
         },
+        telemetryCategory: "magnifier",
         buttons: {
           on: {
             label: "Show",
@@ -59,6 +61,7 @@
         args: {
           direction: "{button}"
         },
+        telemetryCategory: "volume",
         buttons: {
           down: {
             label: "-",
@@ -110,6 +113,7 @@
         args: {
           state: "{button}"
         },
+        telemetryCategory: "nightMode",
         buttons: {
           on: {
             label: "On",
@@ -137,6 +141,7 @@
           learn: "read-selected-pc",
           demo: "read-selected-pc"
         },
+        telemetryCategory: "readAloud",
         buttons: {
           play: {
             label: "|>",
@@ -162,6 +167,7 @@
         args: {
           keys: "{button}"
         },
+        telemetryCategory: "copyPaste",
         buttons: {
           copy: {
             label: "Copy",
@@ -184,6 +190,7 @@
         defaultLabel: "High-Contrast",
         exe: "sethc.exe",
         args: [ "{button}" ],
+        telemetryCategory: "highContrast",
         buttons: {
           on: {
             label: "On",

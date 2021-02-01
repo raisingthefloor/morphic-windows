@@ -21,6 +21,15 @@
 
         public Type? Dialog { get; set; }
 
+        public enum MorphicMenuItemTelemetryType
+        {
+            Settings,
+            LearnMore,
+            QuickDemoVideo
+        }
+        public MorphicMenuItemTelemetryType? TelemetryType;
+        public string? TelemetryCategory;
+
         /// <summary>Show the item only if one or more of these features are enabled.</summary>
         public Features Features
         {
@@ -69,62 +78,113 @@
 
             }
 
-            var segmentation = new Segmentation();
-            string? settingCategoryName = null;
-            switch (((MorphicMenuItem)sender).Open)
+            switch (((MorphicMenuItem)sender).TelemetryType)
             {
-                case "ms-settings:colors":
-                    settingCategoryName = "darkMode";
+                case MorphicMenuItemTelemetryType.Settings:
+                    {
+                        var segmentation = new Segmentation();
+                        var settingCategoryName = ((MorphicMenuItem)sender).TelemetryCategory;
+                        if (settingCategoryName != null)
+                        {
+                            segmentation.Add("category", settingCategoryName);
+                        }
+                        //
+                        segmentation.Add("menuType", this.ParentMenuType.ToString());
+                        //
+                        await Countly.RecordEvent("openSystemSettings", 1, segmentation);
+                        //await Countly.RecordEvent("openSystemSettings" + settingCategoryName);
+                    }
                     break;
-                case "ms-settings:display":
-                    settingCategoryName = "textSize";
+                case MorphicMenuItemTelemetryType.LearnMore:
+                    {
+                        var segmentation = new Segmentation();
+                        var settingCategoryName = ((MorphicMenuItem)sender).TelemetryCategory;
+                        if (settingCategoryName != null)
+                        {
+                            segmentation.Add("category", settingCategoryName);
+                        }
+                        //
+                        segmentation.Add("menuType", this.ParentMenuType.ToString());
+                        //
+                        await Countly.RecordEvent("learnMore", 1, segmentation);
+                    }
                     break;
-                case "ms-settings:easeofaccess-display":
-                    settingCategoryName = "allAccessibility";
-                    break;
-                case "ms-settings:easeofaccess-colorfilter":
-                    settingCategoryName = "colorFilter";
-                    break;
-                case "ms-settings:easeofaccess-cursorandpointersize":
-                    settingCategoryName = "pointerSize";
-                    break;
-                case "ms-settings:easeofaccess-highcontrast":
-                    settingCategoryName = "highContrast";
-                    break;
-                case "ms-settings:easeofaccess-keyboard":
-                    settingCategoryName = "keyboard";
-                    break;
-                case "ms-settings:easeofaccess-magnifier":
-                    settingCategoryName = "magnifier";
-                    break;
-                case "ms-settings:mousetouchpad":
-                    settingCategoryName = "mouse";
-                    break;
-                case "ms-settings:nightlight":
-                    settingCategoryName = "nightMode";
-                    break;
-                case "ms-settings:regionlanguage":
-                    settingCategoryName = "language";
-                    break;
-                case "ms-settings:speech":
-                    settingCategoryName = "readAloud";
-                    break;
-                case null:
-                    // unknown (i.e. no data)
+                case MorphicMenuItemTelemetryType.QuickDemoVideo:
+                    {
+                        var segmentation = new Segmentation();
+                        var settingCategoryName = ((MorphicMenuItem)sender).TelemetryCategory;
+                        if (settingCategoryName != null)
+                        {
+                            segmentation.Add("category", settingCategoryName);
+                        }
+                        //
+                        segmentation.Add("menuType", this.ParentMenuType.ToString());
+                        //
+                        await Countly.RecordEvent("quickDemoVideo", 1, segmentation);
+                    }
                     break;
                 default:
-                    Debug.Assert(false, "Unknown menu item (i.e. no telemetry)");
+                    // handle menu "open settings" items
+                    // NOTE: we may want to create a separate "telemetry type" and embed it in the menu xaml itself (so that we don't have to compare against open paths here)
+                    {
+                        string? settingCategoryName = null;
+                        switch (((MorphicMenuItem)sender).Open)
+                        {
+                            case "ms-settings:colors":
+                                settingCategoryName = "darkMode";
+                                break;
+                            case "ms-settings:display":
+                                settingCategoryName = "textSize";
+                                break;
+                            case "ms-settings:easeofaccess-display":
+                                settingCategoryName = "allAccessibility";
+                                break;
+                            case "ms-settings:easeofaccess-colorfilter":
+                                settingCategoryName = "colorFilter";
+                                break;
+                            case "ms-settings:easeofaccess-cursorandpointersize":
+                                settingCategoryName = "pointerSize";
+                                break;
+                            case "ms-settings:easeofaccess-highcontrast":
+                                settingCategoryName = "highContrast";
+                                break;
+                            case "ms-settings:easeofaccess-keyboard":
+                                settingCategoryName = "keyboard";
+                                break;
+                            case "ms-settings:easeofaccess-magnifier":
+                                settingCategoryName = "magnifier";
+                                break;
+                            case "ms-settings:mousetouchpad":
+                                settingCategoryName = "mouse";
+                                break;
+                            case "ms-settings:nightlight":
+                                settingCategoryName = "nightMode";
+                                break;
+                            case "ms-settings:regionlanguage":
+                                settingCategoryName = "language";
+                                break;
+                            case "ms-settings:speech":
+                                settingCategoryName = "readAloud";
+                                break;
+                            case null:
+                                // unknown (i.e. no data)
+                                break;
+                            default:
+                                Debug.Assert(false, "Unknown menu item (i.e. no telemetry)");
+                                break;
+                        }
+                        if (settingCategoryName != null)
+                        {
+                            var segmentation = new Segmentation();
+                            segmentation.Add("category", settingCategoryName);
+                            segmentation.Add("menuType", this.ParentMenuType.ToString());
+                            //
+                            await Countly.RecordEvent("openSystemSettings", 1, segmentation);
+                            //await Countly.RecordEvent("openSystemSettings" + settingCategoryName);
+                        }
+                    }
                     break;
             }
-            if (settingCategoryName != null)
-            {
-                segmentation.Add("category", settingCategoryName);
-            }
-            //
-            segmentation.Add("menuType", this.ParentMenuType.ToString());
-            //
-            await Countly.RecordEvent("openSystemSettings", 1, segmentation);
-            //await Countly.RecordEvent("openSystemSettings" + settingCategoryName);
         }
     }
 

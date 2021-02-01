@@ -61,6 +61,7 @@
           learn: "snip",
           demo: "snip"
         },
+        telemetryCategory: "screenSnip",
         buttons: {
           copy: {
             label: "Copy",
@@ -93,7 +94,8 @@
               setting: "easeofaccess-highcontrast",
               learn: "contrast",
               demo: "contrast"
-            }
+            },
+            telemetryCategory: "contrast"
           },
           "com.microsoft.windows.colorFilters/enabled": {
             label: "Color",
@@ -103,7 +105,8 @@
               setting: "easeofaccess-colorfilter",
               learn: "color",
               demo: "color"
-            }
+            },
+            telemetryCategory: "colorFilter"
           },
           "dark-mode": {
             action: {
@@ -118,7 +121,8 @@
               setting: "colors",
               learn: "darkmode",
               demo: "darkmode"
-            }
+            },
+            telemetryCategory: "darkMode"
           },
           "com.microsoft.windows.nightMode/enabled": {
             label: "Night",
@@ -128,7 +132,8 @@
               setting: "nightlight",
               learn: "nightmode",
               demo: "nightmode"
-            }
+            },
+            telemetryCategory: "nightMode"
           }
         }
       }

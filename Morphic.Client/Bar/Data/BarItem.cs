@@ -176,6 +176,9 @@ namespace Morphic.Client.Bar.Data
         [JsonProperty("configuration.menu")]
         public Dictionary<string, string> Menu { get; set; } = new Dictionary<string, string>();
 
+        [JsonProperty("configuration.telemetryCategory")]
+        public string? TelemetryCategory { get; set; }
+
         /// <summary>
         /// The type of control used. This is specified by using BarControl attribute in a subclass of this.
         /// </summary>

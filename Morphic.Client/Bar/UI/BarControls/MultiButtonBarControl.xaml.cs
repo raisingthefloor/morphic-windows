@@ -152,7 +152,7 @@ namespace Morphic.Client.Bar.UI.BarControls
 
             if (buttonInfo != null)
             {
-                e.Handled = this.OpenContextMenu(sender, buttonInfo.Menu);
+                e.Handled = this.OpenContextMenu(sender, buttonInfo.Menu, buttonInfo.TelemetryCategory);
             }
         }
 
