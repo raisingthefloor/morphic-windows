@@ -87,6 +87,9 @@ namespace Morphic.Client.Bar.Data
             [JsonProperty("menu")]
             public Dictionary<string, string> Menu { get; set; } = new Dictionary<string, string>();
 
+            [JsonProperty("telemetryCategory")]
+            public string? TelemetryCategory { get; set; }
+
             [JsonProperty("uiName")]
             public string UiName
             {
