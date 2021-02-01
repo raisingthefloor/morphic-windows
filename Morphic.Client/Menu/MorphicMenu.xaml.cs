@@ -123,6 +123,32 @@
             this.App.Shutdown();
         }
 
+        private async void AutorunAfterLoginClicked(object sender, RoutedEventArgs e)
+        {
+            switch (AutorunAfterLoginItem.IsChecked)
+            {
+                case true:
+                    await Countly.RecordEvent("autorunAfterLoginEnabled");
+                    break;
+                case false:
+                    await Countly.RecordEvent("autorunAfterLoginDisabled");
+                    break;
+            }
+        }
+
+        private async void ShowMorphicBarAfterLoginClicked(object sender, RoutedEventArgs e)
+        {
+            switch (ShowMorphicBarAfterLoginItem.IsChecked)
+            {
+                case true:
+                    await Countly.RecordEvent("showMorphicBarAfterLoginEnabled");
+                    break;
+                case false:
+                    await Countly.RecordEvent("showMorphicBarAfterLoginDisabled");
+                    break;
+            }
+        }
+
         private void StopKeyRepeatInit(object sender, RoutedEventArgs e)
         {
             if (sender is MenuItem menuItem)
