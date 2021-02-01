@@ -28,6 +28,12 @@
         {
         }
 
+        public String? TelemetryDeviceUuid
+        {
+            get => this.GetValue<String?>(null);
+            set => this.SetValue(value); // NOTE: the current implementation does not support deleting the value by setting it to null
+        }
+
         /// <summary>
         /// Prevents the help pop-ups from appearing.
         /// </summary>
@@ -354,7 +360,14 @@
             }
             else if (typeof(T) == typeof(string))
             {
-                result = value.ToString();
+                if (value == null)
+                {
+                    return default(T);
+                } 
+                else
+                {
+                    result = value.ToString();
+                }
             }
 
             return result is T v ? v : defaultValue;
