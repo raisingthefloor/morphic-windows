@@ -241,6 +241,31 @@
         {
             _ = App.Current.OpenSession();
         }
+
+        private async void LearnAboutMorphicClicked(object sender, RoutedEventArgs e)
+        {
+            var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
+            await Countly.RecordEvent("learnAboutMorphicClicked", 1, segmentation);
+        }
+
+        private async void QuickDemoMoviesClicked(object sender, RoutedEventArgs e)
+        {
+            var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
+            segmentation.Add("category", "main");
+            await Countly.RecordEvent("quickDemoVideo", 1, segmentation);
+        }
+
+        private async void OtherHelpfulThingsClicked(object sender, RoutedEventArgs e)
+        {
+            var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
+            await Countly.RecordEvent("otherHelpfulThingsClicked", 1, segmentation);
+        }
+
+        private async void AboutMorphicClicked(object sender, RoutedEventArgs e)
+        {
+            var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
+            await Countly.RecordEvent("aboutMorphic", 1, segmentation);
+        }
     }
 
 
