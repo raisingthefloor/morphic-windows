@@ -436,12 +436,22 @@ namespace Morphic.Client
         private async Task ConfigureCountlyAsync()
         {
             // TODO: Move metrics related things to own class.
+
+            // retrieve the telemetry device ID for this device; if it doesn't exist then create a new one
+            var telemetryDeviceUuid = AppOptions.TelemetryDeviceUuid;
+            if (telemetryDeviceUuid == null)
+            {
+                telemetryDeviceUuid = "D_" + Guid.NewGuid().ToString();
+                AppOptions.TelemetryDeviceUuid = telemetryDeviceUuid;
+            }
+
             IConfigurationSection? section = this.Configuration.GetSection("Countly");
             CountlyConfig cc = new CountlyConfig
             {
                 serverUrl = section["ServerUrl"],
                 appKey = section["AppKey"],
                 appVersion = BuildInfo.Current.InformationalVersion,
+                developerProvidedDeviceId = telemetryDeviceUuid,
             };
 
             await Countly.Instance.Init(cc);
