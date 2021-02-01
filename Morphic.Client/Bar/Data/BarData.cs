@@ -193,7 +193,9 @@ namespace Morphic.Client.Bar.Data
                                 ((Morphic.Client.Bar.Data.Actions.WebAction)extraBarItem.Action).UrlString = extraItemData.url ?? "";
                                 break;
                             case "action":
-                                extraBarItem.Action = new Morphic.Client.Bar.Data.Actions.InternalAction();
+                                var extraBarItemInternalAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
+                                extraBarItemInternalAction.TelemetryEventName = "morphicBarExtraItemPressed";
+                                extraBarItem.Action = extraBarItemInternalAction;
                                 ((Morphic.Client.Bar.Data.Actions.InternalAction)extraBarItem.Action).FunctionName = extraItemData.function!;
                                 break;
                             default:

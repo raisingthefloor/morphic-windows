@@ -114,8 +114,11 @@
             await Countly.RecordEvent("hideMorphicBar", 1, segmentation);
         }
 
-        private void QuitClick(object sender, RoutedEventArgs e)
+        private async void QuitClick(object sender, RoutedEventArgs e)
         {
+            var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
+            await Countly.RecordEvent("quit", 1, segmentation);
+
             this.App.BarManager.CloseBar();
             this.App.Shutdown();
         }

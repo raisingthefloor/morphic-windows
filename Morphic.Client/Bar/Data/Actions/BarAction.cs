@@ -235,19 +235,31 @@ namespace Morphic.Client.Bar.Data.Actions
         [JsonProperty("args")]
         public Dictionary<string, string> Arguments { get; set; } = new Dictionary<string, string>();
 
+        public string? TelemetryEventName { get; set; }
+        
         protected override Task<bool> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
         {
-            if (this.FunctionName == null)
+            try
             {
-                return Task.FromResult(true);
+                if (this.FunctionName == null)
+                {
+                    return Task.FromResult(true);
+                }
+
+                Dictionary<string, string> resolvedArgs = this.Arguments
+                    .ToDictionary(kv => kv.Key, kv => this.ResolveString(kv.Value, source) ?? string.Empty);
+
+                resolvedArgs.Add("state", toggleState == true ? "on" : "off");
+
+                return InternalFunctions.Default.InvokeFunction(this.FunctionName, resolvedArgs);
             }
-
-            Dictionary<string, string> resolvedArgs = this.Arguments
-                .ToDictionary(kv => kv.Key, kv => this.ResolveString(kv.Value, source) ?? string.Empty);
-
-            resolvedArgs.Add("state", toggleState == true ? "on" : "off");
-
-            return InternalFunctions.Default.InvokeFunction(this.FunctionName, resolvedArgs);
+            finally
+            {
+                if (this.TelemetryEventName != null) 
+                {
+                    Countly.RecordEvent(this.TelemetryEventName!);
+                }
+            }
         }
     }
 

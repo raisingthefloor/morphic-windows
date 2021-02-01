@@ -10,6 +10,13 @@
 
 namespace Morphic.Client.Bar.UI
 {
+    using AppBarWindow;
+    using BarControls;
+    using CountlySDK;
+    using Data;
+    using Microsoft.Win32;
+    using Mouse = Windows.Native.Input.Mouse;
+    using Settings.SettingsHandlers;
     using System;
     using System.Collections.Generic;
     using System.ComponentModel;
@@ -19,12 +26,6 @@ namespace Morphic.Client.Bar.UI
     using System.Windows.Controls;
     using System.Windows.Input;
     using System.Windows.Shell;
-    using AppBarWindow;
-    using BarControls;
-    using Data;
-    using Microsoft.Win32;
-    using Settings.SettingsHandlers;
-    using Mouse = Windows.Native.Input.Mouse;
 
     /// <summary>
     /// The window for the main bar.
@@ -563,7 +564,16 @@ namespace Morphic.Client.Bar.UI
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
-            App.Current.BarManager.HideBar();
+            try
+            {
+                App.Current.BarManager.HideBar();
+            } 
+            finally 
+            {
+                var segmentation = new Segmentation();
+                segmentation.Add("method", "closeButton");
+                Countly.RecordEvent("hideMorphicBar", 1, segmentation);
+            }
         }
     }
 }
