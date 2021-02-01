@@ -564,7 +564,7 @@ namespace Morphic.Client.Bar.UI
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
-            try 
+            try
             {
                 App.Current.BarManager.HideBar();
             } 
