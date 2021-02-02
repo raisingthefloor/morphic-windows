@@ -103,6 +103,8 @@ stages:
           displayName: "build solutions"
           env:
             Edition: 'Basic'
+            MorphicSpaceEdition: 'Morphic'
+            SetupEditionSuffix: ''
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
           inputs:
             solution: '$(solution)'
@@ -121,6 +123,8 @@ stages:
           env:
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
             Edition: 'Basic'
+            MorphicSpaceEdition: 'Morphic'
+            SetupEditionSuffix: ''
           inputs:
             solution: 'Morphic.Setup\Morphic.Setup.wixproj'
             platform: 'x64'
@@ -154,9 +158,9 @@ stages:
               -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl)"
-              -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicBasicSetup.msi
+              -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicSetup.msi
 
-        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicBasicSetup.msi
+        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicSetup.msi
           displayName: "save x64 installer for later"
           artifact: x64-installer
 
@@ -172,6 +176,8 @@ stages:
           env:
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
             Edition: 'Community'
+            MorphicSpaceEdition: 'Morphic Community'
+            SetupEditionSuffix: 'Community'
           inputs:
             solution: 'Morphic.Setup\Morphic.Setup.wixproj'
             platform: 'x64'
@@ -285,7 +291,7 @@ stages:
                   aws s3 cp $EXTRA_ARGS "${LOCAL_APPCAST_SOURCE}" "s3://${BUCKET}/${S3_APPCAST_OBJECT_NAME}"
                 }
 
-                INSTALLER_NAME_BASE="MorphicBasicSetup"
+                INSTALLER_NAME_BASE="MorphicSetup"
                 LOCAL_MSI_DIR="x64-installer"
                 publishInstaller
 
