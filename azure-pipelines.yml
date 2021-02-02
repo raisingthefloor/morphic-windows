@@ -103,6 +103,8 @@ stages:
           displayName: "build solutions"
           env:
             Edition: 'Basic'
+            AppEditionSuffix: ''
+            SetupEditionSuffix: ''
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
           inputs:
             solution: '$(solution)'
@@ -121,6 +123,8 @@ stages:
           env:
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
             Edition: 'Basic'
+            AppEditionSuffix: ''
+            SetupEditionSuffix: ''
           inputs:
             solution: 'Morphic.Setup\Morphic.Setup.wixproj'
             platform: 'x64'
@@ -172,6 +176,8 @@ stages:
           env:
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
             Edition: 'Community'
+            AppEditionSuffix: ' Community'
+            SetupEditionSuffix: 'Community'
           inputs:
             solution: 'Morphic.Setup\Morphic.Setup.wixproj'
             platform: 'x64'

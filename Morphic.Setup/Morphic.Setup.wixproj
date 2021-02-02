@@ -4,10 +4,6 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
     <Edition Condition="'$(Edition)' == '' ">Basic</Edition>
-    <SetupEditionSuffix Condition="'$(Edition)' == 'Community' ">Community</SetupEditionSuffix>
-    <SetupEditionSuffix Condition="'$(Edition)' == 'Basic' "></SetupEditionSuffix>
-    <AppEditionSuffix Condition="'$(Edition)' == 'Community' "> Community</AppEditionSuffix>
-    <AppEditionSuffix Condition="'$(Edition)' == 'Basic' "></AppEditionSuffix>
     <ProductVersion>3.10</ProductVersion>
     <ProjectGuid>8b686c6d-d3da-4019-b4b7-a0643f17a7f7</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
