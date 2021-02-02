@@ -571,8 +571,8 @@ namespace Morphic.Client.Bar.UI
             finally 
             {
                 var segmentation = new Segmentation();
-                segmentation.Add("method", "closeButton");
-                Countly.RecordEvent("hideMorphicBar", 1, segmentation);
+                segmentation.Add("eventSource", "closeButton");
+                Countly.RecordEvent("morphicBarHide", 1, segmentation);
             }
         }
     }
