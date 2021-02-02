@@ -95,7 +95,7 @@
               learn: "contrast",
               demo: "contrast"
             },
-            telemetryCategory: "contrast"
+            telemetryCategory: "highContrast"
           },
           "com.microsoft.windows.colorFilters/enabled": {
             label: "Color",
