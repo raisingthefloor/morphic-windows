@@ -93,7 +93,7 @@
             var segmentation = new CountlySDK.Segmentation();
             if (_menuOpenedSource != null)
             {
-                segmentation.Add("method", _menuOpenedSource.ToString() + "Menu");
+                segmentation.Add("eventSource", _menuOpenedSource.ToString() + "Menu");
             }
             return segmentation;
         }
@@ -217,7 +217,7 @@
                 this.App.BarManager.HideBar();
                 //
                 var segmentation = new CountlySDK.Segmentation();
-                segmentation.Add("method", "trayIconClick");
+                segmentation.Add("eventSource", "trayIconClick");
                 await Countly.RecordEvent("morphicBarHide", 1, segmentation);
             }
             else
@@ -225,7 +225,7 @@
                 this.App.BarManager.ShowBar();
                 //
                 var segmentation = new CountlySDK.Segmentation();
-                segmentation.Add("method", "trayIconClick");
+                segmentation.Add("eventSource", "trayIconClick");
                 await Countly.RecordEvent("morphicBarShow", 1, segmentation);
             }
         }
