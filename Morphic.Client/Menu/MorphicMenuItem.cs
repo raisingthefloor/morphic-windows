@@ -78,6 +78,18 @@
 
             }
 
+            string? eventSource = null;
+            switch (this.ParentMenuType)
+            {
+                case MenuType.mainMenu:
+                    eventSource = "iconMenu";
+                    break;
+                case MenuType.contextMenu:
+                    eventSource = "contextMenu";
+                    break;
+            }
+
+
             switch (((MorphicMenuItem)sender).TelemetryType)
             {
                 case MorphicMenuItemTelemetryType.Settings:
@@ -89,10 +101,10 @@
                             segmentation.Add("category", settingCategoryName);
                         }
                         //
-                        segmentation.Add("menuType", this.ParentMenuType.ToString());
+                        segmentation.Add("eventSource", eventSource);
                         //
-                        await Countly.RecordEvent("openSystemSettings", 1, segmentation);
-                        //await Countly.RecordEvent("openSystemSettings" + settingCategoryName);
+                        await Countly.RecordEvent("systemSettings", 1, segmentation);
+                        //await Countly.RecordEvent("systemSettings" + settingCategoryName);
                     }
                     break;
                 case MorphicMenuItemTelemetryType.LearnMore:
@@ -104,7 +116,7 @@
                             segmentation.Add("category", settingCategoryName);
                         }
                         //
-                        segmentation.Add("menuType", this.ParentMenuType.ToString());
+                        segmentation.Add("eventSource", eventSource);
                         //
                         await Countly.RecordEvent("learnMore", 1, segmentation);
                     }
@@ -118,7 +130,7 @@
                             segmentation.Add("category", settingCategoryName);
                         }
                         //
-                        segmentation.Add("menuType", this.ParentMenuType.ToString());
+                        segmentation.Add("eventSource", eventSource);
                         //
                         await Countly.RecordEvent("quickDemoVideo", 1, segmentation);
                     }
@@ -177,10 +189,10 @@
                         {
                             var segmentation = new Segmentation();
                             segmentation.Add("category", settingCategoryName);
-                            segmentation.Add("menuType", this.ParentMenuType.ToString());
+                            segmentation.Add("eventSource", eventSource);
                             //
-                            await Countly.RecordEvent("openSystemSettings", 1, segmentation);
-                            //await Countly.RecordEvent("openSystemSettings" + settingCategoryName);
+                            await Countly.RecordEvent("systemSettings", 1, segmentation);
+                            //await Countly.RecordEvent("systemSettings" + settingCategoryName);
                         }
                     }
                     break;

@@ -194,7 +194,7 @@ namespace Morphic.Client.Bar.Data
                                 break;
                             case "action":
                                 var extraBarItemInternalAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
-                                extraBarItemInternalAction.TelemetryEventName = "morphicBarExtraItemPressed";
+                                extraBarItemInternalAction.TelemetryEventName = "morphicBarExtraItem";
                                 extraBarItem.Action = extraBarItemInternalAction;
                                 ((Morphic.Client.Bar.Data.Actions.InternalAction)extraBarItem.Action).FunctionName = extraItemData.function!;
                                 break;
