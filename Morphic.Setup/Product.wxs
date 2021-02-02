@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-    <Product Id="*" Name="Morphic $(env.Edition)" Language="1033" Version="!(bind.FileVersion.filD04FD7A000E8F2985248E10EC6CC63A2)"
+    <Product Id="*" Name="Morphic$(env.AppEditionSuffix)" Language="1033" Version="!(bind.FileVersion.filD04FD7A000E8F2985248E10EC6CC63A2)"
              Manufacturer="Raising the Floor" UpgradeCode="7d0ee114-79e8-4ff6-b28b-0408551483f5">
         <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine"/>
 
@@ -33,7 +33,7 @@
     <Fragment>
         <Directory Id="TARGETDIR" Name="SourceDir">
             <Directory Id="ProgramFiles64Folder">
-                <Directory Id="INSTALLFOLDER" Name="Morphic$(env.Edition)"/>
+                <Directory Id="INSTALLFOLDER" Name="Morphic$(env.SetupEditionSuffix)"/>
             </Directory>
             <Directory Id="ProgramMenuFolder"/>
             <Directory Id="DesktopFolder"/>
@@ -43,7 +43,7 @@
             <Component Id="ApplicationComponent" Guid="8BDA9AF8-9BCC-4B25-8BCF-EE06A3412358">
                 <Shortcut
                         Id="MorphicStartMenuShortcut"
-                        Name="Morphic $(env.Edition)"
+                        Name="Morphic$(env.AppEditionSuffix)"
                         Icon="MorphicIcon"
                         Target="[#filD04FD7A000E8F2985248E10EC6CC63A2]"
                         WorkingDirectory="INSTALLFOLDER"/>
@@ -56,7 +56,7 @@
             <Component Id="DesktopIconComponent" Guid="5A043CA6-3EE9-4572-AB62-4B4FDDCFF016">
                 <Shortcut
                         Id="MorphicDesktopShortcut"
-                        Name="Morphic $(env.Edition)"
+                        Name="Morphic$(env.AppEditionSuffix)"
                         Icon="MorphicIcon"
                         Target="[#filD04FD7A000E8F2985248E10EC6CC63A2]"
                         WorkingDirectory="INSTALLFOLDER"/>
