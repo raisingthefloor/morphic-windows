@@ -103,7 +103,7 @@
             this.App.BarManager.ShowBar();
             //
             var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
-            await Countly.RecordEvent("showMorphicBar", 1, segmentation);
+            await Countly.RecordEvent("morphicBarShow", 1, segmentation);
         }
 
         private async void HideBarClick(object sender, RoutedEventArgs e)
@@ -111,7 +111,7 @@
             this.App.BarManager.HideBar();
             //
             var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
-            await Countly.RecordEvent("hideMorphicBar", 1, segmentation);
+            await Countly.RecordEvent("morphicBarHide", 1, segmentation);
         }
 
         private async void QuitClick(object sender, RoutedEventArgs e)
@@ -218,7 +218,7 @@
                 //
                 var segmentation = new CountlySDK.Segmentation();
                 segmentation.Add("method", "trayIconClick");
-                await Countly.RecordEvent("hideMorphicBar", 1, segmentation);
+                await Countly.RecordEvent("morphicBarHide", 1, segmentation);
             }
             else
             {
@@ -226,7 +226,7 @@
                 //
                 var segmentation = new CountlySDK.Segmentation();
                 segmentation.Add("method", "trayIconClick");
-                await Countly.RecordEvent("showMorphicBar", 1, segmentation);
+                await Countly.RecordEvent("morphicBarShow", 1, segmentation);
             }
         }
 
@@ -245,7 +245,7 @@
         private async void LearnAboutMorphicClicked(object sender, RoutedEventArgs e)
         {
             var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
-            await Countly.RecordEvent("learnAboutMorphicClicked", 1, segmentation);
+            await Countly.RecordEvent("learnAboutMorphic", 1, segmentation);
         }
 
         private async void QuickDemoMoviesClicked(object sender, RoutedEventArgs e)
@@ -258,7 +258,7 @@
         private async void OtherHelpfulThingsClicked(object sender, RoutedEventArgs e)
         {
             var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
-            await Countly.RecordEvent("otherHelpfulThingsClicked", 1, segmentation);
+            await Countly.RecordEvent("otherHelpfulThings", 1, segmentation);
         }
 
         private async void AboutMorphicClicked(object sender, RoutedEventArgs e)
