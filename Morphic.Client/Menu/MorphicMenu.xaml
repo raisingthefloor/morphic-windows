@@ -41,7 +41,7 @@
 
     </menu:MorphicMenuItem>
 
-    <menu:MorphicMenuItem Header="_Other Helpful Things" Click="OtherHelpfulThingsClicked" Open="https://morphic.org/demos" />
+    <menu:MorphicMenuItem Header="_Other Helpful Things" Click="OtherHelpfulThingsClicked" Open="https://morphic.org/helpful" />
 
     <Separator x:Name="CloudSettingsSeparator" />
     <menu:MorphicMenuItem x:Name="CopySettingsBetweenComputersMenuItem" Header="_Copy settings between computers" Dialog="dialogs:TravelWindow"/>
