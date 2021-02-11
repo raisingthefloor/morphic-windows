@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Morphic.ManualTesterCLI": {
+      "commandName": "Project",
+      "commandLineArgs": "G:\\Morphic-Windows\\morphic-windows\\Morphic.Client\\solutions.json5"
+    }
+  }
+}

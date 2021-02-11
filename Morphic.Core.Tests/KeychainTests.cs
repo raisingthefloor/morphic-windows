@@ -1,11 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
-using System.Text;
 using Xunit;
 
 namespace Morphic.Core.Tests
@@ -25,7 +20,7 @@ namespace Morphic.Core.Tests
             var encrypt = new MockEncrypter();
             var options = new KeychainOptions();
             options.Path = Path.Combine(directoryName, "testsave.json");
-            var uri = new Uri("http://www.morphic.world");
+            var uri = new Uri("http://www.morphic.org");
             var wronguri = new Uri("http://www.gpii.net");
             var username = new UsernameCredentials("passuser", "password");
             var key = new KeyCredentials("key");

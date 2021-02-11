@@ -1,95 +1,99 @@
-﻿using Morphic.Core;
-using Morphic.Settings;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
-
-namespace Morphic.ManualTester
+﻿namespace Morphic.ManualTester
 {
+    using System.Windows;
+    using System.Windows.Controls;
+    using System.Windows.Input;
+    using System.Windows.Media;
+    using Settings.SettingsHandlers;
+
     /// <summary>
     /// Interaction logic for ManualControlDouble.xaml
     /// </summary>
     public partial class ManualControlDouble : UserControl
     {
-        public SettingsManager manager;
-        public string solutionId;
-        public Setting setting;
-        public Preferences.Key key;
-        private MainWindow window;
-        public bool changed = false;
-        private Brush redfield = new SolidColorBrush(Color.FromArgb(30, 255, 0, 0));
-        private Brush greenfield = new SolidColorBrush(Color.FromArgb(30, 0, 176, 0));
-        private Brush whitefield = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
-        public ManualControlDouble(MainWindow window, SettingsManager manager, string solutionId, Setting setting)
+        private readonly Setting setting;
+        public bool changed;
+        private readonly Brush greenfield = new SolidColorBrush(Color.FromArgb(30, 0, 176, 0));
+        private readonly Brush redfield = new SolidColorBrush(Color.FromArgb(30, 255, 0, 0));
+        private readonly Brush whitefield = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
+        private readonly MainWindow window;
+
+        public ManualControlDouble(MainWindow window, Setting setting)
         {
-            InitializeComponent();
+            this.InitializeComponent();
             this.window = window;
-            this.manager = manager;
-            this.solutionId = solutionId;
             this.setting = setting;
-            key = new Preferences.Key(solutionId, setting.Name);
-            ControlName.Text = setting.Name;
-            CaptureSetting();
+            this.ControlName.Text = setting.Name;
+            this.CaptureSetting();
         }
 
         private bool Validate()
         {
             try
             {
-                double value = double.Parse(InputField.Text);
+                double value = double.Parse(this.InputField.Text);
                 return true;
             }
             catch
             {
-                InputField.Background = redfield;
+                this.InputField.Background = this.redfield;
                 return false;
             }
         }
 
         public async void CaptureSetting()
         {
-            LoadingIcon.Visibility = Visibility.Visible;
-            InputField.Text = "";
-            if (await manager.Capture(key) is double value)
-            {
-                InputField.Text = value.ToString();
-            }
-            InputField.Background = whitefield;
-            LoadingIcon.Visibility = Visibility.Hidden;
+            this.LoadingIcon.Visibility = Visibility.Visible;
+            this.InputField.Text = "";
+            this.InputField.Text = (await this.setting.GetValue(double.NaN)).ToString();
+            this.InputField.Background = this.whitefield;
+            this.LoadingIcon.Visibility = Visibility.Hidden;
         }
 
-        private void EnterCheck(object sender, System.Windows.Input.KeyEventArgs e)
+        private void EnterCheck(object sender, KeyEventArgs e)
         {
-            if(e.Key == Key.Enter)
+            if (e.Key == Key.Enter)
             {
-                changed = true;
-                InputField.Background = greenfield;
-                if (Validate() && window.AutoApply) ApplySetting();
+                this.changed = true;
+                this.InputField.Background = this.greenfield;
+                if (this.Validate() && this.window.AutoApply)
+                {
+                    this.ApplySetting();
+                }
             }
         }
 
         private void ValueChanged(object sender, RoutedEventArgs e)
         {
-            changed = true;
-            InputField.Background = greenfield;
-            if (Validate() && window.AutoApply) ApplySetting();
+            this.changed = true;
+            this.InputField.Background = this.greenfield;
+            if (this.Validate() && this.window.AutoApply)
+            {
+                this.ApplySetting();
+            }
         }
 
         public async void ApplySetting()
         {
-            if (!changed) return;
-            changed = false;
+            if (!this.changed)
+            {
+                return;
+            }
+
+            this.changed = false;
             try
             {
-                var value = double.Parse(InputField.Text);
-                InputField.Background = whitefield;
-                bool success = await manager.Apply(key, value);
-                if (!success) CaptureSetting();
+                double value = double.Parse(this.InputField.Text);
+                this.InputField.Background = this.whitefield;
+                bool success = await this.setting.SetValue(value);
+                if (!success)
+                {
+                    this.CaptureSetting();
+                }
             }
             catch
             {
-                CaptureSetting();
+                this.CaptureSetting();
             }
         }
     }

@@ -1,59 +1,63 @@
-﻿using Morphic.Core;
-using Morphic.Settings;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
-
-namespace Morphic.ManualTester
+﻿namespace Morphic.ManualTester
 {
+    using System.Windows;
+    using System.Windows.Controls;
+    using System.Windows.Media;
+    using Settings.SettingsHandlers;
+
     /// <summary>
     /// Interaction logic for ManualControlBoolean.xaml
     /// </summary>
     public partial class ManualControlBoolean : UserControl
     {
-        public SettingsManager manager;
-        public string solutionId;
-        public Setting setting;
-        public Preferences.Key key;
-        private MainWindow window;
         public bool changed;
-        private Brush greenfield = new SolidColorBrush(Color.FromArgb(30, 0, 176, 0));
-        private Brush whitefield = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
-        public ManualControlBoolean(MainWindow window, SettingsManager manager, string solutionId, Setting setting)
+        private readonly Brush greenfield = new SolidColorBrush(Color.FromArgb(30, 0, 176, 0));
+        public Setting setting;
+        private readonly Brush whitefield = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
+        private readonly MainWindow window;
+
+        public ManualControlBoolean(MainWindow window, Setting setting)
         {
-            InitializeComponent();
+            this.InitializeComponent();
             this.window = window;
-            this.manager = manager;
-            this.solutionId = solutionId;
             this.setting = setting;
-            key = new Preferences.Key(solutionId, setting.Name);
-            ControlName.Text = setting.Name;
-            CaptureSetting();
+            this.ControlName.Text = setting.Name;
+            this.CaptureSetting();
         }
 
         private void ValueChanged(object sender, RoutedEventArgs e)
         {
-            changed = true;
-            ControlCheckBox.Background = greenfield;
-            if (window.AutoApply) ApplySetting();
+            this.changed = true;
+            this.ControlCheckBox.Background = this.greenfield;
+            if (this.window.AutoApply)
+            {
+                this.ApplySetting();
+            }
         }
 
         public async void CaptureSetting()
         {
-            LoadingIcon.Visibility = Visibility.Visible;
-            ControlCheckBox.Background = whitefield;
-            bool? check = await manager.CaptureBool(key);
-            ControlCheckBox.IsChecked = check;
-            LoadingIcon.Visibility = Visibility.Hidden;
+            this.LoadingIcon.Visibility = Visibility.Visible;
+            this.ControlCheckBox.Background = this.whitefield;
+            bool? check = await this.setting.GetValue<bool>();
+            this.ControlCheckBox.IsChecked = check;
+            this.LoadingIcon.Visibility = Visibility.Hidden;
         }
 
         public async void ApplySetting()
         {
-            if (!changed) return;
-            changed = false;
-            ControlCheckBox.Background = whitefield;
-            bool success = await manager.Apply(key, ControlCheckBox.IsChecked);
-            if (!success) CaptureSetting();
+            if (!this.changed)
+            {
+                return;
+            }
+
+            this.changed = false;
+            this.ControlCheckBox.Background = this.whitefield;
+            bool success = await this.setting.SetValue(this.ControlCheckBox.IsChecked);
+            if (!success)
+            {
+                this.CaptureSetting();
+            }
         }
     }
 }

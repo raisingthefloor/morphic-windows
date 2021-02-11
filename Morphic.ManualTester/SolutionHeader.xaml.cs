@@ -1,33 +1,42 @@
-﻿using Morphic.Settings;
-using System;
-using System.Windows;
-using System.Windows.Controls;
-
-namespace Morphic.ManualTester
+﻿namespace Morphic.ManualTester
 {
+    using System.Windows;
+    using System.Windows.Controls;
+    using Settings.SettingsHandlers;
+    using Settings.SolutionsRegistry;
+
     /// <summary>
     /// Interaction logic for SolutionHeader.xaml
     /// </summary>
     public partial class SolutionHeader : UserControl
     {
-        public SettingsManager manager;
-        public Solution solution;
-        private MainWindow window;
-        private bool itemsLoaded = false;
-        public SolutionHeader(MainWindow window, SettingsManager manager, Solution solution)
+        private bool itemsLoaded;
+        public Solution Solution { get; }
+        private readonly MainWindow window;
+
+        public bool IsExpanded
         {
-            InitializeComponent();
+            get => this.ControlStack.IsExpanded;
+            set => this.ControlStack.IsExpanded = value;
+        }
+
+        public SolutionHeader(MainWindow window, Solution solution)
+        {
+            this.InitializeComponent();
             this.window = window;
-            this.manager = manager;
-            this.solution = solution;
-            SolutionTitle.Content = solution.Id;
-            ControlStack.Items.Add(new TextBlock());
+            this.Solution = solution;
+            this.SolutionTitle.Content = solution.SolutionId;
+            this.ControlStack.Items.Add(new TextBlock());
         }
 
         public void ApplyAllSettings()
         {
-            if (!itemsLoaded) return;
-            foreach(var element in ControlStack.Items)
+            if (!this.itemsLoaded)
+            {
+                return;
+            }
+
+            foreach (object? element in this.ControlStack.Items)
             {
                 if (element != null)
                 {
@@ -53,26 +62,26 @@ namespace Morphic.ManualTester
 
         private void ControlStack_Expanded(object sender, RoutedEventArgs e)
         {
-            RefreshButton.Visibility = Visibility.Visible;
-            if(!itemsLoaded)
+            this.RefreshButton.Visibility = Visibility.Visible;
+            if (!this.itemsLoaded)
             {
-                itemsLoaded = true;
-                ControlStack.Items.Clear();
-                foreach (var setting in solution.Settings)
+                this.itemsLoaded = true;
+                this.ControlStack.Items.Clear();
+                foreach (var setting in this.Solution.AllSettings.Values)
                 {
-                    switch (setting.Kind)
+                    switch (setting.DataType)
                     {
-                        case Setting.ValueKind.Boolean:
-                            ControlStack.Items.Add(new ManualControlBoolean(window, manager, solution.Id, setting));
+                        case SettingType.Bool:
+                            this.ControlStack.Items.Add(new ManualControlBoolean(this.window, setting));
                             break;
-                        case Setting.ValueKind.Double:
-                            ControlStack.Items.Add(new ManualControlDouble(window, manager, solution.Id, setting));
+                        case SettingType.Real:
+                            this.ControlStack.Items.Add(new ManualControlDouble(this.window, setting));
                             break;
-                        case Setting.ValueKind.Integer:
-                            ControlStack.Items.Add(new ManualControlInteger(window, manager, solution.Id, setting));
+                        case SettingType.Int:
+                            this.ControlStack.Items.Add(new ManualControlInteger(this.window, setting));
                             break;
-                        case Setting.ValueKind.String:
-                            ControlStack.Items.Add(new ManualControlString(window, manager, solution.Id, setting));
+                        case SettingType.String:
+                            this.ControlStack.Items.Add(new ManualControlString(this.window, setting));
                             break;
                     }
                 }
@@ -81,40 +90,54 @@ namespace Morphic.ManualTester
 
         private void ControlStack_Collapsed(object sender, RoutedEventArgs e)
         {
-            RefreshButton.Visibility = Visibility.Hidden;
-            if(itemsLoaded)
+            this.RefreshButton.Visibility = Visibility.Hidden;
+            if (this.itemsLoaded)
             {
-                foreach(var element in ControlStack.Items)  //check to see if any items require changing, if so they must be preserved
+                foreach (object? element in this.ControlStack.Items
+                ) //check to see if any items require changing, if so they must be preserved
                 {
                     if (element != null)
                     {
                         if (element.GetType() == typeof(ManualControlBoolean))
                         {
-                            if (((ManualControlBoolean)element).changed) return;
+                            if (((ManualControlBoolean)element).changed)
+                            {
+                                return;
+                            }
                         }
                         else if (element.GetType() == typeof(ManualControlInteger))
                         {
-                            if (((ManualControlInteger)element).changed) return;
+                            if (((ManualControlInteger)element).changed)
+                            {
+                                return;
+                            }
                         }
                         else if (element.GetType() == typeof(ManualControlDouble))
                         {
-                            if (((ManualControlDouble)element).changed) return;
+                            if (((ManualControlDouble)element).changed)
+                            {
+                                return;
+                            }
                         }
                         else if (element.GetType() == typeof(ManualControlString))
                         {
-                            if (((ManualControlString)element).changed) return;
+                            if (((ManualControlString)element).changed)
+                            {
+                                return;
+                            }
                         }
                     }
                 }
-                itemsLoaded = false;
-                ControlStack.Items.Clear();
-                ControlStack.Items.Add(new TextBlock());
+
+                this.itemsLoaded = false;
+                this.ControlStack.Items.Clear();
+                this.ControlStack.Items.Add(new TextBlock());
             }
         }
 
         private void Refresh_Click(object sender, RoutedEventArgs e)
         {
-            foreach (var element in ControlStack.Items)
+            foreach (object? element in this.ControlStack.Items)
             {
                 if (element != null)
                 {

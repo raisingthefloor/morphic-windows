@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Morphic.Core
+﻿namespace Morphic.Core
 {
     /// <summary>
     /// A Storable record with a unique identifier

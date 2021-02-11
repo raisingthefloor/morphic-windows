@@ -1,0 +1,16 @@
+﻿<StackPanel x:Class="Morphic.Client.Dialogs.CopyStartPanel"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        mc:Ignorable="d"
+        ToolTipService.InitialShowDelay="0"
+        >
+    <TextBlock HorizontalAlignment="Center"  Margin="20" FontWeight="Bold">Copy Settings Between Computers</TextBlock>
+    <TextBlock HorizontalAlignment="Center"  Margin="10,10,10,40" FontSize="15" TextWrapping="Wrap">
+        This feature allows you to move your accessibility and usability settings between computers - including the
+        settings of your assistive technologies.
+    </TextBlock>
+    <TextBlock HorizontalAlignment="Center" Margin="20" ><Hyperlink Click="CopyToCloud">Copy settings on this computer to my Cloud Vault</Hyperlink></TextBlock>
+    <TextBlock HorizontalAlignment="Center" Margin="20" ><Hyperlink Click="CopyFromCloud">Use the settings in my Cloud Vault to set up this computer.</Hyperlink></TextBlock>
+</StackPanel>

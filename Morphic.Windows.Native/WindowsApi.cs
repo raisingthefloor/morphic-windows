@@ -22,13 +22,11 @@
 // * Consumer Electronics Association Foundation
 
 using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Morphic.Windows.Native
 {
-    internal static class WindowsApi
+    public static class WindowsApi
     {
         // NOTE: SYSTEM_INFO Is used by GetSystemInfo and GetNativeSystemInfo
         // https://docs.microsoft.com/en-us/windows/win32/api/sysinfoapi/ns-sysinfoapi-system_info
@@ -230,7 +228,7 @@ namespace Morphic.Windows.Native
         }
         //
         [StructLayout(LayoutKind.Explicit)]
-        internal struct DEVMODEW__DUMMYUNIONNAME
+        public struct DEVMODEW__DUMMYUNIONNAME
         {
             [FieldOffset(0)]
             public DEVMODEW__DUMMYUNIONNAME__DUMMYSTRUCTNAME DUMMYSTRUCTNAME;
@@ -275,7 +273,7 @@ namespace Morphic.Windows.Native
 
         // https://docs.microsoft.com/en-us/windows/win32/api/windef/ns-windef-pointl
         [StructLayout(LayoutKind.Sequential)]
-        internal struct POINTL
+        public struct POINTL
         {
             public Int32 x;
             public Int32 y;
@@ -407,13 +405,30 @@ namespace Morphic.Windows.Native
         // NOTE: RECT is used by multiple functions including EnumDisplayMonitor's callbacks
         // https://docs.microsoft.com/en-us/windows/win32/api/windef/ns-windef-rect
         [StructLayout(LayoutKind.Sequential)]
-        internal struct RECT
+        public struct RECT
         {
             public Int32 left;
             public Int32 top;
             public Int32 right;
             public Int32 bottom;
         }
+
+        // ReSharper disable InconsistentNaming
+        [StructLayout(LayoutKind.Sequential)]
+        public struct FILTERKEYS
+        {
+            public int cbSize { get; set; }
+            public int dwFlags {get;set;}
+            public int iWaitMSec {get;set;}
+            public int iDelayMSec {get;set;}
+            public int iRepeatMSec {get;set;}
+            public int iBounceMSec {get;set;}
+
+            public const int FKF_FILTERKEYSON = 0x1;
+        }
+
+        public const int SPI_GETFILTERKEYS = 0x32;
+        public const int SPI_SETFILTERKEYS = 0x33;
 
         // NOTE: this delegate is used as a callback by EnumDisplayMonitors
         // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nc-winuser-monitorenumproc
@@ -503,7 +518,7 @@ namespace Morphic.Windows.Native
         //
         // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-changedisplaysettingsexw
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        internal static extern DISP_CHANGE_RESULT ChangeDisplaySettingsEx(Char[] lpszDeviceName, ref DEVMODEW lpDevMode, IntPtr hwnd, UInt32 dwflags, IntPtr lParam);
+        internal static extern DISP_CHANGE_RESULT ChangeDisplaySettingsEx(string? lpszDeviceName, ref DEVMODEW lpDevMode, IntPtr hwnd, uint dwflags, IntPtr lParam);
         //
         // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-enumdisplaydevicesw
         [DllImport("user32.dll", EntryPoint = "EnumDisplayDevices", CharSet = CharSet.Unicode)]
@@ -515,7 +530,7 @@ namespace Morphic.Windows.Native
         //
         // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-enumdisplaysettingsexw
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        internal static extern Boolean EnumDisplaySettingsEx(Char[] lpszDeviceName, UInt32 iModeNum, ref DEVMODEW lpDevMode, UInt32 dwFlags);
+        internal static extern Boolean EnumDisplaySettingsEx(string? lpszDeviceName, uint iModeNum, ref DEVMODEW lpDevMode, uint dwFlags);
         //
         // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-enumdisplaymonitors
         [DllImport("user32.dll")]
@@ -564,6 +579,502 @@ namespace Morphic.Windows.Native
         // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowthreadprocessid
         [DllImport("user32.dll", SetLastError=true)]
         internal static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+        //
+        // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-keybd_event
+        [DllImport("user32.dll")]
+        internal static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
+        //
+        // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setcursorpos
+        [DllImport("User32.dll")]
+        internal static extern bool SetCursorPos(int X, int Y);
 
+        [DllImport("user32.dll", EntryPoint = "SystemParametersInfoW", SetLastError = true)]
+        public static extern bool SystemParametersInfoFilterKeys(int uiAction, int uiParam, ref FILTERKEYS pvParam, int fWinIni);
+
+        [DllImport("user32.dll", EntryPoint = "SystemParametersInfoW", SetLastError = true)]
+        public static extern bool SystemParametersInfo(uint uiAction, uint uiParam, IntPtr pvParam, int fWinIni);
+        [DllImport("user32.dll", EntryPoint = "SystemParametersInfoW", SetLastError = true)]
+        public static extern bool SystemParametersInfoRef(uint uiAction, uint uiParam, ref object pvParam, int fWinIni);
+
+        // system error codes
+
+        // https://docs.microsoft.com/en-us/windows/win32/debug/system-error-codes--0-499-
+        public enum ErrorCode : uint
+        {
+            ERROR_SUCCESS = 0,
+			//
+            ERROR_ACCESS_DENIED = 5,
+            ERROR_GEN_FAILURE = 31,
+            ERROR_NOT_SUPPORTED = 50,
+            ERROR_INVALID_PARAMETER = 87,
+            ERROR_INSUFFICIENT_BUFFER = 122,
+        }
+
+        // display APIs
+
+        [DllImport("user32.dll")]
+        public static extern ErrorCode DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_SOURCE_DEVICE_NAME requestPacket);
+
+        [DllImport("user32.dll")]
+        public static extern ErrorCode DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_GET_DPI requestPacket);
+
+        [DllImport("user32.dll")]
+        public static extern ErrorCode DisplayConfigSetDeviceInfo(ref DISPLAYCONFIG_SET_DPI requestPacket);
+
+		// NOTE: do _not_ do this (i.e. we should point to the top-level structure, _not_ the header, in case there are bounds safety checks)
+        //[DllImport("user32.dll")]
+        //public static extern int DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_DEVICE_INFO_HEADER requestPacket);
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetDesktopWindow();
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getdisplayconfigbuffersizes
+        [DllImport("user32.dll")]
+        public static extern ErrorCode GetDisplayConfigBufferSizes(QueryDisplayConfigFlags flags, out uint numPathArrayElements, out uint numModeInfoArrayElements);
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-querydisplayconfig
+        [DllImport("user32.dll")]
+        public static extern ErrorCode QueryDisplayConfig(QueryDisplayConfigFlags flags, ref uint numPathArrayElements, [Out] DISPLAYCONFIG_PATH_INFO[] pathInfoArray,
+            ref uint modeInfoArrayElements, [Out] DISPLAYCONFIG_MODE_INFO[] modeInfoArray, IntPtr currentTopologyId);
+
+        [Flags]
+        public enum QueryDisplayConfigFlags: uint
+        {
+            QDC_ALL_PATHS = 0x00000001,
+            QDC_ONLY_ACTIVE_PATHS = 0x00000002,
+            QDC_DATABASE_CURRENT = 0x00000004
+        }
+
+		// https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setdisplayconfig
+        //[DllImport("user32.dll")]
+        //public static extern int SetDisplayConfig(uint numPathArrayElements, [In] DISPLAYCONFIG_PATH_INFO[] pathArray, uint numModeInfoArrayElements, 
+        //    [In] DISPLAYCONFIG_MODE_INFO[] modeInfoArray, uint flags);
+		
+		// https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_path_info
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_PATH_INFO
+        {
+            public DISPLAYCONFIG_PATH_SOURCE_INFO sourceInfo;
+            public DISPLAYCONFIG_PATH_TARGET_INFO targetInfo;
+            public uint flags;
+        }
+		
+        // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_path_source_info
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_PATH_SOURCE_INFO
+        {
+            public LUID adapterId;
+            public uint id;
+            public uint modeInfoIdx; // union with cloneGroupId:16 and sourceModeInfoIdx:16
+            public DisplayConfigSourceInfoStatus statusFlags;
+        }
+
+        [Flags]
+        public enum DisplayConfigSourceInfoStatus : uint
+        {
+            DISPLAYCONFIG_TARGET_IN_USE = 0x00000001,
+        }
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_path_target_info
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_PATH_TARGET_INFO
+        {
+            public LUID adapterId;
+            public uint id;
+            public uint modeInfoIdx; // union with desktopModeInfoIdx:16 and targetModeInfoIdx:16
+            public DISPLAYCONFIG_VIDEO_OUTPUT_TECHNOLOGY outputTechnology;
+            public DISPLAYCONFIG_ROTATION rotation;
+            public DISPLAYCONFIG_SCALING scaling;
+            public DISPLAYCONFIG_RATIONAL refreshRate;
+            public DISPLAYCONFIG_SCANLINE_ORDERING scanLineOrdering;
+            public bool targetAvailable;
+            public DisplayConfigTargetInfoStatus statusFlags;
+        }
+
+        [Flags]
+        public enum DisplayConfigTargetInfoStatus : uint
+        {
+            DISPLAYCONFIG_TARGET_IN_USE = 0x00000001,
+            DISPLAYCONFIG_TARGET_FORCIBLE = 0x00000002,
+            DISPLAYCONFIG_TARGET_FORCED_AVAILABILITY_BOOT = 0x00000004,
+            DISPLAYCONFIG_TARGET_FORCED_AVAILABILITY_PATH = 0x00000008,
+            DISPLAYCONFIG_TARGET_FORCED_AVAILABILITY_SYSTEM = 0x00000010,
+            DISPLAYCONFIG_TARGET_IS_HMD = 0x00000020
+        }
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ne-wingdi-displayconfig_video_output_technology
+        [Flags]
+        public enum DISPLAYCONFIG_VIDEO_OUTPUT_TECHNOLOGY: uint
+        {
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_OTHER = unchecked((uint)-1),
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_HD15 = 0,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_SVIDEO = 1,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_COMPOSITE_VIDEO = 2,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_COMPONENT_VIDEO = 3,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_DVI = 4,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_HDMI = 5,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_LVDS = 6,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_D_JPN = 8,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_SDI = 9,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_DISPLAYPORT_EXTERNAL = 10,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_DISPLAYPORT_EMBEDDED = 11,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_UDI_EXTERNAL = 12,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_UDI_EMBEDDED = 13,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_SDTVDONGLE = 14,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_MIRACAST = 15,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_INDIRECT_WIRED = 16,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_INDIRECT_VIRTUAL = 17,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_INTERNAL = 0x80000000,
+            DISPLAYCONFIG_OUTPUT_TECHNOLOGY_FORCE_UINT32 = 0xFFFFFFFF
+        }
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ne-wingdi-displayconfig_rotation
+        [Flags]
+        public enum DISPLAYCONFIG_ROTATION: uint
+        {
+            DISPLAYCONFIG_ROTATION_IDENTITY = 1,
+            DISPLAYCONFIG_ROTATION_ROTATE90 = 2,
+            DISPLAYCONFIG_ROTATION_ROTATE180 = 3,
+            DISPLAYCONFIG_ROTATION_ROTATE270 = 4,
+            DISPLAYCONFIG_ROTATION_FORCE_UINT32 = 0xFFFFFFFF
+        }
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ne-wingdi-displayconfig_scaling
+        [Flags]
+        public enum DISPLAYCONFIG_SCALING: uint
+        {
+            DISPLAYCONFIG_SCALING_IDENTITY = 1,
+            DISPLAYCONFIG_SCALING_CENTERED = 2,
+            DISPLAYCONFIG_SCALING_STRETCHED = 3,
+            DISPLAYCONFIG_SCALING_ASPECTRATIOCENTEREDMAX = 4,
+            DISPLAYCONFIG_SCALING_CUSTOM = 5,
+            DISPLAYCONFIG_SCALING_PREFERRED = 128,
+            DISPLAYCONFIG_SCALING_FORCE_UINT32 = 0xFFFFFFFF
+        }
+		
+		// https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_rational
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_RATIONAL
+        {
+        	public uint Numerator;
+            public uint Denominator;
+        }
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ne-wingdi-displayconfig_scanline_ordering
+        [Flags]
+        public enum DISPLAYCONFIG_SCANLINE_ORDERING: uint
+        {
+            DISPLAYCONFIG_SCANLINE_ORDERING_UNSPECIFIED = 0,
+            DISPLAYCONFIG_SCANLINE_ORDERING_PROGRESSIVE = 1,
+            DISPLAYCONFIG_SCANLINE_ORDERING_INTERLACED = 2,
+            DISPLAYCONFIG_SCANLINE_ORDERING_INTERLACED_UPPERFIELDFIRST = DISPLAYCONFIG_SCANLINE_ORDERING_INTERLACED,
+            DISPLAYCONFIG_SCANLINE_ORDERING_INTERLACED_LOWERFIELDFIRST = 3,
+            DISPLAYCONFIG_SCANLINE_ORDERING_FORCE_UINT32 = 0xFFFFFFFF
+        }
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_mode_info
+        [StructLayout(LayoutKind.Explicit)]
+        public struct DISPLAYCONFIG_MODE_INFO
+        {
+            [FieldOffset(0)]
+            public DISPLAYCONFIG_MODE_INFO_TYPE infoType;
+            [FieldOffset(4)]
+            public uint id;
+            [FieldOffset(8)]
+            public LUID adapterId;
+
+            // union
+            [FieldOffset(16)]
+            public DISPLAYCONFIG_TARGET_MODE targetMode;
+            [FieldOffset(16)]
+            public DISPLAYCONFIG_SOURCE_MODE sourceMode;
+            [FieldOffset(16)]
+            public DISPLAYCONFIG_DESKTOP_IMAGE_INFO desktopImageInfo;
+        }
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ne-wingdi-displayconfig_mode_info_type
+        [Flags]
+        public enum DISPLAYCONFIG_MODE_INFO_TYPE: uint
+        {
+            DISPLAYCONFIG_MODE_INFO_TYPE_SOURCE = 1,
+            DISPLAYCONFIG_MODE_INFO_TYPE_TARGET = 2,
+            DISPLAYCONFIG_MODE_INFO_TYPE_DESKTOP_IMAGE = 3,
+            DISPLAYCONFIG_MODE_INFO_TYPE_FORCE_UINT32 = 0xFFFFFFFF
+        }
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_target_mode
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_TARGET_MODE
+        {
+            public DISPLAYCONFIG_VIDEO_SIGNAL_INFO targetVideoSignalInfo;
+        }
+		
+		// https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_source_mode
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_SOURCE_MODE
+        {
+            public uint width;
+            public uint height;
+            public DISPLAYCONFIG_PIXELFORMAT pixelFormat;
+            public POINTL position;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_DESKTOP_IMAGE_INFO
+        {
+            public POINTL PathSourceSize;
+            public RECT DesktopImageRegion;
+            public RECT DesktopImageClip;
+        }
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_video_signal_info
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_VIDEO_SIGNAL_INFO
+        {
+            public ulong pixelRate;
+            public DISPLAYCONFIG_RATIONAL hSyncFreq;
+            public DISPLAYCONFIG_RATIONAL vSyncFreq;
+            public DISPLAYCONFIG_2DREGION activeSize;
+            public DISPLAYCONFIG_2DREGION totalSize;
+            public _D3DKMDT_VIDEO_SIGNAL_STANDARD videoStandard; // union: AdditionalSignalInfo(videoStandard:16, vSyncFreqDivider:6, reserved:10)
+            // Scan line ordering (e.g. progressive, interlaced).
+            public DISPLAYCONFIG_SCANLINE_ORDERING scanLineOrdering;
+        }
+
+        // https://docs.microsoft.com/en-us/windows-hardware/drivers/ddi/d3dkmdt/ne-d3dkmdt-_d3dkmdt_video_signal_standard
+		// see: d3dkmdt.h (MSVC v142 - VS 2019 C++ x64/x86 build tools (14.25) [and Spectre-migrated libs] 
+		// NOTE: these values were pulled from 
+        [Flags]
+        public enum _D3DKMDT_VIDEO_SIGNAL_STANDARD : uint
+        {
+            D3DKMDT_VSS_UNINITIALIZED =  0,
+            //
+            D3DKMDT_VSS_VESA_DMT      =  1,
+            D3DKMDT_VSS_VESA_GTF      =  2,
+            D3DKMDT_VSS_VESA_CVT      =  3,
+            //
+            D3DKMDT_VSS_IBM           =  4,
+            D3DKMDT_VSS_APPLE         =  5,
+            //
+            D3DKMDT_VSS_NTSC_M        =  6,
+            D3DKMDT_VSS_NTSC_J        =  7,
+            D3DKMDT_VSS_NTSC_443      =  8,
+            D3DKMDT_VSS_PAL_B         =  9,
+            D3DKMDT_VSS_PAL_B1        = 10,
+            D3DKMDT_VSS_PAL_G         = 11,
+            D3DKMDT_VSS_PAL_H         = 12,
+            D3DKMDT_VSS_PAL_I         = 13,
+            D3DKMDT_VSS_PAL_D         = 14,
+            D3DKMDT_VSS_PAL_N         = 15,
+            D3DKMDT_VSS_PAL_NC        = 16,
+            D3DKMDT_VSS_SECAM_B       = 17,
+            D3DKMDT_VSS_SECAM_D       = 18,
+            D3DKMDT_VSS_SECAM_G       = 19,
+            D3DKMDT_VSS_SECAM_H       = 20,
+            D3DKMDT_VSS_SECAM_K       = 21,
+            D3DKMDT_VSS_SECAM_K1      = 22,
+            D3DKMDT_VSS_SECAM_L       = 23,
+            D3DKMDT_VSS_SECAM_L1      = 24,
+            //
+            D3DKMDT_VSS_EIA_861       = 25,
+            D3DKMDT_VSS_EIA_861A      = 26,
+            D3DKMDT_VSS_EIA_861B      = 27,
+            //
+            D3DKMDT_VSS_PAL_K         = 28,
+            D3DKMDT_VSS_PAL_K1        = 29,
+            D3DKMDT_VSS_PAL_L         = 30,
+            D3DKMDT_VSS_PAL_M         = 31,
+            //
+            D3DKMDT_VSS_OTHER         = 255
+        }
+		
+        // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_source_mode
+        [Flags]
+        public enum DISPLAYCONFIG_PIXELFORMAT: uint
+        {
+            DISPLAYCONFIG_PIXELFORMAT_8BPP = 1,
+            DISPLAYCONFIG_PIXELFORMAT_16BPP = 2,
+            DISPLAYCONFIG_PIXELFORMAT_24BPP = 3,
+            DISPLAYCONFIG_PIXELFORMAT_32BPP = 4,
+            DISPLAYCONFIG_PIXELFORMAT_NONGDI = 5,
+            DISPLAYCONFIG_PIXELFORMAT_FORCE_UINT32 = 0xffffffff
+        }
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_2dregion
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_2DREGION
+        {
+            public uint cx;
+            public uint cy;
+        }
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-luid
+        [StructLayout(LayoutKind.Sequential)]
+        public struct LUID
+        {
+            public uint LowPart;
+            public int HighPart;
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        public struct DISPLAYCONFIG_SOURCE_DEVICE_NAME
+        {
+            public DISPLAYCONFIG_DEVICE_INFO_HEADER header;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = CCHDEVICENAME)]
+            public Char[] viewGdiDeviceName;
+
+            public void Init() 
+            {
+                this.viewGdiDeviceName = new Char[CCHDEVICENAME];
+                this.header.size = (uint)Marshal.SizeOf(typeof(DISPLAYCONFIG_SOURCE_DEVICE_NAME));
+            }
+        }
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_device_info_header
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_DEVICE_INFO_HEADER
+        {
+            public DISPLAYCONFIG_DEVICE_INFO_TYPE type;
+            public uint size;
+            public LUID adapterId;
+            public uint id;
+        }
+
+        [Flags]
+        public enum DISPLAYCONFIG_DEVICE_INFO_TYPE: uint
+        {
+            // NOTE: the GET_DPI and SET_DPI values are undocumented and were reverse engineered as part of the Morphic Classic project
+            DISPLAYCONFIG_DEVICE_INFO_SET_DPI = unchecked((uint)-4),
+            DISPLAYCONFIG_DEVICE_INFO_GET_DPI = unchecked((uint)-3),
+            //
+            // NOTE: the remaining entries are publicly documented
+            DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME = 1,
+            DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_NAME = 2,
+            DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_PREFERRED_MODE = 3,
+            DISPLAYCONFIG_DEVICE_INFO_GET_ADAPTER_NAME = 4,
+            DISPLAYCONFIG_DEVICE_INFO_SET_TARGET_PERSISTENCE = 5,
+            DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_BASE_TYPE = 6,
+            DISPLAYCONFIG_DEVICE_INFO_GET_SUPPORT_VIRTUAL_RESOLUTION = 7,
+            DISPLAYCONFIG_DEVICE_INFO_SET_SUPPORT_VIRTUAL_RESOLUTION = 8,
+            DISPLAYCONFIG_DEVICE_INFO_GET_ADVANCED_COLOR_INFO = 9,
+            DISPLAYCONFIG_DEVICE_INFO_SET_ADVANCED_COLOR_STATE = 10,
+            DISPLAYCONFIG_DEVICE_INFO_GET_SDR_WHITE_LEVEL = 11,
+            DISPLAYCONFIG_DEVICE_INFO_FORCE_UINT32 = 0xFFFFFFFF
+        }
+
+        // Reverse-engineered DPI scaling code, utilizing the CCD APIs
+        // https://docs.microsoft.com/en-us/windows-hardware/drivers/display/ccd-apis
+
+        // NOTE: this structure is undocumented and was reverse engineered as part of the Morphic Classic project
+        // NOTE: all offsets are indices (relative to the recommended DPI scaling value)
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_GET_DPI
+        {
+            public DISPLAYCONFIG_DEVICE_INFO_HEADER header;
+
+            public int minimumDpiOffset;
+            public int currentDpiOffset;
+            public int maximumDpiOffset;
+
+            public void Init()
+            {
+                this.header.size = (uint)Marshal.SizeOf(typeof(DISPLAYCONFIG_GET_DPI));
+            }
+        }
+
+        // NOTE: this structure is undocumented and was reverse engineered as part of the Morphic Classic project
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_SET_DPI
+        {
+            public DISPLAYCONFIG_DEVICE_INFO_HEADER header;
+
+            public int dpiOffset;
+
+            public void Init()
+            {
+                this.header.size = (uint)Marshal.SizeOf(typeof(DISPLAYCONFIG_SET_DPI));
+            }
+        }
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
+
+        public const int MONITOR_DEFAULTTONULL = 0;
+        public const int MONITOR_DEFAULTTOPRIMARY = 1;
+        public const int MONITOR_DEFAULTTONEAREST = 2;
+
+        // windows session APIs
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-exitwindowsex
+        [DllImport("user32.dll")]
+        public static extern bool ExitWindowsEx(ExitWindowsFlags uFlags, ShutdownReason dwReason);
+
+        // see: https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-exitwindowsex
+        [Flags]
+        public enum ExitWindowsFlags : uint
+        {
+            // method (choose one of these five)
+            LogOff = 0,
+            Shutdown = 0x00000001,
+            Reboot = 0x00000002,
+            Poweroff = 0x00000008,
+            Restartapps = 0x00000040, // shut down and restart...and restart apps which have registered with RegisterApplicationRestart
+            //
+            // optional combination flag (if desired, combine (OR) the method with one of these two force options)
+            Force = 0x04,
+            ForceIfHung = 0x10,
+            //
+            // Windows 8: combine (OR) this flag with ShutDown for a faster shutdown
+            HybridShutdown = 0x00400000
+        }
+
+        // see: https://docs.microsoft.com/en-us/windows/win32/shutdown/system-shutdown-reason-codes
+        [Flags]
+        public enum ShutdownReason : uint
+        {
+            // major reasons
+            MajorApplication = 0x00040000,
+            MajorHardware = 0x00010000,
+            MajorLegacyApi = 0x00070000,
+            MajorOperatingSystem = 0x00020000,
+            MajorOther = 0x00000000, // "unplanned shutdown"
+            MajorPower = 0x00060000,
+            MajorSoftware = 0x00030000,
+            MajorSystem = 0x00050000,
+            //
+            // minor reason (optionally combine (OR) these with a major reason)
+            MinorBluescreen = 0x0000000F,
+            MinorCordunplugged = 0x0000000b,
+            MinorDisk = 0x00000007,
+            MinorEnvironment = 0x0000000c,
+            MinorHardwareDriver = 0x0000000d,
+            MinorHotfix = 0x00000011,
+            MinorHotfixUninstall = 0x00000017,
+            MinorHung = 0x00000005,
+            MinorInstallation = 0x00000002,
+            MinorMaintenance = 0x00000001,
+            MinorMmc = 0x00000019,
+            MinorNetworkConnectivity = 0x00000014,
+            MinorNetworkcard = 0x00000009,
+            MinorOther = 0x00000000,
+            MinorOtherdriver = 0x0000000e,
+            MinorPowerSupply = 0x0000000a,
+            MinorProcessor = 0x00000008,
+            MinorReconfig = 0x00000004,
+            MinorSecurity = 0x00000013,
+            MinorSecurityfix = 0x00000012,
+            MinorSecurityfixUninstall = 0x00000018,
+            MinorServicepack = 0x00000010,
+            MinorServicepackUninstall = 0x00000016,
+            MinorTermsrv = 0x00000020,
+            MinorUnstable = 0x00000006,
+            MinorUpgrade = 0x00000006,
+            MinorWmi = 0x00000015,
+            //
+            // optional flags (combine (OR) these with a major and optional minor reason...to provide more information about the event)
+            FlagUserDefined = 0x40000000, // NOTE: this is used with user-defined shutdown reasons (which we would save to the registry)
+            FlagPlanned = 0x80000000
+        }
     }
 }

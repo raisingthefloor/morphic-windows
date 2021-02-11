@@ -22,13 +22,9 @@
 // * Consumer Electronics Association Foundation
 
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Reflection.Metadata.Ecma335;
-using System.Text;
 using System.Text.Json.Serialization;
 using Xunit;
 

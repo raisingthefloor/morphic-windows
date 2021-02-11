@@ -21,11 +21,9 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using Morphic.Core;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text;
 using Microsoft.Extensions.Logging;

@@ -2,28 +2,6 @@
   "org.raisingthefloor.morphic.quickstrip": {
     "visible": true,
     "position.win": "BottomRight",
-    "showsHelp": true,
-    "items": [
-      {
-        "type": "control",
-        "feature": "resolution"
-      },
-      {
-        "type": "control",
-        "feature": "magnifier"
-      },
-      {
-        "type": "control",
-        "feature": "reader"
-      },
-      {
-        "type": "control",
-        "feature": "volume"
-      },
-      {
-        "type": "control",
-        "feature": "nightmode"
-      }
-    ]
+    "showsHelp": true
   }
 }

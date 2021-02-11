@@ -23,7 +23,6 @@
 
 using System.Text.Json.Serialization;
 using System.Collections.Generic;
-using System.Security.Cryptography.X509Certificates;
 
 namespace Morphic.Core
 {
@@ -172,6 +171,9 @@ namespace Morphic.Core
         /// <summary>Arbitrary preferences specific to the solution</summary>
         [JsonExtensionData]
         public Dictionary<string, object?> Values { get; set; } = new Dictionary<string, object?>();
+
+        [JsonIgnore]
+        public Dictionary<string, object?>? Previous { get; set; }
 
         /// <summary>
         /// Default constructor

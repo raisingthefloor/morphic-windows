@@ -21,628 +21,734 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Runtime.InteropServices;
-
-namespace Morphic.Windows.Native
+namespace Morphic.Windows.Native.Display
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Drawing;
+
+    // ReSharper disable InconsistentNaming - Uses naming from the Windows API
+    // ReSharper disable IdentifierTypo - Uses naming from the Windows API
     public class Display
     {
-        // NOTE: this enumeration method is for testing only; because it uses a callback and does not specify an upper limit for the number of callback calls...it may be useless (unless we find a safe way to measure and watch for all callbacks)
-        //public struct DisplayInfo
-        //{
-        //    public Rectangle FullBounds;
-        //    public Rectangle WorkingBounds;
-        //    public Boolean IsPrimaryDisplay;
-        //    public String DeviceName;
-        //}
-        //public static List<DisplayInfo>? GetAllDisplays_CallbackTest()
-        //{
-        //    var listOfDisplays = new List<DisplayInfo>();
-        //    var enumerationInProgress = true;
-        //    var enumerationIsSuccess = true;
-
-        //    // create delegate to populate list of displays
-        //    WindowsApi.MonitorEnumProcDelegate monitorEnumDelegate = delegate(IntPtr hMonitor, IntPtr hdcMonitor, ref WindowsApi.RECT lprcMonitor, IntPtr dwData) {
-        //        WindowsApi.MONITORINFOEXA monitorInfo = new WindowsApi.MONITORINFOEXA();
-        //        monitorInfo.Init();
-
-        //        var result = WindowsApi.GetMonitorInfo(hMonitor, ref monitorInfo);
-        //        if (result == false)
-        //        {
-        //            // TODO: how do we alert the user that we have failed?
-        //            enumerationIsSuccess = false;
-        //            return false;
-        //        }
-
-        //        var displayInfo = new DisplayInfo();
-        //        //
-        //        displayInfo.FullBounds = new Rectangle(monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.top, monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top);
-        //        displayInfo.WorkingBounds = new Rectangle(monitorInfo.rcWork.left, monitorInfo.rcWork.top, monitorInfo.rcWork.right - monitorInfo.rcWork.left, monitorInfo.rcWork.bottom - monitorInfo.rcWork.top);
-        //        //
-        //        displayInfo.IsPrimaryDisplay = ((monitorInfo.dwFlags & WindowsApi.MONITORINFOF_PRIMARY) != 0);
-        //        //
-        //        // convert monitor device name to string
-        //        var deviceNameLength = Array.FindIndex(monitorInfo.szDevice, 0, (arg0) => { return arg0 == '\0'; });
-        //        if (deviceNameLength < 0)
-        //        {
-        //            deviceNameLength = monitorInfo.szDevice.Length;
-        //        }
-        //        displayInfo.DeviceName = new String(monitorInfo.szDevice, 0, deviceNameLength);
-
-        //        listOfDisplays.Add(displayInfo);
-
-        //        // TODO: unfortunately there is no way to know when it's done :(
-        //        enumerationInProgress = false;
-
-        //        // continue to the next display
-        //        return true;
-        //    };
-
-        //    // NOTE: EnumDisplayMonitors enumerates both visible monitors and invisible pseudo-monitors (i.e. mirroring monitors, etc.)
-        //    var result = WindowsApi.EnumDisplayMonitors(IntPtr.Zero /* entire virtual screen */, IntPtr.Zero /* no clipping */, monitorEnumDelegate, IntPtr.Zero);
-        //    if (result == false)
-        //    {
-        //        return null;
-        //    }
-
-        //    while (enumerationInProgress == true)
-        //    {
-        //        System.Threading.Thread.Sleep(1);
-        //    }
-
-        //    if (enumerationIsSuccess == false)
-        //    {
-        //        return null;
-        //    } 
-        //    else
-        //    {
-        //        return listOfDisplays;
-        //    }
-        //}
-
-        /*** Functions to get display adapter info ***/
-
-        public static String? GetPrimaryDisplayAdapterName()
+        // NOTE: if the caller does not provide an hWnd, we use the primary monitor instead
+        // NOTE: this function returns null if it could not obtain the monitor name
+        public static String? GetMonitorName(IntPtr? hWnd)
         {
-            var allDisplayAdapters = GetAllDisplayAdapters();
-
-            foreach(var displayAdapterInfo in allDisplayAdapters) {
-                if(displayAdapterInfo.isPrimaryDisplayAdapter == true)
-                {
-                    return displayAdapterInfo.displayAdapterName;
-                }
-            }
-
-            // if we could not find a primary display adapter, return null
-            return null;
-        }
-
-        public static List<String> GetAllDisplayAdapterNames()
-        {
-            var result = new List<String>();
-
-            var allDisplayAdapters = GetAllDisplayAdapters();
-
-            foreach (var displayAdapterInfo in allDisplayAdapters)
+            IntPtr monitorHandle;
+            if (hWnd == null)
             {
-                result.Add(displayAdapterInfo.displayAdapterName);
+                // get the handle of the primary monitor
+                var desktopHWnd = WindowsApi.GetDesktopWindow();
+                monitorHandle = WindowsApi.MonitorFromWindow(desktopHWnd, WindowsApi.MONITOR_DEFAULTTOPRIMARY);
             }
-
-            return result;
-        }
-
-        public struct DisplayAdapterInfo
-        {
-            public String displayAdapterName;
-            public Boolean isPrimaryDisplayAdapter;
-
-            public DisplayAdapterInfo(
-                String displayAdapterName,
-                Boolean isPrimaryDisplayAdapter
-            )
+            else
             {
-                this.displayAdapterName = displayAdapterName;
-                this.isPrimaryDisplayAdapter = isPrimaryDisplayAdapter;
-            }
-        }
-        public static List<DisplayAdapterInfo> GetAllDisplayAdapters()
-        {
-            var result = new List<DisplayAdapterInfo>();
-
-            // get a list of all display adapters
-            UInt32 iDisplayAdapter = 0;
-            //
-            var success = true;
-            while (success == true)
-            {
-                var cDisplayDevice = new WindowsApi.DISPLAY_DEVICEW();
-                cDisplayDevice.Init();
-
-                success = WindowsApi.EnumDisplayDevices_DisplayAdapter(IntPtr.Zero, iDisplayAdapter, ref cDisplayDevice, 0);
-                if (success == false)
-                {
-                    break;
-                }
-
-                // verify that the device is attached to the desktop
-                if ((UInt32)(cDisplayDevice.StateFlags & WindowsApi.DisplayDeviceStateFlags.DISPLAY_DEVICE_ATTACHED_TO_DESKTOP) == 0)
-                {
-                    iDisplayAdapter += 1;
-                    continue;
-                }
-                // verify that the device is not a mirroring psuedodevice
-                if ((UInt32)(cDisplayDevice.StateFlags & WindowsApi.DisplayDeviceStateFlags.DISPLAY_DEVICE_MIRRORING_DRIVER) != 0)
-                {
-                    iDisplayAdapter += 1;
-                    continue;
-                }
-
-                var deviceNameAsCharArray = cDisplayDevice.DeviceName;
-                var deviceNameAsString = ConvertCharArrayToString(deviceNameAsCharArray);
-
-                var isPrimaryDisplayAdapter = false;
-                if ((UInt32)(cDisplayDevice.StateFlags & WindowsApi.DisplayDeviceStateFlags.DISPLAY_DEVICE_PRIMARY_DEVICE) != 0)
-                {
-                    isPrimaryDisplayAdapter = true;
-                }
-
-                var displayAdapterInfo = new DisplayAdapterInfo(deviceNameAsString, isPrimaryDisplayAdapter);
-                result.Add(displayAdapterInfo);
-
-                iDisplayAdapter += 1;
+                // get the handle of the monitor which contains the majority of the specified hwnd's window
+                monitorHandle = WindowsApi.MonitorFromWindow(hWnd.Value, WindowsApi.MONITOR_DEFAULTTONEAREST);
             }
 
-            return result;
-        }
-
-        /*** Functions to get display adapters' monitor info ***/
-
-        public struct DisplayAdapterMonitorInfo
-        {
-            public readonly String deviceName;
-            public readonly String deviceString;
-            public readonly Boolean isActive;
-
-            internal DisplayAdapterMonitorInfo(
-                String deviceName,
-                String deviceString,
-                Boolean isActive
-            )
-            {
-                this.deviceName = deviceName;
-                this.deviceString = deviceString;
-                this.isActive = isActive;
-            }
-        }
-
-        public static List<DisplayAdapterMonitorInfo> GetAllMonitorsForDisplayAdapter(String displayAdapterName)
-        {
-            var result = new List<DisplayAdapterMonitorInfo>();
-
-            var displayAdapterNameAsCharArray = ConvertStringToNullTerminatedCharArray(displayAdapterName);
-
-            // get the monitors associated with this display adapter
-            UInt32 iMonitor = 0;
-            //
-            var success = true;
-            while (success == true)
-            {
-                var cDisplayDevice = new WindowsApi.DISPLAY_DEVICEW();
-                cDisplayDevice.Init();
-
-                success = WindowsApi.EnumDisplayDevices_Monitor(displayAdapterNameAsCharArray, iMonitor, ref cDisplayDevice, 0);
-                if (success == false)
-                {
-                    break;
-                }
-
-                var monitorDeviceNameAsString = Display.ConvertCharArrayToString(cDisplayDevice.DeviceName);
-                var monitorDeviceStringAsString = Display.ConvertCharArrayToString(cDisplayDevice.DeviceString);
-                var monitorStateFlags = (UInt32)cDisplayDevice.StateFlags;
-
-                Boolean isAttached = false;
-                if ((monitorStateFlags & (UInt32)WindowsApi.ChildDisplayDeviceStateFlags.DISPLAY_DEVICE_ATTACHED) != 0)
-                {
-                    isAttached = true;
-                }
-                // if the monitor is not attached, do not include it in the enumeration; we may modify this logic in the future if/as desired
-                if (isAttached == false)
-                {
-                    iMonitor += 1;
-                    continue;
-                }
-
-                Boolean isActive = false;
-                if ((monitorStateFlags & (UInt32)WindowsApi.ChildDisplayDeviceStateFlags.DISPLAY_DEVICE_ACTIVE) != 0)
-                {
-                    isActive = true;
-                }
-
-                var monitorInfo = new DisplayAdapterMonitorInfo(monitorDeviceNameAsString, monitorDeviceStringAsString, isActive);
-
-                result.Add(monitorInfo);
-
-                iMonitor += 1;
-            }
-
-            return result;
-        }
-
-        /*** Functions to get display settings (per display adapter) ***/
-
-        public struct DisplaySettings
-        {
-            public enum DisplayOrientation: UInt32
-            {
-                Default = 0,
-                Clockwise90Degrees = 1,
-                Clockwise180Degrees = 2,
-                Clockwise270Degrees = 3
-            }
-            //
-            public enum FixedResolutionOutputOption: UInt32
-            {
-                Default = 0,
-                StretchToFillScreen = 1,
-                CenterInScreen = 2
-            }
-            //
-            internal enum DisplayFlags: UInt32
-            {
-                // Grayscale = 1, // no longer valid
-                Interlaced = 2,
-                // TextMode = 4
-            }
-
-            internal readonly WindowsApi.DEVMODEW devmode;
-            //
-            public readonly UInt32 widthInPixels;
-            public readonly UInt32 heightInPixels;
-            public readonly UInt32 refreshRateInHertz;
-            public readonly UInt32 bitsPerPixel;
-            public readonly DisplayOrientation? orientation;
-            public readonly FixedResolutionOutputOption? fixedOutputOption;
-            internal readonly DisplayFlags? flags;
-            public readonly System.Drawing.Point? position;
-
-            private DisplaySettings(
-                WindowsApi.DEVMODEW devmode,
-                UInt32 widthInPixels,
-                UInt32 heightInPixels,
-                UInt32 refreshRateInHertz,
-                UInt32 bitsPerPixel,
-                DisplayOrientation? orientation,
-                FixedResolutionOutputOption? fixedOutputOption,
-                DisplayFlags? flags,
-                System.Drawing.Point? position
-            )
-            {
-                this.devmode = devmode;
-                this.widthInPixels = widthInPixels;
-                this.heightInPixels = heightInPixels;
-                this.refreshRateInHertz = refreshRateInHertz;
-                this.bitsPerPixel = bitsPerPixel;
-                this.orientation = orientation;
-                this.fixedOutputOption = fixedOutputOption;
-                this.flags = flags;
-                this.position = position;
-            }
-
-            internal static DisplaySettings? CreateNew(WindowsApi.DEVMODEW devmode)
-            {
-                if ((UInt32)(devmode.dmFields & WindowsApi.DM_FieldSelectionBit.DM_PELSWIDTH) == 0)
-                {
-                    return null;
-                }
-                var widthInPixels = devmode.dmPelsWidth;
-                //
-                if ((UInt32)(devmode.dmFields & WindowsApi.DM_FieldSelectionBit.DM_PELSHEIGHT) == 0)
-                {
-                    return null;
-                }
-                var heightInPixels = devmode.dmPelsHeight;
-                //
-                if ((UInt32)(devmode.dmFields & WindowsApi.DM_FieldSelectionBit.DM_DISPLAYFREQUENCY) == 0)
-                {
-                    return null;
-                }
-                var refreshRateInHertz = devmode.dmDisplayFrequency;
-                //
-                if ((UInt32)(devmode.dmFields & WindowsApi.DM_FieldSelectionBit.DM_BITSPERPEL) == 0)
-                {
-                    return null;
-                }
-                var bitsPerPixel = devmode.dmBitsPerPel;
-                //
-                DisplayOrientation? orientation = null;
-                if ((UInt32)(devmode.dmFields & WindowsApi.DM_FieldSelectionBit.DM_DISPLAYORIENTATION) != 0)
-                {
-                    orientation = (DisplayOrientation)devmode.DUMMYUNIONNAME.DUMMYSTRUCTNAME2.dmDisplayOrientation;
-                }
-                //
-                FixedResolutionOutputOption? fixedOutputOption = null;
-                if ((UInt32)(devmode.dmFields & WindowsApi.DM_FieldSelectionBit.DM_DISPLAYFIXEDOUTPUT) != 0)
-                {
-                    fixedOutputOption = (FixedResolutionOutputOption)devmode.DUMMYUNIONNAME.DUMMYSTRUCTNAME2.dmDisplayFixedOutput;
-                }
-                //
-                DisplayFlags? flags = null;
-                if ((UInt32)(devmode.dmFields & WindowsApi.DM_FieldSelectionBit.DM_DISPLAYFLAGS) != 0)
-                {
-                    flags = (DisplayFlags)devmode.DUMMYUNIONNAME2.dmDisplayFlags;
-                }
-                //
-                System.Drawing.Point? position = null;
-                if ((UInt32)(devmode.dmFields & WindowsApi.DM_FieldSelectionBit.DM_POSITION) != 0)
-                {
-                    position = new System.Drawing.Point(devmode.DUMMYUNIONNAME.DUMMYSTRUCTNAME2.dmPosition.x, devmode.DUMMYUNIONNAME.DUMMYSTRUCTNAME2.dmPosition.y);
-                }
-
-                var result = new DisplaySettings(
-                    devmode,
-                    widthInPixels,
-                    heightInPixels,
-                    refreshRateInHertz,
-                    bitsPerPixel,
-                    orientation,
-                    fixedOutputOption,
-                    flags,
-                    position
-                );
-                return result;
-            }
-        }
-
-        public static List<DisplaySettings> GetAllDisplaySettingsForDisplayAdapter(String displayAdapterName)
-        {
-            var result = new List<DisplaySettings>();
-
-            var displayAdapterNameAsCharArray = ConvertStringToNullTerminatedCharArray(displayAdapterName);
-
-            // get the display settings for each graphics mode of this display adapter
-            UInt32 iGraphicsMode = 0;
-
-            var success = true;
-            while (success == true)
-            {
-                var devmode = new WindowsApi.DEVMODEW();
-                devmode.Init();
-
-                success = WindowsApi.EnumDisplaySettingsEx(displayAdapterNameAsCharArray, iGraphicsMode, ref devmode, 0);
-                if (success == false)
-                {
-                    break;
-                }
-
-                var displaySettings = DisplaySettings.CreateNew(devmode);
-                if (displaySettings == null)
-                {
-                    iGraphicsMode += 1;
-                    continue;
-                }
-
-                result.Add(displaySettings.Value);
-
-                iGraphicsMode += 1;
-            }
-
-            return result;
-        }
-
-        public static DisplaySettings? GetCurrentDisplaySettingsForDisplayAdapter(String displayAdapterName)
-        {
-            var displayAdapterNameAsCharArray = ConvertStringToNullTerminatedCharArray(displayAdapterName);
-
-            var success = true;
-            var devmode = new WindowsApi.DEVMODEW();
-            devmode.Init();
-
-            success = WindowsApi.EnumDisplaySettingsEx(displayAdapterNameAsCharArray, WindowsApi.ENUM_CURRENT_SETTINGS, ref devmode, 0);
-            if (success == false)
+            var monitorInfo = new WindowsApi.MONITORINFOEXA();
+            monitorInfo.Init();
+            var getMonitorInfoSuccess = WindowsApi.GetMonitorInfo(monitorHandle, ref monitorInfo);
+            if (getMonitorInfoSuccess == false)
             {
                 return null;
             }
 
-            var displaySettings = DisplaySettings.CreateNew(devmode);
-            if (displaySettings == null)
+            var lengthOfDeviceName = Array.IndexOf<char>(monitorInfo.szDevice, '\0');
+            if (lengthOfDeviceName < 0)
+            {
+                lengthOfDeviceName = monitorInfo.szDevice.Length;
+            }
+            var deviceName = new String(monitorInfo.szDevice, 0, lengthOfDeviceName);
+
+            return deviceName;
+        }
+
+        // NOTE: if the caller does not provide an hWnd, we use the primary monitor instead
+        // NOTE: this function returns null if it could not obtain the work area name
+        public static Rectangle? GetPhysicalMonitorWorkArea(IntPtr? hWnd)
+        {
+            // NOTE: if there are any other _reliable_ ways of capturing the working area (i.e. ones which
+            // don't sometimes give us bad data), it would be useful to test them and maybe replace this
+            // algorithm with a simpler and potentially more accurate one.  That said: this seems to work.
+
+            // get the monitor resolution and work area from MonitorToWindow
+            // NOTE: in our testing, this method sometimes returns incorrect results; therefore we use its answer to 
+            // represent the relative size of the workarea to the screen area
+			// NOTE: our initial testing was without Windows 8.1/10's DPI awareness declared in the manifest, so this
+			// might now be unnecessary
+            IntPtr monitorHandle;
+            if (hWnd == null)
+            {
+                // get the handle of the primary monitor
+                var desktopHWnd = WindowsApi.GetDesktopWindow();
+                monitorHandle = WindowsApi.MonitorFromWindow(desktopHWnd, WindowsApi.MONITOR_DEFAULTTOPRIMARY);
+            }
+            else
+            {
+                // get the handle of the monitor which contains the majority of the specified hwnd's window
+                monitorHandle = WindowsApi.MonitorFromWindow(hWnd.Value, WindowsApi.MONITOR_DEFAULTTONEAREST);
+            }
+
+            var monitorInfo = new WindowsApi.MONITORINFOEXA();
+            monitorInfo.Init();
+            var getMonitorInfoSuccess = WindowsApi.GetMonitorInfo(monitorHandle, ref monitorInfo);
+            if (getMonitorInfoSuccess == false)
+            {
+                return null;
+            }
+            var monitorInfoFullArea = new Rectangle(monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.top, monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top);
+            var monitorInfoWorkArea = new Rectangle(monitorInfo.rcWork.left, monitorInfo.rcWork.top, monitorInfo.rcWork.right - monitorInfo.rcWork.left, monitorInfo.rcWork.bottom - monitorInfo.rcWork.top);
+
+            // get the always-correct display resolution from EnumDisplaySettingsEx...and scale the WorkArea to match
+            // NOTE: if the WorkArea specified in SystemParameters.WorkArea has the wrong proportions, we can try using
+            //       monitorInfo.rcWork instead
+            var deviceName = Display.GetMonitorName(null);
+            if (deviceName == null)
             {
                 return null;
             }
 
-            return displaySettings;
-        }
+            WindowsApi.DEVMODEW mode = new WindowsApi.DEVMODEW();
+            mode.Init();
+            // get the display's resolution
+            WindowsApi.EnumDisplaySettingsEx(deviceName, WindowsApi.ENUM_CURRENT_SETTINGS, ref mode, 0);
+            var screenWidth = mode.dmPelsWidth;
+            var screenHeight = mode.dmPelsHeight;
 
-        // NOTE: this function throws an exception if the settings could not be set successfully
-        public static void SetCurrentDisplaySettings(String displayAdapterName, DisplaySettings settings)
-        {
-            /* OPTIONAL FLAGS:
-             * CDS_GLOBAL | CDS_UPDATEREGISTRY  // save the updated resolution for all users
-             * CDS_RESET                        // update the settings even if they're the same as the current settings
-             * CDS_SET_PRIMARY                  // make this display adapter the primary display adapter
-             * CDS_TEST                         // tests if the change would be valid [NOTE: this _might_ let us detect if a display change requires a reboot]
-             * CDS_UPDATEREGISTRY               // save the display change in the system registry (for the user, unless also using CDS_GLOBAL)
-             * CDS_DISABLE_UNSAFE_MODES         // prohibits us from accidentally using unsafe display modes
-             */
-            var displayAdapterNameAsCharArray = ConvertStringToNullTerminatedCharArray(displayAdapterName);
-            var devmode = settings.devmode;
-            var result = WindowsApi.ChangeDisplaySettingsEx(displayAdapterNameAsCharArray, ref devmode, IntPtr.Zero, 0, IntPtr.Zero);
-            switch (result)
+            Rectangle workArea;
+            if ((screenWidth == monitorInfoFullArea.Width) && (screenHeight == monitorInfoFullArea.Height))
             {
-                case WindowsApi.DISP_CHANGE_RESULT.DISP_CHANGE_SUCCESSFUL:
-                    return;
-                default:
-                    throw new Exception("Could not change screen settings; result: " + result);
-            }
-        }
-
-        // NOTE: this function returns True if the display settings can be set, False otherwise
-        // NOTE: this _might_ let us detect if a display change requires a reboot (although we don't yet return a result indicating that reality)
-        public static Boolean TestDisplaySettings(String displayAdapterName, DisplaySettings settings)
-        {
-            var displayAdapterNameAsCharArray = ConvertStringToNullTerminatedCharArray(displayAdapterName);
-            var devmode = settings.devmode;
-            var result = WindowsApi.ChangeDisplaySettingsEx(displayAdapterNameAsCharArray, ref devmode, IntPtr.Zero, (UInt32)WindowsApi.ChangeDisplaySettingsFlags.CDS_TEST, IntPtr.Zero);
-            switch (result)
-            {
-                case WindowsApi.DISP_CHANGE_RESULT.DISP_CHANGE_SUCCESSFUL:
-                    return true;
-                //case WindowsApi.DISP_CHANGE_RESULT.DISP_CHANGE_RESTART:
-                default:
-                    return false;
-            }
-        }
-
-        public static UInt32? GetDpiForWindow(IntPtr handle)
-        {
-            var dpiForWindow = WindowsApi.GetDpiForWindow(handle);
-            if (dpiForWindow == 0)
-            {
-                return null;
+			    // if monitorInfo reflects the actual screen resolution, trust monitorInfo's results
+                workArea = new Rectangle(
+                        monitorInfoWorkArea.Left,
+                        monitorInfoWorkArea.Top,
+                        monitorInfoWorkArea.Width,
+                        monitorInfoWorkArea.Height
+                    );
             } 
             else
             {
-                return dpiForWindow;
+                // otherwise scale the monitor full area against the monitor's physical size
+				// NOTE: due to non-workArea items (such as taskbar heights that change proportionally), this may be off a little bit
+                double ratio = (double)screenWidth / (double)monitorInfoFullArea.Width;
+                workArea = new Rectangle(
+                        (int)((double)monitorInfoWorkArea.Left * ratio),
+                        (int)((double)monitorInfoWorkArea.Top * ratio),
+                        (int)((double)monitorInfoWorkArea.Width * ratio),
+                        (int)((double)monitorInfoWorkArea.Height * ratio)
+                    );
             }
+
+            return workArea;
         }
 
-        public static Int32 GetNumberOfVisibleDisplayMonitors()
+        // GetMonitorScalePercentage is a helper function meant to enable us to always know the actual scaling percentage (even if WPF or our process doesn't know the true value)
+        // NOTE: if the caller does not provide an hWnd, we use the primary monitor instead
+        // NOTE: this function returns null if it could not obtain the work area name
+        public static double? GetMonitorScalePercentage(IntPtr? hWnd)
         {
-            var numberOfVisibleDisplayMonitors = WindowsApi.GetSystemMetrics(WindowsApi.SystemMetricIndex.SM_CMONITORS);
-            return numberOfVisibleDisplayMonitors;
-        }
+            // capture the current dpi "offset"
+            // capture the name of our primary monitor
+            // NOTE: we could pass in the hWnd of a specific window instead
+            var monitorName = Morphic.Windows.Native.Display.Display.GetMonitorName(hWnd);
+            if (monitorName == null)
+            {
+                System.Diagnostics.Debug.Assert(false, "Could not get monitor name");
+                return null;
+            }
 
-        // NOTE: this function is not DPI aware (unless the app is DPI-aware)
-        public static Size? GetMainDisplayMonitorSizeInPixels()
-        {
-            // implementation option 1:
-            // TODO: use alternate GetSystemMetricsForDpi in dpi-aware apps
-            // NOTE: GetSystemMetrics returns a scaled DPI value (not the physical number of pixels)
-            var width = WindowsApi.GetSystemMetrics(WindowsApi.SystemMetricIndex.SM_CXSCREEN);
-            var height = WindowsApi.GetSystemMetrics(WindowsApi.SystemMetricIndex.SM_CYSCREEN);
-            if (width == 0 || height == 0)
+            // get the adapterId and sourceId for this monitor
+            var adapterIdAndSourceId = Morphic.Windows.Native.Display.Display.GetAdapterIdAndSourceId(monitorName);
+            if (adapterIdAndSourceId == null)
+            {
+                System.Diagnostics.Debug.Assert(false, "Could not get adapter ids");
+                return null;
+            }
+
+            var dpiOffsetInfo = Morphic.Windows.Native.Display.Display.GetCurrentDpiOffsetAndRange(adapterIdAndSourceId.Value.adapterId, adapterIdAndSourceId.Value.sourceId);
+            if (dpiOffsetInfo == null)
             {
                 return null;
             }
 
-            // implementation option 2:
-            // TODO: ... width = GetDeviceCaps(hdcPrimaryMonitor, HORZRES);
-            // TODO: ... height = GetDeviceCaps(hdcPrimaryMonitor, VERTRES);
-            //if (width == 0 || height == 0)
-            //{
-            //    return null;
-            //}
-
-            return new Size(width, height);
+            // convert the dpiOffset to a percentage
+            var currentDisplayScale = Morphic.Windows.Native.Display.Display.TranslateDpiOffsetToPercentage(dpiOffsetInfo.Value.currentDpiOffset,
+                dpiOffsetInfo.Value.minimumDpiOffset, dpiOffsetInfo.Value.maximumDpiOffset);
+            if (currentDisplayScale == null)
+            {
+                System.Diagnostics.Debug.Assert(false, "Current display scale % could not be calculated.");
+                return null;
+            }
+            else
+            {
+                return currentDisplayScale;
+            }
         }
-        //
-        //public static Size? GetMainDisplayMonitorSizeInPixels_DpiAware(UInt32 dpi)
-        //{
-        //    var width = WindowsApi.GetSystemMetricsForDpi(WindowsApi.SystemMetricIndex.SM_CXSCREEN, dpi);
-        //    var height = WindowsApi.GetSystemMetricsForDpi(WindowsApi.SystemMetricIndex.SM_CYSCREEN, dpi);
-        //    if (width == 0 || height == 0)
-        //    {
-        //        return null;
-        //    }
 
-        //    return new Size(width, height);
-        //}
-
-
-        // TODO: To get the coordinates of the portion of the screen that is not obscured by the system taskbar or by application desktop toolbars, call the SystemParametersInfo function with the SPI_GETWORKAREA value instead
-        // NOTE: this function is not DPI aware (unless the app is DPI-aware)
-        public static Size? GetMainDisplayMonitorFullScreenWindowSizeInPixels()
+		// This is a helper function for use by applications that need a single array of available scale percentages
+        public List<double>? GetDPIScales()
         {
-            // TODO: use alternate GetSystemMetricsForDpi in dpi-aware apps
-            // NOTE: GetSystemMetrics returns a scaled DPI value (not the physical number of pixels)
-            var width = WindowsApi.GetSystemMetrics(WindowsApi.SystemMetricIndex.SM_CXFULLSCREEN);
-            var height = WindowsApi.GetSystemMetrics(WindowsApi.SystemMetricIndex.SM_CYFULLSCREEN);
-            if (width == 0 || height == 0)
+            // if no display adapter id info was provided, get an id to the primary monitor
+            var primaryMonitorName = Display.GetMonitorName(null);
+            if (primaryMonitorName == null)
             {
                 return null;
             }
 
-            return new Size(width, height);
-        }
-        //
-        //public static Size? GetMainDisplayMonitorFullScreenWindowSizeInPixels_DpiAware(UInt32 dpi)
-        //{
-        //    // NOTE: GetSystemMetrics returns a scaled DPI value (not the physical number of pixels)
-        //    var width = WindowsApi.GetSystemMetricsForDpi(WindowsApi.SystemMetricIndex.SM_CXFULLSCREEN, dpi);
-        //    var height = WindowsApi.GetSystemMetricsForDpi(WindowsApi.SystemMetricIndex.SM_CYFULLSCREEN, dpi);
-        //    if (width == 0 || height == 0)
-        //    {
-        //        return null;
-        //    }
-
-        //    return new Size(width, height);
-        //}
-
-        // NOTE: this function is not DPI aware (unless the app is DPI-aware)
-        public static Rectangle? GetVirtualScreenBoundsInPixels()
-        {
-            // NOTE: GetSystemMetrics returns a scaled DPI value (not the physical number of pixels)
-            var x = WindowsApi.GetSystemMetrics(WindowsApi.SystemMetricIndex.SM_XVIRTUALSCREEN);
-            var y = WindowsApi.GetSystemMetrics(WindowsApi.SystemMetricIndex.SM_YVIRTUALSCREEN);
-            var width = WindowsApi.GetSystemMetrics(WindowsApi.SystemMetricIndex.SM_CXVIRTUALSCREEN);
-            var height = WindowsApi.GetSystemMetrics(WindowsApi.SystemMetricIndex.SM_CYVIRTUALSCREEN);
-            if (width == 0 || height == 0)
+            var primaryMonitorIds = Display.GetAdapterIdAndSourceId(primaryMonitorName);
+            if (primaryMonitorIds == null)
             {
                 return null;
             }
 
-            return new Rectangle(x, y, width, height);
-        }
-        //
-        //public static Rectangle? GetVirtualScreenBoundsInPixels_DpiAware(UInt32 dpi)
-        //{
-        //    var x = WindowsApi.GetSystemMetricsForDpi(WindowsApi.SystemMetricIndex.SM_XVIRTUALSCREEN, dpi);
-        //    var y = WindowsApi.GetSystemMetricsForDpi(WindowsApi.SystemMetricIndex.SM_YVIRTUALSCREEN, dpi);
-        //    var width = WindowsApi.GetSystemMetricsForDpi(WindowsApi.SystemMetricIndex.SM_CXVIRTUALSCREEN, dpi);
-        //    var height = WindowsApi.GetSystemMetricsForDpi(WindowsApi.SystemMetricIndex.SM_CYVIRTUALSCREEN, dpi);
-        //    if (width == 0 || height == 0)
-        //    {
-        //        return null;
-        //    }
-
-        //    return new Rectangle(x, y, width, height);
-        //}
-
-
-        /*** Helper functions: convert String to and from null-terminated Char array ***/
-
-        private static Char[] ConvertStringToNullTerminatedCharArray(String value, Int32? arrayLength = null)
-        {
-            if (arrayLength != null && (value.Length + 1 < arrayLength.Value))
+            var currentDpiOffsetAndRange = Display.GetCurrentDpiOffsetAndRange(primaryMonitorIds.Value.adapterId, primaryMonitorIds.Value.sourceId);
+            if (currentDpiOffsetAndRange == null)
             {
-                throw new ArgumentException("Argument " + nameof(value) + " is longer than the specified array length (including null terminator)");
+                return null;
             }
 
-            // convert the string to a non-null-terminated character array
-            Char[] stringAsCharArray = value.ToCharArray();
-            // copy the string characters to our result
-            Char[] result = new Char[arrayLength ?? (stringAsCharArray.Length + 1)];
-            Array.Copy(stringAsCharArray, 0, result, 0, stringAsCharArray.Length);
-            // append the null terminator
-            result[stringAsCharArray.Length] = '\0';
+            // special-case: if the DPI mode is using a "custom DPI" (which may be a backwards-compatible Windows 8.1 behavior), return _only_ that custom percentage
+            if (IsCustomDpiOffset(currentDpiOffsetAndRange.Value.currentDpiOffset) == true)
+            {
+                var customFixedDpiScalePercentage = Display.GetCustomDpiAsPercentage();
+                if (customFixedDpiScalePercentage == null)
+                {
+                    return null;
+                }
+                //
+                var singleScaleResult = new List<double>();
+                singleScaleResult.Add(customFixedDpiScalePercentage.Value);
+                return singleScaleResult;
+            }
+
+            var minimumScale = Display.TranslateDpiOffsetToPercentage(currentDpiOffsetAndRange.Value.minimumDpiOffset, currentDpiOffsetAndRange.Value.minimumDpiOffset, currentDpiOffsetAndRange.Value.maximumDpiOffset);
+            if (minimumScale == null)
+            {
+                return null;
+            }
+            var maximumScale = Display.TranslateDpiOffsetToPercentage(currentDpiOffsetAndRange.Value.maximumDpiOffset, currentDpiOffsetAndRange.Value.minimumDpiOffset, currentDpiOffsetAndRange.Value.maximumDpiOffset);
+            if (maximumScale == null)
+            {
+                return null;
+            }
+
+            return GetDPIScales(minimumScale.Value, maximumScale.Value);
+        }
+		//
+        public List<double> GetDPIScales(double minimum, double maximum)
+        {
+            var scales = new List<double>();
+
+            var incrementAmount = 0.25;
+            for (var i = minimum; i <= maximum; i += incrementAmount)
+            {
+                if (i >= 2.50)
+                    incrementAmount = 0.50;
+
+                scales.Add(i);
+            }
+
+            return scales;
+        }
+
+        public struct DisplayAdapterIdAndSourceId
+        {
+            public WindowsApi.LUID adapterId;
+            public uint sourceId;
+
+            public DisplayAdapterIdAndSourceId(WindowsApi.LUID adapterId, uint sourceId)
+            {
+                this.adapterId = adapterId;
+                this.sourceId = sourceId;
+            }
+        }
+        public static DisplayAdapterIdAndSourceId? GetAdapterIdAndSourceId(String monitorName)
+        {
+            uint numPathArrayElements;
+            uint numModeInfoArrayElements;
+            var getDisplayConfigBufferSizesSuccess = WindowsApi.GetDisplayConfigBufferSizes(WindowsApi.QueryDisplayConfigFlags.QDC_ONLY_ACTIVE_PATHS, out numPathArrayElements, out numModeInfoArrayElements);
+            switch (getDisplayConfigBufferSizesSuccess)
+            {
+                case WindowsApi.ErrorCode.ERROR_SUCCESS:
+                    break;
+                case WindowsApi.ErrorCode.ERROR_INVALID_PARAMETER:
+                case WindowsApi.ErrorCode.ERROR_NOT_SUPPORTED:
+                case WindowsApi.ErrorCode.ERROR_ACCESS_DENIED:
+                case WindowsApi.ErrorCode.ERROR_GEN_FAILURE:
+                    // failure
+                    return null;
+                default:
+                    // unknown error
+                    return null;
+            }
+
+            var pathInfoElements = new WindowsApi.DISPLAYCONFIG_PATH_INFO[numPathArrayElements];
+            var modeInfoElements = new WindowsApi.DISPLAYCONFIG_MODE_INFO[numModeInfoArrayElements];
+
+            var queryDisplayConfigSuccess = WindowsApi.QueryDisplayConfig(WindowsApi.QueryDisplayConfigFlags.QDC_ONLY_ACTIVE_PATHS, ref numPathArrayElements, pathInfoElements, ref numModeInfoArrayElements, modeInfoElements, IntPtr.Zero);
+            switch (queryDisplayConfigSuccess)
+            {
+                case WindowsApi.ErrorCode.ERROR_SUCCESS:
+                    break;
+                case WindowsApi.ErrorCode.ERROR_INVALID_PARAMETER:
+                case WindowsApi.ErrorCode.ERROR_NOT_SUPPORTED:
+                case WindowsApi.ErrorCode.ERROR_ACCESS_DENIED:
+                case WindowsApi.ErrorCode.ERROR_GEN_FAILURE:
+                case WindowsApi.ErrorCode.ERROR_INSUFFICIENT_BUFFER:
+                    // failure
+                    return null;
+                default:
+                    // unknown error
+                    return null;
+            }
+
+            DisplayAdapterIdAndSourceId? result = null;
+
+            // find the matching display
+            var sourceName = new WindowsApi.DISPLAYCONFIG_SOURCE_DEVICE_NAME();
+            sourceName.Init();
+            foreach (var pathInfoElement in pathInfoElements)
+            {
+                // get the device name
+                sourceName.header.adapterId = pathInfoElement.sourceInfo.adapterId;
+                sourceName.header.id = pathInfoElement.sourceInfo.id;
+                sourceName.header.type = WindowsApi.DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME;
+
+                var displayConfigGetDeviceInfoSuccess = WindowsApi.DisplayConfigGetDeviceInfo(ref sourceName);
+                switch (displayConfigGetDeviceInfoSuccess)
+                {
+                    case WindowsApi.ErrorCode.ERROR_SUCCESS:
+                        break;
+                    case WindowsApi.ErrorCode.ERROR_INVALID_PARAMETER:
+                        System.Diagnostics.Debug.Assert(false, "Error getting device info; this is probably a programming error.");
+                        return null;
+                    case WindowsApi.ErrorCode.ERROR_NOT_SUPPORTED:
+                    case WindowsApi.ErrorCode.ERROR_ACCESS_DENIED:
+                    case WindowsApi.ErrorCode.ERROR_INSUFFICIENT_BUFFER:
+                    case WindowsApi.ErrorCode.ERROR_GEN_FAILURE:
+                        // failure; out of an abundance of caution, try to read the next display
+                        System.Diagnostics.Debug.Assert(false, "Error getting device info; this may not be an error.");
+                        continue;
+                        //return null;
+                    default:
+                        // unknown error
+                        // failure; out of an abundance of caution, try to read the next display
+                        System.Diagnostics.Debug.Assert(false, "Error getting device info; this may not be an error.");
+                        continue;
+                        //return null;
+                }
+
+                var lengthOfViewGdiDeviceName = Array.IndexOf<char>(sourceName.viewGdiDeviceName, '\0');
+                if (lengthOfViewGdiDeviceName < 0)
+                {
+                    lengthOfViewGdiDeviceName = sourceName.viewGdiDeviceName.Length;
+                }
+                var viewGdiDeviceName = new String(sourceName.viewGdiDeviceName, 0, lengthOfViewGdiDeviceName);
+
+                if (viewGdiDeviceName == monitorName)
+                {
+                    // in some circumstances, there could be more than one matching monitor (e.g. a clone).  We should prefer the first one, but 
+                    // even more than that we should prefer an internal/built-in display.  Find the best match now
+
+                    bool isInternal;
+                    switch (pathInfoElement.targetInfo.outputTechnology)
+                    {
+                        case WindowsApi.DISPLAYCONFIG_VIDEO_OUTPUT_TECHNOLOGY.DISPLAYCONFIG_OUTPUT_TECHNOLOGY_DISPLAYPORT_EMBEDDED:
+                        case WindowsApi.DISPLAYCONFIG_VIDEO_OUTPUT_TECHNOLOGY.DISPLAYCONFIG_OUTPUT_TECHNOLOGY_UDI_EMBEDDED:
+                        case WindowsApi.DISPLAYCONFIG_VIDEO_OUTPUT_TECHNOLOGY.DISPLAYCONFIG_OUTPUT_TECHNOLOGY_INTERNAL:
+                            isInternal = true;
+                            break;
+                        default:
+                            isInternal = false;
+                            break;
+                    }
+
+                    if ((result == null) || (isInternal == true))
+                    {
+                        result = new DisplayAdapterIdAndSourceId(sourceName.header.adapterId, sourceName.header.id);
+                    }
+                }
+            }
 
             return result;
         }
 
-        private static String ConvertCharArrayToString(Char[] value)
+        public struct GetDpiOffsetResult
         {
-            Int32 nullTerminatorPos = Array.IndexOf(value, '\0');
-            if (nullTerminatorPos < 0)
+            public int minimumDpiOffset;
+            public int currentDpiOffset;
+            public int maximumDpiOffset;
+        }
+        public static GetDpiOffsetResult? GetCurrentDpiOffsetAndRange()
+        {
+            // if no display adapter id info was provided, get an id to the primary monitor
+            var primaryMonitorName = Display.GetMonitorName(null);
+            if (primaryMonitorName == null)
             {
-                // no null terminator
-                return new String(value);
+                return null;
+            }
+
+            var primaryMonitorIds = Display.GetAdapterIdAndSourceId(primaryMonitorName);
+            if (primaryMonitorIds == null)
+            {
+                return null;
+            }
+
+            return Display.GetCurrentDpiOffsetAndRange(primaryMonitorIds.Value.adapterId, primaryMonitorIds.Value.sourceId);
+        }
+        public static GetDpiOffsetResult? GetCurrentDpiOffsetAndRange(WindowsApi.LUID adapterId, uint sourceId)
+        {
+            // retrieve the DPI values (min, current and max) for the monitor
+            var getDpiInfo = new WindowsApi.DISPLAYCONFIG_GET_DPI();
+            getDpiInfo.Init();
+            getDpiInfo.header.type = WindowsApi.DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_DPI;
+            getDpiInfo.header.adapterId = adapterId;
+            getDpiInfo.header.id = sourceId;
+            //
+            var displayConfigGetDeviceInfoSuccess = WindowsApi.DisplayConfigGetDeviceInfo(ref getDpiInfo);
+            switch (displayConfigGetDeviceInfoSuccess)
+            {
+                case WindowsApi.ErrorCode.ERROR_SUCCESS:
+                    break;
+                case WindowsApi.ErrorCode.ERROR_INVALID_PARAMETER:
+                    System.Diagnostics.Debug.Assert(false, "Error getting dpi info; this is probably a programming error.");
+                    return null;
+                default:
+                    // unknown error
+                    // failure; out of an abundance of caution, try to read the next display
+                    System.Diagnostics.Debug.Assert(false, "Error getting dpi info");
+                    return null;
+            }
+
+            var result = new GetDpiOffsetResult();
+            result.minimumDpiOffset = getDpiInfo.minimumDpiOffset;
+            result.maximumDpiOffset = getDpiInfo.maximumDpiOffset;
+            // NOTE: the current offset can be GREATER than the maximum offset (if the user has specified a custom zoom level, for instance)
+            result.currentDpiOffset = getDpiInfo.currentDpiOffset;
+
+            return result;
+        }
+
+        public static int? TranslatePercentageToDpiOffset(double percentage, int minimumDpiOffset, int maximumDpiOffset)
+        {
+            /* 
+             * minDpiOffset represents 100%, and offsets above that follow this scale (according to Morphic Classic research):
+             * 100% - minDpiOffset
+             * 125%
+             * 150%
+             * 175%
+             * 200%
+             * 225%
+             * 250%
+             * 300%
+             * 350%
+             * 400%
+             * 450%
+             * 500%
+             */
+
+            int dpiOffsetAboveMinimum;
+
+            switch (percentage)
+            {
+                case 1.00:
+                    dpiOffsetAboveMinimum = 0;
+                    break;
+                case 1.25:
+                    dpiOffsetAboveMinimum = 1;
+                    break;
+                case 1.50:
+                    dpiOffsetAboveMinimum = 2;
+                    break;
+                case 1.75:
+                    dpiOffsetAboveMinimum = 3;
+                    break;
+                case 2.00:
+                    dpiOffsetAboveMinimum = 4;
+                    break;
+                case 2.25:
+                    dpiOffsetAboveMinimum = 5;
+                    break;
+                case 2.50:
+                    dpiOffsetAboveMinimum = 6;
+                    break;
+                case 3.00:
+                    dpiOffsetAboveMinimum = 7;
+                    break;
+                case 3.50:
+                    dpiOffsetAboveMinimum = 8;
+                    break;
+                case 4.00:
+                    dpiOffsetAboveMinimum = 9;
+                    break;
+                case 4.50:
+                    dpiOffsetAboveMinimum = 10;
+                    break;
+                case 5.00:
+                    dpiOffsetAboveMinimum = 11;
+                    break;
+                default:
+                    // custom or otherwise unknown percentage
+                    return null;
+            }
+
+            if (minimumDpiOffset + dpiOffsetAboveMinimum > maximumDpiOffset)
+            {
+                // if the percentage is out of range, return null
+                // NOTE: we may want to consider an option which lets us "max out" the dpi offset in this scenario
+                System.Diagnostics.Debug.Assert(false, "Display scale percentage is out of range for the current DPI offset range");
+                return null;
+            }
+
+            // return the dpiOffset which maps to this percentage
+            return minimumDpiOffset + dpiOffsetAboveMinimum;
+        }
+
+        private static bool IsCustomDpiOffset(int dpiOffset)
+        {
+            // special-case: if the DPI mode is using a "custom DPI" (which may be a backwards-compatible Windows 8.1 behavior), its DPI offset will be represented by a large value (always 1234568 in our testing)
+            if (dpiOffset == 1234568)
+            {
+                return true;
+            } 
+            else
+            {
+                return false;
+            }
+        }
+
+        // NOTE: if dpiOffset is out of the min<->max range or the range is too broad, this function will return null
+        public static double? TranslateDpiOffsetToPercentage(int dpiOffset, int minimumDpiOffset, int maximumDpiOffset)
+        {
+            // special-case: if the DPI mode is using a "custom DPI" (which may be a backwards-compatible Windows 8.1 behavior), capture that value now
+            if (IsCustomDpiOffset(dpiOffset) == true)
+            {
+                return Display.GetCustomDpiAsPercentage();
+            }
+
+            /* 
+             * minDpiOffset represents 100%, and offsets above that follow this scale (according to Morphic Classic research):
+             * 100% - minDpiOffset
+             * 125%
+             * 150%
+             * 175%
+             * 200%
+             * 225%
+             * 250%
+             * 300%
+             * 350%
+             * 400%
+             * 450%
+             * 500%
+             */
+
+            var percentageIndex = dpiOffset - minimumDpiOffset;
+
+            // workaround: on Windows, behavior which set the dpiOffset to 1 less than the minDpiOffset was observed where the scale was still 100%
+            // NOTE: ideally we can revisit this and find another method to help sanity-check this result or a way to retrieve this data more accurately
+            if (percentageIndex == -1)
+            {
+                percentageIndex = 0;
+            }
+            
+            if (percentageIndex < 0)
+            {
+                return null;
+            }
+            switch (percentageIndex) {
+                case 0:
+                    return 1.00;
+                case 1:
+                    return 1.25;
+                case 2:
+                    return 1.50;
+                case 3:
+                    return 1.75;
+                case 4:
+                    return 2.00;
+                case 5:
+                    return 2.25;
+                case 6:
+                    return 2.50;
+                case 7:
+                    return 3.00;
+                case 8:
+                    return 3.50;
+                case 9:
+                    return 4.00;
+                case 10:
+                    return 4.50;
+                case 11:
+                    return 5.00;
+                default:
+                    // custom or otherwise unknown percentage
+                    return null;
+            }
+        }
+		
+        // NOTE: Windows users can set a custom DPI percentage (perhaps a backwards-compatibility feature from Windows 8.1)
+        public static double? GetCustomDpiAsPercentage()
+        {
+            // method 1: read the custom DPI level out of the registry (NOTE: this is machine-wide, not per-monitor)
+            object logPixelsAsObject = Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Control Panel\Desktop", "LogPixels", null);
+            if (logPixelsAsObject is int)
+            {
+                var logPixels = (int)logPixelsAsObject;
+                return (double)logPixels / 96;
+            } 
+            else
+            {
+                return null;
+            }
+
+            // method 2: read the custom DPI from .NET
+            //using (System.Drawing.Graphics graphics = System.Drawing.Graphics.FromHwnd(IntPtr.Zero))
+            //{
+            //    // NOTE: technically DpiX and DpiY are two separate scales, but in our testing and based on Windows usage models, they should always be the same
+            //    return (double)graphics.DpiX / 96;
+            //}
+        }
+
+
+        /// <summary>
+        /// Sets the DPI scaling
+        /// </summary>
+        /// <param name="scalePercentage">Scaling percentage to set</param>
+        public bool SetDpiScale(double scalePercentage, DisplayAdapterIdAndSourceId? displayAdapterIdInfo = null)
+        {
+            WindowsApi.LUID adapterId;
+            uint sourceId;
+            if (displayAdapterIdInfo == null)
+            {
+                // if no display adapter id info was provided, get an id to the primary monitor
+                var primaryMonitorName = Display.GetMonitorName(null);
+                if (primaryMonitorName == null)
+                {
+                    return false;
+                }
+
+                var primaryMonitorIds = Display.GetAdapterIdAndSourceId(primaryMonitorName);
+                if (primaryMonitorIds == null)
+                {
+                    return false;
+                }
+
+                adapterId = primaryMonitorIds.Value.adapterId;
+                sourceId = primaryMonitorIds.Value.sourceId;
             }
             else
             {
-                return new string(value, 0, nullTerminatorPos);
+                adapterId = displayAdapterIdInfo.Value.adapterId;
+                sourceId = displayAdapterIdInfo.Value.sourceId;
             }
+
+            var currentDpiOffsetAndRange = Display.GetCurrentDpiOffsetAndRange(adapterId, sourceId);
+            if (currentDpiOffsetAndRange == null)
+            {
+                return false;
+            }
+
+            var newDpiOffset = Display.TranslatePercentageToDpiOffset(scalePercentage, currentDpiOffsetAndRange.Value.minimumDpiOffset, currentDpiOffsetAndRange.Value.maximumDpiOffset);
+            if (newDpiOffset == null)
+            {
+                return false;
+            }
+
+            // set the DPI offset (using the calculated offset)
+            return Display.SetDpiOffset(newDpiOffset.Value, new DisplayAdapterIdAndSourceId(adapterId, sourceId));
+        }
+
+        // NOTE: this function returns false if it fails, true if it succeeds
+        public static bool SetDpiOffset(int dpiOffset, DisplayAdapterIdAndSourceId displayAdapterIdInfo)
+        {
+            // retrieve the DPI values (min, current and max) for the monitor
+            var setDpiInfo = new WindowsApi.DISPLAYCONFIG_SET_DPI();
+            setDpiInfo.Init();
+            setDpiInfo.header.type = WindowsApi.DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_SET_DPI;
+            setDpiInfo.header.adapterId = displayAdapterIdInfo.adapterId;
+            setDpiInfo.header.id = displayAdapterIdInfo.sourceId;
+            setDpiInfo.dpiOffset = dpiOffset;
+            //
+            var displayConfigGetDeviceInfoSuccess = WindowsApi.DisplayConfigSetDeviceInfo(ref setDpiInfo);
+            switch (displayConfigGetDeviceInfoSuccess)
+            {
+                case WindowsApi.ErrorCode.ERROR_SUCCESS:
+                    break;
+                case WindowsApi.ErrorCode.ERROR_INVALID_PARAMETER:
+                    System.Diagnostics.Debug.Assert(false, "Error setting dpi info; this is probably a programming error.");
+                    return false;
+                default:
+                    // unknown error
+                    // failure; out of an abundance of caution, try to read the next display
+                    System.Diagnostics.Debug.Assert(false, "Error setting dpi info");
+                    return false;
+            }
+
+            // verify that the DPI was set successfully
+            // NOTE: this is not technically necessary since we already have a success/failure result, but it's a good sanity check; if it's too early to check this then it's reasonable for us to skip this verification step
+            var currentDpiOffsetAndRange = Display.GetCurrentDpiOffsetAndRange(displayAdapterIdInfo.adapterId, displayAdapterIdInfo.sourceId);
+            if (currentDpiOffsetAndRange == null)
+            {
+                return false;
+            }
+            if (currentDpiOffsetAndRange.Value.currentDpiOffset != dpiOffset)
+            {
+                System.Diagnostics.Debug.Assert(false, "Could not set DPI offset (or the system has not updated the current SPI offset value)");
+                return false;
+            }
+
+            // otherwise, we succeeded
+            return true;
+        }
+
+        /// <summary>Gets the available resolutions for a display device.</summary>
+        public IEnumerable<Size> GetResolutions(string? deviceName = null)
+        {
+            WindowsApi.DEVMODEW mode = new WindowsApi.DEVMODEW();
+            mode.Init();
+
+            uint modeNum = 0;
+
+            while (WindowsApi.EnumDisplaySettingsEx(deviceName, modeNum++, ref mode, 0))
+            {
+                yield return new Size((int)mode.dmPelsWidth, (int)mode.dmPelsHeight);
+            }
+        }
+
+        private static Size Resolution(Size? newSize, string? deviceName = null)
+        {
+            WindowsApi.DEVMODEW mode = new WindowsApi.DEVMODEW();
+            mode.Init();
+            // When setting, the current display still needs to be retrieved, to pre-fill the mode struct.
+            WindowsApi.EnumDisplaySettingsEx(deviceName, WindowsApi.ENUM_CURRENT_SETTINGS, ref mode, 0);
+            Size originalSize = new Size((int)mode.dmPelsWidth, (int)mode.dmPelsHeight);
+
+            if (newSize.HasValue)
+            {
+                const uint CDS_UPDATEREGISTRY = 1;
+                mode.dmPelsWidth = (uint)newSize.Value.Width;
+                mode.dmPelsHeight = (uint)newSize.Value.Height;
+                WindowsApi.ChangeDisplaySettingsEx(deviceName, ref mode, IntPtr.Zero, CDS_UPDATEREGISTRY, IntPtr.Zero);
+            }
+
+            return originalSize;
+        }
+
+        /// <summary>Gets the current resolution for a display device.</summary>
+        /// <returns>The current resolution.</returns>
+        public Size GetResolution(string? deviceName = null)
+        {
+            return Resolution(null, deviceName);
+        }
+
+        /// <summary>Gets the current resolution for a display device.</summary>
+        /// <returns>The previous resolution.</returns>
+        public Size SetResolution(Size resolution, string? deviceName = null)
+        {
+            return Resolution(resolution, deviceName);
         }
     }
 }

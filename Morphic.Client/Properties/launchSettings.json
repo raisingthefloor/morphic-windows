@@ -1,9 +1,19 @@
 {
   "profiles": {
-    "Morphic.Client": {
+    "Morphic-Basic": {
       "commandName": "Project",
       "environmentVariables": {
-        "MORPHIC_DEBUG": "True"
+        "MORPHIC_FEATURES": "Properties/features.basic.txt",
+        "MORPHIC_DEBUG": "True",
+        "xMORPHIC_BAR": "../../../test-bar.json5"
+      }
+    },
+    "Morphic-Community": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "MORPHIC_FEATURES": "Properties/features.community.txt",
+        "MORPHIC_DEBUG": "True",
+        "xMORPHIC_BAR": "../../../test-bar.json5"
       }
     }
   }
