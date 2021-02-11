@@ -12,12 +12,22 @@
     <menu:MorphicMenuItem Header="Show MorphicBar" x:Name="ShowBar" Click="ShowBarClick" />
     <menu:MorphicMenuItem Header="Hide MorphicBar" x:Name="HideBar" Click="HideBarClick" />
 
+    <Separator x:Name="CloudSettingsSeparator" />
+    <menu:MorphicMenuItem Header="Sign out of Morphic" x:Name="LogoutItem" Click="Logout" Features="Community"  />
+    <menu:MorphicMenuItem Header="Sign into Morphic..." x:Name="LoginItem" Click="Login" Features="Community"  />
+    <menu:MorphicMenuItem x:Name="CopySettingsBetweenComputersMenuItem" Header="_Copy settings to or from Morphic Account..." Dialog="dialogs:TravelWindow"/>
+    <menu:MorphicMenuItem x:Name="RestoreSettingsFromBackupMenuItem" Header="_Restore settings from backup" Dialog="dialogs:RestoreWindow"/>
+
     <Separator/>
 
-    <menu:MorphicMenuItem Header="_Learn about Morphic..." Click="LearnAboutMorphicClicked" Open="https://morphic.org/" />
-    <menu:MorphicMenuItem Header="Quick _Demo movies" Click="QuickDemoMoviesClicked" Open="https://morphic.org/demos" />
+    <Separator/>
 
-    <menu:MorphicMenuItem Header="Settings to make the computer easier">
+    <menu:MorphicMenuItem Header="_Explore everything Morphic can do..." Click="LearnAboutMorphicClicked" Open="https://morphic.org/" />
+    <menu:MorphicMenuItem Header="Quick Morphic _demo movies..." Click="QuickDemoMoviesClicked" Open="https://morphic.org/demos" />
+
+    <Separator/>
+
+    <menu:MorphicMenuItem Header="More settings to make the computer easier">
 
         <menu:MorphicMenuHeader Header="Windows Settings for MorphicBar Controls"/>
         <menu:MorphicMenuItem Header="_Magnifier Settings" Open="ms-settings:easeofaccess-magnifier" />
@@ -38,22 +48,15 @@
         <menu:MorphicMenuHeader Header="Direct actions"/>
         <menu:MorphicMenuItem Header="_Stop Key-repeat" IsCheckable="True" Click="StopKeyRepeatToggle" Loaded="StopKeyRepeatInit" />
 
-
     </menu:MorphicMenuItem>
 
-    <menu:MorphicMenuItem Header="_Other Helpful Things" Click="OtherHelpfulThingsClicked" Open="https://morphic.org/helpful" />
-
-    <Separator x:Name="CloudSettingsSeparator" />
-    <menu:MorphicMenuItem x:Name="CopySettingsBetweenComputersMenuItem" Header="_Copy settings between computers" Dialog="dialogs:TravelWindow"/>
-    <menu:MorphicMenuItem x:Name="RestoreSettingsFromBackupMenuItem" Header="_Restore settings from backup" Dialog="dialogs:RestoreWindow"/>
+    <menu:MorphicMenuItem Header="_Other resources to make computers easier..." Click="OtherHelpfulThingsClicked" Open="https://morphic.org/helpful" />
 
     <Separator/>
+
     <menu:MorphicMenuItem Header="_Hide QuickHelp (except with Alt key)" IsCheckable="True" IsChecked="{Binding App.AppOptions.HideQuickHelp}" />
     <menu:MorphicMenuItem Header="_Automatically start Morphic" x:Name="AutorunAfterLoginItem" Click="AutorunAfterLoginClicked" IsCheckable="True" IsChecked="{Binding App.AppOptions.AutoRun}" />
     <menu:MorphicMenuItem Header="_Show Morphic Bar at start" x:Name="ShowMorphicBarAfterLoginItem" Click="ShowMorphicBarAfterLoginClicked" IsCheckable="True" IsChecked="{Binding App.AppOptions.AutoShow}" />
-    <Separator/>
     <menu:MorphicMenuItem Header="_About Morphic..." Click="AboutMorphicClicked" Dialog="dialogs:AboutWindow" />
-    <menu:MorphicMenuItem Header="Log out" x:Name="LogoutItem" Click="Logout" Features="Community"  />
-    <menu:MorphicMenuItem Header="Log in" x:Name="LoginItem" Click="Login" Features="Community"  />
     <menu:MorphicMenuItem Header="_Quit Morphic" Click="QuitClick"/>
 </ContextMenu>
