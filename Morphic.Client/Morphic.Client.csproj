@@ -11,14 +11,13 @@
     <AssemblyName>Morphic</AssemblyName>
     <PublishTrimmed>true</PublishTrimmed>
     <Platforms>AnyCPU;x64</Platforms>
-    <VersionPrefix>1.0$(VersionBuildComponents)</VersionPrefix>
+    <VersionPrefix>1.1$(VersionBuildComponents)</VersionPrefix>
     <VersionSuffix Condition="'$(Configuration)' == 'Debug'">localdev</VersionSuffix>
     <VersionSuffix Condition="'$(Configuration)' == 'Release'">$(VersionSuffix)</VersionSuffix>
     <StartupObject>Morphic.Client.AppMain</StartupObject>
     <Company>Raising the Floor</Company>
     <BuildType Condition="'$(BuildType)' == ''">Development</BuildType>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Edition Condition="'$(Edition)' == ''">All</Edition>
   </PropertyGroup>
 
   <ItemGroup>
@@ -31,20 +30,6 @@
     <None Remove="Solutions.json" />
     <None Remove="Solutions\jaws2019.solutions.json" />
     <None Remove="Solutions\jaws2020.solutions.json" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
-    <!-- copy the feature files for debug sessions, so one can be specified via MORPHIC_FEATURES -->
-    <None Update="Properties\features.*">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(Configuration)' == 'Release'">
-    <!-- copy the feature files for release-mode debug sessions, so one can be specified via MORPHIC_FEATURES -->
-    <None Update="Properties\features.*">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -83,13 +68,10 @@
     <Content Include="test-bar.json5">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="features">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Autoupdater.NET.Official" Version="1.6.0" />
+    <PackageReference Include="Autoupdater.NET.Official" Version="1.6.4" />
     <PackageReference Include="CommandLineParser" Version="2.8.0" />
     <PackageReference Include="Countly" Version="20.5.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="3.1.3" />
@@ -160,7 +142,7 @@
   </ItemGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="copy Properties\features.$(Edition).txt features &amp; copy &quot;appsettings.$(BuildType).json&quot; appsettings.json" />
+    <Exec Command="copy &quot;appsettings.$(BuildType).json&quot; appsettings.json" />
   </Target>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

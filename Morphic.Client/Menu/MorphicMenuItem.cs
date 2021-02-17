@@ -30,30 +30,6 @@
         public MorphicMenuItemTelemetryType? TelemetryType;
         public string? TelemetryCategory;
 
-        /// <summary>Show the item only if one or more of these features are enabled.</summary>
-        public Features Features
-        {
-            set
-            {
-                if (!value.AnyEnabled())
-                {
-                    this.Visibility = Visibility.Collapsed;
-                }
-            }
-        }
-
-        /// <summary>Show the item only if all of these features are enabled.</summary>
-        public Features AllFeatures
-        {
-            set
-            {
-                if (!value.IsEnabled())
-                {
-                    this.Visibility = Visibility.Collapsed;
-                }
-            }
-        }
-
         public MorphicMenuItem()
         {
             this.Click += this.OnClick;

@@ -47,7 +47,7 @@ namespace Morphic.Client.Dialogs
             this.morphicSession = morphicSession;
             this.logger = logger;
             this.serviceProvider = serviceProvider;
-            UriBuilder? builder = new UriBuilder(options.FontEndUri);
+            UriBuilder? builder = new UriBuilder(options.FrontEndUri);
             builder.Path = "/password/reset";
             this.ForgotPasswordUriString = builder.Uri.AbsoluteUri;
             this.InitializeComponent();

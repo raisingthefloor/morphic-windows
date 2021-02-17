@@ -41,14 +41,15 @@ namespace Morphic.Client.Bar.Data
         {
             this.ServiceProvider = serviceProvider ?? App.Current.ServiceProvider;
             SessionOptions sessionOptions = this.ServiceProvider.GetRequiredService<SessionOptions>();
-            this.FrontEndUri = Features.Community.IsEnabled()
-                ? sessionOptions.FontEndUriCommunity
-                : sessionOptions.FontEndUri;
+            this.FrontEndUri = sessionOptions.FrontEndUri;
+            this.BarEditorWebAppUri = sessionOptions.BarEditorWebAppUri;
         }
 
         public IServiceProvider ServiceProvider { get; set; }
 
         public Uri FrontEndUri { get; }
+
+        public Uri BarEditorWebAppUri { get; }
 
         /// <summary>
         /// Where the bar data was loaded from (a url or path).

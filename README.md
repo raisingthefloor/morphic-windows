@@ -4,21 +4,19 @@
 
 ## Building Locally
 
-The client, and its dependent projects, can be built using MSBuild:
+The client and its dependent projects can be built using MSBuild:
 
     msbuild Morphic.Client
 
-To build the installers (add `-p:Configuration=Release` as required):
+To build the installer (add `-p:Configuration=Release` as required):
 
-    msbuild Morphic.Setup -p:Edition=Basic
-    msbuild Morphic.Setup -p:Edition=Community
+    msbuild Morphic.Setup
 
 ## Running (development)
 
-One of two launch profiles can be used, depending on the edition:
+Use the following launch profile:
 
-* Morphic-Basic
-* Morphic-Community
+* Morphic
 
 ### Configuration
 

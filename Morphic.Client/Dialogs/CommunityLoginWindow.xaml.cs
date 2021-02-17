@@ -24,8 +24,7 @@ namespace Morphic.Client.Dialogs
     /// </summary>
     public partial class CommunityLoginWindow : Window, INotifyPropertyChanged
     {
-
-        public CommunityLoginWindow(CommunitySession session, ILogger<CommunityLoginWindow> logger)
+        public CommunityLoginWindow(MorphicSession session, ILogger<CommunityLoginWindow> logger)
         {
             this.DataContext = this;
             this.InitializeComponent();
@@ -34,7 +33,7 @@ namespace Morphic.Client.Dialogs
             this.logger = logger;
         }
 
-        private readonly CommunitySession session;
+        private readonly MorphicSession session;
         private readonly ILogger logger;
 
         private void OnClosed(object? sender, EventArgs e)
