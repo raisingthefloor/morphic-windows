@@ -72,7 +72,7 @@ namespace Morphic.Client.Bar.Data
         /// Title of the bar (the window caption)
         /// </summary>
         [JsonProperty("title")]
-        public string? Title { get; set; } = "Morphic Community Bar";
+        public string? Title { get; set; } = "Custom MorphicBar";
 
         /// <summary>
         /// Size of everything.
