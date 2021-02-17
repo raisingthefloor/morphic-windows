@@ -69,7 +69,7 @@ namespace Morphic.Client.Dialogs
 
         #region Logging In
 
-        public bool ApplyPreferences { get; set; }
+        //public bool ApplyPreferences { get; set; }
 
         /// <summary>
         /// Event handler for the login button click
@@ -110,11 +110,11 @@ namespace Morphic.Client.Dialogs
                 this.ErrorLabel.Focus(); // Makes narrator read the error label
                 this.SetFieldsEnabled(true);
             }
-            else if (this.ApplyPreferences)
-            {
-                _ = this.morphicSession.ApplyAllPreferences();
-                this.Close();
-            }
+            //else if (this.ApplyPreferences)
+            //{
+            //    _ = this.morphicSession.ApplyAllPreferences();
+            //    this.Close();
+            //}
             else
             {
                 this.OnComplete();

@@ -15,7 +15,6 @@ development in the [`launchSettings.json`](../Morphic.Client/Properties/launchSe
 |---|---|---
 |`--debug`|`MORPHIC_DEBUG=1`|Run in "debug mode" (the files `appsettings.Debug.json` and `appsettings.Local.json` are used for configuration)
 |`--bar BARFILE`|`MORPHIC_BAR=BARFILE`|Use `BARFILE` as the json5 file to load as the initial bar
-|`--features FEATURES`|`MORPHIC_FEATURES=FEATURES`|Override the default features file.
 
 ## Static configuration
 
@@ -25,7 +24,7 @@ The application does not write to these.
 ### Bar configuration
 
 * [`DefaultConfig/default-bar.json5`](../Morphic.Client/DefaultConfig/default-bar.json5):
-Contains the base bar information on which other bars (Basic MorphicBar or downloaded community bars) are loaded.
+Contains the base bar information on which other bars (Basic MorphicBar or downloaded custom bars) are loaded.
 
 * [`DefaultConfig/basic-bar.json5`](../Morphic.Client/DefaultConfig/basic-bar.json5):
 The bar definition for the Basic MorphicBar.

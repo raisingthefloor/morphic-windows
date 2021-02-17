@@ -720,7 +720,7 @@ namespace Morphic.Client
                 await this.OnFirstRun();
             }
 
-            // TODO: we probably want to check to see if the user is logged in and has chosen a community bar...and then only load the "basic bar" if they have not
+            // TODO: we probably want to check to see if the user is logged in and has chosen a custom bar...and then only load the "basic bar" if they have not
             this.BarManager.LoadFromBarJson(AppPaths.GetConfigFile("basic-bar.json5", true));
         }
 

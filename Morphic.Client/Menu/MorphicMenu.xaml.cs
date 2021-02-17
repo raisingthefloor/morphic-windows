@@ -3,6 +3,7 @@
     using Bar.UI;
     using CountlySDK;
     using Morphic.Client.Config;
+    using Morphic.Client.Dialogs;
     using System;
     using System.Threading.Tasks;
     using System.Windows;
@@ -236,7 +237,7 @@
 
         private void Login(object sender, RoutedEventArgs e)
         {
-            _ = App.Current.OpenSession();
+            App.Current.Dialogs.OpenDialog<LoginWindow>();
         }
 
         private async void LearnAboutMorphicClicked(object sender, RoutedEventArgs e)

@@ -242,16 +242,16 @@ namespace Morphic.Client.Bar
             UserCommunity? community = null;
             UserBar? userBar = null;
 
-            if (session.Communities.Length == 0)
-            {
-                MessageBox.Show("You are not part of a Morphic community yet.", "Morphic");
-            }
-            else if (session.Communities.Length == 1)
-            {
-                community = session.Communities.First();
-            }
-            else
-            {
+            //if (session.Communities.Length == 0)
+            //{
+            //    MessageBox.Show("You are not part of a Morphic community yet.", "Morphic");
+            //}
+            //else if (session.Communities.Length == 1)
+            //{
+            //    community = session.Communities.First();
+            //}
+            //else
+            //{
                 // The user is a member of multiple communities.
 
                 // See if any membership has changed
@@ -264,25 +264,25 @@ namespace Morphic.Client.Bar
                     community = session.Communities.FirstOrDefault(c => c.Id == lastCommunityId);
                 }
 
-                if (community == null)
-                {
-                    this.Logger.LogInformation("Showing community picker");
+                //if (community == null)
+                //{
+                //    this.Logger.LogInformation("Showing community picker");
 
-                    // Load the bars while the picker is shown
-                    Dictionary<string, Task<UserBar>> bars =
-                        session.Communities.ToDictionary(c => c.Id, c => session.GetBar(c.Id));
+                //    // Load the bars while the picker is shown
+                //    Dictionary<string, Task<UserBar>> bars =
+                //        session.Communities.ToDictionary(c => c.Id, c => session.GetBar(c.Id));
 
-                    // Show the picker
-                    CommunityPickerWindow picker = new CommunityPickerWindow(session.Communities);
-                    bool gotCommunity = picker.ShowDialog() == true;
-                    community = gotCommunity ? picker.SelectedCommunity : null;
+                //    // Show the picker
+                //    CommunityPickerWindow picker = new CommunityPickerWindow(session.Communities);
+                //    bool gotCommunity = picker.ShowDialog() == true;
+                //    community = gotCommunity ? picker.SelectedCommunity : null;
 
-                    if (community != null)
-                    {
-                        userBar = await bars[community.Id];
-                    }
-                }
-            }
+                //    if (community != null)
+                //    {
+                //        userBar = await bars[community.Id];
+                //    }
+                //}
+            //}
 
             if (community != null)
             {
@@ -296,6 +296,7 @@ namespace Morphic.Client.Bar
                     barData.CommunityId = community.Id;
                 }
             }
+            // TODO: if community is null, set our selected community to null and show the Basic MorphicBar            
 
             AppOptions.Current.Communities = session.Communities.Select(c => c.Id).ToArray();
             AppOptions.Current.LastCommunity = community?.Id;

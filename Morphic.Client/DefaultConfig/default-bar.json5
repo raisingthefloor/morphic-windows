@@ -76,7 +76,7 @@
       configuration: {
         function: "menu",
         image_url: "morphic-logo",
-        tooltip: "Morphic Community Bar",
+        tooltip: "Custom MorphicBar",
         uiName: "Menu"
       }
     }

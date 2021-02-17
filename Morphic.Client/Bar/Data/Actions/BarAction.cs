@@ -70,7 +70,7 @@ namespace Morphic.Client.Bar.Data.Actions
                 if (e.UserMessage != null)
                 {
                     MessageBox.Show($"There was a problem performing the action:\n\n{e.UserMessage}",
-                        "Morphic Community Bar", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                        "Custom MorphicBar", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 }
 
                 result = false;
