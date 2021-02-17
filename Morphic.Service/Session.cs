@@ -8,16 +8,14 @@
 
     public class SessionOptions
     {
-        public string Endpoint { get; set; } = "";
-        public string FrontEnd { get; set; } = "";
-        public string? EndpointCommunity { get; set; }
-        public string? FrontEndCommunity { get; set; }
+        public string ApiEndpointUrlAsString { get; set; } = "";
+        public string FrontEndUrlAsString { get; set; } = "";
+        public string? BarEditorWebAppUrlAsString { get; set; }
 
-        public Uri EndpointUriCommunity => new Uri(this.EndpointCommunity ?? this.Endpoint);
-        public Uri EndpointUri => new Uri(this.Endpoint);
+        public Uri ApiEndpointUri => new Uri(this.ApiEndpointUrlAsString);
 
-        public Uri FontEndUri => new Uri(this.FrontEnd);
-        public Uri FontEndUriCommunity => new Uri(this.FrontEndCommunity ?? this.FrontEnd);
+        public Uri FrontEndUri => new Uri(this.FrontEndUrlAsString);
+        public Uri BarEditorWebAppUri => new Uri(this.BarEditorWebAppUrlAsString ?? this.FrontEndUrlAsString);
     }
 
     public abstract class Session : IHttpServiceCredentialsProvider

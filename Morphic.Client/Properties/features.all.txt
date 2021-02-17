@@ -1,3 +1,0 @@
-Name=Internal (all features)
-Basic
-Community

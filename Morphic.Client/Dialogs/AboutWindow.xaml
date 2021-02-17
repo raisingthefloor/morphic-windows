@@ -14,8 +14,8 @@
                    Text="Morphic™ © 2020-2021 Raising the Floor"/>
         <TextBlock x:Name="VersionLabel" HorizontalAlignment="Center"
                    Text="{Binding Path=Version, StringFormat='version {0}'}" />
-        <TextBlock x:Name="BuildLabel" HorizontalAlignment="Center"
-                   Text="{Binding Path=Commit, StringFormat='Build {0}'}"/>
+        <TextBlock x:Name="BuildLabel" HorizontalAlignment="Center" />
+            <!-- Text="{Binding Path=Commit, StringFormat='Build {0}'}" /> -->
         <TextBlock HorizontalAlignment="Center" FontSize="10">
             <Hyperlink RequestNavigate="CheckUpdate_OnClick" NavigateUri="#update">Check for Update</Hyperlink>
         </TextBlock>

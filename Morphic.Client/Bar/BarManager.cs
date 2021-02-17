@@ -219,7 +219,7 @@ namespace Morphic.Client.Bar
         /// </summary>
         /// <param name="session">The current session.</param>
         /// <param name="showCommunityId">Force this community to show.</param>
-        public async void LoadSessionBar(CommunitySession session, string? showCommunityId = null)
+        public async void LoadSessionBar(MorphicSession session, string? showCommunityId = null)
         {
             if (this.firstBar && AppOptions.Current.Launch.BarFile != null)
             {

@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.VisualBasic.CompilerServices;
 using Morphic.Settings.SolutionsRegistry;
 using System;
 using System.IO;

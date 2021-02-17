@@ -13,8 +13,8 @@
     <menu:MorphicMenuItem Header="Hide MorphicBar" x:Name="HideBar" Click="HideBarClick" />
 
     <Separator x:Name="CloudSettingsSeparator" />
-    <menu:MorphicMenuItem Header="Sign out of Morphic" x:Name="LogoutItem" Click="Logout" Features="Community"  />
-    <menu:MorphicMenuItem Header="Sign into Morphic..." x:Name="LoginItem" Click="Login" Features="Community"  />
+    <menu:MorphicMenuItem Header="Sign out of Morphic" x:Name="LogoutItem" Click="Logout" />
+    <menu:MorphicMenuItem Header="Sign into Morphic..." x:Name="LoginItem" Click="Login" />
     <menu:MorphicMenuItem x:Name="CopySettingsBetweenComputersMenuItem" Header="_Copy settings to or from Morphic Account..." Dialog="dialogs:TravelWindow"/>
     <menu:MorphicMenuItem x:Name="RestoreSettingsFromBackupMenuItem" Header="_Restore settings from backup" Dialog="dialogs:RestoreWindow"/>
 
