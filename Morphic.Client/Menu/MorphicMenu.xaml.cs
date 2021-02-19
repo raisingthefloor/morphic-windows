@@ -240,10 +240,10 @@
             App.Current.Dialogs.OpenDialog<LoginWindow>();
         }
 
-        private async void LearnAboutMorphicClicked(object sender, RoutedEventArgs e)
+        private async void ExploreMorphicClicked(object sender, RoutedEventArgs e)
         {
             var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
-            await Countly.RecordEvent("learnAboutMorphic", 1, segmentation);
+            await Countly.RecordEvent("exploreMorphic", 1, segmentation);
         }
 
         private async void QuickDemoMoviesClicked(object sender, RoutedEventArgs e)
