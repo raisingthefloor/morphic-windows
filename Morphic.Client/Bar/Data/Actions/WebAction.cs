@@ -32,6 +32,19 @@ namespace Morphic.Client.Bar.Data.Actions
             {
                 if (Uri.TryCreate(value, UriKind.Absolute, out Uri? uri))
                 {
+                    // validate our uri
+                    switch (uri?.Scheme.ToLowerInvariant()) {
+                        case "http":
+                        case "https":
+                            // allowed
+                            break;
+                        default:
+                            // all other schemes (as well as a null scheme) are disallowed
+                            uri = null;
+                            break;
+                    }
+
+                    // save our validated uri
                     this.Uri = uri;
                 }
                 else
