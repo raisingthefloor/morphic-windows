@@ -244,14 +244,6 @@ namespace Morphic.Client.Bar
 
             UserBar? bar;
 
-            string[] lastCommunities = AppOptions.Current.Communities.ToArray();
-            string? lastCommunityId = communityId;
-
-            if (string.IsNullOrWhiteSpace(lastCommunityId))
-            {
-                lastCommunityId = null;
-            }
-
             UserCommunity? community = null;
             UserBar? userBar = null;
 
@@ -267,14 +259,14 @@ namespace Morphic.Client.Bar
             //{
                 // The user is a member of multiple communities.
 
-                // See if any membership has changed
-                bool changed = session.Communities.Length != lastCommunities.Length
-                    || !session.Communities.Select(c => c.Id).OrderBy(id => id)
-                        .SequenceEqual(lastCommunities.OrderBy(id => id));
+                //// See if any membership has changed
+                //bool changed = session.Communities.Length != lastCommunities.Length
+                //    || !session.Communities.Select(c => c.Id).OrderBy(id => id)
+                //        .SequenceEqual(lastCommunities.OrderBy(id => id));
 
-                if (!changed && lastCommunityId != null)
+                if (/*!changed &&*/ communityId != null)
                 {
-                    community = session.Communities.FirstOrDefault(c => c.Id == lastCommunityId);
+                    community = session.Communities.FirstOrDefault(c => c.Id == communityId);
                 }
 
                 //if (community == null)
