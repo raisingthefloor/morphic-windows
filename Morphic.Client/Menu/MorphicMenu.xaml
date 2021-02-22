@@ -22,7 +22,7 @@
 
     <Separator/>
 
-    <menu:MorphicMenuItem Header="_Explore everything Morphic can do..." Click="LearnAboutMorphicClicked" Open="https://morphic.org/exploremorphic" />
+    <menu:MorphicMenuItem Header="_Explore everything Morphic can do..." Click="ExploreMorphicClicked" Open="https://morphic.org/exploremorphic" />
     <menu:MorphicMenuItem Header="Quick Morphic _demo movies..." Click="QuickDemoMoviesClicked" Open="https://morphic.org/demos" />
 
     <Separator/>
