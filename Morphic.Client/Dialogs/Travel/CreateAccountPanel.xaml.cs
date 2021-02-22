@@ -86,16 +86,16 @@ namespace Morphic.Client.Dialogs
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void OnSubmit(object? sender, RoutedEventArgs e)
+        public async void OnSubmit(object? sender, RoutedEventArgs e)
         {
-            _ = this.Submit();
+            await this.SubmitAsync();
         }
 
         /// <summary>
         /// An async method for actually doing the registration submission
         /// </summary>
         /// <returns></returns>
-        private async Task Submit()
+        private async Task SubmitAsync()
         {
             // TODO: show activity indicator
             this.UpdateValidation();
@@ -107,7 +107,7 @@ namespace Morphic.Client.Dialogs
             var errorMessage = "";
             try
             {
-                success = await this.morphicSession.RegisterUser(user, credentials, this.Preferences);
+                success = await this.morphicSession.RegisterUserAsync(user, credentials, this.Preferences);
             }
             catch (AuthService.BadPasswordException)
             {

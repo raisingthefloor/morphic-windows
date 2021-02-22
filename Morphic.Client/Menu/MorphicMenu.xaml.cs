@@ -232,6 +232,7 @@
 
         private async void Logout(object sender, RoutedEventArgs e)
         {
+            AppOptions.Current.LastCommunity = null;
             await App.Current.MorphicSession.SignOut();
         }
 
@@ -263,6 +264,12 @@
         {
             var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
             await Countly.RecordEvent("aboutMorphic", 1, segmentation);
+        }
+
+        private void SelectBasicMorphicBarClick(object sender, RoutedEventArgs e)
+        {
+            AppOptions.Current.LastCommunity = null;
+            App.Current.BarManager.LoadBasicMorphicBar();
         }
     }
 

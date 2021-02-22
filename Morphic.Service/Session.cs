@@ -53,7 +53,7 @@
         /// Open the session by trying to login with the saved user information, if any
         /// </summary>
         /// <returns>A task that completes when the user information has been fetched</returns>
-        public abstract Task Open();
+        public abstract Task OpenAsync();
 
         #region Authentication
 
@@ -90,7 +90,7 @@
             this.User = user;
         }
 
-        public abstract Task Signin(User user);
+        public abstract Task SignInAsync(User user);
 
         public async Task<bool> Authenticate(UsernameCredentials credentials)
         {
@@ -101,7 +101,7 @@
                 this.keychain.Save(credentials, this.Service.Endpoint);
                 this.Service.AuthToken = auth!.Token;
                 this.userSettings.SetUsernameForId(credentials.Username, auth.User.Id);
-                await this.Signin(auth.User);
+                await this.SignInAsync(auth.User);
             }
             return success;
         }

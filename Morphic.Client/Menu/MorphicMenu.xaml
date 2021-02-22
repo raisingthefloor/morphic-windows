@@ -12,7 +12,10 @@
     <menu:MorphicMenuItem Header="Show MorphicBar" x:Name="ShowBar" Click="ShowBarClick" />
     <menu:MorphicMenuItem Header="Hide MorphicBar" x:Name="HideBar" Click="HideBarClick" />
 
-    <Separator/>
+    <Separator x:Name="ChangeMorphicBarSeparator"/>
+    <MenuItem Header="Change MorphicBar" x:Name="ChangeMorphicBar">
+        <MenuItem Header="Basic MorphicBar" x:Name="SelectBasicMorphicBar" Click="SelectBasicMorphicBarClick" />
+    </MenuItem>
 
     <Separator x:Name="CloudSettingsSeparator" />
     <menu:MorphicMenuItem Header="Sign out of Morphic" x:Name="LogoutItem" Click="Logout" />

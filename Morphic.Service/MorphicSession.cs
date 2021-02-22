@@ -55,28 +55,31 @@ namespace Morphic.Service
         /// Open the session by trying to login with the saved user information, if any 
         /// </summary>
         /// <returns>A task that completes when the user information has been fetched</returns>
-        public override async Task Open()
+        public override async Task OpenAsync()
         {
             this.logger.LogInformation("Opening Session");
 			//
-			// TODO: evaluate if still we want to auth here (this is from CommunitySession)
+            // NOTE: ideally we would not re-authenticate and re-load the MorphicBars before loading the current bar (i.e. ideally we would cache this data, like we do on macOS)
             if (this.CurrentCredentials is UsernameCredentials credentials)
             {
                 await this.Authenticate(credentials);
             }
-			//
+            //
+            // cache our user id (so that we don't re-call "user changed" if our user doesn't actually change here)
+            var cachedUserId = this.User?.Id;
+            //
             if (this.CurrentUserId != null)
             {
                 if (this.CurrentUserId != "")
                 {
-                    this.User = await this.Storage.Load<User>(this.CurrentUserId);
+                    this.User = await this.Storage.LoadAsync<User>(this.CurrentUserId);
                 }
             }
             string preferencesId = this.User?.PreferencesId ?? "__default__";
-            this.Preferences = await this.Storage.Load<Preferences>(preferencesId);
-            if (this.User != null)
+            this.Preferences = await this.Storage.LoadAsync<Preferences>(preferencesId);
+            if ((this.User != null) && (this.User?.Id != cachedUserId))
             {
-                this.UserChanged?.Invoke(this, new EventArgs());
+                await this.UserChangedAsync?.Invoke(this, new EventArgs());
             }
         }
 
@@ -87,14 +90,15 @@ namespace Morphic.Service
         /// </summary>
         public Preferences? Preferences;
 
-        public event EventHandler? UserChanged;
+        public delegate Task AsyncEventHandler(object sender, EventArgs e);
+        public event AsyncEventHandler? UserChangedAsync;
 
-        public override async Task Signin(User user)
+        public override async Task SignInAsync(User user)
         {
-            await this.Signin(user, null);
+            await this.SignInAsync(user, null);
         }
 
-        public async Task Signin(User user, Preferences? preferences)
+        public async Task SignInAsync(User user, Preferences? preferences)
         {
             this.Communities = new UserCommunity[] { };
             this.User = user;
@@ -117,18 +121,30 @@ namespace Morphic.Service
                 this.Communities = communitiesPage.Communities;
             }
 
-            this.UserChanged?.Invoke(this, new EventArgs());
+            if (this.UserChangedAsync != null)
+            {
+                await this.UserChangedAsync.Invoke(this, new EventArgs());
+            }
         }
 
         public async Task SignOut()
         {
+            // empty our list of communities
+            this.Communities = new UserCommunity[0];
+
+            // clear out the user
             this.User = null;
-//            this.Preferences = await this.Storage.Load<Preferences>("__default__");
-//            await this.Solutions.ApplyPreferences(this.Preferences!);
-            this.UserChanged?.Invoke(this, new EventArgs());
+
+            //            this.Preferences = await this.Storage.Load<Preferences>("__default__");
+            //            await this.Solutions.ApplyPreferences(this.Preferences!);
+
+            if (this.UserChangedAsync != null)
+            {
+                await this.UserChangedAsync.Invoke(this, new EventArgs());
+            }
         }
 
-        public async Task<bool> RegisterUser(User user, UsernameCredentials credentials, Preferences preferences)
+        public async Task<bool> RegisterUserAsync(User user, UsernameCredentials credentials, Preferences preferences)
         {
             AuthResponse? auth = await this.Service.Register(user, credentials);
             bool success = auth != null;
@@ -151,7 +167,7 @@ namespace Morphic.Service
                 }
 
                 this.userSettings.SetUsernameForId(credentials.Username, auth.User.Id);
-                await this.Signin(auth.User, preferences);
+                await this.SignInAsync(auth.User, preferences);
             }
 
             return success;

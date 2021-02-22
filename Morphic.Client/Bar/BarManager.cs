@@ -49,6 +49,8 @@ namespace Morphic.Client.Bar
         {
         }
 
+        public bool BarIsLoaded { get; private set; } = false;
+
         /// <summary>
         /// Show a bar that's already loaded.
         /// </summary>
@@ -74,6 +76,8 @@ namespace Morphic.Client.Bar
         /// </summary>
         public void CloseBar()
         {
+            this.BarIsLoaded = false;
+
             if (this.barWindow != null)
             {
                 this.OnBarUnloaded(this.barWindow);
@@ -176,6 +180,13 @@ namespace Morphic.Client.Bar
             }
         }
 
+        public BarData? LoadBasicMorphicBar()
+        {
+            var result = LoadFromBarJson(AppPaths.GetConfigFile("basic-bar.json5", true));
+            AppOptions.Current.LastCommunity = null;
+            return result;
+        }
+
         /// <summary>
         /// Loads and shows a bar.
         /// </summary>
@@ -204,6 +215,8 @@ namespace Morphic.Client.Bar
                 this.CloseBar();
             }
 
+            this.BarIsLoaded = true;
+
             if (bar != null)
             {
                 this.CreateBarWindow(bar);
@@ -219,7 +232,7 @@ namespace Morphic.Client.Bar
         /// </summary>
         /// <param name="session">The current session.</param>
         /// <param name="showCommunityId">Force this community to show.</param>
-        public async void LoadSessionBar(MorphicSession session, string? showCommunityId = null)
+        public async Task LoadSessionBarAsync(MorphicSession session, string communityId)
         {
             if (this.firstBar && AppOptions.Current.Launch.BarFile != null)
             {
@@ -232,7 +245,7 @@ namespace Morphic.Client.Bar
             UserBar? bar;
 
             string[] lastCommunities = AppOptions.Current.Communities.ToArray();
-            string? lastCommunityId = showCommunityId ?? AppOptions.Current.LastCommunity;
+            string? lastCommunityId = communityId;
 
             if (string.IsNullOrWhiteSpace(lastCommunityId))
             {
@@ -255,7 +268,7 @@ namespace Morphic.Client.Bar
                 // The user is a member of multiple communities.
 
                 // See if any membership has changed
-                bool changed = showCommunityId != null && session.Communities.Length != lastCommunities.Length
+                bool changed = session.Communities.Length != lastCommunities.Length
                     || !session.Communities.Select(c => c.Id).OrderBy(id => id)
                         .SequenceEqual(lastCommunities.OrderBy(id => id));
 
@@ -295,11 +308,18 @@ namespace Morphic.Client.Bar
                 {
                     barData.CommunityId = community.Id;
                 }
+
+                AppOptions.Current.LastCommunity = community?.Id;
             }
-            // TODO: if community is null, set our selected community to null and show the Basic MorphicBar            
+            else
+            {
+                // if the community could not be found, show the Basic MorphicBar instead
+                this.LoadBasicMorphicBar();
+
+                AppOptions.Current.LastCommunity = null;
+            }
 
             AppOptions.Current.Communities = session.Communities.Select(c => c.Id).ToArray();
-            AppOptions.Current.LastCommunity = community?.Id;
         }
 
         /// <summary>
