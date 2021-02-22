@@ -1,4 +1,4 @@
-﻿// Copyright 2020 Raising the Floor - International
+﻿// Copyright 2020-2021 Raising the Floor - International
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -537,7 +537,7 @@ namespace Morphic.Client
                 );
 
             this.MorphicSession = this.ServiceProvider.GetRequiredService<MorphicSession>();
-            this.MorphicSession.UserChanged += this.Session_UserChanged;
+            this.MorphicSession.UserChangedAsync += this.Session_UserChangedAsync;
 
             this.Logger.LogInformation("App Started");
 
@@ -553,7 +553,9 @@ namespace Morphic.Client
 
             this.AddSettingsListener();
 
-            this.OpenSession();
+            this.BarManager.BarLoaded += BarManager_BarLoaded;
+
+            await this.OpenSessionAsync();
 
             // Make settings displayed on the UI update when a system setting has changed, or when the app is focused.
             this.SystemSettingChanged += (sender, args) => SettingsHandler.SystemSettingChanged();
@@ -662,21 +664,91 @@ namespace Morphic.Client
             }
         }
 
-        private void Session_UserChanged(object? sender, EventArgs e)
+        private async Task Session_UserChangedAsync(object? sender, EventArgs e)
         {
             if (sender is MorphicSession morphicSession)
             {
                 if (morphicSession.SignedIn)
                 {
-                    // TODO: we probably don't want to switch bars here unless someone had a "chosen" bar when they last logged in on this computer
-                    this.BarManager.LoadSessionBar(morphicSession);
+                    var lastCommunityId = AppOptions.Current.LastCommunity;
+                    if (lastCommunityId != null)
+                    {
+                        // if the user previously selected a community bar, show that one now
+                        await this.BarManager.LoadSessionBarAsync(morphicSession, lastCommunityId);
+                    } 
+                    else
+                    {
+                        // if the user has not selected a community bar, show the basic bar
+                        this.BarManager.LoadBasicMorphicBar();
+                    }
                 }
                 else
                 {
-                    // TODO: instead of closing the bar, switch to the basic bar
-                    this.BarManager.CloseBar();
+                    // if no user is signed in, clear out the last community tag
+                    AppOptions.Current.LastCommunity = null;
+
+                    // if no user is signed in, load the basic bar
+                    this.BarManager.LoadBasicMorphicBar();
+                }
+
+                // reload our list of communities and re-select the current bar
+                ResyncCustomMorphicBarMenuItems();
+            }
+        }
+
+        private void BarManager_BarLoaded(object? sender, BarEventArgs e)
+        {
+            ResyncCustomMorphicBarMenuItems();
+        }
+
+        private void ResyncCustomMorphicBarMenuItems()
+        {
+            // clear all communities in the menu (before basic)
+            var changeMorphicBarMenuItems = this.morphicMenu.ChangeMorphicBar.Items;
+            for (int i = 0; i < changeMorphicBarMenuItems.Count; i++)
+            {
+                var submenuItem = (MenuItem)changeMorphicBarMenuItems[0];
+                if (submenuItem.Name == "SelectBasicMorphicBar")
+                {
+                    // when we reach the basic MorphicBar entry, exit our loop (so that we don't clear out any remaining items)
+                    break;
+                } 
+                else
+                {
+                    this.morphicMenu.ChangeMorphicBar.Items.RemoveAt(0);
                 }
             }
+
+            bool addedCheckmarkByCurrentCommunityBar = false;
+
+            for (int iCommunity = 0; iCommunity < this.MorphicSession.Communities.Length; iCommunity++)
+            {
+                var community = this.MorphicSession.Communities[iCommunity];
+                //
+                var newMenuItem = new MenuItem();
+                newMenuItem.Header = community.Name;
+                newMenuItem.Tag = community.Id;
+                if (community.Id == AppOptions.Current.LastCommunity)
+                {
+                    newMenuItem.IsChecked = true;
+                    addedCheckmarkByCurrentCommunityBar = true;
+                }
+                newMenuItem.Click += CustomMorphicBarMenuItem_Click;
+                //
+                this.morphicMenu.ChangeMorphicBar.Items.Insert(iCommunity, newMenuItem);
+            }
+
+            // if no custom bar was checked, check the community bar instead
+            this.morphicMenu.SelectBasicMorphicBar.IsChecked = (addedCheckmarkByCurrentCommunityBar == false);
+        }
+
+        private async void CustomMorphicBarMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var senderAsMenuItem = (MenuItem)sender;
+            //var communityName = senderAsMenuItem.Header;
+            var communityId = (string)senderAsMenuItem.Tag;
+
+            await this.BarManager.LoadSessionBarAsync(this.MorphicSession, communityId);
         }
 
         private void RegisterGlobalHotKeys()
@@ -691,9 +763,9 @@ namespace Morphic.Client
             });
         }
 
-        public async Task OpenSession()
+        public async Task OpenSessionAsync()
         {
-            await this.MorphicSession.Open();
+            await this.MorphicSession.OpenAsync();
 
             // TODO: when the user first runs Morphic, we probably want to open a welcome window (where the user could then log in)
             //await this.Dialogs.OpenDialog<CommunityLoginWindow>();
@@ -719,8 +791,10 @@ namespace Morphic.Client
                 await this.OnFirstRun();
             }
 
-            // TODO: we probably want to check to see if the user is logged in and has chosen a custom bar...and then only load the "basic bar" if they have not
-            this.BarManager.LoadFromBarJson(AppPaths.GetConfigFile("basic-bar.json5", true));
+            // if no bar was already loaded, load the Basic bar
+            if (this.BarManager.BarIsLoaded == false) {
+                this.BarManager.LoadBasicMorphicBar();
+            }
         }
 
         #endregion

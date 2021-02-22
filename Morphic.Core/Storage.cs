@@ -122,7 +122,7 @@ namespace Morphic.Core
         /// <typeparam name="RecordType">The type of record to load</typeparam>
         /// <param name="identifier">The record's unique identifier</param>
         /// <returns>The requested record, or <code>null</code> if no such record was found</returns>
-        public async Task<RecordType?> Load<RecordType>(string identifier) where RecordType: class, IRecord
+        public async Task<RecordType?> LoadAsync<RecordType>(string identifier) where RecordType: class, IRecord
         {
             var type = typeof(RecordType);
             var path = PathForRecord(identifier, type);
