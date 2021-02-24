@@ -18,6 +18,7 @@
     <Company>Raising the Floor</Company>
     <BuildType Condition="'$(BuildType)' == ''">Development</BuildType>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <LangVersion>9.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
