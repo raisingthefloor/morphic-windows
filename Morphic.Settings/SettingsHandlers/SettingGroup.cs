@@ -43,7 +43,7 @@
         /// <summary>Sets the values of the settings in this group.</summary>
         public Task Set(Values values)
         {
-            return this.SettingsHandler.Set(this, values);
+            return this.SettingsHandler.SetAsync(this, values);
         }
 
         IEnumerator<Setting> IEnumerable<Setting>.GetEnumerator() => this.All.Values.GetEnumerator();

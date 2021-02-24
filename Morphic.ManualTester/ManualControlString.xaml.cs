@@ -67,8 +67,8 @@
 
             this.changed = false;
             this.InputField.Background = this.whitefield;
-            bool success = await this.setting.SetValue(this.InputField.Text);
-            if (!success)
+            var result = await this.setting.SetValueAsync(this.InputField.Text);
+            if (result.IsError)
             {
                 this.CaptureSetting();
             }

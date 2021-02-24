@@ -1,5 +1,6 @@
 ﻿namespace Morphic.Settings.SettingsHandlers
 {
+    using Morphic.Core;
     using System;
     using System.Collections.Generic;
     using System.Reflection;
@@ -56,12 +57,12 @@
         }
 
         /// <summary>Gets the values of the given settings.</summary>
-        public override async Task<Values> Get(SettingGroup settingGroup, IEnumerable<Setting> settings)
+        public override async Task<Values> GetAsync(SettingGroup settingGroup, IEnumerable<Setting> settings)
         {
             Values values = new Values();
             foreach (Setting setting in settings)
             {
-                object? value = await this.Get(setting);
+                object? value = await this.GetAsync(setting);
                 if (!(value is NoValue))
                 {
                     values.Add(setting, value);
@@ -72,7 +73,7 @@
         }
 
         /// <summary>Gets the value of a setting.</summary>
-        public override async Task<object?> Get(Setting setting)
+        public override async Task<object?> GetAsync(Setting setting)
         {
             if (this.getters.TryGetValue(setting.Name, out Getter? getter))
             {
@@ -83,26 +84,26 @@
         }
 
         /// <summary>Sets the values of settings.</summary>
-        public override async Task<bool> Set(SettingGroup settingGroup, Values values)
+        public override async Task<IMorphicResult> SetAsync(SettingGroup settingGroup, Values values)
         {
             bool success = true;
             foreach ((Setting? setting, object? value) in values)
             {
-                success = await this.Set(setting, value) && success;
+                success = (await this.SetAsync(setting, value)).IsSuccess && success;
             }
 
-            return success;
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
         }
 
         /// <summary>Set the value of a setting.</summary>
-        public override async Task<bool> Set(Setting setting, object? newValue)
+        public override async Task<IMorphicResult> SetAsync(Setting setting, object? newValue)
         {
             if (this.setters.TryGetValue(setting.Name, out Setter? setter))
             {
                 await setter(setting, newValue);
             }
 
-            return true;
+            return IMorphicResult.SuccessResult;
         }
 
         private bool HandleListener(Setting setting, bool add)

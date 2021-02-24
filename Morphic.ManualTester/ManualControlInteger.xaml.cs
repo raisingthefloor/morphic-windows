@@ -85,8 +85,8 @@
             {
                 int value = int.Parse(this.InputField.Text);
                 this.InputField.Background = this.whitefield;
-                bool success = await this.setting.SetValue(value);
-                if (!success)
+                var result = await this.setting.SetValueAsync(value);
+                if (result.IsError)
                 {
                     this.CaptureSetting();
                 }

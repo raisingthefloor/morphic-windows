@@ -87,7 +87,7 @@ namespace Morphic.Settings.Tests.SettingsHandlers.Registry
                 Setting setting = sr.GetSetting("registry", settingId);
 
                 // Set the value
-                await setting.SetValue(newValue);
+                await setting.SetValueAsync(newValue);
 
                 // Get the value
                 object? value = await setting.GetValue();

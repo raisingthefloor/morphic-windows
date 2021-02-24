@@ -1,10 +1,11 @@
 ﻿namespace Morphic.Settings.SettingsHandlers.Ini
 {
+    using Microsoft.Extensions.DependencyInjection;
+    using Morphic.Core;
+    using SolutionsRegistry;
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
-    using Microsoft.Extensions.DependencyInjection;
-    using SolutionsRegistry;
 
     /// <summary>
     /// Settings handler for INI files.
@@ -19,7 +20,7 @@
             this.serviceProvider = serviceProvider;
         }
 
-        public override Task<Values> Get(SettingGroup settingGroup, IEnumerable<Setting> settings)
+        public override Task<Values> GetAsync(SettingGroup settingGroup, IEnumerable<Setting> settings)
         {
             IniFileReader reader = this.serviceProvider.GetRequiredService<IniFileReader>();
             reader.SetFile(settingGroup.Path);
@@ -38,7 +39,7 @@
             return Task.FromResult(values);
         }
 
-        public override async Task<bool> Set(SettingGroup settingGroup, Values values)
+        public override async Task<IMorphicResult> SetAsync(SettingGroup settingGroup, Values values)
         {
             IniFileWriter writer = this.serviceProvider.GetService<IniFileWriter>();
 
@@ -51,7 +52,7 @@
 
             await writer.Write(iniData).Save();
 
-            return true;
+            return IMorphicResult.SuccessResult;
         }
     }
 

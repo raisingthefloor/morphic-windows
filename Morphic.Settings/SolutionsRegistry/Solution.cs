@@ -61,10 +61,10 @@
 
                 if (settings != null)
                 {
-                    await group.SettingsHandler.Get(group, settings);
+                    await group.SettingsHandler.GetAsync(group, settings);
                 }
 
-                await group.SettingsHandler.Set(group, values);
+                await group.SettingsHandler.SetAsync(group, values);
             }
         }
 

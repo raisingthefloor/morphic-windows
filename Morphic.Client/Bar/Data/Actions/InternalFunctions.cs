@@ -10,12 +10,13 @@
 
 namespace Morphic.Client.Bar.Data.Actions
 {
+    using Microsoft.Extensions.Logging;
+    using Morphic.Core;
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
     using System.Threading.Tasks;
-    using Microsoft.Extensions.Logging;
 
     /// <summary>
     /// Handles the invocation of internal functions, used by the InternalAction class.
@@ -31,7 +32,7 @@ namespace Morphic.Client.Bar.Data.Actions
         /// <summary>All internal functions.</summary>
         private readonly Dictionary<string, InternalFunctionAttribute> all;
 
-        public delegate Task<bool> InternalFunction(FunctionArgs args);
+        public delegate Task<IMorphicResult> InternalFunction(FunctionArgs args);
 
         protected InternalFunctions()
         {
@@ -69,11 +70,11 @@ namespace Morphic.Client.Bar.Data.Actions
         /// <param name="functionName">The function name.</param>
         /// <param name="functionArgs">The parameters.</param>
         /// <returns></returns>
-        public Task<bool> InvokeFunction(string functionName, Dictionary<string, string> functionArgs)
+        public Task<IMorphicResult> InvokeFunction(string functionName, Dictionary<string, string> functionArgs)
         {
             App.Current.Logger.LogDebug($"Invoking built-in function '{functionName}'");
 
-            Task<bool> result;
+            Task<IMorphicResult> result;
 
             if (this.all.TryGetValue(functionName.ToLowerInvariant(),
                 out InternalFunctionAttribute? functionAttribute))
