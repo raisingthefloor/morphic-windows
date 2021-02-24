@@ -25,7 +25,7 @@ using System;
 
 namespace Morphic.Core
 {
-    internal struct MorphicUnit
+    public struct MorphicUnit
     {
     }
 }

@@ -220,11 +220,11 @@ namespace Morphic.Client.Bar.Data.Actions
 
             // set system dark/light theme
             Setting systemThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(SettingId.LightThemeSystem);
-            await systemThemeSetting.SetValue(!on);
+            await systemThemeSetting.SetValueAsync(!on);
 
             // set apps dark/light theme
             Setting appsThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(SettingId.LightThemeApps);
-            await appsThemeSetting.SetValue(!on);
+            await appsThemeSetting.SetValueAsync(!on);
             return true;
         }
 

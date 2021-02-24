@@ -53,8 +53,8 @@
 
             this.changed = false;
             this.ControlCheckBox.Background = this.whitefield;
-            bool success = await this.setting.SetValue(this.ControlCheckBox.IsChecked);
-            if (!success)
+            var result = await this.setting.SetValueAsync(this.ControlCheckBox.IsChecked);
+            if (result.IsError)
             {
                 this.CaptureSetting();
             }

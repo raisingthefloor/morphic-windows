@@ -71,7 +71,7 @@
         /// <summary>Gets the value of this setting.</summary>
         public async Task<object?> GetValue()
         {
-            this.CurrentValue = await this.SettingGroup.SettingsHandler.Get(this);
+            this.CurrentValue = await this.SettingGroup.SettingsHandler.GetAsync(this);
             return this.CurrentValue;
         }
 
@@ -96,10 +96,10 @@
         }
 
         /// <summary>Sets the value of this setting.</summary>
-        public Task<bool> SetValue(object? newValue)
+        public Task<IMorphicResult> SetValueAsync(object? newValue)
         {
             this.CurrentValue = newValue;
-            return this.SettingGroup.SettingsHandler.Set(this, newValue);
+            return this.SettingGroup.SettingsHandler.SetAsync(this, newValue);
         }
 
         public async Task<bool> CheckForChange()
@@ -119,7 +119,7 @@
             this.changedHandler?.Invoke(this, new SettingEventArgs(this, newValue));
         }
 
-        public async Task<bool> Increment(int direction)
+        public async Task<IMorphicResult> Increment(int direction)
         {
             if (this.Range != null)
             {
@@ -127,10 +127,10 @@
                 current += Math.Sign(direction) * this.Range.IncrementValue;
                 if (current >= await this.Range.GetMin() && current <= await this.Range.GetMax())
                 {
-                    return await this.SetValue(current);
+                    return await this.SetValueAsync(current);
                 }
             }
-            return false;
+            return IMorphicResult.ErrorResult;
         }
 
         public virtual void Deserialized(SettingGroup settingGroup, string settingId)

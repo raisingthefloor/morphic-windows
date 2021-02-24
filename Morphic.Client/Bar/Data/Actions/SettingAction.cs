@@ -1,10 +1,11 @@
 ﻿namespace Morphic.Client.Bar.Data.Actions
 {
-    using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Morphic.Core;
     using Newtonsoft.Json;
     using Settings.SettingsHandlers;
     using Settings.SolutionsRegistry;
+    using System.Threading.Tasks;
 
     [JsonTypeName("setting")]
     public class SettingAction : BarAction
@@ -15,14 +16,14 @@
         public Setting? Setting { get; private set; }
         public Solutions Solutions { get; private set; } = null!;
 
-        protected override Task<bool> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
+        protected override Task<IMorphicResult> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
         {
             Setting? setting;
 
             if (this.Setting == null && !string.IsNullOrEmpty(source))
             {
                 setting = this.Solutions.GetSetting(source);
-                setting.SetValue(toggleState);
+                setting.SetValueAsync(toggleState);
             }
             else
             {
@@ -31,7 +32,7 @@
 
             if (setting == null)
             {
-                return Task.FromResult(true);
+                return Task.FromResult(IMorphicResult.SuccessResult);
             }
 
             switch (source)
@@ -41,12 +42,12 @@
                 case "dec":
                     return setting.Increment(-1);
                 case "on":
-                    return setting.SetValue(true);
+                    return setting.SetValueAsync(true);
                 case "off":
-                    return setting.SetValue(false);
+                    return setting.SetValueAsync(false);
             }
 
-            return Task.FromResult(false);
+            return Task.FromResult(IMorphicResult.ErrorResult);
         }
 
         public override void Deserialized(BarData bar)

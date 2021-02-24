@@ -10,11 +10,12 @@
 
 namespace Morphic.Client.Bar.Data.Actions
 {
+    using Microsoft.Extensions.Logging;
+    using Morphic.Core;
+    using Newtonsoft.Json;
     using System;
     using System.Diagnostics;
     using System.Threading.Tasks;
-    using Microsoft.Extensions.Logging;
-    using Newtonsoft.Json;
 
     /// <summary>
     /// A web-link action.
@@ -69,7 +70,7 @@ namespace Morphic.Client.Bar.Data.Actions
             }
         }
 
-        protected override Task<bool> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
+        protected override Task<IMorphicResult> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
         {
             bool success = true;
             if (this.Uri != null)
@@ -82,7 +83,7 @@ namespace Morphic.Client.Bar.Data.Actions
                 success = process != null;
             }
 
-            return Task.FromResult(success);
+            return Task.FromResult(success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult);
         }
     }
 }

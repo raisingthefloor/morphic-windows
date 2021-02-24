@@ -151,9 +151,9 @@
         }
 
         /// <summary>Sets the value of a setting.</summary>
-        public Task<bool> SetSetting(SettingId settingId, object? newValue)
+        public Task<IMorphicResult> SetSetting(SettingId settingId, object? newValue)
         {
-            return this.Solutions.GetSetting(settingId).SetValue(newValue);
+            return this.Solutions.GetSetting(settingId).SetValueAsync(newValue);
         }
 
     }

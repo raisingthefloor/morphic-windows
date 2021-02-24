@@ -22,10 +22,10 @@
             this.registry = registry;
         }
 
-        public override Task<Values> Get(SettingGroup settingGroup, IEnumerable<Setting>? settings)
+        public override Task<Values> GetAsync(SettingGroup settingGroup, IEnumerable<Setting>? settings)
             => this.Get((RegistrySettingGroup)settingGroup, settings ?? settingGroup);
 
-        public override Task<bool> Set(SettingGroup settingGroup, Values values)
+        public override Task<IMorphicResult> SetAsync(SettingGroup settingGroup, Values values)
             => this.Set((RegistrySettingGroup)settingGroup, values);
 
         public Task<Values> Get(RegistrySettingGroup group, IEnumerable<Setting> settings)
@@ -44,13 +44,13 @@
             return Task.FromResult(values);
         }
 
-        public Task<bool> Set(RegistrySettingGroup settingGroup, Values values)
+        public Task<IMorphicResult> Set(RegistrySettingGroup settingGroup, Values values)
         {
             using IRegistryKey? key = this.OpenKey(settingGroup.RootKeyName, settingGroup.KeyPath, true);
 
             if (key == null)
             {
-                return Task.FromResult(key != null);
+                return Task.FromResult(key != null ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult);
             }
 
             foreach ((Setting setting, object? value) in values)
@@ -62,7 +62,7 @@
                 }
             }
 
-            return Task.FromResult(key != null);
+            return Task.FromResult(key != null ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult);
         }
 
         /// <summary>
