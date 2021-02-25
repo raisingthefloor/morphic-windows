@@ -22,7 +22,6 @@
 // * Consumer Electronics Association Foundation
 
 using System;
-using System.ComponentModel;
 using System.Reflection;
 
 namespace Morphic.Core

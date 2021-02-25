@@ -22,7 +22,6 @@
 // * Consumer Electronics Association Foundation
 
 using System;
-using System.Reflection;
 
 public partial class MorphicEnum<TEnum> where TEnum : struct, Enum
 {
