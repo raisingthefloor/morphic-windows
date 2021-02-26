@@ -25,7 +25,7 @@ using System;
 
 namespace Morphic.Core
 {
-    public interface IMorphicResult<TValue, TError>
+    public interface IMorphicResult<TValue, TError> where TValue: struct where TError: struct
     {
         public bool IsSuccess { get; }
         public bool IsError { get; }
@@ -37,7 +37,7 @@ namespace Morphic.Core
         public static IMorphicResult<TValue, TError> ErrorResult(TError error) => new MorphicError<TValue, TError>(error);
     }
 
-    public class MorphicSuccess<TValue, TError> : IMorphicResult<TValue, TError>
+    public class MorphicSuccess<TValue, TError> : IMorphicResult<TValue, TError> where TValue : struct where TError : struct
     {
         public bool IsSuccess => true;
         public bool IsError => false;
@@ -58,7 +58,7 @@ namespace Morphic.Core
         }
     }
 
-    public class MorphicError<TValue, TError> : IMorphicResult<TValue, TError>
+    public class MorphicError<TValue, TError> : IMorphicResult<TValue, TError> where TValue : struct where TError : struct
     {
         public bool IsSuccess => false;
         public bool IsError => true;
@@ -81,7 +81,7 @@ namespace Morphic.Core
 
     //
 
-    public interface IMorphicResult<TValue>
+    public interface IMorphicResult<TValue> where TValue : struct
     {
         public bool IsSuccess { get; }
         public bool IsError { get; }
@@ -92,7 +92,7 @@ namespace Morphic.Core
         public static IMorphicResult<TValue> ErrorResult() => new MorphicError<TValue>();
     }
 
-    public class MorphicSuccess<TValue> : IMorphicResult<TValue>
+    public class MorphicSuccess<TValue> : IMorphicResult<TValue> where TValue : struct
     {
         public bool IsSuccess => true;
         public bool IsError => false;
@@ -105,7 +105,7 @@ namespace Morphic.Core
         }
     }
 
-    public class MorphicError<TValue> : IMorphicResult<TValue>
+    public class MorphicError<TValue> : IMorphicResult<TValue> where TValue : struct
     {
         public bool IsSuccess => false;
         public bool IsError => true;
