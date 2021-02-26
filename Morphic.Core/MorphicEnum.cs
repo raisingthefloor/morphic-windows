@@ -21,9 +21,12 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-namespace Morphic.Core
+using System;
+
+public partial class MorphicEnum<TEnum> where TEnum : struct, Enum
 {
-    public struct MorphicUnit
+    public static bool IsMember(TEnum value)
     {
+        return (typeof(TEnum).GetEnumName(value) != null);
     }
 }

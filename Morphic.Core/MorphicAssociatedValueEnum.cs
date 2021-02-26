@@ -21,9 +21,19 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-namespace Morphic.Core
+using System;
+
+public abstract record MorphicAssociatedValueEnum<TValue> where TValue : struct, Enum
 {
-    public struct MorphicUnit
+    public TValue Value { get; private set; }
+
+    protected MorphicAssociatedValueEnum(TValue value)
     {
+        this.Value = value;
+    }
+
+    public static bool IsMember(TValue value)
+    {
+        return MorphicEnum<TValue>.IsMember(value);
     }
 }

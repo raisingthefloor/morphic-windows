@@ -21,9 +21,15 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-namespace Morphic.Core
+using Morphic.Core;
+
+namespace Morphic.OAuth
 {
-    public struct MorphicUnit
+    public enum OAuthResponseType
     {
+        [MorphicStringValue("code")]
+        Code,
+        [MorphicStringValue("token")]
+        Token,
     }
 }

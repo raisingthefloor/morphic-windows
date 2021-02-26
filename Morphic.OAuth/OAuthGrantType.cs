@@ -21,9 +21,25 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-namespace Morphic.Core
+using Morphic.Core;
+
+namespace Morphic.OAuth
 {
-    public struct MorphicUnit
+    public enum OAuthGrantType
     {
+        [MorphicStringValue("authorization_code")]
+        AuthorizationCode, // (default)
+        [MorphicStringValue("implicit")]
+        Implicit,          // (for web browsers, etc.)
+        [MorphicStringValue("password")]
+        Password,          // resource owner password credentials (for trusted first-party clients, etc.)
+        [MorphicStringValue("client_credentials")]
+        ClientCredentials, // (for server to server flow, manually-entered OAuth credentials, etc.)
+        [MorphicStringValue("refresh_token")]
+        RefreshToken,      // (for refreshing tokens)
+        [MorphicStringValue("urn:ietf:params:oauth:grant-type:jwt-bearer")]
+        JwtBearer,         // see RFC7523
+        [MorphicStringValue("urn:ietf:params:oauth:grant-type:saml2-bearer")]
+        Saml2Bearer,        // see RFC7522
     }
 }
