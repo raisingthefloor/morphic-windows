@@ -42,8 +42,8 @@ namespace Morphic.Core
         public bool IsSuccess => true;
         public bool IsError => false;
 
-        public TValue Value { get; private set; }
-        public TError Error
+        public TValue? Value { get; private set; }
+        public TError? Error
         {
             get
             {
@@ -63,7 +63,7 @@ namespace Morphic.Core
         public bool IsSuccess => false;
         public bool IsError => true;
 
-        public TValue Value
+        public TValue? Value
         {
             get
             {
@@ -71,7 +71,7 @@ namespace Morphic.Core
                 throw new NotSupportedException();
             }
         }
-        public TError Error { get; private set; }
+        public TError? Error { get; private set; }
 
         public MorphicError(TError error)
         {
@@ -97,7 +97,7 @@ namespace Morphic.Core
         public bool IsSuccess => true;
         public bool IsError => false;
 
-        public TValue Value { get; private set; }
+        public TValue? Value { get; private set; }
 
         public MorphicSuccess(TValue value)
         {
@@ -110,7 +110,7 @@ namespace Morphic.Core
         public bool IsSuccess => false;
         public bool IsError => true;
 
-        public TValue Value
+        public TValue? Value
         {
             get
             {
@@ -154,4 +154,21 @@ namespace Morphic.Core
         }
     }
 
+    //
+
+    // MorphicUnhandledErrorException is just used to catch anywhere that we forget to capture an error result; we throw it in a "default" block following our error handling
+    public class MorphicUnhandledErrorException : Exception
+    {
+        public object? Error { get; private set; }
+
+        public MorphicUnhandledErrorException()
+        {
+            this.Error = null;
+        }
+
+        public MorphicUnhandledErrorException(object error)
+        {
+            this.Error = error;
+        }
+    }
 }
