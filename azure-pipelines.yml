@@ -4,6 +4,7 @@
 # .NET pipelines docs: https://docs.microsoft.com/en-us/azure/devops/pipelines/ecosystems/dotnet-core
 # Microsoft-hosted agents: https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops
 # - Windows 2019 components and version options: https://github.com/actions/virtual-environments/blob/main/images/win/Windows2019-Readme.md
+# .NET Core release versions: https://github.com/dotnet/core/blob/main/release-notes/releases-index.json
 
 trigger:
   branches:
@@ -21,11 +22,12 @@ pool:
 stages:
   - stage: build
     jobs:
-    - job: build
-      steps:
-      - task: UseDotNet@2
-      - displayName: "Use .NET SDK 6.0-preview.1"
-      	inputs:
-	  packageType: sdk
-	  version: 6.0.100-preview.1.21103.13
-	  installationPath: $(Agent.ToolsDirectory)/dotnet
+      - job: build
+        steps:
+        - task: UseDotNet@2
+          displayName: "Use .NET SDK 6.0-preview.1"
+          inputs:
+            packageType: sdk
+            version: 6.0.100-preview.1.21103.13
+            installationPath: $(Agent.ToolsDirectory)/dotnet
+
