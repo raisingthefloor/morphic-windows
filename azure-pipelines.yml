@@ -1,0 +1,31 @@
+# Morphic for Windows (.NET Desktop)
+
+# Documentation used in this pipeline:
+# .NET pipelines docs: https://docs.microsoft.com/en-us/azure/devops/pipelines/ecosystems/dotnet-core
+# Microsoft-hosted agents: https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops
+# - Windows 2019 components and version options: https://github.com/actions/virtual-environments/blob/main/images/win/Windows2019-Readme.md
+
+trigger:
+  branches:
+    include:
+      - master
+
+pr:
+  branches:
+    include:
+    - '*'
+    
+pool:
+  vmImage: 'windows-2019'
+
+stages:
+  - stage: build
+    jobs:
+    - job: build
+      steps:
+      - task: UseDotNet@2
+      - displayName: "Use .NET SDK 6.0-preview1"
+      	inputs:
+	  packageType: sdk
+	  version: 6.0-preview1
+	  installationPath: $(Agent.ToolsDirectory)/dotnet
