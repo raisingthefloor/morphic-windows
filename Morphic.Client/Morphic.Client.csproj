@@ -107,6 +107,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Bar\Data\Actions\ApplicationAction.cs">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Compile>
     <Compile Update="Properties\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>

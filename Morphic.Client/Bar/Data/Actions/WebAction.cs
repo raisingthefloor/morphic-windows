@@ -39,6 +39,9 @@ namespace Morphic.Client.Bar.Data.Actions
                         case "https":
                             // allowed
                             break;
+                        case "skype":
+                            // allowed for now, but in the future we may want to launch Skype directly and handle this information seperately
+                            break;
                         default:
                             // all other schemes (as well as a null scheme) are disallowed
                             uri = null;

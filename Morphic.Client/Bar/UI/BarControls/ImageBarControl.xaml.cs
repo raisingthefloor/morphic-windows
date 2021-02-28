@@ -27,7 +27,10 @@ namespace Morphic.Client.Bar.UI.BarControls
 
         private async void Button_OnClick(object sender, RoutedEventArgs e)
         {
-            await this.BarItem.Action.InvokeAsync();
+            if (this.BarItem.Action != null)
+            {
+                await this.BarItem.Action.InvokeAsync();
+            }
         }
     }
     

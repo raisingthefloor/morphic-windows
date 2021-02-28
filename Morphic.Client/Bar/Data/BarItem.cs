@@ -68,7 +68,7 @@ namespace Morphic.Client.Bar.Data
 
         [JsonProperty("configuration", ObjectCreationHandling = ObjectCreationHandling.Replace)]
         [JsonConverter(typeof(TypedJsonConverter), "kind", "null")]
-        public BarAction Action { get; set; } = new NoOpAction();
+        public BarAction? Action { get; set; }
 
         /// <summary>
         /// The text displayed on the item.
@@ -124,9 +124,17 @@ namespace Morphic.Client.Bar.Data
             {
                 if (!string.IsNullOrEmpty(value))
                 {
-                    if (ColorConverter.ConvertFromString(value) is Color color)
+                    try
                     {
-                        this.Color = color;
+                        if (ColorConverter.ConvertFromString(value) is Color color)
+                        {
+                            this.Color = color;
+                        }
+                    }
+                    catch (FormatException)
+                    {
+                        // invalid value
+                        // NOTE: we should log this error
                     }
                 }
             }
@@ -195,7 +203,7 @@ namespace Morphic.Client.Bar.Data
             this.ControlTheme.Inherit(this.Bar.ControlTheme).Inherit(this.Bar.DefaultTheme);
             this.ControlTheme.InferStateThemes();
 
-            this.Action.Deserialized(this.Bar);
+            this.Action?.Deserialized(this.Bar);
         }
     }
 

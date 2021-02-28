@@ -58,7 +58,14 @@ namespace Morphic.Client.Bar.Data.Actions
                 InternalFunctionAttribute? attr = method.GetCustomAttribute<InternalFunctionAttribute>();
                 if (attr != null)
                 {
-                    attr.SetFunction((InternalFunction)method.CreateDelegate(typeof(InternalFunction)));
+                    try
+                    {
+                        attr.SetFunction((InternalFunction)method.CreateDelegate(typeof(InternalFunction)));
+                    }
+                    catch
+                    {
+                        System.Diagnostics.Debug.Assert(false, "Could not wire up delegate to internal function");
+                    }
                     yield return attr;
                 }
             }
@@ -70,7 +77,7 @@ namespace Morphic.Client.Bar.Data.Actions
         /// <param name="functionName">The function name.</param>
         /// <param name="functionArgs">The parameters.</param>
         /// <returns></returns>
-        public Task<IMorphicResult> InvokeFunction(string functionName, Dictionary<string, string> functionArgs)
+        public Task<IMorphicResult> InvokeFunctionAsync(string functionName, Dictionary<string, string> functionArgs)
         {
             App.Current.Logger.LogDebug($"Invoking built-in function '{functionName}'");
 

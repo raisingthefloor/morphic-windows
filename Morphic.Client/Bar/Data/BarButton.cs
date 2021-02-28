@@ -180,7 +180,7 @@ namespace Morphic.Client.Bar.Data
             // Fallback to a default image.
             if (!success)
             {
-                ImageSource? source = this.Action.DefaultImageSource;
+                ImageSource? source = this.Action?.DefaultImageSource;
                 if (source != null)
                 {
                     this.ImageSource = source;
@@ -188,7 +188,7 @@ namespace Morphic.Client.Bar.Data
                 }
                 else
                 {
-                    Uri? defaultUri = this.Action.DefaultImageUri;
+                    Uri? defaultUri = this.Action?.DefaultImageUri;
                     if (defaultUri != null && this.RemoteImage != defaultUri)
                     {
                         this.RemoteImage = defaultUri;
