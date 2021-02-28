@@ -238,13 +238,13 @@ namespace Morphic.Client.Bar.Data.Actions
 
         public string? TelemetryEventName { get; set; }
         
-        protected override Task<IMorphicResult> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
+        protected async override Task<IMorphicResult> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
         {
             try
             {
                 if (this.FunctionName == null)
                 {
-                    return Task.FromResult(IMorphicResult.SuccessResult);
+                    return IMorphicResult.SuccessResult;
                 }
 
                 Dictionary<string, string> resolvedArgs = this.Arguments
@@ -252,7 +252,7 @@ namespace Morphic.Client.Bar.Data.Actions
 
                 resolvedArgs.Add("state", toggleState == true ? "on" : "off");
 
-                return InternalFunctions.Default.InvokeFunction(this.FunctionName, resolvedArgs);
+                return await InternalFunctions.Default.InvokeFunctionAsync(this.FunctionName, resolvedArgs);
             }
             finally
             {

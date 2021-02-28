@@ -190,7 +190,7 @@ namespace Morphic.Client.Bar.Data
         /// <param name="name">The name of the type.</param>
         /// <param name="barData"></param>
         /// <returns>A class which inherits baseType.</returns>
-        private object CreateInstance(JObject jObject, Type baseType, string name, BarData? barData)
+        private object? CreateInstance(JObject jObject, Type baseType, string name, BarData? barData)
         {
             // Find the class which has the JsonTypeName attribute with the given name.
             Type? type = GetJsonType(baseType, name);
@@ -204,8 +204,8 @@ namespace Morphic.Client.Bar.Data
                 }
                 else
                 {
-                    throw new JsonSerializationException(
-                        $"Unable to get type of {baseType.Name} from '{this.typeFieldName} = ${name}'.");
+                    System.Diagnostics.Debug.Assert(false, $"Unable to get type of {baseType.Name} from '{this.typeFieldName} = ${name}'.");
+                    return null;
                 }
             }
 
@@ -300,6 +300,10 @@ namespace Morphic.Client.Bar.Data
             
             // Create the class for the type.
             object? target = this.CreateInstance(jo, objectType, kindName, bar);
+            if (target == null)
+            {
+                return null;
+            }
 
             // For each property, get the value using a path rather than just the field name.
             // (inspired by https://stackoverflow.com/a/33094930/67586)

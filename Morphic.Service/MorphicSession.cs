@@ -369,7 +369,14 @@ namespace Morphic.Service
             }
 
             UserCommunityDetail? community = await this.Service.FetchUserCommunity(this.User.Id, communityId);
-            return community?.Bar ?? throw new ApplicationException("Unable to retrieve the bar");
+            if (community != null)
+            {
+                return community.Bar;
+            } 
+            else
+            {
+                throw new ApplicationException("Unable to retrieve the bar");
+            }
         }
 
         #endregion

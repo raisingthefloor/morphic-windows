@@ -191,13 +191,13 @@ namespace Morphic.Client.Bar.Data
                         {
                             case "link":
                                 extraBarItem.Action = new Morphic.Client.Bar.Data.Actions.WebAction();
-                                ((Morphic.Client.Bar.Data.Actions.WebAction)extraBarItem.Action).UrlString = extraItemData.url ?? "";
+                                ((Morphic.Client.Bar.Data.Actions.WebAction)extraBarItem.Action!).UrlString = extraItemData.url ?? "";
                                 break;
                             case "action":
                                 var extraBarItemInternalAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
                                 extraBarItemInternalAction.TelemetryEventName = "morphicBarExtraItem";
                                 extraBarItem.Action = extraBarItemInternalAction;
-                                ((Morphic.Client.Bar.Data.Actions.InternalAction)extraBarItem.Action).FunctionName = extraItemData.function!;
+                                ((Morphic.Client.Bar.Data.Actions.InternalAction)extraBarItem.Action!).FunctionName = extraItemData.function!;
                                 break;
                             default:
                                 // unknown type; this should be an impossible code path
@@ -278,8 +278,6 @@ namespace Morphic.Client.Bar.Data
                 item.IsDefault = !this.hasDeserialized;
                 item.Deserialized();
             });
-
-
 
             this.hasDeserialized = true;
         }

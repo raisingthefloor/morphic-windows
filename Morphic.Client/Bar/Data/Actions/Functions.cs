@@ -18,13 +18,14 @@ namespace Morphic.Client.Bar.Data.Actions
     using UI;
     using Clipboard = System.Windows.Forms.Clipboard;
     using IDataObject = System.Windows.Forms.IDataObject;
+    using Morphic.Core;
 
     [HasInternalFunctions]
     // ReSharper disable once UnusedType.Global - accessed via reflection.
     public class Functions
     {
         [InternalFunction("screenshot")]
-        public static async Task<bool> Screenshot(FunctionArgs args)
+        public static async Task<IMorphicResult> ScreenshotAsync(FunctionArgs args)
         {
             // Hide all application windows
             Dictionary<Window, double> opacity = new Dictionary<Window, double>();
@@ -74,15 +75,15 @@ namespace Morphic.Client.Bar.Data.Actions
                 }
             }
 
-            return true;
+            return IMorphicResult.SuccessResult;
         }
 
         [InternalFunction("menu", "key=Morphic")]
-        public static Task<bool> ShowMenu(FunctionArgs args)
+        public async static Task<IMorphicResult> ShowMenuAsync(FunctionArgs args)
         {
             // NOTE: this internal function is only called by the MorphicBar's Morphie menu button
-            App.Current.ShowMenuAsync(null, Morphic.Client.Menu.MorphicMenu.MenuOpenedSource.morphicBarIcon);
-            return Task.FromResult(true);
+            await App.Current.ShowMenuAsync(null, Morphic.Client.Menu.MorphicMenu.MenuOpenedSource.morphicBarIcon);
+            return IMorphicResult.SuccessResult;
         }
 
         /// <summary>
@@ -91,7 +92,7 @@ namespace Morphic.Client.Bar.Data.Actions
         /// <param name="args">direction: "up"/"down", amount: number of 1/100 to move</param>
         /// <returns></returns>
         [InternalFunction("volume", "direction", "amount=10")]
-        public static Task<bool> Volume(FunctionArgs args)
+        public static async Task<IMorphicResult> SetVolumeAsync(FunctionArgs args)
         {
             IntPtr taskTray = WinApi.FindWindow("Shell_TrayWnd", IntPtr.Zero);
             if (taskTray != IntPtr.Zero)
@@ -109,7 +110,7 @@ namespace Morphic.Client.Bar.Data.Actions
                 }
             }
 
-            return Task.FromResult(true);
+            return IMorphicResult.SuccessResult;
         }
 
         // Plays the speech sound.
@@ -121,7 +122,7 @@ namespace Morphic.Client.Bar.Data.Actions
         /// <param name="args">action: "play", "pause", or "stop"</param>
         /// <returns></returns>
         [InternalFunction("readAloud", "action")]
-        public static async Task<bool> ReadAloud(FunctionArgs args)
+        public static async Task<IMorphicResult> ReadAloudAsync(FunctionArgs args)
         {
             string action = args["action"];
             switch (action)
@@ -178,7 +179,7 @@ namespace Morphic.Client.Bar.Data.Actions
 
             }
 
-            return true;
+            return IMorphicResult.SuccessResult;
         }
 
         /// <summary>
@@ -187,22 +188,22 @@ namespace Morphic.Client.Bar.Data.Actions
         /// <param name="args">keys: the keys (see MSDN for SendKeys.Send())</param>
         /// <returns></returns>
         [InternalFunction("sendKeys", "keys")]
-        public static async Task<bool> SendKeys(FunctionArgs args)
+        public static async Task<IMorphicResult> SendKeysAsync(FunctionArgs args)
         {
             await SelectionReader.Default.ActivateLastActiveWindow();
             System.Windows.Forms.SendKeys.SendWait(args["keys"]);
-            return true;
+            return IMorphicResult.SuccessResult;
         }
 
         [InternalFunction("signOut")]
-        public static async Task<bool> SignOut(FunctionArgs args)
+        public static async Task<IMorphicResult> SignOutAsync(FunctionArgs args)
         {
             var success = Morphic.Windows.Native.WindowsSession.WindowsSession.LogOff();
-            return success;
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
         }
 
         [InternalFunction("darkMode")]
-        public static async Task<bool> DarkMode(FunctionArgs args)
+        public static async Task<IMorphicResult> DarkModeAsync(FunctionArgs args)
         {
             bool on = args["state"] == "on";
 
@@ -225,7 +226,7 @@ namespace Morphic.Client.Bar.Data.Actions
             // set apps dark/light theme
             Setting appsThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(SettingId.LightThemeApps);
             await appsThemeSetting.SetValueAsync(!on);
-            return true;
+            return IMorphicResult.SuccessResult;
         }
 
         [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "Windows API naming")]

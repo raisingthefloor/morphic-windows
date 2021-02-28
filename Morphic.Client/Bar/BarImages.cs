@@ -22,6 +22,12 @@
         /// <returns></returns>
         public static string? GetBarIconFile(string name)
         {
+            var translatedName = BarImages.TranslateImageUrlToFileName(name);
+            if (translatedName != null)
+            {
+                name = translatedName;
+            }
+
             string safe = new Regex(@"\.\.|[^-a-zA-Z0-9./]+", RegexOptions.Compiled)
                 .Replace(name, "_")
                 .Trim('/')
@@ -34,6 +40,36 @@
 
             return foundFile;
         }
+
+        // NOTE: the image_url values we get back from the v1 API do not always represent the filename, so we need to map them here
+        public static string? TranslateImageUrlToFileName(string? imageUrl) {
+            switch (imageUrl) {
+                case "calendar$calendar":
+                    return "calendar";
+                case "email$envelope":
+                    return "envelope";
+                case "email$envelopeopen":
+                    return "envelope-open";
+                case "email$envelopeopentext":
+                    return "envelope-open-text";
+                case "email$envelopeoutline":
+                    return "envelope-outline";
+                case "email$envelopeoutlineopen":
+                    return "envelope-outline-open";
+                case "faviconfoxnews":
+                    return "favicon_foxNews";
+                case "news$newspaper":
+                    return "newspaper";
+                case "skype":
+                    return "logo_skype";
+                case "windowmaximize":
+                    return "window-maximize";
+                case null:
+                default:
+                    return imageUrl;
+            }
+        }
+
 
         /// <summary>
         /// Creates an image source from a local image.
@@ -83,7 +119,7 @@
                 }
             }
 
-            if (!imagePath.Contains('/'))
+            if ((imagePath.Contains('/') == false) && (imagePath.Contains('\\') == false))
             {
                 imagePath = GetBarIconFile(imagePath) ?? imagePath;
             }

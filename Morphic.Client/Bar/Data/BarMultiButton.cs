@@ -79,7 +79,7 @@ namespace Morphic.Client.Bar.Data
             }
 
             [JsonProperty("action")]
-            public BarAction Action { get; set; } = new NoOpAction();
+            public BarAction? Action { get; set; }
 
             [JsonProperty("tooltip")]
             public string? Tooltip { get; set; }
@@ -116,7 +116,7 @@ namespace Morphic.Client.Bar.Data
 
             foreach (var (key, buttonInfo) in this.Buttons)
             {
-                if (buttonInfo.Action is NoOpAction)
+                if ((buttonInfo.Action == null) || (buttonInfo.Action is NoOpAction))
                 {
                     buttonInfo.Action = this.Action;
                 }
