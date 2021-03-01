@@ -1,24 +1,18 @@
 namespace Morphic.Client.Bar.Data.Actions
 {
+    using Microsoft.Extensions.Logging;
+    using Morphic.Core;
+    using Settings.SettingsHandlers;
+    using Settings.SolutionsRegistry;
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
-    using System.IO;
-    using System.Linq;
-    using System.Media;
     using System.Runtime.InteropServices;
     using System.Threading.Tasks;
     using System.Windows;
+    using UI;
     using Windows.Native.Input;
     using Windows.Native.Speech;
-    using global::Windows.Media.SpeechSynthesis;
-    using Microsoft.Extensions.Logging;
-    using Settings.SettingsHandlers;
-    using Settings.SolutionsRegistry;
-    using UI;
-    using Clipboard = System.Windows.Forms.Clipboard;
-    using IDataObject = System.Windows.Forms.IDataObject;
-    using Morphic.Core;
 
     [HasInternalFunctions]
     // ReSharper disable once UnusedType.Global - accessed via reflection.
@@ -113,9 +107,6 @@ namespace Morphic.Client.Bar.Data.Actions
             return IMorphicResult.SuccessResult;
         }
 
-        // Plays the speech sound.
-        private static SoundPlayer? speechPlayer;
-
         /// <summary>
         /// Reads the selected text.
         /// </summary>
@@ -124,62 +115,38 @@ namespace Morphic.Client.Bar.Data.Actions
         [InternalFunction("readAloud", "action")]
         public static async Task<IMorphicResult> ReadAloudAsync(FunctionArgs args)
         {
+            var result = IMorphicResult.SuccessResult;
+
             string action = args["action"];
             switch (action)
             {
                 case "pause":
                     App.Current.Logger.LogError("ReadAloud: pause not supported");
+                    result = IMorphicResult.ErrorResult;
                     break;
 
                 case "stop":
-                case "play":
-                    Functions.speechPlayer?.Stop();
-                    Functions.speechPlayer?.Dispose();
-                    Functions.speechPlayer = null;
-
-                    if (action == "stop")
-                    {
-                        break;
-                    }
-
-                    App.Current.Logger.LogDebug("ReadAloud: Storing clipboard");
-                    IDataObject? clipboardData = Clipboard.GetDataObject();
-                    Dictionary<string, object?>? dataStored = null;
-                    if (clipboardData != null)
-                    {
-                        dataStored = clipboardData.GetFormats()
-                            .ToDictionary(format => format, format => (object?)clipboardData.GetData(format, false));
-                    }
-
-                    Clipboard.Clear();
-
-                    // Get the selection
-                    App.Current.Logger.LogDebug("ReadAloud: Getting selected text");
-                    await SelectionReader.Default.GetSelectedText(System.Windows.Forms.SendKeys.SendWait);
-                    string text = Clipboard.GetText();
-
-                    // Restore the clipboard
-                    App.Current.Logger.LogDebug("ReadAloud: Restoring clipboard");
-                    Clipboard.Clear();
-                    dataStored?.Where(kv => kv.Value != null).ToList()
-                        .ForEach(kv => Clipboard.SetData(kv.Key, kv.Value));
-
-                    // Talk the talk
-                    SpeechSynthesizer synth = new SpeechSynthesizer();
-                    SpeechSynthesisStream stream = await synth.SynthesizeTextToStreamAsync(text);
-                    speechPlayer = new SoundPlayer(stream.AsStream());
-                    speechPlayer.LoadCompleted += (o, args) =>
-                    {
-                        speechPlayer.Play();
-                    };
-
-                    speechPlayer.LoadAsync();
-
+                    App.Current.Logger.LogDebug("ReadAloud: Stop reading selected text");
+                    TextToSpeechHelper.Instance.Stop();
                     break;
 
+                case "play":
+                    App.Current.Logger.LogDebug("ReadAloud: Getting selected text");
+
+                    try
+                    {
+                        var text = await ClipboardHelper.GetSelectedText();
+                        await TextToSpeechHelper.Instance.Say(text);
+                    }
+                    catch(Exception ex)
+                    {
+                        App.Current.Logger.LogError(ex, "ReadAloud: Error reading selected text.");
+                        result = IMorphicResult.ErrorResult;
+                    }
+                    break;
             }
 
-            return IMorphicResult.SuccessResult;
+            return result;
         }
 
         /// <summary>
