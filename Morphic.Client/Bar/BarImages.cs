@@ -47,28 +47,40 @@
             switch (imageUrl) {
                 case "abcnews":
                     return "logo_abcNews";
+                case "aljazeera":
+                    return "logo_alJazeera";
                 case "amazon":
                     return "logo_amazon";
                 case "amazonmusic":
                     return "logo_amazonMusic";
                 case "aolold":
                     return "logo_aolOld";
+                case "bbc":
+                    return "logo_bbc";
                 case "bestbuy":
                     return "logo_bestBuy";
+                case "bloomberg":
+                    return "logo_bloomberg";
                 case "box":
                     return "logo_box";
                 case "calendar$calendar":
                     return "calendar";
-                case "craigslist":
-                    return "logo_craigslist";
+                case "cbsnews":
+                    return "logo_cbsNews";
+                case "cnbc":
+                    return "logo_cnbc";
                 case "cnn":
                     return "logo_cnn";
+                case "craigslist":
+                    return "logo_craigslist";
                 case "deezer":
                     return "logo_deezer";
                 case "disneyplus":
                     return "logo_disneyPlus";
                 case "dropbox":
                     return "logo_dropbox";
+                case "drudgereport":
+                    return "logo_drudgeReport";
                 case "ebay":
                     return "logo_ebay";
                 case "etsy":
@@ -87,6 +99,8 @@
                     return "logo_facebook";
                 case "faviconfoxnews":
                     return "favicon_foxNews";
+                case "forbes":
+                    return "logo_forbes";
                 case "foxnews":
                     return "logo_foxNews";
                 case "gmail":
@@ -95,6 +109,8 @@
                     return "logo_googleDrive";
                 case "googlenews":
                     return "logo_googleNews";
+                case "huffpost":
+                    return "logo_huffpost";
                 case "hulu":
                     return "logo_hulu";
                 case "icloud":
@@ -111,18 +127,24 @@
                     return "logo_itunes";
                 case "kohls":
                     return "logo_kohls";
+                case "latimes":
+                    return "logo_laTimes";
                 case "linkedin":
                     return "logo_linkedIn";
                 case "macys":
                     return "logo_macys";
                 case "mail":
                     return "logo_mail";
+                case "nbcnews":
+                    return "logo_nbcNews";
                 case "netflix":
                     return "logo_netflix";
                 case "nextdoor":
                     return "logo_nextdoor";
                 case "newyorktimes":
                     return "logo_newYorkTimes";
+                case "npr":
+                    return "logo_npr";
                 case "onedrive":
                     return "logo_onedrive";
                 case "outlook":
@@ -133,6 +155,8 @@
                     return "logo_pinterest";
                 case "reddit":
                     return "logo_reddit";
+                case "reuters":
+                    return "logo_reuters";
                 case "skype":
                     return "logo_skype";
                 case "spotify":
@@ -141,12 +165,18 @@
                     return "logo_soundcloud";
                 case "target":
                     return "logo_target";
+                case "theguardian":
+                    return "logo_theGuardian";
+                case "thehill":
+                    return "logo_theHill";
                 case "tidal":
                     return "logo_tidal";
                 case "tumblr":
                     return "logo_tumblr";
                 case "twitter":
                     return "logo_twitter";
+                case "usatoday":
+                    return "logo_usaToday";
                 case "vimeo":
                     return "logo_vimeo";
                 case "walmart":
@@ -157,6 +187,8 @@
                     return "logo_wayfair";
                 case "windowmaximize":
                     return "window-maximize";
+                case "wsj":
+                    return "logo_wsj";
                 case "yahoo":
                     return "logo_yahoo";
                 case "yahoomail":

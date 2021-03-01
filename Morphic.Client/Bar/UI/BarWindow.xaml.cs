@@ -506,6 +506,11 @@ namespace Morphic.Client.Bar.UI
                     last.Overflow = true;
                     this.UpdateBarItems();
                 }
+            } 
+            else if (this.Bar.Overflow == BarOverflow.Secondary && this is SecondaryBarWindow secondaryBarWindow) 
+            {
+                System.Diagnostics.Debug.Assert(false, "Unexpected condition; this issue must be resolved; returning false to avoid infinite loop");
+                return false;
             }
 
             return true;
