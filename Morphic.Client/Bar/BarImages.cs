@@ -42,10 +42,19 @@
         }
 
         // NOTE: the image_url values we get back from the v1 API do not always represent the filename, so we need to map them here
+        //       in the (very-near-term) future, we must standardize on URLs or another form via the API; manual mapping is not sustainable
         public static string? TranslateImageUrlToFileName(string? imageUrl) {
             switch (imageUrl) {
+                case "aolold":
+                    return "logo_aolOld";
+                case "box":
+                    return "logo_box";
                 case "calendar$calendar":
                     return "calendar";
+                case "cnn":
+                    return "logo_cnn";
+                case "dropbox":
+                    return "logo_dropbox";
                 case "email$envelope":
                     return "envelope";
                 case "email$envelopeopen":
@@ -56,14 +65,56 @@
                     return "envelope-outline";
                 case "email$envelopeoutlineopen":
                     return "envelope-outline-open";
+                case "facebook":
+                    return "logo_facebook";
                 case "faviconfoxnews":
                     return "favicon_foxNews";
+                case "foxnews":
+                    return "logo_foxNews";
+                case "gmail":
+                    return "logo_gmail";
+                case "googledrive":
+                    return "logo_googleDrive";
+                case "googlenews":
+                    return "logo_googleNews";
+                case "icloud":
+                    return "logo_icloud";
                 case "news$newspaper":
                     return "newspaper";
+                case "imgur":
+                    return "logo_imgur";
+                case "instagram":
+                    return "logo_instagram";
+                case "linkedin":
+                    return "logo_linkedIn";
+                case "mail":
+                    return "logo_mail";
+                case "nextdoor":
+                    return "logo_nextdoor";
+                case "newyorktimes":
+                    return "logo_newYorkTimes";
+                case "onedrive":
+                    return "logo_onedrive";
+                case "outlook":
+                    return "logo_outlook";
+                case "pinterest":
+                    return "logo_pinterest";
+                case "reddit":
+                    return "logo_reddit";
                 case "skype":
                     return "logo_skype";
+                case "tumblr":
+                    return "logo_tumblr";
+                case "twitter":
+                    return "logo_twitter";
+                case "washingtonpost":
+                    return "logo_washingtonPost";
                 case "windowmaximize":
                     return "window-maximize";
+                case "yahoo":
+                    return "logo_yahoo";
+                case "yahoomail":
+                    return "logo_yahoomail";
                 case null:
                 default:
                     return imageUrl;
