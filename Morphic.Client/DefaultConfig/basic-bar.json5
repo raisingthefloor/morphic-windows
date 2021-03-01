@@ -106,7 +106,7 @@
               learn: "color",
               demo: "color"
             },
-            telemetryCategory: "colorFilter"
+            telemetryCategory: "colorFilters"
           },
           "dark-mode": {
             action: {
