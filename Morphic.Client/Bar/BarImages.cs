@@ -45,16 +45,34 @@
         //       in the (very-near-term) future, we must standardize on URLs or another form via the API; manual mapping is not sustainable
         public static string? TranslateImageUrlToFileName(string? imageUrl) {
             switch (imageUrl) {
+                case "abcnews":
+                    return "logo_abcNews";
+                case "amazon":
+                    return "logo_amazon";
+                case "amazonmusic":
+                    return "logo_amazonMusic";
                 case "aolold":
                     return "logo_aolOld";
+                case "bestbuy":
+                    return "logo_bestBuy";
                 case "box":
                     return "logo_box";
                 case "calendar$calendar":
                     return "calendar";
+                case "craigslist":
+                    return "logo_craigslist";
                 case "cnn":
                     return "logo_cnn";
+                case "deezer":
+                    return "logo_deezer";
+                case "disneyplus":
+                    return "logo_disneyPlus";
                 case "dropbox":
                     return "logo_dropbox";
+                case "ebay":
+                    return "logo_ebay";
+                case "etsy":
+                    return "logo_etsy";
                 case "email$envelope":
                     return "envelope";
                 case "email$envelopeopen":
@@ -77,18 +95,30 @@
                     return "logo_googleDrive";
                 case "googlenews":
                     return "logo_googleNews";
+                case "hulu":
+                    return "logo_hulu";
                 case "icloud":
                     return "logo_icloud";
                 case "news$newspaper":
                     return "newspaper";
+                case "iheartradio":
+                    return "logo_iheartRadio";
                 case "imgur":
                     return "logo_imgur";
                 case "instagram":
                     return "logo_instagram";
+                case "itunes":
+                    return "logo_itunes";
+                case "kohls":
+                    return "logo_kohls";
                 case "linkedin":
                     return "logo_linkedIn";
+                case "macys":
+                    return "logo_macys";
                 case "mail":
                     return "logo_mail";
+                case "netflix":
+                    return "logo_netflix";
                 case "nextdoor":
                     return "logo_nextdoor";
                 case "newyorktimes":
@@ -97,24 +127,44 @@
                     return "logo_onedrive";
                 case "outlook":
                     return "logo_outlook";
+                case "pandora":
+                    return "logo_pandora";
                 case "pinterest":
                     return "logo_pinterest";
                 case "reddit":
                     return "logo_reddit";
                 case "skype":
                     return "logo_skype";
+                case "spotify":
+                    return "logo_spotify";
+                case "soundcloud":
+                    return "logo_soundcloud";
+                case "target":
+                    return "logo_target";
+                case "tidal":
+                    return "logo_tidal";
                 case "tumblr":
                     return "logo_tumblr";
                 case "twitter":
                     return "logo_twitter";
+                case "vimeo":
+                    return "logo_vimeo";
+                case "walmart":
+                    return "logo_walmart";
                 case "washingtonpost":
                     return "logo_washingtonPost";
+                case "wayfair":
+                    return "logo_wayfair";
                 case "windowmaximize":
                     return "window-maximize";
                 case "yahoo":
                     return "logo_yahoo";
                 case "yahoomail":
                     return "logo_yahoomail";
+                case "youtube":
+                    return "logo_youtube";
+                case "youtubemusic":
+                    return "logo_youtubeMusic";
                 case null:
                 default:
                     return imageUrl;
