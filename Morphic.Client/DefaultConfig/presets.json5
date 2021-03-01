@@ -63,13 +63,13 @@
         },
         telemetryCategory: "volume",
         buttons: {
-          down: {
-            label: "-",
-            tooltip: "Lower the volume"
-          },
           up: {
             label: "+",
             xtooltip: "Raise the volume"
+          },
+          down: {
+            label: "-",
+            tooltip: "Lower the volume"
           }
         }
       }
@@ -122,6 +122,36 @@
           off: {
             label: "Off",
             tooltip: "Turn off night-mode"
+          }
+        }
+      }
+    },
+    "night-mode": {
+      // Enables night-mode.
+      kind: "setting",
+      widget: "multi",
+      configuration: {
+        settingId: "com.microsoft.windows.nightMode/enabled",
+        defaultLabel: "Night Mode",
+        args: {
+          state: "{button}"
+        },
+        menu: {
+            setting: "nightlight",
+            learn: "nightmode",
+            demo: "nightmode"
+        },
+        telemetryCategory: "nightMode",
+        buttons: {
+          on: {
+            label: "On",
+            value: "on",
+            tooltip: "Turn on Night Light"
+          },
+          off: {
+            label: "Off",
+            value: "off",
+            tooltip: "Turn off Night Light"
           }
         }
       }
@@ -205,11 +235,71 @@
         }
       }
     },
+    "color-vision": {
+      // Toggles color filters.
+      kind: "setting",
+      configuration: {
+        settingId: "com.microsoft.windows.colorFilters/enabled",
+        menu: {
+          setting: "easeofaccess-colorfilter",
+          learn: "color",
+          demo: "color"
+        },
+        telemetryCategory: "colorFilters",
+        buttons: {
+          on: {
+            label: "On",
+            value: "on",
+            tooltip: "Turn on Color Vision filters"
+          },
+          off: {
+            label: "Off",
+            value: "off",
+            tooltip: "Turn off Color Vision filters"
+          }
+        }
+      }
+    },
+    "dark-mode": {
+      // Toggles dark mode.
+      kind: "internal",
+      widget: "multi",
+      configuration: {
+        function: "darkMode",
+        args: {
+          value: "{button}"
+        },
+        menu: {
+          setting: "colors",
+          learn: "darkmode",
+          demo: "darkmode"
+        },
+        telemetryCategory: "darkMode",
+        buttons: {
+          on: {
+            label: "On",
+            value: "on",
+            tooltip: "Turn on Dark Mode"
+          },
+          off: {
+            label: "Off",
+            value: "off",
+            tooltip: "Turn off Dark Mode"
+          }
+        }
+      }
+    },
     "taskManager": {
       kind: "application",
       widget: "image",
       configuration: {
         exe: "taskmgr.exe",
+      }
+    },
+    "log-off": {
+      kind: "internal",
+      configuration: {
+        function: "signOut"
       }
     },
     "screenshot": {

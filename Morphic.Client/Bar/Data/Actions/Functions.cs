@@ -205,7 +205,21 @@ namespace Morphic.Client.Bar.Data.Actions
         [InternalFunction("darkMode")]
         public static async Task<IMorphicResult> DarkModeAsync(FunctionArgs args)
         {
-            bool on = args["state"] == "on";
+            // if we have a "value" property, this is a multi-segmented button and we should use "value" instead of "state"
+            bool on;
+            if (args["value"] != null)
+            {
+                on = (args["value"] == "on");
+            } 
+            else if (args["state"] != null)
+            {
+                on = (args["state"] == "on");
+            }
+            else
+            {
+                System.Diagnostics.Debug.Assert(false, "Function 'darkMode' did not receive a new state");
+                on = false;
+            }
 
             /*
              * NOTE: in addition to the SPI implementation (in code, below), we could also turn on/off the dark theme (via powershell...or possibly via direct registry access); here are the corresponding PowerShell commands

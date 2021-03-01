@@ -91,6 +91,21 @@ namespace Morphic.Client.Bar.Data.Actions
             // handle actions which must be filted by id
             switch (this.Id)
             {
+                case "log-off":
+                    await Countly.RecordEvent("SignOut");
+                    break;
+                case "volume":
+                    {
+                        if (source == "up")
+                        {
+                            await Countly.RecordEvent("volumeUp");
+                        }
+                        else if (source == "down")
+                        {
+                            await Countly.RecordEvent("volumeDown");
+                        }
+                    }
+                    break;
                 case "magnify":
                     {
                         if (source == "on") 
@@ -114,6 +129,50 @@ namespace Morphic.Client.Bar.Data.Actions
                             await Countly.RecordEvent("readSelectedStop");
                             break;
                         }
+                    }
+                    break;
+                case "color-vision":
+                    switch (source)
+                    {
+                        case "on":
+                            await Countly.RecordEvent("colorFiltersOn");
+                            return;
+                        case "off":
+                            await Countly.RecordEvent("colorFiltersOff");
+                            return;
+                    }
+                    break;
+                case "dark-mode":
+                    switch (source)
+                    {
+                        case "on":
+                            await Countly.RecordEvent("darkModeOn");
+                            return;
+                        case "off":
+                            await Countly.RecordEvent("darkModeOff");
+                            return;
+                    }
+                    break;
+                case "high-contrast":
+                    switch (source)
+                    {
+                        case "100":
+                            await Countly.RecordEvent("highContrastOn");
+                            return;
+                        case "1":
+                            await Countly.RecordEvent("highContrastOff");
+                            return;
+                    }
+                    break;
+                case "night-mode":
+                    switch (source)
+                    {
+                        case "on":
+                            await Countly.RecordEvent("nightModeOn");
+                            return;
+                        case "off":
+                            await Countly.RecordEvent("nightModeOff");
+                            return;
                     }
                     break;
                 case "":
