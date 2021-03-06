@@ -70,7 +70,7 @@ namespace Morphic.Windows.Native.Speech
         /// <param name="sendKeys">The <c>SendKeys.SendWait</c> method.</param>
         /// <param name="windowHandle">The window.</param>
         /// <returns>The selected text.</returns>
-        public async Task GetSelectedText(Action<string> sendKeys, IntPtr? windowHandle = null)
+        public async Task GetSelectedTextAsync(Action<string> sendKeys, IntPtr? windowHandle = null)
         {
             IntPtr hwnd = windowHandle ?? this.lastWindow;
             await Task.Run(() =>
