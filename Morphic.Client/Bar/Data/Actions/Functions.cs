@@ -126,6 +126,7 @@ namespace Morphic.Client.Bar.Data.Actions
             {
                 try
                 {
+					// NOTE: some developers have reported unhandled exceptions with this function call, even when inside a try...catch block.  If we experience that, we may need to look at our threading model, UWP alternatives, and Win32 API alternatives.
                     Clipboard.Clear();
                     return IMorphicResult.SuccessResult;
                 }
@@ -314,7 +315,9 @@ namespace Morphic.Client.Bar.Data.Actions
                                 await SelectionReader.Default.GetSelectedTextAsync(System.Windows.Forms.SendKeys.SendWait);
 
                                 // wait 100ms (an arbitrary amount of time, but in our testing some wait is necessary...even with the WM-triggered copy logic above)
-                                // NOTE: perhaps, in the future, we should only do this if our first call to Clipboard.GetText() returns (null? or) an empty string
+                                // NOTE: perhaps, in the future, we should only do this if our first call to Clipboard.GetText() returns (null? or) an empty string;
+								//       or perhaps we should wait up to a certain number of milliseconds to receive a SECOND WM (the one that GetSelectedTextAsync
+								//       waited for).
 								await Task.Delay(100);
 
                                 // capture the current selection
