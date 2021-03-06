@@ -147,9 +147,10 @@ namespace Morphic.Client.Bar.Data.Actions
                         await SelectionReader.Default.ActivateLastActiveWindow();
                         var focusedElement = AutomationElement.FocusedElement;
 
-                        if (focusedElement != null &&  focusedElement.TryGetCurrentPattern(TextPattern.Pattern, out var pattern) && pattern is TextPattern textPattern)
+                        if (focusedElement != null && focusedElement.TryGetCurrentPattern(TextPattern.Pattern, out var pattern) && pattern is TextPattern textPattern)
                         {
-                            var stringBuilder = textPattern.GetSelection()?.Aggregate(new StringBuilder(), (sb, selection) => {
+                            var stringBuilder = textPattern.GetSelection()?.Aggregate(new StringBuilder(), (sb, selection) =>
+                            {
                                 var selectedText = selection.GetText(-1);
 
                                 if (selectedText.Length > 0)
