@@ -31,8 +31,11 @@ namespace Morphic.Client
             using var synth = new SpeechSynthesizer();
             using var stream = await synth.SynthesizeTextToStreamAsync(text);
 
+            // NOTE: we cannot use the speech synthesizer directly using SpeakAsync/SpeakAsyncCancelAll because Windows.Speech.SpeechSynthesis and these corresponding methods are not supported in .NET 5 (i.e. only in .NET Framework)
             _speechPlayer.Stream = stream.AsStream();
 
+            // NOTE: Play() loads and plays the sound in a new thread asynchronously; we could await on LoadAsync and then call Play, but that could create a contention if
+            // Stop() was called before the LoadAsync callback completed and therefore before Play() got called 
             _speechPlayer.Play();
 
             return IMorphicResult.SuccessResult;
