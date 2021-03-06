@@ -7,9 +7,13 @@ namespace Morphic.Client.Bar.Data.Actions
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
+    using System.Linq;
     using System.Runtime.InteropServices;
+    using System.Text;
+    using System.Threading;
     using System.Threading.Tasks;
     using System.Windows;
+    using System.Windows.Automation;
     using UI;
     using Windows.Native.Input;
     using Windows.Native.Speech;
@@ -18,6 +22,8 @@ namespace Morphic.Client.Bar.Data.Actions
     // ReSharper disable once UnusedType.Global - accessed via reflection.
     public class Functions
     {
+        private readonly static SemaphoreSlim _readAloudSemaphore = new SemaphoreSlim(1, 1);
+
         [InternalFunction("screenshot")]
         public static async Task<IMorphicResult> ScreenshotAsync(FunctionArgs args)
         {
@@ -28,7 +34,8 @@ namespace Morphic.Client.Bar.Data.Actions
             {
                 foreach (Window window in App.Current.Windows)
                 {
-                    if (window is BarWindow || window is QuickHelpWindow) {
+                    if (window is BarWindow || window is QuickHelpWindow)
+                    {
                         if (window.AllowsTransparency)
                         {
                             opacity[window] = window.Opacity;
@@ -121,27 +128,57 @@ namespace Morphic.Client.Bar.Data.Actions
             switch (action)
             {
                 case "pause":
-                    App.Current.Logger.LogError("ReadAloud: pause not supported");
+                    App.Current.Logger.LogError("ReadAloud: pause not supported.");
                     result = IMorphicResult.ErrorResult;
                     break;
 
                 case "stop":
-                    App.Current.Logger.LogDebug("ReadAloud: Stop reading selected text");
+                    App.Current.Logger.LogDebug("ReadAloud: Stop reading selected text.");
                     TextToSpeechHelper.Instance.Stop();
                     break;
 
                 case "play":
-                    App.Current.Logger.LogDebug("ReadAloud: Getting selected text");
+                    await _readAloudSemaphore.WaitAsync();
 
                     try
                     {
-                        var text = await ClipboardHelper.GetSelectedText();
-                        await TextToSpeechHelper.Instance.Say(text);
+                        App.Current.Logger.LogDebug("ReadAloud: Getting selected text.");
+
+                        await SelectionReader.Default.ActivateLastActiveWindow();
+                        var focusedElement = AutomationElement.FocusedElement;
+
+                        if (focusedElement != null &&  focusedElement.TryGetCurrentPattern(TextPattern.Pattern, out var pattern) && pattern is TextPattern textPattern)
+                        {
+                            var stringBuilder = textPattern.GetSelection()?.Aggregate(new StringBuilder(), (sb, selection) => {
+                                var selectedText = selection.GetText(-1);
+
+                                if (selectedText.Length > 0)
+                                    sb.AppendLine(selectedText);
+
+                                return sb;
+                            });
+
+                            if (stringBuilder != null && stringBuilder.Length > 0)
+                            {
+                                App.Current.Logger.LogDebug("ReadAloud: Saying selected text.");
+
+                                await TextToSpeechHelper.Instance.Say(stringBuilder.ToString());
+                            }
+                            else
+                            {
+                                App.Current.Logger.LogDebug("ReadAloud: Could not find any selected text.");
+                            }
+                        }
                     }
-                    catch(Exception ex)
+                    catch (Exception ex)
                     {
                         App.Current.Logger.LogError(ex, "ReadAloud: Error reading selected text.");
+
                         result = IMorphicResult.ErrorResult;
+                    }
+                    finally
+                    {
+                        _readAloudSemaphore.Release();
                     }
                     break;
             }
@@ -177,7 +214,7 @@ namespace Morphic.Client.Bar.Data.Actions
             if (args["value"] != null)
             {
                 on = (args["value"] == "on");
-            } 
+            }
             else if (args["state"] != null)
             {
                 on = (args["state"] == "on");
