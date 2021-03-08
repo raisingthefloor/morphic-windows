@@ -157,7 +157,7 @@ stages:
               -kvi "$(SigningClientId)"
               -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
-              -tr "$(TimestampUrl)"
+              -tr "$(TimestampUrl2)"
               -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicSetup.msi
 
         - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicSetup.msi
@@ -203,7 +203,7 @@ stages:
               -kvi "$(SigningClientId)"
               -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
-              -tr "$(TimestampUrl)"
+              -tr "$(TimestampUrl2)"
               -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicCommunitySetup.msi
 
         - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicCommunitySetup.msi
