@@ -8,6 +8,7 @@ namespace Morphic.Client.Bar.Data.Actions
     using System.Linq;
     using System.Media;
     using System.Runtime.InteropServices;
+    using System.Threading;
     using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Automation;

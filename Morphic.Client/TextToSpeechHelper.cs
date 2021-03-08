@@ -24,7 +24,7 @@ namespace Morphic.Client
             _speechPlayer.Stop();
         }
 
-        public async Task<IMorphicResult> Say(string text)
+        public async Task<bool> Say(string text)
         {
             Stop();
 
@@ -38,7 +38,7 @@ namespace Morphic.Client
             // Stop() was called before the LoadAsync callback completed and therefore before Play() got called 
             _speechPlayer.Play();
 
-            return IMorphicResult.SuccessResult;
+            return true;
         }
 
         public void Dispose()
