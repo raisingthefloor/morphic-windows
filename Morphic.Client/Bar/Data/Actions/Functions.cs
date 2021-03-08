@@ -8,6 +8,7 @@ namespace Morphic.Client.Bar.Data.Actions
     using System.Linq;
     using System.Media;
     using System.Runtime.InteropServices;
+    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using System.Windows;
@@ -316,7 +317,7 @@ namespace Morphic.Client.Bar.Data.Actions
 
                                 // copy the current selection to the clipboard
                                 App.Current.Logger.LogDebug("ReadAloud: Sending Ctrl+C to copy the current selection to the clipboard.");
-                                await SelectionReader.Default.GetSelectedTextAsync(System.Windows.Forms.SendKeys.SendWait);
+                                await SelectionReader.Default.GetSelectedText(System.Windows.Forms.SendKeys.SendWait);
 
                                 // wait 100ms (an arbitrary amount of time, but in our testing some wait is necessary...even with the WM-triggered copy logic above)
                                 // NOTE: perhaps, in the future, we should only do this if our first call to Clipboard.GetText() returns (null? or) an empty string;
