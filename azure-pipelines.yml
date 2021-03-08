@@ -143,10 +143,11 @@ stages:
           displayName: 'sign x64 installer'
           inputs:
             targetType: 'inline'
-# NOTE: if we experience downtime with our cert provider's timestamp server (which causes signing to fail), 
+# NOTE: if we experience downtime with our cert provider's timestamp servers (which causes signing to fail), 
 #       we can use the test server (production timestamps, but from a 2nd provider); note that we should NOT do
 #       this for any public preview or release builds...only for internal testing or emergency scenarios.
 #              -tr "$(TimestampUrl)"
+#              -tr "$(TimestampUrl2)"
 #              vs.
 #              -tr "$(TestOnlyTimestampUrl)"
             script: >
@@ -157,7 +158,7 @@ stages:
               -kvi "$(SigningClientId)"
               -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
-              -tr "$(TestOnlyTimestampUrl)"
+              -tr "$(TimestampUrl2)"
               -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicSetup.msi
         - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicSetup.msi
           displayName: "save x64 installer for later"
