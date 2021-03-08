@@ -1,10 +1,13 @@
 # Morphic for Windows (.NET Desktop)
 
 # Documentation used in this pipeline:
-# .NET pipelines docs: https://docs.microsoft.com/en-us/azure/devops/pipelines/ecosystems/dotnet-core
+# .NET pipelines docs: 
+# - Build, test, and deploy: https://docs.microsoft.com/en-us/azure/devops/pipelines/ecosystems/dotnet-core
+# - .NET pipelines tasks: https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/
 # Microsoft-hosted agents: https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops
 # - Windows 2019 components and version options: https://github.com/actions/virtual-environments/blob/main/images/win/Windows2019-Readme.md
 # .NET Core release versions: https://github.com/dotnet/core/blob/main/release-notes/releases-index.json
+# .NET Core RIDs (including x86/x64/ARM64): https://docs.microsoft.com/en-us/dotnet/core/rid-catalog
 
 trigger:
   branches:
