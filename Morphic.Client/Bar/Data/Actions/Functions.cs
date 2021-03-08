@@ -164,7 +164,7 @@ namespace Morphic.Client.Bar.Data.Actions
                     App.Current.Logger.LogDebug("ReadAloud: Stop reading selected text.");
                     TextToSpeechHelper.Instance.Stop();
 
-                    return IMorphicResult.SuccessResult;
+                    return true;
 
                 case "play":
                     string? selectedText = null;
