@@ -185,11 +185,11 @@ namespace Morphic.Windows.Native.Devices
                 uint getChildOrSiblingResult;
                 if (seekingFirstChild == true)
                 {
-                    getChildOrSiblingResult = ExtendedPInvoke.CM_Get_Child(out childDevInst, this.DeviceInfoData.DevInst, 0 /* must be zero */);
+                    getChildOrSiblingResult = ExtendedPInvoke.CM_Get_Child(out childDevInst, previousDevInst, 0 /* must be zero */);
                 }
                 else
                 {
-                    getChildOrSiblingResult = ExtendedPInvoke.CM_Get_Sibling(out childDevInst, this.DeviceInfoData.DevInst, 0 /* must be zero */);
+                    getChildOrSiblingResult = ExtendedPInvoke.CM_Get_Sibling(out childDevInst, previousDevInst, 0 /* must be zero */);
                 }
                 if (getChildOrSiblingResult != (uint)ExtendedPInvoke.CR_RESULT.CR_SUCCESS)
                 {
@@ -633,6 +633,145 @@ namespace Morphic.Windows.Native.Devices
             finally
             {
                 Marshal.FreeHGlobal(pointerToPropertyData);
+            }
+        }
+
+        public record SafelyRemoveDeviceError : MorphicAssociatedValueEnum<SafelyRemoveDeviceError.Values>
+        {
+            // enum members
+            public enum Values
+            {
+                ConfigManagerError/*(uint configManagerErrorCode)*/,
+                CouldNotGetDeviceCapabilities,
+                DeviceIsNotRemovable,
+                DeviceInUse,
+                DeviceWasAlreadyRemoved,
+                SafeEjectVetoed/*(int vetoType, string vetoName)*/,
+                Win32Error/*(int win32ErrorCode)*/
+
+            }
+
+            // functions to create member instances
+            public static SafelyRemoveDeviceError ConfigManagerError(uint configManagerErrorCode) => new SafelyRemoveDeviceError(Values.ConfigManagerError) { ConfigManagerErrorCode = configManagerErrorCode };
+            public static SafelyRemoveDeviceError CouldNotGetDeviceCapabilities => new SafelyRemoveDeviceError(Values.CouldNotGetDeviceCapabilities);
+            public static SafelyRemoveDeviceError DeviceInUse => new SafelyRemoveDeviceError(Values.DeviceInUse);
+            public static SafelyRemoveDeviceError DeviceIsNotRemovable => new SafelyRemoveDeviceError(Values.DeviceIsNotRemovable);
+            public static SafelyRemoveDeviceError DeviceWasAlreadyRemoved => new SafelyRemoveDeviceError(Values.DeviceWasAlreadyRemoved);
+            public static SafelyRemoveDeviceError SafeEjectVetoed(int vetoType, string vetoName) => new SafelyRemoveDeviceError(Values.SafeEjectVetoed) { VetoType = vetoType, VetoName = vetoName };
+            public static SafelyRemoveDeviceError Win32Error(int win32ErrorCode) => new SafelyRemoveDeviceError(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
+
+            // associated values
+            public uint? ConfigManagerErrorCode { get; private set; }
+            public int? VetoType { get; private set; }
+            public string? VetoName { get; private set; }
+            public int? Win32ErrorCode { get; private set; }
+
+            // verbatim required constructor implementation for MorphicAssociatedValueEnums
+            private SafelyRemoveDeviceError(Values value) : base(value) { }
+        }
+        //
+        // NOTE: this will detach the PnP device from the system
+        public IMorphicResult<MorphicUnit, SafelyRemoveDeviceError> SafelyRemoveDevice()
+        {
+            Device targetRemovableDevice;
+
+            if (this.IsRemovable == true)
+            {
+                targetRemovableDevice = this;
+            }
+            else
+            {
+                var getFirstRemovableAncestorResult = this.GetFirstRemovableAncestor();
+                if (getFirstRemovableAncestorResult.IsError == true)
+                {
+                    switch (getFirstRemovableAncestorResult.Error!.Value)
+                    {
+                        case Device.GetParentOrChildError.Values.ConfigManagerError:
+                            return IMorphicResult<MorphicUnit, SafelyRemoveDeviceError>.ErrorResult(SafelyRemoveDeviceError.ConfigManagerError(getFirstRemovableAncestorResult.Error!.ConfigManagerErrorCode!.Value));
+                        case Device.GetParentOrChildError.Values.CouldNotGetDeviceCapabilities:
+                            return IMorphicResult<MorphicUnit, SafelyRemoveDeviceError>.ErrorResult(SafelyRemoveDeviceError.CouldNotGetDeviceCapabilities);
+                        case Device.GetParentOrChildError.Values.Win32Error:
+                            return IMorphicResult<MorphicUnit, SafelyRemoveDeviceError>.ErrorResult(SafelyRemoveDeviceError.Win32Error(getFirstRemovableAncestorResult.Error!.Win32ErrorCode!.Value));
+                    }
+                }
+
+                if (getFirstRemovableAncestorResult.Value == null)
+                {
+                    // neither this device nor its ancestors are ejectable
+                    return IMorphicResult<MorphicUnit, SafelyRemoveDeviceError>.ErrorResult(SafelyRemoveDeviceError.DeviceIsNotRemovable);
+                }
+
+                targetRemovableDevice = getFirstRemovableAncestorResult.Value!;
+            }
+
+            var safeEjectResult = targetRemovableDevice.SafeEject();
+            if (safeEjectResult.IsError == true)
+            {
+                switch (safeEjectResult.Error!.Value)
+                {
+                    case Device.SafeEjectError.Values.ConfigManagerError:
+                        return IMorphicResult<MorphicUnit, SafelyRemoveDeviceError>.ErrorResult(SafelyRemoveDeviceError.ConfigManagerError(safeEjectResult.Error!.ConfigManagerErrorCode!.Value));
+                    case Device.SafeEjectError.Values.DeviceInUse:
+                        return IMorphicResult<MorphicUnit, SafelyRemoveDeviceError>.ErrorResult(SafelyRemoveDeviceError.DeviceInUse);
+                    case Device.SafeEjectError.Values.DeviceWasAlreadyRemoved:
+                        return IMorphicResult<MorphicUnit, SafelyRemoveDeviceError>.ErrorResult(SafelyRemoveDeviceError.DeviceWasAlreadyRemoved);
+                    case Device.SafeEjectError.Values.SafeEjectVetoed:
+                        return IMorphicResult<MorphicUnit, SafelyRemoveDeviceError>.ErrorResult(SafelyRemoveDeviceError.SafeEjectVetoed(safeEjectResult.Error!.VetoType!.Value, safeEjectResult.Error!.VetoName!));
+                }
+            }
+
+            // we successfully ejected
+            return IMorphicResult<MorphicUnit, SafelyRemoveDeviceError>.SuccessResult(new MorphicUnit());
+        }
+
+        internal IMorphicResult<Device?, Device.GetParentOrChildError> GetFirstRemovableAncestor()
+        {
+            var ancestorDeviceResult = this.GetParent();
+            if (ancestorDeviceResult.IsError == true)
+            {
+                return IMorphicResult<Device?, Device.GetParentOrChildError>.ErrorResult(ancestorDeviceResult.Error!);
+            }
+            var ancestorDevice = ancestorDeviceResult.Value;
+
+            while (ancestorDevice != null)
+            {
+                // if this ancestor is removable, return it
+                if (ancestorDevice.IsRemovable == true)
+                {
+                    return IMorphicResult<Device?, Device.GetParentOrChildError>.SuccessResult(ancestorDevice);
+                }
+
+                // if this ancestor was not removable, search out the parent of the current ancestor (i.e. work our way toward root)
+                ancestorDeviceResult = ancestorDevice.GetParent();
+                if (ancestorDeviceResult.IsError == true)
+                {
+                    return IMorphicResult<Device?, Device.GetParentOrChildError>.ErrorResult(ancestorDeviceResult.Error!);
+                }
+                ancestorDevice = ancestorDeviceResult.Value;
+            }
+
+            // if we have run out of ancestors, return null
+            return IMorphicResult<Device?, Device.GetParentOrChildError>.SuccessResult(null);
+        }
+
+        internal IMorphicResult<bool, Device.GetParentOrChildError> GetIsDeviceOrAncestorsRemovable()
+        {
+            // determine if this drive or any of its ancestors are removable
+            if (this.IsRemovable == true)
+            {
+                return IMorphicResult<bool, Device.GetParentOrChildError>.SuccessResult(true);
+            }
+            else
+            {
+                var getFirstRemovableAncestorResult = this.GetFirstRemovableAncestor();
+                if (getFirstRemovableAncestorResult.IsError == true)
+                {
+                    return IMorphicResult<bool, Device.GetParentOrChildError>.ErrorResult(getFirstRemovableAncestorResult.Error!);
+                }
+
+                // if one of our ancestors was removable, our drive is removable
+                var isRemovable = (getFirstRemovableAncestorResult.Value! != null);
+                return IMorphicResult<bool, Device.GetParentOrChildError>.SuccessResult(isRemovable);
             }
         }
     }
