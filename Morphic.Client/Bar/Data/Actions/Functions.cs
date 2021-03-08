@@ -199,7 +199,7 @@ namespace Morphic.Client.Bar.Data.Actions
                                 {
                                     if ((pattern != null) && (pattern is TextPattern textPattern))
                                     {
-                                        App.Current.Logger.LogDebug("ReadAloud: Capturing select text range(s).");
+                                        // App.Current.Logger.LogDebug("ReadAloud: Capturing select text range(s).");
 
                                         // get the collection of text ranges in the selection; note that this can be a disjoint collection if multiple disjoint items were selected
                                         textRangeCollection = textPattern.GetSelection();
@@ -261,18 +261,18 @@ namespace Morphic.Client.Bar.Data.Actions
                             //
                             try
                             {
-                                App.Current.Logger.LogDebug("ReadAloud: Attempting to back up current clipboard.");
+                                // App.Current.Logger.LogDebug("ReadAloud: Attempting to back up current clipboard.");
 
                                 Dictionary<String, object?> clipboardContentsToRestore = new Dictionary<string, object?>();
 
                                 var previousClipboardData = Clipboard.GetDataObject();
                                 if (previousClipboardData != null)
                                 {
-                                    App.Current.Logger.LogDebug("ReadAloud: Current clipboard has contents; attempting to capture format(s) of contents.");
+                                    // App.Current.Logger.LogDebug("ReadAloud: Current clipboard has contents; attempting to capture format(s) of contents.");
                                     string[]? previousClipboardFormats = previousClipboardData.GetFormats();
                                     if (previousClipboardFormats != null)
                                     {
-                                        App.Current.Logger.LogDebug("ReadAloud: Current clipboard has contents; attempting to back up current clipboard.");
+                                        // App.Current.Logger.LogDebug("ReadAloud: Current clipboard has contents; attempting to back up current clipboard.");
 
                                         foreach (var format in previousClipboardFormats)
                                         {
@@ -351,17 +351,17 @@ namespace Morphic.Client.Bar.Data.Actions
                                     {
                                         selectionWasCopiedToClipboard = true;
 
-                                        var formatsCsvBuilder = new StringBuilder();
-                                        formatsCsvBuilder.Append("[");
-                                        if (copiedDataFormats.Length > 0)
-                                        {
-                                            formatsCsvBuilder.Append("\"");
-                                            formatsCsvBuilder.Append(String.Join("\", \"", copiedDataFormats));
-                                            formatsCsvBuilder.Append("\"");
-                                        }
-                                        formatsCsvBuilder.Append("]");
+                                        // var formatsCsvBuilder = new StringBuilder();
+                                        // formatsCsvBuilder.Append("[");
+                                        // if (copiedDataFormats.Length > 0)
+                                        // {
+                                        //     formatsCsvBuilder.Append("\"");
+                                        //     formatsCsvBuilder.Append(String.Join("\", \"", copiedDataFormats));
+                                        //     formatsCsvBuilder.Append("\"");
+                                        // }
+                                        // formatsCsvBuilder.Append("]");
 
-                                        App.Current.Logger.LogDebug("ReadAloud: Ctrl+C did not copy text; instead it copied data in these format(s): " + formatsCsvBuilder.ToString());
+                                        App.Current.Logger.LogDebug("ReadAloud: Ctrl+C copied non-text (un-speakable) contents to the clipboard.");
                                     }
                                     else
                                     {
@@ -370,11 +370,11 @@ namespace Morphic.Client.Bar.Data.Actions
                                 }
 
                                 // restore the previous clipboard's contents
-                                App.Current.Logger.LogDebug("ReadAloud: Attempting to restore the previous clipboard's contents");
+                                // App.Current.Logger.LogDebug("ReadAloud: Attempting to restore the previous clipboard's contents");
                                 //
                                 if (selectionWasCopiedToClipboard == true)
                                 {
-                                    App.Current.Logger.LogDebug("ReadAloud: Clearing the selected text from the clipboard.");
+                                    // App.Current.Logger.LogDebug("ReadAloud: Clearing the selected text from the clipboard.");
                                     try 
                                     {
                                         // try to clear the clipboard for up to 500ms (4 delays of 125ms)
@@ -388,11 +388,11 @@ namespace Morphic.Client.Bar.Data.Actions
                                 //
                                 if (clipboardContentsToRestore.Count > 0)
                                 {
-                                    App.Current.Logger.LogDebug("ReadAloud: Attempting to restore " + clipboardContentsToRestore.Count.ToString() + " item(s) to the clipboard.");
+                                    // App.Current.Logger.LogDebug("ReadAloud: Attempting to restore " + clipboardContentsToRestore.Count.ToString() + " item(s) to the clipboard.");
                                 }
                                 else
                                 {
-                                    App.Current.Logger.LogDebug("ReadAloud: there is nothing to restore to the clipboard.");
+                                    // App.Current.Logger.LogDebug("ReadAloud: there is nothing to restore to the clipboard.");
                                 }
                                 //
                                 foreach (var (format, data) in clipboardContentsToRestore)
@@ -446,7 +446,7 @@ namespace Morphic.Client.Bar.Data.Actions
                         }
                     } else {
                         // could not capture any text
-                        App.Current.Logger.LogError("ReadAloud: Could not capture any selected text; this may or may not be an error.");
+                        // App.Current.Logger.LogError("ReadAloud: Could not capture any selected text; this may or may not be an error.");
 
                         return false;
                     }
