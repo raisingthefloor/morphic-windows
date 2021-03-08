@@ -21,7 +21,6 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using AutoUpdaterDotNET;
 using CountlySDK;
 using CountlySDK.Entities;
 using Microsoft.Extensions.Configuration;
@@ -813,11 +812,11 @@ namespace Morphic.Client
 
         void StartCheckingForUpdates()
         {
-            UpdateOptions? options = this.ServiceProvider.GetRequiredService<UpdateOptions>();
-            if (options.AppCastUrl != "")
-            {
-                AutoUpdater.Start(options.AppCastUrl);
-            }
+            //UpdateOptions? options = this.ServiceProvider.GetRequiredService<UpdateOptions>();
+            //if (options.AppCastUrl != "")
+            //{
+            //    AutoUpdater.Start(options.AppCastUrl);
+            //}
         }
 
         #endregion
