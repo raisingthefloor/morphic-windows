@@ -57,10 +57,10 @@ stages:
         steps:
 
         - task: UseDotNet@2
-          displayName: 'Use .NET Core SDK 5.0.3'
+          displayName: 'Use .NET Core SDK 3.1.406'
           inputs:
             packageType: sdk
-            version: 5.0.3
+            version: 3.1.406
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
         # Set a $(BUILD_TYPE) variable
