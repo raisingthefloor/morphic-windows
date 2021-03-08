@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+	  <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="PInvoke.Kernel32" Version="0.7.104" />
+    <PackageReference Include="PInvoke.SetupApi" Version="0.7.104" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Morphic.Core\Morphic.Core.csproj" />
+  </ItemGroup>
+
+</Project>
