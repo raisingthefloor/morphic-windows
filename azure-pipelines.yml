@@ -12,7 +12,9 @@
 trigger:
   branches:
     include:
-      - master
+    # TODO: before production, limit the branches that are automatically built
+#      - master
+      - '*'
 
 pr:
   branches:
