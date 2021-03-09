@@ -22,6 +22,16 @@ pr:
 pool:
   vmImage: 'windows-2019'
 
+variables:
+- name: solution
+  value: Morphic.sln
+- name: projects
+  value:  |
+      Morphic.Core/Morphic.Core.csproj
+      Morphic.OAuth/Morphic.OAuth.csproj
+      Morphic.Windows.Native/Morphic.Windows.Native.csproj
+      Morphic/Morphic.csproj
+
 stages:
   - stage: build
     jobs:
@@ -34,3 +44,21 @@ stages:
             version: 6.0.100-preview.1.21103.13
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
+        - task: DotNetCoreCLI@2
+          displayName: "restore projects"
+          inputs:
+	    command: restore
+	    projects: '$(projects)'
+        
+        - task: DotNetCoreCLI@2
+          displayName: "build projects"
+          inputs:
+	    command: build
+	    projects: '$(projects)'
+        
+        - task: DotNetCoreCLI@2
+          displayName: "build solution"
+          inputs:
+	    command: build
+	    projects: '$(solution)'
+        
