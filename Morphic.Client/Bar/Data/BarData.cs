@@ -230,7 +230,7 @@ namespace Morphic.Client.Bar.Data
                                                 Action = openAllUsbAction,
                                                 TelemetryCategory = "morphicBarExtraItem",
                                                 Tooltip = "Open All USB Drives",
-                                                Value = "open"
+                                                Value = "openallusb"
                                             };
                                             //
                                             var ejectAllUsbAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
@@ -242,7 +242,7 @@ namespace Morphic.Client.Bar.Data
                                                 Action = ejectAllUsbAction,
                                                 TelemetryCategory = "morphicBarExtraItem",
                                                 Tooltip = "Eject All USB Drives",
-                                                Value = "eject"
+                                                Value = "ejectallusb"
                                             };
                                             //
                                             ((BarMultiButton)extraBarItem).Buttons = new Dictionary<string, BarMultiButton.ButtonInfo>

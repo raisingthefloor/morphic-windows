@@ -230,6 +230,12 @@ namespace Morphic.Client.Bar.Data.Actions
                                 }
                             }
                             break;
+                        case "openallusb":
+                            await Countly.RecordEvent("openUsbDrives");
+                            break;
+                        case "ejectallusb":
+                            await Countly.RecordEvent("ejectUsbDrives");
+                            break;
                         case null:
                             // no tags; this is the Morphie button or another custom element with no known tags
                             break;
