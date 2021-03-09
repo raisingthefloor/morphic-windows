@@ -261,7 +261,7 @@ namespace Morphic.Windows.Native.Devices
             var listOfDosDeviceNamesResult = Drive.GetAllDosDeviceNames();
             if (listOfDosDeviceNamesResult.IsError == true)
             {
-                return IMorphicResult<List<char>, Win32ApiError>.ErrorResult(listOfDosDeviceNamesResult.Error);
+                return IMorphicResult<List<char>, Win32ApiError>.ErrorResult(listOfDosDeviceNamesResult.Error!);
             }
 
             foreach (var dosDeviceName in listOfDosDeviceNamesResult.Value!)
