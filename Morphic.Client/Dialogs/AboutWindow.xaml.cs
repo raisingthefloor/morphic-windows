@@ -5,6 +5,7 @@
     using System.Windows;
     using System.Windows.Input;
     using System.Windows.Navigation;
+    using AutoUpdaterDotNET;
     using Config;
     using Microsoft.Extensions.DependencyInjection;
 
@@ -27,7 +28,7 @@
             UpdateOptions? updateOptions = App.Current.ServiceProvider.GetRequiredService<UpdateOptions>();
             if (!string.IsNullOrEmpty(updateOptions?.AppCastUrl))
             {
-                //AutoUpdater.Start(updateOptions.AppCastUrl);
+                AutoUpdater.Start(updateOptions.AppCastUrl);
             }
             e.Handled = true;
         }
