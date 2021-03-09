@@ -6,6 +6,7 @@ namespace Morphic.Client.Bar.Data.Actions
     using Settings.SolutionsRegistry;
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Runtime.InteropServices;
@@ -194,7 +195,7 @@ namespace Morphic.Client.Bar.Data.Actions
                                 {
                                     if ((pattern != null) && (pattern is TextPattern textPattern))
                                     {
-                                        App.Current.Logger.LogDebug("ReadAloud: Capturing select text range(s).");
+                                        // App.Current.Logger.LogDebug("ReadAloud: Capturing select text range(s).");
 
                                         // get the collection of text ranges in the selection; note that this can be a disjoint collection if multiple disjoint items were selected
                                         textRangeCollection = textPattern.GetSelection();
@@ -256,18 +257,18 @@ namespace Morphic.Client.Bar.Data.Actions
                             //
                             try
                             {
-                                App.Current.Logger.LogDebug("ReadAloud: Attempting to back up current clipboard.");
+                                // App.Current.Logger.LogDebug("ReadAloud: Attempting to back up current clipboard.");
 
                                 Dictionary<String, object?> clipboardContentsToRestore = new Dictionary<string, object?>();
 
                                 var previousClipboardData = Clipboard.GetDataObject();
                                 if (previousClipboardData != null)
                                 {
-                                    App.Current.Logger.LogDebug("ReadAloud: Current clipboard has contents; attempting to capture format(s) of contents.");
+                                    // App.Current.Logger.LogDebug("ReadAloud: Current clipboard has contents; attempting to capture format(s) of contents.");
                                     string[]? previousClipboardFormats = previousClipboardData.GetFormats();
                                     if (previousClipboardFormats != null)
                                     {
-                                        App.Current.Logger.LogDebug("ReadAloud: Current clipboard has contents; attempting to back up current clipboard.");
+                                        // App.Current.Logger.LogDebug("ReadAloud: Current clipboard has contents; attempting to back up current clipboard.");
 
                                         foreach (var format in previousClipboardFormats)
                                         {
@@ -346,17 +347,18 @@ namespace Morphic.Client.Bar.Data.Actions
                                     {
                                         selectionWasCopiedToClipboard = true;
 
-                                        var formatsCsvBuilder = new StringBuilder();
-                                        formatsCsvBuilder.Append("[");
-                                        if (copiedDataFormats.Length > 0)
-                                        {
-                                            formatsCsvBuilder.Append("\"");
-                                            formatsCsvBuilder.Append(String.Join("\", \"", copiedDataFormats));
-                                            formatsCsvBuilder.Append("\"");
-                                        }
-                                        formatsCsvBuilder.Append("]");
+                                        // var formatsCsvBuilder = new StringBuilder();
+                                        // formatsCsvBuilder.Append("[");
+                                        // if (copiedDataFormats.Length > 0)
+                                        // {
+                                        //     formatsCsvBuilder.Append("\"");
+                                        //     formatsCsvBuilder.Append(String.Join("\", \"", copiedDataFormats));
+                                        //     formatsCsvBuilder.Append("\"");
+                                        // }
+                                        // formatsCsvBuilder.Append("]");
 
-                                        App.Current.Logger.LogDebug("ReadAloud: Ctrl+C did not copy text; instead it copied data in these format(s): " + formatsCsvBuilder.ToString());
+                                        // App.Current.Logger.LogDebug("ReadAloud: Ctrl+C did not copy text; instead it copied data in these format(s): " + formatsCsvBuilder.ToString());
+                                        App.Current.Logger.LogDebug("ReadAloud: Ctrl+C copied non-text (un-speakable) contents to the clipboard.");
                                     }
                                     else
                                     {
@@ -365,11 +367,11 @@ namespace Morphic.Client.Bar.Data.Actions
                                 }
 
                                 // restore the previous clipboard's contents
-                                App.Current.Logger.LogDebug("ReadAloud: Attempting to restore the previous clipboard's contents");
+                                // App.Current.Logger.LogDebug("ReadAloud: Attempting to restore the previous clipboard's contents");
                                 //
                                 if (selectionWasCopiedToClipboard == true)
                                 {
-                                    App.Current.Logger.LogDebug("ReadAloud: Clearing the selected text from the clipboard.");
+                                    // App.Current.Logger.LogDebug("ReadAloud: Clearing the selected text from the clipboard.");
                                     try 
                                     {
                                         // try to clear the clipboard for up to 500ms (4 delays of 125ms)
@@ -383,11 +385,11 @@ namespace Morphic.Client.Bar.Data.Actions
                                 //
                                 if (clipboardContentsToRestore.Count > 0)
                                 {
-                                    App.Current.Logger.LogDebug("ReadAloud: Attempting to restore " + clipboardContentsToRestore.Count.ToString() + " item(s) to the clipboard.");
+                                    // App.Current.Logger.LogDebug("ReadAloud: Attempting to restore " + clipboardContentsToRestore.Count.ToString() + " item(s) to the clipboard.");
                                 }
                                 else
                                 {
-                                    App.Current.Logger.LogDebug("ReadAloud: there is nothing to restore to the clipboard.");
+                                    // App.Current.Logger.LogDebug("ReadAloud: there is nothing to restore to the clipboard.");
                                 }
                                 //
                                 foreach (var (format, data) in clipboardContentsToRestore)
@@ -441,7 +443,7 @@ namespace Morphic.Client.Bar.Data.Actions
                         }
                     } else {
                         // could not capture any text
-                        App.Current.Logger.LogError("ReadAloud: Could not capture any selected text; this may or may not be an error.");
+                        // App.Current.Logger.LogError("ReadAloud: Could not capture any selected text; this may or may not be an error.");
 
                         return IMorphicResult.ErrorResult;
                     }
@@ -468,6 +470,162 @@ namespace Morphic.Client.Bar.Data.Actions
         {
             var success = Morphic.Windows.Native.WindowsSession.WindowsSession.LogOff();
             return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        [InternalFunction("openAllUsbDrives")]
+        public static async Task<IMorphicResult> OpenAllUsbDrivesAsync(FunctionArgs args)
+        {
+            App.Current.Logger.LogError("OpenAllUsbDrives");
+
+            var getRemovableDisksAndDrivesResult = await Functions.GetRemovableDisksAndDrivesAsync();
+            if (getRemovableDisksAndDrivesResult.IsError == true)
+            {
+                Debug.Assert(false, "Could not get list of removable drives");
+                App.Current.Logger.LogError("Could not get list of removable drives");
+                return IMorphicResult.ErrorResult;
+            }
+            var removableDrives = getRemovableDisksAndDrivesResult.Value!.RemovableDrives;
+
+            // as we only want to open usb drives which are mounted (i.e. not USB drives which have had their "media" ejected but who still have drive letters assigned)...
+            var mountedRemovableDrives = new List<Morphic.Windows.Native.Devices.Drive>();
+            foreach (var drive in removableDrives)
+            {
+                var getIsMountedResult = await drive.GetIsMountedAsync();
+                if (getIsMountedResult.IsError == true)
+                {
+                    Debug.Assert(false, "Could not determine if drive is mounted");
+                    App.Current.Logger.LogError("Could not determine if drive is mounted");
+                    // gracefully degrade; skip this disk
+                    continue;
+                }
+                var driveIsMounted = getIsMountedResult.Value!;
+
+                if (driveIsMounted)
+                {
+                    mountedRemovableDrives.Add(drive);
+                }
+            }
+
+            // now open all the *mounted* removable disks
+            foreach (var drive in mountedRemovableDrives)
+            {
+                // get the drive's root path (e.g. "E:\"); note that we intentionally get the root path WITH the backslash so that we don't launch autoplay, etc.
+                var tryGetDriveRootPathResult = await drive.TryGetDriveRootPathAsync();
+                if (tryGetDriveRootPathResult.IsError == true)
+                {
+                    Debug.Assert(false, "Could not get removable drive's root path");
+                    App.Current.Logger.LogError("Could not get removable drive's root path");
+                    // gracefully degrade; skip this disk
+                    continue;
+                }
+                var driveRootPath = tryGetDriveRootPathResult.Value!;
+
+                // NOTE: there is also an API call which may be able to do this more directly
+                // see: https://docs.microsoft.com/en-us/windows/win32/api/shlobj_core/nf-shlobj_core-shopenfolderandselectitems
+
+                // NOTE: we might also consider getting the current process for Explorer.exe and then asking it to "explore" the drive
+
+                App.Current.Logger.LogError("Opening USB drive");
+
+                Process.Start(new ProcessStartInfo()
+                {
+                    FileName = driveRootPath,
+                    UseShellExecute = true
+                });
+            }
+
+            return IMorphicResult.SuccessResult;
+        }
+
+        [InternalFunction("ejectAllUsbDrives")]
+        public static async Task<IMorphicResult> EjectAllUsbDrivesAsync(FunctionArgs args)
+        {
+            App.Current.Logger.LogError("EjectAllUsbDrives");
+
+            var getRemovableDisksAndDrivesResult = await Functions.GetRemovableDisksAndDrivesAsync();
+            if (getRemovableDisksAndDrivesResult.IsError == true)
+            {
+                Debug.Assert(false, "Could not get list of removable disks");
+                App.Current.Logger.LogError("Could not get list of removable disks");
+                return IMorphicResult.ErrorResult;
+            }
+            var removableDisks = getRemovableDisksAndDrivesResult.Value!.RemovableDisks;
+
+            // now eject all the removable disks
+            foreach (var disk in removableDisks)
+            {
+                App.Current.Logger.LogError("Safely ejecting drive");
+
+                // NOTE: "safe eject" in this circumstance means to safely eject the usb device (removing it from the PnP system, not physically ejecting media)
+                var safeEjectResult = disk.SafelyRemoveDevice();
+                if (safeEjectResult.IsError == true)
+                {
+                    return IMorphicResult.ErrorResult;
+                }
+            }
+
+            return IMorphicResult.SuccessResult;
+        }
+
+        private struct GetRemovableDisksAndDrivesResult 
+        {
+            public List<Morphic.Windows.Native.Devices.Disk> AllDisks;
+            public List<Morphic.Windows.Native.Devices.Disk> RemovableDisks; // physical volumes
+            public List<Morphic.Windows.Native.Devices.Drive> RemovableDrives; // logical volumes (media / partition); these can have drive letters
+        }
+        //
+        private static async Task<IMorphicResult<GetRemovableDisksAndDrivesResult>> GetRemovableDisksAndDrivesAsync()
+        {
+            // get a list of all disks (but not non-disks such as CD-ROM drives)
+            var getAllDisksResult = await Morphic.Windows.Native.Devices.Disk.GetAllDisksAsync();
+            if (getAllDisksResult.IsError == true)
+            {
+                Debug.Assert(false, "Cannot get list of disks");
+                return IMorphicResult<GetRemovableDisksAndDrivesResult>.ErrorResult();
+            }
+
+            // filter out all disks which are not removable
+            var allDisks = getAllDisksResult.Value!;
+            var removableDisks = new List<Morphic.Windows.Native.Devices.Disk>();
+            foreach (var disk in allDisks)
+            {
+                var getIsRemovableResult = disk.GetIsRemovable();
+                if (getIsRemovableResult.IsError == true)
+                {
+                    Debug.Assert(false, "Cannot determine if disk is removable");
+                    return IMorphicResult<GetRemovableDisksAndDrivesResult>.ErrorResult();
+                }
+                var diskIsRemovable = getIsRemovableResult.Value!;
+                if (diskIsRemovable)
+                {
+                    removableDisks.Add(disk);
+                }
+            }
+
+            // now get all the drives associated with our removable disks
+            var removableDrives = new List<Morphic.Windows.Native.Devices.Drive>();
+            foreach (var removableDisk in removableDisks)
+            {
+                var getDrivesForDiskResult = await removableDisk.GetDrivesAsync();
+                if (getDrivesForDiskResult.IsError == true)
+                {
+                    Debug.Assert(false, "Cannot get list of drives for removable disk");
+                    // gracefully degrade; skip this disk
+                    continue;
+                }
+                var drivesForRemovableDisk = getDrivesForDiskResult.Value!;
+
+                removableDrives.AddRange(drivesForRemovableDisk);
+            }
+
+            var result = new GetRemovableDisksAndDrivesResult
+            {
+                AllDisks = allDisks,
+                RemovableDisks = removableDisks,
+                RemovableDrives = removableDrives
+            };
+
+            return IMorphicResult<GetRemovableDisksAndDrivesResult>.SuccessResult(result);
         }
 
         [InternalFunction("darkMode")]

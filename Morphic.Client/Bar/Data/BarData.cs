@@ -182,22 +182,81 @@ namespace Morphic.Client.Bar.Data
                     List<BarItem> extraBarItems = new List<BarItem>();
                     foreach (var extraItemData in morphicBarExtraItems)
                     {
+                        BarItem extraBarItem;
 
-                        BarButton extraBarItem = new BarButton(defaultBar);
-                        extraBarItem.ToolTipHeader = extraItemData.tooltipHeader;
-                        extraBarItem.ToolTip = extraItemData.tooltipText;
-                        extraBarItem.Text = extraItemData.label ?? "";
                         switch (extraItemData.type)
                         {
                             case "link":
-                                extraBarItem.Action = new Morphic.Client.Bar.Data.Actions.WebAction();
-                                ((Morphic.Client.Bar.Data.Actions.WebAction)extraBarItem.Action!).UrlString = extraItemData.url ?? "";
+                                {
+                                    extraBarItem = new BarButton(defaultBar);
+                                    extraBarItem.ToolTipHeader = extraItemData.tooltipHeader;
+                                    extraBarItem.ToolTip = extraItemData.tooltipText;
+                                    extraBarItem.Text = extraItemData.label ?? "";
+                                    //
+                                    extraBarItem.Action = new Morphic.Client.Bar.Data.Actions.WebAction();
+                                    ((Morphic.Client.Bar.Data.Actions.WebAction)extraBarItem.Action!).UrlString = extraItemData.url ?? "";
+                                }
                                 break;
                             case "action":
-                                var extraBarItemInternalAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
-                                extraBarItemInternalAction.TelemetryEventName = "morphicBarExtraItem";
-                                extraBarItem.Action = extraBarItemInternalAction;
-                                ((Morphic.Client.Bar.Data.Actions.InternalAction)extraBarItem.Action!).FunctionName = extraItemData.function!;
+                                {
+                                    extraBarItem = new BarButton(defaultBar);
+                                    extraBarItem.ToolTipHeader = extraItemData.tooltipHeader;
+                                    extraBarItem.ToolTip = extraItemData.tooltipText;
+                                    extraBarItem.Text = extraItemData.label ?? "";
+                                    //
+                                    var extraBarItemInternalAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
+                                    extraBarItemInternalAction.TelemetryEventName = "morphicBarExtraItem";
+                                    extraBarItem.Action = extraBarItemInternalAction;
+                                    ((Morphic.Client.Bar.Data.Actions.InternalAction)extraBarItem.Action!).FunctionName = extraItemData.function!;
+                                }
+                                break;
+                            case "control":
+                                {
+                                    extraBarItem = new BarMultiButton(defaultBar);
+                                    extraBarItem.ToolTipHeader = extraItemData.tooltipHeader;
+                                    extraBarItem.ToolTip = extraItemData.tooltipText;
+                                    //
+                                    switch (extraItemData.feature)
+                                    {
+                                        case "usbopeneject":
+                                            extraBarItem.Text = extraItemData.label ?? "USB Drives (All)";
+                                            //
+                                            var openAllUsbAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
+                                            openAllUsbAction.TelemetryEventName = "morphicBarExtraItem";
+                                            openAllUsbAction.FunctionName = "openAllUsbDrives";
+                                            var openButton = new BarMultiButton.ButtonInfo
+                                            {
+                                                Text = "Open",
+                                                Action = openAllUsbAction,
+                                                TelemetryCategory = "morphicBarExtraItem",
+                                                Tooltip = "Open All USB Drives",
+                                                Value = "open"
+                                            };
+                                            //
+                                            var ejectAllUsbAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
+                                            ejectAllUsbAction.TelemetryEventName = "morphicBarExtraItem";
+                                            ejectAllUsbAction.FunctionName = "ejectAllUsbDrives";
+                                            var ejectButton = new BarMultiButton.ButtonInfo
+                                            {
+                                                Text = "Eject",
+                                                Action = ejectAllUsbAction,
+                                                TelemetryCategory = "morphicBarExtraItem",
+                                                Tooltip = "Eject All USB Drives",
+                                                Value = "eject"
+                                            };
+                                            //
+                                            ((BarMultiButton)extraBarItem).Buttons = new Dictionary<string, BarMultiButton.ButtonInfo>
+                                            {
+                                                { "open", openButton },
+                                                { "eject", ejectButton }
+                                            };
+                                            //
+                                            break;
+                                        default:
+                                            extraBarItem.Text = extraItemData.label ?? "";
+                                            break;
+                                    }
+                                }
                                 break;
                             default:
                                 // unknown type; this should be an impossible code path
