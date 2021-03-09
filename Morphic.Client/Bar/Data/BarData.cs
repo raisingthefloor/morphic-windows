@@ -183,6 +183,7 @@ namespace Morphic.Client.Bar.Data
                     foreach (var extraItemData in morphicBarExtraItems)
                     {
                         BarItem extraBarItem;
+                        var extraBarItemShouldBeAdded = false;
 
                         switch (extraItemData.type)
                         {
@@ -195,6 +196,7 @@ namespace Morphic.Client.Bar.Data
                                     //
                                     extraBarItem.Action = new Morphic.Client.Bar.Data.Actions.WebAction();
                                     ((Morphic.Client.Bar.Data.Actions.WebAction)extraBarItem.Action!).UrlString = extraItemData.url ?? "";
+                                    extraBarItemShouldBeAdded = true;
                                 }
                                 break;
                             case "action":
@@ -208,6 +210,7 @@ namespace Morphic.Client.Bar.Data
                                     extraBarItemInternalAction.TelemetryEventName = "morphicBarExtraItem";
                                     extraBarItem.Action = extraBarItemInternalAction;
                                     ((Morphic.Client.Bar.Data.Actions.InternalAction)extraBarItem.Action!).FunctionName = extraItemData.function!;
+                                    extraBarItemShouldBeAdded = true;
                                 }
                                 break;
                             case "control":
@@ -251,9 +254,12 @@ namespace Morphic.Client.Bar.Data
                                                 { "eject", ejectButton }
                                             };
                                             //
+                                            extraBarItemShouldBeAdded = true;
                                             break;
                                         default:
                                             extraBarItem.Text = extraItemData.label ?? "";
+                                            // NOTE: we don't know what this button is, so do not show it
+                                            extraBarItemShouldBeAdded = false;
                                             break;
                                     }
                                 }
@@ -265,7 +271,10 @@ namespace Morphic.Client.Bar.Data
                         //extraBarItem.ColorValue = "#00FF00";
                         extraBarItem.IsPrimary = true;
                         //
-                        defaultBar?.AllItems.Add(extraBarItem);
+                        if (extraBarItemShouldBeAdded == true)
+                        {
+                            defaultBar?.AllItems.Add(extraBarItem);
+                        }
                     }
 
                     // add a spacer entry
