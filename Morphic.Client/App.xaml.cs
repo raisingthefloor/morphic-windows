@@ -139,6 +139,8 @@ namespace Morphic.Client
             public string? url { get; set; }
             // for type: action
             public string? function { get; set; }
+            // for type: control
+            public string? feature { get; set; }
         }
 
         public class ConfigFileContents
@@ -334,9 +336,17 @@ namespace Morphic.Client
                     var extraItemUrl = extraItem.url;
                     // for type: action
                     var extraItemFunction = extraItem.function;
+                    // for type: control
+                    var extraItemFeature = extraItem.feature;
 
                     // if the item is invalid, log the error and skip this item
-                    if ((extraItemType == null) || (extraItemLabel == null) || (extraItemTooltipHeader == null))
+                    if (extraItemType == null)
+                    {
+                        // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
+                        Logger?.LogError("Invalid MorphicBar item: " + extraItem.ToString());
+                        continue;
+                    }
+                    if ((extraItemType != "control") && ((extraItemLabel == null) || (extraItemTooltipHeader == null)))
                     {
                         // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
                         Logger?.LogError("Invalid MorphicBar item: " + extraItem.ToString());
@@ -359,6 +369,13 @@ namespace Morphic.Client
                         continue;
                     }
 
+                    // if the "control" is missing its feature, log the error and skip this item
+                    if ((extraItem.type == "control") && (extraItemFeature == null || extraItemFeature == "")) {
+                        // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
+                        Logger?.LogError("Invalid MorphicBar item: " + extraItem.ToString());
+                        continue;
+                    }
+
                     var extraMorphicBarItem = new MorphicBarExtraItem();
                     extraMorphicBarItem.type = extraItemType;
                     extraMorphicBarItem.label = extraItemLabel;
@@ -366,6 +383,7 @@ namespace Morphic.Client
                     extraMorphicBarItem.tooltipText = extraItemTooltipText;
                     extraMorphicBarItem.url = extraItemUrl;
                     extraMorphicBarItem.function = extraItemFunction;
+                    extraMorphicBarItem.feature = extraItemFeature;
                     result.ExtraMorphicBarItems.Add(extraMorphicBarItem);
                 }
             }
