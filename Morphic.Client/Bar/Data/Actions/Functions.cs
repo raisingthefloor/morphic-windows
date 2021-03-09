@@ -552,6 +552,7 @@ namespace Morphic.Client.Bar.Data.Actions
             var removableDisks = getRemovableDisksAndDrivesResult.Value!.RemovableDisks;
 
             // now eject all the removable disks
+            var allDisksRemoved = true;
             foreach (var disk in removableDisks)
             {
                 App.Current.Logger.LogError("Safely ejecting drive");
@@ -560,11 +561,19 @@ namespace Morphic.Client.Bar.Data.Actions
                 var safeEjectResult = disk.SafelyRemoveDevice();
                 if (safeEjectResult.IsError == true)
                 {
-                    return IMorphicResult.ErrorResult;
+                    allDisksRemoved = false;
                 }
+
+                // wait 50ms between ejection
+                await Task.Delay(50);
             }
 
-            return IMorphicResult.SuccessResult;
+            if (allDisksRemoved == false)
+            {
+                return IMorphicResult.ErrorResult;
+            }
+
+            return allDisksRemoved ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
         }
 
         private struct GetRemovableDisksAndDrivesResult 
