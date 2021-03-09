@@ -47,18 +47,18 @@ stages:
         - task: DotNetCoreCLI@2
           displayName: "restore projects"
           inputs:
-	    command: restore
-	    projects: '$(projects)'
+            command: restore
+            projects: '$(projects)'
         
         - task: DotNetCoreCLI@2
           displayName: "build projects"
           inputs:
-	    command: build
-	    projects: '$(projects)'
+           command: build
+           projects: '$(projects)'
         
         - task: DotNetCoreCLI@2
           displayName: "build solution"
           inputs:
-	    command: build
-	    projects: '$(solution)'
+            command: build
+            projects: '$(solution)'
         
