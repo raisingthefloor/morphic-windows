@@ -25,8 +25,8 @@ pool:
   vmImage: 'windows-2019'
 
 variables:
-- name: solution
-  value: Morphic.sln
+- name: mainProject
+  value: Morphic/Morphic.csproj
 - name: projects
   value:  |
       Morphic.Core/Morphic.Core.csproj
@@ -47,20 +47,40 @@ stages:
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - task: DotNetCoreCLI@2
-          displayName: "restore projects"
+          displayName: "dotnet restore"
           inputs:
             command: restore
             projects: '$(projects)'
         
         - task: DotNetCoreCLI@2
-          displayName: "build projects"
+          displayName: "dotnet build"
           inputs:
            command: build
-           projects: '$(projects)'
-        
+           projects: '$(mainProject)'
+
         - task: DotNetCoreCLI@2
-          displayName: "build solution"
+          displayName: "dotnet publish (x86)"
           inputs:
-            command: build
-            projects: '$(solution)'
-        
+            command: publish
+            publishWebProjects: false
+            projects: '$(mainProject)'
+            arguments: '-f net6.0-windows -r win10-x86 -c Release'
+
+
+        - task: DotNetCoreCLI@2
+          displayName: "dotnet publish (x64)"
+          inputs:
+            command: publish
+            publishWebProjects: false
+            projects: '$(mainProject)'
+            arguments: '-f net6.0-windows -r win10-x64 -c Release'
+
+
+        - task: DotNetCoreCLI@2
+          displayName: "dotnet publish (arm64)"
+          inputs:
+            command: publish
+            publishWebProjects: false
+            projects: '$(mainProject)'
+            arguments: '-f net6.0-windows -r win10-arm64 -c Release'
+
