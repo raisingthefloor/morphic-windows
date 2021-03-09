@@ -127,7 +127,6 @@ namespace Morphic.Client.Bar.Data.Actions
                         else if (source == "stop")
                         {
                             await Countly.RecordEvent("readSelectedStop");
-                            break;
                         }
                     }
                     break;
@@ -136,10 +135,10 @@ namespace Morphic.Client.Bar.Data.Actions
                     {
                         case "on":
                             await Countly.RecordEvent("colorFiltersOn");
-                            return;
+                            break;
                         case "off":
                             await Countly.RecordEvent("colorFiltersOff");
-                            return;
+                            break;
                     }
                     break;
                 case "dark-mode":
@@ -147,10 +146,10 @@ namespace Morphic.Client.Bar.Data.Actions
                     {
                         case "on":
                             await Countly.RecordEvent("darkModeOn");
-                            return;
+                            break;
                         case "off":
                             await Countly.RecordEvent("darkModeOff");
-                            return;
+                            break;
                     }
                     break;
                 case "high-contrast":
@@ -158,10 +157,10 @@ namespace Morphic.Client.Bar.Data.Actions
                     {
                         case "100":
                             await Countly.RecordEvent("highContrastOn");
-                            return;
+                            break;
                         case "1":
                             await Countly.RecordEvent("highContrastOff");
-                            return;
+                            break;
                     }
                     break;
                 case "night-mode":
@@ -169,10 +168,10 @@ namespace Morphic.Client.Bar.Data.Actions
                     {
                         case "on":
                             await Countly.RecordEvent("nightModeOn");
-                            return;
+                            break;
                         case "off":
                             await Countly.RecordEvent("nightModeOff");
-                            return;
+                            break;
                     }
                     break;
                 case "":
@@ -183,12 +182,10 @@ namespace Morphic.Client.Bar.Data.Actions
                                 if (toggleState == true)
                                 {
                                     await Countly.RecordEvent("colorFiltersOn");
-                                    return;
                                 }
                                 else
                                 {
                                     await Countly.RecordEvent("colorFiltersOff");
-                                    return;
                                 }
                             }
                             break;
@@ -197,12 +194,10 @@ namespace Morphic.Client.Bar.Data.Actions
                                 if (toggleState == true)
                                 {
                                     await Countly.RecordEvent("highContrastOn");
-                                    return;
                                 }
                                 else
                                 {
                                     await Countly.RecordEvent("highContrastOff");
-                                    return;
                                 }
                             }
                             break;
@@ -211,12 +206,10 @@ namespace Morphic.Client.Bar.Data.Actions
                                 if (toggleState == true)
                                 {
                                     await Countly.RecordEvent("nightModeOn");
-                                    return;
                                 }
                                 else
                                 {
                                     await Countly.RecordEvent("nightModeOff");
-                                    return;
                                 }
                             }
                             break;

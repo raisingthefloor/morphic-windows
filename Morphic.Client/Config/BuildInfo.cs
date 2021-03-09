@@ -18,19 +18,19 @@
                 .InformationalVersion ?? "unknown version";
 
         [JsonPropertyName("buildTime")]
-        public string BuildTime { get; set; } = null!;
+        public string? BuildTime { get; set; } = null;
 
         [JsonPropertyName("commit")]
-        public string Commit { get; set; } = null!;
+        public string? Commit { get; set; } = null;
 
-        protected BuildInfo()
+        public BuildInfo()
         {
         }
         
         public static BuildInfo FromJsonFile(string path)
         {
             var json = File.ReadAllText(path);
-            return JsonSerializer.Deserialize<BuildInfo>(json);
+            return JsonSerializer.Deserialize<BuildInfo>(json)!;
         }
     }
 }

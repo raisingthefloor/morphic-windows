@@ -9,7 +9,7 @@
     <ApplicationIcon>Icon.ico</ApplicationIcon>
     <Win32Resource />
     <AssemblyName>Morphic</AssemblyName>
-    <PublishTrimmed>true</PublishTrimmed>
+    <PublishTrimmed>false</PublishTrimmed>
     <Platforms>AnyCPU;x64</Platforms>
     <VersionPrefix>1.1$(VersionBuildComponents)</VersionPrefix>
     <VersionSuffix Condition="'$(Configuration)' == 'Debug'">localdev</VersionSuffix>

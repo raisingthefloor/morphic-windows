@@ -475,11 +475,11 @@ namespace Morphic.Client.Bar.Data.Actions
         {
             // if we have a "value" property, this is a multi-segmented button and we should use "value" instead of "state"
             bool on;
-            if (args["value"] != null)
+            if (args.Arguments.Keys.Contains("value"))
             {
                 on = (args["value"] == "on");
             }
-            else if (args["state"] != null)
+            else if (args.Arguments.Keys.Contains("state"))
             {
                 on = (args["state"] == "on");
             }

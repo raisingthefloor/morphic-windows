@@ -126,7 +126,7 @@ namespace Morphic.Client.Dialogs
             {
                 await this.morphicSession.Solutions.CapturePreferences(this.morphicSession.Preferences!);
             }
-            catch (Exception e)
+            catch
             {
                 MessageBox.Show(Window.GetWindow(this), "Morphic ran into a problem while capturing the settings");
             }

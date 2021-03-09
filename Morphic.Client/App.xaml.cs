@@ -448,7 +448,7 @@ namespace Morphic.Client
                 serverUrl = section["ServerUrl"],
                 appKey = section["AppKey"],
                 appVersion = BuildInfo.Current.InformationalVersion,
-                developerProvidedDeviceId = telemetryDeviceUuid,
+                developerProvidedDeviceId = telemetryDeviceUuid
             };
 
             await Countly.Instance.Init(cc);

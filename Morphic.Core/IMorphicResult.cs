@@ -4,7 +4,7 @@
 // compliance with this License.
 //
 // You may obtain a copy of the License at
-// https://github.com/GPII/universal/blob/master/LICENSE.txt
+// https://github.com/raisingthefloor/morphic-windows/blob/master/LICENSE.txt
 //
 // The R&D leading to these results received funding from the:
 // * Rehabilitation Services Administration, US Dept. of Education under
@@ -25,7 +25,7 @@ using System;
 
 namespace Morphic.Core
 {
-    public interface IMorphicResult<TValue, TError> where TValue: struct where TError: struct
+    public interface IMorphicResult<TValue, TError>
     {
         public bool IsSuccess { get; }
         public bool IsError { get; }
@@ -37,13 +37,13 @@ namespace Morphic.Core
         public static IMorphicResult<TValue, TError> ErrorResult(TError error) => new MorphicError<TValue, TError>(error);
     }
 
-    public class MorphicSuccess<TValue, TError> : IMorphicResult<TValue, TError> where TValue : struct where TError : struct
+    public class MorphicSuccess<TValue, TError> : IMorphicResult<TValue, TError>
     {
         public bool IsSuccess => true;
         public bool IsError => false;
 
-        public TValue? Value { get; private set; }
-        public TError? Error
+        public TValue Value { get; private set; }
+        public TError Error
         {
             get
             {
@@ -58,12 +58,12 @@ namespace Morphic.Core
         }
     }
 
-    public class MorphicError<TValue, TError> : IMorphicResult<TValue, TError> where TValue : struct where TError : struct
+    public class MorphicError<TValue, TError> : IMorphicResult<TValue, TError>
     {
         public bool IsSuccess => false;
         public bool IsError => true;
 
-        public TValue? Value
+        public TValue Value
         {
             get
             {
@@ -71,7 +71,7 @@ namespace Morphic.Core
                 throw new NotSupportedException();
             }
         }
-        public TError? Error { get; private set; }
+        public TError Error { get; private set; }
 
         public MorphicError(TError error)
         {
@@ -81,7 +81,7 @@ namespace Morphic.Core
 
     //
 
-    public interface IMorphicResult<TValue> where TValue : struct
+    public interface IMorphicResult<TValue>
     {
         public bool IsSuccess { get; }
         public bool IsError { get; }
@@ -92,12 +92,12 @@ namespace Morphic.Core
         public static IMorphicResult<TValue> ErrorResult() => new MorphicError<TValue>();
     }
 
-    public class MorphicSuccess<TValue> : IMorphicResult<TValue> where TValue : struct
+    public class MorphicSuccess<TValue> : IMorphicResult<TValue>
     {
         public bool IsSuccess => true;
         public bool IsError => false;
 
-        public TValue? Value { get; private set; }
+        public TValue Value { get; private set; }
 
         public MorphicSuccess(TValue value)
         {
@@ -105,12 +105,12 @@ namespace Morphic.Core
         }
     }
 
-    public class MorphicError<TValue> : IMorphicResult<TValue> where TValue : struct
+    public class MorphicError<TValue> : IMorphicResult<TValue>
     {
         public bool IsSuccess => false;
         public bool IsError => true;
 
-        public TValue? Value
+        public TValue Value
         {
             get
             {
