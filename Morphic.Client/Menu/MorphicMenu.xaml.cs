@@ -4,8 +4,10 @@
     using CountlySDK;
     using Morphic.Client.Config;
     using Morphic.Client.Dialogs;
+    using Morphic.Windows.Native.OsVersion;
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Controls;
@@ -146,6 +148,36 @@
                     await Countly.RecordEvent("showMorphicBarAfterLoginDisabled");
                     break;
             }
+        }
+
+        private async void WindowsSettingsPointerSizeClicked(object sender, RoutedEventArgs e)
+        {
+            string settingsUrlAsPath = null!; // required to quiet the "not initialized error"
+            var windows10Build = OsVersion.GetWindows10Version();
+
+            switch (windows10Build)
+            {
+                case Windows10Version.v1809:
+                case Windows10Version.v1903:
+                case Windows10Version.v1909:
+                    // Windows 10 1809, 1903, 1909
+                    settingsUrlAsPath = "ms-settings:easeofaccess-cursorandpointersize";
+                    break;
+                case Windows10Version.v2004:
+                case Windows10Version.v20H2:
+                case Windows10Version.vFuture:
+                    // Windows 10 2004, 20H2 (and assumed for the future)
+                    settingsUrlAsPath = "ms-settings:easeofaccess-MousePointer";
+                    break;
+                case null: // not a valid version
+                default:
+                    // not supported
+                    Debug.Assert(false, "This build of Windows 10 is not supported");
+                    return;
+            }
+
+            MorphicMenuItem.OpenMenuItemPath(settingsUrlAsPath);
+            await MorphicMenuItem.RecordMenuItemTelemetryAsync(settingsUrlAsPath, ((MorphicMenuItem)sender).ParentMenuType, ((MorphicMenuItem)sender).TelemetryType, ((MorphicMenuItem)sender).TelemetryCategory);
         }
 
         private void StopKeyRepeatInit(object sender, RoutedEventArgs e)
