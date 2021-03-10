@@ -10,12 +10,13 @@
 
 namespace Morphic.Client.Bar.Data.Actions
 {
+    using Microsoft.Extensions.Logging;
+    using Morphic.Core;
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
     using System.Threading.Tasks;
-    using Microsoft.Extensions.Logging;
 
     /// <summary>
     /// Handles the invocation of internal functions, used by the InternalAction class.
@@ -31,7 +32,7 @@ namespace Morphic.Client.Bar.Data.Actions
         /// <summary>All internal functions.</summary>
         private readonly Dictionary<string, InternalFunctionAttribute> all;
 
-        public delegate Task<bool> InternalFunction(FunctionArgs args);
+        public delegate Task<IMorphicResult> InternalFunction(FunctionArgs args);
 
         protected InternalFunctions()
         {
@@ -57,7 +58,14 @@ namespace Morphic.Client.Bar.Data.Actions
                 InternalFunctionAttribute? attr = method.GetCustomAttribute<InternalFunctionAttribute>();
                 if (attr != null)
                 {
-                    attr.SetFunction((InternalFunction)method.CreateDelegate(typeof(InternalFunction)));
+                    try
+                    {
+                        attr.SetFunction((InternalFunction)method.CreateDelegate(typeof(InternalFunction)));
+                    }
+                    catch
+                    {
+                        System.Diagnostics.Debug.Assert(false, "Could not wire up delegate to internal function");
+                    }
                     yield return attr;
                 }
             }
@@ -69,11 +77,11 @@ namespace Morphic.Client.Bar.Data.Actions
         /// <param name="functionName">The function name.</param>
         /// <param name="functionArgs">The parameters.</param>
         /// <returns></returns>
-        public Task<bool> InvokeFunction(string functionName, Dictionary<string, string> functionArgs)
+        public Task<IMorphicResult> InvokeFunctionAsync(string functionName, Dictionary<string, string> functionArgs)
         {
             App.Current.Logger.LogDebug($"Invoking built-in function '{functionName}'");
 
-            Task<bool> result;
+            Task<IMorphicResult> result;
 
             if (this.all.TryGetValue(functionName.ToLowerInvariant(),
                 out InternalFunctionAttribute? functionAttribute))

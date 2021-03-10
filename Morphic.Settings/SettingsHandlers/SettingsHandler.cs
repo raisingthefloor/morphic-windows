@@ -1,5 +1,6 @@
 ﻿namespace Morphic.Settings.SettingsHandlers
 {
+    using Morphic.Core;
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -16,27 +17,37 @@
         }
 
         /// <summary>Gets the value of the specified settings of a group.</summary>
-        public abstract Task<Values> Get(SettingGroup settingGroup, IEnumerable<Setting> settings);
+		// NOTE: we return both success/failure and a list of results so that we can return partial results in case of partial failure
+        public abstract Task<(IMorphicResult, Values)> GetAsync(SettingGroup settingGroup, IEnumerable<Setting> settings);
 
         /// <summary>Sets the given values to setting in a group.</summary>
-        public abstract Task<bool> Set(SettingGroup settingGroup, Values values);
+        public abstract Task<IMorphicResult> SetAsync(SettingGroup settingGroup, Values values);
 
         /// <summary>Gets the value of all settings in a group.</summary>
-        public virtual Task<Values> Get(SettingGroup settingGroup)
+		// NOTE: we return both success/failure and a list of results so that we can return partial results in case of partial failure
+        public virtual async Task<(IMorphicResult, Values)> GetAsync(SettingGroup settingGroup)
         {
-            return this.Get(settingGroup, settingGroup);
+            return await this.GetAsync(settingGroup, settingGroup);
         }
 
         /// <summary>Gets the value of a single setting.</summary>
-        public virtual async Task<object?> Get(Setting setting)
+        public virtual async Task<IMorphicResult<object?>> GetAsync(Setting setting)
         {
-            return (await this.Get(setting.SettingGroup, new[] { setting })).FirstOrDefault().Value;
+            // NOTE: we are returning an error if doing a GetAsync was a failure...even if we got one item back.  We need to have a more granular error reporting strategy and
+            //       need to determine when it might be safe to return a value even though there was an error
+            var (getResult, value) = await this.GetAsync(setting.SettingGroup, new[] { setting });
+            if (getResult.IsError == true)
+            {
+                return IMorphicResult<object?>.ErrorResult();
+            }
+                
+            return IMorphicResult<object?>.SuccessResult(value.FirstOrDefault().Value);
         }
 
         /// <summary>Set the value of a single setting.</summary>
-        public virtual Task<bool> Set(Setting setting, object? newValue)
+        public virtual async Task<IMorphicResult> SetAsync(Setting setting, object? newValue)
         {
-            return this.Set(setting.SettingGroup, new Values(setting, newValue));
+            return await this.SetAsync(setting.SettingGroup, new Values(setting, newValue));
         }
 
         public virtual Task<Range> GetRange(Setting setting)
@@ -92,6 +103,7 @@
         {
             foreach (Setting setting in this.listeningSettings)
             {
+                // OBSERVATION: we don't check for either success/failure of checking for changes...or capture whether anything was indeed changed
                 _ = setting.CheckForChange();
             }
         }

@@ -89,7 +89,7 @@
 
         }
 
-        private async void LoadNewRegistry(object sender, RoutedEventArgs e)
+        private void LoadNewRegistry(object sender, RoutedEventArgs e)
         {
             OpenFileDialog? filedialog = new OpenFileDialog();
             filedialog.InitialDirectory = "Documents";

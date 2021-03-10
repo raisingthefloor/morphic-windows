@@ -25,10 +25,12 @@ namespace Morphic.Service
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading.Tasks;
     using System.Timers;
     using Microsoft.Extensions.Logging;
     using Morphic.Core;
+    using Morphic.Core.Community;
     using Settings.SolutionsRegistry;
 
     /// <summary>
@@ -45,7 +47,7 @@ namespace Morphic.Service
         public MorphicSession(SessionOptions options, Storage storage,
             Keychain keychain, IUserSettings userSettings, ILogger<MorphicSession> logger,
             ILogger<HttpService> httpLogger, Solutions solutions)
-            : base(options.EndpointUri, storage, keychain, userSettings, logger, httpLogger, solutions)
+            : base(options.ApiEndpointUri, storage, keychain, userSettings, logger, httpLogger, solutions)
         {
         }
 
@@ -53,21 +55,31 @@ namespace Morphic.Service
         /// Open the session by trying to login with the saved user information, if any 
         /// </summary>
         /// <returns>A task that completes when the user information has been fetched</returns>
-        public override async Task Open()
+        public override async Task OpenAsync()
         {
             this.logger.LogInformation("Opening Session");
+			//
+            // NOTE: ideally we would not re-authenticate and re-load the MorphicBars before loading the current bar (i.e. ideally we would cache this data, like we do on macOS)
+            if (this.CurrentCredentials is UsernameCredentials credentials)
+            {
+                await this.Authenticate(credentials);
+            }
+            //
+            // cache our user id (so that we don't re-call "user changed" if our user doesn't actually change here)
+            var cachedUserId = this.User?.Id;
+            //
             if (this.CurrentUserId != null)
             {
                 if (this.CurrentUserId != "")
                 {
-                    this.User = await this.Storage.Load<User>(this.CurrentUserId);
+                    this.User = await this.Storage.LoadAsync<User>(this.CurrentUserId);
                 }
             }
             string preferencesId = this.User?.PreferencesId ?? "__default__";
-            this.Preferences = await this.Storage.Load<Preferences>(preferencesId);
-            if (this.User != null)
+            this.Preferences = await this.Storage.LoadAsync<Preferences>(preferencesId);
+            if ((this.User != null) && (this.User?.Id != cachedUserId))
             {
-                this.UserChanged?.Invoke(this, new EventArgs());
+                await this.UserChangedAsync?.Invoke(this, new EventArgs());
             }
         }
 
@@ -78,15 +90,17 @@ namespace Morphic.Service
         /// </summary>
         public Preferences? Preferences;
 
-        public event EventHandler? UserChanged;
+        public delegate Task AsyncEventHandler(object sender, EventArgs e);
+        public event AsyncEventHandler? UserChangedAsync;
 
-        public override Task Signin(User user)
+        public override async Task SignInAsync(User user)
         {
-            return this.Signin(user, null);
+            await this.SignInAsync(user, null);
         }
 
-        public async Task Signin(User user, Preferences? preferences)
+        public async Task SignInAsync(User user, Preferences? preferences)
         {
+            this.Communities = new UserCommunity[] { };
             this.User = user;
             if (preferences == null)
             {
@@ -95,24 +109,42 @@ namespace Morphic.Service
             }
 
             this.Preferences = preferences;
-            await this.Storage.Save(user);
+            await this.Storage.SaveAsync(user);
             if (this.Preferences != null)
             {
-                await this.Storage.Save(this.Preferences);
+                await this.Storage.SaveAsync(this.Preferences);
             }
 
-            this.UserChanged?.Invoke(this, new EventArgs());
+            UserCommunitiesPage? communitiesPage = await this.Service.FetchUserCommunities(user.Id);
+            if (communitiesPage != null)
+            {
+                this.Communities = communitiesPage.Communities;
+            }
+
+            if (this.UserChangedAsync != null)
+            {
+                await this.UserChangedAsync.Invoke(this, new EventArgs());
+            }
         }
 
         public async Task SignOut()
         {
+            // empty our list of communities
+            this.Communities = new UserCommunity[0];
+
+            // clear out the user
             this.User = null;
-            this.Preferences = await this.Storage.Load<Preferences>("__default__");
-            await this.Solutions.ApplyPreferences(this.Preferences!);
-            this.UserChanged?.Invoke(this, new EventArgs());
+
+            //            this.Preferences = await this.Storage.Load<Preferences>("__default__");
+            //            await this.Solutions.ApplyPreferences(this.Preferences!);
+
+            if (this.UserChangedAsync != null)
+            {
+                await this.UserChangedAsync.Invoke(this, new EventArgs());
+            }
         }
 
-        public async Task<bool> RegisterUser(User user, UsernameCredentials credentials, Preferences preferences)
+        public async Task<bool> RegisterUserAsync(User user, UsernameCredentials credentials, Preferences preferences)
         {
             AuthResponse? auth = await this.Service.Register(user, credentials);
             bool success = auth != null;
@@ -131,11 +163,12 @@ namespace Morphic.Service
                 {
                     preferences.Id = auth.User.PreferencesId;
                     preferences.UserId = auth.User.Id;
-                    await this.Service.Save(preferences);
+                    // OBSERVATION: we do not check to see if the save to the server was successful
+                    _ = await this.Service.SaveAsync(preferences);
                 }
 
                 this.userSettings.SetUsernameForId(credentials.Username, auth.User.Id);
-                await this.Signin(auth.User, preferences);
+                await this.SignInAsync(auth.User, preferences);
             }
 
             return success;
@@ -168,7 +201,7 @@ namespace Morphic.Service
         {
             if (this.Preferences != null)
             {
-                await this.Solutions.ApplyPreferences(this.Preferences, true);
+                await this.Solutions.ApplyPreferencesAsync(this.Preferences, true);
             }
         }
 
@@ -257,11 +290,12 @@ namespace Morphic.Service
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void PreferencesSaveTimerElapsed(object sender, ElapsedEventArgs e)
+        private async void PreferencesSaveTimerElapsed(object sender, ElapsedEventArgs e)
         {
             this.preferencesSaveTimer?.Stop();
             this.preferencesSaveTimer = null;
-            _ = this.SavePreferences();
+            // OBSERVATION: we do not check to see if the save to disk or server was successful
+            _ = await this.SavePreferencesAsync();
 
         }
 
@@ -269,8 +303,10 @@ namespace Morphic.Service
         /// Actually save the preferences to the server
         /// </summary>
         /// <returns></returns>
-        private async Task SavePreferences()
+        private async Task<IMorphicResult> SavePreferencesAsync()
         {
+            var success = true;
+
             if (this.Preferences == null)
             {
                 this.logger.LogWarning("SavePreferences called with null preferences");
@@ -278,27 +314,76 @@ namespace Morphic.Service
             else
             {
                 this.logger.LogInformation("Saving preferences to disk");
-                if (await this.Storage.Save(this.Preferences))
+                if ((await this.Storage.SaveAsync(this.Preferences)).IsSuccess == true)
                 {
                     this.logger.LogInformation("Saved preferences to disk");
                 }
                 else
                 {
                     this.logger.LogError("Failed to save preferences to disk");
+                    success = false;
                 }
 
                 if (this.User != null)
                 {
                     this.logger.LogInformation("Saving preferences to server");
-                    if (await this.Service.Save(this.Preferences))
+                    if ((await this.Service.SaveAsync(this.Preferences)).IsSuccess == true)
                     {
                         this.logger.LogInformation("Saved preferences to server");
                     }
                     else
                     {
                         this.logger.LogError("Failed to save preferences to server");
+                        success = false;
                     }
                 }
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        #endregion
+
+        #region Community
+
+        public UserCommunity[] Communities = { };
+
+        /// <summary>
+        /// Gets a bar for a community.
+        /// </summary>
+        /// <param name="communityId"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        /// <exception cref="InvalidOperationException"></exception>
+        /// <exception cref="ApplicationException"></exception>
+        public async Task<UserBar> GetBar(string communityId)
+        {
+            this.logger.LogInformation($"Getting bar for {communityId}");
+
+            bool knownCommunity = this.Communities.Any(c => c.Id == communityId);
+            if (!knownCommunity)
+            {
+                throw new ArgumentOutOfRangeException(nameof(communityId), "Unknown community ID for the current session");
+            }
+
+            if (this.User == null)
+            {
+                throw new InvalidOperationException("Unable to get a bar while logged out");
+            }
+
+            if (this.Communities.Length == 0)
+            {
+                throw new ApplicationException("Unable to get a bar for a user in no communities");
+            }
+
+            UserCommunityDetail? community = await this.Service.FetchUserCommunity(this.User.Id, communityId);
+            if (community != null)
+            {
+                return community.Bar;
+            } 
+            else
+            {
+                throw new ApplicationException("Unable to retrieve the bar");
             }
         }
 

@@ -20,7 +20,11 @@
                 @"C:\gpii\lite\MorphicLiteClientWindows\Morphic.Client\solutions.json5");
 
             Preferences preferences = new Preferences();
-            await solutions.CapturePreferences(preferences);
+            var capturePreferencesResult = await solutions.CapturePreferencesAsync(preferences);
+            if (capturePreferencesResult.IsError == true)
+            {
+                throw new Exception("CapturePreferences failed");
+            }
 
             return;
 

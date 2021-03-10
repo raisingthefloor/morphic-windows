@@ -8,8 +8,14 @@
 // You may obtain a copy of the License at
 // https://github.com/GPII/universal/blob/master/LICENSE.txt
 
+using Morphic.Windows.Native.WindowsCom;
+
 namespace Morphic.Client.Bar.Data.Actions
 {
+    using Microsoft.Extensions.Logging;
+    using Microsoft.Win32;
+    using Morphic.Core;
+    using Newtonsoft.Json;
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
@@ -21,9 +27,6 @@ namespace Morphic.Client.Bar.Data.Actions
     using System.Windows.Interop;
     using System.Windows.Media;
     using System.Windows.Media.Imaging;
-    using Microsoft.Extensions.Logging;
-    using Microsoft.Win32;
-    using Newtonsoft.Json;
 
     /// <summary>
     /// Action to start an application.
@@ -66,8 +69,15 @@ namespace Morphic.Client.Bar.Data.Actions
         /// <summary>
         /// Invoke the value in `exe` as-is, via the shell (explorer). Don't resolve the path.
         /// </summary>
-        [JsonProperty("asIs")]
-        public bool AsIs { get; set; }
+        [JsonProperty("shell")]
+        public bool Shell { get; set; }
+
+        /// <summary>
+        /// This is a windows store app. The value of `exe` is the Application User Model ID of the app.
+        /// For example, `Microsoft.WindowsCalculator_8wekyb3d8bbwe!App`
+        /// </summary>
+        [JsonProperty("appx")]
+        public bool AppX { get; set; }
 
         /// <summary>
         /// true to always start a new instance. false to activate an existing instance.
@@ -97,11 +107,16 @@ namespace Morphic.Client.Bar.Data.Actions
                 bool isUrl = this.exeNameValue.Length > 3 && this.exeNameValue.EndsWith(':');
                 if (isUrl)
                 {
-                    this.AsIs = true;
+                    this.Shell = true;
                 }
 
+                if (this.exeNameValue.StartsWith("appx:", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    this.AppX = true;
+                    this.exeNameValue = this.exeNameValue.Substring(5);
+                }
 
-                if (this.AsIs || this.exeNameValue.Length == 0)
+                if (this.Shell || this.AppX || this.exeNameValue.Length == 0)
                 {
                     this.AppPath = null;
                 }
@@ -259,19 +274,25 @@ namespace Morphic.Client.Bar.Data.Actions
             return fullPath;
         }
 
-        protected override Task<bool> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
+        protected override Task<IMorphicResult> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
         {
             if (this.DefaultApp != null && string.IsNullOrEmpty(this.ExeName))
             {
                 return this.DefaultApp.InvokeAsync(source);
             }
 
+            if (this.AppX)
+            {
+                var pid = Appx.Start(this.ExeName);
+                return Task.FromResult(pid > 0 ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult);
+            }
+
             if (!this.NewInstance && (Keyboard.Modifiers & ModifierKeys.Shift) != ModifierKeys.Shift)
             {
-                bool activated = this.ActivateInstance();
+                bool activated = this.ActivateInstance().IsSuccess;
                 if (activated)
                 {
-                    return Task.FromResult(true);
+                    return Task.FromResult(IMorphicResult.SuccessResult);
                 }
             }
 
@@ -285,7 +306,7 @@ namespace Morphic.Client.Bar.Data.Actions
 
             };
 
-            if (this.AsIs)
+            if (this.Shell)
             {
                 startInfo.UseShellExecute = true;
             }
@@ -309,7 +330,7 @@ namespace Morphic.Client.Bar.Data.Actions
 
             Process? process = Process.Start(startInfo);
 
-            return Task.FromResult(process != null);
+            return Task.FromResult(process != null ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult);
         }
 
         /// <summary>
@@ -317,7 +338,7 @@ namespace Morphic.Client.Bar.Data.Actions
         /// </summary>
         /// <returns>false if it could not be done.</returns>
         /// <exception cref="NotImplementedException"></exception>
-        private bool ActivateInstance()
+        private IMorphicResult ActivateInstance()
         {
             bool success = false;
             string? friendlyName = Path.GetFileNameWithoutExtension(this.AppPath);
@@ -329,7 +350,7 @@ namespace Morphic.Client.Bar.Data.Actions
                     .Any(process => WinApi.ActivateWindow(process.MainWindowHandle));
             }
 
-            return success;
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
         }
     }
 }

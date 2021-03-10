@@ -40,7 +40,8 @@
             if (preferences == null)
             {
                 preferences = new Preferences();
-                await this.morphicSession.Solutions.CapturePreferences(preferences);
+                // NOTE: we are not returning any kind of error if the preferences were not captured
+                _ = await this.morphicSession.Solutions.CapturePreferencesAsync(preferences);
             }
 
             string json = JsonSerializer.Serialize(preferences);

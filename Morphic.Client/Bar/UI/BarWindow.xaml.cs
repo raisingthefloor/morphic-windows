@@ -435,8 +435,8 @@ namespace Morphic.Client.Bar.UI
                 Rect workArea = this.GetWorkArea();
                 this.MaxWidth = workArea.Width;
                 this.MaxHeight = workArea.Height;
-                this.BarControl.MaxWidth = this.MaxWidth - this.ExtraWidth;
-                this.BarControl.MaxHeight = this.MaxHeight - this.ExtraHeight;
+                this.BarControl.MaxWidth = Math.Max(0, this.MaxWidth - this.ExtraWidth);
+                this.BarControl.MaxHeight = Math.Max(0, this.MaxHeight - this.ExtraHeight);
             }
             else
             {
@@ -506,6 +506,11 @@ namespace Morphic.Client.Bar.UI
                     last.Overflow = true;
                     this.UpdateBarItems();
                 }
+            } 
+            else if (this.Bar.Overflow == BarOverflow.Secondary && this is SecondaryBarWindow secondaryBarWindow) 
+            {
+                System.Diagnostics.Debug.Assert(false, "Unexpected condition; this issue must be resolved; returning false to avoid infinite loop");
+                return false;
             }
 
             return true;

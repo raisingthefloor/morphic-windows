@@ -49,6 +49,8 @@ namespace Morphic.Client.Bar
         {
         }
 
+        public bool BarIsLoaded { get; private set; } = false;
+
         /// <summary>
         /// Show a bar that's already loaded.
         /// </summary>
@@ -74,6 +76,8 @@ namespace Morphic.Client.Bar
         /// </summary>
         public void CloseBar()
         {
+            this.BarIsLoaded = false;
+
             if (this.barWindow != null)
             {
                 this.OnBarUnloaded(this.barWindow);
@@ -176,6 +180,13 @@ namespace Morphic.Client.Bar
             }
         }
 
+        public BarData? LoadBasicMorphicBar()
+        {
+            var result = LoadFromBarJson(AppPaths.GetConfigFile("basic-bar.json5", true));
+            AppOptions.Current.LastCommunity = null;
+            return result;
+        }
+
         /// <summary>
         /// Loads and shows a bar.
         /// </summary>
@@ -204,6 +215,8 @@ namespace Morphic.Client.Bar
                 this.CloseBar();
             }
 
+            this.BarIsLoaded = true;
+
             if (bar != null)
             {
                 this.CreateBarWindow(bar);
@@ -219,7 +232,7 @@ namespace Morphic.Client.Bar
         /// </summary>
         /// <param name="session">The current session.</param>
         /// <param name="showCommunityId">Force this community to show.</param>
-        public async void LoadSessionBar(CommunitySession session, string? showCommunityId = null)
+        public async Task LoadSessionBarAsync(MorphicSession session, string communityId)
         {
             if (this.firstBar && AppOptions.Current.Launch.BarFile != null)
             {
@@ -231,58 +244,50 @@ namespace Morphic.Client.Bar
 
             UserBar? bar;
 
-            string[] lastCommunities = AppOptions.Current.Communities.ToArray();
-            string? lastCommunityId = showCommunityId ?? AppOptions.Current.LastCommunity;
-
-            if (string.IsNullOrWhiteSpace(lastCommunityId))
-            {
-                lastCommunityId = null;
-            }
-
             UserCommunity? community = null;
             UserBar? userBar = null;
 
-            if (session.Communities.Length == 0)
-            {
-                MessageBox.Show("You are not part of a Morphic community yet.", "Morphic");
-            }
-            else if (session.Communities.Length == 1)
-            {
-                community = session.Communities.First();
-            }
-            else
-            {
+            //if (session.Communities.Length == 0)
+            //{
+            //    MessageBox.Show("You are not part of a Morphic community yet.", "Morphic");
+            //}
+            //else if (session.Communities.Length == 1)
+            //{
+            //    community = session.Communities.First();
+            //}
+            //else
+            //{
                 // The user is a member of multiple communities.
 
-                // See if any membership has changed
-                bool changed = showCommunityId != null && session.Communities.Length != lastCommunities.Length
-                    || !session.Communities.Select(c => c.Id).OrderBy(id => id)
-                        .SequenceEqual(lastCommunities.OrderBy(id => id));
+                //// See if any membership has changed
+                //bool changed = session.Communities.Length != lastCommunities.Length
+                //    || !session.Communities.Select(c => c.Id).OrderBy(id => id)
+                //        .SequenceEqual(lastCommunities.OrderBy(id => id));
 
-                if (!changed && lastCommunityId != null)
+                if (/*!changed &&*/ communityId != null)
                 {
-                    community = session.Communities.FirstOrDefault(c => c.Id == lastCommunityId);
+                    community = session.Communities.FirstOrDefault(c => c.Id == communityId);
                 }
 
-                if (community == null)
-                {
-                    this.Logger.LogInformation("Showing community picker");
+                //if (community == null)
+                //{
+                //    this.Logger.LogInformation("Showing community picker");
 
-                    // Load the bars while the picker is shown
-                    Dictionary<string, Task<UserBar>> bars =
-                        session.Communities.ToDictionary(c => c.Id, c => session.GetBar(c.Id));
+                //    // Load the bars while the picker is shown
+                //    Dictionary<string, Task<UserBar>> bars =
+                //        session.Communities.ToDictionary(c => c.Id, c => session.GetBar(c.Id));
 
-                    // Show the picker
-                    CommunityPickerWindow picker = new CommunityPickerWindow(session.Communities);
-                    bool gotCommunity = picker.ShowDialog() == true;
-                    community = gotCommunity ? picker.SelectedCommunity : null;
+                //    // Show the picker
+                //    CommunityPickerWindow picker = new CommunityPickerWindow(session.Communities);
+                //    bool gotCommunity = picker.ShowDialog() == true;
+                //    community = gotCommunity ? picker.SelectedCommunity : null;
 
-                    if (community != null)
-                    {
-                        userBar = await bars[community.Id];
-                    }
-                }
-            }
+                //    if (community != null)
+                //    {
+                //        userBar = await bars[community.Id];
+                //    }
+                //}
+            //}
 
             if (community != null)
             {
@@ -295,10 +300,18 @@ namespace Morphic.Client.Bar
                 {
                     barData.CommunityId = community.Id;
                 }
+
+                AppOptions.Current.LastCommunity = community?.Id;
+            }
+            else
+            {
+                // if the community could not be found, show the Basic MorphicBar instead
+                this.LoadBasicMorphicBar();
+
+                AppOptions.Current.LastCommunity = null;
             }
 
             AppOptions.Current.Communities = session.Communities.Select(c => c.Id).ToArray();
-            AppOptions.Current.LastCommunity = community?.Id;
         }
 
         /// <summary>

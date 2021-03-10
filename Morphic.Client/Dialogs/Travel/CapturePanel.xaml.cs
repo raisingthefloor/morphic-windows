@@ -58,7 +58,8 @@ namespace Morphic.Client.Dialogs
 
         public async void OnSave(object sender, EventArgs args)
         {
-            await this.morphicSession.Service.Save(this.Preferences);
+            // OBSERVATION: we do not check to see if the save to the server was successful
+            _ = await this.morphicSession.Service.SaveAsync(this.Preferences);
             this.CompletePanel.Visibility = Visibility.Collapsed;
             this.SavedPanel.Visibility = Visibility.Visible;
         }
@@ -122,11 +123,8 @@ namespace Morphic.Client.Dialogs
             int minTime = 5000;
             this.Preferences = this.morphicSession.Preferences!;
 
-            try
-            {
-                await this.morphicSession.Solutions.CapturePreferences(this.morphicSession.Preferences!);
-            }
-            catch (Exception e)
+            var capturePreferencesResult = await this.morphicSession.Solutions.CapturePreferencesAsync(this.morphicSession.Preferences!);
+            if (capturePreferencesResult.IsError == true) 
             {
                 MessageBox.Show(Window.GetWindow(this), "Morphic ran into a problem while capturing the settings");
             }

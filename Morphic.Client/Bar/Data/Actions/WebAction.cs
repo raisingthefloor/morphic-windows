@@ -10,11 +10,12 @@
 
 namespace Morphic.Client.Bar.Data.Actions
 {
+    using Microsoft.Extensions.Logging;
+    using Morphic.Core;
+    using Newtonsoft.Json;
     using System;
     using System.Diagnostics;
     using System.Threading.Tasks;
-    using Microsoft.Extensions.Logging;
-    using Newtonsoft.Json;
 
     /// <summary>
     /// A web-link action.
@@ -32,6 +33,22 @@ namespace Morphic.Client.Bar.Data.Actions
             {
                 if (Uri.TryCreate(value, UriKind.Absolute, out Uri? uri))
                 {
+                    // validate our uri
+                    switch (uri?.Scheme.ToLowerInvariant()) {
+                        case "http":
+                        case "https":
+                            // allowed
+                            break;
+                        case "skype":
+                            // allowed for now, but in the future we may want to launch Skype directly and handle this information seperately
+                            break;
+                        default:
+                            // all other schemes (as well as a null scheme) are disallowed
+                            uri = null;
+                            break;
+                    }
+
+                    // save our validated uri
                     this.Uri = uri;
                 }
                 else
@@ -56,7 +73,7 @@ namespace Morphic.Client.Bar.Data.Actions
             }
         }
 
-        protected override Task<bool> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
+        protected override Task<IMorphicResult> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
         {
             bool success = true;
             if (this.Uri != null)
@@ -69,7 +86,7 @@ namespace Morphic.Client.Bar.Data.Actions
                 success = process != null;
             }
 
-            return Task.FromResult(success);
+            return Task.FromResult(success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult);
         }
     }
 }

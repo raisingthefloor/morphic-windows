@@ -10,12 +10,6 @@
         public static BuildInfo Current { get; } = BuildInfo.FromJsonFile(AppPaths.GetAppFile("build-info.json"));
 
         [JsonIgnore]
-        public string EditionName => BuildFeatures.EditionName;
-
-        [JsonIgnore]
-        public Features Features => BuildFeatures.EnabledFeatures;
-
-        [JsonIgnore]
         public string Version => Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "unknown version";
 
         [JsonIgnore]
@@ -24,19 +18,19 @@
                 .InformationalVersion ?? "unknown version";
 
         [JsonPropertyName("buildTime")]
-        public string BuildTime { get; set; } = null!;
+        public string? BuildTime { get; set; } = null;
 
         [JsonPropertyName("commit")]
-        public string Commit { get; set; } = null!;
+        public string? Commit { get; set; } = null;
 
-        protected BuildInfo()
+        public BuildInfo()
         {
         }
         
         public static BuildInfo FromJsonFile(string path)
         {
             var json = File.ReadAllText(path);
-            return JsonSerializer.Deserialize<BuildInfo>(json);
+            return JsonSerializer.Deserialize<BuildInfo>(json)!;
         }
     }
 }

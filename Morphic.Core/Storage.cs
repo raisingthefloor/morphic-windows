@@ -89,7 +89,7 @@ namespace Morphic.Core
         /// <typeparam name="RecordType">The class of record being saved</typeparam>
         /// <param name="record">The record being saved</param>
         /// <returns>Whether or not the save succeeded</returns>
-        public async Task<bool> Save<RecordType>(RecordType record) where RecordType: class, IRecord
+        public async Task<IMorphicResult> SaveAsync<RecordType>(RecordType record) where RecordType: class, IRecord
         {
             var type = typeof(RecordType);
             var path = PathForRecord(record.Id, type);
@@ -107,12 +107,12 @@ namespace Morphic.Core
                     await JsonSerializer.SerializeAsync<RecordType>(stream, record);
                 }
                 logger.LogInformation("Saved {0}/{1}", type.Name, record.Id);
-                return true;
+                return IMorphicResult.SuccessResult;
             }
             catch (Exception e)
             {
                 logger.LogError(e, "Failed to save {0}/{1}", type.Name, record.Id);
-                return false;
+                return IMorphicResult.ErrorResult;
             }
         }
 
@@ -122,7 +122,7 @@ namespace Morphic.Core
         /// <typeparam name="RecordType">The type of record to load</typeparam>
         /// <param name="identifier">The record's unique identifier</param>
         /// <returns>The requested record, or <code>null</code> if no such record was found</returns>
-        public async Task<RecordType?> Load<RecordType>(string identifier) where RecordType: class, IRecord
+        public async Task<RecordType?> LoadAsync<RecordType>(string identifier) where RecordType: class, IRecord
         {
             var type = typeof(RecordType);
             var path = PathForRecord(identifier, type);

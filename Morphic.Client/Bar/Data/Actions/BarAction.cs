@@ -12,6 +12,7 @@ namespace Morphic.Client.Bar.Data.Actions
 {
     using CountlySDK;
     using Microsoft.Extensions.Logging;
+    using Morphic.Core;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
     using System;
@@ -41,7 +42,7 @@ namespace Morphic.Client.Bar.Data.Actions
         /// <param name="source">Button ID, for multi-button bar items.</param>
         /// <param name="toggleState">New state, if the button is a toggle.</param>
         /// <returns></returns>
-        protected abstract Task<bool> InvokeAsyncImpl(string? source = null, bool? toggleState = null);
+        protected abstract Task<IMorphicResult> InvokeAsyncImpl(string? source = null, bool? toggleState = null);
 
         /// <summary>
         /// Invokes the action.
@@ -49,9 +50,9 @@ namespace Morphic.Client.Bar.Data.Actions
         /// <param name="source">Button ID, for multi-button bar items.</param>
         /// <param name="toggleState">New state, if the button is a toggle.</param>
         /// <returns></returns>
-        public async Task<bool> InvokeAsync(string? source = null, bool? toggleState = null)
+        public async Task<IMorphicResult> InvokeAsync(string? source = null, bool? toggleState = null)
         {
-            bool result;
+            IMorphicResult result;
             try
             {
                 try
@@ -70,10 +71,10 @@ namespace Morphic.Client.Bar.Data.Actions
                 if (e.UserMessage != null)
                 {
                     MessageBox.Show($"There was a problem performing the action:\n\n{e.UserMessage}",
-                        "Morphic Community Bar", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                        "Custom MorphicBar", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 }
 
-                result = false;
+                result = IMorphicResult.ErrorResult;
             }
             finally
             {
@@ -90,6 +91,21 @@ namespace Morphic.Client.Bar.Data.Actions
             // handle actions which must be filted by id
             switch (this.Id)
             {
+                case "log-off":
+                    await Countly.RecordEvent("SignOut");
+                    break;
+                case "volume":
+                    {
+                        if (source == "up")
+                        {
+                            await Countly.RecordEvent("volumeUp");
+                        }
+                        else if (source == "down")
+                        {
+                            await Countly.RecordEvent("volumeDown");
+                        }
+                    }
+                    break;
                 case "magnify":
                     {
                         if (source == "on") 
@@ -111,8 +127,51 @@ namespace Morphic.Client.Bar.Data.Actions
                         else if (source == "stop")
                         {
                             await Countly.RecordEvent("readSelectedStop");
-                            break;
                         }
+                    }
+                    break;
+                case "color-vision":
+                    switch (source)
+                    {
+                        case "on":
+                            await Countly.RecordEvent("colorFiltersOn");
+                            break;
+                        case "off":
+                            await Countly.RecordEvent("colorFiltersOff");
+                            break;
+                    }
+                    break;
+                case "dark-mode":
+                    switch (source)
+                    {
+                        case "on":
+                            await Countly.RecordEvent("darkModeOn");
+                            break;
+                        case "off":
+                            await Countly.RecordEvent("darkModeOff");
+                            break;
+                    }
+                    break;
+                case "high-contrast":
+                    switch (source)
+                    {
+                        case "100":
+                            await Countly.RecordEvent("highContrastOn");
+                            break;
+                        case "1":
+                            await Countly.RecordEvent("highContrastOff");
+                            break;
+                    }
+                    break;
+                case "night-mode":
+                    switch (source)
+                    {
+                        case "on":
+                            await Countly.RecordEvent("nightModeOn");
+                            break;
+                        case "off":
+                            await Countly.RecordEvent("nightModeOff");
+                            break;
                     }
                     break;
                 case "":
@@ -123,12 +182,10 @@ namespace Morphic.Client.Bar.Data.Actions
                                 if (toggleState == true)
                                 {
                                     await Countly.RecordEvent("colorFiltersOn");
-                                    return;
                                 }
                                 else
                                 {
                                     await Countly.RecordEvent("colorFiltersOff");
-                                    return;
                                 }
                             }
                             break;
@@ -137,12 +194,10 @@ namespace Morphic.Client.Bar.Data.Actions
                                 if (toggleState == true)
                                 {
                                     await Countly.RecordEvent("highContrastOn");
-                                    return;
                                 }
                                 else
                                 {
                                     await Countly.RecordEvent("highContrastOff");
-                                    return;
                                 }
                             }
                             break;
@@ -151,12 +206,10 @@ namespace Morphic.Client.Bar.Data.Actions
                                 if (toggleState == true)
                                 {
                                     await Countly.RecordEvent("nightModeOn");
-                                    return;
                                 }
                                 else
                                 {
                                     await Countly.RecordEvent("nightModeOff");
-                                    return;
                                 }
                             }
                             break;
@@ -176,6 +229,12 @@ namespace Morphic.Client.Bar.Data.Actions
                                     await Countly.RecordEvent("darkModeOff");
                                 }
                             }
+                            break;
+                        case "openallusb":
+                            await Countly.RecordEvent("openUsbDrives");
+                            break;
+                        case "ejectallusb":
+                            await Countly.RecordEvent("ejectUsbDrives");
                             break;
                         case null:
                             // no tags; this is the Morphie button or another custom element with no known tags
@@ -220,9 +279,9 @@ namespace Morphic.Client.Bar.Data.Actions
     [JsonTypeName("null")]
     public class NoOpAction : BarAction
     {
-        protected override Task<bool> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
+        protected override Task<IMorphicResult> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
         {
-            return Task.FromResult(true);
+            return Task.FromResult(IMorphicResult.SuccessResult);
         }
     }
 
@@ -237,13 +296,13 @@ namespace Morphic.Client.Bar.Data.Actions
 
         public string? TelemetryEventName { get; set; }
         
-        protected override Task<bool> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
+        protected async override Task<IMorphicResult> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
         {
             try
             {
                 if (this.FunctionName == null)
                 {
-                    return Task.FromResult(true);
+                    return IMorphicResult.SuccessResult;
                 }
 
                 Dictionary<string, string> resolvedArgs = this.Arguments
@@ -251,7 +310,7 @@ namespace Morphic.Client.Bar.Data.Actions
 
                 resolvedArgs.Add("state", toggleState == true ? "on" : "off");
 
-                return InternalFunctions.Default.InvokeFunction(this.FunctionName, resolvedArgs);
+                return await InternalFunctions.Default.InvokeFunctionAsync(this.FunctionName, resolvedArgs);
             }
             finally
             {
@@ -269,7 +328,7 @@ namespace Morphic.Client.Bar.Data.Actions
         [JsonProperty("data", Required = Required.Always)]
         public JObject RequestObject { get; set; } = null!;
 
-        protected override async Task<bool> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
+        protected override async Task<IMorphicResult> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
         {
             ClientWebSocket socket = new ClientWebSocket();
             CancellationTokenSource cancel = new CancellationTokenSource();
@@ -281,7 +340,7 @@ namespace Morphic.Client.Bar.Data.Actions
             ArraySegment<byte> sendBuffer = new ArraySegment<byte>(bytes);
             await socket.SendAsync(sendBuffer, WebSocketMessageType.Text, true, cancel.Token);
 
-            return true;
+            return IMorphicResult.SuccessResult;
         }
     }
 
@@ -291,7 +350,7 @@ namespace Morphic.Client.Bar.Data.Actions
         [JsonProperty("run")]
         public string? ShellCommand { get; set; }
 
-        protected override Task<bool> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
+        protected override Task<IMorphicResult> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
         {
             bool success = true;
             if (!string.IsNullOrEmpty(this.ShellCommand))
@@ -304,7 +363,7 @@ namespace Morphic.Client.Bar.Data.Actions
                 success = process != null;
             }
 
-            return Task.FromResult(success);
+            return Task.FromResult(success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult);
         }
 
         public override void Deserialized(BarData barData)

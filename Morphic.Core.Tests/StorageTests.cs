@@ -58,7 +58,7 @@ namespace Morphic.Core.Tests
             Storage storage = new Storage(options, logger);
             var mock = new MockRecord();
             mock.populate();
-            bool sav = await storage.Save<MockRecord>(mock);
+            bool sav = (await storage.SaveAsync<MockRecord>(mock)).IsSuccess;
             Assert.True(sav);
             //EXISTS TEST
             Assert.True(storage.Exists<MockRecord>("testrecord"));
@@ -69,12 +69,12 @@ namespace Morphic.Core.Tests
             Assert.False(storage.Exists<Preferences>("testrecord"));
             Assert.False(storage.Exists<MockRecord>("notajsonfile"));
             //LOAD TEST
-            var testfile = await storage.Load<MockRecord>("testrecord");
-            var nofile = await storage.Load<MockRecord>("thisfileisnthere");
-            var wrongfields = await storage.Load<MockRecord>("incorrectfields");
-            var badjsonfile = await storage.Load<MockRecord>("badjsonfile");
-            var notajson = await storage.Load<MockRecord>("notajsonfile");
-            var binaryfile = await storage.Load<MockRecord>("binaryfile");
+            var testfile = await storage.LoadAsync<MockRecord>("testrecord");
+            var nofile = await storage.LoadAsync<MockRecord>("thisfileisnthere");
+            var wrongfields = await storage.LoadAsync<MockRecord>("incorrectfields");
+            var badjsonfile = await storage.LoadAsync<MockRecord>("badjsonfile");
+            var notajson = await storage.LoadAsync<MockRecord>("notajsonfile");
+            var binaryfile = await storage.LoadAsync<MockRecord>("binaryfile");
             Assert.NotNull(testfile);
             Assert.Equal(mock.UserId, testfile.UserId);
             Assert.Equal(mock.PreferencesId, testfile.PreferencesId);

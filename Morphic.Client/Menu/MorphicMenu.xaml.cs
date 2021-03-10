@@ -3,7 +3,9 @@
     using Bar.UI;
     using CountlySDK;
     using Morphic.Client.Config;
+    using Morphic.Client.Dialogs;
     using System;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Controls;
@@ -58,11 +60,8 @@
             this.ShowBar.Visibility = (!this.App.BarManager.BarVisible).ToVisibility();
             this.HideBar.Visibility = this.App.BarManager.BarVisible.ToVisibility();
 
-            if (Features.Community.IsEnabled())
-            {
-                this.LoginItem.Visibility = (!this.App.CommunitySession.SignedIn).ToVisibility();
-                this.LogoutItem.Visibility = this.App.CommunitySession.SignedIn.ToVisibility();
-            }
+            this.LoginItem.Visibility = (!this.App.MorphicSession.SignedIn).ToVisibility();
+            this.LogoutItem.Visibility = this.App.MorphicSession.SignedIn.ToVisibility();
 
             base.OnOpened(e);
         }
@@ -232,20 +231,24 @@
 
         #endregion
 
-        private void Logout(object sender, RoutedEventArgs e)
+        private async void Logout(object sender, RoutedEventArgs e)
         {
-            App.Current.CommunitySession.SignOut();
+            AppOptions.Current.LastCommunity = null;
+            await App.Current.MorphicSession.SignOut();
         }
 
         private void Login(object sender, RoutedEventArgs e)
         {
-            _ = App.Current.OpenSession();
+            // NOTE: if we want the login menu item to apply cloud-saved preferences after login, we should set this flag to true
+            var applyPreferencesAfterLogin = false;
+            var args = new Dictionary<string, object?>() { { "applyPreferencesAfterLogin", applyPreferencesAfterLogin } };
+            App.Current.Dialogs.OpenDialogAsync<LoginWindow>(args);
         }
 
-        private async void LearnAboutMorphicClicked(object sender, RoutedEventArgs e)
+        private async void ExploreMorphicClicked(object sender, RoutedEventArgs e)
         {
             var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
-            await Countly.RecordEvent("learnAboutMorphic", 1, segmentation);
+            await Countly.RecordEvent("exploreMorphic", 1, segmentation);
         }
 
         private async void QuickDemoMoviesClicked(object sender, RoutedEventArgs e)
@@ -265,6 +268,12 @@
         {
             var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
             await Countly.RecordEvent("aboutMorphic", 1, segmentation);
+        }
+
+        private void SelectBasicMorphicBarClick(object sender, RoutedEventArgs e)
+        {
+            AppOptions.Current.LastCommunity = null;
+            App.Current.BarManager.LoadBasicMorphicBar();
         }
     }
 

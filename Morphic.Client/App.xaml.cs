@@ -1,4 +1,4 @@
-﻿// Copyright 2020 Raising the Floor - International
+﻿// Copyright 2020-2021 Raising the Floor - International
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -114,7 +114,6 @@ namespace Morphic.Client
         public ILogger<App> Logger { get; private set; } = null!;
 
         public MorphicSession MorphicSession { get; private set; } = null!;
-        public CommunitySession CommunitySession { get; private set; } = null!;
 
         public AppOptions AppOptions => AppOptions.Current;
 
@@ -140,6 +139,8 @@ namespace Morphic.Client
             public string? url { get; set; }
             // for type: action
             public string? function { get; set; }
+            // for type: control
+            public string? feature { get; set; }
         }
 
         public class ConfigFileContents
@@ -335,9 +336,17 @@ namespace Morphic.Client
                     var extraItemUrl = extraItem.url;
                     // for type: action
                     var extraItemFunction = extraItem.function;
+                    // for type: control
+                    var extraItemFeature = extraItem.feature;
 
                     // if the item is invalid, log the error and skip this item
-                    if ((extraItemType == null) || (extraItemLabel == null) || (extraItemTooltipHeader == null))
+                    if (extraItemType == null)
+                    {
+                        // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
+                        Logger?.LogError("Invalid MorphicBar item: " + extraItem.ToString());
+                        continue;
+                    }
+                    if ((extraItemType != "control") && ((extraItemLabel == null) || (extraItemTooltipHeader == null)))
                     {
                         // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
                         Logger?.LogError("Invalid MorphicBar item: " + extraItem.ToString());
@@ -360,6 +369,13 @@ namespace Morphic.Client
                         continue;
                     }
 
+                    // if the "control" is missing its feature, log the error and skip this item
+                    if ((extraItem.type == "control") && (extraItemFeature == null || extraItemFeature == "")) {
+                        // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
+                        Logger?.LogError("Invalid MorphicBar item: " + extraItem.ToString());
+                        continue;
+                    }
+
                     var extraMorphicBarItem = new MorphicBarExtraItem();
                     extraMorphicBarItem.type = extraItemType;
                     extraMorphicBarItem.label = extraItemLabel;
@@ -367,6 +383,7 @@ namespace Morphic.Client
                     extraMorphicBarItem.tooltipText = extraItemTooltipText;
                     extraMorphicBarItem.url = extraItemUrl;
                     extraMorphicBarItem.function = extraItemFunction;
+                    extraMorphicBarItem.feature = extraItemFeature;
                     result.ExtraMorphicBarItems.Add(extraMorphicBarItem);
                 }
             }
@@ -413,15 +430,12 @@ namespace Morphic.Client
             services.AddSingleton<Keychain>();
             services.AddSingleton<Storage>();
             services.AddSingleton<MorphicSession>();
-            services.AddSingleton<CommunitySession>();
             services.AddTransient<TravelWindow>();
             services.AddTransient<CreateAccountPanel>();
             services.AddTransient<CapturePanel>();
             services.AddTransient<TravelCompletedPanel>();
             services.AddTransient<LoginWindow>();
-            services.AddTransient<CommunityLoginWindow>();
             services.AddTransient<LoginPanel>();
-            services.AddTransient<CreateAccountPanel>();
             services.AddTransient<AboutWindow>();
             services.AddTransient<CopyStartPanel>();
             services.AddTransient<ApplyPanel>();
@@ -451,7 +465,7 @@ namespace Morphic.Client
                 serverUrl = section["ServerUrl"],
                 appKey = section["AppKey"],
                 appVersion = BuildInfo.Current.InformationalVersion,
-                developerProvidedDeviceId = telemetryDeviceUuid,
+                developerProvidedDeviceId = telemetryDeviceUuid
             };
 
             await Countly.Instance.Init(cc);
@@ -540,10 +554,7 @@ namespace Morphic.Client
                 );
 
             this.MorphicSession = this.ServiceProvider.GetRequiredService<MorphicSession>();
-            this.MorphicSession.UserChanged += this.Session_UserChanged;
-
-            this.CommunitySession = this.ServiceProvider.GetRequiredService<CommunitySession>();
-            this.CommunitySession.UserChanged += this.Session_UserChanged;
+            this.MorphicSession.UserChangedAsync += this.Session_UserChangedAsync;
 
             this.Logger.LogInformation("App Started");
 
@@ -559,7 +570,9 @@ namespace Morphic.Client
 
             this.AddSettingsListener();
 
-            this.OpenSession();
+            this.BarManager.BarLoaded += BarManager_BarLoaded;
+
+            await this.OpenSessionAsync();
 
             // Make settings displayed on the UI update when a system setting has changed, or when the app is focused.
             this.SystemSettingChanged += (sender, args) => SettingsHandler.SystemSettingChanged();
@@ -578,29 +591,26 @@ namespace Morphic.Client
             Registry.SetValue(@"HKEY_CURRENT_USER\Software\Microsoft\ScreenMagnifier", "Magnification", 200);
             Registry.SetValue(@"HKEY_CURRENT_USER\Software\Microsoft\ScreenMagnifier", "MagnificationMode", 3);
 
-            if (Features.Basic.IsEnabled())
+            // Set the colour filter type - if it's not currently enabled.
+            //bool filterOn = this.MorphicSession.GetBool(SettingsManager.Keys.WindowsDisplayColorFilterEnabled) == true;
+            bool filterOn =
+                await this.MorphicSession.GetSetting<bool>(SettingId.ColorFiltersEnabled);
+            if (!filterOn)
             {
-                // Set the colour filter type - if it's not currently enabled.
-                //bool filterOn = this.MorphicSession.GetBool(SettingsManager.Keys.WindowsDisplayColorFilterEnabled) == true;
-                bool filterOn =
-                    await this.MorphicSession.GetSetting<bool>(SettingId.ColorFiltersEnabled);
-                if (!filterOn)
-                {
-                    await this.MorphicSession.SetSetting(SettingId.ColorFiltersFilterType, 5);
-                }
+                await this.MorphicSession.SetSetting(SettingId.ColorFiltersFilterType, 5);
+            }
 
-                // Set the high-contrast theme, if high-contrast is off.
-                bool highcontrastOn = await this.MorphicSession.GetSetting<bool>(SettingId.HighContrastEnabled);
-                if (!highcontrastOn)
-                {
-                    Registry.SetValue(@"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes",
-                        "LastHighContrastTheme", @"%SystemRoot\resources\Ease of Access Themes\hcwhite.theme",
-                        RegistryValueKind.ExpandString);
+            // Set the high-contrast theme, if high-contrast is off.
+            bool highcontrastOn = await this.MorphicSession.GetSetting<bool>(SettingId.HighContrastEnabled);
+            if (!highcontrastOn)
+            {
+                Registry.SetValue(@"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes",
+                    "LastHighContrastTheme", @"%SystemRoot\resources\Ease of Access Themes\hcwhite.theme",
+                    RegistryValueKind.ExpandString);
 
-                    // For windows 10 1809+
-                    Registry.SetValue(@"HKEY_CURRENT_USER\Control Panel\Accessibility\HighContrast",
-                        "High Contrast Scheme", "High Contrast White");
-                }
+                // For windows 10 1809+
+                Registry.SetValue(@"HKEY_CURRENT_USER\Control Panel\Accessibility\HighContrast",
+                    "High Contrast Scheme", "High Contrast White");
             }
         }
 
@@ -671,26 +681,101 @@ namespace Morphic.Client
             }
         }
 
-        private void Session_UserChanged(object? sender, EventArgs e)
+        private async Task Session_UserChangedAsync(object? sender, EventArgs e)
         {
-            if (sender is CommunitySession communitySession)
+            if (sender is MorphicSession morphicSession)
             {
-                if (communitySession.SignedIn)
+                if (morphicSession.SignedIn)
                 {
-                    this.BarManager.LoadSessionBar(communitySession);
+                    var lastCommunityId = AppOptions.Current.LastCommunity;
+                    if (lastCommunityId != null)
+                    {
+                        // if the user previously selected a community bar, show that one now
+                        await this.BarManager.LoadSessionBarAsync(morphicSession, lastCommunityId);
+                    } 
+                    else
+                    {
+                        // if the user has not selected a community bar, show the basic bar
+                        this.BarManager.LoadBasicMorphicBar();
+                    }
                 }
                 else
                 {
-                    this.BarManager.CloseBar();
+                    // if no user is signed in, clear out the last community tag
+                    AppOptions.Current.LastCommunity = null;
+
+                    // if no user is signed in, load the basic bar
+                    this.BarManager.LoadBasicMorphicBar();
+                }
+
+                // reload our list of communities and re-select the current bar
+                ResyncCustomMorphicBarMenuItems();
+            }
+        }
+
+        private void BarManager_BarLoaded(object? sender, BarEventArgs e)
+        {
+            ResyncCustomMorphicBarMenuItems();
+        }
+
+        private void ResyncCustomMorphicBarMenuItems()
+        {
+            // clear all communities in the menu (before basic)
+            var changeMorphicBarMenuItems = this.morphicMenu.ChangeMorphicBar.Items;
+            for (int i = 0; i < changeMorphicBarMenuItems.Count; i++)
+            {
+                var submenuItem = (MenuItem)changeMorphicBarMenuItems[0];
+                if (submenuItem.Name == "SelectBasicMorphicBar")
+                {
+                    // when we reach the basic MorphicBar entry, exit our loop (so that we don't clear out any remaining items)
+                    break;
+                } 
+                else
+                {
+                    this.morphicMenu.ChangeMorphicBar.Items.RemoveAt(0);
                 }
             }
+
+            bool addedCheckmarkByCurrentCommunityBar = false;
+
+            for (int iCommunity = 0; iCommunity < this.MorphicSession.Communities.Length; iCommunity++)
+            {
+                var community = this.MorphicSession.Communities[iCommunity];
+                //
+                var newMenuItem = new MenuItem();
+                newMenuItem.Header = community.Name;
+                newMenuItem.Tag = community.Id;
+                if (community.Id == AppOptions.Current.LastCommunity)
+                {
+                    newMenuItem.IsChecked = true;
+                    addedCheckmarkByCurrentCommunityBar = true;
+                }
+                newMenuItem.Click += CustomMorphicBarMenuItem_Click;
+                //
+                this.morphicMenu.ChangeMorphicBar.Items.Insert(iCommunity, newMenuItem);
+            }
+
+            // if no custom bar was checked, check the community bar instead
+            this.morphicMenu.SelectBasicMorphicBar.IsChecked = (addedCheckmarkByCurrentCommunityBar == false);
+        }
+
+        private async void CustomMorphicBarMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var senderAsMenuItem = (MenuItem)sender;
+            //var communityName = senderAsMenuItem.Header;
+            var communityId = (string)senderAsMenuItem.Tag;
+
+            await this.BarManager.LoadSessionBarAsync(this.MorphicSession, communityId);
         }
 
         private void RegisterGlobalHotKeys()
         {
             HotkeyManager.Current.AddOrReplace("Login with Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift, (sender, e) =>
             {
-                this.Dialogs.OpenDialog<LoginWindow>();
+                // NOTE: if we want the login menu item to apply cloud-saved preferences after login, we should set this flag to true
+                var applyPreferencesAfterLogin = false;
+                var args = new Dictionary<string, object?>() { { "applyPreferencesAfterLogin", applyPreferencesAfterLogin } };
+                this.Dialogs.OpenDialogAsync<LoginWindow>(args);
             });
             HotkeyManager.Current.AddOrReplace("Show Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift | ModifierKeys.Alt, (sender, e) =>
             {
@@ -698,22 +783,12 @@ namespace Morphic.Client
             });
         }
 
-        public async Task OpenSession()
+        public async Task OpenSessionAsync()
         {
-            if (Features.Basic.IsEnabled())
-            {
-                await this.MorphicSession.Open();
-            }
+            await this.MorphicSession.OpenAsync();
 
-            if (Features.Community.IsEnabled())
-            {
-                if (this.CommunitySession.CurrentCredentials == null)
-                {
-                    await this.Dialogs.OpenDialog<CommunityLoginWindow>();
-                }
-
-                await this.CommunitySession.Open();
-            }
+            // TODO: when the user first runs Morphic, we probably want to open a welcome window (where the user could then log in)
+            //await this.Dialogs.OpenDialog<CommunityLoginWindow>();
 
             this.OnSessionOpened();
         }
@@ -736,9 +811,9 @@ namespace Morphic.Client
                 await this.OnFirstRun();
             }
 
-            if (Features.Basic.IsEnabled())
-            {
-                this.BarManager.LoadFromBarJson(AppPaths.GetConfigFile("basic-bar.json5", true));
+            // if no bar was already loaded, load the Basic bar
+            if (this.BarManager.BarIsLoaded == false) {
+                this.BarManager.LoadBasicMorphicBar();
             }
         }
 
@@ -863,7 +938,7 @@ namespace Morphic.Client
             this.systemSettingTimer?.Start();
         }
 
-        private void SystemEvents_SessionEnding(object sender, SessionEndingEventArgs e)
+        private async void SystemEvents_SessionEnding(object sender, SessionEndingEventArgs e)
         {
             // NOTE: in our preliminary testing, we do not have enough time during shutdown
             // to call/complete this function; we should look for a way to keep Windows from
@@ -871,7 +946,7 @@ namespace Morphic.Client
             // critical 'reset settings' items)
             if (ConfigurableFeatures.ResetSettingsIsEnabled == true)
             {
-                this.ResetSettingsAsync().GetAwaiter().GetResult();
+                await this.ResetSettingsAsync();
             }
         }
 

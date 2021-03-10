@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.VisualBasic.CompilerServices;
 using Morphic.Settings.SolutionsRegistry;
 using System;
 using System.IO;
@@ -105,7 +104,8 @@ namespace Morphic.ManualTesterCLI
                     Console.WriteLine("[UNKNOWN DATA TYPE]");
                     return;
                 }
-                object? value = await setting.GetValue();
+                // OBSERVATION: we are not checking for the success/failure of this call...nor returning its success/failure to our caller
+                object? value = (await setting.GetValueAsync()).Value;
                 if (value == null)
                 {
                     Console.WriteLine("[NO DATA RETURNED]");
@@ -129,17 +129,17 @@ namespace Morphic.ManualTesterCLI
                 switch(setting.DataType)
                 {
                     case Settings.SettingsHandlers.SettingType.Bool:
-                        if (value.ToLower() == "0" || value.ToLower() == "false") success = await setting.SetValue(false);
-                        else if (value.ToLower() == "1" || value.ToLower() == "true") success = await setting.SetValue(true);
+                        if (value.ToLower() == "0" || value.ToLower() == "false") success = (await setting.SetValueAsync(false)).IsSuccess;
+                        else if (value.ToLower() == "1" || value.ToLower() == "true") success = (await setting.SetValueAsync(true)).IsSuccess;
                         break;
                     case Settings.SettingsHandlers.SettingType.Int:
-                        success = await setting.SetValue(int.Parse(value));
+                        success = (await setting.SetValueAsync(int.Parse(value))).IsSuccess;
                         break;
                     case Settings.SettingsHandlers.SettingType.Real:
-                        success = await setting.SetValue(double.Parse(value));
+                        success = (await setting.SetValueAsync(double.Parse(value))).IsSuccess;
                         break;
                     case Settings.SettingsHandlers.SettingType.String:
-                        success = await setting.SetValue(value);
+                        success = (await setting.SetValueAsync(value)).IsSuccess;
                         break;
                 }
                 if (success)

@@ -8,16 +8,14 @@
 
     public class SessionOptions
     {
-        public string Endpoint { get; set; } = "";
-        public string FrontEnd { get; set; } = "";
-        public string? EndpointCommunity { get; set; }
-        public string? FrontEndCommunity { get; set; }
+        public string ApiEndpointUrlAsString { get; set; } = "";
+        public string FrontEndUrlAsString { get; set; } = "";
+        public string? BarEditorWebAppUrlAsString { get; set; }
 
-        public Uri EndpointUriCommunity => new Uri(this.EndpointCommunity ?? this.Endpoint);
-        public Uri EndpointUri => new Uri(this.Endpoint);
+        public Uri ApiEndpointUri => new Uri(this.ApiEndpointUrlAsString);
 
-        public Uri FontEndUri => new Uri(this.FrontEnd);
-        public Uri FontEndUriCommunity => new Uri(this.FrontEndCommunity ?? this.FrontEnd);
+        public Uri FrontEndUri => new Uri(this.FrontEndUrlAsString);
+        public Uri BarEditorWebAppUri => new Uri(this.BarEditorWebAppUrlAsString ?? this.FrontEndUrlAsString);
     }
 
     public abstract class Session : IHttpServiceCredentialsProvider
@@ -55,7 +53,7 @@
         /// Open the session by trying to login with the saved user information, if any
         /// </summary>
         /// <returns>A task that completes when the user information has been fetched</returns>
-        public abstract Task Open();
+        public abstract Task OpenAsync();
 
         #region Authentication
 
@@ -92,7 +90,7 @@
             this.User = user;
         }
 
-        public abstract Task Signin(User user);
+        public abstract Task SignInAsync(User user);
 
         public async Task<bool> Authenticate(UsernameCredentials credentials)
         {
@@ -103,7 +101,7 @@
                 this.keychain.Save(credentials, this.Service.Endpoint);
                 this.Service.AuthToken = auth!.Token;
                 this.userSettings.SetUsernameForId(credentials.Username, auth.User.Id);
-                await this.Signin(auth.User);
+                await this.SignInAsync(auth.User);
             }
             return success;
         }
@@ -147,15 +145,15 @@
         }
 
         /// <summary>Gets a setting value.</summary>
-        public Task<object?> GetSetting(SettingId settingId)
+        public async Task<IMorphicResult<object?>> GetSetting(SettingId settingId)
         {
-            return this.Solutions.GetSetting(settingId).GetValue();
+            return await this.Solutions.GetSetting(settingId).GetValueAsync();
         }
 
         /// <summary>Sets the value of a setting.</summary>
-        public Task<bool> SetSetting(SettingId settingId, object? newValue)
+        public async Task<IMorphicResult> SetSetting(SettingId settingId, object? newValue)
         {
-            return this.Solutions.GetSetting(settingId).SetValue(newValue);
+            return await this.Solutions.GetSetting(settingId).SetValueAsync(newValue);
         }
 
     }

@@ -156,7 +156,7 @@ namespace Morphic.Client.Bar.UI.BarControls
             }
         }
 
-        private void Button_OnClick(object sender, RoutedEventArgs e)
+        private async void Button_OnClick(object sender, RoutedEventArgs e)
         {
             BarMultiButton.ButtonInfo? buttonInfo =
                 this.Buttons.Where(b => b.Control == sender)
@@ -170,7 +170,10 @@ namespace Morphic.Client.Bar.UI.BarControls
 
                 // Call the button action.
                 bool? state = (sender as ToggleButton)?.IsChecked;
-                buttonInfo.Action.InvokeAsync(buttonInfo.Value, state);
+                if (buttonInfo.Action != null)
+                {
+                    await buttonInfo.Action.InvokeAsync(buttonInfo.Value, state);
+                }
             }
         }
 

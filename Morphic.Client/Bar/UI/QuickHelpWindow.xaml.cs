@@ -235,8 +235,9 @@ namespace Morphic.Client.Bar.UI
             setting.Changed += SettingChanged;
             pager.Unloaded += (sender, args) => setting.Changed -= SettingChanged;
 
-            setting.GetValue()
-                .ContinueWith(t => this.Dispatcher.Invoke(() => this.UpdatePager(pager, setting, range)));
+            // OBSERVATION: we are not checking for success/failure from the GetValueAsync method (or even capturing the 'gotten' value); this is presumably being called for its side-effects (which are presumably caching)
+            setting.GetValueAsync()
+                .ContinueWith(_ => this.Dispatcher.Invoke(() => this.UpdatePager(pager, setting, range)));
 
             return pager;
         }

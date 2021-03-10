@@ -1,12 +1,14 @@
 namespace Morphic.Client.Bar.Data.Actions
 {
     using Microsoft.Extensions.Logging;
+    using Morphic.Core;
+    using Settings.SettingsHandlers;
+    using Settings.SolutionsRegistry;
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
-    using System.IO;
     using System.Linq;
-    using System.Media;
     using System.Runtime.InteropServices;
     using System.Text;
     using System.Threading;
@@ -14,15 +16,9 @@ namespace Morphic.Client.Bar.Data.Actions
     using System.Windows;
     using System.Windows.Automation;
     using System.Windows.Automation.Text;
+    using UI;
     using Windows.Native.Input;
     using Windows.Native.Speech;
-    using global::Windows.Media.SpeechSynthesis;
-    using Microsoft.Extensions.Logging;
-    using Settings.SettingsHandlers;
-    using Settings.SolutionsRegistry;
-    using UI;
-    using Clipboard = System.Windows.Forms.Clipboard;
-    using IDataObject = System.Windows.Forms.IDataObject;
 
     [HasInternalFunctions]
     // ReSharper disable once UnusedType.Global - accessed via reflection.
@@ -31,7 +27,7 @@ namespace Morphic.Client.Bar.Data.Actions
         private readonly static SemaphoreSlim _captureTextSemaphore = new SemaphoreSlim(1, 1);
 
         [InternalFunction("screenshot")]
-        public static async Task<bool> Screenshot(FunctionArgs args)
+        public static async Task<IMorphicResult> ScreenshotAsync(FunctionArgs args)
         {
             // Hide all application windows
             Dictionary<Window, double> opacity = new Dictionary<Window, double>();
@@ -82,15 +78,15 @@ namespace Morphic.Client.Bar.Data.Actions
                 }
             }
 
-            return true;
+            return IMorphicResult.SuccessResult;
         }
 
         [InternalFunction("menu", "key=Morphic")]
-        public static Task<bool> ShowMenu(FunctionArgs args)
+        public async static Task<IMorphicResult> ShowMenuAsync(FunctionArgs args)
         {
             // NOTE: this internal function is only called by the MorphicBar's Morphie menu button
-            App.Current.ShowMenuAsync(null, Morphic.Client.Menu.MorphicMenu.MenuOpenedSource.morphicBarIcon);
-            return Task.FromResult(true);
+            await App.Current.ShowMenuAsync(null, Morphic.Client.Menu.MorphicMenu.MenuOpenedSource.morphicBarIcon);
+            return IMorphicResult.SuccessResult;
         }
 
         /// <summary>
@@ -99,7 +95,7 @@ namespace Morphic.Client.Bar.Data.Actions
         /// <param name="args">direction: "up"/"down", amount: number of 1/100 to move</param>
         /// <returns></returns>
         [InternalFunction("volume", "direction", "amount=10")]
-        public static Task<bool> Volume(FunctionArgs args)
+        public static async Task<IMorphicResult> SetVolumeAsync(FunctionArgs args)
         {
             IntPtr taskTray = WinApi.FindWindow("Shell_TrayWnd", IntPtr.Zero);
             if (taskTray != IntPtr.Zero)
@@ -117,10 +113,10 @@ namespace Morphic.Client.Bar.Data.Actions
                 }
             }
 
-            return Task.FromResult(true);
+            return IMorphicResult.SuccessResult;
         }
 
-        private static async Task<bool> ClearClipboardAsync(uint numberOfRetries, TimeSpan interval)
+        private static async Task<IMorphicResult> ClearClipboardAsync(uint numberOfRetries, TimeSpan interval)
         {
             // NOTE from Microsoft documentation (something to think about when working on this in the future...and perhaps something we need to handle):
             /* "The Clipboard class can only be used in threads set to single thread apartment (STA) mode. 
@@ -133,7 +129,7 @@ namespace Morphic.Client.Bar.Data.Actions
                 {
 					// NOTE: some developers have reported unhandled exceptions with this function call, even when inside a try...catch block.  If we experience that, we may need to look at our threading model, UWP alternatives, and Win32 API alternatives.
                     Clipboard.Clear();
-                    return true;
+                    return IMorphicResult.SuccessResult;
                 }
                 catch
                 {
@@ -143,7 +139,7 @@ namespace Morphic.Client.Bar.Data.Actions
             }
 
             App.Current.Logger.LogDebug("ReadAloud: Could not clear selected text from the clipboard.");
-            return false;
+            return IMorphicResult.ErrorResult;
         }
 
         /// <summary>
@@ -152,7 +148,7 @@ namespace Morphic.Client.Bar.Data.Actions
         /// <param name="args">action: "play", "pause", or "stop"</param>
         /// <returns></returns>
         [InternalFunction("readAloud", "action")]
-        public static async Task<bool> ReadAloud(FunctionArgs args)
+        public static async Task<IMorphicResult> ReadAloudAsync(FunctionArgs args)
         {
             string action = args["action"];
             switch (action)
@@ -160,13 +156,13 @@ namespace Morphic.Client.Bar.Data.Actions
                 case "pause":
                     App.Current.Logger.LogError("ReadAloud: pause not supported.");
 
-                    return false;
+                    return IMorphicResult.ErrorResult;
 
                 case "stop":
                     App.Current.Logger.LogDebug("ReadAloud: Stop reading selected text.");
                     TextToSpeechHelper.Instance.Stop();
 
-                    return true;
+                    return IMorphicResult.SuccessResult;
 
                 case "play":
                     string? selectedText = null;
@@ -288,7 +284,7 @@ namespace Morphic.Client.Bar.Data.Actions
                                                 // see: https://docs.microsoft.com/en-us/windows/apps/desktop/modernize/desktop-to-uwp-enhance
                                                 App.Current.Logger.LogDebug("ReadAloud: Unable to back up clipboard contents; this can happen with files copied to the clipboard, etc.");
                                                 
-                                                return false;
+                                                return IMorphicResult.ErrorResult;
                                             }
                                             clipboardContentsToRestore[format] = dataObject;
                                         }
@@ -317,7 +313,7 @@ namespace Morphic.Client.Bar.Data.Actions
 
                                 // copy the current selection to the clipboard
                                 App.Current.Logger.LogDebug("ReadAloud: Sending Ctrl+C to copy the current selection to the clipboard.");
-                                await SelectionReader.Default.GetSelectedText(System.Windows.Forms.SendKeys.SendWait);
+                                await SelectionReader.Default.GetSelectedTextAsync(System.Windows.Forms.SendKeys.SendWait);
 
                                 // wait 100ms (an arbitrary amount of time, but in our testing some wait is necessary...even with the WM-triggered copy logic above)
                                 // NOTE: perhaps, in the future, we should only do this if our first call to Clipboard.GetText() returns (null? or) an empty string;
@@ -361,6 +357,7 @@ namespace Morphic.Client.Bar.Data.Actions
                                         // }
                                         // formatsCsvBuilder.Append("]");
 
+                                        // App.Current.Logger.LogDebug("ReadAloud: Ctrl+C did not copy text; instead it copied data in these format(s): " + formatsCsvBuilder.ToString());
                                         App.Current.Logger.LogDebug("ReadAloud: Ctrl+C copied non-text (un-speakable) contents to the clipboard.");
                                     }
                                     else
@@ -416,7 +413,7 @@ namespace Morphic.Client.Bar.Data.Actions
                     {
                         App.Current.Logger.LogError(ex, "ReadAloud: Error reading selected text.");
 
-                        return false;
+                        return IMorphicResult.ErrorResult;
                     }
 
                     if (selectedText != null)
@@ -429,26 +426,26 @@ namespace Morphic.Client.Bar.Data.Actions
 
                                 await TextToSpeechHelper.Instance.Say(selectedText);
 
-                                return true;
+                                return IMorphicResult.SuccessResult;
                             }
                             catch (Exception ex)
                             {
                                 App.Current.Logger.LogError(ex, "ReadAloud: Error reading selected text.");
 
-                                return false;
+                                return IMorphicResult.ErrorResult;
                             }
                         }
                         else
                         {
                             App.Current.Logger.LogDebug("ReadAloud: No text to say; skipping 'say' command.");
 
-                            return true;
+                            return IMorphicResult.SuccessResult;
                         }
                     } else {
                         // could not capture any text
                         // App.Current.Logger.LogError("ReadAloud: Could not capture any selected text; this may or may not be an error.");
 
-                        return false;
+                        return IMorphicResult.ErrorResult;
                     }
                 default:
                     throw new Exception("invalid code path");
@@ -461,24 +458,203 @@ namespace Morphic.Client.Bar.Data.Actions
         /// <param name="args">keys: the keys (see MSDN for SendKeys.Send())</param>
         /// <returns></returns>
         [InternalFunction("sendKeys", "keys")]
-        public static async Task<bool> SendKeys(FunctionArgs args)
+        public static async Task<IMorphicResult> SendKeysAsync(FunctionArgs args)
         {
             await SelectionReader.Default.ActivateLastActiveWindow();
             System.Windows.Forms.SendKeys.SendWait(args["keys"]);
-            return true;
+            return IMorphicResult.SuccessResult;
         }
 
         [InternalFunction("signOut")]
-        public static async Task<bool> SignOut(FunctionArgs args)
+        public static async Task<IMorphicResult> SignOutAsync(FunctionArgs args)
         {
             var success = Morphic.Windows.Native.WindowsSession.WindowsSession.LogOff();
-            return success;
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        [InternalFunction("openAllUsbDrives")]
+        public static async Task<IMorphicResult> OpenAllUsbDrivesAsync(FunctionArgs args)
+        {
+            App.Current.Logger.LogError("OpenAllUsbDrives");
+
+            var getRemovableDisksAndDrivesResult = await Functions.GetRemovableDisksAndDrivesAsync();
+            if (getRemovableDisksAndDrivesResult.IsError == true)
+            {
+                Debug.Assert(false, "Could not get list of removable drives");
+                App.Current.Logger.LogError("Could not get list of removable drives");
+                return IMorphicResult.ErrorResult;
+            }
+            var removableDrives = getRemovableDisksAndDrivesResult.Value!.RemovableDrives;
+
+            // as we only want to open usb drives which are mounted (i.e. not USB drives which have had their "media" ejected but who still have drive letters assigned)...
+            var mountedRemovableDrives = new List<Morphic.Windows.Native.Devices.Drive>();
+            foreach (var drive in removableDrives)
+            {
+                var getIsMountedResult = await drive.GetIsMountedAsync();
+                if (getIsMountedResult.IsError == true)
+                {
+                    Debug.Assert(false, "Could not determine if drive is mounted");
+                    App.Current.Logger.LogError("Could not determine if drive is mounted");
+                    // gracefully degrade; skip this disk
+                    continue;
+                }
+                var driveIsMounted = getIsMountedResult.Value!;
+
+                if (driveIsMounted)
+                {
+                    mountedRemovableDrives.Add(drive);
+                }
+            }
+
+            // now open all the *mounted* removable disks
+            foreach (var drive in mountedRemovableDrives)
+            {
+                // get the drive's root path (e.g. "E:\"); note that we intentionally get the root path WITH the backslash so that we don't launch autoplay, etc.
+                var tryGetDriveRootPathResult = await drive.TryGetDriveRootPathAsync();
+                if (tryGetDriveRootPathResult.IsError == true)
+                {
+                    Debug.Assert(false, "Could not get removable drive's root path");
+                    App.Current.Logger.LogError("Could not get removable drive's root path");
+                    // gracefully degrade; skip this disk
+                    continue;
+                }
+                var driveRootPath = tryGetDriveRootPathResult.Value!;
+
+                // NOTE: there is also an API call which may be able to do this more directly
+                // see: https://docs.microsoft.com/en-us/windows/win32/api/shlobj_core/nf-shlobj_core-shopenfolderandselectitems
+
+                // NOTE: we might also consider getting the current process for Explorer.exe and then asking it to "explore" the drive
+
+                App.Current.Logger.LogError("Opening USB drive");
+
+                Process.Start(new ProcessStartInfo()
+                {
+                    FileName = driveRootPath,
+                    UseShellExecute = true
+                });
+            }
+
+            return IMorphicResult.SuccessResult;
+        }
+
+        [InternalFunction("ejectAllUsbDrives")]
+        public static async Task<IMorphicResult> EjectAllUsbDrivesAsync(FunctionArgs args)
+        {
+            App.Current.Logger.LogError("EjectAllUsbDrives");
+
+            var getRemovableDisksAndDrivesResult = await Functions.GetRemovableDisksAndDrivesAsync();
+            if (getRemovableDisksAndDrivesResult.IsError == true)
+            {
+                Debug.Assert(false, "Could not get list of removable disks");
+                App.Current.Logger.LogError("Could not get list of removable disks");
+                return IMorphicResult.ErrorResult;
+            }
+            var removableDisks = getRemovableDisksAndDrivesResult.Value!.RemovableDisks;
+
+            // now eject all the removable disks
+            var allDisksRemoved = true;
+            foreach (var disk in removableDisks)
+            {
+                App.Current.Logger.LogError("Safely ejecting drive");
+
+                // NOTE: "safe eject" in this circumstance means to safely eject the usb device (removing it from the PnP system, not physically ejecting media)
+                var safeEjectResult = disk.SafelyRemoveDevice();
+                if (safeEjectResult.IsError == true)
+                {
+                    allDisksRemoved = false;
+                }
+
+                // wait 50ms between ejection
+                await Task.Delay(50);
+            }
+
+            if (allDisksRemoved == false)
+            {
+                return IMorphicResult.ErrorResult;
+            }
+
+            return allDisksRemoved ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        private struct GetRemovableDisksAndDrivesResult 
+        {
+            public List<Morphic.Windows.Native.Devices.Disk> AllDisks;
+            public List<Morphic.Windows.Native.Devices.Disk> RemovableDisks; // physical volumes
+            public List<Morphic.Windows.Native.Devices.Drive> RemovableDrives; // logical volumes (media / partition); these can have drive letters
+        }
+        //
+        private static async Task<IMorphicResult<GetRemovableDisksAndDrivesResult>> GetRemovableDisksAndDrivesAsync()
+        {
+            // get a list of all disks (but not non-disks such as CD-ROM drives)
+            var getAllDisksResult = await Morphic.Windows.Native.Devices.Disk.GetAllDisksAsync();
+            if (getAllDisksResult.IsError == true)
+            {
+                Debug.Assert(false, "Cannot get list of disks");
+                return IMorphicResult<GetRemovableDisksAndDrivesResult>.ErrorResult();
+            }
+
+            // filter out all disks which are not removable
+            var allDisks = getAllDisksResult.Value!;
+            var removableDisks = new List<Morphic.Windows.Native.Devices.Disk>();
+            foreach (var disk in allDisks)
+            {
+                var getIsRemovableResult = disk.GetIsRemovable();
+                if (getIsRemovableResult.IsError == true)
+                {
+                    Debug.Assert(false, "Cannot determine if disk is removable");
+                    return IMorphicResult<GetRemovableDisksAndDrivesResult>.ErrorResult();
+                }
+                var diskIsRemovable = getIsRemovableResult.Value!;
+                if (diskIsRemovable)
+                {
+                    removableDisks.Add(disk);
+                }
+            }
+
+            // now get all the drives associated with our removable disks
+            var removableDrives = new List<Morphic.Windows.Native.Devices.Drive>();
+            foreach (var removableDisk in removableDisks)
+            {
+                var getDrivesForDiskResult = await removableDisk.GetDrivesAsync();
+                if (getDrivesForDiskResult.IsError == true)
+                {
+                    Debug.Assert(false, "Cannot get list of drives for removable disk");
+                    // gracefully degrade; skip this disk
+                    continue;
+                }
+                var drivesForRemovableDisk = getDrivesForDiskResult.Value!;
+
+                removableDrives.AddRange(drivesForRemovableDisk);
+            }
+
+            var result = new GetRemovableDisksAndDrivesResult
+            {
+                AllDisks = allDisks,
+                RemovableDisks = removableDisks,
+                RemovableDrives = removableDrives
+            };
+
+            return IMorphicResult<GetRemovableDisksAndDrivesResult>.SuccessResult(result);
         }
 
         [InternalFunction("darkMode")]
-        public static async Task<bool> DarkMode(FunctionArgs args)
+        public static async Task<IMorphicResult> DarkModeAsync(FunctionArgs args)
         {
-            bool on = args["state"] == "on";
+            // if we have a "value" property, this is a multi-segmented button and we should use "value" instead of "state"
+            bool on;
+            if (args.Arguments.Keys.Contains("value"))
+            {
+                on = (args["value"] == "on");
+            }
+            else if (args.Arguments.Keys.Contains("state"))
+            {
+                on = (args["state"] == "on");
+            }
+            else
+            {
+                System.Diagnostics.Debug.Assert(false, "Function 'darkMode' did not receive a new state");
+                on = false;
+            }
 
             /*
              * NOTE: in addition to the SPI implementation (in code, below), we could also turn on/off the dark theme (via powershell...or possibly via direct registry access); here are the corresponding PowerShell commands
@@ -494,12 +670,12 @@ namespace Morphic.Client.Bar.Data.Actions
 
             // set system dark/light theme
             Setting systemThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(SettingId.LightThemeSystem);
-            await systemThemeSetting.SetValue(!on);
+            await systemThemeSetting.SetValueAsync(!on);
 
             // set apps dark/light theme
             Setting appsThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(SettingId.LightThemeApps);
-            await appsThemeSetting.SetValue(!on);
-            return true;
+            await appsThemeSetting.SetValueAsync(!on);
+            return IMorphicResult.SuccessResult;
         }
 
         [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "Windows API naming")]

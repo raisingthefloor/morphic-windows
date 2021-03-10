@@ -15,7 +15,6 @@ development in the [`launchSettings.json`](../Morphic.Client/Properties/launchSe
 |---|---|---
 |`--debug`|`MORPHIC_DEBUG=1`|Run in "debug mode" (the files `appsettings.Debug.json` and `appsettings.Local.json` are used for configuration)
 |`--bar BARFILE`|`MORPHIC_BAR=BARFILE`|Use `BARFILE` as the json5 file to load as the initial bar
-|`--features FEATURES`|`MORPHIC_FEATURES=FEATURES`|Override the default features file.
 
 ## Static configuration
 
@@ -25,10 +24,10 @@ The application does not write to these.
 ### Bar configuration
 
 * [`DefaultConfig/default-bar.json5`](../Morphic.Client/DefaultConfig/default-bar.json5):
-Contains the base bar information on which other bars (Morphic Basic or downloaded community bars) are loaded.
+Contains the base bar information on which other bars (Basic MorphicBar or downloaded custom bars) are loaded.
 
 * [`DefaultConfig/basic-bar.json5`](../Morphic.Client/DefaultConfig/basic-bar.json5):
-The bar definition for Morphic Basic.
+The bar definition for the Basic MorphicBar.
 
 * [`DefaultConfig/presets.json5`](../Morphic.Client/DefaultConfig/presets.json5):
 Definitions for various setting and action bar items. See [BarData](../Morphic.Client/Bar/BarData.md#presetsjson5)
@@ -41,7 +40,3 @@ Definitions for various setting and action bar items. See [BarData](../Morphic.C
 
 * [`build-info.json`](../Morphic.Client/build-info.json):
  Created during in the build pipeline, by [`set-build-info.sh`](../set-build-info.sh), containing the release version.
-* features:
-Provides information about the edition of the installed instance. Copied from
-[`features.basic.txt`](../Morphic.Client/Properties/features.basic.txt) or [`features.community.txt`](../Morphic.Client/Properties/features.community.txt)
-by the installer builder.

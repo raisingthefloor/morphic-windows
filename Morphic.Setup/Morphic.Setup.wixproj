@@ -3,12 +3,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
-    <Edition Condition="'$(Edition)' == '' ">Basic</Edition>
-    <SetupEditionSuffix Condition="'$(Edition)' == '' "></SetupEditionSuffix>
     <ProductVersion>3.10</ProductVersion>
     <ProjectGuid>8b686c6d-d3da-4019-b4b7-a0643f17a7f7</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
-    <OutputName>Morphic$(SetupEditionSuffix)Setup</OutputName>
+    <OutputName>MorphicSetup</OutputName>
     <OutputType>Package</OutputType>
     <OutputPath>bin\$(Configuration)\$(Platform)\</OutputPath>
     <IntermediateOutputPath>obj\$(Configuration)\$(Platform)\</IntermediateOutputPath>
@@ -62,8 +60,7 @@
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
   </PropertyGroup>
   <Target Name="BeforeBuild">
-    <Exec Command="if exist ..\Morphic.Client\bin\$(Configuration)\netcoreapp3.1\win-x64\publish\features del /f ..\Morphic.Client\bin\$(Configuration)\netcoreapp3.1\win-x64\publish\features" />
-    <Exec Command="dotnet publish ..\Morphic.Client\Morphic.Client.csproj -r win-x64 -c $(Configuration) -p:BuildType=$(BuildType) -p:Edition=$(Edition)" />
+    <Exec Command="dotnet publish ..\Morphic.Client\Morphic.Client.csproj -f netcoreapp3.1 -r win-x64 -c $(Configuration) -p:BuildType=$(BuildType)" />
     <HeatDirectory Directory="..\Morphic.Client\bin\$(Configuration)\netcoreapp3.1\win-x64\publish" PreprocessorVariable="var.ClientOutputDirectory" OutputFile="Generated.wxs" ComponentGroupName="GeneratedComponents" DirectoryRefId="INSTALLFOLDER" AutogenerateGuids="true" ToolPath="$(WixToolPath)" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" />
   </Target>
   <!--

@@ -9,8 +9,9 @@
       kind: "application",
       is_primary: true,
       configuration: {
-        exe: "notepad.exe",
-        label: "notepad",
+        exe: "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App",
+        appx: true,
+        label: "calculator",
         tooltipHeader: "tooltip header",
         tooltip: "tooltip text"
       }

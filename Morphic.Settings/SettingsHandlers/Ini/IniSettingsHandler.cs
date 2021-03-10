@@ -1,10 +1,11 @@
 ﻿namespace Morphic.Settings.SettingsHandlers.Ini
 {
+    using Microsoft.Extensions.DependencyInjection;
+    using Morphic.Core;
+    using SolutionsRegistry;
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
-    using Microsoft.Extensions.DependencyInjection;
-    using SolutionsRegistry;
 
     /// <summary>
     /// Settings handler for INI files.
@@ -19,39 +20,56 @@
             this.serviceProvider = serviceProvider;
         }
 
-        public override Task<Values> Get(SettingGroup settingGroup, IEnumerable<Setting> settings)
+		// NOTE: we return both success/failure and a set of values so that we can return a partially list in case of partial failure
+        public override async Task<(IMorphicResult, Values)> GetAsync(SettingGroup settingGroup, IEnumerable<Setting> settings)
         {
-            IniFileReader reader = this.serviceProvider.GetRequiredService<IniFileReader>();
-            reader.SetFile(settingGroup.Path);
+            var success = true;
 
             Values values = new Values();
-            Dictionary<string, string> data = reader.ReadData();
-
-            foreach (Setting setting in settings)
+            try
             {
-                if (data.TryGetValue(setting.Name, out string? value))
+                IniFileReader reader = this.serviceProvider.GetRequiredService<IniFileReader>();
+                reader.SetFile(settingGroup.Path);
+
+                Dictionary<string, string> data = reader.ReadData();
+
+                foreach (Setting setting in settings)
                 {
-                    values.Add(setting, value);
+                    if (data.TryGetValue(setting.Name, out string? value))
+                    {
+                        values.Add(setting, value);
+                    }
                 }
             }
-
-            return Task.FromResult(values);
-        }
-
-        public override async Task<bool> Set(SettingGroup settingGroup, Values values)
-        {
-            IniFileWriter writer = this.serviceProvider.GetService<IniFileWriter>();
-
-            writer.SetFile(settingGroup.Path);
-            Dictionary<string, string?> iniData = new Dictionary<string, string?>();
-            foreach ((Setting setting, object? value) in values)
+            catch
             {
-                iniData[setting.Name] = value?.ToString();
+                success = false;
             }
 
-            await writer.Write(iniData).Save();
+            return (success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult, values);
+        }
 
-            return true;
+        public override async Task<IMorphicResult> SetAsync(SettingGroup settingGroup, Values values)
+        {
+            try
+            {
+                IniFileWriter writer = this.serviceProvider.GetService<IniFileWriter>();
+
+                writer.SetFile(settingGroup.Path);
+                Dictionary<string, string?> iniData = new Dictionary<string, string?>();
+                foreach ((Setting setting, object? value) in values)
+                {
+                    iniData[setting.Name] = value?.ToString();
+                }
+
+                await writer.Write(iniData).Save();
+
+                return IMorphicResult.SuccessResult;
+            }
+            catch
+            {
+                return IMorphicResult.ErrorResult;
+            }
         }
     }
 

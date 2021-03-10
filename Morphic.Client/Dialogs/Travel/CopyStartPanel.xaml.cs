@@ -19,7 +19,7 @@
             this.InitializeComponent();
         }
 
-        private Task<bool> EnsureLoggedOn()
+        private Task<bool> EnsureLoggedOn(bool applyPreferencesAfterLogin)
         {
             Task<bool> task;
 
@@ -29,6 +29,7 @@
                 task = completionSource.Task;
 
                 LoginPanel loginPanel = this.StepFrame.PushPanel<LoginPanel>();
+                loginPanel.ApplyPreferencesAfterLogin = applyPreferencesAfterLogin;
                 loginPanel.Completed += (sender, args) =>
                 {
                     completionSource.SetResult(true);
@@ -44,14 +45,14 @@
 
         private async void CopyToCloud(object sender, RoutedEventArgs e)
         {
-            await this.EnsureLoggedOn();
+            await this.EnsureLoggedOn(false /* applySettingsAfterLogin */);
             CapturePanel capturePanel = this.StepFrame.PushPanel<CapturePanel>();
             capturePanel.Completed += (o, args) => this.Completed?.Invoke(this, EventArgs.Empty);
         }
 
         private async void CopyFromCloud(object sender, RoutedEventArgs e)
         {
-            await this.EnsureLoggedOn();
+            await this.EnsureLoggedOn(false /* applySettingsAfterLogin */);
             ApplyPanel applyPanel = this.StepFrame.PushPanel<ApplyPanel>();
             applyPanel.Completed += (o, args) => this.Completed?.Invoke(this, EventArgs.Empty);
         }

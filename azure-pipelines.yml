@@ -57,10 +57,10 @@ stages:
         steps:
 
         - task: UseDotNet@2
-          displayName: 'Use .NET Core SDK 3.1.404'
+          displayName: 'Use .NET Core SDK 5.0.200'
           inputs:
             packageType: sdk
-            version: 3.1.404
+            version: 5.0.200
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
         # Set a $(BUILD_TYPE) variable
@@ -102,9 +102,6 @@ stages:
         - task: VSBuild@1
           displayName: "build solutions"
           env:
-            Edition: 'Basic'
-            MorphicSpaceEdition: 'Morphic'
-            SetupEditionSuffix: ''
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
           inputs:
             solution: '$(solution)'
@@ -122,9 +119,6 @@ stages:
           displayName: "build x64 installer"
           env:
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
-            Edition: 'Basic'
-            MorphicSpaceEdition: 'Morphic'
-            SetupEditionSuffix: ''
           inputs:
             solution: 'Morphic.Setup\Morphic.Setup.wixproj'
             platform: 'x64'
@@ -149,6 +143,13 @@ stages:
           displayName: 'sign x64 installer'
           inputs:
             targetType: 'inline'
+# NOTE: if we experience downtime with our cert provider's timestamp servers (which causes signing to fail), 
+#       we can use the test server (production timestamps, but from a 2nd provider); note that we should NOT do
+#       this for any public preview or release builds...only for internal testing or emergency scenarios.
+#              -tr "$(TimestampUrl)"
+#              -tr "$(TimestampUrl2)"
+#              vs.
+#              -tr "$(TestOnlyTimestampUrl)"
             script: >
               AzureSignTool sign
               -d Morphic
@@ -159,56 +160,9 @@ stages:
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
               -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicSetup.msi
-
         - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicSetup.msi
           displayName: "save x64 installer for later"
           artifact: x64-installer
-
-        - task: UseDotNet@2
-          displayName: 'Use .NET Core SDK 3.1.404'
-          inputs:
-            packageType: sdk
-            version: 3.1.404
-            installationPath: $(Agent.ToolsDirectory)/dotnet
-
-        - task: VSBuild@1
-          displayName: "build x64 community installer"
-          env:
-            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
-            Edition: 'Community'
-            MorphicSpaceEdition: 'Morphic Community'
-            SetupEditionSuffix: 'Community'
-          inputs:
-            solution: 'Morphic.Setup\Morphic.Setup.wixproj'
-            platform: 'x64'
-            configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:BuildType=$(BUILD_TYPE)'
-
-        - task: UseDotNet@2
-          displayName: 'Use .NET Core SDK 2.1'
-          inputs:
-            packageType: sdk
-            version: 2.1.811
-            installationPath: $(Agent.ToolsDirectory)/dotnet
-
-        - task: CmdLine@2
-          displayName: 'sign x64 community installer'
-          inputs:
-            targetType: 'inline'
-            script: >
-              AzureSignTool sign
-              -d Morphic
-              -du "$(SigningURL)"
-              -kvu "$(SigningVaultURL)"
-              -kvi "$(SigningClientId)"
-              -kvs "$(SigningClientSecret)"
-              -kvc "$(SigningCertName)"
-              -tr "$(TimestampUrl2)"
-              -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicCommunitySetup.msi
-
-        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicCommunitySetup.msi
-          displayName: "save x64 community installer for later"
-          artifact: x64-community-installer
 
         - publish: $(System.DefaultWorkingDirectory)\Morphic.Client\BuildVersion.txt
           displayName: "save build version numbers"
@@ -226,8 +180,6 @@ stages:
 #            path: deploy-morphicweb
           - download: current
             artifact: x64-installer
-          - download: current
-            artifact: x64-community-installer
           - download: current
             artifact: build-version
           - task: Bash@3
@@ -298,13 +250,6 @@ stages:
                 MORPHIC_S3_MSI_OBJECT_NAME=$S3_MSI_OBJECT_NAME
                 MORPHIC_S3_APPCAST_OBJECT_NAME=$S3_APPCAST_OBJECT_NAME
 
-                INSTALLER_NAME_BASE="MorphicCommunitySetup"
-                LOCAL_MSI_DIR="x64-community-installer"
-                publishInstaller
-
-                COMMUNITY_S3_MSI_OBJECT_NAME=$S3_MSI_OBJECT_NAME
-                COMMUNITY_S3_APPCAST_OBJECT_NAME=$S3_APPCAST_OBJECT_NAME
-
 
 #                # TODO: do we want this to update staging and prod automatically, depending on branch?
 #                if [[ "${BRANCH_NAME}" == "master" ]]; then
@@ -317,10 +262,6 @@ stages:
 #                  # client
 #                  go run update-env-var.go ${TO_EDIT} "MORPHIC_WINDOWS_DOWNLOAD_URL" "${S3_PUBLISHED_HTTP_URL}/${MORPHIC_S3_MSI_OBJECT_NAME}"
 #                  go run update-env-var.go ${TO_EDIT} "MORPHIC_WINDOWS_APPCAST_URL" "${S3_PUBLISHED_HTTP_URL}/${MORPHIC_S3_APPCAST_OBJECT_NAME}"
-#
-#                  # community client
-#                  go run update-env-var.go ${TO_EDIT} "MORPHIC_WINDOWS_COMMUNITY_DOWNLOAD_URL" "${S3_PUBLISHED_HTTP_URL}/${COMMUNITY_S3_MSI_OBJECT_NAME}"
-#                  go run update-env-var.go ${TO_EDIT} "MORPHIC_WINDOWS_COMMUNITY_APPCAST_URL" "${S3_PUBLISHED_HTTP_URL}/${COMMUNITY_S3_APPCAST_OBJECT_NAME}"
 #
 #                  git config --global user.email "buildmaster@raisingthefloor.org"
 #                  git config --global user.name "buildmaster"

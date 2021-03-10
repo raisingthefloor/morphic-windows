@@ -22,6 +22,12 @@
         /// <returns></returns>
         public static string? GetBarIconFile(string name)
         {
+            var translatedName = BarImages.TranslateImageUrlToFileName(name);
+            if (translatedName != null)
+            {
+                name = translatedName;
+            }
+
             string safe = new Regex(@"\.\.|[^-a-zA-Z0-9./]+", RegexOptions.Compiled)
                 .Replace(name, "_")
                 .Trim('/')
@@ -34,6 +40,169 @@
 
             return foundFile;
         }
+
+        // NOTE: the image_url values we get back from the v1 API do not always represent the filename, so we need to map them here
+        //       in the (very-near-term) future, we must standardize on URLs or another form via the API; manual mapping is not sustainable
+        public static string? TranslateImageUrlToFileName(string? imageUrl) {
+            switch (imageUrl) {
+                case "abcnews":
+                    return "logo_abcNews";
+                case "aljazeera":
+                    return "logo_alJazeera";
+                case "amazon":
+                    return "logo_amazon";
+                case "amazonmusic":
+                    return "logo_amazonMusic";
+                case "aolold":
+                    return "logo_aolOld";
+                case "bbc":
+                    return "logo_bbc";
+                case "bestbuy":
+                    return "logo_bestBuy";
+                case "bloomberg":
+                    return "logo_bloomberg";
+                case "box":
+                    return "logo_box";
+                case "calendar$calendar":
+                    return "calendar";
+                case "cbsnews":
+                    return "logo_cbsNews";
+                case "cnbc":
+                    return "logo_cnbc";
+                case "cnn":
+                    return "logo_cnn";
+                case "craigslist":
+                    return "logo_craigslist";
+                case "deezer":
+                    return "logo_deezer";
+                case "disneyplus":
+                    return "logo_disneyPlus";
+                case "dropbox":
+                    return "logo_dropbox";
+                case "drudgereport":
+                    return "logo_drudgeReport";
+                case "ebay":
+                    return "logo_ebay";
+                case "etsy":
+                    return "logo_etsy";
+                case "email$envelope":
+                    return "envelope";
+                case "email$envelopeopen":
+                    return "envelope-open";
+                case "email$envelopeopentext":
+                    return "envelope-open-text";
+                case "email$envelopeoutline":
+                    return "envelope-outline";
+                case "email$envelopeoutlineopen":
+                    return "envelope-outline-open";
+                case "facebook":
+                    return "logo_facebook";
+                case "faviconfoxnews":
+                    return "favicon_foxNews";
+                case "forbes":
+                    return "logo_forbes";
+                case "foxnews":
+                    return "logo_foxNews";
+                case "gmail":
+                    return "logo_gmail";
+                case "googledrive":
+                    return "logo_googleDrive";
+                case "googlenews":
+                    return "logo_googleNews";
+                case "huffpost":
+                    return "logo_huffpost";
+                case "hulu":
+                    return "logo_hulu";
+                case "icloud":
+                    return "logo_icloud";
+                case "news$newspaper":
+                    return "newspaper";
+                case "iheartradio":
+                    return "logo_iheartRadio";
+                case "imgur":
+                    return "logo_imgur";
+                case "instagram":
+                    return "logo_instagram";
+                case "itunes":
+                    return "logo_itunes";
+                case "kohls":
+                    return "logo_kohls";
+                case "latimes":
+                    return "logo_laTimes";
+                case "linkedin":
+                    return "logo_linkedIn";
+                case "macys":
+                    return "logo_macys";
+                case "mail":
+                    return "logo_mail";
+                case "nbcnews":
+                    return "logo_nbcNews";
+                case "netflix":
+                    return "logo_netflix";
+                case "nextdoor":
+                    return "logo_nextdoor";
+                case "newyorktimes":
+                    return "logo_newYorkTimes";
+                case "npr":
+                    return "logo_npr";
+                case "onedrive":
+                    return "logo_onedrive";
+                case "outlook":
+                    return "logo_outlook";
+                case "pandora":
+                    return "logo_pandora";
+                case "pinterest":
+                    return "logo_pinterest";
+                case "reddit":
+                    return "logo_reddit";
+                case "reuters":
+                    return "logo_reuters";
+                case "skype":
+                    return "logo_skype";
+                case "spotify":
+                    return "logo_spotify";
+                case "soundcloud":
+                    return "logo_soundcloud";
+                case "target":
+                    return "logo_target";
+                case "theguardian":
+                    return "logo_theGuardian";
+                case "thehill":
+                    return "logo_theHill";
+                case "tidal":
+                    return "logo_tidal";
+                case "tumblr":
+                    return "logo_tumblr";
+                case "twitter":
+                    return "logo_twitter";
+                case "usatoday":
+                    return "logo_usaToday";
+                case "vimeo":
+                    return "logo_vimeo";
+                case "walmart":
+                    return "logo_walmart";
+                case "washingtonpost":
+                    return "logo_washingtonPost";
+                case "wayfair":
+                    return "logo_wayfair";
+                case "windowmaximize":
+                    return "window-maximize";
+                case "wsj":
+                    return "logo_wsj";
+                case "yahoo":
+                    return "logo_yahoo";
+                case "yahoomail":
+                    return "logo_yahoomail";
+                case "youtube":
+                    return "logo_youtube";
+                case "youtubemusic":
+                    return "logo_youtubeMusic";
+                case null:
+                default:
+                    return imageUrl;
+            }
+        }
+
 
         /// <summary>
         /// Creates an image source from a local image.
@@ -83,7 +252,7 @@
                 }
             }
 
-            if (!imagePath.Contains('/'))
+            if ((imagePath.Contains('/') == false) && (imagePath.Contains('\\') == false))
             {
                 imagePath = GetBarIconFile(imagePath) ?? imagePath;
             }
