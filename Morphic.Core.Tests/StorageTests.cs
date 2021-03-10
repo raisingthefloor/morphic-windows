@@ -58,7 +58,7 @@ namespace Morphic.Core.Tests
             Storage storage = new Storage(options, logger);
             var mock = new MockRecord();
             mock.populate();
-            bool sav = await storage.Save<MockRecord>(mock);
+            bool sav = (await storage.SaveAsync<MockRecord>(mock)).IsSuccess;
             Assert.True(sav);
             //EXISTS TEST
             Assert.True(storage.Exists<MockRecord>("testrecord"));

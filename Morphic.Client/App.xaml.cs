@@ -436,7 +436,6 @@ namespace Morphic.Client
             services.AddTransient<TravelCompletedPanel>();
             services.AddTransient<LoginWindow>();
             services.AddTransient<LoginPanel>();
-            services.AddTransient<CreateAccountPanel>();
             services.AddTransient<AboutWindow>();
             services.AddTransient<CopyStartPanel>();
             services.AddTransient<ApplyPanel>();
@@ -773,7 +772,10 @@ namespace Morphic.Client
         {
             HotkeyManager.Current.AddOrReplace("Login with Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift, (sender, e) =>
             {
-                this.Dialogs.OpenDialog<LoginWindow>();
+                // NOTE: if we want the login menu item to apply cloud-saved preferences after login, we should set this flag to true
+                var applyPreferencesAfterLogin = false;
+                var args = new Dictionary<string, object?>() { { "applyPreferencesAfterLogin", applyPreferencesAfterLogin } };
+                this.Dialogs.OpenDialogAsync<LoginWindow>(args);
             });
             HotkeyManager.Current.AddOrReplace("Show Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift | ModifierKeys.Alt, (sender, e) =>
             {

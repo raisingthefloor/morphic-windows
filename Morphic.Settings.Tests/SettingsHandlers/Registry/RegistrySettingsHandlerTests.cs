@@ -44,7 +44,8 @@ namespace Morphic.Settings.Tests.SettingsHandlers.Registry
                 Setting setting = sr.GetSetting("registry", settingId);
 
                 // Get the value
-                object? value = await setting.GetValue();
+                // OBSERVATION: we are not checking for success/failure of this result
+                object? value = (await setting.GetValueAsync()).Value;
 
                 Assert.Equal(expect, value);
             }
@@ -90,7 +91,8 @@ namespace Morphic.Settings.Tests.SettingsHandlers.Registry
                 await setting.SetValueAsync(newValue);
 
                 // Get the value
-                object? value = await setting.GetValue();
+                // OBSERVATION: we are not checking for success/failure of this result
+                object? value = (await setting.GetValueAsync()).Value;
 
                 Assert.Equal(newValue, value);
             }

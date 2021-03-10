@@ -145,15 +145,15 @@
         }
 
         /// <summary>Gets a setting value.</summary>
-        public Task<object?> GetSetting(SettingId settingId)
+        public async Task<IMorphicResult<object?>> GetSetting(SettingId settingId)
         {
-            return this.Solutions.GetSetting(settingId).GetValue();
+            return await this.Solutions.GetSetting(settingId).GetValueAsync();
         }
 
         /// <summary>Sets the value of a setting.</summary>
-        public Task<IMorphicResult> SetSetting(SettingId settingId, object? newValue)
+        public async Task<IMorphicResult> SetSetting(SettingId settingId, object? newValue)
         {
-            return this.Solutions.GetSetting(settingId).SetValueAsync(newValue);
+            return await this.Solutions.GetSetting(settingId).SetValueAsync(newValue);
         }
 
     }

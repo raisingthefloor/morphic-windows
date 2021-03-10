@@ -68,9 +68,11 @@ namespace Morphic.Client.Dialogs
 
         #endregion
 
+        public bool ApplyPreferencesAfterLogin { get; set; } = false;
+
         #region User Info
 
-        public Preferences Preferences = null!;
+        public Preferences? Preferences = null;
 
         #endregion
 
@@ -107,7 +109,7 @@ namespace Morphic.Client.Dialogs
             var errorMessage = "";
             try
             {
-                success = await this.morphicSession.RegisterUserAsync(user, credentials, this.Preferences);
+                success = await this.morphicSession.RegisterUserAsync(user, credentials, this.Preferences ?? new Preferences());
             }
             catch (AuthService.BadPasswordException)
             {
@@ -314,7 +316,8 @@ namespace Morphic.Client.Dialogs
         /// <param name="e"></param>
         public void OnAlreadyHaveAccount(object? sender, RoutedEventArgs e)
         {
-            this.StepFrame.PushPanel<LoginPanel>();
+            LoginPanel loginPanel = this.StepFrame.PushPanel<LoginPanel>();
+            loginPanel.ApplyPreferencesAfterLogin = this.ApplyPreferencesAfterLogin;
         }
 
         #endregion

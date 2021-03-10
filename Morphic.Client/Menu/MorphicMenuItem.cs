@@ -3,6 +3,7 @@
     using Config;
     using CountlySDK;
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Windows;
     using System.Windows.Controls;
@@ -49,7 +50,8 @@
 
                 if (this.Dialog != null)
                 {
-                    App.Current.Dialogs.OpenDialog(this.Dialog!);
+                    var args = new Dictionary<string, object?>();
+                    App.Current.Dialogs.OpenDialogAsync(this.Dialog!, args);
                 }
 
             }

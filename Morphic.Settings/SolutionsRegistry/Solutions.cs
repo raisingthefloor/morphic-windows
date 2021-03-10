@@ -97,8 +97,11 @@
             return (parts[0], parts[1]);
         }
 
-        public async Task CapturePreferences(Preferences preferences, bool async = false)
+        // TODO: consider adding an "async" operation which can capture multiple settings in parallel; for now we're keeping it simple and using serial captures
+        public async Task<IMorphicResult> CapturePreferencesAsync(Preferences preferences)
         {
+            var success = true; 
+
             List<Task> tasks = new List<Task>();
             preferences.Default ??= new Dictionary<string, SolutionPreferences>();
             foreach ((string? solutionId, Solution? solution) in this.All)
@@ -109,28 +112,26 @@
                     preferences.Default.Add(solutionId, solutionPreferences);
                 }
 
-                Task capture = solution.Capture(solutionPreferences);
-                if (async)
+                // NOTE: CaptureAsync is adding data to the class (which we only have a reference to)
+                var captureAsyncResult = await solution.CaptureAsync(solutionPreferences);
+                if (captureAsyncResult.IsError == true)
                 {
-                    tasks.Add(capture);
-                }
-                else
-                {
-                    await capture;
+                    success = false;
+                    continue;
                 }
             }
 
-            if (async)
-            {
-                await Task.WhenAll(tasks);
-            }
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
         }
 
-        public async Task ApplyPreferences(Preferences preferences, bool captureCurrent = false, bool async = false)
+        public async Task<IMorphicResult> ApplyPreferencesAsync(Preferences preferences, bool captureCurrent = false, bool async = false)
         {
+            var success = true;
+
             if (preferences.Default == null)
             {
-                return;
+                // NOTE: unsure whether this is an error condition or a success condition
+                return IMorphicResult.ErrorResult;
             }
 
             foreach ((string solutionId, SolutionPreferences solutionPreferences) in preferences.Default)
@@ -142,9 +143,18 @@
                         solutionPreferences.Previous ??= new Dictionary<string, object?>();
                     }
 
-                    await solution.Apply(solutionPreferences);
+                    try
+                    {
+                        await solution.ApplyAsync(solutionPreferences);
+                    }
+                    catch
+                    {
+                        success = false;
+                    }
                 }
             }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
         }
 
         public async Task RestorePreferences(Preferences preferences, bool async = false)

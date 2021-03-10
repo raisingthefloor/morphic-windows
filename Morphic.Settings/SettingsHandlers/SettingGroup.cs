@@ -6,6 +6,7 @@
     using System.Diagnostics.CodeAnalysis;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Morphic.Core;
     using Newtonsoft.Json;
     using Resolvers;
     using SolutionsRegistry;
@@ -35,15 +36,15 @@
         }
 
         /// <summary>Gets the current values of the settings in this group.</summary>
-        public Task<Values> GetAll(bool includeLocal = false)
+        public async Task<(IMorphicResult, Values)> GetAllAsync(bool includeLocal = false)
         {
-            return this.SettingsHandler.Get(this);
+            return await this.SettingsHandler.GetAsync(this);
         }
 
         /// <summary>Sets the values of the settings in this group.</summary>
-        public Task Set(Values values)
+        public async Task<IMorphicResult> SetAsync(Values values)
         {
-            return this.SettingsHandler.SetAsync(this, values);
+            return await this.SettingsHandler.SetAsync(this, values);
         }
 
         IEnumerator<Setting> IEnumerable<Setting>.GetEnumerator() => this.All.Values.GetEnumerator();

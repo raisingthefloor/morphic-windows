@@ -69,7 +69,7 @@ namespace Morphic.Client.Dialogs
 
         #region Logging In
 
-        //public bool ApplyPreferences { get; set; }
+        public bool ApplyPreferencesAfterLogin { get; set; } = false;
 
         /// <summary>
         /// Event handler for the login button click
@@ -110,11 +110,11 @@ namespace Morphic.Client.Dialogs
                 this.ErrorLabel.Focus(); // Makes narrator read the error label
                 this.SetFieldsEnabled(true);
             }
-            //else if (this.ApplyPreferences)
-            //{
-            //    _ = this.morphicSession.ApplyAllPreferences();
-            //    this.Close();
-            //}
+            else if (this.ApplyPreferencesAfterLogin)
+            {
+                _ = this.morphicSession.ApplyAllPreferences();
+                this.Close();
+            }
             else
             {
                 this.OnComplete();
@@ -139,6 +139,7 @@ namespace Morphic.Client.Dialogs
         private void CreateAccount(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
         {
             CreateAccountPanel accountPanel = this.StepFrame.PushPanel<CreateAccountPanel>();
+            accountPanel.ApplyPreferencesAfterLogin = this.ApplyPreferencesAfterLogin;
             accountPanel.Completed += (o, args) => this.OnComplete();
             e.Handled = true;
         }

@@ -5,6 +5,7 @@
     using Morphic.Client.Config;
     using Morphic.Client.Dialogs;
     using System;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Controls;
@@ -238,7 +239,10 @@
 
         private void Login(object sender, RoutedEventArgs e)
         {
-            App.Current.Dialogs.OpenDialog<LoginWindow>();
+            // NOTE: if we want the login menu item to apply cloud-saved preferences after login, we should set this flag to true
+            var applyPreferencesAfterLogin = false;
+            var args = new Dictionary<string, object?>() { { "applyPreferencesAfterLogin", applyPreferencesAfterLogin } };
+            App.Current.Dialogs.OpenDialogAsync<LoginWindow>(args);
         }
 
         private async void ExploreMorphicClicked(object sender, RoutedEventArgs e)

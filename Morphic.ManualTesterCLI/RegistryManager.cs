@@ -104,7 +104,8 @@ namespace Morphic.ManualTesterCLI
                     Console.WriteLine("[UNKNOWN DATA TYPE]");
                     return;
                 }
-                object? value = await setting.GetValue();
+                // OBSERVATION: we are not checking for the success/failure of this call...nor returning its success/failure to our caller
+                object? value = (await setting.GetValueAsync()).Value;
                 if (value == null)
                 {
                     Console.WriteLine("[NO DATA RETURNED]");
