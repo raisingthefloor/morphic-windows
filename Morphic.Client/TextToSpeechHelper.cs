@@ -1,4 +1,4 @@
-﻿using Morphic.Core;
+using Morphic.Core;
 using System;
 using System.IO;
 using System.Media;
