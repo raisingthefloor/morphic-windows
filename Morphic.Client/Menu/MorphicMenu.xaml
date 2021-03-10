@@ -42,7 +42,7 @@
 
         <menu:MorphicMenuHeader Header="Other Key Windows Settings"/>
         <menu:MorphicMenuItem Header="M_ouse Settings" Open="ms-settings:mousetouchpad" />
-        <menu:MorphicMenuItem Header="_Pointer Size" Open="ms-settings:easeofaccess-cursorandpointersize" />
+        <menu:MorphicMenuItem Header="_Pointer Size" Click="WindowsSettingsPointerSizeClicked" />
         <menu:MorphicMenuItem Header="_Keyboard Settings" Open="ms-settings:easeofaccess-keyboard" />
         <!-- <l:MorphicMenuItem Header="Brightness" Shell="" /> -->
         <menu:MorphicMenuItem Header="_Language" Open="ms-settings:regionlanguage" />
