@@ -29,21 +29,33 @@
         }
 
         /// <summary>Captures the preferences of this solution.</summary>
-        public async Task Capture(SolutionPreferences solutionPreferences)
+        public async Task<IMorphicResult> CaptureAsync(SolutionPreferences solutionPreferences)
         {
+            var success = true;
+
             foreach (SettingGroup settings in this.SettingGroups)
             {
-                Values values = await settings.GetAll();
+                var (getResult, values) = await settings.GetAllAsync();
+                if (getResult.IsError == true)
+                {
+                    success = false;
+                    // NOTE: we will continue capturing the values we _could_ get, even if some failed
+                }
                 foreach ((Setting setting, object? value) in values)
                 {
-                    solutionPreferences.Values.Add(setting.Id, value);
+                    // NOTE: in our testing, sometimes the setting was already present...so we can't be adding it twice.
+                    solutionPreferences.Values[setting.Id] = value;
                 }
             }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
         }
 
         /// <summary>Applies the preferences to this solution.</summary>
-        public async Task Apply(SolutionPreferences solutionPreferences)
+        public async Task<IMorphicResult> ApplyAsync(SolutionPreferences solutionPreferences)
         {
+            var success = true;
+
             bool captureCurrent = solutionPreferences.Previous != null;
             foreach (SettingGroup group in this.SettingGroups)
             {
@@ -61,11 +73,23 @@
 
                 if (settings != null)
                 {
-                    await group.SettingsHandler.GetAsync(group, settings);
+                    // OBSERVATION: unsure why we are not capturing the values here; does this "Get" function have a side-effect we're trying to take advantage of (perhaps caching)?
+                    var (settingHandlerGetResult, _) = await group.SettingsHandler.GetAsync(group, settings);
+                    if (settingHandlerGetResult.IsError == true) 
+                    {
+                        success = false;
+                    }
+                    // NOTE: if this failed: unsure if we should "continue;" here and skip the setting...or proceed to setting it
                 }
 
-                await group.SettingsHandler.SetAsync(group, values);
+                var setResult = await group.SettingsHandler.SetAsync(group, values);
+                if (setResult.IsError == true)
+                { 
+                    success = false;
+                }
             }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
         }
 
         public void Deserialized(IServiceProvider serviceProvider, Solutions solutions, string solutionId)

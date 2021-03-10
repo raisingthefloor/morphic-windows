@@ -109,10 +109,10 @@ namespace Morphic.Service
             }
 
             this.Preferences = preferences;
-            await this.Storage.Save(user);
+            await this.Storage.SaveAsync(user);
             if (this.Preferences != null)
             {
-                await this.Storage.Save(this.Preferences);
+                await this.Storage.SaveAsync(this.Preferences);
             }
 
             UserCommunitiesPage? communitiesPage = await this.Service.FetchUserCommunities(user.Id);
@@ -163,7 +163,8 @@ namespace Morphic.Service
                 {
                     preferences.Id = auth.User.PreferencesId;
                     preferences.UserId = auth.User.Id;
-                    await this.Service.Save(preferences);
+                    // OBSERVATION: we do not check to see if the save to the server was successful
+                    _ = await this.Service.SaveAsync(preferences);
                 }
 
                 this.userSettings.SetUsernameForId(credentials.Username, auth.User.Id);
@@ -200,7 +201,7 @@ namespace Morphic.Service
         {
             if (this.Preferences != null)
             {
-                await this.Solutions.ApplyPreferences(this.Preferences, true);
+                await this.Solutions.ApplyPreferencesAsync(this.Preferences, true);
             }
         }
 
@@ -289,11 +290,12 @@ namespace Morphic.Service
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void PreferencesSaveTimerElapsed(object sender, ElapsedEventArgs e)
+        private async void PreferencesSaveTimerElapsed(object sender, ElapsedEventArgs e)
         {
             this.preferencesSaveTimer?.Stop();
             this.preferencesSaveTimer = null;
-            _ = this.SavePreferences();
+            // OBSERVATION: we do not check to see if the save to disk or server was successful
+            _ = await this.SavePreferencesAsync();
 
         }
 
@@ -301,8 +303,10 @@ namespace Morphic.Service
         /// Actually save the preferences to the server
         /// </summary>
         /// <returns></returns>
-        private async Task SavePreferences()
+        private async Task<IMorphicResult> SavePreferencesAsync()
         {
+            var success = true;
+
             if (this.Preferences == null)
             {
                 this.logger.LogWarning("SavePreferences called with null preferences");
@@ -310,28 +314,32 @@ namespace Morphic.Service
             else
             {
                 this.logger.LogInformation("Saving preferences to disk");
-                if (await this.Storage.Save(this.Preferences))
+                if ((await this.Storage.SaveAsync(this.Preferences)).IsSuccess == true)
                 {
                     this.logger.LogInformation("Saved preferences to disk");
                 }
                 else
                 {
                     this.logger.LogError("Failed to save preferences to disk");
+                    success = false;
                 }
 
                 if (this.User != null)
                 {
                     this.logger.LogInformation("Saving preferences to server");
-                    if (await this.Service.Save(this.Preferences))
+                    if ((await this.Service.SaveAsync(this.Preferences)).IsSuccess == true)
                     {
                         this.logger.LogInformation("Saved preferences to server");
                     }
                     else
                     {
                         this.logger.LogError("Failed to save preferences to server");
+                        success = false;
                     }
                 }
             }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
         }
 
         #endregion

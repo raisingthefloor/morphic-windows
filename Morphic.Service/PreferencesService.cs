@@ -50,14 +50,15 @@ namespace Morphic.Service
         /// </summary>
         /// <param name="service"></param>
         /// <param name="preferences">The preferences to save</param>
-        /// <returns><code>true</code> if the request succeeded, <code>false</code> otherwise</returns>
-        public static async Task<bool> Save(this HttpService service, Preferences preferences)
+        /// <returns><code>IMorphicResult.SuccessResult</code> if the request succeeded, <code>IMorphicResult.ErrorResult</code> otherwise</returns>
+        public static async Task<IMorphicResult> SaveAsync(this HttpService service, Preferences preferences)
         {
             if (preferences.UserId is string userId)
             {
-                return await service.Send(() => HttpRequestMessageExtensions.Create(service, string.Format("v1/users/{0}/preferences/{1}", userId, preferences.Id), HttpMethod.Put, preferences));
+                var success = await service.Send(() => HttpRequestMessageExtensions.Create(service, string.Format("v1/users/{0}/preferences/{1}", userId, preferences.Id), HttpMethod.Put, preferences));
+                return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
             }
-            return false;
+            return IMorphicResult.ErrorResult;
         }
     }
 }

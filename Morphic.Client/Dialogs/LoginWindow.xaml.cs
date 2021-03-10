@@ -24,10 +24,17 @@
 namespace Morphic.Client.Dialogs
 {
     using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Windows;
     using Microsoft.Extensions.Logging;
 
-    public partial class LoginWindow : Window
+    public interface MorphicWindowWithArgs
+    {
+        void SetArguments(Dictionary<String, object?> args);
+    }
+
+    public partial class LoginWindow : Window, MorphicWindowWithArgs
     {
 
         public LoginWindow(ILogger<TravelWindow> logger, IServiceProvider serviceProvider)
@@ -44,15 +51,33 @@ namespace Morphic.Client.Dialogs
 
         private readonly IServiceProvider serviceProvider;
 
+        private bool ApplyPreferencesAfterLogin = false;
+
+        void MorphicWindowWithArgs.SetArguments(Dictionary<String, object?> args)
+        {
+            foreach (var (key, value) in args)
+            {
+                switch (key.ToLower()) {
+                    case "applypreferencesafterlogin":
+                        this.ApplyPreferencesAfterLogin = (value as bool?) ?? false;
+                        break;
+                    default:
+                        Debug.Assert(false, "Unknown argument");
+                        break;
+                }
+            }
+        }
+
         protected override void OnInitialized(EventArgs e)
         {
             base.OnInitialized(e);
-            this.ShowLoginPanel();
+            this.ShowLoginPanel(this.ApplyPreferencesAfterLogin);
         }
 
-        private void ShowLoginPanel()
+        private void ShowLoginPanel(bool applyPreferencesAfterLogin)
         {
             LoginPanel loginPanel = this.StepFrame.PushPanel<LoginPanel>();
+            loginPanel.ApplyPreferencesAfterLogin = applyPreferencesAfterLogin;
             loginPanel.Completed += (sender, args) => this.Close();
         }
     }

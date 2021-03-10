@@ -22,35 +22,67 @@
             this.registry = registry;
         }
 
-        public override Task<Values> GetAsync(SettingGroup settingGroup, IEnumerable<Setting>? settings)
-            => this.Get((RegistrySettingGroup)settingGroup, settings ?? settingGroup);
+        public override async Task<(IMorphicResult, Values)> GetAsync(SettingGroup settingGroup, IEnumerable<Setting>? settings)
+            => await this.GetAsync((RegistrySettingGroup)settingGroup, settings ?? settingGroup);
 
-        public override Task<IMorphicResult> SetAsync(SettingGroup settingGroup, Values values)
-            => this.Set((RegistrySettingGroup)settingGroup, values);
+        public override async Task<IMorphicResult> SetAsync(SettingGroup settingGroup, Values values)
+            => await this.SetAsync((RegistrySettingGroup)settingGroup, values);
 
-        public Task<Values> Get(RegistrySettingGroup group, IEnumerable<Setting> settings)
+		// NOTE: we return both success/failure and a list of results so that we can return partial results in case of partial failure
+#pragma warning disable 1998
+        public async Task<(IMorphicResult, Values)> GetAsync(RegistrySettingGroup group, IEnumerable<Setting> settings)
+#pragma warning restore 1998
         {
+            var success = true;
+
             Values values = new Values();
-            using IRegistryKey? key = this.OpenKey(group.RootKeyName, group.KeyPath);
+            IRegistryKey? key;
+            try
+            {
+                key = this.OpenKey(group.RootKeyName, group.KeyPath);
+            }
+            catch
+            {
+                return (IMorphicResult.ErrorResult, values);
+            }
+
             if (key != null)
             {
-                foreach (Setting setting in settings)
+                try
                 {
-                    object? value = key.GetValue(setting.Name);
-                    values.Add(setting, value);
+                    foreach (Setting setting in settings)
+                    {
+                        object? value;
+                        try
+                        {
+                            value = key.GetValue(setting.Name);
+                            values.Add(setting, value);
+                        }
+                        catch
+                        {
+                            success = false;
+                            continue;
+                        }
+                    }
+                }
+                finally
+                {
+                    key?.Dispose();
                 }
             }
 
-            return Task.FromResult(values);
+            return (success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult, values);
         }
 
-        public Task<IMorphicResult> Set(RegistrySettingGroup settingGroup, Values values)
+#pragma warning disable 1998
+        public async Task<IMorphicResult> SetAsync(RegistrySettingGroup settingGroup, Values values)
+#pragma warning restore 1998
         {
             using IRegistryKey? key = this.OpenKey(settingGroup.RootKeyName, settingGroup.KeyPath, true);
 
             if (key == null)
             {
-                return Task.FromResult(key != null ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult);
+                return key != null ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
             }
 
             foreach ((Setting setting, object? value) in values)
@@ -62,7 +94,7 @@
                 }
             }
 
-            return Task.FromResult(key != null ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult);
+            return key != null ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
         }
 
         /// <summary>

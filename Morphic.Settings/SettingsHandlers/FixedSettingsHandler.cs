@@ -57,30 +57,53 @@
         }
 
         /// <summary>Gets the values of the given settings.</summary>
-        public override async Task<Values> GetAsync(SettingGroup settingGroup, IEnumerable<Setting> settings)
+		// NOTE: we return both success/failure and a list of results so that we can return partial results in case of partial failure
+        public override async Task<(IMorphicResult, Values)> GetAsync(SettingGroup settingGroup, IEnumerable<Setting> settings)
         {
+            var success = true;
+
             Values values = new Values();
             foreach (Setting setting in settings)
             {
-                object? value = await this.GetAsync(setting);
-                if (!(value is NoValue))
+                object? value;
+                var getResult = await this.GetAsync(setting);
+                if (getResult.IsSuccess == true)
                 {
-                    values.Add(setting, value);
+                    value = getResult.Value;
+
+                    if (!(value is NoValue))
+                    {
+                        values.Add(setting, value);
+                    }
+                }
+                else
+                {
+                    success = false;
+                    // not captured; skip to the next setting
+                    continue;
                 }
             }
 
-            return values;
+            return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
         }
 
         /// <summary>Gets the value of a setting.</summary>
-        public override async Task<object?> GetAsync(Setting setting)
+        public override async Task<IMorphicResult<object?>> GetAsync(Setting setting)
         {
             if (this.getters.TryGetValue(setting.Name, out Getter? getter))
             {
-                return await getter(setting);
+                try
+                {
+                    var result = await getter(setting);
+                    return IMorphicResult<object?>.SuccessResult(result);
+                }
+                catch
+                {
+                    return IMorphicResult<object?>.ErrorResult();
+                }
             }
 
-            return new NoValue();
+            return IMorphicResult<object?>.SuccessResult(new NoValue());
         }
 
         /// <summary>Sets the values of settings.</summary>
@@ -89,7 +112,8 @@
             bool success = true;
             foreach ((Setting? setting, object? value) in values)
             {
-                success = (await this.SetAsync(setting, value)).IsSuccess && success;
+                var settingSetResult = await this.SetAsync(setting, value);
+                success = success && settingSetResult.IsSuccess;
             }
 
             return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
@@ -98,12 +122,22 @@
         /// <summary>Set the value of a setting.</summary>
         public override async Task<IMorphicResult> SetAsync(Setting setting, object? newValue)
         {
+            var success = true; 
+
             if (this.setters.TryGetValue(setting.Name, out Setter? setter))
             {
-                await setter(setting, newValue);
+                try
+                {
+                    // NOTE: setters return a bool; should we be capturing this as success/failure?  Moving forward, look at having them return IMorphicResult to be clear
+                    await setter(setting, newValue);
+                }
+                catch
+                {
+                    success = false;
+                }
             }
 
-            return IMorphicResult.SuccessResult;
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
         }
 
         private bool HandleListener(Setting setting, bool add)

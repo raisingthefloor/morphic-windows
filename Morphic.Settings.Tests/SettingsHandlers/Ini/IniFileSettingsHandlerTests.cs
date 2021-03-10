@@ -60,7 +60,11 @@ keyT3=valueT3
             Solution solution = sr.GetSolution("ini");
             SolutionPreferences solutionPreferences = new SolutionPreferences();
 
-            await solution.Capture(solutionPreferences);
+            var captureAsyncResult = await solution.CaptureAsync(solutionPreferences);
+            if (captureAsyncResult.IsError == true)
+            {
+                throw new Exception("CaptureAsync failed with an error");
+            }
 
             // The correct file path is used
             Assert.Equal("test-file.ini", reader.FilePath);
@@ -125,7 +129,7 @@ settingL=value-UPDATED-T3
             }
 
             // Apply the preferences.
-            await solution.Apply(solutionPreferences);
+            await solution.ApplyAsync(solutionPreferences);
 
             // Check the correct file path is used
             Assert.Equal("test-file.ini", writer.FilePath);

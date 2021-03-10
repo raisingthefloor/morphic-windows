@@ -69,10 +69,15 @@
         public object? CurrentValue { get; private set; }
 
         /// <summary>Gets the value of this setting.</summary>
-        public async Task<object?> GetValue()
+        public async Task<IMorphicResult<object?>> GetValueAsync()
         {
-            this.CurrentValue = await this.SettingGroup.SettingsHandler.GetAsync(this);
-            return this.CurrentValue;
+            var getResult = await this.SettingGroup.SettingsHandler.GetAsync(this);
+            if (getResult.IsError == true)
+            {
+                return IMorphicResult<object?>.ErrorResult();
+            }
+            this.CurrentValue = getResult.Value;
+            return IMorphicResult<object?>.SuccessResult(this.CurrentValue);
         }
 
         /// <summary>Gets a property that's not defined by this class, but was specified in the json object.</summary>
@@ -91,27 +96,37 @@
         /// <returns>A task resolving to the value of the setting.</returns>
         public async Task<T> GetValue<T>(T defaultValue = default)
         {
-            object? value = await this.GetValue();
+            // OBSERVATION: we are not checking for success/failure of this result
+            object? value = (await this.GetValueAsync()).Value;
             return value.ConvertTo<T>(defaultValue);
         }
 
         /// <summary>Sets the value of this setting.</summary>
-        public Task<IMorphicResult> SetValueAsync(object? newValue)
+        public async Task<IMorphicResult> SetValueAsync(object? newValue)
         {
             this.CurrentValue = newValue;
-            return this.SettingGroup.SettingsHandler.SetAsync(this, newValue);
+            return await this.SettingGroup.SettingsHandler.SetAsync(this, newValue);
         }
 
-        public async Task<bool> CheckForChange()
+        // NOTE: this function both updates our cached value _and_ returns true/false to indicate whether the state has changed
+        public async Task<IMorphicResult<bool>> CheckForChange()
         {
             object? oldValue = this.CurrentValue;
-            object? newValue = await this.GetValue();
+            // NOTE: calling this.GetValue() has a side-effect...as it changes this.CurrentValue to the newly-fetched value
+
+            var getValueResult = await this.GetValueAsync();
+            if (getValueResult.IsError == true)
+            {
+                return IMorphicResult<bool>.ErrorResult();
+            }
+            var newValue = getValueResult.Value;
+
             bool changed = oldValue != newValue;
             if (changed)
             {
                 this.OnSettingChanged(newValue);
             }
-            return changed;
+            return IMorphicResult<bool>.SuccessResult(changed);
         }
 
         private void OnSettingChanged(object? newValue)
