@@ -35,7 +35,7 @@ namespace Morphic.Windows.Native.OsVersion
                     case 19042:
                         return Windows10Version.v20H2;
                     default:
-                        if (version.Minor > 19042)
+                        if (version.Build > 19042)
                         {
                             return Windows10Version.vFuture;
                         }
