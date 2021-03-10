@@ -57,7 +57,7 @@
 
     <Separator/>
 
-    <menu:MorphicMenuItem Header="_Hide QuickHelp (except with Alt key)" IsCheckable="True" IsChecked="{Binding App.AppOptions.HideQuickHelp}" />
+    <!--<menu:MorphicMenuItem Header="_Hide QuickHelp (except with Alt key)" IsCheckable="True" IsChecked="{Binding App.AppOptions.HideQuickHelp}" />-->
     <menu:MorphicMenuItem Header="_Automatically start Morphic" x:Name="AutorunAfterLoginItem" Click="AutorunAfterLoginClicked" IsCheckable="True" IsChecked="{Binding App.AppOptions.AutoRun}" />
     <menu:MorphicMenuItem Header="_Show Morphic Bar at start" x:Name="ShowMorphicBarAfterLoginItem" Click="ShowMorphicBarAfterLoginClicked" IsCheckable="True" IsChecked="{Binding App.AppOptions.AutoShow}" />
     <menu:MorphicMenuItem Header="_About Morphic..." Click="AboutMorphicClicked" Dialog="dialogs:AboutWindow" />
