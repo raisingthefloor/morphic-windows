@@ -33,6 +33,11 @@ variables:
       Morphic.OAuth/Morphic.OAuth.csproj
       Morphic.Windows.Native/Morphic.Windows.Native.csproj
       Morphic/Morphic.csproj
+  # TODO: temporary values
+  versionMajor: 1
+  versionMinor: 9
+  versionBuild: 10
+  versionRevision: 0
 
 stages:
   - stage: build
@@ -84,3 +89,16 @@ stages:
             projects: '$(mainProject)'
             arguments: '-f net6.0-windows -r win10-arm64 -c Release'
 
+        - powershell: |
+            # Update MorphicPackage's appmanifest with a version number before building it
+            [xml]$manifest= get-content ".\Msix\Package.appxmanifest"
+            $manifest.Package.Identity.Version = "$(major).$(minor).$(build).$(revision)"    
+            $manifest.save("Msix/Package.appxmanifest")
+          displayName: 'Assign version to package manifest'
+
+        - task: MSBuild@1
+          displayName: "package msix (x86)"
+          solution: MorphicPackage/MorphicPackage.xapproj
+          platform: x86
+          configuration: Release
+          msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup.msix /p:AppxPackageSigningEnabled=false'
