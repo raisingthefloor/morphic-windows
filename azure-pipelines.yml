@@ -105,14 +105,12 @@ stages:
             $manifest.save("MorphicPackage/Package.appxmanifest")
           displayName: 'Assign version to package manifest'
 
-        - task: MSBuild@1
+        - task: DotNetCoreCLI@2
           displayName: "package msix (x86)"
           inputs:
-            solution: MorphicPackage/MorphicPackage.wapproj
-            msbuildLocation: 'C:\Program Files (x86)\Microsoft Visual Studio\2019\Preview\MSBuild\Current\Bin\'
-            platform: x86
-            configuration: Release
-            msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup_x86.msix /p:AppxPackageSigningEnabled=false'
+            command: custom
+            custom: msbuild
+            arguments: '"MorphicPackage\MorphicPackage.wapproj" /nologo /nr:false /p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=.\MorphicSetup.msix /p:AppxPackageSigningEnabled=false /p:platform="x86" /p:configuration="Release"'
 
         - task: MSBuild@1
           displayName: "package msix (x64)"
