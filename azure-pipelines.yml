@@ -62,9 +62,9 @@ stages:
             version: 5.0.200
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
-        - task: CmdLine@2
-          inputs:
-            script: 'dotnet --info'
+#        - task: CmdLine@2
+#          inputs:
+#            script: 'dotnet --info'
 
         - task: DotNetCoreCLI@2
           displayName: "dotnet restore"
@@ -84,7 +84,7 @@ stages:
             command: publish
             publishWebProjects: false
             projects: '$(mainProject)'
-            arguments: '-f net6.0-windows -r win10-x86 -c Release'
+            arguments: '-f net5.0-windows -r win10-x86 -c Release'
 
 
         - task: DotNetCoreCLI@2
@@ -93,7 +93,7 @@ stages:
             command: publish
             publishWebProjects: false
             projects: '$(mainProject)'
-            arguments: '-f net6.0-windows -r win10-x64 -c Release'
+            arguments: '-f net5.0-windows -r win10-x64 -c Release'
 
 
 #        - task: DotNetCoreCLI@2
@@ -102,7 +102,7 @@ stages:
 #            command: publish
 #            publishWebProjects: false
 #            projects: '$(mainProject)'
-#            arguments: '-f net6.0-windows -r win10-arm64 -c Release'
+#            arguments: '-f net5.0-windows -r win10-arm64 -c Release'
 
         - powershell: |
             # Update MorphicPackage's appmanifest with a version number before building it
