@@ -33,11 +33,16 @@ variables:
       Morphic.OAuth/Morphic.OAuth.csproj
       Morphic.Windows.Native/Morphic.Windows.Native.csproj
       Morphic/Morphic.csproj
+  
   # TODO: temporary values
-  versionMajor: 1
-  versionMinor: 9
-  versionBuild: 10
-  versionRevision: 0
+- name: versionMajor
+  value: 1
+- name: versionMinor
+  value: 9
+- name: versionBuild
+  value: 10
+- name: versionRevision
+  value: 0
 
 stages:
   - stage: build
