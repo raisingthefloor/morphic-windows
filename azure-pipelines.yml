@@ -58,7 +58,7 @@ stages:
 
         - task: CmdLine@2
           inputs:
-          script: 'dotnet --info'
+            script: 'dotnet --info'
 
         - task: DotNetCoreCLI@2
           displayName: "dotnet restore"
