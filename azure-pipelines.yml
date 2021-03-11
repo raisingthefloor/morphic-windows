@@ -101,7 +101,7 @@ stages:
             $manifest.save("MorphicPackage/Package.appxmanifest")
           displayName: 'Assign version to package manifest'
 
-        - task: MSBuild@1
+        - task: VSBuild@1
           displayName: "package msix (x86)"
           inputs:
             solution: MorphicPackage/MorphicPackage.wapproj
