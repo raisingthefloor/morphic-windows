@@ -107,4 +107,20 @@ stages:
             solution: MorphicPackage/MorphicPackage.wapproj
             platform: x86
             configuration: Release
-            msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup.msix /p:AppxPackageSigningEnabled=false'
+            msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup_x86.msix /p:AppxPackageSigningEnabled=false'
+
+        - task: VSBuild@1
+          displayName: "package msix (x64)"
+          inputs:
+            solution: MorphicPackage/MorphicPackage.wapproj
+            platform: x64
+            configuration: Release
+            msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup_x64.msix /p:AppxPackageSigningEnabled=false'
+
+        - task: VSBuild@1
+          displayName: "package msix (arm64)"
+          inputs:
+            solution: MorphicPackage/MorphicPackage.wapproj
+            platform: arm64
+            configuration: Release
+            msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup_arm64.msix /p:AppxPackageSigningEnabled=false'
