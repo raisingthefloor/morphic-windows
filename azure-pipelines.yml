@@ -103,7 +103,8 @@ stages:
 
         - task: MSBuild@1
           displayName: "package msix (x86)"
-          solution: MorphicPackage/MorphicPackage.xapproj
-          platform: x86
-          configuration: Release
-          msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup.msix /p:AppxPackageSigningEnabled=false'
+          inputs:
+            solution: MorphicPackage/MorphicPackage.xapproj
+            platform: x86
+            configuration: Release
+            msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup.msix /p:AppxPackageSigningEnabled=false'
