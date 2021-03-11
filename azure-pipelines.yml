@@ -56,6 +56,10 @@ stages:
             version: 6.0.100-preview.1.21103.13
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
+        - task: CmdLine@2
+          inputs:
+          script: 'dotnet --info'
+
         - task: DotNetCoreCLI@2
           displayName: "dotnet restore"
           inputs:
@@ -101,7 +105,7 @@ stages:
             $manifest.save("MorphicPackage/Package.appxmanifest")
           displayName: 'Assign version to package manifest'
 
-        - task: VSBuild@1
+        - task: MSBuild@1
           displayName: "package msix (x86)"
           inputs:
             solution: MorphicPackage/MorphicPackage.wapproj
@@ -109,7 +113,7 @@ stages:
             configuration: Release
             msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup_x86.msix /p:AppxPackageSigningEnabled=false'
 
-        - task: VSBuild@1
+        - task: MSBuild@1
           displayName: "package msix (x64)"
           inputs:
             solution: MorphicPackage/MorphicPackage.wapproj
@@ -117,7 +121,7 @@ stages:
             configuration: Release
             msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup_x64.msix /p:AppxPackageSigningEnabled=false'
 
-        - task: VSBuild@1
+        - task: MSBuild@1
           displayName: "package msix (arm64)"
           inputs:
             solution: MorphicPackage/MorphicPackage.wapproj
