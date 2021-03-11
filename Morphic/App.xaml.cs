@@ -41,7 +41,7 @@ namespace Morphic
     /// </summary>
     public partial class App : Application
     {
-        private async void App_Startup(object sender, StartupEventArgs e)
+        private void App_Startup(object sender, StartupEventArgs e)
         {
         }
     }
