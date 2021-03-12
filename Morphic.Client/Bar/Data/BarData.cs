@@ -175,117 +175,123 @@ namespace Morphic.Client.Bar.Data
                 // Mark the items as being from the default specification
                 defaultBar?.AllItems.ForEach(item => item.IsDefault = true);
 
-                // if extra bar items were specified in the config file, add them to the left side of the MorphicBar now
-                var morphicBarExtraItems = ConfigurableFeatures.MorphicBarExtraItems;
-                if (morphicBarExtraItems.Count > 0)
+                // OBSERVATION: we need a better way to determine if this is the basic bar or another bar
+                var isBasicBar = (barSource == AppPaths.GetConfigFile("basic-bar.json5", true));
+                //
+                if (isBasicBar == true)
                 {
-                    List<BarItem> extraBarItems = new List<BarItem>();
-                    foreach (var extraItemData in morphicBarExtraItems)
+                    // if extra bar items were specified in the config file, add them to the left side of the MorphicBar now
+                    var morphicBarExtraItems = ConfigurableFeatures.MorphicBarExtraItems;
+                    if (morphicBarExtraItems.Count > 0)
                     {
-                        BarItem extraBarItem;
-                        var extraBarItemShouldBeAdded = false;
-
-                        switch (extraItemData.type)
+                        List<BarItem> extraBarItems = new List<BarItem>();
+                        foreach (var extraItemData in morphicBarExtraItems)
                         {
-                            case "link":
-                                {
-                                    extraBarItem = new BarButton(defaultBar);
-                                    extraBarItem.ToolTipHeader = extraItemData.tooltipHeader;
-                                    extraBarItem.ToolTip = extraItemData.tooltipText;
-                                    extraBarItem.Text = extraItemData.label ?? "";
-                                    //
-                                    extraBarItem.Action = new Morphic.Client.Bar.Data.Actions.WebAction();
-                                    ((Morphic.Client.Bar.Data.Actions.WebAction)extraBarItem.Action!).UrlString = extraItemData.url ?? "";
-                                    extraBarItemShouldBeAdded = true;
-                                }
-                                break;
-                            case "action":
-                                {
-                                    extraBarItem = new BarButton(defaultBar);
-                                    extraBarItem.ToolTipHeader = extraItemData.tooltipHeader;
-                                    extraBarItem.ToolTip = extraItemData.tooltipText;
-                                    extraBarItem.Text = extraItemData.label ?? "";
-                                    //
-                                    var extraBarItemInternalAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
-                                    extraBarItemInternalAction.TelemetryEventName = "morphicBarExtraItem";
-                                    extraBarItem.Action = extraBarItemInternalAction;
-                                    ((Morphic.Client.Bar.Data.Actions.InternalAction)extraBarItem.Action!).FunctionName = extraItemData.function!;
-                                    extraBarItemShouldBeAdded = true;
-                                }
-                                break;
-                            case "control":
-                                {
-                                    extraBarItem = new BarMultiButton(defaultBar);
-                                    extraBarItem.ToolTipHeader = extraItemData.tooltipHeader;
-                                    extraBarItem.ToolTip = extraItemData.tooltipText;
-                                    //
-                                    switch (extraItemData.feature)
+                            BarItem extraBarItem;
+                            var extraBarItemShouldBeAdded = false;
+
+                            switch (extraItemData.type)
+                            {
+                                case "link":
                                     {
-                                        case "usbopeneject":
-                                            extraBarItem.Text = extraItemData.label ?? "USB Drives (All)";
-                                            //
-                                            var openAllUsbAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
-                                            openAllUsbAction.TelemetryEventName = "morphicBarExtraItem";
-                                            openAllUsbAction.FunctionName = "openAllUsbDrives";
-                                            var openButton = new BarMultiButton.ButtonInfo
-                                            {
-                                                Text = "Open",
-                                                Action = openAllUsbAction,
-                                                TelemetryCategory = "morphicBarExtraItem",
-                                                Tooltip = "Open All USB Drives",
-                                                Value = "openallusb"
-                                            };
-                                            //
-                                            var ejectAllUsbAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
-                                            ejectAllUsbAction.TelemetryEventName = "morphicBarExtraItem";
-                                            ejectAllUsbAction.FunctionName = "ejectAllUsbDrives";
-                                            var ejectButton = new BarMultiButton.ButtonInfo
-                                            {
-                                                Text = "Eject",
-                                                Action = ejectAllUsbAction,
-                                                TelemetryCategory = "morphicBarExtraItem",
-                                                Tooltip = "Eject All USB Drives",
-                                                Value = "ejectallusb"
-                                            };
-                                            //
-                                            ((BarMultiButton)extraBarItem).Buttons = new Dictionary<string, BarMultiButton.ButtonInfo>
+                                        extraBarItem = new BarButton(defaultBar);
+                                        extraBarItem.ToolTipHeader = extraItemData.tooltipHeader;
+                                        extraBarItem.ToolTip = extraItemData.tooltipText;
+                                        extraBarItem.Text = extraItemData.label ?? "";
+                                        //
+                                        extraBarItem.Action = new Morphic.Client.Bar.Data.Actions.WebAction();
+                                        ((Morphic.Client.Bar.Data.Actions.WebAction)extraBarItem.Action!).UrlString = extraItemData.url ?? "";
+                                        extraBarItemShouldBeAdded = true;
+                                    }
+                                    break;
+                                case "action":
+                                    {
+                                        extraBarItem = new BarButton(defaultBar);
+                                        extraBarItem.ToolTipHeader = extraItemData.tooltipHeader;
+                                        extraBarItem.ToolTip = extraItemData.tooltipText;
+                                        extraBarItem.Text = extraItemData.label ?? "";
+                                        //
+                                        var extraBarItemInternalAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
+                                        extraBarItemInternalAction.TelemetryEventName = "morphicBarExtraItem";
+                                        extraBarItem.Action = extraBarItemInternalAction;
+                                        ((Morphic.Client.Bar.Data.Actions.InternalAction)extraBarItem.Action!).FunctionName = extraItemData.function!;
+                                        extraBarItemShouldBeAdded = true;
+                                    }
+                                    break;
+                                case "control":
+                                    {
+                                        extraBarItem = new BarMultiButton(defaultBar);
+                                        extraBarItem.ToolTipHeader = extraItemData.tooltipHeader;
+                                        extraBarItem.ToolTip = extraItemData.tooltipText;
+                                        //
+                                        switch (extraItemData.feature)
+                                        {
+                                            case "usbopeneject":
+                                                extraBarItem.Text = extraItemData.label ?? "USB Drives (All)";
+                                                //
+                                                var openAllUsbAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
+                                                openAllUsbAction.TelemetryEventName = "morphicBarExtraItem";
+                                                openAllUsbAction.FunctionName = "openAllUsbDrives";
+                                                var openButton = new BarMultiButton.ButtonInfo
+                                                {
+                                                    Text = "Open",
+                                                    Action = openAllUsbAction,
+                                                    TelemetryCategory = "morphicBarExtraItem",
+                                                    Tooltip = "Open All USB Drives",
+                                                    Value = "openallusb"
+                                                };
+                                                //
+                                                var ejectAllUsbAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
+                                                ejectAllUsbAction.TelemetryEventName = "morphicBarExtraItem";
+                                                ejectAllUsbAction.FunctionName = "ejectAllUsbDrives";
+                                                var ejectButton = new BarMultiButton.ButtonInfo
+                                                {
+                                                    Text = "Eject",
+                                                    Action = ejectAllUsbAction,
+                                                    TelemetryCategory = "morphicBarExtraItem",
+                                                    Tooltip = "Eject All USB Drives",
+                                                    Value = "ejectallusb"
+                                                };
+                                                //
+                                                ((BarMultiButton)extraBarItem).Buttons = new Dictionary<string, BarMultiButton.ButtonInfo>
                                             {
                                                 { "open", openButton },
                                                 { "eject", ejectButton }
                                             };
-                                            //
-                                            extraBarItemShouldBeAdded = true;
-                                            break;
-                                        default:
-                                            extraBarItem.Text = extraItemData.label ?? "";
-                                            // NOTE: we don't know what this button is, so do not show it
-                                            extraBarItemShouldBeAdded = false;
-                                            break;
+                                                //
+                                                extraBarItemShouldBeAdded = true;
+                                                break;
+                                            default:
+                                                extraBarItem.Text = extraItemData.label ?? "";
+                                                // NOTE: we don't know what this button is, so do not show it
+                                                extraBarItemShouldBeAdded = false;
+                                                break;
+                                        }
                                     }
-                                }
-                                break;
-                            default:
-                                // unknown type; this should be an impossible code path
-                                throw new NotImplementedException();
+                                    break;
+                                default:
+                                    // unknown type; this should be an impossible code path
+                                    throw new NotImplementedException();
+                            }
+                            //extraBarItem.ColorValue = "#00FF00";
+                            extraBarItem.IsPrimary = true;
+                            //
+                            if (extraBarItemShouldBeAdded == true)
+                            {
+                                defaultBar?.AllItems.Add(extraBarItem);
+                            }
                         }
-                        //extraBarItem.ColorValue = "#00FF00";
-                        extraBarItem.IsPrimary = true;
-                        //
-                        if (extraBarItemShouldBeAdded == true)
-                        {
-                            defaultBar?.AllItems.Add(extraBarItem);
-                        }
-                    }
 
-                    // add a spacer entry
-                    BarButton spacerBarItem = new BarButton(defaultBar);
-                    spacerBarItem.ToolTipHeader = "";
-                    spacerBarItem.ToolTip = "";
-                    spacerBarItem.Text = "";
-                    spacerBarItem.ColorValue = "#FFFFFF";
-                    spacerBarItem.IsPrimary = true;
-                    //
-                    defaultBar?.AllItems.Add(spacerBarItem);
+                        // add a spacer entry
+                        BarButton spacerBarItem = new BarButton(defaultBar);
+                        spacerBarItem.ToolTipHeader = "";
+                        spacerBarItem.ToolTip = "";
+                        spacerBarItem.Text = "";
+                        spacerBarItem.ColorValue = "#FFFFFF";
+                        spacerBarItem.IsPrimary = true;
+                        //
+                        defaultBar?.AllItems.Add(spacerBarItem);
+                    }
                 }
             }
             else
