@@ -50,7 +50,7 @@ stages:
       - job: build
         steps:
 #        - task: UseDotNet@2
-#          displayName: "Use .NET SDK 6.0-preview.1"
+#          displayName: 'Use .NET SDK 6.0-preview.1'
 #          inputs:
 #            packageType: sdk
 #            version: 6.0.100-preview.1.21103.13
@@ -67,19 +67,19 @@ stages:
 #            script: 'dotnet --info'
 
         - task: DotNetCoreCLI@2
-          displayName: "dotnet restore"
+          displayName: 'dotnet restore'
           inputs:
             command: restore
             projects: '$(projects)'
         
         - task: DotNetCoreCLI@2
-          displayName: "dotnet build"
+          displayName: 'dotnet build'
           inputs:
            command: build
            projects: '$(mainProject)'
 
         - task: DotNetCoreCLI@2
-          displayName: "dotnet publish (x86)"
+          displayName: 'dotnet publish (x86)'
           inputs:
             command: publish
             publishWebProjects: false
@@ -88,7 +88,7 @@ stages:
 
 
         - task: DotNetCoreCLI@2
-          displayName: "dotnet publish (x64)"
+          displayName: 'dotnet publish (x64)'
           inputs:
             command: publish
             publishWebProjects: false
@@ -97,7 +97,7 @@ stages:
 
 
 #        - task: DotNetCoreCLI@2
-#          displayName: "dotnet publish (arm64)"
+#          displayName: 'dotnet publish (arm64)'
 #          inputs:
 #            command: publish
 #            publishWebProjects: false
@@ -112,7 +112,7 @@ stages:
           displayName: 'Assign version to package manifest'
 
         - task: MSBuild@1
-          displayName: "package msix (x86)"
+          displayName: 'Package MSIX (x86)'
           inputs:
             solution: MorphicPackage/MorphicPackage.wapproj
             platform: x86
@@ -120,7 +120,7 @@ stages:
             msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup_x86.msix /p:AppxPackageSigningEnabled=false'
 
         - task: MSBuild@1
-          displayName: "package msix (x64)"
+          displayName: 'Package MSIX (x64)'
           inputs:
             solution: MorphicPackage/MorphicPackage.wapproj
             platform: x64
@@ -128,9 +128,75 @@ stages:
             msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup_x64.msix /p:AppxPackageSigningEnabled=false'
 
 #        - task: MSBuild@1
-#          displayName: "package msix (arm64)"
+#          displayName: 'Package MSIX (arm64)'
 #          inputs:
 #            solution: MorphicPackage/MorphicPackage.wapproj
 #            platform: arm64
 #            configuration: Release
 #            msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup_x64.msix /p:AppxPackageSigningEnabled=false'
+
+        - task: UseDotNet@2
+          displayName: 'Use .NET Core SDK 2.1'
+          inputs:
+            packageType: sdk
+            version: 2.1.811
+            installationPath: $(Agent.ToolsDirectory)/dotnet
+
+        - task: DotNetCoreCLI@2
+          displayName: 'Install AzureSignTool 2.0.17'
+          inputs:
+            command: 'custom'
+            custom: 'tool'
+            arguments: 'install --global --version 2.0.17 azuresigntool'
+
+# ### SIGNING NOTE (applicable to all signed files) ###
+# NOTE: if we experience downtime with our cert provider's timestamp servers (which causes signing to fail), 
+#       we can use the test server (production timestamps, but from a 2nd provider); note that we should NOT do
+#       this for any public preview or release builds...only for internal testing or emergency scenarios.
+#              -tr "$(TimestampUrl)"
+#              -tr "$(TimestampUrl2)"
+#              vs.
+#              -tr "$(TestOnlyTimestampUrl)"
+
+        - task: CmdLine@2
+          displayName: 'Sign MSIX (x86)'
+          inputs:
+            script: >
+              AzureSignTool sign
+              -d Morphic
+              -du "$(SigningURL)"
+              -kvu "$(SigningVaultURL)"
+              -kvi "$(SigningClientId)"
+              -kvs "$(SigningClientSecret)"
+              -kvc "$(SigningCertName)"
+              -tr "$(TimestampUrl2)"
+              -v $(Build.ArtifactStagingDirectory)\MorphicSetup_x86.msix
+
+        - task: CmdLine@2
+          displayName: 'Sign MSIX (x64)'
+          inputs:
+            script: >
+              AzureSignTool sign
+              -d Morphic
+              -du "$(SigningURL)"
+              -kvu "$(SigningVaultURL)"
+              -kvi "$(SigningClientId)"
+              -kvs "$(SigningClientSecret)"
+              -kvc "$(SigningCertName)"
+              -tr "$(TimestampUrl2)"
+              -v $(Build.ArtifactStagingDirectory)\MorphicSetup_x64.msix
+
+#        - task: CmdLine@2
+#          displayName: 'Sign MSIX (arm64)'
+#          inputs:
+#            script: >
+#              AzureSignTool sign
+#              -d Morphic
+#              -du "$(SigningURL)"
+#              -kvu "$(SigningVaultURL)"
+#              -kvi "$(SigningClientId)"
+#              -kvs "$(SigningClientSecret)"
+#              -kvc "$(SigningCertName)"
+#              -tr "$(TimestampUrl2)"
+#              -v $(Build.ArtifactStagingDirectory)\MorphicSetup_arm64.msix
+
