@@ -177,8 +177,14 @@ namespace Morphic.Windows.Native.Devices
                 switch (deviceStorageDeviceNumberResult.Error!.Value)
                 {
                     case StorageDeviceNumberError.Values.CouldNotRetrieveStorageDeviceNumbers:
+                        // START TEMPORARY CODE TO DIAGNOSE BETA TESTER'S OPEN USB ISSUE
+                        throw new Exception("StorageDeviceUtils.GetStorageDeviceNumberAsync ERROR CouldNotRetrieveStorageDeviceNumbers; devicePath: " + devicePath);
+                        // END TEMPORARY CODE TO DIAGNOSE BETA TESTER'S OPEN USB ISSUE
                         return IMorphicResult<char?, StorageDeviceNumberError>.ErrorResult(StorageDeviceNumberError.CouldNotRetrieveStorageDeviceNumbers);
                     case StorageDeviceNumberError.Values.Win32Error:
+                        // START TEMPORARY CODE TO DIAGNOSE BETA TESTER'S OPEN USB ISSUE
+                        throw new Exception("StorageDeviceUtils.GetStorageDeviceNumberAsync ERROR Win32Error; devicePath: " + devicePath + "; win32Error: " + deviceStorageDeviceNumberResult.Error!.Win32ErrorCode!.Value);
+                        // END TEMPORARY CODE TO DIAGNOSE BETA TESTER'S OPEN USB ISSUE
                         return IMorphicResult<char?, StorageDeviceNumberError>.ErrorResult(StorageDeviceNumberError.Win32Error(deviceStorageDeviceNumberResult.Error!.Win32ErrorCode!.Value));
                     default:
                         throw new Exception("invalid code path");
@@ -192,8 +198,14 @@ namespace Morphic.Windows.Native.Devices
                 switch (dosDrivesAndStorageNumbersResult.Error!.Value)
                 {
                     case StorageDeviceNumberError.Values.CouldNotRetrieveStorageDeviceNumbers:
+                        // START TEMPORARY CODE TO DIAGNOSE BETA TESTER'S OPEN USB ISSUE
+                        throw new Exception("StorageDeviceUtils.GetStorageDeviceNumbersForAllDosDrivesAsync ERROR CouldNotRetrieveStorageDeviceNumbers);
+                        // END TEMPORARY CODE TO DIAGNOSE BETA TESTER'S OPEN USB ISSUE
                         return IMorphicResult<char?, StorageDeviceNumberError>.ErrorResult(StorageDeviceNumberError.CouldNotRetrieveStorageDeviceNumbers);
                     case StorageDeviceNumberError.Values.Win32Error:
+                        // START TEMPORARY CODE TO DIAGNOSE BETA TESTER'S OPEN USB ISSUE
+                        throw new Exception("StorageDeviceUtils.GetStorageDeviceNumbersForAllDosDrivesAsync ERROR Win32Error; win32Error: " + deviceStorageDeviceNumberResult.Error!.Win32ErrorCode!.Value);
+                        // END TEMPORARY CODE TO DIAGNOSE BETA TESTER'S OPEN USB ISSUE
                         return IMorphicResult<char?, StorageDeviceNumberError>.ErrorResult(StorageDeviceNumberError.Win32Error(dosDrivesAndStorageNumbersResult.Error!.Win32ErrorCode!.Value));
                     default:
                         throw new Exception("invalid code path");

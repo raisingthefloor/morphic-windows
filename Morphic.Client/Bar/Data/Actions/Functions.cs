@@ -513,6 +513,19 @@ namespace Morphic.Client.Bar.Data.Actions
                 var tryGetDriveRootPathResult = await drive.TryGetDriveRootPathAsync();
                 if (tryGetDriveRootPathResult.IsError == true)
                 {
+                    // START TEMPORARY CODE TO DIAGNOSE BETA TESTER'S OPEN USB ISSUE
+                    switch (tryGetDriveRootPathResult.Error!.Value)
+                    {
+                        case Windows.Native.Devices.Drive.TryGetDriveLetterError.Values.CouldNotRetrieveStorageDeviceNumbers:
+                            App.Current.Logger.LogError("ERROR IN 'TryGetDriveRootPathAsync': CouldNotRetrieveStorageDeviceNumbers");
+                            App.Current.Logger.LogError("Could not get removable drive's root path");
+                            break;
+                        case Windows.Native.Devices.Drive.TryGetDriveLetterError.Values.Win32Error:
+                            App.Current.Logger.LogError("ERROR IN 'TryGetDriveRootPathAsync': Win32Error: " + tryGetDriveRootPathResult.Error!.Win32ErrorCode.ToString());
+                            break;
+                    }
+                    // END TEMPORARY CODE TO DIAGNOSE BETA TESTER'S OPEN USB ISSUE
+
                     Debug.Assert(false, "Could not get removable drive's root path");
                     App.Current.Logger.LogError("Could not get removable drive's root path");
                     // gracefully degrade; skip this disk
