@@ -197,12 +197,7 @@ namespace Morphic.Windows.Native.Devices
             {
                 switch (dosDrivesAndStorageNumbersResult.Error!.Value)
                 {
-                    case StorageDeviceNumberError.Values.CouldNotRetrieveStorageDeviceNumbers:
-                        // START TEMPORARY CODE TO DIAGNOSE BETA TESTER'S OPEN USB ISSUE
-                        throw new Exception("StorageDeviceUtils.GetStorageDeviceNumbersForAllDosDrivesAsync ERROR CouldNotRetrieveStorageDeviceNumbers");
-                        // END TEMPORARY CODE TO DIAGNOSE BETA TESTER'S OPEN USB ISSUE
-                        return IMorphicResult<char?, StorageDeviceNumberError>.ErrorResult(StorageDeviceNumberError.CouldNotRetrieveStorageDeviceNumbers);
-                    case StorageDeviceNumberError.Values.Win32Error:
+                    case Win32ApiError.Values.Win32Error:
                         // START TEMPORARY CODE TO DIAGNOSE BETA TESTER'S OPEN USB ISSUE
                         throw new Exception("StorageDeviceUtils.GetStorageDeviceNumbersForAllDosDrivesAsync ERROR Win32Error; win32Error: " + dosDrivesAndStorageNumbersResult.Error!.Win32ErrorCode!.Value);
                         // END TEMPORARY CODE TO DIAGNOSE BETA TESTER'S OPEN USB ISSUE
@@ -212,8 +207,17 @@ namespace Morphic.Windows.Native.Devices
                 }
             }
 
-            foreach (var (driveLetter, storageDeviceNumber) in dosDrivesAndStorageNumbersResult.Value!)
+            StorageDeviceNumberError? singleDosDeviceErrorResult = null;
+            foreach (var (driveLetter, storageDeviceNumberResult) in dosDrivesAndStorageNumbersResult.Value!)
             {
+                if (storageDeviceNumberResult.IsError == true)
+                {
+                    singleDosDeviceErrorResult = storageDeviceNumberResult.Error!;
+                    // skip to the next drive letter; if we find our drive letter (even though another drive had an error), then we are still successful in conversion and can return success
+                    continue;
+                }
+                var storageDeviceNumber = storageDeviceNumberResult.Value!;
+                //
                 if (storageDeviceNumber.Equals(deviceStorageDeviceNumberResult.Value!) == true)
                 {
                     // we have found the drive letter
@@ -221,11 +225,28 @@ namespace Morphic.Windows.Native.Devices
                 }
             }
 
-            // if we could not find the mapping, return null; this means we didn't encounter any errors, but we also didn't find the result
+            // if we could not find a mapping AND we found an error with one or more of the drive letters we tried to find a storage number for, bubble up that error to our caller
+            if (singleDosDeviceErrorResult != null)
+            {
+                // NOTE for future: we might want to return an array of errors (along with the drives that they were caused on) in the future, if that's necessary
+                switch (singleDosDeviceErrorResult.Value)
+                {
+                    case StorageDeviceNumberError.Values.CouldNotRetrieveStorageDeviceNumbers:
+                        return IMorphicResult<char?, StorageDeviceNumberError>.ErrorResult(StorageDeviceNumberError.CouldNotRetrieveStorageDeviceNumbers);
+                    case StorageDeviceNumberError.Values.Win32Error:
+                        return IMorphicResult<char?, StorageDeviceNumberError>.ErrorResult(StorageDeviceNumberError.Win32Error(dosDrivesAndStorageNumbersResult.Error!.Win32ErrorCode!.Value));
+                    default:
+                        throw new Exception("invalid code path");
+                }
+            }
+
+            // if we could not find the mapping and there was no error, return null; this simply means we couldn't find a drive letter for the device path (e.g. recovery partitions, etc.)
             return IMorphicResult<char?, StorageDeviceNumberError>.SuccessResult(null);
         }
 
-        private static async Task<IMorphicResult<Dictionary<char, ExtendedPInvoke.STORAGE_DEVICE_NUMBER>, StorageDeviceNumberError>> GetStorageDeviceNumbersForAllDosDrivesAsync()
+        // NOTE: this function will return the full list of drive letters, complete with error conditions for each drive letter (since some drive letters will not let us get their info); it
+        //       ALSO returns a general error if it cannot get any results; if this ever seems too complicated, we could split it into two functions
+        private static async Task<IMorphicResult<Dictionary<char, IMorphicResult<ExtendedPInvoke.STORAGE_DEVICE_NUMBER, StorageDeviceNumberError>>, Win32ApiError>> GetStorageDeviceNumbersForAllDosDrivesAsync()
         {
             // get all dos drive letters
             var allDosDriveLettersResult = Drive.GetAllDosDriveLetters();
@@ -237,17 +258,19 @@ namespace Morphic.Windows.Native.Devices
                         // START TEMPORARY CODE TO DIAGNOSE BETA TESTER'S OPEN USB ISSUE
                         throw new Exception("Drive.GetAllDosDriveLetters ERROR Win32Error; win32Error: " + allDosDriveLettersResult.Error!.Win32ErrorCode!.Value);
                         // END TEMPORARY CODE TO DIAGNOSE BETA TESTER'S OPEN USB ISSUE
-                        return IMorphicResult<Dictionary<char, ExtendedPInvoke.STORAGE_DEVICE_NUMBER>, StorageDeviceNumberError>.ErrorResult(StorageDeviceNumberError.Win32Error(allDosDriveLettersResult.Error!.Win32ErrorCode!.Value));
+                        return IMorphicResult<Dictionary<char, IMorphicResult<ExtendedPInvoke.STORAGE_DEVICE_NUMBER, StorageDeviceNumberError>>, Win32ApiError>.ErrorResult(Win32ApiError.Win32Error(allDosDriveLettersResult.Error!.Win32ErrorCode!.Value));
                     default:
                         throw new Exception("invalid code path");
                 }
             }
 
-            var result = new Dictionary<char, ExtendedPInvoke.STORAGE_DEVICE_NUMBER>();
+            var result = new Dictionary<char, IMorphicResult<ExtendedPInvoke.STORAGE_DEVICE_NUMBER, StorageDeviceNumberError>>();
 
             // get the storage device numbers for each drive letter
             foreach (char dosDriveLetter in allDosDriveLettersResult.Value!)
             {
+                IMorphicResult<ExtendedPInvoke.STORAGE_DEVICE_NUMBER, StorageDeviceNumberError>? errorResult = null;
+
                 // get the storage device number for this devicePath
                 var deviceStorageDeviceNumberResult = await StorageDeviceUtils.GetStorageDeviceNumberAsync(@"\\.\" + dosDriveLetter + ":");
                 if (deviceStorageDeviceNumberResult.IsError)
@@ -255,24 +278,34 @@ namespace Morphic.Windows.Native.Devices
                     switch (deviceStorageDeviceNumberResult.Error!.Value)
                     {
                         case StorageDeviceNumberError.Values.CouldNotRetrieveStorageDeviceNumbers:
-                            // START TEMPORARY CODE TO DIAGNOSE BETA TESTER'S OPEN USB ISSUE
-                            throw new Exception("StorageDeviceUtils.GetStorageDeviceNumberAsync(\"\\\\.\\" + dosDriveLetter + ":\") ERROR CouldNotRetrieveStorageDeviceNumbers");
-                            // END TEMPORARY CODE TO DIAGNOSE BETA TESTER'S OPEN USB ISSUE
-                            return IMorphicResult<Dictionary<char, ExtendedPInvoke.STORAGE_DEVICE_NUMBER>, StorageDeviceNumberError>.ErrorResult(StorageDeviceNumberError.CouldNotRetrieveStorageDeviceNumbers);
+                            //// START TEMPORARY CODE TO DIAGNOSE BETA TESTER'S OPEN USB ISSUE
+                            //throw new Exception("StorageDeviceUtils.GetStorageDeviceNumberAsync(\"\\\\.\\" + dosDriveLetter + ":\") ERROR CouldNotRetrieveStorageDeviceNumbers");
+                            //// END TEMPORARY CODE TO DIAGNOSE BETA TESTER'S OPEN USB ISSUE
+                            errorResult = IMorphicResult<ExtendedPInvoke.STORAGE_DEVICE_NUMBER, StorageDeviceNumberError>.ErrorResult(StorageDeviceNumberError.CouldNotRetrieveStorageDeviceNumbers);
+                            break;
                         case StorageDeviceNumberError.Values.Win32Error:
-                            // START TEMPORARY CODE TO DIAGNOSE BETA TESTER'S OPEN USB ISSUE
-                            throw new Exception("StorageDeviceUtils.GetStorageDeviceNumberAsync(\"\\\\.\\" + dosDriveLetter + ":\") ERROR Win32Error; win32Error: " + deviceStorageDeviceNumberResult.Error!.Win32ErrorCode!.Value);
-                            // END TEMPORARY CODE TO DIAGNOSE BETA TESTER'S OPEN USB ISSUE
-                            return IMorphicResult<Dictionary<char, ExtendedPInvoke.STORAGE_DEVICE_NUMBER>, StorageDeviceNumberError>.ErrorResult(StorageDeviceNumberError.Win32Error(deviceStorageDeviceNumberResult.Error!.Win32ErrorCode!.Value));
+                            //// START TEMPORARY CODE TO DIAGNOSE BETA TESTER'S OPEN USB ISSUE
+                            //throw new Exception("StorageDeviceUtils.GetStorageDeviceNumberAsync(\"\\\\.\\" + dosDriveLetter + ":\") ERROR Win32Error; win32Error: " + allDosDriveLettersResult.Error!.Win32ErrorCode!.Value);
+                            //// END TEMPORARY CODE TO DIAGNOSE BETA TESTER'S OPEN USB ISSUE
+                            errorResult = IMorphicResult<ExtendedPInvoke.STORAGE_DEVICE_NUMBER, StorageDeviceNumberError>.ErrorResult(StorageDeviceNumberError.Win32Error(deviceStorageDeviceNumberResult.Error!.Win32ErrorCode!.Value));
+                            break;
                         default:
                             throw new Exception("invalid code path");
                     }
                 }
 
-                result.Add(dosDriveLetter, deviceStorageDeviceNumberResult.Value!);
+                if (errorResult == null)
+                {
+                    var successResult = IMorphicResult<ExtendedPInvoke.STORAGE_DEVICE_NUMBER, StorageDeviceNumberError>.SuccessResult(deviceStorageDeviceNumberResult.Value!);
+                    result.Add(dosDriveLetter, successResult);
+                }
+                else
+                {
+                    result.Add(dosDriveLetter, errorResult);
+                }
             }
 
-            return IMorphicResult<Dictionary<char, ExtendedPInvoke.STORAGE_DEVICE_NUMBER>, StorageDeviceNumberError>.SuccessResult(result);
+            return IMorphicResult<Dictionary<char, IMorphicResult<ExtendedPInvoke.STORAGE_DEVICE_NUMBER, StorageDeviceNumberError>>, Win32ApiError>.SuccessResult(result);
         }
 
         public static IMorphicResult<List<char>, Win32ApiError> GetAllDosDriveLetters()
