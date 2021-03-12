@@ -199,7 +199,7 @@ namespace Morphic.Windows.Native.Devices
                 {
                     case StorageDeviceNumberError.Values.CouldNotRetrieveStorageDeviceNumbers:
                         // START TEMPORARY CODE TO DIAGNOSE BETA TESTER'S OPEN USB ISSUE
-                        throw new Exception("StorageDeviceUtils.GetStorageDeviceNumbersForAllDosDrivesAsync ERROR CouldNotRetrieveStorageDeviceNumbers");
+                        throw new Exception("StorageDeviceUtils.GetStorageDeviceNumbersForAllDosDrivesAsync ERROR CouldNotRetrieveStorageDeviceNumbers <--");
                         // END TEMPORARY CODE TO DIAGNOSE BETA TESTER'S OPEN USB ISSUE
                         return IMorphicResult<char?, StorageDeviceNumberError>.ErrorResult(StorageDeviceNumberError.CouldNotRetrieveStorageDeviceNumbers);
                     case StorageDeviceNumberError.Values.Win32Error:
