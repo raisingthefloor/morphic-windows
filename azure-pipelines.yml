@@ -25,6 +25,8 @@ pool:
   vmImage: 'windows-2019'
 
 variables:
+# Import all the code-signing variables (from the Library)
+- group: 'windows-code-sign'
 - name: mainProject
   value: Morphic/Morphic.csproj
 - name: projects
