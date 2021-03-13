@@ -32,7 +32,6 @@ namespace Morphic.Client.Bar.UI.BarControls
     {
         public BitmapOrXamlImage()
         {
-            App.Current.Logger.LogDebug(">>> BitmapOrXamlImage constructor");
             InitializeComponent();
         }
 
