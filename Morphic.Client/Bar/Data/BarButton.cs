@@ -188,7 +188,7 @@ namespace Morphic.Client.Bar.Data
             {
                 if (Path.GetExtension(imagePath)?.ToLowerInvariant() == ".xaml")
                 {
-                    var xamlFileStream = new FileStream(this.ImagePath, FileMode.Open);
+                    var xamlFileStream = new FileStream(this.ImagePath, FileMode.Open, FileAccess.Read);
                     // TODO: when we move to .NET 5, set useRestrictiveXamlReader to true
                     var xamlAsCanvas = (Canvas)System.Windows.Markup.XamlReader.Load(new XmlTextReader(xamlFileStream) /*, true */);
                     this.XamlContent = xamlAsCanvas;
