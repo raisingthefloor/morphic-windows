@@ -291,6 +291,9 @@ namespace Morphic.Client.Bar.Data.Actions
         [JsonProperty("function", Required = Required.Always)]
         public string? FunctionName { get; set; }
 
+        [JsonProperty("function_on_right_click_also", Required = Required.AllowNull)]
+        public bool? FunctionOnRightClickAlso { get; set; }
+
         [JsonProperty("args")]
         public Dictionary<string, string> Arguments { get; set; } = new Dictionary<string, string>();
 

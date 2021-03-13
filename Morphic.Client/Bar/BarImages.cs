@@ -5,13 +5,13 @@
     using System.IO;
     using System.Linq;
     using System.Text.RegularExpressions;
+    using System.Windows;
+    using System.Windows.Controls;
     using System.Windows.Media;
     using System.Windows.Media.Imaging;
+    using System.Windows.Resources;
     using System.Xml;
     using Config;
-    using SharpVectors.Converters;
-    using SharpVectors.Dom.Svg;
-    using SharpVectors.Renderers.Wpf;
 
     public class BarImages
     {
@@ -33,7 +33,7 @@
                 .Trim('/')
                 .Replace('/', Path.DirectorySeparatorChar);
             string assetFile = AppPaths.GetAssetFile("bar-icons\\" + safe);
-            string[] extensions = { "", ".svg", ".png", ".ico", ".jpg", ".jpeg", ".gif" };
+            string[] extensions = { "", ".xaml", ".png", ".ico", ".jpg", ".jpeg", ".gif" };
 
             string? foundFile = extensions.Select(extension => assetFile + extension)
                 .FirstOrDefault(File.Exists);
@@ -214,26 +214,6 @@
         {
             ImageSource? result;
 
-            // Attempt to load an SVG image.
-            ImageSource? TrySvg()
-            {
-                try
-                {
-                    using FileSvgReader svg = new FileSvgReader(new WpfDrawingSettings());
-                    DrawingGroup drawingGroup = svg.Read(imagePath);
-                    if (color.HasValue)
-                    {
-                        ChangeDrawingColor(drawingGroup, color.Value);
-                    }
-
-                    return new DrawingImage(drawingGroup);
-                }
-                catch (Exception e) when (e is NotSupportedException || e is XmlException || e is SvgException)
-                {
-                    return null;
-                }
-            }
-
             // Attempt to load a bitmap image.
             ImageSource? TryBitmap()
             {
@@ -246,7 +226,7 @@
                     image.EndInit();
                     return image;
                 }
-                catch (Exception e) when (e is NotSupportedException || e is XmlException || e is SvgException)
+                catch (Exception e) when (e is NotSupportedException || e is XmlException)
                 {
                     return null;
                 }
@@ -257,14 +237,7 @@
                 imagePath = GetBarIconFile(imagePath) ?? imagePath;
             }
 
-            if (Path.GetExtension(imagePath) == ".svg")
-            {
-                result = TrySvg() ?? TryBitmap();
-            }
-            else
-            {
-                result = TryBitmap() ?? TrySvg();
-            }
+            result = TryBitmap();
 
             return result;
         }

@@ -67,8 +67,9 @@
             Background="{StaticResource Background}" />
 
         <!-- The image -->
-        <Image x:Key="Button.Image"
-            Source="{Binding BarItem.ImageSource}"
+        <barControls:BitmapOrXamlImage x:Key="Button.Image"
+            ImageSource="{Binding BarItem.ImageSource}"
+            XamlContent="{Binding BarItem.XamlContent}"
             Stretch="Uniform"
         />
 

@@ -39,7 +39,7 @@ namespace Morphic.Client.Bar.UI.BarControls
             get
             {
                 BarItemSize size = this.ItemSize;
-                if (this.BarItem.ImageSource == null)
+                if ((this.BarItem.ImageSource == null) && (this.BarItem.XamlContent == null))
                 {
                     size = BarItemSize.TextOnly;
                 }

@@ -12,6 +12,7 @@ namespace Morphic.Client.Bar.UI.BarControls
 {
     using System.Windows;
     using Data;
+    using Morphic.Client.Bar.Data.Actions;
 
     /// <summary>
     /// The control for Button bar items.
@@ -30,6 +31,20 @@ namespace Morphic.Client.Bar.UI.BarControls
             if (this.BarItem.Action != null)
             {
                 await this.BarItem.Action.InvokeAsync();
+            }
+        }
+
+        private async void Button_MouseRightButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (this.BarItem.Action != null)
+            {
+                if (this.BarItem.Action is InternalAction)
+                {
+                    if (((InternalAction)this.BarItem.Action).FunctionOnRightClickAlso == true)
+                    {
+                        await this.BarItem.Action.InvokeAsync();
+                    }
+                }
             }
         }
     }
