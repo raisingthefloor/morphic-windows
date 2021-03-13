@@ -8,6 +8,7 @@
 // You may obtain a copy of the License at
 // https://github.com/GPII/universal/blob/master/LICENSE.txt
 
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -31,6 +32,7 @@ namespace Morphic.Client.Bar.UI.BarControls
     {
         public BitmapOrXamlImage()
         {
+            App.Current.Logger.LogDebug(">>> BitmapOrXamlImage constructor");
             InitializeComponent();
         }
 

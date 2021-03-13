@@ -186,22 +186,29 @@ namespace Morphic.Client.Bar.Data
             // Load the local image.
             if (!string.IsNullOrEmpty(this.ImagePath) && File.Exists(this.ImagePath))
             {
+                App.Current.Logger.LogDebug(">>> BarButton.LoadImage 1");
                 if (Path.GetExtension(imagePath)?.ToLowerInvariant() == ".xaml")
                 {
+                    App.Current.Logger.LogDebug(">>> BarButton.LoadImage 2; ImagePath: " + this.ImagePath);
                     var xamlFileStream = new FileStream(this.ImagePath, FileMode.Open);
                     // TODO: when we move to .NET 5, set useRestrictiveXamlReader to true
+                    App.Current.Logger.LogDebug(">>> BarButton.LoadImage 3");
                     var xamlAsCanvas = (Canvas)System.Windows.Markup.XamlReader.Load(new XmlTextReader(xamlFileStream) /*, true */);
+                    App.Current.Logger.LogDebug(">>> BarButton.LoadImage 4");
                     this.XamlContent = xamlAsCanvas;
+                    App.Current.Logger.LogDebug(">>> BarButton.LoadImage 5");
 
                     success = true;
                 }
                 else
                 {
+                    App.Current.Logger.LogDebug(">>> BarButton.LoadImage alt_1");
                     this.ImageSource = BarImages.CreateImageSource(this.ImagePath);
                     
                     success = this.ImageValue != null;
                 }
             }
+            App.Current.Logger.LogDebug(">>> BarButton.LoadImage 6");
 
             // Fallback to a default image.
             if (!success)
