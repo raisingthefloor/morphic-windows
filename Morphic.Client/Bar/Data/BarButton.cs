@@ -190,7 +190,15 @@ namespace Morphic.Client.Bar.Data
                 if (Path.GetExtension(imagePath)?.ToLowerInvariant() == ".xaml")
                 {
                     App.Current.Logger.LogDebug(">>> BarButton.LoadImage 2; ImagePath: " + this.ImagePath);
-                    var xamlFileStream = new FileStream(this.ImagePath, FileMode.Open);
+                    try
+                    {
+                        App.Current.Logger.LogDebug(">>> BarButton.LoadImage 2.1a opening ImagePath as FileStream");
+                        var xamlFileStream = new FileStream(this.ImagePath, FileMode.Open);
+                    }
+                    catch (Exception ex)
+                    {
+                        App.Current.Logger.LogDebug(">>> BarButton.LoadImage 2.1ex EXCEPTION: " + ex.ToString());
+                    }
                     // TODO: when we move to .NET 5, set useRestrictiveXamlReader to true
                     App.Current.Logger.LogDebug(">>> BarButton.LoadImage 3");
                     var xamlAsCanvas = (Canvas)System.Windows.Markup.XamlReader.Load(new XmlTextReader(xamlFileStream) /*, true */);
