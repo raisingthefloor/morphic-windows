@@ -75,6 +75,7 @@
       priority: -100,
       configuration: {
         function: "menu",
+        function_on_right_click_also: true,
         image_url: "morphic-logo",
         tooltip: "Custom MorphicBar",
         uiName: "Menu"

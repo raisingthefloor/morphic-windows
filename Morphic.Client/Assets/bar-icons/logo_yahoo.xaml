@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Name="logo__yahoo" Width="368" Height="368" Clip="F1 M 0,0L 368,0L 368,368L 0,368L 0,0">
+	<Rectangle Width="368" Height="368" Canvas.Left="0" Canvas.Top="0" Stretch="Fill" Fill="#FF5F01D1"/>
+	<Path Width="187.151" Height="209.812" Canvas.Left="32" Canvas.Top="112.849" Stretch="Fill" Fill="#FFFFFFFF" Data="F1 M 32,112.849L 91.4893,112.849L 126.14,201.479L 161.229,112.849L 219.151,112.849L 131.932,322.661L 73.64,322.661L 97.5107,267.063"/>
+	<Path Width="72.0774" Height="72.0773" Canvas.Left="194.74" Canvas.Top="196.912" Stretch="Fill" Fill="#FFFFFFFF" Data="F1 M 266.817,232.948C 266.817,252.855 250.683,268.989 230.781,268.989C 210.875,268.989 194.74,252.855 194.74,232.948C 194.74,213.047 210.875,196.912 230.781,196.912C 250.683,196.912 266.817,213.047 266.817,232.948 Z "/>
+	<Path Width="122.219" Height="138.333" Canvas.Left="213.781" Canvas.Top="45.3387" Stretch="Fill" Fill="#FFFFFFFF" Data="F1 M 278.661,183.672L 213.781,183.672L 271.36,45.3387L 336,45.3387"/>
+</Canvas>

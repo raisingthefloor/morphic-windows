@@ -32,12 +32,14 @@
     
     <Button x:Name="Button"
         Click="Button_OnClick"
+        MouseRightButtonUp="Button_MouseRightButtonUp"
         HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
         HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
         >
         <!-- The image -->
-        <Image
-            Source="{Binding BarItem.ImageSource}"
+        <barControls:BitmapOrXamlImage
+            ImageSource="{Binding BarItem.ImageSource}"
+            XamlContent="{Binding BarItem.XamlContent}"
             Visibility="{Binding BarItem.ShowIcon, Converter={StaticResource BoolVisibility}}"
             Stretch="Uniform"
             MaxHeight="50"

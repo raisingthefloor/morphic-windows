@@ -1,0 +1,4 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Name="calendar" Width="448" Height="512" Clip="F1 M 0,0L 448,0L 448,512L 0,512L 0,0">
+	<Path Width="448" Height="512" Canvas.Left="0" Canvas.Top="0" Stretch="Fill" Fill="#FF000000" Data="F1 M 400,64L 352,64L 352,12C 352,5.40134 346.599,0 340,0L 300,0C 293.401,0 288,5.40134 288,12L 288,64L 160,64L 160,12C 160,5.40134 154.599,0 148,0L 108,0C 101.401,0 96,5.40134 96,12L 96,64L 48,64C 21.5,64 0,85.5 0,112L 0,464C 0,490.5 21.5,512 48,512L 400,512C 426.5,512 448,490.5 448,464L 448,112C 448,85.5 426.5,64 400,64 Z M 394,464L 54,464C 50.6973,464 48,461.303 48,458L 48,160L 400,160L 400,458C 400,461.303 397.303,464 394,464 Z "/>
+</Canvas>

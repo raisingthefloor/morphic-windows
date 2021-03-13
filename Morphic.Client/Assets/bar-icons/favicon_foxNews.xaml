@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Name="favicon__foxNews" Width="1234.67" Height="1234.67" Clip="F1 M 0,0L 1234.67,0L 1234.67,1234.67L 0,1234.67L 0,0">
+	<Rectangle Width="1235" Height="1001.7" Canvas.Left="0" Canvas.Top="-0.333374" Stretch="Fill" Fill="#FF003366"/>
+	<Rectangle Width="1235" Height="219.599" Canvas.Left="0" Canvas.Top="1015.07" Stretch="Fill" Fill="#FFC20017"/>
+	<Path Width="641.303" Height="1001.7" Canvas.Left="2.5" Canvas.Top="-0.333374" Stretch="Fill" Fill="#FFFFFFFF" Data="F1 M 8,1001.36L 643.803,-0.333374L 482.599,-0.333374L 2.5,1001.36"/>
+	<Path Width="351.697" Height="1001.7" Canvas.Left="0" Canvas.Top="-0.333374" Stretch="Fill" Fill="#FFFFFFFF" Data="F1 M 351.697,-0.333374L 205,-0.333374L 0.598667,982.068L 0,1001.36"/>
+	<Rectangle Width="1235" Height="13.7027" Canvas.Left="0" Canvas.Top="1001.36" Stretch="Fill" Fill="#FFFFFFFF"/>
+</Canvas>
