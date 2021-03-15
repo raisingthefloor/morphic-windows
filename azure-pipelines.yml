@@ -121,7 +121,7 @@ stages:
             solution: MorphicPackage/MorphicPackage.wapproj
             platform: x86
             configuration: Release
-            msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup_x86.msix /p:AppxPackageSigningEnabled=false'
+            msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-x86.msix /p:AppxPackageSigningEnabled=false'
 
         - task: MSBuild@1
           displayName: 'Package MSIX (x64)'
@@ -129,7 +129,7 @@ stages:
             solution: MorphicPackage/MorphicPackage.wapproj
             platform: x64
             configuration: Release
-            msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup_x64.msix /p:AppxPackageSigningEnabled=false'
+            msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-x64.msix /p:AppxPackageSigningEnabled=false'
 
 #        - task: MSBuild@1
 #          displayName: 'Package MSIX (arm64)'
@@ -137,7 +137,7 @@ stages:
 #            solution: MorphicPackage/MorphicPackage.wapproj
 #            platform: arm64
 #            configuration: Release
-#            msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup_x64.msix /p:AppxPackageSigningEnabled=false'
+#            msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-x64.msix /p:AppxPackageSigningEnabled=false'
 
         - task: UseDotNet@2
           displayName: 'Use .NET Core SDK 2.1'
