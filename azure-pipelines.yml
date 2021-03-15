@@ -21,9 +21,6 @@ pr:
     include:
     - '*'
     
-pool:
-  vmImage: 'windows-2019'
-
 variables:
 # Import all the code-signing variables (from the Library)
 - group: 'windows-code-sign'
@@ -50,6 +47,8 @@ stages:
   - stage: build
     jobs:
       - job: build
+        pool:
+          vmImage: 'windows-2019'
         steps:
 #        - task: UseDotNet@2
 #          displayName: 'Use .NET SDK 6.0-preview.1'
@@ -222,3 +221,24 @@ stages:
 
   - stage: upload
     jobs:
+      - job: publish_msix
+        pool:
+          vmImage: "ubuntu-20.04"
+        steps:
+        - task: DownloadPipelineArtifact@2
+          displayName: "Capture MSIX (x86) for upload"
+          source: 'current'
+	  artifact: msix-x86
+	  path: ${AGENT_BUILDDIRECTORY}/msix-x86
+
+        - task: DownloadPipelineArtifact@2
+          displayName: "Capture MSIX (x64) for upload"
+          source: 'current'
+	  artifact: msix-x64
+	  path: ${AGENT_BUILDDIRECTORY}/msix-x64
+
+#        - task: DownloadPipelineArtifact@2
+#          displayName: "Capture MSIX (arm64) for upload"
+#          source: 'current'
+#	  artifact: msix-arm64
+#	  path: ${AGENT_BUILDDIRECTORY}/msix-arm64
