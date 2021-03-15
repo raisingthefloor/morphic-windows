@@ -270,8 +270,8 @@ stages:
                     set -x
 
                     echo "detected experimental build"
-		    S3_BUILD_OPERATING_SYSTEM="win"
-		    S3_BUILD_TYPE="experimental"
+                    S3_BUILD_OPERATING_SYSTEM="win"
+                    S3_BUILD_TYPE="experimental"
                     # expire experimental builds after 7 days
                     EXTRA_ARGS="--expires $(date -d '+7 days' --iso-8601=seconds)"
 
