@@ -254,10 +254,10 @@ stages:
 
         - task: Bash@3
           displayName: "Upload MSIXs to S3"
-            env:
+          env:
+              BUCKET: $(bucket)
 #              AWS_ACCESS_KEY_ID: $(accessKey)
 #              AWS_SECRET_ACCESS_KEY: $(secretKey)
-              BUCKET: $(bucket)
 #              AWS_DEFAULT_REGION: $(region)
           inputs:
             targetType: 'inline'
@@ -283,6 +283,7 @@ stages:
                       aws s3 cp $EXTRA_ARGS "${LOCAL_MSIX_SOURCE}" "s3://${BUCKET}/${S3_MSIX_OBJECT_NAME}"
                     }
 
+                    # set version (to be appended to the filenames); this is set to the pipeline name (e.g. Build.BuildNumber)
                     VERSION=$(Build.BuildNumber)
 
                     echo "Uploading MSIX (x86) to S3"
