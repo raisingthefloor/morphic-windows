@@ -173,9 +173,12 @@ stages:
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
               -v $(Build.ArtifactStagingDirectory)\MorphicSetup_x86.msix
-        - publish: $(Build.ArtifactStagingDirectory)\MorphicSetup_x86.msix
+	      
+        - task: PublishPipelineArtifact@1
           displayName: "Cache MSIX (x86) for upload"
-          artifact: setup-x86
+          targetPath: $(Build.ArtifactStagingDirectory)\MorphicSetup_x86.msix
+          artifactName: msix-x86
+          artifactType: pipeline
 
         - task: CmdLine@2
           displayName: 'Sign MSIX (x64)'
@@ -190,9 +193,12 @@ stages:
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
               -v $(Build.ArtifactStagingDirectory)\MorphicSetup_x64.msix
-        - publish: $(Build.ArtifactStagingDirectory)\MorphicSetup_x64.msix
+	      
+        - task: PublishPipelineArtifact@1
           displayName: "Cache MSIX (x64) for upload"
-          artifact: setup-x64
+          targetPath: $(Build.ArtifactStagingDirectory)\MorphicSetup_x64.msix
+          artifactName: msix-x64
+          artifactType: pipeline
 
 #        - task: CmdLine@2
 #          displayName: 'Sign MSIX (arm64)'
@@ -207,7 +213,12 @@ stages:
 #              -kvc "$(SigningCertName)"
 #              -tr "$(TimestampUrl2)"
 #              -v $(Build.ArtifactStagingDirectory)\MorphicSetup_arm64.msix
-#        - publish: $(Build.ArtifactStagingDirectory)\MorphicSetup_arm64.msix
+#
+#        - task: PublishPipelineArtifact@1
 #          displayName: "Cache MSIX (arm64) for upload"
-#          artifact: setup-arm64
+#          targetPath: $(Build.ArtifactStagingDirectory)\MorphicSetup_arm64.msix
+#          artifactName: msix-arm64
+#          artifactType: pipeline
 
+  - stage: upload
+    jobs:
