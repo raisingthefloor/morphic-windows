@@ -9,6 +9,9 @@
 # .NET Core release versions: https://github.com/dotnet/core/blob/main/release-notes/releases-index.json
 # .NET Core RIDs (including x86/x64/ARM64): https://docs.microsoft.com/en-us/dotnet/core/rid-catalog
 
+# NOTE: we are using a previous scheme to label the build #; eventually we will want to change this to standard semver
+name: $(Year:yy)$(DayOfYear).$(Rev:r)
+
 trigger:
   branches:
     include:
@@ -27,11 +30,11 @@ variables:
 - name: mainProject
   value: Morphic/Morphic.csproj
 - name: projects
-  value:  |
-      Morphic.Core/Morphic.Core.csproj
-      Morphic.OAuth/Morphic.OAuth.csproj
-      Morphic.Windows.Native/Morphic.Windows.Native.csproj
-      Morphic/Morphic.csproj
+  value: |
+         Morphic.Core/Morphic.Core.csproj
+         Morphic.OAuth/Morphic.OAuth.csproj
+         Morphic.Windows.Native/Morphic.Windows.Native.csproj
+         Morphic/Morphic.csproj
   
   # TODO: temporary values
 - name: versionMajor
@@ -171,12 +174,12 @@ stages:
               -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
-              -v $(Build.ArtifactStagingDirectory)\MorphicSetup_x86.msix
+              -v $(Build.ArtifactStagingDirectory)\MorphicSetup-x86.msix
 
         - task: PublishPipelineArtifact@1
           displayName: "Cache MSIX (x86) for upload"
           inputs:
-            targetPath: $(Build.ArtifactStagingDirectory)\MorphicSetup_x86.msix
+            targetPath: $(Build.ArtifactStagingDirectory)\MorphicSetup-x86.msix
             artifactName: msix-x86
             artifactType: pipeline
 
@@ -192,12 +195,12 @@ stages:
               -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
-              -v $(Build.ArtifactStagingDirectory)\MorphicSetup_x64.msix
+              -v $(Build.ArtifactStagingDirectory)\MorphicSetup-x64.msix
 
         - task: PublishPipelineArtifact@1
           displayName: "Cache MSIX (x64) for upload"
           inputs:
-            targetPath: $(Build.ArtifactStagingDirectory)\MorphicSetup_x64.msix
+            targetPath: $(Build.ArtifactStagingDirectory)\MorphicSetup-x64.msix
             artifactName: msix-x64
             artifactType: pipeline
 
@@ -213,18 +216,18 @@ stages:
 #              -kvs "$(SigningClientSecret)"
 #              -kvc "$(SigningCertName)"
 #              -tr "$(TimestampUrl2)"
-#              -v $(Build.ArtifactStagingDirectory)\MorphicSetup_arm64.msix
+#              -v $(Build.ArtifactStagingDirectory)\MorphicSetup-arm64.msix
 #
 #        - task: PublishPipelineArtifact@1
 #          displayName: "Cache MSIX (arm64) for upload"
 #          inputs:
-#            targetPath: $(Build.ArtifactStagingDirectory)\MorphicSetup_arm64.msix
+#            targetPath: $(Build.ArtifactStagingDirectory)\MorphicSetup-arm64.msix
 #            artifactName: msix-arm64
 #            artifactType: pipeline
 
-  - stage: upload
+  - stage: publish
     jobs:
-      - job: publish_msix
+      - job: publish
         pool:
           vmImage: "ubuntu-20.04"
         steps:
@@ -233,18 +236,69 @@ stages:
           inputs:
             source: 'current'
             artifact: msix-x86
-            path: ${AGENT_BUILDDIRECTORY}/msix-x86
+            path: ${Agent.BuildDirectory}/msix-x86
 
         - task: DownloadPipelineArtifact@2
           displayName: "Capture MSIX (x64) for upload"
           inputs:
             source: 'current'
             artifact: msix-x64
-            path: ${AGENT_BUILDDIRECTORY}/msix-x64
+            path: ${Agent.BuildDirectory}/msix-x64
 
 #        - task: DownloadPipelineArtifact@2
 #          displayName: "Capture MSIX (arm64) for upload"
 #          inputs:
 #            source: 'current'
 #            artifact: msix-arm64
-#            path: ${AGENT_BUILDDIRECTORY}/msix-arm64
+#            path: ${Agent.BuildDirectory}/msix-arm64
+
+        - task: Bash@3
+          displayName: "Upload MSIXs to S3"
+          env:
+#              AWS_ACCESS_KEY_ID: $(accessKey)
+#              AWS_SECRET_ACCESS_KEY: $(secretKey)
+#              BUCKET: $(bucket)
+#              AWS_DEFAULT_REGION: $(region)
+#              BRANCH: $(Build.SourceBranch)
+#              BRANCH_NAME: $(Build.SourceBranchName)
+          inputs:
+            targetType: 'inline'
+            script: |
+                    # automatically exit if any command returns an error exit code
+                    set -e
+                    # print all commands to the terminal output
+                    set -x
+
+                    echo "detected experimental build"
+                    S3_OBJECT_PREFIX="win/x86/experimental"
+                    # expire experimental builds after 7 days
+                    EXTRA_ARGS="--expires $(date -d '+7 days' --iso-8601=seconds)"
+
+                    S3_PUBLISHED_HTTP_URL="https://d23vryjv7k8eyb.cloudfront.net"
+
+                    publishInstaller() {
+                      LOCAL_MSIX_SOURCE="${AGENT_BUILDDIRECTORY}/${MSIX_NAME_BASE}/${MSIX_NAME_BASE}.msix"
+                      S3_MSIX_OBJECT_NAME="${S3_OBJECT_PREFIX}/${MSIX_NAME_BASE}-${VERSION}.msix"
+
+                      # debug: output the contents of the build directory
+                      ls -al ${AGENT_BUILDDIRECTORY}
+                      aws s3 cp $EXTRA_ARGS "${LOCAL_MSIX_SOURCE}" "s3://${BUCKET}/${S3_MSIX_OBJECT_NAME}"
+                    }
+
+                    VERSION=$(Build.BuildNumber)
+
+                    echo "Uploading MSIX (x86) to S3"
+                    MSIX_NAME_BASE="MorphicSetup-x86"
+                    LOCAL_MSIX_DIR="msix-x86"
+                    publishInstaller
+
+                    echo "Uploading MSIX (x64) to S3"
+                    MSIX_NAME_BASE="MorphicSetup-x64"
+                    LOCAL_MSIX_DIR="msix-x64"
+                    publishInstaller
+
+#                    echo "Uploading MSIX (arm64) to S3"
+#                    MSIX_NAME_BASE="MorphicSetup-arm64"
+#                    LOCAL_MSIX_DIR="msix-arm64"
+#                    publishInstaller
+
