@@ -277,7 +277,7 @@ stages:
                     S3_PUBLISHED_HTTP_URL="https://d23vryjv7k8eyb.cloudfront.net"
 
                     publishInstaller() {
-                      LOCAL_MSIX_SOURCE="${AGENT_BUILDDIRECTORY}/${MSIX_NAME_BASE}/${MSIX_NAME_BASE}.msix"
+                      LOCAL_MSIX_SOURCE="${AGENT_BUILDDIRECTORY}/${LOCAL_MSIX_DIR}/${MSIX_NAME_BASE}.msix"
                       S3_MSIX_OBJECT_NAME="${S3_OBJECT_PREFIX}/${MSIX_NAME_BASE}-${VERSION}.msix"
 
                       # debug: output the contents of the build directory
@@ -291,16 +291,19 @@ stages:
 
                     echo "Uploading MSIX (x86) to S3"
                     MSIX_NAME_BASE="MorphicSetup-x86"
-                    LOCAL_MSIX_DIR="msix-x86"
+                    # NOTE: "s/" is a temporary path requirement; we may also consider calling these folders just "x86" etc.
+                    LOCAL_MSIX_DIR="s/msix-x86"
                     publishInstaller
 
                     echo "Uploading MSIX (x64) to S3"
                     MSIX_NAME_BASE="MorphicSetup-x64"
-                    LOCAL_MSIX_DIR="msix-x64"
+                    # NOTE: "s/" is a temporary path requirement; we may also consider calling these folders just "x86" etc.
+                    LOCAL_MSIX_DIR="s/msix-x64"
                     publishInstaller
 
 #                    echo "Uploading MSIX (arm64) to S3"
 #                    MSIX_NAME_BASE="MorphicSetup-arm64"
-#                    LOCAL_MSIX_DIR="msix-arm64"
+#                    # NOTE: "s/" is a temporary path requirement; we may also consider calling these folders just "x86" etc.
+#                    LOCAL_MSIX_DIR="s/msix-arm64"
 #                    publishInstaller
 
