@@ -254,13 +254,11 @@ stages:
 
         - task: Bash@3
           displayName: "Upload MSIXs to S3"
-          env:
+            env:
 #              AWS_ACCESS_KEY_ID: $(accessKey)
 #              AWS_SECRET_ACCESS_KEY: $(secretKey)
-#              BUCKET: $(bucket)
+              BUCKET: $(bucket)
 #              AWS_DEFAULT_REGION: $(region)
-#              BRANCH: $(Build.SourceBranch)
-#              BRANCH_NAME: $(Build.SourceBranchName)
           inputs:
             targetType: 'inline'
             script: |
