@@ -25,6 +25,8 @@ pr:
     - '*'
     
 variables:
+# Import all Amazon S3 upload credentials and settings
+- group: 's3-public-bucket-upload'
 # Import all the code-signing variables (from the Library)
 - group: 'windows-code-sign'
 - name: mainProject
@@ -36,7 +38,7 @@ variables:
          Morphic.Windows.Native/Morphic.Windows.Native.csproj
          Morphic/Morphic.csproj
   
-  # TODO: temporary values
+# TODO: temporary values
 - name: versionMajor
   value: 1
 - name: versionMinor
@@ -255,10 +257,10 @@ stages:
         - task: Bash@3
           displayName: "Upload MSIXs to S3"
           env:
+              AWS_ACCESS_KEY_ID: $(accessKey)
+              AWS_SECRET_ACCESS_KEY: $(secretKey)
+              AWS_DEFAULT_REGION: $(region)
               BUCKET: $(bucket)
-#              AWS_ACCESS_KEY_ID: $(accessKey)
-#              AWS_SECRET_ACCESS_KEY: $(secretKey)
-#              AWS_DEFAULT_REGION: $(region)
           inputs:
             targetType: 'inline'
             script: |
@@ -284,7 +286,8 @@ stages:
                     }
 
                     # set version (to be appended to the filenames); this is set to the pipeline name (e.g. Build.BuildNumber)
-                    VERSION=$(Build.BuildNumber)
+                    # NOTE: we are temporarily setting this to "1.9"; in the future we should retrieve this from the installer (both here and in the version components at the beginning of this script)
+                    VERSION=1.9.$(Build.BuildNumber)
 
                     echo "Uploading MSIX (x86) to S3"
                     MSIX_NAME_BASE="MorphicSetup-x86"
