@@ -173,6 +173,9 @@ stages:
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
               -v $(Build.ArtifactStagingDirectory)\MorphicSetup_x86.msix
+        - publish: $(Build.ArtifactStagingDirectory)\MorphicSetup_x86.msix
+          displayName: "Cache MSIX (x86) for upload"
+          artifact: setup-x86
 
         - task: CmdLine@2
           displayName: 'Sign MSIX (x64)'
@@ -187,6 +190,9 @@ stages:
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
               -v $(Build.ArtifactStagingDirectory)\MorphicSetup_x64.msix
+        - publish: $(Build.ArtifactStagingDirectory)\MorphicSetup_x64.msix
+          displayName: "Cache MSIX (x64) for upload"
+          artifact: setup-x64
 
 #        - task: CmdLine@2
 #          displayName: 'Sign MSIX (arm64)'
@@ -201,4 +207,7 @@ stages:
 #              -kvc "$(SigningCertName)"
 #              -tr "$(TimestampUrl2)"
 #              -v $(Build.ArtifactStagingDirectory)\MorphicSetup_arm64.msix
+#        - publish: $(Build.ArtifactStagingDirectory)\MorphicSetup_arm64.msix
+#          displayName: "Cache MSIX (arm64) for upload"
+#          artifact: setup-arm64
 
