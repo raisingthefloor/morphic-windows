@@ -228,17 +228,17 @@ stages:
         - task: DownloadPipelineArtifact@2
           displayName: "Capture MSIX (x86) for upload"
           source: 'current'
-	  artifact: msix-x86
-	  path: ${AGENT_BUILDDIRECTORY}/msix-x86
+          artifact: msix-x86
+          path: ${AGENT_BUILDDIRECTORY}/msix-x86
 
         - task: DownloadPipelineArtifact@2
           displayName: "Capture MSIX (x64) for upload"
           source: 'current'
-	  artifact: msix-x64
-	  path: ${AGENT_BUILDDIRECTORY}/msix-x64
+          artifact: msix-x64
+          path: ${AGENT_BUILDDIRECTORY}/msix-x64
 
 #        - task: DownloadPipelineArtifact@2
 #          displayName: "Capture MSIX (arm64) for upload"
 #          source: 'current'
-#	  artifact: msix-arm64
-#	  path: ${AGENT_BUILDDIRECTORY}/msix-arm64
+#          artifact: msix-arm64
+#          path: ${AGENT_BUILDDIRECTORY}/msix-arm64
