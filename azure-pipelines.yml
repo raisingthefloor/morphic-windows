@@ -281,7 +281,7 @@ stages:
                       S3_MSIX_OBJECT_NAME="${S3_OBJECT_PREFIX}/${MSIX_NAME_BASE}-${VERSION}.msix"
 
                       # debug: output the contents of the build directory
-                      ls -al ${AGENT_BUILDDIRECTORY}
+                      ls -al ${AGENT_BUILDDIRECTORY}/${LOCAL_MSIX_DIR}
                       aws s3 cp $EXTRA_ARGS "${LOCAL_MSIX_SOURCE}" "s3://${BUCKET}/${S3_MSIX_OBJECT_NAME}"
                     }
 
