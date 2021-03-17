@@ -107,6 +107,7 @@ namespace Morphic.Client.Dialogs
             if (!success)
             {
                 this.ErrorLabel.Visibility = Visibility.Visible;
+                // OBSERVATION: this may not be the best option, as the user then needs to figure out how to get back to the password field; setting focus to the Password field would be ideal if we can also make narrator read this error label
                 this.ErrorLabel.Focus(); // Makes narrator read the error label
                 this.SetFieldsEnabled(true);
             }
@@ -206,5 +207,11 @@ namespace Morphic.Client.Dialogs
         }
 
         #endregion
+
+        private void Panel_Loaded(object sender, RoutedEventArgs e)
+        {
+            // set focus to the username field once this panel is loaded
+            this.UsernameField.Focus();
+        }
     }
 }

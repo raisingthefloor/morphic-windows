@@ -323,5 +323,11 @@ namespace Morphic.Client.Dialogs
         #endregion
 
         public StepFrame StepFrame { get; set; }
+
+        private void StackPanel_Loaded(object sender, RoutedEventArgs e)
+        {
+            // set focus to the username field once this panel is loaded
+            this.UsernameField.Focus();
+        }
     }
 }
