@@ -72,8 +72,8 @@
                         //
                         segmentation.Add("eventSource", eventSource);
                         //
-                        await Countly.RecordEvent("systemSettings", 1, segmentation);
-                        //await Countly.RecordEvent("systemSettings" + settingCategoryName);
+                        await App.Current.Countly_RecordEventAsync("systemSettings", 1, segmentation);
+                        //await App.Current.Countly_RecordEventAsync("systemSettings" + settingCategoryName);
                     }
                     break;
                 case MorphicMenuItemTelemetryType.LearnMore:
@@ -87,7 +87,7 @@
                         //
                         segmentation.Add("eventSource", eventSource);
                         //
-                        await Countly.RecordEvent("learnMore", 1, segmentation);
+                        await App.Current.Countly_RecordEventAsync("learnMore", 1, segmentation);
                     }
                     break;
                 case MorphicMenuItemTelemetryType.QuickDemoVideo:
@@ -101,7 +101,7 @@
                         //
                         segmentation.Add("eventSource", eventSource);
                         //
-                        await Countly.RecordEvent("quickDemoVideo", 1, segmentation);
+                        await App.Current.Countly_RecordEventAsync("quickDemoVideo", 1, segmentation);
                     }
                     break;
                 default:
@@ -161,8 +161,8 @@
                             segmentation.Add("category", settingCategoryName);
                             segmentation.Add("eventSource", eventSource);
                             //
-                            await Countly.RecordEvent("systemSettings", 1, segmentation);
-                            //await Countly.RecordEvent("systemSettings" + settingCategoryName);
+                            await App.Current.Countly_RecordEventAsync("systemSettings", 1, segmentation);
+                            //await App.Current.Countly_RecordEventAsync("systemSettings" + settingCategoryName);
                         }
                     }
                     break;
@@ -184,7 +184,7 @@
                 if (this.Dialog != null)
                 {
                     var args = new Dictionary<string, object?>();
-                    App.Current.Dialogs.OpenDialogAsync(this.Dialog!, args);
+                    await App.Current.Dialogs.OpenDialogAsync(this.Dialog!, args);
                 }
 
             }

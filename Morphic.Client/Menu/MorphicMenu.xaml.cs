@@ -86,7 +86,7 @@
             this.IsOpen = true;
 
             var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
-            await Countly.RecordEvent("showMenu", 1, segmentation);
+            await App.Current.Countly_RecordEventAsync("showMenu", 1, segmentation);
         }
 
         private CountlySDK.Segmentation CreateMenuOpenedSourceSegmentation(MenuOpenedSource? menuOpenedSource)
@@ -104,7 +104,7 @@
             this.App.BarManager.ShowBar();
             //
             var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
-            await Countly.RecordEvent("morphicBarShow", 1, segmentation);
+            await App.Current.Countly_RecordEventAsync("morphicBarShow", 1, segmentation);
         }
 
         private async void HideBarClick(object sender, RoutedEventArgs e)
@@ -112,13 +112,13 @@
             this.App.BarManager.HideBar();
             //
             var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
-            await Countly.RecordEvent("morphicBarHide", 1, segmentation);
+            await App.Current.Countly_RecordEventAsync("morphicBarHide", 1, segmentation);
         }
 
         private async void QuitClick(object sender, RoutedEventArgs e)
         {
             var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
-            await Countly.RecordEvent("quit", 1, segmentation);
+            await App.Current.Countly_RecordEventAsync("quit", 1, segmentation);
 
             this.App.BarManager.CloseBar();
             this.App.Shutdown();
@@ -129,10 +129,10 @@
             switch (AutorunAfterLoginItem.IsChecked)
             {
                 case true:
-                    await Countly.RecordEvent("autorunAfterLoginEnabled");
+                    await App.Current.Countly_RecordEventAsync("autorunAfterLoginEnabled");
                     break;
                 case false:
-                    await Countly.RecordEvent("autorunAfterLoginDisabled");
+                    await App.Current.Countly_RecordEventAsync("autorunAfterLoginDisabled");
                     break;
             }
         }
@@ -142,10 +142,10 @@
             switch (ShowMorphicBarAfterLoginItem.IsChecked)
             {
                 case true:
-                    await Countly.RecordEvent("showMorphicBarAfterLoginEnabled");
+                    await App.Current.Countly_RecordEventAsync("showMorphicBarAfterLoginEnabled");
                     break;
                 case false:
-                    await Countly.RecordEvent("showMorphicBarAfterLoginDisabled");
+                    await App.Current.Countly_RecordEventAsync("showMorphicBarAfterLoginDisabled");
                     break;
             }
         }
@@ -196,11 +196,11 @@
 
                 if (menuItem.IsChecked == true)
                 {
-                    await Countly.RecordEvent("stopKeyRepeatOn");
+                    await App.Current.Countly_RecordEventAsync("stopKeyRepeatOn");
                 }
                 else
                 {
-                    await Countly.RecordEvent("stopKeyRepeatOff");
+                    await App.Current.Countly_RecordEventAsync("stopKeyRepeatOff");
                 }
             }
         }
@@ -249,7 +249,7 @@
                 //
                 var segmentation = new CountlySDK.Segmentation();
                 segmentation.Add("eventSource", "trayIconClick");
-                await Countly.RecordEvent("morphicBarHide", 1, segmentation);
+                await App.Current.Countly_RecordEventAsync("morphicBarHide", 1, segmentation);
             }
             else
             {
@@ -257,7 +257,7 @@
                 //
                 var segmentation = new CountlySDK.Segmentation();
                 segmentation.Add("eventSource", "trayIconClick");
-                await Countly.RecordEvent("morphicBarShow", 1, segmentation);
+                await App.Current.Countly_RecordEventAsync("morphicBarShow", 1, segmentation);
             }
         }
 
@@ -280,26 +280,26 @@
         private async void ExploreMorphicClicked(object sender, RoutedEventArgs e)
         {
             var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
-            await Countly.RecordEvent("exploreMorphic", 1, segmentation);
+            await App.Current.Countly_RecordEventAsync("exploreMorphic", 1, segmentation);
         }
 
         private async void QuickDemoMoviesClicked(object sender, RoutedEventArgs e)
         {
             var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
             segmentation.Add("category", "main");
-            await Countly.RecordEvent("quickDemoVideo", 1, segmentation);
+            await App.Current.Countly_RecordEventAsync("quickDemoVideo", 1, segmentation);
         }
 
         private async void OtherHelpfulThingsClicked(object sender, RoutedEventArgs e)
         {
             var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
-            await Countly.RecordEvent("otherHelpfulThings", 1, segmentation);
+            await App.Current.Countly_RecordEventAsync("otherHelpfulThings", 1, segmentation);
         }
 
         private async void AboutMorphicClicked(object sender, RoutedEventArgs e)
         {
             var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
-            await Countly.RecordEvent("aboutMorphic", 1, segmentation);
+            await App.Current.Countly_RecordEventAsync("aboutMorphic", 1, segmentation);
         }
 
         private void SelectBasicMorphicBarClick(object sender, RoutedEventArgs e)
