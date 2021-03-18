@@ -28,7 +28,7 @@
         //
         public static bool ResetSettingsIsEnabled = false;
         //
-        public static bool TelemetryIsEnabled = false;
+        public static bool TelemetryIsEnabled = true;
         //
         // NOTE: this setting has no effect if Autorun is disabled
         public static MorphicBarVisibilityAfterLoginOption? MorphicBarVisibilityAfterLogin = MorphicBarVisibilityAfterLoginOption.Restore;

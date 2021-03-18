@@ -918,7 +918,10 @@ namespace Morphic.Client
         protected override async void OnExit(ExitEventArgs e)
         {
             _messageWatcherNativeWindow?.Dispose();
-            await Countly.Instance.SessionEnd();
+            if (ConfigurableFeatures.TelemetryIsEnabled == true)
+            {
+                await Countly.Instance.SessionEnd();
+            }
 
             if (ConfigurableFeatures.ResetSettingsIsEnabled == true)
             {
