@@ -84,11 +84,25 @@
                         }
                         //
                         if (newDpiScale > oldDpiScale) {
-                            Countly.RecordEvent("textSizeIncrease", 1, segmentation);
+                            // NOTE: we can't call our main Countly logic from here (which skips Countly event recording if it's not enabled), so we just swallow any "not init'd" errors here
+                            try
+                            {
+                                Countly.RecordEvent("textSizeIncrease", 1, segmentation);
+                            }
+                            catch (InvalidOperationException)
+                            {
+                            }
                         }
                         else
                         {
-                            Countly.RecordEvent("textSizeDecrease", 1, segmentation);
+                            // NOTE: we can't call our main Countly logic from here (which skips Countly event recording if it's not enabled), so we just swallow any "not init'd" errors here
+                            try
+                            {
+                                Countly.RecordEvent("textSizeDecrease", 1, segmentation);
+                            }
+                            catch (InvalidOperationException)
+                            {
+                            }
                         }
                     }
                 }

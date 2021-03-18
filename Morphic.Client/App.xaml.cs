@@ -142,7 +142,7 @@ namespace Morphic.Client
             // for type: control
             public string? feature { get; set; }
         }
-
+        //
         public class ConfigFileContents
         {
             public class FeaturesConfigSection
@@ -168,7 +168,7 @@ namespace Morphic.Client
             public FeaturesConfigSection? features { get; set; }
             public MorphicBarConfigSection? morphicBar { get; set; }
         }
-
+        //
         private struct CommonConfigurationContents
         {
             public ConfigurableFeatures.AutorunConfigOption? AutorunConfig;
@@ -391,6 +391,23 @@ namespace Morphic.Client
             return result;
         }
 
+        private bool ShouldTelemetryBeDisabled()
+        {
+            // NOTE: we have intentionally chosen not to create the CommonConfigDir (e.g. "C:\ProgramData\Morphic") since Morphic does not currently create files in this folder.
+            var morphicCommonConfigPath = AppPaths.GetCommonConfigDir("", false);
+            if (Directory.Exists(morphicCommonConfigPath) == false)
+            {
+                // if the Morphic common config path doesn't exist, there's definitely no file
+                return false;
+            }
+            //
+            var disableTelemetryFilePath = Path.Combine(morphicCommonConfigPath, "disable_telemetry.txt");
+
+            // if disable_telemetry.txt exists, disable telemetry
+            var disableTelemetryFileExists = File.Exists(disableTelemetryFilePath);
+            return disableTelemetryFileExists;
+        }
+
         /// <summary>
         /// Create a Configuration from appsettings.json
         /// </summary>
@@ -445,6 +462,21 @@ namespace Morphic.Client
             services.AddSingleton<BarPresets>(s => BarPresets.Default);
             services.AddSolutionsRegistryServices();
             services.AddSingleton<Solutions>(s => Solutions.FromFile(s, AppPaths.GetAppFile("solutions.json5")));
+        }
+
+        internal async Task Countly_RecordEventAsync(string Key) {
+            if (ConfigurableFeatures.TelemetryIsEnabled == true)
+            {
+                await Countly.RecordEvent(Key);
+            }
+        }
+
+        internal async Task Countly_RecordEventAsync(string Key, int Count, Segmentation Segmentation)
+        {
+            if (ConfigurableFeatures.TelemetryIsEnabled == true)
+            {
+                await Countly.RecordEvent(Key, Count, Segmentation);
+            }
         }
 
         private async Task ConfigureCountlyAsync()
@@ -541,6 +573,10 @@ namespace Morphic.Client
             base.OnStartup(e);
             this.Logger = this.ServiceProvider.GetRequiredService<ILogger<App>>();
 
+            // determine if telemetry should be enabled
+            var telemetryShouldBeDisabled = this.ShouldTelemetryBeDisabled();
+            var telemetryIsEnabled = (telemetryShouldBeDisabled == false);
+
             // load (optional) common configuration file
             // NOTE: we currently load this AFTER setting up the logger because the GetCommonConfigurationAsync function logs config file errors to the logger
             var commonConfiguration = await this.GetCommonConfigurationAsync();
@@ -549,6 +585,7 @@ namespace Morphic.Client
                 checkForUpdatesIsEnabled: commonConfiguration.CheckForUpdatesIsEnabled,
                 cloudSettingsTransferIsEnabled: commonConfiguration.CloudSettingsTransferIsEnabled,
                 resetSettingsIsEnabled: commonConfiguration.ResetSettingsIsEnabled,
+                telemetryIsEnabled: telemetryIsEnabled,
                 morphicBarvisibilityAfterLogin: commonConfiguration.MorphicBarVisibilityAfterLogin,
                 morphicBarExtraItems: commonConfiguration.ExtraMorphicBarItems
                 );
@@ -561,7 +598,11 @@ namespace Morphic.Client
             this.morphicMenu = new MorphicMenu();
 
             this.RegisterGlobalHotKeys();
-            await this.ConfigureCountlyAsync();
+
+            if (ConfigurableFeatures.TelemetryIsEnabled == true) 
+            { 
+                await this.ConfigureCountlyAsync();
+            }
 
             if (ConfigurableFeatures.CheckForUpdatesIsEnabled == true)
             {
