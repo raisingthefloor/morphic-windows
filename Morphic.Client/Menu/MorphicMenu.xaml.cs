@@ -36,8 +36,9 @@
             // if ConfigurableFeatures.CloudSettingsTransferIsEnabled is false, then hide the settings which can transfer/restore settings
             if (ConfigurableFeatures.CloudSettingsTransferIsEnabled == false)
             {
-                this.CopySettingsBetweenComputersMenuItem.Visibility = Visibility.Collapsed;
-                this.RestoreSettingsFromBackupMenuItem.Visibility = Visibility.Collapsed;
+                this.ChangeSetupMenuItem.Visibility = Visibility.Collapsed;
+                this.SaveMySetupMenuItem.Visibility = Visibility.Collapsed;
+                //this.RestoreSettingsFromBackupMenuItem.Visibility = Visibility.Collapsed;
                 this.CloudSettingsSeparator.Visibility = Visibility.Collapsed;
             }
 
@@ -205,6 +206,15 @@
             }
         }
 
+        #region Settings 
+        private async void SettingsItemClicked(object sender, RoutedEventArgs e)
+        {
+            var args = new Dictionary<string, object?>();
+            await App.Current.Dialogs.OpenDialogAsync<SettingsWindow>(args);
+        }
+
+        #endregion 
+
         #region TrayIcon
 
         private MorphicHybridTrayIcon? _trayIcon = null;
@@ -283,7 +293,13 @@
             await App.Current.Countly_RecordEventAsync("exploreMorphic", 1, segmentation);
         }
 
-        private async void QuickDemoMoviesClicked(object sender, RoutedEventArgs e)
+        private async void HowToCopySetupsClicked(object sender, RoutedEventArgs e)
+        {
+            var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
+            await App.Current.Countly_RecordEventAsync("howToCopySetups", 1, segmentation);
+        }
+
+        private async void QuickDemoVideosClicked(object sender, RoutedEventArgs e)
         {
             var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
             segmentation.Add("category", "main");

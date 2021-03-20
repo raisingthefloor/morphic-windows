@@ -16,17 +16,19 @@
     <MenuItem Header="Change MorphicBar" x:Name="ChangeMorphicBar">
         <MenuItem Header="Basic MorphicBar" x:Name="SelectBasicMorphicBar" Click="SelectBasicMorphicBarClick" />
     </MenuItem>
+    <menu:MorphicMenuItem x:Name="ChangeSetupMenuItem" Header="Change Setup..." Dialog="dialogs:TravelWindow"/>
+    <menu:MorphicMenuItem x:Name="SaveMySetupMenuItem" Header="Save my Setup..." Dialog="dialogs:TravelWindow"/>
+    <!-- <menu:MorphicMenuItem x:Name="RestoreSettingsFromBackupMenuItem" Header="_Restore settings from backup" Dialog="dialogs:RestoreWindow"/> -->
 
     <Separator x:Name="CloudSettingsSeparator" />
     <menu:MorphicMenuItem Header="Sign out of Morphic" x:Name="LogoutItem" Click="Logout" />
     <menu:MorphicMenuItem Header="Sign into Morphic..." x:Name="LoginItem" Click="Login" />
-    <menu:MorphicMenuItem x:Name="CopySettingsBetweenComputersMenuItem" Header="_Copy settings to or from Morphic Account..." Dialog="dialogs:TravelWindow"/>
-    <menu:MorphicMenuItem x:Name="RestoreSettingsFromBackupMenuItem" Header="_Restore settings from backup" Dialog="dialogs:RestoreWindow"/>
 
     <Separator/>
 
     <menu:MorphicMenuItem Header="_Explore everything Morphic can do..." Click="ExploreMorphicClicked" Open="https://morphic.org/exploremorphic" />
-    <menu:MorphicMenuItem Header="Quick Morphic _demo movies..." Click="QuickDemoMoviesClicked" Open="https://morphic.org/demos" />
+    <menu:MorphicMenuItem Header="How to copy setups between computers..." Click="HowToCopySetupsClicked" Open="https://morphic.org/xfersetups" />
+    <menu:MorphicMenuItem Header="Quick Morphic _demo videos..." Click="QuickDemoVideosClicked" Open="https://morphic.org/demos" />
 
     <Separator/>
 
@@ -58,8 +60,9 @@
     <Separator/>
 
     <!--<menu:MorphicMenuItem Header="_Hide QuickHelp (except with Alt key)" IsCheckable="True" IsChecked="{Binding App.AppOptions.HideQuickHelp}" />-->
-    <menu:MorphicMenuItem Header="_Automatically start Morphic" x:Name="AutorunAfterLoginItem" Click="AutorunAfterLoginClicked" IsCheckable="True" IsChecked="{Binding App.AppOptions.AutoRun}" />
-    <menu:MorphicMenuItem Header="_Show Morphic Bar at start" x:Name="ShowMorphicBarAfterLoginItem" Click="ShowMorphicBarAfterLoginClicked" IsCheckable="True" IsChecked="{Binding App.AppOptions.AutoShow}" />
+    <menu:MorphicMenuItem Header="_Automatically start Morphic" x:Name="AutorunAfterLoginItem" Click="AutorunAfterLoginClicked" IsCheckable="True" IsChecked="{Binding App.AppOptions.AutoRun}" Visibility="Collapsed" />
+    <menu:MorphicMenuItem Header="_Show Morphic Bar at start" x:Name="ShowMorphicBarAfterLoginItem" Click="ShowMorphicBarAfterLoginClicked" IsCheckable="True" IsChecked="{Binding App.AppOptions.AutoShow}" Visibility="Collapsed" />
+    <menu:MorphicMenuItem Header="Morphic Settings..." x:Name="MorphicSettingsItem" Click="SettingsItemClicked" />
     <menu:MorphicMenuItem Header="_About Morphic..." Click="AboutMorphicClicked" Dialog="dialogs:AboutWindow" />
     <menu:MorphicMenuItem Header="_Quit Morphic" Click="QuitClick"/>
 </ContextMenu>
