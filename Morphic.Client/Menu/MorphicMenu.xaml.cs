@@ -36,7 +36,8 @@
             // if ConfigurableFeatures.CloudSettingsTransferIsEnabled is false, then hide the settings which can transfer/restore settings
             if (ConfigurableFeatures.CloudSettingsTransferIsEnabled == false)
             {
-                this.CopySettingsBetweenComputersMenuItem.Visibility = Visibility.Collapsed;
+                this.ChangeSetupMenuItem.Visibility = Visibility.Collapsed;
+                this.SaveMySetupMenuItem.Visibility = Visibility.Collapsed;
                 this.RestoreSettingsFromBackupMenuItem.Visibility = Visibility.Collapsed;
                 this.CloudSettingsSeparator.Visibility = Visibility.Collapsed;
             }
@@ -283,7 +284,13 @@
             await App.Current.Countly_RecordEventAsync("exploreMorphic", 1, segmentation);
         }
 
-        private async void QuickDemoMoviesClicked(object sender, RoutedEventArgs e)
+        private async void HowToCopySetupsClicked(object sender, RoutedEventArgs e)
+        {
+            var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
+            await App.Current.Countly_RecordEventAsync("howToCopySetups", 1, segmentation);
+        }
+
+        private async void QuickDemoVideosClicked(object sender, RoutedEventArgs e)
         {
             var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
             segmentation.Add("category", "main");

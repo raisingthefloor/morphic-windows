@@ -143,6 +143,11 @@ namespace Morphic.Client
             public string? feature { get; set; }
         }
         //
+        public class TelemetryConfigSection
+        {
+            public string? siteId { get; set; }
+        }
+        //
         public class ConfigFileContents
         {
             public class FeaturesConfigSection
@@ -167,6 +172,7 @@ namespace Morphic.Client
             public int? version { get; set; }
             public FeaturesConfigSection? features { get; set; }
             public MorphicBarConfigSection? morphicBar { get; set; }
+            public TelemetryConfigSection? telemetry { get; set; }
         }
         //
         private struct CommonConfigurationContents
@@ -177,6 +183,7 @@ namespace Morphic.Client
             public bool ResetSettingsIsEnabled;
             public ConfigurableFeatures.MorphicBarVisibilityAfterLoginOption? MorphicBarVisibilityAfterLogin;
             public List<MorphicBarExtraItem> ExtraMorphicBarItems;
+            public string? TelemetrySiteId;
         }
         private async Task<CommonConfigurationContents> GetCommonConfigurationAsync()
         {
@@ -388,6 +395,9 @@ namespace Morphic.Client
                 }
             }
 
+            // capture telemetry site id
+            result.TelemetrySiteId = deserializedJson.telemetry?.siteId;
+
             return result;
         }
 
@@ -491,6 +501,36 @@ namespace Morphic.Client
                 AppOptions.TelemetryDeviceUuid = telemetryDeviceUuid;
             }
 
+            // if a site id is (or is not) configured, modify the telemetry device uuid accordingly
+            // NOTE: we handle cases of site ids changing, site IDs being added post-deployment, and site IDs being removed post-deployment
+            var unmodifiedTelemetryDeviceUuid = telemetryDeviceUuid;
+            var telemetrySiteId = ConfigurableFeatures.TelemetrySiteId;
+            if (telemetrySiteId != null)
+            {
+                // NOTE: in the future, consider reporting or throwing an error if the site id required sanitization (i.e. wasn't valid)
+                var sanitizedTelemetrySiteId = this.SanitizeSiteId(telemetrySiteId);
+                if (sanitizedTelemetrySiteId != "") 
+                {
+                    // we have a telemetry site id; prepend it
+                    telemetryDeviceUuid = this.PrependSiteIdToTelemetryUuid(telemetryDeviceUuid, telemetrySiteId);
+                }
+                else
+                {
+                    // the supplied site id isn't valid; strip off the site id; In the future consider logging/reporting an error
+                    telemetryDeviceUuid = this.RemoveSiteIdFromTelemetryUuid(telemetryDeviceUuid);
+                }
+            } 
+            else
+            {
+                // no telemetry site id is configured; strip off any site id which might have already been part of our telemetry id
+                telemetryDeviceUuid = this.RemoveSiteIdFromTelemetryUuid(telemetryDeviceUuid);
+            }
+            // if the telemetry uuid has changed (because of the site id), update our stored telemetry uuid now
+            if (telemetryDeviceUuid != unmodifiedTelemetryDeviceUuid)
+            {
+                AppOptions.TelemetryDeviceUuid = telemetryDeviceUuid;
+            }
+
             IConfigurationSection? section = this.Configuration.GetSection("Countly");
             CountlyConfig cc = new CountlyConfig
             {
@@ -503,6 +543,78 @@ namespace Morphic.Client
             await Countly.Instance.Init(cc);
             await Countly.Instance.SessionBegin();
             CountlyBase.IsLoggingEnabled = true;
+        }
+
+        private string PrependSiteIdToTelemetryUuid(string value, string telemetrySiteId) 
+        {
+            var telemetryDeviceUuid = value;
+        
+            if (telemetryDeviceUuid.StartsWith("S_")) 
+            {
+                // if the telemetry device uuid already starts with a site id, strip it off now
+                telemetryDeviceUuid = telemetryDeviceUuid.Remove(0, 2);
+                var indexOfForwardSlash = telemetryDeviceUuid.IndexOf('/');
+                if (indexOfForwardSlash >= 0)
+                {
+                    // strip the site id off the front
+                    telemetryDeviceUuid = telemetryDeviceUuid.Substring(indexOfForwardSlash + 1);
+                } 
+                else
+                {
+                    // the site ID was the only contents; return null
+                    telemetryDeviceUuid = "";
+                }
+            }
+
+            // prepend the site id to the telemetry device uuid
+            telemetryDeviceUuid = "S_" + telemetrySiteId + "/" + telemetryDeviceUuid;
+            return telemetryDeviceUuid;
+        }
+    
+        private string RemoveSiteIdFromTelemetryUuid(string value)
+        {
+            var telemetryDeviceUuid = value;
+
+            if (telemetryDeviceUuid.StartsWith("S_")) 
+            {
+                // if the telemetry device uuid starts with a site id, strip it off now
+                telemetryDeviceUuid = telemetryDeviceUuid.Remove(0, 2);
+                var indexOfForwardSlash = telemetryDeviceUuid.IndexOf('/');
+                if (indexOfForwardSlash >= 0)
+                {
+                    // strip the site id off the front
+                    telemetryDeviceUuid = telemetryDeviceUuid.Substring(indexOfForwardSlash + 1);
+                }
+            } 
+            else
+            {
+                // the site ID is the only contents
+                telemetryDeviceUuid = "";
+            }
+
+            return telemetryDeviceUuid;
+        }
+
+        private string SanitizeSiteId(string siteId)
+        {
+            var siteIdAsCharacters = siteId.ToCharArray();
+            var resultAsCharacters = new List<char>();
+            foreach (var character in siteIdAsCharacters)
+            {
+                if ((character >= 'a' && character <= 'z') ||
+                    (character >= 'A' && character <= 'Z') ||
+                    (character >= '0' && character <= '9'))
+                {
+                    resultAsCharacters.Add(character);
+                } 
+                else
+                {
+                    // filter out this character
+                }
+
+            }
+
+            return new string(resultAsCharacters.ToArray());
         }
 
         private void RecordedException(Task task)
@@ -587,7 +699,8 @@ namespace Morphic.Client
                 resetSettingsIsEnabled: commonConfiguration.ResetSettingsIsEnabled,
                 telemetryIsEnabled: telemetryIsEnabled,
                 morphicBarvisibilityAfterLogin: commonConfiguration.MorphicBarVisibilityAfterLogin,
-                morphicBarExtraItems: commonConfiguration.ExtraMorphicBarItems
+                morphicBarExtraItems: commonConfiguration.ExtraMorphicBarItems,
+                telemetrySiteId: commonConfiguration.TelemetrySiteId
                 );
 
             this.MorphicSession = this.ServiceProvider.GetRequiredService<MorphicSession>();
@@ -599,8 +712,8 @@ namespace Morphic.Client
 
             this.RegisterGlobalHotKeys();
 
-            if (ConfigurableFeatures.TelemetryIsEnabled == true) 
-            { 
+            if (ConfigurableFeatures.TelemetryIsEnabled == true)
+            {
                 await this.ConfigureCountlyAsync();
             }
 

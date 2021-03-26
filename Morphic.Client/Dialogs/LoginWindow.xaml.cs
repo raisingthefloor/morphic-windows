@@ -29,11 +29,6 @@ namespace Morphic.Client.Dialogs
     using System.Windows;
     using Microsoft.Extensions.Logging;
 
-    public interface MorphicWindowWithArgs
-    {
-        void SetArguments(Dictionary<String, object?> args);
-    }
-
     public partial class LoginWindow : Window, MorphicWindowWithArgs
     {
 
