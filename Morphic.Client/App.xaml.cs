@@ -467,6 +467,7 @@ namespace Morphic.Client
             services.AddTransient<CopyStartPanel>();
             services.AddTransient<ApplyPanel>();
             services.AddTransient<RestoreWindow>();
+            services.AddTransient<SettingsWindow>();
             services.AddSingleton<Backups>();
             services.AddTransient<BarData>();
             services.AddSingleton<BarPresets>(s => BarPresets.Default);
