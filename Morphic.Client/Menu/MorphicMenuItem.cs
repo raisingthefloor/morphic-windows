@@ -22,6 +22,7 @@
         public MenuType ParentMenuType = MenuType.mainMenu;
 
         public Type? Dialog { get; set; }
+        public string? DialogAction { get; set; }
 
         public enum MorphicMenuItemTelemetryType
         {
@@ -184,6 +185,10 @@
                 if (this.Dialog != null)
                 {
                     var args = new Dictionary<string, object?>();
+                    if (this.DialogAction != null)
+                    {
+                        args["action"] = this.DialogAction!;
+                    }
                     await App.Current.Dialogs.OpenDialogAsync(this.Dialog!, args);
                 }
 

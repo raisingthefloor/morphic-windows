@@ -24,6 +24,8 @@
 namespace Morphic.Client.Dialogs
 {
     using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Windows;
     using Microsoft.Extensions.Logging;
     using Service;
@@ -32,7 +34,7 @@ namespace Morphic.Client.Dialogs
     /// Window that walks the user the the capture and, if necessary, account creation process.
     /// Loads each panel one at time depending on what steps are required
     /// </summary>
-    public partial class TravelWindow : Window
+    public partial class TravelWindow : Window, MorphicWindowWithArgs
     {
 
         #region Create a Window
@@ -62,6 +64,8 @@ namespace Morphic.Client.Dialogs
 
         #endregion
 
+        private string? StartPanelAction;
+
         protected override void OnInitialized(EventArgs e)
         {
             base.OnInitialized(e);
@@ -74,5 +78,41 @@ namespace Morphic.Client.Dialogs
             copyStartPanel.Completed += (sender, args) => this.Close();
         }
 
+        void MorphicWindowWithArgs.SetArguments(Dictionary<String, object?> args)
+        {
+            foreach (var (key, value) in args)
+            {
+                switch (key.ToLower())
+                {
+                    case "action":
+                        this.StartPanelAction = (value as string) ?? null;
+                        break;
+                    default:
+                        Debug.Assert(false, "Unknown argument");
+                        break;
+                }
+            }
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (this.StartPanelAction != null)
+            {
+                var copyStartPanel = this.StepFrame.CurrentPanel as CopyStartPanel;
+
+                switch (this.StartPanelAction)
+                {
+                    case "CopyToCloud":
+                        copyStartPanel?.CopyToCloud(sender /* or null */, new RoutedEventArgs());
+                        break;
+                    case "CopyFromCloud":
+                        copyStartPanel?.CopyFromCloud(sender /* or null */, new RoutedEventArgs());
+                        break;
+                    default:
+                        Debug.Assert(false, "Unknown action");
+                        break;
+                }
+            }
+        }
     }
 }

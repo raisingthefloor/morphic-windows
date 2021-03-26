@@ -33,6 +33,8 @@
         // NOTE: this setting has no effect if Autorun is disabled
         public static MorphicBarVisibilityAfterLoginOption? MorphicBarVisibilityAfterLogin = MorphicBarVisibilityAfterLoginOption.Restore;
         public static List<Morphic.Client.App.MorphicBarExtraItem> MorphicBarExtraItems = new List<Morphic.Client.App.MorphicBarExtraItem>();
+        //
+        public static string? TelemetrySiteId = null;
 
         public static void SetFeatures(
             AutorunConfigOption? autorunConfig,
@@ -41,7 +43,8 @@
             bool resetSettingsIsEnabled,
             bool telemetryIsEnabled,
             MorphicBarVisibilityAfterLoginOption? morphicBarvisibilityAfterLogin,
-            List<Morphic.Client.App.MorphicBarExtraItem> morphicBarExtraItems
+            List<Morphic.Client.App.MorphicBarExtraItem> morphicBarExtraItems,
+            string? telemetrySiteId
             )
         {
             ConfigurableFeatures.AutorunConfig = autorunConfig;
@@ -51,6 +54,7 @@
             ConfigurableFeatures.TelemetryIsEnabled = telemetryIsEnabled;
             ConfigurableFeatures.MorphicBarVisibilityAfterLogin = morphicBarvisibilityAfterLogin;
             ConfigurableFeatures.MorphicBarExtraItems = morphicBarExtraItems;
+            ConfigurableFeatures.TelemetrySiteId = telemetrySiteId;
         }
     }
 }
