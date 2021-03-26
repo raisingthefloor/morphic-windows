@@ -16,7 +16,7 @@
     <MenuItem Header="Change MorphicBar" x:Name="ChangeMorphicBar">
         <MenuItem Header="Basic MorphicBar" x:Name="SelectBasicMorphicBar" Click="SelectBasicMorphicBarClick" />
     </MenuItem>
-    <menu:MorphicMenuItem x:Name="ChangeSetupMenuItem" Header="Change Setup..." Dialog="dialogs:TravelWindow"/>
+    <menu:MorphicMenuItem x:Name="ChangeSetupMenuItem" Header="Apply or Change Setup..." Dialog="dialogs:TravelWindow"/>
     <menu:MorphicMenuItem x:Name="SaveMySetupMenuItem" Header="Save my Setup..." Dialog="dialogs:TravelWindow"/>
     <!-- <menu:MorphicMenuItem x:Name="RestoreSettingsFromBackupMenuItem" Header="_Restore settings from backup" Dialog="dialogs:RestoreWindow"/> -->
 
