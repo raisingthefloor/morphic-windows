@@ -16,9 +16,9 @@
     <MenuItem Header="Change MorphicBar" x:Name="ChangeMorphicBar">
         <MenuItem Header="Basic MorphicBar" x:Name="SelectBasicMorphicBar" Click="SelectBasicMorphicBarClick" />
     </MenuItem>
-    <menu:MorphicMenuItem x:Name="ChangeSetupMenuItem" Header="Apply or Change Setup..." Dialog="dialogs:TravelWindow"/>
-    <menu:MorphicMenuItem x:Name="SaveMySetupMenuItem" Header="Save my Setup..." Dialog="dialogs:TravelWindow"/>
-    <!-- <menu:MorphicMenuItem x:Name="RestoreSettingsFromBackupMenuItem" Header="_Restore settings from backup" Dialog="dialogs:RestoreWindow"/> -->
+    <menu:MorphicMenuItem x:Name="ChangeSetupMenuItem" Header="Apply or Change Setup..." Dialog="dialogs:TravelWindow" DialogAction="CopyFromCloud"/>
+    <menu:MorphicMenuItem x:Name="SaveMySetupMenuItem" Header="Save my Setup..." Dialog="dialogs:TravelWindow" DialogAction="CopyToCloud"/>
+    <menu:MorphicMenuItem x:Name="RestoreSettingsFromBackupMenuItem" Header="_Restore settings from backup" Dialog="dialogs:RestoreWindow" Visibility="Collapsed"/>
 
     <Separator x:Name="CloudSettingsSeparator" />
     <menu:MorphicMenuItem Header="Sign out of Morphic" x:Name="LogoutItem" Click="Logout" />

@@ -38,7 +38,7 @@
             {
                 this.ChangeSetupMenuItem.Visibility = Visibility.Collapsed;
                 this.SaveMySetupMenuItem.Visibility = Visibility.Collapsed;
-                //this.RestoreSettingsFromBackupMenuItem.Visibility = Visibility.Collapsed;
+                this.RestoreSettingsFromBackupMenuItem.Visibility = Visibility.Collapsed;
                 this.CloudSettingsSeparator.Visibility = Visibility.Collapsed;
             }
 
