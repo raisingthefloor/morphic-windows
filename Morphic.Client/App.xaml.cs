@@ -486,7 +486,7 @@ namespace Morphic.Client
 
             // retrieve the telemetry device ID for this device; if it doesn't exist then create a new one
             var telemetryDeviceUuid = AppOptions.TelemetryDeviceUuid;
-            if (telemetryDeviceUuid == null)
+            if ((telemetryDeviceUuid == null) || (telemetryDeviceUuid == String.Empty))
             {
                 telemetryDeviceUuid = "D_" + Guid.NewGuid().ToString();
                 AppOptions.TelemetryDeviceUuid = telemetryDeviceUuid;
