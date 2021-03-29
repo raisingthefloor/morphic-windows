@@ -506,7 +506,7 @@ namespace Morphic.Client
             // NOTE: we handle cases of site ids changing, site IDs being added post-deployment, and site IDs being removed post-deployment
             var unmodifiedTelemetryDeviceUuid = telemetryDeviceUuid;
             var telemetrySiteId = ConfigurableFeatures.TelemetrySiteId;
-            if (telemetrySiteId != null)
+            if ((telemetrySiteId != null) && (telemetrySiteId != String.Empty))
             {
                 // NOTE: in the future, consider reporting or throwing an error if the site id required sanitization (i.e. wasn't valid)
                 var sanitizedTelemetrySiteId = this.SanitizeSiteId(telemetrySiteId);
@@ -524,7 +524,8 @@ namespace Morphic.Client
             else
             {
                 // no telemetry site id is configured; strip off any site id which might have already been part of our telemetry id
-                telemetryDeviceUuid = this.RemoveSiteIdFromTelemetryUuid(telemetryDeviceUuid);
+                // TODO: in the future, make sure that the telemetry ID wasn't _just_ the site id (as it cannot be allowed to be empty)
+        				telemetryDeviceUuid = this.RemoveSiteIdFromTelemetryUuid(telemetryDeviceUuid);
             }
             // if the telemetry uuid has changed (because of the site id), update our stored telemetry uuid now
             if (telemetryDeviceUuid != unmodifiedTelemetryDeviceUuid)
@@ -586,11 +587,11 @@ namespace Morphic.Client
                     // strip the site id off the front
                     telemetryDeviceUuid = telemetryDeviceUuid.Substring(indexOfForwardSlash + 1);
                 }
-            } 
-            else
-            {
-                // the site ID is the only contents
-                telemetryDeviceUuid = "";
+                else
+                {
+                    // the site ID is the only contents
+                    telemetryDeviceUuid = "";
+                }
             }
 
             return telemetryDeviceUuid;
