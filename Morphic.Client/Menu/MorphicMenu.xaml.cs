@@ -206,15 +206,6 @@
             }
         }
 
-        #region Settings 
-        private async void SettingsItemClicked(object sender, RoutedEventArgs e)
-        {
-            var args = new Dictionary<string, object?>();
-            await App.Current.Dialogs.OpenDialogAsync<SettingsWindow>(args);
-        }
-
-        #endregion 
-
         #region TrayIcon
 
         private MorphicHybridTrayIcon? _trayIcon = null;
