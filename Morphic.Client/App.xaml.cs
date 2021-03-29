@@ -467,6 +467,7 @@ namespace Morphic.Client
             services.AddTransient<CopyStartPanel>();
             services.AddTransient<ApplyPanel>();
             services.AddTransient<RestoreWindow>();
+            services.AddTransient<SettingsWindow>();
             services.AddSingleton<Backups>();
             services.AddTransient<BarData>();
             services.AddSingleton<BarPresets>(s => BarPresets.Default);
@@ -495,7 +496,7 @@ namespace Morphic.Client
 
             // retrieve the telemetry device ID for this device; if it doesn't exist then create a new one
             var telemetryDeviceUuid = AppOptions.TelemetryDeviceUuid;
-            if (telemetryDeviceUuid == null)
+            if ((telemetryDeviceUuid == null) || (telemetryDeviceUuid == String.Empty))
             {
                 telemetryDeviceUuid = "D_" + Guid.NewGuid().ToString();
                 AppOptions.TelemetryDeviceUuid = telemetryDeviceUuid;
@@ -924,17 +925,35 @@ namespace Morphic.Client
 
         private void RegisterGlobalHotKeys()
         {
-            HotkeyManager.Current.AddOrReplace("Login with Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift, (sender, e) =>
+            EventHandler<NHotkey.HotkeyEventArgs> loginHotKeyPressed = async (sender, e) =>
             {
                 // NOTE: if we want the login menu item to apply cloud-saved preferences after login, we should set this flag to true
-                var applyPreferencesAfterLogin = false;
+                var applyPreferencesAfterLogin = true;
                 var args = new Dictionary<string, object?>() { { "applyPreferencesAfterLogin", applyPreferencesAfterLogin } };
-                this.Dialogs.OpenDialogAsync<LoginWindow>(args);
-            });
-            HotkeyManager.Current.AddOrReplace("Show Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift | ModifierKeys.Alt, (sender, e) =>
+                await this.Dialogs.OpenDialogAsync<LoginWindow>(args);
+            };
+            try
+            {
+                HotkeyManager.Current.AddOrReplace("Login with Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift, loginHotKeyPressed);
+            }
+            catch
+            {
+                this.Logger.LogError("Could not register hotkey Ctrl+Shift+M for 'Login with Morphic'");
+            }
+
+            EventHandler<NHotkey.HotkeyEventArgs> showMorphicBarHotKeyPressed = (sender, e) =>
             {
                 this.BarManager.ShowBar();
-            });
+            };
+            try
+            {
+                // TODO: should this hotkey be titled "Show MorphicBar" instead?
+                HotkeyManager.Current.AddOrReplace("Show Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift | ModifierKeys.Alt, showMorphicBarHotKeyPressed);
+            }
+            catch
+            {
+                this.Logger.LogError("Could not register hotkey Ctrl+Shift+Alt+M for 'Show Morphic'");
+            }
         }
 
         public async Task OpenSessionAsync()

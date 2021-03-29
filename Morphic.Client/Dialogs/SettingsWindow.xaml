@@ -1,0 +1,145 @@
+﻿<Window x:Class="Morphic.Client.Dialogs.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Morphic.Client.Dialogs"
+        mc:Ignorable="d"
+        Title="Morphic Settings" Height="640" Width="500"
+        ResizeMode="NoResize"
+        Icon="/Icon.png"
+        WindowStartupLocation="CenterScreen">
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <Grid>
+            <!-- Define setting sections -->
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/> <!-- Account section -->
+                <RowDefinition Height="Auto"/> <!-- MorphicBar Settings section -->
+                <RowDefinition Height="Auto"/> <!-- Preferences section -->
+                <RowDefinition/> <!-- filler for any remaining space-->
+            </Grid.RowDefinitions>
+        
+            <!-- Define two columns -->
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/> <!-- icon for each section -->
+                <ColumnDefinition/> <!-- each settings section -->
+            </Grid.ColumnDefinitions>
+        
+            <!-- Account section -->
+            <Label Grid.Row="0" Grid.Column="0">ACCOUNT</Label>
+            <Grid Grid.Row="0" Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Vertical">
+                    <Label>You are not signed into Morphic</Label>
+                    <Label>You can get your MorphicBar and preferences on this computer if you sign into your Morphic account on this computer.</Label>
+                </StackPanel>
+
+                <Button Grid.Row="1" Grid.Column="0">Sign into Morphic</Button>
+
+                <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Vertical">
+                    <Label>Don't have a Morphic account?</Label>
+                    <Label>- If you have a Morphic Group invitation, click the button in your invitation email to set up your account.  (Learn more about Morphic Group invitations.)</Label>
+                    <Label>- You can also create your own Morphic account here.</Label>
+                </StackPanel>
+            </Grid>
+
+            <!-- MorphicBar Settings section -->
+            <Label Grid.Row="1" Grid.Column="0">MORPHICBAR</Label>
+            <Grid Grid.Row="1" Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+
+                <Label Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">Your MorphicBar Settings</Label>
+
+                <Label Grid.Row="1" Grid.Column="0">MorphicBar Size</Label>
+                <ComboBox Grid.Row="1" Grid.Column="1">
+                    <ComboBoxItem>100%</ComboBoxItem>
+                </ComboBox>
+
+                <Label Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">Morphic Start-up</Label>
+                <ComboBox Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2">
+                    <ComboBoxItem>Show MorphicBar at start-up if shown at shutdown</ComboBoxItem>
+                </ComboBox>
+
+                <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Vertical">
+                    <Label>What size should the tooltips be?</Label>
+                    <Label>Tooltips are the text that shows up when you point to a button.</Label>
+                </StackPanel>
+                <RadioButton Grid.Row="5" Grid.Column="0" GroupName="TooltipSize">Large</RadioButton>
+                <RadioButton Grid.Row="5" Grid.Column="1" GroupName="TooltipSize">Small</RadioButton>
+
+                <StackPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Vertical">
+                    <Label>Do you want the MorphicBar to be docked? (Windows Only)</Label>
+                    <Label>When docked, other windows cannot appear on top of or under the MorphicBar.</Label>
+                </StackPanel>
+                <RadioButton Grid.Row="7" Grid.Column="0" GroupName="Docking">Docked</RadioButton>
+                <RadioButton Grid.Row="7" Grid.Column="1" GroupName="Docking">Not Docked</RadioButton>
+            </Grid>
+
+            <!-- Preferences section -->
+            <Label Grid.Row="2" Grid.Column="0">PREFERENCES</Label>
+            <Grid Grid.Row="2" Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+
+                <Label Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">Transfer Accessibility &amp; Usability Preference Settings to or from this computer</Label>
+
+                <Button Grid.Row="1" Grid.Column="0">Apply a saved preference set to this computer</Button>
+                <Label Grid.Row="1" Grid.Column="1">Clicking this button will get your saved preference settings from your secure Morphic account and apply or re-apply them to this computer.</Label>
+
+                <Button Grid.Row="2" Grid.Column="0">Back up preference settings from this computer</Button>
+                <Label Grid.Row="2" Grid.Column="1">Saves your assistive technology and accessibility and usability settings to your secure Morphic account.  You can then later apply them to this or another computer that has Morphic on it.</Label>
+
+                <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Vertical">
+                    <Label>Do you want backup reminders?</Label>
+                    <Label>If automatic backups are turned off, Morphic can look for settings changes and remind you when you might need to back up your settings. Morphic will only remind you once per week if settings have changed.</Label>
+                </StackPanel>
+
+                <RadioButton Grid.Row="4" Grid.Column="0" GroupName="Reminders">Remind me weekly</RadioButton>
+                <RadioButton Grid.Row="4" Grid.Column="1" GroupName="Reminders">No reminders</RadioButton>
+
+                <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Vertical">
+                    <Label>Clear settings on this computer</Label>
+                    <Label>Do you want to get your computer back to the standard comptuer settings?  If you click the button below, Morphic will reset all Morphic-compatible settings to the manufacturer's standard values.</Label>
+                </StackPanel>
+
+                <Button Grid.Row="6" Grid.Column="0">Reset this computer to standard settings</Button>
+            </Grid>
+        </Grid>
+    </ScrollViewer>
+</Window>
