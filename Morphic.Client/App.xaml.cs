@@ -525,7 +525,7 @@ namespace Morphic.Client
             {
                 // no telemetry site id is configured; strip off any site id which might have already been part of our telemetry id
                 // TODO: in the future, make sure that the telemetry ID wasn't _just_ the site id (as it cannot be allowed to be empty)
-				telemetryDeviceUuid = this.RemoveSiteIdFromTelemetryUuid(telemetryDeviceUuid);
+        				telemetryDeviceUuid = this.RemoveSiteIdFromTelemetryUuid(telemetryDeviceUuid);
             }
             // if the telemetry uuid has changed (because of the site id), update our stored telemetry uuid now
             if (telemetryDeviceUuid != unmodifiedTelemetryDeviceUuid)
