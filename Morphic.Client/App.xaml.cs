@@ -812,17 +812,35 @@ namespace Morphic.Client
 
         private void RegisterGlobalHotKeys()
         {
-            HotkeyManager.Current.AddOrReplace("Login with Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift, (sender, e) =>
+            EventHandler<NHotkey.HotkeyEventArgs> loginHotKeyPressed = async (sender, e) =>
             {
                 // NOTE: if we want the login menu item to apply cloud-saved preferences after login, we should set this flag to true
-                var applyPreferencesAfterLogin = false;
+                var applyPreferencesAfterLogin = true;
                 var args = new Dictionary<string, object?>() { { "applyPreferencesAfterLogin", applyPreferencesAfterLogin } };
-                this.Dialogs.OpenDialogAsync<LoginWindow>(args);
-            });
-            HotkeyManager.Current.AddOrReplace("Show Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift | ModifierKeys.Alt, (sender, e) =>
+                await this.Dialogs.OpenDialogAsync<LoginWindow>(args);
+            };
+            try
+            {
+                HotkeyManager.Current.AddOrReplace("Login with Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift, loginHotKeyPressed);
+            }
+            catch
+            {
+                this.Logger.LogError("Could not register hotkey Ctrl+Shift+M for 'Login with Morphic'");
+            }
+
+            EventHandler<NHotkey.HotkeyEventArgs> showMorphicBarHotKeyPressed = (sender, e) =>
             {
                 this.BarManager.ShowBar();
-            });
+            };
+            try
+            {
+                // TODO: should this hotkey be titled "Show MorphicBar" instead?
+                HotkeyManager.Current.AddOrReplace("Show Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift | ModifierKeys.Alt, showMorphicBarHotKeyPressed);
+            }
+            catch
+            {
+                this.Logger.LogError("Could not register hotkey Ctrl+Shift+Alt+M for 'Show Morphic'");
+            }
         }
 
         public async Task OpenSessionAsync()
