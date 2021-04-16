@@ -98,6 +98,16 @@ namespace Morphic.Client.Bar.Data.Actions
                         var appPath = ApplicationAction.SearchPathEnv("calc.exe");
                         return appPath;
                     }
+                case "firefox":
+                    {
+                        var appPath = ApplicationAction.SearchAppPaths("firefox.exe");
+                        return appPath;
+                    }
+                case "googleChrome":
+                    {
+                        var appPath = ApplicationAction.SearchAppPaths("chrome.exe");
+                        return appPath;
+                    }
                 case "microsoftEdge":
                     {
                         var appPath = ApplicationAction.SearchAppPaths("msedge.exe");
@@ -106,6 +116,11 @@ namespace Morphic.Client.Bar.Data.Actions
                 case "microsoftSkype":
                     {
                         var appPath = ApplicationAction.SearchAppPaths("Skype.exe");
+                        return appPath;
+                    }
+                case "opera":
+                    {
+                        var appPath = ApplicationAction.SearchAppPaths("opera.exe");
                         return appPath;
                     }
                 default:

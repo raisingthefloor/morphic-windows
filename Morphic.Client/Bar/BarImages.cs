@@ -69,6 +69,8 @@
                     return "calendar";
                 case "cbsnews":
                     return "logo_cbsNews";
+                case "chrome":
+                    return "logo_chrome";
                 case "cnbc":
                     return "logo_cnbc";
                 case "cnn":
@@ -101,6 +103,8 @@
                     return "logo_facebook";
                 case "faviconfoxnews":
                     return "favicon_foxNews";
+                case "firefox":
+                    return "logo_firefox";
                 case "forbes":
                     return "logo_forbes";
                 case "foxnews":
@@ -151,6 +155,8 @@
                     return "logo_npr";
                 case "onedrive":
                     return "logo_onedrive";
+                case "opera":
+                    return "logo_opera";
                 case "outlook":
                     return "logo_outlook";
                 case "pandora":
