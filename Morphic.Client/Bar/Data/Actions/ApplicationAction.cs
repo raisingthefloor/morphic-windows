@@ -89,6 +89,29 @@ namespace Morphic.Client.Bar.Data.Actions
         [JsonProperty("windowStyle")]
         public ProcessWindowStyle WindowStyle { get; set; } = ProcessWindowStyle.Normal;
 
+        private static string? ConvertExeIdToExecutablePath(string exeId)
+        {
+            switch (exeId)
+            {
+                case "calculator":
+                    {
+                        var appPath = ApplicationAction.SearchPathEnv("calc.exe");
+                        return appPath;
+                    }
+                case "microsoftEdge":
+                    {
+                        var appPath = ApplicationAction.SearchAppPaths("msedge.exe");
+                        return appPath;
+                    }
+                case "microsoftSkype":
+                    {
+                        var appPath = ApplicationAction.SearchAppPaths("Skype.exe");
+                        return appPath;
+                    }
+                default:
+                    return null;
+            }
+        }
 
         /// <summary>
         /// Executable name, or the full path to it. If also providing arguments, surround the executable path with quotes.
@@ -100,43 +123,22 @@ namespace Morphic.Client.Bar.Data.Actions
             set
             {
                 this.exeNameValue = value;
+                this.AppPath = null; // until we find the executable id'd by exeNameValue, AppPath should be null; it will be set to the actual executable path (or AppX identity)
 
-                // A url like "mailto:"
-                bool isUrl = this.exeNameValue.Length > 3 && this.exeNameValue.EndsWith(':');
-                if (isUrl)
-                {
-                    this.Shell = true;
-                }
-
-                if (this.exeNameValue.StartsWith("appx:", StringComparison.InvariantCultureIgnoreCase))
+                if (value != null && value.StartsWith("appx:", StringComparison.InvariantCultureIgnoreCase))
                 {
                     this.AppX = true;
-                    this.exeNameValue = this.exeNameValue.Substring(5);
+                    this.AppPath = value.Substring(5);
                 }
 
-                if (this.Shell || this.AppX || this.exeNameValue.Length == 0)
+                if (value != null && value.Length > 0)
                 {
-                    this.AppPath = null;
-                }
-                else
-                {
-                    if (this.ExeName.StartsWith('"'))
+                    var appPath = ApplicationAction.ConvertExeIdToExecutablePath(value);
+                    if (appPath != null)
                     {
-                        int nextQuote = this.exeNameValue.IndexOf('"', 1);
-                        if (nextQuote < 0)
-                        {
-                            App.Current.Logger.LogWarning($"Executable path [{this.ExeName}] has mismatching quote");
-                            this.AppPath = this.ExeName.Substring(1);
-                        }
-                        else
-                        {
-                            this.AppPath = this.ExeName.Substring(1, nextQuote - 1);
-                            this.ArgumentsString = this.ExeName.Substring(nextQuote + 1).Trim();
-                        }
+                        this.AppPath = appPath;
+                        App.Current.Logger.LogDebug($"Resolved exe file '{this.exeNameValue}' to '{this.AppPath ?? "(null)"}'");
                     }
-
-                    this.AppPath = this.ResolveAppPath(this.exeNameValue);
-                    App.Current.Logger.LogDebug($"Resolved exe file '{this.exeNameValue}' to '{this.AppPath ?? "(null)"}'");
                 }
 
                 this.IsAvailable = this.AppPath != null;
@@ -161,83 +163,13 @@ namespace Morphic.Client.Bar.Data.Actions
         public Dictionary<string, string> EnvironmentVariables { get; set; } = new Dictionary<string, string>();
 
         /// <summary>
-        /// Resolves the path of an executable, by looking in the "App Paths" registry key or the PATH environment.
-        /// If a full path is provided, and it doesn't exist, then the path for the file name alone is resolved.
-        ///
-        /// Environment variables in the file path are also resolved.
-        /// </summary>
-        /// <param name="exeName">The `exeName` input value.</param>
-        /// <returns>Full path to the executable if found, or null.</returns>
-        private string? ResolveAppPath(string exeName)
-        {
-            string file = Environment.ExpandEnvironmentVariables(exeName);
-            string ext = Path.GetExtension(file).ToLower();
-            string withExe, withoutExe;
-
-            // Try with the .exe extension first, then without, but if the file ends with a '.', then try that first.
-            // (similar to CreateProcess)
-            if (file.EndsWith("."))
-            {
-                string? result1 = this.ResolveAppPathAsIs(file);
-                if (result1 != null)
-                {
-                    return result1;
-                }
-
-                withExe = Path.ChangeExtension(file, ".exe");
-                withoutExe = Path.ChangeExtension(file, null);
-            }
-            else if (ext == ".exe")
-            {
-                withExe = file;
-                withoutExe = Path.ChangeExtension(file, null);
-            }
-            else
-            {
-                withExe = file + ".exe";
-                withoutExe = file;
-            }
-
-            string? result = this.ResolveAppPathAsIs(withExe);
-            if (result != null)
-            {
-                return result;
-            }
-            else
-            {
-                return this.ResolveAppPathAsIs(withoutExe);
-            }
-        }
-
-        /// <summary>
-        /// Called by ResolveAppPath to perform the actual resolving work.
-        /// </summary>
-        /// <param name="file"></param>
-        /// <returns>Full path to the executable if found, or null.</returns>
-        private string? ResolveAppPathAsIs(string file)
-        {
-            string? fullPath = null;
-
-            if (Path.IsPathRooted(file))
-            {
-                if (File.Exists(file))
-                {
-                    fullPath = file;
-                }
-
-                file = Path.GetFileName(file);
-            }
-
-            return fullPath ?? this.SearchAppPaths(file) ?? this.SearchPathEnv(file);
-        }
-
-        /// <summary>
         /// Searches the directories in the PATH environment variable.
         /// </summary>
         /// <param name="file"></param>
         /// <returns>null if not found.</returns>
-        private string? SearchPathEnv(string file)
+        private static string? SearchPathEnv(string file)
         {
+            // OBSERVATION: the noted alternative may search some standard system directories outside of the PATH if the path env var isn't explicitly provided as an array of strings
             // Alternative: https://docs.microsoft.com/en-us/windows/win32/api/shlwapi/nf-shlwapi-pathfindonpathw
             return Environment.GetEnvironmentVariable("PATH")?
                     .Split(Path.PathSeparator)
@@ -250,18 +182,19 @@ namespace Morphic.Client.Bar.Data.Actions
         /// </summary>
         /// <param name="file"></param>
         /// <returns>null if not found.</returns>
-        private string? SearchAppPaths(string file)
+        private static string? SearchAppPaths(string file)
         {
             string? fullPath = null;
 
-            // Look in *\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths
+            // Look in *\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths (giving priority to the current user, in case an entry exists in both locations)
             foreach (RegistryKey rootKey in new[] {Registry.CurrentUser, Registry.LocalMachine})
             {
                 RegistryKey? key =
                     rootKey.OpenSubKey($@"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\{file}");
                 if (key != null)
                 {
-                    fullPath = key.GetValue(string.Empty) as string;
+                    // capture the default key (which should be the full path with executable)
+                    fullPath = key.GetValue(null) as string;
                     if (fullPath != null)
                     {
                         break;
@@ -440,7 +373,7 @@ namespace Morphic.Client.Bar.Data.Actions
                         {
                             var launchTarget = "mailto:";
 
-                            var launchMailProcessResult = ApplicationAction.LaunchProcess(launchTarget, new List<string>(), new Dictionary<string, string>(), this.WindowStyle);
+                            var launchMailProcessResult = ApplicationAction.LaunchProcess(launchTarget, new List<string>(), new Dictionary<string, string>(), this.WindowStyle, true /* useShellExecute should be true for all protocols (e.g. 'mailto:') */);
                             return Task.FromResult(launchMailProcessResult);
                         }
                     default:
@@ -453,7 +386,7 @@ namespace Morphic.Client.Bar.Data.Actions
             }
 
             // if we reach here, we need to launch the executable related to this "exe" ID
-            if (string.IsNullOrEmpty(this.ExeName))
+            if (string.IsNullOrEmpty(this.ExeName) || string.IsNullOrEmpty(this.AppPath))
             {
                 // if we don't have an exeName ID tag, we have failed
                 return Task.FromResult(IMorphicResult.ErrorResult);
@@ -461,22 +394,13 @@ namespace Morphic.Client.Bar.Data.Actions
 
             if (this.AppX)
             {
-                var pid = Appx.Start(this.ExeName);
+                var pid = Appx.Start(this.AppPath);
                 return Task.FromResult(pid > 0 ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult);
-            }
-
-            if (!this.NewInstance && (Keyboard.Modifiers & ModifierKeys.Shift) != ModifierKeys.Shift)
-            {
-                bool activated = this.ActivateInstance().IsSuccess;
-                if (activated)
-                {
-                    return Task.FromResult(IMorphicResult.SuccessResult);
-                }
             }
 
             // for all other processes, launch the executable
             // pathToExecutable
-            var pathToExecutable = this.AppPath ?? this.ExeName;
+            var pathToExecutable = this.AppPath;
             //
             // useShellExecute
             var useShellExecute = true; // default
