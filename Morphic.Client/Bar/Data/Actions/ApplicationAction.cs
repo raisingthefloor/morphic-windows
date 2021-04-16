@@ -59,12 +59,10 @@ namespace Morphic.Client.Bar.Data.Actions
         }
 
         /// <summary>
-        /// Start a default application. This value points to an entry in default-apps.json5.
+        /// Start a default application. This value will be mapped locally
         /// </summary>
         [JsonProperty("default")]
         public string? DefaultAppName { get; set; }
-
-        public BarAction? DefaultApp { get; private set; }
 
         /// <summary>
         /// Invoke the value in `exe` as-is, via the shell (explorer). Don't resolve the path.
@@ -95,10 +93,10 @@ namespace Morphic.Client.Bar.Data.Actions
         /// <summary>
         /// Executable name, or the full path to it. If also providing arguments, surround the executable path with quotes.
         /// </summary>
-        [JsonProperty("exe", Required = Required.Always)]
-        public string ExeName
+        [JsonProperty("exe")]
+        public string? ExeName
         {
-            get => this.exeNameValue ?? string.Empty;
+            get => this.exeNameValue ?? null;
             set
             {
                 this.exeNameValue = value;
@@ -274,11 +272,191 @@ namespace Morphic.Client.Bar.Data.Actions
             return fullPath;
         }
 
+        private static IMorphicResult<string> StripExecutableFromCommand(string command)
+        {
+            // we need to split off the executable name from any arguments; it is either enclosed in quotes or it's everything before a space
+            //
+            // option 1: enclosed in quotes
+            // NOTE: there may be other ways of addressing this (such as looking for a file extension on the executable file name)
+            var indexOfFirstDoubleQuote = command.IndexOf('\"');
+            if (indexOfFirstDoubleQuote == 0)
+            {
+                var indexOfSecondDoubleQuote = command.IndexOf('\"', indexOfFirstDoubleQuote + 1);
+                if (indexOfSecondDoubleQuote > 1)
+                {
+                    command = command.Substring(indexOfFirstDoubleQuote + 1, indexOfSecondDoubleQuote - indexOfFirstDoubleQuote - 1);
+                    return IMorphicResult<string>.SuccessResult(command);
+                }
+                else
+                {
+                    return IMorphicResult<string>.ErrorResult();
+                }
+            }
+            //
+            // option 2: everything before a space (or everything, if there are no spaces)
+            var indexOfFirstSpace = command.IndexOf(' ');
+            if (indexOfFirstSpace > 0)
+            {
+                command = command.Substring(0, indexOfFirstSpace);
+                return IMorphicResult<string>.SuccessResult(command);
+            }
+            else
+            {
+                return IMorphicResult<string>.SuccessResult(command);
+            }
+        }
+
+        private static IMorphicResult<string> GetOpenCommandForProgIdClass(string progId) 
+        {
+            // look up the browser progId's actual executable path (e.g. path to Edge, instead of "MSEdgeHtm")
+            var browserOpenCommandRegistryKey = Registry.ClassesRoot.OpenSubKey(progId + @"\shell\open\command");
+            if (browserOpenCommandRegistryKey != null)
+            {
+                // get the string to launch the browser (e.g. the default registry key value); this result may include arguments
+                var browserOpenCommand = browserOpenCommandRegistryKey.GetValue(null) as string;
+                if (browserOpenCommand != null)
+                {
+                    var stripExecutableFromCommandResult = ApplicationAction.StripExecutableFromCommand(browserOpenCommand);
+                    if (stripExecutableFromCommandResult.IsError == true)
+                    {
+                        return IMorphicResult<string>.ErrorResult();
+                    }
+                    browserOpenCommand = stripExecutableFromCommandResult.Value!;
+
+                    return IMorphicResult<string>.SuccessResult(browserOpenCommand);
+                }
+            }
+
+            // if we could not get the open command, return failure
+            return IMorphicResult<string>.ErrorResult();
+        }
+
+        private static IMorphicResult<string> GetPathToExecutableForUrlAssociation(string urlAssociation)
+        {
+            var userSelectedBrowserRegistryKey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\Shell\Associations\UrlAssociations\" + urlAssociation + @"\UserChoice", false);
+            if (userSelectedBrowserRegistryKey != null)
+            {
+                var progId = userSelectedBrowserRegistryKey.GetValue("ProgId") as string;
+                if (progId != null)
+                {
+                    var getOpenCommandForProgIdClassResult = ApplicationAction.GetOpenCommandForProgIdClass(progId);
+                    if (getOpenCommandForProgIdClassResult.IsError == false)
+                    {
+                        var browserOpenCommand = getOpenCommandForProgIdClassResult.Value!;
+                        return IMorphicResult<string>.SuccessResult(browserOpenCommand);
+                    }
+                }
+            }
+
+            // if we could not get the open command, return failure
+            return IMorphicResult<string>.ErrorResult();
+        }
+
+        private static IMorphicResult<string> GetPathToExecutableForFileExtension(string fileExtension)
+        {
+            var userSelectedBrowserRegistryKey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\" + fileExtension + @"\UserChoice", false);
+            if (userSelectedBrowserRegistryKey != null)
+            {
+                var progId = userSelectedBrowserRegistryKey.GetValue("ProgId") as string;
+                if (progId != null)
+                {
+                    var getOpenCommandForProgIdClassResult = ApplicationAction.GetOpenCommandForProgIdClass(progId);
+                    if (getOpenCommandForProgIdClassResult.IsError == false)
+                    {
+                        var browserOpenCommand = getOpenCommandForProgIdClassResult.Value!;
+                        return IMorphicResult<string>.SuccessResult(browserOpenCommand);
+                    }
+                }
+            }
+
+            // if we could not get the open command, return failure
+            return IMorphicResult<string>.ErrorResult();
+        }
+
+        private static IMorphicResult<string> GetDefaultBrowserPath()
+        {
+            var userSelectedBrowserRegistryKey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\Shell\Associations\UrlAssociations\http\UserChoice", false);
+            if (userSelectedBrowserRegistryKey != null)
+            {
+                var browserProgId = userSelectedBrowserRegistryKey.GetValue("ProgId") as string;
+                if (browserProgId != null)
+                {
+                    var getOpenCommandForProgIdClassResult = ApplicationAction.GetOpenCommandForProgIdClass(browserProgId);
+                    if (getOpenCommandForProgIdClassResult.IsError == false)
+                    {
+                        var browserOpenCommand = getOpenCommandForProgIdClassResult.Value!;
+                        return IMorphicResult<string>.SuccessResult(browserOpenCommand);
+                    }
+                }
+            }
+
+            // if we could not get the browser using the UserChoice registry key, try looking up the file association for an ".htm" file instead
+
+
+
+
+            // if no path could be found, return failure
+            return IMorphicResult<string>.ErrorResult();
+        }
+
         protected override Task<IMorphicResult> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
         {
-            if (this.DefaultApp != null && string.IsNullOrEmpty(this.ExeName))
+            if (this.DefaultAppName != null)
             {
-                return this.DefaultApp.InvokeAsync(source);
+                // use the default application for this type
+                switch (this.DefaultAppName!)
+                {
+                    case "browser":
+                        {
+                            string? associatedExecutablePath = null;
+
+                            // try to get the executable for https:// urls
+                            var getAssociatedExecutableForHttpUrlsResult = ApplicationAction.GetPathToExecutableForUrlAssociation("https");
+                            if (getAssociatedExecutableForHttpUrlsResult.IsError == false)
+                            {
+                                associatedExecutablePath = getAssociatedExecutableForHttpUrlsResult.Value!;
+                            }
+
+                            // if we haven't found the default browser yet, look for the default application to open ".htm" files
+                            if (associatedExecutablePath == null)
+                            {
+                                var getAssociatedExecutableForHtmFilesResult = ApplicationAction.GetPathToExecutableForFileExtension(".htm");
+                                if (getAssociatedExecutableForHtmFilesResult.IsError == false)
+                                {
+                                    associatedExecutablePath = getAssociatedExecutableForHtmFilesResult.Value!;
+                                }
+                            }
+
+                            // if we still haven't found the default browser, gracefully degrade by trying to use the launch process executable shortcut "https:" instead
+                            if (associatedExecutablePath == null)
+                            {
+                                associatedExecutablePath = "https:";
+                            }
+
+                            var launchBrowserProcessResult = ApplicationAction.LaunchProcess(associatedExecutablePath, new List<string>(), new Dictionary<string, string>(), this.WindowStyle);
+                            return Task.FromResult(launchBrowserProcessResult);
+                        }
+                    case "email":
+                        {
+                            var launchTarget = "mailto:";
+
+                            var launchMailProcessResult = ApplicationAction.LaunchProcess(launchTarget, new List<string>(), new Dictionary<string, string>(), this.WindowStyle);
+                            return Task.FromResult(launchMailProcessResult);
+                        }
+                    default:
+                        {
+                            // unknown
+                            Debug.Assert(false, "Unknown 'default' application type: " + this.DefaultAppName!);
+                            return Task.FromResult(IMorphicResult.ErrorResult);
+                        }
+                }
+            }
+
+            // if we reach here, we need to launch the executable related to this "exe" ID
+            if (string.IsNullOrEmpty(this.ExeName))
+            {
+                // if we don't have an exeName ID tag, we have failed
+                return Task.FromResult(IMorphicResult.ErrorResult);
             }
 
             if (this.AppX)
@@ -296,41 +474,90 @@ namespace Morphic.Client.Bar.Data.Actions
                 }
             }
 
-            ProcessStartInfo startInfo = new ProcessStartInfo()
-            {
-                FileName = this.AppPath ?? this.ExeName,
-                ErrorDialog = true,
-                // This is required to start taskmgr (the UAC prompt)
-                UseShellExecute = true,
-                WindowStyle = this.WindowStyle
-
-            };
-
+            // for all other processes, launch the executable
+            // pathToExecutable
+            var pathToExecutable = this.AppPath ?? this.ExeName;
+            //
+            // useShellExecute
+            var useShellExecute = true; // default
             if (this.Shell)
             {
-                startInfo.UseShellExecute = true;
+                useShellExecute = true;
             }
-
+            // arguments
+            List<string> arguments = new List<string>();
             if (this.Arguments.Count > 0)
             {
                 foreach (string argument in this.Arguments)
                 {
-                    startInfo.ArgumentList.Add(this.ResolveString(argument, source));
+                    var resolvedString = this.ResolveString(argument, source);
+                    if (resolvedString != null)
+                    {
+                        arguments.Add(resolvedString);
+                    }
                 }
             }
             else
             {
-                startInfo.Arguments = this.ResolveString(this.ArgumentsString, source);
+                var resolvedString = this.ResolveString(this.ArgumentsString, source);
+                if (resolvedString != null)
+                {
+                    arguments.Add(resolvedString);
+                }
             }
-
+            //
+            // environmentVariables
+            Dictionary<string, string> environmentVariables = new Dictionary<string, string>();
             foreach (var (key, value) in this.EnvironmentVariables)
             {
-                startInfo.EnvironmentVariables.Add(key, this.ResolveString(value, source));
+                var resolvedString = this.ResolveString(value, source);
+                if (resolvedString != null)
+                {
+                    environmentVariables.Add(key, resolvedString);
+                } 
+                else
+                {
+                    Debug.Assert(false, "Could not resolve environment variable: key = " + key + ", value = '" + value + "'");
+                }
+            }
+            //
+            // windowStyle
+            var windowStyle = this.WindowStyle;
+
+            var launchProcessResult = ApplicationAction.LaunchProcess(pathToExecutable, arguments, environmentVariables, windowStyle, useShellExecute);
+            return Task.FromResult(launchProcessResult);
+        }
+
+        private static IMorphicResult LaunchProcess(string pathToExecutable, List<string> arguments, Dictionary<string, string> environmentVariables, ProcessWindowStyle windowStyle, bool useShellExecute = true)
+        {
+            ProcessStartInfo startInfo = new ProcessStartInfo()
+            {
+                FileName = pathToExecutable,
+                ErrorDialog = true,
+                // This is required to start taskmgr (the UAC prompt)
+                UseShellExecute = useShellExecute,
+                WindowStyle = windowStyle
+            };
+
+            foreach (string argument in arguments)
+            {
+                startInfo.ArgumentList.Add(argument);
+            }
+
+            foreach (var (key, value) in environmentVariables)
+            {
+                startInfo.EnvironmentVariables.Add(key, value);
             }
 
             Process? process = Process.Start(startInfo);
-
-            return Task.FromResult(process != null ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult);
+            if (process != null)
+            {
+                return IMorphicResult.SuccessResult;
+            }
+            else
+            {
+                return IMorphicResult.ErrorResult;
+            }
         }
 
         /// <summary>

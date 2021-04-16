@@ -898,7 +898,7 @@ namespace Morphic.Client
                 var community = this.MorphicSession.Communities[iCommunity];
                 //
                 var newMenuItem = new MenuItem();
-                newMenuItem.Header = community.Name;
+                newMenuItem.Header = "Bar from " + community.Name;
                 newMenuItem.Tag = community.Id;
                 if (community.Id == AppOptions.Current.LastCommunity)
                 {
