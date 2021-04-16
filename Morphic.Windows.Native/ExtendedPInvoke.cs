@@ -182,6 +182,30 @@ namespace Morphic.Windows.Native
 
         #endregion SetupApi.h
 
+        #region shellapi.h
+
+        internal enum ShellExecuteErrorCode
+        {
+            /* standard ShellExecute error codes */
+            SE_ERR_FNF = 2, // file not found
+            SE_ERR_PNF = 3, // path not found
+            SE_ERR_ACCESSDENIED = 5, // access denied
+            SE_ERR_OOM =  8, // out of memory
+            SE_ERR_DLLNOTFOUND = 32,
+            //
+            /* extended ShellExecute error codes */
+            SE_ERR_SHARE = 26,
+            SE_ERR_ASSOCINCOMPLETE = 27,
+            SE_ERR_DDETIMEOUT = 28,
+            SE_ERR_DDEFAIL = 29,
+            SE_ERR_DDEBUSY = 30,
+            SE_ERR_NOASSOC = 31,
+        }
+
+        [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+        internal static extern IntPtr FindExecutable(string lpFile, string? lpDirectory, [Out] StringBuilder lpResult);
+
+        #endregion shellapi.h
 
         #region winioctl.h
 
