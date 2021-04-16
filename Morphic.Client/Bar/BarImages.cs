@@ -63,6 +63,8 @@
                     return "logo_bloomberg";
                 case "box":
                     return "logo_box";
+                case "calculator":
+                    return "logo_calculator";
                 case "calendar$calendar":
                     return "calendar";
                 case "cbsnews":
@@ -135,6 +137,8 @@
                     return "logo_macys";
                 case "mail":
                     return "logo_mail";
+                case "msedge":
+                    return "logo_msedge";
                 case "nbcnews":
                     return "logo_nbcNews";
                 case "netflix":
