@@ -113,6 +113,19 @@ namespace Morphic.Client.Bar.Data.Actions
                         var appPath = ApplicationAction.SearchAppPaths("msedge.exe");
                         return appPath;
                     }
+                case "microsoftQuickAssist":
+                    {
+                        // option #1: exactly as written in Quick Assist shortcut (as of 18-Apr-2021): %WINDIR%\system32\quickassist.exe
+                        //var appPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), @"system32\quickassist.exe");
+                        //
+                        // option #2: quickassist.exe in system folder
+                        var appPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "quickassist.exe");
+                        //
+                        // option #3: ms url shortcut (NOTE: we have intentionally not used this in case Quick Assist is removed from the system...as the URL does not give us a way to detect that scenario via "file does not exist" checks)
+                        //var appPath = "ms-quick-assist:";
+                        //
+                        return appPath;
+                    }
                 case "microsoftSkype":
                     {
                         var appPath = ApplicationAction.SearchAppPaths("Skype.exe");
