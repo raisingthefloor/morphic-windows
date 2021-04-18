@@ -143,6 +143,8 @@
                     return "logo_mail";
                 case "msedge":
                     return "logo_msedge";
+                case "msquickassist":
+                    return "logo_msquickassist";
                 case "nbcnews":
                     return "logo_nbcNews";
                 case "netflix":

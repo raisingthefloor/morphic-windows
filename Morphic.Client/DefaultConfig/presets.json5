@@ -317,11 +317,6 @@
       configuration: {
         exe: "mailto:"
       }
-    },
-    "quick-assist": {
-      configuration: {
-        exe: "ms-quick-assist:"
-      }
     }
   }
 }
