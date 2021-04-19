@@ -203,7 +203,7 @@ stages:
                 if [[ "${BRANCH_NAME}" == "master" ]]; then
                   echo "detected master build"
                   S3_OBJECT_PREFIX="win/x64/edge"
-                  EXTRA_ARGS="--expires $(date -d '+21 days' --iso-8601=seconds)"
+                  EXTRA_ARGS="--expires $(date -d '+42 days' --iso-8601=seconds)"
                 elif [[ "${BRANCH}" == *"staging/"* ]]; then
                   echo "detected staging build"
                   S3_OBJECT_PREFIX="win/x64/staging"
