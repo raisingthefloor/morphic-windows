@@ -95,6 +95,10 @@ namespace Morphic.Client.Bar.Data.Actions
             {
                 case "calculator":
                     {
+                        // option #1: calc.exe in system folder
+                        //var appPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "calc.exe");
+                        //
+                        // option #2: find calc.exe in paths
                         var appPath = ApplicationAction.SearchPathEnv("calc.exe");
                         return appPath;
                     }
