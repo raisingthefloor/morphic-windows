@@ -109,7 +109,7 @@ namespace Morphic.Client.Dialogs
             var errorMessage = "";
             try
             {
-                success = await this.morphicSession.RegisterUserAsync(user, credentials, this.Preferences ?? new Preferences());
+                success = await this.morphicSession.RegisterUserAsync(user, credentials, this.Preferences ?? new Preferences(), true);
             }
             catch (AuthService.BadPasswordException)
             {
