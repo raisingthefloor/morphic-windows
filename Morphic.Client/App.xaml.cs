@@ -948,7 +948,11 @@ namespace Morphic.Client
             try
             {
                 // TODO: should this hotkey be titled "Show MorphicBar" instead?
-                HotkeyManager.Current.AddOrReplace("Show Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift | ModifierKeys.Alt, showMorphicBarHotKeyPressed);
+                //HotkeyManager.Current.AddOrReplace("Show Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift | ModifierKeys.Alt, showMorphicBarHotKeyPressed);
+                //
+                // NOTE: per request on 10-May-2021, this hotkey has been changed from Ctrl+Shift+Alt+M to Ctrl+Shift+Alt+Windows+M
+                // TODO: consider changing this modifier key sequence back to Ctrl+Shift+Alt+M (and providing a dialog for the user to decide what key combo they wish to use)
+                HotkeyManager.Current.AddOrReplace("Show Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift | ModifierKeys.Alt | ModifierKeys.Windows, showMorphicBarHotKeyPressed);
             }
             catch
             {
