@@ -836,7 +836,7 @@ namespace Morphic.Client
             }
         }
 
-        private async Task Session_UserChangedAsync(object? sender, EventArgs e)
+        private async Task Session_UserChangedAsync(object? sender, MorphicSession.MorphicSessionSignInOrOutEventArgs e)
         {
             if (sender is MorphicSession morphicSession)
             {
@@ -846,12 +846,30 @@ namespace Morphic.Client
                     if (lastCommunityId != null)
                     {
                         // if the user previously selected a community bar, show that one now
+                        // NOTE: the behavior here may be inconsistent with Morphic on macOS.  If the previously-selected bar is no longer valid (e.g. the user was removed from the community),
+                        //       then we should select the first bar in their list (or the next one...depending on what the design spec says); we should do this consistently on both Windows and macOS
                         await this.BarManager.LoadSessionBarAsync(morphicSession, lastCommunityId);
                     } 
                     else
                     {
-                        // if the user has not selected a community bar, show the basic bar
-                        this.BarManager.LoadBasicMorphicBar();
+                        string? newUserSelectedCommunityId = null;
+                        if (e.SignedInViaLoginForm == true)
+                        {
+                            // if the user just signed in and they have not previously selected a community bar on this computer, select their first-available bar in the list (and fall-back to the Basic bar)
+                            if (morphicSession.Communities.Length > 0) { 
+                                newUserSelectedCommunityId = morphicSession.Communities[0].Id;
+                            }
+                        }
+
+                        if (newUserSelectedCommunityId != null)
+                        {
+                            await this.BarManager.LoadSessionBarAsync(morphicSession, newUserSelectedCommunityId);
+                        }
+                        else
+                        {
+                            // if the user has not selected a community bar, show the basic bar
+                            this.BarManager.LoadBasicMorphicBar();
+                        }
                     }
                 }
                 else
@@ -948,7 +966,11 @@ namespace Morphic.Client
             try
             {
                 // TODO: should this hotkey be titled "Show MorphicBar" instead?
-                HotkeyManager.Current.AddOrReplace("Show Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift | ModifierKeys.Alt, showMorphicBarHotKeyPressed);
+                //HotkeyManager.Current.AddOrReplace("Show Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift | ModifierKeys.Alt, showMorphicBarHotKeyPressed);
+                //
+                // NOTE: per request on 10-May-2021, this hotkey has been changed from Ctrl+Shift+Alt+M to Ctrl+Shift+Alt+Windows+M
+                // TODO: consider changing this modifier key sequence back to Ctrl+Shift+Alt+M (and providing a dialog for the user to decide what key combo they wish to use)
+                HotkeyManager.Current.AddOrReplace("Show Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift | ModifierKeys.Alt | ModifierKeys.Windows, showMorphicBarHotKeyPressed);
             }
             catch
             {

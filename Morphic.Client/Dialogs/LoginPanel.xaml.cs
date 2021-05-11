@@ -98,7 +98,7 @@ namespace Morphic.Client.Dialogs
             bool success = false;
             try
             {
-                success = await this.morphicSession.Authenticate(credentials);
+                success = await this.morphicSession.Authenticate(credentials, true);
             }
             catch (HttpService.BadRequestException e)
             {

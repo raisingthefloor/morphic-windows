@@ -90,9 +90,9 @@
             this.User = user;
         }
 
-        public abstract Task SignInAsync(User user);
+        public abstract Task SignInAsync(User user, bool signedInViaLoginForm);
 
-        public async Task<bool> Authenticate(UsernameCredentials credentials)
+        public async Task<bool> Authenticate(UsernameCredentials credentials, bool signedInViaLoginForm)
         {
             AuthResponse? auth = await this.Service.Authenticate(credentials);
             bool success = auth != null;
@@ -101,7 +101,7 @@
                 this.keychain.Save(credentials, this.Service.Endpoint);
                 this.Service.AuthToken = auth!.Token;
                 this.userSettings.SetUsernameForId(credentials.Username, auth.User.Id);
-                await this.SignInAsync(auth.User);
+                await this.SignInAsync(auth.User, signedInViaLoginForm);
             }
             return success;
         }
