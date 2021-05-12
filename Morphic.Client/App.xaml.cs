@@ -946,7 +946,7 @@ namespace Morphic.Client
             EventHandler<NHotkey.HotkeyEventArgs> loginHotKeyPressed = async (sender, e) =>
             {
                 // NOTE: if we want the login menu item to apply cloud-saved preferences after login, we should set this flag to true
-                var applyPreferencesAfterLogin = true;
+                var applyPreferencesAfterLogin = ConfigurableFeatures.CloudSettingsTransferIsEnabled;
                 var args = new Dictionary<string, object?>() { { "applyPreferencesAfterLogin", applyPreferencesAfterLogin } };
                 await this.Dialogs.OpenDialogAsync<LoginWindow>(args);
             };
