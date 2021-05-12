@@ -5,6 +5,7 @@
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Controls;
 
@@ -21,6 +22,7 @@
         public MenuType ParentMenuType = MenuType.mainMenu;
 
         public Type? Dialog { get; set; }
+        public string? DialogAction { get; set; }
 
         public enum MorphicMenuItemTelemetryType
         {
@@ -36,28 +38,18 @@
             this.Click += this.OnClick;
         }
 
-        private async void OnClick(object sender, RoutedEventArgs e)
+        internal static void OpenMenuItemPath(string openPath)
         {
-            if (sender is MorphicMenuItem item)
+            Process.Start(new ProcessStartInfo(openPath)
             {
-                if (!string.IsNullOrEmpty(item.Open))
-                {
-                    Process.Start(new ProcessStartInfo(this.Open)
-                    {
-                        UseShellExecute = true
-                    });
-                }
+                UseShellExecute = true
+            });
+        }
 
-                if (this.Dialog != null)
-                {
-                    var args = new Dictionary<string, object?>();
-                    App.Current.Dialogs.OpenDialogAsync(this.Dialog!, args);
-                }
-
-            }
-
+        internal static async Task RecordMenuItemTelemetryAsync(string? openPath, MorphicMenuItem.MenuType parentMenuType, MorphicMenuItemTelemetryType? telemetryType, string? telemetryCategory)
+        {
             string? eventSource = null;
-            switch (this.ParentMenuType)
+            switch (parentMenuType)
             {
                 case MenuType.mainMenu:
                     eventSource = "iconMenu";
@@ -68,12 +60,12 @@
             }
 
 
-            switch (((MorphicMenuItem)sender).TelemetryType)
+            switch (telemetryType)
             {
                 case MorphicMenuItemTelemetryType.Settings:
                     {
                         var segmentation = new Segmentation();
-                        var settingCategoryName = ((MorphicMenuItem)sender).TelemetryCategory;
+                        var settingCategoryName = telemetryCategory;
                         if (settingCategoryName != null)
                         {
                             segmentation.Add("category", settingCategoryName);
@@ -81,14 +73,14 @@
                         //
                         segmentation.Add("eventSource", eventSource);
                         //
-                        await Countly.RecordEvent("systemSettings", 1, segmentation);
-                        //await Countly.RecordEvent("systemSettings" + settingCategoryName);
+                        await App.Current.Countly_RecordEventAsync("systemSettings", 1, segmentation);
+                        //await App.Current.Countly_RecordEventAsync("systemSettings" + settingCategoryName);
                     }
                     break;
                 case MorphicMenuItemTelemetryType.LearnMore:
                     {
                         var segmentation = new Segmentation();
-                        var settingCategoryName = ((MorphicMenuItem)sender).TelemetryCategory;
+                        var settingCategoryName = telemetryCategory;
                         if (settingCategoryName != null)
                         {
                             segmentation.Add("category", settingCategoryName);
@@ -96,13 +88,13 @@
                         //
                         segmentation.Add("eventSource", eventSource);
                         //
-                        await Countly.RecordEvent("learnMore", 1, segmentation);
+                        await App.Current.Countly_RecordEventAsync("learnMore", 1, segmentation);
                     }
                     break;
                 case MorphicMenuItemTelemetryType.QuickDemoVideo:
                     {
                         var segmentation = new Segmentation();
-                        var settingCategoryName = ((MorphicMenuItem)sender).TelemetryCategory;
+                        var settingCategoryName = telemetryCategory;
                         if (settingCategoryName != null)
                         {
                             segmentation.Add("category", settingCategoryName);
@@ -110,7 +102,7 @@
                         //
                         segmentation.Add("eventSource", eventSource);
                         //
-                        await Countly.RecordEvent("quickDemoVideo", 1, segmentation);
+                        await App.Current.Countly_RecordEventAsync("quickDemoVideo", 1, segmentation);
                     }
                     break;
                 default:
@@ -118,7 +110,7 @@
                     // NOTE: we may want to create a separate "telemetry type" and embed it in the menu xaml itself (so that we don't have to compare against open paths here)
                     {
                         string? settingCategoryName = null;
-                        switch (((MorphicMenuItem)sender).Open)
+                        switch (openPath)
                         {
                             case "ms-settings:colors":
                                 settingCategoryName = "darkMode";
@@ -133,6 +125,7 @@
                                 settingCategoryName = "colorFilter";
                                 break;
                             case "ms-settings:easeofaccess-cursorandpointersize":
+                            case "ms-settings:easeofaccess-MousePointer":
                                 settingCategoryName = "pointerSize";
                                 break;
                             case "ms-settings:easeofaccess-highcontrast":
@@ -169,12 +162,39 @@
                             segmentation.Add("category", settingCategoryName);
                             segmentation.Add("eventSource", eventSource);
                             //
-                            await Countly.RecordEvent("systemSettings", 1, segmentation);
-                            //await Countly.RecordEvent("systemSettings" + settingCategoryName);
+                            await App.Current.Countly_RecordEventAsync("systemSettings", 1, segmentation);
+                            //await App.Current.Countly_RecordEventAsync("systemSettings" + settingCategoryName);
                         }
                     }
                     break;
             }
+        }
+
+        private async void OnClick(object sender, RoutedEventArgs e)
+        {
+            string? openPath = null;
+
+            if (sender is MorphicMenuItem item)
+            {
+                if (!string.IsNullOrEmpty(item.Open))
+                {
+                    openPath = item.Open;
+                    MorphicMenuItem.OpenMenuItemPath(openPath!);
+                }
+
+                if (this.Dialog != null)
+                {
+                    var args = new Dictionary<string, object?>();
+                    if (this.DialogAction != null)
+                    {
+                        args["action"] = this.DialogAction!;
+                    }
+                    await App.Current.Dialogs.OpenDialogAsync(this.Dialog!, args);
+                }
+
+            }
+
+            await RecordMenuItemTelemetryAsync(openPath, ((MorphicMenuItem)sender).ParentMenuType, ((MorphicMenuItem)sender).TelemetryType, ((MorphicMenuItem)sender).TelemetryCategory);
         }
     }
 

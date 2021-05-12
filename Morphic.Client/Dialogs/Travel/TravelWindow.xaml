@@ -11,7 +11,7 @@
         FontSize="17"
         ResizeMode="NoResize"
         Icon="/Icon.png"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen" Loaded="Window_Loaded">
     <Window.Resources>
         <Style TargetType="{x:Type Button}">
             <Setter Property="Background" Value="#FF008145"/>

@@ -18,7 +18,9 @@ namespace Morphic.Client.Bar.Data
     using System.Runtime.CompilerServices;
     using System.Threading;
     using System.Threading.Tasks;
+    using System.Windows.Controls;
     using System.Windows.Media;
+    using System.Xml;
     using Config;
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
@@ -92,6 +94,17 @@ namespace Morphic.Client.Bar.Data
             set
             {
                 this.imageSource = value;
+                this.OnPropertyChanged();
+            }
+        }
+
+        private Canvas? _xamlContent;
+        public Canvas? XamlContent
+        {
+            get => _xamlContent;
+            set
+            {
+                _xamlContent = value;
                 this.OnPropertyChanged();
             }
         }
@@ -173,8 +186,21 @@ namespace Morphic.Client.Bar.Data
             // Load the local image.
             if (!string.IsNullOrEmpty(this.ImagePath) && File.Exists(this.ImagePath))
             {
-                this.ImageSource = BarImages.CreateImageSource(this.ImagePath);
-                success = this.ImageValue != null;
+                if (Path.GetExtension(imagePath)?.ToLowerInvariant() == ".xaml")
+                {
+                    var xamlFileStream = new FileStream(this.ImagePath, FileMode.Open, FileAccess.Read);
+                    // TODO: when we move to .NET 5, set useRestrictiveXamlReader to true
+                    var xamlAsCanvas = (Canvas)System.Windows.Markup.XamlReader.Load(new XmlTextReader(xamlFileStream) /*, true */);
+                    this.XamlContent = xamlAsCanvas;
+
+                    success = true;
+                }
+                else
+                {
+                    this.ImageSource = BarImages.CreateImageSource(this.ImagePath);
+                    
+                    success = this.ImageValue != null;
+                }
             }
 
             // Fallback to a default image.

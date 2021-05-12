@@ -5,7 +5,7 @@
             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
             xmlns:local="clr-namespace:Morphic.Client"
             mc:Ignorable="d"
-            FocusManager.FocusedElement="{Binding ElementName=UsernameField}">
+            Loaded="Panel_Loaded">
     <StackPanel.Resources>
     </StackPanel.Resources>
     <Grid MaxWidth="400">
@@ -31,7 +31,7 @@
         <Label x:Name="ErrorLabel" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Center" FontWeight="SemiBold" Foreground="#ffcc0000" Visibility="Hidden" AutomationProperties.AutomationId="ErrorLabel" Focusable="True">We did not recognize your login.  Please try again.</Label>
         <UniformGrid Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Columns="2" Rows="1">
             <Button x:Name="CancelButton" Width="Auto" HorizontalAlignment="Left" FontWeight="Bold" Margin="10,5,0,10" Click="OnCancel" IsEnabled="True" AutomationProperties.HelpText="Cancel Login" Content="Cancel"/>
-            <Button x:Name="LoginButton" Width="Auto" HorizontalAlignment="Right" FontWeight="Bold" Margin="10,5,0,10" Click="OnLogin" IsEnabled="False" AutomationProperties.HelpText="Login" Content="Login"/>
+            <Button x:Name="LoginButton" Width="Auto" HorizontalAlignment="Right" FontWeight="Bold" Margin="10,5,0,10" Click="OnLogin" IsEnabled="False" AutomationProperties.HelpText="Login" Content="Login" IsDefault="True"/>
         </UniformGrid>
     </Grid>
     <TextBlock Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Margin="10" HorizontalAlignment="Center">

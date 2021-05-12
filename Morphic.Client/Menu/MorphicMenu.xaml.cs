@@ -4,8 +4,10 @@
     using CountlySDK;
     using Morphic.Client.Config;
     using Morphic.Client.Dialogs;
+    using Morphic.Windows.Native.OsVersion;
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Controls;
@@ -34,7 +36,8 @@
             // if ConfigurableFeatures.CloudSettingsTransferIsEnabled is false, then hide the settings which can transfer/restore settings
             if (ConfigurableFeatures.CloudSettingsTransferIsEnabled == false)
             {
-                this.CopySettingsBetweenComputersMenuItem.Visibility = Visibility.Collapsed;
+                this.ChangeSetupMenuItem.Visibility = Visibility.Collapsed;
+                this.SaveMySetupMenuItem.Visibility = Visibility.Collapsed;
                 this.RestoreSettingsFromBackupMenuItem.Visibility = Visibility.Collapsed;
                 this.CloudSettingsSeparator.Visibility = Visibility.Collapsed;
             }
@@ -84,7 +87,7 @@
             this.IsOpen = true;
 
             var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
-            await Countly.RecordEvent("showMenu", 1, segmentation);
+            await App.Current.Countly_RecordEventAsync("showMenu", 1, segmentation);
         }
 
         private CountlySDK.Segmentation CreateMenuOpenedSourceSegmentation(MenuOpenedSource? menuOpenedSource)
@@ -102,7 +105,7 @@
             this.App.BarManager.ShowBar();
             //
             var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
-            await Countly.RecordEvent("morphicBarShow", 1, segmentation);
+            await App.Current.Countly_RecordEventAsync("morphicBarShow", 1, segmentation);
         }
 
         private async void HideBarClick(object sender, RoutedEventArgs e)
@@ -110,13 +113,13 @@
             this.App.BarManager.HideBar();
             //
             var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
-            await Countly.RecordEvent("morphicBarHide", 1, segmentation);
+            await App.Current.Countly_RecordEventAsync("morphicBarHide", 1, segmentation);
         }
 
         private async void QuitClick(object sender, RoutedEventArgs e)
         {
             var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
-            await Countly.RecordEvent("quit", 1, segmentation);
+            await App.Current.Countly_RecordEventAsync("quit", 1, segmentation);
 
             this.App.BarManager.CloseBar();
             this.App.Shutdown();
@@ -127,10 +130,10 @@
             switch (AutorunAfterLoginItem.IsChecked)
             {
                 case true:
-                    await Countly.RecordEvent("autorunAfterLoginEnabled");
+                    await App.Current.Countly_RecordEventAsync("autorunAfterLoginEnabled");
                     break;
                 case false:
-                    await Countly.RecordEvent("autorunAfterLoginDisabled");
+                    await App.Current.Countly_RecordEventAsync("autorunAfterLoginDisabled");
                     break;
             }
         }
@@ -140,12 +143,42 @@
             switch (ShowMorphicBarAfterLoginItem.IsChecked)
             {
                 case true:
-                    await Countly.RecordEvent("showMorphicBarAfterLoginEnabled");
+                    await App.Current.Countly_RecordEventAsync("showMorphicBarAfterLoginEnabled");
                     break;
                 case false:
-                    await Countly.RecordEvent("showMorphicBarAfterLoginDisabled");
+                    await App.Current.Countly_RecordEventAsync("showMorphicBarAfterLoginDisabled");
                     break;
             }
+        }
+
+        private async void WindowsSettingsPointerSizeClicked(object sender, RoutedEventArgs e)
+        {
+            string settingsUrlAsPath = null!; // required to quiet the "not initialized error"
+            var windows10Build = OsVersion.GetWindows10Version();
+
+            switch (windows10Build)
+            {
+                case Windows10Version.v1809:
+                case Windows10Version.v1903:
+                case Windows10Version.v1909:
+                    // Windows 10 1809, 1903, 1909
+                    settingsUrlAsPath = "ms-settings:easeofaccess-cursorandpointersize";
+                    break;
+                case Windows10Version.v2004:
+                case Windows10Version.v20H2:
+                case Windows10Version.vFuture:
+                    // Windows 10 2004, 20H2 (and assumed for the future)
+                    settingsUrlAsPath = "ms-settings:easeofaccess-MousePointer";
+                    break;
+                case null: // not a valid version
+                default:
+                    // not supported
+                    Debug.Assert(false, "This build of Windows 10 is not supported");
+                    return;
+            }
+
+            MorphicMenuItem.OpenMenuItemPath(settingsUrlAsPath);
+            await MorphicMenuItem.RecordMenuItemTelemetryAsync(settingsUrlAsPath, ((MorphicMenuItem)sender).ParentMenuType, ((MorphicMenuItem)sender).TelemetryType, ((MorphicMenuItem)sender).TelemetryCategory);
         }
 
         private void StopKeyRepeatInit(object sender, RoutedEventArgs e)
@@ -164,11 +197,11 @@
 
                 if (menuItem.IsChecked == true)
                 {
-                    await Countly.RecordEvent("stopKeyRepeatOn");
+                    await App.Current.Countly_RecordEventAsync("stopKeyRepeatOn");
                 }
                 else
                 {
-                    await Countly.RecordEvent("stopKeyRepeatOff");
+                    await App.Current.Countly_RecordEventAsync("stopKeyRepeatOff");
                 }
             }
         }
@@ -217,7 +250,7 @@
                 //
                 var segmentation = new CountlySDK.Segmentation();
                 segmentation.Add("eventSource", "trayIconClick");
-                await Countly.RecordEvent("morphicBarHide", 1, segmentation);
+                await App.Current.Countly_RecordEventAsync("morphicBarHide", 1, segmentation);
             }
             else
             {
@@ -225,7 +258,7 @@
                 //
                 var segmentation = new CountlySDK.Segmentation();
                 segmentation.Add("eventSource", "trayIconClick");
-                await Countly.RecordEvent("morphicBarShow", 1, segmentation);
+                await App.Current.Countly_RecordEventAsync("morphicBarShow", 1, segmentation);
             }
         }
 
@@ -248,26 +281,32 @@
         private async void ExploreMorphicClicked(object sender, RoutedEventArgs e)
         {
             var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
-            await Countly.RecordEvent("exploreMorphic", 1, segmentation);
+            await App.Current.Countly_RecordEventAsync("exploreMorphic", 1, segmentation);
         }
 
-        private async void QuickDemoMoviesClicked(object sender, RoutedEventArgs e)
+        private async void HowToCopySetupsClicked(object sender, RoutedEventArgs e)
+        {
+            var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
+            await App.Current.Countly_RecordEventAsync("howToCopySetups", 1, segmentation);
+        }
+
+        private async void QuickDemoVideosClicked(object sender, RoutedEventArgs e)
         {
             var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
             segmentation.Add("category", "main");
-            await Countly.RecordEvent("quickDemoVideo", 1, segmentation);
+            await App.Current.Countly_RecordEventAsync("quickDemoVideo", 1, segmentation);
         }
 
         private async void OtherHelpfulThingsClicked(object sender, RoutedEventArgs e)
         {
             var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
-            await Countly.RecordEvent("otherHelpfulThings", 1, segmentation);
+            await App.Current.Countly_RecordEventAsync("otherHelpfulThings", 1, segmentation);
         }
 
         private async void AboutMorphicClicked(object sender, RoutedEventArgs e)
         {
             var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
-            await Countly.RecordEvent("aboutMorphic", 1, segmentation);
+            await App.Current.Countly_RecordEventAsync("aboutMorphic", 1, segmentation);
         }
 
         private void SelectBasicMorphicBarClick(object sender, RoutedEventArgs e)

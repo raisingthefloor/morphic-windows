@@ -11,7 +11,7 @@
     <AssemblyName>Morphic</AssemblyName>
     <PublishTrimmed>false</PublishTrimmed>
     <Platforms>AnyCPU;x64</Platforms>
-    <VersionPrefix>1.1$(VersionBuildComponents)</VersionPrefix>
+    <VersionPrefix>1.2$(VersionBuildComponents)</VersionPrefix>
     <VersionSuffix Condition="'$(Configuration)' == 'Debug'">localdev</VersionSuffix>
     <VersionSuffix Condition="'$(Configuration)' == 'Release'">$(VersionSuffix)</VersionSuffix>
     <StartupObject>Morphic.Client.AppMain</StartupObject>
@@ -85,7 +85,6 @@
     <PackageReference Include="Microsoft.Windows.SDK.Contracts" Version="10.0.19041.1" />
     <PackageReference Include="NHotkey.Wpf" Version="2.0.1" />
     <PackageReference Include="NReco.Logging.File" Version="1.1.1" />
-    <PackageReference Include="SharpVectors.Reloaded" Version="1.6.0" />
   </ItemGroup>
 
   <ItemGroup>

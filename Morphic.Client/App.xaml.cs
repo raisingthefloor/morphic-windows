@@ -142,7 +142,12 @@ namespace Morphic.Client
             // for type: control
             public string? feature { get; set; }
         }
-
+        //
+        public class TelemetryConfigSection
+        {
+            public string? siteId { get; set; }
+        }
+        //
         public class ConfigFileContents
         {
             public class FeaturesConfigSection
@@ -167,8 +172,9 @@ namespace Morphic.Client
             public int? version { get; set; }
             public FeaturesConfigSection? features { get; set; }
             public MorphicBarConfigSection? morphicBar { get; set; }
+            public TelemetryConfigSection? telemetry { get; set; }
         }
-
+        //
         private struct CommonConfigurationContents
         {
             public ConfigurableFeatures.AutorunConfigOption? AutorunConfig;
@@ -177,6 +183,7 @@ namespace Morphic.Client
             public bool ResetSettingsIsEnabled;
             public ConfigurableFeatures.MorphicBarVisibilityAfterLoginOption? MorphicBarVisibilityAfterLogin;
             public List<MorphicBarExtraItem> ExtraMorphicBarItems;
+            public string? TelemetrySiteId;
         }
         private async Task<CommonConfigurationContents> GetCommonConfigurationAsync()
         {
@@ -388,7 +395,27 @@ namespace Morphic.Client
                 }
             }
 
+            // capture telemetry site id
+            result.TelemetrySiteId = deserializedJson.telemetry?.siteId;
+
             return result;
+        }
+
+        private bool ShouldTelemetryBeDisabled()
+        {
+            // NOTE: we have intentionally chosen not to create the CommonConfigDir (e.g. "C:\ProgramData\Morphic") since Morphic does not currently create files in this folder.
+            var morphicCommonConfigPath = AppPaths.GetCommonConfigDir("", false);
+            if (Directory.Exists(morphicCommonConfigPath) == false)
+            {
+                // if the Morphic common config path doesn't exist, there's definitely no file
+                return false;
+            }
+            //
+            var disableTelemetryFilePath = Path.Combine(morphicCommonConfigPath, "disable_telemetry.txt");
+
+            // if disable_telemetry.txt exists, disable telemetry
+            var disableTelemetryFileExists = File.Exists(disableTelemetryFilePath);
+            return disableTelemetryFileExists;
         }
 
         /// <summary>
@@ -447,15 +474,61 @@ namespace Morphic.Client
             services.AddSingleton<Solutions>(s => Solutions.FromFile(s, AppPaths.GetAppFile("solutions.json5")));
         }
 
+        internal async Task Countly_RecordEventAsync(string Key) {
+            if (ConfigurableFeatures.TelemetryIsEnabled == true)
+            {
+                await Countly.RecordEvent(Key);
+            }
+        }
+
+        internal async Task Countly_RecordEventAsync(string Key, int Count, Segmentation Segmentation)
+        {
+            if (ConfigurableFeatures.TelemetryIsEnabled == true)
+            {
+                await Countly.RecordEvent(Key, Count, Segmentation);
+            }
+        }
+
         private async Task ConfigureCountlyAsync()
         {
             // TODO: Move metrics related things to own class.
 
             // retrieve the telemetry device ID for this device; if it doesn't exist then create a new one
             var telemetryDeviceUuid = AppOptions.TelemetryDeviceUuid;
-            if (telemetryDeviceUuid == null)
+            if ((telemetryDeviceUuid == null) || (telemetryDeviceUuid == String.Empty))
             {
                 telemetryDeviceUuid = "D_" + Guid.NewGuid().ToString();
+                AppOptions.TelemetryDeviceUuid = telemetryDeviceUuid;
+            }
+
+            // if a site id is (or is not) configured, modify the telemetry device uuid accordingly
+            // NOTE: we handle cases of site ids changing, site IDs being added post-deployment, and site IDs being removed post-deployment
+            var unmodifiedTelemetryDeviceUuid = telemetryDeviceUuid;
+            var telemetrySiteId = ConfigurableFeatures.TelemetrySiteId;
+            if ((telemetrySiteId != null) && (telemetrySiteId != String.Empty))
+            {
+                // NOTE: in the future, consider reporting or throwing an error if the site id required sanitization (i.e. wasn't valid)
+                var sanitizedTelemetrySiteId = this.SanitizeSiteId(telemetrySiteId);
+                if (sanitizedTelemetrySiteId != "") 
+                {
+                    // we have a telemetry site id; prepend it
+                    telemetryDeviceUuid = this.PrependSiteIdToTelemetryUuid(telemetryDeviceUuid, telemetrySiteId);
+                }
+                else
+                {
+                    // the supplied site id isn't valid; strip off the site id; In the future consider logging/reporting an error
+                    telemetryDeviceUuid = this.RemoveSiteIdFromTelemetryUuid(telemetryDeviceUuid);
+                }
+            } 
+            else
+            {
+                // no telemetry site id is configured; strip off any site id which might have already been part of our telemetry id
+                // TODO: in the future, make sure that the telemetry ID wasn't _just_ the site id (as it cannot be allowed to be empty)
+                telemetryDeviceUuid = this.RemoveSiteIdFromTelemetryUuid(telemetryDeviceUuid);
+            }
+            // if the telemetry uuid has changed (because of the site id), update our stored telemetry uuid now
+            if (telemetryDeviceUuid != unmodifiedTelemetryDeviceUuid)
+            {
                 AppOptions.TelemetryDeviceUuid = telemetryDeviceUuid;
             }
 
@@ -471,6 +544,78 @@ namespace Morphic.Client
             await Countly.Instance.Init(cc);
             await Countly.Instance.SessionBegin();
             CountlyBase.IsLoggingEnabled = true;
+        }
+
+        private string PrependSiteIdToTelemetryUuid(string value, string telemetrySiteId) 
+        {
+            var telemetryDeviceUuid = value;
+        
+            if (telemetryDeviceUuid.StartsWith("S_")) 
+            {
+                // if the telemetry device uuid already starts with a site id, strip it off now
+                telemetryDeviceUuid = telemetryDeviceUuid.Remove(0, 2);
+                var indexOfForwardSlash = telemetryDeviceUuid.IndexOf('/');
+                if (indexOfForwardSlash >= 0)
+                {
+                    // strip the site id off the front
+                    telemetryDeviceUuid = telemetryDeviceUuid.Substring(indexOfForwardSlash + 1);
+                } 
+                else
+                {
+                    // the site ID was the only contents; return null
+                    telemetryDeviceUuid = "";
+                }
+            }
+
+            // prepend the site id to the telemetry device uuid
+            telemetryDeviceUuid = "S_" + telemetrySiteId + "/" + telemetryDeviceUuid;
+            return telemetryDeviceUuid;
+        }
+    
+        private string RemoveSiteIdFromTelemetryUuid(string value)
+        {
+            var telemetryDeviceUuid = value;
+
+            if (telemetryDeviceUuid.StartsWith("S_")) 
+            {
+                // if the telemetry device uuid starts with a site id, strip it off now
+                telemetryDeviceUuid = telemetryDeviceUuid.Remove(0, 2);
+                var indexOfForwardSlash = telemetryDeviceUuid.IndexOf('/');
+                if (indexOfForwardSlash >= 0)
+                {
+                    // strip the site id off the front
+                    telemetryDeviceUuid = telemetryDeviceUuid.Substring(indexOfForwardSlash + 1);
+                }
+                else
+                {
+                    // the site ID is the only contents
+                    telemetryDeviceUuid = "";
+                }
+            }
+
+            return telemetryDeviceUuid;
+        }
+
+        private string SanitizeSiteId(string siteId)
+        {
+            var siteIdAsCharacters = siteId.ToCharArray();
+            var resultAsCharacters = new List<char>();
+            foreach (var character in siteIdAsCharacters)
+            {
+                if ((character >= 'a' && character <= 'z') ||
+                    (character >= 'A' && character <= 'Z') ||
+                    (character >= '0' && character <= '9'))
+                {
+                    resultAsCharacters.Add(character);
+                } 
+                else
+                {
+                    // filter out this character
+                }
+
+            }
+
+            return new string(resultAsCharacters.ToArray());
         }
 
         private void RecordedException(Task task)
@@ -541,6 +686,10 @@ namespace Morphic.Client
             base.OnStartup(e);
             this.Logger = this.ServiceProvider.GetRequiredService<ILogger<App>>();
 
+            // determine if telemetry should be enabled
+            var telemetryShouldBeDisabled = this.ShouldTelemetryBeDisabled();
+            var telemetryIsEnabled = (telemetryShouldBeDisabled == false);
+
             // load (optional) common configuration file
             // NOTE: we currently load this AFTER setting up the logger because the GetCommonConfigurationAsync function logs config file errors to the logger
             var commonConfiguration = await this.GetCommonConfigurationAsync();
@@ -549,8 +698,10 @@ namespace Morphic.Client
                 checkForUpdatesIsEnabled: commonConfiguration.CheckForUpdatesIsEnabled,
                 cloudSettingsTransferIsEnabled: commonConfiguration.CloudSettingsTransferIsEnabled,
                 resetSettingsIsEnabled: commonConfiguration.ResetSettingsIsEnabled,
+                telemetryIsEnabled: telemetryIsEnabled,
                 morphicBarvisibilityAfterLogin: commonConfiguration.MorphicBarVisibilityAfterLogin,
-                morphicBarExtraItems: commonConfiguration.ExtraMorphicBarItems
+                morphicBarExtraItems: commonConfiguration.ExtraMorphicBarItems,
+                telemetrySiteId: commonConfiguration.TelemetrySiteId
                 );
 
             this.MorphicSession = this.ServiceProvider.GetRequiredService<MorphicSession>();
@@ -561,7 +712,11 @@ namespace Morphic.Client
             this.morphicMenu = new MorphicMenu();
 
             this.RegisterGlobalHotKeys();
-            await this.ConfigureCountlyAsync();
+
+            if (ConfigurableFeatures.TelemetryIsEnabled == true)
+            {
+                await this.ConfigureCountlyAsync();
+            }
 
             if (ConfigurableFeatures.CheckForUpdatesIsEnabled == true)
             {
@@ -681,7 +836,7 @@ namespace Morphic.Client
             }
         }
 
-        private async Task Session_UserChangedAsync(object? sender, EventArgs e)
+        private async Task Session_UserChangedAsync(object? sender, MorphicSession.MorphicSessionSignInOrOutEventArgs e)
         {
             if (sender is MorphicSession morphicSession)
             {
@@ -691,12 +846,30 @@ namespace Morphic.Client
                     if (lastCommunityId != null)
                     {
                         // if the user previously selected a community bar, show that one now
+                        // NOTE: the behavior here may be inconsistent with Morphic on macOS.  If the previously-selected bar is no longer valid (e.g. the user was removed from the community),
+                        //       then we should select the first bar in their list (or the next one...depending on what the design spec says); we should do this consistently on both Windows and macOS
                         await this.BarManager.LoadSessionBarAsync(morphicSession, lastCommunityId);
                     } 
                     else
                     {
-                        // if the user has not selected a community bar, show the basic bar
-                        this.BarManager.LoadBasicMorphicBar();
+                        string? newUserSelectedCommunityId = null;
+                        if (e.SignedInViaLoginForm == true)
+                        {
+                            // if the user just signed in and they have not previously selected a community bar on this computer, select their first-available bar in the list (and fall-back to the Basic bar)
+                            if (morphicSession.Communities.Length > 0) { 
+                                newUserSelectedCommunityId = morphicSession.Communities[0].Id;
+                            }
+                        }
+
+                        if (newUserSelectedCommunityId != null)
+                        {
+                            await this.BarManager.LoadSessionBarAsync(morphicSession, newUserSelectedCommunityId);
+                        }
+                        else
+                        {
+                            // if the user has not selected a community bar, show the basic bar
+                            this.BarManager.LoadBasicMorphicBar();
+                        }
                     }
                 }
                 else
@@ -743,7 +916,7 @@ namespace Morphic.Client
                 var community = this.MorphicSession.Communities[iCommunity];
                 //
                 var newMenuItem = new MenuItem();
-                newMenuItem.Header = community.Name;
+                newMenuItem.Header = "Bar from " + community.Name;
                 newMenuItem.Tag = community.Id;
                 if (community.Id == AppOptions.Current.LastCommunity)
                 {
@@ -770,17 +943,39 @@ namespace Morphic.Client
 
         private void RegisterGlobalHotKeys()
         {
-            HotkeyManager.Current.AddOrReplace("Login with Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift, (sender, e) =>
+            EventHandler<NHotkey.HotkeyEventArgs> loginHotKeyPressed = async (sender, e) =>
             {
                 // NOTE: if we want the login menu item to apply cloud-saved preferences after login, we should set this flag to true
-                var applyPreferencesAfterLogin = false;
+                var applyPreferencesAfterLogin = true;
                 var args = new Dictionary<string, object?>() { { "applyPreferencesAfterLogin", applyPreferencesAfterLogin } };
-                this.Dialogs.OpenDialogAsync<LoginWindow>(args);
-            });
-            HotkeyManager.Current.AddOrReplace("Show Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift | ModifierKeys.Alt, (sender, e) =>
+                await this.Dialogs.OpenDialogAsync<LoginWindow>(args);
+            };
+            try
+            {
+                HotkeyManager.Current.AddOrReplace("Login with Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift, loginHotKeyPressed);
+            }
+            catch
+            {
+                this.Logger.LogError("Could not register hotkey Ctrl+Shift+M for 'Login with Morphic'");
+            }
+
+            EventHandler<NHotkey.HotkeyEventArgs> showMorphicBarHotKeyPressed = (sender, e) =>
             {
                 this.BarManager.ShowBar();
-            });
+            };
+            try
+            {
+                // TODO: should this hotkey be titled "Show MorphicBar" instead?
+                //HotkeyManager.Current.AddOrReplace("Show Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift | ModifierKeys.Alt, showMorphicBarHotKeyPressed);
+                //
+                // NOTE: per request on 10-May-2021, this hotkey has been changed from Ctrl+Shift+Alt+M to Ctrl+Shift+Alt+Windows+M
+                // TODO: consider changing this modifier key sequence back to Ctrl+Shift+Alt+M (and providing a dialog for the user to decide what key combo they wish to use)
+                HotkeyManager.Current.AddOrReplace("Show Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift | ModifierKeys.Alt | ModifierKeys.Windows, showMorphicBarHotKeyPressed);
+            }
+            catch
+            {
+                this.Logger.LogError("Could not register hotkey Ctrl+Shift+Alt+M for 'Show Morphic'");
+            }
         }
 
         public async Task OpenSessionAsync()
@@ -877,7 +1072,10 @@ namespace Morphic.Client
         protected override async void OnExit(ExitEventArgs e)
         {
             _messageWatcherNativeWindow?.Dispose();
-            await Countly.Instance.SessionEnd();
+            if (ConfigurableFeatures.TelemetryIsEnabled == true)
+            {
+                await Countly.Instance.SessionEnd();
+            }
 
             if (ConfigurableFeatures.ResetSettingsIsEnabled == true)
             {

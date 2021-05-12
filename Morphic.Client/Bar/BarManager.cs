@@ -219,6 +219,23 @@ namespace Morphic.Client.Bar
 
             if (bar != null)
             {
+                // if any of the items are application actions and the application isn't available, remove the button from the items collection
+                var index = 0;
+                while (index < bar.AllItems.Count)
+                {
+                    var actionAsApplicationAction = bar.AllItems[index].Action as Data.Actions.ApplicationAction;
+                    if (actionAsApplicationAction != null)
+                    {
+                        if (actionAsApplicationAction.IsAvailable == false)
+                        {
+                            bar.AllItems.RemoveAt(index);
+                            continue;
+                        }
+                    }
+
+                    index += 1;
+                }
+
                 this.CreateBarWindow(bar);
                 bar.ReloadRequired += this.OnBarOnReloadRequired;
             }

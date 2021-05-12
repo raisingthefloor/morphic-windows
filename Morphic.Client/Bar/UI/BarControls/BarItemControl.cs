@@ -140,18 +140,18 @@ namespace Morphic.Client.Bar.UI.BarControls
                 elem.Focusable = elem.Focusable && elem is Button || elem == this;
             }
 
-            foreach (Image image in this.GetAllChildren().OfType<Image>())
+            foreach (BitmapOrXamlImage bitmapOrXamlImage in this.GetAllChildren().OfType<BitmapOrXamlImage>())
             {
-                image.SourceUpdated += this.ImageOnSourceUpdated;
-                this.ImageOnSourceUpdated(image, null);
+                bitmapOrXamlImage.ImageSourceChanged += BitmapOrXamlImage_ImageSourceChanged;
+                this.BitmapOrXamlImage_ImageSourceChanged(bitmapOrXamlImage, new PropertyChangedEventArgs("ImageSource"));
             }
         }
 
-        private void ImageOnSourceUpdated(object? sender, EventArgs? e)
+        private void BitmapOrXamlImage_ImageSourceChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (sender is Image image)
+            if (sender is BitmapOrXamlImage image)
             {
-                if (image.Source is DrawingImage drawingImage)
+                if (image.ImageSource is DrawingImage drawingImage)
                 {
                     this.DrawingBrush =
                         BarImages.ChangeDrawingColor(drawingImage.Drawing, this.BarItem.Color, this.DrawingBrush);
@@ -178,7 +178,7 @@ namespace Morphic.Client.Bar.UI.BarControls
         }
 
         /// <summary>
-        /// The brush used for monochrome svg images.
+        /// The brush used for monochrome images.
         /// </summary>
         public SolidColorBrush? DrawingBrush { get; protected set; }
 

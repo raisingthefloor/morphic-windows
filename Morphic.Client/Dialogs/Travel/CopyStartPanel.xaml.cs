@@ -43,14 +43,14 @@
             return task;
         }
 
-        private async void CopyToCloud(object sender, RoutedEventArgs e)
+        internal async void CopyToCloud(object sender, RoutedEventArgs e)
         {
             await this.EnsureLoggedOn(false /* applySettingsAfterLogin */);
             CapturePanel capturePanel = this.StepFrame.PushPanel<CapturePanel>();
             capturePanel.Completed += (o, args) => this.Completed?.Invoke(this, EventArgs.Empty);
         }
 
-        private async void CopyFromCloud(object sender, RoutedEventArgs e)
+        internal async void CopyFromCloud(object sender, RoutedEventArgs e)
         {
             await this.EnsureLoggedOn(false /* applySettingsAfterLogin */);
             ApplyPanel applyPanel = this.StepFrame.PushPanel<ApplyPanel>();

@@ -36,8 +36,12 @@ namespace Morphic.Service
     /// <summary>
     /// Manages a user's session with the morphic server
     /// </summary>
-    public class MorphicSession: Session
+    public class MorphicSession : Session
     {
+
+        public class MorphicSessionSignInOrOutEventArgs: EventArgs {
+            public bool SignedInViaLoginForm = false;
+        }
 
         #region Creating a Session
 
@@ -62,7 +66,7 @@ namespace Morphic.Service
             // NOTE: ideally we would not re-authenticate and re-load the MorphicBars before loading the current bar (i.e. ideally we would cache this data, like we do on macOS)
             if (this.CurrentCredentials is UsernameCredentials credentials)
             {
-                await this.Authenticate(credentials);
+                await this.Authenticate(credentials, false);
             }
             //
             // cache our user id (so that we don't re-call "user changed" if our user doesn't actually change here)
@@ -79,7 +83,7 @@ namespace Morphic.Service
             this.Preferences = await this.Storage.LoadAsync<Preferences>(preferencesId);
             if ((this.User != null) && (this.User?.Id != cachedUserId))
             {
-                await this.UserChangedAsync?.Invoke(this, new EventArgs());
+                await this.UserChangedAsync?.Invoke(this, new MorphicSession.MorphicSessionSignInOrOutEventArgs());
             }
         }
 
@@ -91,14 +95,15 @@ namespace Morphic.Service
         public Preferences? Preferences;
 
         public delegate Task AsyncEventHandler(object sender, EventArgs e);
-        public event AsyncEventHandler? UserChangedAsync;
+        public delegate Task MorphicSessionSignInAsyncEventHandler(object sender, MorphicSession.MorphicSessionSignInOrOutEventArgs e);
+        public event MorphicSessionSignInAsyncEventHandler? UserChangedAsync;
 
-        public override async Task SignInAsync(User user)
+        public override async Task SignInAsync(User user, bool signedInViaLoginForm)
         {
-            await this.SignInAsync(user, null);
+            await this.SignInAsync(user, null, signedInViaLoginForm);
         }
 
-        public async Task SignInAsync(User user, Preferences? preferences)
+        public async Task SignInAsync(User user, Preferences? preferences, bool signedInViaLoginForm)
         {
             this.Communities = new UserCommunity[] { };
             this.User = user;
@@ -123,7 +128,7 @@ namespace Morphic.Service
 
             if (this.UserChangedAsync != null)
             {
-                await this.UserChangedAsync.Invoke(this, new EventArgs());
+                await this.UserChangedAsync.Invoke(this, new MorphicSessionSignInOrOutEventArgs() { SignedInViaLoginForm = signedInViaLoginForm });
             }
         }
 
@@ -140,11 +145,11 @@ namespace Morphic.Service
 
             if (this.UserChangedAsync != null)
             {
-                await this.UserChangedAsync.Invoke(this, new EventArgs());
+                await this.UserChangedAsync.Invoke(this, new MorphicSession.MorphicSessionSignInOrOutEventArgs());
             }
         }
 
-        public async Task<bool> RegisterUserAsync(User user, UsernameCredentials credentials, Preferences preferences)
+        public async Task<bool> RegisterUserAsync(User user, UsernameCredentials credentials, Preferences preferences, bool registeredViaLoginForm)
         {
             AuthResponse? auth = await this.Service.Register(user, credentials);
             bool success = auth != null;
@@ -168,7 +173,7 @@ namespace Morphic.Service
                 }
 
                 this.userSettings.SetUsernameForId(credentials.Username, auth.User.Id);
-                await this.SignInAsync(auth.User, preferences);
+                await this.SignInAsync(auth.User, preferences, registeredViaLoginForm);
             }
 
             return success;

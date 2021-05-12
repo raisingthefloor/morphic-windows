@@ -567,7 +567,7 @@ namespace Morphic.Client.Bar.UI
             return control?.BarItem;
         }
 
-        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        private async void CloseButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -577,7 +577,7 @@ namespace Morphic.Client.Bar.UI
             {
                 var segmentation = new Segmentation();
                 segmentation.Add("eventSource", "closeButton");
-                Countly.RecordEvent("morphicBarHide", 1, segmentation);
+                await App.Current.Countly_RecordEventAsync("morphicBarHide", 1, segmentation);
             }
         }
     }
