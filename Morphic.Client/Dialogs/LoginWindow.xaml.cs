@@ -46,6 +46,7 @@ namespace Morphic.Client.Dialogs
 
         private readonly IServiceProvider serviceProvider;
 
+        private LoginPanel? LoginPanel = null;
         private bool ApplyPreferencesAfterLogin = false;
 
         void MorphicWindowWithArgs.SetArguments(Dictionary<String, object?> args)
@@ -55,6 +56,10 @@ namespace Morphic.Client.Dialogs
                 switch (key.ToLower()) {
                     case "applypreferencesafterlogin":
                         this.ApplyPreferencesAfterLogin = (value as bool?) ?? false;
+                        if (this.LoginPanel != null)
+                        {
+                            this.LoginPanel.ApplyPreferencesAfterLogin = this.ApplyPreferencesAfterLogin;
+                        }
                         break;
                     default:
                         Debug.Assert(false, "Unknown argument");
@@ -74,6 +79,7 @@ namespace Morphic.Client.Dialogs
             LoginPanel loginPanel = this.StepFrame.PushPanel<LoginPanel>();
             loginPanel.ApplyPreferencesAfterLogin = applyPreferencesAfterLogin;
             loginPanel.Completed += (sender, args) => this.Close();
+            this.LoginPanel = loginPanel;
         }
     }
 }
