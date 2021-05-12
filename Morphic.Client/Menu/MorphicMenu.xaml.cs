@@ -270,12 +270,12 @@
             await App.Current.MorphicSession.SignOut();
         }
 
-        private void Login(object sender, RoutedEventArgs e)
+        private async void Login(object sender, RoutedEventArgs e)
         {
             // NOTE: if we want the login menu item to apply cloud-saved preferences after login, we should set this flag to true
-            var applyPreferencesAfterLogin = false;
+            var applyPreferencesAfterLogin = ConfigurableFeatures.CloudSettingsTransferIsEnabled;
             var args = new Dictionary<string, object?>() { { "applyPreferencesAfterLogin", applyPreferencesAfterLogin } };
-            App.Current.Dialogs.OpenDialogAsync<LoginWindow>(args);
+            await App.Current.Dialogs.OpenDialogAsync<LoginWindow>(args);
         }
 
         private async void ExploreMorphicClicked(object sender, RoutedEventArgs e)
