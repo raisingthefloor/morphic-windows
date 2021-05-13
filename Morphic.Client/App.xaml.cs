@@ -51,8 +51,10 @@ namespace Morphic.Client
     using Dialogs;
     using Menu;
     using Microsoft.Win32;
+    using Morphic.Windows.Native.OsVersion;
     using Settings.SettingsHandlers;
     using Settings.SolutionsRegistry;
+    using System.Diagnostics;
     using System.Text.Json;
 
     public class AppMain
@@ -674,9 +676,51 @@ namespace Morphic.Client
             logging.AddDebug();
         }
 
+        private static List<Windows10Version> CompatibleWindows10Versions = new List<Windows10Version>() 
+            {
+                // NOTE: the first entry in this list represents the "minimum" version of Windows 10 which we support
+                Windows10Version.v1809,
+                Windows10Version.v1903,
+                Windows10Version.v1909,
+                Windows10Version.v2004,
+                Windows10Version.v20H2,
+                Windows10Version.vFuture
+            };
+        private static bool IsOsCompatibleWithMorphic()
+        {
+            var windows10Build = OsVersion.GetWindows10Version();
+
+            if (windows10Build == null) 
+            {
+                // not a valid version
+                return false;
+            } 
+            else
+            {
+                if (App.CompatibleWindows10Versions.Contains(windows10Build.Value) == true)
+                {
+                    return true;
+                }
+                else
+                {
+                    // either this is an old verison of Windows or it's one we missed that we do support
+                    Debug.Assert(false, "Incompatible or unknown version of Windows");
+                    return false;
+                }
+            }
+        }
+
         protected override async void OnStartup(StartupEventArgs e)
         {
             this.Dispatcher.UnhandledException += this.App_DispatcherUnhandledException;
+
+            if (App.IsOsCompatibleWithMorphic() == false)
+            {
+                MessageBox.Show($"Morphic is not compatible with the current version of Windows.\r\n\r\nPlease upgrade to Windows 10 " + App.CompatibleWindows10Versions[0] + " or newer.");
+
+                this.Shutdown();
+                return;
+            }
 
             this.Configuration = this.GetConfiguration();
             ServiceCollection collection = new ServiceCollection();
@@ -946,7 +990,7 @@ namespace Morphic.Client
             EventHandler<NHotkey.HotkeyEventArgs> loginHotKeyPressed = async (sender, e) =>
             {
                 // NOTE: if we want the login menu item to apply cloud-saved preferences after login, we should set this flag to true
-                var applyPreferencesAfterLogin = true;
+                var applyPreferencesAfterLogin = ConfigurableFeatures.CloudSettingsTransferIsEnabled;
                 var args = new Dictionary<string, object?>() { { "applyPreferencesAfterLogin", applyPreferencesAfterLogin } };
                 await this.Dialogs.OpenDialogAsync<LoginWindow>(args);
             };
@@ -1074,7 +1118,11 @@ namespace Morphic.Client
             _messageWatcherNativeWindow?.Dispose();
             if (ConfigurableFeatures.TelemetryIsEnabled == true)
             {
-                await Countly.Instance.SessionEnd();
+                try
+                {
+                    await Countly.Instance.SessionEnd();
+                }
+                catch { }
             }
 
             if (ConfigurableFeatures.ResetSettingsIsEnabled == true)
