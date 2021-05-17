@@ -26,8 +26,8 @@ namespace Morphic.Client.Bar.Data.Actions
     {
         private readonly static SemaphoreSlim _captureTextSemaphore = new SemaphoreSlim(1, 1);
 
-        [InternalFunction("screenshot")]
-        public static async Task<IMorphicResult> ScreenshotAsync(FunctionArgs args)
+        [InternalFunction("snip")]
+        public static async Task<IMorphicResult> ScreenSnipAsync(FunctionArgs args)
         {
             // Hide all application windows
             Dictionary<Window, double> opacity = new Dictionary<Window, double>();

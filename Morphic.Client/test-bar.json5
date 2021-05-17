@@ -103,8 +103,8 @@
       "kind": "action",
       "is_primary": true,
       "configuration": {
-        "label": "Take Screenshot",
-        "identifier": "screenshot",
+        "label": "Screen Snip",
+        "identifier": "snip",
         "color": "",
         "image_url": "images-solid"
       },
