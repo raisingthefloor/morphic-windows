@@ -214,6 +214,7 @@ namespace Morphic.Client.Bar.Data.Actions
                             }
                             break;
                         case "copy":
+                            // NOTE: this is the basic bar variant of "copy" (below)
                             {
                                 await App.Current.Countly_RecordEventAsync("screenSnip");
                             }
@@ -247,6 +248,12 @@ namespace Morphic.Client.Bar.Data.Actions
                     break;
                 case "screen-zoom":
                     // this action type's telemetry is logged elsewhere
+                    break;
+                case "snip":
+                    // NOTE: this is the custom bar variant of "copy" (above)
+                    {
+                        await App.Current.Countly_RecordEventAsync("screenSnip");
+                    }
                     break;
                 default:
                     // we do not understand this action type (for telemetry logging purposes)

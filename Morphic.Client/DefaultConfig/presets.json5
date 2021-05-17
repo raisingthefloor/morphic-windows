@@ -302,9 +302,26 @@
         function: "signOut"
       }
     },
-    "screenshot": {
+    "snip": {
       kind: "internal",
-      func: "screenshot"
+      widget: "multi",
+      is_primary: true,
+      configuration: {
+        function: "snip",
+        label: "Snip",
+        menu: {
+          learn: "snip",
+          demo: "snip"
+        },
+        telemetryCategory: "screenSnip",
+        buttons: {
+          copy: {
+            label: "Copy",
+            uiName: "Snip copy of part of the screen",
+            tooltip: "Drag with your mouse to copy part of screen. Paste into any document"
+          }
+        }
+      }
     }
   },
   defaults: {

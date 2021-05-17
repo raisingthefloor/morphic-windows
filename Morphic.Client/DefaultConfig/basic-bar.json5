@@ -55,7 +55,7 @@
       widget: "multi",
       is_primary: true,
       configuration: {
-        function: "screenshot",
+        function: "snip",
         label: "Snip",
         menu: {
           learn: "snip",
