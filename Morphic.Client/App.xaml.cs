@@ -860,13 +860,14 @@ namespace Morphic.Client
             bool highcontrastOn = await this.MorphicSession.GetSetting<bool>(SettingId.HighContrastEnabled);
             if (!highcontrastOn)
             {
+                // change the user's high contrast theme to the yellow-on-black high contrast theme (theme #1)
                 Registry.SetValue(@"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes",
-                    "LastHighContrastTheme", @"%SystemRoot\resources\Ease of Access Themes\hcwhite.theme",
+                    "LastHighContrastTheme", @"%SystemRoot\resources\Ease of Access Themes\hc1.theme",
                     RegistryValueKind.ExpandString);
-
+                //
                 // For windows 10 1809+
                 Registry.SetValue(@"HKEY_CURRENT_USER\Control Panel\Accessibility\HighContrast",
-                    "High Contrast Scheme", "High Contrast White");
+                    "High Contrast Scheme", "High Contrast #1");
             }
         }
 
