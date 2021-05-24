@@ -51,6 +51,7 @@ namespace Morphic.Client
     using Dialogs;
     using Menu;
     using Microsoft.Win32;
+    using Morphic.Telemetry;
     using Morphic.Windows.Native.OsVersion;
     using Settings.SettingsHandlers;
     using Settings.SolutionsRegistry;
@@ -116,6 +117,8 @@ namespace Morphic.Client
         public ILogger<App> Logger { get; private set; } = null!;
 
         public MorphicSession MorphicSession { get; private set; } = null!;
+
+        private MorphicTelemetryClient? _telemetryClient = null;
 
         public AppOptions AppOptions => AppOptions.Current;
 
@@ -480,6 +483,8 @@ namespace Morphic.Client
             if (ConfigurableFeatures.TelemetryIsEnabled == true)
             {
                 await Countly.RecordEvent(Key);
+
+                _telemetryClient?.EnqueueActionMessage(Key);
             }
         }
 
@@ -488,51 +493,71 @@ namespace Morphic.Client
             if (ConfigurableFeatures.TelemetryIsEnabled == true)
             {
                 await Countly.RecordEvent(Key, Count, Segmentation);
+
+                _telemetryClient?.EnqueueActionMessage(Key);
             }
+        }
+
+        private struct TelemetryIdComponents
+        {
+            public string CompositeId;
+            public string? SiteId;
+            public string DeviceUuid;
+        }
+        private TelemetryIdComponents GetOrCreateTelemetryIdComponents()
+        {
+            // retrieve the telemetry device ID for this device; if it doesn't exist then create a new one
+            var telemetryCompositeId = AppOptions.TelemetryDeviceUuid;
+            if ((telemetryCompositeId == null) || (telemetryCompositeId == String.Empty) || (telemetryCompositeId.IndexOf("D_") < 0))
+            {
+                telemetryCompositeId = "D_" + Guid.NewGuid().ToString();
+                AppOptions.TelemetryDeviceUuid = telemetryCompositeId;
+            }
+
+            // if a site id is (or is not) configured, modify the telemetry device uuid accordingly
+            // NOTE: we handle cases of site ids changing, site IDs being added post-deployment, and site IDs being removed post-deployment
+            var unmodifiedTelemetryDeviceCompositeId = telemetryCompositeId;
+            var telemetrySiteId = ConfigurableFeatures.TelemetrySiteId;
+            if ((telemetrySiteId != null) && (telemetrySiteId != String.Empty))
+            {
+                // NOTE: in the future, consider reporting or throwing an error if the site id required sanitization (i.e. wasn't valid)
+                var sanitizedTelemetrySiteId = this.SanitizeSiteId(telemetrySiteId);
+                if (sanitizedTelemetrySiteId != "")
+                {
+                    // we have a telemetry site id; prepend it
+                    telemetryCompositeId = this.PrependSiteIdToTelemetryCompositeId(telemetryCompositeId, sanitizedTelemetrySiteId);
+                }
+                else
+                {
+                    // the supplied site id isn't valid; strip off the site id; In the future consider logging/reporting an error
+                    telemetryCompositeId = this.RemoveSiteIdFromTelemetryCompositeId(telemetryCompositeId);
+                }
+            }
+            else
+            {
+                // no telemetry site id is configured; strip off any site id which might have already been part of our telemetry id
+                // TODO: in the future, make sure that the telemetry ID wasn't _just_ the site id (as it cannot be allowed to be empty)
+                telemetryCompositeId = this.RemoveSiteIdFromTelemetryCompositeId(telemetryCompositeId);
+            }
+            // if the telemetry uuid has changed (because of the site id), update our stored telemetry uuid now
+            if (telemetryCompositeId != unmodifiedTelemetryDeviceCompositeId)
+            {
+                AppOptions.TelemetryDeviceUuid = telemetryCompositeId;
+            }
+
+            // capture the raw device UUID
+            var indexOfTelemetryDeviceUuid = telemetryCompositeId.IndexOf("D_") + 2;
+            var telemetryDeviceUuid = telemetryCompositeId.Substring(indexOfTelemetryDeviceUuid);
+
+            return new TelemetryIdComponents() { CompositeId = telemetryCompositeId, SiteId = telemetrySiteId, DeviceUuid = telemetryDeviceUuid };
         }
 
         private async Task ConfigureCountlyAsync()
         {
             // TODO: Move metrics related things to own class.
 
-            // retrieve the telemetry device ID for this device; if it doesn't exist then create a new one
-            var telemetryDeviceUuid = AppOptions.TelemetryDeviceUuid;
-            if ((telemetryDeviceUuid == null) || (telemetryDeviceUuid == String.Empty))
-            {
-                telemetryDeviceUuid = "D_" + Guid.NewGuid().ToString();
-                AppOptions.TelemetryDeviceUuid = telemetryDeviceUuid;
-            }
-
-            // if a site id is (or is not) configured, modify the telemetry device uuid accordingly
-            // NOTE: we handle cases of site ids changing, site IDs being added post-deployment, and site IDs being removed post-deployment
-            var unmodifiedTelemetryDeviceUuid = telemetryDeviceUuid;
-            var telemetrySiteId = ConfigurableFeatures.TelemetrySiteId;
-            if ((telemetrySiteId != null) && (telemetrySiteId != String.Empty))
-            {
-                // NOTE: in the future, consider reporting or throwing an error if the site id required sanitization (i.e. wasn't valid)
-                var sanitizedTelemetrySiteId = this.SanitizeSiteId(telemetrySiteId);
-                if (sanitizedTelemetrySiteId != "") 
-                {
-                    // we have a telemetry site id; prepend it
-                    telemetryDeviceUuid = this.PrependSiteIdToTelemetryUuid(telemetryDeviceUuid, telemetrySiteId);
-                }
-                else
-                {
-                    // the supplied site id isn't valid; strip off the site id; In the future consider logging/reporting an error
-                    telemetryDeviceUuid = this.RemoveSiteIdFromTelemetryUuid(telemetryDeviceUuid);
-                }
-            } 
-            else
-            {
-                // no telemetry site id is configured; strip off any site id which might have already been part of our telemetry id
-                // TODO: in the future, make sure that the telemetry ID wasn't _just_ the site id (as it cannot be allowed to be empty)
-                telemetryDeviceUuid = this.RemoveSiteIdFromTelemetryUuid(telemetryDeviceUuid);
-            }
-            // if the telemetry uuid has changed (because of the site id), update our stored telemetry uuid now
-            if (telemetryDeviceUuid != unmodifiedTelemetryDeviceUuid)
-            {
-                AppOptions.TelemetryDeviceUuid = telemetryDeviceUuid;
-            }
+            // retrieve the telemetry composite ID for this device; if it doesn't exist then create a new one
+            var telemetryDeviceCompositeId = this.GetOrCreateTelemetryIdComponents().CompositeId;
 
             IConfigurationSection? section = this.Configuration.GetSection("Countly");
             CountlyConfig cc = new CountlyConfig
@@ -540,7 +565,7 @@ namespace Morphic.Client
                 serverUrl = section["ServerUrl"],
                 appKey = section["AppKey"],
                 appVersion = BuildInfo.Current.InformationalVersion,
-                developerProvidedDeviceId = telemetryDeviceUuid
+                developerProvidedDeviceId = telemetryDeviceCompositeId
             };
 
             await Countly.Instance.Init(cc);
@@ -548,7 +573,7 @@ namespace Morphic.Client
             CountlyBase.IsLoggingEnabled = true;
         }
 
-        private string PrependSiteIdToTelemetryUuid(string value, string telemetrySiteId) 
+        private string PrependSiteIdToTelemetryCompositeId(string value, string telemetrySiteId) 
         {
             var telemetryDeviceUuid = value;
         
@@ -574,7 +599,7 @@ namespace Morphic.Client
             return telemetryDeviceUuid;
         }
     
-        private string RemoveSiteIdFromTelemetryUuid(string value)
+        private string RemoveSiteIdFromTelemetryCompositeId(string value)
         {
             var telemetryDeviceUuid = value;
 
@@ -619,6 +644,37 @@ namespace Morphic.Client
 
             return new string(resultAsCharacters.ToArray());
         }
+
+        #region Telemetry 
+
+        private void ConfigureTelemetry()
+        {
+            // TODO: Move metrics related things to own class.
+
+            // retrieve the telemetry device ID for this device; if it doesn't exist then create a new one
+            var telemetryIds = this.GetOrCreateTelemetryIdComponents();
+            var telemetryCompositeId = telemetryIds.CompositeId;
+            var telemetrySiteId = telemetryIds.SiteId;
+            var telemetryDeviceUuid = telemetryIds.DeviceUuid;
+
+            // configure our telemetry uplink
+            IConfigurationSection? section = this.Configuration.GetSection("Telemetry");
+            var mqttHostname = section["ServerHostname"];
+            var mqttClientId = telemetryDeviceUuid;
+            var mqttUsername = section["AppName"];
+            var mqttAnonymousPassword = section["AppKey"];
+
+            var telemetryClient = new MorphicTelemetryClient(mqttHostname, mqttClientId, mqttUsername, mqttAnonymousPassword);
+            telemetryClient.SiteId = telemetrySiteId;
+            _telemetryClient = telemetryClient;
+
+            Task.Run(async () =>
+            {
+                await telemetryClient.StartSessionAsync();
+            });
+        }
+
+        #endregion Telemetry
 
         private void RecordedException(Task task)
         {
@@ -760,6 +816,7 @@ namespace Morphic.Client
             if (ConfigurableFeatures.TelemetryIsEnabled == true)
             {
                 await this.ConfigureCountlyAsync();
+                this.ConfigureTelemetry();
             }
 
             if (ConfigurableFeatures.CheckForUpdatesIsEnabled == true)
@@ -1121,6 +1178,15 @@ namespace Morphic.Client
                 try
                 {
                     await Countly.Instance.SessionEnd();
+                }
+                catch { }
+				//
+                try
+                {
+                    if (_telemetryClient != null)
+                    {
+                        _telemetryClient.StopSessionAsync();
+                    }
                 }
                 catch { }
             }
