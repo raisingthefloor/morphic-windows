@@ -38,7 +38,10 @@
                 {
                     foreach (Process process in processes)
                     {
-                        process.Kill(true);
+                        if(process.CloseMainWindow() && !process.WaitForExit(5000))
+                        {
+                            process.Kill(true);
+                        }
                     }
                 }
             }

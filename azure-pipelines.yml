@@ -107,13 +107,50 @@ stages:
             solution: '$(solution)'
             platform: '$(buildPlatform)'
             configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:BuildType=$(BUILD_TYPE)'
+            msbuildArgs: '/p:OutDir=$(Build.BinariesDirectory) /p:BuildType=$(BUILD_TYPE)'
         
         - task: VSTest@2
           displayName: "execute tests"
           inputs:
             platform: '$(buildPlatform)'
             configuration: '$(buildConfiguration)'
+            msbuildArgs: '/p:OutDir=$(Build.BinariesDirectory)'
+
+        - task: UseDotNet@2
+          displayName: 'Use .NET Core SDK 2.1'
+          inputs:
+            packageType: sdk
+            version: 2.1.811
+            installationPath: $(Agent.ToolsDirectory)/dotnet
+
+        - task: CmdLine@2
+          displayName: 'sign morphic client exe'
+          inputs:
+            targetType: 'inline'
+# NOTE: if we experience downtime with our cert provider's timestamp servers (which causes signing to fail), 
+#       we can use the test server (production timestamps, but from a 2nd provider); note that we should NOT do
+#       this for any public preview or release builds...only for internal testing or emergency scenarios.
+#              -tr "$(TimestampUrl)"
+#              -tr "$(TimestampUrl2)"
+#              vs.
+#              -tr "$(TestOnlyTimestampUrl)"
+            script: >
+              AzureSignTool sign
+              -d Morphic
+              -du "$(SigningURL)"
+              -kvu "$(SigningVaultURL)"
+              -kvi "$(SigningClientId)"
+              -kvs "$(SigningClientSecret)"
+              -kvc "$(SigningCertName)"
+              -tr "$(TimestampUrl2)"
+              -v $(Build.BinariesDirectory)\Morphic.exe
+
+        - task: UseDotNet@2
+          displayName: 'Use .NET Core SDK 5.0.200'
+          inputs:
+            packageType: sdk
+            version: 5.0.200
+            installationPath: $(Agent.ToolsDirectory)/dotnet    
         
         - task: VSBuild@1
           displayName: "build x64 installer"
@@ -123,7 +160,7 @@ stages:
             solution: 'Morphic.Setup\Morphic.Setup.wixproj'
             platform: 'x64'
             configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:BuildType=$(BUILD_TYPE)'
+            msbuildArgs: '/p:OutDir=$(Build.BinariesDirectory)/ /p:BuildType=$(BUILD_TYPE)'
 
         - task: UseDotNet@2
           displayName: 'Use .NET Core SDK 2.1'
@@ -159,8 +196,8 @@ stages:
               -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
-              -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicSetup.msi
-        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicSetup.msi
+              -v $(Build.BinariesDirectory)\MorphicSetup.msi
+        - publish: $(Build.BinariesDirectory)\MorphicSetup.msi
           displayName: "save x64 installer for later"
           artifact: x64-installer
 
@@ -169,6 +206,7 @@ stages:
           artifact: build-version
             
   - stage: upload
+    condition: "false"
     jobs:
       - job: publish_installer
         pool:
