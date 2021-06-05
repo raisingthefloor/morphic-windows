@@ -167,7 +167,7 @@ stages:
             solution: 'Morphic.Setup\Morphic.Setup.wixproj'
             platform: 'x64'
             configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:OutDir=$(Build.BinariesDirectory)/ /p:BuildType=$(BUILD_TYPE)'
+            msbuildArgs: '/p:OutDir=$(Build.BinariesDirectory)/ /p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false'
 
         - task: UseDotNet@2
           displayName: 'Use .NET Core SDK 2.1'
@@ -175,7 +175,7 @@ stages:
             packageType: sdk
             version: 2.1.811
             installationPath: $(Agent.ToolsDirectory)/dotnet
-            
+
         - task: CmdLine@2
           displayName: 'sign x64 installer'
           inputs:
