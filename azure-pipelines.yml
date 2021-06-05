@@ -123,6 +123,13 @@ stages:
             version: 2.1.811
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
+        - task: DotNetCoreCLI@2
+          displayName: Install AzureSignTool
+          inputs:
+            command: 'custom'
+            custom: 'tool'
+            arguments: 'install --global azuresigntool'
+
         - task: CmdLine@2
           displayName: 'sign morphic client exe'
           inputs:
@@ -168,14 +175,7 @@ stages:
             packageType: sdk
             version: 2.1.811
             installationPath: $(Agent.ToolsDirectory)/dotnet
-
-        - task: DotNetCoreCLI@2
-          displayName: Install AzureSignTool
-          inputs:
-            command: 'custom'
-            custom: 'tool'
-            arguments: 'install --global azuresigntool'
-
+            
         - task: CmdLine@2
           displayName: 'sign x64 installer'
           inputs:
