@@ -107,14 +107,14 @@ stages:
             solution: '$(solution)'
             platform: '$(buildPlatform)'
             configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:OutDir=$(Build.BinariesDirectory) /p:BuildType=$(BUILD_TYPE)'
+            msbuildArgs: '/p:OutDir=$(Build.BinariesDirectory)/ /p:BuildType=$(BUILD_TYPE)'
         
         - task: VSTest@2
           displayName: "execute tests"
           inputs:
             platform: '$(buildPlatform)'
             configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:OutDir=$(Build.BinariesDirectory)'
+            msbuildArgs: '/p:OutDir=$(Build.BinariesDirectory)/'
 
         - task: UseDotNet@2
           displayName: 'Use .NET Core SDK 2.1'
