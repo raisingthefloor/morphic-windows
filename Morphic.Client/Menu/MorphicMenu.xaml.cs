@@ -267,6 +267,7 @@
         private async void Logout(object sender, RoutedEventArgs e)
         {
             AppOptions.Current.LastCommunity = null;
+            AppOptions.Current.LastMorphicbarId = null;
             await App.Current.MorphicSession.SignOut();
         }
 
@@ -312,6 +313,7 @@
         private void SelectBasicMorphicBarClick(object sender, RoutedEventArgs e)
         {
             AppOptions.Current.LastCommunity = null;
+            AppOptions.Current.LastMorphicbarId = null;
             App.Current.BarManager.LoadBasicMorphicBar();
         }
     }

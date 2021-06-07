@@ -89,19 +89,24 @@
             }
         }
 
-        /// <summary>
-        /// The communities the user is in.
-        /// </summary>
-        public string[] Communities
-        {
-            get => this.GetValue(string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries);
-            set => this.SetValue(string.Join(',', value));
-        }
 
         /// <summary>
         /// The community ID for which the last bar was shown.
         /// </summary>
         public string? LastCommunity
+        {
+            get
+            {
+                string value = this.GetValue(string.Empty);
+                return value.Length == 0 ? null : value;
+            }
+            set => this.SetValue(value ?? string.Empty);
+        }
+
+        /// <summary>
+        /// The morphicbar ID for the last bar shown.
+        /// </summary>
+        public string? LastMorphicbarId
         {
             get
             {
