@@ -999,7 +999,8 @@ namespace Morphic.Client
         {
             // clear all communities in the menu (before basic)
             var changeMorphicBarMenuItems = this.morphicMenu.ChangeMorphicBar.Items;
-            for (int i = 0; i < changeMorphicBarMenuItems.Count; i++)
+            var numberOfMenuItems = changeMorphicBarMenuItems.Count;
+            for (int i = 0; i < numberOfMenuItems; i++)
             {
                 var submenuItem = (MenuItem)changeMorphicBarMenuItems[0];
                 if (submenuItem.Name == "SelectBasicMorphicBar")
@@ -1050,7 +1051,7 @@ namespace Morphic.Client
                     }
                     newMenuItem.Click += CustomMorphicBarMenuItem_Click;
                     //
-                    this.morphicMenu.ChangeMorphicBar.Items.Insert(iCommunity, newMenuItem);
+                    this.morphicMenu.ChangeMorphicBar.Items.Insert(Math.Max(this.morphicMenu.ChangeMorphicBar.Items.Count - 1, 0), newMenuItem);
                 }
             }
 
