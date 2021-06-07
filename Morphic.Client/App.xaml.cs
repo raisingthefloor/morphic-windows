@@ -945,12 +945,13 @@ namespace Morphic.Client
                 if (morphicSession.SignedIn)
                 {
                     var lastCommunityId = AppOptions.Current.LastCommunity;
+                    var lastMorphicbarId = AppOptions.Current.LastMorphicbarId;
                     if (lastCommunityId != null)
                     {
                         // if the user previously selected a community bar, show that one now
                         // NOTE: the behavior here may be inconsistent with Morphic on macOS.  If the previously-selected bar is no longer valid (e.g. the user was removed from the community),
                         //       then we should select the first bar in their list (or the next one...depending on what the design spec says); we should do this consistently on both Windows and macOS
-                        await this.BarManager.LoadSessionBarAsync(morphicSession, lastCommunityId);
+                        await this.BarManager.LoadSessionBarAsync(morphicSession, lastCommunityId, lastMorphicbarId);
                     } 
                     else
                     {
@@ -965,7 +966,7 @@ namespace Morphic.Client
 
                         if (newUserSelectedCommunityId != null)
                         {
-                            await this.BarManager.LoadSessionBarAsync(morphicSession, newUserSelectedCommunityId);
+                            await this.BarManager.LoadSessionBarAsync(morphicSession, newUserSelectedCommunityId, null);
                         }
                         else
                         {
@@ -978,6 +979,7 @@ namespace Morphic.Client
                 {
                     // if no user is signed in, clear out the last community tag
                     AppOptions.Current.LastCommunity = null;
+                    AppOptions.Current.LastMorphicbarId = null;
 
                     // if no user is signed in, load the basic bar
                     this.BarManager.LoadBasicMorphicBar();
@@ -1017,20 +1019,42 @@ namespace Morphic.Client
             {
                 var community = this.MorphicSession.Communities[iCommunity];
                 //
-                var newMenuItem = new MenuItem();
-                newMenuItem.Header = "Bar from " + community.Name;
-                newMenuItem.Tag = community.Id;
-                if (community.Id == AppOptions.Current.LastCommunity)
+                var allBarsForCommunity = this.MorphicSession.MorphicBarsByCommunityId[community.Id];
+                if (allBarsForCommunity == null)
                 {
-                    newMenuItem.IsChecked = true;
-                    addedCheckmarkByCurrentCommunityBar = true;
+                    // NOTE: this scenario shouldn't happen, but it's a gracefully-degrading failsafe just in case
+                    continue;
                 }
-                newMenuItem.Click += CustomMorphicBarMenuItem_Click;
-                //
-                this.morphicMenu.ChangeMorphicBar.Items.Insert(iCommunity, newMenuItem);
+                foreach (var communityBar in allBarsForCommunity)
+                {
+                    var newMenuItem = new MenuItem();
+                    newMenuItem.Header = communityBar.Name + " (from " + community.Name + ")";
+                    newMenuItem.Tag = community.Id + "/" + communityBar.Id;
+                    //
+                    if (community.Id == AppOptions.Current.LastCommunity)
+                    {
+                        var markThisBar = false;
+                        if (AppOptions.Current.LastMorphicbarId == null && addedCheckmarkByCurrentCommunityBar == false)
+                        {
+                            markThisBar = true;
+                        }
+                        else if (AppOptions.Current.LastMorphicbarId == communityBar.Id)
+                        {
+                            markThisBar = true;
+                        }
+                        if (markThisBar == true)
+                        {
+                            newMenuItem.IsChecked = true;
+                            addedCheckmarkByCurrentCommunityBar = true;
+                        }
+                    }
+                    newMenuItem.Click += CustomMorphicBarMenuItem_Click;
+                    //
+                    this.morphicMenu.ChangeMorphicBar.Items.Insert(iCommunity, newMenuItem);
+                }
             }
 
-            // if no custom bar was checked, check the community bar instead
+            // if no custom bar was checked, mark the basic bar instead
             this.morphicMenu.SelectBasicMorphicBar.IsChecked = (addedCheckmarkByCurrentCommunityBar == false);
         }
 
@@ -1038,9 +1062,29 @@ namespace Morphic.Client
         {
             var senderAsMenuItem = (MenuItem)sender;
             //var communityName = senderAsMenuItem.Header;
-            var communityId = (string)senderAsMenuItem.Tag;
+            var (communityId, morphicbarId) = this.ParseMorphicbarMenuItemTag(senderAsMenuItem);
 
-            await this.BarManager.LoadSessionBarAsync(this.MorphicSession, communityId);
+            await this.BarManager.LoadSessionBarAsync(this.MorphicSession, communityId, morphicbarId);
+        }
+
+        private (string communityId, string? morphicbarId) ParseMorphicbarMenuItemTag(MenuItem menuItem)
+        {
+            string communityId;
+            string? morphicbarId;
+
+            string tag = (string)menuItem.Tag;
+            if (tag.IndexOf("/") >= 0)
+            {
+                communityId = tag.Substring(0, tag.IndexOf('/'));
+                morphicbarId = tag.Substring(tag.IndexOf('/') + 1);
+            }
+            else
+            {
+                communityId = tag;
+                morphicbarId = null;
+            }
+
+            return (communityId, morphicbarId);
         }
 
         private void RegisterGlobalHotKeys()
