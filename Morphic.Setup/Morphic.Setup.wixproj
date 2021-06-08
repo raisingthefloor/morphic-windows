@@ -62,10 +62,10 @@
   <Target Name="AfterPreBuild" AfterTargets="PreBuildEvent">
     <HeatDirectory Directory="..\Morphic.Client\bin\$(Configuration)\netcoreapp3.1\win-x64\publish" PreprocessorVariable="var.ClientOutputDirectory" OutputFile="Generated.wxs" ComponentGroupName="GeneratedComponents" DirectoryRefId="INSTALLFOLDER" AutogenerateGuids="true" ToolPath="$(WixToolPath)" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" />
   </Target>
-  <PropertyGroup Condition="'$(BuildType)' == 'Development'">
+  <PropertyGroup Condition="'$(BuildType)' == 'Developmentt'">
     <PreBuildEvent>dotnet publish $(ProjectDir)..\Morphic.Client\Morphic.Client.csproj -f netcoreapp3.1 -r win-x64 -c $(Configuration) -p:BuildType=$(BuildType)</PreBuildEvent>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(BuildType)' == 'Production'">
+  <PropertyGroup Condition="'$(BuildType)' == 'Development'">
       <PreBuildEvent>dotnet publish $(ProjectDir)..\Morphic.Client\Morphic.Client.csproj -f netcoreapp3.1 -r win-x64 -c $(Configuration) -p:BuildType=$(BuildType)
 AzureSignTool sign -d Morphic -du $(SigningUrl) -kvu $(SigningVaultURL) -kvi $(SigningClientId) -kvs $(SigningClientSecret) -kvc $(SigningCertName) -tr $(TimestampUrl2) -v $(ProjectDir)..\Morphic.Client\bin\$(Configuration)\netcoreapp3.1\win-x64\publish\Morphic.exe</PreBuildEvent>
   </PropertyGroup>
