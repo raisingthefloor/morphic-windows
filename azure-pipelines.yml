@@ -138,6 +138,12 @@ stages:
             arguments: 'install --global azuresigntool'
 
         - task: CmdLine@2
+          inputs:
+            targetType: 'inline'
+            script: >
+              tree $(Build.SourcesDirectory)\Morphic.Client\bin /f
+              
+        - task: CmdLine@2
           displayName: 'sign morphic client exe'
           inputs:
             targetType: 'inline'
@@ -157,7 +163,8 @@ stages:
               -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
-              -v Morphic.Client\bin\$(buildConfiguration)\netcoreapp3.1\win-x64\publish\Morphic.exe
+              -v
+              $(Build.SourcesDirectory)\Morphic.Client\bin\$(buildConfiguration)\netcoreapp3.1\win-x64\publish\Morphic.exe
         
         - task: VSBuild@1
           displayName: "build x64 installer"
