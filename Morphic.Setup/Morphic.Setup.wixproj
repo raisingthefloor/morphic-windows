@@ -59,15 +59,16 @@
     <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
   </PropertyGroup>
-  <Target Name="BeforeBuild" Condition="'$(BuildType)' == 'Development'">
-    <Exec Command="dotnet publish ..\Morphic.Client\Morphic.Client.csproj -f netcoreapp3.1 -r win-x64 -c $(Configuration) -p:BuildType=$(BuildType)" />
+  <Target Name="AfterPreBuild" AfterTargets="PreBuildEvent">
     <HeatDirectory Directory="..\Morphic.Client\bin\$(Configuration)\netcoreapp3.1\win-x64\publish" PreprocessorVariable="var.ClientOutputDirectory" OutputFile="Generated.wxs" ComponentGroupName="GeneratedComponents" DirectoryRefId="INSTALLFOLDER" AutogenerateGuids="true" ToolPath="$(WixToolPath)" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" />
   </Target>
-  <Target Name="BeforeBuild" Condition="'$(BuildType)' == 'Production'">
-    <Exec Command="dotnet publish ..\Morphic.Client\Morphic.Client.csproj -f netcoreapp3.1 -r win-x64 -c $(Configuration) -p:BuildType=$(BuildType)" />
-    <Exec Command="AzureSignTool sign -d Morphic -du $(SigningUrl) -kvu $(SigningVaultURL) -kvi $(SigningClientId) -kvs $(SigningClientSecret) -kvc $(SigningCertName) -tr $(TimestampUrl2) -v ..\Morphic.Client\bin\$(Configuration)\netcoreapp3.1\win-x64\publish\Morphic.exe" />
-    <HeatDirectory Directory="..\Morphic.Client\bin\$(Configuration)\netcoreapp3.1\win-x64\publish" PreprocessorVariable="var.ClientOutputDirectory" OutputFile="Generated.wxs" ComponentGroupName="GeneratedComponents" DirectoryRefId="INSTALLFOLDER" AutogenerateGuids="true" ToolPath="$(WixToolPath)" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" />
-  </Target>
+  <PropertyGroup Condition="'$(BuildType)' == 'Development'">
+    <PreBuildEvent>dotnet publish $(ProjectDir)..\Morphic.Client\Morphic.Client.csproj -f netcoreapp3.1 -r win-x64 -c $(Configuration) -p:BuildType=$(BuildType)</PreBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(BuildType)' == 'Production'">
+      <PreBuildEvent>dotnet publish $(ProjectDir)..\Morphic.Client\Morphic.Client.csproj -f netcoreapp3.1 -r win-x64 -c $(Configuration) -p:BuildType=$(BuildType)
+AzureSignTool sign -d Morphic -du $(SigningUrl) -kvu $(SigningVaultURL) -kvi $(SigningClientId) -kvs $(SigningClientSecret) -kvc $(SigningCertName) -tr $(TimestampUrl2) -v $(ProjectDir)..\Morphic.Client\bin\$(Configuration)\netcoreapp3.1\win-x64\publish\Morphic.exe</PreBuildEvent>
+  </PropertyGroup>
   <!--
 	To modify your build process, add your task inside one of the targets below and uncomment it.
 	Other similar extension points exist, see Wix.targets.
