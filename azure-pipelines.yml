@@ -119,6 +119,7 @@ stages:
           displayName: Publish Morphic Client
           inputs:
             command: publish
+            publishWebProjects: false
             projects: 'Morphic.Client/Morphic.Client.csproj'
             arguments: '-f netcoreapp3.1 -r win-x64 -c $(Configuration) -p:BuildType=$(BuildType)'
 
