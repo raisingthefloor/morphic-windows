@@ -57,10 +57,10 @@ stages:
         steps:
 
         - task: UseDotNet@2
-          displayName: 'Use .NET Core SDK 5.0.200'
+          displayName: 'Use .NET Core SDK 3.1.410'
           inputs:
             packageType: sdk
-            version: 5.0.200
+            version: 3.1.410
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
         # Set a $(BUILD_TYPE) variable
@@ -107,21 +107,20 @@ stages:
             solution: '$(solution)'
             platform: '$(buildPlatform)'
             configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:OutDir=$(Build.BinariesDirectory)/ /p:BuildType=$(BUILD_TYPE)'
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE)'
         
         - task: VSTest@2
           displayName: "execute tests"
           inputs:
             platform: '$(buildPlatform)'
             configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:OutDir=$(Build.BinariesDirectory)/'
 
-        - task: UseDotNet@2
-          displayName: 'Use .NET Core SDK 2.1'
+        - task: DotNetCoreCLI@2
+          displayName: Publish Morphic Client
           inputs:
-            packageType: sdk
-            version: 2.1.811
-            installationPath: $(Agent.ToolsDirectory)/dotnet
+            command: publish
+            projects: 'Morphic.Client/Morphic.Client.csproj'
+            arguments: '-f netcoreapp3.1 -r win-x64 -c $(Configuration) -p:BuildType=$(BuildType)'
 
         - task: DotNetCoreCLI@2
           displayName: Install AzureSignTool
@@ -150,14 +149,7 @@ stages:
               -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
-              -v $(Build.BinariesDirectory)\Morphic.exe
-
-        - task: UseDotNet@2
-          displayName: 'Use .NET Core SDK 5.0.200'
-          inputs:
-            packageType: sdk
-            version: 5.0.200
-            installationPath: $(Agent.ToolsDirectory)/dotnet    
+              -v Morphic.Client\bin\$(buildConfiguration)\netcoreapp3.1\win-x64\publish\Morphic.exe
         
         - task: VSBuild@1
           displayName: "build x64 installer"
@@ -167,14 +159,7 @@ stages:
             solution: 'Morphic.Setup\Morphic.Setup.wixproj'
             platform: 'x64'
             configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:OutDir=$(Build.BinariesDirectory)/ /p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false'
-
-        - task: UseDotNet@2
-          displayName: 'Use .NET Core SDK 2.1'
-          inputs:
-            packageType: sdk
-            version: 2.1.811
-            installationPath: $(Agent.ToolsDirectory)/dotnet
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false'
 
         - task: CmdLine@2
           displayName: 'sign x64 installer'
