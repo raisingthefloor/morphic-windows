@@ -23,6 +23,8 @@
 
 using Morphic.Core;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 
 namespace Morphic.Windows.Native.Process
@@ -65,6 +67,26 @@ namespace Morphic.Windows.Native.Process
                     default:
                         return IMorphicResult<string, GetPathToExecutableForFileError>.ErrorResult(GetPathToExecutableForFileError.UnknownShellExecuteErrorCode);
                 }
+            }
+        }
+
+        public static IEnumerable<IntPtr> EnumerateProcessWindowHandles(int processId)
+        {
+            var handles = new List<IntPtr>();
+
+            foreach(ProcessThread thread in System.Diagnostics.Process.GetProcessById(processId).Threads)
+            {
+                WindowsApi.EnumThreadWindows(thread.Id, (hWnd, lParam) => { handles.Add(hWnd); return true; }, IntPtr.Zero);
+            }
+
+            return handles;
+        }
+
+        public static void CloseAllWindows(int processId)
+        {
+            foreach (var handle in EnumerateProcessWindowHandles(processId))
+            {
+                WindowsApi.SendNotifyMessageW(handle, WindowsApi.WindowMessages.WM_CLOSE, UIntPtr.Zero, IntPtr.Zero);
             }
         }
     }

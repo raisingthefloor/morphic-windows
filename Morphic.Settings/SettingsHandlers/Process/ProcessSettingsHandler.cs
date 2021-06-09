@@ -1,8 +1,10 @@
 ﻿namespace Morphic.Settings.SettingsHandlers.Process
 {
+    using System;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
+    using System.Linq;
     using System.Threading.Tasks;
     using SolutionsRegistry;
 
@@ -38,7 +40,9 @@
                 {
                     foreach (Process process in processes)
                     {
-                        if(process.CloseMainWindow() && !process.WaitForExit(5000))
+                        Windows.Native.Process.Process.CloseAllWindows(process.Id);
+
+                        if(!process.HasExited)
                         {
                             process.Kill(true);
                         }

@@ -489,8 +489,9 @@ namespace Morphic.Windows.Native
         internal const int HSHELL_WINDOWACTIVATED = 4;
         internal const int HSHELL_RUDEAPPACTIVATED = 0x8004;
 
-        internal enum WindowMessages : int
+        internal enum WindowMessages : uint
         {
+            WM_CLOSE = 0x0010,
             WM_CLIPBOARDUPDATE = 0x031D
         }
 
@@ -1076,5 +1077,13 @@ namespace Morphic.Windows.Native
             FlagUserDefined = 0x40000000, // NOTE: this is used with user-defined shutdown reasons (which we would save to the registry)
             FlagPlanned = 0x80000000
         }
+
+        internal delegate bool EnumThreadWindowsDelegate(IntPtr hWnd, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        internal static extern bool EnumThreadWindows(int dwThreadId, EnumThreadWindowsDelegate lpfn, IntPtr lParam);
+
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        internal static extern bool SendNotifyMessageW(IntPtr hWnd, WindowMessages msg, UIntPtr wParam, IntPtr lParam);
     }
 }
