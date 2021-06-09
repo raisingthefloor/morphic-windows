@@ -16,8 +16,12 @@
     <MenuItem Header="Change MorphicBar" x:Name="ChangeMorphicBar">
         <MenuItem Header="Basic MorphicBar" x:Name="SelectBasicMorphicBar" Click="SelectBasicMorphicBarClick" />
     </MenuItem>
-    <menu:MorphicMenuItem x:Name="ChangeSetupMenuItem" Header="Apply or Change Setup..." Dialog="dialogs:TravelWindow" DialogAction="CopyFromCloud"/>
-    <menu:MorphicMenuItem x:Name="SaveMySetupMenuItem" Header="Save my Setup..." Dialog="dialogs:TravelWindow" DialogAction="CopyToCloud"/>
+    <!-- NOTE: ideally we should pull the URL from our appsetting (so that we capture the nuances of dev vs prod, direct to the proper on-premise enterprise URL, etc.) -->
+    <menu:MorphicMenuItem Header="Customize MorphicBar..." Click="CustomizeMorphicbarClicked" Open="https://custom.morphic.org" />
+
+    <Separator/>
+    <menu:MorphicMenuItem x:Name="ChangeSetupMenuItem" Header="Apply the Saved Setup..." Dialog="dialogs:TravelWindow" DialogAction="CopyFromCloud"/>
+    <menu:MorphicMenuItem x:Name="SaveMySetupMenuItem" Header="Save Current Setup..." Dialog="dialogs:TravelWindow" DialogAction="CopyToCloud"/>
     <menu:MorphicMenuItem x:Name="RestoreSettingsFromBackupMenuItem" Header="_Restore settings from backup" Dialog="dialogs:RestoreWindow" Visibility="Collapsed"/>
 
     <Separator x:Name="CloudSettingsSeparator" />
