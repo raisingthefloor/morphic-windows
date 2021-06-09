@@ -125,25 +125,25 @@
     <value>..\Dialogs\LoginAnnounce.wav;System.IO.MemoryStream, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="QuickStrip_Advanced_HelpMessage" xml:space="preserve">
-    <value>Customize buttons and take your settings with you anywhere</value>
+    <value>Find settings, sign in/out, customize buttons, move settings, and more.</value>
   </data>
   <data name="QuickStrip_Advanced_HelpTitle" xml:space="preserve">
-    <value>Advanced Features</value>
+    <value>Opens the Morphic Menu</value>
   </data>
   <data name="QuickStrip_Contrast_Off_HelpMessage" xml:space="preserve">
-    <value>Make it harder to distinguish items</value>
+    <value></value>
   </data>
   <data name="QuickStrip_Contrast_Off_HelpTitle" xml:space="preserve">
-    <value>Turn Off High Contrast</value>
+    <value>Turns Contrast off</value>
   </data>
   <data name="QuickStrip_Contrast_Off_Title" xml:space="preserve">
     <value>Off</value>
   </data>
   <data name="QuickStrip_Contrast_On_HelpMessage" xml:space="preserve">
-    <value>Makes screen easier to read for some (Right-click to adjust contrast)</value>
+    <value>Can make the screen easier to read. To change settings, right-click on button.</value>
   </data>
   <data name="QuickStrip_Contrast_On_HelpTitle" xml:space="preserve">
-    <value>Turn Contrast on and off</value>
+    <value>Turns Contrast on</value>
   </data>
   <data name="QuickStrip_Contrast_On_Title" xml:space="preserve">
     <value>On</value>
@@ -155,19 +155,19 @@
     <value>High Contrast</value>
   </data>
   <data name="QuickStrip_NightMode_Off_HelpMessage" xml:space="preserve">
-    <value>Apply color suitable for the daytime.</value>
+    <value></value>
   </data>
   <data name="QuickStrip_NightMode_Off_HelpTitle" xml:space="preserve">
-    <value>Turn Off Night Mode</value>
+    <value>Turns the Night Light feature off</value>
   </data>
   <data name="QuickStrip_NightMode_Off_Title" xml:space="preserve">
     <value>Off</value>
   </data>
   <data name="QuickStrip_NightMode_On_HelpMessage" xml:space="preserve">
-    <value>Reduces eye strain and makes it easier to fall asleep at night</value>
+    <value>Reduces eye strain and makes it easier to fall asleep at night.</value>
   </data>
   <data name="QuickStrip_NightMode_On_HelpTitle" xml:space="preserve">
-    <value>Turn 'Night Light' feature on and off</value>
+    <value>Turns the Night Light feature on</value>
   </data>
   <data name="QuickStrip_NightMode_On_Title" xml:space="preserve">
     <value>On</value>
@@ -176,10 +176,10 @@
     <value>Night mode</value>
   </data>
   <data name="QuickStrip_Snip_HelpMessage" xml:space="preserve">
-    <value>Drag with your mouse to copy a part of screen. Paste into any document.</value>
+    <value>Click Copy. Then click and drag mouse to take picture. Paste into any document.</value>
   </data>
   <data name="QuickStrip_Snip_HelpTitle" xml:space="preserve">
-    <value>Copies a selected part of the screen</value>
+    <value>Takes a picture of a selected part of the screen</value>
   </data>
   <data name="QuickStrip_Snip_Button_Title" xml:space="preserve">
     <value>Copy</value>
@@ -203,19 +203,19 @@
     <value>Color Vision</value>
   </data>
   <data name="QuickStrip_Colors_Color_HelpTitle" xml:space="preserve">
-    <value>Turn color vision filters on and off</value>
+    <value>Turns Color Blindness filters on and off</value>
   </data>
   <data name="QuickStrip_Colors_Color_HelpMessage" xml:space="preserve">
-    <value>Changes colors to adapt for color blindness (Right-click to choose type)</value>
+    <value>Changes colors to adapt to color vision differences. To choose type, right-click on button.</value>
   </data>
   <data name="QuickStrip_Colors_Dark_Title" xml:space="preserve">
     <value>Dark</value>
   </data>
   <data name="QuickStrip_Colors_Dark_HelpTitle" xml:space="preserve">
-    <value>Turn Dark mode on and off</value>
+    <value>Turns Dark Mode on and off</value>
   </data>
   <data name="QuickStrip_Colors_Dark_HelpMessage" xml:space="preserve">
-    <value>Toggles dark mode on and off (Right-click to adjust)</value>
+    <value>To change settings, right-click on button.</value>
   </data>
   <data name="QuickStrip_Colors_Dark_Name" xml:space="preserve">
     <value>Dark mode</value>
@@ -229,19 +229,19 @@
   </data>
 
   <data name="QuickStrip_Magnifier_Hide_HelpMessage" xml:space="preserve">
-    <value>(Right-click to change magnifier settings)</value>
+    <value>To change Magnifier settings, right-click on button.</value>
   </data>
   <data name="QuickStrip_Magnifier_Hide_HelpTitle" xml:space="preserve">
-    <value>Turn off Magnifier</value>
+    <value>Turns off Magnifier</value>
   </data>
   <data name="QuickStrip_Magnifier_Hide_Title" xml:space="preserve">
     <value>Hide</value>
   </data>
   <data name="QuickStrip_Magnifier_Show_HelpMessage" xml:space="preserve">
-    <value>Turns on a Magnifying Lens (Right-click to change settings)</value>
+    <value>Magnifier follows your mouse. Your mouse can click through the box.</value>
   </data>
   <data name="QuickStrip_Magnifier_Show_HelpTitle" xml:space="preserve">
-    <value>Turn on Magnifier that Follows Mouse</value>
+    <value>Turns on a Magnifying lens</value>
   </data>
   <data name="QuickStrip_Magnifier_Show_Title" xml:space="preserve">
     <value>Show</value>
@@ -256,16 +256,16 @@
     <value>Hide Magnifier</value>
   </data>
   <data name="QuickStrip_Reader_Start_HelpMessage" xml:space="preserve">
-    <value>Select any text and then click to have it read</value>
+    <value>Select text to be read. Then click play button to read. To change settings, right-click on button.</value>
   </data>
   <data name="QuickStrip_Reader_Start_HelpTitle" xml:space="preserve">
-    <value>Read the text that is selected</value>
+    <value>Reads text that is selected</value>
   </data>
   <data name="QuickStrip_Reader_Stop_HelpMessage" xml:space="preserve">
-    <value>(Right-click to adjust speed and voice)</value>
+    <value>To change voice and speed settings, right-click on either button.</value>
   </data>
   <data name="QuickStrip_Reader_Stop_HelpTitle" xml:space="preserve">
-    <value>Stop Reading</value>
+    <value>Stops reading</value>
   </data>
   <data name="QuickStrip_Reader_Stop_Name" xml:space="preserve">
     <value>Stop Reading Select Text</value>
@@ -277,34 +277,34 @@
     <value>Read Selected</value>
   </data>
   <data name="QuickStrip_Resolution_Bigger_HelpMessage" xml:space="preserve">
-    <value>Makes everything on screen larger</value>
+    <value>Makes everything on the screen larger.</value>
   </data>
   <data name="QuickStrip_Resolution_Bigger_HelpTitle" xml:space="preserve">
-    <value>Increase Text Size Everywhere</value>
+    <value>Increases Text Size everywhere</value>
   </data>
   <data name="QuickStrip_Resolution_Bigger_Name" xml:space="preserve">
     <value>Increase Text Size</value>
   </data>
   <data name="QuickStrip_Resolution_Bigger_LimitMessage" xml:space="preserve">
-    <value>The text and icons are as large as they can be</value>
+    <value></value>
   </data>
   <data name="QuickStrip_Resolution_Bigger_LimitTitle" xml:space="preserve">
-    <value>Cannot Increase Screen Zoom</value>
+    <value>Text Size cannot go bigger</value>
   </data>
   <data name="QuickStrip_Resolution_Smaller_HelpMessage" xml:space="preserve">
-    <value>Makes everything on screen smaller</value>
+    <value>Makes everything on the screen smaller.</value>
   </data>
   <data name="QuickStrip_Resolution_Smaller_HelpTitle" xml:space="preserve">
-    <value>Decrease Text Size Everywhere</value>
+    <value>Decreases Text Size everywhere</value>
   </data>
   <data name="QuickStrip_Resolution_Smaller_Name" xml:space="preserve">
     <value>Decrease Text Size</value>
   </data>
   <data name="QuickStrip_Resolution_Smaller_LimitMessage" xml:space="preserve">
-    <value>The text and icons are as small as they can be</value>
+    <value></value>
   </data>
   <data name="QuickStrip_Resolution_Smaller_LimitTitle" xml:space="preserve">
-    <value>Cannot Decrease Screen Zoom</value>
+    <value>Text Size cannot go smaller</value>
   </data>
   <data name="QuickStrip_Resolution_Title" xml:space="preserve">
     <value>Text Size</value>
