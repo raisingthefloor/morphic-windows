@@ -207,7 +207,6 @@ stages:
           artifact: build-version
             
   - stage: upload
-    condition: "false"
     jobs:
       - job: publish_installer
         pool:
