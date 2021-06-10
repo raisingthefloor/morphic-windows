@@ -45,12 +45,6 @@ namespace Morphic.Client.Bar.Data
         public BarData Bar { get; set; }
 
         /// <summary>
-        /// true if the item is to be displayed on the pull-out bar.
-        /// </summary>
-        [JsonProperty("is_primary")]
-        public bool IsPrimary { get; set; }
-
-        /// <summary>
         /// true if the item should over-flow to the secondary bar, because it doesn't fit.
         /// </summary>
         public bool Overflow { get; set; }

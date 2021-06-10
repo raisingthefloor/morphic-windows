@@ -128,7 +128,7 @@ namespace Morphic.Client.Bar.Data
         /// <returns>true if the item belongs on the primary bar.</returns>
         private bool IsPrimaryItem(BarItem item)
         {
-            return !item.Hidden && item.IsPrimary && !item.Overflow;
+            return !item.Hidden && !item.Overflow;
         }
 
         /// <summary>
@@ -151,7 +151,7 @@ namespace Morphic.Client.Bar.Data
         /// Gets the items for the additional buttons.
         /// </summary>
         public IEnumerable<BarItem> SecondaryItems => this.AllItems.Where(this.IsSecondaryItem)
-            .OrderByDescending(item => item.IsPrimary)
+            .OrderByDescending(item => item.Overflow)
             .ThenByDescending(item => item.Priority);
 
         public string? CommunityId { get; set; }
@@ -274,7 +274,6 @@ namespace Morphic.Client.Bar.Data
                                     throw new NotImplementedException();
                             }
                             //extraBarItem.ColorValue = "#00FF00";
-                            extraBarItem.IsPrimary = true;
                             //
                             if (extraBarItemShouldBeAdded == true)
                             {
@@ -288,7 +287,6 @@ namespace Morphic.Client.Bar.Data
                         spacerBarItem.ToolTip = "";
                         spacerBarItem.Text = "";
                         spacerBarItem.ColorValue = "#FFFFFF";
-                        spacerBarItem.IsPrimary = true;
                         //
                         defaultBar?.AllItems.Add(spacerBarItem);
                     }
@@ -330,22 +328,6 @@ namespace Morphic.Client.Bar.Data
             this.BarTheme.Apply(Theme.DefaultBar());
             this.DefaultTheme.Apply(Theme.DefaultItem());
             this.ControlTheme.Apply(Theme.DefaultControl()).Apply(this.DefaultTheme);
-
-            if (this.hasDeserialized)
-            {
-                // If a bar has no primary items, it looks stupid. Make all the items primary, and make them over-flow to
-                // the secondary bar.
-                bool hasPrimary = this.PrimaryItems.Any(item => !item.IsDefault);
-                if (!hasPrimary)
-                {
-                    foreach (BarItem item in this.SecondaryItems)
-                    {
-                        item.IsPrimary = true;
-                    }
-
-                    this.Overflow = BarOverflow.Secondary;
-                }
-            }
 
             this.AllItems.ForEach(item =>
             {
