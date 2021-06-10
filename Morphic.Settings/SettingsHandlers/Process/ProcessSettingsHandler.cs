@@ -42,7 +42,7 @@
                     {
                         Windows.Native.Process.Process.CloseAllWindows(process.Id);
 
-                        if(!process.HasExited)
+                        if(!process.WaitForExit(2000))
                         {
                             process.Kill(true);
                         }
