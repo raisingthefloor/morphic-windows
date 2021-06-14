@@ -147,6 +147,11 @@ namespace Morphic.Client.Bar.Data
         public IEnumerable<BarItem> PrimaryItems => this.AllItems.Where(this.IsPrimaryItem)
             .OrderByDescending(item => item.Priority);
 
+        // OBSERVATION: the usage of the "Overflow" bool in sorting and the general nomenclature of "Overflow" and "Priority" leave room for bugs;
+		//              at first glance, "Overflow" should be a filter for secondary items rather than a descending sort order and
+		//              "Priority" (which is the index value) seems like it should ordered in ascending order;
+		//              we should rethink our terminology and refactor the logic here and the variable naming and logic related to these variables
+        //
         /// <summary>
         /// Gets the items for the additional buttons.
         /// </summary>
