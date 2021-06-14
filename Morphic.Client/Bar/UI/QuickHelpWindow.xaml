@@ -9,7 +9,7 @@
         Title="QuickHelpWindow"
         Height="160"
         Width="750"
-        Background="#CC000000"
+        Background="Black"
         BorderBrush="White"
         BorderThickness="1"
         HorizontalAlignment="Center"
