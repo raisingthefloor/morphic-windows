@@ -52,10 +52,12 @@
 
         public async Task<bool> CanExecute(string id)
         {
-            bool canExecute = false;
+            bool canExecute = true;
 
             if (Setting?.Range != null)
             {
+                canExecute = false;
+
                 var range = Setting.Range;
                 var idRequiresCountRefresh = Setting.Id == "zoom";
 
