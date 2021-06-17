@@ -1,16 +1,18 @@
-﻿using System.Windows;
+﻿using System.Linq;
+using System.Windows;
 
 namespace Morphic.Client.Bar.UI
 {
+    using BarControls;
+    using Data;
+    using Dialogs.Elements;
+    using Morphic.Client.Bar.Data.Actions;
+    using Settings.SettingsHandlers;
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using System.Windows.Controls;
     using System.Windows.Media.Animation;
-    using BarControls;
-    using Data;
-    using Dialogs.Elements;
-    using Settings.SettingsHandlers;
 
     public partial class QuickHelpWindow : Window
     {
@@ -105,19 +107,25 @@ namespace Morphic.Client.Bar.UI
                 }));
         }
 
-        private (string? header, string? text) GetHelpText(BarItem? barItem, string? controlTooltip)
+        private (string? header, string? text, string? error) GetHelpText(BarItem? barItem, string? controlTooltip)
         {
-            // Tooltip from the control is like "header|text" or "text"
-            string[] parts = controlTooltip?.Split('|', 2) ?? new string[0];
-            string? controlHeader = null, controlText = null;
+            // Tooltip from the control is like "header|text|error", "header|text" or "text"
+            string[] parts = controlTooltip?.Split('|', 3) ?? new string[0];
+            string? controlHeader = null, controlText = null, errorText = null;
             if (parts.Length == 1)
             {
                 controlText = parts[0];
             }
-            else
+            else if (parts.Length == 2)
             {
                 controlHeader = parts[0];
                 controlText = parts[1];
+            }
+            else if (parts.Length == 3)
+            {
+                controlHeader = parts[0];
+                controlText = parts[1];
+                errorText = parts[2];
             }
 
             if (string.IsNullOrEmpty(controlHeader))
@@ -130,8 +138,14 @@ namespace Morphic.Client.Bar.UI
                 controlText = null;
             }
 
+            if (string.IsNullOrEmpty(errorText))
+            {
+                errorText = null;
+            }
+
             string? header = controlHeader ?? barItem?.ToolTipHeader;
             string? text = controlText ?? barItem?.ToolTip;
+            string? error = errorText;
 
             if (header == text)
             {
@@ -148,7 +162,7 @@ namespace Morphic.Client.Bar.UI
                 }
             }
 
-            return (header, text);
+            return (header, text, error);
         }
 
         private bool wanted;
@@ -158,7 +172,7 @@ namespace Morphic.Client.Bar.UI
         /// </summary>
         /// <param name="barWindow">The bar window.</param>
         /// <param name="element">The element.</param>
-        private void ShowHelp(BarWindow barWindow, FrameworkElement element)
+        private async void ShowHelp(BarWindow barWindow, FrameworkElement element)
         {
             BarItemControl? control = element as BarItemControl ?? element.FindVisualParent<BarItemControl>();
 
@@ -170,16 +184,37 @@ namespace Morphic.Client.Bar.UI
 
             BarItem barItem = control.BarItem;
 
-            (string? header, string? text) = this.GetHelpText(barItem, element.ToolTip?.ToString());
+            (string? header, string? text, string? error) = GetHelpText(barItem, element.ToolTip?.ToString());
 
             if (string.IsNullOrEmpty(header))
             {
-                this.HideHelp();
+                HideHelp();
                 return;
             }
 
-            this.HeaderText = header ?? string.Empty;
-            this.MessageText = text ?? string.Empty;
+            if (control is MultiButtonBarControl multiButtonBarControl)
+            {
+                var buttonInfo = multiButtonBarControl.Buttons
+                    .Where(b => b.Control == element)
+                    .Select(b => b.Button)
+                    .FirstOrDefault();
+
+                if (buttonInfo != null && buttonInfo.Action is SettingAction settingAction && await settingAction.CanExecute(buttonInfo.Id))
+                {
+                    HeaderText = error ?? string.Empty;
+                    MessageText = string.Empty;
+                }
+                else
+                {
+                    HeaderText = header ?? string.Empty;
+                    MessageText = text ?? string.Empty;
+                }
+            }
+            else
+            {
+                HeaderText = header ?? string.Empty;
+                MessageText = text ?? string.Empty;
+            }
 
             this.ShowRangeControl(barItem);
 
@@ -199,29 +234,38 @@ namespace Morphic.Client.Bar.UI
             this.Opacity = 1;
         }
 
-        private void ShowRangeControl(BarItem barItem)
+        private Setting? GetSetting(BarItem barItem)
         {
-            this.RangeContainer.Children.Clear();
+            Setting? setting = null;
 
             if (barItem is BarSettingItem settingItem && settingItem.SettingId != null)
             {
                 try
                 {
-                    Setting setting = settingItem.Solutions.GetSetting(settingItem.SettingId);
-                    if (setting.Range != null)
-                    {
-                        Control control = this.GetRangeControl(setting, setting.Range);
-                        this.RangeContainer.Children.Add(control);
-                    }
+                    setting = settingItem.Solutions.GetSetting(settingItem.SettingId);
                 }
                 catch (KeyNotFoundException)
                 {
                     // ignore
                 }
             }
+
+            return setting;
         }
 
-        private Control GetRangeControl(Setting setting, SettingRange range)
+        private async void ShowRangeControl(BarItem barItem)
+        {
+            RangeContainer.Children.Clear();
+
+            var setting = GetSetting(barItem);
+            if (setting?.Range != null)
+            {
+                var control = await GetRangeControl(setting, setting.Range);
+                RangeContainer.Children.Add(control);
+            }
+        }
+
+        private async Task<Control> GetRangeControl(Setting setting, SettingRange range)
         {
             PagerControl pager = new PagerControl();
 
@@ -234,9 +278,9 @@ namespace Morphic.Client.Bar.UI
 
             setting.Changed += SettingChanged;
             pager.Unloaded += (sender, args) => setting.Changed -= SettingChanged;
-
+            
             // OBSERVATION: we are not checking for success/failure from the GetValueAsync method (or even capturing the 'gotten' value); this is presumably being called for its side-effects (which are presumably caching)
-            setting.GetValueAsync()
+            await setting.GetValueAsync()
                 .ContinueWith(_ => this.Dispatcher.Invoke(() => this.UpdatePager(pager, setting, range)));
 
             return pager;
@@ -247,16 +291,7 @@ namespace Morphic.Client.Bar.UI
             // NOTE: we should add a property to the solutions registry which indicates that this needs to be refreshed every time
             //       _and/or_ we need to have the native handler itself send us a message when it needs updated (such as after a display 
             //       resolution change)
-            bool idRequiresCountRefresh;
-            switch (setting.Id)
-            {
-                case "zoom":
-                    idRequiresCountRefresh = true;
-                    break;
-                default:
-                    idRequiresCountRefresh = false;
-                    break;
-            }
+            var idRequiresCountRefresh = RequiresCountRefresh(setting);
 
             if ((idRequiresCountRefresh == true) || (pager.CurrentPage == -1))
             {
@@ -268,6 +303,15 @@ namespace Morphic.Client.Bar.UI
 
             int value = setting.CurrentValue as int? ?? default;
             pager.CurrentPage = value;
+        }
+
+        private static bool RequiresCountRefresh(Setting setting)
+        {
+            return setting.Id switch
+            {
+                "zoom" => true,
+                _ => false,
+            };
         }
 
         /// <summary>
@@ -305,7 +349,7 @@ namespace Morphic.Client.Bar.UI
             // Move the it next to the bar (the side that has most room)
             if (barWindow.Orientation == Orientation.Horizontal)
             {
-                if (barRect.Top - workArea.Top  > workArea.Bottom - barRect.Bottom)
+                if (barRect.Top - workArea.Top > workArea.Bottom - barRect.Bottom)
                 {
                     rect.Y = barRect.Top - rect.Height;
                 }

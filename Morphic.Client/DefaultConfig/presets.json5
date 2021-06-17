@@ -14,12 +14,12 @@
         buttons: {
           inc: {
             label: "+",
-            tooltip: "Increases Text Size everywhere|Makes everything on the screen larger.",
+            tooltip: "Increases Text Size everywhere|Makes everything on the screen larger.|Text Size cannot go bigger",
             uiName: "Increase Text Size"
           },
           dec: {
             label: "-",
-            tooltip: "Decreases Text Size everywhere|Makes everything on the screen smaller.",
+            tooltip: "Decreases Text Size everywhere|Makes everything on the screen smaller.|Text Size cannot go smaller",
             uiName: "Decrease Text Size"
           }
         }
