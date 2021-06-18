@@ -29,16 +29,15 @@ variables:
 - group: 's3-public-bucket-upload'
 # Import all the code-signing variables (from the Library)
 - group: 'windows-code-sign'
-- name: mainSolution
-  value: Morphic/Morphic.sln
 - name: mainProject
   value: Morphic/Morphic.csproj
+- name: mainSolution
+  value: Morphic/Morphic.sln
 - name: projects
   value: |
          Morphic.Core/Morphic.Core.csproj
          Morphic.OAuth/Morphic.OAuth.csproj
          Morphic.Windows.Native/Morphic.Windows.Native.csproj
-         MorphicPackage/MorphicPackage.wapproj
          Morphic/Morphic.csproj
   
 # TODO: temporary values
@@ -82,16 +81,10 @@ stages:
             projects: '$(projects)'
         
         - task: DotNetCoreCLI@2
-          displayName: 'dotnet restore'
-          inputs:
-            command: restore
-            projects: '$(mainSolution)'
-        
-        - task: DotNetCoreCLI@2
           displayName: 'dotnet build'
           inputs:
            command: build
-           projects: '$(mainProject)'
+           projects: '$(mainSolution)'
 
         - task: DotNetCoreCLI@2
           displayName: 'dotnet publish (x86)'
