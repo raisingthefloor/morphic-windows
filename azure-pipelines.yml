@@ -31,8 +31,6 @@ variables:
 - group: 'windows-code-sign'
 - name: mainProject
   value: Morphic/Morphic.csproj
-- name: mainSolution
-  value: Morphic.sln
 - name: projects
   value: |
          Morphic.Core/Morphic.Core.csproj
@@ -84,7 +82,7 @@ stages:
           displayName: 'dotnet build'
           inputs:
            command: build
-           projects: '$(mainSolution)'
+           projects: '$(mainProject)'
 
         - task: DotNetCoreCLI@2
           displayName: 'dotnet publish (x86)'
