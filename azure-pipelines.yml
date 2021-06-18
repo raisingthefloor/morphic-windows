@@ -32,7 +32,7 @@ variables:
 - name: mainProject
   value: Morphic/Morphic.csproj
 - name: mainSolution
-  value: Morphic/Morphic.sln
+  value: Morphic.sln
 - name: projects
   value: |
          Morphic.Core/Morphic.Core.csproj
