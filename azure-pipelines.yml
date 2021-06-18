@@ -36,6 +36,7 @@ variables:
          Morphic.Core/Morphic.Core.csproj
          Morphic.OAuth/Morphic.OAuth.csproj
          Morphic.Windows.Native/Morphic.Windows.Native.csproj
+         MorphicPackage/MorphicPackage.wapproj
          Morphic/Morphic.csproj
   
 # TODO: temporary values
