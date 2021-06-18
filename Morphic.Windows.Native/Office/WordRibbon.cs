@@ -4,6 +4,8 @@ using System.Text;
 using System.Runtime.InteropServices;
 using Microsoft.Office.Interop.Word;
 using System.IO;
+using System.Xml;
+using System.Reflection;
 
 namespace Morphic.Windows.Native.Office
 {
@@ -42,24 +44,27 @@ namespace Morphic.Windows.Native.Office
         {
             path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\Microsoft\\Office\\Word.officeUI";
             backupPath = path + ".bak";
+            originalString = "";
+            currentSettings = new XmlDocument();
             CapturePrefs(true);
         }
 
         private void CapturePrefs(bool original = false)
         {
-            string capture;
+            string capture = "";
             try
             {
                 if (File.Exists(path))
                 {
                     capture = File.ReadAllText(path);
-                    if (!capture.Contains("<mso:qat>") || !capture.Contains("<mso:tabs>")) //check for if a file is missing key elements, if so just backup and wipe customizations
+                    if (capture == "") //check for empty file (possibly left by earlier Morphic run)
                     {
                         if (!File.Exists(backupPath))
                         {
                             File.Copy(path, backupPath);
                         }
-                        capture = UIFile_EmptyTemplate;
+                        currentSettings = LoadEmptyTemplate();
+                        return;
                     }
                 }
                 else
@@ -68,77 +73,181 @@ namespace Morphic.Windows.Native.Office
                     {
                         File.WriteAllText(backupPath, "");
                     }
-                    capture = UIFile_EmptyTemplate;
+                    currentSettings = LoadEmptyTemplate();
+                    return;
                 }
-                currentSettings = capture;
-                if (!currentSettings.Contains(UIFile_SharedControlsNoTag))   //checks for shared controls from Morphic, if it doesn't have them, adds them. No visible impact on interface and duplicates are ignored
+                currentSettings.LoadXml(capture);
+                XmlNamespaceManager ns = new XmlNamespaceManager(currentSettings.NameTable);
+                ns.AddNamespace("mso", "http://schemas.microsoft.com/office/2009/07/customui");
+                XmlNode tabs = currentSettings.SelectSingleNode("mso:customUI/mso:ribbon/mso:tabs", ns) ?? throw new ArgumentNullException();
+                XmlNode qat = currentSettings.SelectSingleNode("mso:customUI/mso:ribbon/mso:qat", ns) ?? throw new ArgumentNullException();
+                XmlNode sharedControls = qat.SelectSingleNode("mso:sharedControls", ns);
+                XmlDocument template = LoadEmptyTemplate();
+                if(sharedControls == null)
                 {
-                    if (currentSettings.Contains("<mso:sharedControls>"))
+                    XmlNode scgroup = currentSettings.ImportNode(template.SelectSingleNode("mso:customUI/mso:ribbon/mso:qat/mso:sharedControls", ns), true);
+                    qat.AppendChild(scgroup);
+                }
+                else
+                {
+                    foreach(XmlNode control in template.SelectNodes("mso:customUI/mso:ribbon/mso:qat/mso:sharedControls/mso:control", ns))
                     {
-                        currentSettings = currentSettings.Insert(currentSettings.IndexOf("<mso:sharedControls>") + 20, UIFile_SharedControlsNoTag);
-                    }
-                    else
-                    {
-                        currentSettings = currentSettings.Insert(currentSettings.IndexOf("<mso:qat>") + 9, UIFile_SharedControlsWithTag);
+                        if (control == null) break;
+                        bool found = false;
+                        foreach(XmlNode existing in sharedControls.ChildNodes)
+                        {
+                            if (existing == null) break;
+                            if(existing.Attributes["idQ"].Value == control.Attributes["idQ"].Value)
+                            {
+                                found = true;
+                            }
+                        }
+                        if(!found)
+                        {
+                            XmlNode ncontrol = currentSettings.ImportNode(control, true);
+                            sharedControls.AppendChild(ncontrol);
+                        }
                     }
                 }
             }
             catch
             {
-                capture = "";
-                currentSettings = "";
+                currentSettings = LoadEmptyTemplate();
+                try
+                {
+                    if(!File.Exists(backupPath))
+                    {
+                        File.Copy(path, backupPath);
+                    }
+                }
+                catch { }
             }
             if(original)
             {
-                originalSettings = capture;
+                originalString = capture;
             }
         }
 
         public void EnableBasicsTab()
         {
+            XmlDocument template = LoadComponentTemplates();
+            XmlNamespaceManager ns = new XmlNamespaceManager(template.NameTable);
+            ns.AddNamespace("mso", "http://schemas.microsoft.com/office/2009/07/customui");
             CapturePrefs();
-            if(!currentSettings.Contains(UIFile_BasicToolbar))
+            try
             {
-                currentSettings = currentSettings.Insert(currentSettings.IndexOf("<mso:tabs>") + 10, UIFile_BasicToolbar);
-                savePrefs();
+                foreach (XmlNode tab in currentSettings.SelectNodes("mso:customUI/mso:ribbon/mso:tabs/mso:tab", ns))
+                {
+                    if (tab.Attributes["id"].Value == "morphic.basics")
+                    {
+                        tab.ParentNode.RemoveChild(tab);
+                        break;
+                    }
+                }
+                foreach (XmlNode tab in template.SelectNodes("mso:customUI/mso:ribbon/mso:tabs/mso:tab", ns))
+                {
+                    if(tab.Attributes["id"].Value == "morphic.basics")
+                    {
+                        XmlNode node = currentSettings.ImportNode(tab, true);
+                        XmlNode parent = currentSettings.SelectSingleNode("mso:customUI/mso:ribbon/mso:tabs", ns);
+                        parent.InsertBefore(node, parent.FirstChild);
+                        break;
+                    }
+                }
             }
+            catch
+            {
+                CapturePrefs();
+            }
+            savePrefs();
         }
 
         public void DisableBasicsTab()
         {
+            XmlDocument template = LoadComponentTemplates();
+            XmlNamespaceManager ns = new XmlNamespaceManager(template.NameTable);
+            ns.AddNamespace("mso", "http://schemas.microsoft.com/office/2009/07/customui");
             CapturePrefs();
-            if (currentSettings.Contains(UIFile_BasicToolbar))
+            try
             {
-                currentSettings = currentSettings.Remove(currentSettings.IndexOf(UIFile_BasicToolbar), UIFile_BasicToolbar.Length);
-                savePrefs();
+                foreach (XmlNode tab in currentSettings.SelectNodes("mso:customUI/mso:ribbon/mso:tabs/mso:tab", ns))
+                {
+                    if (tab.Attributes["id"].Value == "morphic.basics")
+                    {
+                        tab.ParentNode.RemoveChild(tab);
+                        break;
+                    }
+                }
             }
+            catch
+            {
+                CapturePrefs();
+            }
+            savePrefs();
         }
 
         public void EnableEssentialsTab()
         {
+            XmlDocument template = LoadComponentTemplates();
+            XmlNamespaceManager ns = new XmlNamespaceManager(template.NameTable);
+            ns.AddNamespace("mso", "http://schemas.microsoft.com/office/2009/07/customui");
             CapturePrefs();
-            if (!currentSettings.Contains(UIFile_EssentialsToolbar))
+            try
             {
-                if(currentSettings.Contains(UIFile_BasicToolbar))
+                foreach (XmlNode tab in currentSettings.SelectNodes("mso:customUI/mso:ribbon/mso:tabs/mso:tab", ns))
                 {
-                    currentSettings = currentSettings.Insert(currentSettings.IndexOf(UIFile_BasicToolbar) + UIFile_BasicToolbar.Length, UIFile_EssentialsToolbar);
+                    if (tab.Attributes["id"].Value == "morphic.essentials")
+                    {
+                        tab.ParentNode.RemoveChild(tab);
+                        break;
+                    }
                 }
-                else
+                foreach (XmlNode tab in template.SelectNodes("mso:customUI/mso:ribbon/mso:tabs/mso:tab", ns))
                 {
-                    currentSettings = currentSettings.Insert(currentSettings.IndexOf("<mso:tabs>") + 10, UIFile_EssentialsToolbar);
+                    if (tab.Attributes["id"].Value == "morphic.essentials")
+                    {
+                        XmlNode node = currentSettings.ImportNode(tab, true);
+                        XmlNode parent = currentSettings.SelectSingleNode("mso:customUI/mso:ribbon/mso:tabs", ns);
+                        if (parent.FirstChild != null && parent.FirstChild.Attributes["id"].Value == "morphic.basics")
+                        {
+                            parent.InsertAfter(node, parent.FirstChild);
+                        }
+                        else
+                        {
+                            parent.InsertBefore(node, parent.FirstChild);
+                        }
+                        break;
+                    }
                 }
-                savePrefs();
             }
+            catch
+            {
+                CapturePrefs();
+            }
+            savePrefs();
         }
 
         public void DisableEssentialsTab()
         {
+            XmlDocument template = LoadComponentTemplates();
+            XmlNamespaceManager ns = new XmlNamespaceManager(template.NameTable);
+            ns.AddNamespace("mso", "http://schemas.microsoft.com/office/2009/07/customui");
             CapturePrefs();
-            if (currentSettings.Contains(UIFile_EssentialsToolbar))
+            try
             {
-                currentSettings = currentSettings.Remove(currentSettings.IndexOf(UIFile_EssentialsToolbar), UIFile_EssentialsToolbar.Length);
-                savePrefs();
+                foreach (XmlNode tab in currentSettings.SelectNodes("mso:customUI/mso:ribbon/mso:tabs/mso:tab", ns))
+                {
+                    if (tab.Attributes["id"].Value == "morphic.essentials")
+                    {
+                        tab.ParentNode.RemoveChild(tab);
+                    }
+                }
             }
+            catch
+            {
+                CapturePrefs();
+            }
+            savePrefs();
         }
 
         private void savePrefs()
@@ -153,10 +262,10 @@ namespace Morphic.Windows.Native.Office
                     }
                     else
                     {
-                        File.WriteAllText(path, originalSettings);
+                        File.WriteAllText(path, originalString);
                     }
                 }
-                File.WriteAllText(path, currentSettings);
+                File.WriteAllText(path, currentSettings.OuterXml);
                 RefreshRibbon();
             }
             catch
@@ -179,7 +288,7 @@ namespace Morphic.Windows.Native.Office
                 }
                 else
                 {
-                    File.WriteAllText(path, originalSettings);
+                    File.WriteAllText(path, originalString);
                 }
                 RefreshRibbon();
             }
@@ -224,15 +333,31 @@ namespace Morphic.Windows.Native.Office
             }
         }
 
+        private XmlDocument LoadEmptyTemplate()
+        {
+            XmlDocument reply = new XmlDocument();
+            try
+            {
+                reply.Load(Assembly.GetExecutingAssembly().GetManifestResourceStream("Morphic.Windows.Native.Office.Word_EmptyTemplate.xml"));
+            }
+            catch { }
+            return reply;
+        }
+
+        private XmlDocument LoadComponentTemplates()
+        {
+            XmlDocument reply = new XmlDocument();
+            try
+            {
+                reply.Load(Assembly.GetExecutingAssembly().GetManifestResourceStream("Morphic.Windows.Native.Office.Word_ComponentTemplates.xml"));
+            }
+            catch { }
+            return reply;
+        }
+
         private string path;
         private string backupPath;
-        private string originalSettings;
-        private string currentSettings;
-
-        private static string UIFile_EmptyTemplate = "<mso:customUI xmlns:mso=\"http://schemas.microsoft.com/office/2009/07/customui\"><mso:ribbon><mso:qat></mso:qat><mso:tabs></mso:tabs></mso:ribbon></mso:customUI>";
-        private static string UIFile_BasicToolbar = "<mso:tab id=\"morphic.basics\" label=\" Basics (Morphic)\" insertBeforeQ=\"mso:TabHome\"><mso:group id=\"mso_c2.EDC33\" label=\"                                                                                                                                                                            .                                 .\" autoScale=\"true\"><mso:control idQ=\"mso:FileNewDefault\" visible=\"true\"/><mso:control idQ=\"mso:FileSave\" visible=\"true\"/><mso:control idQ=\"mso:PrintPreviewAndPrint\" visible=\"true\"/></mso:group><mso:group id=\"mso_c1.6FBD983\" label=\"                                                                                                                                                                            .                                 .\" autoScale=\"true\"><mso:control idQ=\"mso:Copy\" visible=\"true\"/><mso:control idQ=\"mso:Cut\" visible=\"true\"/><mso:control idQ=\"mso:PasteMenu\" visible=\"true\"/></mso:group><mso:group id=\"mso_c1.F5839\" label=\"                                                                                                                                                                            .                                 .\" autoScale=\"true\"><mso:control idQ=\"mso:SelectAll\" visible=\"true\"/><mso:gallery idQ=\"mso:ThemeFontsGallery\" showInRibbon=\"false\" visible=\"true\"/><mso:control idQ=\"mso:FontSizeIncreaseWord\" label=\"Increase Font\" visible=\"true\"/><mso:control idQ=\"mso:FontSizeDecreaseWord\" label=\"Decrease Font\" visible=\"true\"/><mso:control idQ=\"mso:Bold\" visible=\"true\"/><mso:control idQ=\"mso:Italic\" visible=\"true\"/><mso:gallery idQ=\"mso:TextHighlightColorPicker\" showInRibbon=\"false\" visible=\"true\"/></mso:group><mso:group id=\"mso_c3.10BDD3\" label=\"                                                                                                                                                                            .                                 .\" autoScale=\"true\"><mso:control idQ=\"mso:ZoomClassic\" visible=\"true\"/><mso:control idQ=\"mso:TranslateMenu\" visible=\"true\"/></mso:group><mso:group id=\"mso_c1.6BAB619\" label=\"                                                                                                                                                                            .                                 .\" autoScale=\"true\"/></mso:tab>";
-        private static string UIFile_EssentialsToolbar = "<mso:tab id=\"morphic.essentials\" label=\"Essentials (Morphic)\" insertBeforeQ=\"mso:TabHome\"><mso:group id=\"mso_c23.1B75B9\" label=\"FILE         PRINT        FORMAT\" autoScale=\"true\"><mso:control idQ=\"mso:FileNewDialogClassic\" label=\"New \" visible=\"true\"/><mso:gallery idQ=\"mso:PageMarginsGallery\" showInRibbon=\"false\" visible=\"true\"/><mso:gallery idQ=\"mso:PageOrientationGallery\" showInRibbon=\"false\" visible=\"true\"/><mso:control idQ=\"mso:FileSave\" visible=\"true\"/><mso:control idQ=\"mso:FileSaveAs\" visible=\"true\"/><mso:control idQ=\"mso:PrintPreviewAndPrint\" label=\"Print\" visible=\"true\"/><mso:control idQ=\"mso:SelectMenuExcel\" visible=\"true\"/><mso:control idQ=\"mso:PasteSpecialDialog\" visible=\"true\"/><mso:control idQ=\"mso:FormatPainter\" visible=\"true\"/></mso:group><mso:group id=\"mso_c25.1C84B8\" label=\"TEXT \" autoScale=\"true\"><mso:control idQ=\"mso:StyleGalleryClassic\" visible=\"true\"/><mso:control idQ=\"mso:Font\" visible=\"true\"/><mso:control idQ=\"mso:FontSize\" visible=\"true\"/><mso:gallery idQ=\"mso:FontColorPicker\" showInRibbon=\"false\" visible=\"true\"/><mso:gallery idQ=\"mso:QuickStylesGallery\" showInRibbon=\"false\" visible=\"true\"/><mso:control idQ=\"mso:Bold\" visible=\"true\"/><mso:control idQ=\"mso:Italic\" visible=\"true\"/><mso:control idQ=\"mso:Underline\" visible=\"true\"/><mso:control idQ=\"mso:Strikethrough\" visible=\"true\"/><mso:control idQ=\"mso:Superscript\" visible=\"true\"/></mso:group><mso:group id=\"mso_c26.1CE297\" label=\"PARAGRAPH\" autoScale=\"true\"><mso:control idQ=\"mso:AlignLeft\" label=\"Left\" visible=\"true\"/><mso:control idQ=\"mso:AlignCenter\" visible=\"true\"/><mso:control idQ=\"mso:AlignRight\" label=\"Right\" visible=\"true\"/><mso:control idQ=\"mso:AlignJustify\" visible=\"true\"/><mso:control idQ=\"mso:BulletsAndNumberingBulletsDialog\" label=\"Bullets (plus)\" visible=\"true\"/><mso:gallery idQ=\"mso:NumberingGalleryWord\" showInRibbon=\"false\" visible=\"true\"/><mso:control idQ=\"mso:OutdentClassic\" visible=\"true\"/><mso:gallery idQ=\"mso:LineSpacingGallery\" label=\"Line Spacing\" showInRibbon=\"false\" visible=\"true\"/><mso:control idQ=\"mso:IndentIncrease\" visible=\"true\"/><mso:control idQ=\"mso:ParagraphMarks\" visible=\"true\"/><mso:gallery idQ=\"mso:ShadingColorPicker\" showInRibbon=\"false\" visible=\"true\"/><mso:gallery idQ=\"mso:BordersSelectionGallery\" showInRibbon=\"false\" visible=\"true\"/></mso:group><mso:group id=\"mso_c28.1E3297\" label=\"INSERT\" autoScale=\"true\"><mso:control idQ=\"mso:TableInsertDialogWord\" label=\"Table...\" visible=\"true\"/><mso:gallery idQ=\"mso:HeaderInsertGallery\" showInRibbon=\"false\" visible=\"true\"/><mso:gallery idQ=\"mso:FooterInsertGallery\" showInRibbon=\"false\" visible=\"true\"/><mso:control idQ=\"mso:PictureInsertFromFile\" label=\"Pictures\" visible=\"true\"/><mso:gallery idQ=\"mso:ShapesInsertGallery\" showInRibbon=\"false\" visible=\"true\"/><mso:control idQ=\"mso:ChartInsert\" visible=\"true\"/><mso:gallery idQ=\"mso:SymbolInsertGallery\" showInRibbon=\"false\" visible=\"true\"/><mso:gallery idQ=\"mso:EquationInsertGallery\" showInRibbon=\"false\" visible=\"true\"/></mso:group><mso:group id=\"mso_c29.1EE2BD\" label=\"EDITING\" autoScale=\"true\"><mso:control idQ=\"mso:InsertNewComment\" visible=\"true\"/><mso:control idQ=\"mso:ReviewTrackChanges\" visible=\"true\"/><mso:control idQ=\"mso:ReviewAcceptOrRejectChangeDialog\" label=\"Accept/Reject \" visible=\"true\"/><mso:gallery idQ=\"mso:Undo\" showInRibbon=\"false\" visible=\"true\"/><mso:gallery idQ=\"mso:Redo\" showInRibbon=\"false\" visible=\"true\"/><mso:control idQ=\"mso:SpellingAndGrammar\" visible=\"true\"/></mso:group><mso:group id=\"mso_c24.1BC272\" label=\"EASIER TO READ\" autoScale=\"true\"><mso:control idQ=\"mso:TranslateMenu\" visible=\"true\"/><mso:control idQ=\"mso:ZoomClassic\" visible=\"true\"/></mso:group></mso:tab>";
-        private static string UIFile_SharedControlsWithTag = "<mso:sharedControls><mso:control idQ=\"mso:FileNewDefault\" visible=\"false\"/><mso:control idQ=\"mso:FileOpenUsingBackstage\" visible=\"false\"/><mso:control idQ=\"mso:FileSave\" visible=\"false\"/><mso:control idQ=\"mso:FileSendAsAttachment\" visible=\"false\"/><mso:control idQ=\"mso:FilePrintQuick\" visible=\"false\"/><mso:control idQ=\"mso:PrintPreviewAndPrint\" visible=\"false\"/><mso:control idQ=\"mso:SpellingAndGrammar\" visible=\"false\"/><mso:control idQ=\"mso:Undo\" visible=\"true\"/><mso:control idQ=\"mso:RedoOrRepeat\" visible=\"true\"/><mso:control idQ=\"mso:TableDrawTable\" visible=\"false\"/><mso:control idQ=\"mso:PointerModeOptions\" visible=\"false\"/><mso:control idQ=\"mso:GroupPrintPreviewPrint\" visible=\"true\"/></mso:sharedControls>";
-        private static string UIFile_SharedControlsNoTag = "<mso:control idQ=\"mso:FileNewDefault\" visible=\"false\"/><mso:control idQ=\"mso:FileOpenUsingBackstage\" visible=\"false\"/><mso:control idQ=\"mso:FileSave\" visible=\"false\"/><mso:control idQ=\"mso:FileSendAsAttachment\" visible=\"false\"/><mso:control idQ=\"mso:FilePrintQuick\" visible=\"false\"/><mso:control idQ=\"mso:PrintPreviewAndPrint\" visible=\"false\"/><mso:control idQ=\"mso:SpellingAndGrammar\" visible=\"false\"/><mso:control idQ=\"mso:Undo\" visible=\"true\"/><mso:control idQ=\"mso:RedoOrRepeat\" visible=\"true\"/><mso:control idQ=\"mso:TableDrawTable\" visible=\"false\"/><mso:control idQ=\"mso:PointerModeOptions\" visible=\"false\"/><mso:control idQ=\"mso:GroupPrintPreviewPrint\" visible=\"true\"/>";
+        private string originalString;
+        private XmlDocument currentSettings;
     }
 }
