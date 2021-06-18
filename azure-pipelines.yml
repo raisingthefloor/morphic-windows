@@ -29,6 +29,8 @@ variables:
 - group: 's3-public-bucket-upload'
 # Import all the code-signing variables (from the Library)
 - group: 'windows-code-sign'
+- name: mainSolution
+  value: Morphic/Morphic.sln
 - name: mainProject
   value: Morphic/Morphic.csproj
 - name: projects
@@ -78,6 +80,12 @@ stages:
           inputs:
             command: restore
             projects: '$(projects)'
+        
+        - task: DotNetCoreCLI@2
+          displayName: 'dotnet restore'
+          inputs:
+            command: restore
+            projects: '$(mainSolution)'
         
         - task: DotNetCoreCLI@2
           displayName: 'dotnet build'
