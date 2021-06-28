@@ -56,8 +56,6 @@
       configuration: {
         defaultLabel: "Volume",
         function: "volume",
-        tooltip: "Volume tooltip",
-        tooltipHeader: "Volume tooltip header",
         args: {
           direction: "{button}"
         },
@@ -65,11 +63,11 @@
         buttons: {
           up: {
             label: "+",
-            xtooltip: "Raise the volume"
+            tooltip: "Increases the volume|Makes all sounds louder.|Volume cannot go louder",
           },
           down: {
             label: "-",
-            tooltip: "Lower the volume"
+            tooltip: "Decreases the volume|Makes all sounds quieter.|Volume cannot go quieter"
           }
         }
       }
@@ -202,12 +200,12 @@
           copy: {
             label: "Copy",
             value: "^c",
-            tooltip: "Copy the selection to the clipboard"
+            tooltip: "Copies your selection|Copies text or other content you have selected so you can paste it somewhere."
           },
           paste: {
             label: "Paste",
             value: "^v",
-            tooltip: "Paste the content of the clipboard to the active window"
+            tooltip: "Pastes what you copied|Inserts copied content where the text cursor is."
           }
         }
       }
