@@ -10,7 +10,7 @@
     <StackPanel x:Name="ReadyPanel" Visibility="Visible">
         <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0">Apply my settings from my Cloud Vault</Label>
         <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,20">
-            Clicking the <Bold>Apply Saved Settings</Bold> button will cause the assistive
+            Clicking the <Bold>Apply</Bold> button will cause the assistive
             technology and system setting in your Morphic Cloud Vault to be applied to this computer.
         </TextBlock>
         <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,20">
