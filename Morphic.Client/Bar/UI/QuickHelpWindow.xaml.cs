@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Windows;
+﻿using System.Windows;
 
 namespace Morphic.Client.Bar.UI
 {
@@ -66,13 +65,16 @@ namespace Morphic.Client.Bar.UI
             // Handle the tooltip shown events
             EventManager.RegisterClassHandler(typeof(FrameworkElement),
                 FrameworkElement.ToolTipOpeningEvent,
-                new RoutedEventHandler((sender, args) =>
+                new RoutedEventHandler(async (sender, args) =>
                 {
                     if (args.Source is FrameworkElement element)
                     {
                         if (Window.GetWindow(element) is BarWindow barWindow)
                         {
-                            QuickHelpWindow.singleInstance?.ShowHelp(barWindow, element);
+                            var singleInstance = QuickHelpWindow.singleInstance;
+                            if (singleInstance != null) {
+                                await singleInstance.ShowHelpAsync(barWindow, element);
+                            }
                             args.Handled = true;
                         }
                     }
@@ -116,16 +118,15 @@ namespace Morphic.Client.Bar.UI
             {
                 controlText = parts[0];
             }
-            else if (parts.Length == 2)
+            else if (parts.Length >= 2)
             {
                 controlHeader = parts[0];
                 controlText = parts[1];
-            }
-            else if (parts.Length == 3)
-            {
-                controlHeader = parts[0];
-                controlText = parts[1];
-                errorText = parts[2];
+				//
+	            if (parts.Length >= 3)
+    	        {
+                	errorText = parts[2];
+	            }
             }
 
             if (string.IsNullOrEmpty(controlHeader))
@@ -145,7 +146,7 @@ namespace Morphic.Client.Bar.UI
 
             string? header = controlHeader ?? barItem?.ToolTipHeader;
             string? text = controlText ?? barItem?.ToolTip;
-            string? error = errorText;
+            string? error = errorText; // OBSERVATION: this "errorText" is generally a limit message (e.g. "cannot go further")
 
             if (header == text)
             {
@@ -172,7 +173,7 @@ namespace Morphic.Client.Bar.UI
         /// </summary>
         /// <param name="barWindow">The bar window.</param>
         /// <param name="element">The element.</param>
-        private async void ShowHelp(BarWindow barWindow, FrameworkElement element)
+        private async Task ShowHelpAsync(BarWindow barWindow, FrameworkElement element)
         {
             BarItemControl? control = element as BarItemControl ?? element.FindVisualParent<BarItemControl>();
 
@@ -184,36 +185,52 @@ namespace Morphic.Client.Bar.UI
 
             BarItem barItem = control.BarItem;
 
-            (string? header, string? text, string? error) = GetHelpText(barItem, element.ToolTip?.ToString());
+            (string? header, string? text, string? error) = this.GetHelpText(barItem, element.ToolTip?.ToString());
 
             if (string.IsNullOrEmpty(header))
             {
-                HideHelp();
+                this.HideHelp();
                 return;
             }
 
+            // NOTE: by default, we'll show the default tooltip text; but if our control is at its limit (or we otherwise use the "error" message for this scenario) then we will show the error instead.
+            var showErrorMessage = false;
+
+            BarMultiButton.ButtonInfo? buttonInfo = null;
             if (control is MultiButtonBarControl multiButtonBarControl)
             {
-                var buttonInfo = multiButtonBarControl.Buttons
-                    .Where(b => b.Control == element)
-                    .Select(b => b.Button)
-                    .FirstOrDefault();
+                // find our multi-button's segment (button) info
+                foreach (var button in multiButtonBarControl.Buttons)
+                {
+                    if (button.Control == element)
+                    {
+                        buttonInfo = button.Button;
+                    }
+                }
 
-                if (buttonInfo != null && buttonInfo.Action is SettingAction settingAction && await settingAction.CanExecute(buttonInfo.Id))
+                // determine if we should show the error/limit message
+                if (buttonInfo != null)
                 {
-                    HeaderText = error ?? string.Empty;
-                    MessageText = string.Empty;
+                    if (buttonInfo.Action is SettingAction settingAction)
+                    {
+                        if ((await settingAction.CanExecute(buttonInfo.Id)) == false)
+                        {
+                            showErrorMessage = true;
+                        }
+                    }
                 }
-                else
-                {
-                    HeaderText = header ?? string.Empty;
-                    MessageText = text ?? string.Empty;
-                }
+            }
+            // OBSERVATION: we don't currently have a method for getting the buttonInfo of a single-segment control; since the sub-controls could be broken out into individual controls in the future, we should add this ability
+
+            if (showErrorMessage == true)
+            {
+                this.HeaderText = error ?? string.Empty;
+                this.MessageText = string.Empty;
             }
             else
             {
-                HeaderText = header ?? string.Empty;
-                MessageText = text ?? string.Empty;
+                this.HeaderText = header ?? string.Empty;
+                this.MessageText = text ?? string.Empty;
             }
 
             this.ShowRangeControl(barItem);
@@ -255,13 +272,13 @@ namespace Morphic.Client.Bar.UI
 
         private async void ShowRangeControl(BarItem barItem)
         {
-            RangeContainer.Children.Clear();
+            this.RangeContainer.Children.Clear();
 
-            var setting = GetSetting(barItem);
+            var setting = this.GetSetting(barItem);
             if (setting?.Range != null)
             {
-                var control = await GetRangeControl(setting, setting.Range);
-                RangeContainer.Children.Add(control);
+                var control = await this.GetRangeControl(setting, setting.Range);
+                this.RangeContainer.Children.Add(control);
             }
         }
 
@@ -291,7 +308,7 @@ namespace Morphic.Client.Bar.UI
             // NOTE: we should add a property to the solutions registry which indicates that this needs to be refreshed every time
             //       _and/or_ we need to have the native handler itself send us a message when it needs updated (such as after a display 
             //       resolution change)
-            var idRequiresCountRefresh = RequiresCountRefresh(setting);
+            var idRequiresCountRefresh = QuickHelpWindow.SettingRequiresCountRefresh(setting);
 
             if ((idRequiresCountRefresh == true) || (pager.CurrentPage == -1))
             {
@@ -305,13 +322,15 @@ namespace Morphic.Client.Bar.UI
             pager.CurrentPage = value;
         }
 
-        private static bool RequiresCountRefresh(Setting setting)
+        private static bool SettingRequiresCountRefresh(Setting setting)
         {
-            return setting.Id switch
+            switch (setting.Id)
             {
-                "zoom" => true,
-                _ => false,
-            };
+                case "zoom":
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         /// <summary>

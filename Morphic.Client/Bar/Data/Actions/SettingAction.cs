@@ -56,8 +56,6 @@
 
             if (Setting?.Range != null)
             {
-                canExecute = false;
-
                 var range = Setting.Range;
                 var idRequiresCountRefresh = Setting.Id == "zoom";
 
@@ -68,11 +66,11 @@
 
                 if (id == "inc" && currentValue >= max)
                 {
-                    canExecute = true;
+                    canExecute = false;
                 }
                 else if (id == "dec" && currentValue <= min)
                 {
-                    canExecute = true;
+                    canExecute = false;
                 }
             }
 
