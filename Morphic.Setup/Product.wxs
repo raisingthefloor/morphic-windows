@@ -16,8 +16,8 @@
             <ComponentRef Id="ApplicationComponent"/>
             <ComponentRef Id="DesktopIconComponent"/>
         </Feature>
-
-
+      
+      
         <CustomAction Id="LaunchApplication" Directory="INSTALLFOLDER"
                       ExeCommand="[#filD04FD7A000E8F2985248E10EC6CC63A2]" Execute="immediate" Impersonate="yes"
                       Return="asyncNoWait"/>
@@ -28,9 +28,16 @@
 
         <UIRef Id="WixUI_Minimal" />
         <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+
+        <Property Id="WINDOWSBUILDNUMBER" Secure="yes">
+            <RegistrySearch Id="BuildNumberSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="CurrentBuildNumber" Type="raw" />
+        </Property>
+        <Condition Message="This application is only supported on Windows 10 version 1903 (build 18362) or higher.">
+            <![CDATA[(WINDOWSBUILDNUMBER >= 18362)]]>
+        </Condition>        
     </Product>
 
-    <Fragment>
+  <Fragment>
         <Directory Id="TARGETDIR" Name="SourceDir">
             <Directory Id="ProgramFiles64Folder">
                 <Directory Id="INSTALLFOLDER" Name="Morphic"/>
