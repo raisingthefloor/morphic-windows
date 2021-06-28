@@ -715,13 +715,13 @@ namespace Morphic.Client
             //
             try
             {
-                this.App.BarManager.CloseBar();
+                this.BarManager.CloseBar();
             }
             catch { }
             //
             try 
             {
-                this.App.Shutdown();
+                this.Shutdown();
             }
             catch 
             { 
