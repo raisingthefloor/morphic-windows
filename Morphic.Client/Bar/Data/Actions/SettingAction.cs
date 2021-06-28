@@ -50,6 +50,33 @@
             return Task.FromResult(IMorphicResult.ErrorResult);
         }
 
+        public async Task<bool> CanExecute(string id)
+        {
+            bool canExecute = true;
+
+            if (Setting?.Range != null)
+            {
+                var range = Setting.Range;
+                var idRequiresCountRefresh = Setting.Id == "zoom";
+
+                var min = await range.GetMin(0, idRequiresCountRefresh);
+                var max = await range.GetMax(0, idRequiresCountRefresh) - 1;
+
+                var currentValue = (int)(Setting.CurrentValue ?? 0);
+
+                if (id == "inc" && currentValue >= max)
+                {
+                    canExecute = false;
+                }
+                else if (id == "dec" && currentValue <= min)
+                {
+                    canExecute = false;
+                }
+            }
+
+            return canExecute;
+        }
+
         public override void Deserialized(BarData bar)
         {
             base.Deserialized(bar);
