@@ -20,8 +20,8 @@
     <menu:MorphicMenuItem Header="Customize MorphicBar..." Click="CustomizeMorphicbarClicked" Open="https://custom.morphic.org" />
 
     <Separator/>
-    <menu:MorphicMenuItem x:Name="ChangeSetupMenuItem" Header="Apply the Saved Setup..." Dialog="dialogs:TravelWindow" DialogAction="CopyFromCloud"/>
-    <menu:MorphicMenuItem x:Name="SaveMySetupMenuItem" Header="Save Current Setup..." Dialog="dialogs:TravelWindow" DialogAction="CopyToCloud"/>
+    <menu:MorphicMenuItem x:Name="ChangeSetupMenuItem" Header="Apply a Saved Setup..." Dialog="dialogs:TravelWindow" DialogAction="CopyFromCloud"/>
+    <menu:MorphicMenuItem x:Name="SaveMySetupMenuItem" Header="Save Current Setup as..." Dialog="dialogs:TravelWindow" DialogAction="CopyToCloud"/>
     <menu:MorphicMenuItem x:Name="RestoreSettingsFromBackupMenuItem" Header="_Restore settings from backup" Dialog="dialogs:RestoreWindow" Visibility="Collapsed"/>
 
     <Separator x:Name="CloudSettingsSeparator" />
