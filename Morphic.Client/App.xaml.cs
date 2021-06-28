@@ -735,7 +735,7 @@ namespace Morphic.Client
         private static List<Windows10Version> CompatibleWindows10Versions = new List<Windows10Version>() 
             {
                 // NOTE: the first entry in this list represents the "minimum" version of Windows 10 which we support
-                Windows10Version.v1809,
+                //Windows10Version.v1809, // NOTE: Morphic is not currently supported on Windows 10 v1809; we are evaluating support for this version in the future
                 Windows10Version.v1903,
                 Windows10Version.v1909,
                 Windows10Version.v2004,
