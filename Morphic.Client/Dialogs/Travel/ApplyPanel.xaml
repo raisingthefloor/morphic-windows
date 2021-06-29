@@ -85,10 +85,10 @@
         <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,10">
             The settings on from your cloud vault have been applied to this Computer.
         </TextBlock>
-        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,10">
+        <!--<TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,10">
             Before they were applied, the old settings were backed up on this computer. To revert back to those settings
             use the <Bold>"Restore settings from backup"</Bold> command in the Morphic menu.
-        </TextBlock>
+        </TextBlock>-->
         <Button x:Name="OkButton" Width="Auto" HorizontalAlignment="Center" FontWeight="Bold" Margin="10,20,0,10" Click="OnOk" IsEnabled="True" Content="OK"/>
     </StackPanel>
 </StackPanel>
