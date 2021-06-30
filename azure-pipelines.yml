@@ -57,10 +57,10 @@ stages:
         steps:
 
         - task: UseDotNet@2
-          displayName: 'Use .NET Core SDK 5.0.301'
+          displayName: 'Use .NET SDK 5.0.301'
           inputs:
             packageType: sdk
-            version: 5.0.301
+            version: 5.0
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
         # Set a $(BUILD_TYPE) variable
@@ -168,10 +168,10 @@ stages:
               $(Build.SourcesDirectory)\Morphic.Client\bin\$(buildConfiguration)\netcoreapp3.1\win-x64\publish\Morphic.exe
         
         - task: UseDotNet@2
-          displayName: 'Use .NET Core SDK 5.0.301'
+          displayName: 'Use .NET SDK 5.0.301'
           inputs:
             packageType: sdk
-            version: 5.0.301
+            version: 5.0
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - task: VSBuild@1
