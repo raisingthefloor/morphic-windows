@@ -23,7 +23,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Morphic.ManualTester", "Mor
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Morphic.ManualTesterCLI", "Morphic.ManualTesterCLI\Morphic.ManualTesterCLI.csproj", "{B30066D3-AB07-429A-BB97-1E57EE587B12}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Morphic.Telemetry", "Morphic.Telemetry\Morphic.Telemetry.csproj", "{A816282D-5A96-4F0E-B011-3E5CC1E321FF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Morphic.Telemetry", "Morphic.Telemetry\Morphic.Telemetry.csproj", "{A816282D-5A96-4F0E-B011-3E5CC1E321FF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

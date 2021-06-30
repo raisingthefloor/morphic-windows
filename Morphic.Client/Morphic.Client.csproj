@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <None Remove="appsettings.json" />
+    <None Remove="app.manifest" />
     <None Remove="DefaultPreferences.json" />
     <None Remove="Icon.png" />
     <None Remove="Dialogs\LoginAnnounce.wav" />
@@ -155,7 +156,7 @@
   </ItemGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="copy &quot;appsettings.$(BuildType).json&quot; appsettings.json" />
+    <Exec Command="copy &quot;appsettings.$(BuildType).json&quot; appsettings.json&#xD;&#xA;IF &quot;$(ConfigurationName)&quot; == &quot;Debug&quot; (&#xD;&#xA;    copy &quot;app.Debug.manifest&quot; app.manifest) ELSE (&#xD;&#xA;    copy &quot;app.$(BuildType).manifest&quot; app.manifest)" />
   </Target>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
