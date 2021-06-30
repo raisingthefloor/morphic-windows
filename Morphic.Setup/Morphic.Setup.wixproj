@@ -34,6 +34,10 @@
     <Content Include="License.rtf" />
   </ItemGroup>
   <ItemGroup>
+    <WixExtension Include="WixUtilExtension">
+      <HintPath>$(WixExtDir)\WixUtilExtension.dll</HintPath>
+      <Name>WixUtilExtension</Name>
+    </WixExtension>
     <WixExtension Include="WixUIExtension">
       <HintPath>$(WixToolPath)WixUIExtension.dll</HintPath>
       <Name>WixUIExtension</Name>
