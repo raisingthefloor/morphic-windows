@@ -1,10 +1,8 @@
 ﻿namespace Morphic.Settings.SettingsHandlers.Process
 {
-    using System;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
-    using System.Linq;
     using System.Threading.Tasks;
     using SolutionsRegistry;
 
@@ -38,12 +36,19 @@
                 }
                 else if (processes.Length > 0)
                 {
+                    // try to close each process naturally (by closing all of its windows) and then, if that didn't exit the process naturally, force-terminate the process
                     foreach (Process process in processes)
                     {
-                        Windows.Native.Process.Process.CloseAllWindows(process.Id);
+                        // NOTE: we ignore the success/failure of closing all windows for the process; this is a "reasonable effort" kind of function call
+                        // NOTE: a response of "true" means that all windows closed (or are closing), whereas "false" means that some windows didn't accept our close call; we may want to tweak the numberOfMillisecondsToWait based on this response
+                        _ = Windows.Native.Process.Process.CloseAllWindowsForProcess(process.Id);
 
-                        if(!process.WaitForExit(2000))
+                        // give this process up to numberOfMillisecondsToWait milliseconds (in this case: 2 seconds) to exit before we intervene to terminate it
+                        // OBSERVATION: we may want to wait for all processes in parallel (if there are multiple processes) so that we don't wait 2 seconds TIMES the number of processes (i.e. so that we want 2 seconds maximum)
+                        var numberOfMillisecondsToWait = 2000;
+                        if (!process.WaitForExit(numberOfMillisecondsToWait))
                         {
+                            // if the process doesn't exit after numberOfMillisecondsToWait, kill the process and all of its subchildren
                             process.Kill(true);
                         }
                     }

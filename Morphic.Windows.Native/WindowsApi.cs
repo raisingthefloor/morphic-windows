@@ -1078,12 +1078,14 @@ namespace Morphic.Windows.Native
             FlagPlanned = 0x80000000
         }
 
+        // NOTE: the EnumThreadWindowsDelegate must return true to continue enumeration (or false to stop enumeration)
         internal delegate bool EnumThreadWindowsDelegate(IntPtr hWnd, IntPtr lParam);
-
+        //
+        // OBSERVATION: threadId is represented as int (instead of uint) here because .NET enumerates threads for a process using int ids
         [DllImport("user32.dll")]
         internal static extern bool EnumThreadWindows(int dwThreadId, EnumThreadWindowsDelegate lpfn, IntPtr lParam);
 
-        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        internal static extern bool SendNotifyMessageW(IntPtr hWnd, WindowMessages msg, UIntPtr wParam, IntPtr lParam);
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        internal static extern bool SendNotifyMessage(IntPtr hWnd, WindowMessages msg, UIntPtr wParam, IntPtr lParam);
     }
 }
