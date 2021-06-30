@@ -54,12 +54,19 @@ namespace Morphic.Client.Bar.Data.Actions
                 // Give enough time for the windows to disappear
                 await Task.Delay(500);
 
-                // Hold down the windows key while pressing shift + s
-                const uint windowsKey = 0x5b; // VK_LWIN
-                Keyboard.PressKey(windowsKey, true);
-                System.Windows.Forms.SendKeys.SendWait("+s");
-                Keyboard.PressKey(windowsKey, false);
+                //// method 1: hold down the windows key while pressing shift + s
+                //// NOTE: this method does not seem to work when we have uiAccess set to true in our manifest (oddly)
+                //const uint windowsKey = 0x5b; // VK_LWIN
+                //Keyboard.PressKey(windowsKey, true);
+                //System.Windows.Forms.SendKeys.SendWait("+s");
+                //Keyboard.PressKey(windowsKey, false);
 
+                // method 2: open up the special windows URI of ms-screenclip:
+                var openPath = "ms-screenclip:";
+                Process.Start(new ProcessStartInfo(openPath)
+                {
+                    UseShellExecute = true
+                });
             }
             finally
             {
