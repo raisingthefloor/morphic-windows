@@ -191,13 +191,6 @@ stages:
             version: 2.1.816
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
-        - task: DotNetCoreCLI@2
-          displayName: Install AzureSignTool
-          inputs:
-            command: 'custom'
-            custom: 'tool'
-            arguments: 'install --global azuresigntool'
-
         - task: CmdLine@2
           displayName: 'sign x64 installer'
           inputs:
