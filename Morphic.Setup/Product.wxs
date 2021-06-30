@@ -23,7 +23,7 @@
                       Return="asyncNoWait"/>
 
         <InstallExecuteSequence>
-          <Custom Action="LaunchApplication" After="InstallFinalize"></Custom>
+          <Custom Action="LaunchApplication" After="InstallFinalize">NOT Installed</Custom>
         </InstallExecuteSequence>
 
         <UIRef Id="WixUI_Minimal" />
