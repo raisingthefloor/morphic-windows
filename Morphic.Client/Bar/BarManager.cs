@@ -184,6 +184,7 @@ namespace Morphic.Client.Bar
         {
             var result = LoadFromBarJson(AppPaths.GetConfigFile("basic-bar.json5", true));
             AppOptions.Current.LastCommunity = null;
+            AppOptions.Current.LastMorphicbarId = null;
             return result;
         }
 
@@ -249,7 +250,7 @@ namespace Morphic.Client.Bar
         /// </summary>
         /// <param name="session">The current session.</param>
         /// <param name="showCommunityId">Force this community to show.</param>
-        public async Task LoadSessionBarAsync(MorphicSession session, string communityId)
+        public async Task LoadSessionBarAsync(MorphicSession session, string communityId, string? morphicbarId)
         {
             if (this.firstBar && AppOptions.Current.Launch.BarFile != null)
             {
@@ -308,17 +309,54 @@ namespace Morphic.Client.Bar
 
             if (community != null)
             {
-                userBar ??= await session.GetBar(community.Id);
+                var legacyBars = await session.GetBarsAsync(community.Id);
+                foreach (var legacyBar in legacyBars) {
+                    var useThisBar = false;
+                    if (morphicbarId == null)
+                    {
+                        // if the user selected this community id instead of a specific morphicbar (Morphic v1.0-v1.2), then use the first bar
+                        useThisBar = true;
+                    }
+                    else if (legacyBar.Id == morphicbarId)
+                    {
+                        // if the user previously selected this specific morphicbar, use it
+                        useThisBar = true;
+                    }
 
-                this.Logger.LogInformation($"Showing bar for community {community.Id} {community.Name}");
-                string barJson = this.GetUserBarJson(userBar);
-                BarData? barData = this.LoadFromBarJson(userBar.Id, barJson);
-                if (barData != null)
-                {
-                    barData.CommunityId = community.Id;
+                    if (useThisBar == true)
+                    {
+                        // OBSERVATION: not sure why the "??=" (userBar == null) check is done here; this logic seems brittle
+                        if (userBar == null)
+                        {
+                            userBar = legacyBar;
+                            break;
+                        }
+                    }
                 }
+                // NOTE: if the morphicbar was not found, we do not set it to null (to remain consistent with previous code logic)
 
-                AppOptions.Current.LastCommunity = community?.Id;
+                // added to protect against not finding the specific community bar
+                if (userBar != null)
+                {
+                    this.Logger.LogInformation($"Showing bar for community {community.Id} {community.Name}");
+                    string barJson = this.GetUserBarJson(userBar);
+                    BarData? barData = this.LoadFromBarJson(userBar.Id, barJson);
+                    if (barData != null)
+                    {
+                        barData.CommunityId = community.Id;
+                    }
+
+                    AppOptions.Current.LastCommunity = community?.Id;
+                    AppOptions.Current.LastMorphicbarId = userBar.Id;
+                }
+                else
+                { 
+                    // if the community or the specific community bar could not be found, show the Basic MorphicBar instead
+                    this.LoadBasicMorphicBar();
+
+                    AppOptions.Current.LastCommunity = null;
+                    AppOptions.Current.LastMorphicbarId = null;
+                } 
             }
             else
             {
@@ -326,9 +364,8 @@ namespace Morphic.Client.Bar
                 this.LoadBasicMorphicBar();
 
                 AppOptions.Current.LastCommunity = null;
+                AppOptions.Current.LastMorphicbarId = null;
             }
-
-            AppOptions.Current.Communities = session.Communities.Select(c => c.Id).ToArray();
         }
 
         /// <summary>

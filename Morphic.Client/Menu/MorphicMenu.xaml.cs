@@ -267,6 +267,7 @@
         private async void Logout(object sender, RoutedEventArgs e)
         {
             AppOptions.Current.LastCommunity = null;
+            AppOptions.Current.LastMorphicbarId = null;
             await App.Current.MorphicSession.SignOut();
         }
 
@@ -276,6 +277,14 @@
             var applyPreferencesAfterLogin = ConfigurableFeatures.CloudSettingsTransferIsEnabled;
             var args = new Dictionary<string, object?>() { { "applyPreferencesAfterLogin", applyPreferencesAfterLogin } };
             await App.Current.Dialogs.OpenDialogAsync<LoginWindow>(args);
+        }
+
+        private async void CustomizeMorphicbarClicked(object sender, RoutedEventArgs e)
+        {
+            var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
+            await App.Current.Countly_RecordEventAsync("customizeMorphicbar", 1, segmentation);
+
+            // NOTE: when we make "navigate to URL" a custom action (rather than something linked in the menu itself), then we should navigate to the appsettings value for the key"BarEditorWebAppUrlAsString"
         }
 
         private async void ExploreMorphicClicked(object sender, RoutedEventArgs e)
@@ -312,6 +321,7 @@
         private void SelectBasicMorphicBarClick(object sender, RoutedEventArgs e)
         {
             AppOptions.Current.LastCommunity = null;
+            AppOptions.Current.LastMorphicbarId = null;
             App.Current.BarManager.LoadBasicMorphicBar();
         }
     }

@@ -44,11 +44,13 @@ namespace Morphic.Client.Bar.Data
         /// </summary>
         public BarData Bar { get; set; }
 
-        /// <summary>
-        /// true if the item is to be displayed on the pull-out bar.
-        /// </summary>
-        [JsonProperty("is_primary")]
-        public bool IsPrimary { get; set; }
+        // NOTE: this property has been deprecated, as the determination of if an item should be on the bar (and not in the overflow drawer) is now based on position and available room
+        //
+        ///// <summary>
+        ///// true if the item is to be displayed on the pull-out bar.
+        ///// </summary>
+        //[JsonProperty("is_primary")]
+        //public bool IsPrimary { get; set; }
 
         /// <summary>
         /// true if the item should over-flow to the secondary bar, because it doesn't fit.

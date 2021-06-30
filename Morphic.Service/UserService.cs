@@ -26,6 +26,7 @@ using Morphic.Core.Community;
 using System.Threading.Tasks;
 using System.Net.Http;
 using System.Text.Json.Serialization;
+using System.Collections.Generic;
 
 namespace Morphic.Service
 {
@@ -74,7 +75,11 @@ namespace Morphic.Service
 
     public class UserCommunityDetail
     {
-        [JsonPropertyName("bar")]
-        public UserBar Bar { get; set; } = null!;
+        // legacy
+        //[JsonPropertyName("bar")]
+        //public UserBar Bar { get; set; } = null!;
+
+        [JsonPropertyName("bars")]
+        public List<UserBar> Bars { get; set; } = null!;
     }
 }

@@ -14,12 +14,12 @@
         buttons: {
           inc: {
             label: "+",
-            tooltip: "Increase Text Size everywhere|Makes everything on the screen larger.",
+            tooltip: "Increases Text Size everywhere|Makes everything on the screen larger.|Text Size cannot go bigger",
             uiName: "Increase Text Size"
           },
           dec: {
             label: "-",
-            tooltip: "Decrease Text Size everywhere|Makes everything on the screen smaller.",
+            tooltip: "Decreases Text Size everywhere|Makes everything on the screen smaller.|Text Size cannot go smaller",
             uiName: "Decrease Text Size"
           }
         }
@@ -39,12 +39,12 @@
           on: {
             label: "Show",
             uiName: "Show Magnifier",
-            tooltip: "Turn on Magnifier that follows mouse|Turns on a Magnifying Lens. (Right-click to change settings)",
+            tooltip: "Turns on a Magnifying lens|Magnifier follows your mouse. Your mouse can click through the box.",
           },
           off: {
             label: "Hide",
             uiName: "Hide Magnifier",
-            tooltip: "Turn off the magnifier|(Right-click to change magnifier settings)"
+            tooltip: "Turns off Magnifier|To change Magnifier settings, right-click on button."
           }
         }
       }
@@ -56,8 +56,6 @@
       configuration: {
         defaultLabel: "Volume",
         function: "volume",
-        tooltip: "Volume tooltip",
-        tooltipHeader: "Volume tooltip header",
         args: {
           direction: "{button}"
         },
@@ -65,11 +63,11 @@
         buttons: {
           up: {
             label: "+",
-            xtooltip: "Raise the volume"
+            tooltip: "Increases the volume|Makes all sounds louder.|Volume cannot go louder",
           },
           down: {
             label: "-",
-            tooltip: "Lower the volume"
+            tooltip: "Decreases the volume|Makes all sounds quieter.|Volume cannot go quieter"
           }
         }
       }
@@ -117,11 +115,11 @@
         buttons: {
           on: {
             label: "On",
-            tooltip: "Turn on night-mode"
+            tooltip: "Turns the Night Light feature on"
           },
           off: {
             label: "Off",
-            tooltip: "Turn off night-mode"
+            tooltip: "Turns the Night Light feature off"
           }
         }
       }
@@ -146,12 +144,12 @@
           on: {
             label: "On",
             value: "on",
-            tooltip: "Turn on Night Light"
+            tooltip: "Turns the Night Light feature on"
           },
           off: {
             label: "Off",
             value: "off",
-            tooltip: "Turn off Night Light"
+            tooltip: "Turns the Night Light feature off"
           }
         }
       }
@@ -176,12 +174,12 @@
           play: {
             label: "|>",
             uiName: "Read selected text",
-            tooltip: "Read text that is selected|Select any text, and then click to have it read",
+            tooltip: "Reads text that is selected|Select text to be read. Then click play button to read. To change settings, right-click on button.",
           },
           stop: {
             label: "[]",
             uiName: "Stop reading selected text",
-            tooltip: "Stop Reading|(Right-click to adjust speed and voice"
+            tooltip: "Stops reading|To change voice and speed settings, right-click on either button."
           }
         }
       }
@@ -202,12 +200,12 @@
           copy: {
             label: "Copy",
             value: "^c",
-            tooltip: "Copy the selection to the clipboard"
+            tooltip: "Copies your selection|Copies text or other content you have selected so you can paste it somewhere."
           },
           paste: {
             label: "Paste",
             value: "^v",
-            tooltip: "Paste the content of the clipboard to the active window"
+            tooltip: "Pastes what you copied|Inserts copied content where the text cursor is."
           }
         }
       }
@@ -225,12 +223,12 @@
           on: {
             label: "On",
             value: "100",
-            tooltip: "Turn on high-contrast"
+            tooltip: "Turns Contrast on"
           },
           off: {
             label: "Off",
             value: "1",
-            tooltip: "Turn off high-contrast"
+            tooltip: "Turns Contrast off"
           }
         }
       }
@@ -250,12 +248,12 @@
           on: {
             label: "On",
             value: "on",
-            tooltip: "Turn on Color Vision filters"
+            tooltip: "Turns Color Blindness filters on"
           },
           off: {
             label: "Off",
             value: "off",
-            tooltip: "Turn off Color Vision filters"
+            tooltip: "Turns Color Blindness filters off"
           }
         }
       }
@@ -279,12 +277,12 @@
           on: {
             label: "On",
             value: "on",
-            tooltip: "Turn on Dark Mode"
+            tooltip: "Turns Dark Mode on"
           },
           off: {
             label: "Off",
             value: "off",
-            tooltip: "Turn off Dark Mode"
+            tooltip: "Turns Dark Mode off"
           }
         }
       }
@@ -302,9 +300,26 @@
         function: "signOut"
       }
     },
-    "screenshot": {
+    "snip": {
       kind: "internal",
-      func: "screenshot"
+      widget: "multi",
+      is_primary: true,
+      configuration: {
+        function: "snip",
+        label: "Snip",
+        menu: {
+          learn: "snip",
+          demo: "snip"
+        },
+        telemetryCategory: "screenSnip",
+        buttons: {
+          copy: {
+            label: "Copy",
+            uiName: "Takes a picture of a selected part of the screen",
+            tooltip: "Click Copy. Then click and drag mouse to take picture. Paste into any document."
+          }
+        }
+      }
     }
   },
   defaults: {

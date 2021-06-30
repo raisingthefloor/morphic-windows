@@ -10,7 +10,7 @@
     <StackPanel x:Name="ReadyPanel" Visibility="Visible">
         <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0">Apply my settings from my Cloud Vault</Label>
         <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,20">
-            Clicking the <Bold>Apply Saved Settings</Bold> button will cause the assistive
+            Clicking the <Bold>Apply</Bold> button will cause the assistive
             technology and system setting in your Morphic Cloud Vault to be applied to this computer.
         </TextBlock>
         <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,20">
@@ -85,10 +85,10 @@
         <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,10">
             The settings on from your cloud vault have been applied to this Computer.
         </TextBlock>
-        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,10">
+        <!--<TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,10">
             Before they were applied, the old settings were backed up on this computer. To revert back to those settings
             use the <Bold>"Restore settings from backup"</Bold> command in the Morphic menu.
-        </TextBlock>
+        </TextBlock>-->
         <Button x:Name="OkButton" Width="Auto" HorizontalAlignment="Center" FontWeight="Bold" Margin="10,20,0,10" Click="OnOk" IsEnabled="True" Content="OK"/>
     </StackPanel>
 </StackPanel>
