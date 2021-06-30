@@ -19,7 +19,7 @@
 
 
         <CustomAction Id="LaunchApplication" Directory="INSTALLFOLDER"
-                      ExeCommand="[#filD04FD7A000E8F2985248E10EC6CC63A2]" Execute="deferred" Impersonate="yes"
+                      ExeCommand="[#filD04FD7A000E8F2985248E10EC6CC63A2]" Execute="deferred" Impersonate="no"
                       Return="asyncNoWait"/>
 
         <InstallExecuteSequence>
