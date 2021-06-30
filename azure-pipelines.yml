@@ -60,7 +60,7 @@ stages:
           displayName: 'Use .NET SDK 5.0.301'
           inputs:
             packageType: sdk
-            version: 5.0.x
+            version: 5.0.301
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
         # Set a $(BUILD_TYPE) variable
@@ -171,7 +171,7 @@ stages:
           displayName: 'Use .NET SDK 5.0.301'
           inputs:
             packageType: sdk
-            version: 5.0.x
+            version: 5.0.301
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - task: VSBuild@1
