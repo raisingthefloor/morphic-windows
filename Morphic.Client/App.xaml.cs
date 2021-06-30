@@ -664,7 +664,17 @@ namespace Morphic.Client
             var mqttUsername = section["AppName"];
             var mqttAnonymousPassword = section["AppKey"];
 
-            var telemetryClient = new MorphicTelemetryClient(mqttHostname, mqttClientId, mqttUsername, mqttAnonymousPassword);
+            var mqttConfig = new MorphicTelemetryClient.WebsocketTelemetryClientConfig()
+            {
+                 Hostname = mqttHostname,
+                 Port = 443,
+                 Path = "/ws",
+                 ClientId = mqttClientId,
+                 Username = mqttUsername,
+                 Password = mqttAnonymousPassword,
+                 UseTls = true
+            };
+            var telemetryClient = new MorphicTelemetryClient(mqttConfig);
             telemetryClient.SiteId = telemetrySiteId;
             _telemetryClient = telemetryClient;
 

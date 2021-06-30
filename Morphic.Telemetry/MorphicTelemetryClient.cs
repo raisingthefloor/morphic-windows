@@ -62,7 +62,29 @@ namespace Morphic.Telemetry
 
         public string? SiteId = null;
 
-        public MorphicTelemetryClient(string mqttHostname, string clientId, string username, string password)
+        public record TelemetryClientConfig
+        {
+            public string ClientId;
+            public string Username;
+            public string Password;
+        }
+		//
+        public record TcpTelemetryClientConfig : TelemetryClientConfig
+        {
+            public string Hostname = "localhost";
+            public ushort? Port = null;
+            public bool UseTls = false;
+        }
+		//
+        public record WebsocketTelemetryClientConfig : TelemetryClientConfig
+        {
+            public string Hostname = "localhost";
+            public ushort? Port = null;
+            public string? Path = null;
+            public bool UseTls = false;
+        }
+
+        public MorphicTelemetryClient(TelemetryClientConfig config)
         {
             _messagesToSend = new List<MqttEventMessage>();
             _messagesToSendSyncObject = new object();
@@ -74,13 +96,51 @@ namespace Morphic.Telemetry
             _mqttClient = mqttFactory.CreateMqttClient();
 
             // set up our MqttClient's options
-            _mqttClientOptions = new MqttClientOptionsBuilder()
-                .WithClientId(clientId)
-                .WithTcpServer(mqttHostname)
-                .WithCredentials(username, password)
-                .WithCleanSession(true) // we are a write-only client (i.e. no subscriptions), so always start with a clean session
-                .WithTls(new MqttClientOptionsBuilderTlsParameters() { UseTls = false })
-                .Build();
+            if (config is TcpTelemetryClientConfig tcpConfig) {
+                _mqttClientOptions = new MqttClientOptionsBuilder()
+                    .WithClientId(tcpConfig.ClientId)
+                    .WithTcpServer(tcpConfig.Hostname, tcpConfig.Port)
+                    .WithCredentials(tcpConfig.Username, tcpConfig.Password)
+                    .WithCleanSession(true) // we are a write-only client (i.e. no subscriptions), so always start with a clean session
+                    .WithTls(new MqttClientOptionsBuilderTlsParameters() { UseTls = tcpConfig.UseTls })
+                    .Build();
+
+            }
+            else if (config is WebsocketTelemetryClientConfig wsConfig) 
+            {
+                var path = wsConfig.Hostname;
+                if (wsConfig.Port != null) 
+                {
+                    path += ":" + wsConfig.Port.Value.ToString();
+                }
+                else
+                {
+                    path += ":443";
+                }
+                if (wsConfig.Path != null)
+                {
+                    // sanity check: make sure the path component starts with "/" or "#"
+					if (wsConfig.Path.Length > 0) 
+					{
+                        var firstCharacter = wsConfig.Path.Substring(0, 1);
+                        if (firstCharacter != "/" && firstCharacter != "#")
+                        {
+                            path += "/";
+                        }
+                    }
+                    //
+                    path += wsConfig.Path!;
+                }
+
+                _mqttClientOptions = new MqttClientOptionsBuilder()
+                    .WithClientId(wsConfig.ClientId)
+                    .WithWebSocketServer(path)
+                    .WithCredentials(wsConfig.Username, wsConfig.Password)
+                    .WithCleanSession(true) // we are a write-only client (i.e. no subscriptions), so always start with a clean session
+                                            //.WithTls(new MqttClientOptionsBuilderTlsParameters() { UseTls = false })
+                    .WithTls(new MqttClientOptionsBuilderTlsParameters() { UseTls = wsConfig.UseTls })
+                    .Build();
+            }
 
             // set up connect handler (in case we want to do anything immediately after successful connection)
             _mqttClient.UseConnectedHandler(async e =>
@@ -93,7 +153,7 @@ namespace Morphic.Telemetry
                 await this.MqttClientDisconnected(_mqttClient, e);
             });
 
-            _clientId = clientId;
+            _clientId = config.ClientId;
         }
 
         public async Task StartSessionAsync()
