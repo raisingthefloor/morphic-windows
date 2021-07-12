@@ -7,7 +7,7 @@ using System.IO;
 using System.Xml;
 using System.Reflection;
 
-namespace Morphic.Windows.Native.Office
+namespace Morphic.Integrations.Office
 {
     public class WordRibbon
     {
@@ -83,26 +83,26 @@ namespace Morphic.Windows.Native.Office
                 XmlNode qat = currentSettings.SelectSingleNode("mso:customUI/mso:ribbon/mso:qat", ns) ?? throw new ArgumentNullException();
                 XmlNode sharedControls = qat.SelectSingleNode("mso:sharedControls", ns);
                 XmlDocument template = LoadEmptyTemplate();
-                if(sharedControls == null)
+                if (sharedControls == null)
                 {
                     XmlNode scgroup = currentSettings.ImportNode(template.SelectSingleNode("mso:customUI/mso:ribbon/mso:qat/mso:sharedControls", ns), true);
                     qat.AppendChild(scgroup);
                 }
                 else
                 {
-                    foreach(XmlNode control in template.SelectNodes("mso:customUI/mso:ribbon/mso:qat/mso:sharedControls/mso:control", ns))
+                    foreach (XmlNode control in template.SelectNodes("mso:customUI/mso:ribbon/mso:qat/mso:sharedControls/mso:control", ns))
                     {
                         if (control == null) break;
                         bool found = false;
-                        foreach(XmlNode existing in sharedControls.ChildNodes)
+                        foreach (XmlNode existing in sharedControls.ChildNodes)
                         {
                             if (existing == null) break;
-                            if(existing.Attributes["idQ"].Value == control.Attributes["idQ"].Value)
+                            if (existing.Attributes["idQ"].Value == control.Attributes["idQ"].Value)
                             {
                                 found = true;
                             }
                         }
-                        if(!found)
+                        if (!found)
                         {
                             XmlNode ncontrol = currentSettings.ImportNode(control, true);
                             sharedControls.AppendChild(ncontrol);
@@ -115,14 +115,14 @@ namespace Morphic.Windows.Native.Office
                 currentSettings = LoadEmptyTemplate();
                 try
                 {
-                    if(!File.Exists(backupPath))
+                    if (!File.Exists(backupPath))
                     {
                         File.Copy(path, backupPath);
                     }
                 }
                 catch { }
             }
-            if(original)
+            if (original)
             {
                 originalString = capture;
             }
@@ -146,7 +146,7 @@ namespace Morphic.Windows.Native.Office
                 }
                 foreach (XmlNode tab in template.SelectNodes("mso:customUI/mso:ribbon/mso:tabs/mso:tab", ns))
                 {
-                    if(tab.Attributes["id"].Value == "morphic.basics")
+                    if (tab.Attributes["id"].Value == "morphic.basics")
                     {
                         XmlNode node = currentSettings.ImportNode(tab, true);
                         XmlNode parent = currentSettings.SelectSingleNode("mso:customUI/mso:ribbon/mso:tabs", ns);
@@ -303,12 +303,12 @@ namespace Morphic.Windows.Native.Office
             try
             {
                 Application? app = GetActiveObject("Word.Application") as Application;
-                if(app == null)
+                if (app == null)
                 {
                     //will safely fail if there is no word open
                     return;
                 }
-                if(app.Windows.Count > 0)
+                if (app.Windows.Count > 0)
                 {
                     Window window = app.ActiveWindow;
                     Window nwindow = window.NewWindow();
@@ -338,7 +338,7 @@ namespace Morphic.Windows.Native.Office
             XmlDocument reply = new XmlDocument();
             try
             {
-                reply.Load(Assembly.GetExecutingAssembly().GetManifestResourceStream("Morphic.Windows.Native.Office.Word_EmptyTemplate.xml"));
+                reply.Load(Assembly.GetExecutingAssembly().GetManifestResourceStream("Morphic.Integrations.Office.Word_EmptyTemplate.xml"));
             }
             catch { }
             return reply;
@@ -349,7 +349,7 @@ namespace Morphic.Windows.Native.Office
             XmlDocument reply = new XmlDocument();
             try
             {
-                reply.Load(Assembly.GetExecutingAssembly().GetManifestResourceStream("Morphic.Windows.Native.Office.Word_ComponentTemplates.xml"));
+                reply.Load(Assembly.GetExecutingAssembly().GetManifestResourceStream("Morphic.Integrations.Office.Word_ComponentTemplates.xml"));
             }
             catch { }
             return reply;

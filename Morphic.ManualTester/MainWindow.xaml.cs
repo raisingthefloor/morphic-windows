@@ -25,7 +25,7 @@
         private string? currentRegistryFile;
         private ILogger<MainWindow> logger = null!;
         private const string RegistryPath = @"HKEY_CURRENT_USER\Software\Raising the Floor\Morphic\ManualTester";
-        private Morphic.Windows.Native.Office.WordRibbon ribbon;
+        private Morphic.Integrations.Office.WordRibbon ribbon;
 
         public MainWindow()
         {
@@ -76,7 +76,7 @@
             this.ConfigureServices(collection);
             this.ServiceProvider = collection.BuildServiceProvider();
             this.logger = this.ServiceProvider.GetRequiredService<ILogger<MainWindow>>();
-            this.ribbon = new Windows.Native.Office.WordRibbon();
+            this.ribbon = new Morphic.Integrations.Office.WordRibbon();
             this.AutoReload = Registry.GetValue(RegistryPath, "AutoReload", null) as string == "1";
             string? lastFile = Registry.GetValue(RegistryPath, "LastFile", null) as string;
             if (string.IsNullOrEmpty(lastFile))

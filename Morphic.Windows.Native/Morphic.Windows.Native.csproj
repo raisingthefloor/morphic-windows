@@ -6,14 +6,6 @@
 		<Platforms>AnyCPU;x64</Platforms>
 	</PropertyGroup>
 	<ItemGroup>
-	  <None Remove="Office\Word_ComponentTemplates.xml" />
-	  <None Remove="Office\Word_EmptyTemplate.xml" />
-	</ItemGroup>
-	<ItemGroup>
-	  <EmbeddedResource Include="Office\Word_ComponentTemplates.xml" />
-	  <EmbeddedResource Include="Office\Word_EmptyTemplate.xml" />
-	</ItemGroup>
-	<ItemGroup>
 	  <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
 	  <PackageReference Include="PInvoke.Kernel32" Version="0.7.104" />
 	  <PackageReference Include="PInvoke.SetupApi" Version="0.7.104" />
@@ -21,12 +13,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Morphic.Core\Morphic.Core.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Microsoft.Office.Interop.Word">
-      <HintPath>C:\Program Files (x86)\Microsoft Visual Studio\Shared\Visual Studio Tools for Office\PIA\Office15\Microsoft.Office.Interop.Word.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>
