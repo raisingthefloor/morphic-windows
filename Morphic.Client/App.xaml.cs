@@ -664,7 +664,17 @@ namespace Morphic.Client
             var mqttUsername = section["AppName"];
             var mqttAnonymousPassword = section["AppKey"];
 
-            var telemetryClient = new MorphicTelemetryClient(mqttHostname, mqttClientId, mqttUsername, mqttAnonymousPassword);
+            var mqttConfig = new MorphicTelemetryClient.WebsocketTelemetryClientConfig()
+            {
+                 Hostname = mqttHostname,
+                 Port = 443,
+                 Path = "/ws",
+                 ClientId = mqttClientId,
+                 Username = mqttUsername,
+                 Password = mqttAnonymousPassword,
+                 UseTls = true
+            };
+            var telemetryClient = new MorphicTelemetryClient(mqttConfig);
             telemetryClient.SiteId = telemetrySiteId;
             _telemetryClient = telemetryClient;
 
@@ -708,7 +718,26 @@ namespace Morphic.Client
 
             Console.WriteLine(ex);
 
-            MessageBox.Show($"Morphic ran into a problem:\n\n{e.Exception.Message}\n\nFurther information:\n{e.Exception}", "Morphic", MessageBoxButton.OK, MessageBoxImage.Warning);
+            // in case of unhandled exception, attempt a graceful shutdown
+            //
+            // uncomment the following line (if it's useful) for (and only during) debugging
+//            MessageBox.Show($"Morphic ran into a problem:\n\n{e.Exception.Message}\n\nFurther information:\n{e.Exception}", "Morphic", MessageBoxButton.OK, MessageBoxImage.Warning);
+            //
+            try
+            {
+                this.BarManager.CloseBar();
+            }
+            catch { }
+            //
+            try 
+            {
+                this.Shutdown();
+            }
+            catch 
+            { 
+                // if we were unable to shutdown the application, hard-exit instead
+                System.Environment.Exit(1);
+            }
 
             // This prevents the exception from crashing the application
             e.Handled = true;
@@ -735,7 +764,7 @@ namespace Morphic.Client
         private static List<Windows10Version> CompatibleWindows10Versions = new List<Windows10Version>() 
             {
                 // NOTE: the first entry in this list represents the "minimum" version of Windows 10 which we support
-                Windows10Version.v1809,
+                //Windows10Version.v1809, // NOTE: Morphic is not currently supported on Windows 10 v1809; we are evaluating support for this version in the future
                 Windows10Version.v1903,
                 Windows10Version.v1909,
                 Windows10Version.v2004,

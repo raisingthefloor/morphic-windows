@@ -57,10 +57,10 @@ stages:
         steps:
 
         - task: UseDotNet@2
-          displayName: 'Use .NET Core SDK 5.0.200'
+          displayName: 'Use .NET SDK 5.0.301'
           inputs:
             packageType: sdk
-            version: 5.0.200
+            version: 5.0.301
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
         # Set a $(BUILD_TYPE) variable
@@ -114,22 +114,21 @@ stages:
           inputs:
             platform: '$(buildPlatform)'
             configuration: '$(buildConfiguration)'
-        
-        - task: VSBuild@1
-          displayName: "build x64 installer"
-          env:
-            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
+
+        - task: DotNetCoreCLI@2
+          displayName: Publish Morphic Client
           inputs:
-            solution: 'Morphic.Setup\Morphic.Setup.wixproj'
-            platform: 'x64'
-            configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:BuildType=$(BUILD_TYPE)'
+            command: publish
+            publishWebProjects: false
+            zipAfterPublish: false
+            projects: 'Morphic.Client/Morphic.Client.csproj'
+            arguments: '-f netcoreapp3.1 -r win-x64 -c $(buildConfiguration) -p:BuildType=$(BUILD_TYPE)'
 
         - task: UseDotNet@2
-          displayName: 'Use .NET Core SDK 2.1'
+          displayName: 'Use .NET Core SDK 2.1.816'
           inputs:
             packageType: sdk
-            version: 2.1.811
+            version: 2.1.816
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - task: DotNetCoreCLI@2
@@ -138,6 +137,59 @@ stages:
             command: 'custom'
             custom: 'tool'
             arguments: 'install --global azuresigntool'
+
+        - task: CmdLine@2
+          inputs:
+            targetType: 'inline'
+            script: >
+              tree $(Build.SourcesDirectory)\Morphic.Client\bin /f
+              
+        - task: CmdLine@2
+          displayName: 'sign morphic client exe'
+          inputs:
+            targetType: 'inline'
+# NOTE: if we experience downtime with our cert provider's timestamp servers (which causes signing to fail), 
+#       we can use the test server (production timestamps, but from a 2nd provider); note that we should NOT do
+#       this for any public preview or release builds...only for internal testing or emergency scenarios.
+#              -tr "$(TimestampUrl)"
+#              -tr "$(TimestampUrl2)"
+#              vs.
+#              -tr "$(TestOnlyTimestampUrl)"
+            script: >
+              AzureSignTool sign
+              -d Morphic
+              -du "$(SigningURL)"
+              -kvu "$(SigningVaultURL)"
+              -kvi "$(SigningClientId)"
+              -kvs "$(SigningClientSecret)"
+              -kvc "$(SigningCertName)"
+              -tr "$(TimestampUrl2)"
+              -v
+              $(Build.SourcesDirectory)\Morphic.Client\bin\$(buildConfiguration)\netcoreapp3.1\win-x64\publish\Morphic.exe
+        
+        - task: UseDotNet@2
+          displayName: 'Use .NET SDK 5.0.301'
+          inputs:
+            packageType: sdk
+            version: 5.0.301
+            installationPath: $(Agent.ToolsDirectory)/dotnet
+
+        - task: VSBuild@1
+          displayName: "build x64 installer"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
+          inputs:
+            solution: 'Morphic.Setup\Morphic.Setup.wixproj'
+            platform: 'x64'
+            configuration: '$(buildConfiguration)'
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false'
+
+        - task: UseDotNet@2
+          displayName: 'Use .NET Core SDK 2.1.816'
+          inputs:
+            packageType: sdk
+            version: 2.1.816
+            installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - task: CmdLine@2
           displayName: 'sign x64 installer'
