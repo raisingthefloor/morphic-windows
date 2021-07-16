@@ -13,6 +13,7 @@ namespace Morphic.Client.Bar.UI.BarControls
     using System;
     using System.Collections.Generic;
     using System.ComponentModel;
+    using System.Diagnostics;
     using System.Linq;
     using System.Threading.Tasks;
     using System.Windows;
@@ -295,14 +296,52 @@ namespace Morphic.Client.Bar.UI.BarControls
                     switch (internalAction.FunctionName)
                     {
                         case "darkMode":
-                            Setting systemThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(Settings.SolutionsRegistry.SettingId.LightThemeSystem);
-                            //
-                            var systemThemeIsLightTheme = await systemThemeSetting.GetValue<bool>();
-                            ((ToggleButton)this.Control).IsChecked = !systemThemeIsLightTheme;
-                            //
-                            //
-                            systemThemeSetting.Changed += this.InverseSettingOnChanged;
-                            this.Control.Unloaded += (sender, args) => systemThemeSetting.Changed -= this.InverseSettingOnChanged;
+                            bool systemThemeIsLightTheme;
+
+                            var getDarkModeStateResult = await Morphic.Client.Bar.Data.Actions.Functions.GetDarkModeStateAsync();
+                            if (getDarkModeStateResult.IsError == true)
+                            {
+                                Debug.Assert(false, "Could not get dark mode state");
+                                break;
+                            }
+                            var darkModeState = getDarkModeStateResult.Value!;
+
+                            var osVersion = Morphic.Windows.Native.OsVersion.OsVersion.GetWindows10Version();
+                            if (osVersion == Windows.Native.OsVersion.Windows10Version.v1809)
+                            {
+                                // Windows 10 v1809+
+
+                                // TODO: add a registry hook which watches for the value to change (and which calls "this.InverseSettingOnChanged")
+                                //       [and unwire the handler when our control is unloaded]
+                                // TODO: we need to make sure that we wire this up in a way that the registry key doesn't get GC'd prematurely
+                                //appsThemeRegistryKey.Changed += this.InverseSettingOnChanged;
+                                ////
+                                //this.Control.Unloaded += (sender, args) => appsThemeRegistryKey.Changed -= this.InverseSettingOnChanged;
+                            }
+                            else if (osVersion == null)
+                            {
+                                // error
+                                //break;
+                            }
+                            else
+                            {
+                                // Windows 10 v1903+
+
+                                // capture changes to system dark theme (triggering our this.InverseSettingOnChanged event handler)
+                                Setting systemThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(Settings.SolutionsRegistry.SettingId.LightThemeSystem);
+                                systemThemeSetting.Changed += this.InverseSettingOnChanged;
+                                //
+                                this.Control.Unloaded += (sender, args) => systemThemeSetting.Changed -= this.InverseSettingOnChanged;
+                                
+                                // capture changes to apps dark theme (triggering our this.InverseSettingOnChanged event handler)
+                                Setting appsThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(Settings.SolutionsRegistry.SettingId.LightThemeApps);
+                                appsThemeSetting.Changed += this.InverseSettingOnChanged;
+                                //
+                                this.Control.Unloaded += (sender, args) => appsThemeSetting.Changed -= this.InverseSettingOnChanged;
+                            }
+
+                            ((ToggleButton)this.Control).IsChecked = darkModeState;
+    
                             break;
                         default:
                             // unknown internal action
