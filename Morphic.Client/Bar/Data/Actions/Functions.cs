@@ -739,6 +739,18 @@ namespace Morphic.Client.Bar.Data.Actions
                 {
                     return IMorphicResult.ErrorResult;
                 }
+
+                // see: https://docs.microsoft.com/en-us/windows/win32/winmsg/wm-wininichange
+                var pointerToImmersiveColorSetString = Marshal.StringToHGlobalUni("ImmersiveColorSet");
+                try
+                {
+                    // notify all windows that we have changed a setting in the "win ini" settings
+                    _ = PInvoke.User32.SendMessage(PInvoke.User32.HWND_BROADCAST, PInvoke.User32.WindowMessage.WM_WININICHANGE, IntPtr.Zero, pointerToImmersiveColorSetString);
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(pointerToImmersiveColorSetString);
+                }
             }
             else if (osVersion == null)
             {
