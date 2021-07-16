@@ -693,7 +693,7 @@ namespace Morphic.Client.Bar.Data.Actions
                     return IMorphicResult<bool>.ErrorResult();
                 }
                 var lightThemeSystemAsObject = getSystemThemeValueResult.Value!;
-                var lightThemeSystemAsBool = ((int)lightThemeSystemAsObject != 0);
+                var lightThemeSystemAsBool = (bool)lightThemeSystemAsObject;
 
                 // set apps dark/light theme
                 Setting appsThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(SettingId.LightThemeApps);
@@ -703,7 +703,7 @@ namespace Morphic.Client.Bar.Data.Actions
                     return IMorphicResult<bool>.ErrorResult();
                 }
                 var lightThemeAppsAsObject = getAppsThemeValueResult.Value!;
-                var lightThemeAppsAsBool = ((int)lightThemeSystemAsObject != 0);
+                var lightThemeAppsAsBool = (bool)lightThemeSystemAsObject;
 
                 // if either apps or system theme is set to "not light", then return true 
                 var darkModeIsEnabled = ((lightThemeSystemAsBool == false) || (lightThemeAppsAsBool == false));
