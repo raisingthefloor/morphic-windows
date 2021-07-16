@@ -182,6 +182,7 @@ namespace Morphic.Windows.Native
 
         #endregion SetupApi.h
 
+
         #region shellapi.h
 
         internal enum ShellExecuteErrorCode
@@ -206,6 +207,7 @@ namespace Morphic.Windows.Native
         internal static extern IntPtr FindExecutable(string lpFile, string? lpDirectory, [Out] StringBuilder lpResult);
 
         #endregion shellapi.h
+
 
         #region winioctl.h
 
@@ -339,5 +341,41 @@ namespace Morphic.Windows.Native
         }
 
         #endregion winioctl.h
+
+
+        #region winnt.h
+
+        internal enum RegistryValueType : uint
+        {
+            REG_NONE = 0,
+            REG_SZ = 1,
+            REG_EXPAND_SZ = 2,
+            REG_BINARY = 3,
+            REG_DWORD = 4,
+            REG_DWORD_LITTLE_ENDIAN = REG_DWORD,
+            REG_DWORD_BIG_ENDIAN = 5,
+            REG_LINK = 6,
+            REG_MULTI_SZ = 7,
+            REG_RESOURCE_LIST = 8,
+            REG_FULL_RESOURCE_DESCRIPTOR = 9,
+            REG_RESOURCE_REQUIREMENTS_LIST = 10,
+            REG_QWORD = 11,
+            REG_QWORD_LITTLE_ENDIAN = REG_QWORD
+        }
+
+        #endregion winnt.h
+
+
+        #region winreg.h
+
+        [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        internal static extern PInvoke.Win32ErrorCode RegQueryValueEx(UIntPtr hKey, [MarshalAs(UnmanagedType.LPWStr)] string? lpValueName, IntPtr lpReserved, out RegistryValueType lpType, IntPtr lpData, ref uint lpcbData);
+
+        [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        internal static extern PInvoke.Win32ErrorCode RegSetValueEx(UIntPtr hKey, [MarshalAs(UnmanagedType.LPWStr)] string? lpValueName, uint reserved, RegistryValueType lpType, IntPtr lpData, uint cbData);
+
+        #endregion winreg.h
+
+
     }
 }
