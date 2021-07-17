@@ -311,6 +311,43 @@ namespace Morphic.Client.Bar.UI.BarControls
                             {
                                 // Windows 10 v1809+
 
+                                // NOTE: this is hard-coded, as a patch, because the solutions registry does not yet understand how to capture/apply settings across incompatible handlers
+                                //       [and trying to call the Windows 10 v1903+ handlers for apps/system "light theme" will result in a memory access exception under v1809]
+                                //       [also: only "AppsUseLightTheme" (and not "SystemUsesLightTheme") existed properly under Windows 10 v1809]
+
+                                var openPersonalizeKeyResult = Morphic.Windows.Native.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize", true);
+                                if (openPersonalizeKeyResult.IsError == true)
+                                {
+                                    Debug.Assert(false, "Could not get Personalize key from registry (so we cannot watch the dark mode state)");
+                                }
+                                else
+                                {
+                                    var personalizeKey = openPersonalizeKeyResult.Value!;
+
+                                    var registerForChangesEvent = new Morphic.Windows.Native.Registry.RegistryKey.RegistryKeyChangedEvent(async (sender, e) =>
+                                    {
+                                        var getDarkModeStateResult = await Morphic.Client.Bar.Data.Actions.Functions.GetDarkModeStateAsync();
+                                        if (getDarkModeStateResult.IsError == true)
+                                        {
+                                            Debug.Assert(false, "Could not get dark mode state");
+                                            return;
+                                        }
+                                        var darkModeState = getDarkModeStateResult.Value!;
+
+                                        Setting appsThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(Settings.SolutionsRegistry.SettingId.LightThemeApps);
+                                        Application.Current.Dispatcher.Invoke(new Action(() => {
+                                            this.InverseSettingOnChanged(sender, new SettingEventArgs(appsThemeSetting, !darkModeState));
+                                        }));
+                                    });
+                                    personalizeKey.RegisterForValueChangeNotification(registerForChangesEvent);
+
+                                    this.Control.Unloaded += (sender, SettingEventArgs) =>
+                                    {
+										// dispose of the RegistryKey; this should terminate the notification registration as well
+                                        personalizeKey.Dispose();
+                                    };
+                                }
+
                                 // TODO: add a registry hook which watches for the value to change (and which calls "this.InverseSettingOnChanged")
                                 //       [and unwire the handler when our control is unloaded]
                                 // TODO: we need to make sure that we wire this up in a way that the registry key doesn't get GC'd prematurely
