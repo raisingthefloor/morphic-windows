@@ -431,7 +431,13 @@ namespace Morphic.Client.Bar.Data.Actions
                             {
                                 App.Current.Logger.LogDebug("ReadAloud: Saying selected text.");
 
-                                await TextToSpeechHelper.Instance.Say(selectedText);
+                                var sayResult = await TextToSpeechHelper.Instance.Say(selectedText);
+                                if (sayResult.IsError == true)
+                                {
+                                    App.Current.Logger.LogError("ReadAloud: Error saying selected text.");
+
+                                    return IMorphicResult.ErrorResult;
+                                }
 
                                 return IMorphicResult.SuccessResult;
                             }

@@ -25,6 +25,7 @@ using Microsoft.Win32.SafeHandles;
 using Morphic.Core;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -39,11 +40,32 @@ namespace Morphic.Windows.Native
 {
     public partial class Registry
     {
-        public class RegistryKey: IDisposable
+        public class RegistryKey : IDisposable
         {
             bool _disposed = false;
 
             SafeRegistryHandle _handle;
+
+            public delegate void RegistryKeyChangedEvent(RegistryKey sender, EventArgs e);
+			//
+            private struct RegistryKeyNotificationInfo
+            {
+                public RegistryKey RegistryKey;
+                public WaitHandle WaitHandle;
+                //
+                public RegistryKeyChangedEvent EventHandler;
+
+                public RegistryKeyNotificationInfo(RegistryKey registryKey, WaitHandle waitHandle, RegistryKeyChangedEvent eventHandler)
+                {
+                    this.RegistryKey = registryKey;
+                    this.WaitHandle = waitHandle;
+                    this.EventHandler = eventHandler;
+                }
+            }
+            private static List<RegistryKeyNotificationInfo> s_registerKeyNotifyPool = new List<RegistryKeyNotificationInfo>();
+            private static AutoResetEvent s_registryKeyNotifyPoolUpdatedEvent = new AutoResetEvent(false);
+            private static Thread? s_registryKeyNotifyPoolThread = null;
+            private static object s_registryKeyNotifyPoolLock = new object();
 
             internal RegistryKey(SafeRegistryHandle handle)
             {
@@ -67,10 +89,19 @@ namespace Morphic.Windows.Native
 
                 if (disposing == true)
                 {
+                    // dispose of our underlying registry key's access handle
                     _handle.Dispose();
                 }
 
                 _disposed = true;
+
+                // trigger the notification pool to remove our entry (if we were subscribed)
+                try
+                {
+					// TODO: consider having a "SubscribedToNotifications" flag in the RegistryKey (and using that flag to determine if this is necessary/appropriate)
+                    s_registryKeyNotifyPoolUpdatedEvent.Set();
+                }
+                catch { }
             }
 
             public IMorphicResult<RegistryKey> OpenSubKey(string name, bool writable = false)
@@ -284,8 +315,10 @@ namespace Morphic.Windows.Native
 
             #endregion SetValue helper functions
 
-            public IMorphicResult RegisterForValueChangeNotification(WaitHandle waitHandle)
+            public IMorphicResult RegisterForValueChangeNotification(RegistryKeyChangedEvent eventHandler)
             {
+                var waitHandle = new ManualResetEvent(false);
+
                 // NOTE: REG_NOTIFY_CHANGE_LAST_SET will trigger on any changes to the key's values
                 // NOTE: registration will auto-unregister after the wait handle is trigger once.  Registration will also auto-unregister when the RegistryKey is closed/disposed
                 var regNotifyErrorCode = PInvoke.AdvApi32.RegNotifyChangeKeyValue(_handle, false, PInvoke.AdvApi32.RegNotifyFilter.REG_NOTIFY_CHANGE_LAST_SET, waitHandle.SafeWaitHandle, true);
@@ -297,7 +330,111 @@ namespace Morphic.Windows.Native
                         return IMorphicResult.ErrorResult;
                 }
 
+                // add our registry key (and accompanying wait handle) to the notify pool
+                // NOTE: this must be the only code which is allowed to add to the notify pool; if we change this behavior, we must re-evaluate and QA the corresponding lock strategy change
+                lock(s_registryKeyNotifyPoolLock)
+                {
+                    var notifyInfo = new RegistryKeyNotificationInfo(this, waitHandle, eventHandler);
+                    s_registerKeyNotifyPool.Add(notifyInfo);
+
+                    if(s_registryKeyNotifyPoolThread == null)
+                    {
+                        s_registryKeyNotifyPoolThread = new Thread(RegistryKey.ListenForRegistryKeyChanges);
+                        s_registryKeyNotifyPoolThread.IsBackground = true; // set up as a background thread (so that it shuts down automatically with our application, even if all the RegistryKeys weren't fully disposed)
+                        s_registryKeyNotifyPoolThread.Start();
+                    } 
+                    else
+                    {
+                        // trigger our notify pool thread to see and watch for the new entries
+                        s_registryKeyNotifyPoolUpdatedEvent.Set();
+                    }
+                }
+
                 return IMorphicResult.SuccessResult;
+            }
+
+            private static void ListenForRegistryKeyChanges()
+            {
+                while(true)
+                {
+                    // get a copy of our current registry key notification pool (i.e. all registry keys which we are watching)
+                    RegistryKeyNotificationInfo[] copyOfNotificationPool;
+                    lock (s_registryKeyNotifyPoolLock)
+                    {
+						// NOTE: we intentionally copy the list into an array to make sure we have a clone of the original list (not a shared reference)
+                        copyOfNotificationPool = s_registerKeyNotifyPool.ToArray();
+
+                        // if there are no registry keys which we are subscribed to, exit our function (and shut down our thread) now
+                        if (copyOfNotificationPool.Length == 0)
+                        {
+                            s_registryKeyNotifyPoolThread = null;
+                            return;
+                        }
+                    }
+
+                    // if any of the registry keys have been disposed, then remove them from our list
+                    int index = 0;
+                    while(index < copyOfNotificationPool.Length)
+                    {
+                        if (copyOfNotificationPool[index].RegistryKey._disposed == true)
+                        {
+                            // remove this item from the list
+                            var newCopyOfNotificationPool = new RegistryKeyNotificationInfo[copyOfNotificationPool.Length - 1];
+                            Array.Copy(copyOfNotificationPool, 0, newCopyOfNotificationPool, 0, index);
+                            Array.Copy(copyOfNotificationPool, index + 1, newCopyOfNotificationPool, index, copyOfNotificationPool.Length - index - 1);
+                            copyOfNotificationPool = newCopyOfNotificationPool;
+                        }
+                        else
+                        {
+                            // continue to the next item
+                            index++;
+                        }
+                    }
+
+                    // create a list of handles to wait on (first the ones which we are watching...and then the one that triggers when the list is updated)
+                    var handlesToWaitOn = new WaitHandle[copyOfNotificationPool.Length + 1];
+                    for (index = 0; index < copyOfNotificationPool.Length; index++)
+                    {
+                        handlesToWaitOn[index] = copyOfNotificationPool[index].WaitHandle;
+                    }
+                    handlesToWaitOn[handlesToWaitOn.Length - 1] = s_registryKeyNotifyPoolUpdatedEvent;
+
+                    // now wait on the handles
+                    var indexOfSetHandle = WaitHandle.WaitAny(handlesToWaitOn);
+                    if (indexOfSetHandle == handlesToWaitOn.Length - 1)
+                    {
+                        // list has been updated; start processing the list again
+                        continue;
+                    }
+                    else
+                    {
+                        // wait handle was triggered!
+                        //
+                        // capture the notification pool entry which triggered
+                        var notificationPoolEntry = copyOfNotificationPool[indexOfSetHandle];
+                        // call the event handler on a thread pool thread
+                        Task.Run(() => { notificationPoolEntry.EventHandler(notificationPoolEntry.RegistryKey, EventArgs.Empty); });
+                        // remove the registry key from our pool
+                        lock(s_registryKeyNotifyPoolLock)
+                        {
+                            for(index = 0; index < s_registerKeyNotifyPool.Count; index++)
+                            {
+                                // NOTE: type WaitHandle is a class, so this comparison is a reference comparison
+                                if (s_registerKeyNotifyPool[index].WaitHandle == notificationPoolEntry.WaitHandle)
+                                {
+                                    s_registerKeyNotifyPool.RemoveAt(index);
+                                    break;
+                                }
+                            }
+                        }
+                        // re-register the registry key for notification (using its existing event handler), since Windows auto-unregisters registrations every time the handle is triggered
+                        var registerForValuechangeNotificationResult = notificationPoolEntry.RegistryKey.RegisterForValueChangeNotification(notificationPoolEntry.EventHandler);
+                        if (registerForValuechangeNotificationResult.IsError)
+                        {
+                            Debug.Assert(false, "Could not re-register registry key for notification after raising event.");
+                        }
+                    }                    
+                }
             }
         }
     }
