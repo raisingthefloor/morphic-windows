@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Morphic.Core;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -16,11 +17,30 @@ namespace Morphic.Windows.Native.OsVersion
     }
     public struct OsVersion
     {
+        public static IMorphicResult<uint> GetUpdateBuildRevision()
+        {
+            var openRegistryKeyResult = Morphic.Windows.Native.Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion");
+            if (openRegistryKeyResult.IsError == true)
+            {
+                return IMorphicResult<uint>.ErrorResult();
+            }
+            var registryKey = openRegistryKeyResult.Value!;
+
+            var getValueResult = registryKey.GetValue<uint>("UBR");
+            if (getValueResult.IsError == true)
+            {
+                return IMorphicResult<uint>.ErrorResult();
+            }
+            var updateBuildRevision = getValueResult.Value!;
+
+            return IMorphicResult<uint>.SuccessResult(updateBuildRevision);
+        }
+
         public static Windows10Version? GetWindows10Version()
         {
             var platform = System.Environment.OSVersion.Platform;
             var version = System.Environment.OSVersion.Version;
-
+            
             if ((version.Major == 10) && (version.Minor == 0))
             {
                 switch (version.Build)
