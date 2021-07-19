@@ -166,9 +166,13 @@
                     break;
                 case Windows10Version.v2004:
                 case Windows10Version.v20H2:
-                case Windows10Version.vFuture:
-                    // Windows 10 2004, 20H2 (and assumed for the future)
+                    // Windows 10 2004, 20H2
                     settingsUrlAsPath = "ms-settings:easeofaccess-MousePointer";
+                    break;
+                case Windows10Version.v21H1:
+                case Windows10Version.vFuture:
+                    // Windows 10 21H1 (and assumed for the future)
+                    settingsUrlAsPath = "ms-settings:easeofaccess-mousepointer";
                     break;
                 case null: // not a valid version
                 default:
