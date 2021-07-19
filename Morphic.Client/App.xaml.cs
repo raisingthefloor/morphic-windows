@@ -769,6 +769,7 @@ namespace Morphic.Client
                 Windows10Version.v1909,
                 Windows10Version.v2004,
                 Windows10Version.v20H2,
+                Windows10Version.v21H1,
                 Windows10Version.vFuture
             };
         private static bool IsOsCompatibleWithMorphic()

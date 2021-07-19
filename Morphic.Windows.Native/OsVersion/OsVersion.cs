@@ -11,6 +11,7 @@ namespace Morphic.Windows.Native.OsVersion
         v1909,
         v2004,
         v20H2,
+        v21H1,
         vFuture // any future release we're not yet aware of
     }
     public struct OsVersion
@@ -34,8 +35,10 @@ namespace Morphic.Windows.Native.OsVersion
                         return Windows10Version.v2004;
                     case 19042:
                         return Windows10Version.v20H2;
+                    case 19043:
+                        return Windows10Version.v21H1;
                     default:
-                        if (version.Build > 19042)
+                        if (version.Build > 19043)
                         {
                             return Windows10Version.vFuture;
                         }
@@ -49,7 +52,7 @@ namespace Morphic.Windows.Native.OsVersion
             {
                 return Windows10Version.vFuture;
             }
-            else if (version.Major > 11)
+            else if (version.Major > 10)
             {
                 return Windows10Version.vFuture;
             }
