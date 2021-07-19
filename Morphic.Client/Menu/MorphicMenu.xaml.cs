@@ -165,9 +165,24 @@
                     settingsUrlAsPath = "ms-settings:easeofaccess-cursorandpointersize";
                     break;
                 case Windows10Version.v2004:
-                case Windows10Version.v20H2:
-                    // Windows 10 2004, 20H2
+                    // Windows 10 2004
                     settingsUrlAsPath = "ms-settings:easeofaccess-MousePointer";
+                    break;
+                case Windows10Version.v20H2:
+                    // Windows 10 20H2
+                    // NOTE: Microsoft changed the URL for this link somwhere between 10.0.19042.986 and 10.0.19042.1052;
+                    //       if we get any bug reports that this link doesn't work with v20H2, be sure to get the "winver" full version #...so we can adjust the revision # below (to something between 986 and 1051) as appropriate
+                    var windowsVersion = System.Environment.OSVersion.Version;
+                    if (windowsVersion.Revision < 1052)
+                    {
+                        // NOTE: this link was verified in Windows 10 19042.985
+                        settingsUrlAsPath = "ms-settings:easeofaccess-MousePointer";
+                    }
+                    else
+                    {
+                        // NOTE: this link was verified in Windows 10 19042.1052
+                        settingsUrlAsPath = "ms-settings:easeofaccess-mousepointer";
+                    }
                     break;
                 case Windows10Version.v21H1:
                 case Windows10Version.vFuture:
