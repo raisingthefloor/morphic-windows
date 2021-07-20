@@ -317,11 +317,26 @@ namespace Morphic.Windows.Native
 
             public IMorphicResult RegisterForValueChangeNotification(RegistryKeyChangedEvent eventHandler)
             {
+                if (_disposed == true)
+                {
+                    return IMorphicResult.ErrorResult;
+                }
+
                 var waitHandle = new ManualResetEvent(false);
 
                 // NOTE: REG_NOTIFY_CHANGE_LAST_SET will trigger on any changes to the key's values
                 // NOTE: registration will auto-unregister after the wait handle is trigger once.  Registration will also auto-unregister when the RegistryKey is closed/disposed
-                var regNotifyErrorCode = PInvoke.AdvApi32.RegNotifyChangeKeyValue(_handle, false, PInvoke.AdvApi32.RegNotifyFilter.REG_NOTIFY_CHANGE_LAST_SET, waitHandle.SafeWaitHandle, true);
+                PInvoke.Win32ErrorCode regNotifyErrorCode;
+                try
+                {
+                    // NOTE: if _handle has been disposed, this will throw an ObjectDisposedException
+                    regNotifyErrorCode = PInvoke.AdvApi32.RegNotifyChangeKeyValue(_handle, false, PInvoke.AdvApi32.RegNotifyFilter.REG_NOTIFY_CHANGE_LAST_SET, waitHandle.SafeWaitHandle, true);
+                }
+                catch(ObjectDisposedException ex)
+                {
+                    return IMorphicResult.ErrorResult;
+                }
+                //
                 switch (regNotifyErrorCode)
                 {
                     case PInvoke.Win32ErrorCode.ERROR_SUCCESS:
@@ -427,11 +442,16 @@ namespace Morphic.Windows.Native
                                 }
                             }
                         }
-                        // re-register the registry key for notification (using its existing event handler), since Windows auto-unregisters registrations every time the handle is triggered
-                        var registerForValuechangeNotificationResult = notificationPoolEntry.RegistryKey.RegisterForValueChangeNotification(notificationPoolEntry.EventHandler);
-                        if (registerForValuechangeNotificationResult.IsError)
+                        //
+                        // if the entry we just removed hasn't been disposed, re-register it for notifications
+                        if(notificationPoolEntry.RegistryKey._disposed == false)
                         {
-                            Debug.Assert(false, "Could not re-register registry key for notification after raising event.");
+                            // re-register the registry key for notification (using its existing event handler), since Windows auto-unregisters registrations every time the handle is triggered
+                            var registerForValuechangeNotificationResult = notificationPoolEntry.RegistryKey.RegisterForValueChangeNotification(notificationPoolEntry.EventHandler);
+                            if (registerForValuechangeNotificationResult.IsError)
+                            {
+                                Debug.Assert(false, "Could not re-register registry key for notification after raising event.");
+                            }
                         }
                     }                    
                 }
