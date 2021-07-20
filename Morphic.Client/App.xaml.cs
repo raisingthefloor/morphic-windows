@@ -764,11 +764,12 @@ namespace Morphic.Client
         private static List<Windows10Version> CompatibleWindows10Versions = new List<Windows10Version>() 
             {
                 // NOTE: the first entry in this list represents the "minimum" version of Windows 10 which we support
-                //Windows10Version.v1809, // NOTE: Morphic is not currently supported on Windows 10 v1809; we are evaluating support for this version in the future
+                Windows10Version.v1809,
                 Windows10Version.v1903,
                 Windows10Version.v1909,
                 Windows10Version.v2004,
                 Windows10Version.v20H2,
+                Windows10Version.v21H1,
                 Windows10Version.vFuture
             };
         private static bool IsOsCompatibleWithMorphic()
@@ -960,10 +961,15 @@ namespace Morphic.Client
             //
             // dark mode
             // NOTE: due to the interrelation between high contrast and dark mode, we reset dark mode AFTER resetting high contrast mode
-            if (await this.MorphicSession.GetSetting<bool>(SettingId.LightThemeSystem) != !darkModeEnabledDefault)
+            var darkModeIsEnabledResult = await Morphic.Client.Bar.Data.Actions.Functions.GetDarkModeStateAsync();
+            if (darkModeIsEnabledResult.IsSuccess == true)
             {
-                await this.MorphicSession.SetSetting(SettingId.LightThemeSystem, !darkModeEnabledDefault);
-                await this.MorphicSession.SetSetting(SettingId.LightThemeApps, !darkModeEnabledDefault);
+                var darkModeIsEnabled = darkModeIsEnabledResult.Value!;
+
+                if (darkModeIsEnabled != darkModeEnabledDefault)
+                {
+                    await Morphic.Client.Bar.Data.Actions.Functions.SetDarkModeStateAsync(darkModeEnabledDefault);
+                }
             }
         }
 
