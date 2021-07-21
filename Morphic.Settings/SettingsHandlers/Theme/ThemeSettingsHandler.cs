@@ -11,12 +11,15 @@
     using Microsoft.Extensions.Logging;
     using Microsoft.Win32;
     using SolutionsRegistry;
+    using System.Threading;
 
     [SrService]
     public class ThemeSettingsHandler : FixedSettingsHandler
     {
         private readonly ILogger<ThemeSettingsHandler> logger;
         private readonly IRegistry registry;
+
+        private readonly static SemaphoreSlim s_setHighContrastSemaphore = new SemaphoreSlim(1, 1);
 
         public ThemeSettingsHandler(ILogger<ThemeSettingsHandler> logger, IRegistry registry)
         {
@@ -64,6 +67,7 @@
                     "resources\\Themes\\aero.theme");
                 if (currentThemeFile != defaultTheme)
                 {
+                    // OBSERVATION: this code is re-entrant; also note that if the aero.theme file is corrupt...this might reenter infinitely until the stack was full
                     this.SaveCurrentTheme(defaultTheme, saveAs);
                 }
                 return;
@@ -129,32 +133,40 @@
         }
 
         [Setter("highContrastEnabled")]
-        public Task<bool> SetHighContrast(Setting setting, object? newValue)
+        public async Task<bool> SetHighContrast(Setting setting, object? newValue)
         {
-            Spi.HighContrastOptions options = Spi.Instance.GetHighContrast();
-
-            bool enable = newValue as bool? == true;
-            bool currentlyEnabled = (options & Spi.HighContrastOptions.HCF_HIGHCONTRASTON) != 0;
-            if (!currentlyEnabled)
+            // capture (or wait on) our "set high contrast" semaphore; we'll release this in the finally block
+            await s_setHighContrastSemaphore.WaitAsync();
+            try
             {
-                // Save the current theme, otherwise windows will use the last saved theme when restoring the contrast
-                // mode.
-                ThemeSettingGroup settingGroup = (ThemeSettingGroup)setting.SettingGroup;
-                this.SaveCurrentTheme(settingGroup.CurrentTheme, settingGroup.SavedTheme);
-            }
+                Spi.HighContrastOptions options = Spi.Instance.GetHighContrast();
 
-            if (enable)
+                bool enable = newValue as bool? == true;
+                bool currentlyEnabled = (options & Spi.HighContrastOptions.HCF_HIGHCONTRASTON) != 0;
+                if (!currentlyEnabled)
+                {
+                    // Save the current theme, otherwise windows will use the last saved theme when restoring the contrast
+                    // mode.
+                    ThemeSettingGroup settingGroup = (ThemeSettingGroup)setting.SettingGroup;
+                    this.SaveCurrentTheme(settingGroup.CurrentTheme, settingGroup.SavedTheme);
+                }
+
+                if (enable)
+                {
+                    options |= Spi.HighContrastOptions.HCF_HIGHCONTRASTON;
+                }
+                else
+                {
+                    options &= ~Spi.HighContrastOptions.HCF_HIGHCONTRASTON;
+                }
+
+                var setHighContrastSuccess = Spi.Instance.SetHighContrast(options);
+                return setHighContrastSuccess;
+            }
+            finally
             {
-                options |= Spi.HighContrastOptions.HCF_HIGHCONTRASTON;
+                s_setHighContrastSemaphore.Release();
             }
-            else
-            {
-                options &= ~Spi.HighContrastOptions.HCF_HIGHCONTRASTON;
-            }
-
-            Spi.Instance.SetHighContrast(options);
-
-            return Task.FromResult(true);
         }
 
         [Getter("highContrastEnabled")]

@@ -24,7 +24,7 @@ namespace Morphic.Client.Bar.Data.Actions
     // ReSharper disable once UnusedType.Global - accessed via reflection.
     public class Functions
     {
-        private readonly static SemaphoreSlim _captureTextSemaphore = new SemaphoreSlim(1, 1);
+        private readonly static SemaphoreSlim s_captureTextSemaphore = new SemaphoreSlim(1, 1);
 
         [InternalFunction("snip")]
         public static async Task<IMorphicResult> ScreenSnipAsync(FunctionArgs args)
@@ -190,7 +190,7 @@ namespace Morphic.Client.Bar.Data.Actions
                         TextPatternRange[]? textRangeCollection = null;
                         //
                         // capture (or wait on) our "capture text" semaphore; we'll release this in the finally block
-                        await _captureTextSemaphore.WaitAsync();
+                        await s_captureTextSemaphore.WaitAsync();
                         //
                         try
                         {
@@ -220,7 +220,7 @@ namespace Morphic.Client.Bar.Data.Actions
                         }
                         finally
                         {
-                            _captureTextSemaphore.Release();
+                            s_captureTextSemaphore.Release();
                         }
                         //
                         // if we just captured a text range collection (i.e. were able to copy the current selection), convert that capture into a string now
@@ -260,7 +260,7 @@ namespace Morphic.Client.Bar.Data.Actions
                         if (captureTextViaAutomationSucceeded == false)
                         {
                             // capture (or wait on) our "capture text" semaphore; we'll release this in the finally block
-                            await _captureTextSemaphore.WaitAsync();
+                            await s_captureTextSemaphore.WaitAsync();
                             //
                             try
                             {
@@ -412,7 +412,7 @@ namespace Morphic.Client.Bar.Data.Actions
                             }
                             finally
                             {
-                                _captureTextSemaphore.Release();
+                                s_captureTextSemaphore.Release();
                             }
                         }
                     }
