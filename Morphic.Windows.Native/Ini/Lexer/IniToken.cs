@@ -34,13 +34,13 @@ namespace Morphic.Windows.Native.Ini
         public IniTokenKind Kind;
         public List<char> Lexeme;
 
-        public LineTerminatorOption? LineTerminator;
+        public IniLineTerminatorOption? LineTerminator;
         
         public List<IniTrivia> LeadingTrivia;
         public List<IniTrivia> TrailingTrivia;
 
         // NOTE: for convenience, we allow callers to pass in a null list for leading/trailing trivia, but we always translate nulls to empty lists
-        public IniToken(IniTokenKind kind, List<char> lexeme, LineTerminatorOption lineTerminator, List<IniTrivia>? leadingTrivia, List<IniTrivia>? trailingTrivia)
+        public IniToken(IniTokenKind kind, List<char> lexeme, IniLineTerminatorOption lineTerminator, List<IniTrivia>? leadingTrivia, List<IniTrivia>? trailingTrivia)
         {
             this.Kind = kind;
             this.Lexeme = lexeme;

@@ -34,9 +34,9 @@ namespace Morphic.Windows.Native.Ini
         public IniTriviaKind Kind;
         public List<char> Lexeme;
 
-        public LineTerminatorOption? LineTerminator;
+        public IniLineTerminatorOption? LineTerminator;
 
-        public IniTrivia(IniTriviaKind kind, List<char> lexeme, LineTerminatorOption lineTerminator)
+        public IniTrivia(IniTriviaKind kind, List<char> lexeme, IniLineTerminatorOption lineTerminator)
         {
             this.Kind = kind;
             this.Lexeme = lexeme;

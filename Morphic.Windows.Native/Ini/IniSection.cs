@@ -40,6 +40,17 @@ namespace Morphic.Windows.Native.Ini
             this.Properties = new List<IniProperty>();
         }
 
+        public override string ToString()
+        {
+            var result = new StringBuilder();
+
+            result.Append('[');
+            result.Append(this.Name);
+            result.Append(']');
+
+            return result.ToString();
+        }
+
         internal static IniSection CreateFromLexeme(List<char> lexeme, List<IniTrivia>? leadingTrivia = null, List<IniTrivia>? trailingTrivia = null)
         {
             var sectionNameAsChars = IniSection.GetSectionNameFromSectionLexeme(lexeme);

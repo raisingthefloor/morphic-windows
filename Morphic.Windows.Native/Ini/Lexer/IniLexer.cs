@@ -56,7 +56,7 @@ namespace Morphic.Windows.Native.Ini
 
                 if (nextLine == null)
                 {
-                    return new IniToken(IniTokenKind.EndOfFile, new List<char>() /* empty lexeme, rather than null */, LineTerminatorOption.None, leadingTrivia, null);
+                    return new IniToken(IniTokenKind.EndOfFile, new List<char>() /* empty lexeme, rather than null */, IniLineTerminatorOption.None, leadingTrivia, null);
                 }
 
                 var lexeme = nextLine.Text!;
@@ -67,7 +67,7 @@ namespace Morphic.Windows.Native.Ini
                 {
                     // empty line; treat this as trivia
                     var whitespaceTrivia = new IniTrivia(IniTriviaKind.Whitespace, lexeme, lineTerminator);
-                    leadingTrivia.Append(whitespaceTrivia);
+                    leadingTrivia.Add(whitespaceTrivia);
 
                     // capture another line of text
                     continue;
@@ -78,8 +78,8 @@ namespace Morphic.Windows.Native.Ini
                     if (lexeme.First() == ';')
                     {
                         // comment; capture this as trivia
-                        var commentTrivia = new IniTrivia(IniTriviaKind.Whitespace, lexeme, lineTerminator);
-                        leadingTrivia.Append(commentTrivia);
+                        var commentTrivia = new IniTrivia(IniTriviaKind.Comment, lexeme, lineTerminator);
+                        leadingTrivia.Add(commentTrivia);
 
                         // capture another line of text
                         continue;
@@ -100,7 +100,7 @@ namespace Morphic.Windows.Native.Ini
                     if(lineIsWhitespace == true)
                     {
                         var whitespaceTrivia = new IniTrivia(IniTriviaKind.Whitespace, lexeme, lineTerminator);
-                        leadingTrivia.Append(whitespaceTrivia);
+                        leadingTrivia.Add(whitespaceTrivia);
 
                         // capture another line of text
                         continue;
@@ -187,9 +187,9 @@ namespace Morphic.Windows.Native.Ini
         private record IniTextLine
         {
             public List<char> Text;
-            public LineTerminatorOption LineTerminator;
+            public IniLineTerminatorOption LineTerminator;
 
-            public IniTextLine(List<char> text, LineTerminatorOption lineTerminator)
+            public IniTextLine(List<char> text, IniLineTerminatorOption lineTerminator)
             {
                 this.Text = text;
                 this.LineTerminator = lineTerminator;
@@ -222,18 +222,18 @@ namespace Morphic.Windows.Native.Ini
                         // end of file marker
 
                         // capture the end of file marker
-                        text.Append(ch);
+                        text.Add(ch);
                         _remainingContents.RemoveAt(0);
 
                         // empty any remaining contents (i.e. stop at a hard EOF marker)
                         _remainingContents.Clear();
 
-                        return new IniTextLine(text, LineTerminatorOption.None);
+                        return new IniTextLine(text, IniLineTerminatorOption.None);
                     default:
                         // any other character
 
                         // capture the character
-                        text.Append(ch);
+                        text.Add(ch);
                         _remainingContents.RemoveAt(0);
 
                         break;
@@ -241,14 +241,14 @@ namespace Morphic.Windows.Native.Ini
             }
 
             // if we reach here, we have captured a line without an end of line marker; return the contents
-            return new IniTextLine(text, LineTerminatorOption.None);
+            return new IniTextLine(text, IniLineTerminatorOption.None);
         }
 
-        private LineTerminatorOption GetLineTerminator()
+        private IniLineTerminatorOption GetLineTerminator()
         {
             if (_remainingContents.Count == 0)
             {
-                return LineTerminatorOption.None;
+                return IniLineTerminatorOption.None;
             }
 
             var ch0 = _remainingContents[0];
@@ -268,25 +268,25 @@ namespace Morphic.Windows.Native.Ini
                             {
                                 // \r\n
                                 _remainingContents.RemoveAt(0);
-                                return LineTerminatorOption.CrLf;
+                                return IniLineTerminatorOption.CrLf;
                             }
                         }
 
                         // if we did not find an \n after the \r, return just \r
 
                         // \r
-                        return LineTerminatorOption.Cr;
+                        return IniLineTerminatorOption.Cr;
                     }
                 case '\n':
                     // \n
                     {
                         _remainingContents.RemoveAt(0);
 
-                        return LineTerminatorOption.Lf;
+                        return IniLineTerminatorOption.Lf;
                     }
                 default:
                     Debug.Assert(false, "Seeking line terminator characters but found another character instead.");
-                    return LineTerminatorOption.None;
+                    return IniLineTerminatorOption.None;
             }
         }
 

@@ -29,7 +29,7 @@ using System.Threading.Tasks;
 
 namespace Morphic.Windows.Native.Ini
 {
-    internal enum LineTerminatorOption
+    internal enum IniLineTerminatorOption
     {
         None,
         Cr,

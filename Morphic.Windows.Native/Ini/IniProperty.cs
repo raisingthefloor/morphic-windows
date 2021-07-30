@@ -36,6 +36,17 @@ namespace Morphic.Windows.Native.Ini
             this.Value = value;
         }
 
+        public override string ToString()
+        {
+            var result = new StringBuilder();
+
+            result.Append(this.Key);
+            result.Append('=');
+            result.Append(this.Value);
+
+            return result.ToString();
+        }
+
         internal static IniProperty CreateFromLexeme(List<char> lexeme, List<IniTrivia>? leadingTrivia = null, List<IniTrivia>? trailingTrivia = null)
         {
             var propertyKeyAsChars = IniProperty.GetKeyFromPropertyLexeme(lexeme);
@@ -74,7 +85,7 @@ namespace Morphic.Windows.Native.Ini
                 throw new InvalidOperationException();
             }
 
-            List<char> value = lexeme.GetRange(indexOfEquals + 1, lexeme.Count - indexOfEquals);
+            List<char> value = lexeme.GetRange(indexOfEquals + 1, lexeme.Count - indexOfEquals - 1);
             return value;
         }
 

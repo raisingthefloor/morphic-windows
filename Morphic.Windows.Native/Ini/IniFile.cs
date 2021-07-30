@@ -16,6 +16,7 @@
 using Morphic.Core;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -38,7 +39,7 @@ namespace Morphic.Windows.Native.Ini
 
         #region Parser 
 
-        public static IMorphicResult<IniFile> LoadContents(string contents)
+        public static IMorphicResult<IniFile> CreateFromString(string contents)
         {
             List<IniProperty> properties = new List<IniProperty>();
             List<IniSection> sections = new List<IniSection>();
@@ -91,10 +92,98 @@ namespace Morphic.Windows.Native.Ini
 
             var result = new IniFile(properties, sections);
             return IMorphicResult<IniFile>.SuccessResult(result);
-
         }
 
         #endregion Parser
+
+        #region Serializer
+
+        public override string ToString()
+        {
+            var result = new StringBuilder();
+
+            foreach(var property in this.Properties)
+            {
+                foreach(var trivia in property.LeadingTrivia)
+                {
+                    IniFile.AppendTriviaToStringBuilder(trivia, ref result);
+                }
+
+                result.Append(property.ToString());
+                // TODO: consider storing and reproducing the "original" line terminator instead (or a default one, if none was specified)
+                IniFile.AppendLineTerminatorToStringBuilder(IniLineTerminatorOption.CrLf, ref result);
+
+                foreach (var trivia in property.TrailingTrivia)
+                {
+                    IniFile.AppendTriviaToStringBuilder(trivia, ref result);
+                }
+            }
+
+            foreach (var section in this.Sections)
+            {
+                foreach (var trivia in section.LeadingTrivia)
+                {
+                    IniFile.AppendTriviaToStringBuilder(trivia, ref result);
+                }
+
+                result.Append(section.ToString());
+                // TODO: consider storing and reproducing the "original" line terminator instead (or a default one, if none was specified)
+                IniFile.AppendLineTerminatorToStringBuilder(IniLineTerminatorOption.CrLf, ref result);
+
+                foreach (var property in section.Properties)
+                {
+                    foreach (var trivia in property.LeadingTrivia)
+                    {
+                        IniFile.AppendTriviaToStringBuilder(trivia, ref result);
+                    }
+
+                    result.Append(property.ToString());
+                    // TODO: consider storing and reproducing the "original" line terminator instead (or a default one, if none was specified)
+                    IniFile.AppendLineTerminatorToStringBuilder(IniLineTerminatorOption.CrLf, ref result);
+
+                    foreach (var trivia in property.TrailingTrivia)
+                    {
+                        IniFile.AppendTriviaToStringBuilder(trivia, ref result);
+                    }
+                }
+
+                foreach (var trivia in section.TrailingTrivia)
+                {
+                    IniFile.AppendTriviaToStringBuilder(trivia, ref result);
+                }
+            }
+
+            return result.ToString();
+        }
+
+        private static void AppendTriviaToStringBuilder(IniTrivia trivia, ref StringBuilder builder)
+        {
+            builder.Append(trivia.Lexeme.ToArray());
+            IniFile.AppendLineTerminatorToStringBuilder(trivia.LineTerminator ?? IniLineTerminatorOption.None, ref builder);
+        }
+
+        private static void AppendLineTerminatorToStringBuilder(IniLineTerminatorOption lineTerminator, ref StringBuilder builder)
+        {
+            switch(lineTerminator)
+            {
+                case IniLineTerminatorOption.Cr:
+                    builder.Append("\r");
+                    break;
+                case IniLineTerminatorOption.CrLf:
+                    builder.Append("\r\n");
+                    break;
+                case IniLineTerminatorOption.Lf:
+                    builder.Append("\n");
+                    break;
+                case IniLineTerminatorOption.None:
+                    break;
+                default:
+                    Debug.Assert(false, "Invalid line terminator option (i.e. code bug)");
+                    throw new ArgumentException();
+            }
+        }
+
+        #endregion Serializer
 
     }
 }
