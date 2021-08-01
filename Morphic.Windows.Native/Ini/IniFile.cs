@@ -31,6 +31,19 @@ namespace Morphic.Windows.Native.Ini
         // NOTE: each section contains zero or more properties (in addition to properties in the root)
         public List<IniSection> Sections;
 
+        private struct EndOfFileContentsStruct
+        {
+            public List<char> Lexeme;
+            public List<IniTrivia> LeadingTrivia;
+
+            public EndOfFileContentsStruct(List<char> lexeme, List<IniTrivia> leadingTrivia)
+            {
+                this.Lexeme = lexeme;
+                this.LeadingTrivia = leadingTrivia;
+            }
+        }
+        private EndOfFileContentsStruct EndOfFileContents;
+
         internal IniFile(List<IniProperty> properties, List<IniSection> sections)
         {
             this.Properties = properties;
@@ -41,8 +54,9 @@ namespace Morphic.Windows.Native.Ini
 
         public static IMorphicResult<IniFile> CreateFromString(string contents)
         {
-            List<IniProperty> properties = new List<IniProperty>();
-            List<IniSection> sections = new List<IniSection>();
+            var properties = new List<IniProperty>();
+            var sections = new List<IniSection>();
+            var endOfFileContents = new EndOfFileContentsStruct(new List<char>(), new List<IniTrivia>());
 
             IniSection? currentSection = null;
 
@@ -51,9 +65,12 @@ namespace Morphic.Windows.Native.Ini
             {
                 IniToken iniToken = lexer.GetNextToken();
 
-                // if we've reached the last token, return
+                // if we've reached the last token, capture the end of file content and break out of this loop
                 if (iniToken.Kind == IniTokenKind.EndOfFile)
                 {
+                    endOfFileContents.Lexeme = iniToken.Lexeme;
+                    endOfFileContents.LeadingTrivia = iniToken.LeadingTrivia;
+
                     break;
                 }
 
@@ -91,6 +108,8 @@ namespace Morphic.Windows.Native.Ini
             }
 
             var result = new IniFile(properties, sections);
+            result.EndOfFileContents = endOfFileContents;
+
             return IMorphicResult<IniFile>.SuccessResult(result);
         }
 
@@ -102,9 +121,10 @@ namespace Morphic.Windows.Native.Ini
         {
             var result = new StringBuilder();
 
-            foreach(var property in this.Properties)
+            // top-level properties
+            foreach (var property in this.Properties)
             {
-                foreach(var trivia in property.LeadingTrivia)
+                foreach (var trivia in property.LeadingTrivia)
                 {
                     IniFile.AppendTriviaToStringBuilder(trivia, ref result);
                 }
@@ -119,6 +139,7 @@ namespace Morphic.Windows.Native.Ini
                 }
             }
 
+            // sections
             foreach (var section in this.Sections)
             {
                 foreach (var trivia in section.LeadingTrivia)
@@ -153,6 +174,13 @@ namespace Morphic.Windows.Native.Ini
                 }
             }
 
+            // end of file contents
+            foreach (var trivia in this.EndOfFileContents.LeadingTrivia)
+            {
+                IniFile.AppendTriviaToStringBuilder(trivia, ref result);
+            }
+            result.Append(this.EndOfFileContents.Lexeme.ToArray());
+
             return result.ToString();
         }
 
@@ -164,7 +192,7 @@ namespace Morphic.Windows.Native.Ini
 
         private static void AppendLineTerminatorToStringBuilder(IniLineTerminatorOption lineTerminator, ref StringBuilder builder)
         {
-            switch(lineTerminator)
+            switch (lineTerminator)
             {
                 case IniLineTerminatorOption.Cr:
                     builder.Append("\r");

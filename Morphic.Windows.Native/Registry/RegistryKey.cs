@@ -266,9 +266,10 @@ namespace Morphic.Windows.Native
                 var handleAsUIntPtr = (UIntPtr)(_handle.DangerousGetHandle().ToInt64());
 
                 IMorphicResult setValueResult;
-                if (typeof(T) == typeof(uint))
+                if ((typeof(T) == typeof(uint)) ||
+                    typeof(T) == typeof(System.String))
                 {
-                    setValueResult = RegistryKey.SetValueForHandle(handleAsUIntPtr, name, (uint)(object)value!);
+                    setValueResult = RegistryKey.SetValueForHandle(handleAsUIntPtr, name, value!);
                 }
                 else
                 {
@@ -285,15 +286,38 @@ namespace Morphic.Windows.Native
 
             #region SetValue helper functions
 
-            private static IMorphicResult SetValueForHandle(UIntPtr handle, string? name, uint value)
+            private static IMorphicResult SetValueForHandle<T>(UIntPtr handle, string? name, T value)
             {
-                var dataSizeAsInt = Marshal.SizeOf<uint>();
-                var ptrToData = Marshal.AllocHGlobal(dataSizeAsInt);
-                Marshal.StructureToPtr<uint>(value, ptrToData, false);
+                IntPtr ptrToData;
+                uint dataSize;
+                ExtendedPInvoke.RegistryValueType valueType;
+
+                if (typeof(T) == typeof(uint))
+                {
+                    var dataSizeAsInt = Marshal.SizeOf<uint>();
+                    ptrToData = Marshal.AllocHGlobal(dataSizeAsInt);
+                    var valueAsUInt = (uint)(object)value!;
+                    Marshal.StructureToPtr<uint>(valueAsUInt, ptrToData, false);
+                    //
+                    dataSize = (uint)dataSizeAsInt;
+                    valueType = ExtendedPInvoke.RegistryValueType.REG_DWORD;
+                }
+                else if (typeof(T) == typeof(System.String))
+                {
+                    var valueAsString = (value as System.String)!;
+                    ptrToData = Marshal.StringToHGlobalUni(valueAsString);
+                    //
+                    dataSize = (uint)((valueAsString.Length + 1 /* +1 for the null terminator */) * 2);
+                    valueType = ExtendedPInvoke.RegistryValueType.REG_SZ;
+                }
+                else
+                {
+                    // unknown type
+                    return IMorphicResult.ErrorResult;
+                }
+                //
                 try
                 {
-                    var dataSize = (uint)dataSizeAsInt;
-                    var valueType = ExtendedPInvoke.RegistryValueType.REG_DWORD;
                     var setValueErrorCode = ExtendedPInvoke.RegSetValueEx(handle, name, 0, valueType, ptrToData, dataSize);
                     switch (setValueErrorCode)
                     {
@@ -311,6 +335,13 @@ namespace Morphic.Windows.Native
                 {
                     Marshal.FreeHGlobal(ptrToData);
                 }
+            }
+
+            private static int CalculateUnicodeNullTerminatedLengthOfString(string value)
+            {
+                // NOTE: this has been tested with unicode characters that are both one code unit and two code units; the System.String type automatically increases "length" as appropriate 
+                //       when surrogate characters (i.e. 2 chars for 1 symbol) are required
+                return (value.Length + 1 /* +1 for the null terminator */) * 2 /* *2 because each character is 2 bytes wide */;
             }
 
             #endregion SetValue helper functions
