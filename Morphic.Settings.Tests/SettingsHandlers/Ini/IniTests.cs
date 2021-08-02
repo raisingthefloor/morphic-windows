@@ -1,4 +1,7 @@
-﻿namespace Morphic.Settings.Tests.SettingsHandlers.Ini
+﻿using System;
+using System.Threading.Tasks;
+
+namespace Morphic.Settings.Tests.SettingsHandlers.Ini
 {
     using System.Collections.Generic;
     using System.IO;
@@ -8,36 +11,30 @@
     using Xunit;
     using Xunit.Abstractions;
 
-    public class IniFileTests
+    public class IniTests
     {
         private readonly ITestOutputHelper output;
 
-        public IniFileTests(ITestOutputHelper testOutputHelper)
+        public IniTests(ITestOutputHelper testOutputHelper)
         {
             this.output = testOutputHelper;
         }
 
-        [Fact]
-        public void IniFileReadLf()
+        [Theory]
+        [InlineData("read-test-simple.ini", "\n")]
+        [InlineData("read-test-simple.ini", "\r\n")]
+        [InlineData("read-test.ini", "\n", Skip = "unsupported")]
+        [InlineData("read-test.ini", "\r\n", Skip = "unsupported")]
+        [InlineData("aero-theme.ini", "\r\n")]
+        public void IniReadTest(string filename, string eol)
         {
-            this.DoReadTest("\n");
-        }
-
-        [Fact]
-        public void IniFileReadCrLf()
-        {
-            this.DoReadTest("\r\n");
-        }
-
-        public void DoReadTest(string eol)
-        {
-            string iniFile = TestUtil.GetLocalFile("read-test.ini");
+            string iniFile = TestUtil.GetLocalFile(filename);
 
             Dictionary<string,string> expected = new Dictionary<string, string>();
 
             Regex getExpected = new Regex("^[#;]@ *{?(?<key>[^:]*)}?:{?(?<value>.*?)}?$");
 
-            // read-test.ini contains the expected data, on lines that start with '#@'.
+            // test ini files contain the expected data, on lines that start with '#@' or ';@'.
             // Extract this json from the file.
             foreach (string line in File.ReadAllLines(iniFile))
             {
@@ -49,7 +46,8 @@
             }
 
             // Read the ini data from the file
-            IniFileReader iniReader = new TestIniFileReader(ReplaceEol(File.ReadAllText(iniFile), eol));
+            Ini iniReader = new TestIni(ReplaceEol(File.ReadAllText(iniFile), eol));
+            iniReader.Parse();
 
             Dictionary<string,string> data = iniReader.ReadData();
 
@@ -78,45 +76,57 @@
         }
 
         /// <summary>Tests writing the same data does not change the ini file.</summary>
-        [Fact]
-        public void IniFileWriteNoChange()
+        [Theory]
+        [InlineData("write-test-simple.ini")]
+        [InlineData("write-test.ini", Skip = "unsupported")]
+        public void IniFileWriteNoChange(string filename)
         {
             // Read the ini file
-            string content = File.ReadAllText(TestUtil.GetLocalFile("write-test.ini"));
-            IniFileReader reader = new TestIniFileReader(content);
+            string content = File.ReadAllText(TestUtil.GetLocalFile(filename));
+            Ini reader = new TestIni(content);
+            reader.Parse();
             Dictionary<string, string> data = reader.ReadData();
 
             // Write back the same data
-            IniFileWriter writer1 = new TestIniFileWriter(content);
-            string writtenData = writer1.Write(data).Result;
+            TestIni writer1 = new(content);
+            writer1.Parse();
+            writer1.WriteData(data);
+            string? writtenData = writer1.Result;
 
             // Result should be the same
             Assert.Equal(content, writtenData);
         }
 
         /// <summary>Tests updating values, then writing the original values, does not change the ini file.</summary>
-        [Fact]
-        public void IniFileWriteNoChangeRevert()
+        [Theory]
+        [InlineData("write-test-simple.ini")]
+        [InlineData("write-test.ini", Skip = "unsupported")]
+        public void IniFileWriteNoChangeRevert(string filename)
         {
             // Read the ini file.
-            string originalContent = File.ReadAllText(TestUtil.GetLocalFile("write-test.ini"));
-            IniFileReader reader = new TestIniFileReader(originalContent);
+            string originalContent = File.ReadAllText(TestUtil.GetLocalFile(filename));
+            Ini reader = new TestIni(originalContent);
+            reader.Parse();
             Dictionary<string, string> originalData = reader.ReadData();
 
             // Update all values.
             Dictionary<string, string> updatedData =
                 originalData.ToDictionary(kv => kv.Key, kv => $"{kv.Value}-{kv.Value}".ToUpper());
 
-            // Write the new data.
-            IniFileWriter writer1 = new TestIniFileWriter(originalContent);
-            string updatedContent = writer1.Write(updatedData).Result;
+            // WriteFile the new data.
+            TestIni writer1 = new(originalContent);
+            writer1.Parse();
+            writer1.WriteData(updatedData);
+            string? updatedContent = writer1.Result;
 
             // The content should have changed
             Assert.NotEqual(originalContent, updatedContent);
 
-            // Write back the original data
-            IniFileWriter writer2 = new TestIniFileWriter(updatedContent);
-            string revertedContent = writer2.Write(originalData).Result;
+            // WriteFile back the original data
+            TestIni writer2 = new(updatedContent);
+            writer2.Parse();
+            writer2.WriteData(originalData);
+            string? revertedContent = writer2.Result;
 
             // Result should be the same - however, the indentation on some multi-line values are not preserved.
             // Remove these large indentations before comparing.
@@ -125,31 +135,24 @@
             Assert.Equal(fixedOriginal, revertedContent);
         }
 
-        [Fact]
-        public void IniFileWriteCorrectDataLf()
-        {
-            DoWriteTest("\n");
-        }
-
-        [Fact]
-        public void IniFileWriteCorrectDataCrLf()
-        {
-            DoWriteTest("\r\n");
-        }
-
         private static string ReplaceEol(string input, string eol)
         {
             string normalised = input.Replace("\r\n", "\n").Replace("\r", "\n");
             return eol != "\n" ? normalised.Replace("\n", eol) : normalised;
         }
 
-        private static void DoWriteTest(string eol)
+        [Theory]
+        [InlineData("write-test-simple.ini", "write-test-simple.expect.ini", "\r\n")]
+        [InlineData("write-test-simple.ini", "write-test-simple.expect.ini", "\n", Skip = "unsupported")]
+        [InlineData("write-test.ini", "write-test.expect.ini", "\n", Skip = "unsupported")]
+        [InlineData("write-test.ini", "write-test.expect.ini", "\r\n", Skip = "unsupported")]
+        private static void IniWriteTest(string filename, string expectedFilename, string eol)
         {
             // Read the ini file.
-            string originalContent =
-                ReplaceEol(File.ReadAllText(TestUtil.GetLocalFile("write-test.ini")), eol);
+            string originalContent = ReplaceEol(File.ReadAllText(TestUtil.GetLocalFile(filename)), eol);
 
-            IniFileReader reader = new TestIniFileReader(originalContent);
+            Ini reader = new TestIni(originalContent);
+            reader.Parse();
             Dictionary<string, string> originalData = reader.ReadData();
 
             Regex getKey = new Regex(@"^(?:.*\.)?([^.]+)$");
@@ -214,12 +217,80 @@
             updatedData["newSection2.newSubSection.newKey5"] = "new value 5";
 
             // Write the new data
-            IniFileWriter writer =
-                new TestIniFileWriter(ReplaceEol(File.ReadAllText(TestUtil.GetLocalFile("write-test.ini")), eol));
-            string updatedContent = writer.Write(updatedData).Result;
-            string expectedContent = ReplaceEol(File.ReadAllText(TestUtil.GetLocalFile("write-test.expect.ini")), eol);
+            TestIni writer = new(ReplaceEol(File.ReadAllText(TestUtil.GetLocalFile(filename)), eol));
+            writer.Parse();
+            writer.WriteData(updatedData);
+            string? updatedContent = writer.Result;
+            string expectedContent = ReplaceEol(File.ReadAllText(TestUtil.GetLocalFile(expectedFilename)), eol);
 
             Assert.Equal(expectedContent, updatedContent);
+        }
+
+        /// <summary>Tests reading a real file.</summary>
+        [Theory]
+        [InlineData("read-test-simple.ini", "final_section.complete", "yes")]
+        public async void IniReadFileTest(string filename, string propertyPath, string expectedValue)
+        {
+            Ini ini = new();
+            await ini.ReadFile(TestUtil.GetLocalFile(filename));
+
+            string? lastValue = ini.GetValue(propertyPath);
+
+            // The value should have been read as expected.
+            Assert.Equal(expectedValue, lastValue);
+        }
+
+        /// <summary>Tests reading a non-existent file.</summary>
+        [Fact]
+        public async void IniReadFileNotExistsTest()
+        {
+            Ini ini = new();
+            await ini.ReadFile("not-exist" + Environment.TickCount);
+
+            Dictionary<string,string> data = ini.ReadData();
+
+            // An empty set of properties.
+            Assert.Empty(data);
+        }
+
+        private async Task<Ini> ReadTestFile(string path)
+        {
+            Ini ini = new();
+            await ini.ReadFile(path);
+
+            // Ensure something was loaded
+            Dictionary<string,string> data = ini.ReadData();
+            Assert.NotEmpty(data);
+
+            return ini;
+        }
+
+        /// <summary>Tests writing to a file.</summary>
+        [Fact]
+        public async void IniWriteFileTest()
+        {
+            Ini ini = await this.ReadTestFile(TestUtil.GetLocalFile("read-test-simple.ini"));
+
+            // Update something, and write it
+            ini.SetValue("written_section.written_value", "it worked");
+            string tempFile = Path.GetTempFileName();
+
+            try
+            {
+                await ini.WriteFile(tempFile);
+
+                string[] writtenContent = await File.ReadAllLinesAsync(tempFile);
+
+                // File should contain the new value
+                Assert.Contains("written_value=it worked", writtenContent);
+            }
+            finally
+            {
+                if (File.Exists(tempFile))
+                {
+                    File.Delete(tempFile);
+                }
+            }
         }
     }
 }
