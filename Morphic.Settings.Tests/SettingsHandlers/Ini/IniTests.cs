@@ -35,13 +35,13 @@
 
             Dictionary<string,string> expected = new Dictionary<string, string>();
 
-            Regex getExpected = new Regex("^#@ *{?(?<key>[^:]*)}?:{?(?<value>.*?)}?$");
+            Regex getExpected = new Regex("^[#;]@ *{?(?<key>[^:]*)}?:{?(?<value>.*?)}?$");
 
             // read-test.ini contains the expected data, on lines that start with '#@'.
             // Extract this json from the file.
             foreach (string line in File.ReadAllLines(iniFile))
             {
-                if (line.StartsWith("#@"))
+                if (line.StartsWith("#@") || line.StartsWith(";@"))
                 {
                     Match match = getExpected.Match(line);
                     expected[match.Groups["key"].Value] = match.Groups["value"].Value.Replace("\\n", eol);

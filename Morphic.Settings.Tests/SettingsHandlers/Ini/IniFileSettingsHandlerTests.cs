@@ -153,7 +153,7 @@ ignoreC=CC
 key1=value-UPDATED-OneParent
 key2=valueTwoParent
 keyT2=value-UPDATED-T2
-[[test3]]
+[test3]
 ignoreD=DD
 key1=value-UPDATED-OneChild
 key2=valueTwoChild
