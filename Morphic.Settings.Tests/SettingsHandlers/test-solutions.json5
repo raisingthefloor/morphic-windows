@@ -36,9 +36,13 @@
           "settingG": "test2.key1",
           "settingH": "test2.key2",
           "settingI": "test2.keyT2",
-          "settingJ": "test2.test3.key1",
-          "settingK": "test2.test3.key2",
-          "settingL": "test2.test3.keyT3"
+          // nested sections unsupported
+          // "settingJ": "test2.test3.key1",
+          // "settingK": "test2.test3.key2",
+          // "settingL": "test2.test3.keyT3"
+           "settingJ": "test3.key1",
+           "settingK": "test3.key2",
+           "settingL": "test3.keyT3"
         }
       }
     ]

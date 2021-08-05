@@ -42,7 +42,7 @@
         /// The current theme file used by the OS. This will be used as a base to create a new theme file, and currently
         /// applied settings will be added to it.</param>
         /// <param name="saveAs">The file to write the saved theme to.</param>
-        private void SaveCurrentTheme(string currentThemeFile, string saveAs)
+        private async Task SaveCurrentTheme(string currentThemeFile, string saveAs)
         {
             this.logger.LogInformation($"Saving current theme, using {currentThemeFile}.");
 
@@ -52,8 +52,8 @@
             try
             {
                 // Read the .theme file that's currently being used.
-                IniFileReader themeReader = new IniFileReader();
-                themeReader.SetFile(currentThemeFile);
+                Ini themeReader = new();
+                await themeReader.ReadFile(currentThemeFile);
                 themeData = themeReader.ReadData();
                 isValid = themeData.ContainsKey("MasterThemeSelector.MTSM");
             }
@@ -69,7 +69,7 @@
                 if (currentThemeFile != defaultTheme)
                 {
                     // OBSERVATION: this code is re-entrant; also note that if the aero.theme file is corrupt...this might reenter infinitely until the stack was full
-                    this.SaveCurrentTheme(defaultTheme, saveAs);
+                    await this.SaveCurrentTheme(defaultTheme, saveAs);
                 }
                 return;
             }
@@ -122,10 +122,10 @@
                 Directory.CreateDirectory(saveAsPath);
             }
 
-            IniFileWriter writer = new IniFileWriter();
-            writer.SetFile(currentThemeFile);
-            writer.Write(themeData!);
-            writer.SaveAs(saveAs);
+            Ini writer = new();
+            await writer.ReadFile(currentThemeFile);
+            writer.WriteData(themeData!);
+            await writer.WriteFile(saveAs);
 
             // Make windows use this theme file when restoring high-contrast.
             using IRegistryKey highContrastKey =
@@ -165,7 +165,7 @@
                     // Save the current theme, otherwise windows will use the last saved theme when restoring the contrast
                     // mode.
                     ThemeSettingGroup settingGroup = (ThemeSettingGroup)setting.SettingGroup;
-                    this.SaveCurrentTheme(settingGroup.CurrentTheme, settingGroup.SavedTheme);
+                    await this.SaveCurrentTheme(settingGroup.CurrentTheme, settingGroup.SavedTheme);
                 }
 
                 var setHighContrastModeIsOnResult = Morphic.Windows.Native.Display.DisplayUtils.SetHighContrastModeIsOn(newOnState);
