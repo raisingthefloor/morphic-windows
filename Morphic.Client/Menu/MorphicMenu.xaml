@@ -12,6 +12,11 @@
     <menu:MorphicMenuItem Header="Show MorphicBar" x:Name="ShowBar" Click="ShowBarClick" />
     <menu:MorphicMenuItem Header="Hide MorphicBar" x:Name="HideBar" Click="HideBarClick" />
 
+    <Separator/>
+
+    <menu:MorphicMenuItem Header="Sign out of Morphic" x:Name="LogoutItem" Click="Logout" />
+    <menu:MorphicMenuItem Header="Sign into Morphic..." x:Name="LoginItem" Click="Login" />
+
     <Separator x:Name="ChangeMorphicBarSeparator"/>
     <MenuItem Header="Change MorphicBar" x:Name="ChangeMorphicBar">
         <MenuItem Header="Basic MorphicBar" x:Name="SelectBasicMorphicBar" Click="SelectBasicMorphicBarClick" />
@@ -23,15 +28,11 @@
     <menu:MorphicMenuItem x:Name="ChangeSetupMenuItem" Header="Apply a Saved Setup..." Dialog="dialogs:TravelWindow" DialogAction="CopyFromCloud"/>
     <menu:MorphicMenuItem x:Name="SaveMySetupMenuItem" Header="Save Current Setup as..." Dialog="dialogs:TravelWindow" DialogAction="CopyToCloud"/>
     <menu:MorphicMenuItem x:Name="RestoreSettingsFromBackupMenuItem" Header="_Restore settings from backup" Dialog="dialogs:RestoreWindow" Visibility="Collapsed"/>
+    <menu:MorphicMenuItem Header="How to copy setups between computers..." Click="HowToCopySetupsClicked" Open="https://morphic.org/xfersetups" />
 
     <Separator x:Name="CloudSettingsSeparator" />
-    <menu:MorphicMenuItem Header="Sign out of Morphic" x:Name="LogoutItem" Click="Logout" />
-    <menu:MorphicMenuItem Header="Sign into Morphic..." x:Name="LoginItem" Click="Login" />
-
-    <Separator/>
 
     <menu:MorphicMenuItem Header="_Explore everything Morphic can do..." Click="ExploreMorphicClicked" Open="https://morphic.org/exploremorphic" />
-    <menu:MorphicMenuItem Header="How to copy setups between computers..." Click="HowToCopySetupsClicked" Open="https://morphic.org/xfersetups" />
     <menu:MorphicMenuItem Header="Quick Morphic _demo videos..." Click="QuickDemoVideosClicked" Open="https://morphic.org/demos" />
 
     <Separator/>
@@ -66,6 +67,7 @@
     <!--<menu:MorphicMenuItem Header="_Hide QuickHelp (except with Alt key)" IsCheckable="True" IsChecked="{Binding App.AppOptions.HideQuickHelp}" />-->
     <menu:MorphicMenuItem Header="_Automatically start Morphic" x:Name="AutorunAfterLoginItem" Click="AutorunAfterLoginClicked" IsCheckable="True" IsChecked="{Binding App.AppOptions.AutoRun}" />
     <menu:MorphicMenuItem Header="_Show Morphic Bar at start" x:Name="ShowMorphicBarAfterLoginItem" Click="ShowMorphicBarAfterLoginClicked" IsCheckable="True" IsChecked="{Binding App.AppOptions.AutoShow}" />
+    <menu:MorphicMenuItem Header="Problems? Contact us..." Click="ContactUsClicked" Open="https://morphic.org/contact-us" />
     <menu:MorphicMenuItem Header="_About Morphic..." Click="AboutMorphicClicked" Dialog="dialogs:AboutWindow" />
     <menu:MorphicMenuItem Header="_Quit Morphic" Click="QuitClick"/>
 </ContextMenu>
