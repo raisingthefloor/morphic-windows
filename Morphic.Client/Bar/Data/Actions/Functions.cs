@@ -24,7 +24,7 @@ namespace Morphic.Client.Bar.Data.Actions
     // ReSharper disable once UnusedType.Global - accessed via reflection.
     public class Functions
     {
-        private readonly static SemaphoreSlim _captureTextSemaphore = new SemaphoreSlim(1, 1);
+        private readonly static SemaphoreSlim s_captureTextSemaphore = new SemaphoreSlim(1, 1);
 
         [InternalFunction("snip")]
         public static async Task<IMorphicResult> ScreenSnipAsync(FunctionArgs args)
@@ -54,12 +54,19 @@ namespace Morphic.Client.Bar.Data.Actions
                 // Give enough time for the windows to disappear
                 await Task.Delay(500);
 
-                // Hold down the windows key while pressing shift + s
-                const uint windowsKey = 0x5b; // VK_LWIN
-                Keyboard.PressKey(windowsKey, true);
-                System.Windows.Forms.SendKeys.SendWait("+s");
-                Keyboard.PressKey(windowsKey, false);
+                //// method 1: hold down the windows key while pressing shift + s
+                //// NOTE: this method does not seem to work when we have uiAccess set to true in our manifest (oddly)
+                //const uint windowsKey = 0x5b; // VK_LWIN
+                //Keyboard.PressKey(windowsKey, true);
+                //System.Windows.Forms.SendKeys.SendWait("+s");
+                //Keyboard.PressKey(windowsKey, false);
 
+                // method 2: open up the special windows URI of ms-screenclip:
+                var openPath = "ms-screenclip:";
+                Process.Start(new ProcessStartInfo(openPath)
+                {
+                    UseShellExecute = true
+                });
             }
             finally
             {
@@ -183,7 +190,7 @@ namespace Morphic.Client.Bar.Data.Actions
                         TextPatternRange[]? textRangeCollection = null;
                         //
                         // capture (or wait on) our "capture text" semaphore; we'll release this in the finally block
-                        await _captureTextSemaphore.WaitAsync();
+                        await s_captureTextSemaphore.WaitAsync();
                         //
                         try
                         {
@@ -213,7 +220,7 @@ namespace Morphic.Client.Bar.Data.Actions
                         }
                         finally
                         {
-                            _captureTextSemaphore.Release();
+                            s_captureTextSemaphore.Release();
                         }
                         //
                         // if we just captured a text range collection (i.e. were able to copy the current selection), convert that capture into a string now
@@ -253,7 +260,7 @@ namespace Morphic.Client.Bar.Data.Actions
                         if (captureTextViaAutomationSucceeded == false)
                         {
                             // capture (or wait on) our "capture text" semaphore; we'll release this in the finally block
-                            await _captureTextSemaphore.WaitAsync();
+                            await s_captureTextSemaphore.WaitAsync();
                             //
                             try
                             {
@@ -405,7 +412,7 @@ namespace Morphic.Client.Bar.Data.Actions
                             }
                             finally
                             {
-                                _captureTextSemaphore.Release();
+                                s_captureTextSemaphore.Release();
                             }
                         }
                     }
@@ -424,7 +431,13 @@ namespace Morphic.Client.Bar.Data.Actions
                             {
                                 App.Current.Logger.LogDebug("ReadAloud: Saying selected text.");
 
-                                await TextToSpeechHelper.Instance.Say(selectedText);
+                                var sayResult = await TextToSpeechHelper.Instance.Say(selectedText);
+                                if (sayResult.IsError == true)
+                                {
+                                    App.Current.Logger.LogError("ReadAloud: Error saying selected text.");
+
+                                    return IMorphicResult.ErrorResult;
+                                }
 
                                 return IMorphicResult.SuccessResult;
                             }
@@ -637,6 +650,148 @@ namespace Morphic.Client.Bar.Data.Actions
             return IMorphicResult<GetRemovableDisksAndDrivesResult>.SuccessResult(result);
         }
 
+        internal async static Task<IMorphicResult<bool>> GetDarkModeStateAsync()
+        {
+            var osVersion = Morphic.Windows.Native.OsVersion.OsVersion.GetWindows10Version();
+            if (osVersion == Windows.Native.OsVersion.Windows10Version.v1809)
+            {
+                // Windows 10 v1809
+
+                // NOTE: this is hard-coded, as a patch, because the solutions registry does not yet understand how to capture/apply settings across incompatible handlers
+                //       [and trying to call the Windows 10 v1903+ handlers for apps/system "light theme" will result in a memory access exception under v1809]
+                //       [also: only "AppsUseLightTheme" (and not "SystemUsesLightTheme") existed properly under Windows 10 v1809]
+
+                var openPersonalizeKeyResult = Morphic.Windows.Native.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize", true);
+                if (openPersonalizeKeyResult.IsError == true)
+                {
+                    return IMorphicResult<bool>.ErrorResult();
+                }
+                var personalizeKey = openPersonalizeKeyResult.Value!;
+
+                // get the current setting
+                var getAppsUseLightThemeResult = personalizeKey.GetValue<uint>("AppsUseLightTheme");
+                if (getAppsUseLightThemeResult.IsError == true)
+                {
+                    return IMorphicResult<bool>.ErrorResult();
+                }
+                var appsUseLightThemeAsUInt32 = getAppsUseLightThemeResult.Value!;
+                var appsUseLightThemeAsBool = (appsUseLightThemeAsUInt32 != 0) ? true : false;
+
+                // dark theme state is the inverse of AppsUseLightTheme
+                var darkThemeState = !appsUseLightThemeAsBool;
+
+                return IMorphicResult<bool>.SuccessResult(darkThemeState);
+            }
+            else if (osVersion == null)
+            {
+                // error
+                return IMorphicResult<bool>.ErrorResult();
+            }
+            else
+            {
+                // Windows 10 v1903+
+
+                // get system dark/light theme
+                Setting systemThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(SettingId.LightThemeSystem);
+                var getSystemThemeValueResult = await systemThemeSetting.GetValueAsync();
+                if (getSystemThemeValueResult.IsError == true)
+                {
+                    return IMorphicResult<bool>.ErrorResult();
+                }
+                var lightThemeSystemAsObject = getSystemThemeValueResult.Value!;
+                var lightThemeSystemAsBool = (bool)lightThemeSystemAsObject;
+
+                // set apps dark/light theme
+                Setting appsThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(SettingId.LightThemeApps);
+                var getAppsThemeValueResult = await appsThemeSetting.GetValueAsync();
+                if (getAppsThemeValueResult.IsError == true)
+                {
+                    return IMorphicResult<bool>.ErrorResult();
+                }
+                var lightThemeAppsAsObject = getAppsThemeValueResult.Value!;
+                var lightThemeAppsAsBool = (bool)lightThemeSystemAsObject;
+
+                // if either apps or system theme is set to "not light", then return true 
+                var darkModeIsEnabled = ((lightThemeSystemAsBool == false) || (lightThemeAppsAsBool == false));
+                return IMorphicResult<bool>.SuccessResult(darkModeIsEnabled);
+            }
+        }
+
+        internal async static Task<IMorphicResult> SetDarkModeStateAsync(bool state)
+        {
+            var osVersion = Morphic.Windows.Native.OsVersion.OsVersion.GetWindows10Version();
+            if (osVersion == Windows.Native.OsVersion.Windows10Version.v1809)
+            {
+                // Windows 10 v1809
+
+                // NOTE: this is hard-coded, as a patch, because the solutions registry does not yet understand how to capture/apply settings across incompatible handlers
+                //       [and trying to call the Windows 10 v1903+ handlers for apps/system "light theme" will result in a memory access exception under v1809]
+                //       [also: only "AppsUseLightTheme" (and not "SystemUsesLightTheme") existed properly under Windows 10 v1809]
+
+                var openPersonalizeKeyResult = Morphic.Windows.Native.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize", true);
+                if (openPersonalizeKeyResult.IsError == true)
+                {
+                    return IMorphicResult.ErrorResult;
+                }
+                var personalizeKey = openPersonalizeKeyResult.Value!;
+
+                // set apps dark/light theme
+                //
+                uint newAppsUseLightThemeAsUInt32 = state ? (uint)0 : (uint)1; // NOTE: these are inverted (because we are setting "light state" using the inverse of the "dark state" parameter
+                //
+                // set the setting to the inverted state
+                var setAppsUseLightThemeResult = personalizeKey.SetValue<uint>("AppsUseLightTheme", newAppsUseLightThemeAsUInt32);
+                if (setAppsUseLightThemeResult.IsError == true)
+                {
+                    return IMorphicResult.ErrorResult;
+                }
+
+                // see: https://docs.microsoft.com/en-us/windows/win32/winmsg/wm-wininichange
+                var pointerToImmersiveColorSetString = Marshal.StringToHGlobalUni("ImmersiveColorSet");
+                try
+                {
+                    // notify all windows that we have changed a setting in the "win ini" settings
+                    _ = PInvoke.User32.SendMessage(PInvoke.User32.HWND_BROADCAST, PInvoke.User32.WindowMessage.WM_WININICHANGE, IntPtr.Zero, pointerToImmersiveColorSetString);
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(pointerToImmersiveColorSetString);
+                }
+            }
+            else if (osVersion == null)
+            {
+                // error
+                return IMorphicResult.ErrorResult;
+            }
+            else
+            {
+                // Windows 10 v1903+
+
+                /*
+                 * NOTE: in addition to the SPI implementation (in code, below), we could also turn on/off the dark theme (via powershell...or possibly via direct registry access); here are the corresponding PowerShell commands
+                 * NOTE: we use registry access to get/set dark mode under Windows 10 <=v1809 (see code above); the "system dark theme" was introduced in Windows 10 v1903
+                 * 
+                 * SWITCH TO LIGHT MODE:
+                 * New-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name SystemUsesLightTheme -Value 1 -Type Dword -Force
+                 * New-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name AppsUseLightTheme -Value 1 -Type Dword -Force
+                 * 
+                 * SWITCH TO DARK MODE:
+                 * New-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name SystemUsesLightTheme -Value 0 -Type Dword -Force
+                 * New-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name AppsUseLightTheme -Value 0 -Type Dword -Force
+                */
+
+                // set system dark/light theme
+                Setting systemThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(SettingId.LightThemeSystem);
+                await systemThemeSetting.SetValueAsync(!state);
+
+                // set apps dark/light theme
+                Setting appsThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(SettingId.LightThemeApps);
+                await appsThemeSetting.SetValueAsync(!state);
+            }
+
+            return IMorphicResult.SuccessResult;
+        }
+
         [InternalFunction("darkMode")]
         public static async Task<IMorphicResult> DarkModeAsync(FunctionArgs args)
         {
@@ -656,25 +811,12 @@ namespace Morphic.Client.Bar.Data.Actions
                 on = false;
             }
 
-            /*
-             * NOTE: in addition to the SPI implementation (in code, below), we could also turn on/off the dark theme (via powershell...or possibly via direct registry access); here are the corresponding PowerShell commands
-             * 
-             * SWITCH TO LIGHT MODE:
-             * New-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name SystemUsesLightTheme -Value 1 -Type Dword -Force
-             * New-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name AppsUseLightTheme -Value 1 -Type Dword -Force
-             * 
-             * SWITCH TO DARK MODE:
-             * New-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name SystemUsesLightTheme -Value 0 -Type Dword -Force
-             * New-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name AppsUseLightTheme -Value 0 -Type Dword -Force
-            */
+            var setDarkModeStateResult = await Functions.SetDarkModeStateAsync(on);
+            if (setDarkModeStateResult.IsError == true)
+            {
+                return IMorphicResult.ErrorResult;
+            }
 
-            // set system dark/light theme
-            Setting systemThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(SettingId.LightThemeSystem);
-            await systemThemeSetting.SetValueAsync(!on);
-
-            // set apps dark/light theme
-            Setting appsThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(SettingId.LightThemeApps);
-            await appsThemeSetting.SetValueAsync(!on);
             return IMorphicResult.SuccessResult;
         }
 

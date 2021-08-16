@@ -165,10 +165,40 @@
                     settingsUrlAsPath = "ms-settings:easeofaccess-cursorandpointersize";
                     break;
                 case Windows10Version.v2004:
-                case Windows10Version.v20H2:
-                case Windows10Version.vFuture:
-                    // Windows 10 2004, 20H2 (and assumed for the future)
+                    // Windows 10 2004
                     settingsUrlAsPath = "ms-settings:easeofaccess-MousePointer";
+                    break;
+                case Windows10Version.v20H2:
+                    // Windows 10 20H2
+                    // NOTE: Microsoft changed the URL for this link somwhere between 10.0.19042.986 and 10.0.19042.1052;
+                    //       if we get any bug reports that this link doesn't work with v20H2, be sure to get the "winver" full version #...so we can adjust the revision # below (to something between 986 and 1051) as appropriate
+                    uint? updateBuildRevision;
+                    var getUpdateBuildRevisionResult = Morphic.Windows.Native.OsVersion.OsVersion.GetUpdateBuildRevision();
+                    if (getUpdateBuildRevisionResult.IsSuccess == true)
+                    {
+                        updateBuildRevision = getUpdateBuildRevisionResult.Value!;
+                    }
+                    else
+                    {
+                        // NOTE: if we could not get the update build revision, we fail gracefully by assuming that the user's computer is updated to the OS version's most recent updates
+                        updateBuildRevision = null;
+                    }
+
+                    if (updateBuildRevision.HasValue == true && updateBuildRevision.Value < 1052)
+                    {
+                        // NOTE: this link was verified in Windows 10 19042.985
+                        settingsUrlAsPath = "ms-settings:easeofaccess-MousePointer";
+                    }
+                    else
+                    {
+                        // NOTE: this link was verified in Windows 10 19042.1052
+                        settingsUrlAsPath = "ms-settings:easeofaccess-mousepointer";
+                    }
+                    break;
+                case Windows10Version.v21H1:
+                case Windows10Version.vFuture:
+                    // Windows 10 21H1 (and assumed for the future)
+                    settingsUrlAsPath = "ms-settings:easeofaccess-mousepointer";
                     break;
                 case null: // not a valid version
                 default:
@@ -277,6 +307,20 @@
             var applyPreferencesAfterLogin = ConfigurableFeatures.CloudSettingsTransferIsEnabled;
             var args = new Dictionary<string, object?>() { { "applyPreferencesAfterLogin", applyPreferencesAfterLogin } };
             await App.Current.Dialogs.OpenDialogAsync<LoginWindow>(args);
+        }
+
+        private async void CustomizeMorphicbarClicked(object sender, RoutedEventArgs e)
+        {
+            var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
+            await App.Current.Countly_RecordEventAsync("customizeMorphicbar", 1, segmentation);
+
+            // NOTE: when we make "navigate to URL" a custom action (rather than something linked in the menu itself), then we should navigate to the appsettings value for the key"BarEditorWebAppUrlAsString"
+        }
+
+        private async void ContactUsClicked(object sender, RoutedEventArgs e)
+        {
+            var segmentation = CreateMenuOpenedSourceSegmentation(_menuOpenedSource);
+            await App.Current.Countly_RecordEventAsync("contactUs", 1, segmentation);
         }
 
         private async void ExploreMorphicClicked(object sender, RoutedEventArgs e)

@@ -23,6 +23,8 @@
 
 using Morphic.Core;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 
 namespace Morphic.Windows.Native.Process
@@ -66,6 +68,43 @@ namespace Morphic.Windows.Native.Process
                         return IMorphicResult<string, GetPathToExecutableForFileError>.ErrorResult(GetPathToExecutableForFileError.UnknownShellExecuteErrorCode);
                 }
             }
+        }
+
+        public static IEnumerable<IntPtr> GetAllWindowHandlesForProcess(int processId)
+        {
+            var handles = new List<IntPtr>();
+
+            var threadsForProcess = System.Diagnostics.Process.GetProcessById(processId).Threads;
+            foreach (var threadAsObject in threadsForProcess)
+            {
+                ProcessThread? thread = threadAsObject as ProcessThread;
+                if (thread != null)
+                {
+                    // NOTE: as we control the enumeration callback and it always returns true, we do not capture or analyze any errors returned by this function call;
+                    // //    a 'false' response here would theoretically just mean that there were no windows to enumerate (in which case we'd correctly return an empty list)
+                    _ = WindowsApi.EnumThreadWindows(thread.Id, (hWnd, lParam) => { handles.Add(hWnd); return true; }, IntPtr.Zero);
+                }
+            }
+
+            return handles;
+        }
+
+        // NOTE: This function returns IMorphicResult.ErrorResult even if some windows were closed; we may want to add granularity (i.e. "CompletelyFailed" vs "PartiallyFailed" vs "Success") in the future
+        public static IMorphicResult CloseAllWindowsForProcess(int processId)
+        {
+            var success = true;
+
+            var windowHandlesForProcess = GetAllWindowHandlesForProcess(processId);
+            foreach (var handle in windowHandlesForProcess)
+            {
+                var result = WindowsApi.SendNotifyMessage(handle, WindowsApi.WindowMessages.WM_CLOSE, UIntPtr.Zero, IntPtr.Zero);
+                if (result != false)
+                {
+                    success = false;
+                }
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
         }
     }
 }

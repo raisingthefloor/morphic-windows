@@ -11,12 +11,16 @@
     using Microsoft.Extensions.Logging;
     using Microsoft.Win32;
     using SolutionsRegistry;
+    using System.Threading;
+    using System.Diagnostics;
 
     [SrService]
     public class ThemeSettingsHandler : FixedSettingsHandler
     {
         private readonly ILogger<ThemeSettingsHandler> logger;
         private readonly IRegistry registry;
+
+        private readonly static SemaphoreSlim s_setHighContrastSemaphore = new SemaphoreSlim(1, 1);
 
         public ThemeSettingsHandler(ILogger<ThemeSettingsHandler> logger, IRegistry registry)
         {
@@ -38,7 +42,7 @@
         /// The current theme file used by the OS. This will be used as a base to create a new theme file, and currently
         /// applied settings will be added to it.</param>
         /// <param name="saveAs">The file to write the saved theme to.</param>
-        private void SaveCurrentTheme(string currentThemeFile, string saveAs)
+        private async Task SaveCurrentTheme(string currentThemeFile, string saveAs)
         {
             this.logger.LogInformation($"Saving current theme, using {currentThemeFile}.");
 
@@ -48,8 +52,8 @@
             try
             {
                 // Read the .theme file that's currently being used.
-                IniFileReader themeReader = new IniFileReader();
-                themeReader.SetFile(currentThemeFile);
+                Ini themeReader = new();
+                await themeReader.ReadFile(currentThemeFile);
                 themeData = themeReader.ReadData();
                 isValid = themeData.ContainsKey("MasterThemeSelector.MTSM");
             }
@@ -64,7 +68,8 @@
                     "resources\\Themes\\aero.theme");
                 if (currentThemeFile != defaultTheme)
                 {
-                    this.SaveCurrentTheme(defaultTheme, saveAs);
+                    // OBSERVATION: this code is re-entrant; also note that if the aero.theme file is corrupt...this might reenter infinitely until the stack was full
+                    await this.SaveCurrentTheme(defaultTheme, saveAs);
                 }
                 return;
             }
@@ -117,10 +122,10 @@
                 Directory.CreateDirectory(saveAsPath);
             }
 
-            IniFileWriter writer = new IniFileWriter();
-            writer.SetFile(currentThemeFile);
-            writer.Write(themeData!);
-            writer.SaveAs(saveAs);
+            Ini writer = new();
+            await writer.ReadFile(currentThemeFile);
+            writer.WriteData(themeData!);
+            await writer.WriteFile(saveAs);
 
             // Make windows use this theme file when restoring high-contrast.
             using IRegistryKey highContrastKey =
@@ -129,39 +134,67 @@
         }
 
         [Setter("highContrastEnabled")]
-        public Task<bool> SetHighContrast(Setting setting, object? newValue)
+        public async Task<bool> SetHighContrast(Setting setting, object? newValue)
         {
-            Spi.HighContrastOptions options = Spi.Instance.GetHighContrast();
-
-            bool enable = newValue as bool? == true;
-            bool currentlyEnabled = (options & Spi.HighContrastOptions.HCF_HIGHCONTRASTON) != 0;
-            if (!currentlyEnabled)
+            // capture (or wait on) our "set high contrast" semaphore; we'll release this in the finally block
+            await s_setHighContrastSemaphore.WaitAsync();
+            try
             {
-                // Save the current theme, otherwise windows will use the last saved theme when restoring the contrast
-                // mode.
-                ThemeSettingGroup settingGroup = (ThemeSettingGroup)setting.SettingGroup;
-                this.SaveCurrentTheme(settingGroup.CurrentTheme, settingGroup.SavedTheme);
-            }
+                var getHighContrastModeIsOnResult = Morphic.Windows.Native.Display.DisplayUtils.GetHighContrastModeIsOn();
+                if (getHighContrastModeIsOnResult.IsError == true)
+                {
+                    Debug.Assert(false, "ERROR: Could not determine if high contrast mode is on or not.");
+                    return false;
+                }
+                var highContrastModeIsOn = getHighContrastModeIsOnResult.Value!;
 
-            if (enable)
+                bool newOnState;
+                var newValueAsBool = newValue as bool?;
+                if (newValueAsBool.HasValue == true)
+                {
+                    newOnState = newValueAsBool.Value;
+                }
+                else
+                {
+                    // default to true (if newValue was null)
+                    newOnState = true;
+                }
+				
+                if (!highContrastModeIsOn)
+                {
+                    // Save the current theme, otherwise windows will use the last saved theme when restoring the contrast
+                    // mode.
+                    ThemeSettingGroup settingGroup = (ThemeSettingGroup)setting.SettingGroup;
+                    await this.SaveCurrentTheme(settingGroup.CurrentTheme, settingGroup.SavedTheme);
+                }
+
+                var setHighContrastModeIsOnResult = Morphic.Windows.Native.Display.DisplayUtils.SetHighContrastModeIsOn(newOnState);
+                if (setHighContrastModeIsOnResult.IsError == true)
+                {
+                    Debug.Assert(false, "ERROR: Could not turn high contrast mode on/off.");
+                    return false;
+                }
+
+                return true;
+            }
+            finally
             {
-                options |= Spi.HighContrastOptions.HCF_HIGHCONTRASTON;
+                s_setHighContrastSemaphore.Release();
             }
-            else
-            {
-                options &= ~Spi.HighContrastOptions.HCF_HIGHCONTRASTON;
-            }
-
-            Spi.Instance.SetHighContrast(options);
-
-            return Task.FromResult(true);
         }
 
         [Getter("highContrastEnabled")]
         public async Task<object?> GetHighContrast(Setting setting)
         {
-            Spi.HighContrastOptions options = Spi.Instance.GetHighContrast();
-            return (options & Spi.HighContrastOptions.HCF_HIGHCONTRASTON) != 0;
+            var getHighContrastModeIsOnResult = Morphic.Windows.Native.Display.DisplayUtils.GetHighContrastModeIsOn();
+            if (getHighContrastModeIsOnResult.IsError == true)
+            {
+                Debug.Assert(false, "ERROR: Could not determine if high contrast mode is on or not.");
+                return null;
+            }
+            var highContrastModeIsOn = getHighContrastModeIsOnResult.Value!;
+
+            return highContrastModeIsOn;
         }
     }
 }

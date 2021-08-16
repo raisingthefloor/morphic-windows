@@ -664,7 +664,17 @@ namespace Morphic.Client
             var mqttUsername = section["AppName"];
             var mqttAnonymousPassword = section["AppKey"];
 
-            var telemetryClient = new MorphicTelemetryClient(mqttHostname, mqttClientId, mqttUsername, mqttAnonymousPassword);
+            var mqttConfig = new MorphicTelemetryClient.WebsocketTelemetryClientConfig()
+            {
+                 Hostname = mqttHostname,
+                 Port = 443,
+                 Path = "/ws",
+                 ClientId = mqttClientId,
+                 Username = mqttUsername,
+                 Password = mqttAnonymousPassword,
+                 UseTls = true
+            };
+            var telemetryClient = new MorphicTelemetryClient(mqttConfig);
             telemetryClient.SiteId = telemetrySiteId;
             _telemetryClient = telemetryClient;
 
@@ -708,7 +718,26 @@ namespace Morphic.Client
 
             Console.WriteLine(ex);
 
-            MessageBox.Show($"Morphic ran into a problem:\n\n{e.Exception.Message}\n\nFurther information:\n{e.Exception}", "Morphic", MessageBoxButton.OK, MessageBoxImage.Warning);
+            // in case of unhandled exception, attempt a graceful shutdown
+            //
+            // uncomment the following line (if it's useful) for (and only during) debugging
+//            MessageBox.Show($"Morphic ran into a problem:\n\n{e.Exception.Message}\n\nFurther information:\n{e.Exception}", "Morphic", MessageBoxButton.OK, MessageBoxImage.Warning);
+            //
+            try
+            {
+                this.BarManager.CloseBar();
+            }
+            catch { }
+            //
+            try 
+            {
+                this.Shutdown();
+            }
+            catch 
+            { 
+                // if we were unable to shutdown the application, hard-exit instead
+                System.Environment.Exit(1);
+            }
 
             // This prevents the exception from crashing the application
             e.Handled = true;
@@ -740,6 +769,7 @@ namespace Morphic.Client
                 Windows10Version.v1909,
                 Windows10Version.v2004,
                 Windows10Version.v20H2,
+                Windows10Version.v21H1,
                 Windows10Version.vFuture
             };
         private static bool IsOsCompatibleWithMorphic()
@@ -931,10 +961,15 @@ namespace Morphic.Client
             //
             // dark mode
             // NOTE: due to the interrelation between high contrast and dark mode, we reset dark mode AFTER resetting high contrast mode
-            if (await this.MorphicSession.GetSetting<bool>(SettingId.LightThemeSystem) != !darkModeEnabledDefault)
+            var darkModeIsEnabledResult = await Morphic.Client.Bar.Data.Actions.Functions.GetDarkModeStateAsync();
+            if (darkModeIsEnabledResult.IsSuccess == true)
             {
-                await this.MorphicSession.SetSetting(SettingId.LightThemeSystem, !darkModeEnabledDefault);
-                await this.MorphicSession.SetSetting(SettingId.LightThemeApps, !darkModeEnabledDefault);
+                var darkModeIsEnabled = darkModeIsEnabledResult.Value!;
+
+                if (darkModeIsEnabled != darkModeEnabledDefault)
+                {
+                    await Morphic.Client.Bar.Data.Actions.Functions.SetDarkModeStateAsync(darkModeEnabledDefault);
+                }
             }
         }
 

@@ -36,9 +36,29 @@
                 }
                 else if (processes.Length > 0)
                 {
+                    // try to close each process naturally (by closing all of its windows) and then, if that didn't exit the process naturally, force-terminate the process
                     foreach (Process process in processes)
                     {
-                        process.Kill(true);
+                        int numberOfMillisecondsToWait;
+#if DEBUG
+                        // NOTE: in debug mode, we usually don't set the requestedExecutionLevel with uiAccess to asInvoker (in the application manifest, for example), unless we're specifically debugging this code
+                        //       [so we need to just shut down the process (without closing all windwos for the process) instead]
+                        numberOfMillisecondsToWait = 0;
+#else
+                        // NOTE: we ignore the success/failure of closing all windows for the process; this is a "reasonable effort" kind of function call
+                        // NOTE: a response of "true" means that all windows closed (or are closing), whereas "false" means that some windows didn't accept our close call; we may want to tweak the numberOfMillisecondsToWait based on this response
+                        _ = Windows.Native.Process.Process.CloseAllWindowsForProcess(process.Id);
+
+                        // give this process up to numberOfMillisecondsToWait milliseconds (in this case: 2 seconds) to exit before we intervene to terminate it
+                        // OBSERVATION: we may want to wait for all processes in parallel (if there are multiple processes) so that we don't wait 2 seconds TIMES the number of processes (i.e. so that we want 2 seconds maximum)
+                        numberOfMillisecondsToWait = 2000;
+#endif
+
+                        if (!process.WaitForExit(numberOfMillisecondsToWait))
+                        {
+                            // if the process doesn't exit after numberOfMillisecondsToWait, kill the process and all of its subchildren
+                            process.Kill(true);
+                        }
                     }
                 }
             }
