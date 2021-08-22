@@ -11,6 +11,30 @@ namespace Morphic.Integrations.Office
 {
     public class WordRibbon
     {
+        #region General Office functions
+
+        // NOTE: if we add more Word- or Office-related functionality, we should move this region to a separate class
+        public static bool IsOfficeInstalled()
+        {
+            var path = WordRibbon.GetPathToOfficeUserData();
+            return path != null;
+        }
+
+        private static string? GetPathToOfficeUserData()
+        {
+            var standardPathToWord = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Microsoft\Office");
+            if (System.IO.Directory.Exists(standardPathToWord) == true)
+            {
+                return standardPathToWord;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        #endregion General Office functions
+
         private const int WM_ACTIVATE = 0x6;
         [DllImport("user32.dll")]
         private static extern IntPtr SendMessage(IntPtr hWnd, int Msg, int wParam, IntPtr lParam);

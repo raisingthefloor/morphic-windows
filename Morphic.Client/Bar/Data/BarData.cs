@@ -300,7 +300,8 @@ namespace Morphic.Client.Bar.Data
                                                         { "essentials", essentialsWordRibbonButton }
                                                     };
                                                     //
-                                                    extraBarItemShouldBeAdded = true;
+                                                    // NOTE: we shouldonly show this item if Word is actually installed
+                                                    extraBarItemShouldBeAdded = Morphic.Integrations.Office.WordRibbon.IsOfficeInstalled();
                                                 }
                                                 break;
                                             default:
