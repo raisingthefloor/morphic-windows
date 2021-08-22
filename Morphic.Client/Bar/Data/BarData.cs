@@ -232,39 +232,76 @@ namespace Morphic.Client.Bar.Data
                                         switch (extraItemData.feature)
                                         {
                                             case "usbopeneject":
-                                                extraBarItem.Text = extraItemData.label ?? "USB Drives (All)";
-                                                //
-                                                var openAllUsbAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
-                                                openAllUsbAction.TelemetryEventName = "morphicBarExtraItem";
-                                                openAllUsbAction.FunctionName = "openAllUsbDrives";
-                                                var openButton = new BarMultiButton.ButtonInfo
                                                 {
-                                                    Text = "Open",
-                                                    Action = openAllUsbAction,
-                                                    TelemetryCategory = "morphicBarExtraItem",
-                                                    Tooltip = "Open All USB Drives",
-                                                    Value = "openallusb"
-                                                };
-                                                //
-                                                var ejectAllUsbAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
-                                                ejectAllUsbAction.TelemetryEventName = "morphicBarExtraItem";
-                                                ejectAllUsbAction.FunctionName = "ejectAllUsbDrives";
-                                                var ejectButton = new BarMultiButton.ButtonInfo
+                                                    extraBarItem.Text = extraItemData.label ?? "USB Drives (All)";
+                                                    //
+                                                    var openAllUsbAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
+                                                    openAllUsbAction.TelemetryEventName = "morphicBarExtraItem";
+                                                    openAllUsbAction.FunctionName = "openAllUsbDrives";
+                                                    var openButton = new BarMultiButton.ButtonInfo
+                                                    {
+                                                        Text = "Open",
+                                                        Action = openAllUsbAction,
+                                                        TelemetryCategory = "morphicBarExtraItem",
+                                                        Tooltip = "Open All USB Drives",
+                                                        Value = "openallusb"
+                                                    };
+                                                    //
+                                                    var ejectAllUsbAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
+                                                    ejectAllUsbAction.TelemetryEventName = "morphicBarExtraItem";
+                                                    ejectAllUsbAction.FunctionName = "ejectAllUsbDrives";
+                                                    var ejectButton = new BarMultiButton.ButtonInfo
+                                                    {
+                                                        Text = "Eject",
+                                                        Action = ejectAllUsbAction,
+                                                        TelemetryCategory = "morphicBarExtraItem",
+                                                        Tooltip = "Eject All USB Drives",
+                                                        Value = "ejectallusb"
+                                                    };
+                                                    //
+                                                    ((BarMultiButton)extraBarItem).Buttons = new Dictionary<string, BarMultiButton.ButtonInfo>
+                                                    {
+                                                        { "open", openButton },
+                                                        { "eject", ejectButton }
+                                                    };
+                                                    //
+                                                    extraBarItemShouldBeAdded = true;
+                                                }
+                                                break;
+                                            case "wordsimplify":
                                                 {
-                                                    Text = "Eject",
-                                                    Action = ejectAllUsbAction,
-                                                    TelemetryCategory = "morphicBarExtraItem",
-                                                    Tooltip = "Eject All USB Drives",
-                                                    Value = "ejectallusb"
-                                                };
-                                                //
-                                                ((BarMultiButton)extraBarItem).Buttons = new Dictionary<string, BarMultiButton.ButtonInfo>
-                                            {
-                                                { "open", openButton },
-                                                { "eject", ejectButton }
-                                            };
-                                                //
-                                                extraBarItemShouldBeAdded = true;
+                                                    extraBarItem.Text = extraItemData.label ?? "Word Simplify";
+                                                    //
+                                                    var basicWordRibbonAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
+                                                    basicWordRibbonAction.TelemetryEventName = "morphicBarExtraItem"; // basicWordRibbonToggle
+                                                    var basicWordRibbonButton = new BarMultiButton.ButtonInfo
+                                                    {
+                                                        Text = "Basic",
+                                                        Action = basicWordRibbonAction,
+                                                        TelemetryCategory = "morphicBarExtraItem",
+                                                        Tooltip = "Adds a new 'Basic Items' ribbon to Word|Gives you a new simpler ribbon with just the basic items on it.",
+                                                        Value = "basicwordribbon"
+                                                    };
+                                                    //
+                                                    var essentialsWordRibbonAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
+                                                    essentialsWordRibbonAction.TelemetryEventName = "morphicBarExtraItem"; // essentialsWordRibbonToggle
+                                                    var essentialsWordRibbonButton = new BarMultiButton.ButtonInfo
+                                                    {
+                                                        Text = "Essentials",
+                                                        Action = essentialsWordRibbonAction,
+                                                        TelemetryCategory = "morphicBarExtraItem",
+                                                        Tooltip = "Adds a new 'Essential Items' ribbon to Word|Gives you a new ribbon with essential items gathered from all other ribbons.",
+                                                        Value = "essentialswordribbon"
+                                                    };
+                                                    //
+                                                    ((BarMultiButton)extraBarItem).Buttons = new Dictionary<string, BarMultiButton.ButtonInfo>
+                                                    {
+                                                        { "basic", basicWordRibbonButton },
+                                                        { "essentials", essentialsWordRibbonButton }
+                                                    };
+                                                    //
+                                                    extraBarItemShouldBeAdded = true;
+                                                }
                                                 break;
                                             default:
                                                 extraBarItem.Text = extraItemData.label ?? "";
