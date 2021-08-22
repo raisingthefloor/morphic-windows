@@ -1,11 +1,35 @@
-﻿using System;
+﻿// Copyright 2020-2021 Raising the Floor - International
+//
+// Licensed under the New BSD license. You may not use this file except in
+// compliance with this License.
+//
+// You may obtain a copy of the License at
+// https://github.com/GPII/universal/blob/master/LICENSE.txt
+//
+// The R&D leading to these results received funding from the:
+// * Rehabilitation Services Administration, US Dept. of Education under 
+//   grant H421A150006 (APCP)
+// * National Institute on Disability, Independent Living, and 
+//   Rehabilitation Research (NIDILRR)
+// * Administration for Independent Living & Dept. of Education under grants 
+//   H133E080022 (RERC-IT) and H133E130028/90RE5003-01-00 (UIITA-RERC)
+// * European Union's Seventh Framework Programme (FP7/2007-2013) grant 
+//   agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
+// * William and Flora Hewlett Foundation
+// * Ontario Ministry of Research and Innovation
+// * Canadian Foundation for Innovation
+// * Adobe Foundation
+// * Consumer Electronics Association Foundation
+
+using Morphic.Core;
+using Microsoft.Office.Interop.Word;
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using System.Text;
 using System.Runtime.InteropServices;
-using Microsoft.Office.Interop.Word;
-using System.IO;
 using System.Xml;
-using System.Reflection;
 
 namespace Morphic.Integrations.Office
 {
@@ -16,24 +40,78 @@ namespace Morphic.Integrations.Office
         // NOTE: if we add more Word- or Office-related functionality, we should move this region to a separate class
         public static bool IsOfficeInstalled()
         {
-            var path = WordRibbon.GetPathToOfficeUserData();
-            return path != null;
+            var path = WordRibbon.GetPathToOfficeUserDataDirectory();
+            return System.IO.Directory.Exists(path);
         }
 
-        private static string? GetPathToOfficeUserData()
+        private static string GetPathToOfficeUserDataDirectory()
         {
-            var standardPathToWord = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Microsoft\Office");
-            if (System.IO.Directory.Exists(standardPathToWord) == true)
-            {
-                return standardPathToWord;
-            }
-            else
-            {
-                return null;
-            }
+            return System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Microsoft\Office");
         }
 
         #endregion General Office functions
+
+        private static string GetPathToWordRibbonFile()
+        {
+            return System.IO.Path.Combine(WordRibbon.GetPathToOfficeUserDataDirectory(), "Word.officeUI");
+        }
+
+        public static IMorphicResult<bool> IsBasicSimplifyRibbonEnabled()
+        {
+            return WordRibbon.IsRibbonEnabled("morphic.basics");
+        }
+
+        public static IMorphicResult<bool> IsEssentialsSimplifyRibbonEnabled()
+        {
+            return WordRibbon.IsRibbonEnabled("morphic.essentials");
+        }
+
+        private static IMorphicResult<bool> IsRibbonEnabled(string ribbonId)
+        {
+            var path = GetPathToWordRibbonFile();
+            if (System.IO.File.Exists(path) == false)
+            {
+                return new MorphicSuccess<bool>(false);
+            }
+
+            var xmlDocument = new XmlDocument();
+            try
+            {
+                xmlDocument.Load(path);
+            }
+            catch
+            {
+                return new MorphicError<bool>();
+            }
+
+            XmlNamespaceManager xmlNamespaceManager = new XmlNamespaceManager(xmlDocument.NameTable);
+            xmlNamespaceManager.AddNamespace("mso", "http://schemas.microsoft.com/office/2009/07/customui");
+
+            XmlNode msoTabsParentNode = xmlDocument.SelectSingleNode("mso:customUI/mso:ribbon/mso:tabs", xmlNamespaceManager);
+            if (msoTabsParentNode == null)
+            {
+                // parent tabs node doesn't exist, so the ribbon is not enabled
+                return new MorphicSuccess<bool>(false);
+            }
+
+            var msoTabNodes = xmlDocument.SelectNodes("mso:customUI/mso:ribbon/mso:tabs/mso:tab", xmlNamespaceManager);
+            if (msoTabNodes == null)
+            {
+                // child tab nodes don't exist, so the ribbon is not enabled
+                return new MorphicSuccess<bool>(false);
+            }
+
+            foreach (XmlNode? msoTab in msoTabNodes!)
+            {
+                if (msoTab?.Attributes["id"].Value == ribbonId)
+                {
+                    return new MorphicSuccess<bool>(true);
+                }
+            }
+
+            // if we did not find the tab in our list, return false
+            return new MorphicSuccess<bool>(false);
+        }
 
         private const int WM_ACTIVATE = 0x6;
         [DllImport("user32.dll")]

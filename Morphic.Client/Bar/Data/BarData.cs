@@ -274,22 +274,26 @@ namespace Morphic.Client.Bar.Data
                                                     //
                                                     var basicWordRibbonAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
                                                     basicWordRibbonAction.TelemetryEventName = "morphicBarExtraItem"; // basicWordRibbonToggle
+                                                    basicWordRibbonAction.FunctionName = "basicWordRibbon";
                                                     var basicWordRibbonButton = new BarMultiButton.ButtonInfo
                                                     {
                                                         Text = "Basic",
                                                         Action = basicWordRibbonAction,
                                                         TelemetryCategory = "morphicBarExtraItem",
+                                                        Toggle = true,
                                                         Tooltip = "Adds a new 'Basic Items' ribbon to Word|Gives you a new simpler ribbon with just the basic items on it.",
                                                         Value = "basicwordribbon"
                                                     };
                                                     //
                                                     var essentialsWordRibbonAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
                                                     essentialsWordRibbonAction.TelemetryEventName = "morphicBarExtraItem"; // essentialsWordRibbonToggle
+                                                    essentialsWordRibbonAction.FunctionName = "essentialsWordRibbon";
                                                     var essentialsWordRibbonButton = new BarMultiButton.ButtonInfo
                                                     {
                                                         Text = "Essentials",
                                                         Action = essentialsWordRibbonAction,
                                                         TelemetryCategory = "morphicBarExtraItem",
+                                                        Toggle = true,
                                                         Tooltip = "Adds a new 'Essential Items' ribbon to Word|Gives you a new ribbon with essential items gathered from all other ribbons.",
                                                         Value = "essentialswordribbon"
                                                     };
