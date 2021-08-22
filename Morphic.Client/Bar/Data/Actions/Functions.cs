@@ -820,6 +820,72 @@ namespace Morphic.Client.Bar.Data.Actions
             return IMorphicResult.SuccessResult;
         }
 
+        //
+
+        [InternalFunction("basicWordRibbon")]
+        public static async Task<IMorphicResult> ToggleBasicWordRibbonAsync(FunctionArgs args)
+        {
+            // if we have a "value" property, this is a multi-segmented button and we should use "value" instead of "state"
+            bool on;
+            if (args.Arguments.Keys.Contains("value"))
+            {
+                on = (args["value"] == "on");
+            }
+            else if (args.Arguments.Keys.Contains("state"))
+            {
+                on = (args["state"] == "on");
+            }
+            else
+            {
+                System.Diagnostics.Debug.Assert(false, "Function 'basicWordRibbon' did not receive a new state");
+                on = false;
+            }
+
+            if (on == true)
+            {
+                var enableRibbonResult = Morphic.Integrations.Office.WordRibbon.EnableBasicSimplifyRibbon();
+                return enableRibbonResult.IsSuccess ? new MorphicSuccess() : new MorphicError();
+            }
+            else
+            {
+                var disableRibbonResult = Morphic.Integrations.Office.WordRibbon.DisableBasicSimplifyRibbon();
+                return disableRibbonResult.IsSuccess ? new MorphicSuccess() : new MorphicError();
+            }
+        }
+
+        [InternalFunction("essentialsWordRibbon")]
+        public static async Task<IMorphicResult> ToggleEssentialsWordRibbonAsync(FunctionArgs args)
+        {
+            // if we have a "value" property, this is a multi-segmented button and we should use "value" instead of "state"
+            bool on;
+            if (args.Arguments.Keys.Contains("value"))
+            {
+                on = (args["value"] == "on");
+            }
+            else if (args.Arguments.Keys.Contains("state"))
+            {
+                on = (args["state"] == "on");
+            }
+            else
+            {
+                System.Diagnostics.Debug.Assert(false, "Function 'essentialsWordRibbon' did not receive a new state");
+                on = false;
+            }
+
+            if (on == true)
+            {
+                var enableRibbonResult = Morphic.Integrations.Office.WordRibbon.EnableEssentialsSimplifyRibbon();
+                return enableRibbonResult.IsSuccess ? new MorphicSuccess() : new MorphicError();
+            }
+            else
+            {
+                var disableRibbonResult = Morphic.Integrations.Office.WordRibbon.DisableEssentialsSimplifyRibbon();
+                return disableRibbonResult.IsSuccess ? new MorphicSuccess() : new MorphicError();
+            }
+        }
+
+        //
+
         [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "Windows API naming")]
         [SuppressMessage("ReSharper", "IdentifierTypo", Justification = "Windows API naming")]
         private static class WinApi

@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Morphic.Core\Morphic.Core.csproj" />
+    <ProjectReference Include="..\Morphic.Windows.Native\Morphic.Windows.Native.csproj" />
   </ItemGroup>
 
   <ItemGroup>
