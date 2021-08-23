@@ -45,8 +45,6 @@
                             VerticalAlignment="Stretch" />
                     <Button Name="DE" Content=" Disable Essential " Click="DEssential"
                             VerticalAlignment="Stretch" />
-                    <Button Name="RO" Content=" Restore Original " Click="RestoreOriginal"
-                            VerticalAlignment="Stretch" />
                 </DockPanel>
             </DockPanel>
         </StackPanel>
