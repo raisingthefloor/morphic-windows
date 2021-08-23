@@ -378,7 +378,19 @@ namespace Morphic.Client.Bar.UI.BarControls
                             }
 
                             ((ToggleButton)this.Control).IsChecked = darkModeState;
-    
+                            break;
+                        case "basicWordRibbon":
+                            var isBasicWordRibbonEnabledResult = Morphic.Integrations.Office.WordRibbon.IsBasicSimplifyRibbonEnabled();
+                            var basicSimpifyRibbonIsEnabled = isBasicWordRibbonEnabledResult.IsSuccess ? isBasicWordRibbonEnabledResult.Value! : false;
+
+                            ((ToggleButton)this.Control).IsChecked = basicSimpifyRibbonIsEnabled;
+
+                            break;
+                        case "essentialsWordRibbon":
+                            var isEssentialsWordRibbonEnabledResult = Morphic.Integrations.Office.WordRibbon.IsEssentialsSimplifyRibbonEnabled();
+                            var essentialsSimpifyRibbonIsEnabled = isEssentialsWordRibbonEnabledResult.IsSuccess ? isEssentialsWordRibbonEnabledResult.Value! : false;
+
+                            ((ToggleButton)this.Control).IsChecked = essentialsSimpifyRibbonIsEnabled;
                             break;
                         default:
                             // unknown internal action
