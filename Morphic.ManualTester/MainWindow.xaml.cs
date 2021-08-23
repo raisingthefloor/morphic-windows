@@ -1,5 +1,6 @@
 ﻿namespace Morphic.ManualTester
 {
+	using Morphic.Integrations.Office;
     using System;
     using System.Collections.Generic;
     using System.IO;
@@ -25,7 +26,6 @@
         private string? currentRegistryFile;
         private ILogger<MainWindow> logger = null!;
         private const string RegistryPath = @"HKEY_CURRENT_USER\Software\Raising the Floor\Morphic\ManualTester";
-        private Morphic.Integrations.Office.WordRibbon ribbon;
 
         public MainWindow()
         {
@@ -76,7 +76,6 @@
             this.ConfigureServices(collection);
             this.ServiceProvider = collection.BuildServiceProvider();
             this.logger = this.ServiceProvider.GetRequiredService<ILogger<MainWindow>>();
-            this.ribbon = new Morphic.Integrations.Office.WordRibbon();
             this.AutoReload = Registry.GetValue(RegistryPath, "AutoReload", null) as string == "1";
             string? lastFile = Registry.GetValue(RegistryPath, "LastFile", null) as string;
             if (string.IsNullOrEmpty(lastFile))
@@ -224,27 +223,22 @@
 
         private void EBasic(object sender, RoutedEventArgs e)
         {
-            ribbon.EnableBasicsTab();
+            WordRibbon.EnableBasicSimplifyRibbon();
         }
 
         private void DBasic(object sender, RoutedEventArgs e)
         {
-            ribbon.DisableBasicsTab();
+            WordRibbon.DisableBasicSimplifyRibbon();
         }
 
         private void EEssential(object sender, RoutedEventArgs e)
         {
-            ribbon.EnableEssentialsTab();
+            WordRibbon.EnableEssentialsSimplifyRibbon();
         }
 
         private void DEssential(object sender, RoutedEventArgs e)
         {
-            ribbon.DisableEssentialsTab();
-        }
-
-        private void RestoreOriginal(object sender, RoutedEventArgs e)
-        {
-            ribbon.RestoreOriginal();
+            WordRibbon.DisableEssentialsSimplifyRibbon();
         }
 
         private FileSystemWatcher? fileWatcher = null;
