@@ -268,6 +268,56 @@ namespace Morphic.Client.Bar.Data
                                                     extraBarItemShouldBeAdded = true;
                                                 }
                                                 break;
+                                            case "volume":
+                                                {
+                                                    extraBarItem.Text = extraItemData.label ?? "Volume";
+                                                    //
+                                                    var volumeUpAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
+                                                    volumeUpAction.TelemetryEventName = "volumeUp";
+                                                    volumeUpAction.FunctionName = "volumeUp";
+                                                    var volumeUpButton = new BarMultiButton.ButtonInfo
+                                                    {
+                                                        Text = "+",
+                                                        Action = volumeUpAction,
+                                                        TelemetryCategory = "volumeUp",
+                                                        Tooltip = "Increases the volume|Makes all sounds louder.|Volume cannot go louder",
+                                                        Value = "volumeUp"
+                                                    };
+                                                    //
+                                                    var volumeDownAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
+                                                    volumeDownAction.TelemetryEventName = "volumeDown";
+                                                    volumeDownAction.FunctionName = "volumeDown";
+                                                    var volumeDownButton = new BarMultiButton.ButtonInfo
+                                                    {
+                                                        Text = "-",
+                                                        Action = volumeDownAction,
+                                                        TelemetryCategory = "volumeDown",
+                                                        Tooltip = "Decreases the volume|Makes all sounds quieter.|Volume cannot go quieter",
+                                                        Value = "volumeDown"
+                                                    };
+                                                    //
+                                                    var volumeMuteAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
+                                                    volumeMuteAction.TelemetryEventName = "volumeMute";
+                                                    volumeMuteAction.FunctionName = "volumeMute";
+                                                    var volumeMuteButton = new BarMultiButton.ButtonInfo
+                                                    {
+                                                        Text = "Mute",
+                                                        Action = volumeMuteAction,
+                                                        TelemetryCategory = "volumeMute",
+                                                        Tooltip = "Mutes all sounds from your computer|Mutes your speakers - but does NOT mute your microphone.",
+                                                        Value = "volumeMute"
+                                                    };
+                                                    //
+                                                    ((BarMultiButton)extraBarItem).Buttons = new Dictionary<string, BarMultiButton.ButtonInfo>
+                                                    {
+                                                        { "volumeUp", volumeUpButton },
+                                                        { "volumeDown", volumeDownButton },
+                                                        { "volumeMute", volumeMuteButton }
+                                                    };
+                                                    //
+                                                    extraBarItemShouldBeAdded = true;
+                                                }
+                                                break;
                                             case "wordsimplify":
                                                 {
                                                     extraBarItem.Text = extraItemData.label ?? "Word Simplify";

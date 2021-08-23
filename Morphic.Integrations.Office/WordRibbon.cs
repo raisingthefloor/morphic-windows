@@ -31,6 +31,7 @@ using System.Text;
 using System.Runtime.InteropServices;
 using System.Xml;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace Morphic.Integrations.Office
 {
@@ -230,7 +231,7 @@ namespace Morphic.Integrations.Office
 
         public static IMorphicResult EnableEssentialsSimplifyRibbon()
         {
-            var disableRibbonResult = WordRibbon.EnableRibbon(WordRibbon.ESSENTIALS_SIMPLIFY_RIBBON_ID);
+            var disableRibbonResult = WordRibbon.EnableRibbon(WordRibbon.ESSENTIALS_SIMPLIFY_RIBBON_ID, WordRibbon.BASIC_SIMPLIFY_RIBBON_ID /* insertAfterRibbonId */);
             if (disableRibbonResult.IsError == true)
             {
                 return new MorphicError();
@@ -242,7 +243,7 @@ namespace Morphic.Integrations.Office
         }
 
         // NOTE: this function does not make Word update its ribbons in real-time; to do so, call the ReloadRibbons() function after using this function
-        private static IMorphicResult EnableRibbon(string ribbonId)
+        private static IMorphicResult EnableRibbon(string ribbonId, string? insertAfterRibbonId = null)
         {
             XmlDocument xmlDocument = new XmlDocument();
 
@@ -311,7 +312,7 @@ namespace Morphic.Integrations.Office
                 }
             }
 
-            // at this point, we knowt hat the tab (i.e. ribbon) is not in the XmlDocument; load it from our template and insert it now
+            // at this point, we know that the tab (i.e. ribbon) is not in the XmlDocument; load it from our template and insert it now
 
             // get a copy of the appropriate tab (ribbon) node from the template we have embedded as a resource in this library
             var getRibbonNodeResult = WordRibbon.GetRibbonTabNodeFromTemplate(ribbonId);
@@ -322,10 +323,27 @@ namespace Morphic.Integrations.Office
             }
             var ribbonNodeToImport = getRibbonNodeResult.Value!;
 
-            // insert the tab (ribbon) node at the top of our list
+            XmlNode? insertAfterNode = null;
+            if (insertAfterRibbonId != null)
+            {
+                var getRibbonResult = GetRibbonTabNodeFromXmlDocument(xmlDocument, insertAfterRibbonId!);
+                if ((getRibbonResult.IsSuccess == true) && (getRibbonResult.Value != null))
+                {
+                    insertAfterNode = getRibbonResult.Value!; 
+                }
+            }
+
+            // insert the tab (ribbon) node at the top of our list (or in the appropriate place, if it should go _after_ another node
             // TODO: we actually want to insert ESSENTIALS _after_ BASIC if BASIC exists; add some logic for that!
             var ribbonNode = xmlDocument.ImportNode(ribbonNodeToImport, true);
-            msoTabsParentNode.InsertBefore(ribbonNode, msoTabsParentNode.FirstChild);
+            if (insertAfterNode != null)
+            {
+                msoTabsParentNode.InsertAfter(ribbonNode, insertAfterNode!);
+            }
+            else
+            {
+                msoTabsParentNode.InsertBefore(ribbonNode, msoTabsParentNode.FirstChild);
+            }
 
             // save out the modified XMLdocument
             try
@@ -342,6 +360,37 @@ namespace Morphic.Integrations.Office
         }
 
         //
+
+        private static IMorphicResult<XmlNode?> GetRibbonTabNodeFromXmlDocument(XmlDocument xmlDocument, string ribbonId)
+        {
+            XmlNamespaceManager xmlNamespaceManager = new XmlNamespaceManager(xmlDocument.NameTable);
+            xmlNamespaceManager.AddNamespace("mso", WordRibbon.MSO_NAMESPACE);
+
+            var msoTabsParentNode = xmlDocument.SelectSingleNode("mso:customUI/mso:ribbon/mso:tabs", xmlNamespaceManager);
+            if (msoTabsParentNode == null)
+            {
+                // parent tabs node doesn't exist; we are missing our template ribbons
+                return new MorphicError<XmlNode?>();
+            }
+
+            var msoTabNodes = xmlDocument.SelectNodes("mso:customUI/mso:ribbon/mso:tabs/mso:tab", xmlNamespaceManager);
+            if (msoTabNodes == null)
+            {
+                // child tab nodes (i.e. ribbon templates) don't exist
+                return new MorphicError<XmlNode?>();
+            }
+
+            foreach (XmlNode? msoTabNode in msoTabNodes!)
+            {
+                if (msoTabNode?.Attributes["id"].Value == ribbonId)
+                {
+                    return new MorphicSuccess<XmlNode?>(msoTabNode);
+                }
+            }
+
+            // if we did not find the ribbon in our list of tabs, return null
+            return new MorphicSuccess<XmlNode?>(null);
+        }
 
         private static IMorphicResult<XmlNode> GetRibbonTabNodeFromTemplate(string ribbonId)
         {
@@ -361,38 +410,26 @@ namespace Morphic.Integrations.Office
                 return new MorphicError<XmlNode>();
             }
 
-            XmlNamespaceManager xmlNamespaceManager = new XmlNamespaceManager(xmlDocument.NameTable);
-            xmlNamespaceManager.AddNamespace("mso", WordRibbon.MSO_NAMESPACE);
-
-            var msoTabsParentNode = xmlDocument.SelectSingleNode("mso:customUI/mso:ribbon/mso:tabs", xmlNamespaceManager);
-            if (msoTabsParentNode == null)
+            var ribbonTabNodeResult = WordRibbon.GetRibbonTabNodeFromXmlDocument(xmlDocument, ribbonId);
+            if (ribbonTabNodeResult.IsError == true)
             {
-                // parent tabs node doesn't exist; we are missing our template ribbons
                 return new MorphicError<XmlNode>();
             }
-
-            var msoTabNodes = xmlDocument.SelectNodes("mso:customUI/mso:ribbon/mso:tabs/mso:tab", xmlNamespaceManager);
-            if (msoTabNodes == null)
+            var ribbonTabNode = ribbonTabNodeResult.Value;
+            if (ribbonTabNode == null)
             {
-                // child tab nodes (i.e. ribbon templates) don't exist
+                // if we did not find the tab in our list, return an error
                 return new MorphicError<XmlNode>();
             }
-
-            foreach (XmlNode? msoTabNode in msoTabNodes!)
+            else
             {
-                if (msoTabNode?.Attributes["id"].Value == ribbonId)
-                {
-                    return new MorphicSuccess<XmlNode>(msoTabNode);
-                }
+                return new MorphicSuccess<XmlNode>(ribbonTabNode!);
             }
-
-            // if we did not find the tab in our list, return an error
-            return new MorphicError<XmlNode>();
         }
 
         //
 
-        private static IMorphicResult ReloadRibbons()
+        private static async Task<IMorphicResult> ReloadRibbons()
         {
             Microsoft.Office.Interop.Word.Application? wordApplication;
             try
@@ -433,6 +470,9 @@ namespace Morphic.Integrations.Office
                     // NOTE: if there were already _multiple_ windows, it _might_ be sufficient to just cycle through existing windows to trigger the reload
                     var tempWordWindow = wordApplication.NewWindow();
 
+                    // OBSERVATION: this pattern of switching between windows is based on word derived from earlier Morphic Classic code; we should re-evaluate this methodology, to determine if it is still the best
+                    //              way to trigger Word to let it know that the ribbons file has been updated
+
                     // cycle through each Word window...twice
                     for (var cycleIndex = 0; cycleIndex < 2; cycleIndex += 1)
                     {
@@ -447,6 +487,8 @@ namespace Morphic.Integrations.Office
                             //Morphic.Windows.Native.SendMessage
                             var nativeWordWindow = new Morphic.Windows.Native.Windowing.Window((IntPtr)wordWindow.Hwnd);
                             var sendMessageResult = nativeWordWindow.Activate();
+                            // NOTE: this 250m delay is somewhat arbitrary; we should do further examination to find the right delay (or to ask Word the right questions to know when it is done)
+                            await System.Threading.Tasks.Task.Delay(250);
                         }
                     }
 
@@ -454,7 +496,11 @@ namespace Morphic.Integrations.Office
                     for (var cycleIndex = 0; cycleIndex < 2; cycleIndex += 1)
                     {
                         activeWordWindow.Activate();
+                        // NOTE: this 250m delay is somewhat arbitrary; we should do further examination to find the right delay (or to ask Word the right questions to know when it is done)
+                        await System.Threading.Tasks.Task.Delay(250);
                         tempWordWindow.Activate();
+                        // NOTE: this 250m delay is somewhat arbitrary; we should do further examination to find the right delay (or to ask Word the right questions to know when it is done)
+                        await System.Threading.Tasks.Task.Delay(250);
                     }
                     //
                     tempWordWindow.Close();

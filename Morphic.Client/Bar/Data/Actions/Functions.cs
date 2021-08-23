@@ -96,12 +96,43 @@ namespace Morphic.Client.Bar.Data.Actions
             return IMorphicResult.SuccessResult;
         }
 
+        [InternalFunction("volumeUp")]
+        public static async Task<IMorphicResult> VolumeUpAsync(FunctionArgs args)
+        {
+            args.Arguments.Add("direction", "up");
+            args.Arguments.Add("amount", "6");
+            return await SetVolumeAsync(args);
+        }
+
+        [InternalFunction("volumeDown")]
+        public static async Task<IMorphicResult> VolumeDownAsync(FunctionArgs args)
+        {
+            args.Arguments.Add("direction", "down");
+            args.Arguments.Add("amount", "6");
+            return await SetVolumeAsync(args);
+        }
+
+        [InternalFunction("volumeMute")]
+        public static async Task<IMorphicResult> VolumeMuteAsync(FunctionArgs args)
+        {
+            IntPtr taskTray = WinApi.FindWindow("Shell_TrayWnd", IntPtr.Zero);
+            if (taskTray != IntPtr.Zero)
+            {
+                int action = WinApi.APPCOMMAND_VOLUME_MUTE;
+
+                WinApi.SendMessage(taskTray, WinApi.WM_APPCOMMAND, IntPtr.Zero,
+                    (IntPtr)WinApi.MakeLong(0, (short)action));
+                }
+
+            return IMorphicResult.SuccessResult;
+        }
+
         /// <summary>
         /// Lowers or raises the volume.
         /// </summary>
         /// <param name="args">direction: "up"/"down", amount: number of 1/100 to move</param>
         /// <returns></returns>
-        [InternalFunction("volume", "direction", "amount=10")]
+        [InternalFunction("volume", "direction", "amount=6")]
         public static async Task<IMorphicResult> SetVolumeAsync(FunctionArgs args)
         {
             IntPtr taskTray = WinApi.FindWindow("Shell_TrayWnd", IntPtr.Zero);
@@ -110,7 +141,7 @@ namespace Morphic.Client.Bar.Data.Actions
                 int action = args["direction"] == "up"
                     ? WinApi.APPCOMMAND_VOLUME_UP
                     : WinApi.APPCOMMAND_VOLUME_DOWN;
-
+                
                 // Each command moves the volume by 2 notches.
                 int times = Math.Clamp(Convert.ToInt32(args["amount"]), 1, 20) / 2;
                 for (int n = 0; n < times; n++)
@@ -890,6 +921,7 @@ namespace Morphic.Client.Bar.Data.Actions
         [SuppressMessage("ReSharper", "IdentifierTypo", Justification = "Windows API naming")]
         private static class WinApi
         {
+            public const int APPCOMMAND_VOLUME_MUTE = 8;
             public const int APPCOMMAND_VOLUME_DOWN = 9;
             public const int APPCOMMAND_VOLUME_UP = 10;
             public const int WM_APPCOMMAND = 0x319;
