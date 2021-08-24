@@ -314,6 +314,7 @@ namespace Morphic.Client.Bar.Data
                                                         { "volumeDown", volumeDownButton },
                                                         { "volumeMute", volumeMuteButton }
                                                     };
+                                                    ((BarMultiButton)extraBarItem).AutoSize = true;
                                                     //
                                                     extraBarItemShouldBeAdded = true;
                                                 }
@@ -353,6 +354,7 @@ namespace Morphic.Client.Bar.Data
                                                         { "basic", basicWordRibbonButton },
                                                         { "essentials", essentialsWordRibbonButton }
                                                     };
+                                                    ((BarMultiButton)extraBarItem).AutoSize = true;
                                                     //
                                                     // NOTE: we shouldonly show this item if Word is actually installed
                                                     extraBarItemShouldBeAdded = Morphic.Integrations.Office.WordRibbon.IsOfficeInstalled();
