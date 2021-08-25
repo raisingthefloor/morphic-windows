@@ -304,6 +304,7 @@ namespace Morphic.Client.Bar.Data
                                                         Text = "Mute",
                                                         Action = volumeMuteAction,
                                                         TelemetryCategory = "volumeMute",
+                                                        Toggle = true,
                                                         Tooltip = "Mutes all sounds from your computer|Mutes your speakers - but does NOT mute your microphone.",
                                                         Value = "volumeMute"
                                                     };
