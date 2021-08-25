@@ -379,6 +379,18 @@ namespace Morphic.Client.Bar.UI.BarControls
 
                             ((ToggleButton)this.Control).IsChecked = darkModeState;
                             break;
+                        case "volumeMute":
+                            var getMuteStateResult = Morphic.Client.Bar.Data.Actions.Functions.GetMuteState();
+                            if (getMuteStateResult.IsError == true)
+                            {
+                                Debug.Assert(false, "Could not get volume mute state");
+                                break;
+                            }
+                            var volumeMuteState = getMuteStateResult.Value!;
+
+                            ((ToggleButton)this.Control).IsChecked = volumeMuteState;
+
+                            break;
                         case "basicWordRibbon":
                             var isBasicWordRibbonEnabledResult = Morphic.Integrations.Office.WordRibbon.IsBasicSimplifyRibbonEnabled();
                             var basicSimpifyRibbonIsEnabled = isBasicWordRibbonEnabledResult.IsSuccess ? isBasicWordRibbonEnabledResult.Value! : false;

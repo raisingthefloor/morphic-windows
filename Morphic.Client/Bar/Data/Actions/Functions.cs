@@ -112,19 +112,55 @@ namespace Morphic.Client.Bar.Data.Actions
             return await SetVolumeAsync(args);
         }
 
+        internal static IMorphicResult<bool> GetMuteState()
+        {
+            try
+            {
+                var audioEndpoint = Windows.Native.Audio.AudioEndpoint.GetDefaultAudioOutputEndpoint();
+
+                // if we didn't get a state in the request, try to reverse the state
+                var state = audioEndpoint.GetMasterMuteState();
+
+                return IMorphicResult<bool>.SuccessResult(state);
+            }
+            catch
+            {
+                return IMorphicResult<bool>.ErrorResult();
+            }
+        }
+
         [InternalFunction("volumeMute")]
         public static async Task<IMorphicResult> VolumeMuteAsync(FunctionArgs args)
         {
-            // NOTE: ideally we should switch this functionality to use AudioEndpoint.SetMasterMuteState instead
-
-            IntPtr taskTray = WinApi.FindWindow("Shell_TrayWnd", IntPtr.Zero);
-            if (taskTray != IntPtr.Zero)
+            bool newState;
+            if (args.Arguments.Keys.Contains("state"))
             {
-                int action = WinApi.APPCOMMAND_VOLUME_MUTE;
-
-                WinApi.SendMessage(taskTray, WinApi.WM_APPCOMMAND, IntPtr.Zero,
-                    (IntPtr)WinApi.MakeLong(0, (short)action));
+                newState = (args["state"] == "on");
+            }
+            else
+            {
+                var getMuteStateResult = Functions.GetMuteState();
+                if (getMuteStateResult.IsSuccess == true)
+                {
+                    newState = getMuteStateResult.Value!;
                 }
+                else
+                {
+                    // if we cannot get the current value, gracefully degrade (i.e. assume that the volume is not muted)
+                    newState = false;
+                }
+            }
+
+            try
+            {
+                // set the mute state to the new state value
+                var audioEndpoint = Windows.Native.Audio.AudioEndpoint.GetDefaultAudioOutputEndpoint();
+                audioEndpoint.SetMasterMuteState(newState);
+            }
+            catch
+            {
+                return IMorphicResult.ErrorResult;
+            }
 
             return IMorphicResult.SuccessResult;
         }
@@ -937,7 +973,7 @@ namespace Morphic.Client.Bar.Data.Actions
         [SuppressMessage("ReSharper", "IdentifierTypo", Justification = "Windows API naming")]
         private static class WinApi
         {
-            public const int APPCOMMAND_VOLUME_MUTE = 8;
+            //public const int APPCOMMAND_VOLUME_MUTE = 8;
             public const int APPCOMMAND_VOLUME_DOWN = 9;
             public const int APPCOMMAND_VOLUME_UP = 10;
             public const int WM_APPCOMMAND = 0x319;
