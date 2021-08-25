@@ -115,6 +115,8 @@ namespace Morphic.Client.Bar.Data.Actions
         [InternalFunction("volumeMute")]
         public static async Task<IMorphicResult> VolumeMuteAsync(FunctionArgs args)
         {
+            // NOTE: ideally we should switch this functionality to use AudioEndpoint.SetMasterMuteState instead
+
             IntPtr taskTray = WinApi.FindWindow("Shell_TrayWnd", IntPtr.Zero);
             if (taskTray != IntPtr.Zero)
             {
@@ -135,6 +137,8 @@ namespace Morphic.Client.Bar.Data.Actions
         [InternalFunction("volume", "direction", "amount=6")]
         public static async Task<IMorphicResult> SetVolumeAsync(FunctionArgs args)
         {
+            // NOTE: ideally we should switch this functionality to use AudioEndpoint.SetMasterVolumeLevel instead
+
             IntPtr taskTray = WinApi.FindWindow("Shell_TrayWnd", IntPtr.Zero);
             if (taskTray != IntPtr.Zero)
             {
