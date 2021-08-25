@@ -115,6 +115,8 @@ namespace Morphic.Client.Bar.Data.Actions
         [InternalFunction("volumeMute")]
         public static async Task<IMorphicResult> VolumeMuteAsync(FunctionArgs args)
         {
+            // NOTE: ideally we should switch this functionality to use AudioEndpoint.SetMasterMuteState instead
+
             IntPtr taskTray = WinApi.FindWindow("Shell_TrayWnd", IntPtr.Zero);
             if (taskTray != IntPtr.Zero)
             {
@@ -135,6 +137,8 @@ namespace Morphic.Client.Bar.Data.Actions
         [InternalFunction("volume", "direction", "amount=6")]
         public static async Task<IMorphicResult> SetVolumeAsync(FunctionArgs args)
         {
+            // NOTE: ideally we should switch this functionality to use AudioEndpoint.SetMasterVolumeLevel instead
+
             IntPtr taskTray = WinApi.FindWindow("Shell_TrayWnd", IntPtr.Zero);
             if (taskTray != IntPtr.Zero)
             {
@@ -700,13 +704,25 @@ namespace Morphic.Client.Bar.Data.Actions
                 var personalizeKey = openPersonalizeKeyResult.Value!;
 
                 // get the current setting
+                bool appsUseLightThemeAsBool;
                 var getAppsUseLightThemeResult = personalizeKey.GetValue<uint>("AppsUseLightTheme");
                 if (getAppsUseLightThemeResult.IsError == true)
                 {
-                    return IMorphicResult<bool>.ErrorResult();
+                    if (getAppsUseLightThemeResult.Error == Windows.Native.Registry.RegistryKey.RegistryValueError.ValueDoesNotExist)
+                    {
+                        // default AppsUseLightTheme (inverse of dark mode state) on Windows 10 v1809 is true
+                        appsUseLightThemeAsBool = true;
+                    }
+                    else
+                    {
+                        return IMorphicResult<bool>.ErrorResult();
+                    }
                 }
-                var appsUseLightThemeAsUInt32 = getAppsUseLightThemeResult.Value!;
-                var appsUseLightThemeAsBool = (appsUseLightThemeAsUInt32 != 0) ? true : false;
+                else
+                {
+                    var appsUseLightThemeAsUInt32 = getAppsUseLightThemeResult.Value!;
+                    appsUseLightThemeAsBool = (appsUseLightThemeAsUInt32 != 0) ? true : false;
+                }
 
                 // dark theme state is the inverse of AppsUseLightTheme
                 var darkThemeState = !appsUseLightThemeAsBool;
