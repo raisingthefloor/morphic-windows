@@ -133,7 +133,7 @@ namespace Morphic.Integrations.Office
                 return new MorphicError();
             }
 
-            WordRibbon.ReloadRibbons();
+            WordRibbon.ReloadRibbonsAsync();
 
             return new MorphicSuccess();
         }
@@ -146,7 +146,7 @@ namespace Morphic.Integrations.Office
                 return new MorphicError();
             }
 
-            WordRibbon.ReloadRibbons();
+            WordRibbon.ReloadRibbonsAsync();
 
             return new MorphicSuccess();
         }
@@ -224,7 +224,7 @@ namespace Morphic.Integrations.Office
                 return new MorphicError();
             }
 
-            WordRibbon.ReloadRibbons();
+            WordRibbon.ReloadRibbonsAsync();
 
             return new MorphicSuccess();
         }
@@ -237,7 +237,7 @@ namespace Morphic.Integrations.Office
                 return new MorphicError();
             }
 
-            WordRibbon.ReloadRibbons();
+            WordRibbon.ReloadRibbonsAsync();
 
             return new MorphicSuccess();
         }
