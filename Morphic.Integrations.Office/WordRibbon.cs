@@ -429,33 +429,43 @@ namespace Morphic.Integrations.Office
 
         //
 
-        private static async Task<IMorphicResult> ReloadRibbons()
+        private static async Task<IMorphicResult> ReloadRibbonsAsync()
         {
+            Console.Error.WriteLine("ReloadRibbonsAsync (1)");
+
             Microsoft.Office.Interop.Word.Application? wordApplication;
             try
             {
+                Console.Error.WriteLine("ReloadRibbonsAsync (2a)");
                 wordApplication = Morphic.Windows.Native.InteropServices.Marshal.GetActiveObject("Word.Application") as Microsoft.Office.Interop.Word.Application;
             }
             catch (COMException)
             {
+                Console.Error.WriteLine("ReloadRibbonsAsync (2a-EXCEPTION)");
                 // if we get a COM exception, assume that Word is not installed
                 return new MorphicSuccess();
             }
 
+            Console.Error.WriteLine("ReloadRibbonsAsync (3)");
             if (wordApplication == null)
             {
+                Console.Error.WriteLine("ReloadRibbonsAsync (3-NULL)");
                 // if Word was not running, the object will be null; there is nothing to do
                 return new MorphicSuccess();
             }
+                        Console.Error.WriteLine("ReloadRibbonsAsync (1)");
 
+            Console.Error.WriteLine("ReloadRibbonsAsync (4)");
             if (wordApplication.Windows.Count == 0)
             {
+                Console.Error.WriteLine("ReloadRibbonsAsync (4-EMPTYARRAY)");
                 // if Word has no active windows, there is nothing to do
                 return new MorphicSuccess();
             }
 
             var isSuccess = true;
 
+            Console.Error.WriteLine("ReloadRibbonsAsync (5)");
             try
             {
                 // create a new Word window; we'll then toggle activation between all active Word windows (and then close the new window) to convince Word to refresh its ribbons in all windows
@@ -464,6 +474,7 @@ namespace Morphic.Integrations.Office
                 // first, capture a reference to the active Word window; we'll need to return to this window after our cycling is done
                 var activeWordWindow = wordApplication.ActiveWindow;
 
+                Console.Error.WriteLine("ReloadRibbonsAsync (6)");
                 try
                 {
                     // create a new window; by observation, this will cause Word to load in the new ribbons
@@ -472,53 +483,73 @@ namespace Morphic.Integrations.Office
 
                     // OBSERVATION: this pattern of switching between windows is based on word derived from earlier Morphic Classic code; we should re-evaluate this methodology, to determine if it is still the best
                     //              way to trigger Word to let it know that the ribbons file has been updated
+                    Console.Error.WriteLine("ReloadRibbonsAsync (7)");
 
                     // cycle through each Word window...twice
                     for (var cycleIndex = 0; cycleIndex < 2; cycleIndex += 1)
                     {
+                        Console.Error.WriteLine("ReloadRibbonsAsync (8a)");
                         foreach (Window? wordWindow in wordApplication.Windows)
                         {
+                            Console.Error.WriteLine("ReloadRibbonsAsync (9a)");
                             if (wordWindow == null)
                             {
+                                Console.Error.WriteLine("ReloadRibbonsAsync (9a-NULL)");
                                 Debug.Assert(false, "Programming error: Word's Windows array is not null, but it is returning null windows");
                                 continue;
                             }
 
+                            Console.Error.WriteLine("ReloadRibbonsAsync (9b)");
                             //Morphic.Windows.Native.SendMessage
                             var nativeWordWindow = new Morphic.Windows.Native.Windowing.Window((IntPtr)wordWindow.Hwnd);
+                            Console.Error.WriteLine("ReloadRibbonsAsync (9c)");
                             var sendMessageResult = nativeWordWindow.Activate();
+                            Console.Error.WriteLine("ReloadRibbonsAsync (9d)");
                             // NOTE: this 250m delay is somewhat arbitrary; we should do further examination to find the right delay (or to ask Word the right questions to know when it is done)
                             await System.Threading.Tasks.Task.Delay(250);
                         }
+                        Console.Error.WriteLine("ReloadRibbonsAsync (8b)");
                     }
 
+                    Console.Error.WriteLine("ReloadRibbonsAsync (10)");
                     // finally, activate both the original window and the new window _twice_, and then close the new window
                     for (var cycleIndex = 0; cycleIndex < 2; cycleIndex += 1)
                     {
+                        Console.Error.WriteLine("ReloadRibbonsAsync (11a)");
                         activeWordWindow.Activate();
                         // NOTE: this 250m delay is somewhat arbitrary; we should do further examination to find the right delay (or to ask Word the right questions to know when it is done)
+                        Console.Error.WriteLine("ReloadRibbonsAsync (11b)");
                         await System.Threading.Tasks.Task.Delay(250);
+                        Console.Error.WriteLine("ReloadRibbonsAsync (11c)");
                         tempWordWindow.Activate();
                         // NOTE: this 250m delay is somewhat arbitrary; we should do further examination to find the right delay (or to ask Word the right questions to know when it is done)
+                        Console.Error.WriteLine("ReloadRibbonsAsync (11d)");
                         await System.Threading.Tasks.Task.Delay(250);
+                        Console.Error.WriteLine("ReloadRibbonsAsync (11e)");
                     }
                     //
+                    Console.Error.WriteLine("ReloadRibbonsAsync (12)");
                     tempWordWindow.Close();
+                    Console.Error.WriteLine("ReloadRibbonsAsync (13)");
                 }
                 finally
                 {
+                    Console.Error.WriteLine("ReloadRibbonsAsync (FINALLY)");
                     // for sanity sake, make sure we end up with the original Word window being active
                     activeWordWindow.Activate();
                 }
             }
             catch
             {
+                Console.Error.WriteLine("ReloadRibbonsAsync (CATCH-FAILURES)");
                 // if any operations fail (via COM automation), return an error
                 isSuccess = false;
             }
 
+            Console.Error.WriteLine("ReloadRibbonsAsync (14)");
             // if we completed all the steps, assume success
             return isSuccess ? new MorphicSuccess() : new MorphicError();
         }
+
     }
 }
