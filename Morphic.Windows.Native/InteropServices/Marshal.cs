@@ -57,9 +57,11 @@ namespace Morphic.Windows.Native.InteropServices
             {
                 // if we could not get the object, return null
                 // NOTE: if we want to distinguish between error results (i.e. object not active vs. others), we could read the win32 "last error" code
+                Console.Error.WriteLine("GetActiveObject failed; result: " + getActiveObjectResult.ToString());
                 return null;
             }
 
+            Console.Error.WriteLine("GetActiveObject successful");
             return activeObject;
         }
 
