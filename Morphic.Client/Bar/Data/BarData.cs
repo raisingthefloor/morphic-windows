@@ -315,6 +315,12 @@ namespace Morphic.Client.Bar.Data
                                                         { "volumeDown", volumeDownButton },
                                                         { "volumeMute", volumeMuteButton }
                                                     };
+                                                    ((BarMultiButton)extraBarItem).Menu = new Dictionary<string, string>()
+                                                    {
+                                                        { "setting", "sound" },
+                                                        { "learn", "volmute" },
+                                                        { "demo", "volmute" }
+                                                    };
                                                     ((BarMultiButton)extraBarItem).AutoSize = true;
                                                     //
                                                     extraBarItemShouldBeAdded = true;
@@ -354,6 +360,11 @@ namespace Morphic.Client.Bar.Data
                                                     {
                                                         { "basic", basicWordRibbonButton },
                                                         { "essentials", essentialsWordRibbonButton }
+                                                    };
+                                                    ((BarMultiButton)extraBarItem).Menu = new Dictionary<string, string>()
+                                                    {
+                                                        { "learn", "wordsimplify" },
+                                                        { "demo", "wordsimplify" }
                                                     };
                                                     ((BarMultiButton)extraBarItem).AutoSize = true;
                                                     //
