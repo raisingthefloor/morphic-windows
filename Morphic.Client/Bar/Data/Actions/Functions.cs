@@ -905,6 +905,29 @@ namespace Morphic.Client.Bar.Data.Actions
 
         //
 
+        const string WORD_RUNNING_MESSAGE = "You need to exit Word in order to use the Word Simplify buttons.\n\n(1) Quit Word.\n(2) Use the Word Simplify buttons to select the simplified ribbon(s) you want.\n(3) Re-launch Word.";
+
+        private static bool IsSafeToModifyRibbonFile_WarnUser()
+        {
+            // make sure Word is not running before attempting to change the word ribbon enable/disable state
+            var isWordRunningResult = Morphic.Integrations.Office.WordRibbon.IsWordRunning();
+            if (isWordRunningResult.IsError == true)
+            {
+                // NOTE: realistically, we might not want to create a modal message box during an async function. 
+                MessageBox.Show("Sorry, we cannot detect if Word is running.\n\nThis feature is currently unavailable.");
+            }
+            var wordIsRunning = isWordRunningResult.Value!;
+            //
+            if (wordIsRunning == true)
+            {
+                MessageBox.Show(Functions.WORD_RUNNING_MESSAGE);
+                return false;
+            }
+
+            // if Word is not running, it's safe to proceed
+            return true;
+        }
+
         [InternalFunction("basicWordRibbon")]
         public static async Task<IMorphicResult> ToggleBasicWordRibbonAsync(FunctionArgs args)
         {
@@ -922,6 +945,12 @@ namespace Morphic.Client.Bar.Data.Actions
             {
                 System.Diagnostics.Debug.Assert(false, "Function 'basicWordRibbon' did not receive a new state");
                 on = false;
+            }
+
+            if (Functions.IsSafeToModifyRibbonFile_WarnUser() == false)
+            {
+                // Word is running, so we are choosing not to execute this function
+                return new MorphicError();
             }
 
             if (on == true)
@@ -953,6 +982,12 @@ namespace Morphic.Client.Bar.Data.Actions
             {
                 System.Diagnostics.Debug.Assert(false, "Function 'essentialsWordRibbon' did not receive a new state");
                 on = false;
+            }
+
+            if (Functions.IsSafeToModifyRibbonFile_WarnUser() == false)
+            {
+                // Word is running, so we are choosing not to execute this function
+                return new MorphicError();
             }
 
             if (on == true)

@@ -173,7 +173,32 @@ namespace Morphic.Client.Bar.UI.BarControls
                 bool? state = (sender as ToggleButton)?.IsChecked;
                 if (buttonInfo.Action != null)
                 {
-                    await buttonInfo.Action.InvokeAsync(buttonInfo.Value, state);
+                    var result = await buttonInfo.Action.InvokeAsync(buttonInfo.Value, state);
+
+                    // if we get an error, deal with that error based on the type of button that was pressed
+                    // NOTE: this is, unfortunately, a temporary solution; this code should be reworked to centrally handle these sorts of things
+                    //       (and also to not TOGGLE the state of the button automatically via the GUI (so that it's not toggled unless the operation is successful)
+                    if (result.IsError == true)
+                    {
+                        if (buttonInfo.Value.ToLowerInvariant() == "basicwordribbon")
+                        {
+                            var isBasicSimplifyRibbonEnabledResult = Morphic.Integrations.Office.WordRibbon.IsBasicSimplifyRibbonEnabled();
+                            // NOTE: we do not handle the error condition (of not being able to capture this value); in the future, we may want to consider showing an error to the user and/or assuming a default toggle state
+                            if (isBasicSimplifyRibbonEnabledResult.IsSuccess == true)
+                            {
+                                ((ToggleButton)sender).IsChecked = isBasicSimplifyRibbonEnabledResult.Value!;
+                            }
+                        }
+                        else if (buttonInfo.Value.ToLowerInvariant() == "essentialswordribbon")
+                        {
+                            var isEssentialsSimplifyRibbonEnabledResult = Morphic.Integrations.Office.WordRibbon.IsEssentialsSimplifyRibbonEnabled();
+                            // NOTE: we do not handle the error condition (of not being able to capture this value); in the future, we may want to consider showing an error to the user and/or assuming a default toggle state
+                            if (isEssentialsSimplifyRibbonEnabledResult.IsSuccess == true)
+                            {
+                                ((ToggleButton)sender).IsChecked = isEssentialsSimplifyRibbonEnabledResult.Value!;
+                            }
+                        }
+                    }
                 }
             }
         }
