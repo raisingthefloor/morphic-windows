@@ -905,7 +905,7 @@ namespace Morphic.Client.Bar.Data.Actions
 
         //
 
-        const string WORD_RUNNING_MESSAGE = "You need to exit Word in order to use the Word Simplify buttons.\n\n(1) Quit Word.\n(2) Use the Word Simplify buttons to select the simplified ribbon(s) you want.\n(3) Re-launch Word.";
+        const string WORD_RUNNING_MESSAGE = "You need to exit Word in order to use the Word Simplify buttons.\n\n(1) Quit Word.\n(2) Use the Word Simplify buttons to add or remove the simplified ribbon(s) you want.\n(3) Re-launch Word.";
 
         private static bool IsSafeToModifyRibbonFile_WarnUser()
         {
