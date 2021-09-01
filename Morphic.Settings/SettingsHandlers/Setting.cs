@@ -46,12 +46,23 @@
         [JsonProperty("name")]
         public string Name { get; private set; } = string.Empty;
 
+        /// <summary>Human-readable name.</summary>
+        [JsonProperty("title")]
+        public string Title { get; private set; } = string.Empty;
+
+        /// <summary>Human-readable description.</summary>
+        [JsonProperty("description")]
+        public string Description { get; private set; } = string.Empty;
+
         [JsonProperty("dataType")]
         public SettingType DataType { get; private set; }
 
         /// <summary>Don't copy this setting to/from another computer.</summary>
         [JsonProperty("local")]
         public bool Local { get; private set; }
+
+        [JsonProperty("default")]
+        public string Default { get; private set; } = string.Empty;
 
         [JsonProperty("range")]
         public SettingRange? Range { get; private set; }

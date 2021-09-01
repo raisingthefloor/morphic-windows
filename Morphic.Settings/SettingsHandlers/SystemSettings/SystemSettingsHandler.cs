@@ -29,13 +29,14 @@
                     if(settingItem == null)
                     {
                         success = false;
+                        values.Add(setting, null, Values.ValueType.NotFound);
                         // skip to the next setting
                         continue;
                     }
 
                     // NOTE: this is another area where changing the result of GetValue to an IMorphicResult could provide clear and granular success/error result
                     object? value = await settingItem!.GetValue();
-                    values.Add(setting, value);
+                    values.Add(setting, value, Values.ValueType.UserSetting);
                 }
                 catch
                 {

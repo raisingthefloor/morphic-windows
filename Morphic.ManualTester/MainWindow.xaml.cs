@@ -15,6 +15,20 @@
     using Microsoft.Extensions.Logging;
     using Microsoft.Win32;
     using Settings.SolutionsRegistry;
+    using Settings.Resolvers;
+
+    //Resolver for testing
+    public class TestResolver : Resolver
+    {
+        public Dictionary<string, string> Values { get; set; } = new Dictionary<string, string>();
+
+        public override string? ResolveValue(string valueName)
+        {
+            return this.Values.TryGetValue(valueName, out string? value)
+                ? value
+                : null;
+        }
+    }
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -44,6 +58,7 @@
             services.AddSingleton(services);
             services.AddSingleton<IServiceProvider>(provider => provider);
             services.AddSolutionsRegistryServices();
+
         }
 
         private void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
@@ -68,6 +83,15 @@
         {
             logging.SetMinimumLevel(LogLevel.Debug);
         }
+
+        private static TestResolver resolver = new TestResolver()
+        {
+            Values = new Dictionary<string, string>()
+            {
+                { "value1", "first" },
+                { "value2", "second" }
+            }
+        };
 
         protected void OnStartup()
         {
@@ -219,6 +243,75 @@
                 {
                 }
             }
+        }
+
+        private void ReloadAll(object sender, RoutedEventArgs e)
+        {
+            foreach (object? element in this.SettingsList.Items)
+            {
+                try
+                {
+                    SolutionHeader? header = (SolutionHeader?)element;
+                    if (header != null)
+                    {
+                        header.RefreshSettings();
+                    }
+                }
+                catch
+                {
+                }
+            }
+        }
+
+        private string CSVText;
+
+        private void SaveCSV(object sender, RoutedEventArgs e)
+        {
+            CSVText = "";
+            SaveFileDialog? filedialog = new SaveFileDialog();
+            filedialog.Title = "Save CSV File As";
+            filedialog.InitialDirectory = "Documents";
+            filedialog.Filter = "CSV files|*.csv|All files (*.*)|*.*";
+            filedialog.AddExtension = true;
+            if (filedialog.ShowDialog() == true)
+            {
+                CSVText = filedialog.FileName;
+                File.WriteAllText(CSVText, "Title, Machine Name, DataType, Range, Default, Comments");
+
+                foreach (object? element in this.SettingsList.Items)
+                {
+                    try
+                    {
+                        SolutionHeader? header = (SolutionHeader?)element;
+                        if (header != null)
+                        {
+                            header.SaveCSV(this);
+                        }
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+        }
+
+        public void AddCSVLine(String[] values)
+        {
+            bool first = true;
+            string line = "\n";
+            foreach (String val in values)
+            {
+                if (first)
+                {
+                    first = false;
+                }
+                else
+                {
+                    line += ",";
+                }
+                line += val;
+            }
+            File.AppendAllText(CSVText, line);
         }
 
         private FileSystemWatcher? fileWatcher = null;
