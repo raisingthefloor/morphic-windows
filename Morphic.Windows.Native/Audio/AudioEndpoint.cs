@@ -24,17 +24,69 @@
 namespace Morphic.Windows.Native.Audio
 {
     using System;
+    using System.Diagnostics;
     using System.Runtime.InteropServices;
     using WindowsCom;
     using WindowsCoreAudio;
 
-    public class AudioEndpoint
+    public class AudioEndpoint: IDisposable
     {
         private IAudioEndpointVolume _audioEndpointVolume;
+        private AudioEndpointVolumeCallback? _audioEndpointVolumeCallback;
+        private bool disposedValue;
+
+        private float? _lastMasterVolumeLevel;
+        private bool? _lastMasterMuteState;
 
         private AudioEndpoint(IAudioEndpointVolume audioEndpointVolume)
         {
             this._audioEndpointVolume = audioEndpointVolume;
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            // OBSERVATION: in our early testing, Dispose was never called with _audioEndpointVolumeCallback _not_ set to true, even when the application was shutting down;
+            //              we should do some testing and see if it's possible to make sure that this "unregister" always gets called...just in case Windows doesn't like having
+            //              registrations sticking around for applications which aren't still running
+
+            // before disposing of any managed objects, unregister our callback
+            try
+            {
+                if (_audioEndpointVolumeCallback != null)
+                {
+                    _audioEndpointVolume.UnregisterControlChangeNotify(_audioEndpointVolumeCallback!);
+                }
+            }
+            catch
+            {
+                // ignore any exception
+                Debug.Assert(false, "Could not unregister unmanaged notification callback");
+            }
+
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    // TODO: dispose managed state (managed objects)
+                }
+
+                // free unmanaged resources
+
+                disposedValue = true;
+            }
+        }
+
+        ~AudioEndpoint()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: false);
+        }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
 
         public static AudioEndpoint GetDefaultAudioOutputEndpoint()
@@ -62,6 +114,89 @@ namespace Morphic.Windows.Native.Audio
             return new AudioEndpoint(audioEndpointVolume);
         }
 
+        private void UpdateUnmanagedNotificationRegistration()
+        {
+            var shouldBeRegisteredForNotifications = false;
+            // if any events are registered by our caller, we need to be registered for unmanaged volume/mute state change notifications
+            //
+            // volume level
+            if (_masterVolumeLevelChangedEvent != null)
+            {
+                shouldBeRegisteredForNotifications = true;
+            }
+            //
+            // mute state
+            if (_masterMuteStateChangedEvent != null)
+            {
+                shouldBeRegisteredForNotifications = true;
+            }
+
+            if (shouldBeRegisteredForNotifications == true)
+            {
+                // if we have subscribed events and are _not_ already registered for notifications, register for notifications now
+                if (_audioEndpointVolumeCallback == null)
+                {
+                    _audioEndpointVolumeCallback = new AudioEndpointVolumeCallback(this.AudioVolumeNotificationCallback);
+                    _audioEndpointVolume.RegisterControlChangeNotify(_audioEndpointVolumeCallback);
+                }
+            }
+            else
+            {
+                // unregister for notifications if we are already registered...but no longer have any subscribed events
+                if (_audioEndpointVolumeCallback != null)
+                {
+                    _audioEndpointVolume.UnregisterControlChangeNotify(_audioEndpointVolumeCallback!);
+                }
+            }
+        }
+
+        private void AudioVolumeNotificationCallback(AudioVolumeNotificationData audioVolumeNotificationData)
+        {
+            if (_lastMasterVolumeLevel != audioVolumeNotificationData.MasterVolume)
+            {
+                _lastMasterVolumeLevel = audioVolumeNotificationData.MasterVolume;
+                _masterVolumeLevelChangedEvent?.Invoke(this, new MasterVolumeLevelChangedEventArgs() { VolumeLevel = audioVolumeNotificationData.MasterVolume });
+            }
+
+            if (_lastMasterMuteState != audioVolumeNotificationData.Muted)
+            {
+                _lastMasterMuteState = audioVolumeNotificationData.Muted;
+                _masterMuteStateChangedEvent?.Invoke(this, new MasterMuteStateChangedEventArgs() { MuteState = audioVolumeNotificationData.Muted });
+            }
+        }
+
+        public class MasterVolumeLevelChangedEventArgs : EventArgs
+        {
+            public float VolumeLevel;
+        }
+        private EventHandler<MasterVolumeLevelChangedEventArgs> _masterVolumeLevelChangedEvent;
+        public event EventHandler<MasterVolumeLevelChangedEventArgs> MasterVolumeLevelChangedEvent
+        {
+            add
+            {
+                // if we have not already captured the master volume level, do so now
+                if (_lastMasterVolumeLevel == null)
+                {
+                    try
+                    {
+                        this.GetMasterVolumeLevel();
+                    }
+                    catch { }
+                }
+
+                _masterVolumeLevelChangedEvent += value;
+                this.UpdateUnmanagedNotificationRegistration();
+            }
+            remove
+            {
+                if (_masterVolumeLevelChangedEvent != null)
+                {
+                    _masterVolumeLevelChangedEvent -= value;
+                }
+                this.UpdateUnmanagedNotificationRegistration();
+            }
+        }
+
         public Single GetMasterVolumeLevel()
         {
             // get the master volume level
@@ -72,6 +207,8 @@ namespace Morphic.Windows.Native.Audio
                 // TODO: consider throwing more granular exceptions here
                 throw new COMException("IAudioEndpointVolume.GetMasterVolumeLevelScalar failed", Marshal.GetExceptionForHR(result));
             }
+
+            _lastMasterVolumeLevel = volumeLevelScalar;
 
             return volumeLevelScalar;
         }
@@ -92,6 +229,35 @@ namespace Morphic.Windows.Native.Audio
             }
         }
 
+        public class MasterMuteStateChangedEventArgs : EventArgs
+        {
+            public bool MuteState;
+        }
+        private EventHandler<MasterMuteStateChangedEventArgs> _masterMuteStateChangedEvent;
+        public event EventHandler<MasterMuteStateChangedEventArgs> MasterMuteStateChangedEvent
+        {
+            add
+            {
+                // if we have not already captured the master mute state, do so now
+                if (_lastMasterMuteState == null)
+                {
+                    try
+                    {
+                        this.GetMasterMuteState();
+                    }
+                    catch { }
+                }
+
+                _masterMuteStateChangedEvent += value;
+                this.UpdateUnmanagedNotificationRegistration();
+            }
+            remove
+            {
+                _masterMuteStateChangedEvent -= value;
+                this.UpdateUnmanagedNotificationRegistration();
+            }
+        }
+
         public Boolean GetMasterMuteState()
         {
             // get the master mute state
@@ -103,7 +269,11 @@ namespace Morphic.Windows.Native.Audio
                 throw new COMException("IAudioEndpointVolume.GetMute failed", Marshal.GetExceptionForHR(result));
             }
 
-            return (isMutedAsInt32 != 0) ? true : false;
+            var muteState = (isMutedAsInt32 != 0) ? true : false;
+
+            _lastMasterMuteState = muteState;
+
+            return muteState;
         }
 
         public void SetMasterMuteState(Boolean muteState)

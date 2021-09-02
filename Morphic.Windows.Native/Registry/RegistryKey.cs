@@ -104,6 +104,29 @@ namespace Morphic.Windows.Native
                 catch { }
             }
 
+            public record RegistryValueError : MorphicAssociatedValueEnum<RegistryValueError.Values>
+            {
+                // enum members
+                public enum Values
+                {
+
+                    ValueDoesNotExist,
+                    TypeMismatch,
+                    Win32Error/*(int win32ErrorCode)*/
+                }
+
+                // functions to create member instances
+                public static RegistryValueError TypeMismatch => new RegistryValueError(Values.TypeMismatch);
+                public static RegistryValueError ValueDoesNotExist => new RegistryValueError(Values.ValueDoesNotExist);
+                public static RegistryValueError Win32Error(int win32ErrorCode) => new RegistryValueError(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
+
+                // associated values
+                public int? Win32ErrorCode { get; private set; }
+
+                // verbatim required constructor implementation for MorphicAssociatedValueEnums
+                private RegistryValueError(Values value) : base(value) { }
+            }
+
             public IMorphicResult<RegistryKey> OpenSubKey(string name, bool writable = false)
             {
                 // configure key access requirements
@@ -133,37 +156,37 @@ namespace Morphic.Windows.Native
             }
 
             // NOTE: this function is provided for legacy code compatibility (i.e. for code designed around Microsoft.Win32 registry functions)
-            public IMorphicResult<object> GetValue(string? name)
+            public IMorphicResult<object, RegistryValueError> GetValue(string? name)
             {
                 var getValueAndTypeAsObjectResult = this.GetValueAndTypeAsObject(name);
                 if (getValueAndTypeAsObjectResult.IsError == true)
                 {
-                    return IMorphicResult<object>.ErrorResult();
+                    return IMorphicResult<object, RegistryValueError>.ErrorResult(getValueAndTypeAsObjectResult.Error!);
                 }
                 var valueType = getValueAndTypeAsObjectResult.Value.ValueType;
                 var data = getValueAndTypeAsObjectResult.Value.Data;
 
-                return IMorphicResult<object>.SuccessResult(data);
+                return IMorphicResult<object, RegistryValueError>.SuccessResult(data);
             }
 
-            public IMorphicResult<T> GetValue<T>(string? name)
+            public IMorphicResult<T, RegistryValueError> GetValue<T>(string? name)
             {
                 var getValueAndTypeAsObjectResult = this.GetValueAndTypeAsObject(name);
                 if (getValueAndTypeAsObjectResult.IsError == true)
                 {
-                    return IMorphicResult<T>.ErrorResult();
+                    return IMorphicResult<T, RegistryValueError>.ErrorResult(getValueAndTypeAsObjectResult.Error!);
                 }
                 var valueType = getValueAndTypeAsObjectResult.Value.ValueType;
                 var data = getValueAndTypeAsObjectResult.Value.Data;
 
                 if ((typeof(T) == typeof(uint)) && (valueType == ExtendedPInvoke.RegistryValueType.REG_DWORD))
                 {
-                    return IMorphicResult<T>.SuccessResult((T)data);
+                    return IMorphicResult<T, RegistryValueError>.SuccessResult((T)data);
                 }
                 else
                 {
                     // for all other types (and for type mismatches), return an error
-                    return IMorphicResult<T>.ErrorResult();
+                    return IMorphicResult<T, RegistryValueError>.ErrorResult(RegistryValueError.TypeMismatch);
                 }
             }
 
@@ -177,7 +200,7 @@ namespace Morphic.Windows.Native
                     this.ValueType = valueType;
                 }
             }
-            private IMorphicResult<GetValueAndTypeAsObjectResult> GetValueAndTypeAsObject(string? name)
+            private IMorphicResult<GetValueAndTypeAsObjectResult, RegistryValueError> GetValueAndTypeAsObject(string? name)
             {
                 var handleAsUIntPtr = (UIntPtr)(_handle.DangerousGetHandle().ToInt64());
 
@@ -189,25 +212,27 @@ namespace Morphic.Windows.Native
                 {
                     case PInvoke.Win32ErrorCode.ERROR_SUCCESS:
                         break;
+                    case PInvoke.Win32ErrorCode.ERROR_FILE_NOT_FOUND:
+                        return IMorphicResult<GetValueAndTypeAsObjectResult, RegistryValueError>.ErrorResult(RegistryValueError.ValueDoesNotExist);
                     default:
                         // NOTE: in the future, we may want to consider returning a specific result (i.e. "could not open for write access" etc.)
-                        return IMorphicResult<GetValueAndTypeAsObjectResult>.ErrorResult();
+                        return IMorphicResult<GetValueAndTypeAsObjectResult, RegistryValueError>.ErrorResult(RegistryValueError.Win32Error((int)queryValueErrorCode));
                 }
 
                 // pass 2: capture the actual data
                 var getValueResult = RegistryKey.GetValueForHandleAsUInt32(handleAsUIntPtr, name, dataSize);
                 if (getValueResult.IsError)
                 {
-                    return IMorphicResult<GetValueAndTypeAsObjectResult>.ErrorResult();
+                    return IMorphicResult<GetValueAndTypeAsObjectResult, RegistryValueError>.ErrorResult(getValueResult.Error!);
                 }
 
                 var data = getValueResult.Value;
-                return IMorphicResult<GetValueAndTypeAsObjectResult>.SuccessResult(new GetValueAndTypeAsObjectResult(data, valueType));
+                return IMorphicResult<GetValueAndTypeAsObjectResult, RegistryValueError>.SuccessResult(new GetValueAndTypeAsObjectResult(data, valueType));
             }
 
             #region GetValue helper functions
 
-            private static IMorphicResult<uint> GetValueForHandleAsUInt32(UIntPtr handle, string? name, uint dataSize)
+            private static IMorphicResult<uint, RegistryValueError> GetValueForHandleAsUInt32(UIntPtr handle, string? name, uint dataSize)
             {
                 var ptrToData = Marshal.AllocHGlobal((int)dataSize);
                 try
@@ -221,23 +246,23 @@ namespace Morphic.Windows.Native
                             break;
                         default:
                             // NOTE: in the future, we may want to consider returning a specific result (i.e. "could not open for write access" etc.)
-                            return IMorphicResult<uint>.ErrorResult();
+                            return IMorphicResult<uint, RegistryValueError>.ErrorResult(RegistryValueError.Win32Error((int)queryValueErrorCode));
                     }
 
                     // validate value type and data size
                     if (valueType != ExtendedPInvoke.RegistryValueType.REG_DWORD)
                     {
-                        return IMorphicResult<uint>.ErrorResult();
+                        return IMorphicResult<uint, RegistryValueError>.ErrorResult(RegistryValueError.TypeMismatch);
                     }
                     //
                     if (mutableDataSize != dataSize)
                     {
-                        return IMorphicResult<uint>.ErrorResult();
+                        return IMorphicResult<uint, RegistryValueError>.ErrorResult(RegistryValueError.TypeMismatch);
                     }
 
                     // capture and return result
                     var data = Marshal.PtrToStructure<uint>(ptrToData);
-                    return IMorphicResult<uint>.SuccessResult(data);
+                    return IMorphicResult<uint, RegistryValueError>.SuccessResult(data);
                 }
                 finally
                 {
@@ -266,9 +291,10 @@ namespace Morphic.Windows.Native
                 var handleAsUIntPtr = (UIntPtr)(_handle.DangerousGetHandle().ToInt64());
 
                 IMorphicResult setValueResult;
-                if (typeof(T) == typeof(uint))
+                if ((typeof(T) == typeof(uint)) ||
+                    typeof(T) == typeof(System.String))
                 {
-                    setValueResult = RegistryKey.SetValueForHandle(handleAsUIntPtr, name, (uint)(object)value!);
+                    setValueResult = RegistryKey.SetValueForHandle(handleAsUIntPtr, name, value!);
                 }
                 else
                 {
@@ -285,15 +311,38 @@ namespace Morphic.Windows.Native
 
             #region SetValue helper functions
 
-            private static IMorphicResult SetValueForHandle(UIntPtr handle, string? name, uint value)
+            private static IMorphicResult SetValueForHandle<T>(UIntPtr handle, string? name, T value)
             {
-                var dataSizeAsInt = Marshal.SizeOf<uint>();
-                var ptrToData = Marshal.AllocHGlobal(dataSizeAsInt);
-                Marshal.StructureToPtr<uint>(value, ptrToData, false);
+                IntPtr ptrToData;
+                uint dataSize;
+                ExtendedPInvoke.RegistryValueType valueType;
+
+                if (typeof(T) == typeof(uint))
+                {
+                    var dataSizeAsInt = Marshal.SizeOf<uint>();
+                    ptrToData = Marshal.AllocHGlobal(dataSizeAsInt);
+                    var valueAsUInt = (uint)(object)value!;
+                    Marshal.StructureToPtr<uint>(valueAsUInt, ptrToData, false);
+                    //
+                    dataSize = (uint)dataSizeAsInt;
+                    valueType = ExtendedPInvoke.RegistryValueType.REG_DWORD;
+                }
+                else if (typeof(T) == typeof(System.String))
+                {
+                    var valueAsString = (value as System.String)!;
+                    ptrToData = Marshal.StringToHGlobalUni(valueAsString);
+                    //
+                    dataSize = (uint)((valueAsString.Length + 1 /* +1 for the null terminator */) * 2);
+                    valueType = ExtendedPInvoke.RegistryValueType.REG_SZ;
+                }
+                else
+                {
+                    // unknown type
+                    return IMorphicResult.ErrorResult;
+                }
+                //
                 try
                 {
-                    var dataSize = (uint)dataSizeAsInt;
-                    var valueType = ExtendedPInvoke.RegistryValueType.REG_DWORD;
                     var setValueErrorCode = ExtendedPInvoke.RegSetValueEx(handle, name, 0, valueType, ptrToData, dataSize);
                     switch (setValueErrorCode)
                     {
@@ -311,6 +360,13 @@ namespace Morphic.Windows.Native
                 {
                     Marshal.FreeHGlobal(ptrToData);
                 }
+            }
+
+            private static int CalculateUnicodeNullTerminatedLengthOfString(string value)
+            {
+                // NOTE: this has been tested with unicode characters that are both one code unit and two code units; the System.String type automatically increases "length" as appropriate 
+                //       when surrogate characters (i.e. 2 chars for 1 symbol) are required
+                return (value.Length + 1 /* +1 for the null terminator */) * 2 /* *2 because each character is 2 bytes wide */;
             }
 
             #endregion SetValue helper functions

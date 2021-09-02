@@ -61,49 +61,49 @@
             return result;
         }
 
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-        public struct HighContrast
-        {
-            public uint cbSize;
-            public uint dwFlags;
-            public IntPtr lpszDefaultScheme;
+        //[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+        //public struct HighContrast
+        //{
+        //    public uint cbSize;
+        //    public uint dwFlags;
+        //    public IntPtr lpszDefaultScheme;
 
-            public static HighContrast Create()
-            {
-                return new HighContrast()
-                {
-                    cbSize = (uint)Marshal.SizeOf(typeof(HighContrast)),
-                    dwFlags = 0,
-                    lpszDefaultScheme = IntPtr.Zero,
-                };
-            }
-        }
+        //    public static HighContrast Create()
+        //    {
+        //        return new HighContrast()
+        //        {
+        //            cbSize = (uint)Marshal.SizeOf(typeof(HighContrast)),
+        //            dwFlags = 0,
+        //            lpszDefaultScheme = IntPtr.Zero,
+        //        };
+        //    }
+        //}
 
-        public HighContrastOptions GetHighContrast()
-        {
-            Spi.HighContrast highContrast = Spi.HighContrast.Create();
-            Spi.Instance.SystemParametersInfo(Spi.Action.GETHIGHCONTRAST, highContrast.cbSize, ref highContrast);
-            return (HighContrastOptions)highContrast.dwFlags;
-        }
-        public bool SetHighContrast(HighContrastOptions flags)
-        {
-            Spi.HighContrast highContrast = Spi.HighContrast.Create();
-            highContrast.dwFlags = (uint)flags;
-            return Spi.Instance.SystemParametersInfo(Spi.Action.SETHIGHCONTRAST, highContrast.cbSize, highContrast);
-        }
+        //public HighContrastOptions GetHighContrast()
+        //{
+        //    Spi.HighContrast highContrast = Spi.HighContrast.Create();
+        //    Spi.Instance.SystemParametersInfo(Spi.Action.GETHIGHCONTRAST, highContrast.cbSize, ref highContrast);
+        //    return (HighContrastOptions)highContrast.dwFlags;
+        //}
+        //public bool SetHighContrast(HighContrastOptions flags)
+        //{
+        //    Spi.HighContrast highContrast = Spi.HighContrast.Create();
+        //    highContrast.dwFlags = (uint)flags;
+        //    return Spi.Instance.SystemParametersInfo(Spi.Action.SETHIGHCONTRAST, highContrast.cbSize, highContrast);
+        //}
 
-        [Flags]
-        public enum HighContrastOptions
-        {
-            HCF_HIGHCONTRASTON = 0x00000001,
-            HCF_AVAILABLE = 0x00000002,
-            HCF_HOTKEYACTIVE = 0x00000004,
-            HCF_CONFIRMHOTKEY = 0x00000008,
-            HCF_HOTKEYSOUND = 0x00000010,
-            HCF_INDICATOR = 0x00000020,
-            HCF_HOTKEYAVAILABLE = 0x00000040,
-            HCF_OPTION_NOTHEMECHANGE = 0x00001000
-        }
+        //[Flags]
+        //public enum HighContrastOptions
+        //{
+        //    HCF_HIGHCONTRASTON = 0x00000001,
+        //    HCF_AVAILABLE = 0x00000002,
+        //    HCF_HOTKEYACTIVE = 0x00000004,
+        //    HCF_CONFIRMHOTKEY = 0x00000008,
+        //    HCF_HOTKEYSOUND = 0x00000010,
+        //    HCF_INDICATOR = 0x00000020,
+        //    HCF_HOTKEYAVAILABLE = 0x00000040,
+        //    HCF_OPTION_NOTHEMECHANGE = 0x00001000
+        //}
 
         public enum Action : uint
         {

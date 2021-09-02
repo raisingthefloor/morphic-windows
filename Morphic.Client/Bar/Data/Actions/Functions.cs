@@ -96,21 +96,92 @@ namespace Morphic.Client.Bar.Data.Actions
             return IMorphicResult.SuccessResult;
         }
 
+        [InternalFunction("volumeUp")]
+        public static async Task<IMorphicResult> VolumeUpAsync(FunctionArgs args)
+        {
+            args.Arguments.Add("direction", "up");
+            args.Arguments.Add("amount", "6");
+            return await SetVolumeAsync(args);
+        }
+
+        [InternalFunction("volumeDown")]
+        public static async Task<IMorphicResult> VolumeDownAsync(FunctionArgs args)
+        {
+            args.Arguments.Add("direction", "down");
+            args.Arguments.Add("amount", "6");
+            return await SetVolumeAsync(args);
+        }
+
+        internal static IMorphicResult<bool> GetMuteState()
+        {
+            try
+            {
+                var audioEndpoint = Windows.Native.Audio.AudioEndpoint.GetDefaultAudioOutputEndpoint();
+
+                // if we didn't get a state in the request, try to reverse the state
+                var state = audioEndpoint.GetMasterMuteState();
+
+                return IMorphicResult<bool>.SuccessResult(state);
+            }
+            catch
+            {
+                return IMorphicResult<bool>.ErrorResult();
+            }
+        }
+
+        [InternalFunction("volumeMute")]
+        public static async Task<IMorphicResult> VolumeMuteAsync(FunctionArgs args)
+        {
+            bool newState;
+            if (args.Arguments.Keys.Contains("state"))
+            {
+                newState = (args["state"] == "on");
+            }
+            else
+            {
+                var getMuteStateResult = Functions.GetMuteState();
+                if (getMuteStateResult.IsSuccess == true)
+                {
+                    newState = getMuteStateResult.Value!;
+                }
+                else
+                {
+                    // if we cannot get the current value, gracefully degrade (i.e. assume that the volume is not muted)
+                    newState = false;
+                }
+            }
+
+            try
+            {
+                // set the mute state to the new state value
+                var audioEndpoint = Windows.Native.Audio.AudioEndpoint.GetDefaultAudioOutputEndpoint();
+                audioEndpoint.SetMasterMuteState(newState);
+            }
+            catch
+            {
+                return IMorphicResult.ErrorResult;
+            }
+
+            return IMorphicResult.SuccessResult;
+        }
+
         /// <summary>
         /// Lowers or raises the volume.
         /// </summary>
         /// <param name="args">direction: "up"/"down", amount: number of 1/100 to move</param>
         /// <returns></returns>
-        [InternalFunction("volume", "direction", "amount=10")]
+        [InternalFunction("volume", "direction", "amount=6")]
         public static async Task<IMorphicResult> SetVolumeAsync(FunctionArgs args)
         {
+            // NOTE: ideally we should switch this functionality to use AudioEndpoint.SetMasterVolumeLevel instead
+
             IntPtr taskTray = WinApi.FindWindow("Shell_TrayWnd", IntPtr.Zero);
             if (taskTray != IntPtr.Zero)
             {
                 int action = args["direction"] == "up"
                     ? WinApi.APPCOMMAND_VOLUME_UP
                     : WinApi.APPCOMMAND_VOLUME_DOWN;
-
+                
                 // Each command moves the volume by 2 notches.
                 int times = Math.Clamp(Convert.ToInt32(args["amount"]), 1, 20) / 2;
                 for (int n = 0; n < times; n++)
@@ -669,13 +740,25 @@ namespace Morphic.Client.Bar.Data.Actions
                 var personalizeKey = openPersonalizeKeyResult.Value!;
 
                 // get the current setting
+                bool appsUseLightThemeAsBool;
                 var getAppsUseLightThemeResult = personalizeKey.GetValue<uint>("AppsUseLightTheme");
                 if (getAppsUseLightThemeResult.IsError == true)
                 {
-                    return IMorphicResult<bool>.ErrorResult();
+                    if (getAppsUseLightThemeResult.Error == Windows.Native.Registry.RegistryKey.RegistryValueError.ValueDoesNotExist)
+                    {
+                        // default AppsUseLightTheme (inverse of dark mode state) on Windows 10 v1809 is true
+                        appsUseLightThemeAsBool = true;
+                    }
+                    else
+                    {
+                        return IMorphicResult<bool>.ErrorResult();
+                    }
                 }
-                var appsUseLightThemeAsUInt32 = getAppsUseLightThemeResult.Value!;
-                var appsUseLightThemeAsBool = (appsUseLightThemeAsUInt32 != 0) ? true : false;
+                else
+                {
+                    var appsUseLightThemeAsUInt32 = getAppsUseLightThemeResult.Value!;
+                    appsUseLightThemeAsBool = (appsUseLightThemeAsUInt32 != 0) ? true : false;
+                }
 
                 // dark theme state is the inverse of AppsUseLightTheme
                 var darkThemeState = !appsUseLightThemeAsBool;
@@ -820,10 +903,112 @@ namespace Morphic.Client.Bar.Data.Actions
             return IMorphicResult.SuccessResult;
         }
 
+        //
+
+        const string WORD_RUNNING_MESSAGE = "You need to exit Word in order to use the Word Simplify buttons.\n\n(1) Quit Word.\n(2) Use the Word Simplify buttons to add or remove the simplified ribbon(s) you want.\n(3) Re-launch Word.";
+
+        private static bool IsSafeToModifyRibbonFile_WarnUser()
+        {
+            // make sure Word is not running before attempting to change the word ribbon enable/disable state
+            var isWordRunningResult = Morphic.Integrations.Office.WordRibbon.IsWordRunning();
+            if (isWordRunningResult.IsError == true)
+            {
+                // NOTE: realistically, we might not want to create a modal message box during an async function. 
+                MessageBox.Show("Sorry, we cannot detect if Word is running.\n\nThis feature is currently unavailable.");
+            }
+            var wordIsRunning = isWordRunningResult.Value!;
+            //
+            if (wordIsRunning == true)
+            {
+                MessageBox.Show(Functions.WORD_RUNNING_MESSAGE);
+                return false;
+            }
+
+            // if Word is not running, it's safe to proceed
+            return true;
+        }
+
+        [InternalFunction("basicWordRibbon")]
+        public static async Task<IMorphicResult> ToggleBasicWordRibbonAsync(FunctionArgs args)
+        {
+            // if we have a "value" property, this is a multi-segmented button and we should use "value" instead of "state"
+            bool on;
+            if (args.Arguments.Keys.Contains("value"))
+            {
+                on = (args["value"] == "on");
+            }
+            else if (args.Arguments.Keys.Contains("state"))
+            {
+                on = (args["state"] == "on");
+            }
+            else
+            {
+                System.Diagnostics.Debug.Assert(false, "Function 'basicWordRibbon' did not receive a new state");
+                on = false;
+            }
+
+            if (Functions.IsSafeToModifyRibbonFile_WarnUser() == false)
+            {
+                // Word is running, so we are choosing not to execute this function
+                return new MorphicError();
+            }
+
+            if (on == true)
+            {
+                var enableRibbonResult = Morphic.Integrations.Office.WordRibbon.EnableBasicSimplifyRibbon();
+                return enableRibbonResult.IsSuccess ? new MorphicSuccess() : new MorphicError();
+            }
+            else
+            {
+                var disableRibbonResult = Morphic.Integrations.Office.WordRibbon.DisableBasicSimplifyRibbon();
+                return disableRibbonResult.IsSuccess ? new MorphicSuccess() : new MorphicError();
+            }
+        }
+
+        [InternalFunction("essentialsWordRibbon")]
+        public static async Task<IMorphicResult> ToggleEssentialsWordRibbonAsync(FunctionArgs args)
+        {
+            // if we have a "value" property, this is a multi-segmented button and we should use "value" instead of "state"
+            bool on;
+            if (args.Arguments.Keys.Contains("value"))
+            {
+                on = (args["value"] == "on");
+            }
+            else if (args.Arguments.Keys.Contains("state"))
+            {
+                on = (args["state"] == "on");
+            }
+            else
+            {
+                System.Diagnostics.Debug.Assert(false, "Function 'essentialsWordRibbon' did not receive a new state");
+                on = false;
+            }
+
+            if (Functions.IsSafeToModifyRibbonFile_WarnUser() == false)
+            {
+                // Word is running, so we are choosing not to execute this function
+                return new MorphicError();
+            }
+
+            if (on == true)
+            {
+                var enableRibbonResult = Morphic.Integrations.Office.WordRibbon.EnableEssentialsSimplifyRibbon();
+                return enableRibbonResult.IsSuccess ? new MorphicSuccess() : new MorphicError();
+            }
+            else
+            {
+                var disableRibbonResult = Morphic.Integrations.Office.WordRibbon.DisableEssentialsSimplifyRibbon();
+                return disableRibbonResult.IsSuccess ? new MorphicSuccess() : new MorphicError();
+            }
+        }
+
+        //
+
         [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "Windows API naming")]
         [SuppressMessage("ReSharper", "IdentifierTypo", Justification = "Windows API naming")]
         private static class WinApi
         {
+            //public const int APPCOMMAND_VOLUME_MUTE = 8;
             public const int APPCOMMAND_VOLUME_DOWN = 9;
             public const int APPCOMMAND_VOLUME_UP = 10;
             public const int WM_APPCOMMAND = 0x319;

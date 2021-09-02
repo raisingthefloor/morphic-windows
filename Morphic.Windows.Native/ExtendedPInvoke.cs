@@ -173,6 +173,22 @@ namespace Morphic.Windows.Native
         #endregion minwindef.h
 
 
+        #region ole32.h
+
+        [DllImport("ole32.dll", CharSet = CharSet.Unicode, SetLastError = false)]
+        internal static extern uint CLSIDFromProgIDEx(string lpszProgID, out Guid lpclsid);
+
+        #endregion ole32.h
+
+
+        #region oleAuto.h
+
+        [DllImport("oleaut32.dll", SetLastError = true)]
+        internal static extern uint GetActiveObject([In] ref Guid rclsid, IntPtr pvReserved, [MarshalAs(UnmanagedType.IUnknown)] out object ppunk);
+
+        #endregion oleAuto.h
+
+
         #region SetupApi.h
 
         internal const uint SPDRP_CAPABILITIES = 0x0000000F;
@@ -207,6 +223,18 @@ namespace Morphic.Windows.Native
         internal static extern IntPtr FindExecutable(string lpFile, string? lpDirectory, [Out] StringBuilder lpResult);
 
         #endregion shellapi.h
+
+
+        #region winerror.h
+
+        internal enum Win32ErrorCode: uint
+        {
+            S_OK = 0x00000000,
+            CO_E_CLASSSTRING = 0x800401F3,
+            REGDB_E_WRITEREGDB = 0x80040151
+        }
+
+        #endregion winerror.h
 
 
         #region winioctl.h
@@ -376,6 +404,43 @@ namespace Morphic.Windows.Native
 
         #endregion winreg.h
 
+
+        #region WinUser.h
+
+        // WM_ACTIVATE state values
+        internal static readonly IntPtr WA_INACTIVE = (IntPtr)0;
+        internal static readonly IntPtr WA_ACTIVE = (IntPtr)1;
+        internal static readonly IntPtr WA_CLICKACTIVE = (IntPtr)2;
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-highcontrastw
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        internal struct HIGHCONTRAST
+        {
+            public uint cbSize;
+            public HighContrastFlags dwFlags;
+            public String? lpszDefaultScheme;
+
+            public void Init()
+            {
+                this.cbSize = (uint)Marshal.SizeOf(typeof(HIGHCONTRAST));
+            }
+        }
+
+        // flags for HIGHCONTRAST.dwFlags
+        public enum HighContrastFlags: uint 
+        {
+            HCF_HIGHCONTRASTON  = 0x00000001,
+            HCF_AVAILABLE       = 0x00000002,
+            HCF_HOTKEYACTIVE    = 0x00000004,
+            HCF_CONFIRMHOTKEY   = 0x00000008,
+            HCF_HOTKEYSOUND     = 0x00000010,
+            HCF_INDICATOR       = 0x00000020,
+            HCF_HOTKEYAVAILABLE = 0x00000040,
+            HCF_LOGONDESKTOP    = 0x00000100,
+            HCF_DEFAULTDESKTOP  = 0x00000200
+        }
+
+        #endregion WinUser.h
 
     }
 }

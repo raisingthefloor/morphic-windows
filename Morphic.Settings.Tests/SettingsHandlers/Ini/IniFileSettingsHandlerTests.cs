@@ -31,7 +31,7 @@ ignoreC=CC
 key1=valueOneParent
 key2=valueTwoParent
 keyT2=valueT2
-[[test3]]
+[test3]
 ignoreD=DD
 key1=valueOneChild
 key2=valueTwoChild
@@ -46,12 +46,10 @@ keyT3=valueT3
         [Fact]
         public async Task IniGet()
         {
-            TestIniFileReader reader = new TestIniFileReader() {
-                ContentOverride = TestContent
-            };
+            TestIni ini = new(TestContent);
 
             ServiceCollection serviceCollection = TestUtil.GetTestServices();
-            serviceCollection.ReplaceTransient<IniFileReader>(s => reader);
+            serviceCollection.ReplaceTransient<Ini>(s => ini);
             IServiceProvider serviceProvider = serviceCollection.BuildServiceProvider();
 
             Solutions sr = Solutions.FromFile(serviceProvider, TestUtil.GetLocalFile("..\\test-solutions.json5"));
@@ -67,9 +65,9 @@ keyT3=valueT3
             }
 
             // The correct file path is used
-            Assert.Equal("test-file.ini", reader.FilePath);
+            Assert.Equal("test-file.ini", ini.FilePath);
 
-            Dictionary<string,string> expect = TestUtil.StringToDictionary(@"
+            Dictionary<string, string> expect = TestUtil.StringToDictionary(@"
 settingA=valueOneA
 settingB=valueTwoA
 settingC=valueThreeA
@@ -94,16 +92,10 @@ settingL=valueT3
         [Fact]
         public async Task IniSet()
         {
-            TestIniFileWriter writer = new TestIniFileWriter() {
-                ContentOverride = TestUtil.ReadLocalFile("handler-test.ini")
-            };
-            TestIniFileReader reader = new TestIniFileReader() {
-                ContentOverride = TestUtil.ReadLocalFile("handler-test.ini")
-            };
+            TestIni writer = new(TestUtil.ReadLocalFile("handler-test.ini"));
 
             ServiceProvider serviceProvider = TestUtil.GetTestServices()
-                .ReplaceTransient<IniFileWriter>(s => writer)
-                .ReplaceTransient<IniFileReader>(s => reader)
+                .ReplaceTransient<Ini>(s => writer)
                 .BuildServiceProvider();
 
             Solutions sr = Solutions.FromFile(serviceProvider, TestUtil.GetLocalFile("..\\test-solutions.json5"));
@@ -153,7 +145,7 @@ ignoreC=CC
 key1=value-UPDATED-OneParent
 key2=valueTwoParent
 keyT2=value-UPDATED-T2
-[[test3]]
+[test3]
 ignoreD=DD
 key1=value-UPDATED-OneChild
 key2=valueTwoChild
@@ -168,39 +160,36 @@ keyT3=value-UPDATED-T3
         }
     }
 
-    public class TestIniFileReader : IniFileReader
+    /// <summary>
+    /// Wrapper for the Ini class for testing.
+    /// </summary>
+    public class TestIni : Ini
     {
-        public TestIniFileReader(string? content = null)
+        /// <summary>
+        /// Creates an instance using predefined content.
+        /// </summary>
+        /// <param name="content">The content.</param>
+        public TestIni(string? content = null)
         {
-            this.content = content;
+            base.Content = content;
         }
 
-        public string? ContentOverride { get; set; }
+        /// <summary>true if WriteFile has been called.</summary>
+        public bool Saved { get; private set; }
 
-        public override void SetFile(string path)
+        /// <summary>The written ini file content.</summary>
+        public string? Result => this.IniFile?.ToString();
+
+        /// <inheritdoc cref="Ini.ReadFile"/>
+        public override Task ReadFile(string path)
         {
             this.FilePath = path;
-            this.content = this.ContentOverride;
-        }
-    }
-
-    public class TestIniFileWriter : IniFileWriter
-    {
-        public TestIniFileWriter(string? content = null)
-        {
-            this.content = content;
+            this.Parse();
+            return Task.FromResult(true);
         }
 
-        public string? ContentOverride { get; set; }
-        public bool Saved { get; set; }
-
-        public override void SetFile(string path)
-        {
-            this.FilePath = path;
-            this.content = this.ContentOverride;
-        }
-
-        public override Task Save()
+        /// <inheritdoc cref="Ini.ReadFile"/>
+        public override Task WriteFile(string filePath)
         {
             this.Saved = true;
             return Task.FromResult(true);

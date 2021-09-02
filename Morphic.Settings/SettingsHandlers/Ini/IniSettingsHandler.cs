@@ -28,14 +28,13 @@
             Values values = new Values();
             try
             {
-                IniFileReader reader = this.serviceProvider.GetRequiredService<IniFileReader>();
-                reader.SetFile(settingGroup.Path);
-
-                Dictionary<string, string> data = reader.ReadData();
+                Ini ini = this.serviceProvider.GetRequiredService<Ini>();
+                await ini.ReadFile(settingGroup.Path);
 
                 foreach (Setting setting in settings)
                 {
-                    if (data.TryGetValue(setting.Name, out string? value))
+                    string? value = ini.GetValue(setting.Name);
+                    if (value != null)
                     {
                         values.Add(setting, value);
                     }
@@ -53,16 +52,15 @@
         {
             try
             {
-                IniFileWriter writer = this.serviceProvider.GetService<IniFileWriter>();
+                Ini ini = this.serviceProvider.GetRequiredService<Ini>();
+                await ini.ReadFile(settingGroup.Path);
 
-                writer.SetFile(settingGroup.Path);
-                Dictionary<string, string?> iniData = new Dictionary<string, string?>();
                 foreach ((Setting setting, object? value) in values)
                 {
-                    iniData[setting.Name] = value?.ToString();
+                    ini.SetValue(setting.Name, value?.ToString());
                 }
 
-                await writer.Write(iniData).Save();
+                await ini.WriteFile(settingGroup.Path);
 
                 return IMorphicResult.SuccessResult;
             }
