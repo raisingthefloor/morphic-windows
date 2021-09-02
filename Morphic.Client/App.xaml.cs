@@ -971,6 +971,32 @@ namespace Morphic.Client
                     await Morphic.Client.Bar.Data.Actions.Functions.SetDarkModeStateAsync(darkModeEnabledDefault);
                 }
             }
+            //
+            //
+            // word simplify
+            var isOfficeInstalled = Morphic.Integrations.Office.WordRibbon.IsOfficeInstalled();
+            if (isOfficeInstalled == true)
+            {
+                var isBasicSimplifyRibbonEnabledResult = Morphic.Integrations.Office.WordRibbon.IsBasicSimplifyRibbonEnabled();
+                if (isBasicSimplifyRibbonEnabledResult.IsSuccess == true)
+                {
+                    var isBasicSimplifyRibbonEnabled = isBasicSimplifyRibbonEnabledResult.Value!;
+                    if (isBasicSimplifyRibbonEnabled == true)
+                    {
+                        _ = Morphic.Integrations.Office.WordRibbon.DisableBasicSimplifyRibbon();
+                    }
+                }
+
+                var isEssentialsSimplifyRibbonEnabledResult = Morphic.Integrations.Office.WordRibbon.IsEssentialsSimplifyRibbonEnabled();
+                if (isEssentialsSimplifyRibbonEnabledResult.IsSuccess == true)
+                {
+                    var isEssentialsSimplifyRibbonEnabled = isEssentialsSimplifyRibbonEnabledResult.Value!;
+                    if (isEssentialsSimplifyRibbonEnabled == true)
+                    {
+                        _ = Morphic.Integrations.Office.WordRibbon.DisableEssentialsSimplifyRibbon();
+                    }
+                }
+            }
         }
 
         private async Task Session_UserChangedAsync(object? sender, MorphicSession.MorphicSessionSignInOrOutEventArgs e)
