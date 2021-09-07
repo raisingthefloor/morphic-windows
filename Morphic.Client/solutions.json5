@@ -1,4 +1,4 @@
-{
+﻿{
   "com.aisquared.zoomtext": {
     "settings": [
       {
@@ -4669,8 +4669,11 @@
   "com.freedomscientific.jaws": {
     "settings": [
       {
-        "type": "iniFile",
-        "path": "%APPDATA%\\Freedom Scientific\\JAWS\\2019\\Settings\\enu\\DEFAULT.JCF",
+        "type": "LayeredIniFile",
+        "pathlayers": [
+          "%APPDATA%\\Freedom Scientific\\JAWS\\2019\\Settings\\enu\\DEFAULT.JCF",
+          "%PROGRAMDATA%\\Freedom Scientific\\JAWS\\2019\\Settings\\enu\\DEFAULT.JCF"
+        ],
         "settings": {
           "OutputModes.TUTOR": {
             "name": "OutputModes.TUTOR",
