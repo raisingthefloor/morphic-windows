@@ -312,6 +312,7 @@
                 line += val;
             }
             File.AppendAllText(CSVText, line);
+		}
 
         private void EBasic(object sender, RoutedEventArgs e)
         {
