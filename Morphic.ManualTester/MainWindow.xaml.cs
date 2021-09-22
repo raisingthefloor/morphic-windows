@@ -1,5 +1,6 @@
 ﻿namespace Morphic.ManualTester
 {
+	using Morphic.Integrations.Office;
     using System;
     using System.Collections.Generic;
     using System.IO;
@@ -99,7 +100,6 @@
             this.ConfigureServices(collection);
             this.ServiceProvider = collection.BuildServiceProvider();
             this.logger = this.ServiceProvider.GetRequiredService<ILogger<MainWindow>>();
-
             this.AutoReload = Registry.GetValue(RegistryPath, "AutoReload", null) as string == "1";
             string? lastFile = Registry.GetValue(RegistryPath, "LastFile", null) as string;
             if (string.IsNullOrEmpty(lastFile))
@@ -312,6 +312,25 @@
                 line += val;
             }
             File.AppendAllText(CSVText, line);
+
+        private void EBasic(object sender, RoutedEventArgs e)
+        {
+            WordRibbon.EnableBasicSimplifyRibbon();
+        }
+
+        private void DBasic(object sender, RoutedEventArgs e)
+        {
+            WordRibbon.DisableBasicSimplifyRibbon();
+        }
+
+        private void EEssential(object sender, RoutedEventArgs e)
+        {
+            WordRibbon.EnableEssentialsSimplifyRibbon();
+        }
+
+        private void DEssential(object sender, RoutedEventArgs e)
+        {
+            WordRibbon.DisableEssentialsSimplifyRibbon();
         }
 
         private FileSystemWatcher? fileWatcher = null;
