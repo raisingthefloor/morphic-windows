@@ -5,12 +5,20 @@
     using SolutionsRegistry;
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Threading.Tasks;
     
     [SrService]
     class NativeSettingsHandler : SettingsHandler
     {
         private readonly IServiceProvider serviceProvider;
+
+        private enum SolidColorComponent
+        {
+            Red,
+            Green,
+            Blue
+        }
 
         public NativeSettingsHandler(IServiceProvider serviceProvider)
         {
@@ -46,6 +54,30 @@
                     case "DoubleClickHeightConfig":
                         {
                             var getResult = this.GetDoubleClickHeight();
+                            getWasSuccessful = getResult.IsSuccess;
+                            value = getResult.Value;
+                        }
+                        break;
+                    case "SolidColorConfigR":
+                        {
+                            // NOTE: we should rework the solutions registry so that red, green and blue are all retrieved in ONE call (as an RGB or ARGB value)
+                            var getResult = this.GetSolidColorComponent(SolidColorComponent.Red);
+                            getWasSuccessful = getResult.IsSuccess;
+                            value = getResult.Value;
+                        }
+                        break;
+                    case "SolidColorConfigG":
+                        {
+                            // NOTE: we should rework the solutions registry so that red, green and blue are all retrieved in ONE call (as an RGB or ARGB value)
+                            var getResult = this.GetSolidColorComponent(SolidColorComponent.Green);
+                            getWasSuccessful = getResult.IsSuccess;
+                            value = getResult.Value;
+                        }
+                        break;
+                    case "SolidColorConfigB":
+                        {
+                            // NOTE: we should rework the solutions registry so that red, green and blue are all retrieved in ONE call (as an RGB or ARGB value)
+                            var getResult = this.GetSolidColorComponent(SolidColorComponent.Blue);
                             getWasSuccessful = getResult.IsSuccess;
                             value = getResult.Value;
                         }
@@ -122,6 +154,54 @@
             return IMorphicResult<uint>.SuccessResult(result);
         }
 
+        // NOTE: we should rework the solutions registry so that red, green and blue are all retrieved in ONE call (as an RGB or ARGB value)
+        private IMorphicResult<byte> GetSolidColorComponent(SolidColorComponent colorComponent)
+        {
+            var colorIndex = ExtendedPInvoke.COLOR_DESKTOP;
+
+            byte result;
+
+            var getSysColorResult = this.GetSysColor(colorIndex);
+            if (getSysColorResult.IsError == true)
+            {
+                return IMorphicResult<byte>.ErrorResult();
+            }
+            var color = getSysColorResult.Value!;
+
+            switch (colorComponent)
+            {
+                case SolidColorComponent.Red:
+                    result = (byte)((color & 0xFF) >> 0);
+                    break;
+                case SolidColorComponent.Green:
+                    result = (byte)((color & 0xFF00) >> 8);
+                    break;
+                case SolidColorComponent.Blue:
+                    result = (byte)((color & 0xFF0000) >> 16);
+                    break;
+                default:
+                    // unreachable code
+                    Debug.Assert(false);
+                    return IMorphicResult<byte>.ErrorResult();
+            }
+
+            return IMorphicResult<byte>.SuccessResult(result);
+        }
+
+        private IMorphicResult<uint> GetSysColor(int colorIndex)
+        {
+            // verify that the required syscolor is supported on this installation of Windows
+            var sysColorBrush = ExtendedPInvoke.GetSysColorBrush(colorIndex);
+            if (sysColorBrush == IntPtr.Zero)
+            {
+                return IMorphicResult<uint>.ErrorResult();
+            }
+
+            var color = ExtendedPInvoke.GetSysColor(colorIndex);
+
+            return IMorphicResult<uint>.SuccessResult(color);
+        }
+
         private IMorphicResult<double> GetVolume()
         {
             // OBSERVATION: if the system has no default audio output endpoint (or we cannot get the volume level), we currently have no way to return that error
@@ -187,6 +267,60 @@
                             var valueAsUint = convertToUintResult.Value!;
 
                             var setResult = this.SetDoubleClickHeight(valueAsUint);
+                            if (setResult.IsError == true)
+                            {
+                                success = false;
+                            }
+                        }
+                        break;
+                    case "SolidColorConfigR":
+                        {
+                            // NOTE: we should rework the solutions registry so that red, green and blue are all set in ONE call (as an RGB or ARGB value)
+                            var convertToByteResult = this.TryConvertObjectToByte(value);
+                            if (convertToByteResult.IsError == true)
+                            {
+                                success = false;
+                                break;
+                            }
+                            var valueAsByte = convertToByteResult.Value!;
+
+                            var setResult = this.SetSolidColorComponent(SolidColorComponent.Red, valueAsByte);
+                            if (setResult.IsError == true)
+                            {
+                                success = false;
+                            }
+                        }
+                        break;
+                    case "SolidColorConfigG":
+                        {
+                            // NOTE: we should rework the solutions registry so that red, green and blue are all set in ONE call (as an RGB or ARGB value)
+                            var convertToByteResult = this.TryConvertObjectToByte(value);
+                            if (convertToByteResult.IsError == true)
+                            {
+                                success = false;
+                                break;
+                            }
+                            var valueAsByte = convertToByteResult.Value!;
+
+                            var setResult = this.SetSolidColorComponent(SolidColorComponent.Green, valueAsByte);
+                            if (setResult.IsError == true)
+                            {
+                                success = false;
+                            }
+                        }
+                        break;
+                    case "SolidColorConfigB":
+                        {
+                            // NOTE: we should rework the solutions registry so that red, green and blue are all set in ONE call (as an RGB or ARGB value)
+                            var convertToByteResult = this.TryConvertObjectToByte(value);
+                            if (convertToByteResult.IsError == true)
+                            {
+                                success = false;
+                                break;
+                            }
+                            var valueAsByte = convertToByteResult.Value!;
+
+                            var setResult = this.SetSolidColorComponent(SolidColorComponent.Blue, valueAsByte);
                             if (setResult.IsError == true)
                             {
                                 success = false;
@@ -260,6 +394,54 @@
             return IMorphicResult.SuccessResult;
         }
 
+        // NOTE: we should rework the solutions registry so that red, green and blue are all set in ONE call (as an RGB or ARGB value)
+        private IMorphicResult SetSolidColorComponent(SolidColorComponent colorComponent, byte value)
+        {
+            var colorIndex = ExtendedPInvoke.COLOR_DESKTOP;
+
+            var getSysColorResult = this.GetSysColor(colorIndex);
+            if (getSysColorResult.IsError == true)
+            {
+                return IMorphicResult.ErrorResult;
+            }
+            var color = getSysColorResult.Value!;
+
+            switch (colorComponent)
+            {
+                case SolidColorComponent.Red:
+                    {
+                        color &= ~((uint)0xFF);
+                        color |= (uint)(value & 0xFF) << 0;
+                    }
+                    break;
+                case SolidColorComponent.Green:
+                    {
+                        color &= ~((uint)0xFF00);
+                        color |= (uint)(value & 0xFF) << 8;
+                    }
+                    break;
+                case SolidColorComponent.Blue:
+                    {
+                        color &= ~((uint)0xFF0000);
+                        color |= (uint)(value & 0xFF) << 16;
+                    }
+                    break;
+                default:
+                    // invalid code path
+                    Debug.Assert(false);
+                    throw new Exception();
+            }
+
+            var setSysColorsResult = ExtendedPInvoke.SetSysColors(1, new int[] { colorIndex }, new uint[] { color });
+            if (setSysColorsResult == false)
+            {
+                // NOTE: we could get additional error information via GetLastError
+                return IMorphicResult.ErrorResult;
+            }
+
+            return IMorphicResult.SuccessResult;
+        }
+
         private IMorphicResult SetVolume(double value)
         {
             // OBSERVATION: if the system has no default audio output endpoint (or we cannot set the volume level), we currently have no way to return that error
@@ -272,10 +454,57 @@
 
         //
 
+        private IMorphicResult<byte> TryConvertObjectToByte(object? value)
+        {
+            if (value == null)
+            {
+                return IMorphicResult<byte>.ErrorResult();
+            }
+
+            // make sure the value fits within the allowed range
+            if ((value.GetType() == typeof(sbyte)) ||
+                (value.GetType() == typeof(short)) ||
+                (value.GetType() == typeof(int)) ||
+                (value.GetType() == typeof(long)))
+            {
+                // signed integers
+
+                var valueAsLong = Convert.ToInt64(value);
+                if (valueAsLong < 0)
+                {
+                    return IMorphicResult<byte>.ErrorResult();
+                }
+                if (valueAsLong > byte.MaxValue)
+                {
+                    return IMorphicResult<byte>.ErrorResult();
+                }
+            }
+            else if ((value.GetType() == typeof(byte)) ||
+                (value.GetType() == typeof(ushort)) ||
+                (value.GetType() == typeof(uint)) ||
+                (value.GetType() == typeof(ulong)))
+            {
+                // unsigned integers
+
+                var valueAsUlong = Convert.ToUInt64(value);
+                if (valueAsUlong > byte.MaxValue)
+                {
+                    return IMorphicResult<byte>.ErrorResult();
+                }
+
+            }
+            else
+            {
+                // non-integer (i.e. unknown type)
+                return IMorphicResult<byte>.ErrorResult();
+            }
+
+            var result = Convert.ToByte(value);
+            return IMorphicResult<byte>.SuccessResult(result);
+        }
+
         private IMorphicResult<uint> TryConvertObjectToUInt(object? value)
         {
-            uint result;
-
             if (value == null)
             {
                 return IMorphicResult<uint>.ErrorResult();
@@ -319,15 +548,13 @@
                 return IMorphicResult<uint>.ErrorResult();
             }
 
-            result = Convert.ToUInt32(value);
+            var result = Convert.ToUInt32(value);
             return IMorphicResult<uint>.SuccessResult(result);
         }
 
         // NOTE: if the user calls this function with an integer, we validate that it is less than 2^52 (and greater than -(2^52)) to ensure that there is no loss in precision
         private IMorphicResult<double> TryConvertObjectToDouble(object? value)
         {
-            double result;
-
             if (value == null)
             {
                 return IMorphicResult<double>.ErrorResult();
@@ -375,7 +602,7 @@
                 return IMorphicResult<double>.ErrorResult();
             }
 
-            result = Convert.ToDouble(value);
+            var result = Convert.ToDouble(value);
             return IMorphicResult<double>.SuccessResult(result);
         }
     }

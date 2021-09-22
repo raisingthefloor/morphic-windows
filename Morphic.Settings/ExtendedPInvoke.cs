@@ -34,12 +34,23 @@ namespace Morphic.Settings
     {
         #region WinUser.h
 
+        internal const int COLOR_BACKGROUND = 1;
+        internal const int COLOR_DESKTOP = COLOR_BACKGROUND;
+
         [DllImport("user32.dll")]
         internal static extern uint GetDoubleClickTime();
+
+        [DllImport("user32.dll")]
+        internal static extern uint GetSysColor(int nIndex);
+
+        [DllImport("user32.dll")]
+        internal static extern IntPtr GetSysColorBrush(int nIndex);
 
         [DllImport("user32.dll", SetLastError = true)]
         internal static extern bool SetDoubleClickTime(uint unnamedParam1);
 
+        [DllImport("user32.dll")]
+        internal static extern bool SetSysColors(int cElements, int[] lpaElements, uint[] lpaRgbValues);
 
         #endregion WinUser.h
 
