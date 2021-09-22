@@ -3,7 +3,6 @@
     using System.Collections;
     using System.Collections.Generic;
 
-
     public class Values : IEnumerable<KeyValuePair<Setting, object>>
     {
         private Dictionary<Setting, object?> values = new Dictionary<Setting, object?>();

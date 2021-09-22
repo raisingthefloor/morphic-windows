@@ -59,7 +59,6 @@
             services.AddSingleton(services);
             services.AddSingleton<IServiceProvider>(provider => provider);
             services.AddSolutionsRegistryServices();
-
         }
 
         private void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
