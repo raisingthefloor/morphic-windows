@@ -67,6 +67,9 @@
         [JsonProperty("range")]
         public SettingRange? Range { get; private set; }
 
+        [JsonProperty("enum")]
+        public Dictionary<string, object>? enumvals { get; private set; }
+
         [JsonProperty("changes")]
         public SettingChanges? SettingChanges { get; private set; }
 
@@ -151,7 +154,7 @@
             {
                 int current = await this.GetValue<int>();
                 current += Math.Sign(direction) * this.Range.IncrementValue;
-                if (current >= await this.Range.GetMin() && current <= await this.Range.GetMax())
+                if (current >= await this.Range.GetMinInt() && current <= await this.Range.GetMaxInt())
                 {
                     return await this.SetValueAsync(current);
                 }
@@ -240,8 +243,8 @@
     [JsonObject(MemberSerialization.OptIn)]
     public class SettingRange
     {
-        private int? minValue;
-        private int? maxValue;
+        private double? minValue;
+        private double? maxValue;
 
         [JsonProperty("min", Required = Required.Always)]
         private Limit Min { get; set; } = null!;
@@ -255,7 +258,7 @@
         [JsonProperty("live")]
         public bool Live { get; private set; }
 
-        public async Task<int> GetMin(int defaultResult = 0, bool forceReload = false)
+        public async Task<double> GetMin(int defaultResult = 0, bool forceReload = false)
         {
             if (this.Live || !this.minValue.HasValue || forceReload)
             {
@@ -265,7 +268,12 @@
             return this.minValue.Value;
         }
 
-        public async Task<int> GetMax(int defaultResult = 0, bool forceReload = false)
+        public async Task<int> GetMinInt(int defaultResult = 0, bool forceReload = false)
+        {
+            return (int)Math.Round(await this.GetMin(defaultResult, forceReload));
+        }
+
+        public async Task<double> GetMax(int defaultResult = 0, bool forceReload = false)
         {
             if (this.Live || !this.maxValue.HasValue || forceReload)
             {
@@ -273,6 +281,11 @@
             }
 
             return this.maxValue.Value;
+        }
+
+        public async Task<int> GetMaxInt(int defaultResult = 0, bool forceReload = false)
+        {
+            return (int)Math.Round(await this.GetMax(defaultResult, forceReload));
         }
 
         public Setting Setting { get; private set; } = null!;
@@ -290,8 +303,8 @@
             private Setting? parentSetting;
             private string? settingId;
             private string? expression;
-            private int? value;
-            private int increment;
+            private double? value;
+            private double increment;
             private Limit? defaultValue;
 
             // "settingId [ (+|-) increment] [ ? default]"
@@ -303,7 +316,7 @@
             {
             }
 
-            public async Task<int> Get(int defaultResult = 0)
+            public async Task<double> Get(double defaultResult = 0)
             {
                 if (this.value.HasValue)
                 {
@@ -317,7 +330,7 @@
 
                 if (this.setting != null)
                 {
-                    int num = await this.setting.GetValue(this.defaultValue?.value ?? int.MinValue);
+                    double num = await this.setting.GetValue(this.defaultValue?.value ?? int.MinValue);
                     if (num != int.MinValue)
                     {
                         return num;
@@ -334,7 +347,7 @@
 
             private static Limit FromString(string expr)
             {
-                if (int.TryParse(expr, out int number))
+                if (double.TryParse(expr, out double number))
                 {
                     return new Limit() { value = number };
                 }
@@ -344,6 +357,7 @@
 
             public static implicit operator Limit(int number) => new Limit() { value = number };
             public static implicit operator Limit(long number) => new Limit() { value = (int)number };
+            public static implicit operator Limit(double number) => new Limit() { value = number };
             public static implicit operator Limit(string expr) => FromString(expr);
 
             public void Deserialized(Setting parent)

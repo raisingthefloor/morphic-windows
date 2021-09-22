@@ -1,5 +1,6 @@
 ﻿namespace Morphic.ManualTester
 {
+    using System;
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Input;
@@ -52,6 +53,21 @@
             this.LoadingIcon.Visibility = Visibility.Visible;
             this.InputField.Text = "";
             this.pending = true;
+            if (setting.enumvals != null)
+            {
+                this.EnumVals.Visibility = Visibility.Visible;
+                this.EnumVals.Items.Clear();
+                foreach (string key in setting.enumvals.Keys)
+                {
+                    ComboBoxItem evitem = new ComboBoxItem();
+                    evitem.Content = key;
+                    this.EnumVals.Items.Add(evitem);
+                }
+            }
+            else
+            {
+                this.EnumVals.Visibility = Visibility.Hidden;
+            }
             if (setting.Default != "")
             {
                 this.DataType.ToolTip = "DEFAULT: " + setting.Default;
@@ -69,14 +85,29 @@
             {
                 this.InputField.Background = this.bluefield;
                 this.InputField.Text = this.setting.Default;
-                return;
             }
-            this.pending = false;
-            this.InputField.Text = val.Get(setting)!.ToString();
-            this.InputField.Background = this.whitefield;
-            if(val.GetType(setting) == Values.ValueType.Hardcoded)
+            else
             {
-                this.InputField.Background = this.cyanfield;
+                this.pending = false;
+                this.InputField.Text = val.Get(setting)!.ToString();
+                this.InputField.Background = this.whitefield;
+                if (val.GetType(setting) == Values.ValueType.Hardcoded)
+                {
+                    this.InputField.Background = this.cyanfield;
+                }
+            }
+            if (this.setting.enumvals != null)   //measure value against enum values
+            {
+                int index = 0;
+                foreach (var eval in this.setting.enumvals.Values)
+                {
+                    if (this.InputField.Text == eval.ToString())
+                    {
+                        this.EnumVals.SelectedIndex = index;
+                        break;
+                    }
+                    ++index;
+                }
             }
         }
 
@@ -108,6 +139,13 @@
             }
         }
 
+        private void SelectEnumVal(object sender, EventArgs e)
+        {
+            ComboBoxItem selected = (this.EnumVals.SelectedItem as ComboBoxItem)!;
+            this.InputField.Text = setting.enumvals[selected.Content.ToString()].ToString();
+            this.ValueChanged(sender, new RoutedEventArgs());
+        }
+
         public async void ApplySetting()
         {
             if (!this.changed)
@@ -120,8 +158,9 @@
             var result = await this.setting.SetValueAsync(this.InputField.Text);
             if (result.IsError)
             {
-                this.CaptureSetting();
+                //this.CaptureSetting();
             }
+            this.CaptureSetting();
         }
 
         public void SaveCSV(MainWindow main)

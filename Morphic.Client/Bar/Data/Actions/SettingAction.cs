@@ -59,8 +59,8 @@
                 var range = Setting.Range;
                 var idRequiresCountRefresh = Setting.Id == "zoom";
 
-                var min = await range.GetMin(0, idRequiresCountRefresh);
-                var max = await range.GetMax(0, idRequiresCountRefresh) - 1;
+                var min = await range.GetMinInt(0, idRequiresCountRefresh);
+                var max = await range.GetMaxInt(0, idRequiresCountRefresh) - 1;
 
                 var currentValue = (int)(Setting.CurrentValue ?? 0);
 

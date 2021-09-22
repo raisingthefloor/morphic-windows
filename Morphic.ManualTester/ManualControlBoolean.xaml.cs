@@ -1,5 +1,6 @@
 ﻿namespace Morphic.ManualTester
 {
+    using System;
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Media;
@@ -60,6 +61,21 @@
         {
             this.LoadingIcon.Visibility = Visibility.Visible;
             this.pending = true;
+            if (setting.enumvals != null)
+            {
+                this.EnumVals.Visibility = Visibility.Visible;
+                this.EnumVals.Items.Clear();
+                foreach (string key in setting.enumvals.Keys)
+                {
+                    ComboBoxItem evitem = new ComboBoxItem();
+                    evitem.Content = key;
+                    this.EnumVals.Items.Add(evitem);
+                }
+            }
+            else
+            {
+                this.EnumVals.Visibility = Visibility.Hidden;
+            }
             if (setting.Default != "")
             {
                 this.DataType.ToolTip = "DEFAULT: " + setting.Default;
@@ -73,20 +89,36 @@
                 return;
             }
             this.LoadingIcon.Visibility = Visibility.Hidden;
-            if (!val.Contains(this.setting) || val.GetType(setting) == Values.ValueType.NotFound)
+            if (!val.Contains(this.setting) || val.GetType(setting) == Values.ValueType.NotFound )
             {
                 this.ControlCheckBox.Background = this.bluefield;
                 this.ControlCheckBox.IsChecked = this.setting.Default.ToLower().Contains("true");
                 return;
             }
-            this.pending = false;
-            this.ControlCheckBox.Background = this.whitefield;
-            if (val.Get(setting) as bool? != null)
+            else
             {
-                this.ControlCheckBox.IsChecked = val.Get(setting) as bool?;
-                if (val.GetType(setting) == Values.ValueType.Hardcoded)
+                this.pending = false;
+                this.ControlCheckBox.Background = this.whitefield;
+                if (val.Get(setting) as bool? != null)
                 {
-                    this.ControlCheckBox.Background = this.cyanfield;
+                    this.ControlCheckBox.IsChecked = val.Get(setting) as bool?;
+                    if (val.GetType(setting) == Values.ValueType.Hardcoded)
+                    {
+                        this.ControlCheckBox.Background = this.cyanfield;
+                    }
+                }
+            }
+            if (this.setting.enumvals != null)   //measure value against enum values
+            {
+                int index = 0;
+                foreach (var eval in this.setting.enumvals.Values)
+                {
+                    if (this.ControlCheckBox == eval)
+                    {
+                        this.EnumVals.SelectedIndex = index;
+                        break;
+                    }
+                    ++index;
                 }
             }
         }
@@ -108,8 +140,16 @@
             var result = await this.setting.SetValueAsync(this.ControlCheckBox.IsChecked);
             if (result.IsError)
             {
-                this.CaptureSetting();
+                //this.CaptureSetting();
             }
+            this.CaptureSetting();
+        }
+
+        private void SelectEnumVal(object sender, EventArgs e)
+        {
+            ComboBoxItem selected = (this.EnumVals.SelectedItem as ComboBoxItem)!;
+            this.ControlCheckBox.IsChecked = (bool)setting.enumvals[selected.Content.ToString()];
+            this.ValueChanged(sender, new RoutedEventArgs());
         }
 
         public void SaveCSV(MainWindow main)
