@@ -50,6 +50,13 @@
                             value = getResult.Value;
                         }
                         break;
+                    case "Volume":
+                        {
+                            var getResult = this.GetVolume();
+                            getWasSuccessful = getResult.IsSuccess;
+                            value = getResult.Value;
+                        }
+                        break;
                     default:
                         success = false;
                         values.Add(setting, null, Values.ValueType.NotFound);
@@ -115,6 +122,16 @@
             return IMorphicResult<uint>.SuccessResult(result);
         }
 
+        private IMorphicResult<double> GetVolume()
+        {
+            // OBSERVATION: if the system has no default audio output endpoint (or we cannot get the volume level), we currently have no way to return that error
+            var audioEndpoint = Windows.Native.Audio.AudioEndpoint.GetDefaultAudioOutputEndpoint();
+            // OBSERVATION: Morphic treats the volume as a double-precision floating point value, but we get and set it as its native single-precision floating point value
+            var volumeLevelAsFloat = audioEndpoint.GetMasterVolumeLevel();
+
+            return IMorphicResult<double>.SuccessResult((double)volumeLevelAsFloat);
+        }
+
         //
 
         public override async Task<IMorphicResult> SetAsync(SettingGroup settingGroup, Values values)
@@ -176,6 +193,23 @@
                             }
                         }
                         break;
+                    case "Volume":
+                        {
+                            var convertToDoubleResult = this.TryConvertObjectToDouble(value);
+                            if (convertToDoubleResult.IsError == true)
+                            {
+                                success = false;
+                                break;
+                            }
+                            var valueAsDouble = convertToDoubleResult.Value!;
+
+                            var setResult = this.SetVolume(valueAsDouble);
+                            if (setResult.IsError == true)
+                            {
+                                success = false;
+                            }
+                        }
+                        break;
                     default:
                         success = false;
                         // skip to the next setting
@@ -184,6 +218,56 @@
             }
 
             return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        //
+
+        private IMorphicResult SetDoubleClickTime(uint value)
+        {
+            var setResult = ExtendedPInvoke.SetDoubleClickTime(value);
+            if (setResult == false)
+            {
+                // NOTE: we could call GetLastError here to get the last error
+                return IMorphicResult.ErrorResult;
+            }
+
+            return IMorphicResult.SuccessResult;
+        }
+
+        public IMorphicResult SetDoubleClickWidth(uint value)
+        {
+            // OBSERVATION: SystemParametersInfoFlags.None was used in Morphic Classic, but may not be what we want here
+            var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_SETDOUBLECLKWIDTH, value, IntPtr.Zero, PInvoke.User32.SystemParametersInfoFlags.None);
+            if (spiResult == false)
+            {
+                // NOTE: we could call GetLastError here to get the last error
+                return IMorphicResult.ErrorResult;
+            }
+
+            return IMorphicResult.SuccessResult;
+        }
+
+        public IMorphicResult SetDoubleClickHeight(uint value)
+        {
+            // OBSERVATION: SystemParametersInfoFlags.None was used in Morphic Classic, but may not be what we want here
+            var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_SETDOUBLECLKHEIGHT, value, IntPtr.Zero, PInvoke.User32.SystemParametersInfoFlags.None);
+            if (spiResult == false)
+            {
+                // NOTE: we could call GetLastError here to get the last error
+                return IMorphicResult.ErrorResult;
+            }
+
+            return IMorphicResult.SuccessResult;
+        }
+
+        private IMorphicResult SetVolume(double value)
+        {
+            // OBSERVATION: if the system has no default audio output endpoint (or we cannot set the volume level), we currently have no way to return that error
+            var audioEndpoint = Windows.Native.Audio.AudioEndpoint.GetDefaultAudioOutputEndpoint();
+            // OBSERVATION: Morphic treats the volume as a double-precision floating point value, but we get and set it as its native single-precision floating point value
+            audioEndpoint.SetMasterVolumeLevel((float)value);
+
+            return IMorphicResult.SuccessResult;
         }
 
         //
@@ -239,44 +323,60 @@
             return IMorphicResult<uint>.SuccessResult(result);
         }
 
-        //
-
-        private IMorphicResult SetDoubleClickTime(uint value)
+        // NOTE: if the user calls this function with an integer, we validate that it is less than 2^52 (and greater than -(2^52)) to ensure that there is no loss in precision
+        private IMorphicResult<double> TryConvertObjectToDouble(object? value)
         {
-            var setResult = ExtendedPInvoke.SetDoubleClickTime(value);
-            if (setResult == false)
+            double result;
+
+            if (value == null)
             {
-                // NOTE: we could call GetLastError here to get the last error
-                return IMorphicResult.ErrorResult;
+                return IMorphicResult<double>.ErrorResult();
             }
 
-            return IMorphicResult.SuccessResult;
-        }
-
-        public IMorphicResult SetDoubleClickWidth(uint value)
-        {
-            // OBSERVATION: SystemParametersInfoFlags.None was used in Morphic Classic, but may not be what we want here
-            var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_SETDOUBLECLKWIDTH, value, IntPtr.Zero, PInvoke.User32.SystemParametersInfoFlags.None);
-            if (spiResult == false)
+            // make sure the value fits within the allowed range
+            if ((value.GetType() == typeof(sbyte)) ||
+                (value.GetType() == typeof(short)) ||
+                (value.GetType() == typeof(int)) ||
+                (value.GetType() == typeof(long)))
             {
-                // NOTE: we could call GetLastError here to get the last error
-                return IMorphicResult.ErrorResult;
+                // signed integers
+
+                var valueAsLong = Convert.ToInt64(value);
+                if (valueAsLong <= -(((Int64)2) << 52)) {
+                    return IMorphicResult<double>.ErrorResult();
+                }
+                if (valueAsLong >= ((Int64)2) << 52) {
+                    return IMorphicResult<double>.ErrorResult();
+                }
+            }
+            else if ((value.GetType() == typeof(byte)) ||
+                (value.GetType() == typeof(ushort)) ||
+                (value.GetType() == typeof(uint)) ||
+                (value.GetType() == typeof(ulong)))
+            {
+                // unsigned integers
+
+                var valueAsUlong = Convert.ToUInt64(value);
+                if (valueAsUlong >= ((Int64)2) << 52)
+                {
+                    return IMorphicResult<double>.ErrorResult();
+                }
+            }
+            else if ((value.GetType() == typeof(float)) ||
+                (value.GetType() == typeof(double)))
+            {
+                // floating-point values
+
+                // NOTE: all single- and double-precision floating point values can be converted to double
+            }
+            else
+            {
+                // non-integer (i.e. unknown type)
+                return IMorphicResult<double>.ErrorResult();
             }
 
-            return IMorphicResult.SuccessResult;
-        }
-
-        public IMorphicResult SetDoubleClickHeight(uint value)
-        {
-            // OBSERVATION: SystemParametersInfoFlags.None was used in Morphic Classic, but may not be what we want here
-            var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_SETDOUBLECLKHEIGHT, value, IntPtr.Zero, PInvoke.User32.SystemParametersInfoFlags.None);
-            if (spiResult == false)
-            {
-                // NOTE: we could call GetLastError here to get the last error
-                return IMorphicResult.ErrorResult;
-            }
-
-            return IMorphicResult.SuccessResult;
+            result = Convert.ToDouble(value);
+            return IMorphicResult<double>.SuccessResult(result);
         }
     }
 
