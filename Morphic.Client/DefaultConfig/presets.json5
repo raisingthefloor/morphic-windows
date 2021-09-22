@@ -212,22 +212,19 @@
     },
     "high-contrast": {
       // Toggles high-contrast.
-      kind: "application",
+      kind: "setting",
       widget: "multi",
       configuration: {
         defaultLabel: "High-Contrast",
-        exe: "sethc.exe",
-        args: [ "{button}" ],
+        settingId: "com.microsoft.windows.highContrast/enabled",
         telemetryCategory: "highContrast",
         buttons: {
           on: {
             label: "On",
-            value: "100",
             tooltip: "Turns Contrast on"
           },
           off: {
             label: "Off",
-            value: "1",
             tooltip: "Turns Contrast off"
           }
         }

@@ -25,6 +25,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Morphic.ManualTesterCLI", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Morphic.Telemetry", "Morphic.Telemetry\Morphic.Telemetry.csproj", "{A816282D-5A96-4F0E-B011-3E5CC1E321FF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Morphic.Integrations.Office", "Morphic.Integrations.Office\Morphic.Integrations.Office.csproj", "{D91EF666-04FB-4AC3-BBB8-A96C3E97BE72}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -120,6 +122,14 @@ Global
 		{A816282D-5A96-4F0E-B011-3E5CC1E321FF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A816282D-5A96-4F0E-B011-3E5CC1E321FF}.Release|x64.ActiveCfg = Release|Any CPU
 		{A816282D-5A96-4F0E-B011-3E5CC1E321FF}.Release|x64.Build.0 = Release|Any CPU
+		{D91EF666-04FB-4AC3-BBB8-A96C3E97BE72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D91EF666-04FB-4AC3-BBB8-A96C3E97BE72}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D91EF666-04FB-4AC3-BBB8-A96C3E97BE72}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D91EF666-04FB-4AC3-BBB8-A96C3E97BE72}.Debug|x64.Build.0 = Debug|Any CPU
+		{D91EF666-04FB-4AC3-BBB8-A96C3E97BE72}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D91EF666-04FB-4AC3-BBB8-A96C3E97BE72}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D91EF666-04FB-4AC3-BBB8-A96C3E97BE72}.Release|x64.ActiveCfg = Release|Any CPU
+		{D91EF666-04FB-4AC3-BBB8-A96C3E97BE72}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

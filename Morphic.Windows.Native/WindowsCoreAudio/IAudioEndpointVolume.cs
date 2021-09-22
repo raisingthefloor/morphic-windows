@@ -26,43 +26,43 @@ using System.Runtime.InteropServices;
 
 namespace Morphic.Windows.Native.WindowsCoreAudio
 {
-    //[ComImport]
+    [ComImport]
     [Guid("5CDF2C82-841E-4546-9722-0CF74078229A")]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     internal interface IAudioEndpointVolume
     {
         // RegisterControlChangeNotify
-        public Int32 RegisterControlChangeNotify(IntPtr pNotify);
+        public Int32 RegisterControlChangeNotify(IAudioEndpointVolumeCallback pNotify);
 
         // UnregisterControlChangeNotify
-        public Int32 UnregisterControlChangeNotify(IntPtr pNotify);
+        public Int32 UnregisterControlChangeNotify(IAudioEndpointVolumeCallback pNotify);
 
         // GetChannelCount
-        public Int32 GetChannelCount(out UInt32 pnChannelCount);
+        public Int32 GetChannelCount(out uint pnChannelCount);
 
         // SetMasterVolumeLevel
-        public Int32 SetMasterVolumeLevel(Single fLevelDB, IntPtr /* (IntPtr.Zero) */ pguidEventContext);
+        public Int32 SetMasterVolumeLevel(float fLevelDB, IntPtr /* (IntPtr.Zero) */ pguidEventContext);
 
         // SetMasterVolumeLevelScalar
-        public Int32 SetMasterVolumeLevelScalar(Single fLevel, IntPtr /* (IntPtr.Zero) */ pguidEventContext);
+        public Int32 SetMasterVolumeLevelScalar(float fLevel, IntPtr /* (IntPtr.Zero) */ pguidEventContext);
 
         // GetMasterVolumeLevel
-        public Int32 GetMasterVolumeLevel(out Single pfLevelDB);
+        public Int32 GetMasterVolumeLevel(out float pfLevelDB);
 
         // GetMasterVolumeLevelScalar
-        public Int32 GetMasterVolumeLevelScalar(out Single pfLevel);
+        public Int32 GetMasterVolumeLevelScalar(out float pfLevel);
 
         // SetChannelVolumeLevel
-        public Int32 SetChannelVolumeLevel(UInt32 nChannel, Single fLevelDB, IntPtr /* (IntPtr.Zero) */ pguidEventContext);
+        public Int32 SetChannelVolumeLevel(uint nChannel, float fLevelDB, IntPtr /* (IntPtr.Zero) */ pguidEventContext);
 
         // SetChannelVolumeLevelScalar
-        public Int32 SetChannelVolumeLevelScalar(UInt32 nChannel, Single fLevel, IntPtr /* (IntPtr.Zero) */ pguidEventContext);
+        public Int32 SetChannelVolumeLevelScalar(uint nChannel, float fLevel, IntPtr /* (IntPtr.Zero) */ pguidEventContext);
 
         // GetChannelVolumeLevel
-        public Int32 GetChannelVolumeLevel(UInt32 nChannel, out Single fLevelDB);
+        public Int32 GetChannelVolumeLevel(uint nChannel, out float fLevelDB);
 
         // GetChannelVolumeLevelScalar
-        public Int32 GetChannelVolumeLevelScalar(UInt32 nChannel, out Single fLevel);
+        public Int32 GetChannelVolumeLevelScalar(uint nChannel, out float fLevel);
 
         // SetMute
         public Int32 SetMute(Int32 bMute, IntPtr /* (IntPtr.Zero) */ pguidEventContext);
@@ -71,7 +71,7 @@ namespace Morphic.Windows.Native.WindowsCoreAudio
         public Int32 GetMute(out Int32 bMute);
 
         // GetVolumeStepInfo
-        public Int32 GetVolumeStepInfo(out UInt32 pnStep, out UInt32 pnStepCount);
+        public Int32 GetVolumeStepInfo(out uint pnStep, out uint pnStepCount);
 
         // VolumeStepUp
         public Int32 VolumeStepUp(IntPtr /* (IntPtr.Zero) */ pguidEventContext);
@@ -80,9 +80,9 @@ namespace Morphic.Windows.Native.WindowsCoreAudio
         public Int32 VolumeStepDown(IntPtr /* (IntPtr.Zero) */ pguidEventContext);
 
         // QueryHardwareSupport
-        public Int32 QueryHardwareSupport(out UInt32 pdwHardwareSupportMask);
+        public Int32 QueryHardwareSupport(out uint pdwHardwareSupportMask);
 
         // GetVolumeRange
-        public Int32 GetVolumeRange(out Single pflVolumeMindB, out Single pflVolumeMaxdB, out Single pflVolumeIncrementdB);
+        public Int32 GetVolumeRange(out float pflVolumeMindB, out float pflVolumeMaxdB, out float pflVolumeIncrementdB);
     }
 }

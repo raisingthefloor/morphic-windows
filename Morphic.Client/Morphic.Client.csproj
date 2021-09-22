@@ -11,7 +11,7 @@
     <AssemblyName>Morphic</AssemblyName>
     <PublishTrimmed>false</PublishTrimmed>
     <Platforms>AnyCPU;x64</Platforms>
-    <VersionPrefix>1.3$(VersionBuildComponents)</VersionPrefix>
+    <VersionPrefix>1.4$(VersionBuildComponents)</VersionPrefix>
     <VersionSuffix Condition="'$(Configuration)' == 'Debug'">localdev</VersionSuffix>
     <VersionSuffix Condition="'$(Configuration)' == 'Release'">$(VersionSuffix)</VersionSuffix>
     <StartupObject>Morphic.Client.AppMain</StartupObject>
@@ -90,6 +90,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Morphic.Core\Morphic.Core.csproj" />
+    <ProjectReference Include="..\Morphic.Integrations.Office\Morphic.Integrations.Office.csproj" />
     <ProjectReference Include="..\Morphic.Service\Morphic.Service.csproj" />
     <ProjectReference Include="..\Morphic.Settings\Morphic.Settings.csproj" />
     <ProjectReference Include="..\Morphic.Telemetry\Morphic.Telemetry.csproj" />

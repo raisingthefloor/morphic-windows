@@ -232,39 +232,145 @@ namespace Morphic.Client.Bar.Data
                                         switch (extraItemData.feature)
                                         {
                                             case "usbopeneject":
-                                                extraBarItem.Text = extraItemData.label ?? "USB Drives (All)";
-                                                //
-                                                var openAllUsbAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
-                                                openAllUsbAction.TelemetryEventName = "morphicBarExtraItem";
-                                                openAllUsbAction.FunctionName = "openAllUsbDrives";
-                                                var openButton = new BarMultiButton.ButtonInfo
                                                 {
-                                                    Text = "Open",
-                                                    Action = openAllUsbAction,
-                                                    TelemetryCategory = "morphicBarExtraItem",
-                                                    Tooltip = "Open All USB Drives",
-                                                    Value = "openallusb"
-                                                };
-                                                //
-                                                var ejectAllUsbAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
-                                                ejectAllUsbAction.TelemetryEventName = "morphicBarExtraItem";
-                                                ejectAllUsbAction.FunctionName = "ejectAllUsbDrives";
-                                                var ejectButton = new BarMultiButton.ButtonInfo
+                                                    extraBarItem.Text = extraItemData.label ?? "USB Drives (All)";
+                                                    //
+                                                    var openAllUsbAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
+                                                    openAllUsbAction.TelemetryEventName = "morphicBarExtraItem";
+                                                    openAllUsbAction.FunctionName = "openAllUsbDrives";
+                                                    var openButton = new BarMultiButton.ButtonInfo
+                                                    {
+                                                        Text = "Open",
+                                                        Action = openAllUsbAction,
+                                                        TelemetryCategory = "morphicBarExtraItem",
+                                                        Tooltip = "Open All USB Drives",
+                                                        Value = "openallusb"
+                                                    };
+                                                    //
+                                                    var ejectAllUsbAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
+                                                    ejectAllUsbAction.TelemetryEventName = "morphicBarExtraItem";
+                                                    ejectAllUsbAction.FunctionName = "ejectAllUsbDrives";
+                                                    var ejectButton = new BarMultiButton.ButtonInfo
+                                                    {
+                                                        Text = "Eject",
+                                                        Action = ejectAllUsbAction,
+                                                        TelemetryCategory = "morphicBarExtraItem",
+                                                        Tooltip = "Eject All USB Drives",
+                                                        Value = "ejectallusb"
+                                                    };
+                                                    //
+                                                    ((BarMultiButton)extraBarItem).Buttons = new Dictionary<string, BarMultiButton.ButtonInfo>
+                                                    {
+                                                        { "open", openButton },
+                                                        { "eject", ejectButton }
+                                                    };
+                                                    //
+                                                    extraBarItemShouldBeAdded = true;
+                                                }
+                                                break;
+                                            case "volume":
                                                 {
-                                                    Text = "Eject",
-                                                    Action = ejectAllUsbAction,
-                                                    TelemetryCategory = "morphicBarExtraItem",
-                                                    Tooltip = "Eject All USB Drives",
-                                                    Value = "ejectallusb"
-                                                };
-                                                //
-                                                ((BarMultiButton)extraBarItem).Buttons = new Dictionary<string, BarMultiButton.ButtonInfo>
-                                            {
-                                                { "open", openButton },
-                                                { "eject", ejectButton }
-                                            };
-                                                //
-                                                extraBarItemShouldBeAdded = true;
+                                                    extraBarItem.Text = extraItemData.label ?? "Volume";
+                                                    //
+                                                    var volumeUpAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
+                                                    volumeUpAction.TelemetryEventName = "volumeUp";
+                                                    volumeUpAction.FunctionName = "volumeUp";
+                                                    var volumeUpButton = new BarMultiButton.ButtonInfo
+                                                    {
+                                                        Text = "+",
+                                                        Action = volumeUpAction,
+                                                        TelemetryCategory = "volumeUp",
+                                                        Tooltip = "Increases the volume|Makes all sounds louder.|Volume cannot go louder",
+                                                        Value = "volumeUp"
+                                                    };
+                                                    //
+                                                    var volumeDownAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
+                                                    volumeDownAction.TelemetryEventName = "volumeDown";
+                                                    volumeDownAction.FunctionName = "volumeDown";
+                                                    var volumeDownButton = new BarMultiButton.ButtonInfo
+                                                    {
+                                                        Text = "-",
+                                                        Action = volumeDownAction,
+                                                        TelemetryCategory = "volumeDown",
+                                                        Tooltip = "Decreases the volume|Makes all sounds quieter.|Volume cannot go quieter",
+                                                        Value = "volumeDown"
+                                                    };
+                                                    //
+                                                    var volumeMuteAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
+                                                    volumeMuteAction.TelemetryEventName = "volumeMute";
+                                                    volumeMuteAction.FunctionName = "volumeMute";
+                                                    var volumeMuteButton = new BarMultiButton.ButtonInfo
+                                                    {
+                                                        Text = "Mute",
+                                                        Action = volumeMuteAction,
+                                                        TelemetryCategory = "volumeMute",
+                                                        Toggle = true,
+                                                        Tooltip = "Mutes all sounds from your computer|Mutes your speakers - but does NOT mute your microphone.",
+                                                        Value = "volumeMute"
+                                                    };
+                                                    //
+                                                    ((BarMultiButton)extraBarItem).Buttons = new Dictionary<string, BarMultiButton.ButtonInfo>
+                                                    {
+                                                        { "volumeUp", volumeUpButton },
+                                                        { "volumeDown", volumeDownButton },
+                                                        { "volumeMute", volumeMuteButton }
+                                                    };
+                                                    ((BarMultiButton)extraBarItem).Menu = new Dictionary<string, string>()
+                                                    {
+                                                        { "setting", "sound" },
+                                                        { "learn", "volmute" },
+                                                        { "demo", "volmute" }
+                                                    };
+                                                    ((BarMultiButton)extraBarItem).AutoSize = true;
+                                                    //
+                                                    extraBarItemShouldBeAdded = true;
+                                                }
+                                                break;
+                                            case "wordsimplify":
+                                                {
+                                                    extraBarItem.Text = extraItemData.label ?? "Word Simplify";
+                                                    //
+                                                    var basicWordRibbonAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
+                                                    basicWordRibbonAction.TelemetryEventName = "morphicBarExtraItem"; // basicWordRibbonToggle
+                                                    basicWordRibbonAction.FunctionName = "basicWordRibbon";
+                                                    var basicWordRibbonButton = new BarMultiButton.ButtonInfo
+                                                    {
+                                                        Text = "Basic",
+                                                        Action = basicWordRibbonAction,
+                                                        TelemetryCategory = "morphicBarExtraItem",
+                                                        Toggle = true,
+                                                        Tooltip = "Adds a new 'Basic Items' ribbon to Word|Gives you a new simpler ribbon with just the basic items on it.",
+                                                        Value = "basicwordribbon"
+                                                    };
+                                                    //
+                                                    var essentialsWordRibbonAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
+                                                    essentialsWordRibbonAction.TelemetryEventName = "morphicBarExtraItem"; // essentialsWordRibbonToggle
+                                                    essentialsWordRibbonAction.FunctionName = "essentialsWordRibbon";
+                                                    var essentialsWordRibbonButton = new BarMultiButton.ButtonInfo
+                                                    {
+                                                        Text = "Essentials",
+                                                        Action = essentialsWordRibbonAction,
+                                                        TelemetryCategory = "morphicBarExtraItem",
+                                                        Toggle = true,
+                                                        Tooltip = "Adds a new 'Essential Items' ribbon to Word|Gives you a new ribbon with essential items gathered from all other ribbons.",
+                                                        Value = "essentialswordribbon"
+                                                    };
+                                                    //
+                                                    ((BarMultiButton)extraBarItem).Buttons = new Dictionary<string, BarMultiButton.ButtonInfo>
+                                                    {
+                                                        { "basic", basicWordRibbonButton },
+                                                        { "essentials", essentialsWordRibbonButton }
+                                                    };
+                                                    ((BarMultiButton)extraBarItem).Menu = new Dictionary<string, string>()
+                                                    {
+                                                        { "learn", "wordsimplify" },
+                                                        { "demo", "wordsimplify" }
+                                                    };
+                                                    ((BarMultiButton)extraBarItem).AutoSize = true;
+                                                    //
+                                                    // NOTE: we shouldonly show this item if Word is actually installed
+                                                    extraBarItemShouldBeAdded = Morphic.Integrations.Office.WordRibbon.IsOfficeInstalled();
+                                                }
                                                 break;
                                             default:
                                                 extraBarItem.Text = extraItemData.label ?? "";

@@ -91,7 +91,7 @@ namespace Morphic.Client.Bar.Data.Actions
             }
             else
             {
-                throw new ActionException($"No internal function found for '{functionName}");
+                throw new ActionException($"No internal function found for '{functionName}'");
             }
 
             return result;
