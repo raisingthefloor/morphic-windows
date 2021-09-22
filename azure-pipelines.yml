@@ -162,6 +162,7 @@ stages:
               -kvu "$(SigningVaultURL)"
               -kvi "$(SigningClientId)"
               -kvs "$(SigningClientSecret)"
+              -kvt "$(AzureTenantId)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
               -v
@@ -208,6 +209,7 @@ stages:
               -du "$(SigningURL)"
               -kvu "$(SigningVaultURL)"
               -kvi "$(SigningClientId)"
+              -kvt "$(AzureTenantId)"
               -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
