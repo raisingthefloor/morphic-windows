@@ -32,6 +32,13 @@ namespace Morphic.Settings
 {
     internal struct ExtendedPInvoke
     {
+        #region MinWinDef.h
+
+        internal const int MAX_PATH = 260;
+
+        #endregion MinWinDef.h
+
+
         #region WinUser.h
 
         internal const int COLOR_BACKGROUND = 1;
