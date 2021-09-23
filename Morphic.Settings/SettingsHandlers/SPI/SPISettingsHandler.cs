@@ -2,10 +2,12 @@
 namespace Morphic.Settings.SettingsHandlers.SPI
 {
     using Morphic.Core;
+    using Morphic.Settings.SolutionsRegistry;
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
+    [SrService]
     class SPISettingsHandler: SettingsHandler
     {
         private readonly IServiceProvider serviceProvider;
