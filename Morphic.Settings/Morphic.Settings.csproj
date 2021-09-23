@@ -21,4 +21,9 @@
     <ProjectReference Include="..\Morphic.Windows.Native\Morphic.Windows.Native.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="SettingsHandlers\XML\" />
+    <Folder Include="SettingsHandlers\WMI\" />
+  </ItemGroup>
+
 </Project>

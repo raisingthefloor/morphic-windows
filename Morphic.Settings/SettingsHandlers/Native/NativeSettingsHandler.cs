@@ -606,10 +606,4 @@
             return IMorphicResult<double>.SuccessResult(result);
         }
     }
-
-    [SettingsHandlerType("native", typeof(NativeSettingsHandler))]
-    public class NativeSettingGroup : SettingGroup
-    {
-
-    }
 }
