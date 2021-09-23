@@ -1,5 +1,6 @@
 ﻿namespace Morphic.Settings.SettingsHandlers.SPI
 {
+    using Newtonsoft.Json;
     using System.Collections.Generic;
 
     [SettingsHandlerType("SPI", typeof(SPISettingsHandler))]
