@@ -98,6 +98,16 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                         }
                     }
                     break;
+                case "SPI_GETMOUSEKEYS":
+                    {
+                        var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetMouseKeys(settings);
+                        success = spiGetMorphicResult.IsSuccess;
+                        if (success == true)
+                        {
+                            values = spiGetValues;
+                        }
+                    }
+                    break;
                 case "SPI_GETMOUSETRAILS":
                     {
                         var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetMouseTrails(settings);
@@ -469,6 +479,99 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             return IMorphicResult<ulong>.SuccessResult(result);
         }
 
+        private static (IMorphicResult, Values) SpiGetMouseKeys(IEnumerable<Setting> settings)
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation and pass in the actual mousekeys struct size in the API call
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            var internalGetMouseKeysResult = SPISettingsHandler.InternalSpiGetMouseKeys();
+            if (internalGetMouseKeysResult.IsError == true)
+            {
+                // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
+                return (IMorphicResult.ErrorResult, new Values());
+            }
+            var mouseKeys = internalGetMouseKeysResult.Value!;
+
+            //
+
+            var success = true;
+            var values = new Values();
+
+            foreach (Setting setting in settings)
+            {
+                switch (setting.Name)
+                {
+                    case "MouseKeysOn":
+                        var mouseKeysOn = (mouseKeys.dwFlags & ExtendedPInvoke.MKF_MOUSEKEYSON) == ExtendedPInvoke.MKF_MOUSEKEYSON;
+                        values.Add(setting, mouseKeysOn);
+                        break;
+                    case "MaxSpeed":
+                        double maxSpeedAsDouble = (double)(mouseKeys.iMaxSpeed - 10) / 350;
+                        values.Add(setting, maxSpeedAsDouble);
+                        break;
+                    default:
+                        success = false;
+                        values.Add(setting, null, Values.ValueType.NotFound);
+                        continue;
+                }
+            }
+
+            return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
+        }
+
+        private static IMorphicResult<ExtendedPInvoke.MOUSEKEYS> InternalSpiGetMouseKeys()
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation and pass in the actual mousekeys struct size in the API call
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            ExtendedPInvoke.MOUSEKEYS result;
+
+            var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+
+            ExtendedPInvoke.MOUSEKEYS pvParamAsMouseKeys = new ExtendedPInvoke.MOUSEKEYS
+            {
+                cbSize = (uint)Marshal.SizeOf<ExtendedPInvoke.MOUSEKEYS>()
+            };
+
+            var pointerToMouseKeys = Marshal.AllocHGlobal(Marshal.SizeOf<ExtendedPInvoke.MOUSEKEYS>());
+            try
+            {
+                Marshal.StructureToPtr(pvParamAsMouseKeys, pointerToMouseKeys, false);
+
+                var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_GETMOUSEKEYS, pvParamAsMouseKeys.cbSize, pointerToMouseKeys, fWinIni);
+                if (spiResult == true)
+                {
+                    result = Marshal.PtrToStructure<ExtendedPInvoke.MOUSEKEYS>(pointerToMouseKeys);
+                }
+                else
+                {
+                    return IMorphicResult<ExtendedPInvoke.MOUSEKEYS>.ErrorResult();
+                }
+            }
+            catch
+            {
+                return IMorphicResult<ExtendedPInvoke.MOUSEKEYS>.ErrorResult();
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(pointerToMouseKeys);
+            }
+
+            return IMorphicResult<ExtendedPInvoke.MOUSEKEYS>.SuccessResult(result);
+        }
+
         private static (IMorphicResult, Values) SpiGetMouseTrails(IEnumerable<Setting> settings)
         {
             // uiParam
@@ -812,6 +915,12 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                         success = spiSetMorphicResult.IsSuccess;
                     }
                     break;
+                case "SPI_SETMOUSEKEYS":
+                    {
+                        var spiSetMorphicResult = SPISettingsHandler.SpiSetMouseKeys(spiSettingGroup.fWinIni, values);
+                        success = spiSetMorphicResult.IsSuccess;
+                    }
+                    break;
                 case "SPI_SETMOUSETRAILS":
                     {
                         var spiSetMorphicResult = SPISettingsHandler.SpiSetMouseTrails(spiSettingGroup.fWinIni, values);
@@ -1108,6 +1217,132 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             if (spiResult == false)
             {
                 success = false;
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        private static IMorphicResult SpiSetMouseKeys(string? fWinIniAsString, Values values)
+        {
+            var success = true;
+
+            // capture the current MouseKeys struct data up-front
+            var internalGetMouseKeysResult = SPISettingsHandler.InternalSpiGetMouseKeys();
+            if (internalGetMouseKeysResult.IsError == true)
+            {
+                return IMorphicResult.ErrorResult;
+            }
+            var mouseKeys = internalGetMouseKeysResult.Value!;
+
+            foreach (var value in values)
+            {
+                switch (value.Key.Name)
+                {
+                    case "MouseKeysOn":
+                        {
+                            var valueAsNullableBool = value.Value as bool?;
+                            if (valueAsNullableBool == null)
+                            {
+                                success = false;
+                                continue;
+                            }
+                            var valueAsBool = valueAsNullableBool!;
+
+                            if (valueAsBool == true)
+                            {
+                                mouseKeys.dwFlags |= ExtendedPInvoke.MKF_MOUSEKEYSON;
+                            }
+                            else
+                            {
+                                mouseKeys.dwFlags &= ~ExtendedPInvoke.MKF_MOUSEKEYSON;
+                            }
+                        }
+                        break;
+                    case "MaxSpeed":
+                        {
+                            var convertValueToDoubleResult = ConversionUtils.TryConvertObjectToDouble(value.Value);
+                            if (convertValueToDoubleResult.IsError == true)
+                            {
+                                success = false;
+                                continue;
+                            }
+                            var valueAsDouble = convertValueToDoubleResult.Value!;
+
+                            // NOTE: we verify that the floating-point value is in the range of 0.0...1.0
+                            if (valueAsDouble < 0.0 || valueAsDouble > 1.0)
+                            {
+                                success = false;
+                                continue;
+                            }
+
+                            // convert the value to a range of 10-360
+                            var mouseKeysMaxSpeedValue = (uint)(valueAsDouble * 350) + 10;
+
+                            mouseKeys.iMaxSpeed = mouseKeysMaxSpeedValue;
+                        }
+                        break;
+                    default:
+                        success = false;
+                        continue;
+                }
+            }
+
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation and pass in the actual mousekeys struct size in the API call
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // OBSERVATION: for security purposes, we may want to consider hard-coding these flags or otherwise limiting them
+            // NOTE: we should review and sanity-check the setting in the solutions registry
+            var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+            if (fWinIniAsString != null)
+            {
+                var parseFlagsResult = SPISettingsHandler.ParseWinIniFlags(fWinIniAsString);
+                if (parseFlagsResult.IsSuccess == true)
+                {
+                    fWinIni = parseFlagsResult.Value!;
+                }
+            }
+
+            var internalSetMouseKeysResult = SPISettingsHandler.InternalSpiSetMouseKeys(mouseKeys, fWinIni);
+            if (internalSetMouseKeysResult.IsError == true)
+            {
+                return IMorphicResult.ErrorResult;
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        private static IMorphicResult InternalSpiSetMouseKeys(ExtendedPInvoke.MOUSEKEYS mouseKeys, PInvoke.User32.SystemParametersInfoFlags fWinIni)
+        {
+            // sanity check
+            if (mouseKeys.cbSize != Marshal.SizeOf<ExtendedPInvoke.MOUSEKEYS>())
+            {
+                throw new ArgumentException(nameof(mouseKeys));
+            }
+
+            var success = true;
+
+            var pointerToMouseKeys = Marshal.AllocHGlobal(Marshal.SizeOf<ExtendedPInvoke.MOUSEKEYS>());
+            try
+            {
+                Marshal.StructureToPtr(mouseKeys, pointerToMouseKeys, false);
+
+                var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_SETMOUSEKEYS, mouseKeys.cbSize, pointerToMouseKeys, fWinIni);
+                if (spiResult == false)
+                {
+                    success = false;
+                }
+            }
+            catch
+            {
+                success = false;
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(pointerToMouseKeys);
             }
 
             return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;

@@ -98,6 +98,32 @@ namespace Morphic.Settings
         }
 
         [StructLayout(LayoutKind.Sequential)]
+        public struct MOUSEKEYS
+        {
+            public uint cbSize { get; set; }
+            public uint dwFlags { get; set; }
+            public uint iMaxSpeed { get; set; }
+            public uint iTimeToMaxSpeed { get; set; }
+            public uint iCtrlSpeed { get; set; }
+            public uint dwReserved1 { get; set; }
+            public uint dwReserved2 { get; set; }
+        }
+
+        internal const uint MKF_MOUSEKEYSON = 0x00000001;
+        //internal const uint MKF_AVAILABLE = 0x00000002;
+        //internal const uint MKF_HOTKEYACTIVE = 0x00000004;
+        //internal const uint MKF_CONFIRMHOTKEY = 0x00000008;
+        //internal const uint MKF_HOTKEYSOUND = 0x00000010;
+        //internal const uint MKF_INDICATOR = 0x00000020;
+        //internal const uint MKF_MODIFIERS = 0x00000040;
+        //internal const uint MKF_REPLACENUMBERS = 0x00000080;
+        //internal const uint MKF_LEFTBUTTONSEL = 0x10000000;
+        //internal const uint MKF_RIGHTBUTTONSEL = 0x20000000;
+        //internal const uint MKF_LEFTBUTTONDOWN = 0x01000000;
+        //internal const uint MKF_RIGHTBUTTONDOWN = 0x02000000;
+        //internal const uint MKF_MOUSEMODE = 0x80000000;
+
+        [StructLayout(LayoutKind.Sequential)]
         public struct STICKYKEYS
         {
             public uint cbSize { get; set; }
