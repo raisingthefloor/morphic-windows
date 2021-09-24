@@ -127,6 +127,20 @@ namespace Morphic.Settings
         //internal const uint SKF_LWINLOCKED = 0x00400000;
         //internal const uint SKF_RWINLOCKED = 0x00800000;
 
+        [StructLayout(LayoutKind.Sequential)]
+        public struct TOGGLEKEYS
+        {
+            public uint cbSize { get; set; }
+            public uint dwFlags { get; set; }
+        }
+
+        internal const uint TKF_TOGGLEKEYSON = 0x00000001;
+        //internal const uint TKF_AVAILABLE = 0x00000002;
+        //internal const uint TKF_HOTKEYACTIVE = 0x00000004;
+        //internal const uint TKF_CONFIRMHOTKEY = 0x00000008;
+        //internal const uint TKF_HOTKEYSOUND = 0x00000010;
+        //internal const uint TKF_INDICATOR = 0x00000020;
+
         [DllImport("user32.dll")]
         internal static extern uint GetDoubleClickTime();
 

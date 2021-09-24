@@ -108,6 +108,16 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                         }
                     }
                     break;
+                case "SPI_GETTOGGLEKEYS":
+                    {
+                        var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetToggleKeys(settings);
+                        success = spiGetMorphicResult.IsSuccess;
+                        if (success == true)
+                        {
+                            values = spiGetValues;
+                        }
+                    }
+                    break;
                 default:
                     success = false;
                     foreach (var setting in settings)
@@ -544,6 +554,95 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             return IMorphicResult<ExtendedPInvoke.STICKYKEYS>.SuccessResult(result);
         }
 
+        private static (IMorphicResult, Values) SpiGetToggleKeys(IEnumerable<Setting> settings)
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation and pass in the actual togglekeys struct size in the API call
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            var internalGetToggleKeysResult = SPISettingsHandler.InternalSpiGetToggleKeys();
+            if (internalGetToggleKeysResult.IsError == true)
+            {
+                // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
+                return (IMorphicResult.ErrorResult, new Values());
+            }
+            var toggleKeys = internalGetToggleKeysResult.Value!;
+
+            //
+
+            var success = true;
+            var values = new Values();
+
+            foreach (Setting setting in settings)
+            {
+                switch (setting.Name)
+                {
+                    case "ToggleKeysOn":
+                        var toggleKeysOn = (toggleKeys.dwFlags & ExtendedPInvoke.TKF_TOGGLEKEYSON) == ExtendedPInvoke.TKF_TOGGLEKEYSON;
+                        values.Add(setting, toggleKeysOn);
+                        break;
+                    default:
+                        success = false;
+                        values.Add(setting, null, Values.ValueType.NotFound);
+                        continue;
+                }
+            }
+
+            return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
+        }
+
+        private static IMorphicResult<ExtendedPInvoke.TOGGLEKEYS> InternalSpiGetToggleKeys()
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation and pass in the actual togglekeys struct size in the API call
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            ExtendedPInvoke.TOGGLEKEYS result;
+
+            var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+
+            ExtendedPInvoke.TOGGLEKEYS pvParamAsToggleKeys = new ExtendedPInvoke.TOGGLEKEYS
+            {
+                cbSize = (uint)Marshal.SizeOf<ExtendedPInvoke.TOGGLEKEYS>()
+            };
+
+            var pointerToToggleKeys = Marshal.AllocHGlobal(Marshal.SizeOf<ExtendedPInvoke.TOGGLEKEYS>());
+            try
+            {
+                Marshal.StructureToPtr(pvParamAsToggleKeys, pointerToToggleKeys, false);
+
+                var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_GETTOGGLEKEYS, pvParamAsToggleKeys.cbSize, pointerToToggleKeys, fWinIni);
+                if (spiResult == true)
+                {
+                    result = Marshal.PtrToStructure<ExtendedPInvoke.TOGGLEKEYS>(pointerToToggleKeys);
+                }
+                else
+                {
+                    return IMorphicResult<ExtendedPInvoke.TOGGLEKEYS>.ErrorResult();
+                }
+            }
+            catch
+            {
+                return IMorphicResult<ExtendedPInvoke.TOGGLEKEYS>.ErrorResult();
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(pointerToToggleKeys);
+            }
+
+            return IMorphicResult<ExtendedPInvoke.TOGGLEKEYS>.SuccessResult(result);
+        }
+
         //
 
         // OBSERVATION: this information is compiled in the solutions registry, but we should consider hard-coding it instead for security; for now it's compiled into code.
@@ -620,6 +719,12 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                 case "SPI_SETSTICKYKEYS":
                     {
                         var spiSetMorphicResult = SPISettingsHandler.SpiSetStickyKeys(spiSettingGroup.fWinIni, values);
+                        success = spiSetMorphicResult.IsSuccess;
+                    }
+                    break;
+                case "SPI_SETTOGGLEKEYS":
+                    {
+                        var spiSetMorphicResult = SPISettingsHandler.SpiSetToggleKeys(spiSettingGroup.fWinIni, values);
                         success = spiSetMorphicResult.IsSuccess;
                     }
                     break;
@@ -1121,6 +1226,109 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             finally
             {
                 Marshal.FreeHGlobal(pointerToStickyKeys);
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        private static IMorphicResult SpiSetToggleKeys(string? fWinIniAsString, Values values)
+        {
+            var success = true;
+
+            // capture the current ToggleKeys struct data up-front
+            var internalGetToggleKeysResult = SPISettingsHandler.InternalSpiGetToggleKeys();
+            if (internalGetToggleKeysResult.IsError == true)
+            {
+                return IMorphicResult.ErrorResult;
+            }
+            var toggleKeys = internalGetToggleKeysResult.Value!;
+
+            foreach (var value in values)
+            {
+                switch (value.Key.Name)
+                {
+                    case "ToggleKeysOn":
+                        {
+                            var valueAsNullableBool = value.Value as bool?;
+                            if (valueAsNullableBool == null)
+                            {
+                                success = false;
+                                continue;
+                            }
+                            var valueAsBool = valueAsNullableBool!;
+
+                            if (valueAsBool == true)
+                            {
+                                toggleKeys.dwFlags |= ExtendedPInvoke.TKF_TOGGLEKEYSON;
+                            }
+                            else
+                            {
+                                toggleKeys.dwFlags &= ~ExtendedPInvoke.TKF_TOGGLEKEYSON;
+                            }
+                        }
+                        break;
+                    default:
+                        success = false;
+                        continue;
+                }
+            }
+
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation and pass in the actual togglekeys struct size in the API call
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // OBSERVATION: for security purposes, we may want to consider hard-coding these flags or otherwise limiting them
+            // NOTE: we should review and sanity-check the setting in the solutions registry
+            var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+            if (fWinIniAsString != null)
+            {
+                var parseFlagsResult = SPISettingsHandler.ParseWinIniFlags(fWinIniAsString);
+                if (parseFlagsResult.IsSuccess == true)
+                {
+                    fWinIni = parseFlagsResult.Value!;
+                }
+            }
+
+            var internalSetToggleKeysResult = SPISettingsHandler.InternalSpiSetToggleKeys(toggleKeys, fWinIni);
+            if (internalSetToggleKeysResult.IsError == true)
+            {
+                return IMorphicResult.ErrorResult;
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        private static IMorphicResult InternalSpiSetToggleKeys(ExtendedPInvoke.TOGGLEKEYS toggleKeys, PInvoke.User32.SystemParametersInfoFlags fWinIni)
+        {
+            // sanity check
+            if (toggleKeys.cbSize != Marshal.SizeOf<ExtendedPInvoke.TOGGLEKEYS>())
+            {
+                throw new ArgumentException(nameof(toggleKeys));
+            }
+
+            var success = true;
+
+            var pointerToToggleKeys = Marshal.AllocHGlobal(Marshal.SizeOf<ExtendedPInvoke.TOGGLEKEYS>());
+            try
+            {
+                Marshal.StructureToPtr(toggleKeys, pointerToToggleKeys, false);
+
+                var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_SETTOGGLEKEYS, toggleKeys.cbSize, pointerToToggleKeys, fWinIni);
+                if (spiResult == false)
+                {
+                    success = false;
+                }
+            }
+            catch
+            {
+                success = false;
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(pointerToToggleKeys);
             }
 
             return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
