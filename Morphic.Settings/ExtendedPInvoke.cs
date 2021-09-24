@@ -63,6 +63,37 @@ namespace Morphic.Settings
         //internal const uint FKF_INDICATOR = 0x00000020;
         //internal const uint FKF_CLICKON = 0x00000040;
 
+        // https://docs.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-highcontrastw
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        internal struct HIGHCONTRAST
+        {
+            public uint cbSize;
+            public HighContrastFlags dwFlags;
+            public string? lpszDefaultScheme;
+
+            public static HIGHCONTRAST CreateNew()
+            {
+                var result = new HIGHCONTRAST();
+                result.cbSize = (uint)Marshal.SizeOf(typeof(HIGHCONTRAST));
+                return result;
+            }
+        }
+
+        // flags for HIGHCONTRAST.dwFlags
+        public enum HighContrastFlags : uint
+        {
+            HCF_HIGHCONTRASTON = 0x00000001,
+            HCF_AVAILABLE = 0x00000002,
+            HCF_HOTKEYACTIVE = 0x00000004,
+            HCF_CONFIRMHOTKEY = 0x00000008,
+            HCF_HOTKEYSOUND = 0x00000010,
+            HCF_INDICATOR = 0x00000020,
+            HCF_HOTKEYAVAILABLE = 0x00000040,
+            HCF_LOGONDESKTOP = 0x00000100,
+            HCF_DEFAULTDESKTOP = 0x00000200,
+            HCF_OPTION_NOTHEMECHANGE = 0x00001000,
+        }
+
         [DllImport("user32.dll")]
         internal static extern uint GetDoubleClickTime();
 

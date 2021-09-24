@@ -78,6 +78,16 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                         }
                     }
                     break;
+                case "SPI_GETHIGHCONTRAST":
+                    {
+                        var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetHighContrast(settings);
+                        success = spiGetMorphicResult.IsSuccess;
+                        if (success == true)
+                        {
+                            values = spiGetValues;
+                        }
+                    }
+                    break;
                 default:
                     success = false;
                     foreach (var setting in settings)
@@ -247,6 +257,92 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             return IMorphicResult<ExtendedPInvoke.FILTERKEYS>.SuccessResult(result);
         }
 
+        private static (IMorphicResult, Values) SpiGetHighContrast(IEnumerable<Setting> settings)
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation and pass in the actual highcontrast struct size in the API call
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            var internalGetHighContrastResult = SPISettingsHandler.InternalSpiGetHighContrast();
+            if (internalGetHighContrastResult.IsError == true)
+            {
+                // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
+                return (IMorphicResult.ErrorResult, new Values());
+            }
+            var highContrast = internalGetHighContrastResult.Value!;
+
+            //
+
+            var success = true;
+            var values = new Values();
+
+            foreach (Setting setting in settings)
+            {
+                switch (setting.Name)
+                {
+                    case "HighContrastOn":
+                        var highContrastOn = (highContrast.dwFlags & ExtendedPInvoke.HighContrastFlags.HCF_HIGHCONTRASTON) == ExtendedPInvoke.HighContrastFlags.HCF_HIGHCONTRASTON;
+                        values.Add(setting, highContrastOn);
+                        break;
+                    default:
+                        success = false;
+                        values.Add(setting, null, Values.ValueType.NotFound);
+                        continue;
+                }
+            }
+
+            return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
+        }
+
+        private static IMorphicResult<ExtendedPInvoke.HIGHCONTRAST> InternalSpiGetHighContrast()
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation and pass in the actual highcontrast struct size in the API call
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            ExtendedPInvoke.HIGHCONTRAST result;
+
+            var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+
+            ExtendedPInvoke.HIGHCONTRAST pvParamAsHighContrast = ExtendedPInvoke.HIGHCONTRAST.CreateNew();
+
+            var pointerToHighContrast = Marshal.AllocHGlobal(Marshal.SizeOf<ExtendedPInvoke.HIGHCONTRAST>());
+            try
+            {
+                Marshal.StructureToPtr(pvParamAsHighContrast, pointerToHighContrast, false);
+
+                var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_GETHIGHCONTRAST, pvParamAsHighContrast.cbSize, pointerToHighContrast, fWinIni);
+                if (spiResult == true)
+                {
+                    result = Marshal.PtrToStructure<ExtendedPInvoke.HIGHCONTRAST>(pointerToHighContrast);
+                }
+                else
+                {
+                    return IMorphicResult<ExtendedPInvoke.HIGHCONTRAST>.ErrorResult();
+                }
+            }
+            catch
+            {
+                return IMorphicResult<ExtendedPInvoke.HIGHCONTRAST>.ErrorResult();
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(pointerToHighContrast);
+            }
+
+            return IMorphicResult<ExtendedPInvoke.HIGHCONTRAST>.SuccessResult(result);
+        }
+
         //
 
         // OBSERVATION: this information is compiled in the solutions registry, but we should consider hard-coding it instead for security; for now it's compiled into code.
@@ -305,6 +401,12 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                 case "SPI_SETFILTERKEYS":
                     {
                         var spiSetMorphicResult = SPISettingsHandler.SpiSetFilterKeys(spiSettingGroup.fWinIni, values);
+                        success = spiSetMorphicResult.IsSuccess;
+                    }
+                    break;
+                case "SPI_SETHIGHCONTRAST":
+                    {
+                        var spiSetMorphicResult = SPISettingsHandler.SpiSetHighContrast(spiSettingGroup.fWinIni, values);
                         success = spiSetMorphicResult.IsSuccess;
                     }
                     break;
@@ -500,5 +602,110 @@ namespace Morphic.Settings.SettingsHandlers.SPI
 
             return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
         }
+
+        private static IMorphicResult SpiSetHighContrast(string? fWinIniAsString, Values values)
+        {
+            var success = true;
+
+            // capture the current HighContrast struct data up-front
+            var internalGetHighContrastResult = SPISettingsHandler.InternalSpiGetHighContrast();
+            if (internalGetHighContrastResult.IsError == true)
+            {
+                return IMorphicResult.ErrorResult;
+            }
+            var highContrast = internalGetHighContrastResult.Value!;
+
+            foreach (var value in values)
+            {
+                switch (value.Key.Name)
+                {
+                    case "HighContrastOn":
+                        {
+                            var valueAsNullableBool = value.Value as bool?;
+                            if (valueAsNullableBool == null)
+                            {
+                                success = false;
+                                continue;
+                            }
+                            var valueAsBool = valueAsNullableBool!;
+
+                            if (valueAsBool == true)
+                            {
+                                highContrast.dwFlags |= ExtendedPInvoke.HighContrastFlags.HCF_HIGHCONTRASTON;
+                            }
+                            else
+                            {
+                                highContrast.dwFlags &= ~ExtendedPInvoke.HighContrastFlags.HCF_HIGHCONTRASTON;
+                            }
+                        }
+                        break;
+                    default:
+                        success = false;
+                        continue;
+                }
+            }
+
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation and pass in the actual highcontrast struct size in the API call
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // OBSERVATION: for security purposes, we may want to consider hard-coding these flags or otherwise limiting them
+            // NOTE: we should review and sanity-check the setting in the solutions registry
+            var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+            if (fWinIniAsString != null)
+            {
+                var parseFlagsResult = SPISettingsHandler.ParseWinIniFlags(fWinIniAsString);
+                if (parseFlagsResult.IsSuccess == true)
+                {
+                    fWinIni = parseFlagsResult.Value!;
+                }
+            }
+
+            var internalSetHighContrastResult = SPISettingsHandler.InternalSpiSetHighContrast(highContrast, fWinIni);
+            if (internalSetHighContrastResult.IsError == true)
+            {
+                return IMorphicResult.ErrorResult;
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        private static IMorphicResult InternalSpiSetHighContrast(ExtendedPInvoke.HIGHCONTRAST highContrast, PInvoke.User32.SystemParametersInfoFlags fWinIni)
+        {
+            // sanity check
+            if (highContrast.cbSize != Marshal.SizeOf<ExtendedPInvoke.HIGHCONTRAST>())
+            {
+                throw new ArgumentException(nameof(highContrast));
+            }
+
+            var success = true;
+
+            var pointerToHighContrast = Marshal.AllocHGlobal(Marshal.SizeOf<ExtendedPInvoke.HIGHCONTRAST>());
+            try
+            {
+                Marshal.StructureToPtr(highContrast, pointerToHighContrast, false);
+
+                var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_SETHIGHCONTRAST, highContrast.cbSize, pointerToHighContrast, fWinIni);
+                if (spiResult == false)
+                {
+                    success = false;
+                }
+            }
+            catch
+            {
+                success = false;
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(pointerToHighContrast);
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+
     }
 }
