@@ -88,6 +88,26 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                         }
                     }
                     break;
+                case "SPI_GETMOUSETRAILS":
+                    {
+                        var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetMouseTrails(settings);
+                        success = spiGetMorphicResult.IsSuccess;
+                        if (success == true)
+                        {
+                            values = spiGetValues;
+                        }
+                    }
+                    break;
+                case "SPI_GETSTICKYKEYS":
+                    {
+                        var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetStickyKeys(settings);
+                        success = spiGetMorphicResult.IsSuccess;
+                        if (success == true)
+                        {
+                            values = spiGetValues;
+                        }
+                    }
+                    break;
                 default:
                     success = false;
                     foreach (var setting in settings)
@@ -343,6 +363,187 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             return IMorphicResult<ExtendedPInvoke.HIGHCONTRAST>.SuccessResult(result);
         }
 
+        private static (IMorphicResult, Values) SpiGetMouseTrails(IEnumerable<Setting> settings)
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation as it is unused
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            var internalGetMouseTrailsResult = SPISettingsHandler.InternalSpiGetMouseTrails();
+            if (internalGetMouseTrailsResult.IsError == true)
+            {
+                // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
+                return (IMorphicResult.ErrorResult, new Values());
+            }
+            var mouseTrailsValue = internalGetMouseTrailsResult.Value!;
+
+            //
+
+            var success = true;
+            var values = new Values();
+
+            foreach (Setting setting in settings)
+            {
+                switch (setting.Name)
+                {
+                    case "MouseTrails":
+                        // NOTE: if this value is out or range, we should handle the error condition
+                        if (mouseTrailsValue < 0 || mouseTrailsValue > 10)
+                        {
+                            Debug.Assert(false, "MouseTrails value is out of range 0...10");
+                        } 
+                        values.Add(setting, mouseTrailsValue);
+                        break;
+                    default:
+                        success = false;
+                        values.Add(setting, null, Values.ValueType.NotFound);
+                        continue;
+                }
+            }
+
+            return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
+        }
+
+        private static IMorphicResult<uint> InternalSpiGetMouseTrails()
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation as it is unused
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            // OBSERVATION: we did not find the exact type required for this data in the Microsoft documentation; they said "integer" so we assume int32/uint32,
+            //              and the GPII-ported solutions registry says uint (uint32)
+            uint result;
+
+            var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+
+            uint pvParamAsUint = 0;
+
+            var pointerToUint = Marshal.AllocHGlobal(Marshal.SizeOf<uint>());
+            try
+            {
+                Marshal.StructureToPtr(pvParamAsUint, pointerToUint, false);
+
+                var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_GETMOUSETRAILS, 0, pointerToUint, fWinIni);
+                if (spiResult == true)
+                {
+                    result = Marshal.PtrToStructure<uint>(pointerToUint);
+                }
+                else
+                {
+                    return IMorphicResult<uint>.ErrorResult();
+                }
+            }
+            catch
+            {
+                return IMorphicResult<uint>.ErrorResult();
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(pointerToUint);
+            }
+
+            return IMorphicResult<uint>.SuccessResult(result);
+        }
+
+        private static (IMorphicResult, Values) SpiGetStickyKeys(IEnumerable<Setting> settings)
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation and pass in the actual stickykeys struct size in the API call
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            var internalGetStickyKeysResult = SPISettingsHandler.InternalSpiGetStickyKeys();
+            if (internalGetStickyKeysResult.IsError == true)
+            {
+                // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
+                return (IMorphicResult.ErrorResult, new Values());
+            }
+            var stickyKeys = internalGetStickyKeysResult.Value!;
+
+            //
+
+            var success = true;
+            var values = new Values();
+
+            foreach (Setting setting in settings)
+            {
+                switch (setting.Name)
+                {
+                    case "StickyKeysOn":
+                        var stickyKeysOn = (stickyKeys.dwFlags & ExtendedPInvoke.SKF_STICKYKEYSON) == ExtendedPInvoke.SKF_STICKYKEYSON;
+                        values.Add(setting, stickyKeysOn);
+                        break;
+                    default:
+                        success = false;
+                        values.Add(setting, null, Values.ValueType.NotFound);
+                        continue;
+                }
+            }
+
+            return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
+        }
+
+        private static IMorphicResult<ExtendedPInvoke.STICKYKEYS> InternalSpiGetStickyKeys()
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation and pass in the actual stickykeys struct size in the API call
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            ExtendedPInvoke.STICKYKEYS result;
+
+            var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+
+            ExtendedPInvoke.STICKYKEYS pvParamAsStickyKeys = new ExtendedPInvoke.STICKYKEYS
+            {
+                cbSize = (uint)Marshal.SizeOf<ExtendedPInvoke.STICKYKEYS>()
+            };
+
+            var pointerToStickyKeys = Marshal.AllocHGlobal(Marshal.SizeOf<ExtendedPInvoke.STICKYKEYS>());
+            try
+            {
+                Marshal.StructureToPtr(pvParamAsStickyKeys, pointerToStickyKeys, false);
+
+                var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_GETSTICKYKEYS, pvParamAsStickyKeys.cbSize, pointerToStickyKeys, fWinIni);
+                if (spiResult == true)
+                {
+                    result = Marshal.PtrToStructure<ExtendedPInvoke.STICKYKEYS>(pointerToStickyKeys);
+                }
+                else
+                {
+                    return IMorphicResult<ExtendedPInvoke.STICKYKEYS>.ErrorResult();
+                }
+            }
+            catch
+            {
+                return IMorphicResult<ExtendedPInvoke.STICKYKEYS>.ErrorResult();
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(pointerToStickyKeys);
+            }
+
+            return IMorphicResult<ExtendedPInvoke.STICKYKEYS>.SuccessResult(result);
+        }
+
         //
 
         // OBSERVATION: this information is compiled in the solutions registry, but we should consider hard-coding it instead for security; for now it's compiled into code.
@@ -407,6 +608,18 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                 case "SPI_SETHIGHCONTRAST":
                     {
                         var spiSetMorphicResult = SPISettingsHandler.SpiSetHighContrast(spiSettingGroup.fWinIni, values);
+                        success = spiSetMorphicResult.IsSuccess;
+                    }
+                    break;
+                case "SPI_SETMOUSETRAILS":
+                    {
+                        var spiSetMorphicResult = SPISettingsHandler.SpiSetMouseTrails(spiSettingGroup.fWinIni, values);
+                        success = spiSetMorphicResult.IsSuccess;
+                    }
+                    break;
+                case "SPI_SETSTICKYKEYS":
+                    {
+                        var spiSetMorphicResult = SPISettingsHandler.SpiSetStickyKeys(spiSettingGroup.fWinIni, values);
                         success = spiSetMorphicResult.IsSuccess;
                     }
                     break;
@@ -603,6 +816,110 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
         }
 
+        private static IMorphicResult SpiSetMouseTrails(string? fWinIniAsString, Values values)
+        {
+            var success = true;
+
+            // NOTE: since the data passed to/from the SPI function is a primitive type and not a struct, there is no need to read the value before writing
+
+            uint? mouseTrailsValue = null;
+
+            foreach (var value in values)
+            {
+                switch (value.Key.Name)
+                {
+                    case "MouseTrails":
+                        {
+                            var convertValueToUIntResult = ConversionUtils.TryConvertObjectToUInt(value.Value);
+                            if (convertValueToUIntResult.IsError == true)
+                            {
+                                success = false;
+                                continue;
+                            }
+                            var valueAsUInt = convertValueToUIntResult.Value!;
+
+                            // validate the range
+                            if (valueAsUInt < 0 || valueAsUInt > 10)
+                            {
+                                success = false;
+                                continue;
+                            }
+
+                            mouseTrailsValue = valueAsUInt;
+                        }
+                        break;
+                    default:
+                        success = false;
+                        continue;
+                }
+            }
+
+            // NOTE: we only try to set the value if we were passed a value in the group
+            if (mouseTrailsValue != null)
+            {
+                // uiParam
+                // NOTE: in this implementation, we ignore the representation as it is not used
+                //
+                // pvParam
+                // NOTE: in this implementation, we ignore the representation and create our own buffer
+                //
+                // fWinIni = flags
+                // OBSERVATION: for security purposes, we may want to consider hard-coding these flags or otherwise limiting them
+                // NOTE: we should review and sanity-check the setting in the solutions registry
+                var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+                if (fWinIniAsString != null)
+                {
+                    var parseFlagsResult = SPISettingsHandler.ParseWinIniFlags(fWinIniAsString);
+                    if (parseFlagsResult.IsSuccess == true)
+                    {
+                        fWinIni = parseFlagsResult.Value!;
+                    }
+                }
+
+                var internalSetMouseTrailsResult = SPISettingsHandler.InternalSpiSetMouseTrails(mouseTrailsValue.Value, fWinIni);
+                if (internalSetMouseTrailsResult.IsError == true)
+                {
+                    return IMorphicResult.ErrorResult;
+                }
+            }
+            else
+            {
+                success = false;
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        private static IMorphicResult InternalSpiSetMouseTrails(uint mouseTrailsValue, PInvoke.User32.SystemParametersInfoFlags fWinIni)
+        {
+            var success = true;
+
+            var pointerToMouseTrailsValue = Marshal.AllocHGlobal(Marshal.SizeOf<uint>());
+            try
+            {
+                Marshal.StructureToPtr(mouseTrailsValue, pointerToMouseTrailsValue, false);
+
+                // OBSERVATION: the modern solutions registry indicates that this value should be get and set via pvParam, but the GPII solutions registry indicates that it should
+                //              be get via pvParam and set via uiParam; Microsoft's documentation also says we should set via uiParam; we are following Microsoft's documentation.
+                // OBSERVATION: values of 1 and 0 both mean "no mouse trails"; Windows appears to record any value set to "1" as "0"...so reading the value after setting 1 will return 0
+                var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_SETMOUSETRAILS, mouseTrailsValue, IntPtr.Zero, fWinIni);
+                if (spiResult == false)
+                {
+                    success = false;
+                }
+            }
+            catch
+            {
+                success = false;
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(pointerToMouseTrailsValue);
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
         private static IMorphicResult SpiSetHighContrast(string? fWinIniAsString, Values values)
         {
             var success = true;
@@ -706,6 +1023,107 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
         }
 
+        private static IMorphicResult SpiSetStickyKeys(string? fWinIniAsString, Values values)
+        {
+            var success = true;
 
+            // capture the current StickyKeys struct data up-front
+            var internalGetStickyKeysResult = SPISettingsHandler.InternalSpiGetStickyKeys();
+            if (internalGetStickyKeysResult.IsError == true)
+            {
+                return IMorphicResult.ErrorResult;
+            }
+            var stickyKeys = internalGetStickyKeysResult.Value!;
+
+            foreach (var value in values)
+            {
+                switch (value.Key.Name)
+                {
+                    case "StickyKeysOn":
+                        {
+                            var valueAsNullableBool = value.Value as bool?;
+                            if (valueAsNullableBool == null)
+                            {
+                                success = false;
+                                continue;
+                            }
+                            var valueAsBool = valueAsNullableBool!;
+
+                            if (valueAsBool == true)
+                            {
+                                stickyKeys.dwFlags |= ExtendedPInvoke.SKF_STICKYKEYSON;
+                            }
+                            else
+                            {
+                                stickyKeys.dwFlags &= ~ExtendedPInvoke.SKF_STICKYKEYSON;
+                            }
+                        }
+                        break;
+                    default:
+                        success = false;
+                        continue;
+                }
+            }
+
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation and pass in the actual stickykeys struct size in the API call
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // OBSERVATION: for security purposes, we may want to consider hard-coding these flags or otherwise limiting them
+            // NOTE: we should review and sanity-check the setting in the solutions registry
+            var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+            if (fWinIniAsString != null)
+            {
+                var parseFlagsResult = SPISettingsHandler.ParseWinIniFlags(fWinIniAsString);
+                if (parseFlagsResult.IsSuccess == true)
+                {
+                    fWinIni = parseFlagsResult.Value!;
+                }
+            }
+
+            var internalSetStickyKeysResult = SPISettingsHandler.InternalSpiSetStickyKeys(stickyKeys, fWinIni);
+            if (internalSetStickyKeysResult.IsError == true)
+            {
+                return IMorphicResult.ErrorResult;
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        private static IMorphicResult InternalSpiSetStickyKeys(ExtendedPInvoke.STICKYKEYS stickyKeys, PInvoke.User32.SystemParametersInfoFlags fWinIni)
+        {
+            // sanity check
+            if (stickyKeys.cbSize != Marshal.SizeOf<ExtendedPInvoke.STICKYKEYS>())
+            {
+                throw new ArgumentException(nameof(stickyKeys));
+            }
+
+            var success = true;
+
+            var pointerToStickyKeys = Marshal.AllocHGlobal(Marshal.SizeOf<ExtendedPInvoke.STICKYKEYS>());
+            try
+            {
+                Marshal.StructureToPtr(stickyKeys, pointerToStickyKeys, false);
+
+                var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_SETSTICKYKEYS, stickyKeys.cbSize, pointerToStickyKeys, fWinIni);
+                if (spiResult == false)
+                {
+                    success = false;
+                }
+            }
+            catch
+            {
+                success = false;
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(pointerToStickyKeys);
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
     }
 }

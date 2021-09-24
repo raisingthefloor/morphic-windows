@@ -94,6 +94,39 @@ namespace Morphic.Settings
             HCF_OPTION_NOTHEMECHANGE = 0x00001000,
         }
 
+        [StructLayout(LayoutKind.Sequential)]
+        public struct STICKYKEYS
+        {
+            public uint cbSize { get; set; }
+            public uint dwFlags { get; set; }
+        }
+
+        internal const uint SKF_STICKYKEYSON = 0x00000001;
+        //internal const uint SKF_AVAILABLE = 0x00000002;
+        //internal const uint SKF_HOTKEYACTIVE = 0x00000004;
+        //internal const uint SKF_CONFIRMHOTKEY = 0x00000008;
+        //internal const uint SKF_HOTKEYSOUND = 0x00000010;
+        //internal const uint SKF_INDICATOR = 0x00000020;
+        //internal const uint SKF_AUDIBLEFEEDBACK = 0x00000040;
+        //internal const uint SKF_TRISTATE = 0x00000080;
+        //internal const uint SKF_TWOKEYSOFF = 0x00000100;
+        //internal const uint SKF_LALTLATCHED = 0x10000000;
+        //internal const uint SKF_LCTLLATCHED = 0x04000000;
+        //internal const uint SKF_LSHIFTLATCHED = 0x01000000;
+        //internal const uint SKF_RALTLATCHED = 0x20000000;
+        //internal const uint SKF_RCTLLATCHED = 0x08000000;
+        //internal const uint SKF_RSHIFTLATCHED = 0x02000000;
+        //internal const uint SKF_LWINLATCHED = 0x40000000;
+        //internal const uint SKF_RWINLATCHED = 0x80000000;
+        //internal const uint SKF_LALTLOCKED = 0x00100000;
+        //internal const uint SKF_LCTLLOCKED = 0x00040000;
+        //internal const uint SKF_LSHIFTLOCKED = 0x00010000;
+        //internal const uint SKF_RALTLOCKED = 0x00200000;
+        //internal const uint SKF_RCTLLOCKED = 0x00080000;
+        //internal const uint SKF_RSHIFTLOCKED = 0x00020000;
+        //internal const uint SKF_LWINLOCKED = 0x00400000;
+        //internal const uint SKF_RWINLOCKED = 0x00800000;
+
         [DllImport("user32.dll")]
         internal static extern uint GetDoubleClickTime();
 
