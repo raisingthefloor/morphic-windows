@@ -88,6 +88,16 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                         }
                     }
                     break;
+                case "SPI_GETMESSAGEDURATION":
+                    {
+                        var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetMessageDuration(settings);
+                        success = spiGetMorphicResult.IsSuccess;
+                        if (success == true)
+                        {
+                            values = spiGetValues;
+                        }
+                    }
+                    break;
                 case "SPI_GETMOUSETRAILS":
                     {
                         var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetMouseTrails(settings);
@@ -371,6 +381,92 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             }
 
             return IMorphicResult<ExtendedPInvoke.HIGHCONTRAST>.SuccessResult(result);
+        }
+
+        private static (IMorphicResult, Values) SpiGetMessageDuration(IEnumerable<Setting> settings)
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation as it is unused
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            var internalGetMessageDurationResult = SPISettingsHandler.InternalSpiGetMessageDuration();
+            if (internalGetMessageDurationResult.IsError == true)
+            {
+                // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
+                return (IMorphicResult.ErrorResult, new Values());
+            }
+            var messageDurationInSeconds = internalGetMessageDurationResult.Value!;
+
+            //
+
+            var success = true;
+            var values = new Values();
+
+            foreach (Setting setting in settings)
+            {
+                switch (setting.Name)
+                {
+                    case "Duration":
+                        values.Add(setting, messageDurationInSeconds);
+                        break;
+                    default:
+                        success = false;
+                        values.Add(setting, null, Values.ValueType.NotFound);
+                        continue;
+                }
+            }
+
+            return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
+        }
+
+        private static IMorphicResult<ulong> InternalSpiGetMessageDuration()
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation as it is unused
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            // OBSERVATION: the Microsoft documentation says that the value is a ULONG, but the GPII and modern solutions registry says UINT; we are following the Microsoft docs
+            ulong result;
+
+            var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+
+            ulong pvParamAsUlong = 0;
+
+            var pointerToUlong = Marshal.AllocHGlobal(Marshal.SizeOf<ulong>());
+            try
+            {
+                Marshal.StructureToPtr(pvParamAsUlong, pointerToUlong, false);
+
+                var spiResult = PInvoke.User32.SystemParametersInfo((PInvoke.User32.SystemParametersInfoAction)ExtendedPInvoke.SPI_GETMESSAGEDURATION, 0, pointerToUlong, fWinIni);
+                if (spiResult == true)
+                {
+                    result = Marshal.PtrToStructure<ulong>(pointerToUlong);
+                }
+                else
+                {
+                    return IMorphicResult<ulong>.ErrorResult();
+                }
+            }
+            catch
+            {
+                return IMorphicResult<ulong>.ErrorResult();
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(pointerToUlong);
+            }
+
+            return IMorphicResult<ulong>.SuccessResult(result);
         }
 
         private static (IMorphicResult, Values) SpiGetMouseTrails(IEnumerable<Setting> settings)
@@ -710,6 +806,12 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                         success = spiSetMorphicResult.IsSuccess;
                     }
                     break;
+                case "SPI_SETMESSAGEDURATION":
+                    {
+                        var spiSetMorphicResult = SPISettingsHandler.SpiSetMessageDuration(spiSettingGroup.fWinIni, values);
+                        success = spiSetMorphicResult.IsSuccess;
+                    }
+                    break;
                 case "SPI_SETMOUSETRAILS":
                     {
                         var spiSetMorphicResult = SPISettingsHandler.SpiSetMouseTrails(spiSettingGroup.fWinIni, values);
@@ -921,6 +1023,96 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
         }
 
+        private static IMorphicResult SpiSetMessageDuration(string? fWinIniAsString, Values values)
+        {
+            var success = true;
+
+            // NOTE: since the data passed to/from the SPI function is a primitive type and not a struct, there is no need to read the value before writing
+
+            ulong? messageDurationInSeconds = null;
+
+            foreach (var value in values)
+            {
+                switch (value.Key.Name)
+                {
+                    case "Duration":
+                        {
+                            var convertValueToULongResult = ConversionUtils.TryConvertObjectToULong(value.Value);
+                            if (convertValueToULongResult.IsError == true)
+                            {
+                                success = false;
+                                continue;
+                            }
+                            var valueAsULong = convertValueToULongResult.Value!;
+
+                            messageDurationInSeconds = valueAsULong;
+                        }
+                        break;
+                    default:
+                        success = false;
+                        continue;
+                }
+            }
+
+            // NOTE: we only try to set the value if we were passed a value in the group
+            if (messageDurationInSeconds != null)
+            {
+                // uiParam
+                // NOTE: in this implementation, we ignore the representation as it is not used
+                //
+                // pvParam
+                // NOTE: in this implementation, we ignore the representation and create our own buffer
+                //
+                // fWinIni = flags
+                // OBSERVATION: for security purposes, we may want to consider hard-coding these flags or otherwise limiting them
+                // NOTE: we should review and sanity-check the setting in the solutions registry
+                var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+                if (fWinIniAsString != null)
+                {
+                    var parseFlagsResult = SPISettingsHandler.ParseWinIniFlags(fWinIniAsString);
+                    if (parseFlagsResult.IsSuccess == true)
+                    {
+                        fWinIni = parseFlagsResult.Value!;
+                    }
+                }
+
+                var internalSetMessageDurationResult = SPISettingsHandler.InternalSpiSetMessageDuration(messageDurationInSeconds.Value, fWinIni);
+                if (internalSetMessageDurationResult.IsError == true)
+                {
+                    return IMorphicResult.ErrorResult;
+                }
+            }
+            else
+            {
+                success = false;
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        private static IMorphicResult InternalSpiSetMessageDuration(ulong messageDurationInSeconds, PInvoke.User32.SystemParametersInfoFlags fWinIni)
+        {
+            var success = true;
+
+            var convertValueToIntPtrResult = ConversionUtils.TryConvertObjectToIntPtr(messageDurationInSeconds);
+            if (convertValueToIntPtrResult.IsError == true)
+            {
+                return IMorphicResult.ErrorResult;
+            }
+            var messageDurationInSecondsAsIntPtr = convertValueToIntPtrResult.Value!;
+
+            // OBSERVATION: the GPII and modern solutions registry indicates that this value is a UINT, but the Microsoft documentation says to pass it as an IntPtr (instead
+            //              of passing a pointer to a value); so we're passing it as an IntPtr.
+            // OBSERVATION: values of 1-4 are invalid and will be ignored by Windows; we should create some kind of sanity check, range or other filter for this parameter
+            var spiResult = PInvoke.User32.SystemParametersInfo((PInvoke.User32.SystemParametersInfoAction)ExtendedPInvoke.SPI_SETMESSAGEDURATION, 0, messageDurationInSecondsAsIntPtr, fWinIni);
+            if (spiResult == false)
+            {
+                success = false;
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
         private static IMorphicResult SpiSetMouseTrails(string? fWinIniAsString, Values values)
         {
             var success = true;
@@ -999,27 +1191,13 @@ namespace Morphic.Settings.SettingsHandlers.SPI
         {
             var success = true;
 
-            var pointerToMouseTrailsValue = Marshal.AllocHGlobal(Marshal.SizeOf<uint>());
-            try
-            {
-                Marshal.StructureToPtr(mouseTrailsValue, pointerToMouseTrailsValue, false);
-
-                // OBSERVATION: the modern solutions registry indicates that this value should be get and set via pvParam, but the GPII solutions registry indicates that it should
-                //              be get via pvParam and set via uiParam; Microsoft's documentation also says we should set via uiParam; we are following Microsoft's documentation.
-                // OBSERVATION: values of 1 and 0 both mean "no mouse trails"; Windows appears to record any value set to "1" as "0"...so reading the value after setting 1 will return 0
-                var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_SETMOUSETRAILS, mouseTrailsValue, IntPtr.Zero, fWinIni);
-                if (spiResult == false)
-                {
-                    success = false;
-                }
-            }
-            catch
+            // OBSERVATION: the modern solutions registry indicates that this value should be get and set via pvParam, but the GPII solutions registry indicates that it should
+            //              be get via pvParam and set via uiParam; Microsoft's documentation also says we should set via uiParam; we are following Microsoft's documentation.
+            // OBSERVATION: values of 1 and 0 both mean "no mouse trails"; Windows appears to record any value set to "1" as "0"...so reading the value after setting 1 will return 0
+            var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_SETMOUSETRAILS, mouseTrailsValue, IntPtr.Zero, fWinIni);
+            if (spiResult == false)
             {
                 success = false;
-            }
-            finally
-            {
-                Marshal.FreeHGlobal(pointerToMouseTrailsValue);
             }
 
             return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;

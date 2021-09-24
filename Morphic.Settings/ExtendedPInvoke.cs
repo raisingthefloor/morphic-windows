@@ -44,6 +44,9 @@ namespace Morphic.Settings
         internal const int COLOR_BACKGROUND = 1;
         internal const int COLOR_DESKTOP = COLOR_BACKGROUND;
 
+        internal const uint SPI_GETMESSAGEDURATION = 0x2016;
+        internal const uint SPI_SETMESSAGEDURATION = 0x2017;
+
         [StructLayout(LayoutKind.Sequential)]
         public struct FILTERKEYS
         {

@@ -24,6 +24,7 @@
 using Morphic.Core;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 
 namespace Morphic.Settings
@@ -126,6 +127,114 @@ namespace Morphic.Settings
 
             var result = Convert.ToUInt32(value);
             return IMorphicResult<uint>.SuccessResult(result);
+        }
+
+        internal static IMorphicResult<ulong> TryConvertObjectToULong(object? value)
+        {
+            if (value == null)
+            {
+                return IMorphicResult<ulong>.ErrorResult();
+            }
+
+            // make sure the value fits within the allowed range
+            if ((value.GetType() == typeof(sbyte)) ||
+                (value.GetType() == typeof(short)) ||
+                (value.GetType() == typeof(int)) ||
+                (value.GetType() == typeof(long)))
+            {
+                // signed integers
+
+                var valueAsLong = Convert.ToInt64(value);
+                if (valueAsLong < 0)
+                {
+                    return IMorphicResult<ulong>.ErrorResult();
+                }
+            }
+            else if ((value.GetType() == typeof(byte)) ||
+                (value.GetType() == typeof(ushort)) ||
+                (value.GetType() == typeof(uint)) ||
+                (value.GetType() == typeof(ulong)))
+            {
+                // unsigned integers
+
+                var valueAsUlong = Convert.ToUInt64(value);
+                if (valueAsUlong > ulong.MaxValue)
+                {
+                    return IMorphicResult<ulong>.ErrorResult();
+                }
+
+            }
+            else
+            {
+                // non-integer (i.e. unknown type)
+                return IMorphicResult<ulong>.ErrorResult();
+            }
+
+            var result = Convert.ToUInt64(value);
+            return IMorphicResult<ulong>.SuccessResult(result);
+        }
+
+        internal static IMorphicResult<IntPtr> TryConvertObjectToIntPtr(object? value)
+        {
+            if (value == null)
+            {
+                return IMorphicResult<IntPtr>.ErrorResult();
+            }
+
+            Int64 INTPTR_MAX;
+            switch (IntPtr.Size)
+            {
+                case 4:
+                    INTPTR_MAX = Int32.MaxValue;
+                    break;
+                case 8:
+                    INTPTR_MAX = Int64.MaxValue;
+                    break;
+                default:
+                    Debug.Assert(false, "The bitness of this platform is unsupported");
+                    return IMorphicResult<IntPtr>.ErrorResult();
+            }
+
+            // make sure the value fits within the allowed range
+            if ((value.GetType() == typeof(sbyte)) ||
+                (value.GetType() == typeof(short)) ||
+                (value.GetType() == typeof(int)) ||
+                (value.GetType() == typeof(long)))
+            {
+                // signed integers
+
+                var valueAsLong = Convert.ToInt64(value);
+                if (valueAsLong < 0)
+                {
+                    return IMorphicResult<IntPtr>.ErrorResult();
+                }
+                if (valueAsLong > INTPTR_MAX)
+                {
+                    return IMorphicResult<IntPtr>.ErrorResult();
+                }
+            }
+            else if ((value.GetType() == typeof(byte)) ||
+                (value.GetType() == typeof(ushort)) ||
+                (value.GetType() == typeof(uint)) ||
+                (value.GetType() == typeof(ulong)))
+            {
+                // unsigned integers
+
+                var valueAsUlong = Convert.ToUInt64(value);
+                if (valueAsUlong > (ulong)INTPTR_MAX)
+                {
+                    return IMorphicResult<IntPtr>.ErrorResult();
+                }
+
+            }
+            else
+            {
+                // non-integer (i.e. unknown type)
+                return IMorphicResult<IntPtr>.ErrorResult();
+            }
+
+            var result = new IntPtr(Convert.ToInt64(value));
+            return IMorphicResult<IntPtr>.SuccessResult(result);
         }
 
         // NOTE: if the user calls this function with an integer, we validate that it is less than 2^52 (and greater than -(2^52)) to ensure that there is no loss in precision
