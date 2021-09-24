@@ -44,6 +44,25 @@ namespace Morphic.Settings
         internal const int COLOR_BACKGROUND = 1;
         internal const int COLOR_DESKTOP = COLOR_BACKGROUND;
 
+        [StructLayout(LayoutKind.Sequential)]
+        public struct FILTERKEYS
+        {
+            public uint cbSize { get; set; }
+            public uint dwFlags { get; set; }
+            public uint iWaitMSec { get; set; }
+            public uint iDelayMSec { get; set; }
+            public uint iRepeatMSec { get; set; }
+            public uint iBounceMSec { get; set; }
+        }
+
+        internal const uint FKF_FILTERKEYSON = 0x00000001;
+        //internal const uint FKF_AVAILABLE = 0x00000002;
+        //internal const uint FKF_HOTKEYACTIVE = 0x00000004;
+        //internal const uint FKF_CONFIRMHOTKEY = 0x00000008;
+        //internal const uint FKF_HOTKEYSOUND = 0x00000010;
+        //internal const uint FKF_INDICATOR = 0x00000020;
+        //internal const uint FKF_CLICKON = 0x00000040;
+
         [DllImport("user32.dll")]
         internal static extern uint GetDoubleClickTime();
 

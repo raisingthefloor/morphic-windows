@@ -1,4 +1,26 @@
-﻿
+﻿// Copyright 2021 Raising the Floor - International
+//
+// Licensed under the New BSD license. You may not use this file except in
+// compliance with this License.
+//
+// You may obtain a copy of the License at
+// https://github.com/raisingthefloor/morphic-windows/blob/master/LICENSE.txt
+//
+// The R&D leading to these results received funding from the:
+// * Rehabilitation Services Administration, US Dept. of Education under
+//   grant H421A150006 (APCP)
+// * National Institute on Disability, Independent Living, and
+//   Rehabilitation Research (NIDILRR)
+// * Administration for Independent Living & Dept. of Education under grants
+//   H133E080022 (RERC-IT) and H133E130028/90RE5003-01-00 (UIITA-RERC)
+// * European Union's Seventh Framework Programme (FP7/2007-2013) grant
+//   agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
+// * William and Flora Hewlett Foundation
+// * Ontario Ministry of Research and Innovation
+// * Canadian Foundation for Innovation
+// * Adobe Foundation
+// * Consumer Electronics Association Foundation
+
 namespace Morphic.Settings.SettingsHandlers.SPI
 {
     using Morphic.Core;
@@ -23,7 +45,7 @@ namespace Morphic.Settings.SettingsHandlers.SPI
 
         public override async Task<(IMorphicResult, Values)> GetAsync(SettingGroup settingGroup, IEnumerable<Setting> settings)
         {
-            var success = true;
+            bool success;
             Values values = new Values();
 
             var spiSettingGroupAsOptional = settingGroup as SPISettingGroup;
@@ -34,77 +56,198 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             }
             var spiSettingGroup = spiSettingGroupAsOptional!;
 
-            // NOTE: SPISettingsHandlers, in our current implementation, allow exactly one setting (no more, no fewer) per call
-            var iSetting = 1;
-            foreach (Setting setting in settings)
+            switch (spiSettingGroup.getAction)
             {
-                if (iSetting > 1)
+                case "SPI_GETDESKWALLPAPER":
+                    {
+                        var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetDesktopWallpaper(spiSettingGroup.uiParam, settings);
+                        success = spiGetMorphicResult.IsSuccess;
+                        if (success == true)
+                        {
+                            values = spiGetValues;
+                        }
+                    }
+                    break;
+                case "SPI_GETFILTERKEYS":
+                    {
+                        var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetFilterKeys(settings);
+                        success = spiGetMorphicResult.IsSuccess;
+                        if (success == true)
+                        {
+                            values = spiGetValues;
+                        }
+                    }
+                    break;
+                default:
+                    success = false;
+                    foreach (var setting in settings)
+                    {
+                        values.Add(setting, null, Values.ValueType.NotFound);
+                    }
+                    break;
+            }
+
+            return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
+        }
+
+        //
+
+        private static (IMorphicResult, Values) SpiGetDesktopWallpaper(object? uiParamAsObject, IEnumerable<Setting> settings)
+        {
+            var values = new Values();
+
+            // uiParam = length of pvParam buffer (up to MAX_PATH)
+            var uiParam = (uiParamAsObject as uint?) ?? ExtendedPInvoke.MAX_PATH;
+            uiParam = Math.Min(uiParam, ExtendedPInvoke.MAX_PATH);
+            //
+            // pvParam = representation of the required buffer
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+            var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+
+            string pvParamAsString;
+
+            var pointerToPvParam = Marshal.AllocHGlobal((int)uiParam * sizeof(char));
+            try
+            {
+                var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_GETDESKWALLPAPER, uiParam, pointerToPvParam, fWinIni);
+                if (spiResult == true)
                 {
-                    Debug.Assert(false, "More than one setting provided to settings handler for this SettingGroup; this is currently not supported in the SPISettingsHandler.");
-                    // OBSERVATION: in production, we'd generally prefer to crash or something similar in this kind of bug situation
+                    pvParamAsString = Marshal.PtrToStringUni(pointerToPvParam)!;
+                }
+                else
+                {
                     return (IMorphicResult.ErrorResult, values);
                 }
+            }
+            catch
+            {
+                return (IMorphicResult.ErrorResult, values);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(pointerToPvParam);
+            }
 
-                object? value = null;
-                var getWasSuccessful = false;
+            //
 
-                switch (spiSettingGroup.getAction)
+            var success = true;
+
+            foreach (Setting setting in settings)
+            {
+                switch (setting.Name)
                 {
-                    case "SPI_GETDESKWALLPAPER":
-                        {
-                            // uiParam = length of pvParam buffer (up to MAX_PATH)
-                            var uiParam = (spiSettingGroup.uiParam as uint?) ?? ExtendedPInvoke.MAX_PATH;
-                            uiParam = Math.Min(uiParam, ExtendedPInvoke.MAX_PATH);
-                            //
-                            // pvParam = representation of the required buffer
-                            // NOTE: in this implementation, we ignore the representation and create our own buffer
-                            //
-                            // fWinIni = flags
-                            // OBSERVATION: for security purposes, we may want to consider hard-coding these flags or otherwise limiting them
-                            // NOTE: we should review and sanity-check the setting in the solutions registry
-                            var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
-                            var parseFlagsResult = SPISettingsHandler.ParseWinIniFlags(spiSettingGroup.fWinIni);
-                            if (parseFlagsResult.IsSuccess == true)
-                            {
-                                fWinIni = parseFlagsResult.Value!;
-                            }
-
-                            var pointerToPvParam = Marshal.AllocHGlobal((int)uiParam * sizeof(char));
-                            try
-                            {
-                                getWasSuccessful = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_GETDESKWALLPAPER, uiParam, pointerToPvParam, fWinIni);
-                                if (getWasSuccessful == true)
-                                {
-                                    value = Marshal.PtrToStringUni(pointerToPvParam);
-                                }
-                            }
-                            finally
-                            {
-                                Marshal.FreeHGlobal(pointerToPvParam);
-                            }
-                        }
+                    case "ImageConfig":
+                        // NOTE: this is another area where changing the result of GetValue to an IMorphicResult could provide clear and granular success/error result
+                        values.Add(setting, pvParamAsString);
                         break;
                     default:
                         success = false;
                         values.Add(setting, null, Values.ValueType.NotFound);
                         continue;
                 }
-
-                if (getWasSuccessful == false)
-                {
-                    success = false;
-                    // skip to the next setting
-                    continue;
-                }
-
-                // NOTE: this is another area where changing the result of GetValue to an IMorphicResult could provide clear and granular success/error result
-                values.Add(setting, value);
-
-                iSetting += 1;
             }
 
             return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
         }
+
+        private static (IMorphicResult, Values) SpiGetFilterKeys(IEnumerable<Setting> settings)
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation and pass in the actual filterkeys struct size in the API call
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            var internalGetFilterKeysResult = SPISettingsHandler.InternalSpiGetFilterKeys();
+            if (internalGetFilterKeysResult.IsError == true)
+            {
+                // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
+                return (IMorphicResult.ErrorResult, new Values());
+            }
+            var filterKeys = internalGetFilterKeysResult.Value!;
+
+            //
+
+            var success = true;
+            var values = new Values();
+
+            foreach (Setting setting in settings)
+            {
+                switch (setting.Name)
+                {
+                    case "FilterKeysEnable":
+                        var filterKeysOn = (filterKeys.dwFlags & ExtendedPInvoke.FKF_FILTERKEYSON) == ExtendedPInvoke.FKF_FILTERKEYSON;
+                        values.Add(setting, filterKeysOn);
+                        break;
+                    case "SlowKeysInterval":
+                        // NOTE: in the GPII win32.json5 registry, it appears that this value might have been returned as "0" if filterkeys was disabled
+                        var slowKeysInterval = filterKeys.iWaitMSec;
+                        values.Add(setting, slowKeysInterval);
+                        break;
+                    default:
+                        success = false;
+                        values.Add(setting, null, Values.ValueType.NotFound);
+                        continue;
+                }
+            }
+
+            return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
+        }
+
+        private static IMorphicResult<ExtendedPInvoke.FILTERKEYS> InternalSpiGetFilterKeys()
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation and pass in the actual filterkeys struct size in the API call
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            ExtendedPInvoke.FILTERKEYS result;
+
+            var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+
+            ExtendedPInvoke.FILTERKEYS pvParamAsFilterKeys = new ExtendedPInvoke.FILTERKEYS
+            {
+                cbSize = (uint)Marshal.SizeOf<ExtendedPInvoke.FILTERKEYS>()
+            };
+
+            var pointerToFilterKeys = Marshal.AllocHGlobal(Marshal.SizeOf<ExtendedPInvoke.FILTERKEYS>());
+            try
+            {
+                Marshal.StructureToPtr(pvParamAsFilterKeys, pointerToFilterKeys, false);
+
+                var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_GETFILTERKEYS, pvParamAsFilterKeys.cbSize, pointerToFilterKeys, fWinIni);
+                if (spiResult == true)
+                {
+                    result = Marshal.PtrToStructure<ExtendedPInvoke.FILTERKEYS>(pointerToFilterKeys);
+                }
+                else
+                {
+                    return IMorphicResult<ExtendedPInvoke.FILTERKEYS>.ErrorResult();
+                }
+            }
+            catch
+            {
+                return IMorphicResult<ExtendedPInvoke.FILTERKEYS>.ErrorResult();
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(pointerToFilterKeys);
+            }
+
+            return IMorphicResult<ExtendedPInvoke.FILTERKEYS>.SuccessResult(result);
+        }
+
+        //
 
         // OBSERVATION: this information is compiled in the solutions registry, but we should consider hard-coding it instead for security; for now it's compiled into code.
         private static IMorphicResult<PInvoke.User32.SystemParametersInfoFlags> ParseWinIniFlags(string fWinIniAsString)
@@ -141,7 +284,7 @@ namespace Morphic.Settings.SettingsHandlers.SPI
 
         public override async Task<IMorphicResult> SetAsync(SettingGroup settingGroup, Values values)
         {
-            var success = true;
+            bool success;
 
             var spiSettingGroupAsOptional = settingGroup as SPISettingGroup;
             if (spiSettingGroupAsOptional == null)
@@ -151,26 +294,45 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             }
             var spiSettingGroup = spiSettingGroupAsOptional!;
 
-            // NOTE: SPISettingsHandlers, in our current implementation, allow exactly one setting/value (no more, no fewer) per call
-            var iValue = 1;
+            switch (spiSettingGroup.setAction)
+            {
+                case "SPI_SETDESKWALLPAPER":
+                    {
+                        var spiSetMorphicResult = SPISettingsHandler.SpiSetDesktopWallpaper(spiSettingGroup.fWinIni, values);
+                        success = spiSetMorphicResult.IsSuccess;
+                    }
+                    break;
+                case "SPI_SETFILTERKEYS":
+                    {
+                        var spiSetMorphicResult = SPISettingsHandler.SpiSetFilterKeys(spiSettingGroup.fWinIni, values);
+                        success = spiSetMorphicResult.IsSuccess;
+                    }
+                    break;
+                default:
+                    success = false;
+                    break;
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        //
+
+        private static IMorphicResult SpiSetDesktopWallpaper(string? fWinIniAsString, Values values)
+        {
+            var success = true;
+
             foreach (var value in values)
             {
-                if (iValue > 1)
+                switch(value.Key.Name)
                 {
-                    Debug.Assert(false, "More than one vaule/setting provided to settings handler for this SettingGroup; this is currently not supported in the SPISettingsHandler.");
-                    // OBSERVATION: in production, we'd generally prefer to crash or something similar in this kind of bug situation
-                    return IMorphicResult.ErrorResult;
-                }
-
-                switch (spiSettingGroup.setAction)
-                {
-                    case "SPI_SETDESKWALLPAPER":
+                    case "ImageConfig":
                         {
                             var valueAsNullableString = value.Value as string;
                             if (valueAsNullableString == null)
                             {
                                 success = false;
-                                break;
+                                continue;
                             }
                             var valueAsString = valueAsNullableString!;
 
@@ -185,10 +347,13 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                             // OBSERVATION: for security purposes, we may want to consider hard-coding these flags or otherwise limiting them
                             // NOTE: we should review and sanity-check the setting in the solutions registry
                             var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
-                            var parseFlagsResult = SPISettingsHandler.ParseWinIniFlags(spiSettingGroup.fWinIni);
-                            if (parseFlagsResult.IsSuccess == true)
+                            if (fWinIniAsString != null)
                             {
-                                fWinIni = parseFlagsResult.Value!;
+                                var parseFlagsResult = SPISettingsHandler.ParseWinIniFlags(fWinIniAsString);
+                                if (parseFlagsResult.IsSuccess == true)
+                                {
+                                    fWinIni = parseFlagsResult.Value!;
+                                }
                             }
 
                             // TODO: validate the value (which is a path, which must point to a safe place to retrieve images, which must point to a folder and file where the user has read access, and which must be an image type compatible with using as wallpaper)
@@ -196,11 +361,15 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                             var pointerToPvParam = Marshal.StringToHGlobalUni(valueAsString);
                             try
                             {
-                                var setResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_SETDESKWALLPAPER, uiParam, pointerToPvParam, fWinIni);
-                                if (setResult == false)
+                                var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_SETDESKWALLPAPER, uiParam, pointerToPvParam, fWinIni);
+                                if (spiResult == false)
                                 {
                                     success = false;
                                 }
+                            }
+                            catch
+                            {
+                                success = false;
                             }
                             finally
                             {
@@ -210,12 +379,123 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                         break;
                     default:
                         success = false;
-                        // skip to the next setting
                         continue;
                 }
+            }
 
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
 
-                iValue += 1;
+        private static IMorphicResult SpiSetFilterKeys(string? fWinIniAsString, Values values)
+        {
+            var success = true;
+
+            // capture the current FilterKeys struct data up-front
+            var internalGetFilterKeysResult = SPISettingsHandler.InternalSpiGetFilterKeys();
+            if (internalGetFilterKeysResult.IsError == true)
+            {
+                return IMorphicResult.ErrorResult;
+            }
+            var filterKeys = internalGetFilterKeysResult.Value!;
+
+            foreach (var value in values)
+            {
+                switch (value.Key.Name)
+                {
+                    case "FilterKeysEnable":
+                        {
+                            var valueAsNullableBool = value.Value as bool?;
+                            if (valueAsNullableBool == null)
+                            {
+                                success = false;
+                                continue;
+                            }
+                            var valueAsBool = valueAsNullableBool!;
+
+                            if (valueAsBool == true)
+                            {
+                                filterKeys.dwFlags |= ExtendedPInvoke.FKF_FILTERKEYSON;
+                            }
+                            else
+                            {
+                                filterKeys.dwFlags &= ~ExtendedPInvoke.FKF_FILTERKEYSON;
+                            }
+                        }
+                        break;
+                    case "SlowKeysInterval":
+                        {
+                            var convertValueToUIntResult = ConversionUtils.TryConvertObjectToUInt(value.Value);
+                            if (convertValueToUIntResult.IsError == true)
+                            {
+                                success = false;
+                                continue;
+                            }
+                            var valueAsUInt = convertValueToUIntResult.Value!;
+
+                            filterKeys.iWaitMSec = valueAsUInt;
+                        }
+                        break;
+                    default:
+                        success = false;
+                        continue;
+                }
+            }
+
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation and pass in the actual filterkeys struct size in the API call
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // OBSERVATION: for security purposes, we may want to consider hard-coding these flags or otherwise limiting them
+            // NOTE: we should review and sanity-check the setting in the solutions registry
+            var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+            if (fWinIniAsString != null)
+            {
+                var parseFlagsResult = SPISettingsHandler.ParseWinIniFlags(fWinIniAsString);
+                if (parseFlagsResult.IsSuccess == true)
+                {
+                    fWinIni = parseFlagsResult.Value!;
+                }
+            }
+
+            var internalSetFilterKeysResult = SPISettingsHandler.InternalSpiSetFilterKeys(filterKeys, fWinIni);
+            if (internalSetFilterKeysResult.IsError == true)
+            {
+                return IMorphicResult.ErrorResult;
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        private static IMorphicResult InternalSpiSetFilterKeys(ExtendedPInvoke.FILTERKEYS filterKeys, PInvoke.User32.SystemParametersInfoFlags fWinIni)
+        {
+            // sanity check
+            if (filterKeys.cbSize != Marshal.SizeOf<ExtendedPInvoke.FILTERKEYS>()) {
+                throw new ArgumentException(nameof(filterKeys));
+            }
+
+            var success = true;
+
+            var pointerToFilterKeys = Marshal.AllocHGlobal(Marshal.SizeOf<ExtendedPInvoke.FILTERKEYS>());
+            try
+            {
+                Marshal.StructureToPtr(filterKeys, pointerToFilterKeys, false);
+
+                var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_SETFILTERKEYS, filterKeys.cbSize, pointerToFilterKeys, fWinIni);
+                if (spiResult == false)
+                {
+                    success = false;
+                }
+            }
+            catch
+            {
+                success = false;
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(pointerToFilterKeys);
             }
 
             return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
