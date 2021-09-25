@@ -58,6 +58,16 @@ namespace Morphic.Settings.SettingsHandlers.SPI
 
             switch (spiSettingGroup.getAction)
             {
+                case "SPI_GETACTIVEWINDOWTRACKING":
+                    {
+                        var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetActiveWindowTracking(settings);
+                        success = spiGetMorphicResult.IsSuccess;
+                        if (success == true)
+                        {
+                            values = spiGetValues;
+                        }
+                    }
+                    break;
                 case "SPI_GETAUDIODESCRIPTION":
                     {
                         var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetAudioDescription(settings);
@@ -232,6 +242,48 @@ namespace Morphic.Settings.SettingsHandlers.SPI
 
         //
 
+        private static (IMorphicResult, Values) SpiGetActiveWindowTracking(IEnumerable<Setting> settings)
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation and pass in the actual bool type size in the API call
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetValueViaPointerToBool(PInvoke.User32.SystemParametersInfoAction.SPI_GETACTIVEWINDOWTRACKING);
+            if (internalSpiGetResult.IsError == true)
+            {
+                // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
+                return (IMorphicResult.ErrorResult, new Values());
+            }
+            var activeWindowTrackingValue = internalSpiGetResult.Value!;
+
+            //
+
+            var success = true;
+            var values = new Values();
+
+            foreach (Setting setting in settings)
+            {
+                switch (setting.Name)
+                {
+                    case "WindowsTrackingConfig":
+                        var windowTrackingConfig = activeWindowTrackingValue;
+                        values.Add(setting, windowTrackingConfig);
+                        break;
+                    default:
+                        success = false;
+                        values.Add(setting, null, Values.ValueType.NotFound);
+                        continue;
+                }
+            }
+
+            return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
+        }
+
         private static (IMorphicResult, Values) SpiGetAudioDescription(IEnumerable<Setting> settings)
         {
             // uiParam
@@ -243,13 +295,13 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             // fWinIni = flags
             // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
 
-            var internalGetAudioDescriptionResult = SPISettingsHandler.InternalSpiGetAudioDescription();
-            if (internalGetAudioDescriptionResult.IsError == true)
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetAudioDescription();
+            if (internalSpiGetResult.IsError == true)
             {
                 // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
                 return (IMorphicResult.ErrorResult, new Values());
             }
-            var audioDescriptionStruct = internalGetAudioDescriptionResult.Value!;
+            var audioDescriptionStruct = internalSpiGetResult.Value!;
 
             //
 
@@ -332,13 +384,13 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             // fWinIni = flags
             // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
 
-            var internalGetCursorShadowResult = SPISettingsHandler.InternalSpiGetCursorShadow();
-            if (internalGetCursorShadowResult.IsError == true)
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetValueViaPointerToBool(PInvoke.User32.SystemParametersInfoAction.SPI_GETCURSORSHADOW);
+            if (internalSpiGetResult.IsError == true)
             {
                 // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
                 return (IMorphicResult.ErrorResult, new Values());
             }
-            var cursorShadowValue = internalGetCursorShadowResult.Value!;
+            var cursorShadowValue = internalSpiGetResult.Value!;
 
             //
 
@@ -350,8 +402,8 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                 switch (setting.Name)
                 {
                     case "MouseCursorShadowEnable":
-                        var underlineMenuShortcutsOn = cursorShadowValue;
-                        values.Add(setting, underlineMenuShortcutsOn);
+                        var mouseCursorShadowEnable = cursorShadowValue;
+                        values.Add(setting, mouseCursorShadowEnable);
                         break;
                     default:
                         success = false;
@@ -361,49 +413,6 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             }
 
             return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
-        }
-
-        private static IMorphicResult<bool> InternalSpiGetCursorShadow()
-        {
-            // uiParam
-            // NOTE: in this implementation, we ignore the representation and pass in the actual bool type size in the API call
-            //
-            // pvParam
-            // NOTE: in this implementation, we ignore the representation and create our own buffer
-            //
-            // fWinIni = flags
-            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
-
-            bool result;
-
-            var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
-
-            bool pvParamAsBool = false;
-            var pointerToBool = Marshal.AllocHGlobal(Marshal.SizeOf<bool>());
-            try
-            {
-                Marshal.StructureToPtr(pvParamAsBool, pointerToBool, false);
-
-                var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_GETCURSORSHADOW, 0, pointerToBool, fWinIni);
-                if (spiResult == true)
-                {
-                    result = Marshal.PtrToStructure<bool>(pointerToBool);
-                }
-                else
-                {
-                    return IMorphicResult<bool>.ErrorResult();
-                }
-            }
-            catch
-            {
-                return IMorphicResult<bool>.ErrorResult();
-            }
-            finally
-            {
-                Marshal.FreeHGlobal(pointerToBool);
-            }
-
-            return IMorphicResult<bool>.SuccessResult(result);
         }
 
         private static (IMorphicResult, Values) SpiGetDesktopWallpaper(object? uiParamAsObject, IEnumerable<Setting> settings)
@@ -478,13 +487,13 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             // fWinIni = flags
             // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
 
-            var internalGetFilterKeysResult = SPISettingsHandler.InternalSpiGetFilterKeys();
-            if (internalGetFilterKeysResult.IsError == true)
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetFilterKeys();
+            if (internalSpiGetResult.IsError == true)
             {
                 // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
                 return (IMorphicResult.ErrorResult, new Values());
             }
-            var filterKeys = internalGetFilterKeysResult.Value!;
+            var filterKeys = internalSpiGetResult.Value!;
 
             //
 
@@ -572,13 +581,13 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             // fWinIni = flags
             // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
 
-            var internalGetHighContrastResult = SPISettingsHandler.InternalSpiGetHighContrast();
-            if (internalGetHighContrastResult.IsError == true)
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetHighContrast();
+            if (internalSpiGetResult.IsError == true)
             {
                 // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
                 return (IMorphicResult.ErrorResult, new Values());
             }
-            var highContrast = internalGetHighContrastResult.Value!;
+            var highContrast = internalSpiGetResult.Value!;
 
             //
 
@@ -658,13 +667,13 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             // fWinIni = flags
             // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
 
-            var internalGetKeyboardCuesResult = SPISettingsHandler.InternalSpiGetKeyboardCues();
-            if (internalGetKeyboardCuesResult.IsError == true)
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetValueViaPointerToBool(PInvoke.User32.SystemParametersInfoAction.SPI_GETKEYBOARDCUES);
+            if (internalSpiGetResult.IsError == true)
             {
                 // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
                 return (IMorphicResult.ErrorResult, new Values());
             }
-            var keyboardCuesValue = internalGetKeyboardCuesResult.Value!;
+            var keyboardCuesValue = internalSpiGetResult.Value!;
 
             //
 
@@ -689,49 +698,6 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
         }
 
-        private static IMorphicResult<bool> InternalSpiGetKeyboardCues()
-        {
-            // uiParam
-            // NOTE: in this implementation, we ignore the representation and pass in the actual bool type size in the API call
-            //
-            // pvParam
-            // NOTE: in this implementation, we ignore the representation and create our own buffer
-            //
-            // fWinIni = flags
-            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
-
-            bool result;
-
-            var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
-
-            bool pvParamAsBool = false;
-            var pointerToBool = Marshal.AllocHGlobal(Marshal.SizeOf<bool>());
-            try
-            {
-                Marshal.StructureToPtr(pvParamAsBool, pointerToBool, false);
-
-                var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_GETKEYBOARDCUES, 0, pointerToBool, fWinIni);
-                if (spiResult == true)
-                {
-                    result = Marshal.PtrToStructure<bool>(pointerToBool);
-                }
-                else
-                {
-                    return IMorphicResult<bool>.ErrorResult();
-                }
-            }
-            catch
-            {
-                return IMorphicResult<bool>.ErrorResult();
-            }
-            finally
-            {
-                Marshal.FreeHGlobal(pointerToBool);
-            }
-
-            return IMorphicResult<bool>.SuccessResult(result);
-        }
-
         private static (IMorphicResult, Values) SpiGetKeyboardPref(IEnumerable<Setting> settings)
         {
             // uiParam
@@ -743,13 +709,13 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             // fWinIni = flags
             // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
 
-            var internalGetKeyboardPrefResult = SPISettingsHandler.InternalSpiGetKeyboardPref();
-            if (internalGetKeyboardPrefResult.IsError == true)
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetValueViaPointerToBool(PInvoke.User32.SystemParametersInfoAction.SPI_GETKEYBOARDPREF);
+            if (internalSpiGetResult.IsError == true)
             {
                 // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
                 return (IMorphicResult.ErrorResult, new Values());
             }
-            var keyboardPrefValue = internalGetKeyboardPrefResult.Value!;
+            var keyboardPrefValue = internalSpiGetResult.Value!;
 
             //
 
@@ -774,49 +740,6 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
         }
 
-        private static IMorphicResult<bool> InternalSpiGetKeyboardPref()
-        {
-            // uiParam
-            // NOTE: in this implementation, we ignore the representation and pass in the actual bool type size in the API call
-            //
-            // pvParam
-            // NOTE: in this implementation, we ignore the representation and create our own buffer
-            //
-            // fWinIni = flags
-            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
-
-            bool result;
-
-            var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
-
-            bool pvParamAsBool = false;
-            var pointerToBool = Marshal.AllocHGlobal(Marshal.SizeOf<bool>());
-            try
-            {
-                Marshal.StructureToPtr(pvParamAsBool, pointerToBool, false);
-
-                var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_GETKEYBOARDPREF, 0, pointerToBool, fWinIni);
-                if (spiResult == true)
-                {
-                    result = Marshal.PtrToStructure<bool>(pointerToBool);
-                }
-                else
-                {
-                    return IMorphicResult<bool>.ErrorResult();
-                }
-            }
-            catch
-            {
-                return IMorphicResult<bool>.ErrorResult();
-            }
-            finally
-            {
-                Marshal.FreeHGlobal(pointerToBool);
-            }
-
-            return IMorphicResult<bool>.SuccessResult(result);
-        }
-
         private static (IMorphicResult, Values) SpiGetMessageDuration(IEnumerable<Setting> settings)
         {
             // uiParam
@@ -828,13 +751,13 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             // fWinIni = flags
             // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
 
-            var internalGetMessageDurationResult = SPISettingsHandler.InternalSpiGetMessageDuration();
-            if (internalGetMessageDurationResult.IsError == true)
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetMessageDuration();
+            if (internalSpiGetResult.IsError == true)
             {
                 // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
                 return (IMorphicResult.ErrorResult, new Values());
             }
-            var messageDurationInSeconds = internalGetMessageDurationResult.Value!;
+            var messageDurationInSeconds = internalSpiGetResult.Value!;
 
             //
 
@@ -915,13 +838,13 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             // fWinIni = flags
             // NOTE: in this implementation, we ignore the fWiniIni flags as this setting does not use the SystemParametersInfo API
 
-            var internalGetMouseButtonSwapResult = SPISettingsHandler.InternalSystemMetricsGetMouseButtonSwap();
-            if (internalGetMouseButtonSwapResult.IsError == true)
+            var internalSystemMetricsGetResult = SPISettingsHandler.InternalSystemMetricsGetMouseButtonSwap();
+            if (internalSystemMetricsGetResult.IsError == true)
             {
                 // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
                 return (IMorphicResult.ErrorResult, new Values());
             }
-            var mouseButtonSwapValue = internalGetMouseButtonSwapResult.Value!;
+            var mouseButtonSwapValue = internalSystemMetricsGetResult.Value!;
 
             //
 
@@ -967,13 +890,13 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             // fWinIni = flags
             // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
 
-            var internalGetMouseKeysResult = SPISettingsHandler.InternalSpiGetMouseKeys();
-            if (internalGetMouseKeysResult.IsError == true)
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetMouseKeys();
+            if (internalSpiGetResult.IsError == true)
             {
                 // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
                 return (IMorphicResult.ErrorResult, new Values());
             }
-            var mouseKeys = internalGetMouseKeysResult.Value!;
+            var mouseKeys = internalSpiGetResult.Value!;
 
             //
 
@@ -1060,13 +983,13 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             // fWinIni = flags
             // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
 
-            var internalGetMouseTrailsResult = SPISettingsHandler.InternalSpiGetMouseTrails();
-            if (internalGetMouseTrailsResult.IsError == true)
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetMouseTrails();
+            if (internalSpiGetResult.IsError == true)
             {
                 // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
                 return (IMorphicResult.ErrorResult, new Values());
             }
-            var mouseTrailsValue = internalGetMouseTrailsResult.Value!;
+            var mouseTrailsValue = internalSpiGetResult.Value!;
 
             //
 
@@ -1152,13 +1075,13 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             // fWinIni = flags
             // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
 
-            var internalGetMouseWheelRoutingResult = SPISettingsHandler.InternalSpiGetMouseWheelRouting();
-            if (internalGetMouseWheelRoutingResult.IsError == true)
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetMouseWheelRouting();
+            if (internalSpiGetResult.IsError == true)
             {
                 // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
                 return (IMorphicResult.ErrorResult, new Values());
             }
-            var mouseWheelRoutingValue = internalGetMouseWheelRoutingResult.Value!;
+            var mouseWheelRoutingValue = internalSpiGetResult.Value!;
 
             //
 
@@ -1240,13 +1163,13 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             // fWinIni = flags
             // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
 
-            var internalGetStickyKeysResult = SPISettingsHandler.InternalSpiGetStickyKeys();
-            if (internalGetStickyKeysResult.IsError == true)
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetStickyKeys();
+            if (internalSpiGetResult.IsError == true)
             {
                 // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
                 return (IMorphicResult.ErrorResult, new Values());
             }
-            var stickyKeys = internalGetStickyKeysResult.Value!;
+            var stickyKeys = internalSpiGetResult.Value!;
 
             //
 
@@ -1329,13 +1252,13 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             // fWinIni = flags
             // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
 
-            var internalGetToggleKeysResult = SPISettingsHandler.InternalSpiGetToggleKeys();
-            if (internalGetToggleKeysResult.IsError == true)
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetToggleKeys();
+            if (internalSpiGetResult.IsError == true)
             {
                 // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
                 return (IMorphicResult.ErrorResult, new Values());
             }
-            var toggleKeys = internalGetToggleKeysResult.Value!;
+            var toggleKeys = internalSpiGetResult.Value!;
 
             //
 
@@ -1419,13 +1342,13 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             // fWinIni = flags
             // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
 
-            var internalGetWheelScrollCharsResult = SPISettingsHandler.InternalSpiGetWheelScrollChars();
-            if (internalGetWheelScrollCharsResult.IsError == true)
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetWheelScrollChars();
+            if (internalSpiGetResult.IsError == true)
             {
                 // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
                 return (IMorphicResult.ErrorResult, new Values());
             }
-            var wheelScrollCharsValue = internalGetWheelScrollCharsResult.Value!;
+            var wheelScrollCharsValue = internalSpiGetResult.Value!;
 
             //
 
@@ -1507,13 +1430,13 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             // fWinIni = flags
             // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
 
-            var internalGetWheelScrollLinesResult = SPISettingsHandler.InternalSpiGetWheelScrollLines();
-            if (internalGetWheelScrollLinesResult.IsError == true)
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetWheelScrollLines();
+            if (internalSpiGetResult.IsError == true)
             {
                 // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
                 return (IMorphicResult.ErrorResult, new Values());
             }
-            var wheelScrollLinesValue = internalGetWheelScrollLinesResult.Value!;
+            var wheelScrollLinesValue = internalSpiGetResult.Value!;
 
             //
 
@@ -1584,39 +1507,50 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             return IMorphicResult<uint>.SuccessResult(result);
         }
 
-        //
+		//
 
-        // OBSERVATION: this information is compiled in the solutions registry, but we should consider hard-coding it instead for security; for now it's compiled into code.
-        private static IMorphicResult<PInvoke.User32.SystemParametersInfoFlags> ParseWinIniFlags(string fWinIniAsString)
+        private static IMorphicResult<bool> InternalSpiGetValueViaPointerToBool(PInvoke.User32.SystemParametersInfoAction spiAction)
         {
-            var result = PInvoke.User32.SystemParametersInfoFlags.None;
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation and pass in the actual bool type size in the API call
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
 
-            if (fWinIniAsString != String.Empty)
+            bool result;
+
+            var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+
+            bool pvParamAsBool = false;
+            var pointerToBool = Marshal.AllocHGlobal(Marshal.SizeOf<bool>());
+            try
             {
-                var stringComponents = fWinIniAsString.Split('|');
-                foreach (String stringComponent in stringComponents)
+                Marshal.StructureToPtr(pvParamAsBool, pointerToBool, false);
+
+                var spiResult = PInvoke.User32.SystemParametersInfo(spiAction, 0, pointerToBool, fWinIni);
+                if (spiResult == true)
                 {
-                    switch (stringComponent)
-                    {
-                        case "SPIF_SENDCHANGE":
-                            result |= PInvoke.User32.SystemParametersInfoFlags.SPIF_SENDCHANGE;
-                            break;
-                        case "SPIF_SENDWININICHANGE":
-                            result |= PInvoke.User32.SystemParametersInfoFlags.SPIF_SENDWININICHANGE;
-                            break;
-                        case "SPIF_UPDATEINIFILE":
-                            result |= PInvoke.User32.SystemParametersInfoFlags.SPIF_UPDATEINIFILE;
-                            break;
-                        default:
-                            Debug.Assert(false, "Invalid fWinIni option: " + stringComponent);
-                            throw new ArgumentOutOfRangeException(nameof(fWinIniAsString));
-                    }
+                    result = Marshal.PtrToStructure<bool>(pointerToBool);
+                }
+                else
+                {
+                    return IMorphicResult<bool>.ErrorResult();
                 }
             }
+            catch
+            {
+                return IMorphicResult<bool>.ErrorResult();
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(pointerToBool);
+            }
 
-            return IMorphicResult<PInvoke.User32.SystemParametersInfoFlags>.SuccessResult(result);
+            return IMorphicResult<bool>.SuccessResult(result);
         }
-
         //
 
         public override async Task<IMorphicResult> SetAsync(SettingGroup settingGroup, Values values)
@@ -1633,6 +1567,12 @@ namespace Morphic.Settings.SettingsHandlers.SPI
 
             switch (spiSettingGroup.setAction)
             {
+                case "SPI_SETACTIVEWINDOWTRACKING":
+                    {
+                        var spiSetMorphicResult = SPISettingsHandler.SpiSetActiveWindowTracking(spiSettingGroup.fWinIni, values);
+                        success = spiSetMorphicResult.IsSuccess;
+                    }
+                    break;
                 case "SPI_SETAUDIODESCRIPTION":
                     {
                         var spiSetMorphicResult = SPISettingsHandler.SpiSetAudioDescription(spiSettingGroup.fWinIni, values);
@@ -1738,18 +1678,81 @@ namespace Morphic.Settings.SettingsHandlers.SPI
         }
 
         //
+        private static IMorphicResult SpiSetActiveWindowTracking(string? fWinIniAsString, Values values)
+        {
+            var success = true;
+
+            bool? activeWindowTrackingValue = null;
+
+            foreach (var value in values)
+            {
+                switch (value.Key.Name)
+                {
+                    case "WindowsTrackingConfig":
+                        {
+                            var valueAsNullableBool = value.Value as bool?;
+                            if (valueAsNullableBool == null)
+                            {
+                                success = false;
+                                continue;
+                            }
+                            var valueAsBool = valueAsNullableBool.Value;
+
+                            activeWindowTrackingValue = valueAsBool;
+                        }
+                        break;
+                    default:
+                        success = false;
+                        continue;
+                }
+            }
+
+            if (activeWindowTrackingValue.HasValue == true)
+            {
+                // uiParam
+                // NOTE: in this implementation, we ignore the representation and pass in the actual bool type size in the API call
+                //
+                // pvParam
+                // NOTE: in this implementation, we ignore the representation and create our own buffer
+                //
+                // fWinIni = flags
+                // OBSERVATION: for security purposes, we may want to consider hard-coding these flags or otherwise limiting them
+                // NOTE: we should review and sanity-check the setting in the solutions registry
+                var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+                if (fWinIniAsString != null)
+                {
+                    var parseFlagsResult = SPISettingsHandler.ParseWinIniFlags(fWinIniAsString);
+                    if (parseFlagsResult.IsSuccess == true)
+                    {
+                        fWinIni = parseFlagsResult.Value!;
+                    }
+                }
+
+                var internalSpiSetResult = SPISettingsHandler.InternalSpiSetValueViaPvParamValue(PInvoke.User32.SystemParametersInfoAction.SPI_SETACTIVEWINDOWTRACKING, activeWindowTrackingValue.Value, fWinIni);
+                if (internalSpiSetResult.IsError == true)
+                {
+                    return IMorphicResult.ErrorResult;
+                }
+            }
+            else
+            {
+                success = false;
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
 
         private static IMorphicResult SpiSetAudioDescription(string? fWinIniAsString, Values values)
         {
             var success = true;
 
             // capture the current AudioDescription struct data up-front
-            var internalGetAudioDescriptionResult = SPISettingsHandler.InternalSpiGetAudioDescription();
-            if (internalGetAudioDescriptionResult.IsError == true)
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetAudioDescription();
+            if (internalSpiGetResult.IsError == true)
             {
                 return IMorphicResult.ErrorResult;
             }
-            var audioDescription = internalGetAudioDescriptionResult.Value!;
+            var audioDescription = internalSpiGetResult.Value!;
 
             foreach (var value in values)
             {
@@ -1793,8 +1796,8 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                 }
             }
 
-            var internalSetAudioDescriptionResult = SPISettingsHandler.InternalSpiSetAudioDescription(audioDescription, fWinIni);
-            if (internalSetAudioDescriptionResult.IsError == true)
+            var internalSpiSetResult = SPISettingsHandler.InternalSpiSetAudioDescription(audioDescription, fWinIni);
+            if (internalSpiSetResult.IsError == true)
             {
                 return IMorphicResult.ErrorResult;
             }
@@ -1886,28 +1889,13 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                     }
                 }
 
-                var internalSetCursorShadowResult = SPISettingsHandler.InternalSpiSetCursorShadow(cursorShadowValue.Value, fWinIni);
-                if (internalSetCursorShadowResult.IsError == true)
+                var internalSpiSetResult = SPISettingsHandler.InternalSpiSetValueViaPvParamValue(PInvoke.User32.SystemParametersInfoAction.SPI_SETCURSORSHADOW, cursorShadowValue.Value, fWinIni);
+                if (internalSpiSetResult.IsError == true)
                 {
                     return IMorphicResult.ErrorResult;
                 }
             }
             else
-            {
-                success = false;
-            }
-
-            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
-        }
-
-        private static IMorphicResult InternalSpiSetCursorShadow(bool cursorShadowValue, PInvoke.User32.SystemParametersInfoFlags fWinIni)
-        {
-            var success = true;
-
-            var cursorShadowValueAsIntPtr = new IntPtr(cursorShadowValue ? 1 : 0);
-
-            var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_SETCURSORSHADOW, 0, cursorShadowValueAsIntPtr, fWinIni);
-            if (spiResult == false)
             {
                 success = false;
             }
@@ -1988,12 +1976,12 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             var success = true;
 
             // capture the current FilterKeys struct data up-front
-            var internalGetFilterKeysResult = SPISettingsHandler.InternalSpiGetFilterKeys();
-            if (internalGetFilterKeysResult.IsError == true)
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetFilterKeys();
+            if (internalSpiGetResult.IsError == true)
             {
                 return IMorphicResult.ErrorResult;
             }
-            var filterKeys = internalGetFilterKeysResult.Value!;
+            var filterKeys = internalSpiGetResult.Value!;
 
             foreach (var value in values)
             {
@@ -2057,8 +2045,8 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                 }
             }
 
-            var internalSetFilterKeysResult = SPISettingsHandler.InternalSpiSetFilterKeys(filterKeys, fWinIni);
-            if (internalSetFilterKeysResult.IsError == true)
+            var internalSpiSetResult = SPISettingsHandler.InternalSpiSetFilterKeys(filterKeys, fWinIni);
+            if (internalSpiSetResult.IsError == true)
             {
                 return IMorphicResult.ErrorResult;
             }
@@ -2148,28 +2136,13 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                     }
                 }
 
-                var internalSetKeyboardCuesResult = SPISettingsHandler.InternalSpiSetKeyboardCues(keyboardCuesValue.Value, fWinIni);
-                if (internalSetKeyboardCuesResult.IsError == true)
+                var internalSpiSetResult = SPISettingsHandler.InternalSpiSetValueViaPvParamValue(PInvoke.User32.SystemParametersInfoAction.SPI_SETKEYBOARDCUES, keyboardCuesValue.Value, fWinIni);
+                if (internalSpiSetResult.IsError == true)
                 {
                     return IMorphicResult.ErrorResult;
                 }
             }
             else
-            {
-                success = false;
-            }
-
-            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
-        }
-
-        private static IMorphicResult InternalSpiSetKeyboardCues(bool keyboardCuesValue, PInvoke.User32.SystemParametersInfoFlags fWinIni)
-        {
-            var success = true;
-
-            var keyboardCuesValueAsIntPtr = new IntPtr(keyboardCuesValue ? 1 : 0);
-
-            var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_SETKEYBOARDCUES, 0, keyboardCuesValueAsIntPtr, fWinIni);
-            if (spiResult == false)
             {
                 success = false;
             }
@@ -2227,8 +2200,8 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                     }
                 }
 
-                var internalSetKeyboardPrefResult = SPISettingsHandler.InternalSpiSetKeyboardPref(keyboardPrefValue.Value, fWinIni);
-                if (internalSetKeyboardPrefResult.IsError == true)
+                var internalSpiSetResult = SPISettingsHandler.InternalSpiSetKeyboardPref(keyboardPrefValue.Value, fWinIni);
+                if (internalSpiSetResult.IsError == true)
                 {
                     return IMorphicResult.ErrorResult;
                 }
@@ -2309,8 +2282,8 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                     }
                 }
 
-                var internalSetMessageDurationResult = SPISettingsHandler.InternalSpiSetMessageDuration(messageDurationInSeconds.Value, fWinIni);
-                if (internalSetMessageDurationResult.IsError == true)
+                var internalSpiSetResult = SPISettingsHandler.InternalSpiSetMessageDuration(messageDurationInSeconds.Value, fWinIni);
+                if (internalSpiSetResult.IsError == true)
                 {
                     return IMorphicResult.ErrorResult;
                 }
@@ -2396,8 +2369,8 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                     }
                 }
 
-                var internalSetMouseButtonSwapResult = SPISettingsHandler.InternalSpiSetMouseButtonSwap(mouseButtonSwapValue.Value, fWinIni);
-                if (internalSetMouseButtonSwapResult.IsError == true)
+                var internalSpiSetResult = SPISettingsHandler.InternalSpiSetMouseButtonSwap(mouseButtonSwapValue.Value, fWinIni);
+                if (internalSpiSetResult.IsError == true)
                 {
                     return IMorphicResult.ErrorResult;
                 }
@@ -2430,12 +2403,12 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             var success = true;
 
             // capture the current MouseKeys struct data up-front
-            var internalGetMouseKeysResult = SPISettingsHandler.InternalSpiGetMouseKeys();
-            if (internalGetMouseKeysResult.IsError == true)
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetMouseKeys();
+            if (internalSpiGetResult.IsError == true)
             {
                 return IMorphicResult.ErrorResult;
             }
-            var mouseKeys = internalGetMouseKeysResult.Value!;
+            var mouseKeys = internalSpiGetResult.Value!;
 
             foreach (var value in values)
             {
@@ -2509,8 +2482,8 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                 }
             }
 
-            var internalSetMouseKeysResult = SPISettingsHandler.InternalSpiSetMouseKeys(mouseKeys, fWinIni);
-            if (internalSetMouseKeysResult.IsError == true)
+            var internalSpiSetResult = SPISettingsHandler.InternalSpiSetMouseKeys(mouseKeys, fWinIni);
+            if (internalSpiSetResult.IsError == true)
             {
                 return IMorphicResult.ErrorResult;
             }
@@ -2611,8 +2584,8 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                     }
                 }
 
-                var internalSetMouseTrailsResult = SPISettingsHandler.InternalSpiSetMouseTrails(mouseTrailsValue.Value, fWinIni);
-                if (internalSetMouseTrailsResult.IsError == true)
+                var internalSpiSetResult = SPISettingsHandler.InternalSpiSetMouseTrails(mouseTrailsValue.Value, fWinIni);
+                if (internalSpiSetResult.IsError == true)
                 {
                     return IMorphicResult.ErrorResult;
                 }
@@ -2696,8 +2669,10 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                     }
                 }
 
-                var internalSetMouseWheelRoutingResult = SPISettingsHandler.InternalSpiSetMouseWheelRouting(mouseWheelRoutingValue.Value, fWinIni);
-                if (internalSetMouseWheelRoutingResult.IsError == true)
+                // NOTE: Microsoft's documentation says that pvParam for this setting must point to a DWORD, but in our testing the pvParam must be an IntPtr representing the setting VALUE (i.e. not a pointer)
+                //       see: https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-systemparametersinfow
+                var internalSpiSetResult = SPISettingsHandler.InternalSpiSetValueViaPvParamValue((PInvoke.User32.SystemParametersInfoAction)ExtendedPInvoke.SPI_SETMOUSEWHEELROUTING, mouseWheelRoutingValue.Value, fWinIni);
+                if (internalSpiSetResult.IsError == true)
                 {
                     return IMorphicResult.ErrorResult;
                 }
@@ -2710,35 +2685,17 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
         }
 
-        private static IMorphicResult InternalSpiSetMouseWheelRouting(uint mouseWheelRoutingValue, PInvoke.User32.SystemParametersInfoFlags fWinIni)
-        {
-            var success = true;
-
-            var mouseWheelRoutingValueAsIntPtr = new IntPtr(mouseWheelRoutingValue);
-
-            // NOTE: Microsoft's documentation says that pvParam for this setting must point to a DWORD, but in our testing the pvParam must be an IntPtr representing the setting VALUE (i.e. not a pointer)
-            //       see: https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-systemparametersinfow
-            var spiResult = PInvoke.User32.SystemParametersInfo((PInvoke.User32.SystemParametersInfoAction)ExtendedPInvoke.SPI_SETMOUSEWHEELROUTING, 0, mouseWheelRoutingValueAsIntPtr, fWinIni);
-            if (spiResult == false)
-            {
-                int lastError = Marshal.GetLastWin32Error();
-                success = false;
-            }
-
-            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
-        }
-
         private static IMorphicResult SpiSetHighContrast(string? fWinIniAsString, Values values)
         {
             var success = true;
 
             // capture the current HighContrast struct data up-front
-            var internalGetHighContrastResult = SPISettingsHandler.InternalSpiGetHighContrast();
-            if (internalGetHighContrastResult.IsError == true)
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetHighContrast();
+            if (internalSpiGetResult.IsError == true)
             {
                 return IMorphicResult.ErrorResult;
             }
-            var highContrast = internalGetHighContrastResult.Value!;
+            var highContrast = internalSpiGetResult.Value!;
 
             foreach (var value in values)
             {
@@ -2789,8 +2746,8 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                 }
             }
 
-            var internalSetHighContrastResult = SPISettingsHandler.InternalSpiSetHighContrast(highContrast, fWinIni);
-            if (internalSetHighContrastResult.IsError == true)
+            var internalSpiSetResult = SPISettingsHandler.InternalSpiSetHighContrast(highContrast, fWinIni);
+            if (internalSpiSetResult.IsError == true)
             {
                 return IMorphicResult.ErrorResult;
             }
@@ -2836,12 +2793,12 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             var success = true;
 
             // capture the current StickyKeys struct data up-front
-            var internalGetStickyKeysResult = SPISettingsHandler.InternalSpiGetStickyKeys();
-            if (internalGetStickyKeysResult.IsError == true)
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetStickyKeys();
+            if (internalSpiGetResult.IsError == true)
             {
                 return IMorphicResult.ErrorResult;
             }
-            var stickyKeys = internalGetStickyKeysResult.Value!;
+            var stickyKeys = internalSpiGetResult.Value!;
 
             foreach (var value in values)
             {
@@ -2892,8 +2849,8 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                 }
             }
 
-            var internalSetStickyKeysResult = SPISettingsHandler.InternalSpiSetStickyKeys(stickyKeys, fWinIni);
-            if (internalSetStickyKeysResult.IsError == true)
+            var internalSpiSetResult = SPISettingsHandler.InternalSpiSetStickyKeys(stickyKeys, fWinIni);
+            if (internalSpiSetResult.IsError == true)
             {
                 return IMorphicResult.ErrorResult;
             }
@@ -2939,12 +2896,12 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             var success = true;
 
             // capture the current ToggleKeys struct data up-front
-            var internalGetToggleKeysResult = SPISettingsHandler.InternalSpiGetToggleKeys();
-            if (internalGetToggleKeysResult.IsError == true)
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetToggleKeys();
+            if (internalSpiGetResult.IsError == true)
             {
                 return IMorphicResult.ErrorResult;
             }
-            var toggleKeys = internalGetToggleKeysResult.Value!;
+            var toggleKeys = internalSpiGetResult.Value!;
 
             foreach (var value in values)
             {
@@ -2995,8 +2952,8 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                 }
             }
 
-            var internalSetToggleKeysResult = SPISettingsHandler.InternalSpiSetToggleKeys(toggleKeys, fWinIni);
-            if (internalSetToggleKeysResult.IsError == true)
+            var internalSpiSetResult = SPISettingsHandler.InternalSpiSetToggleKeys(toggleKeys, fWinIni);
+            if (internalSpiSetResult.IsError == true)
             {
                 return IMorphicResult.ErrorResult;
             }
@@ -3098,8 +3055,8 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                     }
                 }
 
-                var internalSetWheelScrollCharsResult = SPISettingsHandler.InternalSpiSetWheelScrollChars(wheelScrollCharsValue.Value, fWinIni);
-                if (internalSetWheelScrollCharsResult.IsError == true)
+                var internalSpiSetResult = SPISettingsHandler.InternalSpiSetWheelScrollChars(wheelScrollCharsValue.Value, fWinIni);
+                if (internalSpiSetResult.IsError == true)
                 {
                     return IMorphicResult.ErrorResult;
                 }
@@ -3185,8 +3142,8 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                     }
                 }
 
-                var internalSetWheelScrollLinesResult = SPISettingsHandler.InternalSpiSetWheelScrollLines(wheelScrollLinesValue.Value, fWinIni);
-                if (internalSetWheelScrollLinesResult.IsError == true)
+                var internalSpiSetResult = SPISettingsHandler.InternalSpiSetWheelScrollLines(wheelScrollLinesValue.Value, fWinIni);
+                if (internalSpiSetResult.IsError == true)
                 {
                     return IMorphicResult.ErrorResult;
                 }
@@ -3210,6 +3167,71 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             }
 
             return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+		
+		//
+		
+		private static IMorphicResult InternalSpiSetValueViaPvParamValue(PInvoke.User32.SystemParametersInfoAction action, bool value, PInvoke.User32.SystemParametersInfoFlags fWinIni)
+        {
+            var success = true;
+
+            var valueAsIntPtr = new IntPtr(value ? 1 : 0);
+
+            var spiResult = PInvoke.User32.SystemParametersInfo(action, 0, valueAsIntPtr, fWinIni);
+            if (spiResult == false)
+            {
+                success = false;
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        private static IMorphicResult InternalSpiSetValueViaPvParamValue(PInvoke.User32.SystemParametersInfoAction action, uint value, PInvoke.User32.SystemParametersInfoFlags fWinIni)
+        {
+            var success = true;
+
+            var valueAsIntPtr = new IntPtr(value);
+
+            var spiResult = PInvoke.User32.SystemParametersInfo(action, 0, valueAsIntPtr, fWinIni);
+            if (spiResult == false)
+            {
+                success = false;
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        //
+
+        // OBSERVATION: this information is compiled in the solutions registry, but we should consider hard-coding it instead for security; for now it's compiled into code.
+        private static IMorphicResult<PInvoke.User32.SystemParametersInfoFlags> ParseWinIniFlags(string fWinIniAsString)
+        {
+            var result = PInvoke.User32.SystemParametersInfoFlags.None;
+
+            if (fWinIniAsString != String.Empty)
+            {
+                var stringComponents = fWinIniAsString.Split('|');
+                foreach (String stringComponent in stringComponents)
+                {
+                    switch (stringComponent)
+                    {
+                        case "SPIF_SENDCHANGE":
+                            result |= PInvoke.User32.SystemParametersInfoFlags.SPIF_SENDCHANGE;
+                            break;
+                        case "SPIF_SENDWININICHANGE":
+                            result |= PInvoke.User32.SystemParametersInfoFlags.SPIF_SENDWININICHANGE;
+                            break;
+                        case "SPIF_UPDATEINIFILE":
+                            result |= PInvoke.User32.SystemParametersInfoFlags.SPIF_UPDATEINIFILE;
+                            break;
+                        default:
+                            Debug.Assert(false, "Invalid fWinIni option: " + stringComponent);
+                            throw new ArgumentOutOfRangeException(nameof(fWinIniAsString));
+                    }
+                }
+            }
+
+            return IMorphicResult<PInvoke.User32.SystemParametersInfoFlags>.SuccessResult(result);
         }
     }
 }
