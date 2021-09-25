@@ -208,6 +208,16 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                         }
                     }
                     break;
+                case "SPI_GETMOUSEVANISH":
+                    {
+                        var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetMouseVanish(settings);
+                        success = spiGetMorphicResult.IsSuccess;
+                        if (success == true)
+                        {
+                            values = spiGetValues;
+                        }
+                    }
+                    break;
                 case "SPI_GETMOUSEWHEELROUTING":
                     {
                         var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetMouseWheelRouting(settings);
@@ -1220,6 +1230,48 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
         }
 
+        private static (IMorphicResult, Values) SpiGetMouseVanish(IEnumerable<Setting> settings)
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation and pass in the actual bool type size in the API call
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetValueViaPointerToBool(PInvoke.User32.SystemParametersInfoAction.SPI_GETMOUSEVANISH);
+            if (internalSpiGetResult.IsError == true)
+            {
+                // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
+                return (IMorphicResult.ErrorResult, new Values());
+            }
+            var mouseVanishValue = internalSpiGetResult.Value!;
+
+            //
+
+            var success = true;
+            var values = new Values();
+
+            foreach (Setting setting in settings)
+            {
+                switch (setting.Name)
+                {
+                    case "HidePointerConfig":
+                        var hidePointerConfig = mouseVanishValue;
+                        values.Add(setting, hidePointerConfig);
+                        break;
+                    default:
+                        success = false;
+                        values.Add(setting, null, Values.ValueType.NotFound);
+                        continue;
+                }
+            }
+
+            return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
+        }
+
         private static (IMorphicResult, Values) SpiGetMouseWheelRouting(IEnumerable<Setting> settings)
         {
             // uiParam
@@ -1859,6 +1911,12 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                 case "SPI_SETMOUSETRAILS":
                     {
                         var spiSetMorphicResult = SPISettingsHandler.SpiSetMouseTrails(spiSettingGroup.fWinIni, values);
+                        success = spiSetMorphicResult.IsSuccess;
+                    }
+                    break;
+                case "SPI_SETMOUSEVANISH":
+                    {
+                        var spiSetMorphicResult = SPISettingsHandler.SpiSetMouseVanish(spiSettingGroup.fWinIni, values);
                         success = spiSetMorphicResult.IsSuccess;
                     }
                     break;
@@ -3121,6 +3179,70 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                 //              be get via pvParam and set via uiParam; Microsoft's documentation also says we should set via uiParam; we are following Microsoft's documentation.
                 // OBSERVATION: values of 1 and 0 both mean "no mouse trails"; Windows appears to record any value set to "1" as "0"...so reading the value after setting 1 will return 0
                 var internalSpiSetResult = SPISettingsHandler.InternalSpiSetValueViaUiParamValue(PInvoke.User32.SystemParametersInfoAction.SPI_SETMOUSETRAILS, mouseTrailsValue.Value, fWinIni);
+                if (internalSpiSetResult.IsError == true)
+                {
+                    return IMorphicResult.ErrorResult;
+                }
+            }
+            else
+            {
+                success = false;
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        private static IMorphicResult SpiSetMouseVanish(string? fWinIniAsString, Values values)
+        {
+            var success = true;
+
+            bool? mouseVanishValue = null;
+
+            foreach (var value in values)
+            {
+                switch (value.Key.Name)
+                {
+                    case "HidePointerConfig":
+                        {
+                            var valueAsNullableBool = value.Value as bool?;
+                            if (valueAsNullableBool == null)
+                            {
+                                success = false;
+                                continue;
+                            }
+                            var valueAsBool = valueAsNullableBool.Value;
+
+                            mouseVanishValue = valueAsBool;
+                        }
+                        break;
+                    default:
+                        success = false;
+                        continue;
+                }
+            }
+
+            if (mouseVanishValue.HasValue == true)
+            {
+                // uiParam
+                // NOTE: in this implementation, we ignore the representation and pass in the actual bool type size in the API call
+                //
+                // pvParam
+                // NOTE: in this implementation, we ignore the representation and create our own buffer
+                //
+                // fWinIni = flags
+                // OBSERVATION: for security purposes, we may want to consider hard-coding these flags or otherwise limiting them
+                // NOTE: we should review and sanity-check the setting in the solutions registry
+                var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+                if (fWinIniAsString != null)
+                {
+                    var parseFlagsResult = SPISettingsHandler.ParseWinIniFlags(fWinIniAsString);
+                    if (parseFlagsResult.IsSuccess == true)
+                    {
+                        fWinIni = parseFlagsResult.Value!;
+                    }
+                }
+
+                var internalSpiSetResult = SPISettingsHandler.InternalSpiSetValueViaPvParamValue(PInvoke.User32.SystemParametersInfoAction.SPI_SETMOUSEVANISH, mouseVanishValue.Value, fWinIni);
                 if (internalSpiSetResult.IsError == true)
                 {
                     return IMorphicResult.ErrorResult;
