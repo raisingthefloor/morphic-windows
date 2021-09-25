@@ -178,6 +178,16 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                         }
                     }
                     break;
+                case "SPI_GETWHEELSCROLLLINES":
+                    {
+                        var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetWheelScrollLines(settings);
+                        success = spiGetMorphicResult.IsSuccess;
+                        if (success == true)
+                        {
+                            values = spiGetValues;
+                        }
+                    }
+                    break;
                 default:
                     success = false;
                     foreach (var setting in settings)
@@ -1194,6 +1204,95 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             return IMorphicResult<ExtendedPInvoke.TOGGLEKEYS>.SuccessResult(result);
         }
 
+
+        private static (IMorphicResult, Values) SpiGetWheelScrollLines(IEnumerable<Setting> settings)
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation as it is unused
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            var internalGetWheelScrollLinesResult = SPISettingsHandler.InternalSpiGetWheelScrollLine();
+            if (internalGetWheelScrollLinesResult.IsError == true)
+            {
+                // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
+                return (IMorphicResult.ErrorResult, new Values());
+            }
+            var wheelScrollLinesValue = internalGetWheelScrollLinesResult.Value!;
+
+            //
+
+            var success = true;
+            var values = new Values();
+
+            foreach (Setting setting in settings)
+            {
+                switch (setting.Name)
+                {
+                    case "ScrollWheelModeConfig":
+
+                        values.Add(setting, wheelScrollLinesValue);
+                        break;
+                    default:
+                        success = false;
+                        values.Add(setting, null, Values.ValueType.NotFound);
+                        continue;
+                }
+            }
+
+            return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
+        }
+
+        private static IMorphicResult<uint> InternalSpiGetWheelScrollLine()
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation as it is unused
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            // OBSERVATION: we did not find the exact type required for this data in the Microsoft documentation; they said "integer" so we assume int32/uint32,
+            //              and the GPII-ported solutions registry says uint (uint32)
+            uint result;
+
+            var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+
+            uint pvParamAsUint = 0;
+
+            var pointerToUint = Marshal.AllocHGlobal(Marshal.SizeOf<uint>());
+            try
+            {
+                Marshal.StructureToPtr(pvParamAsUint, pointerToUint, false);
+
+                var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_GETWHEELSCROLLLINES, 0, pointerToUint, fWinIni);
+                if (spiResult == true)
+                {
+                    result = Marshal.PtrToStructure<uint>(pointerToUint);
+                }
+                else
+                {
+                    return IMorphicResult<uint>.ErrorResult();
+                }
+            }
+            catch
+            {
+                return IMorphicResult<uint>.ErrorResult();
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(pointerToUint);
+            }
+
+            return IMorphicResult<uint>.SuccessResult(result);
+        }
+
         //
 
         // OBSERVATION: this information is compiled in the solutions registry, but we should consider hard-coding it instead for security; for now it's compiled into code.
@@ -1310,6 +1409,12 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                     }
                     break;
                 case "SPI_SETTOGGLEKEYS":
+                    {
+                        var spiSetMorphicResult = SPISettingsHandler.SpiSetToggleKeys(spiSettingGroup.fWinIni, values);
+                        success = spiSetMorphicResult.IsSuccess;
+                    }
+                    break;
+                case "SPI_SETWHEELSCROLLLINES":
                     {
                         var spiSetMorphicResult = SPISettingsHandler.SpiSetToggleKeys(spiSettingGroup.fWinIni, values);
                         success = spiSetMorphicResult.IsSuccess;
@@ -2451,6 +2556,93 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             finally
             {
                 Marshal.FreeHGlobal(pointerToToggleKeys);
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        private static IMorphicResult SpiSetWheelScrollLines(string? fWinIniAsString, Values values)
+        {
+            var success = true;
+
+            // NOTE: since the data passed to/from the SPI function is a primitive type and not a struct, there is no need to read the value before writing
+
+            uint? wheelScrollLinesValue = null;
+
+            foreach (var value in values)
+            {
+                switch (value.Key.Name)
+                {
+                    case "ScrollWheelModeConfig":
+                        {
+                            var convertValueToUIntResult = ConversionUtils.TryConvertObjectToUInt(value.Value);
+                            if (convertValueToUIntResult.IsError == true)
+                            {
+                                success = false;
+                                continue;
+                            }
+                            var valueAsUInt = convertValueToUIntResult.Value!;
+
+                            // validate the range
+                            if (valueAsUInt < 0 || valueAsUInt > 10)
+                            {
+                                success = false;
+                                continue;
+                            }
+
+                            wheelScrollLinesValue = valueAsUInt;
+                        }
+                        break;
+                    default:
+                        success = false;
+                        continue;
+                }
+            }
+
+            // NOTE: we only try to set the value if we were passed a value in the group
+            if (wheelScrollLinesValue != null)
+            {
+                // uiParam
+                // NOTE: in this implementation, we ignore the representation and pass in the bool value in the API call
+                //
+                // pvParam
+                // NOTE: in this implementation, we ignore the representation as this value should be null
+                //
+                // fWinIni = flags
+                // OBSERVATION: for security purposes, we may want to consider hard-coding these flags or otherwise limiting them
+                // NOTE: we should review and sanity-check the setting in the solutions registry
+                var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+                if (fWinIniAsString != null)
+                {
+                    var parseFlagsResult = SPISettingsHandler.ParseWinIniFlags(fWinIniAsString);
+                    if (parseFlagsResult.IsSuccess == true)
+                    {
+                        fWinIni = parseFlagsResult.Value!;
+                    }
+                }
+
+                var internalSetWheelScrollLinesResult = SPISettingsHandler.InternalSpiSetWheelScrollLines(wheelScrollLinesValue.Value, fWinIni);
+                if (internalSetWheelScrollLinesResult.IsError == true)
+                {
+                    return IMorphicResult.ErrorResult;
+                }
+            }
+            else
+            {
+                success = false;
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        private static IMorphicResult InternalSpiSetWheelScrollLines(uint wheelScrollLinesValue, PInvoke.User32.SystemParametersInfoFlags fWinIni)
+        {
+            var success = true;
+
+            var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_SETWHEELSCROLLLINES, wheelScrollLinesValue, IntPtr.Zero, fWinIni);
+            if (spiResult == false)
+            {
+                success = false;
             }
 
             return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
