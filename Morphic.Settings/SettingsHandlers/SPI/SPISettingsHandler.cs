@@ -238,6 +238,16 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                         }
                     }
                     break;
+                case "SPI_GETWINARRANGING":
+                    {
+                        var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetWinArranging(settings);
+                        success = spiGetMorphicResult.IsSuccess;
+                        if (success == true)
+                        {
+                            values = spiGetValues;
+                        }
+                    }
+                    break;
                 default:
                     success = false;
                     foreach (var setting in settings)
@@ -1559,7 +1569,49 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             return IMorphicResult<uint>.SuccessResult(result);
         }
 
-		//
+        private static (IMorphicResult, Values) SpiGetWinArranging(IEnumerable<Setting> settings)
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation and pass in the actual bool type size in the API call
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetValueViaPointerToBool((PInvoke.User32.SystemParametersInfoAction)ExtendedPInvoke.SPI_GETWINARRANGING);
+            if (internalSpiGetResult.IsError == true)
+            {
+                // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
+                return (IMorphicResult.ErrorResult, new Values());
+            }
+            var winArrangingValue = internalSpiGetResult.Value!;
+
+            //
+
+            var success = true;
+            var values = new Values();
+
+            foreach (Setting setting in settings)
+            {
+                switch (setting.Name)
+                {
+                    case "WindowsArrangement":
+                        var windowsArrangement = winArrangingValue;
+                        values.Add(setting, windowsArrangement);
+                        break;
+                    default:
+                        success = false;
+                        values.Add(setting, null, Values.ValueType.NotFound);
+                        continue;
+                }
+            }
+
+            return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
+        }
+
+        //
 
         private static IMorphicResult<bool> InternalSpiGetValueViaPointerToBool(PInvoke.User32.SystemParametersInfoAction spiAction)
         {
@@ -1724,6 +1776,12 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                 case "SPI_SETWHEELSCROLLLINES":
                     {
                         var spiSetMorphicResult = SPISettingsHandler.SpiSetWheelScrollLines(spiSettingGroup.fWinIni, values);
+                        success = spiSetMorphicResult.IsSuccess;
+                    }
+                    break;
+                case "SPI_SETWINARRANGING":
+                    {
+                        var spiSetMorphicResult = SPISettingsHandler.SpiSetWinArranging(spiSettingGroup.fWinIni, values);
                         success = spiSetMorphicResult.IsSuccess;
                     }
                     break;
@@ -2323,28 +2381,13 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                     }
                 }
 
-                var internalSpiSetResult = SPISettingsHandler.InternalSpiSetKeyboardPref(keyboardPrefValue.Value, fWinIni);
+                var internalSpiSetResult = SPISettingsHandler.InternalSpiSetValueViaUiParamValue(PInvoke.User32.SystemParametersInfoAction.SPI_SETKEYBOARDPREF, keyboardPrefValue.Value, fWinIni);
                 if (internalSpiSetResult.IsError == true)
                 {
                     return IMorphicResult.ErrorResult;
                 }
             }
             else
-            {
-                success = false;
-            }
-
-            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
-        }
-
-        private static IMorphicResult InternalSpiSetKeyboardPref(bool keyboardPrefValue, PInvoke.User32.SystemParametersInfoFlags fWinIni)
-        {
-            var success = true;
-
-            var keyboardPrefValueAsUInt = (uint)(keyboardPrefValue ? 1 : 0);
-
-            var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_SETKEYBOARDPREF, keyboardPrefValueAsUInt, IntPtr.Zero, fWinIni);
-            if (spiResult == false)
             {
                 success = false;
             }
@@ -2492,28 +2535,13 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                     }
                 }
 
-                var internalSpiSetResult = SPISettingsHandler.InternalSpiSetMouseButtonSwap(mouseButtonSwapValue.Value, fWinIni);
+                var internalSpiSetResult = SPISettingsHandler.InternalSpiSetValueViaUiParamValue(PInvoke.User32.SystemParametersInfoAction.SPI_SETMOUSEBUTTONSWAP, mouseButtonSwapValue.Value, fWinIni);
                 if (internalSpiSetResult.IsError == true)
                 {
                     return IMorphicResult.ErrorResult;
                 }
             }
             else
-            {
-                success = false;
-            }
-
-            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
-        }
-
-        private static IMorphicResult InternalSpiSetMouseButtonSwap(bool mouseButtonSwapValue, PInvoke.User32.SystemParametersInfoFlags fWinIni)
-        {
-            var success = true;
-
-            var mouseButtonSwapValueAsUInt = (uint)(mouseButtonSwapValue ? 1 : 0);
-
-            var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_SETMOUSEBUTTONSWAP, mouseButtonSwapValueAsUInt, IntPtr.Zero, fWinIni);
-            if (spiResult == false)
             {
                 success = false;
             }
@@ -2707,29 +2735,16 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                     }
                 }
 
-                var internalSpiSetResult = SPISettingsHandler.InternalSpiSetMouseTrails(mouseTrailsValue.Value, fWinIni);
+                // OBSERVATION: the modern solutions registry indicates that this value should be get and set via pvParam, but the GPII solutions registry indicates that it should
+                //              be get via pvParam and set via uiParam; Microsoft's documentation also says we should set via uiParam; we are following Microsoft's documentation.
+                // OBSERVATION: values of 1 and 0 both mean "no mouse trails"; Windows appears to record any value set to "1" as "0"...so reading the value after setting 1 will return 0
+                var internalSpiSetResult = SPISettingsHandler.InternalSpiSetValueViaUiParamValue(PInvoke.User32.SystemParametersInfoAction.SPI_SETMOUSETRAILS, mouseTrailsValue.Value, fWinIni);
                 if (internalSpiSetResult.IsError == true)
                 {
                     return IMorphicResult.ErrorResult;
                 }
             }
             else
-            {
-                success = false;
-            }
-
-            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
-        }
-
-        private static IMorphicResult InternalSpiSetMouseTrails(uint mouseTrailsValue, PInvoke.User32.SystemParametersInfoFlags fWinIni)
-        {
-            var success = true;
-
-            // OBSERVATION: the modern solutions registry indicates that this value should be get and set via pvParam, but the GPII solutions registry indicates that it should
-            //              be get via pvParam and set via uiParam; Microsoft's documentation also says we should set via uiParam; we are following Microsoft's documentation.
-            // OBSERVATION: values of 1 and 0 both mean "no mouse trails"; Windows appears to record any value set to "1" as "0"...so reading the value after setting 1 will return 0
-            var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_SETMOUSETRAILS, mouseTrailsValue, IntPtr.Zero, fWinIni);
-            if (spiResult == false)
             {
                 success = false;
             }
@@ -3178,26 +3193,13 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                     }
                 }
 
-                var internalSpiSetResult = SPISettingsHandler.InternalSpiSetWheelScrollChars(wheelScrollCharsValue.Value, fWinIni);
+                var internalSpiSetResult = SPISettingsHandler.InternalSpiSetValueViaUiParamValue((PInvoke.User32.SystemParametersInfoAction)ExtendedPInvoke.SPI_SETWHEELSCROLLCHARS, wheelScrollCharsValue.Value, fWinIni);
                 if (internalSpiSetResult.IsError == true)
                 {
                     return IMorphicResult.ErrorResult;
                 }
             }
             else
-            {
-                success = false;
-            }
-
-            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
-        }
-
-        private static IMorphicResult InternalSpiSetWheelScrollChars(uint wheelScrollCharsValue, PInvoke.User32.SystemParametersInfoFlags fWinIni)
-        {
-            var success = true;
-
-            var spiResult = PInvoke.User32.SystemParametersInfo((PInvoke.User32.SystemParametersInfoAction)ExtendedPInvoke.SPI_SETWHEELSCROLLCHARS, wheelScrollCharsValue, IntPtr.Zero, fWinIni);
-            if (spiResult == false)
             {
                 success = false;
             }
@@ -3265,7 +3267,7 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                     }
                 }
 
-                var internalSpiSetResult = SPISettingsHandler.InternalSpiSetWheelScrollLines(wheelScrollLinesValue.Value, fWinIni);
+                var internalSpiSetResult = SPISettingsHandler.InternalSpiSetValueViaUiParamValue(PInvoke.User32.SystemParametersInfoAction.SPI_SETWHEELSCROLLLINES, wheelScrollLinesValue.Value, fWinIni);
                 if (internalSpiSetResult.IsError == true)
                 {
                     return IMorphicResult.ErrorResult;
@@ -3279,11 +3281,81 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
         }
 
-        private static IMorphicResult InternalSpiSetWheelScrollLines(uint wheelScrollLinesValue, PInvoke.User32.SystemParametersInfoFlags fWinIni)
+        private static IMorphicResult SpiSetWinArranging(string? fWinIniAsString, Values values)
         {
             var success = true;
 
-            var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_SETWHEELSCROLLLINES, wheelScrollLinesValue, IntPtr.Zero, fWinIni);
+            bool? winArrangementValue = null;
+
+            foreach (var value in values)
+            {
+                switch (value.Key.Name)
+                {
+                    case "WindowsArrangement":
+                        {
+                            var valueAsNullableBool = value.Value as bool?;
+                            if (valueAsNullableBool == null)
+                            {
+                                success = false;
+                                continue;
+                            }
+                            var valueAsBool = valueAsNullableBool.Value;
+
+                            winArrangementValue = valueAsBool;
+                        }
+                        break;
+                    default:
+                        success = false;
+                        continue;
+                }
+            }
+
+            if (winArrangementValue.HasValue == true)
+            {
+                // uiParam
+                // NOTE: in this implementation, we ignore the representation and pass in the actual bool type size in the API call
+                //
+                // pvParam
+                // NOTE: in this implementation, we ignore the representation and create our own buffer
+                //
+                // fWinIni = flags
+                // OBSERVATION: for security purposes, we may want to consider hard-coding these flags or otherwise limiting them
+                // NOTE: we should review and sanity-check the setting in the solutions registry
+                var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+                if (fWinIniAsString != null)
+                {
+                    var parseFlagsResult = SPISettingsHandler.ParseWinIniFlags(fWinIniAsString);
+                    if (parseFlagsResult.IsSuccess == true)
+                    {
+                        fWinIni = parseFlagsResult.Value!;
+                    }
+                }
+
+                // NOTE: the Microsoft documentation says that this parameter must be set via the pvParam value, but testing showed that it is actually set via the uiParam value
+                //       see: https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-systemparametersinfow
+                var internalSpiSetResult = SPISettingsHandler.InternalSpiSetValueViaUiParamValue((PInvoke.User32.SystemParametersInfoAction)ExtendedPInvoke.SPI_SETWINARRANGING, winArrangementValue.Value, fWinIni);
+                if (internalSpiSetResult.IsError == true)
+                {
+                    return IMorphicResult.ErrorResult;
+                }
+            }
+            else
+            {
+                success = false;
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        //
+
+        private static IMorphicResult InternalSpiSetValueViaUiParamValue(PInvoke.User32.SystemParametersInfoAction action, bool value, PInvoke.User32.SystemParametersInfoFlags fWinIni)
+        {
+            var success = true;
+
+            var valueAsUInt = (uint)(value ? 1 : 0);
+
+            var spiResult = PInvoke.User32.SystemParametersInfo(action, valueAsUInt, IntPtr.Zero, fWinIni);
             if (spiResult == false)
             {
                 success = false;
@@ -3291,10 +3363,23 @@ namespace Morphic.Settings.SettingsHandlers.SPI
 
             return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
         }
-		
-		//
-		
-		private static IMorphicResult InternalSpiSetValueViaPvParamValue(PInvoke.User32.SystemParametersInfoAction action, bool value, PInvoke.User32.SystemParametersInfoFlags fWinIni)
+
+        private static IMorphicResult InternalSpiSetValueViaUiParamValue(PInvoke.User32.SystemParametersInfoAction action, uint value, PInvoke.User32.SystemParametersInfoFlags fWinIni)
+        {
+            var success = true;
+
+            var spiResult = PInvoke.User32.SystemParametersInfo(action, value, IntPtr.Zero, fWinIni);
+            if (spiResult == false)
+            {
+                success = false;
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        //
+
+        private static IMorphicResult InternalSpiSetValueViaPvParamValue(PInvoke.User32.SystemParametersInfoAction action, bool value, PInvoke.User32.SystemParametersInfoFlags fWinIni)
         {
             var success = true;
 

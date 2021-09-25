@@ -52,6 +52,8 @@ namespace Morphic.Settings
         internal const uint SPI_SETMOUSEWHEELROUTING = 0x201D;
         internal const uint SPI_GETWHEELSCROLLCHARS = 0x006C;
         internal const uint SPI_SETWHEELSCROLLCHARS = 0x006D;
+        internal const uint SPI_GETWINARRANGING = 0x0082;
+        internal const uint SPI_SETWINARRANGING = 0x0083;
 
 
         [StructLayout(LayoutKind.Sequential)]
