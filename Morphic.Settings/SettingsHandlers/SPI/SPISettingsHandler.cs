@@ -158,6 +158,16 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                         }
                     }
                     break;
+                case "SPI_GETMOUSE":
+                    {
+                        var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetMouse(settings);
+                        success = spiGetMorphicResult.IsSuccess;
+                        if (success == true)
+                        {
+                            values = spiGetValues;
+                        }
+                    }
+                    break;
                 case "SPI_GETMOUSEBUTTONSWAP":
                     {
                         var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SystemMetricsGetMouseButtonSwap(settings);
@@ -898,6 +908,70 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             return IMorphicResult<ulong>.SuccessResult(result);
         }
 
+        private static (IMorphicResult, Values) SpiGetMouse(IEnumerable<Setting> settings)
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation as it is unused
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetValueViaPointerToUIntArray(PInvoke.User32.SystemParametersInfoAction.SPI_GETMOUSE, 3);
+            if (internalSpiGetResult.IsError == true)
+            {
+                // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
+                return (IMorphicResult.ErrorResult, new Values());
+            }
+            var mouseUIntArray = internalSpiGetResult.Value!;
+
+            //
+
+            var success = true;
+            var values = new Values();
+
+            foreach (Setting setting in settings)
+            {
+                switch (setting.Name)
+                {
+                    case "EnhancePrecisionConfig":
+                        // NOTE: in our observations, turning "enhance pointer precision" on and off results in the following values.  Note that these may not be the same values on all
+                        //       computers and that they might be need to be masked against OTHER settings; do not use this into production until this has been fully analyzed
+                        // [0, 0, 0] = off (observed)
+                        // [6, 10, 1] = on (observed)
+
+                        bool enhancePrecisionConfig;
+                        if (mouseUIntArray[0] == 0 && mouseUIntArray[1] == 0 && mouseUIntArray[2] == 0)
+                        {
+                            // observed OFF state
+                            enhancePrecisionConfig = false;
+                        }
+                        else if (mouseUIntArray[0] == 6 && mouseUIntArray[1] == 10 && mouseUIntArray[2] == 1)
+                        {
+                            // observed ON state
+                            enhancePrecisionConfig = true;
+                        }
+                        else
+                        {
+                            Debug.Assert(false, "Unknown three-uint array value combination when getting 'enhance pointer precision' value");
+                            success = false;
+                            values.Add(setting, null, Values.ValueType.NotFound);
+                            continue;
+                        }
+                        values.Add(setting, enhancePrecisionConfig);
+                        break;
+                    default:
+                        success = false;
+                        values.Add(setting, null, Values.ValueType.NotFound);
+                        continue;
+                }
+            }
+
+            return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
+        }
+
         // NOTE: to get the current mouse button swap state, the GetSystemMetrics API is used instead of SystemParametersInfo; this deserves some thoughts around refactoring
         private static (IMorphicResult, Values) SystemMetricsGetMouseButtonSwap(IEnumerable<Setting> settings)
         {
@@ -1485,52 +1559,6 @@ namespace Morphic.Settings.SettingsHandlers.SPI
 
         //
 
-        private static IMorphicResult<uint> InternalSpiGetValueViaPointerToUInt(PInvoke.User32.SystemParametersInfoAction action)
-        {
-            // uiParam
-            // NOTE: in this implementation, we ignore the representation as it is unused
-            //
-            // pvParam
-            // NOTE: in this implementation, we ignore the representation and create our own buffer
-            //
-            // fWinIni = flags
-            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
-
-            // OBSERVATION: we did not find the exact type required for this data in the Microsoft documentation; they said "integer" so we assume int32/uint32,
-            //              and the GPII-ported solutions registry says uint (uint32)
-            uint result;
-
-            var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
-
-            uint pvParamAsUint = 0;
-
-            var pointerToUint = Marshal.AllocHGlobal(Marshal.SizeOf<uint>());
-            try
-            {
-                Marshal.StructureToPtr(pvParamAsUint, pointerToUint, false);
-
-                var spiResult = PInvoke.User32.SystemParametersInfo(action, 0, pointerToUint, fWinIni);
-                if (spiResult == true)
-                {
-                    result = Marshal.PtrToStructure<uint>(pointerToUint);
-                }
-                else
-                {
-                    return IMorphicResult<uint>.ErrorResult();
-                }
-            }
-            catch
-            {
-                return IMorphicResult<uint>.ErrorResult();
-            }
-            finally
-            {
-                Marshal.FreeHGlobal(pointerToUint);
-            }
-
-            return IMorphicResult<uint>.SuccessResult(result);
-        }
-
         private static IMorphicResult<bool> InternalSpiGetValueViaPointerToBool(PInvoke.User32.SystemParametersInfoAction spiAction)
         {
             // uiParam
@@ -1573,6 +1601,109 @@ namespace Morphic.Settings.SettingsHandlers.SPI
 
             return IMorphicResult<bool>.SuccessResult(result);
         }
+
+        private static IMorphicResult<uint> InternalSpiGetValueViaPointerToUInt(PInvoke.User32.SystemParametersInfoAction action)
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation as it is unused
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            // OBSERVATION: we did not find the exact type required for this data in the Microsoft documentation; they said "integer" so we assume int32/uint32,
+            //              and the GPII-ported solutions registry says uint (uint32)
+            uint result;
+
+            var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+
+            uint pvParamAsUInt = 0;
+
+            var pointerToUint = Marshal.AllocHGlobal(Marshal.SizeOf<uint>());
+            try
+            {
+                Marshal.StructureToPtr(pvParamAsUInt, pointerToUint, false);
+
+                var spiResult = PInvoke.User32.SystemParametersInfo(action, 0, pointerToUint, fWinIni);
+                if (spiResult == true)
+                {
+                    result = Marshal.PtrToStructure<uint>(pointerToUint);
+                }
+                else
+                {
+                    return IMorphicResult<uint>.ErrorResult();
+                }
+            }
+            catch
+            {
+                return IMorphicResult<uint>.ErrorResult();
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(pointerToUint);
+            }
+
+            return IMorphicResult<uint>.SuccessResult(result);
+        }
+
+        private static IMorphicResult<uint[]> InternalSpiGetValueViaPointerToUIntArray(PInvoke.User32.SystemParametersInfoAction action, uint count)
+        {
+            var sizeOfUInt = Marshal.SizeOf<uint>(); 
+
+            if ((long)sizeOfUInt * (long)count > int.MaxValue)
+            {
+                throw new ArgumentOutOfRangeException(nameof(count));
+            }
+
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation as it is unused
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            // OBSERVATION: we did not find the exact type required for this data in the Microsoft documentation; they said "integer" so we assume int32/uint32,
+            //              and the GPII-ported solutions registry says uint (uint32)
+            uint[] result = new uint[(int)count];
+
+            var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+
+            uint pvParamAsUint = 0;
+
+            var pointerToUIntArray = Marshal.AllocHGlobal(sizeOfUInt * (int)count);
+            try
+            {
+                Marshal.StructureToPtr(pvParamAsUint, pointerToUIntArray, false);
+
+                var spiResult = PInvoke.User32.SystemParametersInfo(action, 0, pointerToUIntArray, fWinIni);
+                if (spiResult == true)
+                {
+                    for (var index = 0; index < count; index += 1)
+                    {
+                        result[index] = Marshal.PtrToStructure<uint>(pointerToUIntArray + (index * sizeOfUInt));
+                    }
+                }
+                else
+                {
+                    return IMorphicResult<uint[]>.ErrorResult();
+                }
+            }
+            catch
+            {
+                return IMorphicResult<uint[]>.ErrorResult();
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(pointerToUIntArray);
+            }
+
+            return IMorphicResult<uint[]>.SuccessResult(result);
+        }
+
         //
 
         public override async Task<IMorphicResult> SetAsync(SettingGroup settingGroup, Values values)
@@ -1646,6 +1777,12 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                 case "SPI_SETMESSAGEDURATION":
                     {
                         var spiSetMorphicResult = SPISettingsHandler.SpiSetMessageDuration(spiSettingGroup.fWinIni, values);
+                        success = spiSetMorphicResult.IsSuccess;
+                    }
+                    break;
+                case "SPI_SETMOUSE":
+                    {
+                        var spiSetMorphicResult = SPISettingsHandler.SpiSetMouse(spiSettingGroup.fWinIni, values);
                         success = spiSetMorphicResult.IsSuccess;
                     }
                     break;
@@ -2402,6 +2539,92 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             // OBSERVATION: values of 1-4 are invalid and will be ignored by Windows; we should create some kind of sanity check, range or other filter for this parameter
             var spiResult = PInvoke.User32.SystemParametersInfo((PInvoke.User32.SystemParametersInfoAction)ExtendedPInvoke.SPI_SETMESSAGEDURATION, 0, messageDurationInSecondsAsIntPtr, fWinIni);
             if (spiResult == false)
+            {
+                success = false;
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        private static IMorphicResult SpiSetMouse(string? fWinIniAsString, Values values)
+        {
+            // NOTE: if we are going to write out values without understanding potential for other masked values that we don't understand, we may want to consider
+            //       getting the three-element array before setting it (to make sure it's currently set to a value we understand)
+
+            var success = true;
+
+            bool? enhancePointerPrecision = null;
+
+            foreach (var value in values)
+            {
+                switch (value.Key.Name)
+                {
+                    case "EnhancePrecisionConfig":
+                        {
+                            var valueAsNullableBool = value.Value as bool?;
+                            if (valueAsNullableBool == null)
+                            {
+                                success = false;
+                                continue;
+                            }
+                            var valueAsBool = valueAsNullableBool.Value;
+
+                            enhancePointerPrecision = valueAsBool;
+                        }
+                        break;
+                    default:
+                        success = false;
+                        continue;
+                }
+            }
+
+            if (enhancePointerPrecision.HasValue == true)
+            {
+                // uiParam
+                // NOTE: in this implementation, we ignore the representation and pass in the bool value in the API call
+                //
+                // pvParam
+                // NOTE: in this implementation, we ignore the representation as this value should be null
+                //
+                // fWinIni = flags
+                // OBSERVATION: for security purposes, we may want to consider hard-coding these flags or otherwise limiting them
+                // NOTE: we should review and sanity-check the setting in the solutions registry
+                var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+                if (fWinIniAsString != null)
+                {
+                    var parseFlagsResult = SPISettingsHandler.ParseWinIniFlags(fWinIniAsString);
+                    if (parseFlagsResult.IsSuccess == true)
+                    {
+                        fWinIni = parseFlagsResult.Value!;
+                    }
+                }
+
+                // NOTE: in our observations, turning "enhance pointer precision" on and off results in the following values.  Note that these may not be the same values on all
+                //       computers and that they might be need to be masked against OTHER settings; do not use this into production until this has been fully analyzed
+                // [0, 0, 0] = off (observed)
+                // [6, 10, 1] = on (observed)
+
+                uint[] enhancePointerPrecisionAsUIntArray = new uint[3];
+                if (enhancePointerPrecision.Value == true)
+                {
+                    enhancePointerPrecisionAsUIntArray[0] = 6;
+                    enhancePointerPrecisionAsUIntArray[1] = 10;
+                    enhancePointerPrecisionAsUIntArray[2] = 1;
+                }
+                else
+                {
+                    enhancePointerPrecisionAsUIntArray[0] = 0;
+                    enhancePointerPrecisionAsUIntArray[1] = 0;
+                    enhancePointerPrecisionAsUIntArray[2] = 0;
+                }
+
+                var internalSpiSetResult = SPISettingsHandler.InternalSpiSetValueViaPointerToArray<uint>(PInvoke.User32.SystemParametersInfoAction.SPI_SETMOUSE, enhancePointerPrecisionAsUIntArray, fWinIni);
+                if (internalSpiSetResult.IsError == true)
+                {
+                    return IMorphicResult.ErrorResult;
+                }
+            }
+            else
             {
                 success = false;
             }
@@ -3402,6 +3625,38 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             if (spiResult == false)
             {
                 success = false;
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        private static IMorphicResult InternalSpiSetValueViaPointerToArray<T>(PInvoke.User32.SystemParametersInfoAction action, T[] value, PInvoke.User32.SystemParametersInfoFlags fWinIni) 
+        {
+            var success = true;
+
+            var sizeOfT = Marshal.SizeOf(typeof(T));
+            if ((Int64)sizeOfT * (Int64)value.Length > Int32.MaxValue)
+            {
+                throw new ArgumentException(nameof(value));
+            }
+
+            IntPtr pointerToPvParam = Marshal.AllocHGlobal(sizeOfT * value.Length);
+            try
+            {
+                for (var index = 0; index < value.Length; index += 1)
+                {
+                    Marshal.StructureToPtr(value[index]!, pointerToPvParam + (index * sizeOfT), false);
+                }
+
+                var spiResult = PInvoke.User32.SystemParametersInfo(action, 0, pointerToPvParam, fWinIni);
+                if (spiResult == false)
+                {
+                    success = false;
+                }
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(pointerToPvParam);
             }
 
             return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
