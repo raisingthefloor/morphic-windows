@@ -188,6 +188,16 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                         }
                     }
                     break;
+                case "SPI_GETMOUSESONAR":
+                    {
+                        var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetMouseSonar(settings);
+                        success = spiGetMorphicResult.IsSuccess;
+                        if (success == true)
+                        {
+                            values = spiGetValues;
+                        }
+                    }
+                    break;
                 case "SPI_GETMOUSESPEED":
                     {
                         var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetMouseSpeed(settings);
@@ -1138,6 +1148,48 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             return IMorphicResult<ExtendedPInvoke.MOUSEKEYS>.SuccessResult(result);
         }
 
+        private static (IMorphicResult, Values) SpiGetMouseSonar(IEnumerable<Setting> settings)
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation and pass in the actual bool type size in the API call
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetValueViaPointerToBool(PInvoke.User32.SystemParametersInfoAction.SPI_GETMOUSESONAR);
+            if (internalSpiGetResult.IsError == true)
+            {
+                // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
+                return (IMorphicResult.ErrorResult, new Values());
+            }
+            var mouseSonarValue = internalSpiGetResult.Value!;
+
+            //
+
+            var success = true;
+            var values = new Values();
+
+            foreach (Setting setting in settings)
+            {
+                switch (setting.Name)
+                {
+                    case "MouseSonarConfig":
+                        var mouseSonarConfig = mouseSonarValue;
+                        values.Add(setting, mouseSonarConfig);
+                        break;
+                    default:
+                        success = false;
+                        values.Add(setting, null, Values.ValueType.NotFound);
+                        continue;
+                }
+            }
+
+            return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
+        }
+
         private static (IMorphicResult, Values) SpiGetMouseSpeed(IEnumerable<Setting> settings)
         {
             // uiParam
@@ -1899,6 +1951,12 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                 case "SPI_SETMOUSEKEYS":
                     {
                         var spiSetMorphicResult = SPISettingsHandler.SpiSetMouseKeys(spiSettingGroup.fWinIni, values);
+                        success = spiSetMorphicResult.IsSuccess;
+                    }
+                    break;
+                case "SPI_SETMOUSESONAR":
+                    {
+                        var spiSetMorphicResult = SPISettingsHandler.SpiSetMouseSonar(spiSettingGroup.fWinIni, values);
                         success = spiSetMorphicResult.IsSuccess;
                     }
                     break;
@@ -3036,6 +3094,70 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             finally
             {
                 Marshal.FreeHGlobal(pointerToMouseKeys);
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        private static IMorphicResult SpiSetMouseSonar(string? fWinIniAsString, Values values)
+        {
+            var success = true;
+
+            bool? mouseSonarValue = null;
+
+            foreach (var value in values)
+            {
+                switch (value.Key.Name)
+                {
+                    case "MouseSonarConfig":
+                        {
+                            var valueAsNullableBool = value.Value as bool?;
+                            if (valueAsNullableBool == null)
+                            {
+                                success = false;
+                                continue;
+                            }
+                            var valueAsBool = valueAsNullableBool.Value;
+
+                            mouseSonarValue = valueAsBool;
+                        }
+                        break;
+                    default:
+                        success = false;
+                        continue;
+                }
+            }
+
+            if (mouseSonarValue.HasValue == true)
+            {
+                // uiParam
+                // NOTE: in this implementation, we ignore the representation and pass in the actual bool type size in the API call
+                //
+                // pvParam
+                // NOTE: in this implementation, we ignore the representation and create our own buffer
+                //
+                // fWinIni = flags
+                // OBSERVATION: for security purposes, we may want to consider hard-coding these flags or otherwise limiting them
+                // NOTE: we should review and sanity-check the setting in the solutions registry
+                var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+                if (fWinIniAsString != null)
+                {
+                    var parseFlagsResult = SPISettingsHandler.ParseWinIniFlags(fWinIniAsString);
+                    if (parseFlagsResult.IsSuccess == true)
+                    {
+                        fWinIni = parseFlagsResult.Value!;
+                    }
+                }
+
+                var internalSpiSetResult = SPISettingsHandler.InternalSpiSetValueViaPvParamValue(PInvoke.User32.SystemParametersInfoAction.SPI_SETMOUSESONAR, mouseSonarValue.Value, fWinIni);
+                if (internalSpiSetResult.IsError == true)
+                {
+                    return IMorphicResult.ErrorResult;
+                }
+            }
+            else
+            {
+                success = false;
             }
 
             return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
