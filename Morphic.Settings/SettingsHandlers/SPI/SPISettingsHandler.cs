@@ -158,6 +158,16 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                         }
                     }
                     break;
+                case "SPI_GETMOUSEWHEELROUTING":
+                    {
+                        var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetMouseWheelRouting(settings);
+                        success = spiGetMorphicResult.IsSuccess;
+                        if (success == true)
+                        {
+                            values = spiGetValues;
+                        }
+                    }
+                    break;
                 case "SPI_GETSTICKYKEYS":
                     {
                         var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetStickyKeys(settings);
@@ -1026,6 +1036,94 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             return IMorphicResult<uint>.SuccessResult(result);
         }
 
+        private static (IMorphicResult, Values) SpiGetMouseWheelRouting(IEnumerable<Setting> settings)
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation as it is unused
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            var internalGetMouseWheelRoutingResult = SPISettingsHandler.InternalSpiGetMouseWheelRouting();
+            if (internalGetMouseWheelRoutingResult.IsError == true)
+            {
+                // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
+                return (IMorphicResult.ErrorResult, new Values());
+            }
+            var mouseWheelRoutingValue = internalGetMouseWheelRoutingResult.Value!;
+
+            //
+
+            var success = true;
+            var values = new Values();
+
+            foreach (Setting setting in settings)
+            {
+                switch (setting.Name)
+                {
+                    case "ScrollFocusRoutingConfig":
+                        // OBSERVATION: we may want to validate the values returned by this setting
+                        values.Add(setting, mouseWheelRoutingValue);
+                        break;
+                    default:
+                        success = false;
+                        values.Add(setting, null, Values.ValueType.NotFound);
+                        continue;
+                }
+            }
+
+            return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
+        }
+
+        private static IMorphicResult<uint> InternalSpiGetMouseWheelRouting()
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation as it is unused
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            // OBSERVATION: we did not find the exact type required for this data in the Microsoft documentation; they said "integer" so we assume int32/uint32,
+            //              and the GPII-ported solutions registry says uint (uint32)
+            uint result;
+
+            var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+
+            uint pvParamAsUint = 0;
+
+            var pointerToUint = Marshal.AllocHGlobal(Marshal.SizeOf<uint>());
+            try
+            {
+                Marshal.StructureToPtr(pvParamAsUint, pointerToUint, false);
+
+                var spiResult = PInvoke.User32.SystemParametersInfo((PInvoke.User32.SystemParametersInfoAction)ExtendedPInvoke.SPI_GETMOUSEWHEELROUTING, 0, pointerToUint, fWinIni);
+                if (spiResult == true)
+                {
+                    result = Marshal.PtrToStructure<uint>(pointerToUint);
+                }
+                else
+                {
+                    return IMorphicResult<uint>.ErrorResult();
+                }
+            }
+            catch
+            {
+                return IMorphicResult<uint>.ErrorResult();
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(pointerToUint);
+            }
+
+            return IMorphicResult<uint>.SuccessResult(result);
+        }
+
         private static (IMorphicResult, Values) SpiGetStickyKeys(IEnumerable<Setting> settings)
         {
             // uiParam
@@ -1399,6 +1497,12 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                 case "SPI_SETMOUSETRAILS":
                     {
                         var spiSetMorphicResult = SPISettingsHandler.SpiSetMouseTrails(spiSettingGroup.fWinIni, values);
+                        success = spiSetMorphicResult.IsSuccess;
+                    }
+                    break;
+                case "SPI_SETMOUSEWHEELROUTING":
+                    {
+                        var spiSetMorphicResult = SPISettingsHandler.SpiSetMouseWheelRouting(spiSettingGroup.fWinIni, values);
                         success = spiSetMorphicResult.IsSuccess;
                     }
                     break;
@@ -2246,6 +2350,93 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_SETMOUSETRAILS, mouseTrailsValue, IntPtr.Zero, fWinIni);
             if (spiResult == false)
             {
+                success = false;
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        private static IMorphicResult SpiSetMouseWheelRouting(string? fWinIniAsString, Values values)
+        {
+            var success = true;
+
+            // NOTE: since the data passed to/from the SPI function is a primitive type and not a struct, there is no need to read the value before writing
+
+            uint? mouseWheelRoutingValue = null;
+
+            foreach (var value in values)
+            {
+                switch (value.Key.Name)
+                {
+                    case "ScrollFocusRoutingConfig":
+                        {
+                            var convertValueToUIntResult = ConversionUtils.TryConvertObjectToUInt(value.Value);
+                            if (convertValueToUIntResult.IsError == true)
+                            {
+                                success = false;
+                                continue;
+                            }
+                            var valueAsUInt = convertValueToUIntResult.Value!;
+
+                            // NOTE: we may want to validate the input
+
+                            mouseWheelRoutingValue = valueAsUInt;
+                        }
+                        break;
+                    default:
+                        success = false;
+                        continue;
+                }
+            }
+
+            // NOTE: we only try to set the value if we were passed a value in the group
+            if (mouseWheelRoutingValue != null)
+            {
+                // uiParam
+                // NOTE: in this implementation, we ignore the representation and pass in the bool value in the API call
+                //
+                // pvParam
+                // NOTE: in this implementation, we ignore the representation as this value should be null
+                //
+                // fWinIni = flags
+                // OBSERVATION: for security purposes, we may want to consider hard-coding these flags or otherwise limiting them
+                // NOTE: we should review and sanity-check the setting in the solutions registry
+                var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+                if (fWinIniAsString != null)
+                {
+                    var parseFlagsResult = SPISettingsHandler.ParseWinIniFlags(fWinIniAsString);
+                    if (parseFlagsResult.IsSuccess == true)
+                    {
+                        fWinIni = parseFlagsResult.Value!;
+                    }
+                }
+
+                var internalSetMouseWheelRoutingResult = SPISettingsHandler.InternalSpiSetMouseWheelRouting(mouseWheelRoutingValue.Value, fWinIni);
+                if (internalSetMouseWheelRoutingResult.IsError == true)
+                {
+                    return IMorphicResult.ErrorResult;
+                }
+            }
+            else
+            {
+                success = false;
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        private static IMorphicResult InternalSpiSetMouseWheelRouting(uint mouseWheelRoutingValue, PInvoke.User32.SystemParametersInfoFlags fWinIni)
+        {
+            var success = true;
+
+            var mouseWheelRoutingValueAsIntPtr = new IntPtr(mouseWheelRoutingValue);
+
+            // NOTE: Microsoft's documentation says that pvParam for this setting must point to a DWORD, but in our testing the pvParam must be an IntPtr representing the setting VALUE (i.e. not a pointer)
+            //       see: https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-systemparametersinfow
+            var spiResult = PInvoke.User32.SystemParametersInfo((PInvoke.User32.SystemParametersInfoAction)ExtendedPInvoke.SPI_SETMOUSEWHEELROUTING, 0, mouseWheelRoutingValueAsIntPtr, fWinIni);
+            if (spiResult == false)
+            {
+                int lastError = Marshal.GetLastWin32Error();
                 success = false;
             }
 

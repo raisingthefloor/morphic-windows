@@ -48,6 +48,8 @@ namespace Morphic.Settings
         internal const uint SPI_SETAUDIODESCRIPTION = 0x0075;
         internal const uint SPI_GETMESSAGEDURATION = 0x2016;
         internal const uint SPI_SETMESSAGEDURATION = 0x2017;
+        internal const uint SPI_GETMOUSEWHEELROUTING = 0x201C;
+        internal const uint SPI_SETMOUSEWHEELROUTING = 0x201D;
 
         [StructLayout(LayoutKind.Sequential)]
         public struct AUDIODESCRIPTION
