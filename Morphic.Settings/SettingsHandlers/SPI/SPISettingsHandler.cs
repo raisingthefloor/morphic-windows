@@ -68,6 +68,16 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                         }
                     }
                     break;
+                case "SPI_GETACTIVEWNDTRKZORDER":
+                    {
+                        var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetActiveWndTrkZOrder(settings);
+                        success = spiGetMorphicResult.IsSuccess;
+                        if (success == true)
+                        {
+                            values = spiGetValues;
+                        }
+                    }
+                    break;
                 case "SPI_GETAUDIODESCRIPTION":
                     {
                         var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetAudioDescription(settings);
@@ -273,6 +283,48 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                     case "WindowsTrackingConfig":
                         var windowTrackingConfig = activeWindowTrackingValue;
                         values.Add(setting, windowTrackingConfig);
+                        break;
+                    default:
+                        success = false;
+                        values.Add(setting, null, Values.ValueType.NotFound);
+                        continue;
+                }
+            }
+
+            return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
+        }
+
+        private static (IMorphicResult, Values) SpiGetActiveWndTrkZOrder(IEnumerable<Setting> settings)
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation and pass in the actual bool type size in the API call
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetValueViaPointerToBool(PInvoke.User32.SystemParametersInfoAction.SPI_GETACTIVEWNDTRKZORDER);
+            if (internalSpiGetResult.IsError == true)
+            {
+                // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
+                return (IMorphicResult.ErrorResult, new Values());
+            }
+            var activeWndTrkZOrderValue = internalSpiGetResult.Value!;
+
+            //
+
+            var success = true;
+            var values = new Values();
+
+            foreach (Setting setting in settings)
+            {
+                switch (setting.Name)
+                {
+                    case "ActiveZOrder":
+                        var activeZOrder = activeWndTrkZOrderValue;
+                        values.Add(setting, activeZOrder);
                         break;
                     default:
                         success = false;
@@ -1573,6 +1625,12 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                         success = spiSetMorphicResult.IsSuccess;
                     }
                     break;
+                case "SPI_SETACTIVEWNDTRKZORDER":
+                    {
+                        var spiSetMorphicResult = SPISettingsHandler.SpiSetActiveWndTrkZOrder(spiSettingGroup.fWinIni, values);
+                        success = spiSetMorphicResult.IsSuccess;
+                    }
+                    break;
                 case "SPI_SETAUDIODESCRIPTION":
                     {
                         var spiSetMorphicResult = SPISettingsHandler.SpiSetAudioDescription(spiSettingGroup.fWinIni, values);
@@ -1678,6 +1736,7 @@ namespace Morphic.Settings.SettingsHandlers.SPI
         }
 
         //
+
         private static IMorphicResult SpiSetActiveWindowTracking(string? fWinIniAsString, Values values)
         {
             var success = true;
@@ -1729,6 +1788,70 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                 }
 
                 var internalSpiSetResult = SPISettingsHandler.InternalSpiSetValueViaPvParamValue(PInvoke.User32.SystemParametersInfoAction.SPI_SETACTIVEWINDOWTRACKING, activeWindowTrackingValue.Value, fWinIni);
+                if (internalSpiSetResult.IsError == true)
+                {
+                    return IMorphicResult.ErrorResult;
+                }
+            }
+            else
+            {
+                success = false;
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        private static IMorphicResult SpiSetActiveWndTrkZOrder(string? fWinIniAsString, Values values)
+        {
+            var success = true;
+
+            bool? activeWndTrkZOrderValue = null;
+
+            foreach (var value in values)
+            {
+                switch (value.Key.Name)
+                {
+                    case "ActiveZOrder":
+                        {
+                            var valueAsNullableBool = value.Value as bool?;
+                            if (valueAsNullableBool == null)
+                            {
+                                success = false;
+                                continue;
+                            }
+                            var valueAsBool = valueAsNullableBool.Value;
+
+                            activeWndTrkZOrderValue = valueAsBool;
+                        }
+                        break;
+                    default:
+                        success = false;
+                        continue;
+                }
+            }
+
+            if (activeWndTrkZOrderValue.HasValue == true)
+            {
+                // uiParam
+                // NOTE: in this implementation, we ignore the representation and pass in the actual bool type size in the API call
+                //
+                // pvParam
+                // NOTE: in this implementation, we ignore the representation and create our own buffer
+                //
+                // fWinIni = flags
+                // OBSERVATION: for security purposes, we may want to consider hard-coding these flags or otherwise limiting them
+                // NOTE: we should review and sanity-check the setting in the solutions registry
+                var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+                if (fWinIniAsString != null)
+                {
+                    var parseFlagsResult = SPISettingsHandler.ParseWinIniFlags(fWinIniAsString);
+                    if (parseFlagsResult.IsSuccess == true)
+                    {
+                        fWinIni = parseFlagsResult.Value!;
+                    }
+                }
+
+                var internalSpiSetResult = SPISettingsHandler.InternalSpiSetValueViaPvParamValue(PInvoke.User32.SystemParametersInfoAction.SPI_SETACTIVEWNDTRKZORDER, activeWndTrkZOrderValue.Value, fWinIni);
                 if (internalSpiSetResult.IsError == true)
                 {
                     return IMorphicResult.ErrorResult;
