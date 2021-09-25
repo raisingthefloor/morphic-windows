@@ -218,6 +218,16 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                         }
                     }
                     break;
+                case "SPI_GETSNAPTODEFBUTTON":
+                    {
+                        var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetSnapToDefaultButton(settings);
+                        success = spiGetMorphicResult.IsSuccess;
+                        if (success == true)
+                        {
+                            values = spiGetValues;
+                        }
+                    }
+                    break;
                 case "SPI_GETSTICKYKEYS":
                     {
                         var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetStickyKeys(settings);
@@ -1252,6 +1262,48 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
         }
 
+        private static (IMorphicResult, Values) SpiGetSnapToDefaultButton(IEnumerable<Setting> settings)
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation and pass in the actual bool type size in the API call
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetValueViaPointerToBool((PInvoke.User32.SystemParametersInfoAction)ExtendedPInvoke.SPI_GETSNAPTODEFBUTTON);
+            if (internalSpiGetResult.IsError == true)
+            {
+                // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
+                return (IMorphicResult.ErrorResult, new Values());
+            }
+            var snapToDefaultButton = internalSpiGetResult.Value!;
+
+            //
+
+            var success = true;
+            var values = new Values();
+
+            foreach (Setting setting in settings)
+            {
+                switch (setting.Name)
+                {
+                    case "SnapToDefaultButtonConfig":
+                        var snapToDefaultButtonConfig = snapToDefaultButton;
+                        values.Add(setting, snapToDefaultButtonConfig);
+                        break;
+                    default:
+                        success = false;
+                        values.Add(setting, null, Values.ValueType.NotFound);
+                        continue;
+                }
+            }
+
+            return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
+        }
+
         private static (IMorphicResult, Values) SpiGetStickyKeys(IEnumerable<Setting> settings)
         {
             // uiParam
@@ -1816,6 +1868,12 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                         success = spiSetMorphicResult.IsSuccess;
                     }
                     break;
+                case "SPI_SETSNAPTODEFBUTTON":
+                    {
+                        var spiSetMorphicResult = SPISettingsHandler.SpiSetSnapToDefaultButton(spiSettingGroup.fWinIni, values);
+                        success = spiSetMorphicResult.IsSuccess;
+                    }
+                    break;
                 case "SPI_SETSTICKYKEYS":
                     {
                         var spiSetMorphicResult = SPISettingsHandler.SpiSetStickyKeys(spiSettingGroup.fWinIni, values);
@@ -2323,6 +2381,109 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             finally
             {
                 Marshal.FreeHGlobal(pointerToFilterKeys);
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        private static IMorphicResult SpiSetHighContrast(string? fWinIniAsString, Values values)
+        {
+            var success = true;
+
+            // capture the current HighContrast struct data up-front
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetHighContrast();
+            if (internalSpiGetResult.IsError == true)
+            {
+                return IMorphicResult.ErrorResult;
+            }
+            var highContrast = internalSpiGetResult.Value!;
+
+            foreach (var value in values)
+            {
+                switch (value.Key.Name)
+                {
+                    case "HighContrastOn":
+                        {
+                            var valueAsNullableBool = value.Value as bool?;
+                            if (valueAsNullableBool == null)
+                            {
+                                success = false;
+                                continue;
+                            }
+                            var valueAsBool = valueAsNullableBool.Value;
+
+                            if (valueAsBool == true)
+                            {
+                                highContrast.dwFlags |= ExtendedPInvoke.HighContrastFlags.HCF_HIGHCONTRASTON;
+                            }
+                            else
+                            {
+                                highContrast.dwFlags &= ~ExtendedPInvoke.HighContrastFlags.HCF_HIGHCONTRASTON;
+                            }
+                        }
+                        break;
+                    default:
+                        success = false;
+                        continue;
+                }
+            }
+
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation and pass in the actual highcontrast struct size in the API call
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // OBSERVATION: for security purposes, we may want to consider hard-coding these flags or otherwise limiting them
+            // NOTE: we should review and sanity-check the setting in the solutions registry
+            var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+            if (fWinIniAsString != null)
+            {
+                var parseFlagsResult = SPISettingsHandler.ParseWinIniFlags(fWinIniAsString);
+                if (parseFlagsResult.IsSuccess == true)
+                {
+                    fWinIni = parseFlagsResult.Value!;
+                }
+            }
+
+            var internalSpiSetResult = SPISettingsHandler.InternalSpiSetHighContrast(highContrast, fWinIni);
+            if (internalSpiSetResult.IsError == true)
+            {
+                return IMorphicResult.ErrorResult;
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        private static IMorphicResult InternalSpiSetHighContrast(ExtendedPInvoke.HIGHCONTRAST highContrast, PInvoke.User32.SystemParametersInfoFlags fWinIni)
+        {
+            // sanity check
+            if (highContrast.cbSize != Marshal.SizeOf<ExtendedPInvoke.HIGHCONTRAST>())
+            {
+                throw new ArgumentException(nameof(highContrast));
+            }
+
+            var success = true;
+
+            var pointerToHighContrast = Marshal.AllocHGlobal(Marshal.SizeOf<ExtendedPInvoke.HIGHCONTRAST>());
+            try
+            {
+                Marshal.StructureToPtr(highContrast, pointerToHighContrast, false);
+
+                var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_SETHIGHCONTRAST, highContrast.cbSize, pointerToHighContrast, fWinIni);
+                if (spiResult == false)
+                {
+                    success = false;
+                }
+            }
+            catch
+            {
+                success = false;
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(pointerToHighContrast);
             }
 
             return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
@@ -3044,23 +3205,17 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
         }
 
-        private static IMorphicResult SpiSetHighContrast(string? fWinIniAsString, Values values)
+        private static IMorphicResult SpiSetSnapToDefaultButton(string? fWinIniAsString, Values values)
         {
             var success = true;
 
-            // capture the current HighContrast struct data up-front
-            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetHighContrast();
-            if (internalSpiGetResult.IsError == true)
-            {
-                return IMorphicResult.ErrorResult;
-            }
-            var highContrast = internalSpiGetResult.Value!;
+            bool? snapToDefaultButtonValue = null;
 
             foreach (var value in values)
             {
                 switch (value.Key.Name)
                 {
-                    case "HighContrastOn":
+                    case "SnapToDefaultButtonConfig":
                         {
                             var valueAsNullableBool = value.Value as bool?;
                             if (valueAsNullableBool == null)
@@ -3070,14 +3225,7 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                             }
                             var valueAsBool = valueAsNullableBool.Value;
 
-                            if (valueAsBool == true)
-                            {
-                                highContrast.dwFlags |= ExtendedPInvoke.HighContrastFlags.HCF_HIGHCONTRASTON;
-                            }
-                            else
-                            {
-                                highContrast.dwFlags &= ~ExtendedPInvoke.HighContrastFlags.HCF_HIGHCONTRASTON;
-                            }
+                            snapToDefaultButtonValue = valueAsBool;
                         }
                         break;
                     default:
@@ -3086,62 +3234,36 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                 }
             }
 
-            // uiParam
-            // NOTE: in this implementation, we ignore the representation and pass in the actual highcontrast struct size in the API call
-            //
-            // pvParam
-            // NOTE: in this implementation, we ignore the representation and create our own buffer
-            //
-            // fWinIni = flags
-            // OBSERVATION: for security purposes, we may want to consider hard-coding these flags or otherwise limiting them
-            // NOTE: we should review and sanity-check the setting in the solutions registry
-            var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
-            if (fWinIniAsString != null)
+            if (snapToDefaultButtonValue.HasValue == true)
             {
-                var parseFlagsResult = SPISettingsHandler.ParseWinIniFlags(fWinIniAsString);
-                if (parseFlagsResult.IsSuccess == true)
+                // uiParam
+                // NOTE: in this implementation, we ignore the representation and pass in the bool value in the API call
+                //
+                // pvParam
+                // NOTE: in this implementation, we ignore the representation as this value should be null
+                //
+                // fWinIni = flags
+                // OBSERVATION: for security purposes, we may want to consider hard-coding these flags or otherwise limiting them
+                // NOTE: we should review and sanity-check the setting in the solutions registry
+                var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+                if (fWinIniAsString != null)
                 {
-                    fWinIni = parseFlagsResult.Value!;
+                    var parseFlagsResult = SPISettingsHandler.ParseWinIniFlags(fWinIniAsString);
+                    if (parseFlagsResult.IsSuccess == true)
+                    {
+                        fWinIni = parseFlagsResult.Value!;
+                    }
+                }
+
+                var internalSpiSetResult = SPISettingsHandler.InternalSpiSetValueViaUiParamValue(PInvoke.User32.SystemParametersInfoAction.SPI_SETSNAPTODEFBUTTON, snapToDefaultButtonValue.Value, fWinIni);
+                if (internalSpiSetResult.IsError == true)
+                {
+                    return IMorphicResult.ErrorResult;
                 }
             }
-
-            var internalSpiSetResult = SPISettingsHandler.InternalSpiSetHighContrast(highContrast, fWinIni);
-            if (internalSpiSetResult.IsError == true)
-            {
-                return IMorphicResult.ErrorResult;
-            }
-
-            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
-        }
-
-        private static IMorphicResult InternalSpiSetHighContrast(ExtendedPInvoke.HIGHCONTRAST highContrast, PInvoke.User32.SystemParametersInfoFlags fWinIni)
-        {
-            // sanity check
-            if (highContrast.cbSize != Marshal.SizeOf<ExtendedPInvoke.HIGHCONTRAST>())
-            {
-                throw new ArgumentException(nameof(highContrast));
-            }
-
-            var success = true;
-
-            var pointerToHighContrast = Marshal.AllocHGlobal(Marshal.SizeOf<ExtendedPInvoke.HIGHCONTRAST>());
-            try
-            {
-                Marshal.StructureToPtr(highContrast, pointerToHighContrast, false);
-
-                var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_SETHIGHCONTRAST, highContrast.cbSize, pointerToHighContrast, fWinIni);
-                if (spiResult == false)
-                {
-                    success = false;
-                }
-            }
-            catch
+            else
             {
                 success = false;
-            }
-            finally
-            {
-                Marshal.FreeHGlobal(pointerToHighContrast);
             }
 
             return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;

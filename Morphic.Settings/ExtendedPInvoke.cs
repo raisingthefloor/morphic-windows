@@ -50,6 +50,8 @@ namespace Morphic.Settings
         internal const uint SPI_SETMESSAGEDURATION = 0x2017;
         internal const uint SPI_GETMOUSEWHEELROUTING = 0x201C;
         internal const uint SPI_SETMOUSEWHEELROUTING = 0x201D;
+        internal const uint SPI_GETSNAPTODEFBUTTON = 0x005F;
+        internal const uint SPI_SETSNAPTODEFBUTTON = 0x0060;
         internal const uint SPI_GETWHEELSCROLLCHARS = 0x006C;
         internal const uint SPI_SETWHEELSCROLLCHARS = 0x006D;
         internal const uint SPI_GETWINARRANGING = 0x0082;
