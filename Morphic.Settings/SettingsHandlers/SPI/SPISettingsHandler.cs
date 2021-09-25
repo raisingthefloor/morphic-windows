@@ -148,16 +148,6 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                         }
                     }
                     break;
-                case "SPI_GETMOUSEBUTTONSWAP":
-                    {
-                        var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SystemMetricsGetMouseButtonSwap(settings);
-                        success = spiGetMorphicResult.IsSuccess;
-                        if (success == true)
-                        {
-                            values = spiGetValues;
-                        }
-                    }
-                    break;
                 case "SPI_GETMESSAGEDURATION":
                     {
                         var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetMessageDuration(settings);
@@ -168,9 +158,29 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                         }
                     }
                     break;
+                case "SPI_GETMOUSEBUTTONSWAP":
+                    {
+                        var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SystemMetricsGetMouseButtonSwap(settings);
+                        success = spiGetMorphicResult.IsSuccess;
+                        if (success == true)
+                        {
+                            values = spiGetValues;
+                        }
+                    }
+                    break;
                 case "SPI_GETMOUSEKEYS":
                     {
                         var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetMouseKeys(settings);
+                        success = spiGetMorphicResult.IsSuccess;
+                        if (success == true)
+                        {
+                            values = spiGetValues;
+                        }
+                    }
+                    break;
+                case "SPI_GETMOUSESPEED":
+                    {
+                        var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetMouseSpeed(settings);
                         success = spiGetMorphicResult.IsSuccess;
                         if (success == true)
                         {
@@ -1034,6 +1044,52 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             return IMorphicResult<ExtendedPInvoke.MOUSEKEYS>.SuccessResult(result);
         }
 
+        private static (IMorphicResult, Values) SpiGetMouseSpeed(IEnumerable<Setting> settings)
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation as it is unused
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetValueViaPointerToUInt(PInvoke.User32.SystemParametersInfoAction.SPI_GETMOUSESPEED);
+            if (internalSpiGetResult.IsError == true)
+            {
+                // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
+                return (IMorphicResult.ErrorResult, new Values());
+            }
+            var mouseSpeedValue = internalSpiGetResult.Value!;
+
+            //
+
+            var success = true;
+            var values = new Values();
+
+            foreach (Setting setting in settings)
+            {
+                switch (setting.Name)
+                {
+                    case "PointerSpeedConfig":
+                        // NOTE: if this value is out or range, we should handle the error condition
+                        if (mouseSpeedValue < 1 || mouseSpeedValue > 20)
+                        {
+                            Debug.Assert(false, "MouseSpeed value is out of range 1...20");
+                        }
+                        values.Add(setting, mouseSpeedValue);
+                        break;
+                    default:
+                        success = false;
+                        values.Add(setting, null, Values.ValueType.NotFound);
+                        continue;
+                }
+            }
+
+            return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
+        }
+
         private static (IMorphicResult, Values) SpiGetMouseTrails(IEnumerable<Setting> settings)
         {
             // uiParam
@@ -1045,7 +1101,7 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             // fWinIni = flags
             // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
 
-            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetMouseTrails();
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetValueViaPointerToUInt(PInvoke.User32.SystemParametersInfoAction.SPI_GETMOUSETRAILS);
             if (internalSpiGetResult.IsError == true)
             {
                 // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
@@ -1080,52 +1136,6 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
         }
 
-        private static IMorphicResult<uint> InternalSpiGetMouseTrails()
-        {
-            // uiParam
-            // NOTE: in this implementation, we ignore the representation as it is unused
-            //
-            // pvParam
-            // NOTE: in this implementation, we ignore the representation and create our own buffer
-            //
-            // fWinIni = flags
-            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
-
-            // OBSERVATION: we did not find the exact type required for this data in the Microsoft documentation; they said "integer" so we assume int32/uint32,
-            //              and the GPII-ported solutions registry says uint (uint32)
-            uint result;
-
-            var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
-
-            uint pvParamAsUint = 0;
-
-            var pointerToUint = Marshal.AllocHGlobal(Marshal.SizeOf<uint>());
-            try
-            {
-                Marshal.StructureToPtr(pvParamAsUint, pointerToUint, false);
-
-                var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_GETMOUSETRAILS, 0, pointerToUint, fWinIni);
-                if (spiResult == true)
-                {
-                    result = Marshal.PtrToStructure<uint>(pointerToUint);
-                }
-                else
-                {
-                    return IMorphicResult<uint>.ErrorResult();
-                }
-            }
-            catch
-            {
-                return IMorphicResult<uint>.ErrorResult();
-            }
-            finally
-            {
-                Marshal.FreeHGlobal(pointerToUint);
-            }
-
-            return IMorphicResult<uint>.SuccessResult(result);
-        }
-
         private static (IMorphicResult, Values) SpiGetMouseWheelRouting(IEnumerable<Setting> settings)
         {
             // uiParam
@@ -1137,7 +1147,7 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             // fWinIni = flags
             // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
 
-            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetMouseWheelRouting();
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetValueViaPointerToUInt((PInvoke.User32.SystemParametersInfoAction)ExtendedPInvoke.SPI_GETMOUSEWHEELROUTING);
             if (internalSpiGetResult.IsError == true)
             {
                 // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
@@ -1166,52 +1176,6 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             }
 
             return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
-        }
-
-        private static IMorphicResult<uint> InternalSpiGetMouseWheelRouting()
-        {
-            // uiParam
-            // NOTE: in this implementation, we ignore the representation as it is unused
-            //
-            // pvParam
-            // NOTE: in this implementation, we ignore the representation and create our own buffer
-            //
-            // fWinIni = flags
-            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
-
-            // OBSERVATION: we did not find the exact type required for this data in the Microsoft documentation; they said "integer" so we assume int32/uint32,
-            //              and the GPII-ported solutions registry says uint (uint32)
-            uint result;
-
-            var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
-
-            uint pvParamAsUint = 0;
-
-            var pointerToUint = Marshal.AllocHGlobal(Marshal.SizeOf<uint>());
-            try
-            {
-                Marshal.StructureToPtr(pvParamAsUint, pointerToUint, false);
-
-                var spiResult = PInvoke.User32.SystemParametersInfo((PInvoke.User32.SystemParametersInfoAction)ExtendedPInvoke.SPI_GETMOUSEWHEELROUTING, 0, pointerToUint, fWinIni);
-                if (spiResult == true)
-                {
-                    result = Marshal.PtrToStructure<uint>(pointerToUint);
-                }
-                else
-                {
-                    return IMorphicResult<uint>.ErrorResult();
-                }
-            }
-            catch
-            {
-                return IMorphicResult<uint>.ErrorResult();
-            }
-            finally
-            {
-                Marshal.FreeHGlobal(pointerToUint);
-            }
-
-            return IMorphicResult<uint>.SuccessResult(result);
         }
 
         private static (IMorphicResult, Values) SpiGetStickyKeys(IEnumerable<Setting> settings)
@@ -1404,7 +1368,7 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             // fWinIni = flags
             // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
 
-            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetWheelScrollChars();
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetValueViaPointerToUInt((PInvoke.User32.SystemParametersInfoAction)ExtendedPInvoke.SPI_GETWHEELSCROLLCHARS);
             if (internalSpiGetResult.IsError == true)
             {
                 // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
@@ -1435,52 +1399,6 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
         }
 
-        private static IMorphicResult<uint> InternalSpiGetWheelScrollChars()
-        {
-            // uiParam
-            // NOTE: in this implementation, we ignore the representation as it is unused
-            //
-            // pvParam
-            // NOTE: in this implementation, we ignore the representation and create our own buffer
-            //
-            // fWinIni = flags
-            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
-
-            // OBSERVATION: we did not find the exact type required for this data in the Microsoft documentation; they said "integer" so we assume int32/uint32,
-            //              and the GPII-ported solutions registry says uint (uint32)
-            uint result;
-
-            var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
-
-            uint pvParamAsUint = 0;
-
-            var pointerToUint = Marshal.AllocHGlobal(Marshal.SizeOf<uint>());
-            try
-            {
-                Marshal.StructureToPtr(pvParamAsUint, pointerToUint, false);
-
-                var spiResult = PInvoke.User32.SystemParametersInfo((PInvoke.User32.SystemParametersInfoAction)ExtendedPInvoke.SPI_GETWHEELSCROLLCHARS, 0, pointerToUint, fWinIni);
-                if (spiResult == true)
-                {
-                    result = Marshal.PtrToStructure<uint>(pointerToUint);
-                }
-                else
-                {
-                    return IMorphicResult<uint>.ErrorResult();
-                }
-            }
-            catch
-            {
-                return IMorphicResult<uint>.ErrorResult();
-            }
-            finally
-            {
-                Marshal.FreeHGlobal(pointerToUint);
-            }
-
-            return IMorphicResult<uint>.SuccessResult(result);
-        }
-
         private static (IMorphicResult, Values) SpiGetWheelScrollLines(IEnumerable<Setting> settings)
         {
             // uiParam
@@ -1492,7 +1410,7 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             // fWinIni = flags
             // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
 
-            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetWheelScrollLines();
+            var internalSpiGetResult = SPISettingsHandler.InternalSpiGetValueViaPointerToUInt(PInvoke.User32.SystemParametersInfoAction.SPI_GETWHEELSCROLLLINES);
             if (internalSpiGetResult.IsError == true)
             {
                 // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
@@ -1521,52 +1439,6 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             }
 
             return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
-        }
-
-        private static IMorphicResult<uint> InternalSpiGetWheelScrollLines()
-        {
-            // uiParam
-            // NOTE: in this implementation, we ignore the representation as it is unused
-            //
-            // pvParam
-            // NOTE: in this implementation, we ignore the representation and create our own buffer
-            //
-            // fWinIni = flags
-            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
-
-            // OBSERVATION: we did not find the exact type required for this data in the Microsoft documentation; they said "integer" so we assume int32/uint32,
-            //              and the GPII-ported solutions registry says uint (uint32)
-            uint result;
-
-            var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
-
-            uint pvParamAsUint = 0;
-
-            var pointerToUint = Marshal.AllocHGlobal(Marshal.SizeOf<uint>());
-            try
-            {
-                Marshal.StructureToPtr(pvParamAsUint, pointerToUint, false);
-
-                var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_GETWHEELSCROLLLINES, 0, pointerToUint, fWinIni);
-                if (spiResult == true)
-                {
-                    result = Marshal.PtrToStructure<uint>(pointerToUint);
-                }
-                else
-                {
-                    return IMorphicResult<uint>.ErrorResult();
-                }
-            }
-            catch
-            {
-                return IMorphicResult<uint>.ErrorResult();
-            }
-            finally
-            {
-                Marshal.FreeHGlobal(pointerToUint);
-            }
-
-            return IMorphicResult<uint>.SuccessResult(result);
         }
 
         private static (IMorphicResult, Values) SpiGetWinArranging(IEnumerable<Setting> settings)
@@ -1612,6 +1484,52 @@ namespace Morphic.Settings.SettingsHandlers.SPI
         }
 
         //
+
+        private static IMorphicResult<uint> InternalSpiGetValueViaPointerToUInt(PInvoke.User32.SystemParametersInfoAction action)
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation as it is unused
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            // OBSERVATION: we did not find the exact type required for this data in the Microsoft documentation; they said "integer" so we assume int32/uint32,
+            //              and the GPII-ported solutions registry says uint (uint32)
+            uint result;
+
+            var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+
+            uint pvParamAsUint = 0;
+
+            var pointerToUint = Marshal.AllocHGlobal(Marshal.SizeOf<uint>());
+            try
+            {
+                Marshal.StructureToPtr(pvParamAsUint, pointerToUint, false);
+
+                var spiResult = PInvoke.User32.SystemParametersInfo(action, 0, pointerToUint, fWinIni);
+                if (spiResult == true)
+                {
+                    result = Marshal.PtrToStructure<uint>(pointerToUint);
+                }
+                else
+                {
+                    return IMorphicResult<uint>.ErrorResult();
+                }
+            }
+            catch
+            {
+                return IMorphicResult<uint>.ErrorResult();
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(pointerToUint);
+            }
+
+            return IMorphicResult<uint>.SuccessResult(result);
+        }
 
         private static IMorphicResult<bool> InternalSpiGetValueViaPointerToBool(PInvoke.User32.SystemParametersInfoAction spiAction)
         {
@@ -1725,21 +1643,27 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                         success = spiSetMorphicResult.IsSuccess;
                     }
                     break;
-                case "SPI_SETMOUSEBUTTONSWAP":
-                    {
-                        var spiSetMorphicResult = SPISettingsHandler.SpiSetMouseButtonSwap(spiSettingGroup.fWinIni, values);
-                        success = spiSetMorphicResult.IsSuccess;
-                    }
-                    break;
                 case "SPI_SETMESSAGEDURATION":
                     {
                         var spiSetMorphicResult = SPISettingsHandler.SpiSetMessageDuration(spiSettingGroup.fWinIni, values);
                         success = spiSetMorphicResult.IsSuccess;
                     }
                     break;
+                case "SPI_SETMOUSEBUTTONSWAP":
+                    {
+                        var spiSetMorphicResult = SPISettingsHandler.SpiSetMouseButtonSwap(spiSettingGroup.fWinIni, values);
+                        success = spiSetMorphicResult.IsSuccess;
+                    }
+                    break;
                 case "SPI_SETMOUSEKEYS":
                     {
                         var spiSetMorphicResult = SPISettingsHandler.SpiSetMouseKeys(spiSettingGroup.fWinIni, values);
+                        success = spiSetMorphicResult.IsSuccess;
+                    }
+                    break;
+                case "SPI_SETMOUSESPEED":
+                    {
+                        var spiSetMorphicResult = SPISettingsHandler.SpiSetMouseSpeed(spiSettingGroup.fWinIni, values);
                         success = spiSetMorphicResult.IsSuccess;
                     }
                     break;
@@ -2670,6 +2594,80 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             finally
             {
                 Marshal.FreeHGlobal(pointerToMouseKeys);
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        private static IMorphicResult SpiSetMouseSpeed(string? fWinIniAsString, Values values)
+        {
+            var success = true;
+
+            // NOTE: since the data passed to/from the SPI function is a primitive type and not a struct, there is no need to read the value before writing
+
+            uint? mouseSpeedValue = null;
+
+            foreach (var value in values)
+            {
+                switch (value.Key.Name)
+                {
+                    case "PointerSpeedConfig":
+                        {
+                            var convertValueToUIntResult = ConversionUtils.TryConvertObjectToUInt(value.Value);
+                            if (convertValueToUIntResult.IsError == true)
+                            {
+                                success = false;
+                                continue;
+                            }
+                            var valueAsUInt = convertValueToUIntResult.Value!;
+
+                            // validate the range
+                            if (valueAsUInt < 1 || valueAsUInt > 20)
+                            {
+                                success = false;
+                                continue;
+                            }
+
+                            mouseSpeedValue = valueAsUInt;
+                        }
+                        break;
+                    default:
+                        success = false;
+                        continue;
+                }
+            }
+
+            // NOTE: we only try to set the value if we were passed a value in the group
+            if (mouseSpeedValue != null)
+            {
+                // uiParam
+                // NOTE: in this implementation, we ignore the representation and pass in the bool value in the API call
+                //
+                // pvParam
+                // NOTE: in this implementation, we ignore the representation as this value should be null
+                //
+                // fWinIni = flags
+                // OBSERVATION: for security purposes, we may want to consider hard-coding these flags or otherwise limiting them
+                // NOTE: we should review and sanity-check the setting in the solutions registry
+                var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+                if (fWinIniAsString != null)
+                {
+                    var parseFlagsResult = SPISettingsHandler.ParseWinIniFlags(fWinIniAsString);
+                    if (parseFlagsResult.IsSuccess == true)
+                    {
+                        fWinIni = parseFlagsResult.Value!;
+                    }
+                }
+
+                var internalSpiSetResult = SPISettingsHandler.InternalSpiSetValueViaPvParamValue(PInvoke.User32.SystemParametersInfoAction.SPI_SETMOUSESPEED, mouseSpeedValue.Value, fWinIni);
+                if (internalSpiSetResult.IsError == true)
+                {
+                    return IMorphicResult.ErrorResult;
+                }
+            }
+            else
+            {
+                success = false;
             }
 
             return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
