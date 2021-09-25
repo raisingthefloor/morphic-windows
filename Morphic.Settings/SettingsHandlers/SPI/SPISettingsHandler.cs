@@ -118,6 +118,16 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                         }
                     }
                     break;
+                case "SPI_GETMOUSEBUTTONSWAP":
+                    {
+                        var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SystemMetricsGetMouseButtonSwap(settings);
+                        success = spiGetMorphicResult.IsSuccess;
+                        if (success == true)
+                        {
+                            values = spiGetValues;
+                        }
+                    }
+                    break;
                 case "SPI_GETMESSAGEDURATION":
                     {
                         var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetMessageDuration(settings);
@@ -768,6 +778,59 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             return IMorphicResult<ulong>.SuccessResult(result);
         }
 
+        // NOTE: to get the current mouse button swap state, the GetSystemMetrics API is used instead of SystemParametersInfo; this deserves some thoughts around refactoring
+        private static (IMorphicResult, Values) SystemMetricsGetMouseButtonSwap(IEnumerable<Setting> settings)
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation as this setting does not use the SystemParametersInfo API
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation as this setting does not use the SystemParametersInfo API
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags as this setting does not use the SystemParametersInfo API
+
+            var internalGetMouseButtonSwapResult = SPISettingsHandler.InternalSystemMetricsGetMouseButtonSwap();
+            if (internalGetMouseButtonSwapResult.IsError == true)
+            {
+                // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
+                return (IMorphicResult.ErrorResult, new Values());
+            }
+            var mouseButtonSwapValue = internalGetMouseButtonSwapResult.Value!;
+
+            //
+
+            var success = true;
+            var values = new Values();
+
+            foreach (Setting setting in settings)
+            {
+                switch (setting.Name)
+                {
+                    case "SwapMouseButtonsConfig":
+                        var swapMouseButtonsConfig = mouseButtonSwapValue;
+                        values.Add(setting, swapMouseButtonsConfig);
+                        break;
+                    default:
+                        success = false;
+                        values.Add(setting, null, Values.ValueType.NotFound);
+                        continue;
+                }
+            }
+
+            return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
+        }
+
+        // NOTE: to get the current mouse button swap state, the GetSystemMetrics API is used instead of SystemParametersInfo; this deserves some thoughts around refactoring
+        private static IMorphicResult<bool> InternalSystemMetricsGetMouseButtonSwap()
+        {
+            var getSystemMetricsResult = PInvoke.User32.GetSystemMetrics(PInvoke.User32.SystemMetric.SM_SWAPBUTTON);
+
+            bool result = (getSystemMetricsResult != 0) ? true : false;
+
+            return IMorphicResult<bool>.SuccessResult(result);
+        }
+
         private static (IMorphicResult, Values) SpiGetMouseKeys(IEnumerable<Setting> settings)
         {
             // uiParam
@@ -1216,6 +1279,12 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                         success = spiSetMorphicResult.IsSuccess;
                     }
                     break;
+                case "SPI_SETMOUSEBUTTONSWAP":
+                    {
+                        var spiSetMorphicResult = SPISettingsHandler.SpiSetMouseButtonSwap(spiSettingGroup.fWinIni, values);
+                        success = spiSetMorphicResult.IsSuccess;
+                    }
+                    break;
                 case "SPI_SETMESSAGEDURATION":
                     {
                         var spiSetMorphicResult = SPISettingsHandler.SpiSetMessageDuration(spiSettingGroup.fWinIni, values);
@@ -1646,10 +1715,10 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             if (keyboardPrefValue.HasValue == true)
             {
                 // uiParam
-                // NOTE: in this implementation, we ignore the representation and pass in the actual bool type size in the API call
+                // NOTE: in this implementation, we ignore the representation and pass in the bool value in the API call
                 //
                 // pvParam
-                // NOTE: in this implementation, we ignore the representation and create our own buffer
+                // NOTE: in this implementation, we ignore the representation as this value should be null
                 //
                 // fWinIni = flags
                 // OBSERVATION: for security purposes, we may want to consider hard-coding these flags or otherwise limiting them
@@ -1775,6 +1844,85 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             //              of passing a pointer to a value); so we're passing it as an IntPtr.
             // OBSERVATION: values of 1-4 are invalid and will be ignored by Windows; we should create some kind of sanity check, range or other filter for this parameter
             var spiResult = PInvoke.User32.SystemParametersInfo((PInvoke.User32.SystemParametersInfoAction)ExtendedPInvoke.SPI_SETMESSAGEDURATION, 0, messageDurationInSecondsAsIntPtr, fWinIni);
+            if (spiResult == false)
+            {
+                success = false;
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        private static IMorphicResult SpiSetMouseButtonSwap(string? fWinIniAsString, Values values)
+        {
+            var success = true;
+
+            bool? mouseButtonSwapValue = null;
+
+            foreach (var value in values)
+            {
+                switch (value.Key.Name)
+                {
+                    case "SwapMouseButtonsConfig":
+                        {
+                            var valueAsNullableBool = value.Value as bool?;
+                            if (valueAsNullableBool == null)
+                            {
+                                success = false;
+                                continue;
+                            }
+                            var valueAsBool = valueAsNullableBool.Value;
+
+                            mouseButtonSwapValue = valueAsBool;
+                        }
+                        break;
+                    default:
+                        success = false;
+                        continue;
+                }
+            }
+
+            if (mouseButtonSwapValue.HasValue == true)
+            {
+                // uiParam
+                // NOTE: in this implementation, we ignore the representation and pass in the bool value in the API call
+                //
+                // pvParam
+                // NOTE: in this implementation, we ignore the representation as this value should be null
+                //
+                // fWinIni = flags
+                // OBSERVATION: for security purposes, we may want to consider hard-coding these flags or otherwise limiting them
+                // NOTE: we should review and sanity-check the setting in the solutions registry
+                var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+                if (fWinIniAsString != null)
+                {
+                    var parseFlagsResult = SPISettingsHandler.ParseWinIniFlags(fWinIniAsString);
+                    if (parseFlagsResult.IsSuccess == true)
+                    {
+                        fWinIni = parseFlagsResult.Value!;
+                    }
+                }
+
+                var internalSetMouseButtonSwapResult = SPISettingsHandler.InternalSpiSetMouseButtonSwap(mouseButtonSwapValue.Value, fWinIni);
+                if (internalSetMouseButtonSwapResult.IsError == true)
+                {
+                    return IMorphicResult.ErrorResult;
+                }
+            }
+            else
+            {
+                success = false;
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        private static IMorphicResult InternalSpiSetMouseButtonSwap(bool mouseButtonSwapValue, PInvoke.User32.SystemParametersInfoFlags fWinIni)
+        {
+            var success = true;
+
+            var mouseButtonSwapValueAsUInt = (uint)(mouseButtonSwapValue ? 1 : 0);
+
+            var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_SETMOUSEBUTTONSWAP, mouseButtonSwapValueAsUInt, IntPtr.Zero, fWinIni);
             if (spiResult == false)
             {
                 success = false;
@@ -1951,10 +2099,10 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             if (mouseTrailsValue != null)
             {
                 // uiParam
-                // NOTE: in this implementation, we ignore the representation as it is not used
+                // NOTE: in this implementation, we ignore the representation and pass in the bool value in the API call
                 //
                 // pvParam
-                // NOTE: in this implementation, we ignore the representation and create our own buffer
+                // NOTE: in this implementation, we ignore the representation as this value should be null
                 //
                 // fWinIni = flags
                 // OBSERVATION: for security purposes, we may want to consider hard-coding these flags or otherwise limiting them
