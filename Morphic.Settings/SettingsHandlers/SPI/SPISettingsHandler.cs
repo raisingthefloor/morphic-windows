@@ -68,6 +68,16 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                         }
                     }
                     break;
+                case "SPI_GETCURSORSHADOW":
+                    {
+                        var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetCursorShadow(settings);
+                        success = spiGetMorphicResult.IsSuccess;
+                        if (success == true)
+                        {
+                            values = spiGetValues;
+                        }
+                    }
+                    break;
                 case "SPI_GETDESKWALLPAPER":
                     {
                         var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetDesktopWallpaper(spiSettingGroup.uiParam, settings);
@@ -188,6 +198,16 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                         }
                     }
                     break;
+                case "SPI_GETWHEELSCROLLCHARS":
+                    {
+                        var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetWheelScrollChars(settings);
+                        success = spiGetMorphicResult.IsSuccess;
+                        if (success == true)
+                        {
+                            values = spiGetValues;
+                        }
+                    }
+                    break;
                 case "SPI_GETWHEELSCROLLLINES":
                     {
                         var (spiGetMorphicResult, spiGetValues) = SPISettingsHandler.SpiGetWheelScrollLines(settings);
@@ -299,6 +319,91 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             }
 
             return IMorphicResult<ExtendedPInvoke.AUDIODESCRIPTION>.SuccessResult(result);
+        }
+
+        private static (IMorphicResult, Values) SpiGetCursorShadow(IEnumerable<Setting> settings)
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation and pass in the actual bool type size in the API call
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            var internalGetCursorShadowResult = SPISettingsHandler.InternalSpiGetCursorShadow();
+            if (internalGetCursorShadowResult.IsError == true)
+            {
+                // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
+                return (IMorphicResult.ErrorResult, new Values());
+            }
+            var cursorShadowValue = internalGetCursorShadowResult.Value!;
+
+            //
+
+            var success = true;
+            var values = new Values();
+
+            foreach (Setting setting in settings)
+            {
+                switch (setting.Name)
+                {
+                    case "MouseCursorShadowEnable":
+                        var underlineMenuShortcutsOn = cursorShadowValue;
+                        values.Add(setting, underlineMenuShortcutsOn);
+                        break;
+                    default:
+                        success = false;
+                        values.Add(setting, null, Values.ValueType.NotFound);
+                        continue;
+                }
+            }
+
+            return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
+        }
+
+        private static IMorphicResult<bool> InternalSpiGetCursorShadow()
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation and pass in the actual bool type size in the API call
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            bool result;
+
+            var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+
+            bool pvParamAsBool = false;
+            var pointerToBool = Marshal.AllocHGlobal(Marshal.SizeOf<bool>());
+            try
+            {
+                Marshal.StructureToPtr(pvParamAsBool, pointerToBool, false);
+
+                var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_GETCURSORSHADOW, 0, pointerToBool, fWinIni);
+                if (spiResult == true)
+                {
+                    result = Marshal.PtrToStructure<bool>(pointerToBool);
+                }
+                else
+                {
+                    return IMorphicResult<bool>.ErrorResult();
+                }
+            }
+            catch
+            {
+                return IMorphicResult<bool>.ErrorResult();
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(pointerToBool);
+            }
+
+            return IMorphicResult<bool>.SuccessResult(result);
         }
 
         private static (IMorphicResult, Values) SpiGetDesktopWallpaper(object? uiParamAsObject, IEnumerable<Setting> settings)
@@ -1303,6 +1408,94 @@ namespace Morphic.Settings.SettingsHandlers.SPI
         }
 
 
+        private static (IMorphicResult, Values) SpiGetWheelScrollChars(IEnumerable<Setting> settings)
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation as it is unused
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            var internalGetWheelScrollCharsResult = SPISettingsHandler.InternalSpiGetWheelScrollChars();
+            if (internalGetWheelScrollCharsResult.IsError == true)
+            {
+                // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
+                return (IMorphicResult.ErrorResult, new Values());
+            }
+            var wheelScrollCharsValue = internalGetWheelScrollCharsResult.Value!;
+
+            //
+
+            var success = true;
+            var values = new Values();
+
+            foreach (Setting setting in settings)
+            {
+                switch (setting.Name)
+                {
+                    case "ScrollCharsConfig":
+
+                        values.Add(setting, wheelScrollCharsValue);
+                        break;
+                    default:
+                        success = false;
+                        values.Add(setting, null, Values.ValueType.NotFound);
+                        continue;
+                }
+            }
+
+            return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
+        }
+
+        private static IMorphicResult<uint> InternalSpiGetWheelScrollChars()
+        {
+            // uiParam
+            // NOTE: in this implementation, we ignore the representation as it is unused
+            //
+            // pvParam
+            // NOTE: in this implementation, we ignore the representation and create our own buffer
+            //
+            // fWinIni = flags
+            // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
+
+            // OBSERVATION: we did not find the exact type required for this data in the Microsoft documentation; they said "integer" so we assume int32/uint32,
+            //              and the GPII-ported solutions registry says uint (uint32)
+            uint result;
+
+            var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+
+            uint pvParamAsUint = 0;
+
+            var pointerToUint = Marshal.AllocHGlobal(Marshal.SizeOf<uint>());
+            try
+            {
+                Marshal.StructureToPtr(pvParamAsUint, pointerToUint, false);
+
+                var spiResult = PInvoke.User32.SystemParametersInfo((PInvoke.User32.SystemParametersInfoAction)ExtendedPInvoke.SPI_GETWHEELSCROLLCHARS, 0, pointerToUint, fWinIni);
+                if (spiResult == true)
+                {
+                    result = Marshal.PtrToStructure<uint>(pointerToUint);
+                }
+                else
+                {
+                    return IMorphicResult<uint>.ErrorResult();
+                }
+            }
+            catch
+            {
+                return IMorphicResult<uint>.ErrorResult();
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(pointerToUint);
+            }
+
+            return IMorphicResult<uint>.SuccessResult(result);
+        }
+
         private static (IMorphicResult, Values) SpiGetWheelScrollLines(IEnumerable<Setting> settings)
         {
             // uiParam
@@ -1314,7 +1507,7 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             // fWinIni = flags
             // NOTE: in this implementation, we ignore the fWiniIni flags (since this is a get operation, and fWinIni flags are only for set operations)
 
-            var internalGetWheelScrollLinesResult = SPISettingsHandler.InternalSpiGetWheelScrollLine();
+            var internalGetWheelScrollLinesResult = SPISettingsHandler.InternalSpiGetWheelScrollLines();
             if (internalGetWheelScrollLinesResult.IsError == true)
             {
                 // NOTE: we may want to consider returning a Values set which says "an internal error resulted in values not being returned"
@@ -1345,7 +1538,7 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
         }
 
-        private static IMorphicResult<uint> InternalSpiGetWheelScrollLine()
+        private static IMorphicResult<uint> InternalSpiGetWheelScrollLines()
         {
             // uiParam
             // NOTE: in this implementation, we ignore the representation as it is unused
@@ -1446,6 +1639,12 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                         success = spiSetMorphicResult.IsSuccess;
                     }
                     break;
+                case "SPI_SETCURSORSHADOW":
+                    {
+                        var spiSetMorphicResult = SPISettingsHandler.SpiSetCursorShadow(spiSettingGroup.fWinIni, values);
+                        success = spiSetMorphicResult.IsSuccess;
+                    }
+                    break;
                 case "SPI_SETDESKWALLPAPER":
                     {
                         var spiSetMorphicResult = SPISettingsHandler.SpiSetDesktopWallpaper(spiSettingGroup.fWinIni, values);
@@ -1518,9 +1717,15 @@ namespace Morphic.Settings.SettingsHandlers.SPI
                         success = spiSetMorphicResult.IsSuccess;
                     }
                     break;
+                case "SPI_SETWHEELSCROLLCHARS":
+                    {
+                        var spiSetMorphicResult = SPISettingsHandler.SpiSetWheelScrollChars(spiSettingGroup.fWinIni, values);
+                        success = spiSetMorphicResult.IsSuccess;
+                    }
+                    break;
                 case "SPI_SETWHEELSCROLLLINES":
                     {
-                        var spiSetMorphicResult = SPISettingsHandler.SpiSetToggleKeys(spiSettingGroup.fWinIni, values);
+                        var spiSetMorphicResult = SPISettingsHandler.SpiSetWheelScrollLines(spiSettingGroup.fWinIni, values);
                         success = spiSetMorphicResult.IsSuccess;
                     }
                     break;
@@ -1625,6 +1830,86 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             finally
             {
                 Marshal.FreeHGlobal(pointerToAudioDescription);
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+
+        private static IMorphicResult SpiSetCursorShadow(string? fWinIniAsString, Values values)
+        {
+            var success = true;
+
+            bool? cursorShadowValue = null;
+
+            foreach (var value in values)
+            {
+                switch (value.Key.Name)
+                {
+                    case "MouseCursorShadowEnable":
+                        {
+                            var valueAsNullableBool = value.Value as bool?;
+                            if (valueAsNullableBool == null)
+                            {
+                                success = false;
+                                continue;
+                            }
+                            var valueAsBool = valueAsNullableBool.Value;
+
+                            cursorShadowValue = valueAsBool;
+                        }
+                        break;
+                    default:
+                        success = false;
+                        continue;
+                }
+            }
+
+            if (cursorShadowValue.HasValue == true)
+            {
+                // uiParam
+                // NOTE: in this implementation, we ignore the representation and pass in the actual bool type size in the API call
+                //
+                // pvParam
+                // NOTE: in this implementation, we ignore the representation and create our own buffer
+                //
+                // fWinIni = flags
+                // OBSERVATION: for security purposes, we may want to consider hard-coding these flags or otherwise limiting them
+                // NOTE: we should review and sanity-check the setting in the solutions registry
+                var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+                if (fWinIniAsString != null)
+                {
+                    var parseFlagsResult = SPISettingsHandler.ParseWinIniFlags(fWinIniAsString);
+                    if (parseFlagsResult.IsSuccess == true)
+                    {
+                        fWinIni = parseFlagsResult.Value!;
+                    }
+                }
+
+                var internalSetCursorShadowResult = SPISettingsHandler.InternalSpiSetCursorShadow(cursorShadowValue.Value, fWinIni);
+                if (internalSetCursorShadowResult.IsError == true)
+                {
+                    return IMorphicResult.ErrorResult;
+                }
+            }
+            else
+            {
+                success = false;
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        private static IMorphicResult InternalSpiSetCursorShadow(bool cursorShadowValue, PInvoke.User32.SystemParametersInfoFlags fWinIni)
+        {
+            var success = true;
+
+            var cursorShadowValueAsIntPtr = new IntPtr(cursorShadowValue ? 1 : 0);
+
+            var spiResult = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_SETCURSORSHADOW, 0, cursorShadowValueAsIntPtr, fWinIni);
+            if (spiResult == false)
+            {
+                success = false;
             }
 
             return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
@@ -2752,6 +3037,94 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
         }
 
+
+        private static IMorphicResult SpiSetWheelScrollChars(string? fWinIniAsString, Values values)
+        {
+            var success = true;
+
+            // NOTE: since the data passed to/from the SPI function is a primitive type and not a struct, there is no need to read the value before writing
+
+            uint? wheelScrollCharsValue = null;
+
+            foreach (var value in values)
+            {
+                switch (value.Key.Name)
+                {
+                    case "ScrollCharsConfig":
+                        {
+                            var convertValueToUIntResult = ConversionUtils.TryConvertObjectToUInt(value.Value);
+                            if (convertValueToUIntResult.IsError == true)
+                            {
+                                success = false;
+                                continue;
+                            }
+                            var valueAsUInt = convertValueToUIntResult.Value!;
+
+                            // validate the range
+                            if (valueAsUInt < 0 || valueAsUInt > 10)
+                            {
+                                success = false;
+                                continue;
+                            }
+
+                            wheelScrollCharsValue = valueAsUInt;
+                        }
+                        break;
+                    default:
+                        success = false;
+                        continue;
+                }
+            }
+
+            // NOTE: we only try to set the value if we were passed a value in the group
+            if (wheelScrollCharsValue != null)
+            {
+                // uiParam
+                // NOTE: in this implementation, we ignore the representation and pass in the uint value in the API call
+                //
+                // pvParam
+                // NOTE: in this implementation, we ignore the representation as this value should be null
+                //
+                // fWinIni = flags
+                // OBSERVATION: for security purposes, we may want to consider hard-coding these flags or otherwise limiting them
+                // NOTE: we should review and sanity-check the setting in the solutions registry
+                var fWinIni = PInvoke.User32.SystemParametersInfoFlags.None;
+                if (fWinIniAsString != null)
+                {
+                    var parseFlagsResult = SPISettingsHandler.ParseWinIniFlags(fWinIniAsString);
+                    if (parseFlagsResult.IsSuccess == true)
+                    {
+                        fWinIni = parseFlagsResult.Value!;
+                    }
+                }
+
+                var internalSetWheelScrollCharsResult = SPISettingsHandler.InternalSpiSetWheelScrollChars(wheelScrollCharsValue.Value, fWinIni);
+                if (internalSetWheelScrollCharsResult.IsError == true)
+                {
+                    return IMorphicResult.ErrorResult;
+                }
+            }
+            else
+            {
+                success = false;
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
+        private static IMorphicResult InternalSpiSetWheelScrollChars(uint wheelScrollCharsValue, PInvoke.User32.SystemParametersInfoFlags fWinIni)
+        {
+            var success = true;
+
+            var spiResult = PInvoke.User32.SystemParametersInfo((PInvoke.User32.SystemParametersInfoAction)ExtendedPInvoke.SPI_SETWHEELSCROLLCHARS, wheelScrollCharsValue, IntPtr.Zero, fWinIni);
+            if (spiResult == false)
+            {
+                success = false;
+            }
+
+            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+        }
+
         private static IMorphicResult SpiSetWheelScrollLines(string? fWinIniAsString, Values values)
         {
             var success = true;
@@ -2794,7 +3167,7 @@ namespace Morphic.Settings.SettingsHandlers.SPI
             if (wheelScrollLinesValue != null)
             {
                 // uiParam
-                // NOTE: in this implementation, we ignore the representation and pass in the bool value in the API call
+                // NOTE: in this implementation, we ignore the representation and pass in the uint value in the API call
                 //
                 // pvParam
                 // NOTE: in this implementation, we ignore the representation as this value should be null
