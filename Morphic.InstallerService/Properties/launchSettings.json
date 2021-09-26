@@ -1,0 +1,14 @@
+{
+  "profiles": {
+    "InstallerService": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      },
+      "remoteDebugEnabled": false,
+      "remoteDebugMachine": "DESKTOP-7664DSH",
+      "dotnetRunMessages": true,
+      "authenticationMode": "None"
+    }
+  }
+}

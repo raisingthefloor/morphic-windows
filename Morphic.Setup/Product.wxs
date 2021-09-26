@@ -13,6 +13,8 @@
 
         <Feature Id="ProductFeature" Title="Morphic" Level="1">
             <ComponentGroupRef Id="GeneratedComponents"/>
+            <ComponentGroupRef Id="InstallerServiceGeneratedComponents"/>
+            <ComponentGroupRef Id="InstallerServiceClientGeneratedComponents"/>
             <ComponentRef Id="ApplicationComponent"/>
             <ComponentRef Id="DesktopIconComponent"/>
         </Feature>
@@ -38,7 +40,10 @@
   <Fragment>
         <Directory Id="TARGETDIR" Name="SourceDir">
             <Directory Id="ProgramFiles64Folder">
-                <Directory Id="INSTALLFOLDER" Name="Morphic"/>
+              <Directory Id="INSTALLFOLDER" Name="Morphic">
+                <Directory Id="SERVICEFOLDER" Name="InstallerService"/>
+                <Directory Id="SERVICECLIENTFOLDER" Name="InstallerServiceClient"/>
+              </Directory>
             </Directory>
             <Directory Id="ProgramMenuFolder"/>
             <Directory Id="DesktopFolder"/>

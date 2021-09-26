@@ -17,6 +17,12 @@
     <menu:MorphicMenuItem Header="Sign out of Morphic" x:Name="LogoutItem" Click="Logout" />
     <menu:MorphicMenuItem Header="Sign into Morphic..." x:Name="LoginItem" Click="Login" />
 
+    <Separator/>
+    
+    <menu:MorphicMenuHeader Header="Jaws"/>
+    <menu:MorphicMenuItem Header="Install Jaws" Click="InstallJawsClick" />
+    <menu:MorphicMenuItem Header="Uninstall Jaws" Click="UninstallJawsClick" />
+
     <Separator x:Name="ChangeMorphicBarSeparator"/>
     <MenuItem Header="Change MorphicBar" x:Name="ChangeMorphicBar">
         <MenuItem Header="Basic MorphicBar" x:Name="SelectBasicMorphicBar" Click="SelectBasicMorphicBarClick" />

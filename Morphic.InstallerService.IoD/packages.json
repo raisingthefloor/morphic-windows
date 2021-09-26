@@ -1,0 +1,38 @@
+[
+  {
+    "enabled": false,
+    "name": "PowerShell",
+    "type": "msi",
+    "url": "https://github.com/PowerShell/PowerShell/releases/download/v7.1.3/PowerShell-7.1.3-win-x64.msi",
+    "hash": "459642D8B6D69F643794DF8394F28191F43E5ED35472899C4F0D8424F6D1317C",
+    "hashType": "SHA256"
+  },
+  {
+    "enabled": false,
+    "name": "Process Explorer",
+    "type": "zip",
+    "url": "https://download.sysinternals.com/files/ProcessExplorer.zip",
+    "hash": "683D1507C5FEE0DDD8A99366237820623BD634D73006C3B174A7DDF4AEFB359D",
+    "hashType": "SHA256"
+  },
+  {
+    "enabled": false,
+    "name": "7-Zip",
+    "type": "exe",
+    "commandArguments": "/S",
+    "uninstallCommand": "C:\\Program Files\\7-Zip\\Uninstall.exe /S /V /qn /norestart",
+    "url": "https://www.7-zip.org/a/7z1900-x64.exe",
+    "hash": "0f5d4dbbe5e55b7aa31b91e5925ed901fdf46a367491d81381846f05ad54c45e",
+    "hashType": "SHA256"
+  },
+  {
+    "enabled": true,
+    "name": "JAWS",
+    "type": "jaws",
+    "commandArguments": "/qn /Layout \"c:\\FS setup\\OfflineSetup\"",
+    "url": "https://jaws2021.vfo.digital/2021.2107.12.400/CCCC3B93-1C9A-4AD9-B616-923E91ED7651/J2021.2107.12.400-any.exe",
+    "hash": "6d6ac777dcccc12ece8b535655ca995d447902f49f12f52720980218b4d3ed04",
+    "hashType": "SHA256"
+  }
+]
+

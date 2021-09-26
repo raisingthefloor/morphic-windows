@@ -8,3 +8,5 @@ Morphic.Client/appsettings.json
 Morphic.Client/app.manifest
 Morphic.Client/BuildVersion.txt
 Morphic.Bar
+/Morphic.Setup/InstallerServiceGenerated.wxs
+/Morphic.Setup/InstallerServiceClientGenerated.wxs

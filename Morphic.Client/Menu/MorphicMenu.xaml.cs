@@ -8,6 +8,8 @@
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.IO;
+    using System.Reflection;
     using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Controls;
@@ -359,6 +361,35 @@
             AppOptions.Current.LastCommunity = null;
             AppOptions.Current.LastMorphicbarId = null;
             App.Current.BarManager.LoadBasicMorphicBar();
+        }
+
+        private void InstallJawsClick(object sender, RoutedEventArgs e)
+        {
+            Execute(@"InstallerServiceClient\Morphic.InstallerService.Client.exe", "install");
+        }
+
+        private void UninstallJawsClick(object sender, RoutedEventArgs e)
+        {
+            Execute(@"InstallerServiceClient\Morphic.InstallerService.Client.exe", "uninstall");
+        }
+
+        private static async Task Execute(string path, string arguments)
+        {
+            var currentPath = Assembly.GetExecutingAssembly().Location;
+            var filePath = Path.Combine(Path.GetDirectoryName(currentPath) ?? string.Empty, path);
+
+            var processInfo = new ProcessStartInfo
+            {
+                UseShellExecute = true,
+                Verb = "runas",
+
+                FileName = filePath,
+                Arguments = arguments
+            };
+
+            var process = Process.Start(processInfo);
+
+            process.WaitForExit();
         }
     }
 

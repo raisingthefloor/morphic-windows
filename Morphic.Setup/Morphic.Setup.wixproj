@@ -19,6 +19,8 @@
   <ItemGroup>
     <Compile Include="Product.wxs" />
     <Compile Include="Generated.wxs" />
+    <Compile Include="InstallerServiceGenerated.wxs" />
+    <Compile Include="InstallerServiceClientGenerated.wxs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Morphic.Client\Morphic.Client.csproj">
@@ -29,8 +31,17 @@
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
       <RefTargetDir>INSTALLFOLDER</RefTargetDir>
     </ProjectReference>
+    <ProjectReference Include="..\Morphic.InstallerService\Morphic.InstallerService.csproj">
+      <Name>Morphic.InstallerService</Name>
+      <Project>{0a0f3809-e1bb-45cb-9ee9-605aae734208}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="InstallerServiceTransforms.xslt" />
     <Content Include="License.rtf" />
   </ItemGroup>
   <ItemGroup>
@@ -49,7 +60,7 @@
     <Error Text="The WiX Toolset v3.11 (or newer) build tools must be installed to build this project. To download the WiX Toolset, see http://wixtoolset.org/releases/" />
   </Target>
   <PropertyGroup>
-    <DefineConstants>ClientOutputDirectory=..\Morphic.Client\bin\$(Configuration)\netcoreapp3.1\win-x64\publish</DefineConstants>
+    <DefineConstants>ClientOutputDirectory=..\Morphic.Client\bin\$(Configuration)\netcoreapp3.1\win-x64\publish;InstallerServiceOutputDirectory=..\Morphic.InstallerService\bin\$(Configuration)\net5.0-windows10.0.17763\win-x64\publish;InstallerServiceClientOutputDirectory=..\Morphic.InstallerService.Client\bin\$(Configuration)\netcoreapp3.1\win-x64\publish</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
     <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
@@ -65,9 +76,15 @@
   </PropertyGroup>
   <Target Name="AfterPreBuild" AfterTargets="PreBuildEvent">
     <HeatDirectory Directory="..\Morphic.Client\bin\$(Configuration)\netcoreapp3.1\win-x64\publish" PreprocessorVariable="var.ClientOutputDirectory" OutputFile="Generated.wxs" ComponentGroupName="GeneratedComponents" DirectoryRefId="INSTALLFOLDER" AutogenerateGuids="true" ToolPath="$(WixToolPath)" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" />
+    <HeatDirectory Directory="..\Morphic.InstallerService\bin\$(Configuration)\net5.0-windows10.0.17763\win-x64\publish" Transforms="InstallerServiceTransforms.xslt" PreprocessorVariable="var.InstallerServiceOutputDirectory" OutputFile="InstallerServiceGenerated.wxs" ComponentGroupName="InstallerServiceGeneratedComponents" DirectoryRefId="SERVICEFOLDER" AutogenerateGuids="true" ToolPath="$(WixToolPath)" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" />
+    <HeatDirectory Directory="..\Morphic.InstallerService.Client\bin\$(Configuration)\netcoreapp3.1\win-x64\publish" PreprocessorVariable="var.InstallerServiceClientOutputDirectory" OutputFile="InstallerServiceClientGenerated.wxs" ComponentGroupName="InstallerServiceClientGeneratedComponents" DirectoryRefId="SERVICECLIENTFOLDER" AutogenerateGuids="true" ToolPath="$(WixToolPath)" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" />
   </Target>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <PreBuildEvent>dotnet publish $(ProjectDir)..\Morphic.Client\Morphic.Client.csproj -f netcoreapp3.1 -r win-x64 -c $(Configuration) -p:BuildType=$(BuildType)</PreBuildEvent>
+    <PreBuildEvent>
+      dotnet publish $(ProjectDir)..\Morphic.Client\Morphic.Client.csproj -f netcoreapp3.1 -r win-x64 -c $(Configuration) -p:BuildType=$(BuildType)
+      dotnet publish $(ProjectDir)..\Morphic.InstallerService\Morphic.InstallerService.csproj -f net5.0-windows10.0.17763 -r win-x64 -c $(Configuration) -p:BuildType=$(BuildType)
+      dotnet publish $(ProjectDir)..\Morphic.InstallerService.Client\Morphic.InstallerService.Client.csproj -f netcoreapp3.1 -r win-x64 -c $(Configuration) -p:BuildType=$(BuildType)
+    </PreBuildEvent>
   </PropertyGroup>
   <!--
 	To modify your build process, add your task inside one of the targets below and uncomment it.

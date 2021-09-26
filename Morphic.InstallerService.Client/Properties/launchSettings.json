@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Morphic.InstallerService.Client": {
+      "commandName": "Project",
+      "commandLineArgs": "install"
+    }
+  }
+}

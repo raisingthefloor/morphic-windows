@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "IoDCLI": {
+      "commandName": "Project",
+      "remoteDebugEnabled": true,
+      "remoteDebugMachine": "DESKTOP-7664DSH",
+      "authenticationMode": "None"
+    }
+  }
+}
