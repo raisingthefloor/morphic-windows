@@ -133,6 +133,13 @@ stages:
             projects: 'Morphic.InstallerService.Client/Morphic.InstallerService.Client.csproj'
             arguments: '-f netcoreapp3.1 -r win-x64 -c $(buildConfiguration) -p:BuildType=$(BUILD_TYPE)'
 
+        - task: UseDotNet@2
+          displayName: 'Use .NET SDK 5.0.301'
+          inputs:
+            packageType: sdk
+            version: 5.0.301
+            installationPath: $(Agent.ToolsDirectory)/dotnet
+            
         - task: DotNetCoreCLI@2
           displayName: Publish Morphic Installer Service
           inputs:
