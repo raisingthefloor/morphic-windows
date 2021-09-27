@@ -61,5 +61,47 @@ namespace Morphic.InstallerService
                 }
             });
         }
+
+        public async Task Install(string application, string[] arguments)
+        {
+            _logger.LogInformation($"Install called for application '{application}'.");
+
+            var user = WindowsIdentityHelper.GetLoggedOnUsers().First();
+
+            await WindowsIdentity.RunImpersonated(user.AccessToken, async () =>
+            {
+                var service = _serviceProvider.GetService<PackageManagerService>();
+
+                if (service != null)
+                {
+                    await service.InstallJaws(arguments);
+                }
+                else
+                {
+                    _logger.LogError("Unable to resolve package manager service.");
+                }
+            });
+        }
+
+        public async Task Uninstall(string application, string[] arguments)
+        {
+            _logger.LogInformation($"Uninstall called for application '{application}'.");
+
+            var user = WindowsIdentityHelper.GetLoggedOnUsers().First();
+
+            await WindowsIdentity.RunImpersonated(user.AccessToken, async () =>
+            {
+                var service = _serviceProvider.GetService<PackageManagerService>();
+
+                if (service != null)
+                {
+                    await service.UninstallJaws(arguments);
+                }
+                else
+                {
+                    _logger.LogError("Unable to resolve package manager service.");
+                }
+            });
+        }
     }
 }

@@ -64,6 +64,36 @@ namespace IoDCLI
             }
         }
 
+        public async Task InstallJaws(string[] arguments)
+        {
+            if (arguments.Length > 0)
+            {
+                var workflow = new JawsWorkflow(null, (sender, args) => HandleProgress(args), _logger)
+                {
+                    SourcePath = arguments[0]
+                };
+
+                await workflow.Install();
+            }
+
+            await Task.CompletedTask;
+        }
+
+        public async Task UninstallJaws(string[] arguments)
+        {
+            if (arguments.Length > 0)
+            {
+                var workflow = new JawsWorkflow(null, (sender, args) => HandleProgress(args), _logger)
+                {
+                    SourcePath = arguments[0]
+                };
+
+                await workflow.Uninstall();
+            }
+
+            await Task.CompletedTask;
+        }
+
         public async Task ProcessPackages()
         {
             _logger.LogInformation($"{Platform.Name}");

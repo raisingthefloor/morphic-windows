@@ -14,7 +14,10 @@
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Controls.Primitives;
+    using System.Windows.Forms;
     using Windows.Native.Input;
+
+    using Control = System.Windows.Controls.Control;
 
     public partial class MorphicMenu : ContextMenu
     {
@@ -365,12 +368,28 @@
 
         private void InstallJawsClick(object sender, RoutedEventArgs e)
         {
-            Execute(@"InstallerServiceClient\Morphic.InstallerService.Client.exe", "install");
+            var dialog = new FolderBrowserDialog();
+
+            var result = dialog.ShowDialog();
+
+            if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(dialog.SelectedPath))
+            {
+                var arguments = $"install jaws \"{dialog.SelectedPath}\"";
+                Execute(@"InstallerServiceClient\Morphic.InstallerService.Client.exe", arguments);
+            }
         }
 
         private void UninstallJawsClick(object sender, RoutedEventArgs e)
         {
-            Execute(@"InstallerServiceClient\Morphic.InstallerService.Client.exe", "uninstall");
+            var dialog = new FolderBrowserDialog();
+
+            var result = dialog.ShowDialog();
+
+            if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(dialog.SelectedPath))
+            {
+                var arguments = $"uninstall jaws {dialog.SelectedPath}";
+                Execute(@"InstallerServiceClient\Morphic.InstallerService.Client.exe", arguments);
+            }
         }
 
         private static async Task Execute(string path, string arguments)

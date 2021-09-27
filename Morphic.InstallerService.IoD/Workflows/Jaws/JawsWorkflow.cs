@@ -44,8 +44,11 @@ namespace IoDCLI.Workflows.Jaws
                 new Package { Url = @"x64\JAWSStart.msi", Hash = "ABCF5DA4A16FE5705642A9FE5C6A6E9453A085ABBA4818329EDC4F00315009D4", HashType = "SHA256", CommandArguments = "ALLUSERS=1 REBOOT=ReallySuppress ARPSYSTEMCOMPONENT=1" },
             };
 
+        public string SourcePath { get; set; }
+
         public JawsWorkflow(Package package, EventHandler<ProgressEventArgs> progressHandler, ILogger logger) : base(package, progressHandler, logger)
         {
+            SourcePath = @"C:\FS setup\OfflineSetup\enu";
         }
 
         public override string GetFileExtension()
@@ -62,7 +65,7 @@ namespace IoDCLI.Workflows.Jaws
                 //if (Validate())
                 foreach (var msiToInstall in _msiToInstall)
                 {
-                    msiToInstall.Url = Path.Combine(@"C:\FS setup\OfflineSetup\enu", msiToInstall.Url);
+                    msiToInstall.Url = Path.Combine(SourcePath, msiToInstall.Url);
 
                     var workflow = new MsiWorkflow(msiToInstall, true, (sender, args) => HandleProgress(args), Logger);
 
@@ -106,7 +109,7 @@ namespace IoDCLI.Workflows.Jaws
         {
             foreach (var msiToInstall in _msiToInstall)
             {
-                msiToInstall.Url = Path.Combine(@"C:\FS setup\OfflineSetup\enu", msiToInstall.Url);
+                msiToInstall.Url = Path.Combine(SourcePath, msiToInstall.Url);
 
                 var workflow = new MsiWorkflow(msiToInstall, true, (sender, args) => HandleProgress(args), Logger);
 

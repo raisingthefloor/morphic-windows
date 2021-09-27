@@ -1,6 +1,7 @@
 ﻿using JKang.IpcServiceFramework.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Morphic.InstallerService.Contracts;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Morphic.InstallerService.Client
@@ -22,18 +23,30 @@ namespace Morphic.InstallerService.Client
 
             var client = clientFactory.CreateClient("client1");
 
-            if (args[0] == "install")
+            var action = args[0];
+            var application = args[1];
+            var arguments = new List<string>();
+
+            if (args.Length > 2)
+            {
+                for (var i = 2; i < args.Length; i++)
+                {
+                    arguments.Add(args[i]);
+                }
+            }
+
+            if (action == "install")
             {
                 await ConsoleUtils.BusyIndicator("Installing please wait.", async () =>
                 {
-                    await client.InvokeAsync(x => x.Install(package));
+                    await client.InvokeAsync(x => x.Install(application, arguments.ToArray()));
                 });
             }
-            else if (args[0] == "uninstall")
+            else if (action == "uninstall")
             {
                 await ConsoleUtils.BusyIndicator("Uninstalling please wait.", async () =>
                 {
-                    await client.InvokeAsync(x => x.Uninstall(package));
+                    await client.InvokeAsync(x => x.Uninstall(application, arguments.ToArray()));
                 });
             }
         }
