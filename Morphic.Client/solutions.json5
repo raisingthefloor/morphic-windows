@@ -8554,6 +8554,30 @@
   "com.microsoft.windows.desktopBackground": {
     "settings": [
       {
+        "type": "SPI",
+        "getAction": "SPI_GETDESKWALLPAPER",
+        "setAction": "SPI_SETDESKWALLPAPER",
+        "uiParam": 260,
+        "pvParam": {
+          "type": "array",
+          "valueType": "TCHAR",
+          "length": 260
+        },
+        "settings": {
+          "ImageConfig": {
+            "name": "ImageConfig",
+            "title": "Desktop background wallpaper",
+            "description": "The path to the image to be set as the new desktop wallpaper.",
+            "paths": [
+              {
+                "type": "string"
+              }
+            ],
+            "dataType": "string"
+          }
+        }
+      },
+      {
         "type": "registry",
         "path": "HKCU\\Control Panel\\Desktop",
         "settings": {
@@ -8599,7 +8623,46 @@
     ]
   },
   "com.microsoft.windows.desktopBackgroundColor": {
-    "settings": []
+    "settings": [
+      {
+        "type": "native",
+        "settings": {
+          "SolidColorConfigR": {
+            "name": "SolidColorConfigR",
+            "title": "Desktop background red",
+            "description": "The red value to be set as desktop background.",
+            "functionName": "SolidColor",
+            "dataType": "int",
+            "range": {
+              "min": 0,
+              "max": 255
+            }
+          },
+          "SolidColorConfigG": {
+            "name": "SolidColorConfigG",
+            "title": "Desktop background green",
+            "description": "The green value to be set as desktop background.",
+            "functionName": "SolidColor",
+            "dataType": "int",
+            "range": {
+              "min": 0,
+              "max": 255
+            }
+          },
+          "SolidColorConfigB": {
+            "name": "SolidColorConfigB",
+            "title": "Desktop background blue",
+            "description": "The blue value to be set as desktop background.",
+            "functionName": "SolidColor",
+            "dataType": "int",
+            "range": {
+              "min": 0,
+              "max": 255
+            }
+          }
+        }
+      }
+    ]
   },
   "com.microsoft.windows.cursors": {
     "settings": [
@@ -8768,10 +8831,68 @@
     ]
   },
   "com.microsoft.windows.filterKeys": {
-    "settings": []
+    "settings": [
+      {
+        "type": "SPI",
+        "getAction": "SPI_GETFILTERKEYS",
+        "setAction": "SPI_SETFILTERKEYS",
+        "uiParam": "struct_size",
+        "pvParam": {
+          "type": "struct",
+          "name": "FILTERKEYS"
+        },
+        "settings": {
+          "FilterKeysEnable": {
+            "name": "FilterKeysEnable",
+            "title": "Filter keys",
+            "description": "Enable/Disable filter keys",
+            "paths": [
+              {
+                "type": "string"
+              }
+            ],
+            "dataType": "bool"
+          },
+          "SlowKeysInterval": {
+            "name": "SlowKeysInterval",
+            "title": "Slow keys interval",
+            "description": "Slow keys interval time in milliseconds",
+            "paths": [
+              {
+                "type": "string"
+              }
+            ],
+            "dataType": "int"
+          }
+        }
+      }
+    ]
   },
   "com.microsoft.windows.highContrast": {
     "settings": [
+      {
+        "type": "SPI",
+        "getAction": "SPI_GETHIGHCONTRAST",
+        "setAction": "SPI_SETHIGHCONTRAST",
+        "uiParam": "struct_size",
+        "pvParam": {
+          "type": "struct",
+          "name": "HIGHCONTRAST"
+        },
+        "settings": {
+          "HighContrastOn": {
+            "name": "HighContrastOn",
+            "title": "High Contrast",
+            "description": "Whether to enable/disable High Contrast",
+            "paths": [
+              {
+                "type": "string"
+              }
+            ],
+            "dataType": "bool"
+          }
+        }
+      },
       {
         "type": "registry",
         "path": "HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes",
@@ -8803,10 +8924,767 @@
     ]
   },
   "com.microsoft.windows.audioDescription": {
-    "settings": []
+    "settings": [
+      {
+        "type": "SPI",
+        "getAction": "SPI_GETAUDIODESCRIPTION",
+        "setAction": "SPI_SETAUDIODESCRIPTION",
+        "uiParam": "struct_size",
+        "pvParam": {
+          "type": "struct",
+          "name": "AUDIODESCRIPTION"
+        },
+        "settings": {
+          "AudioDescriptionOn": {
+            "name": "AudioDescriptionOn",
+            "title": "Video audio description",
+            "description": "Hear descriptions of what's happening in videos",
+            "paths": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "get": {
+                    "type": "string"
+                  },
+                  "set": {
+                    "type": "string"
+                  }
+                }
+              }
+            ],
+            "dataType": "bool",
+            "enum": {
+              "off": false,
+              "on": true
+            }
+          }
+        }
+      }
+    ]
   },
   "com.microsoft.windows.notificationDuration": {
-    "settings": []
+    "settings": [
+      {
+        "type": "SPI",
+        "getAction": "SPI_GETMESSAGEDURATION",
+        "setAction": "SPI_SETMESSAGEDURATION",
+        "uiParam": 0,
+        "pvParam": {
+          "type": "UINT"
+        },
+        "settings": {
+          "Duration": {
+            "name": "Duration",
+            "title": "Notification duration",
+            "description": "Changes the time system notifications are displayed",
+            "paths": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "get": {
+                    "type": "string"
+                  },
+                  "set": {
+                    "type": "string"
+                  }
+                }
+              }
+            ],
+            "dataType": "int"
+          }
+        }
+      }
+    ]
+  },
+  "com.microsoft.windows.toggleKeys": {
+    "settings": [
+      {
+        "type": "SPI",
+        "getAction": "SPI_GETTOGGLEKEYS",
+        "setAction": "SPI_SETTOGGLEKEYS",
+        "uiParam": "struct_size",
+        "pvParam": {
+          "type": "struct",
+          "name": "TOGGLEKEYS"
+        },
+        "settings": {
+          "ToggleKeysOn": {
+            "name": "ToggleKeysOn",
+            "title": "ToggleKeys accesibility feature",
+            "description": "Enable/Disable ToggleKeys feature",
+            "paths": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "get": {
+                    "type": "string"
+                  },
+                  "set": {
+                    "type": "string"
+                  }
+                }
+              }
+            ],
+            "dataType": "bool"
+          }
+        }
+      }
+    ]
+  },
+  "com.microsoft.windows.underlineMenuShortcuts": {
+    "settings": [
+      {
+        "type": "SPI",
+        "getAction": "SPI_GETKEYBOARDCUES",
+        "setAction": "SPI_SETKEYBOARDCUES",
+        "uiParam": 0,
+        "pvParam": {
+          "type": "BOOL"
+        },
+        "settings": {
+          "UnderlineMenuShortcutsOn": {
+            "name": "UnderlineMenuShortcutsOn",
+            "title": "Enable/Disable the underlining of menu shortcuts",
+            "description": "Displays a underline showing which is the shortcut to active a menu item",
+            "paths": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "get": {
+                    "type": "string"
+                  },
+                  "set": {
+                    "type": "string"
+                  }
+                }
+              }
+            ],
+            "dataType": "bool",
+            "enum": {
+              "Off": false,
+              "On": true
+            }
+          }
+        }
+      },
+      {
+        "type": "SPI",
+        "getAction": "SPI_GETKEYBOARDPREF",
+        "setAction": "SPI_SETKEYBOARDPREF",
+        "uiParam": 0,
+        "pvParam": {
+          "type": "BOOL"
+        },
+        "settings": {
+          "KeyboardPreferenceOn": {
+            "name": "KeyboardPreferenceOn",
+            "title": "Keyboard as preferred input method",
+            "description": "Set the keyboard as the preferred input method",
+            "paths": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "get": {
+                    "type": "string"
+                  },
+                  "set": {
+                    "type": "string"
+                  }
+                }
+              }
+            ],
+            "dataType": "bool"
+          }
+        }
+      }
+    ]
+  },
+  "com.microsoft.windows.mouseKeys": {
+    "settings": [
+      {
+        "type": "SPI",
+        "getAction": "SPI_GETMOUSEKEYS",
+        "setAction": "SPI_SETMOUSEKEYS",
+        "uiParam": "struct_size",
+        "pvParam": {
+          "type": "struct",
+          "name": "MOUSEKEYS"
+        },
+        "settings": {
+          "MouseKeysOn": {
+            "name": "MouseKeysOn",
+            "title": "Mouse keys",
+            "description": "Enable/Disable mouse keys",
+            "paths": [
+              {
+                "type": "string"
+              }
+            ],
+            "dataType": "bool"
+          },
+          "MaxSpeed": {
+            "name": "MaxSpeed",
+            "title": "Mouse keys speed",
+            "description": "Speed of mouse keys",
+            "paths": [
+              {
+                "type": "string"
+              }
+            ],
+            "dataType": "real",
+            "range": {
+              "min": 10.0,
+              "max": 360.0
+            }
+          }
+        }
+      }
+    ]
+  },
+  "com.microsoft.windows.mouseSettings": {
+    "settings": [
+      {
+        "type": "native",
+        "settings": {
+          "DoubleClickTimeConfig": {
+            "name": "DoubleClickTimeConfig",
+            "title": "Double click time",
+            "description": "Changes the amount of time that can elapse between a first click and a second click for the OS to consider the mouse action a double-click.",
+            "functionName": "DoubleClickTime",
+            "dataType": "int",
+            "range": {
+              "min": 500,
+              "max": 5000
+            }
+          }
+        }
+      },
+      {
+        "type": "native",
+        "settings": {
+          "DoubleClickWidthConfig": {
+            "name": "DoubleClickWidthConfig",
+            "title": "Double-click rectangle width",
+            "description": "Changes the width of the rectangle in which a second click should fall for OS to consider the mouse action a double-click.",
+            "functionName": "DoubleClickWidth",
+            "dataType": "int",
+            "range": {
+              "min": 1,
+              "max": 64
+            }
+          }
+        }
+      },
+      {
+        "type": "native",
+        "settings": {
+          "DoubleClickHeightConfig": {
+            "name": "DoubleClickHeightConfig",
+            "title": "Double-click rectangle height",
+            "description": "Changes the height of the rectangle in which a second click should fall for OS to consider the mouse action a double-click.",
+            "functionName": "DoubleClickHeight",
+            "dataType": "int",
+            "range": {
+              "min": 1,
+              "max": 64
+            }
+          }
+        }
+      },
+      {
+        "type": "SPI",
+        "getAction": "SPI_GETMOUSEBUTTONSWAP",
+        "setAction": "SPI_SETMOUSEBUTTONSWAP",
+        "uiParam": 0,
+        "pvParam": {
+          "type": "BOOL"
+        },
+        "fWinIni": "SPIF_UPDATEINIFILE|SPIF_SENDCHANGE",
+        "settings": {
+          "SwapMouseButtonsConfig": {
+            "name": "SwapMouseButtonsConfig",
+            "title": "Swap mouse primary button",
+            "description": "Swap mouse left/right buttons",
+            "paths": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "get": {
+                    "type": "string"
+                  },
+                  "set": {
+                    "type": "string"
+                  }
+                }
+              }
+            ],
+            "dataType": "bool",
+            "enum": {
+              "Off": false,
+              "On": true
+            }
+          }
+        }
+      },
+      {
+        "type": "SPI",
+        "getAction": "SPI_GETWHEELSCROLLLINES",
+        "setAction": "SPI_SETWHEELSCROLLLINES",
+        "uiParam": 0,
+        "pvParam": {
+          "type": "UINT"
+        },
+        "fWinIni": "SPIF_UPDATEINIFILE|SPIF_SENDCHANGE",
+        "settings": {}
+      },
+      {
+        "type": "SPI",
+        "getAction": "SPI_GETMOUSEWHEELROUTING",
+        "setAction": "SPI_SETMOUSEWHEELROUTING",
+        "uiParam": 0,
+        "pvParam": {
+          "type": "UINT"
+        },
+        "fWinIni": "SPIF_UPDATEINIFILE|SPIF_SENDCHANGE",
+        "settings": {
+          "ScrollFocusRoutingConfig": {
+            "name": "ScrollFocusRoutingConfig",
+            "title": "Mouse scroll focus routing",
+            "description": "Changes the way mouse scrolling is passed to applications.",
+            "paths": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "get": {
+                    "type": "string"
+                  },
+                  "set": {
+                    "type": "string"
+                  }
+                }
+              }
+            ],
+            "dataType": "int",
+            "enum": {
+              "RoutingFocus": 0,
+              "RoutingHybrid": 1
+            }
+          }
+        }
+      },
+      {
+        "type": "SPI",
+        "getAction": "SPI_GETCURSORSHADOW",
+        "setAction": "SPI_SETCURSORSHADOW",
+        "uiParam": 0,
+        "pvParam": {
+          "type": "BOOL"
+        },
+        "fWinIni": "SPIF_UPDATEINIFILE|SPIF_SENDCHANGE",
+        "settings": {
+          "MouseCursorShadowEnable": {
+            "name": "MouseCursorShadowEnable",
+            "title": "Mouse cursor shadow",
+            "description": "Enables or disables mouse cursor shadow.",
+            "paths": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "get": {
+                    "type": "string"
+                  },
+                  "set": {
+                    "type": "string"
+                  }
+                }
+              }
+            ],
+            "dataType": "bool"
+          }
+        }
+      },
+      {
+        "type": "SPI",
+        "getAction": "SPI_GETWHEELSCROLLCHARS",
+        "setAction": "SPI_SETWHEELSCROLLCHARS",
+        "uiParam": 0,
+        "pvParam": {
+          "type": "UINT"
+        },
+        "fWinIni": "SPIF_UPDATEINIFILE|SPIF_SENDCHANGE",
+        "settings": {
+          "ScrollCharsConfig": {
+            "name": "ScrollCharsConfig",
+            "title": "Mouse wheel horizontal scroll",
+            "description": "Changes the number of chars that are scrolled horizontally.",
+            "paths": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "get": {
+                    "type": "string"
+                  },
+                  "set": {
+                    "type": "string"
+                  }
+                }
+              }
+            ],
+            "dataType": "int",
+            "range": {
+              "min": 1,
+              "max": 100
+            }
+          }
+        }
+      },
+      {
+        "type": "SPI",
+        "getAction": "SPI_GETACTIVEWINDOWTRACKING",
+        "setAction": "SPI_SETACTIVEWINDOWTRACKING",
+        "uiParam": 0,
+        "pvParam": {
+          "type": "BOOL"
+        },
+        "fWinIni": "SPIF_UPDATEINIFILE|SPIF_SENDCHANGE",
+        "settings": {
+          "WindowsTrackingConfig": {
+            "name": "WindowsTrackingConfig",
+            "title": "Mouse Windows tracking",
+            "description": "Windows are focused when mouse is stopped over them.",
+            "paths": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "get": {
+                    "type": "string"
+                  },
+                  "set": {
+                    "type": "string"
+                  }
+                }
+              }
+            ],
+            "dataType": "bool"
+          }
+        }
+      },
+      {
+        "type": "SPI",
+        "getAction": "SPI_GETACTIVEWNDTRKZORDER",
+        "setAction": "SPI_SETACTIVEWNDTRKZORDER",
+        "uiParam": 0,
+        "pvParam": {
+          "type": "BOOL"
+        },
+        "fWinIni": "SPIF_UPDATEINIFILE|SPIF_SENDCHANGE",
+        "settings": {
+          "ActiveZOrder": {
+            "name": "ActiveZOrder",
+            "title": "Windows Tracking",
+            "description": "Windows receive focus when mouse hovers over them.",
+            "paths": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "get": {
+                    "type": "string"
+                  },
+                  "set": {
+                    "type": "string"
+                  }
+                }
+              }
+            ],
+            "dataType": "bool"
+          }
+        }
+      },
+      {
+        "type": "SPI",
+        "getAction": "SPI_GETWINARRANGING",
+        "setAction": "SPI_SETWINARRANGING",
+        "uiParam": 0,
+        "pvParam": {
+          "type": "BOOL"
+        },
+        "fWinIni": "SPIF_UPDATEINIFILE|SPIF_SENDCHANGE",
+        "settings": {
+          "WindowsArrangement": {
+            "name": "WindowsArrangement",
+            "title": "Configures Window arrangement",
+            "description": "Enable/Disables the automatic Windows arrangment when dragging windows to border with mouse.",
+            "paths": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "get": {
+                    "type": "string"
+                  },
+                  "set": {
+                    "type": "string"
+                  }
+                }
+              }
+            ],
+            "dataType": "bool"
+          }
+        }
+      },
+      {
+        "type": "SPI",
+        "getAction": "SPI_GETMOUSESPEED",
+        "setAction": "SPI_SETMOUSESPEED",
+        "uiParam": 0,
+        "pvParam": {
+          "type": "UINT"
+        },
+        "fWinIni": "SPIF_UPDATEINIFILE|SPIF_SENDCHANGE",
+        "settings": {
+          "PointerSpeedConfig": {
+            "name": "PointerSpeedConfig",
+            "title": "Configures pointer speed",
+            "description": "Selects a pointer speed.",
+            "paths": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "get": {
+                    "type": "string"
+                  },
+                  "set": {
+                    "type": "string"
+                  }
+                }
+              }
+            ],
+            "dataType": "int",
+            "range": {
+              "min": 1,
+              "max": 20
+            }
+          }
+        }
+      },
+      {
+        "type": "SPI",
+        "getAction": "SPI_GETMOUSE",
+        "setAction": "SPI_SETMOUSE",
+        "uiParam": 0,
+        "pvParam": {
+          "type": "array",
+          "valueType": "INT",
+          "length": 3
+        },
+        "fWinIni": "SPIF_UPDATEINIFILE|SPIF_SENDCHANGE",
+        "settings": {
+          "EnhancePrecisionConfig": {
+            "name": "EnhancePrecisionConfig",
+            "title": "Enhance pointer precision",
+            "description": "Enable/Disables enhanced pointer precision.",
+            "paths": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "get": {
+                    "type": "string"
+                  },
+                  "set": {
+                    "type": "string"
+                  }
+                }
+              }
+            ],
+            "dataType": "bool"
+          }
+        }
+      },
+      {
+        "type": "SPI",
+        "getAction": "SPI_GETSNAPTODEFBUTTON",
+        "setAction": "SPI_SETSNAPTODEFBUTTON",
+        "uiParam": 0,
+        "pvParam": {
+          "type": "UINT"
+        },
+        "fWinIni": "SPIF_UPDATEINIFILE|SPIF_SENDCHANGE",
+        "settings": {
+          "SnapToDefaultButtonConfig": {
+            "name": "SnapToDefaultButtonConfig",
+            "title": "Snap To",
+            "description": "Automatically move pointer to the default button in a dialogue.",
+            "paths": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "get": {
+                    "type": "string"
+                  },
+                  "set": {
+                    "type": "string"
+                  }
+                }
+              }
+            ],
+            "dataType": "bool"
+          }
+        }
+      },
+      {
+        "type": "SPI",
+        "getAction": "SPI_GETMOUSEVANISH",
+        "setAction": "SPI_SETMOUSEVANISH",
+        "uiParam": 0,
+        "pvParam": {
+          "type": "INT"
+        },
+        "fWinIni": "SPIF_UPDATEINIFILE|SPIF_SENDCHANGE",
+        "settings": {
+          "HidePointerConfig": {
+            "name": "HidePointerConfig",
+            "title": "Hide pointer while typing",
+            "description": "Enable/Disables hiding the pointer while typing.",
+            "paths": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "get": {
+                    "type": "string"
+                  },
+                  "set": {
+                    "type": "string"
+                  }
+                }
+              }
+            ],
+            "dataType": "bool"
+          }
+        }
+      },
+      {
+        "type": "SPI",
+        "getAction": "SPI_GETMOUSESONAR",
+        "setAction": "SPI_SETMOUSESONAR",
+        "uiParam": 0,
+        "pvParam": {
+          "type": "UINT"
+        },
+        "fWinIni": "SPIF_UPDATEINIFILE|SPIF_SENDCHANGE",
+        "settings": {
+          "MouseSonarConfig": {
+            "name": "MouseSonarConfig",
+            "title": "Mouse sonar",
+            "description": "Enable/Disable showing mouse location when pressing the CTRL key.",
+            "paths": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "get": {
+                    "type": "string"
+                  },
+                  "set": {
+                    "type": "string"
+                  }
+                }
+              }
+            ],
+            "dataType": "bool"
+          }
+        }
+      }
+    ]
+  },
+  "com.microsoft.windows.mouseTrailing": {
+    "settings": [
+      {
+        "type": "SPI",
+        "getAction": "SPI_GETMOUSETRAILS",
+        "setAction": "SPI_SETMOUSETRAILS",
+        "uiParam": 0,
+        "pvParam": {
+          "type": "UINT"
+        },
+        "settings": {
+          "MouseTrails": {
+            "name": "MouseTrails",
+            "title": "Mouse trails",
+            "description": "Amount of mouse trailing",
+            "paths": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "get": {
+                    "type": "string"
+                  },
+                  "set": {
+                    "type": "string"
+                  }
+                }
+              }
+            ],
+            "dataType": "int",
+            "range": {
+              "min": 0,
+              "max": 10
+            }
+          }
+        }
+      }
+    ]
   },
   "com.microsoft.windows.language": {
     "settings": [
@@ -8863,12 +9741,6 @@
         }
       }
     ]
-  },
-  "com.microsoft.windows.toggleKeys": {
-    "settings": []
-  },
-  "com.microsoft.windows.underlineMenuShortcuts": {
-    "settings": []
   },
   "com.microsoft.windows.shortcutWarningMessage": {
     "settings": [
@@ -9109,15 +9981,6 @@
         }
       }
     ]
-  },
-  "com.microsoft.windows.mouseKeys": {
-    "settings": []
-  },
-  "com.microsoft.windows.mouseSettings": {
-    "settings": []
-  },
-  "com.microsoft.windows.mouseTrailing": {
-    "settings": []
   },
   "com.microsoft.windows.narrator": {
     "settings": [
@@ -9783,7 +10646,42 @@ False: Off
     "settings": []
   },
   "com.microsoft.windows.stickyKeys": {
-    "settings": []
+    "settings": [
+      {
+        "type": "SPI",
+        "getAction": "SPI_GETSTICKYKEYS",
+        "setAction": "SPI_SETSTICKYKEYS",
+        "uiParam": "struct_size",
+        "pvParam": {
+          "type": "struct",
+          "name": "STICKYKEYS"
+        },
+        "settings": {
+          "StickyKeysOn": {
+            "name": "StickyKeysOn",
+            "title": "Sticky Keys On",
+            "description": "Whether or not sticky keys should be turned on.",
+            "paths": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "get": {
+                    "type": "string"
+                  },
+                  "set": {
+                    "type": "string"
+                  }
+                }
+              }
+            ],
+            "dataType": "bool"
+          }
+        }
+      }
+    ]
   },
   "com.microsoft.windows.touchPadSettings": {
     "settings": [
@@ -9921,7 +10819,24 @@ False: Off
     ]
   },
   "com.microsoft.windows.volumeControl": {
-    "settings": []
+    "settings": [
+      {
+        "type": "native",
+        "settings": {
+          "Volume": {
+            "name": "Volume",
+            "title": "System volume",
+            "description": "Changes the current system volume.",
+            "functionName": "Volume",
+            "dataType": "real",
+            "range": {
+              "min": 0.0,
+              "max": 1.0
+            }
+          }
+        }
+      }
+    ]
   },
   "com.office.windowsOneNoteLearningTools": {
     "settings": [
