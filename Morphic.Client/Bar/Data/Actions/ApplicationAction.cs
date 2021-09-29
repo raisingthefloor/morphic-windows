@@ -112,9 +112,34 @@ namespace Morphic.Client.Bar.Data.Actions
                         var appPath = ApplicationAction.SearchAppPaths("chrome.exe");
                         return appPath;
                     }
+                case "microsoftAccess":
+                    {
+                        var appPath = ApplicationAction.SearchAppPaths("MSACCESS.EXE");
+                        return appPath;
+                    }
+                case "microsoftExcel":
+                    {
+                        var appPath = ApplicationAction.SearchAppPaths("excel.exe");
+                        return appPath;
+                    }
                 case "microsoftEdge":
                     {
                         var appPath = ApplicationAction.SearchAppPaths("msedge.exe");
+                        return appPath;
+                    }
+                case "microsoftOneNote":
+                    {
+                        var appPath = ApplicationAction.SearchAppPaths("OneNote.exe");
+                        return appPath;
+                    }
+                case "microsoftOutlook":
+                    {
+                        var appPath = ApplicationAction.SearchAppPaths("OUTLOOK.EXE");
+                        return appPath;
+                    }
+                case "microsoftPowerPoint":
+                    {
+                        var appPath = ApplicationAction.SearchAppPaths("powerpnt.exe");
                         return appPath;
                     }
                 case "microsoftQuickAssist":
@@ -133,6 +158,25 @@ namespace Morphic.Client.Bar.Data.Actions
                 case "microsoftSkype":
                     {
                         var appPath = ApplicationAction.SearchAppPaths("Skype.exe");
+                        return appPath;
+                    }
+                case "microsoftTeams":
+                    {
+                        // NOTE: this is a very odd path, and it's not in the "AppPaths"; if we can find another way to determine the proper launch path or launch programatically, we should consider another method
+                        var userAppDataLocalPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                        var appPath = Path.Combine(new string[] { userAppDataLocalPath, "Microsoft", "Teams", "current", "Teams.exe" });
+                        return appPath;
+
+                        // NOTE: we could also probably launch Teams via the "ms-teams:" URI, but that wouldn't necessarily help us detect if it's installed
+
+                        // NOTE: in the future, it would be better to launch Update.exe and have it then start Teams (as Microsoft does for their shortcut) -- but we'd probably want to
+                        //       detect the Teams.exe file itself to detect if it was installed
+                        //var appPath = Path.Combine(new string[] { userAppDataLocalPath, "Microsoft", "Teams", "Update.exe" });
+                        //var params = new string[] { "--processStart", "Teams.exe" };
+                    }
+                case "microsoftWord":
+                    {
+                        var appPath = ApplicationAction.SearchAppPaths("Winword.exe");
                         return appPath;
                     }
                 case "opera":
@@ -235,6 +279,104 @@ namespace Morphic.Client.Bar.Data.Actions
             }
 
             return fullPath;
+        }
+
+        // NOTE: we should not use GetAppPathForProgId until we have dealt with removing command-line arguments (e.g. "C:\Program Files\Microsoft Office\Root\Office16\WINWORD.EXE /Automation")
+        private static IMorphicResult<string> GetAppPathForProgId(string progId)
+        {
+            var getClassIdResult = ApplicationAction.GetClassIdForProgId(progId);
+            if (getClassIdResult.IsError == true)
+            {
+                return IMorphicResult<string>.ErrorResult();
+            }
+            var classId = getClassIdResult.Value!;
+
+            var getPathResult = ApplicationAction.GetLocalServer32PathForClassId(classId);
+            if (getPathResult.IsError == true)
+            {
+                return IMorphicResult<string>.ErrorResult();
+            }
+            var path = getPathResult.Value!;
+
+            // if the command is enclosed by quotes, strip out the actual executable name
+            if (path.Length > 0 && path.Substring(0, 1) == "\"")
+            {
+                var indexOfClosingQuote = path.IndexOf('\"', 1);
+                if (indexOfClosingQuote > 0)
+                {
+                    path = path.Substring(1, indexOfClosingQuote - 1);
+                }
+            }
+
+            // NOTE: we should check the actual path and remove any command-line arguments (in case the path includes the executable name and also command-line arguments)
+            //       [this could be tricky]
+
+            return IMorphicResult<string>.SuccessResult(path);
+        }
+
+        // NOTE: this function should return the path to run an executable, given its classId (which can be retrieved from FindClassIdForProgId)
+        private static IMorphicResult<string> GetLocalServer32PathForClassId(string classId)
+        {
+            string? result = null;
+
+            bool is64Bit;
+            switch (IntPtr.Size)
+            {
+                case 4:
+                    is64Bit = false;
+                    break;
+                case 8:
+                    is64Bit = true;
+                    break;
+                default:
+                    Debug.Assert(false, "OS is not 32-bit or 64-bit");
+                    return IMorphicResult<string>.ErrorResult();
+            }
+
+            RegistryKey? key;
+            if (is64Bit == true)
+            {
+                key = Registry.ClassesRoot.OpenSubKey($@"Wow6432Node\CLSID\{classId}\LocalServer32");
+            } 
+            else
+            {
+                key = Registry.ClassesRoot.OpenSubKey($@"CLSID\{classId}\LocalServer32");
+            }
+
+            if (key != null)
+            {
+                var localServer32 = key.GetValue(null) as string;
+                if (localServer32 != null)
+                {
+                    result = localServer32;
+                }
+            }
+
+            if (result is not null)
+            {
+                return IMorphicResult<string>.SuccessResult(result);
+            }
+            else
+            {
+                // if we could not find the key or if its default value was null or invalid, return an error
+                return IMorphicResult<string>.ErrorResult();
+            }
+        }
+
+        private static IMorphicResult<string> GetClassIdForProgId(string progId)
+        {
+            RegistryKey? key = Registry.ClassesRoot.OpenSubKey($@"{progId}\CLSID");
+            if (key != null)
+            {
+                var classId = key.GetValue(null) as string;
+                if (classId != null)
+                {
+                    return IMorphicResult<string>.SuccessResult(classId);
+                }
+            }
+
+            // if we could not find the key or if its default value was null, return an error
+            return IMorphicResult<string>.ErrorResult();
         }
 
         private static IMorphicResult<string> StripExecutableFromCommand(string command)
