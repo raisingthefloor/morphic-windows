@@ -57,7 +57,7 @@
                         {
                             value = key.GetValue(setting.Name);
                             Values.ValueType type = (value == null) ? Values.ValueType.NotFound : Values.ValueType.UserSetting;
-                            values.Add(setting, value);
+                            values.Add(setting, value, type);
                         }
                         catch
                         {

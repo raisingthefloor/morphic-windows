@@ -26,9 +26,13 @@
             this.window = window;
             this.setting = setting;
             this.ControlName.Text = (setting.Title != string.Empty) ? setting.Title : setting.Name;
-            if(setting.Description != string.Empty)
+            if (setting.Description != string.Empty)
             {
-                this.ControlName.ToolTip = setting.Description;
+                this.ControlName.ToolTip = setting.Name + "\n\n" + setting.Description;
+            }
+            else
+            {
+                this.ControlName.ToolTip = setting.Name;
             }
             this.SetLoading();
             //this.CaptureSetting();
@@ -148,6 +152,10 @@
         private void SelectEnumVal(object sender, EventArgs e)
         {
             ComboBoxItem selected = (this.EnumVals.SelectedItem as ComboBoxItem)!;
+            if (selected == null)
+            {
+                return;
+            }
             this.ControlCheckBox.IsChecked = (bool)setting.enumvals[selected.Content.ToString()];
             this.ValueChanged(sender, new RoutedEventArgs());
         }

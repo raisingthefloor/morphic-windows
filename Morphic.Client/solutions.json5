@@ -8549,7 +8549,37 @@
     ]
   },
   "com.microsoft.windows.brightness": {
-    "settings": []
+    "settings": [
+      {
+        "type": "WMI",
+        "namespace": "root\\WMI",
+        "getClassName": "WmiMonitorBrightness",
+        "getProperty": "CurrentBrightness",
+        "setClassName": "WmiMonitorBrightnessMethods",
+        "setMethod": "WmiSetBrightness",
+        "setParams": [
+          4294967295,
+          "$value"
+        ],
+        "setReturnVal": [
+          "uint",
+          0
+        ],
+        "settingType": "uint",
+        "settings": {
+          "Brightness": {
+            "name": "Brightness",
+            "title": "Brightness",
+            "description": "Set the screen brightness.",
+            "dataType": "real",
+            "range": {
+              "min": 0.0,
+              "max": 100.0
+            }
+          }
+        }
+      }
+    ]
   },
   "com.microsoft.windows.desktopBackground": {
     "settings": [
@@ -11048,7 +11078,1121 @@ False: Off
     ]
   },
   "com.texthelp.readWriteGold": {
-    "settings": []
+    "settings": [
+      {
+        "type": "XML",
+        "path": "%APPDATA%\\Texthelp\\ReadAndWrite\\12\\RWSettings.xml",
+        "encoding": "utf-8",
+        "xml-tag": "<?xml version=\"1.0\" encoding=\"utf-8\"?>",
+        "settings": {
+          "ApplicationSettings.AppBar.IconSize": {
+            "name": "ApplicationSettings.AppBar.IconSize",
+            "title": "Button size",
+            "description": "Changes the application panel buttons size.",
+            "dataType": "string",
+            "enum": {
+              "Medium": "Medium",
+              "Small": "Small",
+              "Large": "Large"
+            },
+            "default": "Medium"
+          },
+          "ApplicationSettings.AppBar.ToolbarIconSet": {
+            "name": "ApplicationSettings.AppBar.ToolbarIconSet",
+            "title": "Button style",
+            "description": "Changes the application panel buttons style.",
+            "dataType": "string",
+            "enum": {
+              "Clear": "Clear",
+              "Color": "Color"
+            },
+            "default": "Clear"
+          },
+          "ApplicationSettings.AppBar.ShowText": {
+            "name": "ApplicationSettings.AppBar.ShowText",
+            "title": "Show text on toolbar",
+            "description": "Shows icons text in the application toolbar.",
+            "dataType": "bool",
+            "default": false
+          },
+          "ApplicationSettings.AppBar.optToolbarBackColour": {
+            "name": "ApplicationSettings.AppBar.optToolbarBackColour",
+            "title": "Toolbar color",
+            "description": "Changes the amount of time for considering a click when hovering over a key.",
+            "dataType": "string"
+          },
+          "ApplicationSettings.AppBar.RunOnStartUp": {
+            "name": "ApplicationSettings.AppBar.RunOnStartUp",
+            "title": "Launch on Windows startup",
+            "description": "Automatically launches the application at windows startup.",
+            "dataType": "bool",
+            "default": true
+          },
+          "ApplicationSettings.Spelling.OrderByContext": {
+            "name": "ApplicationSettings.Spelling.OrderByContext",
+            "title": "Order suggestions by context",
+            "description": "Suggestions are ordered by context.",
+            "dataType": "bool",
+            "default": true
+          },
+          "ApplicationSettings.Spelling.SpeakSpellingOnHover": {
+            "name": "ApplicationSettings.Spelling.SpeakSpellingOnHover",
+            "title": "Speak when mouse pointer hovers over a word",
+            "description": "When mouse pointer hovers over a word spell the hovered word.",
+            "dataType": "bool",
+            "default": true
+          },
+          "ApplicationSettings.Spelling.ShowCheckIt": {
+            "name": "ApplicationSettings.Spelling.ShowCheckIt",
+            "title": "Classic Spell Check",
+            "description": "Uses the old program interface for spell checking.",
+            "dataType": "bool",
+            "default": false
+          },
+          "ApplicationSettings.Spelling.RightClickMSWord": {
+            "name": "ApplicationSettings.Spelling.RightClickMSWord",
+            "title": "Microsoft Word right click spell check",
+            "description": "Allows right click Read&Write spell check in Microsoft Word.",
+            "dataType": "bool",
+            "default": false
+          },
+          "ApplicationSettings.Dictionary.WebDictionary": {
+            "name": "ApplicationSettings.Dictionary.WebDictionary",
+            "title": "Web Dictionary",
+            "description": "Select the web dictionary to use.",
+            "dataType": "string",
+            "enum": {
+              "Google Dictionary": "Google Dictionary",
+              "Bing": "Bing",
+              "Dictionary.com": "Dictionary.com"
+            },
+            "default": "Google Dictionary"
+          },
+          "ApplicationSettings.Dictionary.PopupDictionary": {
+            "name": "ApplicationSettings.Dictionary.PopupDictionary",
+            "title": "Pop-up Dictionary",
+            "description": "Displays a popup dictionary when hovering selected words.",
+            "dataType": "bool",
+            "default": false
+          },
+          "ApplicationSettings.Dictionary.ToggleImages": {
+            "name": "ApplicationSettings.Dictionary.ToggleImages",
+            "title": "Toggle Images",
+            "description": "Toggles image section in dictionary popup window.",
+            "dataType": "bool",
+            "default": false
+          },
+          "ApplicationSettings.StudySkills.CollectYellowHighlight": {
+            "name": "ApplicationSettings.StudySkills.CollectYellowHighlight",
+            "title": "Collect Yellow color",
+            "description": "Collects your highlighted sections that have been marked with Yellow.",
+            "dataType": "bool",
+            "default": true
+          },
+          "ApplicationSettings.StudySkills.CollectBlueHighlight": {
+            "name": "ApplicationSettings.StudySkills.CollectBlueHighlight",
+            "title": "Collect Blue color",
+            "description": "Collects your highlighted sections that have been marked with Blue.",
+            "dataType": "bool",
+            "default": true
+          },
+          "ApplicationSettings.StudySkills.CollectGreenHighlight": {
+            "name": "ApplicationSettings.StudySkills.CollectGreenHighlight",
+            "title": "Collect Green color",
+            "description": "Collects your highlighted sections that have been marked with Green.",
+            "dataType": "bool",
+            "default": true
+          },
+          "ApplicationSettings.StudySkills.CollectPinkHighlight": {
+            "name": "ApplicationSettings.StudySkills.CollectPinkHighlight",
+            "title": "Collect Pink color",
+            "description": "Collects your highlighted sections that have been marked with Pink.",
+            "dataType": "bool",
+            "default": true
+          },
+          "ApplicationSettings.StudySkills.CollectOrder": {
+            "name": "ApplicationSettings.StudySkills.CollectOrder",
+            "title": "Highlights order",
+            "description": "Changes the order in which highlights are displayed.",
+            "dataType": "string",
+            "enum": {
+              "Color": "Color",
+              "Position": "Position",
+              "Time": "Time"
+            },
+            "default": "Color"
+          },
+          "ApplicationSettings.StudySkills.ColorSeparator": {
+            "name": "ApplicationSettings.StudySkills.ColorSeparator",
+            "title": "Colors separator",
+            "description": "Element used for color separation.",
+            "dataType": "string",
+            "enum": {
+              "Paragraph": "Paragraph",
+              "None": "None",
+              "Page": "Page"
+            },
+            "default": "Paragraph"
+          },
+          "ApplicationSettings.StudySkills.HighlightSeparator": {
+            "name": "ApplicationSettings.StudySkills.HighlightSeparator",
+            "title": "Highlights separator",
+            "description": "Element used for highlight separation.",
+            "dataType": "string",
+            "enum": {
+              "Line": "Line",
+              "None": "None",
+              "Space": "Space",
+              "Tab": "Tab"
+            },
+            "default": "Line"
+          },
+          "ApplicationSettings.StudySkills.MultiDocHighlighting": {
+            "name": "ApplicationSettings.StudySkills.MultiDocHighlighting",
+            "title": "Collect from multiple documents",
+            "description": "Makes the application collect your highlights from multiple documents.",
+            "dataType": "bool",
+            "default": true
+          },
+          "ApplicationSettings.Prediction.DisplayAlphabetic": {
+            "name": "ApplicationSettings.Prediction.DisplayAlphabetic",
+            "title": "Alphabetic display",
+            "description": "Display words alphabetically.",
+            "dataType": "bool",
+            "default": false
+          },
+          "ApplicationSettings.Prediction.FollowCursor": {
+            "name": "ApplicationSettings.Prediction.FollowCursor",
+            "title": "Follow the cursor while typing",
+            "description": "Instructs the system to have the Prediction window follow where the cursor goes.",
+            "dataType": "bool",
+            "default": false
+          },
+          "ApplicationSettings.Prediction.AutoHeightAdjust": {
+            "name": "ApplicationSettings.Prediction.AutoHeightAdjust",
+            "title": "Auto height adjust",
+            "description": "Instructs the system to have the Prediction window change size depending on the amount of words appearing.",
+            "dataType": "bool",
+            "default": false
+          },
+          "ApplicationSettings.Prediction.winPredictOneWordAhead": {
+            "name": "ApplicationSettings.Prediction.winPredictOneWordAhead",
+            "title": "Predict one word ahead",
+            "description": "Instructs the system to predict a word ahead.",
+            "dataType": "bool",
+            "default": true
+          },
+          "ApplicationSettings.Prediction.InsertSpaceAfterPred": {
+            "name": "ApplicationSettings.Prediction.InsertSpaceAfterPred",
+            "title": "Insert a space after predictions",
+            "description": "Instructs the system to automatically insert a space after a word when it is inserted.",
+            "dataType": "bool",
+            "default": true
+          },
+          "ApplicationSettings.Prediction.UseSpellingForPredictions": {
+            "name": "ApplicationSettings.Prediction.UseSpellingForPredictions",
+            "title": "Use spelling suggestions for the prediction list",
+            "description": "Allows the system to suggest words even if you start to spell them wrong.",
+            "dataType": "bool",
+            "default": true
+          },
+          "ApplicationSettings.Prediction.SpeakPredictionOnMouseHover": {
+            "name": "ApplicationSettings.Prediction.SpeakPredictionOnMouseHover",
+            "title": "Speak when hovering",
+            "description": "Speaks when the mouse pointer hovers over a word",
+            "dataType": "bool",
+            "default": true
+          },
+          "ApplicationSettings.Prediction.SpeakOnWordClick": {
+            "name": "ApplicationSettings.Prediction.SpeakOnWordClick",
+            "title": "Speak the word when clicked",
+            "description": "Speaks the word clicked in the prediction list.",
+            "dataType": "bool",
+            "default": false
+          },
+          "ApplicationSettings.Prediction.InsertOnWordClick": {
+            "name": "ApplicationSettings.Prediction.InsertOnWordClick",
+            "title": "Insert the word when clicked",
+            "description": "Inserts the word clicked in the prediction list.",
+            "dataType": "bool",
+            "default": true
+          },
+          "ApplicationSettings.Prediction.SpellCheckBeforeLearn": {
+            "name": "ApplicationSettings.Prediction.SpellCheckBeforeLearn",
+            "title": "Spell check each word before learning",
+            "description": "System always spell check each word before learning it. Turn off for making the system learn custom words.",
+            "dataType": "bool",
+            "default": true
+          },
+          "ApplicationSettings.Prediction.AutoLearnAsType": {
+            "name": "ApplicationSettings.Prediction.AutoLearnAsType",
+            "title": "Automatically learn as I type",
+            "description": "Prediction will learn anything typed by the user when using prediction.",
+            "dataType": "bool",
+            "default": true
+          },
+          "ApplicationSettings.Scanning.dpi": {
+            "name": "ApplicationSettings.Scanning.dpi",
+            "title": "Resolution",
+            "description": "DPI resolution in which the scan is going to be performed.",
+            "dataType": "int",
+            "enum": {
+              "300 DPI": 300,
+              "600 DPI": 600
+            },
+            "default": 300
+          },
+          "ApplicationSettings.Scanning.colormode": {
+            "name": "ApplicationSettings.Scanning.colormode",
+            "title": "Color mode",
+            "description": "Specifies the color mode used to scan the image.",
+            "dataType": "string",
+            "enum": {
+              "Full color": "Color",
+              "GrayScale": "GrayScale",
+              "Monochrome": "BlackAndWhite"
+            },
+            "default": "Color"
+          },
+          "ApplicationSettings.Scanning.HideInterface": {
+            "name": "ApplicationSettings.Scanning.HideInterface",
+            "title": "Hide device settings",
+            "description": "Make the scanning easier and faster. You can turn this off for getting device info.",
+            "dataType": "bool",
+            "default": true
+          },
+          "ApplicationSettings.Scanning.Countdown": {
+            "name": "ApplicationSettings.Scanning.Countdown",
+            "title": "Use Countdown",
+            "description": "Automatically scans using a countdown interval.",
+            "dataType": "bool",
+            "default": true
+          },
+          "ApplicationSettings.Scanning.CountdownInterval": {
+            "name": "ApplicationSettings.Scanning.CountdownInterval",
+            "title": "Countdown seconds interval",
+            "description": "Sets the number of seconds of the interval.",
+            "dataType": "int",
+            "range": {
+              "min": 0,
+              "max": 99
+            },
+            "default": 6
+          },
+          "ApplicationSettings.Scanning.ADF": {
+            "name": "ApplicationSettings.Scanning.ADF",
+            "title": "Automatic Document Feeder",
+            "description": "Enable if you are using an Automatic Document Feeder.",
+            "dataType": "bool",
+            "default": false
+          },
+          "ApplicationSettings.Scanning.Duplex": {
+            "name": "ApplicationSettings.Scanning.Duplex",
+            "title": "Duplex",
+            "description": "Enable you are using an 'double side scanner'.",
+            "dataType": "bool",
+            "default": false
+          },
+          "ApplicationSettings.Scanning.AutoSave": {
+            "name": "ApplicationSettings.Scanning.AutoSave",
+            "title": "Use save location",
+            "description": "Use the supplied location to save the scanned documents.",
+            "dataType": "bool",
+            "default": false
+          },
+          "ApplicationSettings.Scanning.DefaultFilePath": {
+            "name": "ApplicationSettings.Scanning.DefaultFilePath",
+            "title": "File path",
+            "description": "Default location for storing the scanned documents.",
+            "dataType": "string",
+            "default": "%HOME%\\Documents"
+          },
+          "ApplicationSettings.Scanning.DefaultFileName": {
+            "name": "ApplicationSettings.Scanning.DefaultFileName",
+            "title": "File name",
+            "description": "Default file name for the scanned document.",
+            "dataType": "string",
+            "default": "Scan"
+          },
+          "ApplicationSettings.Scanning.PdfTextOnly": {
+            "name": "ApplicationSettings.Scanning.PdfTextOnly",
+            "title": "Text only PDF output",
+            "description": "Scan to PDF to text only.",
+            "dataType": "bool",
+            "default": false
+          },
+          "ApplicationSettings.Scanning.MSWordRetainFormat": {
+            "name": "ApplicationSettings.Scanning.MSWordRetainFormat",
+            "title": "Plain text Word output",
+            "description": "Scan to Word in plain text.",
+            "dataType": "bool",
+            "default": false
+          },
+          "ApplicationSettings.Scanning.CoverFirstPage": {
+            "name": "ApplicationSettings.Scanning.CoverFirstPage",
+            "title": "Title in ePub Output",
+            "description": "Threat heading as book title for ePub output.",
+            "dataType": "bool",
+            "default": true
+          },
+          "ApplicationSettings.Scanning.EnableEpub": {
+            "name": "ApplicationSettings.Scanning.EnableEpub",
+            "title": "Enable ePup",
+            "description": "Enable ePub as output format.",
+            "dataType": "bool",
+            "default": false
+          },
+          "ApplicationSettings.Scanning.EnableWeb": {
+            "name": "ApplicationSettings.Scanning.EnableWeb",
+            "title": "Enable Web",
+            "description": "Enable Web as output format.",
+            "dataType": "bool",
+            "default": false
+          },
+          "ApplicationSettings.ScreenMasking.ScreenMask": {
+            "name": "ApplicationSettings.ScreenMasking.ScreenMask",
+            "title": "Screen Masking mode",
+            "description": "Specifies the mode in which 'Screen Masking' tool will operate.",
+            "dataType": "string",
+            "enum": {
+              "TintScreen": "TintScreen",
+              "UnderlineTypingLine": "UnderlineTypingLine",
+              "TintTypingLine": "TintTypingLine",
+              "SystemBackground": "SystemBackground",
+              "UnderlineCursor": "UnderlineCursor"
+            },
+            "default": "TintScreen"
+          },
+          "ApplicationSettings.ScreenMasking.TintScreenColour": {
+            "name": "ApplicationSettings.ScreenMasking.TintScreenColour",
+            "title": "Whole screen color mask",
+            "description": "Selects the color for tinting the screen.",
+            "dataType": "string",
+            "default": "#80FFFF"
+          },
+          "ApplicationSettings.ScreenMasking.TintScreenOpacity": {
+            "name": "ApplicationSettings.ScreenMasking.TintScreenOpacity",
+            "title": "Whole screen mask opacity",
+            "description": "Selects the opacity for the screen mask.",
+            "dataType": "real",
+            "range": {
+              "min": 0.0,
+              "max": 1.0
+            },
+            "default": 0.3
+          },
+          "ApplicationSettings.ScreenMasking.ReadingLight": {
+            "name": "ApplicationSettings.ScreenMasking.ReadingLight",
+            "title": "Reading ruler",
+            "description": "Enable/Disable reading ruler.",
+            "dataType": "bool",
+            "default": false
+          },
+          "ApplicationSettings.ScreenMasking.ReadingLightColour": {
+            "name": "ApplicationSettings.ScreenMasking.ReadingLightColour",
+            "title": "Reading ruler color",
+            "description": "Selects the color for the reading ruler.",
+            "dataType": "string",
+            "default": "#00FFFFFF"
+          },
+          "ApplicationSettings.ScreenMasking.ReadingLightOpacity": {
+            "name": "ApplicationSettings.ScreenMasking.ReadingLightOpacity",
+            "title": "Reading ruler opacity",
+            "description": "Selects the opacity for the reading ruler.",
+            "dataType": "real",
+            "range": {
+              "min": 0.0,
+              "max": 1.0
+            },
+            "default": 0.3
+          },
+          "ApplicationSettings.ScreenMasking.ReadingLightHeight": {
+            "name": "ApplicationSettings.ScreenMasking.ReadingLightHeight",
+            "title": "Reading ruler height",
+            "description": "Selects the height for the reading ruler.",
+            "dataType": "int",
+            "range": {
+              "min": 0,
+              "max": 300
+            },
+            "default": 100
+          },
+          "ApplicationSettings.ScreenMasking.UnderlineTypingLineColour": {
+            "name": "ApplicationSettings.ScreenMasking.UnderlineTypingLineColour",
+            "title": "Underline typing line color",
+            "description": "Selects the color for the underline typing line.",
+            "dataType": "string",
+            "default": "#80FFFF"
+          },
+          "ApplicationSettings.ScreenMasking.UnderlineTypingLineOpacity": {
+            "name": "ApplicationSettings.ScreenMasking.UnderlineTypingLineOpacity",
+            "title": "Underline typing line opacity",
+            "description": "Selects the opacity for the underline typing line.",
+            "dataType": "real",
+            "range": {
+              "min": 0.0,
+              "max": 1.0
+            },
+            "default": 0.5
+          },
+          "ApplicationSettings.ScreenMasking.UnderlineTypingLineHeight": {
+            "name": "ApplicationSettings.ScreenMasking.UnderlineTypingLineHeight",
+            "title": "Underline typing line height",
+            "description": "Selects the height for the underline typing line.",
+            "dataType": "int",
+            "range": {
+              "min": 0,
+              "max": 100
+            },
+            "default": 5
+          },
+          "ApplicationSettings.ScreenMasking.TintTypingLineColour": {
+            "name": "ApplicationSettings.ScreenMasking.TintTypingLineColour",
+            "title": "Typing line mask color",
+            "description": "Selects the color for the typing line mask.",
+            "dataType": "string",
+            "default": "#80FFFF"
+          },
+          "ApplicationSettings.ScreenMasking.TintTypingLineOpacity": {
+            "name": "ApplicationSettings.ScreenMasking.TintTypingLineOpacity",
+            "title": "Typing line mask opacity",
+            "description": "Selects the opacity for the typing line mask.",
+            "dataType": "real",
+            "range": {
+              "min": 0.0,
+              "max": 1.0
+            },
+            "default": 0.3
+          },
+          "ApplicationSettings.ScreenMasking.SystemBackgroundColour": {
+            "name": "ApplicationSettings.ScreenMasking.SystemBackgroundColour",
+            "title": "Change page color",
+            "description": "Changes the page color of text fields.",
+            "dataType": "string",
+            "default": "#80FFFF"
+          },
+          "ApplicationSettings.ScreenMasking.UnderlineCursorColour": {
+            "name": "ApplicationSettings.ScreenMasking.UnderlineCursorColour",
+            "title": "Underline cursor color",
+            "description": "Changes the color for the underline cursor.",
+            "dataType": "string",
+            "default": "#80FFFF"
+          },
+          "ApplicationSettings.ScreenMasking.UnderlineCursorOpacity": {
+            "name": "ApplicationSettings.ScreenMasking.UnderlineCursorOpacity",
+            "title": "Underline cursor line opacity",
+            "description": "Selects the opacity for underline cursor line.",
+            "dataType": "real",
+            "range": {
+              "min": 0.0,
+              "max": 1.0
+            },
+            "default": 0.5
+          },
+          "ApplicationSettings.ScreenMasking.UnderlineCursorHeight": {
+            "name": "ApplicationSettings.ScreenMasking.UnderlineCursorHeight",
+            "title": "Underline cursor line height",
+            "description": "Selects the height for underline cursor line.",
+            "dataType": "int",
+            "range": {
+              "min": 0,
+              "max": 100
+            },
+            "default": 5
+          },
+          "ApplicationSettings.Screenshot.CaptureBy": {
+            "name": "ApplicationSettings.Screenshot.CaptureBy",
+            "title": "Capture operation",
+            "description": "Specifies the type of operation that is needed for making a screenshot.",
+            "dataType": "string",
+            "enum": {
+              "Drawing Rectangle": "Drawing Rectangle",
+              "Drawing Freehand": "Drawing Freehand",
+              "Hover": "Hover"
+            },
+            "default": "Drawing Rectangle"
+          },
+          "ApplicationSettings.Screenshot.ScreenshotTo": {
+            "name": "ApplicationSettings.Screenshot.ScreenshotTo",
+            "title": "Capture target",
+            "description": "Specifies the capture target of the screenshot operation.",
+            "dataType": "string",
+            "enum": {
+              "Window": "Window",
+              "Microsoft Word": "Microsoft Word",
+              "Text Reader": "Text Reader"
+            },
+            "default": "Window"
+          },
+          "ApplicationSettings.Screenshot.AppendToMsWordDoc": {
+            "name": "ApplicationSettings.Screenshot.AppendToMsWordDoc",
+            "title": "Add to active Microsoft Word document",
+            "description": "Automatically add the screenshot to the current active Microsoft Word document.",
+            "dataType": "bool",
+            "default": true
+          },
+          "ApplicationSettings.Speech.CurrentVoice": {
+            "name": "ApplicationSettings.Speech.CurrentVoice",
+            "title": "Voice",
+            "description": "Selects the human voice for speaking.",
+            "dataType": "string",
+            "enum": {
+              "Mexican Spanish Paulina - Vocalizer": "Mexican Spanish Paulina - Vocalizer",
+              "US Ava - Vocalizer": "US Ava - Vocalizer",
+              "US Tom - Vocalizer": "US Tom - Vocalizer",
+              "Microsoft David Desktop - English (United States)": "Microsoft David Desktop - English (United States)",
+              "Microsoft Zira Desktop - English (United States)": "Microsoft Zira Desktop - English (United States)"
+            },
+            "default": "US Ava - Vocalizer"
+          },
+          "ApplicationSettings.Speech.VoiceSpeed": {
+            "name": "ApplicationSettings.Speech.VoiceSpeed",
+            "title": "Voice speed",
+            "description": "Selects the speed of reading.",
+            "dataType": "int",
+            "range": {
+              "min": 0,
+              "max": 100
+            },
+            "default": 50
+          },
+          "ApplicationSettings.Speech.UseVoiceSpeedHotKey": {
+            "name": "ApplicationSettings.Speech.UseVoiceSpeedHotKey",
+            "title": "Use arrow keys to change speed",
+            "description": "This will allow you to use the Up (⬆) and Down (⬇) keys on your keyboard to change the voice speed when it is reading.",
+            "dataType": "bool",
+            "default": true
+          },
+          "ApplicationSettings.Speech.WordPause": {
+            "name": "ApplicationSettings.Speech.WordPause",
+            "title": "Word pause",
+            "description": "Selects the word pause time while reading.",
+            "dataType": "int",
+            "range": {
+              "min": 0,
+              "max": 1000
+            },
+            "default": 0
+          },
+          "ApplicationSettings.Speech.VoicePitch": {
+            "name": "ApplicationSettings.Speech.VoicePitch",
+            "title": "Voice pitch",
+            "description": "Selects the pitch of the reading voice.",
+            "dataType": "int",
+            "range": {
+              "min": 0,
+              "max": 100
+            },
+            "default": 50
+          },
+          "ApplicationSettings.Speech.SpeakAsIType": {
+            "name": "ApplicationSettings.Speech.SpeakAsIType",
+            "title": "Speak as I type",
+            "description": "Enable speaking while the user is typing.",
+            "dataType": "bool",
+            "default": true
+          },
+          "ApplicationSettings.Speech.SpeakOnEachLetter": {
+            "name": "ApplicationSettings.Speech.SpeakOnEachLetter",
+            "title": "Speak on each letter",
+            "description": "System will speak each written letter.",
+            "dataType": "bool",
+            "default": false
+          },
+          "ApplicationSettings.Speech.SpeakOnEachWord": {
+            "name": "ApplicationSettings.Speech.SpeakOnEachWord",
+            "title": "Speak on each word",
+            "description": "System will speak each written word.",
+            "dataType": "bool",
+            "default": true
+          },
+          "ApplicationSettings.Speech.SpeakOnEachSentence": {
+            "name": "ApplicationSettings.Speech.SpeakOnEachSentence",
+            "title": "Speak on each sentence",
+            "description": "System will speak each written sentence.",
+            "dataType": "bool",
+            "default": true
+          },
+          "ApplicationSettings.Speech.ScreenReadingEnabled": {
+            "name": "ApplicationSettings.Speech.ScreenReadingEnabled",
+            "title": "Screen reading",
+            "description": "Enables screen reading.",
+            "dataType": "bool",
+            "default": true
+          },
+          "ApplicationSettings.Speech.SelectionType": {
+            "name": "ApplicationSettings.Speech.SelectionType",
+            "title": "Read by",
+            "description": "Selects the reading unit.",
+            "dataType": "int",
+            "enum": {
+              "Words": 0,
+              "Sentences": 1,
+              "Paragraphs": 2
+            },
+            "default": 1
+          },
+          "ApplicationSettings.Speech.ContinuousReading": {
+            "name": "ApplicationSettings.Speech.ContinuousReading",
+            "title": "Continuous reading",
+            "description": "It instructs the system to keep reading until the end of the text.",
+            "dataType": "bool",
+            "default": true
+          },
+          "ApplicationSettings.Speech.ReadTheWeb": {
+            "name": "ApplicationSettings.Speech.ReadTheWeb",
+            "title": "Read the web",
+            "description": "Encourages the system to read webpages.",
+            "dataType": "bool",
+            "default": true
+          },
+          "ApplicationSettings.Speech.HighlightingMethod": {
+            "name": "ApplicationSettings.Speech.HighlightingMethod",
+            "title": "Read by",
+            "description": "Selects the reading unit.",
+            "dataType": "int",
+            "enum": {
+              "Speak with highlighting in document": 0,
+              "Speak with highlighting in text reader": 1,
+              "Speak using one word display": 2
+            },
+            "default": 0
+          },
+          "ApplicationSettings.Speech.TextReaderOneWordFontName": {
+            "name": "ApplicationSettings.Speech.TextReaderOneWordFontName",
+            "title": "One word display font",
+            "description": "Selects the reading font for the 'one word display'",
+            "dataType": "string",
+            "enum": {
+              "Adobe Arabic": "Adobe Arabic",
+              "Adobe Fan Heiti Std": "Adobe Fan Heiti Std",
+              "Adobe Gothic Std": "Adobe Gothic Std",
+              "Adobe Hebrew": "Adobe Hebrew",
+              "Adobe Heiti Std": "Adobe Heiti Std",
+              "Adobe Ming Std": "Adobe Ming Std",
+              "Adobe Myungjo Std": "Adobe Myungjo Std",
+              "Adobe Pi Std": "Adobe Pi Std",
+              "Adobe Song Std": "Adobe Song Std",
+              "Adobe Thai": "Adobe Thai",
+              "Arial": "Arial",
+              "Bahnschrift": "Bahnschrift",
+              "Calibri": "Calibri",
+              "Cambria": "Cambria",
+              "Cambria Math": "Cambria Math",
+              "Candara": "Candara",
+              "Comic Sans MS": "Comic Sans MS",
+              "Consolas": "Consolas",
+              "Constantia": "Constantia",
+              "Corbel": "Corbel",
+              "Courier New": "Courier New",
+              "Courier Std": "Courier Std",
+              "Ebrima": "Ebrima",
+              "Franklin Gothic": "Franklin Gothic",
+              "Gabriola": "Gabriola",
+              "Gadugi": "Gadugi",
+              "Georgia": "Georgia",
+              "Global Monospace": "Global Monospace",
+              "Global Sans Serif": "Global Sans Serif",
+              "Global Serif": "Global Serif",
+              "Global User Interface": "Global User Interface",
+              "HoloLens MDL2 Assets": "HoloLens MDL2 Assets",
+              "Impact": "Impact",
+              "Ink Free": "Ink Free",
+              "Javanese Text": "Javanese Text",
+              "Kozuka Gothic Pr6N": "Kozuka Gothic Pr6N",
+              "Kozuka Mincho Pr6N": "Kozuka Mincho Pr6N",
+              "Leelawadee UI": "Leelawadee UI",
+              "Lucida Console": "Lucida Console",
+              "Lucida Sans Unicode": "Lucida Sans Unicode",
+              "Malgun Gothic": "Malgun Gothic",
+              "Marlett": "Marlett",
+              "Microsoft Himalaya": "Microsoft Himalaya",
+              "Microsoft JhengHei": "Microsoft JhengHei",
+              "Microsoft JhengHei UI": "Microsoft JhengHei UI",
+              "Microsoft New Tai Lue": "Microsoft New Tai Lue",
+              "Microsoft PhagsPa": "Microsoft PhagsPa",
+              "Microsoft Sans Serif": "Microsoft Sans Serif",
+              "Microsoft Tai Le": "Microsoft Tai Le",
+              "Microsoft YaHei": "Microsoft YaHei",
+              "Microsoft YaHei UI": "Microsoft YaHei UI",
+              "Microsoft Yi Baiti": "Microsoft Yi Baiti",
+              "MingLiUHKSCS-ExtB": "MingLiUHKSCS-ExtB",
+              "MingLiU-ExtB": "MingLiU-ExtB",
+              "Minion Pro": "Minion Pro",
+              "Mongolian Baiti": "Mongolian Baiti",
+              "MS Gothic": "MS Gothic",
+              "MS PGothic": "MS PGothic",
+              "MS UI Gothic": "MS UI Gothic",
+              "MV Boli": "MV Boli",
+              "Myanmar Text": "Myanmar Text",
+              "Myriad Pro": "Myriad Pro",
+              "Nirmala UI": "Nirmala UI",
+              "NSimSun": "NSimSun",
+              "Open Sans": "Open Sans",
+              "Palatino Linotype": "Palatino Linotype",
+              "PMingLiu-ExtB": "PMingLiu-ExtB",
+              "Segoe MDL2 Assets": "Segoe MDL2 Assets",
+              "Segoe Print": "Segoe Print",
+              "Segoe Script": "Segoe Script",
+              "Segoe UI": "Segoe UI",
+              "Segoe UI Emoji": "Segoe UI Emoji",
+              "Segoe UI Historic": "Segoe UI Historic",
+              "Segoe UI Symbol": "Segoe UI Symbol",
+              "SimSun": "SimSun",
+              "Simsun-ExtB": "Simsun-ExtB",
+              "Sitka Banner": "Sitka Banner",
+              "Sitka Display": "Sitka Display",
+              "Sitka Heading": "Sitka Heading",
+              "Sitka Small": "Sitka Small",
+              "Sitka Subheading": "Sitka Subheading",
+              "Sitka Text": "Sitka Text",
+              "Sylfaen": "Sylfaen",
+              "Symbol": "Symbol",
+              "Tahoma": "Tahoma",
+              "Times New Roman": "Times New Roman",
+              "Trebuchet MS": "Trebuchet MS",
+              "Verdana": "Verdana",
+              "Webdings": "Webdings",
+              "Wingdings": "Wingdings",
+              "Yu Gothic": "Yu Gothic",
+              "Yu Gothic UI": "Yu Gothic UI"
+            },
+            "default": "Comic Sans MS"
+          },
+          "ApplicationSettings.Speech.optSpeechHighTRFontName": {
+            "name": "ApplicationSettings.Speech.optSpeechHighTRFontName",
+            "title": "Text reader display font",
+            "description": "Selects the font for the 'text reader tool'.",
+            "dataType": "string",
+            "enum": {
+              "Adobe Arabic": "Adobe Arabic",
+              "Adobe Fan Heiti Std": "Adobe Fan Heiti Std",
+              "Adobe Gothic Std": "Adobe Gothic Std",
+              "Adobe Hebrew": "Adobe Hebrew",
+              "Adobe Heiti Std": "Adobe Heiti Std",
+              "Adobe Ming Std": "Adobe Ming Std",
+              "Adobe Myungjo Std": "Adobe Myungjo Std",
+              "Adobe Pi Std": "Adobe Pi Std",
+              "Adobe Song Std": "Adobe Song Std",
+              "Adobe Thai": "Adobe Thai",
+              "Arial": "Arial",
+              "Bahnschrift": "Bahnschrift",
+              "Calibri": "Calibri",
+              "Cambria": "Cambria",
+              "Cambria Math": "Cambria Math",
+              "Candara": "Candara",
+              "Comic Sans MS": "Comic Sans MS",
+              "Consolas": "Consolas",
+              "Constantia": "Constantia",
+              "Corbel": "Corbel",
+              "Courier New": "Courier New",
+              "Courier Std": "Courier Std",
+              "Ebrima": "Ebrima",
+              "Franklin Gothic": "Franklin Gothic",
+              "Gabriola": "Gabriola",
+              "Gadugi": "Gadugi",
+              "Georgia": "Georgia",
+              "Global Monospace": "Global Monospace",
+              "Global Sans Serif": "Global Sans Serif",
+              "Global Serif": "Global Serif",
+              "Global User Interface": "Global User Interface",
+              "HoloLens MDL2 Assets": "HoloLens MDL2 Assets",
+              "Impact": "Impact",
+              "Ink Free": "Ink Free",
+              "Javanese Text": "Javanese Text",
+              "Kozuka Gothic Pr6N": "Kozuka Gothic Pr6N",
+              "Kozuka Mincho Pr6N": "Kozuka Mincho Pr6N",
+              "Leelawadee UI": "Leelawadee UI",
+              "Lucida Console": "Lucida Console",
+              "Lucida Sans Unicode": "Lucida Sans Unicode",
+              "Malgun Gothic": "Malgun Gothic",
+              "Marlett": "Marlett",
+              "Microsoft Himalaya": "Microsoft Himalaya",
+              "Microsoft JhengHei": "Microsoft JhengHei",
+              "Microsoft JhengHei UI": "Microsoft JhengHei UI",
+              "Microsoft New Tai Lue": "Microsoft New Tai Lue",
+              "Microsoft PhagsPa": "Microsoft PhagsPa",
+              "Microsoft Sans Serif": "Microsoft Sans Serif",
+              "Microsoft Tai Le": "Microsoft Tai Le",
+              "Microsoft YaHei": "Microsoft YaHei",
+              "Microsoft YaHei UI": "Microsoft YaHei UI",
+              "Microsoft Yi Baiti": "Microsoft Yi Baiti",
+              "MingLiUHKSCS-ExtB": "MingLiUHKSCS-ExtB",
+              "MingLiU-ExtB": "MingLiU-ExtB",
+              "Minion Pro": "Minion Pro",
+              "Mongolian Baiti": "Mongolian Baiti",
+              "MS Gothic": "MS Gothic",
+              "MS PGothic": "MS PGothic",
+              "MS UI Gothic": "MS UI Gothic",
+              "MV Boli": "MV Boli",
+              "Myanmar Text": "Myanmar Text",
+              "Myriad Pro": "Myriad Pro",
+              "Nirmala UI": "Nirmala UI",
+              "NSimSun": "NSimSun",
+              "Open Sans": "Open Sans",
+              "Palatino Linotype": "Palatino Linotype",
+              "PMingLiu-ExtB": "PMingLiu-ExtB",
+              "Segoe MDL2 Assets": "Segoe MDL2 Assets",
+              "Segoe Print": "Segoe Print",
+              "Segoe Script": "Segoe Script",
+              "Segoe UI": "Segoe UI",
+              "Segoe UI Emoji": "Segoe UI Emoji",
+              "Segoe UI Historic": "Segoe UI Historic",
+              "Segoe UI Symbol": "Segoe UI Symbol",
+              "SimSun": "SimSun",
+              "Simsun-ExtB": "Simsun-ExtB",
+              "Sitka Banner": "Sitka Banner",
+              "Sitka Display": "Sitka Display",
+              "Sitka Heading": "Sitka Heading",
+              "Sitka Small": "Sitka Small",
+              "Sitka Subheading": "Sitka Subheading",
+              "Sitka Text": "Sitka Text",
+              "Sylfaen": "Sylfaen",
+              "Symbol": "Symbol",
+              "Tahoma": "Tahoma",
+              "Times New Roman": "Times New Roman",
+              "Trebuchet MS": "Trebuchet MS",
+              "Verdana": "Verdana",
+              "Webdings": "Webdings",
+              "Wingdings": "Wingdings",
+              "Yu Gothic": "Yu Gothic",
+              "Yu Gothic UI": "Yu Gothic UI"
+            },
+            "default": "Comic Sans MS"
+          },
+          "ApplicationSettings.Speech.TextReaderOneWordFontSize": {
+            "name": "ApplicationSettings.Speech.TextReaderOneWordFontSize",
+            "title": "One word display font size",
+            "description": "Selects the font size for the 'one word display'.",
+            "dataType": "int",
+            "range": {
+              "min": 10,
+              "max": 50
+            },
+            "default": 14
+          },
+          "ApplicationSettings.Speech.optSpeechHighTRFontSize": {
+            "name": "ApplicationSettings.Speech.optSpeechHighTRFontSize",
+            "title": "Text reader font size",
+            "description": "Selects the font size for the 'text reader tool'.",
+            "dataType": "int",
+            "range": {
+              "min": 10,
+              "max": 50
+            },
+            "default": 14
+          },
+          "ApplicationSettings.Speech.HighlightingBackColour": {
+            "name": "ApplicationSettings.Speech.HighlightingBackColour",
+            "title": "Highlighted background color",
+            "description": "Selects the color used as background for highlighting.",
+            "dataType": "string",
+            "enum": {
+              "Blue": "Blue",
+              "Turquoise": "Turquoise",
+              "Brigh green": "Chartreuse",
+              "Violet": "Violet",
+              "Red": "Red",
+              "Yellow": "Yellow",
+              "White": "White",
+              "Dark Blue": "DarkBlue",
+              "Teal": "Teal",
+              "Dark Green": "DarkGreen",
+              "Purple": "Purple",
+              "Dark Red": "DarkRed",
+              "Olive green": "Olive",
+              "Dimmed Text": "LightGray",
+              "Gray": "Gray"
+            },
+            "default": "Yellow"
+          },
+          "ApplicationSettings.Speech.HighlightingForeColour": {
+            "name": "ApplicationSettings.Speech.HighlightingForeColour",
+            "title": "Highlighted foreground color",
+            "description": "Selects the color used as foreground for highlighting.",
+            "dataType": "string",
+            "enum": {
+              "Yellow": "Yellow",
+              "Red": "Red",
+              "Violet": "Violet",
+              "Bright green": "Chartreuse",
+              "Turquoise": "Turquoise",
+              "Blue": "Blue",
+              "Black": "Black",
+              "Pale yellow": "LightYellow",
+              "Orange": "Orange",
+              "Light Green": "LightGreen",
+              "Sky blue": "SkyBlue",
+              "White": "White",
+              "Royal blue": "RoyalBlue"
+            },
+            "default": "Yellow"
+          },
+          "ApplicationSettings.Translation.FromLanguage": {
+            "name": "ApplicationSettings.Translation.FromLanguage",
+            "title": "Translate from",
+            "description": "Selects the language from which translate text.",
+            "dataType": "string",
+            "enum": {
+              "English": "en",
+              "Afrikaans": "af",
+              "Albanian": "sq",
+              "Arabic": "ar",
+              "Belarusian": "be",
+              "Bengali": "bn",
+              "Bulgarian": "bg",
+              "Catalan": "ca",
+              "Chinese": "zh",
+              "Croatian": "hr",
+              "Czech": "cs",
+              "Danish": "da",
+              "Dutch": "nl",
+              "Estonian": "et",
+              "Filipino": "tl",
+              "Finnish": "fi",
+              "French": "fr",
+              "Galician": "gl",
+              "German": "de",
+              "Greek": "el",
+              "Gujarati": "gu",
+              "Haitian Creole": "ht",
+              "Hebrew": "he",
+              "Hindi": "hi",
+              "Hungarian": "hu",
+              "Icelandic": "is",
+              "Indonesian": "id",
+              "Irish": "ga",
+              "Italian": "it",
+              "Japanese": "ja",
+              "Kannada": "kn",
+              "Korean": "ko",
+              "Latvian": "lv",
+              "Lithuanian": "lt",
+              "Macedonian": "mk",
+              "Malay": "ms",
+              "Maltese": "mt",
+              "Norwegian": "no",
+              "Persian": "fa",
+              "Polish": "pl",
+              "Portuguese": "pt",
+              "Romanian": "ro",
+              "Russian": "ru",
+              "Serbian": "sr",
+              "Slovak": "sk",
+              "Slovenian": "sl",
+              "Spanish": "es",
+              "Swahili": "sw",
+              "Swedish": "sv",
+              "Tamil": "ta",
+              "Telugu": "te",
+              "Thai": "th",
+              "Turkish": "tr",
+              "Ukrainian": "uk",
+              "Urdu": "ur",
+              "Vietnamese": "vi",
+              "Welsh": "cy",
+              "Yiddish": "yi"
+            },
+            "default": "en"
+          },
+          "ApplicationSettings.Translation.ToLanguage": {
+            "name": "ApplicationSettings.Translation.ToLanguage",
+            "title": "Translate to",
+            "description": "Selects the target language in which text should be translated.",
+            "dataType": "string",
+            "enum": {
+              "English": "en",
+              "Afrikaans": "af",
+              "Albanian": "sq",
+              "Arabic": "ar",
+              "Belarusian": "be",
+              "Bengali": "bn",
+              "Bulgarian": "bg",
+              "Catalan": "ca",
+              "Chinese": "zh",
+              "Croatian": "hr",
+              "Czech": "cs",
+              "Danish": "da",
+              "Dutch": "nl",
+              "Estonian": "et",
+              "Filipino": "tl",
+              "Finnish": "fi",
+              "French": "fr",
+              "Galician": "gl",
+              "German": "de",
+              "Greek": "el",
+              "Gujarati": "gu",
+              "Haitian Creole": "ht",
+              "Hebrew": "he",
+              "Hindi": "hi",
+              "Hungarian": "hu",
+              "Icelandic": "is",
+              "Indonesian": "id",
+              "Irish": "ga",
+              "Italian": "it",
+              "Japanese": "ja",
+              "Kannada": "kn",
+              "Korean": "ko",
+              "Latvian": "lv",
+              "Lithuanian": "lt",
+              "Macedonian": "mk",
+              "Malay": "ms",
+              "Maltese": "mt",
+              "Norwegian": "no",
+              "Persian": "fa",
+              "Polish": "pl",
+              "Portuguese": "pt",
+              "Romanian": "ro",
+              "Russian": "ru",
+              "Serbian": "sr",
+              "Slovak": "sk",
+              "Slovenian": "sl",
+              "Spanish": "es",
+              "Swahili": "sw",
+              "Swedish": "sv",
+              "Tamil": "ta",
+              "Telugu": "te",
+              "Thai": "th",
+              "Turkish": "tr",
+              "Ukrainian": "uk",
+              "Urdu": "ur",
+              "Vietnamese": "vi",
+              "Welsh": "cy",
+              "Yiddish": "yi"
+            },
+            "default": "es"
+          },
+          "ApplicationSettings.Vocabulary.VocabListWindow": {
+            "name": "ApplicationSettings.Vocabulary.VocabListWindow",
+            "title": "Show Vocabulary list window",
+            "description": "Displays the vocabulary list window. This lets you edit the current vocabulary list before creating a doc with it.",
+            "dataType": "bool",
+            "default": false
+          },
+          "ApplicationSettings.Vocabulary.VocabListImages": {
+            "name": "ApplicationSettings.Vocabulary.VocabListImages",
+            "title": "Include pictures",
+            "description": "Include pictures of the words present in the vocabulary list.",
+            "dataType": "bool",
+            "default": true
+          },
+          "ApplicationSettings.Vocabulary.VocabListDefinitions": {
+            "name": "ApplicationSettings.Vocabulary.VocabListDefinitions",
+            "title": "Include definitions",
+            "description": "Include definitions of the words present the vocabulary list.",
+            "dataType": "bool",
+            "default": true
+          },
+          "ApplicationSettings.VoiceNote.InsertInDoc": {
+            "name": "ApplicationSettings.VoiceNote.InsertInDoc",
+            "title": "Insert voice note directly on document",
+            "description": "Allows you to insert a voice note directly in the current working document if supported.",
+            "dataType": "bool",
+            "default": false
+          }
+        }
+      }
+    ]
   },
   "net.gpii.test.speechControl": {
     "settings": []

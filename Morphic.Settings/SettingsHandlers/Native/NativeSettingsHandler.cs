@@ -126,7 +126,7 @@ namespace Morphic.Settings.SettingsHandlers.Native
                 }
 
                 // NOTE: this is another area where changing the result of GetValue to an IMorphicResult could provide clear and granular success/error result
-                values.Add(setting, value);
+                values.Add(setting, value, (value == null) ? Values.ValueType.NotFound : Values.ValueType.UserSetting);
             }
 
             return ((success? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
