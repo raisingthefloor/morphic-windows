@@ -17,6 +17,7 @@
                               Checked="AutoReload_OnChecked" Unchecked="AutoReload_OnChecked" />
                     <Button Name="LoadRegistry" Content=" Load Another Registry " Click="LoadNewRegistry"
                             VerticalAlignment="Stretch" />
+                    <Button Name="SaveCSVButton" Content=" Export CSV " Click="SaveCSV" VerticalAlignment="Stretch"/>
                 </DockPanel>
             </DockPanel>
             <TextBlock Name="LoadedFileName" Margin="10,0,0,0" Foreground="White" HorizontalAlignment="Stretch"
@@ -37,6 +38,7 @@
                               Unchecked="ToggleAutoApply" VerticalAlignment="Center" Margin="10,0,10,0" />
                     <Button Name="ApplySettings" Content=" Apply Settings " Click="ApplyAllSettings"
                             VerticalAlignment="Stretch" Visibility="Hidden" />
+                    <Button Name="RefreshAll" Content="   Refresh All   " Click="ReloadAll" VerticalAlignment="Stretch"/>
                     <Button Name="EB" Content=" Enable Basic " Click="EBasic"
                             VerticalAlignment="Stretch" />
                     <Button Name="DB" Content=" Disable Basic " Click="DBasic"

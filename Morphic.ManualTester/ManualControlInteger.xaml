@@ -13,7 +13,10 @@
                     <DockPanel DockPanel.Dock="Right" HorizontalAlignment="Right">
                         <Image Name="LoadingIcon" Source="pack://application:,,,/Hourglass.png" Height="20"
                                Margin="5,0,5,0" Visibility="Hidden" />
-                        <TextBlock Text="Integer:" VerticalAlignment="Center" />
+                        <ComboBox Name="EnumVals" VerticalAlignment="Center" Margin="0,0,5,0" DropDownClosed="SelectEnumVal"/>
+                        <TextBlock Name="DataType" Text="Integer" VerticalAlignment="Center" />
+                        <TextBlock Name="Range" VerticalAlignment="Center"/>
+                        <TextBlock Text=":" VerticalAlignment="Center" />
                         <TextBox Name="InputField" VerticalAlignment="Center" Margin="5,0,20,0" Width="100"
                                  LostFocus="ValueChanged" KeyDown="EnterCheck" />
                     </DockPanel>

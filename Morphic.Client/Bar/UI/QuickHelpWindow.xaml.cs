@@ -312,8 +312,8 @@ namespace Morphic.Client.Bar.UI
 
             if ((idRequiresCountRefresh == true) || (pager.CurrentPage == -1))
             {
-                var min = range.GetMin(0, idRequiresCountRefresh);
-                var max = range.GetMax(0, idRequiresCountRefresh);
+                var min = range.GetMinInt(0, idRequiresCountRefresh);
+                var max = range.GetMaxInt(0, idRequiresCountRefresh);
                 pager.Offset = await min;
                 pager.NumberOfPages = await max;
             }
