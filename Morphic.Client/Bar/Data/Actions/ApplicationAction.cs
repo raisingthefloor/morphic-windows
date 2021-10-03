@@ -89,103 +89,153 @@ namespace Morphic.Client.Bar.Data.Actions
         [JsonProperty("windowStyle")]
         public ProcessWindowStyle WindowStyle { get; set; } = ProcessWindowStyle.Normal;
 
-        private static string? ConvertExeIdToExecutablePath(string exeId)
+        internal struct MorphicExecutablePathInfo
         {
+            public bool IsAppx;
+            public string Path;
+        }
+        //
+        // NOTE: we should consider returning error details (e.g. "executable not found", "unknown exeId", "win32 error") from this function
+        private static IMorphicResult<MorphicExecutablePathInfo> ConvertExeIdToExecutablePath(string exeId)
+        {
+            bool isAppX = false;
+            string? appPath = null;
+
             switch (exeId)
             {
                 case "calculator":
                     {
                         // option #1: calc.exe in system folder
-                        //var appPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "calc.exe");
+                        //appPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "calc.exe");
                         //
                         // option #2: find calc.exe in paths
-                        var appPath = ApplicationAction.SearchPathEnv("calc.exe");
-                        return appPath;
+                        appPath = ApplicationAction.SearchPathEnv("calc.exe");
                     }
+                    break;
                 case "firefox":
                     {
-                        var appPath = ApplicationAction.SearchAppPaths("firefox.exe");
-                        return appPath;
+                        appPath = ApplicationAction.SearchAppPaths("firefox.exe");
                     }
+                    break;
                 case "googleChrome":
                     {
-                        var appPath = ApplicationAction.SearchAppPaths("chrome.exe");
-                        return appPath;
+                        appPath = ApplicationAction.SearchAppPaths("chrome.exe");
                     }
+                    break;
                 case "microsoftAccess":
                     {
-                        var appPath = ApplicationAction.SearchAppPaths("MSACCESS.EXE");
-                        return appPath;
+                        appPath = ApplicationAction.SearchAppPaths("MSACCESS.EXE");
                     }
+                    break;
                 case "microsoftExcel":
                     {
-                        var appPath = ApplicationAction.SearchAppPaths("excel.exe");
-                        return appPath;
+                        appPath = ApplicationAction.SearchAppPaths("excel.exe");
                     }
+                    break;
                 case "microsoftEdge":
                     {
-                        var appPath = ApplicationAction.SearchAppPaths("msedge.exe");
-                        return appPath;
+                        appPath = ApplicationAction.SearchAppPaths("msedge.exe");
                     }
+                    break;
                 case "microsoftOneNote":
                     {
-                        var appPath = ApplicationAction.SearchAppPaths("OneNote.exe");
-                        return appPath;
+                        appPath = ApplicationAction.SearchAppPaths("OneNote.exe");
                     }
+                    break;
                 case "microsoftOutlook":
                     {
-                        var appPath = ApplicationAction.SearchAppPaths("OUTLOOK.EXE");
-                        return appPath;
+                        appPath = ApplicationAction.SearchAppPaths("OUTLOOK.EXE");
                     }
+                    break;
                 case "microsoftPowerPoint":
                     {
-                        var appPath = ApplicationAction.SearchAppPaths("powerpnt.exe");
-                        return appPath;
+                        appPath = ApplicationAction.SearchAppPaths("powerpnt.exe");
                     }
+                    break;
                 case "microsoftQuickAssist":
                     {
                         // option #1: exactly as written in Quick Assist shortcut (as of 18-Apr-2021): %WINDIR%\system32\quickassist.exe
                         //var appPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), @"system32\quickassist.exe");
                         //
                         // option #2: quickassist.exe in system folder
-                        var appPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "quickassist.exe");
+                        appPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "quickassist.exe");
                         //
                         // option #3: ms url shortcut (NOTE: we have intentionally not used this in case Quick Assist is removed from the system...as the URL does not give us a way to detect that scenario via "file does not exist" checks)
                         //var appPath = "ms-quick-assist:";
-                        //
-                        return appPath;
                     }
+                    break;
                 case "microsoftSkype":
                     {
-                        var appPath = ApplicationAction.SearchAppPaths("Skype.exe");
-                        return appPath;
+                        appPath = ApplicationAction.SearchAppPaths("Skype.exe");
                     }
+                    break;
                 case "microsoftTeams":
                     {
                         // NOTE: this is a very odd path, and it's not in the "AppPaths"; if we can find another way to determine the proper launch path or launch programatically, we should consider another method
                         var userAppDataLocalPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                        var appPath = Path.Combine(new string[] { userAppDataLocalPath, "Microsoft", "Teams", "current", "Teams.exe" });
-                        return appPath;
+                        var fixedAppPath = Path.Combine(new string[] { userAppDataLocalPath, "Microsoft", "Teams", "current", "Teams.exe" });
 
                         // NOTE: we could also probably launch Teams via the "ms-teams:" URI, but that wouldn't necessarily help us detect if it's installed
 
                         // NOTE: in the future, it would be better to launch Update.exe and have it then start Teams (as Microsoft does for their shortcut) -- but we'd probably want to
                         //       detect the Teams.exe file itself to detect if it was installed
-                        //var appPath = Path.Combine(new string[] { userAppDataLocalPath, "Microsoft", "Teams", "Update.exe" });
+                        //var fixedAppPath = Path.Combine(new string[] { userAppDataLocalPath, "Microsoft", "Teams", "Update.exe" });
                         //var params = new string[] { "--processStart", "Teams.exe" };
+
+                        // NOTE: in Windows 11 (and perhaps in recent releases of Windows 10), Microsoft Teams is installed as an Appx package with the name:
+                        // MicrosoftTeams_8wekyb3d8bbwe
+                        // ...so we might refer to this as appx:MicrosoftTeams_8wekyb3d8bbwe!MicrosoftTeams
+                        // NOTE: this path, including "!MicrosoftTeams" at the end, is the Application User Model ID (AUMID) of Microsoft Teams
+
+                        if (File.Exists(fixedAppPath) == true)
+                        {
+                            // if the file exists, set appPath to the fixed path
+                            appPath = fixedAppPath;
+                        }
+                        else
+                        {
+                            // if Teams was not installed as an EXE, check to see if it's installed as an APPX package
+                            var packageFamilyName = "MicrosoftTeams_8wekyb3d8bbwe";
+                            var isPackageInstalledResult = Appx.IsPackageInstalled(packageFamilyName);
+                            if (isPackageInstalledResult.IsError == true) {
+                                return new MorphicError<MorphicExecutablePathInfo>();
+                            }
+                            var isPackageInstalled = isPackageInstalledResult.Value!;
+
+                            if (isPackageInstalled == true) 
+                            {
+                                appPath = packageFamilyName + "!MicrosoftTeams";
+                                isAppX = true;
+                            }
+                        }
                     }
+                    break;
                 case "microsoftWord":
                     {
-                        var appPath = ApplicationAction.SearchAppPaths("Winword.exe");
-                        return appPath;
+                        appPath = ApplicationAction.SearchAppPaths("Winword.exe");
                     }
+                    break;
                 case "opera":
                     {
-                        var appPath = ApplicationAction.SearchAppPaths("opera.exe");
-                        return appPath;
+                        appPath = ApplicationAction.SearchAppPaths("opera.exe");
                     }
+                    break;
                 default:
                     return null;
+            }
+
+            if (appPath != null)
+            {
+                var result = new MorphicExecutablePathInfo()
+                {
+                    IsAppx = isAppX,
+                    Path = appPath
+                };
+                return new MorphicSuccess<MorphicExecutablePathInfo>(result);
+            }
+            else
+            {
+                return new MorphicError<MorphicExecutablePathInfo>();
             }
         }
 
@@ -201,6 +251,8 @@ namespace Morphic.Client.Bar.Data.Actions
                 this.exeNameValue = value;
                 this.AppPath = null; // until we find the executable id'd by exeNameValue, AppPath should be null; it will be set to the actual executable path (or AppX identity)
 
+                // OBSERVATION: we currently do not check if a package is installed; we simply assume that it is installed (i.e. available) if the EXE name beings with "appx:"
+				// NOTE: the "exename" for an appx is "appx:" followed by the AUMID (which includes the package name, plus additional information after the package name)
                 if (value != null && value.StartsWith("appx:", StringComparison.InvariantCultureIgnoreCase))
                 {
                     this.AppX = true;
@@ -209,10 +261,11 @@ namespace Morphic.Client.Bar.Data.Actions
 
                 if (value != null && value.Length > 0)
                 {
-                    var appPath = ApplicationAction.ConvertExeIdToExecutablePath(value);
-                    if (appPath != null)
+                    var convertExeToPathResult = ApplicationAction.ConvertExeIdToExecutablePath(value);
+                    if (convertExeToPathResult.IsError == false)
                     {
-                        this.AppPath = appPath;
+                        this.AppX = convertExeToPathResult.Value!.IsAppx;
+                        this.AppPath = convertExeToPathResult.Value!.Path;
                         App.Current.Logger.LogDebug($"Resolved exe file '{this.exeNameValue}' to '{this.AppPath ?? "(null)"}'");
                     }
                 }

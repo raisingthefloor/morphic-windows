@@ -332,9 +332,9 @@ namespace Morphic.Client.Bar.UI.BarControls
                             var darkModeState = getDarkModeStateResult.Value!;
 
                             var osVersion = Morphic.Windows.Native.OsVersion.OsVersion.GetWindows10Version();
-                            if (osVersion == Windows.Native.OsVersion.Windows10Version.v1809)
+                            if (osVersion == Windows.Native.OsVersion.Windows10Version.Win10_v1809)
                             {
-                                // Windows 10 v1809+
+                                // Windows 10 v1809
 
                                 // NOTE: this is hard-coded, as a patch, because the solutions registry does not yet understand how to capture/apply settings across incompatible handlers
                                 //       [and trying to call the Windows 10 v1903+ handlers for apps/system "light theme" will result in a memory access exception under v1809]

@@ -118,6 +118,7 @@
                             case "ms-settings:display":
                                 settingCategoryName = "textSize";
                                 break;
+                            case "ms-settings:easeofaccess":
                             case "ms-settings:easeofaccess-display":
                                 settingCategoryName = "allAccessibility";
                                 break;
