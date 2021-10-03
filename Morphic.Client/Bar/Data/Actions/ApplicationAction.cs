@@ -165,7 +165,6 @@ namespace Morphic.Client.Bar.Data.Actions
                         // NOTE: this is a very odd path, and it's not in the "AppPaths"; if we can find another way to determine the proper launch path or launch programatically, we should consider another method
                         var userAppDataLocalPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
                         var appPath = Path.Combine(new string[] { userAppDataLocalPath, "Microsoft", "Teams", "current", "Teams.exe" });
-                        return appPath;
 
                         // NOTE: we could also probably launch Teams via the "ms-teams:" URI, but that wouldn't necessarily help us detect if it's installed
 
@@ -173,6 +172,15 @@ namespace Morphic.Client.Bar.Data.Actions
                         //       detect the Teams.exe file itself to detect if it was installed
                         //var appPath = Path.Combine(new string[] { userAppDataLocalPath, "Microsoft", "Teams", "Update.exe" });
                         //var params = new string[] { "--processStart", "Teams.exe" };
+
+                        if (File.Exists(appPath) == true)
+                        {
+                            return appPath;
+                        }
+                        else
+                        {
+                            return null;
+                        }
                     }
                 case "microsoftWord":
                     {
