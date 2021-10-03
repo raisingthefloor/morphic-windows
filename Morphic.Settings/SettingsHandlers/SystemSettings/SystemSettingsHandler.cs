@@ -80,7 +80,7 @@
         private SystemSettingItem? GetSettingItem(string settingName)
         {
             // certain setting(s) are not supported for "get" operations on Windows 10 v1809 under our current reverse-engineered "get value" scheme; filter those now
-            if (Morphic.Windows.Native.OsVersion.OsVersion.GetWindows10Version() == Windows.Native.OsVersion.Windows10Version.v1809)
+            if (Morphic.Windows.Native.OsVersion.OsVersion.GetWindows10Version() == Windows.Native.OsVersion.Windows10Version.Win10_v1809)
             {
                 if (IsSettingSupportedInWindows10v1809(settingName) == false)
                 {

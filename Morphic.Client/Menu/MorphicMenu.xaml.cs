@@ -151,6 +151,41 @@
             }
         }
 
+        private async void WindowsSettingsAllAccessibilityOptionsClicked(object sender, RoutedEventArgs e)
+        {
+            string settingsUrlAsPath = null!; // required to quiet the "not initialized error"
+            var windows10Build = OsVersion.GetWindows10Version();
+
+            switch (windows10Build)
+            {
+                case Windows10Version.Win10_v1809:
+                case Windows10Version.Win10_v1903:
+                case Windows10Version.Win10_v1909:
+                case Windows10Version.Win10_v2004:
+                case Windows10Version.Win10_v20H2:
+                case Windows10Version.Win10_v21H1:
+                    // Windows 10 1809, 1903, 1909, 2004, 20H2, 21H1
+                    // NOTE: we should re-evaluate this path in all versions of Windows (to verify that it shouldn't be simply "ms-settings:easeofaccess" instead)
+                    settingsUrlAsPath = "ms-settings:easeofaccess-display";
+                    break;
+                case Windows10Version.Win11_v21H2:
+                    settingsUrlAsPath = "ms-settings:easeofaccess";
+                    break;
+                case Windows10Version.vFuture:
+                    // OBSERVATION: this may be the wrong path for future verisons of Windows (especially since Win10 and Win11 _may_ treat this differently post-21H1); re-evaluate this logic
+                    settingsUrlAsPath = "ms-settings:easeofaccess-display";
+                    break;
+                case null: // not a valid version
+                default:
+                    // not supported
+                    Debug.Assert(false, "This build of Windows is not supported");
+                    return;
+            }
+
+            MorphicMenuItem.OpenMenuItemPath(settingsUrlAsPath);
+            await MorphicMenuItem.RecordMenuItemTelemetryAsync(settingsUrlAsPath, ((MorphicMenuItem)sender).ParentMenuType, ((MorphicMenuItem)sender).TelemetryType, ((MorphicMenuItem)sender).TelemetryCategory);
+        }
+
         private async void WindowsSettingsPointerSizeClicked(object sender, RoutedEventArgs e)
         {
             string settingsUrlAsPath = null!; // required to quiet the "not initialized error"
@@ -158,17 +193,17 @@
 
             switch (windows10Build)
             {
-                case Windows10Version.v1809:
-                case Windows10Version.v1903:
-                case Windows10Version.v1909:
+                case Windows10Version.Win10_v1809:
+                case Windows10Version.Win10_v1903:
+                case Windows10Version.Win10_v1909:
                     // Windows 10 1809, 1903, 1909
                     settingsUrlAsPath = "ms-settings:easeofaccess-cursorandpointersize";
                     break;
-                case Windows10Version.v2004:
+                case Windows10Version.Win10_v2004:
                     // Windows 10 2004
                     settingsUrlAsPath = "ms-settings:easeofaccess-MousePointer";
                     break;
-                case Windows10Version.v20H2:
+                case Windows10Version.Win10_v20H2:
                     // Windows 10 20H2
                     // NOTE: Microsoft changed the URL for this link somwhere between 10.0.19042.986 and 10.0.19042.1052;
                     //       if we get any bug reports that this link doesn't work with v20H2, be sure to get the "winver" full version #...so we can adjust the revision # below (to something between 986 and 1051) as appropriate
@@ -195,15 +230,16 @@
                         settingsUrlAsPath = "ms-settings:easeofaccess-mousepointer";
                     }
                     break;
-                case Windows10Version.v21H1:
+                case Windows10Version.Win10_v21H1:
+                case Windows10Version.Win11_v21H2:
                 case Windows10Version.vFuture:
-                    // Windows 10 21H1 (and assumed for the future)
+                    // Windows 10 21H1, Windows 11 21H2 (and assumed for the future)
                     settingsUrlAsPath = "ms-settings:easeofaccess-mousepointer";
                     break;
                 case null: // not a valid version
                 default:
                     // not supported
-                    Debug.Assert(false, "This build of Windows 10 is not supported");
+                    Debug.Assert(false, "This build of Windows is not supported");
                     return;
             }
 

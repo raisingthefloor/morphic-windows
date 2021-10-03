@@ -53,7 +53,7 @@
         <menu:MorphicMenuItem Header="_Keyboard Settings" Open="ms-settings:easeofaccess-keyboard" />
         <!-- <l:MorphicMenuItem Header="Brightness" Shell="" /> -->
         <menu:MorphicMenuItem Header="_Language" Open="ms-settings:regionlanguage" />
-        <menu:MorphicMenuItem Header="_All Accessibility Options" Open="ms-settings:easeofaccess-display" />
+        <menu:MorphicMenuItem Header="_All Accessibility Options" Click="WindowsSettingsAllAccessibilityOptionsClicked" />
 
         <menu:MorphicMenuHeader Header="Direct actions"/>
         <menu:MorphicMenuItem Header="_Stop Key-repeat" IsCheckable="True" Click="StopKeyRepeatToggle" Loaded="StopKeyRepeatInit" />

@@ -764,12 +764,13 @@ namespace Morphic.Client
         private static List<Windows10Version> CompatibleWindows10Versions = new List<Windows10Version>() 
             {
                 // NOTE: the first entry in this list represents the "minimum" version of Windows 10 which we support
-                Windows10Version.v1809,
-                Windows10Version.v1903,
-                Windows10Version.v1909,
-                Windows10Version.v2004,
-                Windows10Version.v20H2,
-                Windows10Version.v21H1,
+                Windows10Version.Win10_v1809,
+                Windows10Version.Win10_v1903,
+                Windows10Version.Win10_v1909,
+                Windows10Version.Win10_v2004,
+                Windows10Version.Win10_v20H2,
+                Windows10Version.Win10_v21H1,
+                Windows10Version.Win11_v21H2,
                 Windows10Version.vFuture
             };
         private static bool IsOsCompatibleWithMorphic()
