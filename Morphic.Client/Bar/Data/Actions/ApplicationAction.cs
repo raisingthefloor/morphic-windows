@@ -173,6 +173,12 @@ namespace Morphic.Client.Bar.Data.Actions
                         //var appPath = Path.Combine(new string[] { userAppDataLocalPath, "Microsoft", "Teams", "Update.exe" });
                         //var params = new string[] { "--processStart", "Teams.exe" };
 
+                        // NOTE: in Windows 11 (and perhaps in recent releases of Windows 10), Microsoft Teams is installed as an Appx package with the name:
+                        // MicrosoftTeams_8wekyb3d8bbwe
+                        // ...so we might refer to this as appx:MicrosoftTeams_8wekyb3d8bbwe
+						//
+						// OBSERVATION: today, we distinguish between EXEs and APPX EXEs in the function which calls this function, so it's currently too late to return an APPX path at this point
+
                         if (File.Exists(appPath) == true)
                         {
                             return appPath;
@@ -209,6 +215,8 @@ namespace Morphic.Client.Bar.Data.Actions
                 this.exeNameValue = value;
                 this.AppPath = null; // until we find the executable id'd by exeNameValue, AppPath should be null; it will be set to the actual executable path (or AppX identity)
 
+                // OBSERVATION: we currently have no way of determining if a package is installed; we simply assume that it is installed (i.e. available) if the EXE name beings with "appx:"
+                // OBSERVATION: some applications (like Microsoft Teams) might be available as both a traditional EXE and also as an APPX package; we need to add the ability to search for both
                 if (value != null && value.StartsWith("appx:", StringComparison.InvariantCultureIgnoreCase))
                 {
                     this.AppX = true;
