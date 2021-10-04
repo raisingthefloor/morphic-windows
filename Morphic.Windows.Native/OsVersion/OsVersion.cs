@@ -13,9 +13,14 @@ namespace Morphic.Windows.Native.OsVersion
         Win10_v2004,
         Win10_v20H2,
         Win10_v21H1,
-        //Win10_v21H2,
+        Win10_v21H2,
+        Win10_vFuture // any future release of Windows 10 we're not yet aware of
+    }
+
+    public enum Windows11Version
+    {
         Win11_v21H2,
-        vFuture // any future release we're not yet aware of
+        Win11_vFuture // any future release of Windows 11 we're not yet aware of
     }
 
     public struct OsVersion
@@ -60,15 +65,42 @@ namespace Morphic.Windows.Native.OsVersion
                         return Windows10Version.Win10_v20H2;
                     case 19043:
                         return Windows10Version.Win10_v21H1;
-                    //case 19044:
-                    //    return Windows10Version.Win10_v21H2;
-                    case 22000:
-                        return Windows10Version.Win11_v21H2;
+                    case 19044:
+                        return Windows10Version.Win10_v21H2;
                     default:
                         // NOTE: as Microsoft is shipping both Windows 10 and Windows 11 as "10.0.###.###" releases, we may need to add some nuance to this code in the future (for 10 vs 11)
-                        if (version.Build > 19043)
+                        if (version.Build > 19044 && version.Build < 22000)
                         {
-                            return Windows10Version.vFuture;
+                            return Windows10Version.Win10_vFuture;
+                        }
+                        else
+                        {
+                            return null;
+                        }
+                }
+            }
+            else /* if (version.Major < 10) */
+            {
+                return null;
+            }
+        }
+
+        public static Windows11Version? GetWindows11Version()
+        {
+            var platform = System.Environment.OSVersion.Platform;
+            var version = System.Environment.OSVersion.Version;
+
+            if ((version.Major == 10) && (version.Minor == 0))
+            {
+                switch (version.Build)
+                {
+                    case 22000:
+                        return Windows11Version.Win11_v21H2;
+                    default:
+                        // NOTE: as Microsoft is shipping both Windows 10 and Windows 11 as "10.0.###.###" releases, we may need to add some nuance to this code in the future (for 10 vs 11)
+                        if (version.Build > 22000)
+                        {
+                            return Windows11Version.Win11_vFuture;
                         }
                         else
                         {
@@ -78,11 +110,11 @@ namespace Morphic.Windows.Native.OsVersion
             }
             else if ((version.Major == 10) && (version.Minor > 0))
             {
-                return Windows10Version.vFuture;
+                return Windows11Version.Win11_vFuture;
             }
             else if (version.Major > 10)
             {
-                return Windows10Version.vFuture;
+                return Windows11Version.Win11_vFuture;
             }
             else /* if (version.Major < 10) */
             {

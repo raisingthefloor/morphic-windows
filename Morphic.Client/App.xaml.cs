@@ -770,21 +770,29 @@ namespace Morphic.Client
                 Windows10Version.Win10_v2004,
                 Windows10Version.Win10_v20H2,
                 Windows10Version.Win10_v21H1,
-                Windows10Version.Win11_v21H2,
-                Windows10Version.vFuture
+                Windows10Version.Win10_v21H2,
+                Windows10Version.Win11_vFuture
+            };
+        private static List<Windows11Version> CompatibleWindows11Versions = new List<Windows11Version>()
+            {
+                // NOTE: the first entry in this list represents the "minimum" version of Windows 11 which we support
+                Windows11Version.Win11_v21H2,
+                Windows11Version.Win11_vFuture
             };
         private static bool IsOsCompatibleWithMorphic()
         {
             var windows10Build = OsVersion.GetWindows10Version();
+            var windows11Build = OsVersion.GetWindows11Version();
 
-            if (windows10Build == null) 
+            if (windows10Build == null && windows11Build == null) 
             {
                 // not a valid version
                 return false;
             } 
             else
             {
-                if (App.CompatibleWindows10Versions.Contains(windows10Build.Value) == true)
+                if ((App.CompatibleWindows10Versions.Contains(windows10Build.Value) == true) ||
+                    (App.CompatibleWindows11Versions.Contains(windows11Build.Value) == true))
                 {
                     return true;
                 }
