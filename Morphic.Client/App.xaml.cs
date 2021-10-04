@@ -771,7 +771,7 @@ namespace Morphic.Client
                 Windows10Version.Win10_v20H2,
                 Windows10Version.Win10_v21H1,
                 Windows10Version.Win10_v21H2,
-                Windows10Version.Win11_vFuture
+                Windows10Version.Win10_vFuture
             };
         private static List<Windows11Version> CompatibleWindows11Versions = new List<Windows11Version>()
             {
