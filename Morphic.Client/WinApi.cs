@@ -72,6 +72,11 @@ namespace Morphic.Client
                 return new Rect(this.Left, this.Top, this.Right - this.Left, this.Bottom - this.Top);
             }
 
+            public PInvoke.RECT ToPInvokeRect()
+            {
+                return new PInvoke.RECT() { left = this.Left, top = this.Top, right = this.Right, bottom = this.Bottom };
+            }
+
             /// <summary>
             /// Creates a win32 RECT from a .NET Rect.
             /// </summary>

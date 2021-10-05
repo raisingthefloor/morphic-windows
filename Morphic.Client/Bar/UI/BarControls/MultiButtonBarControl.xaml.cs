@@ -331,8 +331,8 @@ namespace Morphic.Client.Bar.UI.BarControls
                             }
                             var darkModeState = getDarkModeStateResult.Value!;
 
-                            var osVersion = Morphic.Windows.Native.OsVersion.OsVersion.GetWindows10Version();
-                            if (osVersion == Windows.Native.OsVersion.Windows10Version.Win10_v1809)
+                            var osVersion = Morphic.Windows.Native.OsVersion.OsVersion.GetWindowsVersion();
+                            if (osVersion == Windows.Native.OsVersion.WindowsVersion.Win10_v1809)
                             {
                                 // Windows 10 v1809
 
