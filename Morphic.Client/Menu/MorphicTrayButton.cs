@@ -274,7 +274,7 @@ namespace Morphic.Client.Menu
             // NOTE: this function is somewhat redundant and is provided to support Windows 11; we should refactor all of this code to handle window messages centrally
             private void _mouseHook_WndProcEvent(object? sender, Windows.Native.WindowMessageHooks.MouseWindowMessageHook.WndProcEventArgs e)
             {
-                // TODO: I _MUST_ CHANGE MY LOGIC SO THAT I CALL THIS IN A QUEUE ON A DISPATCH THREAD!
+                // TODO: we should ensure that calls are queued and then called from a sequential thread (ideally a UI dispatch thread)
                 switch ((WinApi.WindowMessage)e.Message) 
                 {
                     case WinApi.WindowMessage.WM_LBUTTONDOWN:
