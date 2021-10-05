@@ -154,45 +154,31 @@
         private async void WindowsSettingsAllAccessibilityOptionsClicked(object sender, RoutedEventArgs e)
         {
             string settingsUrlAsPath = null!; // required to quiet the "not initialized error"
-            var windows10Build = OsVersion.GetWindows10Version();
-            var windows11Build = OsVersion.GetWindows11Version();
+            var windowsVersion = OsVersion.GetWindowsVersion();
 
-            if (windows10Build is not null)
+            if (windowsVersion is not null)
             {
-                switch (windows10Build)
+                switch (windowsVersion)
                 {
-                    case Windows10Version.Win10_v1809:
-                    case Windows10Version.Win10_v1903:
-                    case Windows10Version.Win10_v1909:
-                    case Windows10Version.Win10_v2004:
-                    case Windows10Version.Win10_v20H2:
-                    case Windows10Version.Win10_v21H1:
-                    case Windows10Version.Win10_v21H2:
+                    case WindowsVersion.Win10_v1809:
+                    case WindowsVersion.Win10_v1903:
+                    case WindowsVersion.Win10_v1909:
+                    case WindowsVersion.Win10_v2004:
+                    case WindowsVersion.Win10_v20H2:
+                    case WindowsVersion.Win10_v21H1:
+                    case WindowsVersion.Win10_v21H2:
                         // Windows 10 1809, 1903, 1909, 2004, 20H2, 21H1, 21H2
                         // NOTE: we should re-evaluate this path in all versions of Windows (to verify that it shouldn't be simply "ms-settings:easeofaccess" instead)
                         settingsUrlAsPath = "ms-settings:easeofaccess-display";
                         break;
-                    case Windows10Version.Win10_vFuture:
+                    case WindowsVersion.Win10_vFuture:
                         // OBSERVATION: this may be the wrong path for future verisons of Windows (especially since Win10 and Win11 _may_ treat this differently post-21H1); re-evaluate this logic
                         settingsUrlAsPath = "ms-settings:easeofaccess-display";
                         break;
-                    default:
-                        // not supported
-                        Debug.Assert(false, "This build of Windows is not supported");
-                        return;
-                }
-            } 
-            else if (windows11Build is not null)
-            {
-                switch (windows11Build)
-                {
-                    case Windows11Version.Win11_v21H2:
-                        // Windows 11 21H2
+                    case WindowsVersion.Win11_v21H2:
+                    case WindowsVersion.Win11_vFuture:
+                        // Windows 11 21H2 (and assumed for the future)
                         settingsUrlAsPath = "ms-settings:easeofaccess";
-                        break;
-                    case Windows11Version.Win11_vFuture:
-                        // OBSERVATION: this may be the wrong path for future verisons of Windows (especially since Win10 and Win11 _may_ treat this differently post-21H1); re-evaluate this logic
-                        settingsUrlAsPath = "ms-settings:easeofaccess-display";
                         break;
                     default:
                         // not supported
@@ -214,24 +200,23 @@
         private async void WindowsSettingsPointerSizeClicked(object sender, RoutedEventArgs e)
         {
             string settingsUrlAsPath = null!; // required to quiet the "not initialized error"
-            var windows10Build = OsVersion.GetWindows10Version();
-            var windows11Build = OsVersion.GetWindows11Version();
+            var windowsVersion = OsVersion.GetWindowsVersion();
 
-            if (windows10Build is not null)
+            if (windowsVersion is not null)
             {
-                switch (windows10Build)
+                switch (windowsVersion)
                 {
-                    case Windows10Version.Win10_v1809:
-                    case Windows10Version.Win10_v1903:
-                    case Windows10Version.Win10_v1909:
+                    case WindowsVersion.Win10_v1809:
+                    case WindowsVersion.Win10_v1903:
+                    case WindowsVersion.Win10_v1909:
                         // Windows 10 1809, 1903, 1909
                         settingsUrlAsPath = "ms-settings:easeofaccess-cursorandpointersize";
                         break;
-                    case Windows10Version.Win10_v2004:
+                    case WindowsVersion.Win10_v2004:
                         // Windows 10 2004
                         settingsUrlAsPath = "ms-settings:easeofaccess-MousePointer";
                         break;
-                    case Windows10Version.Win10_v20H2:
+                    case WindowsVersion.Win10_v20H2:
                         // Windows 10 20H2
                         // NOTE: Microsoft changed the URL for this link somwhere between 10.0.19042.986 and 10.0.19042.1052;
                         //       if we get any bug reports that this link doesn't work with v20H2, be sure to get the "winver" full version #...so we can adjust the revision # below (to something between 986 and 1051) as appropriate
@@ -258,24 +243,14 @@
                             settingsUrlAsPath = "ms-settings:easeofaccess-mousepointer";
                         }
                         break;
-                    case Windows10Version.Win10_v21H1:
-                    case Windows10Version.Win10_v21H2:
-                    case Windows10Version.Win10_vFuture:
+                    case WindowsVersion.Win10_v21H1:
+                    case WindowsVersion.Win10_v21H2:
+                    case WindowsVersion.Win10_vFuture:
                         // Windows 10 21H1, Windows 10 21H2 (and assumed for the future)
                         settingsUrlAsPath = "ms-settings:easeofaccess-mousepointer";
                         break;
-                    default:
-                        // not supported
-                        Debug.Assert(false, "This build of Windows is not supported");
-                        return;
-                }
-            }
-            else if (windows11Build is not null)
-            {
-                switch (windows11Build)
-                {
-                    case Windows11Version.Win11_v21H2:
-                    case Windows11Version.Win11_vFuture:
+                    case WindowsVersion.Win11_v21H2:
+                    case WindowsVersion.Win11_vFuture:
                         // Windows 11 21H2 (and assumed for the future)
                         settingsUrlAsPath = "ms-settings:easeofaccess-mousepointer";
                         break;
@@ -354,27 +329,33 @@
 
         private async void OnTrayIconRightClicked(object? sender, EventArgs e)
         {
-            await this.ShowAsync(null, MenuOpenedSource.trayIcon);
+            await this.Dispatcher.InvokeAsync(async () =>
+            {
+                await this.ShowAsync(null, MenuOpenedSource.trayIcon);
+            });
         }
 
         private async void OnTrayIconClicked(object? sender, EventArgs e)
         {
-            if (this.App.BarManager.BarVisible)
+            await this.Dispatcher.InvokeAsync(async () =>
             {
-                this.App.BarManager.HideBar();
-                //
-                var segmentation = new CountlySDK.Segmentation();
-                segmentation.Add("eventSource", "trayIconClick");
-                await App.Current.Countly_RecordEventAsync("morphicBarHide", 1, segmentation);
-            }
-            else
-            {
-                this.App.BarManager.ShowBar();
-                //
-                var segmentation = new CountlySDK.Segmentation();
-                segmentation.Add("eventSource", "trayIconClick");
-                await App.Current.Countly_RecordEventAsync("morphicBarShow", 1, segmentation);
-            }
+                if (this.App.BarManager.BarVisible)
+                {
+                    this.App.BarManager.HideBar();
+                    //
+                    var segmentation = new CountlySDK.Segmentation();
+                    segmentation.Add("eventSource", "trayIconClick");
+                    await App.Current.Countly_RecordEventAsync("morphicBarHide", 1, segmentation);
+                }
+                else
+                {
+                    this.App.BarManager.ShowBar();
+                    //
+                    var segmentation = new CountlySDK.Segmentation();
+                    segmentation.Add("eventSource", "trayIconClick");
+                    await App.Current.Countly_RecordEventAsync("morphicBarShow", 1, segmentation);
+                }
+            });
         }
 
         #endregion

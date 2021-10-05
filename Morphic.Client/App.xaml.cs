@@ -761,47 +761,39 @@ namespace Morphic.Client
             logging.AddDebug();
         }
 
-        private static List<Windows10Version> CompatibleWindows10Versions = new List<Windows10Version>() 
+        private static List<WindowsVersion> CompatibleWindowsVersions = new List<WindowsVersion>() 
             {
-                // NOTE: the first entry in this list represents the "minimum" version of Windows 10 which we support
-                Windows10Version.Win10_v1809,
-                Windows10Version.Win10_v1903,
-                Windows10Version.Win10_v1909,
-                Windows10Version.Win10_v2004,
-                Windows10Version.Win10_v20H2,
-                Windows10Version.Win10_v21H1,
-                Windows10Version.Win10_v21H2,
-                Windows10Version.Win10_vFuture
-            };
-        private static List<Windows11Version> CompatibleWindows11Versions = new List<Windows11Version>()
-            {
-                // NOTE: the first entry in this list represents the "minimum" version of Windows 11 which we support
-                Windows11Version.Win11_v21H2,
-                Windows11Version.Win11_vFuture
+                // NOTE: the first entry in this list represents the "minimum" version of Windows which we support
+                WindowsVersion.Win10_v1809,
+                WindowsVersion.Win10_v1903,
+                WindowsVersion.Win10_v1909,
+                WindowsVersion.Win10_v2004,
+                WindowsVersion.Win10_v20H2,
+                WindowsVersion.Win10_v21H1,
+                WindowsVersion.Win10_v21H2,
+                WindowsVersion.Win10_vFuture,
+                //
+                WindowsVersion.Win11_v21H2,
+                WindowsVersion.Win11_vFuture
             };
         private static bool IsOsCompatibleWithMorphic()
         {
-            var windows10Build = OsVersion.GetWindows10Version();
-            var windows11Build = OsVersion.GetWindows11Version();
+            var windowsVersion = OsVersion.GetWindowsVersion();
 
-            if (windows10Build == null && windows11Build == null) 
+            if (windowsVersion == null) 
             {
                 // not a valid version
                 return false;
-            } 
-            else
+            }
+            else if (App.CompatibleWindowsVersions.Contains(windowsVersion.Value) == true)
             {
-                if ((App.CompatibleWindows10Versions.Contains(windows10Build.Value) == true) ||
-                    (App.CompatibleWindows11Versions.Contains(windows11Build.Value) == true))
-                {
-                    return true;
-                }
-                else
-                {
-                    // either this is an old verison of Windows or it's one we missed that we do support
-                    Debug.Assert(false, "Incompatible or unknown version of Windows");
-                    return false;
-                }
+                return true;
+            }
+            else 
+            {
+                // either this is an old verison of Windows or it's one we missed that we do support
+                Debug.Assert(false, "Incompatible or unknown version of Windows");
+                return false;
             }
         }
 
@@ -811,7 +803,7 @@ namespace Morphic.Client
 
             if (App.IsOsCompatibleWithMorphic() == false)
             {
-                MessageBox.Show($"Morphic is not compatible with the current version of Windows.\r\n\r\nPlease upgrade to Windows 10 " + App.CompatibleWindows10Versions[0] + " or newer.");
+                MessageBox.Show($"Morphic is not compatible with the current version of Windows.\r\n\r\nPlease upgrade to Windows 10 " + App.CompatibleWindowsVersions[0] + " or newer.");
 
                 this.Shutdown();
                 return;
