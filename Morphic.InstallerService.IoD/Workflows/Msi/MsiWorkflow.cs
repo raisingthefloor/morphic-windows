@@ -40,6 +40,7 @@ namespace IoDCLI.Workflows.Msi
 
             if (localPackage)
             {
+                Logger.LogInformation($"Installing from {package.Url}");
                 LocalFilePath = package.Url;
             }
         }

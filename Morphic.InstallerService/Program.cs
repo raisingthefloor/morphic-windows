@@ -8,6 +8,8 @@ using Morphic.InstallerService.Contracts;
 
 //sc create "Moprhic Installer Service" binPath="C:\Users\codan\Downloads\IoDCLI\InstallerService\bin\Debug\net5.0-windows10.0.17763\InstallerService.exe C:\Users\codan\Downloads\IoDCLI\InstallerService\bin\Debug\net5.0-windows10.0.17763"
 
+WindowsIdentityHelper.RegDisablePredefinedCacheEx();
+
 IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices(services =>
     {

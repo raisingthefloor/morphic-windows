@@ -50,6 +50,8 @@ namespace IoDCLI.Workflows
 
         public bool Validate()
         {
+            Logger.LogInformation($"Validating '{LocalFilePath}'...");
+
             var hashProvider = new SHA256HashProvider();
             var fileHash = hashProvider.Hash(LocalFilePath);
             var packageHash = Package.Hash;
@@ -61,7 +63,7 @@ namespace IoDCLI.Workflows
 
         public void Cleanup()
         {
-            File.Delete(LocalFilePath);
+            //File.Delete(LocalFilePath);
         }
 
         private static bool VerifyHash(string hash1, string hash2)

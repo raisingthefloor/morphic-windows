@@ -9,6 +9,25 @@ namespace Morphic.InstallerService
 {
     class WindowsIdentityHelper
     {
+        [DllImport("advapi32.dll", CharSet = CharSet.Auto)]
+        public static extern int RegDisablePredefinedCacheEx();
+
+        [DllImport("userenv.dll")]
+        public static extern bool LoadUserProfile(IntPtr hToken, ref ProfileInfo lpProfileInfo);
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct ProfileInfo
+        {
+            public int dwSize;
+            public int dwFlags;
+            public string lpUserName;
+            public string lpProfilePath;
+            public string lpDefaultPath;
+            public string lpServerName;
+            public string lpPolicyPath;
+            public IntPtr hProfile;
+        }
+
         [SuppressUnmanagedCodeSecurity]
         [DllImport("advapi32", SetLastError = true)]
         static extern int OpenProcessToken(IntPtr ProcessHandle, int DesiredAccess, ref IntPtr TokenHandle);

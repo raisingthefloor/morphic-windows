@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Morphic.InstallerService.Contracts;
 using System;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Threading.Tasks;
 
@@ -23,11 +24,13 @@ namespace Morphic.InstallerService
         public async Task Install(Package package)
         {
             _logger.LogInformation("Install called.");
-
+            
             var user = WindowsIdentityHelper.GetLoggedOnUsers().First();
 
             await WindowsIdentity.RunImpersonated(user.AccessToken, async () =>
             {
+                LoadUserProfile(user);
+
                 var service = _serviceProvider.GetService<PackageManagerService>();
 
                 if (service != null)
@@ -41,6 +44,15 @@ namespace Morphic.InstallerService
             });
         }
 
+        private bool LoadUserProfile(WindowsIdentity user)
+        {
+            var profileInfo = new WindowsIdentityHelper.ProfileInfo();
+            profileInfo.dwSize = Marshal.SizeOf(profileInfo);
+            profileInfo.lpUserName = user.Name;
+            profileInfo.dwFlags = 1;
+            return WindowsIdentityHelper.LoadUserProfile(user.Token, ref profileInfo);
+        }
+
         public async Task Uninstall(Package package)
         {
             _logger.LogInformation("Uninstall called.");
@@ -49,6 +61,8 @@ namespace Morphic.InstallerService
 
             await WindowsIdentity.RunImpersonated(user.AccessToken, async () =>
             {
+                LoadUserProfile(user);
+
                 var service = _serviceProvider.GetService<PackageManagerService>();
 
                 if (service != null)
@@ -70,6 +84,8 @@ namespace Morphic.InstallerService
 
             await WindowsIdentity.RunImpersonated(user.AccessToken, async () =>
             {
+                LoadUserProfile(user);
+
                 var service = _serviceProvider.GetService<PackageManagerService>();
 
                 if (service != null)
@@ -91,6 +107,8 @@ namespace Morphic.InstallerService
 
             await WindowsIdentity.RunImpersonated(user.AccessToken, async () =>
             {
+                LoadUserProfile(user);
+
                 var service = _serviceProvider.GetService<PackageManagerService>();
 
                 if (service != null)

@@ -6,6 +6,7 @@ using Morphic.Core;
 using Morphic.InstallerService.Contracts;
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace IoDCLI.Workflows.Jaws
@@ -81,8 +82,7 @@ namespace IoDCLI.Workflows.Jaws
                 //Download();
 
                 //if (Validate())
-                CreateRegistryKey(Registry.CurrentUser, @"Software\Freedom Scientific");
-                CreateRegistryKey(Registry.LocalMachine, @"Software\Freedom Scientific");
+                CreateRegistryKeys();
 
                 foreach (var msiToInstall in _msiToInstall)
                 {
@@ -152,11 +152,16 @@ namespace IoDCLI.Workflows.Jaws
             }
         }
 
+        private void CreateRegistryKeys()
+        {
+            CreateRegistryKey(Registry.CurrentUser, @"Software\Freedom Scientific");
+            CreateRegistryKey(Registry.LocalMachine, @"Software\Freedom Scientific");
+        }
+
         private void DeleteRegistryKeys()
         {
-            Registry.CurrentUser.OpenSubKey("Software").DeleteSubKeyTree("Freedom Scientific");
-
-            Registry.LocalMachine.OpenSubKey("Software").DeleteSubKeyTree("Freedom Scientific");
+            Registry.CurrentUser.OpenSubKey("Software", true).DeleteSubKeyTree("Freedom Scientific");
+            Registry.LocalMachine.OpenSubKey("Software", true).DeleteSubKeyTree("Freedom Scientific");
         }
 
         private void CleanupDirectories()

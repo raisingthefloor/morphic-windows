@@ -387,7 +387,7 @@
 
             if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(dialog.SelectedPath))
             {
-                var arguments = $"uninstall jaws {dialog.SelectedPath}";
+                var arguments = $"uninstall jaws \"{dialog.SelectedPath}\"";
                 Execute(@"InstallerServiceClient\Morphic.InstallerService.Client.exe", arguments);
             }
         }
