@@ -24,7 +24,7 @@ trigger:
       - "staging/*"
 
 pool:
-  vmImage: 'windows-latest'
+  vmImage: 'windows-2019'
 
 variables:
 # must be created in the azure UI under Pipelines > Library and specify accessKey, secretKey, region, and bucket
@@ -162,6 +162,7 @@ stages:
               -kvu "$(SigningVaultURL)"
               -kvi "$(SigningClientId)"
               -kvs "$(SigningClientSecret)"
+              -kvt "$(AzureTenantId)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
               -v
@@ -208,6 +209,7 @@ stages:
               -du "$(SigningURL)"
               -kvu "$(SigningVaultURL)"
               -kvi "$(SigningClientId)"
+              -kvt "$(AzureTenantId)"
               -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"

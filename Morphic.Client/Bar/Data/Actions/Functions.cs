@@ -723,8 +723,8 @@ namespace Morphic.Client.Bar.Data.Actions
 
         internal async static Task<IMorphicResult<bool>> GetDarkModeStateAsync()
         {
-            var osVersion = Morphic.Windows.Native.OsVersion.OsVersion.GetWindows10Version();
-            if (osVersion == Windows.Native.OsVersion.Windows10Version.v1809)
+            var osVersion = Morphic.Windows.Native.OsVersion.OsVersion.GetWindowsVersion();
+            if (osVersion == Windows.Native.OsVersion.WindowsVersion.Win10_v1809)
             {
                 // Windows 10 v1809
 
@@ -802,8 +802,8 @@ namespace Morphic.Client.Bar.Data.Actions
 
         internal async static Task<IMorphicResult> SetDarkModeStateAsync(bool state)
         {
-            var osVersion = Morphic.Windows.Native.OsVersion.OsVersion.GetWindows10Version();
-            if (osVersion == Windows.Native.OsVersion.Windows10Version.v1809)
+            var osVersion = Morphic.Windows.Native.OsVersion.OsVersion.GetWindowsVersion();
+            if (osVersion == Windows.Native.OsVersion.WindowsVersion.Win10_v1809)
             {
                 // Windows 10 v1809
 
