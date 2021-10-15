@@ -52,7 +52,7 @@ namespace Morphic.Windows.Native.Ini
 
         #region Parser 
 
-        public static IMorphicResult<IniFile> CreateFromString(string contents)
+        public static MorphicResult<IniFile, MorphicUnit> CreateFromString(string contents)
         {
             var properties = new List<IniProperty>();
             var sections = new List<IniSection>();
@@ -90,7 +90,7 @@ namespace Morphic.Windows.Native.Ini
                             // new property
                             var newProperty = IniProperty.CreateFromLexeme(iniToken.Lexeme, iniToken.LeadingTrivia, iniToken.TrailingTrivia);
                             //
-                            if (currentSection != null)
+                            if (currentSection is not null)
                             {
                                 // property within a section
                                 currentSection.Properties.Add(newProperty);
@@ -103,14 +103,14 @@ namespace Morphic.Windows.Native.Ini
                         }
                         break;
                     case IniTokenKind.Invalid:
-                        return IMorphicResult<IniFile>.ErrorResult();
+                        return MorphicResult.ErrorResult();
                 }
             }
 
             var result = new IniFile(properties, sections);
             result.EndOfFileContents = endOfFileContents;
 
-            return IMorphicResult<IniFile>.SuccessResult(result);
+            return MorphicResult.OkResult(result);
         }
 
         #endregion Parser

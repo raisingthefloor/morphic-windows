@@ -36,7 +36,7 @@ namespace Morphic.Windows.Native.Display
         public static String? GetMonitorName(IntPtr? hWnd)
         {
             IntPtr monitorHandle;
-            if (hWnd == null)
+            if (hWnd is null)
             {
                 // get the handle of the primary monitor
                 var desktopHWnd = WindowsApi.GetDesktopWindow();
@@ -80,7 +80,7 @@ namespace Morphic.Windows.Native.Display
 			// NOTE: our initial testing was without Windows 8.1/10's DPI awareness declared in the manifest, so this
 			// might now be unnecessary
             IntPtr monitorHandle;
-            if (hWnd == null)
+            if (hWnd is null)
             {
                 // get the handle of the primary monitor
                 var desktopHWnd = WindowsApi.GetDesktopWindow();
@@ -106,7 +106,7 @@ namespace Morphic.Windows.Native.Display
             // NOTE: if the WorkArea specified in SystemParameters.WorkArea has the wrong proportions, we can try using
             //       monitorInfo.rcWork instead
             var deviceName = Display.GetMonitorName(null);
-            if (deviceName == null)
+            if (deviceName is null)
             {
                 return null;
             }
@@ -154,7 +154,7 @@ namespace Morphic.Windows.Native.Display
             // capture the name of our primary monitor
             // NOTE: we could pass in the hWnd of a specific window instead
             var monitorName = Morphic.Windows.Native.Display.Display.GetMonitorName(hWnd);
-            if (monitorName == null)
+            if (monitorName is null)
             {
                 System.Diagnostics.Debug.Assert(false, "Could not get monitor name");
                 return null;
@@ -162,14 +162,14 @@ namespace Morphic.Windows.Native.Display
 
             // get the adapterId and sourceId for this monitor
             var adapterIdAndSourceId = Morphic.Windows.Native.Display.Display.GetAdapterIdAndSourceId(monitorName);
-            if (adapterIdAndSourceId == null)
+            if (adapterIdAndSourceId is null)
             {
                 System.Diagnostics.Debug.Assert(false, "Could not get adapter ids");
                 return null;
             }
 
             var dpiOffsetInfo = Morphic.Windows.Native.Display.Display.GetCurrentDpiOffsetAndRange(adapterIdAndSourceId.Value.adapterId, adapterIdAndSourceId.Value.sourceId);
-            if (dpiOffsetInfo == null)
+            if (dpiOffsetInfo is null)
             {
                 return null;
             }
@@ -177,7 +177,7 @@ namespace Morphic.Windows.Native.Display
             // convert the dpiOffset to a percentage
             var currentDisplayScale = Morphic.Windows.Native.Display.Display.TranslateDpiOffsetToPercentage(dpiOffsetInfo.Value.currentDpiOffset,
                 dpiOffsetInfo.Value.minimumDpiOffset, dpiOffsetInfo.Value.maximumDpiOffset);
-            if (currentDisplayScale == null)
+            if (currentDisplayScale is null)
             {
                 System.Diagnostics.Debug.Assert(false, "Current display scale % could not be calculated.");
                 return null;
@@ -193,19 +193,19 @@ namespace Morphic.Windows.Native.Display
         {
             // if no display adapter id info was provided, get an id to the primary monitor
             var primaryMonitorName = Display.GetMonitorName(null);
-            if (primaryMonitorName == null)
+            if (primaryMonitorName is null)
             {
                 return null;
             }
 
             var primaryMonitorIds = Display.GetAdapterIdAndSourceId(primaryMonitorName);
-            if (primaryMonitorIds == null)
+            if (primaryMonitorIds is null)
             {
                 return null;
             }
 
             var currentDpiOffsetAndRange = Display.GetCurrentDpiOffsetAndRange(primaryMonitorIds.Value.adapterId, primaryMonitorIds.Value.sourceId);
-            if (currentDpiOffsetAndRange == null)
+            if (currentDpiOffsetAndRange is null)
             {
                 return null;
             }
@@ -214,7 +214,7 @@ namespace Morphic.Windows.Native.Display
             if (IsCustomDpiOffset(currentDpiOffsetAndRange.Value.currentDpiOffset) == true)
             {
                 var customFixedDpiScalePercentage = Display.GetCustomDpiAsPercentage();
-                if (customFixedDpiScalePercentage == null)
+                if (customFixedDpiScalePercentage is null)
                 {
                     return null;
                 }
@@ -225,12 +225,12 @@ namespace Morphic.Windows.Native.Display
             }
 
             var minimumScale = Display.TranslateDpiOffsetToPercentage(currentDpiOffsetAndRange.Value.minimumDpiOffset, currentDpiOffsetAndRange.Value.minimumDpiOffset, currentDpiOffsetAndRange.Value.maximumDpiOffset);
-            if (minimumScale == null)
+            if (minimumScale is null)
             {
                 return null;
             }
             var maximumScale = Display.TranslateDpiOffsetToPercentage(currentDpiOffsetAndRange.Value.maximumDpiOffset, currentDpiOffsetAndRange.Value.minimumDpiOffset, currentDpiOffsetAndRange.Value.maximumDpiOffset);
-            if (maximumScale == null)
+            if (maximumScale is null)
             {
                 return null;
             }
@@ -366,7 +366,7 @@ namespace Morphic.Windows.Native.Display
                             break;
                     }
 
-                    if ((result == null) || (isInternal == true))
+                    if ((result is null) || (isInternal == true))
                     {
                         result = new DisplayAdapterIdAndSourceId(sourceName.header.adapterId, sourceName.header.id);
                     }
@@ -386,13 +386,13 @@ namespace Morphic.Windows.Native.Display
         {
             // if no display adapter id info was provided, get an id to the primary monitor
             var primaryMonitorName = Display.GetMonitorName(null);
-            if (primaryMonitorName == null)
+            if (primaryMonitorName is null)
             {
                 return null;
             }
 
             var primaryMonitorIds = Display.GetAdapterIdAndSourceId(primaryMonitorName);
-            if (primaryMonitorIds == null)
+            if (primaryMonitorIds is null)
             {
                 return null;
             }
@@ -621,17 +621,17 @@ namespace Morphic.Windows.Native.Display
         {
             WindowsApi.LUID adapterId;
             uint sourceId;
-            if (displayAdapterIdInfo == null)
+            if (displayAdapterIdInfo is null)
             {
                 // if no display adapter id info was provided, get an id to the primary monitor
                 var primaryMonitorName = Display.GetMonitorName(null);
-                if (primaryMonitorName == null)
+                if (primaryMonitorName is null)
                 {
                     return false;
                 }
 
                 var primaryMonitorIds = Display.GetAdapterIdAndSourceId(primaryMonitorName);
-                if (primaryMonitorIds == null)
+                if (primaryMonitorIds is null)
                 {
                     return false;
                 }
@@ -646,13 +646,13 @@ namespace Morphic.Windows.Native.Display
             }
 
             var currentDpiOffsetAndRange = Display.GetCurrentDpiOffsetAndRange(adapterId, sourceId);
-            if (currentDpiOffsetAndRange == null)
+            if (currentDpiOffsetAndRange is null)
             {
                 return false;
             }
 
             var newDpiOffset = Display.TranslatePercentageToDpiOffset(scalePercentage, currentDpiOffsetAndRange.Value.minimumDpiOffset, currentDpiOffsetAndRange.Value.maximumDpiOffset);
-            if (newDpiOffset == null)
+            if (newDpiOffset is null)
             {
                 return false;
             }
@@ -690,7 +690,7 @@ namespace Morphic.Windows.Native.Display
             // verify that the DPI was set successfully
             // NOTE: this is not technically necessary since we already have a success/failure result, but it's a good sanity check; if it's too early to check this then it's reasonable for us to skip this verification step
             var currentDpiOffsetAndRange = Display.GetCurrentDpiOffsetAndRange(displayAdapterIdInfo.adapterId, displayAdapterIdInfo.sourceId);
-            if (currentDpiOffsetAndRange == null)
+            if (currentDpiOffsetAndRange is null)
             {
                 return false;
             }

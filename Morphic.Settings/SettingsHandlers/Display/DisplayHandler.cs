@@ -56,24 +56,24 @@
                 // method 2: get/set zoom level based on scale percentage
                 var all = this.display.GetDPIScales();
                 double? newDpiScale = null;
-                if (all != null && index >= 0 && index < all.Count)
+                if (all is not null && index >= 0 && index < all.Count)
                 {
                     newDpiScale = all[index];
                 }
-                if (newDpiScale != null)
+                if (newDpiScale is not null)
                 {
                     // capture the current scale
                     var oldDpiScale = Display.GetMonitorScalePercentage(null);
                     // capture the recommended scale
                     var currentDpiOffsetAndRange = Display.GetCurrentDpiOffsetAndRange();
-                    var recommendedDpiScale = currentDpiOffsetAndRange != null ? Display.TranslateDpiOffsetToPercentage(0, currentDpiOffsetAndRange.Value.minimumDpiOffset, currentDpiOffsetAndRange.Value.maximumDpiOffset) : null;
+                    var recommendedDpiScale = currentDpiOffsetAndRange is not null ? Display.TranslateDpiOffsetToPercentage(0, currentDpiOffsetAndRange.Value.minimumDpiOffset, currentDpiOffsetAndRange.Value.maximumDpiOffset) : null;
                     // set the new percentage
                     this.display.SetDpiScale(newDpiScale.Value);
                     // report the display scale (percentage) change
-                    if (oldDpiScale != null)
+                    if (oldDpiScale is not null)
                     {
                         var segmentation = new Segmentation();
-                        if (recommendedDpiScale != null)
+                        if (recommendedDpiScale is not null)
                         {
                             var relativePercent = newDpiScale / recommendedDpiScale;
                             segmentation.Add("scalePercent", ((int)(relativePercent * 100)).ToString());
@@ -120,7 +120,7 @@
 
 			// method 2: get/set zoom level based on scale percentage
             var scale = Morphic.Windows.Native.Display.Display.GetMonitorScalePercentage(null);
-            if (scale == null)
+            if (scale is null)
             {
                 return Task.FromResult<object?>(null);
             }

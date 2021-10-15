@@ -27,7 +27,7 @@ namespace Morphic.Client.Bar.Data.Actions
         private readonly static SemaphoreSlim s_captureTextSemaphore = new SemaphoreSlim(1, 1);
 
         [InternalFunction("snip")]
-        public static async Task<IMorphicResult> ScreenSnipAsync(FunctionArgs args)
+        public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> ScreenSnipAsync(FunctionArgs args)
         {
             // Hide all application windows
             Dictionary<Window, double> opacity = new Dictionary<Window, double>();
@@ -85,19 +85,19 @@ namespace Morphic.Client.Bar.Data.Actions
                 }
             }
 
-            return IMorphicResult.SuccessResult;
+            return MorphicResult.OkResult();
         }
 
         [InternalFunction("menu", "key=Morphic")]
-        public async static Task<IMorphicResult> ShowMenuAsync(FunctionArgs args)
+        public async static Task<MorphicResult<MorphicUnit, MorphicUnit>> ShowMenuAsync(FunctionArgs args)
         {
             // NOTE: this internal function is only called by the MorphicBar's Morphie menu button
             await App.Current.ShowMenuAsync(null, Morphic.Client.Menu.MorphicMenu.MenuOpenedSource.morphicBarIcon);
-            return IMorphicResult.SuccessResult;
+            return MorphicResult.OkResult();
         }
 
         [InternalFunction("volumeUp")]
-        public static async Task<IMorphicResult> VolumeUpAsync(FunctionArgs args)
+        public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> VolumeUpAsync(FunctionArgs args)
         {
             args.Arguments.Add("direction", "up");
             args.Arguments.Add("amount", "6");
@@ -105,14 +105,14 @@ namespace Morphic.Client.Bar.Data.Actions
         }
 
         [InternalFunction("volumeDown")]
-        public static async Task<IMorphicResult> VolumeDownAsync(FunctionArgs args)
+        public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> VolumeDownAsync(FunctionArgs args)
         {
             args.Arguments.Add("direction", "down");
             args.Arguments.Add("amount", "6");
             return await SetVolumeAsync(args);
         }
 
-        internal static IMorphicResult<bool> GetMuteState()
+        internal static MorphicResult<bool, MorphicUnit> GetMuteState()
         {
             try
             {
@@ -121,16 +121,16 @@ namespace Morphic.Client.Bar.Data.Actions
                 // if we didn't get a state in the request, try to reverse the state
                 var state = audioEndpoint.GetMasterMuteState();
 
-                return IMorphicResult<bool>.SuccessResult(state);
+                return MorphicResult.OkResult(state);
             }
             catch
             {
-                return IMorphicResult<bool>.ErrorResult();
+                return MorphicResult.ErrorResult();
             }
         }
 
         [InternalFunction("volumeMute")]
-        public static async Task<IMorphicResult> VolumeMuteAsync(FunctionArgs args)
+        public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> VolumeMuteAsync(FunctionArgs args)
         {
             bool newState;
             if (args.Arguments.Keys.Contains("state"))
@@ -159,10 +159,10 @@ namespace Morphic.Client.Bar.Data.Actions
             }
             catch
             {
-                return IMorphicResult.ErrorResult;
+                return MorphicResult.ErrorResult();
             }
 
-            return IMorphicResult.SuccessResult;
+            return MorphicResult.OkResult();
         }
 
         /// <summary>
@@ -171,7 +171,7 @@ namespace Morphic.Client.Bar.Data.Actions
         /// <param name="args">direction: "up"/"down", amount: number of 1/100 to move</param>
         /// <returns></returns>
         [InternalFunction("volume", "direction", "amount=6")]
-        public static async Task<IMorphicResult> SetVolumeAsync(FunctionArgs args)
+        public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> SetVolumeAsync(FunctionArgs args)
         {
             // NOTE: ideally we should switch this functionality to use AudioEndpoint.SetMasterVolumeLevel instead
 
@@ -191,10 +191,10 @@ namespace Morphic.Client.Bar.Data.Actions
                 }
             }
 
-            return IMorphicResult.SuccessResult;
+            return MorphicResult.OkResult();
         }
 
-        private static async Task<IMorphicResult> ClearClipboardAsync(uint numberOfRetries, TimeSpan interval)
+        private static async Task<MorphicResult<MorphicUnit, MorphicUnit>> ClearClipboardAsync(uint numberOfRetries, TimeSpan interval)
         {
             // NOTE from Microsoft documentation (something to think about when working on this in the future...and perhaps something we need to handle):
             /* "The Clipboard class can only be used in threads set to single thread apartment (STA) mode. 
@@ -207,7 +207,7 @@ namespace Morphic.Client.Bar.Data.Actions
                 {
 					// NOTE: some developers have reported unhandled exceptions with this function call, even when inside a try...catch block.  If we experience that, we may need to look at our threading model, UWP alternatives, and Win32 API alternatives.
                     Clipboard.Clear();
-                    return IMorphicResult.SuccessResult;
+                    return MorphicResult.OkResult();
                 }
                 catch
                 {
@@ -217,7 +217,7 @@ namespace Morphic.Client.Bar.Data.Actions
             }
 
             App.Current.Logger.LogDebug("ReadAloud: Could not clear selected text from the clipboard.");
-            return IMorphicResult.ErrorResult;
+            return MorphicResult.ErrorResult();
         }
 
         /// <summary>
@@ -226,7 +226,7 @@ namespace Morphic.Client.Bar.Data.Actions
         /// <param name="args">action: "play", "pause", or "stop"</param>
         /// <returns></returns>
         [InternalFunction("readAloud", "action")]
-        public static async Task<IMorphicResult> ReadAloudAsync(FunctionArgs args)
+        public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> ReadAloudAsync(FunctionArgs args)
         {
             string action = args["action"];
             switch (action)
@@ -234,13 +234,13 @@ namespace Morphic.Client.Bar.Data.Actions
                 case "pause":
                     App.Current.Logger.LogError("ReadAloud: pause not supported.");
 
-                    return IMorphicResult.ErrorResult;
+                    return MorphicResult.ErrorResult();
 
                 case "stop":
                     App.Current.Logger.LogDebug("ReadAloud: Stop reading selected text.");
                     TextToSpeechHelper.Instance.Stop();
 
-                    return IMorphicResult.SuccessResult;
+                    return MorphicResult.OkResult();
 
                 case "play":
                     string? selectedText = null;
@@ -266,12 +266,12 @@ namespace Morphic.Client.Bar.Data.Actions
                         try
                         {
                             var focusedElement = AutomationElement.FocusedElement;
-                            if (focusedElement != null)
+                            if (focusedElement is not null)
                             {
                                 object? pattern = null;
                                 if (focusedElement.TryGetCurrentPattern(TextPattern.Pattern, out pattern))
                                 {
-                                    if ((pattern != null) && (pattern is TextPattern textPattern))
+                                    if ((pattern is not null) && (pattern is TextPattern textPattern))
                                     {
                                         // App.Current.Logger.LogDebug("ReadAloud: Capturing select text range(s).");
 
@@ -296,7 +296,7 @@ namespace Morphic.Client.Bar.Data.Actions
                         //
                         // if we just captured a text range collection (i.e. were able to copy the current selection), convert that capture into a string now
                         StringBuilder? selectedTextBuilder = null;
-                        if (textRangeCollection != null)
+                        if (textRangeCollection is not null)
                         {
                             // we have captured a range (presumably either an empty or non-empty selection)
                             selectedTextBuilder = new StringBuilder();
@@ -304,13 +304,13 @@ namespace Morphic.Client.Bar.Data.Actions
                             // append each text range
                             foreach (var textRange in textRangeCollection)
                             {
-                                if (textRange != null)
+                                if (textRange is not null)
                                 {
                                     selectedTextBuilder.Append(textRange.GetText(-1 /* maximumRange */));
                                 }
                             }
 
-                            //if (selectedTextBuilder != null /* && stringBuilder.Length > 0 */)
+                            //if (selectedTextBuilder is not null /* && stringBuilder.Length > 0 */)
                             //{
                                 selectedText = selectedTextBuilder.ToString();
                                 captureTextViaAutomationSucceeded = true;
@@ -340,11 +340,11 @@ namespace Morphic.Client.Bar.Data.Actions
                                 Dictionary<String, object?> clipboardContentsToRestore = new Dictionary<string, object?>();
 
                                 var previousClipboardData = Clipboard.GetDataObject();
-                                if (previousClipboardData != null)
+                                if (previousClipboardData is not null)
                                 {
                                     // App.Current.Logger.LogDebug("ReadAloud: Current clipboard has contents; attempting to capture format(s) of contents.");
                                     string[]? previousClipboardFormats = previousClipboardData.GetFormats();
-                                    if (previousClipboardFormats != null)
+                                    if (previousClipboardFormats is not null)
                                     {
                                         // App.Current.Logger.LogDebug("ReadAloud: Current clipboard has contents; attempting to back up current clipboard.");
 
@@ -362,7 +362,7 @@ namespace Morphic.Client.Bar.Data.Actions
                                                 // see: https://docs.microsoft.com/en-us/windows/apps/desktop/modernize/desktop-to-uwp-enhance
                                                 App.Current.Logger.LogDebug("ReadAloud: Unable to back up clipboard contents; this can happen with files copied to the clipboard, etc.");
                                                 
-                                                return IMorphicResult.ErrorResult;
+                                                return MorphicResult.ErrorResult();
                                             }
                                             clipboardContentsToRestore[format] = dataObject;
                                         }
@@ -402,14 +402,14 @@ namespace Morphic.Client.Bar.Data.Actions
                                 // capture the current selection
                                 var selectionWasCopiedToClipboard = false;
                                 var textCopiedToClipboard = Clipboard.GetText();
-                                if (textCopiedToClipboard != null)
+                                if (textCopiedToClipboard is not null)
                                 {
                                     selectionWasCopiedToClipboard = true;
 
                                     // we now have our selected text
                                     selectedText = textCopiedToClipboard;
 
-                                    if (selectedText != null)
+                                    if (selectedText is not null)
                                     {
                                         App.Current.Logger.LogDebug("ReadAloud: Captured selected text.");
                                     }
@@ -421,7 +421,7 @@ namespace Morphic.Client.Bar.Data.Actions
                                 else
                                 {
                                     var copiedDataFormats = Clipboard.GetDataObject()?.GetFormats();
-                                    if (copiedDataFormats != null)
+                                    if (copiedDataFormats is not null)
                                     {
                                         selectionWasCopiedToClipboard = true;
 
@@ -473,7 +473,7 @@ namespace Morphic.Client.Bar.Data.Actions
                                 foreach (var (format, data) in clipboardContentsToRestore)
                                 {
                                     // NOTE: sometimes, data is null (which is not something that SetData can accept) so we have to just skip that element
-                                    if (data != null)
+                                    if (data is not null)
                                     {
                                         Clipboard.SetData(format, data);
                                     }
@@ -491,10 +491,10 @@ namespace Morphic.Client.Bar.Data.Actions
                     {
                         App.Current.Logger.LogError(ex, "ReadAloud: Error reading selected text.");
 
-                        return IMorphicResult.ErrorResult;
+                        return MorphicResult.ErrorResult();
                     }
 
-                    if (selectedText != null)
+                    if (selectedText is not null)
                     {
                         if (selectedText != String.Empty)
                         {
@@ -507,29 +507,29 @@ namespace Morphic.Client.Bar.Data.Actions
                                 {
                                     App.Current.Logger.LogError("ReadAloud: Error saying selected text.");
 
-                                    return IMorphicResult.ErrorResult;
+                                    return MorphicResult.ErrorResult();
                                 }
 
-                                return IMorphicResult.SuccessResult;
+                                return MorphicResult.OkResult();
                             }
                             catch (Exception ex)
                             {
                                 App.Current.Logger.LogError(ex, "ReadAloud: Error reading selected text.");
 
-                                return IMorphicResult.ErrorResult;
+                                return MorphicResult.ErrorResult();
                             }
                         }
                         else
                         {
                             App.Current.Logger.LogDebug("ReadAloud: No text to say; skipping 'say' command.");
 
-                            return IMorphicResult.SuccessResult;
+                            return MorphicResult.OkResult();
                         }
                     } else {
                         // could not capture any text
                         // App.Current.Logger.LogError("ReadAloud: Could not capture any selected text; this may or may not be an error.");
 
-                        return IMorphicResult.ErrorResult;
+                        return MorphicResult.ErrorResult();
                     }
                 default:
                     throw new Exception("invalid code path");
@@ -542,22 +542,22 @@ namespace Morphic.Client.Bar.Data.Actions
         /// <param name="args">keys: the keys (see MSDN for SendKeys.Send())</param>
         /// <returns></returns>
         [InternalFunction("sendKeys", "keys")]
-        public static async Task<IMorphicResult> SendKeysAsync(FunctionArgs args)
+        public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> SendKeysAsync(FunctionArgs args)
         {
             await SelectionReader.Default.ActivateLastActiveWindow();
             System.Windows.Forms.SendKeys.SendWait(args["keys"]);
-            return IMorphicResult.SuccessResult;
+            return MorphicResult.OkResult();
         }
 
         [InternalFunction("signOut")]
-        public static async Task<IMorphicResult> SignOutAsync(FunctionArgs args)
+        public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> SignOutAsync(FunctionArgs args)
         {
             var success = Morphic.Windows.Native.WindowsSession.WindowsSession.LogOff();
-            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+            return success ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
         }
 
         [InternalFunction("openAllUsbDrives")]
-        public static async Task<IMorphicResult> OpenAllUsbDrivesAsync(FunctionArgs args)
+        public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> OpenAllUsbDrivesAsync(FunctionArgs args)
         {
             App.Current.Logger.LogError("OpenAllUsbDrives");
 
@@ -566,7 +566,7 @@ namespace Morphic.Client.Bar.Data.Actions
             {
                 Debug.Assert(false, "Could not get list of removable drives");
                 App.Current.Logger.LogError("Could not get list of removable drives");
-                return IMorphicResult.ErrorResult;
+                return MorphicResult.ErrorResult();
             }
             var removableDrives = getRemovableDisksAndDrivesResult.Value!.RemovableDrives;
 
@@ -618,11 +618,11 @@ namespace Morphic.Client.Bar.Data.Actions
                 });
             }
 
-            return IMorphicResult.SuccessResult;
+            return MorphicResult.OkResult();
         }
 
         [InternalFunction("ejectAllUsbDrives")]
-        public static async Task<IMorphicResult> EjectAllUsbDrivesAsync(FunctionArgs args)
+        public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> EjectAllUsbDrivesAsync(FunctionArgs args)
         {
             App.Current.Logger.LogError("EjectAllUsbDrives");
 
@@ -631,7 +631,7 @@ namespace Morphic.Client.Bar.Data.Actions
             {
                 Debug.Assert(false, "Could not get list of removable disks");
                 App.Current.Logger.LogError("Could not get list of removable disks");
-                return IMorphicResult.ErrorResult;
+                return MorphicResult.ErrorResult();
             }
             var removableDisks = getRemovableDisksAndDrivesResult.Value!.RemovableDisks;
 
@@ -654,10 +654,10 @@ namespace Morphic.Client.Bar.Data.Actions
 
             if (allDisksRemoved == false)
             {
-                return IMorphicResult.ErrorResult;
+                return MorphicResult.ErrorResult();
             }
 
-            return allDisksRemoved ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+            return allDisksRemoved ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
         }
 
         private struct GetRemovableDisksAndDrivesResult 
@@ -667,14 +667,14 @@ namespace Morphic.Client.Bar.Data.Actions
             public List<Morphic.Windows.Native.Devices.Drive> RemovableDrives; // logical volumes (media / partition); these can have drive letters
         }
         //
-        private static async Task<IMorphicResult<GetRemovableDisksAndDrivesResult>> GetRemovableDisksAndDrivesAsync()
+        private static async Task<MorphicResult<GetRemovableDisksAndDrivesResult, MorphicUnit>> GetRemovableDisksAndDrivesAsync()
         {
             // get a list of all disks (but not non-disks such as CD-ROM drives)
             var getAllDisksResult = await Morphic.Windows.Native.Devices.Disk.GetAllDisksAsync();
             if (getAllDisksResult.IsError == true)
             {
                 Debug.Assert(false, "Cannot get list of disks");
-                return IMorphicResult<GetRemovableDisksAndDrivesResult>.ErrorResult();
+                return MorphicResult.ErrorResult();
             }
 
             // filter out all disks which are not removable
@@ -686,7 +686,7 @@ namespace Morphic.Client.Bar.Data.Actions
                 if (getIsRemovableResult.IsError == true)
                 {
                     Debug.Assert(false, "Cannot determine if disk is removable");
-                    return IMorphicResult<GetRemovableDisksAndDrivesResult>.ErrorResult();
+                    return MorphicResult.ErrorResult();
                 }
                 var diskIsRemovable = getIsRemovableResult.Value!;
                 if (diskIsRemovable)
@@ -718,10 +718,10 @@ namespace Morphic.Client.Bar.Data.Actions
                 RemovableDrives = removableDrives
             };
 
-            return IMorphicResult<GetRemovableDisksAndDrivesResult>.SuccessResult(result);
+            return MorphicResult.OkResult(result);
         }
 
-        internal async static Task<IMorphicResult<bool>> GetDarkModeStateAsync()
+        internal async static Task<MorphicResult<bool, MorphicUnit>> GetDarkModeStateAsync()
         {
             var osVersion = Morphic.Windows.Native.OsVersion.OsVersion.GetWindowsVersion();
             if (osVersion == Windows.Native.OsVersion.WindowsVersion.Win10_v1809)
@@ -735,7 +735,7 @@ namespace Morphic.Client.Bar.Data.Actions
                 var openPersonalizeKeyResult = Morphic.Windows.Native.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize", true);
                 if (openPersonalizeKeyResult.IsError == true)
                 {
-                    return IMorphicResult<bool>.ErrorResult();
+                    return MorphicResult.ErrorResult();
                 }
                 var personalizeKey = openPersonalizeKeyResult.Value!;
 
@@ -751,7 +751,7 @@ namespace Morphic.Client.Bar.Data.Actions
                     }
                     else
                     {
-                        return IMorphicResult<bool>.ErrorResult();
+                        return MorphicResult.ErrorResult();
                     }
                 }
                 else
@@ -763,12 +763,12 @@ namespace Morphic.Client.Bar.Data.Actions
                 // dark theme state is the inverse of AppsUseLightTheme
                 var darkThemeState = !appsUseLightThemeAsBool;
 
-                return IMorphicResult<bool>.SuccessResult(darkThemeState);
+                return MorphicResult.OkResult(darkThemeState);
             }
-            else if (osVersion == null)
+            else if (osVersion is null)
             {
                 // error
-                return IMorphicResult<bool>.ErrorResult();
+                return MorphicResult.ErrorResult();
             }
             else
             {
@@ -779,7 +779,7 @@ namespace Morphic.Client.Bar.Data.Actions
                 var getSystemThemeValueResult = await systemThemeSetting.GetValueAsync();
                 if (getSystemThemeValueResult.IsError == true)
                 {
-                    return IMorphicResult<bool>.ErrorResult();
+                    return MorphicResult.ErrorResult();
                 }
                 var lightThemeSystemAsObject = getSystemThemeValueResult.Value!;
                 var lightThemeSystemAsBool = (bool)lightThemeSystemAsObject;
@@ -789,18 +789,18 @@ namespace Morphic.Client.Bar.Data.Actions
                 var getAppsThemeValueResult = await appsThemeSetting.GetValueAsync();
                 if (getAppsThemeValueResult.IsError == true)
                 {
-                    return IMorphicResult<bool>.ErrorResult();
+                    return MorphicResult.ErrorResult();
                 }
                 var lightThemeAppsAsObject = getAppsThemeValueResult.Value!;
                 var lightThemeAppsAsBool = (bool)lightThemeSystemAsObject;
 
                 // if either apps or system theme is set to "not light", then return true 
                 var darkModeIsEnabled = ((lightThemeSystemAsBool == false) || (lightThemeAppsAsBool == false));
-                return IMorphicResult<bool>.SuccessResult(darkModeIsEnabled);
+                return MorphicResult.OkResult(darkModeIsEnabled);
             }
         }
 
-        internal async static Task<IMorphicResult> SetDarkModeStateAsync(bool state)
+        internal async static Task<MorphicResult<MorphicUnit, MorphicUnit>> SetDarkModeStateAsync(bool state)
         {
             var osVersion = Morphic.Windows.Native.OsVersion.OsVersion.GetWindowsVersion();
             if (osVersion == Windows.Native.OsVersion.WindowsVersion.Win10_v1809)
@@ -814,7 +814,7 @@ namespace Morphic.Client.Bar.Data.Actions
                 var openPersonalizeKeyResult = Morphic.Windows.Native.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize", true);
                 if (openPersonalizeKeyResult.IsError == true)
                 {
-                    return IMorphicResult.ErrorResult;
+                    return MorphicResult.ErrorResult();
                 }
                 var personalizeKey = openPersonalizeKeyResult.Value!;
 
@@ -826,7 +826,7 @@ namespace Morphic.Client.Bar.Data.Actions
                 var setAppsUseLightThemeResult = personalizeKey.SetValue<uint>("AppsUseLightTheme", newAppsUseLightThemeAsUInt32);
                 if (setAppsUseLightThemeResult.IsError == true)
                 {
-                    return IMorphicResult.ErrorResult;
+                    return MorphicResult.ErrorResult();
                 }
 
                 // see: https://docs.microsoft.com/en-us/windows/win32/winmsg/wm-wininichange
@@ -841,10 +841,10 @@ namespace Morphic.Client.Bar.Data.Actions
                     Marshal.FreeHGlobal(pointerToImmersiveColorSetString);
                 }
             }
-            else if (osVersion == null)
+            else if (osVersion is null)
             {
                 // error
-                return IMorphicResult.ErrorResult;
+                return MorphicResult.ErrorResult();
             }
             else
             {
@@ -872,11 +872,11 @@ namespace Morphic.Client.Bar.Data.Actions
                 await appsThemeSetting.SetValueAsync(!state);
             }
 
-            return IMorphicResult.SuccessResult;
+            return MorphicResult.OkResult();
         }
 
         [InternalFunction("darkMode")]
-        public static async Task<IMorphicResult> DarkModeAsync(FunctionArgs args)
+        public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> DarkModeAsync(FunctionArgs args)
         {
             // if we have a "value" property, this is a multi-segmented button and we should use "value" instead of "state"
             bool on;
@@ -897,10 +897,10 @@ namespace Morphic.Client.Bar.Data.Actions
             var setDarkModeStateResult = await Functions.SetDarkModeStateAsync(on);
             if (setDarkModeStateResult.IsError == true)
             {
-                return IMorphicResult.ErrorResult;
+                return MorphicResult.ErrorResult();
             }
 
-            return IMorphicResult.SuccessResult;
+            return MorphicResult.OkResult();
         }
 
         //
@@ -929,7 +929,7 @@ namespace Morphic.Client.Bar.Data.Actions
         }
 
         [InternalFunction("basicWordRibbon")]
-        public static async Task<IMorphicResult> ToggleBasicWordRibbonAsync(FunctionArgs args)
+        public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> ToggleBasicWordRibbonAsync(FunctionArgs args)
         {
             // if we have a "value" property, this is a multi-segmented button and we should use "value" instead of "state"
             bool on;
@@ -950,23 +950,23 @@ namespace Morphic.Client.Bar.Data.Actions
             if (Functions.IsSafeToModifyRibbonFile_WarnUser() == false)
             {
                 // Word is running, so we are choosing not to execute this function
-                return new MorphicError();
+                return MorphicResult.ErrorResult();
             }
 
             if (on == true)
             {
                 var enableRibbonResult = Morphic.Integrations.Office.WordRibbon.EnableBasicSimplifyRibbon();
-                return enableRibbonResult.IsSuccess ? new MorphicSuccess() : new MorphicError();
+                return enableRibbonResult.IsSuccess ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
             }
             else
             {
                 var disableRibbonResult = Morphic.Integrations.Office.WordRibbon.DisableBasicSimplifyRibbon();
-                return disableRibbonResult.IsSuccess ? new MorphicSuccess() : new MorphicError();
+                return disableRibbonResult.IsSuccess ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
             }
         }
 
         [InternalFunction("essentialsWordRibbon")]
-        public static async Task<IMorphicResult> ToggleEssentialsWordRibbonAsync(FunctionArgs args)
+        public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> ToggleEssentialsWordRibbonAsync(FunctionArgs args)
         {
             // if we have a "value" property, this is a multi-segmented button and we should use "value" instead of "state"
             bool on;
@@ -987,18 +987,18 @@ namespace Morphic.Client.Bar.Data.Actions
             if (Functions.IsSafeToModifyRibbonFile_WarnUser() == false)
             {
                 // Word is running, so we are choosing not to execute this function
-                return new MorphicError();
+                return MorphicResult.ErrorResult();
             }
 
             if (on == true)
             {
                 var enableRibbonResult = Morphic.Integrations.Office.WordRibbon.EnableEssentialsSimplifyRibbon();
-                return enableRibbonResult.IsSuccess ? new MorphicSuccess() : new MorphicError();
+                return enableRibbonResult.IsSuccess ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
             }
             else
             {
                 var disableRibbonResult = Morphic.Integrations.Office.WordRibbon.DisableEssentialsSimplifyRibbon();
-                return disableRibbonResult.IsSuccess ? new MorphicSuccess() : new MorphicError();
+                return disableRibbonResult.IsSuccess ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
             }
         }
 

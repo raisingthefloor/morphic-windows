@@ -64,17 +64,17 @@ namespace Morphic.Client.Bar.Data
         /// <param name="force"></param>
         public void InferStateThemes(bool force = false)
         {
-            if (force || this.Hover.Background == null)
+            if (force || this.Hover.Background is null)
             {
                 this.Hover.Background = this.LightenColor(this.Background ?? Colors.Transparent, 0.25f);
             }
 
-            if (force || this.Active.Background == null)
+            if (force || this.Active.Background is null)
             {
                 this.Active.Background = this.LightenColor(this.Background ?? Colors.Transparent, 0.5f);
             }
 
-            if (force || this.Focus.Background == null)
+            if (force || this.Focus.Background is null)
             {
                 this.Focus.Background = this.Hover.Background;
             }
@@ -166,7 +166,7 @@ namespace Morphic.Client.Bar.Data
             foreach (PropertyInfo property in typeof(Theme).GetProperties().Where(p => p.CanWrite))
             {
                 object? origValue = all ? null : property.GetValue(this);
-                if (origValue == null || (origValue is double d && double.IsNaN(d)))
+                if (origValue is null || (origValue is double d && double.IsNaN(d)))
                 {
                     object? newValue = property.GetValue(source);
                     property.SetValue(this, newValue);

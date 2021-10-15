@@ -56,7 +56,7 @@ namespace Morphic.Client.Dialogs
                 switch (key.ToLower()) {
                     case "applypreferencesafterlogin":
                         this.ApplyPreferencesAfterLogin = (value as bool?) ?? false;
-                        if (this.LoginPanel != null)
+                        if (this.LoginPanel is not null)
                         {
                             this.LoginPanel.ApplyPreferencesAfterLogin = this.ApplyPreferencesAfterLogin;
                         }

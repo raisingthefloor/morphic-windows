@@ -73,7 +73,7 @@ namespace Morphic.Settings.SettingsHandlers.SystemSettings
         {
             this.dryRun = dryRun;
             string dllPath = this.GetSettingDll(settingId);
-            if (dllPath == null)
+            if (dllPath is null)
             {
                 throw new SettingFailedException("No such setting");
             }
@@ -229,7 +229,7 @@ namespace Morphic.Settings.SettingsHandlers.SystemSettings
                 value = Registry.GetValue(path, "DllPath", null);
             }
 
-            return value == null ? null : value.ToString();
+            return value is null ? null : value.ToString();
         }
 
         /// <summary>Get an instance of ISettingItem for the given setting.</summary>
@@ -259,7 +259,7 @@ namespace Morphic.Settings.SettingsHandlers.SystemSettings
             // Call it.
             ISystemSettingItem item;
             IntPtr result = getSetting(settingId, out item, IntPtr.Zero);
-            if (result != IntPtr.Zero || item == null)
+            if (result != IntPtr.Zero || item is null)
             {
                 throw new SettingFailedException("Unable to instantiate setting class", true);
             }

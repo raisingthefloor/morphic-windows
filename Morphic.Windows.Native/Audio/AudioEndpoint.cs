@@ -52,7 +52,7 @@ namespace Morphic.Windows.Native.Audio
             // before disposing of any managed objects, unregister our callback
             try
             {
-                if (_audioEndpointVolumeCallback != null)
+                if (_audioEndpointVolumeCallback is not null)
                 {
                     _audioEndpointVolume.UnregisterControlChangeNotify(_audioEndpointVolumeCallback!);
                 }
@@ -120,13 +120,13 @@ namespace Morphic.Windows.Native.Audio
             // if any events are registered by our caller, we need to be registered for unmanaged volume/mute state change notifications
             //
             // volume level
-            if (_masterVolumeLevelChangedEvent != null)
+            if (_masterVolumeLevelChangedEvent is not null)
             {
                 shouldBeRegisteredForNotifications = true;
             }
             //
             // mute state
-            if (_masterMuteStateChangedEvent != null)
+            if (_masterMuteStateChangedEvent is not null)
             {
                 shouldBeRegisteredForNotifications = true;
             }
@@ -134,7 +134,7 @@ namespace Morphic.Windows.Native.Audio
             if (shouldBeRegisteredForNotifications == true)
             {
                 // if we have subscribed events and are _not_ already registered for notifications, register for notifications now
-                if (_audioEndpointVolumeCallback == null)
+                if (_audioEndpointVolumeCallback is null)
                 {
                     _audioEndpointVolumeCallback = new AudioEndpointVolumeCallback(this.AudioVolumeNotificationCallback);
                     _audioEndpointVolume.RegisterControlChangeNotify(_audioEndpointVolumeCallback);
@@ -143,7 +143,7 @@ namespace Morphic.Windows.Native.Audio
             else
             {
                 // unregister for notifications if we are already registered...but no longer have any subscribed events
-                if (_audioEndpointVolumeCallback != null)
+                if (_audioEndpointVolumeCallback is not null)
                 {
                     _audioEndpointVolume.UnregisterControlChangeNotify(_audioEndpointVolumeCallback!);
                 }
@@ -175,7 +175,7 @@ namespace Morphic.Windows.Native.Audio
             add
             {
                 // if we have not already captured the master volume level, do so now
-                if (_lastMasterVolumeLevel == null)
+                if (_lastMasterVolumeLevel is null)
                 {
                     try
                     {
@@ -189,7 +189,7 @@ namespace Morphic.Windows.Native.Audio
             }
             remove
             {
-                if (_masterVolumeLevelChangedEvent != null)
+                if (_masterVolumeLevelChangedEvent is not null)
                 {
                     _masterVolumeLevelChangedEvent -= value;
                 }
@@ -239,7 +239,7 @@ namespace Morphic.Windows.Native.Audio
             add
             {
                 // if we have not already captured the master mute state, do so now
-                if (_lastMasterMuteState == null)
+                if (_lastMasterMuteState is null)
                 {
                     try
                     {

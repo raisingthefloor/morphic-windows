@@ -18,34 +18,34 @@
 
         /// <summary>Gets the value of the specified settings of a group.</summary>
 		// NOTE: we return both success/failure and a list of results so that we can return partial results in case of partial failure
-        public abstract Task<(IMorphicResult, Values)> GetAsync(SettingGroup settingGroup, IEnumerable<Setting> settings);
+        public abstract Task<(MorphicResult<MorphicUnit, MorphicUnit>, Values)> GetAsync(SettingGroup settingGroup, IEnumerable<Setting> settings);
 
         /// <summary>Sets the given values to setting in a group.</summary>
-        public abstract Task<IMorphicResult> SetAsync(SettingGroup settingGroup, Values values);
+        public abstract Task<MorphicResult<MorphicUnit, MorphicUnit>> SetAsync(SettingGroup settingGroup, Values values);
 
         /// <summary>Gets the value of all settings in a group.</summary>
 		// NOTE: we return both success/failure and a list of results so that we can return partial results in case of partial failure
-        public virtual async Task<(IMorphicResult, Values)> GetAsync(SettingGroup settingGroup)
+        public virtual async Task<(MorphicResult<MorphicUnit, MorphicUnit>, Values)> GetAsync(SettingGroup settingGroup)
         {
             return await this.GetAsync(settingGroup, settingGroup);
         }
 
         /// <summary>Gets the value of a single setting.</summary>
-        public virtual async Task<IMorphicResult<object?>> GetAsync(Setting setting)
+        public virtual async Task<MorphicResult<object?, MorphicUnit>> GetAsync(Setting setting)
         {
             // NOTE: we are returning an error if doing a GetAsync was a failure...even if we got one item back.  We need to have a more granular error reporting strategy and
             //       need to determine when it might be safe to return a value even though there was an error
             var (getResult, value) = await this.GetAsync(setting.SettingGroup, new[] { setting });
             if (getResult.IsError == true)
             {
-                return IMorphicResult<object?>.ErrorResult();
+                return MorphicResult.ErrorResult();
             }
                 
-            return IMorphicResult<object?>.SuccessResult(value.FirstOrDefault().Value);
+            return MorphicResult.OkResult((object?)value.FirstOrDefault().Value);
         }
 
         /// <summary>Set the value of a single setting.</summary>
-        public virtual async Task<IMorphicResult> SetAsync(Setting setting, object? newValue)
+        public virtual async Task<MorphicResult<MorphicUnit, MorphicUnit>> SetAsync(Setting setting, object? newValue)
         {
             return await this.SetAsync(setting.SettingGroup, new Values(setting, newValue));
         }

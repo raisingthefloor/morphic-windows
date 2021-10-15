@@ -69,7 +69,7 @@ namespace Morphic.ManualTesterCLI
         {
             //not sure what to do with this command without debugdescription
             var setting = solutions.GetSolution(solution).GetSetting(preference);
-            if (setting != null)
+            if (setting is not null)
             {
                 Console.WriteLine(setting.ToString());
             }
@@ -78,7 +78,7 @@ namespace Morphic.ManualTesterCLI
 #nullable enable
         public async Task Get(string? solution = null)
         {
-            bool allSolutions = (solution == null);
+            bool allSolutions = (solution is null);
             foreach (var sol in solutions.All.Values)
             {
                 if (allSolutions || solution == sol.SolutionId)
@@ -106,7 +106,7 @@ namespace Morphic.ManualTesterCLI
                 }
                 // OBSERVATION: we are not checking for the success/failure of this call...nor returning its success/failure to our caller
                 object? value = (await setting.GetValueAsync()).Value;
-                if (value == null)
+                if (value is null)
                 {
                     Console.WriteLine("[NO DATA RETURNED]");
                     return;

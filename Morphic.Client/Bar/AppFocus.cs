@@ -74,14 +74,14 @@
                 cursor ??= PresentationSource.FromVisual(window)?.CompositionTarget.TransformFromDevice
                                              .Transform(WindowMovement.GetCursorPos());
 
-                if (cursor != null)
+                if (cursor is not null)
                 {
                     System.Windows.Rect rc = window.GetRect();
                     rc.Inflate(10, 10);
                     if (rc.Contains(cursor.Value))
                     {
                         isOver = true;
-                        if (this.mouseTimer == null)
+                        if (this.mouseTimer is null)
                         {
                             // Keep an eye on the current position.
                             this.mouseTimer = new DispatcherTimer(DispatcherPriority.Input)

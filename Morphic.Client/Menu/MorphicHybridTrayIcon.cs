@@ -87,11 +87,11 @@ namespace Morphic.Client.Menu
             set
             {
                 _icon = value;
-                if (_notifyIcon != null)
+                if (_notifyIcon is not null)
                 {
                     _notifyIcon.Icon = _icon;
                 }
-                if (_trayButton != null)
+                if (_trayButton is not null)
                 {
                     _trayButton.Icon = _icon;
                 }
@@ -108,11 +108,11 @@ namespace Morphic.Client.Menu
             set
             {
                 _text = value;
-                if (_notifyIcon != null)
+                if (_notifyIcon is not null)
                 {
                     _notifyIcon.Text = _text;
                 }
-                if (_trayButton != null)
+                if (_trayButton is not null)
                 {
                     _trayButton.Text = _text;
                 }
@@ -130,11 +130,11 @@ namespace Morphic.Client.Menu
             {
                 _visible = value;
 
-                if (_notifyIcon != null)
+                if (_notifyIcon is not null)
                 {
                     _notifyIcon.Visible = _visible;
                 }
-                if (_trayButton != null)
+                if (_trayButton is not null)
                 {
                     _trayButton.Visible = _visible;
                 }
@@ -145,7 +145,7 @@ namespace Morphic.Client.Menu
 
         private void InitializeTrayIcon()
         {
-            if (_notifyIcon != null) {
+            if (_notifyIcon is not null) {
                 return;
             }
 
@@ -169,7 +169,7 @@ namespace Morphic.Client.Menu
 
         private void InitializeTrayButton()
         {
-            if (_trayButton != null)
+            if (_trayButton is not null)
             {
                 return;
             }
@@ -209,7 +209,7 @@ namespace Morphic.Client.Menu
                 {
                     case TrayIconLocationOption.NotificationTray:
                     case TrayIconLocationOption.NotificationTrayAndNextToNotificationTray:
-                        if (_notifyIcon == null)
+                        if (_notifyIcon is null)
                         {
                             this.InitializeTrayIcon();
                         }
@@ -221,7 +221,7 @@ namespace Morphic.Client.Menu
                 {
                     case TrayIconLocationOption.NextToNotificationTray:
                     case TrayIconLocationOption.NotificationTrayAndNextToNotificationTray:
-                        if (_trayButton == null)
+                        if (_trayButton is null)
                         {
                             this.InitializeTrayButton();
                         }
@@ -233,7 +233,7 @@ namespace Morphic.Client.Menu
                 {
                     case TrayIconLocationOption.None:
                     case TrayIconLocationOption.NextToNotificationTray:
-                        if (_notifyIcon != null)
+                        if (_notifyIcon is not null)
                         {
                             _notifyIcon.Dispose();
                             _notifyIcon = null;
@@ -246,7 +246,7 @@ namespace Morphic.Client.Menu
                 {
                     case TrayIconLocationOption.None:
                     case TrayIconLocationOption.NotificationTray:
-                        if (_trayButton != null)
+                        if (_trayButton is not null)
                         {
                             _trayButton.Dispose();
                             _trayButton = null;

@@ -49,13 +49,13 @@
         protected override void OnOpened(RoutedEventArgs e)
         {
             // if autorun settings are configured by config.json, do not give the user the option to enable/disable
-            if (ConfigurableFeatures.AutorunConfig != null)
+            if (ConfigurableFeatures.AutorunConfig is not null)
             {
                 this.AutorunAfterLoginItem.Visibility = Visibility.Collapsed;
             }
 
             // if morphicBarVisibilityAfterLogin settings are configured by config.json, do not give the user the option to enable/disable
-            if (ConfigurableFeatures.MorphicBarVisibilityAfterLogin != null)
+            if (ConfigurableFeatures.MorphicBarVisibilityAfterLogin is not null)
             {
                 this.ShowMorphicBarAfterLoginItem.Visibility = Visibility.Collapsed;
             }
@@ -73,7 +73,7 @@
         {
             _menuOpenedSource = menuOpenedSource;
 
-            if (control == null)
+            if (control is null)
             {
                 this.Placement = PlacementMode.Mouse;
                 this.PlacementTarget = null;
@@ -93,7 +93,7 @@
         private CountlySDK.Segmentation CreateMenuOpenedSourceSegmentation(MenuOpenedSource? menuOpenedSource)
         {
             var segmentation = new CountlySDK.Segmentation();
-            if (_menuOpenedSource != null)
+            if (_menuOpenedSource is not null)
             {
                 segmentation.Add("eventSource", _menuOpenedSource.ToString() + "Menu");
             }

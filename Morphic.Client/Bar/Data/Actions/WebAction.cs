@@ -69,24 +69,25 @@ namespace Morphic.Client.Bar.Data.Actions
             get
             {
                 return null;
-//                this.Uri != null ? new Uri($"https://icons.duckduckgo.com/ip2/{this.Uri.Host}.ico") : null;
+//                this.Uri is not null ? new Uri($"https://icons.duckduckgo.com/ip2/{this.Uri.Host}.ico") : null;
             }
         }
 
-        protected override Task<IMorphicResult> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
+        protected override Task<MorphicResult<MorphicUnit, MorphicUnit>> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
         {
             bool success = true;
-            if (this.Uri != null)
+            if (this.Uri is not null)
             {
                 Process? process = Process.Start(new ProcessStartInfo()
                 {
                     FileName = this.ResolveString(this.Uri?.ToString(), source),
                     UseShellExecute = true
                 });
-                success = process != null;
+                success = process is not null;
             }
 
-            return Task.FromResult(success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult);
+            MorphicResult<MorphicUnit, MorphicUnit> result = success ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
+            return Task.FromResult(result);
         }
     }
 }

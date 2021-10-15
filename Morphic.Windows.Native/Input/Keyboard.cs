@@ -40,7 +40,7 @@ namespace Morphic.Windows.Native.Input
             WindowsApi.SystemParametersInfoFilterKeys(
                 WindowsApi.SPI_GETFILTERKEYS, filterKeys.cbSize, ref filterKeys, 0);
 
-            if (newvalue != null)
+            if (newvalue is not null)
             {
                 if (newvalue == true)
                 {

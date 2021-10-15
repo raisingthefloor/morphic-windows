@@ -62,7 +62,7 @@
                 this.logger.LogInformation(e, $"Unable to read {currentThemeFile}.");
             }
 
-            if (!isValid || themeData == null)
+            if (!isValid || themeData is null)
             {
                 string defaultTheme = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows),
                     "resources\\Themes\\aero.theme");

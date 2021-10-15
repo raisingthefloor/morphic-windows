@@ -44,12 +44,12 @@ namespace Morphic.Settings.SettingsHandlers.Ini
         /// <exception cref="SolutionsRegistryException">INI file parser failure.</exception>
         public void Parse()
         {
-            if (this.Content == null)
+            if (this.Content is null)
             {
                 throw new InvalidOperationException("INI file has not been loaded");
             }
 
-            IMorphicResult<IniFile> result = IniFile.CreateFromString(this.Content);
+            MorphicResult<IniFile, MorphicUnit> result = IniFile.CreateFromString(this.Content);
             this.IniFile = result.IsSuccess
                 ? result.Value
                 : throw new SolutionsRegistryException($"INI file parsing failed for ${this.FilePath}");
@@ -63,7 +63,7 @@ namespace Morphic.Settings.SettingsHandlers.Ini
         /// <exception cref="InvalidOperationException">INI file has not been read yet.</exception>
         public virtual Task WriteFile(string filePath)
         {
-            if (this.IniFile == null)
+            if (this.IniFile is null)
             {
                 throw new InvalidOperationException("INI file has not been parsed");
             }
@@ -92,7 +92,7 @@ namespace Morphic.Settings.SettingsHandlers.Ini
         /// <exception cref="InvalidOperationException">INI file has not been read yet.</exception>
         public string? GetValue(string path)
         {
-            if (this.IniFile == null)
+            if (this.IniFile is null)
             {
                 throw new InvalidOperationException("INI file has not been parsed");
             }
@@ -102,7 +102,7 @@ namespace Morphic.Settings.SettingsHandlers.Ini
             string propertyName = parts.Last();
             string? sectionName = parts.Length > 1 ? parts[0] : null;
 
-            List<IniProperty>? properties = sectionName == null
+            List<IniProperty>? properties = sectionName is null
                 ? this.IniFile.Properties
                 : this.IniFile.Sections.FirstOrDefault(s => s.Name == sectionName)?.Properties;
 
@@ -119,7 +119,7 @@ namespace Morphic.Settings.SettingsHandlers.Ini
         /// <exception cref="InvalidOperationException">INI file has not been read yet.</exception>
         public void SetValue(string path, string? value)
         {
-            if (this.IniFile == null)
+            if (this.IniFile is null)
             {
                 throw new InvalidOperationException("INI file has not been parsed");
             }
@@ -130,14 +130,14 @@ namespace Morphic.Settings.SettingsHandlers.Ini
             string? sectionName = parts.Length > 1 ? parts[0] : null;
 
             List<IniProperty> properties;
-            if (sectionName == null)
+            if (sectionName is null)
             {
                 properties = this.IniFile.Properties;
             }
             else
             {
                 IniSection? section = this.IniFile.Sections.FirstOrDefault(s => s.Name == sectionName);
-                if (section == null)
+                if (section is null)
                 {
                     section = new IniSection(sectionName);
                     this.IniFile.Sections.Add(section);
@@ -147,14 +147,14 @@ namespace Morphic.Settings.SettingsHandlers.Ini
             }
 
             IniProperty? property = properties.FirstOrDefault(p => p.Key == propertyName);
-            if (value == null)
+            if (value is null)
             {
-                if (property != null)
+                if (property is not null)
                 {
                     properties.Remove(property);
                 }
             }
-            else if (property == null)
+            else if (property is null)
             {
                 properties.Add(new IniProperty(propertyName, value));
             }
@@ -171,7 +171,7 @@ namespace Morphic.Settings.SettingsHandlers.Ini
         /// <exception cref="InvalidOperationException">INI file has not been read yet.</exception>
         public Dictionary<string,string> ReadData()
         {
-            if (this.IniFile == null)
+            if (this.IniFile is null)
             {
                 throw new InvalidOperationException("INI file has not been parsed");
             }
