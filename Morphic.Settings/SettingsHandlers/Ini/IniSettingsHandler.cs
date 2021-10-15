@@ -21,7 +21,7 @@
         }
 
 		// NOTE: we return both success/failure and a set of values so that we can return a partially list in case of partial failure
-        public override async Task<(IMorphicResult, Values)> GetAsync(SettingGroup settingGroup, IEnumerable<Setting> settings)
+        public override async Task<(MorphicResult<MorphicUnit, MorphicUnit>, Values)> GetAsync(SettingGroup settingGroup, IEnumerable<Setting> settings)
         {
             var success = true;
 
@@ -34,7 +34,7 @@
                 foreach (Setting setting in settings)
                 {
                     string? value = ini.GetValue(setting.Name);
-                    if (value != null)
+                    if (value is not null)
                     {
                         values.Add(setting, value);
                     }
@@ -45,10 +45,10 @@
                 success = false;
             }
 
-            return (success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult, values);
+            return (success ? MorphicResult.OkResult() : MorphicResult.ErrorResult(), values);
         }
 
-        public override async Task<IMorphicResult> SetAsync(SettingGroup settingGroup, Values values)
+        public override async Task<MorphicResult<MorphicUnit, MorphicUnit>> SetAsync(SettingGroup settingGroup, Values values)
         {
             try
             {
@@ -62,11 +62,11 @@
 
                 await ini.WriteFile(settingGroup.Path);
 
-                return IMorphicResult.SuccessResult;
+                return MorphicResult.OkResult();
             }
             catch
             {
-                return IMorphicResult.ErrorResult;
+                return MorphicResult.ErrorResult();
             }
         }
     }

@@ -64,10 +64,10 @@
         {
             get
             {
-                if (this.CurrentUserId != null)
+                if (this.CurrentUserId is not null)
                 {
                     string? username = this.userSettings.GetUsernameForId(this.CurrentUserId);
-                    if (username != null)
+                    if (username is not null)
                     {
                         if (this.keychain.LoadUsername(this.Service.Endpoint, username) is ICredentials credentials)
                         {
@@ -95,7 +95,7 @@
         public async Task<bool> Authenticate(UsernameCredentials credentials, bool signedInViaLoginForm)
         {
             AuthResponse? auth = await this.Service.Authenticate(credentials);
-            bool success = auth != null;
+            bool success = auth is not null;
             if (success)
             {
                 this.keychain.Save(credentials, this.Service.Endpoint);
@@ -134,7 +134,7 @@
             }
         }
 
-        public bool SignedIn => this.User != null;
+        public bool SignedIn => this.User is not null;
 
         #endregion
 
@@ -145,13 +145,13 @@
         }
 
         /// <summary>Gets a setting value.</summary>
-        public async Task<IMorphicResult<object?>> GetSetting(SettingId settingId)
+        public async Task<MorphicResult<object?, MorphicUnit>> GetSetting(SettingId settingId)
         {
             return await this.Solutions.GetSetting(settingId).GetValueAsync();
         }
 
         /// <summary>Sets the value of a setting.</summary>
-        public async Task<IMorphicResult> SetSetting(SettingId settingId, object? newValue)
+        public async Task<MorphicResult<MorphicUnit, MorphicUnit>> SetSetting(SettingId settingId, object? newValue)
         {
             return await this.Solutions.GetSetting(settingId).SetValueAsync(newValue);
         }

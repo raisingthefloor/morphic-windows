@@ -29,7 +29,7 @@
         }
 
         /// <summary>Captures the preferences of this solution.</summary>
-        public async Task<IMorphicResult> CaptureAsync(SolutionPreferences solutionPreferences)
+        public async Task<MorphicResult<MorphicUnit, MorphicUnit>> CaptureAsync(SolutionPreferences solutionPreferences)
         {
             var success = true;
 
@@ -48,15 +48,15 @@
                 }
             }
 
-            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+            return success ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
         }
 
         /// <summary>Applies the preferences to this solution.</summary>
-        public async Task<IMorphicResult> ApplyAsync(SolutionPreferences solutionPreferences)
+        public async Task<MorphicResult<MorphicUnit, MorphicUnit>> ApplyAsync(SolutionPreferences solutionPreferences)
         {
             var success = true;
 
-            bool captureCurrent = solutionPreferences.Previous != null;
+            bool captureCurrent = solutionPreferences.Previous is not null;
             foreach (SettingGroup group in this.SettingGroups)
             {
                 Values values = new Values();
@@ -71,7 +71,7 @@
                     }
                 }
 
-                if (settings != null)
+                if (settings is not null)
                 {
                     // OBSERVATION: unsure why we are not capturing the values here; does this "Get" function have a side-effect we're trying to take advantage of (perhaps caching)?
                     var (settingHandlerGetResult, _) = await group.SettingsHandler.GetAsync(group, settings);
@@ -89,7 +89,7 @@
                 }
             }
 
-            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+            return success ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
         }
 
         public void Deserialized(IServiceProvider serviceProvider, Solutions solutions, string solutionId)

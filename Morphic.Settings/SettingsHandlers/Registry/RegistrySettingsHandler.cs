@@ -22,15 +22,15 @@
             this.registry = registry;
         }
 
-        public override async Task<(IMorphicResult, Values)> GetAsync(SettingGroup settingGroup, IEnumerable<Setting>? settings)
+        public override async Task<(MorphicResult<MorphicUnit, MorphicUnit>, Values)> GetAsync(SettingGroup settingGroup, IEnumerable<Setting>? settings)
             => await this.GetAsync((RegistrySettingGroup)settingGroup, settings ?? settingGroup);
 
-        public override async Task<IMorphicResult> SetAsync(SettingGroup settingGroup, Values values)
+        public override async Task<MorphicResult<MorphicUnit, MorphicUnit>> SetAsync(SettingGroup settingGroup, Values values)
             => await this.SetAsync((RegistrySettingGroup)settingGroup, values);
 
 		// NOTE: we return both success/failure and a list of results so that we can return partial results in case of partial failure
 #pragma warning disable 1998
-        public async Task<(IMorphicResult, Values)> GetAsync(RegistrySettingGroup group, IEnumerable<Setting> settings)
+        public async Task<(MorphicResult<MorphicUnit, MorphicUnit>, Values)> GetAsync(RegistrySettingGroup group, IEnumerable<Setting> settings)
 #pragma warning restore 1998
         {
             var success = true;
@@ -43,10 +43,10 @@
             }
             catch
             {
-                return (IMorphicResult.ErrorResult, values);
+                return (MorphicResult.ErrorResult(), values);
             }
 
-            if (key != null)
+            if (key is not null)
             {
                 try
                 {
@@ -71,30 +71,30 @@
                 }
             }
 
-            return (success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult, values);
+            return (success ? MorphicResult.OkResult() : MorphicResult.ErrorResult(), values);
         }
 
 #pragma warning disable 1998
-        public async Task<IMorphicResult> SetAsync(RegistrySettingGroup settingGroup, Values values)
+        public async Task<MorphicResult<MorphicUnit, MorphicUnit>> SetAsync(RegistrySettingGroup settingGroup, Values values)
 #pragma warning restore 1998
         {
             using IRegistryKey? key = this.OpenKey(settingGroup.RootKeyName, settingGroup.KeyPath, true);
 
-            if (key == null)
+            if (key is null)
             {
-                return key != null ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+                return key is not null ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
             }
 
             foreach ((Setting setting, object? value) in values)
             {
-                if (key != null)
+                if (key is not null)
                 {
                     RegistryValueKind kind = GetValueKind(setting.GetProperty("valueKind"));
                     key.SetValue(setting.Name, value, kind);
                 }
             }
 
-            return key != null ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+            return key is not null ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
         }
 
         /// <summary>

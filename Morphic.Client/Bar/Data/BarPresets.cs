@@ -83,7 +83,7 @@ namespace Morphic.Client.Bar.Data
 
                 dict.TryGetValue(key, out JObject? preset);
 
-                if (preset != null)
+                if (preset is not null)
                 {
                     jo.Merge(preset.DeepClone());
                 }

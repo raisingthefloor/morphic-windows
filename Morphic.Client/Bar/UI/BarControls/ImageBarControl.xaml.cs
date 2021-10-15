@@ -28,7 +28,7 @@ namespace Morphic.Client.Bar.UI.BarControls
 
         private async void Button_OnClick(object sender, RoutedEventArgs e)
         {
-            if (this.BarItem.Action != null)
+            if (this.BarItem.Action is not null)
             {
                 await this.BarItem.Action.InvokeAsync();
             }
@@ -36,7 +36,7 @@ namespace Morphic.Client.Bar.UI.BarControls
 
         private async void Button_MouseRightButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            if (this.BarItem.Action != null)
+            if (this.BarItem.Action is not null)
             {
                 if (this.BarItem.Action is InternalAction)
                 {

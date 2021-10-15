@@ -32,7 +32,7 @@ namespace Morphic.Windows.Native.WindowsCom
             return (int) pid;
         }
 
-        public static IMorphicResult<bool> IsPackageInstalled(string packageFamilyName)
+        public static MorphicResult<bool, MorphicUnit> IsPackageInstalled(string packageFamilyName)
         {
             var packageManager = new PackageManager();
 
@@ -43,12 +43,12 @@ namespace Morphic.Windows.Native.WindowsCom
             }
             catch
             {
-                return new MorphicError<bool>();
+                return MorphicResult.ErrorResult();
             }
 
             var isInstalled = packages.Count > 0 ? true : false;
 
-            return new MorphicSuccess<bool>(isInstalled);
+            return MorphicResult.OkResult(isInstalled);
         }
     }
 

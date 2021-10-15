@@ -23,7 +23,7 @@
         public static string? GetBarIconFile(string name)
         {
             var translatedName = BarImages.TranslateImageUrlToFileName(name);
-            if (translatedName != null)
+            if (translatedName is not null)
             {
                 name = translatedName;
             }

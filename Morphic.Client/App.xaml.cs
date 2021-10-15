@@ -251,7 +251,7 @@ namespace Morphic.Client
                 return result;
             }
 
-            if ((deserializedJson.version == null) || (deserializedJson.version.Value < 0) || (deserializedJson.version.Value > 0))
+            if ((deserializedJson.version is null) || (deserializedJson.version.Value < 0) || (deserializedJson.version.Value > 0))
             {
                 // sorry, we don't understand this version of the file
                 // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
@@ -260,7 +260,7 @@ namespace Morphic.Client
             }
 
             // capture the autorun setting
-            if (deserializedJson.features?.autorunAfterLogin?.enabled != null)
+            if (deserializedJson.features?.autorunAfterLogin?.enabled is not null)
             {
                 if (deserializedJson.features!.autorunAfterLogin!.enabled == false)
                 {
@@ -289,19 +289,19 @@ namespace Morphic.Client
             }
 
             // capture the check for updates "is enabled" setting
-            if (deserializedJson.features?.checkForUpdates?.enabled != null)
+            if (deserializedJson.features?.checkForUpdates?.enabled is not null)
             {
                 result.CheckForUpdatesIsEnabled = deserializedJson.features.checkForUpdates.enabled.Value;
             }
 
             // capture the cloud settings transfer "is enabled" setting
-            if (deserializedJson.features?.cloudSettingsTransfer?.enabled != null)
+            if (deserializedJson.features?.cloudSettingsTransfer?.enabled is not null)
             {
                 result.CloudSettingsTransferIsEnabled = deserializedJson.features.cloudSettingsTransfer.enabled.Value;
             }
 
             // capture the reset settings (to standard) "is enabled" setting
-            if (deserializedJson.features?.resetSettings?.enabled != null)
+            if (deserializedJson.features?.resetSettings?.enabled is not null)
             {
                 result.ResetSettingsIsEnabled = deserializedJson.features.resetSettings.enabled.Value;
             }
@@ -330,7 +330,7 @@ namespace Morphic.Client
 
 
             // capture any extra items (up to 3)
-            if (deserializedJson.morphicBar?.extraItems != null)
+            if (deserializedJson.morphicBar?.extraItems is not null)
             {
                 foreach (var extraItem in deserializedJson.morphicBar!.extraItems)
                 {
@@ -352,13 +352,13 @@ namespace Morphic.Client
                     var extraItemFeature = extraItem.feature;
 
                     // if the item is invalid, log the error and skip this item
-                    if (extraItemType == null)
+                    if (extraItemType is null)
                     {
                         // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
                         Logger?.LogError("Invalid MorphicBar item: " + extraItem.ToString());
                         continue;
                     }
-                    if ((extraItemType != "control") && ((extraItemLabel == null) || (extraItemTooltipHeader == null)))
+                    if ((extraItemType != "control") && ((extraItemLabel is null) || (extraItemTooltipHeader is null)))
                     {
                         // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
                         Logger?.LogError("Invalid MorphicBar item: " + extraItem.ToString());
@@ -366,7 +366,7 @@ namespace Morphic.Client
                     }
 
                     // if the "link" is missing its url, log the error and skip this item
-                    if ((extraItemType == "link") && (extraItemUrl == null))
+                    if ((extraItemType == "link") && (extraItemUrl is null))
                     {
                         // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
                         Logger?.LogError("Invalid MorphicBar item: " + extraItem.ToString());
@@ -374,7 +374,7 @@ namespace Morphic.Client
                     }
 
                     // if the "action" is missing its function, log the error and skip this item
-                    if ((extraItemType == "action") && (extraItemFunction == null || extraItemFunction == ""))
+                    if ((extraItemType == "action") && (extraItemFunction is null || extraItemFunction == ""))
                     {
                         // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
                         Logger?.LogError("Invalid MorphicBar item: " + extraItem.ToString());
@@ -382,7 +382,7 @@ namespace Morphic.Client
                     }
 
                     // if the "control" is missing its feature, log the error and skip this item
-                    if ((extraItem.type == "control") && (extraItemFeature == null || extraItemFeature == "")) {
+                    if ((extraItem.type == "control") && (extraItemFeature is null || extraItemFeature == "")) {
                         // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
                         Logger?.LogError("Invalid MorphicBar item: " + extraItem.ToString());
                         continue;
@@ -508,7 +508,7 @@ namespace Morphic.Client
         {
             // retrieve the telemetry device ID for this device; if it doesn't exist then create a new one
             var telemetryCompositeId = AppOptions.TelemetryDeviceUuid;
-            if ((telemetryCompositeId == null) || (telemetryCompositeId == String.Empty) || (telemetryCompositeId.IndexOf("D_") < 0))
+            if ((telemetryCompositeId is null) || (telemetryCompositeId == String.Empty) || (telemetryCompositeId.IndexOf("D_") < 0))
             {
                 telemetryCompositeId = "D_" + Guid.NewGuid().ToString();
                 AppOptions.TelemetryDeviceUuid = telemetryCompositeId;
@@ -518,7 +518,7 @@ namespace Morphic.Client
             // NOTE: we handle cases of site ids changing, site IDs being added post-deployment, and site IDs being removed post-deployment
             var unmodifiedTelemetryDeviceCompositeId = telemetryCompositeId;
             var telemetrySiteId = ConfigurableFeatures.TelemetrySiteId;
-            if ((telemetrySiteId != null) && (telemetrySiteId != String.Empty))
+            if ((telemetrySiteId is not null) && (telemetrySiteId != String.Empty))
             {
                 // NOTE: in the future, consider reporting or throwing an error if the site id required sanitization (i.e. wasn't valid)
                 var sanitizedTelemetrySiteId = this.SanitizeSiteId(telemetrySiteId);
@@ -780,7 +780,7 @@ namespace Morphic.Client
         {
             var windowsVersion = OsVersion.GetWindowsVersion();
 
-            if (windowsVersion == null) 
+            if (windowsVersion is null) 
             {
                 // not a valid version
                 return false;
@@ -935,15 +935,15 @@ namespace Morphic.Client
             //
             // screen scaling
             var monitorName = Morphic.Windows.Native.Display.Display.GetMonitorName(null);
-            if (monitorName != null)
+            if (monitorName is not null)
             {
                 // get the adapterId and sourceId for this monitor
                 var adapterIdAndSourceId = Morphic.Windows.Native.Display.Display.GetAdapterIdAndSourceId(monitorName);
-                if (adapterIdAndSourceId != null)
+                if (adapterIdAndSourceId is not null)
                 {
                     // get the current DPI offset
                     var currentDisplayDpiOffset = Morphic.Windows.Native.Display.Display.GetCurrentDpiOffsetAndRange(adapterIdAndSourceId.Value.adapterId, adapterIdAndSourceId.Value.sourceId);
-                    if (currentDisplayDpiOffset != null)
+                    if (currentDisplayDpiOffset is not null)
                     {
                         if (currentDisplayDpiOffset.Value.currentDpiOffset != displayDpiOffsetDefault)
                         {
@@ -1008,7 +1008,7 @@ namespace Morphic.Client
                 {
                     var lastCommunityId = AppOptions.Current.LastCommunity;
                     var lastMorphicbarId = AppOptions.Current.LastMorphicbarId;
-                    if (lastCommunityId != null)
+                    if (lastCommunityId is not null)
                     {
                         // if the user previously selected a community bar, show that one now
                         // NOTE: the behavior here may be inconsistent with Morphic on macOS.  If the previously-selected bar is no longer valid (e.g. the user was removed from the community),
@@ -1026,7 +1026,7 @@ namespace Morphic.Client
                             }
                         }
 
-                        if (newUserSelectedCommunityId != null)
+                        if (newUserSelectedCommunityId is not null)
                         {
                             await this.BarManager.LoadSessionBarAsync(morphicSession, newUserSelectedCommunityId, null);
                         }
@@ -1083,7 +1083,7 @@ namespace Morphic.Client
                 var community = this.MorphicSession.Communities[iCommunity];
                 //
                 var allBarsForCommunity = this.MorphicSession.MorphicBarsByCommunityId[community.Id];
-                if (allBarsForCommunity == null)
+                if (allBarsForCommunity is null)
                 {
                     // NOTE: this scenario shouldn't happen, but it's a gracefully-degrading failsafe just in case
                     continue;
@@ -1097,7 +1097,7 @@ namespace Morphic.Client
                     if (community.Id == AppOptions.Current.LastCommunity)
                     {
                         var markThisBar = false;
-                        if (AppOptions.Current.LastMorphicbarId == null && addedCheckmarkByCurrentCommunityBar == false)
+                        if (AppOptions.Current.LastMorphicbarId is null && addedCheckmarkByCurrentCommunityBar == false)
                         {
                             markThisBar = true;
                         }
@@ -1250,7 +1250,7 @@ namespace Morphic.Client
 
         protected override void OnActivated(EventArgs e)
         {
-            if (_messageWatcherNativeWindow == null)
+            if (_messageWatcherNativeWindow is null)
             {
                 // create a list of the messages we want to watch for
                 List<uint> messagesToWatch = new List<uint>();
@@ -1291,7 +1291,7 @@ namespace Morphic.Client
 				//
                 try
                 {
-                    if (_telemetryClient != null)
+                    if (_telemetryClient is not null)
                     {
                         _telemetryClient.StopSessionAsync();
                     }

@@ -53,7 +53,7 @@ namespace Morphic.Windows.Native.WindowsCoreAudio
                 throw new COMException("IMMDeviceEnumerator.GetDefaultAudioEndpoint failed", Marshal.GetExceptionForHR(result));
             }
 
-            if (@interface == null)
+            if (@interface is null)
             {
                 // NOTE: this code should never be executed since Activate should have returned an HRESULT of E_POINTER if it failed
                 throw new COMException("IMMDevice.Activate returned a null pointer", new NullReferenceException());

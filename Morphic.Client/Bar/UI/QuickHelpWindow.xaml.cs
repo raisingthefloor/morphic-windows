@@ -72,7 +72,7 @@ namespace Morphic.Client.Bar.UI
                         if (Window.GetWindow(element) is BarWindow barWindow)
                         {
                             var singleInstance = QuickHelpWindow.singleInstance;
-                            if (singleInstance != null) {
+                            if (singleInstance is not null) {
                                 await singleInstance.ShowHelpAsync(barWindow, element);
                             }
                             args.Handled = true;
@@ -87,7 +87,7 @@ namespace Morphic.Client.Bar.UI
                 {
                     if (args.Source is FrameworkElement element)
                     {
-                        if (element.ToolTip != null && !(Window.GetWindow(element) is BarWindow))
+                        if (element.ToolTip is not null && !(Window.GetWindow(element) is BarWindow))
                         {
                             if (ToolTipService.GetInitialShowDelay(element) == 0)
                             {
@@ -153,10 +153,10 @@ namespace Morphic.Client.Bar.UI
                 text = null;
             }
 
-            if (header == null && text != null)
+            if (header is null && text is not null)
             {
                 header = barItem?.Text;
-                if (header == null)
+                if (header is null)
                 {
                     header = text;
                     text = null;
@@ -177,7 +177,7 @@ namespace Morphic.Client.Bar.UI
         {
             BarItemControl? control = element as BarItemControl ?? element.FindVisualParent<BarItemControl>();
 
-            if (control == null)
+            if (control is null)
             {
                 this.HideHelp();
                 return;
@@ -209,7 +209,7 @@ namespace Morphic.Client.Bar.UI
                 }
 
                 // determine if we should show the error/limit message
-                if (buttonInfo != null)
+                if (buttonInfo is not null)
                 {
                     if (buttonInfo.Action is SettingAction settingAction)
                     {
@@ -255,7 +255,7 @@ namespace Morphic.Client.Bar.UI
         {
             Setting? setting = null;
 
-            if (barItem is BarSettingItem settingItem && settingItem.SettingId != null)
+            if (barItem is BarSettingItem settingItem && settingItem.SettingId is not null)
             {
                 try
                 {
@@ -275,7 +275,7 @@ namespace Morphic.Client.Bar.UI
             this.RangeContainer.Children.Clear();
 
             var setting = this.GetSetting(barItem);
-            if (setting?.Range != null)
+            if (setting?.Range is not null)
             {
                 var control = await this.GetRangeControl(setting, setting.Range);
                 this.RangeContainer.Children.Add(control);

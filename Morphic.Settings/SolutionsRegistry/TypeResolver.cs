@@ -59,7 +59,7 @@
         public Type BindToType(string? assemblyName, string typeName)
         {
             Type? type = ResolveType(typeName);
-            if (type == null)
+            if (type is null)
             {
                 Console.WriteLine($"unknown type: {typeName}");
                 return typeof(object);

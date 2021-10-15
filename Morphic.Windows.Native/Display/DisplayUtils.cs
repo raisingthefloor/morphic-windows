@@ -48,7 +48,7 @@ namespace Morphic.Windows.Native.Display
             //
             public String? DefaultColorScheme;
         }
-        private static IMorphicResult<HighContrastInfo> GetHighContrastInfo()
+        private static MorphicResult<HighContrastInfo, MorphicUnit> GetHighContrastInfo()
         {
             var highContrastInfo = new ExtendedPInvoke.HIGHCONTRAST();
             highContrastInfo.Init();
@@ -59,7 +59,7 @@ namespace Morphic.Windows.Native.Display
                 var spiSuccess = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_GETHIGHCONTRAST, highContrastInfo.cbSize, pointerToHighContrastInfo, PInvoke.User32.SystemParametersInfoFlags.None);
                 if (spiSuccess == false)
                 {
-                    return IMorphicResult<HighContrastInfo>.ErrorResult();
+                    return MorphicResult.ErrorResult();
                 }
 
                 highContrastInfo = Marshal.PtrToStructure<ExtendedPInvoke.HIGHCONTRAST>(pointerToHighContrastInfo);
@@ -81,22 +81,22 @@ namespace Morphic.Windows.Native.Display
                 //
                 DefaultColorScheme = highContrastInfo.lpszDefaultScheme
             };
-            return IMorphicResult<HighContrastInfo>.SuccessResult(result);
+            return MorphicResult.OkResult(result);
         }
 
-        public static IMorphicResult<bool> GetHighContrastModeIsOn()
+        public static MorphicResult<bool, MorphicUnit> GetHighContrastModeIsOn()
         {
             var getHighContrastInfoResult = DisplayUtils.GetHighContrastInfo();
             if (getHighContrastInfoResult.IsError == true)
             {
-                return IMorphicResult<bool>.ErrorResult();
+                return MorphicResult.ErrorResult();
             }
             var highContrastInfo = getHighContrastInfoResult.Value!;
 
-            return IMorphicResult<bool>.SuccessResult(highContrastInfo.FeatureIsOn);
+            return MorphicResult.OkResult(highContrastInfo.FeatureIsOn);
         }
 
-        public static IMorphicResult SetHighContrastModeIsOn(bool isOn)
+        public static MorphicResult<MorphicUnit, MorphicUnit> SetHighContrastModeIsOn(bool isOn)
         {
             // NOTE: we lock on s_modifyHighContrastLock here to ensure that our application doesn't modify the system's HIGHCONTRAST settings while we're reading, updating and rewriting them
             lock(s_modifyHighContrastLock)
@@ -112,7 +112,7 @@ namespace Morphic.Windows.Native.Display
                     var spiSuccess = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_GETHIGHCONTRAST, highContrastInfo.cbSize, pointerToHighContrastInfo, PInvoke.User32.SystemParametersInfoFlags.None);
                     if (spiSuccess == false)
                     {
-                        return IMorphicResult.ErrorResult;
+                        return MorphicResult.ErrorResult();
                     }
 
                     highContrastInfo = Marshal.PtrToStructure<ExtendedPInvoke.HIGHCONTRAST>(pointerToHighContrastInfo);
@@ -134,10 +134,10 @@ namespace Morphic.Windows.Native.Display
                     spiSuccess = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_SETHIGHCONTRAST, highContrastInfo.cbSize, pointerToHighContrastInfo, PInvoke.User32.SystemParametersInfoFlags.SPIF_SENDWININICHANGE);
                     if (spiSuccess == false)
                     {
-                        return IMorphicResult.ErrorResult;
+                        return MorphicResult.ErrorResult();
                     }
 
-                    return IMorphicResult.SuccessResult;
+                    return MorphicResult.OkResult();
                 }
                 finally
                 {
@@ -148,21 +148,21 @@ namespace Morphic.Windows.Native.Display
 
         //
 
-        public static IMorphicResult<String?> GetHighContrastModeDefaultColorScheme()
+        public static MorphicResult<String?, MorphicUnit> GetHighContrastModeDefaultColorScheme()
         {
             var getHighContrastInfoResult = DisplayUtils.GetHighContrastInfo();
             if (getHighContrastInfoResult.IsError == true)
             {
-                return IMorphicResult<String?>.ErrorResult();
+                return MorphicResult.ErrorResult();
             }
             var highContrastInfo = getHighContrastInfoResult.Value!;
 
-            return IMorphicResult<String?>.SuccessResult(highContrastInfo.DefaultColorScheme);
+            return MorphicResult.OkResult(highContrastInfo.DefaultColorScheme);
         }
 
-        public static IMorphicResult SetHighContrastModeDefaultColorScheme(String defaultColorScheme)
+        public static MorphicResult<MorphicUnit, MorphicUnit> SetHighContrastModeDefaultColorScheme(String defaultColorScheme)
         {
-            if (defaultColorScheme == null)
+            if (defaultColorScheme is null)
             {
                 throw new ArgumentNullException(nameof(defaultColorScheme));
             }
@@ -181,7 +181,7 @@ namespace Morphic.Windows.Native.Display
                     var spiSuccess = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_GETHIGHCONTRAST, highContrastInfo.cbSize, pointerToHighContrastInfo, PInvoke.User32.SystemParametersInfoFlags.None);
                     if (spiSuccess == false)
                     {
-                        return IMorphicResult.ErrorResult;
+                        return MorphicResult.ErrorResult();
                     }
 
                     highContrastInfo = Marshal.PtrToStructure<ExtendedPInvoke.HIGHCONTRAST>(pointerToHighContrastInfo);
@@ -194,10 +194,10 @@ namespace Morphic.Windows.Native.Display
                     spiSuccess = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_SETHIGHCONTRAST, highContrastInfo.cbSize, pointerToHighContrastInfo, PInvoke.User32.SystemParametersInfoFlags.SPIF_SENDWININICHANGE);
                     if (spiSuccess == false)
                     {
-                        return IMorphicResult.ErrorResult;
+                        return MorphicResult.ErrorResult();
                     }
 
-                    return IMorphicResult.SuccessResult;
+                    return MorphicResult.OkResult();
                 }
                 finally
                 {

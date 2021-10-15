@@ -38,7 +38,7 @@
 
             foreach (object? element in this.ControlStack.Items)
             {
-                if (element != null)
+                if (element is not null)
                 {
                     if (element.GetType() == typeof(ManualControlBoolean))
                     {
@@ -96,7 +96,7 @@
                 foreach (object? element in this.ControlStack.Items
                 ) //check to see if any items require changing, if so they must be preserved
                 {
-                    if (element != null)
+                    if (element is not null)
                     {
                         if (element.GetType() == typeof(ManualControlBoolean))
                         {
@@ -139,7 +139,7 @@
         {
             foreach (object? element in this.ControlStack.Items)
             {
-                if (element != null)
+                if (element is not null)
                 {
                     if (element.GetType() == typeof(ManualControlBoolean))
                     {

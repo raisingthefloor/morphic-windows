@@ -142,7 +142,7 @@ namespace Morphic.Client.Bar.UI
             CorrectedCoords size = new CorrectedCoords(finalSize, orientation);
             CorrectedCoords actualSize = new CorrectedCoords(0, 0, orientation);
 
-            List<BarItemControl> children = this.InternalChildren.OfType<BarItemControl>().Where(c => c != null).ToList();
+            List<BarItemControl> children = this.InternalChildren.OfType<BarItemControl>().Where(c => c is not null).ToList();
             if (!children.Any())
             {
                 return finalSize;

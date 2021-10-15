@@ -52,7 +52,7 @@ namespace Morphic.Windows.Native.WindowsCoreAudio
             {
                 // NOTE: objects created by Activator.CreateInstance do not need to be manually freed
                 var mmDeviceEnumeratorAsNullable = Activator.CreateInstance(MMDeviceEnumeratorType) as IMMDeviceEnumerator;
-                if (mmDeviceEnumeratorAsNullable == null)
+                if (mmDeviceEnumeratorAsNullable is null)
                 {
                     throw new COMException();
                 }
@@ -82,7 +82,7 @@ namespace Morphic.Windows.Native.WindowsCoreAudio
                 }
             }
 
-            if (immDevice == null)
+            if (immDevice is null)
             {
                 // NOTE: this code should never be executed since GetDefaultAudioEndpoint should have returned an HRESULT of E_POINTER if it failed
                 throw new COMException("IMMDeviceEnumerator.GetDefaultAudioEndpoint returned a null pointer", new NullReferenceException());

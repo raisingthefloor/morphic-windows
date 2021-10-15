@@ -54,7 +54,7 @@ namespace Morphic.Windows.Native.Ini
             {
                 var nextLine = this.ReadIniTextLine();
 
-                if (nextLine == null)
+                if (nextLine is null)
                 {
                     return new IniToken(IniTokenKind.EndOfFile, new List<char>() /* empty lexeme, rather than null */, IniLineTerminatorOption.None, leadingTrivia, null);
                 }
@@ -127,7 +127,7 @@ namespace Morphic.Windows.Native.Ini
                                 break;
                         }
 
-                        if(firstNonWhitespaceCharacter != null)
+                        if(firstNonWhitespaceCharacter is not null)
                         {
                             break;
                         }

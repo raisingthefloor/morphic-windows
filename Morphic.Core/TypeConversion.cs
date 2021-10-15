@@ -31,7 +31,7 @@
             bool success;
             object? resultObject;
 
-            if (value == null)
+            if (value is null)
             {
                 result = default!;
                 return false;

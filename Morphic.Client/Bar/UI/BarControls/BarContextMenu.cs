@@ -44,7 +44,7 @@
                         break;
                 }
 
-                string finalTarget = (format == null)
+                string finalTarget = (format is null)
                     ? target
                     : string.Format(format, target);
 
@@ -54,7 +54,7 @@
                     Open = finalTarget,
                     ParentMenuType = MorphicMenuItem.MenuType.contextMenu,
                     TelemetryType = telemetryType,
-                    TelemetryCategory = (telemetryType != null) ? telemetryCategory : null
+                    TelemetryCategory = (telemetryType is not null) ? telemetryCategory : null
                 };
 
                 menu.Items.Add(item);

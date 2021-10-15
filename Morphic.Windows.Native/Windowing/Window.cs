@@ -42,7 +42,7 @@ namespace Morphic.Windows.Native.Windowing
             this.hWnd = hWnd;
         }
 
-        public IMorphicResult Activate(IntPtr? hWndBeingDeactivated = null, bool emulateClickActivation = false)
+        public MorphicResult<MorphicUnit, MorphicUnit> Activate(IntPtr? hWndBeingDeactivated = null, bool emulateClickActivation = false)
         {
             var sendMessageResult = PInvoke.User32.SendMessage(
                 this.hWnd,  
@@ -51,14 +51,14 @@ namespace Morphic.Windows.Native.Windowing
                 hWndBeingDeactivated ?? IntPtr.Zero
                 );
 
-            return (sendMessageResult == IntPtr.Zero) ? new MorphicSuccess() : new MorphicError();
+            return (sendMessageResult == IntPtr.Zero) ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
         }
 
-        public IMorphicResult Inactivate(IntPtr? hWndBeingActivated = null)
+        public MorphicResult<MorphicUnit, MorphicUnit> Inactivate(IntPtr? hWndBeingActivated = null)
         {
             var sendMessageResult = PInvoke.User32.SendMessage(this.hWnd, PInvoke.User32.WindowMessage.WM_ACTIVATE, ExtendedPInvoke.WA_INACTIVE, hWndBeingActivated ?? IntPtr.Zero);
 
-            return (sendMessageResult == IntPtr.Zero) ? new MorphicSuccess() : new MorphicError();
+            return (sendMessageResult == IntPtr.Zero) ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
         }
 
         //// NOTE: ideally we would not directly expose a Win32 API like this; consider wrapping it inside other (more appropriate, higher-level) functions instead

@@ -39,7 +39,7 @@ namespace Morphic.Client
 
         public string? GetUsernameForId(string userId)
         {
-            if (UserSettings.Default.UsernamesById == null)
+            if (UserSettings.Default.UsernamesById is null)
             {
                 return null;
             }
@@ -48,7 +48,7 @@ namespace Morphic.Client
 
         public void SetUsernameForId(string username, string userId)
         {
-            if (UserSettings.Default.UsernamesById == null)
+            if (UserSettings.Default.UsernamesById is null)
             {
                 UserSettings.Default.UsernamesById = new StringDictionarySetting();
             }

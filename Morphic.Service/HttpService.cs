@@ -179,7 +179,7 @@ namespace Morphic.Service
             if (credentialsProvider.CredentialsForHttpService(this) is ICredentials creds)
             {
                 var auth = await this.Authenticate(creds);
-                if (auth != null)
+                if (auth is not null)
                 {
                     AuthToken = auth.Token;
                     credentialsProvider.HttpServiceAuthenticatedUser(auth.User);

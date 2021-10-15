@@ -26,7 +26,7 @@
                 .GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
             {
                 GetterAttribute? getAttr = method.GetCustomAttribute<GetterAttribute>();
-                if (getAttr != null)
+                if (getAttr is not null)
                 {
                     if (Delegate.CreateDelegate(typeof(Getter), this, method, false) is Getter d)
                     {
@@ -36,7 +36,7 @@
                 }
 
                 SetterAttribute? setAttr = method.GetCustomAttribute<SetterAttribute>();
-                if (setAttr != null)
+                if (setAttr is not null)
                 {
                     if (Delegate.CreateDelegate(typeof(Setter), this, method, true) is Setter d)
                     {
@@ -46,7 +46,7 @@
                 }
 
                 ListenerAttribute? listenAttr = method.GetCustomAttribute<ListenerAttribute>();
-                if (listenAttr != null)
+                if (listenAttr is not null)
                 {
                     if (Delegate.CreateDelegate(typeof(Listener), this, method, true) is Listener d)
                     {
@@ -58,7 +58,7 @@
 
         /// <summary>Gets the values of the given settings.</summary>
 		// NOTE: we return both success/failure and a list of results so that we can return partial results in case of partial failure
-        public override async Task<(IMorphicResult, Values)> GetAsync(SettingGroup settingGroup, IEnumerable<Setting> settings)
+        public override async Task<(MorphicResult<MorphicUnit, MorphicUnit>, Values)> GetAsync(SettingGroup settingGroup, IEnumerable<Setting> settings)
         {
             var success = true;
 
@@ -84,30 +84,30 @@
                 }
             }
 
-            return ((success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult), values);
+            return ((success ? MorphicResult.OkResult() : MorphicResult.ErrorResult()), values);
         }
 
         /// <summary>Gets the value of a setting.</summary>
-        public override async Task<IMorphicResult<object?>> GetAsync(Setting setting)
+        public override async Task<MorphicResult<object?, MorphicUnit>> GetAsync(Setting setting)
         {
             if (this.getters.TryGetValue(setting.Name, out Getter? getter))
             {
                 try
                 {
                     var result = await getter(setting);
-                    return IMorphicResult<object?>.SuccessResult(result);
+                    return MorphicResult.OkResult(result);
                 }
                 catch
                 {
-                    return IMorphicResult<object?>.ErrorResult();
+                    return MorphicResult.ErrorResult();
                 }
             }
 
-            return IMorphicResult<object?>.SuccessResult(new NoValue());
+            return MorphicResult.OkResult<object?>(new NoValue());
         }
 
         /// <summary>Sets the values of settings.</summary>
-        public override async Task<IMorphicResult> SetAsync(SettingGroup settingGroup, Values values)
+        public override async Task<MorphicResult<MorphicUnit, MorphicUnit>> SetAsync(SettingGroup settingGroup, Values values)
         {
             bool success = true;
             foreach ((Setting? setting, object? value) in values)
@@ -116,11 +116,11 @@
                 success = success && settingSetResult.IsSuccess;
             }
 
-            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+            return success ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
         }
 
         /// <summary>Set the value of a setting.</summary>
-        public override async Task<IMorphicResult> SetAsync(Setting setting, object? newValue)
+        public override async Task<MorphicResult<MorphicUnit, MorphicUnit>> SetAsync(Setting setting, object? newValue)
         {
             var success = true; 
 
@@ -128,7 +128,7 @@
             {
                 try
                 {
-                    // NOTE: setters return a bool; should we be capturing this as success/failure?  Moving forward, look at having them return IMorphicResult to be clear
+                    // NOTE: setters return a bool; should we be capturing this as success/failure?  Moving forward, look at having them return MorphicResult<,> to be clear
                     await setter(setting, newValue);
                 }
                 catch
@@ -137,7 +137,7 @@
                 }
             }
 
-            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+            return success ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
         }
 
         private bool HandleListener(Setting setting, bool add)

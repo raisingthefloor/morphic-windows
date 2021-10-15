@@ -16,13 +16,14 @@
         public Setting? Setting { get; private set; }
         public Solutions Solutions { get; private set; } = null!;
 
-        protected override Task<IMorphicResult> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
+        protected override Task<MorphicResult<MorphicUnit, MorphicUnit>> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
         {
             Setting? setting;
 
-            if (this.Setting == null && !string.IsNullOrEmpty(source))
+            if (this.Setting is null && !string.IsNullOrEmpty(source))
             {
                 setting = this.Solutions.GetSetting(source);
+                // OBSERVATION: we do not await on this call; we may want to do so
                 setting.SetValueAsync(toggleState);
             }
             else
@@ -30,9 +31,10 @@
                 setting = this.Setting;
             }
 
-            if (setting == null)
+            if (setting is null)
             {
-                return Task.FromResult(IMorphicResult.SuccessResult);
+                MorphicResult<MorphicUnit, MorphicUnit> okResult = MorphicResult.OkResult();
+                return Task.FromResult(okResult);
             }
 
             switch (source)
@@ -47,14 +49,15 @@
                     return setting.SetValueAsync(false);
             }
 
-            return Task.FromResult(IMorphicResult.ErrorResult);
+            MorphicResult<MorphicUnit, MorphicUnit> errorResult = MorphicResult.ErrorResult();
+            return Task.FromResult(errorResult);
         }
 
         public async Task<bool> CanExecute(string id)
         {
             bool canExecute = true;
 
-            if (Setting?.Range != null)
+            if (Setting?.Range is not null)
             {
                 var range = Setting.Range;
                 var idRequiresCountRefresh = Setting.Id == "zoom";

@@ -121,7 +121,7 @@ namespace Morphic.Client.Bar.UI.BarControls
         protected bool OpenContextMenu(object? control, Dictionary<string,string>? items = null, string? telemetryCategory = null)
         {
             ContextMenu? menu = BarContextMenu.CreateContextMenu(items ?? this.BarItem.Menu, telemetryCategory ?? this.BarItem.TelemetryCategory);
-            if (menu != null)
+            if (menu is not null)
             {
                 menu.Placement = PlacementMode.Top;
                 menu.PlacementTarget = control as UIElement ?? this;

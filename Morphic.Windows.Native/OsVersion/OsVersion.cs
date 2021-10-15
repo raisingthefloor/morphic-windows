@@ -22,23 +22,23 @@ namespace Morphic.Windows.Native.OsVersion
 
     public struct OsVersion
     {
-        public static IMorphicResult<uint> GetUpdateBuildRevision()
+        public static MorphicResult<uint, MorphicUnit> GetUpdateBuildRevision()
         {
             var openRegistryKeyResult = Morphic.Windows.Native.Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion");
             if (openRegistryKeyResult.IsError == true)
             {
-                return IMorphicResult<uint>.ErrorResult();
+                return MorphicResult.ErrorResult();
             }
             var registryKey = openRegistryKeyResult.Value!;
 
             var getValueResult = registryKey.GetValue<uint>("UBR");
             if (getValueResult.IsError == true)
             {
-                return IMorphicResult<uint>.ErrorResult();
+                return MorphicResult.ErrorResult();
             }
             var updateBuildRevision = getValueResult.Value!;
 
-            return IMorphicResult<uint>.SuccessResult(updateBuildRevision);
+            return MorphicResult.OkResult(updateBuildRevision);
         }
 
         public static WindowsVersion? GetWindowsVersion()

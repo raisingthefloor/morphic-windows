@@ -105,7 +105,7 @@ namespace Morphic.Client.Bar.UI.AppBarWindow
             appBarData.uCallbackMessage = this.callbackMessage;
             AppBarMessage(WinApi.ABMessage.ABM_NEW, ref appBarData);
             
-            if (this.hwndSource == null)
+            if (this.hwndSource is null)
             {
                 this.hwndSource = HwndSource.FromHwnd(this.WindowHandle);
                 this.hwndSource?.AddHook(this.WindowProc);

@@ -188,7 +188,7 @@
 
         private void ToggleAutoApply(object sender, RoutedEventArgs e)
         {
-            if (this.AutoApplyToggle.IsChecked != null && this.ApplySettings != null)
+            if (this.AutoApplyToggle.IsChecked is not null && this.ApplySettings is not null)
             {
                 if ((bool)this.AutoApplyToggle.IsChecked)
                 {
@@ -210,7 +210,7 @@
                 try
                 {
                     SolutionHeader? header = (SolutionHeader?)element;
-                    if (header != null)
+                    if (header is not null)
                     {
                         header.ApplyAllSettings();
                     }
@@ -258,7 +258,7 @@
                 {
                     this._autoReload = value;
                     Registry.SetValue(RegistryPath, "AutoReload", this._autoReload ? "1" : "0");
-                    if (this.currentRegistryFile != null && this._autoReload)
+                    if (this.currentRegistryFile is not null && this._autoReload)
                     {
                         this.WatchFile(this.currentRegistryFile);
                     }
@@ -280,7 +280,7 @@
             string dir = Path.GetDirectoryName(fullPath)!;
             string filename = Path.GetFileName(fullPath);
 
-            if (this.fileWatcher != null)
+            if (this.fileWatcher is not null)
             {
                 if (this.fileWatcher.Filter == filename)
                 {
