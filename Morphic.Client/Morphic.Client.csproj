@@ -11,7 +11,7 @@
     <AssemblyName>Morphic</AssemblyName>
     <PublishTrimmed>false</PublishTrimmed>
     <Platforms>AnyCPU;x64</Platforms>
-    <VersionPrefix>1.4$(VersionBuildComponents)</VersionPrefix>
+    <VersionPrefix>1.5$(VersionBuildComponents)</VersionPrefix>
     <VersionSuffix Condition="'$(Configuration)' == 'Debug'">localdev</VersionSuffix>
     <VersionSuffix Condition="'$(Configuration)' == 'Release'">$(VersionSuffix)</VersionSuffix>
     <StartupObject>Morphic.Client.AppMain</StartupObject>
