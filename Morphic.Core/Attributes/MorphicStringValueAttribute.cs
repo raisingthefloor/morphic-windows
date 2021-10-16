@@ -1,10 +1,10 @@
-﻿// Copyright 2021 Raising the Floor - International
+﻿// Copyright 2021 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
 //
 // You may obtain a copy of the License at
-// https://github.com/raisingthefloor/morphic-windows/blob/master/LICENSE.txt
+// https://github.com/raisingthefloor/morphic-windows/blob/main/LICENSE
 //
 // The R&D leading to these results received funding from the:
 // * Rehabilitation Services Administration, US Dept. of Education under
@@ -24,35 +24,39 @@
 using System;
 using System.Reflection;
 
-public partial class MorphicEnum<TEnum> where TEnum : struct, Enum
+namespace Morphic.Core
 {
-    public static bool IsMember(TEnum value)
+    [System.AttributeUsage(AttributeTargets.Field)]
+    public class MorphicStringValueAttribute : Attribute
     {
-        return (typeof(TEnum).GetEnumName(value) is not null);
+        public string StringValue;
+
+        public MorphicStringValueAttribute(string stringValue)
+        {
+            this.StringValue = stringValue;
+        }
     }
 
-    public static TEnum? FromStringValue(string stringValue, StringComparison comparisonType = StringComparison.Ordinal)
+    public static partial class MorphicExtensions
     {
-        foreach (TEnum member in System.Enum.GetValues(typeof(TEnum)))
+        public static string? ToStringValue<TEnum>(this TEnum value) where TEnum : Enum
         {
-            var memberName = typeof(TEnum).GetEnumName(member);
+            var memberName = typeof(TEnum).GetEnumName(value);
+            if (memberName is null)
+            {
+                // member does not exist
+                return null;
+            }
             //
-            var fieldInfo = typeof(TEnum).GetField(memberName!);
+            var fieldInfo = typeof(TEnum).GetField(memberName);
             //
             var attribute = fieldInfo!.GetCustomAttribute<Morphic.Core.MorphicStringValueAttribute>();
             if (attribute is null)
             {
                 // this enum member does not have a string value
-                continue;
+                return null;
             }
-
-            if (attribute.StringValue.Equals(stringValue, comparisonType))
-            {
-                return member;
-            }
+            return attribute.StringValue;
         }
-
-        // if we could not find the member (i.e. the member with the supplied string value does not exist), return null
-        return null;
     }
 }

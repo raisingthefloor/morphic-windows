@@ -92,6 +92,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Morphic.Core\Morphic.Core.csproj" />
     <ProjectReference Include="..\Morphic.Integrations.Office\Morphic.Integrations.Office.csproj" />
+    <ProjectReference Include="..\Morphic.OAuth.Client\Morphic.OAuth.Client.csproj" />
+    <ProjectReference Include="..\Morphic.OAuth.Core\Morphic.OAuth.Core.csproj" />
     <ProjectReference Include="..\Morphic.Service\Morphic.Service.csproj" />
     <ProjectReference Include="..\Morphic.Settings\Morphic.Settings.csproj" />
     <ProjectReference Include="..\Morphic.Telemetry\Morphic.Telemetry.csproj" />
