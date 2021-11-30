@@ -1,4 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Name="window_maximize" Width="512" Height="448" Clip="F1 M 0,0L 512,0L 512,448L 0,448L 0,0">
-	<Path Width="512" Height="448" Canvas.Left="0" Canvas.Top="0" Stretch="Fill" Fill="#FF000000" Data="F1 M 464,0L 48,0C 21.5,0 0,21.5 0,48L 0,400C 0,426.5 21.5,448 48,448L 464,448C 490.5,448 512,426.5 512,400L 512,48C 512,21.5 490.5,0 464,0 Z M 464,394C 464,397.303 461.303,400 458,400L 54,400C 50.6973,400 48,397.303 48,394L 48,160L 464,160"/>
-</Canvas>
