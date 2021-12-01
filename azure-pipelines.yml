@@ -86,7 +86,6 @@ stages:
             projects: '$(mainProject)'
             arguments: '-f net6.0-windows -r win10-x86 -c Release'
 
-
         - task: DotNetCoreCLI@2
           displayName: 'dotnet publish (x64)'
           inputs:
@@ -95,14 +94,13 @@ stages:
             projects: '$(mainProject)'
             arguments: '-f net6.0-windows -r win10-x64 -c Release'
 
-
-#        - task: DotNetCoreCLI@2
-#          displayName: 'dotnet publish (arm64)'
-#          inputs:
-#            command: publish
-#            publishWebProjects: false
-#            projects: '$(mainProject)'
-#            arguments: '-f net6.0-windows -r win10-arm64 -c Release'
+        - task: DotNetCoreCLI@2
+          displayName: 'dotnet publish (arm64)'
+          inputs:
+            command: publish
+            publishWebProjects: false
+            projects: '$(mainProject)'
+            arguments: '-f net6.0-windows -r win10-arm64 -c Release'
 
         - powershell: |
             # Update MorphicPackage's appmanifest with a version number before building it
@@ -127,13 +125,13 @@ stages:
             configuration: Release
             msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-x64.msix /p:AppxPackageSigningEnabled=false'
 
-#        - task: MSBuild@1
-#          displayName: 'Package MSIX (arm64)'
-#          inputs:
-#            solution: MorphicPackage/MorphicPackage.wapproj
-#            platform: arm64
-#            configuration: Release
-#            msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-x64.msix /p:AppxPackageSigningEnabled=false'
+        - task: MSBuild@1
+          displayName: 'Package MSIX (arm64)'
+          inputs:
+            solution: MorphicPackage/MorphicPackage.wapproj
+            platform: arm64
+            configuration: Release
+            msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-x64.msix /p:AppxPackageSigningEnabled=false'
 
         - task: UseDotNet@2
           displayName: 'Use .NET Core SDK 2.1'
@@ -200,26 +198,26 @@ stages:
             artifactName: msix-x64
             artifactType: pipeline
 
-#        - task: CmdLine@2
-#          displayName: 'Sign MSIX (arm64)'
-#          inputs:
-#            script: >
-#              AzureSignTool sign
-#              -d Morphic
-#              -du "$(SigningURL)"
-#              -kvu "$(SigningVaultURL)"
-#              -kvi "$(SigningClientId)"
-#              -kvs "$(SigningClientSecret)"
-#              -kvc "$(SigningCertName)"
-#              -tr "$(TimestampUrl2)"
-#              -v $(Build.ArtifactStagingDirectory)\MorphicSetup-arm64.msix
-#
-#        - task: PublishPipelineArtifact@1
-#          displayName: "Cache MSIX (arm64) for upload"
-#          inputs:
-#            targetPath: $(Build.ArtifactStagingDirectory)\MorphicSetup-arm64.msix
-#            artifactName: msix-arm64
-#            artifactType: pipeline
+        - task: CmdLine@2
+          displayName: 'Sign MSIX (arm64)'
+          inputs:
+            script: >
+              AzureSignTool sign
+              -d Morphic
+              -du "$(SigningURL)"
+              -kvu "$(SigningVaultURL)"
+              -kvi "$(SigningClientId)"
+              -kvs "$(SigningClientSecret)"
+              -kvc "$(SigningCertName)"
+              -tr "$(TimestampUrl2)"
+              -v $(Build.ArtifactStagingDirectory)\MorphicSetup-arm64.msix
+
+        - task: PublishPipelineArtifact@1
+          displayName: "Cache MSIX (arm64) for upload"
+          inputs:
+            targetPath: $(Build.ArtifactStagingDirectory)\MorphicSetup-arm64.msix
+            artifactName: msix-arm64
+            artifactType: pipeline
 
   - stage: publish
     jobs:
@@ -241,12 +239,12 @@ stages:
             artifact: msix-x64
             path: msix-x64
 
-#        - task: DownloadPipelineArtifact@2
-#          displayName: "Capture MSIX (arm64) for upload"
-#          inputs:
-#            source: 'current'
-#            artifact: msix-arm64
-#            path: ${Agent.BuildDirectory}/msix-arm64
+        - task: DownloadPipelineArtifact@2
+          displayName: "Capture MSIX (arm64) for upload"
+          inputs:
+            source: 'current'
+            artifact: msix-arm64
+            path: ${Agent.BuildDirectory}/msix-arm64
 
         - task: Bash@3
           displayName: "Upload MSIXs to S3"
@@ -298,10 +296,10 @@ stages:
                     S3_BUILD_ARCHITECTURE="x64"
                     publishInstaller
 
-#                    echo "Uploading MSIX (arm64) to S3"
-#                    MSIX_NAME_BASE="MorphicSetup-arm64"
-#                    # NOTE: "s/" is a temporary path requirement; we may also consider calling these folders just "x86" etc.
-#                    LOCAL_MSIX_DIR="s/msix-arm64"
-#                    S3_BUILD_ARCHITECTURE="arm64"
-#                    publishInstaller
+                    echo "Uploading MSIX (arm64) to S3"
+                    MSIX_NAME_BASE="MorphicSetup-arm64"
+                    # NOTE: "s/" is a temporary path requirement; we may also consider calling these folders just "x86" etc.
+                    LOCAL_MSIX_DIR="s/msix-arm64"
+                    S3_BUILD_ARCHITECTURE="arm64"
+                    publishInstaller
 
