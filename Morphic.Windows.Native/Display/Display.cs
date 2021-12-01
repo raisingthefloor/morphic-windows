@@ -48,7 +48,7 @@ namespace Morphic.Windows.Native.Display
 
         //
 
-        public static IMorphicResult<Display> GetDisplayByName(string displayName)
+        public static MorphicResult<Display, MorphicUnit> GetDisplayByName(string displayName)
         {
             // retrieve the buffer sizes needed to call QueryDisplayConfig (i.e. to get our displays' configs)
             uint numPathArrayElements;
@@ -63,10 +63,10 @@ namespace Morphic.Windows.Native.Display
                 case PInvoke.Win32ErrorCode.ERROR_ACCESS_DENIED:
                 case PInvoke.Win32ErrorCode.ERROR_GEN_FAILURE:
                     // failure
-                    return IMorphicResult<Display>.ErrorResult();
+                    return MorphicResult.ErrorResult();
                 default:
                     // unknown error
-                    return IMorphicResult<Display>.ErrorResult();
+                    return MorphicResult.ErrorResult();
             }
 
             var pathInfoElements = new ExtendedPInvoke.DISPLAYCONFIG_PATH_INFO[numPathArrayElements];
@@ -83,10 +83,10 @@ namespace Morphic.Windows.Native.Display
                 case PInvoke.Win32ErrorCode.ERROR_GEN_FAILURE:
                 case PInvoke.Win32ErrorCode.ERROR_INSUFFICIENT_BUFFER:
                     // failure
-                    return IMorphicResult<Display>.ErrorResult();
+                    return MorphicResult.ErrorResult();
                 default:
                     // unknown error
-                    return IMorphicResult<Display>.ErrorResult();
+                    return MorphicResult.ErrorResult();
             }
 
             Display? result = null;
@@ -108,7 +108,7 @@ namespace Morphic.Windows.Native.Display
                         break;
                     case PInvoke.Win32ErrorCode.ERROR_INVALID_PARAMETER:
                         System.Diagnostics.Debug.Assert(false, "Error getting device info; this is probably a programming error.");
-                        return IMorphicResult<Display>.ErrorResult();
+                        return MorphicResult.ErrorResult();
                     case PInvoke.Win32ErrorCode.ERROR_NOT_SUPPORTED:
                     case PInvoke.Win32ErrorCode.ERROR_ACCESS_DENIED:
                     case PInvoke.Win32ErrorCode.ERROR_INSUFFICIENT_BUFFER:
@@ -151,7 +151,7 @@ namespace Morphic.Windows.Native.Display
                     }
 
                     // if this entry matches out monitorName and we either (a) don't have a result yet or (b) have a result but this one is _internal_, then update our result
-                    if ((result == null) || (isInternal == true))
+                    if ((result is null) || (isInternal == true))
                     {
                         result = new Display(displayName, sourceName.header.adapterId, sourceName.header.id);
                     }
@@ -159,32 +159,32 @@ namespace Morphic.Windows.Native.Display
             }
 
             // if we could not find a matching display, return an error result
-            if (result == null)
+            if (result is null)
             {
-                return IMorphicResult<Display>.ErrorResult();
+                return MorphicResult.ErrorResult();
             }
 
-            return IMorphicResult<Display>.SuccessResult(result!.Value);
+            return MorphicResult.OkResult(result!.Value);
         }
 
-        public static IMorphicResult<Display> GetDisplayForWindow(IntPtr windowHandle)
+        public static MorphicResult<Display, MorphicUnit> GetDisplayForWindow(IntPtr windowHandle)
         {
             var getDisplayNameResult = Display.GetDisplayNameForWindowHandle(windowHandle);
             if (getDisplayNameResult.IsError == true)
             {
-                return IMorphicResult<Display>.ErrorResult();
+                return MorphicResult.ErrorResult();
             }
             var displayName = getDisplayNameResult.Value!;
 
             return Display.GetDisplayByName(displayName);
         }
 
-        public static IMorphicResult<Display> GetPrimaryDisplay()
+        public static MorphicResult<Display, MorphicUnit> GetPrimaryDisplay()
         {
             var getDisplayNameResult = Display.GetDisplayNameForWindowHandle(null);
             if (getDisplayNameResult.IsError == true)
             {
-                return IMorphicResult<Display>.ErrorResult();
+                return MorphicResult.ErrorResult();
             }
             var displayName = getDisplayNameResult.Value!;
 
@@ -194,16 +194,16 @@ namespace Morphic.Windows.Native.Display
         //
 
         // NOTE: if the caller does not provide a windowHandle, we use the primary monitor instead
-        private static IMorphicResult<string> GetDisplayNameForWindowHandle(IntPtr? windowHandle)
+        private static MorphicResult<string, MorphicUnit> GetDisplayNameForWindowHandle(IntPtr? windowHandle)
         {
             // get the handle to the monitor associated with this windowHandle (or the primary monitor, if no windowHandle was specified)
             IntPtr monitorHandle;
-            if (windowHandle != null)
+            if (windowHandle is not null)
             {
                 // get the handle of the monitor which contains the majority of the specified windowHandle's window
                 monitorHandle = PInvoke.User32.MonitorFromWindow(windowHandle.Value, PInvoke.User32.MonitorOptions.MONITOR_DEFAULTTONEAREST);
             }
-            else /* if (windowHandle == null) */
+            else /* if (windowHandle is null) */
             {
                 // get the handle of the primary monitor
                 IntPtr desktopHWnd = PInvoke.User32.GetDesktopWindow();
@@ -215,7 +215,7 @@ namespace Morphic.Windows.Native.Display
             bool getMonitorInfoSuccess = ExtendedPInvoke.GetMonitorInfo(monitorHandle, ref monitorInfo);
             if (getMonitorInfoSuccess == false)
             {
-                return IMorphicResult<string>.ErrorResult();
+                return MorphicResult.ErrorResult();
             }
 
             int lengthOfDeviceName = Array.IndexOf(monitorInfo.szDevice, '\0');
@@ -226,7 +226,7 @@ namespace Morphic.Windows.Native.Display
             }
             var deviceName = new string(monitorInfo.szDevice, 0, lengthOfDeviceName);
 
-            return IMorphicResult<string>.SuccessResult(deviceName);
+            return MorphicResult.OkResult(deviceName);
         }
 
         //
@@ -237,7 +237,7 @@ namespace Morphic.Windows.Native.Display
             public int CurrentDpiOffset;
             public int MaximumDpiOffset;
         }
-        public IMorphicResult<GetDpiOffsetResult> GetCurrentDpiOffsetAndRange()
+        public MorphicResult<GetDpiOffsetResult, MorphicUnit> GetCurrentDpiOffsetAndRange()
         {
             // retrieve the DPI values (min, current and max) for the monitor
             var getDpiInfo = new ExtendedPInvoke.DISPLAYCONFIG_GET_DPI();
@@ -253,11 +253,11 @@ namespace Morphic.Windows.Native.Display
                     break;
                 case PInvoke.Win32ErrorCode.ERROR_INVALID_PARAMETER:
                     System.Diagnostics.Debug.Assert(false, "Error getting dpi info; this is probably a programming error.");
-                    return IMorphicResult<GetDpiOffsetResult>.ErrorResult();
+                    return MorphicResult.ErrorResult();
                 default:
                     // unknown error
                     System.Diagnostics.Debug.Assert(false, "Error getting dpi info");
-                    return IMorphicResult<GetDpiOffsetResult>.ErrorResult();
+                    return MorphicResult.ErrorResult();
             }
 
             var result = new GetDpiOffsetResult();
@@ -266,16 +266,16 @@ namespace Morphic.Windows.Native.Display
             // NOTE: the current offset can be GREATER than the maximum offset (if the user has specified a custom zoom level, for instance)
             result.CurrentDpiOffset = getDpiInfo.currentDpiOffset;
 
-            return IMorphicResult<GetDpiOffsetResult>.SuccessResult(result);
+            return MorphicResult.OkResult(result);
         }
 
-        public async Task<IMorphicResult> SetDpiOffsetAsync(int dpiOffset)
+        public async Task<MorphicResult<MorphicUnit, MorphicUnit>> SetDpiOffsetAsync(int dpiOffset)
         {
             var thisDisplay = this;
             var adapterId = this.AdapterId;
             var sourceId = this.SourceId;
 
-            return await Task.Run(() =>
+            return await Task.Run((Func<MorphicResult<MorphicUnit, MorphicUnit>>)(() =>
             {
                 // retrieve the DPI values (min, current and max) for the monitor
                 var setDpiInfo = new ExtendedPInvoke.DISPLAYCONFIG_SET_DPI();
@@ -292,68 +292,68 @@ namespace Morphic.Windows.Native.Display
                         break;
                     case PInvoke.Win32ErrorCode.ERROR_INVALID_PARAMETER:
                         System.Diagnostics.Debug.Assert(false, "Error setting dpi info; this is probably a programming error.");
-                        return IMorphicResult.ErrorResult;
+                        return MorphicResult.ErrorResult();
                     default:
                         // unknown error
                         System.Diagnostics.Debug.Assert(false, "Error setting dpi info");
-                        return IMorphicResult.ErrorResult;
+                        return MorphicResult.ErrorResult();
                 }
 
                 // verify that the DPI was set successfully
                 // NOTE: this is not technically necessary since we already have a success/failure result, but it's a good sanity check; if it's too early to check this then it's reasonable for us to skip this verification step
                 var currentDpiOffsetAndRange = thisDisplay.GetCurrentDpiOffsetAndRange();
-                if (currentDpiOffsetAndRange == null)
+                if (currentDpiOffsetAndRange.IsError == true)
                 {
-                    return IMorphicResult.ErrorResult;
+                    return MorphicResult.ErrorResult();
                 }
                 if (currentDpiOffsetAndRange.Value.CurrentDpiOffset != dpiOffset)
                 {
                     System.Diagnostics.Debug.Assert(false, "Could not set DPI offset (or the system has not updated the current SPI offset value)");
-                    return IMorphicResult.ErrorResult;
+                    return MorphicResult.ErrorResult();
                 }
 
                 // otherwise, we succeeded
-                return IMorphicResult.SuccessResult;
-            });
+                return MorphicResult.OkResult();
+            }));
         }
 
         //
 
-        public IMorphicResult<double> GetScalePercentage()
+        public MorphicResult<double, MorphicUnit> GetScalePercentage()
         {
             var currentDpiOffsetAndRangeResult = this.GetCurrentDpiOffsetAndRange();
             if (currentDpiOffsetAndRangeResult.IsError == true)
             {
-                return IMorphicResult<double>.ErrorResult();
+                return MorphicResult.ErrorResult();
             }
             var currentDpiOffsetAndRange = currentDpiOffsetAndRangeResult.Value!;
 
             var scalePercentageResult = Display.TranslateDpiOffsetToScalePercentage(currentDpiOffsetAndRange.CurrentDpiOffset, currentDpiOffsetAndRange.MinimumDpiOffset, currentDpiOffsetAndRange.MaximumDpiOffset);
             if (scalePercentageResult.IsError == true)
             {
-                return IMorphicResult<double>.ErrorResult();
+                return MorphicResult.ErrorResult();
             }
             var scalePercentage = scalePercentageResult.Value!;
 
-            return IMorphicResult<double>.SuccessResult(scalePercentage);
+            return MorphicResult.OkResult(scalePercentage);
         }
 
         /// <summary>
         /// Sets the DPI scaling
         /// </summary>
         /// <param name="scalePercentage">Scaling percentage to set</param>
-        public async Task<IMorphicResult> SetScalePercentageAsync(double scalePercentage)
+        public async Task<MorphicResult<MorphicUnit, MorphicUnit>> SetScalePercentageAsync(double scalePercentage)
         {
             var currentDpiOffsetAndRange = this.GetCurrentDpiOffsetAndRange();
-            if (currentDpiOffsetAndRange == null)
+            if (currentDpiOffsetAndRange.IsError == true)
             {
-                return IMorphicResult.ErrorResult;
+                return MorphicResult.ErrorResult();
             }
 
             var newDpiOffsetResult = Display.TranslateScalePercentageToDpiOffset(scalePercentage, currentDpiOffsetAndRange.Value.MinimumDpiOffset, currentDpiOffsetAndRange.Value.MaximumDpiOffset);
             if (newDpiOffsetResult.IsError == true)
             {
-                return IMorphicResult.ErrorResult;
+                return MorphicResult.ErrorResult();
             }
             var newDpiOffset = newDpiOffsetResult.Value!;
 
@@ -364,12 +364,12 @@ namespace Morphic.Windows.Native.Display
         //
 
         // returns: an array of available scale percentages
-        public IMorphicResult<List<double>> GetAvailableScalePercentages()
+        public MorphicResult<List<double>, MorphicUnit> GetAvailableScalePercentages()
         {
             var currentDpiOffsetAndRange = this.GetCurrentDpiOffsetAndRange();
-            if (currentDpiOffsetAndRange == null)
+            if (currentDpiOffsetAndRange.IsError == true)
             {
-                return IMorphicResult<List<double>>.ErrorResult();
+                return MorphicResult.ErrorResult();
             }
 
             // special-case: if the DPI mode is using a "custom DPI" (which may be a backwards-compatible Windows 8.1 behavior), return _only_ that custom percentage
@@ -378,28 +378,28 @@ namespace Morphic.Windows.Native.Display
                 var customFixedDpiScalePercentageResult = Display.GetCustomDpiOffsetAsPercentage();
                 if (customFixedDpiScalePercentageResult.IsError == true)
                 {
-                    return IMorphicResult<List<double>>.ErrorResult();
+                    return MorphicResult.ErrorResult();
                 }
                 var customFixedDpiScalePercentage = customFixedDpiScalePercentageResult.Value!;
                 //
                 var singleScaleResult = new List<double>();
                 singleScaleResult.Add(customFixedDpiScalePercentage);
-                return IMorphicResult<List<double>>.SuccessResult(singleScaleResult);
+                return MorphicResult.OkResult(singleScaleResult);
             }
 
             var minimumScaleResult = Display.TranslateDpiOffsetToScalePercentage(currentDpiOffsetAndRange.Value.MinimumDpiOffset, currentDpiOffsetAndRange.Value.MinimumDpiOffset, currentDpiOffsetAndRange.Value.MaximumDpiOffset);
             if (minimumScaleResult.IsError == true)
             {
-                return IMorphicResult<List<double>>.ErrorResult();
+                return MorphicResult.ErrorResult();
             }
             var maximumScaleResult = Display.TranslateDpiOffsetToScalePercentage(currentDpiOffsetAndRange.Value.MaximumDpiOffset, currentDpiOffsetAndRange.Value.MinimumDpiOffset, currentDpiOffsetAndRange.Value.MaximumDpiOffset);
             if (maximumScaleResult.IsError == true)
             {
-                return IMorphicResult<List<double>>.ErrorResult();
+                return MorphicResult.ErrorResult();
             }
 
             var fixedScalePercentagesInRange = this.GetFixedScalePercentagesInRange(minimumScaleResult.Value!, maximumScaleResult.Value!);
-            return IMorphicResult<List<double>>.SuccessResult(fixedScalePercentagesInRange);
+            return MorphicResult.OkResult(fixedScalePercentagesInRange);
         }
 
         public List<double> GetFixedScalePercentagesInRange(double minimum, double maximum)
@@ -421,7 +421,7 @@ namespace Morphic.Windows.Native.Display
         //
 
         // NOTE: if dpiOffset is out of the min<->max range or the range is too broad, this function will return an ErrorResult
-        public static IMorphicResult<double> TranslateDpiOffsetToScalePercentage(int dpiOffset, int minimumDpiOffset, int maximumDpiOffset)
+        public static MorphicResult<double, MorphicUnit> TranslateDpiOffsetToScalePercentage(int dpiOffset, int minimumDpiOffset, int maximumDpiOffset)
         {
             // special-case: if the DPI mode is using a "custom DPI" (which may be a backwards-compatible Windows 8.1 behavior), capture that value now
             if (Display.IsCustomDpiOffset(dpiOffset) == true)
@@ -456,7 +456,7 @@ namespace Morphic.Windows.Native.Display
 
             if (percentageIndex < 0)
             {
-                return IMorphicResult<double>.ErrorResult();
+                return MorphicResult.ErrorResult();
             }
 
             double scalePercentage;
@@ -500,13 +500,13 @@ namespace Morphic.Windows.Native.Display
                     break;
                 default:
                     // custom or otherwise unknown percentage
-                    return IMorphicResult<double>.ErrorResult();
+                    return MorphicResult.ErrorResult();
             }
 
-            return IMorphicResult<double>.SuccessResult(scalePercentage);
+            return MorphicResult.OkResult(scalePercentage);
         }
 
-        public static IMorphicResult<int> TranslateScalePercentageToDpiOffset(double percentage, int minimumDpiOffset, int maximumDpiOffset)
+        public static MorphicResult<int, MorphicUnit> TranslateScalePercentageToDpiOffset(double percentage, int minimumDpiOffset, int maximumDpiOffset)
         {
             /* 
              * minDpiOffset represents 100%, and offsets above that follow this scale (according to Morphic Classic research):
@@ -566,7 +566,7 @@ namespace Morphic.Windows.Native.Display
                     break;
                 default:
                     // custom or otherwise unknown percentage
-                    return IMorphicResult<int>.ErrorResult();
+                    return MorphicResult.ErrorResult();
             }
 
             if (minimumDpiOffset + dpiOffsetAboveMinimum > maximumDpiOffset)
@@ -574,12 +574,12 @@ namespace Morphic.Windows.Native.Display
                 // if the percentage is out of range, return null
                 // NOTE: we may want to consider an option which lets us "max out" the dpi offset in this scenario
                 System.Diagnostics.Debug.Assert(false, "Display scale percentage is out of range for the current DPI offset range");
-                return IMorphicResult<int>.ErrorResult();
+                return MorphicResult.ErrorResult();
             }
 
             // return the dpiOffset which maps to this percentage
             var dpiOffset = minimumDpiOffset + dpiOffsetAboveMinimum;
-            return IMorphicResult<int>.SuccessResult(dpiOffset);
+            return MorphicResult.OkResult(dpiOffset);
         }
 
         //
@@ -598,25 +598,25 @@ namespace Morphic.Windows.Native.Display
         }
 
         // NOTE: Windows users can set a custom DPI percentage (perhaps a backwards-compatibility feature from Windows 8.1)
-        public static IMorphicResult<double> GetCustomDpiOffsetAsPercentage()
+        public static MorphicResult<double, MorphicUnit> GetCustomDpiOffsetAsPercentage()
         {
             // method 1: read the custom DPI level out of the registry (NOTE: this is machine-wide, not per-monitor)
 #pragma warning disable CA1416 // Validate platform compatibility
             object? logPixelsAsObject = Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Control Panel\Desktop", "LogPixels", null);
 #pragma warning restore CA1416 // Validate platform compatibility
-            if (logPixelsAsObject == null)
+            if (logPixelsAsObject is null)
             {
-                return IMorphicResult<double>.ErrorResult();
+                return MorphicResult.ErrorResult();
             }
             if (logPixelsAsObject is int)
             {
                 var logPixels = (int)logPixelsAsObject;
                 var logPixelsAsPercentage = (double)logPixels / 96;
-                return IMorphicResult<double>.SuccessResult(logPixelsAsPercentage);
+                return MorphicResult.OkResult(logPixelsAsPercentage);
             }
             else
             {
-                return IMorphicResult<double>.ErrorResult();
+                return MorphicResult.ErrorResult();
             }
 
             // method 2: read the custom DPI from .NET

@@ -21,6 +21,7 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
+using Morphic.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
     <RuntimeIdentifiers>win-x64;win-x86</RuntimeIdentifiers>
     <Platforms>AnyCPU;x64;x86</Platforms>
@@ -9,13 +9,10 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
+    <PackageReference Include="Morphic.Core" Version="1.1.0" />
     <PackageReference Include="PInvoke.Kernel32" Version="0.7.104" />
     <PackageReference Include="PInvoke.SetupApi" Version="0.7.104" />
     <PackageReference Include="PInvoke.User32" Version="0.7.104" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Morphic.Core\Morphic.Core.csproj" />
   </ItemGroup>
 
 </Project>

@@ -74,7 +74,7 @@ namespace Morphic.Windows.Native.Devices
             private GetDrivesError(Values value) : base(value) { }
         }
         //
-        public static async Task<IMorphicResult<List<Drive>, GetDrivesError>> GetAllDrivesAsync()
+        public static async Task<MorphicResult<List<Drive>, GetDrivesError>> GetAllDrivesAsync()
         {
             var allDrives = new List<Drive>();
 
@@ -85,15 +85,15 @@ namespace Morphic.Windows.Native.Devices
                 switch (allDiskDevicesResult.Error!.Value)
                 {
                     case Device.GetDevicesForClassGuidError.Values.ConfigManagerError:
-                        return IMorphicResult<List<Drive>, GetDrivesError>.ErrorResult(GetDrivesError.ConfigManagerError(allDiskDevicesResult.Error!.ConfigManagerErrorCode!.Value));
+                        return MorphicResult.ErrorResult(GetDrivesError.ConfigManagerError(allDiskDevicesResult.Error!.ConfigManagerErrorCode!.Value));
                     case Device.GetDevicesForClassGuidError.Values.CouldNotEnumerateViaWin32Api:
-                        return IMorphicResult<List<Drive>, GetDrivesError>.ErrorResult(GetDrivesError.CouldNotEnumerateViaWin32Api);
+                        return MorphicResult.ErrorResult(GetDrivesError.CouldNotEnumerateViaWin32Api);
                     case Device.GetDevicesForClassGuidError.Values.CouldNotGetDeviceCapabilities:
-                        return IMorphicResult<List<Drive>, GetDrivesError>.ErrorResult(GetDrivesError.CouldNotGetDeviceCapabilities);
+                        return MorphicResult.ErrorResult(GetDrivesError.CouldNotGetDeviceCapabilities);
                     case Device.GetDevicesForClassGuidError.Values.CouldNotGetDeviceInstanceId:
-                        return IMorphicResult<List<Drive>, GetDrivesError>.ErrorResult(GetDrivesError.CouldNotGetDeviceInstanceId);
+                        return MorphicResult.ErrorResult(GetDrivesError.CouldNotGetDeviceInstanceId);
                     case Device.GetDevicesForClassGuidError.Values.Win32Error:
-                        return IMorphicResult<List<Drive>, GetDrivesError>.ErrorResult(GetDrivesError.Win32Error(allDiskDevicesResult.Error!.Win32ErrorCode!.Value));
+                        return MorphicResult.ErrorResult(GetDrivesError.Win32Error(allDiskDevicesResult.Error!.Win32ErrorCode!.Value));
                 }
             }
 
@@ -107,9 +107,9 @@ namespace Morphic.Windows.Native.Devices
                     switch (diskStorageDeviceNumberResult.Error!.Value)
                     {
                         case StorageDeviceNumberError.Values.CouldNotRetrieveStorageDeviceNumbers:
-                            return IMorphicResult<List<Drive>, GetDrivesError>.ErrorResult(GetDrivesError.CouldNotRetrieveStorageDeviceNumbers);
+                            return MorphicResult.ErrorResult(GetDrivesError.CouldNotRetrieveStorageDeviceNumbers);
                         case StorageDeviceNumberError.Values.Win32Error:
-                            return IMorphicResult<List<Drive>, GetDrivesError>.ErrorResult(GetDrivesError.Win32Error(allDiskDevicesResult.Error!.Win32ErrorCode!.Value));
+                            return MorphicResult.ErrorResult(GetDrivesError.Win32Error(allDiskDevicesResult.Error!.Win32ErrorCode!.Value));
                     }
                 }
                 var storageDeviceNumber = diskStorageDeviceNumberResult.Value!;
@@ -118,7 +118,7 @@ namespace Morphic.Windows.Native.Devices
                 allDrives.Add(drive);
             }
 
-            return IMorphicResult<List<Drive>, GetDrivesError>.SuccessResult(allDrives);
+            return MorphicResult.OkResult(allDrives);
         }
 
         public record TryGetDriveLetterError : MorphicAssociatedValueEnum<TryGetDriveLetterError.Values>
@@ -141,7 +141,7 @@ namespace Morphic.Windows.Native.Devices
             private TryGetDriveLetterError(Values value) : base(value) { }
         }
         //
-        public async Task<IMorphicResult<char?, TryGetDriveLetterError>> TryGetDriveLetterAsync()
+        public async Task<MorphicResult<char?, TryGetDriveLetterError>> TryGetDriveLetterAsync()
         {
             // get the disk letter for the drive
             var convertDriveLetterResult = await Drive.TryConvertDevicePathToDosDriveLetterAsync(_device.DevicePath!);
@@ -150,25 +150,25 @@ namespace Morphic.Windows.Native.Devices
                 switch (convertDriveLetterResult.Error!.Value)
                 {
                     case StorageDeviceNumberError.Values.CouldNotRetrieveStorageDeviceNumbers:
-                        return IMorphicResult<char?, TryGetDriveLetterError>.ErrorResult(TryGetDriveLetterError.CouldNotRetrieveStorageDeviceNumbers);
+                        return MorphicResult.ErrorResult(TryGetDriveLetterError.CouldNotRetrieveStorageDeviceNumbers);
                     case StorageDeviceNumberError.Values.Win32Error:
-                        return IMorphicResult<char?, TryGetDriveLetterError>.ErrorResult(TryGetDriveLetterError.Win32Error(convertDriveLetterResult.Error!.Win32ErrorCode!.Value));
+                        return MorphicResult.ErrorResult(TryGetDriveLetterError.Win32Error(convertDriveLetterResult.Error!.Win32ErrorCode!.Value));
                 }
             }
 
             // NOTE: convertDiskLetterResult.Value will be null if this drive has no drive letter; note that Windows allows drive letters to be assigned and unassigned on-the-fly to mounted volumes
             var diskLetter = convertDriveLetterResult.Value;
-            return IMorphicResult<char?, TryGetDriveLetterError>.SuccessResult(diskLetter);
+            return MorphicResult.OkResult(diskLetter);
         }
 
         // NOTE: for a Drive, "IsRemovable" means that the media can be ejected (i.e. a CD can be ejected from a drive; a USB drive's volume cannot be ejected from the physical USB drive)
         //       [in other words, this will return true for CD-ROMs, but false for USB drives]
-        public IMorphicResult<bool, Device.GetParentOrChildError> GetIsRemovable()
+        public MorphicResult<bool, Device.GetParentOrChildError> GetIsRemovable()
         {
             return _device.GetIsDeviceOrAncestorsRemovable();
         }
 
-        private static async Task<IMorphicResult<char?, StorageDeviceNumberError>> TryConvertDevicePathToDosDriveLetterAsync(string devicePath)
+        private static async Task<MorphicResult<char?, StorageDeviceNumberError>> TryConvertDevicePathToDosDriveLetterAsync(string devicePath)
         {
             // get the storage device number for this devicePath
             var deviceStorageDeviceNumberResult = await StorageDeviceUtils.GetStorageDeviceNumberAsync(devicePath);
@@ -177,9 +177,9 @@ namespace Morphic.Windows.Native.Devices
                 switch (deviceStorageDeviceNumberResult.Error!.Value)
                 {
                     case StorageDeviceNumberError.Values.CouldNotRetrieveStorageDeviceNumbers:
-                        return IMorphicResult<char?, StorageDeviceNumberError>.ErrorResult(StorageDeviceNumberError.CouldNotRetrieveStorageDeviceNumbers);
+                        return MorphicResult.ErrorResult(StorageDeviceNumberError.CouldNotRetrieveStorageDeviceNumbers);
                     case StorageDeviceNumberError.Values.Win32Error:
-                        return IMorphicResult<char?, StorageDeviceNumberError>.ErrorResult(StorageDeviceNumberError.Win32Error(deviceStorageDeviceNumberResult.Error!.Win32ErrorCode!.Value));
+                        return MorphicResult.ErrorResult(StorageDeviceNumberError.Win32Error(deviceStorageDeviceNumberResult.Error!.Win32ErrorCode!.Value));
                     default:
                         throw new Exception("invalid code path");
                 }
@@ -192,7 +192,7 @@ namespace Morphic.Windows.Native.Devices
                 switch (dosDrivesAndStorageNumbersResult.Error!.Value)
                 {
                     case Win32ApiError.Values.Win32Error:
-                        return IMorphicResult<char?, StorageDeviceNumberError>.ErrorResult(StorageDeviceNumberError.Win32Error(dosDrivesAndStorageNumbersResult.Error!.Win32ErrorCode!.Value));
+                        return MorphicResult.ErrorResult(StorageDeviceNumberError.Win32Error(dosDrivesAndStorageNumbersResult.Error!.Win32ErrorCode!.Value));
                     default:
                         throw new Exception("invalid code path");
                 }
@@ -212,32 +212,32 @@ namespace Morphic.Windows.Native.Devices
                 if (storageDeviceNumber.Equals(deviceStorageDeviceNumberResult.Value!) == true)
                 {
                     // we have found the drive letter
-                    return IMorphicResult<char?, StorageDeviceNumberError>.SuccessResult(driveLetter);
+                    return MorphicResult.OkResult<char?>(driveLetter);
                 }
             }
 
             // if we could not find a mapping AND we found an error with one or more of the drive letters we tried to find a storage number for, bubble up that error to our caller
-            if (singleDosDeviceErrorResult != null)
+            if (singleDosDeviceErrorResult is not null)
             {
                 // NOTE for future: we might want to return an array of errors (along with the drives that they were caused on) in the future, if that's necessary
                 switch (singleDosDeviceErrorResult.Value)
                 {
                     case StorageDeviceNumberError.Values.CouldNotRetrieveStorageDeviceNumbers:
-                        return IMorphicResult<char?, StorageDeviceNumberError>.ErrorResult(StorageDeviceNumberError.CouldNotRetrieveStorageDeviceNumbers);
+                        return MorphicResult.ErrorResult(StorageDeviceNumberError.CouldNotRetrieveStorageDeviceNumbers);
                     case StorageDeviceNumberError.Values.Win32Error:
-                        return IMorphicResult<char?, StorageDeviceNumberError>.ErrorResult(StorageDeviceNumberError.Win32Error(dosDrivesAndStorageNumbersResult.Error!.Win32ErrorCode!.Value));
+                        return MorphicResult.ErrorResult(StorageDeviceNumberError.Win32Error(dosDrivesAndStorageNumbersResult.Error!.Win32ErrorCode!.Value));
                     default:
                         throw new Exception("invalid code path");
                 }
             }
 
             // if we could not find the mapping and there was no error, return null; this simply means we couldn't find a drive letter for the device path (e.g. recovery partitions, etc.)
-            return IMorphicResult<char?, StorageDeviceNumberError>.SuccessResult(null);
+            return MorphicResult.OkResult<char?>(null);
         }
 
         // NOTE: this function will return the full list of drive letters, complete with error conditions for each drive letter (since some drive letters will not let us get their info); it
         //       ALSO returns a general error if it cannot get any results; if this ever seems too complicated, we could split it into two functions
-        private static async Task<IMorphicResult<Dictionary<char, IMorphicResult<ExtendedPInvoke.STORAGE_DEVICE_NUMBER, StorageDeviceNumberError>>, Win32ApiError>> GetStorageDeviceNumbersForAllDosDrivesAsync()
+        private static async Task<MorphicResult<Dictionary<char, MorphicResult<ExtendedPInvoke.STORAGE_DEVICE_NUMBER, StorageDeviceNumberError>>, Win32ApiError>> GetStorageDeviceNumbersForAllDosDrivesAsync()
         {
             // get all dos drive letters
             var allDosDriveLettersResult = Drive.GetAllDosDriveLetters();
@@ -246,18 +246,18 @@ namespace Morphic.Windows.Native.Devices
                 switch (allDosDriveLettersResult.Error!.Value)
                 {
                     case Win32ApiError.Values.Win32Error:
-                        return IMorphicResult<Dictionary<char, IMorphicResult<ExtendedPInvoke.STORAGE_DEVICE_NUMBER, StorageDeviceNumberError>>, Win32ApiError>.ErrorResult(Win32ApiError.Win32Error(allDosDriveLettersResult.Error!.Win32ErrorCode!.Value));
+                        return MorphicResult.ErrorResult(Win32ApiError.Win32Error(allDosDriveLettersResult.Error!.Win32ErrorCode!.Value));
                     default:
                         throw new Exception("invalid code path");
                 }
             }
 
-            var result = new Dictionary<char, IMorphicResult<ExtendedPInvoke.STORAGE_DEVICE_NUMBER, StorageDeviceNumberError>>();
+            var result = new Dictionary<char, MorphicResult<ExtendedPInvoke.STORAGE_DEVICE_NUMBER, StorageDeviceNumberError>>();
 
             // get the storage device numbers for each drive letter
             foreach (char dosDriveLetter in allDosDriveLettersResult.Value!)
             {
-                IMorphicResult<ExtendedPInvoke.STORAGE_DEVICE_NUMBER, StorageDeviceNumberError>? driveErrorResult = null;
+                MorphicResult<ExtendedPInvoke.STORAGE_DEVICE_NUMBER, StorageDeviceNumberError>? driveErrorResult = null;
 
                 // get the storage device number for this devicePath
                 var deviceStorageDeviceNumberResult = await StorageDeviceUtils.GetStorageDeviceNumberAsync(@"\\.\" + dosDriveLetter + ":");
@@ -266,38 +266,38 @@ namespace Morphic.Windows.Native.Devices
                     switch (deviceStorageDeviceNumberResult.Error!.Value)
                     {
                         case StorageDeviceNumberError.Values.CouldNotRetrieveStorageDeviceNumbers:
-                            driveErrorResult = IMorphicResult<ExtendedPInvoke.STORAGE_DEVICE_NUMBER, StorageDeviceNumberError>.ErrorResult(StorageDeviceNumberError.CouldNotRetrieveStorageDeviceNumbers);
+                            driveErrorResult = MorphicResult.ErrorResult(StorageDeviceNumberError.CouldNotRetrieveStorageDeviceNumbers);
                             break;
                         case StorageDeviceNumberError.Values.Win32Error:
-                            driveErrorResult = IMorphicResult<ExtendedPInvoke.STORAGE_DEVICE_NUMBER, StorageDeviceNumberError>.ErrorResult(StorageDeviceNumberError.Win32Error(deviceStorageDeviceNumberResult.Error!.Win32ErrorCode!.Value));
+                            driveErrorResult = MorphicResult.ErrorResult(StorageDeviceNumberError.Win32Error(deviceStorageDeviceNumberResult.Error!.Win32ErrorCode!.Value));
                             break;
                         default:
                             throw new Exception("invalid code path");
                     }
                 }
 
-                if (driveErrorResult == null)
+                if (driveErrorResult is null)
                 {
-                    var driveSuccessResult = IMorphicResult<ExtendedPInvoke.STORAGE_DEVICE_NUMBER, StorageDeviceNumberError>.SuccessResult(deviceStorageDeviceNumberResult.Value!);
+                    var driveSuccessResult = MorphicResult.OkResult(deviceStorageDeviceNumberResult.Value!);
                     result.Add(dosDriveLetter, driveSuccessResult);
                 }
                 else
                 {
-                    result.Add(dosDriveLetter, driveErrorResult);
+                    result.Add(dosDriveLetter, driveErrorResult.Value);
                 }
             }
 
-            return IMorphicResult<Dictionary<char, IMorphicResult<ExtendedPInvoke.STORAGE_DEVICE_NUMBER, StorageDeviceNumberError>>, Win32ApiError>.SuccessResult(result);
+            return MorphicResult.OkResult(result);
         }
 
-        public static IMorphicResult<List<char>, Win32ApiError> GetAllDosDriveLetters()
+        public static MorphicResult<List<char>, Win32ApiError> GetAllDosDriveLetters()
         {
             var listOfDosDriveLetters = new List<char>();
 
             var listOfDosDeviceNamesResult = Drive.GetAllDosDeviceNames();
             if (listOfDosDeviceNamesResult.IsError == true)
             {
-                return IMorphicResult<List<char>, Win32ApiError>.ErrorResult(listOfDosDeviceNamesResult.Error!);
+                return MorphicResult.ErrorResult(listOfDosDeviceNamesResult.Error!);
             }
 
             foreach (var dosDeviceName in listOfDosDeviceNamesResult.Value!)
@@ -308,10 +308,10 @@ namespace Morphic.Windows.Native.Devices
                 }
             }
 
-            return IMorphicResult<List<char>, Win32ApiError>.SuccessResult(listOfDosDriveLetters);
+            return MorphicResult.OkResult(listOfDosDriveLetters);
         }
 
-        private static IMorphicResult<List<string>, Win32ApiError> GetAllDosDeviceNames()
+        private static MorphicResult<List<string>, Win32ApiError> GetAllDosDeviceNames()
         {
             var listOfDosDeviceNames = new List<string>();
 
@@ -323,7 +323,7 @@ namespace Morphic.Windows.Native.Devices
                 if (numberOfChars == 0)
                 {
                     var win32ErrorCode = Marshal.GetLastWin32Error();
-                    return IMorphicResult<List<string>, Win32ApiError>.ErrorResult(Win32ApiError.Win32Error(win32ErrorCode));
+                    return MorphicResult.ErrorResult(Win32ApiError.Win32Error(win32ErrorCode));
                 }
 
                 var dosDevicesAsCharArray = new char[numberOfChars];
@@ -346,10 +346,10 @@ namespace Morphic.Windows.Native.Devices
                 Marshal.FreeHGlobal(pointerToListOfDosDeviceNames);
             }
 
-            return IMorphicResult<List<string>, Win32ApiError>.SuccessResult(listOfDosDeviceNames);
+            return MorphicResult.OkResult(listOfDosDeviceNames);
         }
 
-        public IMorphicResult<MorphicUnit, Device.SafelyRemoveDeviceError> SafelyRemoveDevice()
+        public MorphicResult<MorphicUnit, Device.SafelyRemoveDeviceError> SafelyRemoveDevice()
         {
             return _device.SafelyRemoveDevice();
         }
@@ -378,7 +378,7 @@ namespace Morphic.Windows.Native.Devices
             private EjectDriveMediaError(Values value) : base(value) { }
         }
         //
-        public async Task<IMorphicResult<MorphicUnit, EjectDriveMediaError>> EjectDriveMediaAsync()
+        public async Task<MorphicResult<MorphicUnit, EjectDriveMediaError>> EjectDriveMediaAsync()
         {
             // NOTE: CD-ROMs cannot eject unless we switch from using the drive's device path to the drive letter 
             // NOTE: In all of our testing, 100% of drives that could be ejected with their device letter could also be ejected with their drive letter (if they had a drive letter),
@@ -391,16 +391,16 @@ namespace Morphic.Windows.Native.Devices
                 switch (convertToDriveLetterResult.Error!.Value)
                 {
                     case StorageDeviceNumberError.Values.CouldNotRetrieveStorageDeviceNumbers:
-                        return IMorphicResult<MorphicUnit, EjectDriveMediaError>.ErrorResult(EjectDriveMediaError.CouldNotRetrieveStorageDeviceNumbers);
+                        return MorphicResult.ErrorResult(EjectDriveMediaError.CouldNotRetrieveStorageDeviceNumbers);
                     case StorageDeviceNumberError.Values.Win32Error:
-                        return IMorphicResult<MorphicUnit, EjectDriveMediaError>.ErrorResult(EjectDriveMediaError.Win32Error(convertToDriveLetterResult.Error!.Win32ErrorCode!.Value));
+                        return MorphicResult.ErrorResult(EjectDriveMediaError.Win32Error(convertToDriveLetterResult.Error!.Win32ErrorCode!.Value));
                 }
             }
 
             string pathToEject;
 
             var driveLetter = convertToDriveLetterResult.Value;
-            if (driveLetter != null)
+            if (driveLetter is not null)
             {
                 // convert the drive letter to a path (e.g. 'E' => '\\.\E:')
                 pathToEject = Drive.ConvertDriveLetterToDriveLetterPath(driveLetter.Value);
@@ -414,7 +414,7 @@ namespace Morphic.Windows.Native.Devices
         }
         //
         // NOTE: this function ejects the media from the drive (i.e. for CD-ROM drives...but this can also work to "eject" USB drives without unmounting their drive letters, exhibiting the same behavior as when right-clicking 'eject drive' on a USB drive in Windows Explorer)
-        private static async Task<IMorphicResult<MorphicUnit, EjectDriveMediaError>> EjectDriveMediaAsync(string path)
+        private static async Task<MorphicResult<MorphicUnit, EjectDriveMediaError>> EjectDriveMediaAsync(string path)
         {
             // when we clean up, we will need to unlock the volume; set up that delegate now
             Func<PInvoke.Kernel32.SafeObjectHandle, Task<EjectDriveMediaError?>> unlockVolumeAsync = async delegate(PInvoke.Kernel32.SafeObjectHandle deviceHandle)
@@ -449,9 +449,9 @@ namespace Morphic.Windows.Native.Devices
                 switch (win32ErrorCode)
                 {
                     case (int)PInvoke.Win32ErrorCode.ERROR_SHARING_VIOLATION:
-                        return IMorphicResult<MorphicUnit, EjectDriveMediaError>.ErrorResult(EjectDriveMediaError.DiskInUse);
+                        return MorphicResult.ErrorResult(EjectDriveMediaError.DiskInUse);
                     default:
-                        return IMorphicResult<MorphicUnit, EjectDriveMediaError>.ErrorResult(EjectDriveMediaError.Win32Error(win32ErrorCode));
+                        return MorphicResult.ErrorResult(EjectDriveMediaError.Win32Error(win32ErrorCode));
                 }
             }
             //
@@ -473,9 +473,9 @@ namespace Morphic.Windows.Native.Devices
                     switch (ex.NativeErrorCode)
                     {
                         case PInvoke.Win32ErrorCode.ERROR_ACCESS_DENIED:
-                            return IMorphicResult<MorphicUnit, EjectDriveMediaError>.ErrorResult(EjectDriveMediaError.DiskInUse);
+                            return MorphicResult.ErrorResult(EjectDriveMediaError.DiskInUse);
                         default:
-                            return IMorphicResult<MorphicUnit, EjectDriveMediaError>.ErrorResult(EjectDriveMediaError.Win32Error((int)ex.NativeErrorCode));
+                            return MorphicResult.ErrorResult(EjectDriveMediaError.Win32Error((int)ex.NativeErrorCode));
                     }
                 }
                 var requiresAttemptToUnlock = true;
@@ -497,15 +497,15 @@ namespace Morphic.Windows.Native.Devices
                     {
                         // NOTE: in our testing, we got an exception with NativeErrorCode 1 (ERROR_INVALID_FUNCTION) when trying to eject a CD-ROM which was in use;
                         //       this seems like an odd error to get back, so we're just passing it through for now rather than returning an error of DiskInUse.
-                        return IMorphicResult<MorphicUnit, EjectDriveMediaError>.ErrorResult(EjectDriveMediaError.Win32Error((int)ex.NativeErrorCode));
+                        return MorphicResult.ErrorResult(EjectDriveMediaError.Win32Error((int)ex.NativeErrorCode));
                     }
 
                     // unlock the storage device
                     var unlockError = await unlockVolumeAsync(deviceHandle);
                     requiresAttemptToUnlock = false;
-                    if (unlockError != null)
+                    if (unlockError is not null)
                     {
-                        return IMorphicResult<MorphicUnit, EjectDriveMediaError>.ErrorResult(unlockError);
+                        return MorphicResult.ErrorResult(unlockError);
                     }
                 }
                 finally
@@ -524,25 +524,25 @@ namespace Morphic.Windows.Native.Devices
                 deviceHandle.Close();
             }
 
-            return IMorphicResult<MorphicUnit, EjectDriveMediaError>.SuccessResult(new MorphicUnit());
+            return MorphicResult.OkResult();
         }
 
-        public async Task<IMorphicResult<string?, TryGetDriveLetterError>> TryGetDriveRootPathAsync()
+        public async Task<MorphicResult<string?, TryGetDriveLetterError>> TryGetDriveRootPathAsync()
         {
             var tryGetDriveLetterResult = await this.TryGetDriveLetterAsync();
             if (tryGetDriveLetterResult.IsError == true) {
-                return IMorphicResult<string?, TryGetDriveLetterError>.ErrorResult(tryGetDriveLetterResult.Error!);
+                return MorphicResult.ErrorResult(tryGetDriveLetterResult.Error!);
             }
             var driveLetter = tryGetDriveLetterResult.Value;
 
-            if (driveLetter == null)
+            if (driveLetter is null)
             {
-                return IMorphicResult<string?, TryGetDriveLetterError>.SuccessResult(null);
+                return MorphicResult.OkResult<string?>(null);
             }
             else
             {
                 var driveRootPath = driveLetter + @":\";
-                return IMorphicResult<string?, TryGetDriveLetterError>.SuccessResult(driveRootPath);
+                return MorphicResult.OkResult<string?>(driveRootPath);
             }
         }
 
@@ -552,13 +552,13 @@ namespace Morphic.Windows.Native.Devices
         }
 
         // NOTE: some drives (like CD-ROM drives) are volumes which don't have a corresponding "disk", so this function can return a successful result of null
-        public async Task<IMorphicResult<Disk?, Disk.GetDisksError>> GetDiskAsync()
+        public async Task<MorphicResult<Disk?, Disk.GetDisksError>> GetDiskAsync()
         {
             // get a list of all of the disks (so we can compare these against our storage device number)
             var getAllDisksResult = await Morphic.Windows.Native.Devices.Disk.GetAllDisksAsync();
             if (getAllDisksResult.IsError == true)
             {
-                return IMorphicResult<Disk?, Disk.GetDisksError>.ErrorResult(getAllDisksResult.Error!);
+                return MorphicResult.ErrorResult(getAllDisksResult.Error!);
             }
             var allDisks = getAllDisksResult.Value!;
 
@@ -569,25 +569,25 @@ namespace Morphic.Windows.Native.Devices
             {
                 case 0:
                     // this drive has no corresponding disk (e.g. CD-ROMs)
-                    return IMorphicResult<Disk?, Disk.GetDisksError>.SuccessResult(null);
+                    return MorphicResult.OkResult<Disk?>(null);
                 case 1:
                     // this drive has exactly one disk (the normal case)
-                    return IMorphicResult<Disk?, Disk.GetDisksError>.SuccessResult(disksForThisDrive.First());
+                    return MorphicResult.OkResult<Disk?>(disksForThisDrive.First());
                 default:
                     // this is an unexpected error condition
                     Debug.Assert(false, "Drive has multiple disks; this should not be possible.");
                     // fail gracefully, returning success but indicating the the drive has no corresponding disk
-                    return IMorphicResult<Disk?, Disk.GetDisksError>.SuccessResult(null);
+                    return MorphicResult.OkResult<Disk?>(null);
             }
         }
 
-        public async Task<IMorphicResult<bool, Win32ApiError>> GetIsMountedAsync()
+        public async Task<MorphicResult<bool, Win32ApiError>> GetIsMountedAsync()
         {
             var deviceHandle = PInvoke.Kernel32.CreateFile(_device.DevicePath, PInvoke.Kernel32.ACCESS_MASK.GenericRight.GENERIC_READ | PInvoke.Kernel32.ACCESS_MASK.GenericRight.GENERIC_WRITE, PInvoke.Kernel32.FileShare.FILE_SHARE_READ | PInvoke.Kernel32.FileShare.FILE_SHARE_WRITE, IntPtr.Zero, PInvoke.Kernel32.CreationDisposition.OPEN_EXISTING, (PInvoke.Kernel32.CreateFileFlags)0, PInvoke.Kernel32.SafeObjectHandle.Null);
             if (deviceHandle.IsInvalid == true)
             {
                 var win32ErrorCode = Marshal.GetLastWin32Error();
-                return IMorphicResult<bool, Win32ApiError>.ErrorResult(Win32ApiError.Win32Error(win32ErrorCode));
+                return MorphicResult.ErrorResult(Win32ApiError.Win32Error(win32ErrorCode));
             }
             try
             {
@@ -602,7 +602,7 @@ namespace Morphic.Windows.Native.Devices
                         cancellationToken: System.Threading.CancellationToken.None);
 
                     // if the above call passed successfully, the volume is mounted
-                    return IMorphicResult<bool, Win32ApiError>.SuccessResult(true);
+                    return MorphicResult.OkResult(true);
                 }
                 catch (PInvoke.Win32Exception ex)
                 {
@@ -610,9 +610,9 @@ namespace Morphic.Windows.Native.Devices
                     {
                         // based on our testing, an unmounted volume will return ERROR_INVALID_PARAMETER
                         case PInvoke.Win32ErrorCode.ERROR_INVALID_PARAMETER:
-                            return IMorphicResult<bool, Win32ApiError>.SuccessResult(false);
+                            return MorphicResult.OkResult(false);
                         default:
-                            return IMorphicResult<bool, Win32ApiError>.ErrorResult(Win32ApiError.Win32Error((int)ex.NativeErrorCode));
+                            return MorphicResult.ErrorResult(Win32ApiError.Win32Error((int)ex.NativeErrorCode));
                     }
                 }
             }

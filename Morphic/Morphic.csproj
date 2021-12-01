@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net5.0-windows</TargetFramework>
+    <TargetFramework>net6.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <RuntimeIdentifiers>win-x64;win-x86</RuntimeIdentifiers>
@@ -11,7 +11,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Morphic.Core\Morphic.Core.csproj" />
+    <PackageReference Include="Morphic.Core" Version="1.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Morphic.OAuth\Morphic.OAuth.csproj" />
     <ProjectReference Include="..\Morphic.Windows.Native\Morphic.Windows.Native.csproj" />
   </ItemGroup>

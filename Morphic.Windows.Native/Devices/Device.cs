@@ -74,7 +74,7 @@ namespace Morphic.Windows.Native.Devices
             private GetParentOrChildError(Values value) : base(value) { }
         }
         //
-        public IMorphicResult<Device?, GetParentOrChildError> GetParent()
+        public MorphicResult<Device?, GetParentOrChildError> GetParent()
         {
             // see: https://docs.microsoft.com/en-us/windows-hardware/drivers/install/obtaining-the-parent-of-a-device-in-the-device-tree
 
@@ -87,9 +87,9 @@ namespace Morphic.Windows.Native.Devices
                 {
                     case (uint)ExtendedPInvoke.CR_RESULT.CR_NO_SUCH_DEVNODE:
                         // device doesn't have a parent
-                        return IMorphicResult<Device?, GetParentOrChildError>.SuccessResult(null);
+                        return MorphicResult.OkResult<Device?>(null);
                     default:
-                        return IMorphicResult<Device?, GetParentOrChildError>.ErrorResult(GetParentOrChildError.ConfigManagerError(getParentResult));
+                        return MorphicResult.ErrorResult(GetParentOrChildError.ConfigManagerError(getParentResult));
                 }
             }
 
@@ -98,12 +98,12 @@ namespace Morphic.Windows.Native.Devices
             var getDeviceIdSizeResult = ExtendedPInvoke.CM_Get_Device_ID_Size(out deviceInstanceIdLength, parentDevInst, 0 /* must be zero */);
             if (getDeviceIdSizeResult != (uint)ExtendedPInvoke.CR_RESULT.CR_SUCCESS)
             {
-                return IMorphicResult<Device?, GetParentOrChildError>.ErrorResult(GetParentOrChildError.ConfigManagerError(getDeviceIdSizeResult));
+                return MorphicResult.ErrorResult(GetParentOrChildError.ConfigManagerError(getDeviceIdSizeResult));
             }
             if (deviceInstanceIdLength == 0)
             {
                 // device does not exist
-                return IMorphicResult<Device?, GetParentOrChildError>.SuccessResult(null);
+                return MorphicResult.OkResult<Device?>(null);
             }
             //
             // add one to the length (because the previous function returns the length _without_ the null-terminator character)
@@ -116,7 +116,7 @@ namespace Morphic.Windows.Native.Devices
                 var getDeviceIdResult = ExtendedPInvoke.CM_Get_Device_ID(parentDevInst, pointerToParentDeviceInstanceId, deviceInstanceIdLength, 0);
                 if (getDeviceIdResult != (uint)ExtendedPInvoke.CR_RESULT.CR_SUCCESS)
                 {
-                    return IMorphicResult<Device?, GetParentOrChildError>.ErrorResult(GetParentOrChildError.ConfigManagerError(getDeviceIdResult));
+                    return MorphicResult.ErrorResult(GetParentOrChildError.ConfigManagerError(getDeviceIdResult));
                 }
 
                 parentDeviceInstanceId = Marshal.PtrToStringUni(pointerToParentDeviceInstanceId)!;
@@ -136,7 +136,7 @@ namespace Morphic.Windows.Native.Devices
                 if (setupDiOpenDeviceInfoSuccess == false)
                 {
                     var win32ErrorCode = Marshal.GetLastWin32Error();
-                    return IMorphicResult<Device?, GetParentOrChildError>.ErrorResult(GetParentOrChildError.Win32Error(win32ErrorCode));
+                    return MorphicResult.ErrorResult(GetParentOrChildError.Win32Error(win32ErrorCode));
                 }
 
                 parentDeviceInfoData = Marshal.PtrToStructure<PInvoke.SetupApi.SP_DEVINFO_DATA>(pointerToParentDeviceInfoData);
@@ -153,21 +153,21 @@ namespace Morphic.Windows.Native.Devices
                 switch (getPropertyResult.Error!.Value)
                 {
                     case GetDevicePlugAndPlayPropertyError.Values.PropertyDoesNotExistOrIsInvalid:
-                        return IMorphicResult<Device?, GetParentOrChildError>.ErrorResult(GetParentOrChildError.CouldNotGetDeviceCapabilities);
+                        return MorphicResult.ErrorResult(GetParentOrChildError.CouldNotGetDeviceCapabilities);
                     case GetDevicePlugAndPlayPropertyError.Values.SizeOfReturnTypeDoesNotMatchPropertyValue:
-                        return IMorphicResult<Device?, GetParentOrChildError>.ErrorResult(GetParentOrChildError.CouldNotGetDeviceCapabilities);
+                        return MorphicResult.ErrorResult(GetParentOrChildError.CouldNotGetDeviceCapabilities);
                     case GetDevicePlugAndPlayPropertyError.Values.Win32Error:
-                        return IMorphicResult<Device?, GetParentOrChildError>.ErrorResult(GetParentOrChildError.Win32Error(getPropertyResult.Error.Win32ErrorCode!.Value));
+                        return MorphicResult.ErrorResult(GetParentOrChildError.Win32Error(getPropertyResult.Error.Win32ErrorCode!.Value));
                 }
             }
             ExtendedPInvoke.CmDeviceCapabilitiesFlags parentDeviceCapabilities = (ExtendedPInvoke.CmDeviceCapabilitiesFlags)getPropertyResult.Value!;
 
             // NOTE: in the future, if we want to save the devicePaths for all nodes (including parents/children), we should change DevicePath to be non-optional (and we should enumerate and capture that path here)
             Device parentDevice = new Device(this.DeviceInfoSetHandle, parentDeviceInfoData, null, parentDeviceInstanceId, parentDeviceCapabilities);
-            return IMorphicResult<Device?, GetParentOrChildError>.SuccessResult(parentDevice);
+            return MorphicResult.OkResult<Device?>(parentDevice);
         }
 
-        public IMorphicResult<List<Device>, GetParentOrChildError> GetChildren()
+        public MorphicResult<List<Device>, GetParentOrChildError> GetChildren()
         {
             // see: https://docs.microsoft.com/en-us/windows/win32/api/cfgmgr32/nf-cfgmgr32-cm_get_child
 
@@ -199,7 +199,7 @@ namespace Morphic.Windows.Native.Devices
                         break;
                     }
 
-                    return IMorphicResult<List<Device>, GetParentOrChildError>.ErrorResult(GetParentOrChildError.ConfigManagerError(getChildOrSiblingResult));
+                    return MorphicResult.ErrorResult(GetParentOrChildError.ConfigManagerError(getChildOrSiblingResult));
                 }
                 // update our previousDevInst (so that the next iteration uses it instead)
                 previousDevInst = childDevInst;
@@ -211,12 +211,12 @@ namespace Morphic.Windows.Native.Devices
                 var getDeviceIdSizeResult = ExtendedPInvoke.CM_Get_Device_ID_Size(out deviceInstanceIdLength, childDevInst, 0 /* must be zero */);
                 if (getDeviceIdSizeResult != (uint)ExtendedPInvoke.CR_RESULT.CR_SUCCESS)
                 {
-                    return IMorphicResult<List<Device>, GetParentOrChildError>.ErrorResult(GetParentOrChildError.ConfigManagerError(getDeviceIdSizeResult));
+                    return MorphicResult.ErrorResult(GetParentOrChildError.ConfigManagerError(getDeviceIdSizeResult));
                 }
                 if (deviceInstanceIdLength == 0)
                 {
                     // device does not exist
-                    return IMorphicResult<List<Device>, GetParentOrChildError>.SuccessResult(new List<Device>());
+                    return MorphicResult.OkResult(new List<Device>());
                 }
                 //
                 // add one to the length (because the previous function returns the length _without_ the null-terminator character)
@@ -229,7 +229,7 @@ namespace Morphic.Windows.Native.Devices
                     var getDeviceIdResult = ExtendedPInvoke.CM_Get_Device_ID(childDevInst, pointerToChildDeviceInstanceId, deviceInstanceIdLength, 0);
                     if (getDeviceIdResult != (uint)ExtendedPInvoke.CR_RESULT.CR_SUCCESS)
                     {
-                        return IMorphicResult<List<Device>, GetParentOrChildError>.ErrorResult(GetParentOrChildError.ConfigManagerError(getDeviceIdResult));
+                        return MorphicResult.ErrorResult(GetParentOrChildError.ConfigManagerError(getDeviceIdResult));
                     }
 
                     childDeviceInstanceId = Marshal.PtrToStringUni(pointerToChildDeviceInstanceId)!;
@@ -249,7 +249,7 @@ namespace Morphic.Windows.Native.Devices
                     if (setupDiOpenDeviceInfoSuccess == false)
                     {
                         var win32ErrorCode = Marshal.GetLastWin32Error();
-                        return IMorphicResult<List<Device>, GetParentOrChildError>.ErrorResult(GetParentOrChildError.Win32Error(win32ErrorCode));
+                        return MorphicResult.ErrorResult(GetParentOrChildError.Win32Error(win32ErrorCode));
                     }
 
                     childDeviceInfoData = Marshal.PtrToStructure<PInvoke.SetupApi.SP_DEVINFO_DATA>(pointerToChildDeviceInfoData);
@@ -266,11 +266,11 @@ namespace Morphic.Windows.Native.Devices
                     switch (getPropertyResult.Error!.Value)
                     {
                         case GetDevicePlugAndPlayPropertyError.Values.PropertyDoesNotExistOrIsInvalid:
-                            return IMorphicResult<List<Device>, GetParentOrChildError>.ErrorResult(GetParentOrChildError.CouldNotGetDeviceCapabilities);
+                            return MorphicResult.ErrorResult(GetParentOrChildError.CouldNotGetDeviceCapabilities);
                         case GetDevicePlugAndPlayPropertyError.Values.SizeOfReturnTypeDoesNotMatchPropertyValue:
-                            return IMorphicResult<List<Device>, GetParentOrChildError>.ErrorResult(GetParentOrChildError.CouldNotGetDeviceCapabilities);
+                            return MorphicResult.ErrorResult(GetParentOrChildError.CouldNotGetDeviceCapabilities);
                         case GetDevicePlugAndPlayPropertyError.Values.Win32Error:
-                            return IMorphicResult<List<Device>, GetParentOrChildError>.ErrorResult(GetParentOrChildError.Win32Error(getPropertyResult.Error.Win32ErrorCode!.Value));
+                            return MorphicResult.ErrorResult(GetParentOrChildError.Win32Error(getPropertyResult.Error.Win32ErrorCode!.Value));
                     }
                 }
                 ExtendedPInvoke.CmDeviceCapabilitiesFlags childDeviceCapabilities = (ExtendedPInvoke.CmDeviceCapabilitiesFlags)getPropertyResult.Value!;
@@ -280,7 +280,7 @@ namespace Morphic.Windows.Native.Devices
                 listOfChildDevices.Add(childDevice);
             }
             
-            return IMorphicResult<List<Device>, GetParentOrChildError>.SuccessResult(listOfChildDevices);
+            return MorphicResult.OkResult(listOfChildDevices);
         }
 
         public record GetDevicesForClassGuidError : MorphicAssociatedValueEnum<GetDevicesForClassGuidError.Values>
@@ -310,16 +310,16 @@ namespace Morphic.Windows.Native.Devices
             private GetDevicesForClassGuidError(Values value) : base(value) { }
         }
         //
-        public static IMorphicResult<List<Device>, GetDevicesForClassGuidError> GetDevicesForClassGuid(Guid classGuid)
+        public static MorphicResult<List<Device>, GetDevicesForClassGuidError> GetDevicesForClassGuid(Guid classGuid)
         {
             var listOfDevices = new List<Device>();
 
             // get a DeviceInfoSet as a SafeHandle variant (which we'll share with each of our devices, so that they can further enumerate their parents/children)
             PInvoke.SetupApi.SafeDeviceInfoSetHandle? deviceInfoSetHandle;
             deviceInfoSetHandle = PInvoke.SetupApi.SetupDiGetClassDevs(classGuid, null, IntPtr.Zero, PInvoke.SetupApi.GetClassDevsFlags.DIGCF_PRESENT | PInvoke.SetupApi.GetClassDevsFlags.DIGCF_DEVICEINTERFACE);
-            if (deviceInfoSetHandle == null)
+            if (deviceInfoSetHandle is null)
             {
-                return IMorphicResult<List<Device>, GetDevicesForClassGuidError>.ErrorResult(GetDevicesForClassGuidError.CouldNotEnumerateViaWin32Api);
+                return MorphicResult.ErrorResult(GetDevicesForClassGuidError.CouldNotEnumerateViaWin32Api);
             }
             // when we reach here, we have a device information set (which is a list of attached and enumerated disks)
 
@@ -342,7 +342,7 @@ namespace Morphic.Windows.Native.Devices
                     else
                     {
                         // for any other win32 error, fail
-                        return IMorphicResult<List<Device>, GetDevicesForClassGuidError>.ErrorResult(GetDevicesForClassGuidError.Win32Error(win32ErrorCode));
+                        return MorphicResult.ErrorResult(GetDevicesForClassGuidError.Win32Error(win32ErrorCode));
                     }
                 }
 
@@ -366,7 +366,7 @@ namespace Morphic.Windows.Native.Devices
                         else
                         {
                             // for any other win32 error, fail
-                            return IMorphicResult<List<Device>, GetDevicesForClassGuidError>.ErrorResult(GetDevicesForClassGuidError.Win32Error(win32ErrorCode));
+                            return MorphicResult.ErrorResult(GetDevicesForClassGuidError.Win32Error(win32ErrorCode));
                         }
                     }
 
@@ -392,7 +392,7 @@ namespace Morphic.Windows.Native.Devices
                     if (success == false)
                     {
                         var win32ErrorCode = Marshal.GetLastWin32Error();
-                        return IMorphicResult<List<Device>, GetDevicesForClassGuidError>.ErrorResult(GetDevicesForClassGuidError.Win32Error(win32ErrorCode));
+                        return MorphicResult.ErrorResult(GetDevicesForClassGuidError.Win32Error(win32ErrorCode));
                     }
 
                     // capture the device's path; it's already stored in deviceInterfaceData.DevicePath, but that's as a char*; we want to return it as a string instead
@@ -406,12 +406,12 @@ namespace Morphic.Windows.Native.Devices
                     var getDeviceIdSizeResult = ExtendedPInvoke.CM_Get_Device_ID_Size(out deviceInstanceIdLength, deviceInfoData.DevInst, 0 /* must be zero */);
                     if (getDeviceIdSizeResult != (uint)ExtendedPInvoke.CR_RESULT.CR_SUCCESS)
                     {
-                        return IMorphicResult<List<Device>, GetDevicesForClassGuidError>.ErrorResult(GetDevicesForClassGuidError.ConfigManagerError(getDeviceIdSizeResult));
+                        return MorphicResult.ErrorResult(GetDevicesForClassGuidError.ConfigManagerError(getDeviceIdSizeResult));
                     }
                     if (deviceInstanceIdLength == 0)
                     {
                         // device does not exist
-                        return IMorphicResult<List<Device>, GetDevicesForClassGuidError>.ErrorResult(GetDevicesForClassGuidError.CouldNotGetDeviceInstanceId);
+                        return MorphicResult.ErrorResult(GetDevicesForClassGuidError.CouldNotGetDeviceInstanceId);
                     }
                     //
                     // add one to the length (because the previous function returns the length _without_ the null-terminator character)
@@ -424,7 +424,7 @@ namespace Morphic.Windows.Native.Devices
                         var getDeviceIdResult = ExtendedPInvoke.CM_Get_Device_ID(deviceInfoData.DevInst, pointerToDeviceInstanceId, deviceInstanceIdLength, 0);
                         if (getDeviceIdResult != (uint)ExtendedPInvoke.CR_RESULT.CR_SUCCESS)
                         {
-                            return IMorphicResult<List<Device>, GetDevicesForClassGuidError>.ErrorResult(GetDevicesForClassGuidError.ConfigManagerError(getDeviceIdResult));
+                            return MorphicResult.ErrorResult(GetDevicesForClassGuidError.ConfigManagerError(getDeviceIdResult));
                         }
 
                         deviceInstanceId = Marshal.PtrToStringUni(pointerToDeviceInstanceId)!;
@@ -441,11 +441,11 @@ namespace Morphic.Windows.Native.Devices
                         switch (getPropertyResult.Error!.Value)
                         {
                             case GetDevicePlugAndPlayPropertyError.Values.PropertyDoesNotExistOrIsInvalid:
-                                return IMorphicResult<List<Device>, GetDevicesForClassGuidError>.ErrorResult(GetDevicesForClassGuidError.CouldNotGetDeviceCapabilities);
+                                return MorphicResult.ErrorResult(GetDevicesForClassGuidError.CouldNotGetDeviceCapabilities);
                             case GetDevicePlugAndPlayPropertyError.Values.SizeOfReturnTypeDoesNotMatchPropertyValue:
-                                return IMorphicResult<List<Device>, GetDevicesForClassGuidError>.ErrorResult(GetDevicesForClassGuidError.CouldNotGetDeviceCapabilities);
+                                return MorphicResult.ErrorResult(GetDevicesForClassGuidError.CouldNotGetDeviceCapabilities);
                             case GetDevicePlugAndPlayPropertyError.Values.Win32Error:
-                                return IMorphicResult<List<Device>, GetDevicesForClassGuidError>.ErrorResult(GetDevicesForClassGuidError.Win32Error(getPropertyResult.Error.Win32ErrorCode!.Value));
+                                return MorphicResult.ErrorResult(GetDevicesForClassGuidError.Win32Error(getPropertyResult.Error.Win32ErrorCode!.Value));
                         }
                     }
                     ExtendedPInvoke.CmDeviceCapabilitiesFlags deviceCapabilities = (ExtendedPInvoke.CmDeviceCapabilitiesFlags)getPropertyResult.Value!;
@@ -462,7 +462,7 @@ namespace Morphic.Windows.Native.Devices
                 memberIndex += 1;
             }
 
-            return IMorphicResult<List<Device>, GetDevicesForClassGuidError>.SuccessResult(listOfDevices);
+            return MorphicResult.OkResult(listOfDevices);
         }
 
         public record SafeEjectError : MorphicAssociatedValueEnum<SafeEjectError.Values>
@@ -491,7 +491,7 @@ namespace Morphic.Windows.Native.Devices
             private SafeEjectError(Values value) : base(value) { }
         }
         //
-        public IMorphicResult<MorphicUnit, SafeEjectError> SafeEject()
+        public MorphicResult<MorphicUnit, SafeEjectError> SafeEject()
         {
             // see: https://docs.microsoft.com/en-us/windows/win32/api/cfgmgr32/nf-cfgmgr32-cm_request_device_ejectw
             // see: https://docs.microsoft.com/en-us/windows/win32/api/cfg/ne-cfg-pnp_veto_type
@@ -514,14 +514,14 @@ namespace Morphic.Windows.Native.Devices
                                 case (int)ExtendedPInvoke.PNP_VETO_TYPE.PNP_VetoWindowsApp:
                                 case (int)ExtendedPInvoke.PNP_VETO_TYPE.PNP_VetoWindowsService:
                                 case (int)ExtendedPInvoke.PNP_VETO_TYPE.PNP_VetoOutstandingOpen:
-                                    return IMorphicResult<MorphicUnit, SafeEjectError>.ErrorResult(SafeEjectError.DeviceInUse);
+                                    return MorphicResult.ErrorResult(SafeEjectError.DeviceInUse);
                                 case (int)ExtendedPInvoke.PNP_VETO_TYPE.PNP_VetoAlreadyRemoved:
-                                    return IMorphicResult<MorphicUnit, SafeEjectError>.ErrorResult(SafeEjectError.DeviceWasAlreadyRemoved);
+                                    return MorphicResult.ErrorResult(SafeEjectError.DeviceWasAlreadyRemoved);
                                 default:
-                                    return IMorphicResult<MorphicUnit, SafeEjectError>.ErrorResult(SafeEjectError.SafeEjectVetoed(vetoType, vetoName));
+                                    return MorphicResult.ErrorResult(SafeEjectError.SafeEjectVetoed(vetoType, vetoName));
                             }
                         default:
-                            return IMorphicResult<MorphicUnit, SafeEjectError>.ErrorResult(SafeEjectError.ConfigManagerError(deviceEjectResult));
+                            return MorphicResult.ErrorResult(SafeEjectError.ConfigManagerError(deviceEjectResult));
                     }
                 }
 
@@ -531,7 +531,7 @@ namespace Morphic.Windows.Native.Devices
                 Marshal.FreeHGlobal(pointerToVetoName);
             }
 
-            return IMorphicResult<MorphicUnit, SafeEjectError>.SuccessResult(new MorphicUnit());
+            return MorphicResult.OkResult();
         }
 
         //
@@ -558,7 +558,7 @@ namespace Morphic.Windows.Native.Devices
             private GetDevicePlugAndPlayPropertyError(Values value) : base(value) { }
         }
         //
-        private static IMorphicResult<TResult, GetDevicePlugAndPlayPropertyError> GetDevicePlugAndPlayProperty<TResult>(PInvoke.SetupApi.SafeDeviceInfoSetHandle deviceInfoSetHandle, PInvoke.SetupApi.SP_DEVINFO_DATA devinfoData, uint property)
+        private static MorphicResult<TResult, GetDevicePlugAndPlayPropertyError> GetDevicePlugAndPlayProperty<TResult>(PInvoke.SetupApi.SafeDeviceInfoSetHandle deviceInfoSetHandle, PInvoke.SetupApi.SP_DEVINFO_DATA devinfoData, uint property)
         {
             // step #1: get the required size of the property
             uint propertyRegDataType;
@@ -576,9 +576,9 @@ namespace Morphic.Windows.Native.Devices
                             // we have successfully received the size we need
                             break;
                         case (int)PInvoke.Win32ErrorCode.ERROR_INVALID_DATA:
-                            return IMorphicResult<TResult, GetDevicePlugAndPlayPropertyError>.ErrorResult(GetDevicePlugAndPlayPropertyError.PropertyDoesNotExistOrIsInvalid);
+                            return MorphicResult.ErrorResult(GetDevicePlugAndPlayPropertyError.PropertyDoesNotExistOrIsInvalid);
                         default:
-                            return IMorphicResult<TResult, GetDevicePlugAndPlayPropertyError>.ErrorResult(GetDevicePlugAndPlayPropertyError.Win32Error(win32ErrorCode));
+                            return MorphicResult.ErrorResult(GetDevicePlugAndPlayPropertyError.Win32Error(win32ErrorCode));
                     }
                 }
 
@@ -600,9 +600,9 @@ namespace Morphic.Windows.Native.Devices
                     switch (win32ErrorCode)
                     {
                         case (int)PInvoke.Win32ErrorCode.ERROR_INVALID_DATA:
-                            return IMorphicResult<TResult, GetDevicePlugAndPlayPropertyError>.ErrorResult(GetDevicePlugAndPlayPropertyError.PropertyDoesNotExistOrIsInvalid);
+                            return MorphicResult.ErrorResult(GetDevicePlugAndPlayPropertyError.PropertyDoesNotExistOrIsInvalid);
                         default:
-                            return IMorphicResult<TResult, GetDevicePlugAndPlayPropertyError>.ErrorResult(GetDevicePlugAndPlayPropertyError.Win32Error(win32ErrorCode));
+                            return MorphicResult.ErrorResult(GetDevicePlugAndPlayPropertyError.Win32Error(win32ErrorCode));
                     }
                 }
 
@@ -611,19 +611,19 @@ namespace Morphic.Windows.Native.Devices
                 {
                     var propertyDataAsByteArray = new byte[requiredSize];
                     Marshal.Copy(pointerToPropertyData, propertyDataAsByteArray, 0, requiredSize);
-                    return IMorphicResult<TResult, GetDevicePlugAndPlayPropertyError>.SuccessResult((TResult)(object)propertyDataAsByteArray);
+                    return MorphicResult.OkResult((TResult)(object)propertyDataAsByteArray);
                 }
                 else if (typeof(TResult) == typeof(int))
                 {
-                    if (requiredSize != sizeof(int)) { return IMorphicResult<TResult, GetDevicePlugAndPlayPropertyError>.ErrorResult(GetDevicePlugAndPlayPropertyError.SizeOfReturnTypeDoesNotMatchPropertyValue); }
+                    if (requiredSize != sizeof(int)) { return MorphicResult.ErrorResult(GetDevicePlugAndPlayPropertyError.SizeOfReturnTypeDoesNotMatchPropertyValue); }
                     var result = Marshal.PtrToStructure<int>(pointerToPropertyData);
-                    return IMorphicResult<TResult, GetDevicePlugAndPlayPropertyError>.SuccessResult((TResult)(object)result!);
+                    return MorphicResult.OkResult((TResult)(object)result!);
                 }
                 else if (typeof(TResult) == typeof(uint))
                 {
-                    if (requiredSize != sizeof(uint)) { return IMorphicResult<TResult, GetDevicePlugAndPlayPropertyError>.ErrorResult(GetDevicePlugAndPlayPropertyError.SizeOfReturnTypeDoesNotMatchPropertyValue); }
+                    if (requiredSize != sizeof(uint)) { return MorphicResult.ErrorResult(GetDevicePlugAndPlayPropertyError.SizeOfReturnTypeDoesNotMatchPropertyValue); }
                     var result = Marshal.PtrToStructure<uint>(pointerToPropertyData);
-                    return IMorphicResult<TResult, GetDevicePlugAndPlayPropertyError>.SuccessResult((TResult)(object)result!);
+                    return MorphicResult.OkResult((TResult)(object)result!);
                 }
                 else
                 {
@@ -671,7 +671,7 @@ namespace Morphic.Windows.Native.Devices
         }
         //
         // NOTE: this will detach the PnP device from the system
-        public IMorphicResult<MorphicUnit, SafelyRemoveDeviceError> SafelyRemoveDevice()
+        public MorphicResult<MorphicUnit, SafelyRemoveDeviceError> SafelyRemoveDevice()
         {
             Device targetRemovableDevice;
 
@@ -687,18 +687,18 @@ namespace Morphic.Windows.Native.Devices
                     switch (getFirstRemovableAncestorResult.Error!.Value)
                     {
                         case Device.GetParentOrChildError.Values.ConfigManagerError:
-                            return IMorphicResult<MorphicUnit, SafelyRemoveDeviceError>.ErrorResult(SafelyRemoveDeviceError.ConfigManagerError(getFirstRemovableAncestorResult.Error!.ConfigManagerErrorCode!.Value));
+                            return MorphicResult.ErrorResult(SafelyRemoveDeviceError.ConfigManagerError(getFirstRemovableAncestorResult.Error!.ConfigManagerErrorCode!.Value));
                         case Device.GetParentOrChildError.Values.CouldNotGetDeviceCapabilities:
-                            return IMorphicResult<MorphicUnit, SafelyRemoveDeviceError>.ErrorResult(SafelyRemoveDeviceError.CouldNotGetDeviceCapabilities);
+                            return MorphicResult.ErrorResult(SafelyRemoveDeviceError.CouldNotGetDeviceCapabilities);
                         case Device.GetParentOrChildError.Values.Win32Error:
-                            return IMorphicResult<MorphicUnit, SafelyRemoveDeviceError>.ErrorResult(SafelyRemoveDeviceError.Win32Error(getFirstRemovableAncestorResult.Error!.Win32ErrorCode!.Value));
+                            return MorphicResult.ErrorResult(SafelyRemoveDeviceError.Win32Error(getFirstRemovableAncestorResult.Error!.Win32ErrorCode!.Value));
                     }
                 }
 
-                if (getFirstRemovableAncestorResult.Value == null)
+                if (getFirstRemovableAncestorResult.Value is null)
                 {
                     // neither this device nor its ancestors are ejectable
-                    return IMorphicResult<MorphicUnit, SafelyRemoveDeviceError>.ErrorResult(SafelyRemoveDeviceError.DeviceIsNotRemovable);
+                    return MorphicResult.ErrorResult(SafelyRemoveDeviceError.DeviceIsNotRemovable);
                 }
 
                 targetRemovableDevice = getFirstRemovableAncestorResult.Value!;
@@ -710,68 +710,68 @@ namespace Morphic.Windows.Native.Devices
                 switch (safeEjectResult.Error!.Value)
                 {
                     case Device.SafeEjectError.Values.ConfigManagerError:
-                        return IMorphicResult<MorphicUnit, SafelyRemoveDeviceError>.ErrorResult(SafelyRemoveDeviceError.ConfigManagerError(safeEjectResult.Error!.ConfigManagerErrorCode!.Value));
+                        return MorphicResult.ErrorResult(SafelyRemoveDeviceError.ConfigManagerError(safeEjectResult.Error!.ConfigManagerErrorCode!.Value));
                     case Device.SafeEjectError.Values.DeviceInUse:
-                        return IMorphicResult<MorphicUnit, SafelyRemoveDeviceError>.ErrorResult(SafelyRemoveDeviceError.DeviceInUse);
+                        return MorphicResult.ErrorResult(SafelyRemoveDeviceError.DeviceInUse);
                     case Device.SafeEjectError.Values.DeviceWasAlreadyRemoved:
-                        return IMorphicResult<MorphicUnit, SafelyRemoveDeviceError>.ErrorResult(SafelyRemoveDeviceError.DeviceWasAlreadyRemoved);
+                        return MorphicResult.ErrorResult(SafelyRemoveDeviceError.DeviceWasAlreadyRemoved);
                     case Device.SafeEjectError.Values.SafeEjectVetoed:
-                        return IMorphicResult<MorphicUnit, SafelyRemoveDeviceError>.ErrorResult(SafelyRemoveDeviceError.SafeEjectVetoed(safeEjectResult.Error!.VetoType!.Value, safeEjectResult.Error!.VetoName!));
+                        return MorphicResult.ErrorResult(SafelyRemoveDeviceError.SafeEjectVetoed(safeEjectResult.Error!.VetoType!.Value, safeEjectResult.Error!.VetoName!));
                 }
             }
 
             // we successfully ejected
-            return IMorphicResult<MorphicUnit, SafelyRemoveDeviceError>.SuccessResult(new MorphicUnit());
+            return MorphicResult.OkResult();
         }
 
-        internal IMorphicResult<Device?, Device.GetParentOrChildError> GetFirstRemovableAncestor()
+        internal MorphicResult<Device?, Device.GetParentOrChildError> GetFirstRemovableAncestor()
         {
             var ancestorDeviceResult = this.GetParent();
             if (ancestorDeviceResult.IsError == true)
             {
-                return IMorphicResult<Device?, Device.GetParentOrChildError>.ErrorResult(ancestorDeviceResult.Error!);
+                return MorphicResult.ErrorResult(ancestorDeviceResult.Error!);
             }
             var ancestorDevice = ancestorDeviceResult.Value;
 
-            while (ancestorDevice != null)
+            while (ancestorDevice is not null)
             {
                 // if this ancestor is removable, return it
                 if (ancestorDevice.IsRemovable == true)
                 {
-                    return IMorphicResult<Device?, Device.GetParentOrChildError>.SuccessResult(ancestorDevice);
+                    return MorphicResult.OkResult<Device?>(ancestorDevice);
                 }
 
                 // if this ancestor was not removable, search out the parent of the current ancestor (i.e. work our way toward root)
                 ancestorDeviceResult = ancestorDevice.GetParent();
                 if (ancestorDeviceResult.IsError == true)
                 {
-                    return IMorphicResult<Device?, Device.GetParentOrChildError>.ErrorResult(ancestorDeviceResult.Error!);
+                    return MorphicResult.ErrorResult(ancestorDeviceResult.Error!);
                 }
                 ancestorDevice = ancestorDeviceResult.Value;
             }
 
             // if we have run out of ancestors, return null
-            return IMorphicResult<Device?, Device.GetParentOrChildError>.SuccessResult(null);
+            return MorphicResult.OkResult<Device?>(null);
         }
 
-        internal IMorphicResult<bool, Device.GetParentOrChildError> GetIsDeviceOrAncestorsRemovable()
+        internal MorphicResult<bool, Device.GetParentOrChildError> GetIsDeviceOrAncestorsRemovable()
         {
             // determine if this drive or any of its ancestors are removable
             if (this.IsRemovable == true)
             {
-                return IMorphicResult<bool, Device.GetParentOrChildError>.SuccessResult(true);
+                return MorphicResult.OkResult(true);
             }
             else
             {
                 var getFirstRemovableAncestorResult = this.GetFirstRemovableAncestor();
                 if (getFirstRemovableAncestorResult.IsError == true)
                 {
-                    return IMorphicResult<bool, Device.GetParentOrChildError>.ErrorResult(getFirstRemovableAncestorResult.Error!);
+                    return MorphicResult.ErrorResult(getFirstRemovableAncestorResult.Error!);
                 }
 
                 // if one of our ancestors was removable, our drive is removable
-                var isRemovable = (getFirstRemovableAncestorResult.Value! != null);
-                return IMorphicResult<bool, Device.GetParentOrChildError>.SuccessResult(isRemovable);
+                var isRemovable = (getFirstRemovableAncestorResult.Value! is not null);
+                return MorphicResult.OkResult(isRemovable);
             }
         }
     }

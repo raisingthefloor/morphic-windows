@@ -73,7 +73,7 @@ namespace Morphic.Windows.Native.Devices
             private GetDisksError(Values value) : base(value) { }
         }
         //
-        public static async Task<IMorphicResult<List<Disk>, GetDisksError>> GetAllDisksAsync()
+        public static async Task<MorphicResult<List<Disk>, GetDisksError>> GetAllDisksAsync()
         {
             var allDisks = new List<Disk>();
 
@@ -84,15 +84,15 @@ namespace Morphic.Windows.Native.Devices
                 switch (allDiskDevicesResult.Error!.Value)
                 {
                     case Device.GetDevicesForClassGuidError.Values.ConfigManagerError:
-                        return IMorphicResult<List<Disk>, GetDisksError>.ErrorResult(GetDisksError.ConfigManagerError(allDiskDevicesResult.Error!.ConfigManagerErrorCode!.Value));
+                        return MorphicResult.ErrorResult(GetDisksError.ConfigManagerError(allDiskDevicesResult.Error!.ConfigManagerErrorCode!.Value));
                     case Device.GetDevicesForClassGuidError.Values.CouldNotEnumerateViaWin32Api:
-                        return IMorphicResult<List<Disk>, GetDisksError>.ErrorResult(GetDisksError.CouldNotEnumerateViaWin32Api);
+                        return MorphicResult.ErrorResult(GetDisksError.CouldNotEnumerateViaWin32Api);
                     case Device.GetDevicesForClassGuidError.Values.CouldNotGetDeviceCapabilities:
-                        return IMorphicResult<List<Disk>, GetDisksError>.ErrorResult(GetDisksError.CouldNotGetDeviceCapabilities);
+                        return MorphicResult.ErrorResult(GetDisksError.CouldNotGetDeviceCapabilities);
                     case Device.GetDevicesForClassGuidError.Values.CouldNotGetDeviceInstanceId:
-                        return IMorphicResult<List<Disk>, GetDisksError>.ErrorResult(GetDisksError.CouldNotGetDeviceInstanceId);
+                        return MorphicResult.ErrorResult(GetDisksError.CouldNotGetDeviceInstanceId);
                     case Device.GetDevicesForClassGuidError.Values.Win32Error:
-                        return IMorphicResult<List<Disk>, GetDisksError>.ErrorResult(GetDisksError.Win32Error(allDiskDevicesResult.Error!.Win32ErrorCode!.Value));
+                        return MorphicResult.ErrorResult(GetDisksError.Win32Error(allDiskDevicesResult.Error!.Win32ErrorCode!.Value));
                 }
             }
 
@@ -106,9 +106,9 @@ namespace Morphic.Windows.Native.Devices
                     switch (diskStorageDeviceNumberResult.Error!.Value)
                     {
                         case StorageDeviceNumberError.Values.CouldNotRetrieveStorageDeviceNumbers:
-                            return IMorphicResult<List<Disk>, GetDisksError>.ErrorResult(GetDisksError.CouldNotRetrieveStorageDeviceNumbers);
+                            return MorphicResult.ErrorResult(GetDisksError.CouldNotRetrieveStorageDeviceNumbers);
                         case StorageDeviceNumberError.Values.Win32Error:
-                            return IMorphicResult<List<Disk>, GetDisksError>.ErrorResult(GetDisksError.Win32Error(allDiskDevicesResult.Error!.Win32ErrorCode!.Value));
+                            return MorphicResult.ErrorResult(GetDisksError.Win32Error(allDiskDevicesResult.Error!.Win32ErrorCode!.Value));
                     }
                 }
                 var storageDeviceNumber = diskStorageDeviceNumberResult.Value!;
@@ -117,34 +117,34 @@ namespace Morphic.Windows.Native.Devices
                 allDisks.Add(disk);
             }
 
-            return IMorphicResult<List<Disk>, GetDisksError>.SuccessResult(allDisks);
+            return MorphicResult.OkResult(allDisks);
         }
 
         // NOTE: for a Disk, "IsRemovable" means that the hardware can be removed (i.e. a USB drive can be removed; we're not talking about physically ejecting media out of a drive)
         //       [in other words, this will return true for USB drives, but false for USB CD-ROMs]
-        public IMorphicResult<bool, Device.GetParentOrChildError> GetIsRemovable()
+        public MorphicResult<bool, Device.GetParentOrChildError> GetIsRemovable()
         {
             return _device.GetIsDeviceOrAncestorsRemovable();
         }
 
-        public IMorphicResult<MorphicUnit, Device.SafelyRemoveDeviceError> SafelyRemoveDevice()
+        public MorphicResult<MorphicUnit, Device.SafelyRemoveDeviceError> SafelyRemoveDevice()
         {
             return _device.SafelyRemoveDevice();
         }
 
-        public async Task<IMorphicResult<IEnumerable<Drive>, Drive.GetDrivesError>> GetDrivesAsync()
+        public async Task<MorphicResult<IEnumerable<Drive>, Drive.GetDrivesError>> GetDrivesAsync()
         {
             // get a list of all of the drives (so we can compare these against our storage device number)
             var getAllDrivesResult = await Morphic.Windows.Native.Devices.Drive.GetAllDrivesAsync();
             if (getAllDrivesResult.IsError == true)
             {
-                return IMorphicResult<IEnumerable<Drive>, Drive.GetDrivesError>.ErrorResult(getAllDrivesResult.Error!);
+                return MorphicResult.ErrorResult(getAllDrivesResult.Error!);
             }
             var allDrives = getAllDrivesResult.Value!;
 
             // filter out the drives which don't have the same storage device number as our disk
             var drivesOfThisDisk = allDrives.Where(drive => ((this.StorageDeviceNumber.DeviceType == drive.StorageDeviceNumber.DeviceType) && (this.StorageDeviceNumber.DeviceNumber == drive.StorageDeviceNumber.DeviceNumber)));
-            return IMorphicResult<IEnumerable<Drive>, Drive.GetDrivesError>.SuccessResult(drivesOfThisDisk!);
+            return MorphicResult.OkResult(drivesOfThisDisk!);
         }
     }
 }
