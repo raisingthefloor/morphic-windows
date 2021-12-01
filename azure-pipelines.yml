@@ -244,7 +244,7 @@ stages:
           inputs:
             source: 'current'
             artifact: msix-arm64
-            path: ${Agent.BuildDirectory}/msix-arm64
+            path: msix-arm64
 
         - task: Bash@3
           displayName: "Upload MSIXs to S3"
