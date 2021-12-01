@@ -5,7 +5,7 @@
 # - Build, test, and deploy: https://docs.microsoft.com/en-us/azure/devops/pipelines/ecosystems/dotnet-core
 # - .NET pipelines tasks: https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/
 # Microsoft-hosted agents: https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops
-# - Windows 2019 components and version options: https://github.com/actions/virtual-environments/blob/main/images/win/Windows2019-Readme.md
+# - Windows 2022 components and version options: https://github.com/actions/virtual-environments/blob/main/images/win/Windows2022-Readme.md
 # .NET Core release versions: https://github.com/dotnet/core/blob/main/release-notes/releases-index.json
 # .NET Core RIDs (including x86/x64/ARM64): https://docs.microsoft.com/en-us/dotnet/core/rid-catalog
 
@@ -131,7 +131,7 @@ stages:
             solution: MorphicPackage/MorphicPackage.wapproj
             platform: arm64
             configuration: Release
-            msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-x64.msix /p:AppxPackageSigningEnabled=false'
+            msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-arm64.msix /p:AppxPackageSigningEnabled=false'
 
         - task: UseDotNet@2
           displayName: 'Use .NET Core SDK 2.1'
@@ -291,14 +291,14 @@ stages:
 
                     echo "Uploading MSIX (x64) to S3"
                     MSIX_NAME_BASE="MorphicSetup-x64"
-                    # NOTE: "s/" is a temporary path requirement; we may also consider calling these folders just "x86" etc.
+                    # NOTE: "s/" is a temporary path requirement; we may also consider calling these folders just "x64" etc.
                     LOCAL_MSIX_DIR="s/msix-x64"
                     S3_BUILD_ARCHITECTURE="x64"
                     publishInstaller
 
                     echo "Uploading MSIX (arm64) to S3"
                     MSIX_NAME_BASE="MorphicSetup-arm64"
-                    # NOTE: "s/" is a temporary path requirement; we may also consider calling these folders just "x86" etc.
+                    # NOTE: "s/" is a temporary path requirement; we may also consider calling these folders just "arm64" etc.
                     LOCAL_MSIX_DIR="s/msix-arm64"
                     S3_BUILD_ARCHITECTURE="arm64"
                     publishInstaller
