@@ -53,19 +53,13 @@ stages:
     jobs:
       - job: build
         pool:
-          vmImage: 'windows-2019'
+          vmImage: 'windows-2022'
         steps:
-#        - task: UseDotNet@2
-#          displayName: 'Use .NET SDK 6.0-preview.1'
-#          inputs:
-#            packageType: sdk
-#            version: 6.0.100-preview.1.21103.13
-#            installationPath: $(Agent.ToolsDirectory)/dotnet
         - task: UseDotNet@2
-          displayName: 'Use .NET Core SDK 5.0.301'
+          displayName: 'Use .NET Core SDK 6.0.100'
           inputs:
             packageType: sdk
-            version: 5.0.301
+            version: 6.0.100
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
 #        - task: CmdLine@2
@@ -90,7 +84,7 @@ stages:
             command: publish
             publishWebProjects: false
             projects: '$(mainProject)'
-            arguments: '-f net5.0-windows -r win10-x86 -c Release'
+            arguments: '-f net6.0-windows -r win10-x86 -c Release'
 
 
         - task: DotNetCoreCLI@2
@@ -99,7 +93,7 @@ stages:
             command: publish
             publishWebProjects: false
             projects: '$(mainProject)'
-            arguments: '-f net5.0-windows -r win10-x64 -c Release'
+            arguments: '-f net6.0-windows -r win10-x64 -c Release'
 
 
 #        - task: DotNetCoreCLI@2
@@ -108,7 +102,7 @@ stages:
 #            command: publish
 #            publishWebProjects: false
 #            projects: '$(mainProject)'
-#            arguments: '-f net5.0-windows -r win10-arm64 -c Release'
+#            arguments: '-f net6.0-windows -r win10-arm64 -c Release'
 
         - powershell: |
             # Update MorphicPackage's appmanifest with a version number before building it
