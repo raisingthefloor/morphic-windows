@@ -1,0 +1,102 @@
+# Morphic for Windows (.NET Desktop)
+
+# Documentation used in this pipeline:
+# .NET pipelines docs: 
+# - Build, test, and deploy: https://docs.microsoft.com/en-us/azure/devops/pipelines/ecosystems/dotnet-core
+# - .NET pipelines tasks: https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/
+# Microsoft-hosted agents: https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops
+# - Windows 2022 components and version options: https://github.com/actions/virtual-environments/blob/main/images/win/Windows2022-Readme.md
+# .NET Core release versions: https://github.com/dotnet/core/blob/main/release-notes/releases-index.json
+# .NET Core RIDs (including x86/x64/ARM64): https://docs.microsoft.com/en-us/dotnet/core/rid-catalog
+
+# NOTE: we name the builds using a semver-compatible scheme; with the exception of publicly-released builds, this includes the current date in the build #
+# release: major.minor.patch.0
+#  canary: major.minor.patch.0-canary+YYDDD.BBB (where DDD is the day of year; where BBB is the build run # within the day, starting at one)
+#     dev: major.minor.patch.0-dev+YYDDD.BBB (where DDD is the day of year; where BBB is the build run # within the day, starting at one)
+name: $(Year:yy)$(DayOfYear).$(Rev:r)
+
+trigger:
+  branches:
+    include:
+    # TODO: before Morphic 2.0 RTM, limit the branches that are automatically built (e.g. "canary" [develop*] and release [release*], etc.)
+#      - master
+      - '*'
+
+# TODO: before Morphic 2.0 RTM, determine when we want builds to happen (i.e. in PRs, we'd build the "dev*" releases)
+pr:
+  branches:
+    include:
+    - '*'
+    
+variables:
+# Import all Amazon S3 upload credentials and settings
+- group: 's3-public-bucket-upload'
+# Import all the code-signing variables (from the Library)
+- group: 'windows-code-sign'
+- name: mainProject
+  value: Morphic/Morphic.csproj
+- name: projects
+  value: |
+         Morphic.Windows.Native/Morphic.Windows.Native.csproj
+         Morphic/Morphic.csproj
+  
+# TODO: these are temporary values; replace them with actual (semver-compatible) values for production
+- name: versionMajor
+  value: 2
+- name: versionMinor
+  value: 0
+- name: versionBuild
+  value: 0
+- name: versionRevision
+  value: 9999
+
+stages:
+  - stage: build
+    jobs:
+      - job: build
+        pool:
+          vmImage: 'windows-2022'
+        steps:
+        - task: UseDotNet@2
+          displayName: 'Use .NET Core SDK 6.0.100'
+          inputs:
+            packageType: sdk
+            version: 6.0.100
+            installationPath: $(Agent.ToolsDirectory)/dotnet
+
+        - task: DotNetCoreCLI@2
+          displayName: 'dotnet restore'
+          inputs:
+            command: restore
+            projects: '$(projects)'
+        
+        - task: DotNetCoreCLI@2
+          displayName: 'dotnet build'
+          inputs:
+           command: build
+           projects: '$(mainProject)'
+
+        - task: DotNetCoreCLI@2
+          displayName: 'dotnet publish (x86)'
+          inputs:
+            command: publish
+            publishWebProjects: false
+            projects: '$(mainProject)'
+            arguments: '-f net6.0-windows -r win10-x86 -c Release'
+
+        - task: DotNetCoreCLI@2
+          displayName: 'dotnet publish (x64)'
+          inputs:
+            command: publish
+            publishWebProjects: false
+            projects: '$(mainProject)'
+            arguments: '-f net6.0-windows -r win10-x64 -c Release'
+
+        - task: DotNetCoreCLI@2
+          displayName: 'dotnet publish (arm64)'
+          inputs:
+            command: publish
+            publishWebProjects: false
+            projects: '$(mainProject)'
+            arguments: '-f net6.0-windows -r win10-arm64 -c Release'
+
