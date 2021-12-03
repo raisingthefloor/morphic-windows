@@ -71,11 +71,11 @@ stages:
             command: restore
             projects: '$(projects)'
         
+        # NOTE: this step is not necessary for packaged apps; we'll probably need to bring it back (plus maybe build the MSI installer) if we add an unpackaged app option
         # TODO: switch to "dotnet build" (DotNetCoreCLI@2) once Microsoft supports it for Windows App SDK applications; in the meantime, we use msbuild
-        # TODO: this step may technically not be necessary; test the build process without it
-        # TODO: this step may just be building the x86 or ANYCPU variant (whatever the default is), rather than building all three sets of artifacts
+        # NOTE: msbuild generally just builds the x86 or ANYCPU variant (whatever the default is)--rather than building all three sets of artifacts--so this would probably need to be executed three times (once we each architecture specified)
 #        - task: MSBuild@1
-#          displayName: 'msbuild'
+#          displayName: 'Build Unpackaged App (default arch)'
 #          inputs:
 #           solution: '$(mainProject)'
 #           configuration: release
@@ -88,7 +88,7 @@ stages:
           displayName: 'Assign version to package manifest'
 
         - task: MSBuild@1
-          displayName: 'Package MSIX (x86)'
+          displayName: 'Build Packaged App (x86)'
           inputs:
             solution: 'Morphic (Package)/Morphic (Package).wapproj'
             platform: x86
@@ -96,7 +96,7 @@ stages:
             msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-x86.msix /p:AppxPackageSigningEnabled=false'
 
         - task: MSBuild@1
-          displayName: 'Package MSIX (x64)'
+          displayName: 'Build Packaged App (x64)'
           inputs:
             solution: 'Morphic (Package)/Morphic (Package).wapproj'
             platform: x64
@@ -104,7 +104,7 @@ stages:
             msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-x64.msix /p:AppxPackageSigningEnabled=false'
 
         - task: MSBuild@1
-          displayName: 'Package MSIX (arm64)'
+          displayName: 'Build Packaged App (arm64)'
           inputs:
             solution: 'Morphic (Package)/Morphic (Package).wapproj'
             platform: arm64
@@ -260,7 +260,7 @@ stages:
                     # set version (to be appended to the filenames); this is set to the semver version; the name (i.e. Build.BuildNumber) is appended as part of the filename
                     # NOTE: we are temporarily setting this to "2.0"; in the future we should retrieve this from the installer (both here and in the version components at the beginning of this script)
                     VERSION=2.0.0.0
-                    BUILD_NUMBER=(Build.BuildNumber)
+                    BUILD_NUMBER=$(Build.BuildNumber)
 
                     echo "Uploading MSIX (x86) to S3"
                     MSIX_NAME_BASE="MorphicSetup-x86"
