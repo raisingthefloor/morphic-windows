@@ -77,27 +77,34 @@ stages:
            solution: '$(mainProject)'
            configuration: release
 
-        - task: DotNetCoreCLI@2
-          displayName: 'dotnet publish (x86)'
-          inputs:
-            command: publish
-            publishWebProjects: false
-            projects: '$(mainProject)'
-            arguments: '-f net6.0-windows -r win10-x86 -c Release'
+        - powershell: |
+            # Update MorphicPackage's appmanifest with a version number before building it
+            [xml]$manifest= get-content ".\Morphic (Package)\Package.appxmanifest"
+            $manifest.Package.Identity.Version = "$(versionMajor).$(versionMinor).$(versionBuild).$(versionRevision)"    
+            $manifest.save("Morphic (Package)/Package.appxmanifest")
+          displayName: 'Assign version to package manifest'
 
-        - task: DotNetCoreCLI@2
-          displayName: 'dotnet publish (x64)'
+        - task: MSBuild@1
+          displayName: 'Package MSIX (x86)'
           inputs:
-            command: publish
-            publishWebProjects: false
-            projects: '$(mainProject)'
-            arguments: '-f net6.0-windows -r win10-x64 -c Release'
+            solution: 'Morphic (Package)/MorphicPackage.wapproj'
+            platform: x86
+            configuration: Release
+            msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-x86.msix /p:AppxPackageSigningEnabled=false'
 
-        - task: DotNetCoreCLI@2
-          displayName: 'dotnet publish (arm64)'
+        - task: MSBuild@1
+          displayName: 'Package MSIX (x64)'
           inputs:
-            command: publish
-            publishWebProjects: false
-            projects: '$(mainProject)'
-            arguments: '-f net6.0-windows -r win10-arm64 -c Release'
+            solution: 'Morphic (Package)/MorphicPackage.wapproj'
+            platform: x64
+            configuration: Release
+            msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-x64.msix /p:AppxPackageSigningEnabled=false'
+
+        - task: MSBuild@1
+          displayName: 'Package MSIX (arm64)'
+          inputs:
+            solution: 'Morphic (Package)/MorphicPackage.wapproj'
+            platform: arm64
+            configuration: Release
+            msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-arm64.msix /p:AppxPackageSigningEnabled=false'
 
