@@ -58,18 +58,18 @@ stages:
           vmImage: 'windows-2022'
         steps:
         - task: UseDotNet@2
-          displayName: 'Use .NET Core SDK 6.0.100'
+          displayName: 'Use .NET SDK 6.0.100'
           inputs:
             packageType: sdk
             version: 6.0.100
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
-#        # TODO: this step may technically not be necessary; test the build process without it
-#        - task: DotNetCoreCLI@2
-#          displayName: 'dotnet restore'
-#          inputs:
-#            command: restore
-#            projects: '$(projects)'
+        # NOTE: although NuGet restore is traditional for msbuild-based builds (and 'dotnet restore' for 'dotnet build'-based builds), 'dotnet restore' works with both
+        - task: DotNetCoreCLI@2
+          displayName: 'dotnet restore'
+          inputs:
+            command: restore
+            projects: '$(projects)'
         
         # NOTE: this step is not necessary for packaged apps; we'll probably need to bring it back (plus maybe build the MSI installer) if we add an unpackaged app option
         # TODO: switch to "dotnet build" (DotNetCoreCLI@2) once Microsoft supports it for Windows App SDK applications; in the meantime, we use msbuild
