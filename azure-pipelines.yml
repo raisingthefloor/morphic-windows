@@ -87,13 +87,13 @@ stages:
             $manifest.save("Morphic (Package)/Package.appxmanifest")
           displayName: 'Assign version to package manifest'
 
-#        - task: MSBuild@1
-#          displayName: 'Build packaged app (x86)'
-#          inputs:
-#            solution: 'Morphic (Package)/Morphic (Package).wapproj'
-#            platform: x86
-#            configuration: Release
-#            msbuildArguments: '/p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-x86.msix'
+        - task: MSBuild@1
+          displayName: 'Build packaged app (x86)'
+          inputs:
+            solution: 'Morphic (Package)/Morphic (Package).wapproj'
+            platform: x86
+            configuration: Release
+            msbuildArguments: '/p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-x86.msix'
 
         - task: MSBuild@1
           displayName: 'Build packaged app (x64)'
