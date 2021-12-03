@@ -87,7 +87,7 @@ stages:
         - task: MSBuild@1
           displayName: 'Package MSIX (x86)'
           inputs:
-            solution: 'Morphic (Package)/MorphicPackage.wapproj'
+            solution: 'Morphic (Package)/Morphic (Package).wapproj'
             platform: x86
             configuration: Release
             msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-x86.msix /p:AppxPackageSigningEnabled=false'
@@ -95,7 +95,7 @@ stages:
         - task: MSBuild@1
           displayName: 'Package MSIX (x64)'
           inputs:
-            solution: 'Morphic (Package)/MorphicPackage.wapproj'
+            solution: 'Morphic (Package)/Morphic (Package).wapproj'
             platform: x64
             configuration: Release
             msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-x64.msix /p:AppxPackageSigningEnabled=false'
@@ -103,7 +103,7 @@ stages:
         - task: MSBuild@1
           displayName: 'Package MSIX (arm64)'
           inputs:
-            solution: 'Morphic (Package)/MorphicPackage.wapproj'
+            solution: 'Morphic (Package)/Morphic (Package).wapproj'
             platform: arm64
             configuration: Release
             msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-arm64.msix /p:AppxPackageSigningEnabled=false'
