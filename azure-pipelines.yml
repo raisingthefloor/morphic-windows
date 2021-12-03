@@ -197,3 +197,88 @@ stages:
             artifactName: msix-arm64
             artifactType: pipeline
 
+  - stage: publish
+    jobs:
+      - job: publish
+        pool:
+          vmImage: "ubuntu-20.04"
+        steps:
+# TODO: determine how to capture (download) the artifacts into the root folder (i.e. not "./s/")
+        - task: DownloadPipelineArtifact@2
+          displayName: "Capture MSIX (x86) for upload"
+          inputs:
+            source: 'current'
+            artifact: msix-x86
+            path: msix-x86
+
+        - task: DownloadPipelineArtifact@2
+          displayName: "Capture MSIX (x64) for upload"
+          inputs:
+            source: 'current'
+            artifact: msix-x64
+            path: msix-x64
+
+        - task: DownloadPipelineArtifact@2
+          displayName: "Capture MSIX (arm64) for upload"
+          inputs:
+            source: 'current'
+            artifact: msix-arm64
+            path: msix-arm64
+
+        - task: Bash@3
+          displayName: "Upload MSIXs to S3"
+          env:
+              AWS_ACCESS_KEY_ID: $(accessKey)
+              AWS_SECRET_ACCESS_KEY: $(secretKey)
+              AWS_DEFAULT_REGION: $(region)
+              BUCKET: $(bucket)
+          inputs:
+            targetType: 'inline'
+            script: |
+                    # automatically exit if any command returns an error exit code
+                    set -e
+                    # print all commands to the terminal output
+                    set -x
+
+                    echo "detected dev build"
+                    S3_BUILD_OPERATING_SYSTEM="win"
+                    S3_BUILD_TYPE="dev"
+                    # expire dev builds after 7 days
+                    EXTRA_ARGS="--expires $(date -d '+7 days' --iso-8601=seconds)"
+
+                    S3_PUBLISHED_HTTP_URL="https://d23vryjv7k8eyb.cloudfront.net"
+
+                    publishInstaller() {
+                      LOCAL_MSIX_SOURCE="${AGENT_BUILDDIRECTORY}/${LOCAL_MSIX_DIR}/${MSIX_NAME_BASE}.msix"
+                      S3_MSIX_OBJECT_NAME="${S3_BUILD_OPERATING_SYSTEM}/${S3_BUILD_ARCHITECTURE}/${S3_BUILD_TYPE}/${MSIX_NAME_BASE}.${VERSION}-${S3_BUILD_TYPE}.${Build.BuildNumber}.msix"
+
+                      # debug: output the contents of the build directory
+                      ls -al ${AGENT_BUILDDIRECTORY}/${LOCAL_MSIX_DIR}
+                      aws s3 cp $EXTRA_ARGS "${LOCAL_MSIX_SOURCE}" "s3://${BUCKET}/${S3_MSIX_OBJECT_NAME}"
+                    }
+
+                    # set version (to be appended to the filenames); this is set to the semver version; the name (i.e. Build.BuildNumber) is appended as part of the filename
+                    # NOTE: we are temporarily setting this to "2.0"; in the future we should retrieve this from the installer (both here and in the version components at the beginning of this script)
+                    VERSION=2.0.0.0
+
+                    echo "Uploading MSIX (x86) to S3"
+                    MSIX_NAME_BASE="MorphicSetup-x86"
+                    # NOTE: "s/" is a temporary path requirement; we may also consider calling these folders just "x86" etc.
+                    LOCAL_MSIX_DIR="s/msix-x86"
+                    S3_BUILD_ARCHITECTURE="x86"
+                    publishInstaller
+
+                    echo "Uploading MSIX (x64) to S3"
+                    MSIX_NAME_BASE="MorphicSetup-x64"
+                    # NOTE: "s/" is a temporary path requirement; we may also consider calling these folders just "x64" etc.
+                    LOCAL_MSIX_DIR="s/msix-x64"
+                    S3_BUILD_ARCHITECTURE="x64"
+                    publishInstaller
+
+                    echo "Uploading MSIX (arm64) to S3"
+                    MSIX_NAME_BASE="MorphicSetup-arm64"
+                    # NOTE: "s/" is a temporary path requirement; we may also consider calling these folders just "arm64" etc.
+                    LOCAL_MSIX_DIR="s/msix-arm64"
+                    S3_BUILD_ARCHITECTURE="arm64"
+                    publishInstaller
+
