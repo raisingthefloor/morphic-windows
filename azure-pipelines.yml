@@ -93,7 +93,7 @@ stages:
             solution: 'Morphic (Package)/Morphic (Package).wapproj'
             platform: x86
             configuration: Release
-            msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-x86.msix /p:AppxPackageSigningEnabled=false'
+            msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-x86.msix /p:AppxPackageSigningEnabled=false /p:PublishReadyToRun=true'
 
         - task: MSBuild@1
           displayName: 'Build packaged app (x64)'
@@ -109,7 +109,7 @@ stages:
             solution: 'Morphic (Package)/Morphic (Package).wapproj'
             platform: arm64
             configuration: Release
-            msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-arm64.msix /p:AppxPackageSigningEnabled=false'
+            msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-arm64.msix /p:AppxPackageSigningEnabled=false /p:PublishReadyToRun=true'
 
         - task: UseDotNet@2
           displayName: 'Use .NET Core SDK 2.1'
