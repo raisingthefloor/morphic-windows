@@ -64,6 +64,7 @@ stages:
             version: 6.0.100
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
+        # TODO: this step may technically not be necessary; test the build process without it
         - task: DotNetCoreCLI@2
           displayName: 'dotnet restore'
           inputs:
@@ -71,6 +72,8 @@ stages:
             projects: '$(projects)'
         
         # TODO: switch to "dotnet build" (DotNetCoreCLI@2) once Microsoft supports it for Windows App SDK applications; in the meantime, we use msbuild
+        # TODO: this step may technically not be necessary; test the build process without it
+        # TODO: this step may just be building the x86 or ANYCPU variant (whatever the default is), rather than building all three sets of artifacts
         - task: MSBuild@1
           displayName: 'msbuild'
           inputs:
@@ -107,4 +110,90 @@ stages:
             platform: arm64
             configuration: Release
             msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-arm64.msix /p:AppxPackageSigningEnabled=false'
+
+        - task: UseDotNet@2
+          displayName: 'Use .NET Core SDK 2.1'
+          inputs:
+            packageType: sdk
+            version: 2.1.811
+            installationPath: $(Agent.ToolsDirectory)/dotnet
+
+        - task: DotNetCoreCLI@2
+          displayName: 'Install AzureSignTool 2.0.17'
+          inputs:
+            command: 'custom'
+            custom: 'tool'
+            arguments: 'install --global --version 2.0.17 azuresigntool'
+
+# ### SIGNING NOTE (applicable to all signed files) ###
+# NOTE: if we experience downtime with our cert provider's timestamp servers (which causes signing to fail), 
+#       we can use the test server (production timestamps, but from a 2nd provider); note that we should NOT do
+#       this for any public preview or release builds...only for internal testing or emergency scenarios.
+#              -tr "$(TimestampUrl)"
+#              -tr "$(TimestampUrl2)"
+#              vs.
+#              -tr "$(TestOnlyTimestampUrl)"
+
+        - task: CmdLine@2
+          displayName: 'Sign MSIX (x86)'
+          inputs:
+            script: >
+              AzureSignTool sign
+              -d Morphic
+              -du "$(SigningURL)"
+              -kvu "$(SigningVaultURL)"
+              -kvi "$(SigningClientId)"
+              -kvs "$(SigningClientSecret)"
+              -kvc "$(SigningCertName)"
+              -tr "$(TimestampUrl2)"
+              -v $(Build.ArtifactStagingDirectory)\MorphicSetup-x86.msix
+
+        - task: PublishPipelineArtifact@1
+          displayName: "Cache MSIX (x86) for upload"
+          inputs:
+            targetPath: $(Build.ArtifactStagingDirectory)\MorphicSetup-x86.msix
+            artifactName: msix-x86
+            artifactType: pipeline
+
+        - task: CmdLine@2
+          displayName: 'Sign MSIX (x64)'
+          inputs:
+            script: >
+              AzureSignTool sign
+              -d Morphic
+              -du "$(SigningURL)"
+              -kvu "$(SigningVaultURL)"
+              -kvi "$(SigningClientId)"
+              -kvs "$(SigningClientSecret)"
+              -kvc "$(SigningCertName)"
+              -tr "$(TimestampUrl2)"
+              -v $(Build.ArtifactStagingDirectory)\MorphicSetup-x64.msix
+
+        - task: PublishPipelineArtifact@1
+          displayName: "Cache MSIX (x64) for upload"
+          inputs:
+            targetPath: $(Build.ArtifactStagingDirectory)\MorphicSetup-x64.msix
+            artifactName: msix-x64
+            artifactType: pipeline
+
+        - task: CmdLine@2
+          displayName: 'Sign MSIX (arm64)'
+          inputs:
+            script: >
+              AzureSignTool sign
+              -d Morphic
+              -du "$(SigningURL)"
+              -kvu "$(SigningVaultURL)"
+              -kvi "$(SigningClientId)"
+              -kvs "$(SigningClientSecret)"
+              -kvc "$(SigningCertName)"
+              -tr "$(TimestampUrl2)"
+              -v $(Build.ArtifactStagingDirectory)\MorphicSetup-arm64.msix
+
+        - task: PublishPipelineArtifact@1
+          displayName: "Cache MSIX (arm64) for upload"
+          inputs:
+            targetPath: $(Build.ArtifactStagingDirectory)\MorphicSetup-arm64.msix
+            artifactName: msix-arm64
+            artifactType: pipeline
 
