@@ -101,7 +101,7 @@ stages:
             solution: 'Morphic (Package)/Morphic (Package).wapproj'
             platform: x64
             configuration: Release
-            msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-x64.msix /p:AppxPackageSigningEnabled=false'
+            msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-x64.msix /p:AppxPackageSigningEnabled=false /p:PublishReadyToRun=true'
 
         - task: MSBuild@1
           displayName: 'Build packaged app (arm64)'
