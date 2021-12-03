@@ -71,11 +71,11 @@ stages:
             projects: '$(projects)'
         
         # TODO: switch to "dotnet build" (DotNetCoreCLI@2) once Microsoft supports it for Windows App SDK applications; in the meantime, we use msbuild
-        - task: DotNetCoreCLI@2
-          displayName: 'msbuild'
-          inputs:
-           solution: '$(mainProject)'
-           configuration: release
+#        - task: DotNetCoreCLI@2
+#          displayName: 'msbuild'
+#          inputs:
+#           solution: '$(mainProject)'
+#           configuration: release
 
         - task: DotNetCoreCLI@2
           displayName: 'dotnet publish (x86)'
