@@ -24,6 +24,7 @@
 using Morphic.Core;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -43,6 +44,9 @@ namespace Morphic.Windows.Native.Windowing.Utils
             if (value == true)
             {
                 // determine if the window already has a "hidden window" parent; if it does, then capture that window's handle so we can destroy it AFTER disconnecting it as our parent; note that if we tried to destroy it before disconnecting it, we could inadvertently destroy its child--our window--as well
+
+				// NOTE: another implementation option here would be to check NativeWindow.RemoveHiddenWindowSafeHandle (and capture the window's safe handle at the same time)
+				//       [if we ever move this logic to the Window class (or an extension to it), we should just store the "ShowInTaskbar=false owner"'s safehandle in that class]
 
                 oldParentHWndAsIntPtr = PInvoke.User32.GetWindow(hWnd, PInvoke.User32.GetWindowCommands.GW_OWNER);
 				// NOTE: we are looking for the owner (above), not the parent (below); this is a bit confusing because of the flag we use to set the owner (which is a "PARENT" flag)
@@ -99,8 +103,23 @@ namespace Morphic.Windows.Native.Windowing.Utils
             if (oldParentHWndAsIntPtr != IntPtr.Zero)
             {
                 // if we need to clean up the old parent window, destroy it now
-                // NOTE: technically we should be destroying the window using the thread it was created on; also...ideally we would dispose of its SafeHandle instead of disposing its hWnd directly
-                _ = PInvoke.User32.DestroyWindow(oldParentHWndAsIntPtr);
+
+                // obtain the safe handle we created when we originally created this window owner to make a "do not show in taskbar" window; remove it from the collection since we're going to destroy it
+                var oldParentHwndAsSafeHandle = NativeWindow.RemoveHiddenWindowSafeHandle(oldParentHWndAsIntPtr);
+                if (oldParentHwndAsSafeHandle is not null)
+                {
+                    // if we could find the safe handle, dispose of it now; dispose should take care of destroying the window on the original creation thread
+                    oldParentHwndAsSafeHandle.Dispose();
+                }
+                else
+                {
+                    // NOTE: this shouldn't really happen in practice, so trap it for the debugger if we're actively debugging the app; otherwise, we'll attempt to degrade gracefully
+                    Debug.Assert(false, "Could not find native window's safe handle to dispose of; this probably indicates a programming bug.");
+
+                    // if we could not find the safe handle, destroy the parent as a precaution
+                    // NOTE: technically we should be destroying the window using the thread it was created on (which is why we use a SafeNativeWindowHandle, above, which takes of that for us)
+                    _ = PInvoke.User32.DestroyWindow(oldParentHWndAsIntPtr);
+                }
             }
 
             return MorphicResult.OkResult();

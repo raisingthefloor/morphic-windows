@@ -37,6 +37,23 @@ namespace Morphic.Windows.Native.Windowing
         internal static string? HiddenWindowClassName { get; private set; } = null;
         private static ushort? HiddenWindowClassAtom = null;
 
+        // NOTE: we currently retain a list of all hidden windows that we've created (indexed by their IntPtr handle, and holding their SafeHandle which itself holds the appropriate thread to destroy the window); in an ideal scenario,
+        //       each window class would retain its own SafeHandle so that we didn't need to do this centrally
+        private static Dictionary<IntPtr, SafeNativeWindowHandle> HiddenWindowSafeHandles = new Dictionary<IntPtr, SafeNativeWindowHandle>();
+        internal static SafeNativeWindowHandle? RemoveHiddenWindowSafeHandle(IntPtr hWnd)
+        {
+            SafeNativeWindowHandle? safeHandle;
+            var keyExists = NativeWindow.HiddenWindowSafeHandles.TryGetValue(hWnd, out safeHandle);
+            if (keyExists == true)
+            {
+                NativeWindow.HiddenWindowSafeHandles.Remove(hWnd);
+                return safeHandle;
+            }
+            else
+            {
+                return null;
+            }
+        }
         public static MorphicResult<SafeNativeWindowHandle, Win32ApiError> CreateNewHiddenWindow()
         {
             // register the "hidden window" class
@@ -125,6 +142,10 @@ namespace Morphic.Windows.Native.Windowing
                 return MorphicResult.ErrorResult(Win32ApiError.Win32Error(win32Error));
             }
             var hWndAsSafeHandle = new SafeNativeWindowHandle(hWnd, true);
+
+            // NOTE: we currently retain a list of all hidden windows that we've created (indexed by their IntPtr handle, and holding their SafeHandle which itself holds the appropriate thread to destroy the window); in an ideal scenario,
+            //       each window class would retain its own SafeHandle so that we didn't need to do this centrally
+            NativeWindow.HiddenWindowSafeHandles[hWnd] = hWndAsSafeHandle;
 
             return MorphicResult.OkResult(hWndAsSafeHandle);
         }
