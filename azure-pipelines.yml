@@ -87,13 +87,13 @@ stages:
             $manifest.save("Morphic (Package)/Package.appxmanifest")
           displayName: 'Assign version to package manifest'
 
-        - task: MSBuild@1
-          displayName: 'Build packaged app (x86)'
-          inputs:
-            solution: 'Morphic (Package)/Morphic (Package).wapproj'
-            platform: x86
-            configuration: Release
-            msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-x86.msix /p:AppxPackageSigningEnabled=false /p:PublishReadyToRun=true'
+#        - task: MSBuild@1
+#          displayName: 'Build packaged app (x86)'
+#          inputs:
+#            solution: 'Morphic (Package)/Morphic (Package).wapproj'
+#            platform: x86
+#            configuration: Release
+#            msbuildArguments: '/p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-x86.msix'
 
         - task: MSBuild@1
           displayName: 'Build packaged app (x64)'
@@ -101,7 +101,7 @@ stages:
             solution: 'Morphic (Package)/Morphic (Package).wapproj'
             platform: x64
             configuration: Release
-            msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-x64.msix /p:AppxPackageSigningEnabled=false /p:PublishReadyToRun=true'
+            msbuildArguments: '/p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-x64.msix'
 
         - task: MSBuild@1
           displayName: 'Build packaged app (arm64)'
@@ -109,7 +109,7 @@ stages:
             solution: 'Morphic (Package)/Morphic (Package).wapproj'
             platform: arm64
             configuration: Release
-            msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly  /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-arm64.msix /p:AppxPackageSigningEnabled=false /p:PublishReadyToRun=true'
+            msbuildArguments: '/p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-arm64.msix /p:AppxPackageSigningEnabled=false'
 
         - task: UseDotNet@2
           displayName: 'Use .NET Core SDK 2.1'
