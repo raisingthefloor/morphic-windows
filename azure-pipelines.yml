@@ -74,11 +74,11 @@ stages:
         # TODO: switch to "dotnet build" (DotNetCoreCLI@2) once Microsoft supports it for Windows App SDK applications; in the meantime, we use msbuild
         # TODO: this step may technically not be necessary; test the build process without it
         # TODO: this step may just be building the x86 or ANYCPU variant (whatever the default is), rather than building all three sets of artifacts
-        - task: MSBuild@1
-          displayName: 'msbuild'
-          inputs:
-           solution: '$(mainProject)'
-           configuration: release
+#        - task: MSBuild@1
+#          displayName: 'msbuild'
+#          inputs:
+#           solution: '$(mainProject)'
+#           configuration: release
 
         - powershell: |
             # Update MorphicPackage's appmanifest with a version number before building it
@@ -250,7 +250,7 @@ stages:
 
                     publishInstaller() {
                       LOCAL_MSIX_SOURCE="${AGENT_BUILDDIRECTORY}/${LOCAL_MSIX_DIR}/${MSIX_NAME_BASE}.msix"
-                      S3_MSIX_OBJECT_NAME="${S3_BUILD_OPERATING_SYSTEM}/${S3_BUILD_ARCHITECTURE}/${S3_BUILD_TYPE}/${MSIX_NAME_BASE}.${VERSION}-${S3_BUILD_TYPE}.${Build.BuildNumber}.msix"
+                      S3_MSIX_OBJECT_NAME="${S3_BUILD_OPERATING_SYSTEM}/${S3_BUILD_ARCHITECTURE}/${S3_BUILD_TYPE}/${MSIX_NAME_BASE}.${VERSION}-${S3_BUILD_TYPE}.${BUILD_NUMBER}.msix"
 
                       # debug: output the contents of the build directory
                       ls -al ${AGENT_BUILDDIRECTORY}/${LOCAL_MSIX_DIR}
@@ -260,6 +260,7 @@ stages:
                     # set version (to be appended to the filenames); this is set to the semver version; the name (i.e. Build.BuildNumber) is appended as part of the filename
                     # NOTE: we are temporarily setting this to "2.0"; in the future we should retrieve this from the installer (both here and in the version components at the beginning of this script)
                     VERSION=2.0.0.0
+		    BUILD_NUMBER=(Build.BuildNumber)
 
                     echo "Uploading MSIX (x86) to S3"
                     MSIX_NAME_BASE="MorphicSetup-x86"
