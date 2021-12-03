@@ -260,7 +260,7 @@ stages:
                     # set version (to be appended to the filenames); this is set to the semver version; the name (i.e. Build.BuildNumber) is appended as part of the filename
                     # NOTE: we are temporarily setting this to "2.0"; in the future we should retrieve this from the installer (both here and in the version components at the beginning of this script)
                     VERSION=2.0.0.0
-		    BUILD_NUMBER=(Build.BuildNumber)
+                    BUILD_NUMBER=(Build.BuildNumber)
 
                     echo "Uploading MSIX (x86) to S3"
                     MSIX_NAME_BASE="MorphicSetup-x86"
