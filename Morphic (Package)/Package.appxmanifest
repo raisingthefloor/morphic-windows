@@ -20,6 +20,11 @@
   <Dependencies>
     <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.17763.0" MaxVersionTested="10.0.19041.0" />
     <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.19041.0" />
+   <!-- NOTE: to support Azure Pipelines, we needed to add these three package dependencies manually to Package.appxmanifest; ideally we can find a better way to do this which does not require this manual addition (as it could get out of sync) -->
+    <PackageDependency Name="Microsoft.WindowsAppRuntime.1.0" MinVersion="0.319.455.0" Publisher="CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US" />
+    <PackageDependency Name="Microsoft.VCLibs.140.00.UWPDesktop" MinVersion="14.0.30035.0" Publisher="CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US" />
+    <PackageDependency Name="Microsoft.VCLibs.140.00" MinVersion="14.0.30035.0" Publisher="CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US" />
+   <!-- END manual inclusion of three package dependencies -->
   </Dependencies>
 
   <Resources>
