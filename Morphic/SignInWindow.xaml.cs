@@ -60,8 +60,9 @@ namespace Morphic
             // set window properties
             // NOTE: at the time of writing, WinUI did not support setting these properties via XAML
             this.Title = "Sign into Morphic";
-            //Width = "600"
-            //Height = "500"
+            //
+            // set width and height (scaled by per-display DPI)
+            Morphic.Windows.Native.Windowing.Utils.WindowUtils.SetWindowSize(hWnd, 600 /* width */, 500 /* height */);
             //FontSize = "17"
             //ResizeMode = "NoResize"
             //Icon = "/Icon.png"

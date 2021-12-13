@@ -34,6 +34,41 @@ namespace Morphic.Windows.Native.Windowing.Utils
 {
     public class WindowUtils
     {
+        public static MorphicResult<MorphicUnit, Win32ApiError> SetWindowSize(IntPtr hWnd, int width, int height)
+        {
+            // get the DPI for the current window (or rather the DPI of the monitor where this window is located)
+            // NOTE: our application must have its DPI_AWARENESS set to DPI_AWARENESS_PER_MONITOR_AWARE for this to work in multi-monitor scenarios
+            var dpiForWindow = PInvoke.User32.GetDpiForWindow(hWnd);
+            if (dpiForWindow == 0)
+            {
+                // an invalid hWnd will cause the GetDpiForWindow to return a value of zero
+                // TODO: test this to make sure it returns an actual error!!!
+                var win32ErrorCode = PInvoke.Kernel32.GetLastError();
+                return MorphicResult.ErrorResult(Win32ApiError.Win32Error((int)win32ErrorCode));
+            }
+
+            // calculate a scaled width and height, based on the DPI
+            // NOTE: we scale using double-precision floating point value here for efficiency
+            var scaleFactor = ((double)dpiForWindow) / 96.0;
+            var scaledWidth = (int)((double)width * scaleFactor);
+            var scaledHeight = (int)((double)height * scaleFactor);
+
+            var flags = PInvoke.User32.SetWindowPosFlags.SWP_ASYNCWINDOWPOS |
+                PInvoke.User32.SetWindowPosFlags.SWP_NOACTIVATE |
+                PInvoke.User32.SetWindowPosFlags.SWP_NOMOVE |
+                PInvoke.User32.SetWindowPosFlags.SWP_NOOWNERZORDER | /* TODO: this prevents the window's OWNER'S z-order from changing; I'm not sure if we need this or not; it's probably safe to omit? */
+                PInvoke.User32.SetWindowPosFlags.SWP_NOZORDER;
+            //
+            var success = PInvoke.User32.SetWindowPos(hWnd, IntPtr.Zero, 0, 0, scaledWidth, scaledHeight, flags);
+            if (success == false)
+            {
+                var win32ErrorCode = PInvoke.Kernel32.GetLastError();
+                return MorphicResult.ErrorResult(Win32ApiError.Win32Error((int)win32ErrorCode));
+            }
+
+            return MorphicResult.OkResult();
+        }
+
         public static MorphicResult<MorphicUnit, Win32ApiError> SetShowInTaskbar(IntPtr hWnd, bool value)
         {
             IntPtr oldParentHWndAsIntPtr;
