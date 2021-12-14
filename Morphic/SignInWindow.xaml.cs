@@ -63,8 +63,12 @@ namespace Morphic
             //
             // set width and height (scaled by per-display DPI)
             Morphic.Windows.Native.Windowing.Utils.WindowUtils.SetWindowSize(hWnd, 600 /* width */, 500 /* height */);
+            //
+            // make the window a fixed-size window; also remove the minimize button
+            Morphic.Windows.Native.Windowing.Utils.WindowUtils.SetResizable(hWnd, Windows.Native.Windowing.Utils.WindowUtils.ResizeMode.NoResize);
+            //
             //FontSize = "17"
-            //ResizeMode = "NoResize"
+            //
             //Icon = "/Icon.png"
             //WindowStartupLocation = "CenterScreen"
         }

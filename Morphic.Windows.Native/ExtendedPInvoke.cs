@@ -144,6 +144,10 @@ namespace Morphic.Windows.Native
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         internal static extern IntPtr DefWindowProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
+        // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowlongptrw
+        [DllImport("user32.dll")]
+        internal static extern IntPtr GetWindowLongPtr(IntPtr hWnd, int nIndex);
+
         // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-loadcursorw
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         internal static extern IntPtr LoadCursor(IntPtr hInstance, int lpCursorName);

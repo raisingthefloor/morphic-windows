@@ -34,36 +34,66 @@ namespace Morphic.Windows.Native.Windowing.Utils
 {
     public class WindowUtils
     {
-        public static MorphicResult<MorphicUnit, Win32ApiError> SetWindowSize(IntPtr hWnd, int width, int height)
+        public enum ResizeMode
         {
-            // get the DPI for the current window (or rather the DPI of the monitor where this window is located)
-            // NOTE: our application must have its DPI_AWARENESS set to DPI_AWARENESS_PER_MONITOR_AWARE for this to work in multi-monitor scenarios
-            var dpiForWindow = PInvoke.User32.GetDpiForWindow(hWnd);
-            if (dpiForWindow == 0)
+            CanMinimize,
+            CanResize,
+            // CanResizeWithGrip, // not currently implemented; if we need this, see what WPF does (via the style on a WPF Windows with this ResizeMode; use Spy++)
+            NoResize
+        }
+        public static MorphicResult<MorphicUnit, Win32ApiError> SetResizable(IntPtr hWnd, ResizeMode resizeMode)
+        {
+            IntPtr getStyleResult = ExtendedPInvoke.GetWindowLongPtr(hWnd, (int)PInvoke.User32.WindowLongIndexFlags.GWL_STYLE);
+            if (getStyleResult == IntPtr.Zero)
             {
-                // an invalid hWnd will cause the GetDpiForWindow to return a value of zero
-                // TODO: test this to make sure it returns an actual error!!!
+                // NOTE: if SetWindowLong or SetWindowLongPtr has not been called on this window, it will still return IntPtr.Zero
                 var win32ErrorCode = PInvoke.Kernel32.GetLastError();
-                return MorphicResult.ErrorResult(Win32ApiError.Win32Error((int)win32ErrorCode));
+                if (win32ErrorCode != PInvoke.Win32ErrorCode.ERROR_SUCCESS)
+                {
+                    return MorphicResult.ErrorResult(Win32ApiError.Win32Error((int)win32ErrorCode));
+                }
+            }
+            nint windowStyle = (nint)getStyleResult;
+
+            switch (resizeMode)
+            {
+                case ResizeMode.CanMinimize:
+                    {
+                        windowStyle &= ~(nint)PInvoke.User32.WindowStyles.WS_MAXIMIZEBOX;
+                        windowStyle |= (nint)PInvoke.User32.WindowStyles.WS_MINIMIZEBOX;
+                        windowStyle &= ~(nint)PInvoke.User32.WindowStyles.WS_SIZEFRAME;
+                    }
+                    break;
+                case ResizeMode.CanResize:
+                    {
+                        windowStyle |= (nint)PInvoke.User32.WindowStyles.WS_MAXIMIZEBOX;
+                        windowStyle |= (nint)PInvoke.User32.WindowStyles.WS_MINIMIZEBOX;
+                        windowStyle |= (nint)PInvoke.User32.WindowStyles.WS_SIZEFRAME;
+                    }
+                    break;
+                case ResizeMode.NoResize:
+                    {
+                        windowStyle &= ~(nint)PInvoke.User32.WindowStyles.WS_MAXIMIZEBOX;
+                        windowStyle &= ~(nint)PInvoke.User32.WindowStyles.WS_MINIMIZEBOX;
+                        windowStyle &= ~(nint)PInvoke.User32.WindowStyles.WS_SIZEFRAME;
+                    }
+                    break;
+                default:
+                    throw new ArgumentException("Invalid argument", nameof(resizeMode));
             }
 
-            // calculate a scaled width and height, based on the DPI
-            // NOTE: we scale using double-precision floating point value here for efficiency
-            var scaleFactor = ((double)dpiForWindow) / 96.0;
-            var scaledWidth = (int)((double)width * scaleFactor);
-            var scaledHeight = (int)((double)height * scaleFactor);
-
-            var flags = PInvoke.User32.SetWindowPosFlags.SWP_ASYNCWINDOWPOS |
-                PInvoke.User32.SetWindowPosFlags.SWP_NOACTIVATE |
-                PInvoke.User32.SetWindowPosFlags.SWP_NOMOVE |
-                PInvoke.User32.SetWindowPosFlags.SWP_NOOWNERZORDER | /* TODO: this prevents the window's OWNER'S z-order from changing; I'm not sure if we need this or not; it's probably safe to omit? */
-                PInvoke.User32.SetWindowPosFlags.SWP_NOZORDER;
-            //
-            var success = PInvoke.User32.SetWindowPos(hWnd, IntPtr.Zero, 0, 0, scaledWidth, scaledHeight, flags);
-            if (success == false)
+            // NOTE: per the Microsoft docs, we need to set last error to zero before calling this function...or else our result will probably be zero and the error code may be from a different Win32 API call (even if we were successful)
+            // see: https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowlongptrw
+            PInvoke.Kernel32.SetLastError(0);
+            var setStyleResult = PInvoke.User32.SetWindowLongPtr(hWnd, PInvoke.User32.WindowLongIndexFlags.GWL_STYLE, windowStyle);
+            if (setStyleResult == IntPtr.Zero)
             {
+                // NOTE: this function call may still return zero upon success as well as failure (but with an error result of ERROR_SUCCESS)
                 var win32ErrorCode = PInvoke.Kernel32.GetLastError();
-                return MorphicResult.ErrorResult(Win32ApiError.Win32Error((int)win32ErrorCode));
+                if (win32ErrorCode != PInvoke.Win32ErrorCode.ERROR_SUCCESS)
+                {
+                    return MorphicResult.ErrorResult(Win32ApiError.Win32Error((int)win32ErrorCode));
+                }
             }
 
             return MorphicResult.OkResult();
@@ -184,6 +214,41 @@ namespace Morphic.Windows.Native.Windowing.Utils
 
             // NOTE: this Win32 API doesn't return a success/failure result, so we just call the function and assume it works
             PInvoke.User32.ShowWindow(hWnd, nCmdShow);
+        }
+
+        public static MorphicResult<MorphicUnit, Win32ApiError> SetWindowSize(IntPtr hWnd, int width, int height)
+        {
+            // get the DPI for the current window (or rather the DPI of the monitor where this window is located)
+            // NOTE: our application must have its DPI_AWARENESS set to DPI_AWARENESS_PER_MONITOR_AWARE for this to work in multi-monitor scenarios
+            var dpiForWindow = PInvoke.User32.GetDpiForWindow(hWnd);
+            if (dpiForWindow == 0)
+            {
+                // an invalid hWnd will cause the GetDpiForWindow to return a value of zero
+                // TODO: test this to make sure it returns an actual error!!!
+                var win32ErrorCode = PInvoke.Kernel32.GetLastError();
+                return MorphicResult.ErrorResult(Win32ApiError.Win32Error((int)win32ErrorCode));
+            }
+
+            // calculate a scaled width and height, based on the DPI
+            // NOTE: we scale using double-precision floating point value here for efficiency
+            var scaleFactor = ((double)dpiForWindow) / 96.0;
+            var scaledWidth = (int)((double)width * scaleFactor);
+            var scaledHeight = (int)((double)height * scaleFactor);
+
+            var flags = PInvoke.User32.SetWindowPosFlags.SWP_ASYNCWINDOWPOS |
+                PInvoke.User32.SetWindowPosFlags.SWP_NOACTIVATE |
+                PInvoke.User32.SetWindowPosFlags.SWP_NOMOVE |
+                PInvoke.User32.SetWindowPosFlags.SWP_NOOWNERZORDER | /* TODO: this prevents the window's OWNER'S z-order from changing; I'm not sure if we need this or not; it's probably safe to omit? */
+                PInvoke.User32.SetWindowPosFlags.SWP_NOZORDER;
+            //
+            var success = PInvoke.User32.SetWindowPos(hWnd, IntPtr.Zero, 0, 0, scaledWidth, scaledHeight, flags);
+            if (success == false)
+            {
+                var win32ErrorCode = PInvoke.Kernel32.GetLastError();
+                return MorphicResult.ErrorResult(Win32ApiError.Win32Error((int)win32ErrorCode));
+            }
+
+            return MorphicResult.OkResult();
         }
     }
 }
