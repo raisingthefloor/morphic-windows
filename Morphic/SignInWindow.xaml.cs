@@ -65,7 +65,7 @@ namespace Morphic
             Morphic.Windows.Native.Windowing.Utils.WindowUtils.SetWindowSize(hWnd, 600 /* width */, 500 /* height */);
             //
             // make the window a fixed-size window; also remove the minimize button
-            Morphic.Windows.Native.Windowing.Utils.WindowUtils.SetResizable(hWnd, Windows.Native.Windowing.Utils.WindowUtils.ResizeMode.NoResize);
+            //Morphic.Windows.Native.Windowing.Utils.WindowUtils.SetResizable(hWnd, Windows.Native.Windowing.Utils.WindowUtils.ResizeMode.NoResize);
             //
             // start up the window in the center of the screen
             Morphic.Windows.Native.Windowing.Utils.WindowUtils.SetWindowStartupLocation(hWnd, Windows.Native.Windowing.Utils.WindowUtils.WindowStartupLocation.CenterScreen);
