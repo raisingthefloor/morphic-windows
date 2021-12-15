@@ -29,4 +29,9 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Assets\Images\theme-light\" />
+    <Folder Include="Assets\Images\theme-dark\" />
+  </ItemGroup>
 </Project>

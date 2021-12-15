@@ -7,7 +7,19 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid>
+    <StackPanel Orientation="Vertical">
+        <!-- Sign-in dialog section -->
+        
+        <!-- Morphic logo and title -->
+        <StackPanel Orientation="Vertical" Margin="0,20, 0, 20">
+            <Image Source="/Assets/Images/Square50x50Logo.png" HorizontalAlignment="Center" Width="60"/>
+            <TextBlock HorizontalAlignment="Center" FontSize="18" FontWeight="Bold">Sign in to your Morphic Account</TextBlock>
+        </StackPanel>
+        
+        <!-- "under construction" block -->
+        <StackPanel Orientation="Vertical" Margin="0,20, 0, 20">
+            <TextBlock HorizontalAlignment="Center" FontSize="24" FontWeight="ExtraBold">[window is under construction]</TextBlock>
+        </StackPanel>
 
-    </Grid>
+    </StackPanel>
 </Window>
