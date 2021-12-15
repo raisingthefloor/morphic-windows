@@ -59,7 +59,7 @@ namespace Morphic
 
             // set window properties
             // NOTE: at the time of writing, WinUI did not support setting these properties via XAML
-            this.Title = "Sign into Morphic";
+            this.Title = ((App)Application.Current).ResourceLoader.GetString("SignInWindow/Title");
             //
             // set width and height (scaled by per-display DPI)
             _ = Morphic.Windows.Native.Windowing.Utils.WindowUtils.SetWindowSize(hWnd, 600 /* width */, 500 /* height */);
@@ -70,9 +70,10 @@ namespace Morphic
             // start up the window in the center of the screen
             _ = Morphic.Windows.Native.Windowing.Utils.WindowUtils.SetWindowStartupLocation(hWnd, Windows.Native.Windowing.Utils.WindowUtils.WindowStartupLocation.CenterScreen);
             //
-            //FontSize = "17"
+            // set our window's (titlebar) icon			
+            _ = Morphic.Windows.Native.Windowing.Utils.WindowUtils.SetIcon(hWnd, Windows.Native.Windowing.Utils.WindowUtils.IconSize.Small_For_Titlebar, "Assets\\Icons\\Morphic.ico", 32, 32);
             //
-            //Icon = "/Icon.png"
+            //FontSize = "17"
         }
     }
 }

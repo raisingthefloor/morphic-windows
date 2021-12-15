@@ -11,6 +11,8 @@
   </PropertyGroup>
   <ItemGroup>
     <None Remove="SignInWindow.xaml" />
+    <None Remove="Strings\en-US\Resources.resw" />
+    <None Remove="Strings\es-ES\Resources.resw" />
   </ItemGroup>
 
   <ItemGroup>

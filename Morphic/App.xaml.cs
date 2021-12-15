@@ -29,6 +29,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using Microsoft.UI.Xaml.Shapes;
+using Microsoft.Windows.ApplicationModel.Resources;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -49,7 +50,10 @@ namespace Morphic
     /// </summary>
     public partial class App : Application
     {
-        private Window m_window;
+        private Window _window;
+
+        internal ResourceLoader ResourceLoader { get; private set; }
+        internal ResourceManager ResourceManager { get; private set; }
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -58,6 +62,10 @@ namespace Morphic
         public App()
         {
             this.InitializeComponent();
+
+            // initialize a resource loader and resource manager; we'll use these globally
+            this.ResourceLoader = new ResourceLoader();
+            this.ResourceManager = new ResourceManager();
         }
 
         /// <summary>
@@ -67,9 +75,9 @@ namespace Morphic
         /// <param name="args">Details about the launch request and process.</param>
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
-			// for now, launch the sign in window; in the future, we'll take different actions based on the startup method (e.g. sign in screen vs. MorphicBar vs. tray button icon, etc.)
-            m_window = new SignInWindow();
-            m_window.Activate();
+            // for now, launch the sign in window; in the future, we'll take different actions based on the startup method (e.g. sign in screen vs. MorphicBar vs. tray button icon, etc.)
+            _window = new SignInWindow();
+            _window.Activate();
         }
     }
 }

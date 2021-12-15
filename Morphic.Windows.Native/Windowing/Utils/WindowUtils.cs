@@ -34,6 +34,42 @@ namespace Morphic.Windows.Native.Windowing.Utils
 {
     public class WindowUtils
     {
+        public enum IconSize
+        {
+            Big_For_TaskSwitcher,
+            Small_For_Titlebar
+        }
+        public static MorphicResult<MorphicUnit, Win32ApiError> SetIcon(IntPtr hWnd, IconSize iconSizeToSet, string iconFileName, int requestedWidth, int requestedHeight)
+        {
+            // load the icon
+            var loadImageResult = PInvoke.User32.LoadImage(IntPtr.Zero /* set to zero, as we're loading a local file */, iconFileName, PInvoke.User32.ImageType.IMAGE_ICON, requestedWidth, requestedHeight, PInvoke.User32.LoadImageFlags.LR_LOADFROMFILE);
+            if (loadImageResult == IntPtr.Zero)
+            {
+                var win32ErrorCode = PInvoke.Kernel32.GetLastError();
+                return MorphicResult.ErrorResult(Win32ApiError.Win32Error((int)win32ErrorCode));
+            }
+            var iconHandle = loadImageResult;
+
+            IntPtr wParam;
+            switch (iconSizeToSet)
+            {
+                case IconSize.Big_For_TaskSwitcher:
+                    wParam = new IntPtr(1);
+                    break;
+                case IconSize.Small_For_Titlebar:
+                    wParam = new IntPtr(0);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException("Unknown value", nameof(iconSizeToSet));
+            }
+
+            // tell the window to use this icon as its icon
+            // NOTE: the return value of SendMessage in this circumstance is the previous icon handle used for the specified icon; we ignore that result
+            _ = PInvoke.User32.SendMessage(hWnd, PInvoke.User32.WindowMessage.WM_SETICON, wParam, iconHandle);
+
+            return MorphicResult.OkResult();
+        }
+
         public enum ResizeMode
         {
             CanMinimize,
