@@ -55,20 +55,20 @@ namespace Morphic
 
             // app windows like this one get tray entries by default; make sure we hide that tray entry
             // NOTE: we need to do this NOW, in this constructor, before the window is activated
-            Morphic.Windows.Native.Windowing.Utils.WindowUtils.SetShowInTaskbar(hWnd, false);
+            _ = Morphic.Windows.Native.Windowing.Utils.WindowUtils.SetShowInTaskbar(hWnd, false);
 
             // set window properties
             // NOTE: at the time of writing, WinUI did not support setting these properties via XAML
             this.Title = "Sign into Morphic";
             //
             // set width and height (scaled by per-display DPI)
-            Morphic.Windows.Native.Windowing.Utils.WindowUtils.SetWindowSize(hWnd, 600 /* width */, 500 /* height */);
+            _ = Morphic.Windows.Native.Windowing.Utils.WindowUtils.SetWindowSize(hWnd, 600 /* width */, 500 /* height */);
             //
             // make the window a fixed-size window; also remove the minimize button
-            //Morphic.Windows.Native.Windowing.Utils.WindowUtils.SetResizable(hWnd, Windows.Native.Windowing.Utils.WindowUtils.ResizeMode.NoResize);
+            _ = Morphic.Windows.Native.Windowing.Utils.WindowUtils.SetResizable(hWnd, Windows.Native.Windowing.Utils.WindowUtils.ResizeMode.NoResize);
             //
             // start up the window in the center of the screen
-            Morphic.Windows.Native.Windowing.Utils.WindowUtils.SetWindowStartupLocation(hWnd, Windows.Native.Windowing.Utils.WindowUtils.WindowStartupLocation.CenterScreen);
+            _ = Morphic.Windows.Native.Windowing.Utils.WindowUtils.SetWindowStartupLocation(hWnd, Windows.Native.Windowing.Utils.WindowUtils.WindowStartupLocation.CenterScreen);
             //
             //FontSize = "17"
             //

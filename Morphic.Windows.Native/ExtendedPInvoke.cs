@@ -144,9 +144,25 @@ namespace Morphic.Windows.Native
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         internal static extern IntPtr DefWindowProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
+        // docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowlongw
+        [DllImport("user32.dll", EntryPoint = "GetWindowLong")]
+        private static extern Int32 GetWindowLongPtr_32bit(IntPtr hWnd, int nIndex);
+        //
         // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowlongptrw
-        [DllImport("user32.dll")]
-        internal static extern IntPtr GetWindowLongPtr(IntPtr hWnd, int nIndex);
+        [DllImport("user32.dll", EntryPoint = "GetWindowLongPtr")]
+        private static extern IntPtr GetWindowLongPtr_64bit(IntPtr hWnd, int nIndex);
+        //
+        internal static IntPtr GetWindowLongPtr(IntPtr hWnd, int nIndex)
+        {
+            // NOTE: 32-bit windows does not have a DLL entrypoint labeled GetWindowLongPtr, so we alias the functions here (just like the C header files do)
+            if (Marshal.SizeOf<IntPtr>() == 4) {
+                return (IntPtr)ExtendedPInvoke.GetWindowLongPtr_32bit(hWnd, nIndex);
+            }
+            else
+            {
+                return ExtendedPInvoke.GetWindowLongPtr_64bit(hWnd, nIndex);
+            }
+        }
 
         // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-loadcursorw
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
