@@ -250,5 +250,73 @@ namespace Morphic.Windows.Native.Windowing.Utils
 
             return MorphicResult.OkResult();
         }
+
+        public enum WindowStartupLocation
+        {
+            //CenterOwner, // not currently implemented; there are a lot of scenarios to consider (child window with visible parent vs. child window with hidden/minimized parent vs. top level window, etc.)
+            CenterScreen,
+            //Manual, // not currently implemented, as this should be the default Windows window condition (and we don't have any logic to determine Left or Top boundaries to use in this scenario)
+        }
+        public static MorphicResult<MorphicUnit, Win32ApiError> SetWindowStartupLocation(IntPtr hWnd, WindowStartupLocation windowStartupLocation)
+        {
+            PInvoke.RECT rectToCenterWithin;
+            switch (windowStartupLocation)
+            {
+                case WindowStartupLocation.CenterScreen:
+                    {
+                        // NOTE: this code finds the monitor which contains the window (or contains more of the window than any other monitor); this appears to be what we want to happen.
+                        var monitorHandle = PInvoke.User32.MonitorFromWindow(hWnd, PInvoke.User32.MonitorOptions.MONITOR_DEFAULTTONEAREST);
+                        var monitorInfo = new PInvoke.User32.MONITORINFO();
+                        monitorInfo.cbSize = Marshal.SizeOf<PInvoke.User32.MONITORINFO>();
+                        var getMonitorInfoSuccess = PInvoke.User32.GetMonitorInfo(monitorHandle, ref monitorInfo);
+                        if (getMonitorInfoSuccess == false)
+                        {
+                            var win32ErrorCode = PInvoke.Kernel32.GetLastError();
+                            return MorphicResult.ErrorResult(Win32ApiError.Win32Error((int)win32ErrorCode));
+                        }
+
+                        // get the working area of the monitor (i.e. desktop, minus the taskbar or any docked windows)
+                        rectToCenterWithin = monitorInfo.rcWork;
+                    }
+                    break;
+                default:
+                    throw new ArgumentException("Invalid argument", nameof(windowStartupLocation));
+            }
+
+            // get the rect of our target window
+            PInvoke.RECT windowRect;
+            var getWindowRectSuccess = PInvoke.User32.GetWindowRect(hWnd, out windowRect);
+            if (getWindowRectSuccess == false)
+            {
+                var win32ErrorCode = PInvoke.Kernel32.GetLastError();
+                return MorphicResult.ErrorResult(Win32ApiError.Win32Error((int)win32ErrorCode));
+            }
+            var windowCurrentWidth = windowRect.right - windowRect.left;
+            var windowCurrentHeight = windowRect.bottom - windowRect.top;
+
+            // calculate the target window's new center based on the current center of the owner/screen
+            var centerX = rectToCenterWithin.left + ((rectToCenterWithin.right - rectToCenterWithin.left) / 2);
+            var centerY = rectToCenterWithin.top + ((rectToCenterWithin.bottom - rectToCenterWithin.top) / 2);
+            //
+            var windowNewLeft = centerX - (windowCurrentWidth / 2);
+            var windowNewTop = centerY - (windowCurrentHeight / 2);
+
+            // NOTE: there may be scenarios where centering the window will leave part of it off-screen (possibly even off of the active displays' workspace); we may want to test how WPF handles those scenarios, to determine if we should be forcing the window onto the visible screen (and what to do if it's too big for that)
+
+            var flags = PInvoke.User32.SetWindowPosFlags.SWP_ASYNCWINDOWPOS |
+                PInvoke.User32.SetWindowPosFlags.SWP_NOACTIVATE |
+                PInvoke.User32.SetWindowPosFlags.SWP_NOOWNERZORDER | /* TODO: this prevents the window's OWNER'S z-order from changing; I'm not sure if we need this or not; it's probably safe to omit? */
+                PInvoke.User32.SetWindowPosFlags.SWP_NOSIZE | // NOTE: we set the flag to not resize out of an abundance of caution (even though we pass in the existing window size); if we find it necessary to set the width/height as well, we can remove this flag
+                PInvoke.User32.SetWindowPosFlags.SWP_NOZORDER;
+            //
+            var success = PInvoke.User32.SetWindowPos(hWnd, IntPtr.Zero, windowNewLeft, windowNewTop, windowCurrentWidth, windowCurrentHeight, flags);
+            if (success == false)
+            {
+                var win32ErrorCode = PInvoke.Kernel32.GetLastError();
+                return MorphicResult.ErrorResult(Win32ApiError.Win32Error((int)win32ErrorCode));
+            }
+
+            return MorphicResult.OkResult();
+        }
     }
 }
