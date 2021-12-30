@@ -23,7 +23,7 @@
         {
             Task<bool> task;
 
-            if (this.morphicSession.User == null)
+            if (this.morphicSession.User is null)
             {
                 TaskCompletionSource<bool> completionSource = new TaskCompletionSource<bool>();
                 task = completionSource.Task;

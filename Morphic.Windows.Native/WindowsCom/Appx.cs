@@ -1,7 +1,12 @@
-﻿using System;
+﻿using Morphic.Core;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Windows.ApplicationModel;
+using Windows.Management.Deployment;
 
 namespace Morphic.Windows.Native.WindowsCom
 {
@@ -25,6 +30,25 @@ namespace Morphic.Windows.Native.WindowsCom
             }
 
             return (int) pid;
+        }
+
+        public static MorphicResult<bool, MorphicUnit> IsPackageInstalled(string packageFamilyName)
+        {
+            var packageManager = new PackageManager();
+
+            List<Package> packages;
+            try
+            {
+                packages = packageManager.FindPackagesForUser(string.Empty, packageFamilyName).ToList();
+            }
+            catch
+            {
+                return MorphicResult.ErrorResult();
+            }
+
+            var isInstalled = packages.Count > 0 ? true : false;
+
+            return MorphicResult.OkResult(isInstalled);
         }
     }
 

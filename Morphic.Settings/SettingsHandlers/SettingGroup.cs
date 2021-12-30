@@ -36,13 +36,13 @@
         }
 
         /// <summary>Gets the current values of the settings in this group.</summary>
-        public async Task<(IMorphicResult, Values)> GetAllAsync(bool includeLocal = false)
+        public async Task<(MorphicResult<MorphicUnit, MorphicUnit>, Values)> GetAllAsync(bool includeLocal = false)
         {
             return await this.SettingsHandler.GetAsync(this);
         }
 
         /// <summary>Sets the values of the settings in this group.</summary>
-        public async Task<IMorphicResult> SetAsync(Values values)
+        public async Task<MorphicResult<MorphicUnit, MorphicUnit>> SetAsync(Values values)
         {
             return await this.SettingsHandler.SetAsync(this, values);
         }

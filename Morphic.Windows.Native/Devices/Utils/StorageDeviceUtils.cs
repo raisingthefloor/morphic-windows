@@ -48,13 +48,13 @@ namespace Morphic.Windows.Native.Devices.Utils
         private StorageDeviceNumberError(Values value) : base(value) { }
     }
     internal struct StorageDeviceUtils {
-        internal static async Task<IMorphicResult<ExtendedPInvoke.STORAGE_DEVICE_NUMBER, StorageDeviceNumberError>> GetStorageDeviceNumberAsync(string devicePath)
+        internal static async Task<MorphicResult<ExtendedPInvoke.STORAGE_DEVICE_NUMBER, StorageDeviceNumberError>> GetStorageDeviceNumberAsync(string devicePath)
         {
             var deviceHandle = PInvoke.Kernel32.CreateFile(devicePath, (PInvoke.Kernel32.ACCESS_MASK)0, PInvoke.Kernel32.FileShare.FILE_SHARE_READ, IntPtr.Zero, PInvoke.Kernel32.CreationDisposition.OPEN_EXISTING, (PInvoke.Kernel32.CreateFileFlags)0, PInvoke.Kernel32.SafeObjectHandle.Null);
             if (deviceHandle.IsInvalid == true)
             {
                 var win32ErrorCode = Marshal.GetLastWin32Error();
-                return IMorphicResult<ExtendedPInvoke.STORAGE_DEVICE_NUMBER, StorageDeviceNumberError>.ErrorResult(StorageDeviceNumberError.Win32Error(win32ErrorCode));
+                return MorphicResult.ErrorResult(StorageDeviceNumberError.Win32Error(win32ErrorCode));
             }
             //
             // get the device number for this storage device
@@ -75,13 +75,13 @@ namespace Morphic.Windows.Native.Devices.Utils
                 }
                 catch (PInvoke.Win32Exception ex)
                 {
-                    return IMorphicResult<ExtendedPInvoke.STORAGE_DEVICE_NUMBER, StorageDeviceNumberError>.ErrorResult(StorageDeviceNumberError.Win32Error((int)ex.NativeErrorCode));
+                    return MorphicResult.ErrorResult(StorageDeviceNumberError.Win32Error((int)ex.NativeErrorCode));
                 }
 
                 var storageDeviceNumberAsArray = storageDeviceNumberMemoryObject.ToArray();
                 if (storageDeviceNumberAsArray.Length != 1)
                 {
-                    return IMorphicResult<ExtendedPInvoke.STORAGE_DEVICE_NUMBER, StorageDeviceNumberError>.ErrorResult(StorageDeviceNumberError.CouldNotRetrieveStorageDeviceNumbers);
+                    return MorphicResult.ErrorResult(StorageDeviceNumberError.CouldNotRetrieveStorageDeviceNumbers);
                 }
                 storageDeviceNumber = storageDeviceNumberAsArray[0];
             }
@@ -90,7 +90,7 @@ namespace Morphic.Windows.Native.Devices.Utils
                 deviceHandle.Close();
             }
 
-            return IMorphicResult<ExtendedPInvoke.STORAGE_DEVICE_NUMBER, StorageDeviceNumberError>.SuccessResult(storageDeviceNumber);
+            return MorphicResult.OkResult(storageDeviceNumber);
         }
     }
 }

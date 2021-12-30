@@ -56,7 +56,7 @@ namespace Morphic.Client.Bar
         /// </summary>
         public void ShowBar()
         {
-            if (this.barWindow != null)
+            if (this.barWindow is not null)
             {
                 AppOptions.Current.MorphicBarIsVisible = true;
                 this.barWindow.Visibility = Visibility.Visible;
@@ -78,7 +78,7 @@ namespace Morphic.Client.Bar
         {
             this.BarIsLoaded = false;
 
-            if (this.barWindow != null)
+            if (this.barWindow is not null)
             {
                 this.OnBarUnloaded(this.barWindow);
                 BarData bar = this.barWindow.Bar;
@@ -108,7 +108,7 @@ namespace Morphic.Client.Bar
             {
                 showMorphicBar = true;
             }
-            if (ConfigurableFeatures.MorphicBarVisibilityAfterLogin != null)
+            if (ConfigurableFeatures.MorphicBarVisibilityAfterLogin is not null)
             {
                 switch (ConfigurableFeatures.MorphicBarVisibilityAfterLogin.Value)
                 {
@@ -196,7 +196,7 @@ namespace Morphic.Client.Bar
         /// <param name="serviceProvider"></param>
         public BarData? LoadFromBarJson(string path, string? content = null, IServiceProvider? serviceProvider = null)
         {
-            if (this.firstBar && AppOptions.Current.Launch.BarFile != null)
+            if (this.firstBar && AppOptions.Current.Launch.BarFile is not null)
             {
                 path = AppOptions.Current.Launch.BarFile;
             }
@@ -211,21 +211,21 @@ namespace Morphic.Client.Bar
                 this.Logger.LogError(e, "Problem loading the bar.");
             }
 
-            if (this.barWindow != null)
+            if (this.barWindow is not null)
             {
                 this.CloseBar();
             }
 
             this.BarIsLoaded = true;
 
-            if (bar != null)
+            if (bar is not null)
             {
                 // if any of the items are application actions and the application isn't available, remove the button from the items collection
                 var index = 0;
                 while (index < bar.AllItems.Count)
                 {
                     var actionAsApplicationAction = bar.AllItems[index].Action as Data.Actions.ApplicationAction;
-                    if (actionAsApplicationAction != null)
+                    if (actionAsApplicationAction is not null)
                     {
                         if (actionAsApplicationAction.IsAvailable == false)
                         {
@@ -252,7 +252,7 @@ namespace Morphic.Client.Bar
         /// <param name="showCommunityId">Force this community to show.</param>
         public async Task LoadSessionBarAsync(MorphicSession session, string communityId, string? morphicbarId)
         {
-            if (this.firstBar && AppOptions.Current.Launch.BarFile != null)
+            if (this.firstBar && AppOptions.Current.Launch.BarFile is not null)
             {
                 this.LoadFromBarJson(AppOptions.Current.Launch.BarFile);
                 return;
@@ -282,12 +282,12 @@ namespace Morphic.Client.Bar
                 //    || !session.Communities.Select(c => c.Id).OrderBy(id => id)
                 //        .SequenceEqual(lastCommunities.OrderBy(id => id));
 
-                if (/*!changed &&*/ communityId != null)
+                if (/*!changed &&*/ communityId is not null)
                 {
                     community = session.Communities.FirstOrDefault(c => c.Id == communityId);
                 }
 
-                //if (community == null)
+                //if (community is null)
                 //{
                 //    this.Logger.LogInformation("Showing community picker");
 
@@ -300,19 +300,19 @@ namespace Morphic.Client.Bar
                 //    bool gotCommunity = picker.ShowDialog() == true;
                 //    community = gotCommunity ? picker.SelectedCommunity : null;
 
-                //    if (community != null)
+                //    if (community is not null)
                 //    {
                 //        userBar = await bars[community.Id];
                 //    }
                 //}
             //}
 
-            if (community != null)
+            if (community is not null)
             {
                 var legacyBars = await session.GetBarsAsync(community.Id);
                 foreach (var legacyBar in legacyBars) {
                     var useThisBar = false;
-                    if (morphicbarId == null)
+                    if (morphicbarId is null)
                     {
                         // if the user selected this community id instead of a specific morphicbar (Morphic v1.0-v1.2), then use the first bar
                         useThisBar = true;
@@ -325,8 +325,8 @@ namespace Morphic.Client.Bar
 
                     if (useThisBar == true)
                     {
-                        // OBSERVATION: not sure why the "??=" (userBar == null) check is done here; this logic seems brittle
-                        if (userBar == null)
+                        // OBSERVATION: not sure why the "??=" (userBar is null) check is done here; this logic seems brittle
+                        if (userBar is null)
                         {
                             userBar = legacyBar;
                             break;
@@ -336,12 +336,12 @@ namespace Morphic.Client.Bar
                 // NOTE: if the morphicbar was not found, we do not set it to null (to remain consistent with previous code logic)
 
                 // added to protect against not finding the specific community bar
-                if (userBar != null)
+                if (userBar is not null)
                 {
                     this.Logger.LogInformation($"Showing bar for community {community.Id} {community.Name}");
                     string barJson = this.GetUserBarJson(userBar);
                     BarData? barData = this.LoadFromBarJson(userBar.Id, barJson);
-                    if (barData != null)
+                    if (barData is not null)
                     {
                         barData.CommunityId = community.Id;
                     }

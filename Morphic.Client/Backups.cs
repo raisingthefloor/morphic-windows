@@ -37,7 +37,7 @@
         public async Task Store(Preferences? preferences = null)
         {
             this.logger.LogInformation("Making backup");
-            if (preferences == null)
+            if (preferences is null)
             {
                 preferences = new Preferences();
                 // NOTE: we are not returning any kind of error if the preferences were not captured

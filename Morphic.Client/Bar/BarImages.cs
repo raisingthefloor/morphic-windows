@@ -23,7 +23,7 @@
         public static string? GetBarIconFile(string name)
         {
             var translatedName = BarImages.TranslateImageUrlToFileName(name);
-            if (translatedName != null)
+            if (translatedName is not null)
             {
                 name = translatedName;
             }
@@ -141,10 +141,24 @@
                     return "logo_macys";
                 case "mail":
                     return "logo_mail";
+                case "msaccess":
+                    return "logo_msaccess";
                 case "msedge":
                     return "logo_msedge";
+                case "msexcel":
+                    return "logo_msexcel";
+                case "msonenote":
+                    return "logo_msonenote";
+                case "msoutlook":
+                    return "logo_msoutlook";
+                case "mspowerpoint":
+                    return "logo_mspowerpoint";
                 case "msquickassist":
                     return "logo_msquickassist";
+                case "msteams":
+                    return "logo_msteams";
+                case "msword":
+                    return "logo_msword";
                 case "nbcnews":
                     return "logo_nbcNews";
                 case "netflix":

@@ -120,7 +120,7 @@
             this.ThemeStateChanged?.Invoke(this, new ThemeEventArgs(this.ActiveTheme));
 
             // Update the brush used by a mono drawing image.
-            if (this.DrawingBrush != null && this.ActiveTheme.Background.HasValue)
+            if (this.DrawingBrush is not null && this.ActiveTheme.Background.HasValue)
             {
                 this.DrawingBrush.Color = this.ActiveTheme.Background.Value;
             }

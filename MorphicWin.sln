@@ -34,6 +34,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Morphic.InstallerService.Io
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Morphic.InstallerService", "Morphic.InstallerService\Morphic.InstallerService.csproj", "{0A0F3809-E1BB-45CB-9EE9-605AAE734208}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Morphic.OAuth.Client", "Morphic.OAuth.Client\Morphic.OAuth.Client.csproj", "{B6B435A7-B1F6-4AA1-9399-C81AF385D729}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Morphic.OAuth.Core", "Morphic.OAuth.Core\Morphic.OAuth.Core.csproj", "{F21221CE-1BD7-49FA-9203-2B5B02949357}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -169,6 +173,22 @@ Global
 		{0A0F3809-E1BB-45CB-9EE9-605AAE734208}.Release|Any CPU.Build.0 = Release|Any CPU
 		{0A0F3809-E1BB-45CB-9EE9-605AAE734208}.Release|x64.ActiveCfg = Release|Any CPU
 		{0A0F3809-E1BB-45CB-9EE9-605AAE734208}.Release|x64.Build.0 = Release|Any CPU
+		{B6B435A7-B1F6-4AA1-9399-C81AF385D729}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6B435A7-B1F6-4AA1-9399-C81AF385D729}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6B435A7-B1F6-4AA1-9399-C81AF385D729}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B6B435A7-B1F6-4AA1-9399-C81AF385D729}.Debug|x64.Build.0 = Debug|Any CPU
+		{B6B435A7-B1F6-4AA1-9399-C81AF385D729}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6B435A7-B1F6-4AA1-9399-C81AF385D729}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B6B435A7-B1F6-4AA1-9399-C81AF385D729}.Release|x64.ActiveCfg = Release|Any CPU
+		{B6B435A7-B1F6-4AA1-9399-C81AF385D729}.Release|x64.Build.0 = Release|Any CPU
+		{F21221CE-1BD7-49FA-9203-2B5B02949357}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F21221CE-1BD7-49FA-9203-2B5B02949357}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F21221CE-1BD7-49FA-9203-2B5B02949357}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F21221CE-1BD7-49FA-9203-2B5B02949357}.Debug|x64.Build.0 = Debug|Any CPU
+		{F21221CE-1BD7-49FA-9203-2B5B02949357}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F21221CE-1BD7-49FA-9203-2B5B02949357}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F21221CE-1BD7-49FA-9203-2B5B02949357}.Release|x64.ActiveCfg = Release|Any CPU
+		{F21221CE-1BD7-49FA-9203-2B5B02949357}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -109,7 +109,7 @@ namespace Morphic.Telemetry
             else if (config is WebsocketTelemetryClientConfig wsConfig) 
             {
                 var path = wsConfig.Hostname;
-                if (wsConfig.Port != null) 
+                if (wsConfig.Port is not null) 
                 {
                     path += ":" + wsConfig.Port.Value.ToString();
                 }
@@ -117,7 +117,7 @@ namespace Morphic.Telemetry
                 {
                     path += ":443";
                 }
-                if (wsConfig.Path != null)
+                if (wsConfig.Path is not null)
                 {
                     // sanity check: make sure the path component starts with "/" or "#"
 					if (wsConfig.Path.Length > 0) 
@@ -379,7 +379,7 @@ namespace Morphic.Telemetry
             }
         }
 
-        private async Task<IMorphicResult> ConnectToMqttServerAsync()
+        private async Task<MorphicResult<MorphicUnit, MorphicUnit>> ConnectToMqttServerAsync()
         {
             try
             {
@@ -387,14 +387,14 @@ namespace Morphic.Telemetry
                 switch (connectResult.ResultCode)
                 {
                     case MQTTnet.Client.Connecting.MqttClientConnectResultCode.Success:
-                        return IMorphicResult.SuccessResult;
+                        return MorphicResult.OkResult();
                     default:
-                        return IMorphicResult.ErrorResult;
+                        return MorphicResult.ErrorResult();
                 }
             }
             catch
             {
-                return IMorphicResult.ErrorResult;
+                return MorphicResult.ErrorResult();
             }
         }
 

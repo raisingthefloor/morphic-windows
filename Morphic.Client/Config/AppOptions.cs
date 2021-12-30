@@ -48,7 +48,7 @@
             get => this.GetValue<bool?>(null);
             set
             {
-                if (value == null)
+                if (value is null)
                 {
                     throw new Exception("MorphicBarIsVisible must be set to a non-null value.");
                 }
@@ -64,7 +64,7 @@
         {
             get
             {
-                if (ConfigurableFeatures.MorphicBarVisibilityAfterLogin != null) { 
+                if (ConfigurableFeatures.MorphicBarVisibilityAfterLogin is not null) { 
                     switch (ConfigurableFeatures.MorphicBarVisibilityAfterLogin.Value)
                     {
                         case ConfigurableFeatures.MorphicBarVisibilityAfterLoginOption.Show:
@@ -80,7 +80,7 @@
             }
             set
             {
-                if (ConfigurableFeatures.MorphicBarVisibilityAfterLogin != null) {
+                if (ConfigurableFeatures.MorphicBarVisibilityAfterLogin is not null) {
                     Debug.Assert(false, "AutoShow should never be set with a new value when the setting is already configured by config.json");
                     return;
                 }
@@ -124,7 +124,7 @@
         {
             get
             {
-                if (this.firstRunUpgrade == null)
+                if (this.firstRunUpgrade is null)
                 {
                     this.CheckFirstRun();
                 }
@@ -138,7 +138,7 @@
         {
             get
             {
-                if (this.firstRun == null)
+                if (this.firstRun is null)
                 {
                     this.CheckFirstRun();
                 }
@@ -150,7 +150,7 @@
         /// <summary>Check if this instance is the first since installation.</summary>
         private void CheckFirstRun()
         {
-            if (this.firstRun == null)
+            if (this.firstRun is null)
             {
                 // ReSharper disable ExplicitCallerInfoArgument
                 string lastVersion = this.GetValue(string.Empty, "version");
@@ -196,7 +196,7 @@
                 localMachineAutorunKey = null;
             }
 
-            if (ConfigurableFeatures.AutorunConfig != null)
+            if (ConfigurableFeatures.AutorunConfig is not null)
             {
                 // if config.json specified our autorun config, capture that data now
                 switch (ConfigurableFeatures.AutorunConfig) {
@@ -216,7 +216,7 @@
                         throw new NotImplementedException();
                 }
 
-                if (newValue != null)
+                if (newValue is not null)
                 {
                     Debug.Assert(false, "HandleAutoRun should never be called with a new setting when the setting is already configured by config.json");
                     return enabled;
@@ -227,11 +227,11 @@
                 using RegistryKey morphicKey =
                     Registry.CurrentUser.CreateSubKey(@"Software\Raising the Floor\Morphic")!;
 
-                if (newValue == null)
+                if (newValue is null)
                 {
                     // Get the configured value
                     object value = morphicKey.GetValue("AutoRun");
-                    if (value == null)
+                    if (value is null)
                     {
                         // This might be the first time running, enable auto-run by default.
                         enabled = true;
@@ -239,7 +239,7 @@
                     else
                     {
                         // Respect the system setting (it was probably removed on purpose).
-                        enabled = currentUserAutorunKey.GetValue("Morphic") != null;
+                        enabled = currentUserAutorunKey.GetValue("Morphic") is not null;
                     }
                 }
                 else
@@ -322,7 +322,7 @@
             {
                 try
                 {
-                    if (value != null)
+                    if (value is not null)
                     {
                         result = ((IConvertible)value).ToInt32(null);
                     }
@@ -365,7 +365,7 @@
             }
             else if (typeof(T) == typeof(string))
             {
-                if (value == null)
+                if (value is null)
                 {
                     return default(T);
                 } 
@@ -426,7 +426,7 @@
             foreach (PropertyInfo property in this.GetType().GetProperties())
             {
                 OptionAttribute? option = property.GetCustomAttribute<OptionAttribute>(true);
-                if (option != null)
+                if (option is not null)
                 {
                     string varName = $"{EnvironmentPrefix}{option.LongName}".ToUpperInvariant();
 

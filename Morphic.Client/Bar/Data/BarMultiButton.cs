@@ -116,7 +116,7 @@ namespace Morphic.Client.Bar.Data
 
             foreach (var (key, buttonInfo) in this.Buttons)
             {
-                if ((buttonInfo.Action == null) || (buttonInfo.Action is NoOpAction))
+                if ((buttonInfo.Action is null) || (buttonInfo.Action is NoOpAction))
                 {
                     buttonInfo.Action = this.Action;
                 }

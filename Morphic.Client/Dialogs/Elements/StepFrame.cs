@@ -72,7 +72,7 @@ namespace Morphic.Client.Dialogs.Elements
             this.CurrentPanel = panel;
             this.AddVisualChild(panel);
             this.InvalidateVisual();
-            if (animated && this.dismissedPanel != null)
+            if (animated && this.dismissedPanel is not null)
             {
 
                 var duration = new Duration(TimeSpan.FromSeconds(this.PushAnimationDurationInSeconds));
@@ -125,11 +125,11 @@ namespace Morphic.Client.Dialogs.Elements
             get
             {
                 var count = 0;
-                if (this.dismissedPanel != null)
+                if (this.dismissedPanel is not null)
                 {
                     ++count;
                 }
-                if (this.CurrentPanel != null)
+                if (this.CurrentPanel is not null)
                 {
                     ++count;
                 }

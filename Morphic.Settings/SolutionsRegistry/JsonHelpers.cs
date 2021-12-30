@@ -35,7 +35,7 @@
             // Allow private members to be deserialised.
             if (!jsonProperty.Writable && member is PropertyInfo propertyInfo)
             {
-                jsonProperty.Writable = propertyInfo.GetSetMethod(true) != null;
+                jsonProperty.Writable = propertyInfo.GetSetMethod(true) is not null;
             }
 
             return jsonProperty;

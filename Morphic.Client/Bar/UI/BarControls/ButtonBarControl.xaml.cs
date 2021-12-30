@@ -39,7 +39,7 @@ namespace Morphic.Client.Bar.UI.BarControls
             get
             {
                 BarItemSize size = this.ItemSize;
-                if ((this.BarItem.ImageSource == null) && (this.BarItem.XamlContent == null))
+                if ((this.BarItem.ImageSource is null) && (this.BarItem.XamlContent is null))
                 {
                     size = BarItemSize.TextOnly;
                 }
@@ -60,7 +60,7 @@ namespace Morphic.Client.Bar.UI.BarControls
 
         private async void Button_OnClick(object sender, RoutedEventArgs e)
         {
-            if (this.BarItem.Action != null)
+            if (this.BarItem.Action is not null)
             {
                 await this.BarItem.Action.InvokeAsync();
             }

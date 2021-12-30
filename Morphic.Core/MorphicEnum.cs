@@ -22,11 +22,37 @@
 // * Consumer Electronics Association Foundation
 
 using System;
+using System.Reflection;
 
 public partial class MorphicEnum<TEnum> where TEnum : struct, Enum
 {
     public static bool IsMember(TEnum value)
     {
-        return (typeof(TEnum).GetEnumName(value) != null);
+        return (typeof(TEnum).GetEnumName(value) is not null);
+    }
+
+    public static TEnum? FromStringValue(string stringValue, StringComparison comparisonType = StringComparison.Ordinal)
+    {
+        foreach (TEnum member in System.Enum.GetValues(typeof(TEnum)))
+        {
+            var memberName = typeof(TEnum).GetEnumName(member);
+            //
+            var fieldInfo = typeof(TEnum).GetField(memberName!);
+            //
+            var attribute = fieldInfo!.GetCustomAttribute<Morphic.Core.MorphicStringValueAttribute>();
+            if (attribute is null)
+            {
+                // this enum member does not have a string value
+                continue;
+            }
+
+            if (attribute.StringValue.Equals(stringValue, comparisonType))
+            {
+                return member;
+            }
+        }
+
+        // if we could not find the member (i.e. the member with the supplied string value does not exist), return null
+        return null;
     }
 }

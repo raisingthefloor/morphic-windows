@@ -412,7 +412,7 @@ namespace Morphic.Client.Bar.Data
 
             BarData? bar;
 
-            using (TextReader reader = content == null
+            using (TextReader reader = content is null
                 ? (TextReader)File.OpenText(barSource)
                 : new StringReader(content))
             {

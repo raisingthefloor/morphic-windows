@@ -34,7 +34,7 @@ namespace Morphic.Client.Bar.UI
 
         public object? Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value == null || value as bool? == false || value as string == string.Empty
+            if (value is null || value as bool? == false || value as string == string.Empty
                 || value as Orientation? == Orientation.Horizontal)
             {
                 return parameter ?? this.False;
@@ -82,7 +82,7 @@ namespace Morphic.Client.Bar.UI
             do
             {
                 parent = VisualTreeHelper.GetParent(child);
-                if (parent != null)
+                if (parent is not null)
                 {
                     if (parent is T p)
                     {
@@ -93,7 +93,7 @@ namespace Morphic.Client.Bar.UI
                         child = parent;
                     }
                 }
-            } while (parent != null);
+            } while (parent is not null);
 
             return null;
         }

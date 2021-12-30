@@ -34,7 +34,7 @@ namespace Morphic.Windows.Native.InteropServices
         // NOTE: this function throws a COMException if the object was not found
         public static object? GetActiveObject(string progId)
         {
-            if (progId == null)
+            if (progId is null)
             {
                 throw new ArgumentNullException(nameof(progId));
             }

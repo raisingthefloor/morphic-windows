@@ -54,13 +54,13 @@
         protected override void OnOpened(RoutedEventArgs e)
         {
             // if autorun settings are configured by config.json, do not give the user the option to enable/disable
-            if (ConfigurableFeatures.AutorunConfig != null)
+            if (ConfigurableFeatures.AutorunConfig is not null)
             {
                 this.AutorunAfterLoginItem.Visibility = Visibility.Collapsed;
             }
 
             // if morphicBarVisibilityAfterLogin settings are configured by config.json, do not give the user the option to enable/disable
-            if (ConfigurableFeatures.MorphicBarVisibilityAfterLogin != null)
+            if (ConfigurableFeatures.MorphicBarVisibilityAfterLogin is not null)
             {
                 this.ShowMorphicBarAfterLoginItem.Visibility = Visibility.Collapsed;
             }
@@ -78,7 +78,7 @@
         {
             _menuOpenedSource = menuOpenedSource;
 
-            if (control == null)
+            if (control is null)
             {
                 this.Placement = PlacementMode.Mouse;
                 this.PlacementTarget = null;
@@ -98,7 +98,7 @@
         private CountlySDK.Segmentation CreateMenuOpenedSourceSegmentation(MenuOpenedSource? menuOpenedSource)
         {
             var segmentation = new CountlySDK.Segmentation();
-            if (_menuOpenedSource != null)
+            if (_menuOpenedSource is not null)
             {
                 segmentation.Add("eventSource", _menuOpenedSource.ToString() + "Menu");
             }
@@ -156,60 +156,120 @@
             }
         }
 
+        private async void WindowsSettingsAllAccessibilityOptionsClicked(object sender, RoutedEventArgs e)
+        {
+            string settingsUrlAsPath = null!; // required to quiet the "not initialized error"
+            var windowsVersion = OsVersion.GetWindowsVersion();
+
+            if (windowsVersion is not null)
+            {
+                switch (windowsVersion)
+                {
+                    case WindowsVersion.Win10_v1809:
+                    case WindowsVersion.Win10_v1903:
+                    case WindowsVersion.Win10_v1909:
+                    case WindowsVersion.Win10_v2004:
+                    case WindowsVersion.Win10_v20H2:
+                    case WindowsVersion.Win10_v21H1:
+                    case WindowsVersion.Win10_v21H2:
+                        // Windows 10 1809, 1903, 1909, 2004, 20H2, 21H1, 21H2
+                        // NOTE: we should re-evaluate this path in all versions of Windows (to verify that it shouldn't be simply "ms-settings:easeofaccess" instead)
+                        settingsUrlAsPath = "ms-settings:easeofaccess-display";
+                        break;
+                    case WindowsVersion.Win10_vFuture:
+                        // OBSERVATION: this may be the wrong path for future verisons of Windows (especially since Win10 and Win11 _may_ treat this differently post-21H1); re-evaluate this logic
+                        settingsUrlAsPath = "ms-settings:easeofaccess-display";
+                        break;
+                    case WindowsVersion.Win11_v21H2:
+                    case WindowsVersion.Win11_vFuture:
+                        // Windows 11 21H2 (and assumed for the future)
+                        settingsUrlAsPath = "ms-settings:easeofaccess";
+                        break;
+                    default:
+                        // not supported
+                        Debug.Assert(false, "This build of Windows is not supported");
+                        return;
+                }
+            }
+            else
+            {
+                // not supported
+                Debug.Assert(false, "This build of Windows is not supported");
+                return;
+            }
+
+            MorphicMenuItem.OpenMenuItemPath(settingsUrlAsPath);
+            await MorphicMenuItem.RecordMenuItemTelemetryAsync(settingsUrlAsPath, ((MorphicMenuItem)sender).ParentMenuType, ((MorphicMenuItem)sender).TelemetryType, ((MorphicMenuItem)sender).TelemetryCategory);
+        }
+
         private async void WindowsSettingsPointerSizeClicked(object sender, RoutedEventArgs e)
         {
             string settingsUrlAsPath = null!; // required to quiet the "not initialized error"
-            var windows10Build = OsVersion.GetWindows10Version();
+            var windowsVersion = OsVersion.GetWindowsVersion();
 
-            switch (windows10Build)
+            if (windowsVersion is not null)
             {
-                case Windows10Version.v1809:
-                case Windows10Version.v1903:
-                case Windows10Version.v1909:
-                    // Windows 10 1809, 1903, 1909
-                    settingsUrlAsPath = "ms-settings:easeofaccess-cursorandpointersize";
-                    break;
-                case Windows10Version.v2004:
-                    // Windows 10 2004
-                    settingsUrlAsPath = "ms-settings:easeofaccess-MousePointer";
-                    break;
-                case Windows10Version.v20H2:
-                    // Windows 10 20H2
-                    // NOTE: Microsoft changed the URL for this link somwhere between 10.0.19042.986 and 10.0.19042.1052;
-                    //       if we get any bug reports that this link doesn't work with v20H2, be sure to get the "winver" full version #...so we can adjust the revision # below (to something between 986 and 1051) as appropriate
-                    uint? updateBuildRevision;
-                    var getUpdateBuildRevisionResult = Morphic.Windows.Native.OsVersion.OsVersion.GetUpdateBuildRevision();
-                    if (getUpdateBuildRevisionResult.IsSuccess == true)
-                    {
-                        updateBuildRevision = getUpdateBuildRevisionResult.Value!;
-                    }
-                    else
-                    {
-                        // NOTE: if we could not get the update build revision, we fail gracefully by assuming that the user's computer is updated to the OS version's most recent updates
-                        updateBuildRevision = null;
-                    }
-
-                    if (updateBuildRevision.HasValue == true && updateBuildRevision.Value < 1052)
-                    {
-                        // NOTE: this link was verified in Windows 10 19042.985
+                switch (windowsVersion)
+                {
+                    case WindowsVersion.Win10_v1809:
+                    case WindowsVersion.Win10_v1903:
+                    case WindowsVersion.Win10_v1909:
+                        // Windows 10 1809, 1903, 1909
+                        settingsUrlAsPath = "ms-settings:easeofaccess-cursorandpointersize";
+                        break;
+                    case WindowsVersion.Win10_v2004:
+                        // Windows 10 2004
                         settingsUrlAsPath = "ms-settings:easeofaccess-MousePointer";
-                    }
-                    else
-                    {
-                        // NOTE: this link was verified in Windows 10 19042.1052
+                        break;
+                    case WindowsVersion.Win10_v20H2:
+                        // Windows 10 20H2
+                        // NOTE: Microsoft changed the URL for this link somwhere between 10.0.19042.986 and 10.0.19042.1052;
+                        //       if we get any bug reports that this link doesn't work with v20H2, be sure to get the "winver" full version #...so we can adjust the revision # below (to something between 986 and 1051) as appropriate
+                        uint? updateBuildRevision;
+                        var getUpdateBuildRevisionResult = Morphic.Windows.Native.OsVersion.OsVersion.GetUpdateBuildRevision();
+                        if (getUpdateBuildRevisionResult.IsSuccess == true)
+                        {
+                            updateBuildRevision = getUpdateBuildRevisionResult.Value!;
+                        }
+                        else
+                        {
+                            // NOTE: if we could not get the update build revision, we fail gracefully by assuming that the user's computer is updated to the OS version's most recent updates
+                            updateBuildRevision = null;
+                        }
+
+                        if (updateBuildRevision.HasValue == true && updateBuildRevision.Value < 1052)
+                        {
+                            // NOTE: this link was verified in Windows 10 19042.985
+                            settingsUrlAsPath = "ms-settings:easeofaccess-MousePointer";
+                        }
+                        else
+                        {
+                            // NOTE: this link was verified in Windows 10 19042.1052
+                            settingsUrlAsPath = "ms-settings:easeofaccess-mousepointer";
+                        }
+                        break;
+                    case WindowsVersion.Win10_v21H1:
+                    case WindowsVersion.Win10_v21H2:
+                    case WindowsVersion.Win10_vFuture:
+                        // Windows 10 21H1, Windows 10 21H2 (and assumed for the future)
                         settingsUrlAsPath = "ms-settings:easeofaccess-mousepointer";
-                    }
-                    break;
-                case Windows10Version.v21H1:
-                case Windows10Version.vFuture:
-                    // Windows 10 21H1 (and assumed for the future)
-                    settingsUrlAsPath = "ms-settings:easeofaccess-mousepointer";
-                    break;
-                case null: // not a valid version
-                default:
-                    // not supported
-                    Debug.Assert(false, "This build of Windows 10 is not supported");
-                    return;
+                        break;
+                    case WindowsVersion.Win11_v21H2:
+                    case WindowsVersion.Win11_vFuture:
+                        // Windows 11 21H2 (and assumed for the future)
+                        settingsUrlAsPath = "ms-settings:easeofaccess-mousepointer";
+                        break;
+                    default:
+                        // not supported
+                        Debug.Assert(false, "This build of Windows is not supported");
+                        return;
+                }
+            }
+            else
+            {
+                // not supported
+                Debug.Assert(false, "This build of Windows is not supported");
+                return;
             }
 
             MorphicMenuItem.OpenMenuItemPath(settingsUrlAsPath);
@@ -274,27 +334,33 @@
 
         private async void OnTrayIconRightClicked(object? sender, EventArgs e)
         {
-            await this.ShowAsync(null, MenuOpenedSource.trayIcon);
+            await this.Dispatcher.InvokeAsync(async () =>
+            {
+                await this.ShowAsync(null, MenuOpenedSource.trayIcon);
+            });
         }
 
         private async void OnTrayIconClicked(object? sender, EventArgs e)
         {
-            if (this.App.BarManager.BarVisible)
+            await this.Dispatcher.InvokeAsync(async () =>
             {
-                this.App.BarManager.HideBar();
-                //
-                var segmentation = new CountlySDK.Segmentation();
-                segmentation.Add("eventSource", "trayIconClick");
-                await App.Current.Countly_RecordEventAsync("morphicBarHide", 1, segmentation);
-            }
-            else
-            {
-                this.App.BarManager.ShowBar();
-                //
-                var segmentation = new CountlySDK.Segmentation();
-                segmentation.Add("eventSource", "trayIconClick");
-                await App.Current.Countly_RecordEventAsync("morphicBarShow", 1, segmentation);
-            }
+                if (this.App.BarManager.BarVisible)
+                {
+                    this.App.BarManager.HideBar();
+                    //
+                    var segmentation = new CountlySDK.Segmentation();
+                    segmentation.Add("eventSource", "trayIconClick");
+                    await App.Current.Countly_RecordEventAsync("morphicBarHide", 1, segmentation);
+                }
+                else
+                {
+                    this.App.BarManager.ShowBar();
+                    //
+                    var segmentation = new CountlySDK.Segmentation();
+                    segmentation.Add("eventSource", "trayIconClick");
+                    await App.Current.Countly_RecordEventAsync("morphicBarShow", 1, segmentation);
+                }
+            });
         }
 
         #endregion

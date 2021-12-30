@@ -137,7 +137,7 @@ namespace Morphic.Client.Bar.UI.BarControls
                         .Select(b => b.Button)
                         .FirstOrDefault();
 
-                if (buttonInfo != null && !buttonInfo.Toggle)
+                if (buttonInfo is not null && !buttonInfo.Toggle)
                 {
                     button.IsChecked = false;
                     routedEventArgs.Handled = true;
@@ -151,7 +151,7 @@ namespace Morphic.Client.Bar.UI.BarControls
                     .Select(b => b.Button)
                     .FirstOrDefault();
 
-            if (buttonInfo != null)
+            if (buttonInfo is not null)
             {
                 e.Handled = this.OpenContextMenu(sender, buttonInfo.Menu, buttonInfo.TelemetryCategory);
             }
@@ -164,14 +164,14 @@ namespace Morphic.Client.Bar.UI.BarControls
                     .Select(b => b.Button)
                     .FirstOrDefault();
 
-            if (buttonInfo != null)
+            if (buttonInfo is not null)
             {
                 MultiButtonBarControl.LastClickedControl = sender as Control;
                 MultiButtonBarControl.LastClickedTime = DateTime.Now;
 
                 // Call the button action.
                 bool? state = (sender as ToggleButton)?.IsChecked;
-                if (buttonInfo.Action != null)
+                if (buttonInfo.Action is not null)
                 {
                     var result = await buttonInfo.Action.InvokeAsync(buttonInfo.Value, state);
 
@@ -231,7 +231,7 @@ namespace Morphic.Client.Bar.UI.BarControls
                 ? null
                 : BarImages.GetBarIconFile(icon);
 
-            return iconPath != null
+            return iconPath is not null
                 ? $"icon:{iconPath}"
                 : finalText;
         }
@@ -281,7 +281,7 @@ namespace Morphic.Client.Bar.UI.BarControls
                     if (args.PropertyName == nameof(this.itemControl.ActiveTheme))
                     {
                         this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(args.PropertyName));
-                        if (imageBrush != null && this.ActiveTheme.TextColor.HasValue)
+                        if (imageBrush is not null && this.ActiveTheme.TextColor.HasValue)
                         {
                             imageBrush.Color = this.ActiveTheme.TextColor.Value;
                         }
@@ -331,10 +331,10 @@ namespace Morphic.Client.Bar.UI.BarControls
                             }
                             var darkModeState = getDarkModeStateResult.Value!;
 
-                            var osVersion = Morphic.Windows.Native.OsVersion.OsVersion.GetWindows10Version();
-                            if (osVersion == Windows.Native.OsVersion.Windows10Version.v1809)
+                            var osVersion = Morphic.Windows.Native.OsVersion.OsVersion.GetWindowsVersion();
+                            if (osVersion == Windows.Native.OsVersion.WindowsVersion.Win10_v1809)
                             {
-                                // Windows 10 v1809+
+                                // Windows 10 v1809
 
                                 // NOTE: this is hard-coded, as a patch, because the solutions registry does not yet understand how to capture/apply settings across incompatible handlers
                                 //       [and trying to call the Windows 10 v1903+ handlers for apps/system "light theme" will result in a memory access exception under v1809]
@@ -380,7 +380,7 @@ namespace Morphic.Client.Bar.UI.BarControls
                                 ////
                                 //this.Control.Unloaded += (sender, args) => appsThemeRegistryKey.Changed -= this.InverseSettingOnChanged;
                             }
-                            else if (osVersion == null)
+                            else if (osVersion is null)
                             {
                                 // error
                                 //break;

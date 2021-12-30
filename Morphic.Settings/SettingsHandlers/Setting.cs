@@ -21,7 +21,7 @@
         {
             add
             {
-                if (this.changedHandler == null)
+                if (this.changedHandler is null)
                 {
                     this.SettingGroup.SettingsHandler.AddSettingListener(this);
                 }
@@ -31,7 +31,7 @@
             remove
             {
                 this.changedHandler -= value;
-                if (this.changedHandler == null)
+                if (this.changedHandler is null)
                 {
                     this.SettingGroup.SettingsHandler.RemoveSettingListener(this);
                 }
@@ -69,15 +69,15 @@
         public object? CurrentValue { get; private set; }
 
         /// <summary>Gets the value of this setting.</summary>
-        public async Task<IMorphicResult<object?>> GetValueAsync()
+        public async Task<MorphicResult<object?, MorphicUnit>> GetValueAsync()
         {
             var getResult = await this.SettingGroup.SettingsHandler.GetAsync(this);
             if (getResult.IsError == true)
             {
-                return IMorphicResult<object?>.ErrorResult();
+                return MorphicResult.ErrorResult();
             }
             this.CurrentValue = getResult.Value;
-            return IMorphicResult<object?>.SuccessResult(this.CurrentValue);
+            return MorphicResult.OkResult(this.CurrentValue);
         }
 
         /// <summary>Gets a property that's not defined by this class, but was specified in the json object.</summary>
@@ -102,14 +102,14 @@
         }
 
         /// <summary>Sets the value of this setting.</summary>
-        public async Task<IMorphicResult> SetValueAsync(object? newValue)
+        public async Task<MorphicResult<MorphicUnit, MorphicUnit>> SetValueAsync(object? newValue)
         {
             this.CurrentValue = newValue;
             return await this.SettingGroup.SettingsHandler.SetAsync(this, newValue);
         }
 
         // NOTE: this function both updates our cached value _and_ returns true/false to indicate whether the state has changed
-        public async Task<IMorphicResult<bool>> CheckForChange()
+        public async Task<MorphicResult<bool, MorphicUnit>> CheckForChange()
         {
             object? oldValue = this.CurrentValue;
             // NOTE: calling this.GetValue() has a side-effect...as it changes this.CurrentValue to the newly-fetched value
@@ -117,7 +117,7 @@
             var getValueResult = await this.GetValueAsync();
             if (getValueResult.IsError == true)
             {
-                return IMorphicResult<bool>.ErrorResult();
+                return MorphicResult.ErrorResult();
             }
             var newValue = getValueResult.Value;
 
@@ -126,7 +126,7 @@
             {
                 this.OnSettingChanged(newValue);
             }
-            return IMorphicResult<bool>.SuccessResult(changed);
+            return MorphicResult.OkResult(changed);
         }
 
         private void OnSettingChanged(object? newValue)
@@ -134,9 +134,9 @@
             this.changedHandler?.Invoke(this, new SettingEventArgs(this, newValue));
         }
 
-        public async Task<IMorphicResult> Increment(int direction)
+        public async Task<MorphicResult<MorphicUnit, MorphicUnit>> Increment(int direction)
         {
-            if (this.Range != null)
+            if (this.Range is not null)
             {
                 int current = await this.GetValue<int>();
                 current += Math.Sign(direction) * this.Range.IncrementValue;
@@ -145,7 +145,7 @@
                     return await this.SetValueAsync(current);
                 }
             }
-            return IMorphicResult.ErrorResult;
+            return MorphicResult.ErrorResult();
         }
 
         public virtual void Deserialized(SettingGroup settingGroup, string settingId)
@@ -157,7 +157,7 @@
                 this.Name = this.Id;
             }
 
-            if (this.extraPropertiesJson != null)
+            if (this.extraPropertiesJson is not null)
             {
                 this.extraProperties = this.extraPropertiesJson.ToDictionary(kv => kv.Key, kv => kv.Value.ToString());
                 this.extraPropertiesJson = null;
@@ -299,12 +299,12 @@
                     return this.value.Value;
                 }
 
-                if (this.settingId != null && this.setting == null)
+                if (this.settingId is not null && this.setting is null)
                 {
                     this.setting = this.parentSetting?.SettingGroup.Solution.ResolveSettingId(this.settingId);
                 }
 
-                if (this.setting != null)
+                if (this.setting is not null)
                 {
                     int num = await this.setting.GetValue(this.defaultValue?.value ?? int.MinValue);
                     if (num != int.MinValue)
@@ -313,7 +313,7 @@
                     }
                 }
 
-                if (this.defaultValue != null)
+                if (this.defaultValue is not null)
                 {
                     return await this.defaultValue.Get();
                 }
@@ -338,7 +338,7 @@
             public void Deserialized(Setting parent)
             {
                 this.parentSetting = parent;
-                if (this.expression != null)
+                if (this.expression is not null)
                 {
                     // Parse the expression.
                     Match match = this.parseLimit.Match(this.expression.Trim());

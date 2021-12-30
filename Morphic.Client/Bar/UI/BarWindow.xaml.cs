@@ -199,7 +199,7 @@ namespace Morphic.Client.Bar.UI
                 && DateTime.Now - MultiButtonBarControl.LastClickedTime.Value < TimeSpan.FromSeconds(10))
             {
                 Control? button = MultiButtonBarControl.LastClickedControl;
-                if (button != null)
+                if (button is not null)
                 {
                     try
                     {
@@ -229,7 +229,7 @@ namespace Morphic.Client.Bar.UI
             set
             {
                 this.barItems = value;
-                if (this.BarControl != null)
+                if (this.BarControl is not null)
                 {
                     this.BarControl.ItemsSource = this.barItems;
                 }
@@ -281,7 +281,7 @@ namespace Morphic.Client.Bar.UI
             this.BarItems = items.ToList();
             if (this is PrimaryBarWindow)
             {
-                if (this.BarControl != null)
+                if (this.BarControl is not null)
                 {
                     foreach (BarItemControl control in this.BarControl.ItemControls)
                     {
@@ -501,7 +501,7 @@ namespace Morphic.Client.Bar.UI
             {
                 // Hide the last item
                 BarItem? last = this.Bar.PrimaryItems.LastOrDefault(item => !item.NoOverflow);
-                if (last != null)
+                if (last is not null)
                 {
                     last.Overflow = true;
                     this.UpdateBarItems();

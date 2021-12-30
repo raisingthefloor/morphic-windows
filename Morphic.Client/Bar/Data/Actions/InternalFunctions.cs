@@ -32,7 +32,7 @@ namespace Morphic.Client.Bar.Data.Actions
         /// <summary>All internal functions.</summary>
         private readonly Dictionary<string, InternalFunctionAttribute> all;
 
-        public delegate Task<IMorphicResult> InternalFunction(FunctionArgs args);
+        public delegate Task<MorphicResult<MorphicUnit, MorphicUnit>> InternalFunction(FunctionArgs args);
 
         protected InternalFunctions()
         {
@@ -56,7 +56,7 @@ namespace Morphic.Client.Bar.Data.Actions
             foreach (MethodInfo method in methods)
             {
                 InternalFunctionAttribute? attr = method.GetCustomAttribute<InternalFunctionAttribute>();
-                if (attr != null)
+                if (attr is not null)
                 {
                     try
                     {
@@ -77,11 +77,11 @@ namespace Morphic.Client.Bar.Data.Actions
         /// <param name="functionName">The function name.</param>
         /// <param name="functionArgs">The parameters.</param>
         /// <returns></returns>
-        public Task<IMorphicResult> InvokeFunctionAsync(string functionName, Dictionary<string, string> functionArgs)
+        public Task<MorphicResult<MorphicUnit, MorphicUnit>> InvokeFunctionAsync(string functionName, Dictionary<string, string> functionArgs)
         {
             App.Current.Logger.LogDebug($"Invoking built-in function '{functionName}'");
 
-            Task<IMorphicResult> result;
+            Task<MorphicResult<MorphicUnit, MorphicUnit>> result;
 
             if (this.all.TryGetValue(functionName.ToLowerInvariant(),
                 out InternalFunctionAttribute? functionAttribute))
@@ -141,7 +141,7 @@ namespace Morphic.Client.Bar.Data.Actions
                 if (!arguments.ContainsKey(name))
                 {
                     string? defaultValue = split.Length > 1 ? split[1] : null;
-                    if (defaultValue == null)
+                    if (defaultValue is null)
                     {
                         throw new ActionException(
                             $"Internal function {this.FunctionName} invoked without parameter {name}");

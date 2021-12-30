@@ -66,7 +66,7 @@
                     {
                         var segmentation = new Segmentation();
                         var settingCategoryName = telemetryCategory;
-                        if (settingCategoryName != null)
+                        if (settingCategoryName is not null)
                         {
                             segmentation.Add("category", settingCategoryName);
                         }
@@ -81,7 +81,7 @@
                     {
                         var segmentation = new Segmentation();
                         var settingCategoryName = telemetryCategory;
-                        if (settingCategoryName != null)
+                        if (settingCategoryName is not null)
                         {
                             segmentation.Add("category", settingCategoryName);
                         }
@@ -95,7 +95,7 @@
                     {
                         var segmentation = new Segmentation();
                         var settingCategoryName = telemetryCategory;
-                        if (settingCategoryName != null)
+                        if (settingCategoryName is not null)
                         {
                             segmentation.Add("category", settingCategoryName);
                         }
@@ -118,6 +118,7 @@
                             case "ms-settings:display":
                                 settingCategoryName = "textSize";
                                 break;
+                            case "ms-settings:easeofaccess":
                             case "ms-settings:easeofaccess-display":
                                 settingCategoryName = "allAccessibility";
                                 break;
@@ -156,7 +157,7 @@
                                 Debug.Assert(false, "Unknown menu item (i.e. no telemetry)");
                                 break;
                         }
-                        if (settingCategoryName != null)
+                        if (settingCategoryName is not null)
                         {
                             var segmentation = new Segmentation();
                             segmentation.Add("category", settingCategoryName);
@@ -182,10 +183,10 @@
                     MorphicMenuItem.OpenMenuItemPath(openPath!);
                 }
 
-                if (this.Dialog != null)
+                if (this.Dialog is not null)
                 {
                     var args = new Dictionary<string, object?>();
-                    if (this.DialogAction != null)
+                    if (this.DialogAction is not null)
                     {
                         args["action"] = this.DialogAction!;
                     }

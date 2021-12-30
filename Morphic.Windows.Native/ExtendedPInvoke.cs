@@ -440,6 +440,19 @@ namespace Morphic.Windows.Native
             HCF_DEFAULTDESKTOP  = 0x00000200
         }
 
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct MSLLHOOKSTRUCT
+        {
+            public PInvoke.POINT pt;
+            // NOTE: the mouseData DWORD is apparently used as a signed integer (rather than as an uint)
+            public int mouseData;
+            public uint flags;
+            public uint time;
+            public UIntPtr dwExtraInfo;
+        }
+
+        [DllImport("user32.dll")]
+        internal static extern bool UnhookWindowsHookEx(IntPtr hhk);
         #endregion WinUser.h
 
     }

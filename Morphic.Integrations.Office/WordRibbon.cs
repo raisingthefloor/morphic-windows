@@ -61,7 +61,7 @@ namespace Morphic.Integrations.Office
 
         #region General Word functions
 
-        public static IMorphicResult<bool> IsWordRunning()
+        public static MorphicResult<bool, MorphicUnit> IsWordRunning()
         {
             Process[] processes;
             try
@@ -71,16 +71,16 @@ namespace Morphic.Integrations.Office
             catch
             {
                 // we could not detect whether or not Word is running
-                return new MorphicError<bool>();
+                return MorphicResult.ErrorResult();
             }
 
             if (processes.Length > 0)
             {
-                return new MorphicSuccess<bool>(true);
+                return MorphicResult.OkResult(true);
             }
             else
             {
-                return new MorphicSuccess<bool>(false);
+                return MorphicResult.OkResult(false);
             }
         }
 
@@ -93,22 +93,22 @@ namespace Morphic.Integrations.Office
 
         //
 
-        public static IMorphicResult<bool> IsBasicSimplifyRibbonEnabled()
+        public static MorphicResult<bool, MorphicUnit> IsBasicSimplifyRibbonEnabled()
         {
             return WordRibbon.IsRibbonEnabled(WordRibbon.BASIC_SIMPLIFY_RIBBON_ID);
         }
 
-        public static IMorphicResult<bool> IsEssentialsSimplifyRibbonEnabled()
+        public static MorphicResult<bool, MorphicUnit> IsEssentialsSimplifyRibbonEnabled()
         {
             return WordRibbon.IsRibbonEnabled(WordRibbon.ESSENTIALS_SIMPLIFY_RIBBON_ID);
         }
 
-        private static IMorphicResult<bool> IsRibbonEnabled(string ribbonId)
+        private static MorphicResult<bool, MorphicUnit> IsRibbonEnabled(string ribbonId)
         {
             var path = GetPathToWordRibbonFile();
             if (System.IO.File.Exists(path) == false)
             {
-                return new MorphicSuccess<bool>(false);
+                return MorphicResult.OkResult(false);
             }
 
             var xmlDocument = new XmlDocument();
@@ -118,75 +118,75 @@ namespace Morphic.Integrations.Office
             }
             catch
             {
-                return new MorphicError<bool>();
+                return MorphicResult.ErrorResult();
             }
 
             XmlNamespaceManager xmlNamespaceManager = new XmlNamespaceManager(xmlDocument.NameTable);
             xmlNamespaceManager.AddNamespace("mso", WordRibbon.MSO_NAMESPACE);
 
             var msoTabsParentNode = xmlDocument.SelectSingleNode("mso:customUI/mso:ribbon/mso:tabs", xmlNamespaceManager);
-            if (msoTabsParentNode == null)
+            if (msoTabsParentNode is null)
             {
                 // parent tabs node doesn't exist, so the ribbon is not enabled
-                return new MorphicSuccess<bool>(false);
+                return MorphicResult.OkResult(false);
             }
 
             var msoTabNodes = xmlDocument.SelectNodes("mso:customUI/mso:ribbon/mso:tabs/mso:tab", xmlNamespaceManager);
-            if (msoTabNodes == null)
+            if (msoTabNodes is null)
             {
                 // child tab nodes don't exist, so the ribbon is not enabled
-                return new MorphicSuccess<bool>(false);
+                return MorphicResult.OkResult(false);
             }
 
             foreach (XmlNode? msoTabNode in msoTabNodes!)
             {
                 if (msoTabNode?.Attributes["id"].Value == ribbonId)
                 {
-                    return new MorphicSuccess<bool>(true);
+                    return MorphicResult.OkResult(true);
                 }
             }
 
             // if we did not find the tab in our list, return false
-            return new MorphicSuccess<bool>(false);
+            return MorphicResult.OkResult(false);
         }
 
         //
 
-        public static IMorphicResult DisableBasicSimplifyRibbon()
+        public static MorphicResult<MorphicUnit, MorphicUnit> DisableBasicSimplifyRibbon()
         {
             var disableRibbonResult = WordRibbon.DisableRibbon(WordRibbon.BASIC_SIMPLIFY_RIBBON_ID);
             if (disableRibbonResult.IsError == true)
             {
-                return new MorphicError();
+                return MorphicResult.ErrorResult();
             }
 
             // NOTE: we have removed this functionality for the time being due to limitations in Word automation; we may revisit it in the future
             //await WordRibbon.ReloadRibbonsAsync();
 
-            return new MorphicSuccess();
+            return MorphicResult.OkResult();
         }
 
-        public static IMorphicResult DisableEssentialsSimplifyRibbon()
+        public static MorphicResult<MorphicUnit, MorphicUnit> DisableEssentialsSimplifyRibbon()
         {
             var disableRibbonResult = WordRibbon.DisableRibbon(WordRibbon.ESSENTIALS_SIMPLIFY_RIBBON_ID);
             if (disableRibbonResult.IsError == true)
             {
-                return new MorphicError();
+                return MorphicResult.ErrorResult();
             }
 
             // NOTE: we have removed this functionality for the time being due to limitations in Word automation; we may revisit it in the future
             //await WordRibbon.ReloadRibbonsAsync();
 
-            return new MorphicSuccess();
+            return MorphicResult.OkResult();
         }
 
         // NOTE: this function does not make Word update its ribbons in real-time; to do so, call the ReloadRibbons() function after using this function
-        private static IMorphicResult DisableRibbon(string ribbonId)
+        private static MorphicResult<MorphicUnit, MorphicUnit> DisableRibbon(string ribbonId)
         {
             var path = GetPathToWordRibbonFile();
             if (System.IO.File.Exists(path) == false)
             {
-                return new MorphicSuccess();
+                return MorphicResult.OkResult();
             }
 
             var xmlDocument = new XmlDocument();
@@ -196,24 +196,24 @@ namespace Morphic.Integrations.Office
             }
             catch
             {
-                return new MorphicError();
+                return MorphicResult.ErrorResult();
             }
 
             XmlNamespaceManager xmlNamespaceManager = new XmlNamespaceManager(xmlDocument.NameTable);
             xmlNamespaceManager.AddNamespace("mso", WordRibbon.MSO_NAMESPACE);
 
             var msoTabsParentNode = xmlDocument.SelectSingleNode("mso:customUI/mso:ribbon/mso:tabs", xmlNamespaceManager);
-            if (msoTabsParentNode == null)
+            if (msoTabsParentNode is null)
             {
                 // parent tabs node doesn't exist, so the ribbon also does not exist
-                return new MorphicSuccess();
+                return MorphicResult.OkResult();
             }
 
             var msoTabNodes = xmlDocument.SelectNodes("mso:customUI/mso:ribbon/mso:tabs/mso:tab", xmlNamespaceManager);
-            if (msoTabNodes == null)
+            if (msoTabNodes is null)
             {
                 // child tab nodes don't exist, so the ribbon also does not exist
-                return new MorphicSuccess();
+                return MorphicResult.OkResult();
             }
 
             var ribbonRemoved = false;
@@ -235,46 +235,46 @@ namespace Morphic.Integrations.Office
                 }
                 catch
                 {
-                    return new MorphicError();
+                    return MorphicResult.ErrorResult();
                 }
             }
 
             // if we reach here, the ribbon is not enabled; return success
-            return new MorphicSuccess();
+            return MorphicResult.OkResult();
         }
 
         //
 
-        public static IMorphicResult EnableBasicSimplifyRibbon()
+        public static MorphicResult<MorphicUnit, MorphicUnit> EnableBasicSimplifyRibbon()
         {
             var disableRibbonResult = WordRibbon.EnableRibbon(WordRibbon.BASIC_SIMPLIFY_RIBBON_ID);
             if (disableRibbonResult.IsError == true)
             {
-                return new MorphicError();
+                return MorphicResult.ErrorResult();
             }
 
             // NOTE: we have removed this functionality for the time being due to limitations in Word automation; we may revisit it in the future
             //await WordRibbon.ReloadRibbons();
 
-            return new MorphicSuccess();
+            return MorphicResult.OkResult();
         }
 
-        public static IMorphicResult EnableEssentialsSimplifyRibbon()
+        public static MorphicResult<MorphicUnit, MorphicUnit> EnableEssentialsSimplifyRibbon()
         {
             var disableRibbonResult = WordRibbon.EnableRibbon(WordRibbon.ESSENTIALS_SIMPLIFY_RIBBON_ID, WordRibbon.BASIC_SIMPLIFY_RIBBON_ID /* insertAfterRibbonId */);
             if (disableRibbonResult.IsError == true)
             {
-                return new MorphicError();
+                return MorphicResult.ErrorResult();
             }
 
             // NOTE: we have removed this functionality for the time being due to limitations in Word automation; we may revisit it in the future
             //await WordRibbon.ReloadRibbons();
 
-            return new MorphicSuccess();
+            return MorphicResult.OkResult();
         }
 
         // NOTE: this function does not make Word update its ribbons in real-time; to do so, call the ReloadRibbons() function after using this function
-        private static IMorphicResult EnableRibbon(string ribbonId, string? insertAfterRibbonId = null)
+        private static MorphicResult<MorphicUnit, MorphicUnit> EnableRibbon(string ribbonId, string? insertAfterRibbonId = null)
         {
             XmlDocument xmlDocument = new XmlDocument();
 
@@ -287,7 +287,7 @@ namespace Morphic.Integrations.Office
                 }
                 catch
                 {
-                    return new MorphicError();
+                    return MorphicResult.ErrorResult();
                 }
             }
 
@@ -296,15 +296,15 @@ namespace Morphic.Integrations.Office
 
             // verify that the "mso:customUI" node exists
             var msoCustomUINode = xmlDocument.SelectSingleNode("mso:customUI", xmlNamespaceManager);
-            if (msoCustomUINode == null)
+            if (msoCustomUINode is null)
             {
                 // required root note doesn't exist
 
                 // does a DIFFERENT root node exist?  If so, exit with failure
                 var rootNode = xmlDocument.FirstChild;
-                if (rootNode != null)
+                if (rootNode is not null)
                 {
-                    return new MorphicError();
+                    return MorphicResult.ErrorResult();
                 }
 
                 // otherwise, if the XML tree is empty, create the required root node
@@ -314,7 +314,7 @@ namespace Morphic.Integrations.Office
 
             // verify that the "mso:customUI/mso:ribbon" node exists
             var msoRibbonNode = xmlDocument.SelectSingleNode("mso:customUI/mso:ribbon", xmlNamespaceManager);
-            if (msoRibbonNode == null)
+            if (msoRibbonNode is null)
             {
                 // required ribbon node doesn't exist; create it now
                 msoRibbonNode = xmlDocument.CreateNode(XmlNodeType.Element, "mso:ribbon", WordRibbon.MSO_NAMESPACE);
@@ -323,7 +323,7 @@ namespace Morphic.Integrations.Office
 
             // verify that the "mso:customUI/mso:ribbon/mso:tabs" node exists
             var msoTabsParentNode = xmlDocument.SelectSingleNode("mso:customUI/mso:ribbon/mso:tabs", xmlNamespaceManager);
-            if (msoTabsParentNode == null)
+            if (msoTabsParentNode is null)
             {
                 // required tabs node doesn't exist; create it now
                 msoTabsParentNode = xmlDocument.CreateNode(XmlNodeType.Element, "mso:tabs", WordRibbon.MSO_NAMESPACE);
@@ -332,13 +332,13 @@ namespace Morphic.Integrations.Office
 
             // verify that the tab (ribbon) is not already present; if it is, then return success
             var msoTabNodes = xmlDocument.SelectNodes("mso:customUI/mso:ribbon/mso:tabs/mso:tab", xmlNamespaceManager);
-            if (msoTabNodes != null)
+            if (msoTabNodes is not null)
             {
                 foreach (XmlNode? msoTabNode in msoTabNodes!)
                 {
                     if (msoTabNode?.Attributes["id"].Value == ribbonId)
                     {
-                        return new MorphicSuccess();
+                        return MorphicResult.OkResult();
                     }
                 }
             }
@@ -355,10 +355,10 @@ namespace Morphic.Integrations.Office
             var ribbonNodeToImport = getRibbonNodeResult.Value!;
 
             XmlNode? insertAfterNode = null;
-            if (insertAfterRibbonId != null)
+            if (insertAfterRibbonId is not null)
             {
                 var getRibbonResult = GetRibbonTabNodeFromXmlDocument(xmlDocument, insertAfterRibbonId!);
-                if ((getRibbonResult.IsSuccess == true) && (getRibbonResult.Value != null))
+                if ((getRibbonResult.IsSuccess == true) && (getRibbonResult.Value is not null))
                 {
                     insertAfterNode = getRibbonResult.Value!; 
                 }
@@ -367,7 +367,7 @@ namespace Morphic.Integrations.Office
             // insert the tab (ribbon) node at the top of our list (or in the appropriate place, if it should go _after_ another node
             // TODO: we actually want to insert ESSENTIALS _after_ BASIC if BASIC exists; add some logic for that!
             var ribbonNode = xmlDocument.ImportNode(ribbonNodeToImport, true);
-            if (insertAfterNode != null)
+            if (insertAfterNode is not null)
             {
                 msoTabsParentNode.InsertAfter(ribbonNode, insertAfterNode!);
             }
@@ -383,52 +383,52 @@ namespace Morphic.Integrations.Office
             }
             catch
             {
-                return new MorphicError();
+                return MorphicResult.ErrorResult();
             }
 
             // if we reach here, the ribbon has been enabled; return success
-            return new MorphicSuccess();
+            return MorphicResult.OkResult();
         }
 
         //
 
-        private static IMorphicResult<XmlNode?> GetRibbonTabNodeFromXmlDocument(XmlDocument xmlDocument, string ribbonId)
+        private static MorphicResult<XmlNode?, MorphicUnit> GetRibbonTabNodeFromXmlDocument(XmlDocument xmlDocument, string ribbonId)
         {
             XmlNamespaceManager xmlNamespaceManager = new XmlNamespaceManager(xmlDocument.NameTable);
             xmlNamespaceManager.AddNamespace("mso", WordRibbon.MSO_NAMESPACE);
 
             var msoTabsParentNode = xmlDocument.SelectSingleNode("mso:customUI/mso:ribbon/mso:tabs", xmlNamespaceManager);
-            if (msoTabsParentNode == null)
+            if (msoTabsParentNode is null)
             {
                 // parent tabs node doesn't exist; we are missing our template ribbons
-                return new MorphicError<XmlNode?>();
+                return MorphicResult.ErrorResult();
             }
 
             var msoTabNodes = xmlDocument.SelectNodes("mso:customUI/mso:ribbon/mso:tabs/mso:tab", xmlNamespaceManager);
-            if (msoTabNodes == null)
+            if (msoTabNodes is null)
             {
                 // child tab nodes (i.e. ribbon templates) don't exist
-                return new MorphicError<XmlNode?>();
+                return MorphicResult.ErrorResult();
             }
 
             foreach (XmlNode? msoTabNode in msoTabNodes!)
             {
                 if (msoTabNode?.Attributes["id"].Value == ribbonId)
                 {
-                    return new MorphicSuccess<XmlNode?>(msoTabNode);
+                    return MorphicResult.OkResult(msoTabNode);
                 }
             }
 
             // if we did not find the ribbon in our list of tabs, return null
-            return new MorphicSuccess<XmlNode?>(null);
+            return MorphicResult.OkResult<XmlNode?>(null);
         }
 
-        private static IMorphicResult<XmlNode> GetRibbonTabNodeFromTemplate(string ribbonId)
+        private static MorphicResult<XmlNode, MorphicUnit> GetRibbonTabNodeFromTemplate(string ribbonId)
         {
             var ribbonTemplateFileStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Morphic.Integrations.Office.Templates.Word_ComponentTemplates.xml");
-            if (ribbonTemplateFileStream == null)
+            if (ribbonTemplateFileStream is null)
             {
-                return new MorphicError<XmlNode>();
+                return MorphicResult.ErrorResult();
             }
 
             var xmlDocument = new XmlDocument();
@@ -438,30 +438,30 @@ namespace Morphic.Integrations.Office
             }
             catch
             {
-                return new MorphicError<XmlNode>();
+                return MorphicResult.ErrorResult();
             }
 
             var ribbonTabNodeResult = WordRibbon.GetRibbonTabNodeFromXmlDocument(xmlDocument, ribbonId);
             if (ribbonTabNodeResult.IsError == true)
             {
-                return new MorphicError<XmlNode>();
+                return MorphicResult.ErrorResult();
             }
             var ribbonTabNode = ribbonTabNodeResult.Value;
-            if (ribbonTabNode == null)
+            if (ribbonTabNode is null)
             {
                 // if we did not find the tab in our list, return an error
-                return new MorphicError<XmlNode>();
+                return MorphicResult.ErrorResult();
             }
             else
             {
-                return new MorphicSuccess<XmlNode>(ribbonTabNode!);
+                return MorphicResult.OkResult(ribbonTabNode!);
             }
         }
 
         //
 
         // NOTE: we have removed this functionality for the time being due to limitations in Word automation; we may revisit it in the future
-        //private static async Task<IMorphicResult> ReloadRibbonsAsync()
+        //private static async Task<MorphicResult<MorphicUnit, MorphicUnit>> ReloadRibbonsAsync()
         //{
         //    Microsoft.Office.Interop.Word.Application? wordApplication;
         //    try
@@ -471,19 +471,19 @@ namespace Morphic.Integrations.Office
         //    catch (COMException)
         //    {
         //        // if we get a COM exception, assume that Word is not installed
-        //        return new MorphicSuccess();
+        //        return MorphicResult.OkResult();
         //    }
 
-        //    if (wordApplication == null)
+        //    if (wordApplication is null)
         //    {
         //        // if Word was not running, the object will be null; there is nothing to do
-        //        return new MorphicSuccess();
+        //        return MorphicResult.OkResult();
         //    }
 
         //    if (wordApplication.Windows.Count == 0)
         //    {
         //        // if Word has no active windows, there is nothing to do
-        //        return new MorphicSuccess();
+        //        return MorphicResult.OkResult();
         //    }
 
         //    var isSuccess = true;
@@ -510,7 +510,7 @@ namespace Morphic.Integrations.Office
         //            {
         //                foreach (Window? wordWindow in wordApplication.Windows)
         //                {
-        //                    if (wordWindow == null)
+        //                    if (wordWindow is null)
         //                    {
         //                        Debug.Assert(false, "Programming error: Word's Windows array is not null, but it is returning null windows");
         //                        continue;
@@ -550,7 +550,7 @@ namespace Morphic.Integrations.Office
         //    }
 
         //    // if we completed all the steps, assume success
-        //    return isSuccess ? new MorphicSuccess() : new MorphicError();
+        //    return isSuccess ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
         //}
     }
 }
