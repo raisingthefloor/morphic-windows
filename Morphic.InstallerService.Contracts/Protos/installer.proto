@@ -1,0 +1,48 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "Morphic.InstallerService";
+
+import "google/protobuf/timestamp.proto";
+
+package MorphicInstallerServer;
+
+message Response {
+	oneof response {
+		LogMessage log = 1;
+		ProgressMessage progress = 2;
+		CompleteMessage complete = 3;
+	}
+}
+
+message LogMessage {
+	string message = 1;
+}
+
+message ProgressMessage {
+	double percentage = 1;
+}
+
+message CompleteMessage {
+
+}
+
+message ActionMessage {
+	oneof action {
+		InstallRequest install = 1;
+		UninstallRequest uninstall = 2;
+	}
+}
+
+message InstallRequest {
+	string application = 1;
+	repeated string arguments = 2;
+}
+
+message UninstallRequest {
+	string application = 1;
+	repeated string arguments = 2;
+}
+
+service MorphicInstaller {
+	rpc StartSession(stream ActionMessage) returns (stream Response);
+}

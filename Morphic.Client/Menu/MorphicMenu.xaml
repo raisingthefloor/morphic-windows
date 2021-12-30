@@ -19,9 +19,9 @@
 
     <Separator/>
     
-    <menu:MorphicMenuHeader Header="Jaws"/>
-    <menu:MorphicMenuItem Header="Install Jaws" Click="InstallJawsClick" />
-    <menu:MorphicMenuItem Header="Uninstall Jaws" Click="UninstallJawsClick" />
+    <menu:MorphicMenuHeader Header="Read&amp;Write"/>
+    <menu:MorphicMenuItem Header="Install Read&amp;Write" Click="InstallReadAndWriteClick" />
+    <menu:MorphicMenuItem Header="Uninstall Read&amp;Write" Click="UninstallReadAndWriteClick" />
 
     <Separator x:Name="ChangeMorphicBarSeparator"/>
     <MenuItem Header="Change MorphicBar" x:Name="ChangeMorphicBar">

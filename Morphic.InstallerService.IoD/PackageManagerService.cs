@@ -6,6 +6,7 @@ using IoDCLI.Workflows.MsiX;
 using IoDCLI.Workflows.Zip;
 using Microsoft.Extensions.Logging;
 using Morphic.InstallerService.Contracts;
+using Morphic.InstallerService.IoD.Workflows.ReadAndWrite;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -64,14 +65,26 @@ namespace IoDCLI
             }
         }
 
-        public async Task InstallJaws(string[] arguments)
+        public async Task InstallJaws(string[] arguments, EventHandler<ProgressEventArgs> progressHandler = null)
         {
             if (arguments.Length > 0)
             {
-                var workflow = new JawsWorkflow(null, (sender, args) => HandleProgress(args), _logger)
+                JawsWorkflow workflow = null;
+
+                if (progressHandler == null)
                 {
-                    SourcePath = arguments[0]
-                };
+                    workflow = new JawsWorkflow(null, (sender, args) => HandleProgress(args), _logger)
+                    {
+                        SourcePath = arguments[0]
+                    };
+                }
+                else
+                {
+                    workflow = new JawsWorkflow(null, progressHandler, _logger)
+                    {
+                        SourcePath = arguments[0]
+                    };
+                }
 
                 await workflow.Install();
             }
@@ -84,6 +97,48 @@ namespace IoDCLI
             if (arguments.Length > 0)
             {
                 var workflow = new JawsWorkflow(null, (sender, args) => HandleProgress(args), _logger)
+                {
+                    SourcePath = arguments[0]
+                };
+
+                await workflow.Uninstall();
+            }
+
+            await Task.CompletedTask;
+        }
+
+        public async Task InstallReadAndWrite(string[] arguments, EventHandler<ProgressEventArgs> progressHandler = null)
+        {
+            if (arguments.Length > 0)
+            {
+                ReadAndWriteWorkflow workflow = null;
+
+                if (progressHandler == null)
+                {
+                    workflow = new ReadAndWriteWorkflow(null, (sender, args) => HandleProgress(args), _logger)
+                    {
+                        SourcePath = arguments[0]
+                    };
+                }
+                else
+                {
+                    workflow = new ReadAndWriteWorkflow(null, progressHandler, _logger)
+                    {
+                        SourcePath = arguments[0]
+                    };
+                }
+
+                await workflow.Install();
+            }
+
+            await Task.CompletedTask;
+        }
+
+        public async Task UninstallReadAndWrite(string[] arguments)
+        {
+            if (arguments.Length > 0)
+            {
+                var workflow = new ReadAndWriteWorkflow(null, (sender, args) => HandleProgress(args), _logger)
                 {
                     SourcePath = arguments[0]
                 };
@@ -121,6 +176,8 @@ namespace IoDCLI
                             await ProcessZip(package, false);
                         else if (package.Type == "jaws")
                             await ProcessJaws(package, false);
+                        else if (package.Type == "readandwrite")
+                            await ProcessReadAndWrite(package, false);
                     }
                     else
                     {
@@ -179,6 +236,16 @@ namespace IoDCLI
             var workflow = new JawsWorkflow(package, (sender, args) => HandleProgress(args), _logger);
 
             if(!remove)
+                await workflow.Install();
+            else
+                await workflow.Uninstall();
+        }
+
+        private async Task ProcessReadAndWrite(Package package, bool remove)
+        {
+            var workflow = new ReadAndWriteWorkflow(package, (sender, args) => HandleProgress(args), _logger);
+
+            if (!remove)
                 await workflow.Install();
             else
                 await workflow.Uninstall();

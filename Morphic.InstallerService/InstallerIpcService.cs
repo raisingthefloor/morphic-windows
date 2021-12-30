@@ -90,7 +90,7 @@ namespace Morphic.InstallerService
 
                 if (service != null)
                 {
-                    await service.InstallJaws(arguments);
+                    await service.InstallReadAndWrite(arguments);
                 }
                 else
                 {
@@ -113,7 +113,7 @@ namespace Morphic.InstallerService
 
                 if (service != null)
                 {
-                    await service.UninstallJaws(arguments);
+                    await service.UninstallReadAndWrite(arguments);
                 }
                 else
                 {

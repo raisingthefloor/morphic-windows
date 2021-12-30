@@ -458,6 +458,32 @@
             }
         }
 
+        private void InstallReadAndWriteClick(object sender, RoutedEventArgs e)
+        {
+            var dialog = new FolderBrowserDialog();
+
+            var result = dialog.ShowDialog();
+
+            if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(dialog.SelectedPath))
+            {
+                var arguments = $"install readandwrite \"{dialog.SelectedPath}\"";
+                Execute(@"InstallerServiceClient\Morphic.InstallerService.Client.exe", arguments);
+            }
+        }
+
+        private void UninstallReadAndWriteClick(object sender, RoutedEventArgs e)
+        {
+            var dialog = new FolderBrowserDialog();
+
+            var result = dialog.ShowDialog();
+
+            if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(dialog.SelectedPath))
+            {
+                var arguments = $"uninstall readandwrite \"{dialog.SelectedPath}\"";
+                Execute(@"InstallerServiceClient\Morphic.InstallerService.Client.exe", arguments);
+            }
+        }
+
         private static async Task Execute(string path, string arguments)
         {
             var currentPath = Assembly.GetExecutingAssembly().Location;
