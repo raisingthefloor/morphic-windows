@@ -28,7 +28,7 @@ namespace Morphic.OAuth.Rfc7591
 {
     public struct Rfc7591ClientRegistrationRequestContent
     {
-        public List<string?> redirect_uris { get; set; }
+        public List<string>? redirect_uris { get; set; }
         public string? token_endpoint_auth_method { get; set; }
         public List<string>? grant_types { get; set; }
         public List<string>? response_types { get; set; }
@@ -45,7 +45,7 @@ namespace Morphic.OAuth.Rfc7591
 
         //
 
-        public List<string?> redirect_uris { get; set; }
+        public List<string>? redirect_uris { get; set; }
         public string? token_endpoint_auth_method { get; set; }
         public List<string>? grant_types { get; set; }
         public List<string>? response_types { get; set; }
