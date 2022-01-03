@@ -45,7 +45,7 @@ namespace Morphic.Client.Bar.Data.Actions
         {
             get
             {
-                if (this.AppPath is not null)
+                if (this.ImageIsCollapsed == false && this.AppPath is not null)
                 {
                     return Imaging.CreateBitmapSourceFromHIcon(
                         System.Drawing.Icon.ExtractAssociatedIcon(this.AppPath).Handle,
@@ -57,6 +57,8 @@ namespace Morphic.Client.Bar.Data.Actions
                 }
             }
         }
+
+        internal bool ImageIsCollapsed { get; set; } = false;
 
         /// <summary>
         /// Start a default application. This value will be mapped locally

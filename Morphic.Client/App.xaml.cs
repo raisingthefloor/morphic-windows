@@ -146,6 +146,8 @@ namespace Morphic.Client
             public string? function { get; set; }
             // for type: control
             public string? feature { get; set; }
+            // for type: application
+            public string? appId { get; set; }
         }
         //
         public class TelemetryConfigSection
@@ -350,6 +352,8 @@ namespace Morphic.Client
                     var extraItemFunction = extraItem.function;
                     // for type: control
                     var extraItemFeature = extraItem.feature;
+                    // for type: application
+                    var extraItemAppId = extraItem.appId;
 
                     // if the item is invalid, log the error and skip this item
                     if (extraItemType is null)
@@ -358,7 +362,15 @@ namespace Morphic.Client
                         Logger?.LogError("Invalid MorphicBar item: " + extraItem.ToString());
                         continue;
                     }
-                    if ((extraItemType != "control") && ((extraItemLabel is null) || (extraItemTooltipHeader is null)))
+                    if ((extraItemType != "control") && (extraItemLabel is null))
+                    {
+                        // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
+                        Logger?.LogError("Invalid MorphicBar item: " + extraItem.ToString());
+                        continue;
+                    }
+
+                    // if the "application" is missing its appId, log the error and skip this item
+                    if ((extraItemType == "application") && (extraItemAppId is null))
                     {
                         // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
                         Logger?.LogError("Invalid MorphicBar item: " + extraItem.ToString());
@@ -396,6 +408,7 @@ namespace Morphic.Client
                     extraMorphicBarItem.url = extraItemUrl;
                     extraMorphicBarItem.function = extraItemFunction;
                     extraMorphicBarItem.feature = extraItemFeature;
+                    extraMorphicBarItem.appId = extraItemAppId;
                     result.ExtraMorphicBarItems.Add(extraMorphicBarItem);
                 }
             }
