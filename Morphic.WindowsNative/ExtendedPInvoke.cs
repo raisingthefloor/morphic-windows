@@ -32,7 +32,251 @@ using System.Threading.Tasks;
 
 internal struct ExtendedPInvoke
 {
-    #region "WinUser.h"
+    #region wingdi.h
+
+    [Flags]
+    public enum QueryDisplayConfigFlags : uint
+    {
+        QDC_ALL_PATHS = 0x00000001,
+        QDC_ONLY_ACTIVE_PATHS = 0x00000002,
+        QDC_DATABASE_CURRENT = 0x00000004
+    }
+    // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_device_info_header
+    [StructLayout(LayoutKind.Sequential)]
+    public struct DISPLAYCONFIG_DEVICE_INFO_HEADER
+    {
+        public DISPLAYCONFIG_DEVICE_INFO_TYPE type;
+        public uint size;
+        public PInvoke.User32.LUID adapterId;
+        public uint id;
+    }
+
+    [Flags]
+    public enum DISPLAYCONFIG_DEVICE_INFO_TYPE : uint
+    {
+        // NOTE: the GET_DPI and SET_DPI values are undocumented and were reverse engineered as part of the Morphic Classic project
+        DISPLAYCONFIG_DEVICE_INFO_SET_DPI = unchecked((uint)-4),
+        DISPLAYCONFIG_DEVICE_INFO_GET_DPI = unchecked((uint)-3),
+        //
+        // NOTE: the remaining entries are publicly documented
+        DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME = 1,
+        DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_NAME = 2,
+        DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_PREFERRED_MODE = 3,
+        DISPLAYCONFIG_DEVICE_INFO_GET_ADAPTER_NAME = 4,
+        DISPLAYCONFIG_DEVICE_INFO_SET_TARGET_PERSISTENCE = 5,
+        DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_BASE_TYPE = 6,
+        DISPLAYCONFIG_DEVICE_INFO_GET_SUPPORT_VIRTUAL_RESOLUTION = 7,
+        DISPLAYCONFIG_DEVICE_INFO_SET_SUPPORT_VIRTUAL_RESOLUTION = 8,
+        DISPLAYCONFIG_DEVICE_INFO_GET_ADVANCED_COLOR_INFO = 9,
+        DISPLAYCONFIG_DEVICE_INFO_SET_ADVANCED_COLOR_STATE = 10,
+        DISPLAYCONFIG_DEVICE_INFO_GET_SDR_WHITE_LEVEL = 11,
+        DISPLAYCONFIG_DEVICE_INFO_FORCE_UINT32 = 0xFFFFFFFF
+    }
+
+    // Reverse-engineered DPI scaling code, utilizing the CCD APIs
+    // https://docs.microsoft.com/en-us/windows-hardware/drivers/display/ccd-apis
+    //
+    // NOTE: this structure is undocumented and was reverse engineered as part of the Morphic Classic project
+    // NOTE: all offsets are indices (relative to the OS's recommended DPI scaling value; the recommended DPI scaling value is always zero)
+    [StructLayout(LayoutKind.Sequential)]
+    public struct DISPLAYCONFIG_GET_DPI
+    {
+        public DISPLAYCONFIG_DEVICE_INFO_HEADER header;
+
+        public int minimumDpiOffset;
+        public int currentDpiOffset;
+        public int maximumDpiOffset;
+    }
+
+    // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_mode_info
+    [StructLayout(LayoutKind.Explicit)]
+    public struct DISPLAYCONFIG_MODE_INFO
+    {
+        [FieldOffset(0)]
+        public PInvoke.User32.DISPLAYCONFIG_MODE_INFO_TYPE infoType;
+        [FieldOffset(4)]
+        public uint id;
+        [FieldOffset(8)]
+        public PInvoke.User32.LUID adapterId;
+
+        // union
+        [FieldOffset(16)]
+        public DISPLAYCONFIG_TARGET_MODE targetMode;
+        [FieldOffset(16)]
+        public PInvoke.User32.DISPLAYCONFIG_SOURCE_MODE sourceMode;
+        [FieldOffset(16)]
+        public PInvoke.User32.DISPLAYCONFIG_DESKTOP_IMAGE_INFO desktopImageInfo;
+    }
+
+    // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_path_info
+    [StructLayout(LayoutKind.Sequential)]
+    public struct DISPLAYCONFIG_PATH_INFO
+    {
+        public DISPLAYCONFIG_PATH_SOURCE_INFO sourceInfo;
+        public DISPLAYCONFIG_PATH_TARGET_INFO targetInfo;
+        public uint flags;
+    }
+	
+    [Flags]
+    public enum DisplayConfigSourceInfoStatus : uint
+    {
+        DISPLAYCONFIG_TARGET_IN_USE = 0x00000001,
+    }
+
+    // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_path_source_info
+    [StructLayout(LayoutKind.Sequential)]
+    public struct DISPLAYCONFIG_PATH_SOURCE_INFO
+    {
+        public PInvoke.User32.LUID adapterId;
+        public uint id;
+        public uint modeInfoIdx; // union with cloneGroupId:16 and sourceModeInfoIdx:16
+        public DisplayConfigSourceInfoStatus statusFlags;
+    }
+
+    // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_path_target_info
+    [StructLayout(LayoutKind.Sequential)]
+    public struct DISPLAYCONFIG_PATH_TARGET_INFO
+    {
+        public PInvoke.User32.LUID adapterId;
+        public uint id;
+        public uint modeInfoIdx; // union with desktopModeInfoIdx:16 and targetModeInfoIdx:16
+        public PInvoke.User32.DISPLAYCONFIG_VIDEO_OUTPUT_TECHNOLOGY outputTechnology;
+        public PInvoke.User32.DISPLAYCONFIG_ROTATION rotation;
+        public PInvoke.User32.DISPLAYCONFIG_SCALING scaling;
+        public PInvoke.User32.DISPLAYCONFIG_RATIONAL refreshRate;
+        public PInvoke.User32.DISPLAYCONFIG_SCANLINE_ORDERING scanLineOrdering;
+        public bool targetAvailable;
+        public PInvoke.User32.DISPLAYCONFIG_PATH_TARGET_INFOFlags statusFlags;
+    }
+    // Reverse-engineered DPI scaling code, utilizing the CCD APIs
+    // https://docs.microsoft.com/en-us/windows-hardware/drivers/display/ccd-apis
+    //
+    // NOTE: this structure is undocumented and was reverse engineered as part of the Morphic Classic project
+    // NOTE: all offsets are indices (relative to the OS's recommended DPI scaling value; the recommended DPI scaling value is always zero)
+    [StructLayout(LayoutKind.Sequential)]
+    public struct DISPLAYCONFIG_SET_DPI
+    {
+        public DISPLAYCONFIG_DEVICE_INFO_HEADER header;
+
+        public int dpiOffset;
+
+        public void Init()
+        {
+            this.header.size = (uint)Marshal.SizeOf(typeof(DISPLAYCONFIG_SET_DPI));
+        }
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    public struct DISPLAYCONFIG_SOURCE_DEVICE_NAME
+    {
+        public DISPLAYCONFIG_DEVICE_INFO_HEADER header;
+
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = CCHDEVICENAME)]
+        public Char[] viewGdiDeviceName;
+    }
+
+
+    // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_target_mode
+    [StructLayout(LayoutKind.Sequential)]
+    public struct DISPLAYCONFIG_TARGET_MODE
+    {
+        public DISPLAYCONFIG_VIDEO_SIGNAL_INFO targetVideoSignalInfo;
+    }
+
+    // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_video_signal_info
+    [StructLayout(LayoutKind.Sequential)]
+    public struct DISPLAYCONFIG_VIDEO_SIGNAL_INFO
+    {
+        public ulong pixelRate;
+        public PInvoke.User32.DISPLAYCONFIG_RATIONAL hSyncFreq;
+        public PInvoke.User32.DISPLAYCONFIG_RATIONAL vSyncFreq;
+        public PInvoke.User32.DISPLAYCONFIG_2DREGION activeSize;
+        public PInvoke.User32.DISPLAYCONFIG_2DREGION totalSize;
+        public _D3DKMDT_VIDEO_SIGNAL_STANDARD videoStandard; // union: AdditionalSignalInfo(videoStandard:16, vSyncFreqDivider:6, reserved:10)
+                                                             // Scan line ordering (e.g. progressive, interlaced).
+        public PInvoke.User32.DISPLAYCONFIG_SCANLINE_ORDERING scanLineOrdering;
+    }
+
+    // https://docs.microsoft.com/en-us/windows-hardware/drivers/ddi/d3dkmdt/ne-d3dkmdt-_d3dkmdt_video_signal_standard
+    // see: d3dkmdt.h (MSVC v142 - VS 2019 C++ x64/x86 build tools (14.25) [and Spectre-migrated libs] 
+    [Flags]
+    public enum _D3DKMDT_VIDEO_SIGNAL_STANDARD : uint
+    {
+        D3DKMDT_VSS_UNINITIALIZED = 0,
+        //
+        D3DKMDT_VSS_VESA_DMT = 1,
+        D3DKMDT_VSS_VESA_GTF = 2,
+        D3DKMDT_VSS_VESA_CVT = 3,
+        //
+        D3DKMDT_VSS_IBM = 4,
+        D3DKMDT_VSS_APPLE = 5,
+        //
+        D3DKMDT_VSS_NTSC_M = 6,
+        D3DKMDT_VSS_NTSC_J = 7,
+        D3DKMDT_VSS_NTSC_443 = 8,
+        D3DKMDT_VSS_PAL_B = 9,
+        D3DKMDT_VSS_PAL_B1 = 10,
+        D3DKMDT_VSS_PAL_G = 11,
+        D3DKMDT_VSS_PAL_H = 12,
+        D3DKMDT_VSS_PAL_I = 13,
+        D3DKMDT_VSS_PAL_D = 14,
+        D3DKMDT_VSS_PAL_N = 15,
+        D3DKMDT_VSS_PAL_NC = 16,
+        D3DKMDT_VSS_SECAM_B = 17,
+        D3DKMDT_VSS_SECAM_D = 18,
+        D3DKMDT_VSS_SECAM_G = 19,
+        D3DKMDT_VSS_SECAM_H = 20,
+        D3DKMDT_VSS_SECAM_K = 21,
+        D3DKMDT_VSS_SECAM_K1 = 22,
+        D3DKMDT_VSS_SECAM_L = 23,
+        D3DKMDT_VSS_SECAM_L1 = 24,
+        //
+        D3DKMDT_VSS_EIA_861 = 25,
+        D3DKMDT_VSS_EIA_861A = 26,
+        D3DKMDT_VSS_EIA_861B = 27,
+        //
+        D3DKMDT_VSS_PAL_K = 28,
+        D3DKMDT_VSS_PAL_K1 = 29,
+        D3DKMDT_VSS_PAL_L = 30,
+        D3DKMDT_VSS_PAL_M = 31,
+        //
+        D3DKMDT_VSS_OTHER = 255
+    }
+
+    // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-querydisplayconfig
+    [DllImport("user32.dll")]
+    public static extern PInvoke.Win32ErrorCode QueryDisplayConfig(QueryDisplayConfigFlags flags, ref uint numPathArrayElements, [Out] DISPLAYCONFIG_PATH_INFO[] pathInfoArray,
+        ref uint modeInfoArrayElements, [Out] DISPLAYCONFIG_MODE_INFO[] modeInfoArray, IntPtr currentTopologyId);
+
+
+
+    #endregion wingdi.h
+
+
+    #region WinUser.h
+
+    private const int CCHDEVICENAME = 32;
+
+    // NOTE: MONITORINFOEX is used by the GetMonitorInfo function
+    // https://docs.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-monitorinfoexa
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    internal struct MONITORINFOEXW
+    {
+        public uint cbSize;
+        public PInvoke.RECT rcMonitor;
+        public PInvoke.RECT rcWork;
+        public uint dwFlags;
+        // NOTE: szDevice must be marshalled as a ByValArray instead of a ByValTString so that Marshal.SizeOf can calculate a value
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = CCHDEVICENAME)]
+        public char[] szDevice;
+    }
+
+    // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-displayconfiggetdeviceinfo
+    [DllImport("user32.dll")]
+    public static extern PInvoke.Win32ErrorCode DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_SOURCE_DEVICE_NAME requestPacket);
+    //
+    [DllImport("user32.dll")]
+    public static extern PInvoke.Win32ErrorCode DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_GET_DPI requestPacket);
 
     // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-createwindowexw
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
@@ -214,5 +458,16 @@ internal struct ExtendedPInvoke
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate IntPtr WNDPROC(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
-    #endregion "WinUser.h"
+    [DllImport("user32.dll")]
+    public static extern PInvoke.Win32ErrorCode DisplayConfigSetDeviceInfo(ref DISPLAYCONFIG_SET_DPI requestPacket);
+
+    // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getdisplayconfigbuffersizes
+    [DllImport("user32.dll")]
+    public static extern PInvoke.Win32ErrorCode GetDisplayConfigBufferSizes(QueryDisplayConfigFlags flags, out uint numPathArrayElements, out uint numModeInfoArrayElements);
+
+    // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getmonitorinfow
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    internal static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFOEXW lpmi);
+
+    #endregion WinUser.h
 }
