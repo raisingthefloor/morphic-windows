@@ -44,7 +44,7 @@ public class SafeNativeWindowHandle : SafeHandle
 
     protected override bool ReleaseHandle()
     {
-        // NOTE: according to Microsfot's documentation, we must obey all rules for constrained execution regions in this block of code.
+        // NOTE: according to Microsoft's documentation, we must obey all rules for constrained execution regions in this block of code.
         // see: https://docs.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.safehandle?view=net-6.0
 
         // NOTE: we pass along the result to our caller, but we don't throw an exception here; as Microsoft notes in their sample, most code could not recover from an exception thrown here
