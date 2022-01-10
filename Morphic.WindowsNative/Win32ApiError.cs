@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2021 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2022 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -21,26 +21,25 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
+namespace Morphic.WindowsNative;
+
 using Morphic.Core;
 
-namespace Morphic.Windows.Native
+// NOTE: this type is designed to be returned as the Error type in MorphicResult<TResult, Win32ApiError> function results
+public record Win32ApiError : MorphicAssociatedValueEnum<Win32ApiError.Values>
 {
-    // NOTE: this type is designed to be returned as the Error type in MorphicResult<TResult, Win32ApiError> function results
-    public record Win32ApiError : MorphicAssociatedValueEnum<Win32ApiError.Values>
+    // enum members
+    public enum Values
     {
-        // enum members
-        public enum Values
-        {
-            Win32Error/*(int win32ErrorCode)*/
-        }
-
-        // functions to create member instances
-        public static Win32ApiError Win32Error(int win32ErrorCode) => new Win32ApiError(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
-
-        // associated values
-        public int? Win32ErrorCode { get; private set; }
-
-        // verbatim required constructor implementation for MorphicAssociatedValueEnums
-        private Win32ApiError(Values value) : base(value) { }
+        Win32Error/*(int win32ErrorCode)*/
     }
+
+    // functions to create member instances
+    public static Win32ApiError Win32Error(int win32ErrorCode) => new Win32ApiError(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
+
+    // associated values
+    public int? Win32ErrorCode { get; private set; }
+
+    // verbatim required constructor implementation for MorphicAssociatedValueEnums
+    private Win32ApiError(Values value) : base(value) { }
 }

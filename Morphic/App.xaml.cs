@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2021 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2022 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -20,6 +20,8 @@
 // * Canadian Foundation for Innovation
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
+
+namespace Morphic;
 
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -43,41 +45,38 @@ using Windows.Foundation.Collections;
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
-namespace Morphic
+/// <summary>
+/// Provides application-specific behavior to supplement the default Application class.
+/// </summary>
+public partial class App : Application
 {
+    private Window _window;
+
+    internal ResourceLoader ResourceLoader { get; private set; }
+    internal ResourceManager ResourceManager { get; private set; }
+
     /// <summary>
-    /// Provides application-specific behavior to supplement the default Application class.
+    /// Initializes the singleton application object.  This is the first line of authored code
+    /// executed, and as such is the logical equivalent of main() or WinMain().
     /// </summary>
-    public partial class App : Application
+    public App()
     {
-        private Window _window;
+        this.InitializeComponent();
 
-        internal ResourceLoader ResourceLoader { get; private set; }
-        internal ResourceManager ResourceManager { get; private set; }
+        // initialize a resource loader and resource manager; we'll use these globally
+        this.ResourceLoader = new ResourceLoader();
+        this.ResourceManager = new ResourceManager();
+    }
 
-        /// <summary>
-        /// Initializes the singleton application object.  This is the first line of authored code
-        /// executed, and as such is the logical equivalent of main() or WinMain().
-        /// </summary>
-        public App()
-        {
-            this.InitializeComponent();
-
-            // initialize a resource loader and resource manager; we'll use these globally
-            this.ResourceLoader = new ResourceLoader();
-            this.ResourceManager = new ResourceManager();
-        }
-
-        /// <summary>
-        /// Invoked when the application is launched normally by the end user.  Other entry points
-        /// will be used such as when the application is launched to open a specific file.
-        /// </summary>
-        /// <param name="args">Details about the launch request and process.</param>
-        protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
-        {
-            // for now, launch the sign in window; in the future, we'll take different actions based on the startup method (e.g. sign in screen vs. MorphicBar vs. tray button icon, etc.)
-            _window = new SignInWindow();
-            _window.Activate();
-        }
+    /// <summary>
+    /// Invoked when the application is launched normally by the end user.  Other entry points
+    /// will be used such as when the application is launched to open a specific file.
+    /// </summary>
+    /// <param name="args">Details about the launch request and process.</param>
+    protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
+    {
+        // for now, launch the sign in window; in the future, we'll take different actions based on the startup method (e.g. sign in screen vs. MorphicBar vs. tray button icon, etc.)
+        _window = new SignInWindow();
+        _window.Activate();
     }
 }

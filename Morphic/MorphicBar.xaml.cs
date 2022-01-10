@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2021 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2022 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -21,6 +21,8 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
+namespace Morphic;
+
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -39,30 +41,27 @@ using Windows.Foundation.Collections;
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
-namespace Morphic
+/// <summary>
+/// An empty window that can be used on its own or navigated to within a Frame.
+/// </summary>
+public sealed partial class MorphicBar : Window
 {
-    /// <summary>
-    /// An empty window that can be used on its own or navigated to within a Frame.
-    /// </summary>
-    public sealed partial class MorphicBar : Window
+    public MorphicBar()
     {
-        public MorphicBar()
-        {
-            this.InitializeComponent();
+        this.InitializeComponent();
 
-            // get this WinUI window's native hWnd
-            IntPtr hWnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+        // get this WinUI window's native hWnd
+        IntPtr hWnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
 
-            // app windows like this one get tray entries by default; make sure we hide that tray entry
-            // NOTE: we need to do this NOW, in this constructor, before the window is activated
-            Morphic.Windows.Native.Windowing.Utils.WindowUtils.SetShowInTaskbar(hWnd, false);
+        // app windows like this one get tray entries by default; make sure we hide that tray entry
+        // NOTE: we need to do this NOW, in this constructor, before the window is activated
+        Morphic.WindowsNative.Windowing.Utils.WindowUtils.SetShowInTaskbar(hWnd, false);
 
-            // make this window a topmost window (i.e. floating above other windows)
-            Morphic.Windows.Native.Windowing.Utils.WindowUtils.SetTopmost(hWnd, true);
+        // make this window a topmost window (i.e. floating above other windows)
+        Morphic.WindowsNative.Windowing.Utils.WindowUtils.SetTopmost(hWnd, true);
 
-            // set window properties
-            // NOTE: at the time of writing, WinUI did not support setting these properties via XAML
-            this.Title = "MorphicBar";
-        }
+        // set window properties
+        // NOTE: at the time of writing, WinUI did not support setting these properties via XAML
+        this.Title = "MorphicBar";
     }
 }

@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2021 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2022 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -21,6 +21,8 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
+namespace Morphic;
+
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -39,41 +41,39 @@ using Windows.Foundation.Collections;
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
-namespace Morphic
+/// <summary>
+/// An empty window that can be used on its own or navigated to within a Frame.
+/// </summary>
+public sealed partial class SignInWindow : Window
 {
-    /// <summary>
-    /// An empty window that can be used on its own or navigated to within a Frame.
-    /// </summary>
-    public sealed partial class SignInWindow : Window
+    public SignInWindow()
     {
-        public SignInWindow()
-        {
-            this.InitializeComponent();
+        this.InitializeComponent();
 
-            // get this WinUI window's native hWnd
-            IntPtr hWnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+        // get this WinUI window's native hWnd
+        IntPtr hWnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
 
-            // app windows like this one get tray entries by default; make sure we hide that tray entry
-            // NOTE: we need to do this NOW, in this constructor, before the window is activated
-            _ = Morphic.Windows.Native.Windowing.Utils.WindowUtils.SetShowInTaskbar(hWnd, false);
+        // app windows like this one get tray entries by default; make sure we hide that tray entry
+        // NOTE: we need to do this NOW, in this constructor, before the window is activated
+        _ = Morphic.WindowsNative.Windowing.Utils.WindowUtils.SetShowInTaskbar(hWnd, false);
 
-            // set window properties
-            // NOTE: at the time of writing, WinUI did not support setting these properties via XAML
-            this.Title = ((App)Application.Current).ResourceLoader.GetString("SignInWindow/Title");
-            //
-            // set width and height (scaled by per-display DPI)
-            _ = Morphic.Windows.Native.Windowing.Utils.WindowUtils.SetWindowSize(hWnd, 600 /* width */, 500 /* height */);
-            //
-            // make the window a fixed-size window; also remove the minimize button
-            _ = Morphic.Windows.Native.Windowing.Utils.WindowUtils.SetResizable(hWnd, Windows.Native.Windowing.Utils.WindowUtils.ResizeMode.NoResize);
-            //
-            // start up the window in the center of the screen
-            _ = Morphic.Windows.Native.Windowing.Utils.WindowUtils.SetWindowStartupLocation(hWnd, Windows.Native.Windowing.Utils.WindowUtils.WindowStartupLocation.CenterScreen);
-            //
-            // set our window's (titlebar) icon			
-            _ = Morphic.Windows.Native.Windowing.Utils.WindowUtils.SetIcon(hWnd, Windows.Native.Windowing.Utils.WindowUtils.IconSize.Small_For_Titlebar, "Assets\\Icons\\Morphic.ico", 32, 32);
-            //
-            //FontSize = "17"
-        }
+        // set window properties
+        // NOTE: at the time of writing, WinUI did not support setting these properties via XAML
+        this.Title = ((App)Application.Current).ResourceLoader.GetString("SignInWindow/Title");
+        //
+        // set width and height (scaled by per-display DPI)
+        _ = Morphic.WindowsNative.Windowing.Utils.WindowUtils.SetWindowSize(hWnd, 600 /* width */, 500 /* height */);
+        //
+        // make the window a fixed-size window; also remove the minimize button
+        _ = Morphic.WindowsNative.Windowing.Utils.WindowUtils.SetResizable(hWnd, WindowsNative.Windowing.Utils.WindowUtils.ResizeMode.NoResize);
+        //
+        // start up the window in the center of the screen
+        _ = Morphic.WindowsNative.Windowing.Utils.WindowUtils.SetWindowStartupLocation(hWnd, WindowsNative.Windowing.Utils.WindowUtils.WindowStartupLocation.CenterScreen);
+        //
+        // set our window's (titlebar) icon			
+        _ = Morphic.WindowsNative.Windowing.Utils.WindowUtils.SetIcon(hWnd, WindowsNative.Windowing.Utils.WindowUtils.IconSize.Small_For_Titlebar, "Assets\\Icons\\Morphic.ico", 32, 32);
+        //
+        //FontSize = "17"
+
     }
 }

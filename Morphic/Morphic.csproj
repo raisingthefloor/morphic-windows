@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Morphic.Windows.Native\Morphic.Windows.Native.csproj" />
+    <ProjectReference Include="..\Morphic.WindowsNative\Morphic.WindowsNative.csproj" />
   </ItemGroup>
 
   <ItemGroup>
