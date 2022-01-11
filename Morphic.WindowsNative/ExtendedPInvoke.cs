@@ -34,6 +34,8 @@ internal struct ExtendedPInvoke
 {
     #region wingdi.h
 
+    private const int CCHFORMNAME = 32;
+
     [Flags]
     public enum QueryDisplayConfigFlags : uint
     {
@@ -248,7 +250,146 @@ internal struct ExtendedPInvoke
     public static extern PInvoke.Win32ErrorCode QueryDisplayConfig(QueryDisplayConfigFlags flags, ref uint numPathArrayElements, [Out] DISPLAYCONFIG_PATH_INFO[] pathInfoArray,
         ref uint modeInfoArrayElements, [Out] DISPLAYCONFIG_MODE_INFO[] modeInfoArray, IntPtr currentTopologyId);
 
+    //
 
+    // DEVMODEW is used by EnumDisplaySettingsEx and other functions
+    // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-devmodew
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    internal struct DEVMODEW
+    {
+        private const int privateDriverDataLength = 0;
+
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = CCHDEVICENAME)]
+        public char[] dmDeviceName;
+        public ushort dmSpecVersion;
+        public ushort dmDriverVersion;
+        public ushort dmSize;
+        public ushort dmDriverExtra;
+        public DM_FieldSelectionBit dmFields;
+        public DEVMODEW__DUMMYUNIONNAME DUMMYUNIONNAME;
+        public short dmColor;
+        public short dmDuplex;
+        public short dmYResolution;
+        public short dmTTOption;
+        public short dmCollate;
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = CCHFORMNAME)]
+        public char[] dmFormName;
+        public ushort dmLogPixels;
+        public uint dmBitsPerPel;
+        public uint dmPelsWidth;
+        public uint dmPelsHeight;
+        public DEVMODEW__DUMMYUNIONNAME2 DUMMYUNIONNAME2;
+        public uint dmDisplayFrequency;
+        public uint dmICMMethod;
+        public uint dmICMIntent;
+        public uint dmMediaType;
+        public uint dmDitherType;
+        public uint dmReserved1;
+        public uint dmReserved2;
+        public uint dmPanningWidth;
+        public uint dmPanningHeight;
+        //[MarshalAs(UnmanagedType.ByValArray, SizeConst = privateDriverDataLength)]
+        //public Byte[] privateDriverData;
+
+        public static DEVMODEW CreateAndInitializeNew()
+        {
+            var result = new DEVMODEW()
+            {
+                dmDeviceName = new Char[CCHDEVICENAME],
+                dmFormName = new Char[CCHFORMNAME],
+                // privateDriverData = new byte[privateDriverDataLength],
+                dmDriverExtra = privateDriverDataLength,
+                dmSize = (ushort)Marshal.SizeOf(typeof(DEVMODEW)),
+            };
+
+            return result;
+        }
+    }
+    //
+    [StructLayout(LayoutKind.Explicit)]
+    public struct DEVMODEW__DUMMYUNIONNAME
+    {
+        [FieldOffset(0)]
+        public DEVMODEW__DUMMYUNIONNAME__DUMMYSTRUCTNAME DUMMYSTRUCTNAME;
+        //
+        [FieldOffset(0)]
+        public DEVMODEW__DUMMYUNIONNAME__DUMMYSTRUCTNAME2 DUMMYSTRUCTNAME2;
+
+        /* printer only fields */
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DEVMODEW__DUMMYUNIONNAME__DUMMYSTRUCTNAME
+        {
+            public short dmOrientation;
+            public short dmPaperSize;
+            public short dmPaperLength;
+            public short dmPaperWidth;
+            public short dmScale;
+            public short dmCopies;
+            public short dmDefaultSource;
+            public short dmPrintQuality;
+        }
+
+        /* display only fields */
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DEVMODEW__DUMMYUNIONNAME__DUMMYSTRUCTNAME2
+        {
+            public POINTL dmPosition;
+            public uint dmDisplayOrientation;
+            public uint dmDisplayFixedOutput;
+        }
+    }
+    //
+    [StructLayout(LayoutKind.Explicit)]
+    internal struct DEVMODEW__DUMMYUNIONNAME2
+    {
+        [FieldOffset(0)]
+        public uint dmDisplayFlags;
+        //
+        [FieldOffset(0)]
+        public uint dmNup;
+    }
+
+    // https://docs.microsoft.com/en-us/windows/win32/api/windef/ns-windef-pointl
+    [StructLayout(LayoutKind.Sequential)]
+    public struct POINTL
+    {
+        public int x;
+        public int y;
+    }
+
+    internal enum DM_FieldSelectionBit : uint
+    {
+        DM_ORIENTATION = 0x0000_0001,
+        DM_PAPERSIZE = 0x0000_0002,
+        DM_PAPERLENGTH = 0x0000_0004,
+        DM_PAPERWIDTH = 0x0000_0008,
+        DM_SCALE = 0x0000_0010,
+        DM_POSITION = 0x0000_0020,
+        DM_NUP = 0x0000_0040,
+        DM_DISPLAYORIENTATION = 0x0000_0080,
+        DM_COPIES = 0x0000_0100,
+        DM_DEFAULTSOURCE = 0x0000_0200,
+        DM_PRINTQUALITY = 0x0000_0400,
+        DM_COLOR = 0x0000_0800,
+        DM_DUPLEX = 0x0000_1000,
+        DM_YRESOLUTION = 0x0000_2000,
+        DM_TTOPTION = 0x0000_4000,
+        DM_COLLATE = 0x0000_8000,
+        DM_FORMNAME = 0x0001_0000,
+        DM_LOGPIXELS = 0x0002_0000,
+        DM_BITSPERPEL = 0x0004_0000,
+        DM_PELSWIDTH = 0x0008_0000,
+        DM_PELSHEIGHT = 0x0010_0000,
+        DM_DISPLAYFLAGS = 0x0020_0000,
+        DM_DISPLAYFREQUENCY = 0x0040_0000,
+        DM_ICMMETHOD = 0x0080_0000,
+        DM_ICMINTENT = 0x0100_0000,
+        DM_MEDIATYPE = 0x0200_0000,
+        DM_DITHERTYPE = 0x0400_0000,
+        DM_PANNINGWIDTH = 0x0800_0000,
+        DM_PANNINGHEIGHT = 0x1000_0000,
+        DM_DISPLAYFIXEDOUTPUT = 0x2000_0000,
+    }
 
     #endregion wingdi.h
 
@@ -256,6 +397,10 @@ internal struct ExtendedPInvoke
     #region WinUser.h
 
     private const int CCHDEVICENAME = 32;
+
+    // WinUser.h (Windows 10 SDK v10.0.18632)
+    internal static readonly uint ENUM_CURRENT_SETTINGS = BitConverter.ToUInt32(BitConverter.GetBytes((Int32)(-1)));
+    //internal static readonly uint ENUM_REGISTRY_SETTINGS = BitConverter.ToUInt32(BitConverter.GetBytes((Int32)(-2)));
 
     // NOTE: MONITORINFOEX is used by the GetMonitorInfo function
     // https://docs.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-monitorinfoexa
@@ -294,7 +439,7 @@ internal struct ExtendedPInvoke
         IntPtr hInstance,
         IntPtr lpParam);
 
-    // helper declaration (for passing the class name as a UInt16)
+    // helper declaration (for passing the class name as a ushort)
     internal static IntPtr CreateWindowEx(ExtendedPInvoke.WindowStylesEx dwExStyle, ushort lpClassName, string? lpWindowName, ExtendedPInvoke.WindowStyles dwStyle, int X, int Y, int nWidth, int nHeight, IntPtr hWndParent, IntPtr hMenu, IntPtr hInstance, IntPtr lpParam)
     {
         return ExtendedPInvoke.CreateWindowEx(dwExStyle, new IntPtr(lpClassName), lpWindowName, dwStyle, X, Y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
@@ -390,7 +535,7 @@ internal struct ExtendedPInvoke
 
     // docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowlongw
     [DllImport("user32.dll", EntryPoint = "GetWindowLong")]
-    private static extern Int32 GetWindowLongPtr_32bit(IntPtr hWnd, int nIndex);
+    private static extern int GetWindowLongPtr_32bit(IntPtr hWnd, int nIndex);
     //
     // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowlongptrw
     [DllImport("user32.dll", EntryPoint = "GetWindowLongPtr")]
@@ -468,6 +613,10 @@ internal struct ExtendedPInvoke
     // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getmonitorinfow
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     internal static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFOEXW lpmi);
+
+    // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-enumdisplaysettingsexw
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    internal static extern Boolean EnumDisplaySettingsEx(string? lpszDeviceName, uint iModeNum, ref DEVMODEW lpDevMode, uint dwFlags);
 
     #endregion WinUser.h
 }

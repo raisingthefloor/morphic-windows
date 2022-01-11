@@ -35,12 +35,14 @@ using System.Threading.Tasks;
 
 public struct Display
 {
+    private readonly IntPtr MonitorHandle;
     public readonly string DisplayName;
     public readonly PInvoke.User32.LUID AdapterId;
     public readonly uint SourceId;
 
-    private Display(string displayName, PInvoke.User32.LUID adapterId, uint sourceId)
+    private Display(IntPtr monitorHandle, string displayName, PInvoke.User32.LUID adapterId, uint sourceId)
     {
+        this.MonitorHandle = monitorHandle;
         this.DisplayName = displayName;
         this.AdapterId = adapterId;
         this.SourceId = sourceId;
@@ -48,8 +50,16 @@ public struct Display
 
     //
 
-    public static MorphicResult<Display, MorphicUnit> GetDisplayByName(string displayName)
+    public static MorphicResult<Display, MorphicUnit> GetDisplayByMonitorHandle(IntPtr monitorHandle)
     {
+        // get the monitor's display name
+        var getDisplayNameResult = Display.GetDisplayNameForMonitorHandle(monitorHandle);
+        if (getDisplayNameResult.IsError == true)
+        {
+            return MorphicResult.ErrorResult();
+        }
+        var displayName = getDisplayNameResult.Value!;
+
         // retrieve the buffer sizes needed to call QueryDisplayConfig (i.e. to get our displays' configs)
         uint numPathArrayElements;
         uint numModeInfoArrayElements;
@@ -153,7 +163,7 @@ public struct Display
                 // if this entry matches out monitorName and we either (a) don't have a result yet or (b) have a result but this one is _internal_, then update our result
                 if ((result is null) || (isInternal == true))
                 {
-                    result = new Display(displayName, sourceName.header.adapterId, sourceName.header.id);
+                    result = new Display(monitorHandle, displayName, sourceName.header.adapterId, sourceName.header.id);
                 }
             }
         }
@@ -169,47 +179,39 @@ public struct Display
 
     public static MorphicResult<Display, MorphicUnit> GetDisplayForWindow(IntPtr windowHandle)
     {
-        var getDisplayNameResult = Display.GetDisplayNameForWindowHandle(windowHandle);
-        if (getDisplayNameResult.IsError == true)
-        {
-            return MorphicResult.ErrorResult();
-        }
-        var displayName = getDisplayNameResult.Value!;
+        var monitorHandle = Display.GetMonitorHandleForWindow(windowHandle);
 
-        return Display.GetDisplayByName(displayName);
+        return Display.GetDisplayByMonitorHandle(monitorHandle);
     }
 
     public static MorphicResult<Display, MorphicUnit> GetPrimaryDisplay()
     {
-        var getDisplayNameResult = Display.GetDisplayNameForWindowHandle(null);
-        if (getDisplayNameResult.IsError == true)
-        {
-            return MorphicResult.ErrorResult();
-        }
-        var displayName = getDisplayNameResult.Value!;
+        var monitorHandle = Display.GetMonitorHandleForPrimaryMonitor(); ;
 
-        return Display.GetDisplayByName(displayName);
+        return Display.GetDisplayByMonitorHandle(monitorHandle);
     }
 
     //
 
-    // NOTE: if the caller does not provide a windowHandle, we use the primary monitor instead
-    private static MorphicResult<string, MorphicUnit> GetDisplayNameForWindowHandle(IntPtr? windowHandle)
+    private static IntPtr GetMonitorHandleForWindow(IntPtr windowHandle)
     {
-        // get the handle to the monitor associated with this windowHandle (or the primary monitor, if no windowHandle was specified)
-        IntPtr monitorHandle;
-        if (windowHandle is not null)
-        {
-            // get the handle of the monitor which contains the majority of the specified windowHandle's window
-            monitorHandle = PInvoke.User32.MonitorFromWindow(windowHandle.Value, PInvoke.User32.MonitorOptions.MONITOR_DEFAULTTONEAREST);
-        }
-        else /* if (windowHandle is null) */
-        {
-            // get the handle of the primary monitor
-            IntPtr desktopHWnd = PInvoke.User32.GetDesktopWindow();
-            monitorHandle = PInvoke.User32.MonitorFromWindow(desktopHWnd, PInvoke.User32.MonitorOptions.MONITOR_DEFAULTTOPRIMARY);
-        }
+        // get the handle of the monitor which contains the majority of the specified windowHandle's window
+        var monitorHandle = PInvoke.User32.MonitorFromWindow(windowHandle, PInvoke.User32.MonitorOptions.MONITOR_DEFAULTTONEAREST);
+        return monitorHandle;
+    }
 
+    private static IntPtr GetMonitorHandleForPrimaryMonitor()
+    {
+        // get the handle of the primary monitor
+        IntPtr desktopHWnd = PInvoke.User32.GetDesktopWindow();
+        var monitorHandle = PInvoke.User32.MonitorFromWindow(desktopHWnd, PInvoke.User32.MonitorOptions.MONITOR_DEFAULTTOPRIMARY);
+
+        return monitorHandle;
+    }
+
+    // NOTE: if the caller does not provide a windowHandle, we use the primary monitor instead
+    private static MorphicResult<string, MorphicUnit> GetDisplayNameForMonitorHandle(IntPtr monitorHandle)
+    {
         ExtendedPInvoke.MONITORINFOEXW monitorInfo = new ExtendedPInvoke.MONITORINFOEXW();
         monitorInfo.cbSize = (uint)Marshal.SizeOf(monitorInfo);
         bool getMonitorInfoSuccess = ExtendedPInvoke.GetMonitorInfo(monitorHandle, ref monitorInfo);
@@ -284,8 +286,8 @@ public struct Display
             setDpiInfo.header.adapterId = adapterId;
             setDpiInfo.header.id = sourceId;
             setDpiInfo.dpiOffset = dpiOffset;
-                //
-                var displayConfigGetDeviceInfoSuccess = ExtendedPInvoke.DisplayConfigSetDeviceInfo(ref setDpiInfo);
+            //
+            var displayConfigGetDeviceInfoSuccess = ExtendedPInvoke.DisplayConfigSetDeviceInfo(ref setDpiInfo);
             switch (displayConfigGetDeviceInfoSuccess)
             {
                 case PInvoke.Win32ErrorCode.ERROR_SUCCESS:
@@ -627,4 +629,80 @@ public struct Display
         //    return IMorphicResult<double>.SuccessResult(logPixelsAsPercentage);
         //}
     }
+
+    //
+
+    // for PerMonitorV2 DPI-aware clients, this function will return the display rectangle in PHYSICAL pixels
+    // for non-DPI-aware clients, this function will return the display rectangle in VIRTUAL pixels
+    public MorphicResult<Rectangle, MorphicUnit> GetDisplayRectangleInPixels()
+    {
+        ExtendedPInvoke.MONITORINFOEXW monitorInfo = new ExtendedPInvoke.MONITORINFOEXW();
+        monitorInfo.cbSize = (uint)Marshal.SizeOf(monitorInfo);
+        bool getMonitorInfoSuccess = ExtendedPInvoke.GetMonitorInfo(this.MonitorHandle, ref monitorInfo);
+        if (getMonitorInfoSuccess == false)
+        {
+            return MorphicResult.ErrorResult();
+        }
+
+        var displayRect = new Rectangle(monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.top, monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top);
+        return MorphicResult.OkResult(displayRect);
+    }
+
+    // for PerMonitorV2 DPI-aware clients, this function will return the display rectangle in PHYSICAL pixels
+    // for non-DPI-aware clients, this function will return the display rectangle in VIRTUAL pixels
+    public MorphicResult<Rectangle, MorphicUnit> GetWorkAreaRectangleInPixels()
+    {
+        ExtendedPInvoke.MONITORINFOEXW monitorInfo = new ExtendedPInvoke.MONITORINFOEXW();
+        monitorInfo.cbSize = (uint)Marshal.SizeOf(monitorInfo);
+        bool getMonitorInfoSuccess = ExtendedPInvoke.GetMonitorInfo(this.MonitorHandle, ref monitorInfo);
+        if (getMonitorInfoSuccess == false)
+        {
+            return MorphicResult.ErrorResult();
+        }
+
+        var displayRect = new Rectangle(monitorInfo.rcWork.left, monitorInfo.rcWork.top, monitorInfo.rcWork.right - monitorInfo.rcWork.left, monitorInfo.rcWork.bottom - monitorInfo.rcWork.top);
+        return MorphicResult.OkResult(displayRect);
+    }
+
+    // NOTE: this function will always return the resolution in physical pixels, regardless of whether the app is DPI aware or not
+    public MorphicResult<Size, MorphicUnit> GetDisplayResolutionInPhysicalPixels()
+    {
+        // get the always-correct display resolution from EnumDisplaySettingsEx...and scale the WorkArea to match
+        // NOTE: if the WorkArea specified in SystemParameters.WorkArea has the wrong proportions, we can try using
+        //       monitorInfo.rcWork instead
+
+        ExtendedPInvoke.DEVMODEW deviceMode = ExtendedPInvoke.DEVMODEW.CreateAndInitializeNew();
+        // get the display's resolution
+        var enum_display_settings_result = ExtendedPInvoke.EnumDisplaySettingsEx(this.DisplayName, ExtendedPInvoke.ENUM_CURRENT_SETTINGS, ref deviceMode, 0);
+        if (enum_display_settings_result == false)
+        {
+            return MorphicResult.ErrorResult();
+        }
+        //
+        var screenWidth = deviceMode.dmPelsWidth;
+        var screenHeight = deviceMode.dmPelsHeight;
+
+        return MorphicResult.OkResult(new Size((int)screenWidth, (int)screenHeight));
+    }
+
+    public MorphicResult<Size, MorphicUnit> GetDisplayResolutionInVirtualPixels()
+    {
+        var getDisplayResolutionInPhysicalPixelsResult = this.GetDisplayResolutionInPhysicalPixels();
+        if (getDisplayResolutionInPhysicalPixelsResult.IsError == true)
+        {
+            return MorphicResult.ErrorResult();
+        }
+        var displayResolutionInPhysicalPixels = getDisplayResolutionInPhysicalPixelsResult.Value!;
+
+        var getScalePercentageResult = this.GetScalePercentage();
+        if (getScalePercentageResult.IsError == true)
+        {
+            return MorphicResult.ErrorResult();
+        }
+        var scalePercentage = getScalePercentageResult.Value!;
+
+        var result = new Size((int)(displayResolutionInPhysicalPixels.Width / scalePercentage), (int)(displayResolutionInPhysicalPixels.Height / scalePercentage));
+        return MorphicResult.OkResult(result);
+    }
 }
+
