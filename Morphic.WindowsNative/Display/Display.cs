@@ -634,14 +634,18 @@ public struct Display
 
     // for PerMonitorV2 DPI-aware clients, this function will return the display rectangle in PHYSICAL pixels
     // for non-DPI-aware clients, this function will return the display rectangle in VIRTUAL pixels
-    public MorphicResult<Rectangle, MorphicUnit> GetDisplayRectangleInPixels()
+    public MorphicResult<Rectangle, Win32ApiError> GetDisplayRectangleInPixels()
     {
         ExtendedPInvoke.MONITORINFOEXW monitorInfo = new ExtendedPInvoke.MONITORINFOEXW();
         monitorInfo.cbSize = (uint)Marshal.SizeOf(monitorInfo);
         bool getMonitorInfoSuccess = ExtendedPInvoke.GetMonitorInfo(this.MonitorHandle, ref monitorInfo);
         if (getMonitorInfoSuccess == false)
         {
-            return MorphicResult.ErrorResult();
+            var win32ErrorCode = PInvoke.Kernel32.GetLastError();
+            if (win32ErrorCode != PInvoke.Win32ErrorCode.ERROR_SUCCESS)
+            {
+                return MorphicResult.ErrorResult(Win32ApiError.Win32Error((int)win32ErrorCode));
+            }
         }
 
         var displayRect = new Rectangle(monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.top, monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top);
