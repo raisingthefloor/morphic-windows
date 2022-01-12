@@ -1,4 +1,4 @@
-﻿// Copyright 2021 Raising the Floor - International
+﻿// Copyright 2021-2022 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -237,6 +237,398 @@ namespace Morphic.Windows.Native
         #endregion winerror.h
 
 
+        #region wingdi.h
+
+        private const int CCHFORMNAME = 32;
+
+        [Flags]
+        public enum QueryDisplayConfigFlags : uint
+        {
+            QDC_ALL_PATHS = 0x00000001,
+            QDC_ONLY_ACTIVE_PATHS = 0x00000002,
+            QDC_DATABASE_CURRENT = 0x00000004
+        }
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_device_info_header
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        public struct DISPLAYCONFIG_DEVICE_INFO_HEADER
+        {
+            public DISPLAYCONFIG_DEVICE_INFO_TYPE type;
+            public uint size;
+            public PInvoke.User32.LUID adapterId;
+            public uint id;
+        }
+
+        [Flags]
+        public enum DISPLAYCONFIG_DEVICE_INFO_TYPE : uint
+        {
+            // NOTE: the GET_DPI and SET_DPI values are undocumented and were reverse engineered as part of the Morphic Classic project
+            DISPLAYCONFIG_DEVICE_INFO_SET_DPI = unchecked((uint)-4),
+            DISPLAYCONFIG_DEVICE_INFO_GET_DPI = unchecked((uint)-3),
+            //
+            // NOTE: the remaining entries are publicly documented
+            DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME = 1,
+            DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_NAME = 2,
+            DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_PREFERRED_MODE = 3,
+            DISPLAYCONFIG_DEVICE_INFO_GET_ADAPTER_NAME = 4,
+            DISPLAYCONFIG_DEVICE_INFO_SET_TARGET_PERSISTENCE = 5,
+            DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_BASE_TYPE = 6,
+            DISPLAYCONFIG_DEVICE_INFO_GET_SUPPORT_VIRTUAL_RESOLUTION = 7,
+            DISPLAYCONFIG_DEVICE_INFO_SET_SUPPORT_VIRTUAL_RESOLUTION = 8,
+            DISPLAYCONFIG_DEVICE_INFO_GET_ADVANCED_COLOR_INFO = 9,
+            DISPLAYCONFIG_DEVICE_INFO_SET_ADVANCED_COLOR_STATE = 10,
+            DISPLAYCONFIG_DEVICE_INFO_GET_SDR_WHITE_LEVEL = 11,
+            DISPLAYCONFIG_DEVICE_INFO_FORCE_UINT32 = 0xFFFFFFFF
+        }
+
+        // Reverse-engineered DPI scaling code, utilizing the CCD APIs
+        // https://docs.microsoft.com/en-us/windows-hardware/drivers/display/ccd-apis
+        //
+        // NOTE: this structure is undocumented and was reverse engineered as part of the Morphic Classic project
+        // NOTE: all offsets are indices (relative to the OS's recommended DPI scaling value; the recommended DPI scaling value is always zero)
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_GET_DPI
+        {
+            public DISPLAYCONFIG_DEVICE_INFO_HEADER header;
+
+            public int minimumDpiOffset;
+            public int currentDpiOffset;
+            public int maximumDpiOffset;
+
+            public static DISPLAYCONFIG_GET_DPI InitializeNew()
+            {
+                var result = new DISPLAYCONFIG_GET_DPI()
+                {
+                    header = new DISPLAYCONFIG_DEVICE_INFO_HEADER()
+                    {
+                        size = (uint)Marshal.SizeOf<DISPLAYCONFIG_GET_DPI>()
+                    }
+                };
+                return result;
+            }
+        }
+        //
+    	// NOTE: this structure is undocumented and was reverse engineered as part of the Morphic Classic project
+	    // NOTE: all offsets are indices (relative to the OS's recommended DPI scaling value; the recommended DPI scaling value is always zero)
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_SET_DPI
+        {
+            public DISPLAYCONFIG_DEVICE_INFO_HEADER header;
+
+            public int dpiOffset;
+
+            public static DISPLAYCONFIG_SET_DPI InitializeNew()
+            {
+                var result = new DISPLAYCONFIG_SET_DPI()
+                {
+                    header = new DISPLAYCONFIG_DEVICE_INFO_HEADER()
+                    {
+                        size = (uint)Marshal.SizeOf<DISPLAYCONFIG_SET_DPI>()
+                    }
+                };
+                return result;
+            }
+        }
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_mode_info
+        [StructLayout(LayoutKind.Explicit)]
+        public struct DISPLAYCONFIG_MODE_INFO
+        {
+            [FieldOffset(0)]
+            public PInvoke.User32.DISPLAYCONFIG_MODE_INFO_TYPE infoType;
+            [FieldOffset(4)]
+            public uint id;
+            [FieldOffset(8)]
+            public PInvoke.User32.LUID adapterId;
+
+            // union
+            [FieldOffset(16)]
+            public DISPLAYCONFIG_TARGET_MODE targetMode;
+            [FieldOffset(16)]
+            public PInvoke.User32.DISPLAYCONFIG_SOURCE_MODE sourceMode;
+            [FieldOffset(16)]
+            public PInvoke.User32.DISPLAYCONFIG_DESKTOP_IMAGE_INFO desktopImageInfo;
+        }
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_path_info
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_PATH_INFO
+        {
+            public DISPLAYCONFIG_PATH_SOURCE_INFO sourceInfo;
+            public DISPLAYCONFIG_PATH_TARGET_INFO targetInfo;
+            public uint flags;
+        }
+
+        [Flags]
+        public enum DisplayConfigSourceInfoStatus : uint
+        {
+            DISPLAYCONFIG_TARGET_IN_USE = 0x00000001,
+        }
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_path_source_info
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_PATH_SOURCE_INFO
+        {
+            public PInvoke.User32.LUID adapterId;
+            public uint id;
+            public uint modeInfoIdx; // union with cloneGroupId:16 and sourceModeInfoIdx:16
+            public DisplayConfigSourceInfoStatus statusFlags;
+        }
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_path_target_info
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_PATH_TARGET_INFO
+        {
+            public PInvoke.User32.LUID adapterId;
+            public uint id;
+            public uint modeInfoIdx; // union with desktopModeInfoIdx:16 and targetModeInfoIdx:16
+            public PInvoke.User32.DISPLAYCONFIG_VIDEO_OUTPUT_TECHNOLOGY outputTechnology;
+            public PInvoke.User32.DISPLAYCONFIG_ROTATION rotation;
+            public PInvoke.User32.DISPLAYCONFIG_SCALING scaling;
+            public PInvoke.User32.DISPLAYCONFIG_RATIONAL refreshRate;
+            public PInvoke.User32.DISPLAYCONFIG_SCANLINE_ORDERING scanLineOrdering;
+            public bool targetAvailable;
+            public PInvoke.User32.DISPLAYCONFIG_PATH_TARGET_INFOFlags statusFlags;
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        public struct DISPLAYCONFIG_SOURCE_DEVICE_NAME
+        {
+            public DISPLAYCONFIG_DEVICE_INFO_HEADER header;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = CCHDEVICENAME)]
+            public Char[] viewGdiDeviceName;
+
+            public static DISPLAYCONFIG_SOURCE_DEVICE_NAME InitializeNew()
+            {
+                var result = new DISPLAYCONFIG_SOURCE_DEVICE_NAME()
+                {
+                    viewGdiDeviceName = new char[CCHDEVICENAME],
+                    header = new DISPLAYCONFIG_DEVICE_INFO_HEADER() 
+                    {
+                        size = (uint)Marshal.SizeOf<DISPLAYCONFIG_SOURCE_DEVICE_NAME>()
+                    }
+                };
+                return result;
+            }
+        }
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_target_mode
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_TARGET_MODE
+        {
+            public DISPLAYCONFIG_VIDEO_SIGNAL_INFO targetVideoSignalInfo;
+        }
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_video_signal_info
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_VIDEO_SIGNAL_INFO
+        {
+            public ulong pixelRate;
+            public PInvoke.User32.DISPLAYCONFIG_RATIONAL hSyncFreq;
+            public PInvoke.User32.DISPLAYCONFIG_RATIONAL vSyncFreq;
+            public PInvoke.User32.DISPLAYCONFIG_2DREGION activeSize;
+            public PInvoke.User32.DISPLAYCONFIG_2DREGION totalSize;
+            public _D3DKMDT_VIDEO_SIGNAL_STANDARD videoStandard; // union: AdditionalSignalInfo(videoStandard:16, vSyncFreqDivider:6, reserved:10)
+            // Scan line ordering (e.g. progressive, interlaced).
+            public PInvoke.User32.DISPLAYCONFIG_SCANLINE_ORDERING scanLineOrdering;
+        }
+
+        // https://docs.microsoft.com/en-us/windows-hardware/drivers/ddi/d3dkmdt/ne-d3dkmdt-_d3dkmdt_video_signal_standard
+        // see: d3dkmdt.h (MSVC v142 - VS 2019 C++ x64/x86 build tools (14.25) [and Spectre-migrated libs] 
+        [Flags]
+        public enum _D3DKMDT_VIDEO_SIGNAL_STANDARD : uint
+        {
+            D3DKMDT_VSS_UNINITIALIZED = 0,
+            //
+            D3DKMDT_VSS_VESA_DMT = 1,
+            D3DKMDT_VSS_VESA_GTF = 2,
+            D3DKMDT_VSS_VESA_CVT = 3,
+            //
+            D3DKMDT_VSS_IBM = 4,
+            D3DKMDT_VSS_APPLE = 5,
+            //
+            D3DKMDT_VSS_NTSC_M = 6,
+            D3DKMDT_VSS_NTSC_J = 7,
+            D3DKMDT_VSS_NTSC_443 = 8,
+            D3DKMDT_VSS_PAL_B = 9,
+            D3DKMDT_VSS_PAL_B1 = 10,
+            D3DKMDT_VSS_PAL_G = 11,
+            D3DKMDT_VSS_PAL_H = 12,
+            D3DKMDT_VSS_PAL_I = 13,
+            D3DKMDT_VSS_PAL_D = 14,
+            D3DKMDT_VSS_PAL_N = 15,
+            D3DKMDT_VSS_PAL_NC = 16,
+            D3DKMDT_VSS_SECAM_B = 17,
+            D3DKMDT_VSS_SECAM_D = 18,
+            D3DKMDT_VSS_SECAM_G = 19,
+            D3DKMDT_VSS_SECAM_H = 20,
+            D3DKMDT_VSS_SECAM_K = 21,
+            D3DKMDT_VSS_SECAM_K1 = 22,
+            D3DKMDT_VSS_SECAM_L = 23,
+            D3DKMDT_VSS_SECAM_L1 = 24,
+            //
+            D3DKMDT_VSS_EIA_861 = 25,
+            D3DKMDT_VSS_EIA_861A = 26,
+            D3DKMDT_VSS_EIA_861B = 27,
+            //
+            D3DKMDT_VSS_PAL_K = 28,
+            D3DKMDT_VSS_PAL_K1 = 29,
+            D3DKMDT_VSS_PAL_L = 30,
+            D3DKMDT_VSS_PAL_M = 31,
+            //
+            D3DKMDT_VSS_OTHER = 255
+        }
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-querydisplayconfig
+        [DllImport("user32.dll")]
+        public static extern PInvoke.Win32ErrorCode QueryDisplayConfig(QueryDisplayConfigFlags flags, ref uint numPathArrayElements, [Out] DISPLAYCONFIG_PATH_INFO[] pathInfoArray,
+            ref uint modeInfoArrayElements, [Out] DISPLAYCONFIG_MODE_INFO[] modeInfoArray, IntPtr currentTopologyId);
+
+        //
+
+        // DEVMODEW is used by EnumDisplaySettingsEx and other functions
+        // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-devmodew
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        internal struct DEVMODEW
+        {
+            private const int privateDriverDataLength = 0;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = CCHDEVICENAME)]
+            public char[] dmDeviceName;
+            public ushort dmSpecVersion;
+            public ushort dmDriverVersion;
+            public ushort dmSize;
+            public ushort dmDriverExtra;
+            public DM_FieldSelectionBit dmFields;
+            public DEVMODEW__DUMMYUNIONNAME DUMMYUNIONNAME;
+            public short dmColor;
+            public short dmDuplex;
+            public short dmYResolution;
+            public short dmTTOption;
+            public short dmCollate;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = CCHFORMNAME)]
+            public char[] dmFormName;
+            public ushort dmLogPixels;
+            public uint dmBitsPerPel;
+            public uint dmPelsWidth;
+            public uint dmPelsHeight;
+            public DEVMODEW__DUMMYUNIONNAME2 DUMMYUNIONNAME2;
+            public uint dmDisplayFrequency;
+            public uint dmICMMethod;
+            public uint dmICMIntent;
+            public uint dmMediaType;
+            public uint dmDitherType;
+            public uint dmReserved1;
+            public uint dmReserved2;
+            public uint dmPanningWidth;
+            public uint dmPanningHeight;
+            //[MarshalAs(UnmanagedType.ByValArray, SizeConst = privateDriverDataLength)]
+            //public Byte[] privateDriverData;
+
+            public static DEVMODEW InitializeNew()
+            {
+                var result = new DEVMODEW()
+                {
+                    dmDeviceName = new Char[CCHDEVICENAME],
+                    dmFormName = new Char[CCHFORMNAME],
+                    // privateDriverData = new byte[privateDriverDataLength],
+                    dmDriverExtra = privateDriverDataLength,
+                    dmSize = (ushort)Marshal.SizeOf(typeof(DEVMODEW)),
+                };
+
+                return result;
+            }
+        }
+        //
+        [StructLayout(LayoutKind.Explicit)]
+        public struct DEVMODEW__DUMMYUNIONNAME
+        {
+            [FieldOffset(0)]
+            public DEVMODEW__DUMMYUNIONNAME__DUMMYSTRUCTNAME DUMMYSTRUCTNAME;
+            //
+            [FieldOffset(0)]
+            public DEVMODEW__DUMMYUNIONNAME__DUMMYSTRUCTNAME2 DUMMYSTRUCTNAME2;
+
+            /* printer only fields */
+            [StructLayout(LayoutKind.Sequential)]
+            public struct DEVMODEW__DUMMYUNIONNAME__DUMMYSTRUCTNAME
+            {
+                public short dmOrientation;
+                public short dmPaperSize;
+                public short dmPaperLength;
+                public short dmPaperWidth;
+                public short dmScale;
+                public short dmCopies;
+                public short dmDefaultSource;
+                public short dmPrintQuality;
+            }
+
+            /* display only fields */
+            [StructLayout(LayoutKind.Sequential)]
+            public struct DEVMODEW__DUMMYUNIONNAME__DUMMYSTRUCTNAME2
+            {
+                public POINTL dmPosition;
+                public uint dmDisplayOrientation;
+                public uint dmDisplayFixedOutput;
+            }
+        }
+        //
+        [StructLayout(LayoutKind.Explicit)]
+        internal struct DEVMODEW__DUMMYUNIONNAME2
+        {
+            [FieldOffset(0)]
+            public uint dmDisplayFlags;
+            //
+            [FieldOffset(0)]
+            public uint dmNup;
+        }
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/windef/ns-windef-pointl
+        [StructLayout(LayoutKind.Sequential)]
+        public struct POINTL
+        {
+            public int x;
+            public int y;
+        }
+
+        internal enum DM_FieldSelectionBit : uint
+        {
+            DM_ORIENTATION = 0x0000_0001,
+            DM_PAPERSIZE = 0x0000_0002,
+            DM_PAPERLENGTH = 0x0000_0004,
+            DM_PAPERWIDTH = 0x0000_0008,
+            DM_SCALE = 0x0000_0010,
+            DM_POSITION = 0x0000_0020,
+            DM_NUP = 0x0000_0040,
+            DM_DISPLAYORIENTATION = 0x0000_0080,
+            DM_COPIES = 0x0000_0100,
+            DM_DEFAULTSOURCE = 0x0000_0200,
+            DM_PRINTQUALITY = 0x0000_0400,
+            DM_COLOR = 0x0000_0800,
+            DM_DUPLEX = 0x0000_1000,
+            DM_YRESOLUTION = 0x0000_2000,
+            DM_TTOPTION = 0x0000_4000,
+            DM_COLLATE = 0x0000_8000,
+            DM_FORMNAME = 0x0001_0000,
+            DM_LOGPIXELS = 0x0002_0000,
+            DM_BITSPERPEL = 0x0004_0000,
+            DM_PELSWIDTH = 0x0008_0000,
+            DM_PELSHEIGHT = 0x0010_0000,
+            DM_DISPLAYFLAGS = 0x0020_0000,
+            DM_DISPLAYFREQUENCY = 0x0040_0000,
+            DM_ICMMETHOD = 0x0080_0000,
+            DM_ICMINTENT = 0x0100_0000,
+            DM_MEDIATYPE = 0x0200_0000,
+            DM_DITHERTYPE = 0x0400_0000,
+            DM_PANNINGWIDTH = 0x0800_0000,
+            DM_PANNINGHEIGHT = 0x1000_0000,
+            DM_DISPLAYFIXEDOUTPUT = 0x2000_0000,
+        }
+
+        #endregion wingdi.h
+
+
         #region winioctl.h
 
         static uint CTL_CODE(uint deviceType, uint function, uint method, ushort access)
@@ -402,10 +794,69 @@ namespace Morphic.Windows.Native
         [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         internal static extern PInvoke.Win32ErrorCode RegSetValueEx(UIntPtr hKey, [MarshalAs(UnmanagedType.LPWStr)] string? lpValueName, uint reserved, RegistryValueType lpType, IntPtr lpData, uint cbData);
 
-        #endregion winreg.h
+	    #endregion winreg.h
 
 
         #region WinUser.h
+
+        private const int CCHDEVICENAME = 32;
+
+        // WinUser.h (Windows 10 SDK v10.0.18632)
+        internal static readonly uint ENUM_CURRENT_SETTINGS = BitConverter.ToUInt32(BitConverter.GetBytes((int)(-1)));
+        //internal static readonly uint ENUM_REGISTRY_SETTINGS = BitConverter.ToUInt32(BitConverter.GetBytes((int)(-2)));
+
+        // NOTE: MONITORINFOEX is used by the GetMonitorInfo function
+        // https://docs.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-monitorinfoexw
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        internal struct MONITORINFOEXW
+        {
+            public uint cbSize;
+            public PInvoke.RECT rcMonitor;
+            public PInvoke.RECT rcWork;
+            public uint dwFlags;
+            // NOTE: szDevice must be marshalled as a ByValArray instead of a ByValTString so that Marshal.SizeOf can calculate a value
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = CCHDEVICENAME)]
+            public char[] szDevice;
+			
+            public static MONITORINFOEXW InitializeNew()
+            {
+                var result = new MONITORINFOEXW()
+                {
+                    cbSize = (uint)Marshal.SizeOf<MONITORINFOEXW>()
+                };
+                return result;
+            }
+        }
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getdisplayconfigbuffersizes
+        [DllImport("user32.dll")]
+        public static extern PInvoke.Win32ErrorCode GetDisplayConfigBufferSizes(QueryDisplayConfigFlags flags, out uint numPathArrayElements, out uint numModeInfoArrayElements);
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-displayconfiggetdeviceinfo
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        public static extern PInvoke.Win32ErrorCode DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_SOURCE_DEVICE_NAME requestPacket);
+        //
+        [DllImport("user32.dll")]
+        public static extern PInvoke.Win32ErrorCode DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_GET_DPI requestPacket);
+
+        [DllImport("user32.dll")]
+        public static extern PInvoke.Win32ErrorCode DisplayConfigSetDeviceInfo(ref DISPLAYCONFIG_SET_DPI requestPacket);
+
+        // NOTE: this delegate is used as a callback by EnumDisplayMonitors
+        // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nc-winuser-monitorenumproc
+        internal delegate Boolean MonitorEnumProc(IntPtr hMonitor, IntPtr hdcMonitor, ref PInvoke.RECT lpRect, IntPtr lParam);
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-enumdisplaymonitors
+        [DllImport("user32.dll")]
+        internal static extern Boolean EnumDisplayMonitors(IntPtr hdc, IntPtr lprcClip, MonitorEnumProc lpfnEnum, IntPtr dwData);
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-enumdisplaysettingsexw
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        internal static extern Boolean EnumDisplaySettingsEx(string? lpszDeviceName, uint iModeNum, ref DEVMODEW lpDevMode, uint dwFlags);
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getmonitorinfow
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        internal static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFOEXW lpmi);
 
         // WM_ACTIVATE state values
         internal static readonly IntPtr WA_INACTIVE = (IntPtr)0;
@@ -453,6 +904,7 @@ namespace Morphic.Windows.Native
 
         [DllImport("user32.dll")]
         internal static extern bool UnhookWindowsHookEx(IntPtr hhk);
+
         #endregion WinUser.h
 
     }

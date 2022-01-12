@@ -946,21 +946,22 @@ namespace Morphic.Client
                 await this.MorphicSession.SetSetting(SettingId.NightModeEnabled, nightModeIsEnabled);
             }
             //
-            // screen scaling
-            var monitorName = Morphic.Windows.Native.Display.Display.GetMonitorName(null);
-            if (monitorName is not null)
+            // screen scaling (on all monitors)
+            var getAllDisplaysResult = Morphic.Windows.Native.Display.Display.GetAllDisplays();
+            if (getAllDisplaysResult.IsSuccess == true) 
             {
-                // get the adapterId and sourceId for this monitor
-                var adapterIdAndSourceId = Morphic.Windows.Native.Display.Display.GetAdapterIdAndSourceId(monitorName);
-                if (adapterIdAndSourceId is not null)
+                var allDisplays = getAllDisplaysResult.Value!;
+
+                foreach (var display in allDisplays)
                 {
-                    // get the current DPI offset
-                    var currentDisplayDpiOffset = Morphic.Windows.Native.Display.Display.GetCurrentDpiOffsetAndRange(adapterIdAndSourceId.Value.adapterId, adapterIdAndSourceId.Value.sourceId);
-                    if (currentDisplayDpiOffset is not null)
+		            // get the current DPI offset for the monitor
+                    var getCurrentDisplayDpiOffsetAndRangeResult = display.GetCurrentDpiOffsetAndRange();
+                    if (getCurrentDisplayDpiOffsetAndRangeResult.IsSuccess == true)
                     {
-                        if (currentDisplayDpiOffset.Value.currentDpiOffset != displayDpiOffsetDefault)
+                        var currentDisplayDpiOffset = getCurrentDisplayDpiOffsetAndRangeResult.Value!;
+                        if (currentDisplayDpiOffset.CurrentDpiOffset != displayDpiOffsetDefault)
                         {
-                            _ = Morphic.Windows.Native.Display.Display.SetDpiOffset(displayDpiOffsetDefault, adapterIdAndSourceId.Value);
+                            _ = await display.SetDpiOffsetAsync(displayDpiOffsetDefault);
                         }
                     }
                 }

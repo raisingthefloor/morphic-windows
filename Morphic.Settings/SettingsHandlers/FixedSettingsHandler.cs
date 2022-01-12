@@ -122,7 +122,11 @@
         /// <summary>Set the value of a setting.</summary>
         public override async Task<MorphicResult<MorphicUnit, MorphicUnit>> SetAsync(Setting setting, object? newValue)
         {
-            var success = true; 
+            var success = true;
+
+            // if there are any prefix (custom) actions to take for this setting handler, do them now
+            var extraActionSuccess = await this.PrefixActionForFixedSettingsHandlerAsync(setting, newValue);
+            success &= extraActionSuccess.IsSuccess;
 
             if (this.setters.TryGetValue(setting.Name, out Setter? setter))
             {
@@ -138,6 +142,54 @@
             }
 
             return success ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
+        }
+
+        private async Task<MorphicResult<MorphicUnit, MorphicUnit>> PrefixActionForFixedSettingsHandlerAsync(Setting setting, object? newValue)
+        {
+            switch (setting.SettingGroup.Solution.SolutionId) {
+                case "com.microsoft.windows.magnifier":
+                    {
+                        // magnifier solution
+                        // NOTE: for now, we assume that all magnifier solution entries
+                        // NOTE: ideally this code would be in the same place as the code which opens the magnifier; due to the current configuration of the solution registry we need to tag this on as an "extra"
+
+                        var magnifierState = newValue as bool?;
+                        if (magnifierState.HasValue == false)
+                        {
+                            return MorphicResult.ErrorResult();
+                        }
+
+                        if (magnifierState.Value == true)
+                        {
+                            // before showing the magnifier, move the cursor to the center of the screen where the mouse pointer currently resides
+
+                            var getCurrentPositionResult = Morphic.Windows.Native.Mouse.Mouse.GetCurrentPosition();
+                            if (getCurrentPositionResult.IsError == true)
+                            {
+                                return MorphicResult.ErrorResult();
+                            }
+                            var currentMousePosition = getCurrentPositionResult.Value!;
+
+                            var getDisplayForPointResult = Morphic.Windows.Native.Display.Display.GetDisplayForPoint(currentMousePosition);
+                            if (getDisplayForPointResult.IsError == true)
+                            {
+                                return MorphicResult.ErrorResult();
+                            }
+                            var targetDisplay = getDisplayForPointResult.Value!;
+
+                            var moveCursorToCenterOfDisplayResult = Morphic.Windows.Native.Mouse.Mouse.MoveCursorToCenterOfDisplay(targetDisplay);
+                            if (moveCursorToCenterOfDisplayResult.IsError == true)
+                            {
+                                return MorphicResult.ErrorResult();
+                            }
+                        }
+
+                        return MorphicResult.OkResult();
+                    }
+                default:
+                    // nothing to do
+                    return MorphicResult.OkResult();
+            }
         }
 
         private bool HandleListener(Setting setting, bool add)

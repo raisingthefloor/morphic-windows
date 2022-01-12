@@ -25,24 +25,24 @@
             this.display = display;
         }
 
-        public Size[] GetResolutions()
-        {
-            Size current = this.display.GetResolution();
-            double currentRatio = current.Width / (double)current.Height;
-            var result = this.display.GetResolutions().Append(current)
-                // Get resolutions with a similar ratio
-                .Where(r => Math.Abs(currentRatio - (r.Width / (double)r.Height)) < 0.1);
+        //public Size[] GetResolutions()
+        //{
+        //    Size current = Display.GetResolution();
+        //    double currentRatio = current.Width / (double)current.Height;
+        //    var result = Display.GetResolutions().Append(current)
+        //        // Get resolutions with a similar ratio
+        //        .Where(r => Math.Abs(currentRatio - (r.Width / (double)r.Height)) < 0.1);
 
-            // Remove the very similar resolutions (favouring the one closest to the current one)
-            result = result.GroupBy(r => r.Width)
-                .Select(g => g.OrderBy(r => Math.Abs(currentRatio - (r.Width / (double)r.Height))).First());
+        //    // Remove the very similar resolutions (favouring the one closest to the current one)
+        //    result = result.GroupBy(r => r.Width)
+        //        .Select(g => g.OrderBy(r => Math.Abs(currentRatio - (r.Width / (double)r.Height))).First());
 
-            // Sort them by height
-            return result.OrderByDescending(r => r.Height).ToArray();
-        }
+        //    // Sort them by height
+        //    return result.OrderByDescending(r => r.Height).ToArray();
+        //}
 
         [Setter("zoom")]
-        public Task<bool> SetZoom(Setting setting, object? newValue)
+        public async Task<bool> SetZoom(Setting setting, object? newValue)
         {
             if (newValue is int index)
             {
@@ -54,21 +54,58 @@
                 //}
 
                 // method 2: get/set zoom level based on scale percentage
-                var all = this.display.GetDPIScales();
+                var all = Display.GetDPIScales();
                 double? newDpiScale = null;
                 if (all is not null && index >= 0 && index < all.Count)
                 {
                     newDpiScale = all[index];
                 }
+                //
+                // NOTE: due to current architectural limitations, Morphic v1.x uses the mouse cursor to determine which display to zoom (instead of finding the display the MorphicBar is on)
+                var getCurrentPositionResult = Morphic.Windows.Native.Mouse.Mouse.GetCurrentPosition();
+                if (getCurrentPositionResult.IsError == true)
+                {
+                    return false;
+                }
+                var currentMousePosition = getCurrentPositionResult.Value!;
+                //
+                var getDisplayForPointResult = Morphic.Windows.Native.Display.Display.GetDisplayForPoint(currentMousePosition);
+                if (getDisplayForPointResult.IsError == true)
+                {
+                    return false;
+                }
+                var targetDisplay = getDisplayForPointResult.Value!;
+                //
                 if (newDpiScale is not null)
                 {
                     // capture the current scale
-                    var oldDpiScale = Display.GetMonitorScalePercentage(null);
+                    var oldDpiScale = targetDisplay.GetMonitorScalePercentage();
+                    //
                     // capture the recommended scale
-                    var currentDpiOffsetAndRange = Display.GetCurrentDpiOffsetAndRange();
-                    var recommendedDpiScale = currentDpiOffsetAndRange is not null ? Display.TranslateDpiOffsetToPercentage(0, currentDpiOffsetAndRange.Value.minimumDpiOffset, currentDpiOffsetAndRange.Value.maximumDpiOffset) : null;
+                    Display.GetDpiOffsetResult? currentDpiOffsetAndRange;
+                    double? recommendedDpiScale;
+                    var getCurrentDpiOffsetAndRangeResult = targetDisplay.GetCurrentDpiOffsetAndRange();
+                    if (getCurrentDpiOffsetAndRangeResult.IsSuccess == true)
+                    {
+                        currentDpiOffsetAndRange = getCurrentDpiOffsetAndRangeResult.Value!;
+                        var translateDpiOffsetToScalePercentageResult = Display.TranslateDpiOffsetToScalePercentage(0, currentDpiOffsetAndRange.Value.MinimumDpiOffset, currentDpiOffsetAndRange.Value.MaximumDpiOffset);
+                        if (translateDpiOffsetToScalePercentageResult.IsError == true)
+                        {
+                            recommendedDpiScale = null;
+                        }
+                        else
+                        {
+                            recommendedDpiScale = translateDpiOffsetToScalePercentageResult.Value!;
+                        }
+                    }
+                    else
+                    {
+                        currentDpiOffsetAndRange = null;
+                        recommendedDpiScale = null;
+                    }
+                    //
                     // set the new percentage
-                    this.display.SetDpiScale(newDpiScale.Value);
+                    _ = await targetDisplay.SetDpiScaleAsync(newDpiScale.Value);
                     // report the display scale (percentage) change
                     if (oldDpiScale is not null)
                     {
@@ -78,7 +115,7 @@
                             var relativePercent = newDpiScale / recommendedDpiScale;
                             segmentation.Add("scalePercent", ((int)(relativePercent * 100)).ToString());
 
-                            var recommendedDpiIndex = -currentDpiOffsetAndRange!.Value.minimumDpiOffset;
+                            var recommendedDpiIndex = -currentDpiOffsetAndRange!.Value.MinimumDpiOffset;
                             var relativeDotOffset = index - recommendedDpiIndex;
                             segmentation.Add("dotOffset", relativeDotOffset.ToString());
                         }
@@ -87,7 +124,7 @@
                             // NOTE: we can't call our main Countly logic from here (which skips Countly event recording if it's not enabled), so we just swallow any "not init'd" errors here
                             try
                             {
-                                Countly.RecordEvent("textSizeIncrease", 1, segmentation);
+                                await Countly.RecordEvent("textSizeIncrease", 1, segmentation);
                             }
                             catch (InvalidOperationException)
                             {
@@ -98,7 +135,7 @@
                             // NOTE: we can't call our main Countly logic from here (which skips Countly event recording if it's not enabled), so we just swallow any "not init'd" errors here
                             try
                             {
-                                Countly.RecordEvent("textSizeDecrease", 1, segmentation);
+                                await Countly.RecordEvent("textSizeDecrease", 1, segmentation);
                             }
                             catch (InvalidOperationException)
                             {
@@ -108,25 +145,41 @@
                 }
             }
 
-            return Task.FromResult(true);
+            return true;
         }
 
         [Getter("zoom")]
         public Task<object?> GetZoom(Setting settingGroup)
         {
-			// method 1: get/set zoom level based on resolution
+            // method 1: get/set zoom level based on resolution
             //List<Size> all = this.GetResolutions().ToList();
             //return all.IndexOf(this.display.GetResolution());
 
-			// method 2: get/set zoom level based on scale percentage
-            var scale = Morphic.Windows.Native.Display.Display.GetMonitorScalePercentage(null);
+            // method 2: get/set zoom level based on scale percentage
+            //
+            // NOTE: due to current architectural limitations, Morphic v1.x uses the mouse cursor to determine which display to zoom (instead of finding the display the MorphicBar is on)
+            var getCurrentPositionResult = Morphic.Windows.Native.Mouse.Mouse.GetCurrentPosition();
+            if (getCurrentPositionResult.IsError == true)
+            {
+                return Task.FromResult<object?>(null);
+            }
+            var currentMousePosition = getCurrentPositionResult.Value!;
+            //
+            var getDisplayForPointResult = Morphic.Windows.Native.Display.Display.GetDisplayForPoint(currentMousePosition);
+            if (getDisplayForPointResult.IsError == true)
+            {
+                return Task.FromResult<object?>(null);
+            }
+            var targetDisplay = getDisplayForPointResult.Value!;
+            //
+            var scale = targetDisplay.GetMonitorScalePercentage();
             if (scale is null)
             {
                 return Task.FromResult<object?>(null);
             }
 
             //List<Size> all = this.GetResolutions().ToList();
-            var all = this.display.GetDPIScales();
+            var all = Display.GetDPIScales();
             return Task.FromResult<object?>(all.IndexOf(scale.Value)); //all.IndexOf(this.display.GetResolution());
         }
 
@@ -137,7 +190,7 @@
             //return Task.FromResult<object?>(this.GetResolutions().Length);
 
 			// method 2: get/set zoom level based on scale percentage
-            return Task.FromResult<object?>(this.display.GetDPIScales().Count);
+            return Task.FromResult<object?>(Display.GetDPIScales().Count);
         }
     }
 }
