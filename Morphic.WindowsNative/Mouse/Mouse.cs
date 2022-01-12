@@ -33,6 +33,23 @@ using System.Threading.Tasks;
 
 public class Mouse
 {
+    public static MorphicResult<Point, Win32ApiError> GetCurrentPosition()
+    {
+        var point = new PInvoke.POINT();
+        var getCursorPosResult = PInvoke.User32.GetCursorPos(out point);
+        if (getCursorPosResult == false)
+        {
+            var win32ErrorCode = PInvoke.Kernel32.GetLastError();
+            if (win32ErrorCode != PInvoke.Win32ErrorCode.ERROR_SUCCESS)
+            {
+                return MorphicResult.ErrorResult(Win32ApiError.Win32Error((int)win32ErrorCode));
+            }
+        }
+
+        var result = new Point(point.x, point.y);
+        return MorphicResult.OkResult(result);
+    }
+	
     // NOTE: in the future, we may want to consider offering an animation of our cursor's move to the center of the display, via a second (options) parameter
     public static MorphicResult<MorphicUnit, Win32ApiError> MoveCursorToCenterOfDisplay(Morphic.WindowsNative.Display.Display display)
     {

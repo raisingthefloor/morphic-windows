@@ -43,8 +43,9 @@ internal struct ExtendedPInvoke
         QDC_ONLY_ACTIVE_PATHS = 0x00000002,
         QDC_DATABASE_CURRENT = 0x00000004
     }
+
     // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_device_info_header
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     public struct DISPLAYCONFIG_DEVICE_INFO_HEADER
     {
         public DISPLAYCONFIG_DEVICE_INFO_TYPE type;
@@ -88,6 +89,40 @@ internal struct ExtendedPInvoke
         public int minimumDpiOffset;
         public int currentDpiOffset;
         public int maximumDpiOffset;
+
+        public static DISPLAYCONFIG_GET_DPI InitializeNew()
+        {
+            var result = new DISPLAYCONFIG_GET_DPI()
+            {
+                header = new DISPLAYCONFIG_DEVICE_INFO_HEADER()
+                {
+                    size = (uint)Marshal.SizeOf<DISPLAYCONFIG_GET_DPI>()
+                }
+            };
+            return result;
+        }
+    }
+    //
+    // NOTE: this structure is undocumented and was reverse engineered as part of the Morphic Classic project
+    // NOTE: all offsets are indices (relative to the OS's recommended DPI scaling value; the recommended DPI scaling value is always zero)
+    [StructLayout(LayoutKind.Sequential)]
+    public struct DISPLAYCONFIG_SET_DPI
+    {
+        public DISPLAYCONFIG_DEVICE_INFO_HEADER header;
+
+        public int dpiOffset;
+
+        public static DISPLAYCONFIG_SET_DPI InitializeNew()
+        {
+            var result = new DISPLAYCONFIG_SET_DPI()
+            {
+                header = new DISPLAYCONFIG_DEVICE_INFO_HEADER()
+                {
+                    size = (uint)Marshal.SizeOf<DISPLAYCONFIG_SET_DPI>()
+                }
+            };
+            return result;
+        }
     }
 
     // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_mode_info
@@ -150,23 +185,6 @@ internal struct ExtendedPInvoke
         public bool targetAvailable;
         public PInvoke.User32.DISPLAYCONFIG_PATH_TARGET_INFOFlags statusFlags;
     }
-    // Reverse-engineered DPI scaling code, utilizing the CCD APIs
-    // https://docs.microsoft.com/en-us/windows-hardware/drivers/display/ccd-apis
-    //
-    // NOTE: this structure is undocumented and was reverse engineered as part of the Morphic Classic project
-    // NOTE: all offsets are indices (relative to the OS's recommended DPI scaling value; the recommended DPI scaling value is always zero)
-    [StructLayout(LayoutKind.Sequential)]
-    public struct DISPLAYCONFIG_SET_DPI
-    {
-        public DISPLAYCONFIG_DEVICE_INFO_HEADER header;
-
-        public int dpiOffset;
-
-        public void Init()
-        {
-            this.header.size = (uint)Marshal.SizeOf(typeof(DISPLAYCONFIG_SET_DPI));
-        }
-    }
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     public struct DISPLAYCONFIG_SOURCE_DEVICE_NAME
@@ -175,8 +193,20 @@ internal struct ExtendedPInvoke
 
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = CCHDEVICENAME)]
         public Char[] viewGdiDeviceName;
+		
+        public static DISPLAYCONFIG_SOURCE_DEVICE_NAME InitializeNew()
+        {
+            var result = new DISPLAYCONFIG_SOURCE_DEVICE_NAME()
+            {
+                viewGdiDeviceName = new char[CCHDEVICENAME],
+                header = new DISPLAYCONFIG_DEVICE_INFO_HEADER() 
+                {
+                    size = (uint)Marshal.SizeOf<DISPLAYCONFIG_SOURCE_DEVICE_NAME>()
+                }
+            };
+            return result;
+        }
     }
-
 
     // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_target_mode
     [StructLayout(LayoutKind.Sequential)]
@@ -291,7 +321,7 @@ internal struct ExtendedPInvoke
         //[MarshalAs(UnmanagedType.ByValArray, SizeConst = privateDriverDataLength)]
         //public Byte[] privateDriverData;
 
-        public static DEVMODEW CreateAndInitializeNew()
+        public static DEVMODEW InitializeNew()
         {
             var result = new DEVMODEW()
             {
@@ -399,8 +429,8 @@ internal struct ExtendedPInvoke
     private const int CCHDEVICENAME = 32;
 
     // WinUser.h (Windows 10 SDK v10.0.18632)
-    internal static readonly uint ENUM_CURRENT_SETTINGS = BitConverter.ToUInt32(BitConverter.GetBytes((Int32)(-1)));
-    //internal static readonly uint ENUM_REGISTRY_SETTINGS = BitConverter.ToUInt32(BitConverter.GetBytes((Int32)(-2)));
+    internal static readonly uint ENUM_CURRENT_SETTINGS = BitConverter.ToUInt32(BitConverter.GetBytes((int)(-1)));
+    //internal static readonly uint ENUM_REGISTRY_SETTINGS = BitConverter.ToUInt32(BitConverter.GetBytes((int)(-2)));
 
     // NOTE: MONITORINFOEX is used by the GetMonitorInfo function
     // https://docs.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-monitorinfoexa
@@ -414,14 +444,46 @@ internal struct ExtendedPInvoke
         // NOTE: szDevice must be marshalled as a ByValArray instead of a ByValTString so that Marshal.SizeOf can calculate a value
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = CCHDEVICENAME)]
         public char[] szDevice;
+
+        public static MONITORINFOEXW InitializeNew()
+        {
+            var result = new MONITORINFOEXW()
+            {
+                cbSize = (uint)Marshal.SizeOf<MONITORINFOEXW>()
+            };
+            return result;
+        }
     }
 
-    // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-displayconfiggetdeviceinfo
+    // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getdisplayconfigbuffersizes
     [DllImport("user32.dll")]
+    public static extern PInvoke.Win32ErrorCode GetDisplayConfigBufferSizes(QueryDisplayConfigFlags flags, out uint numPathArrayElements, out uint numModeInfoArrayElements);
+
+    // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-displayconfiggetdeviceinfo
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     public static extern PInvoke.Win32ErrorCode DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_SOURCE_DEVICE_NAME requestPacket);
     //
     [DllImport("user32.dll")]
     public static extern PInvoke.Win32ErrorCode DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_GET_DPI requestPacket);
+
+    [DllImport("user32.dll")]
+    public static extern PInvoke.Win32ErrorCode DisplayConfigSetDeviceInfo(ref DISPLAYCONFIG_SET_DPI requestPacket);
+
+    // NOTE: this delegate is used as a callback by EnumDisplayMonitors
+    // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nc-winuser-monitorenumproc
+    internal delegate Boolean MonitorEnumProc(IntPtr hMonitor, IntPtr hdcMonitor, ref PInvoke.RECT lpRect, IntPtr lParam);
+
+    // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-enumdisplaymonitors
+    [DllImport("user32.dll")]
+    internal static extern Boolean EnumDisplayMonitors(IntPtr hdc, IntPtr lprcClip, MonitorEnumProc lpfnEnum, IntPtr dwData);
+
+    // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-enumdisplaysettingsexw
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    internal static extern Boolean EnumDisplaySettingsEx(string? lpszDeviceName, uint iModeNum, ref DEVMODEW lpDevMode, uint dwFlags);
+
+    // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getmonitorinfow
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    internal static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFOEXW lpmi);
 
     // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-createwindowexw
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
@@ -602,21 +664,6 @@ internal struct ExtendedPInvoke
     // see: https://docs.microsoft.com/en-us/previous-versions/windows/desktop/legacy/ms633573(v=vs.85)
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate IntPtr WNDPROC(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
-
-    [DllImport("user32.dll")]
-    public static extern PInvoke.Win32ErrorCode DisplayConfigSetDeviceInfo(ref DISPLAYCONFIG_SET_DPI requestPacket);
-
-    // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getdisplayconfigbuffersizes
-    [DllImport("user32.dll")]
-    public static extern PInvoke.Win32ErrorCode GetDisplayConfigBufferSizes(QueryDisplayConfigFlags flags, out uint numPathArrayElements, out uint numModeInfoArrayElements);
-
-    // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getmonitorinfow
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-    internal static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFOEXW lpmi);
-
-    // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-enumdisplaysettingsexw
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-    internal static extern Boolean EnumDisplaySettingsEx(string? lpszDeviceName, uint iModeNum, ref DEVMODEW lpDevMode, uint dwFlags);
 
     #endregion WinUser.h
 }

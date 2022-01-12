@@ -102,8 +102,7 @@ public struct Display
         Display? result = null;
 
         // find the matching display
-        var sourceName = new ExtendedPInvoke.DISPLAYCONFIG_SOURCE_DEVICE_NAME();
-        sourceName.header.size = (uint)Marshal.SizeOf(typeof(ExtendedPInvoke.DISPLAYCONFIG_SOURCE_DEVICE_NAME));
+        var sourceName = ExtendedPInvoke.DISPLAYCONFIG_SOURCE_DEVICE_NAME.InitializeNew();
         foreach (var pathInfoElement in pathInfoElements)
         {
             // get the device name
@@ -111,8 +110,8 @@ public struct Display
             sourceName.header.id = pathInfoElement.sourceInfo.id;
             sourceName.header.type = ExtendedPInvoke.DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME;
             //
-            var displayConfigGetDeviceInfoSuccess = ExtendedPInvoke.DisplayConfigGetDeviceInfo(ref sourceName);
-            switch (displayConfigGetDeviceInfoSuccess)
+            var displayConfigGetDeviceInfoResult = ExtendedPInvoke.DisplayConfigGetDeviceInfo(ref sourceName);
+            switch (displayConfigGetDeviceInfoResult)
             {
                 case PInvoke.Win32ErrorCode.ERROR_SUCCESS:
                     break;
@@ -184,11 +183,43 @@ public struct Display
         return Display.GetDisplayByMonitorHandle(monitorHandle);
     }
 
-    public static MorphicResult<Display, MorphicUnit> GetPrimaryDisplay()
+    public static MorphicResult<Display, MorphicUnit> GetDisplayForPoint(Point point)
     {
-        var monitorHandle = Display.GetMonitorHandleForPrimaryMonitor(); ;
+        var monitorHandle = Display.GetMonitorHandleForPoint(point);
 
         return Display.GetDisplayByMonitorHandle(monitorHandle);
+    }
+
+    public static MorphicResult<Display, MorphicUnit> GetPrimaryDisplay()
+    {
+        var monitorHandle = Display.GetMonitorHandleForPrimaryMonitor();
+
+        return Display.GetDisplayByMonitorHandle(monitorHandle);
+    }
+
+    public static MorphicResult<List<Display>, MorphicUnit> GetAllDisplays()
+    {
+        var result = new List<Display>();
+
+        var getAllMonitorHandlesResult = Display.GetAllMonitorHandles();
+        if (getAllMonitorHandlesResult.IsError == true)
+        {
+            return MorphicResult.ErrorResult();
+        }
+        var allMonitorHandles = getAllMonitorHandlesResult.Value!;
+
+        foreach (var monitorHandle in allMonitorHandles)
+        {
+            var getDisplayByMonitorHandleResult = Display.GetDisplayByMonitorHandle(monitorHandle);
+            if (getDisplayByMonitorHandleResult.IsError == true)
+            {
+                return MorphicResult.ErrorResult();
+            }
+            var display = getDisplayByMonitorHandleResult.Value!;
+            result.Add(display);
+        }
+
+        return MorphicResult.OkResult(result);
     }
 
     //
@@ -197,6 +228,15 @@ public struct Display
     {
         // get the handle of the monitor which contains the majority of the specified windowHandle's window
         var monitorHandle = PInvoke.User32.MonitorFromWindow(windowHandle, PInvoke.User32.MonitorOptions.MONITOR_DEFAULTTONEAREST);
+        return monitorHandle;
+    }
+
+    private static IntPtr GetMonitorHandleForPoint(Point point)
+    {
+        // get the handle of the monitor which contains the point; this is useful, for instance, for finding the monitor where the mouse cursor currently rests
+        var nativePoint = new PInvoke.POINT() { x = point.X, y = point.Y };
+        var monitorHandle = PInvoke.User32.MonitorFromPoint(nativePoint, PInvoke.User32.MonitorOptions.MONITOR_DEFAULTTONEAREST);
+
         return monitorHandle;
     }
 
@@ -209,11 +249,49 @@ public struct Display
         return monitorHandle;
     }
 
+    private static MorphicResult<List<IntPtr>, MorphicUnit> GetAllMonitorHandles()
+    {
+        var monitorHandles = new List<IntPtr>();
+
+        // NOTE: we have chosen not to use the PInvoke.User32 package's EnumDisplayMonitors function because it requires unsafe code
+        //unsafe
+        //{
+        //    var enumDisplayMonitorsResult = PInvoke.User32.EnumDisplayMonitors(
+        //        IntPtr.Zero,
+        //        IntPtr.Zero,
+        //        (IntPtr hMonitor, IntPtr hdcMonitor, PInvoke.RECT* lpRect, void* lParam) =>
+        //        {
+        //            monitorHandles.Add(hMonitor);
+        //
+        //            // return true to continue the enumeration
+        //            return true;
+        //        },
+        //        IntPtr.Zero);
+        //}
+
+        var enumDisplayMonitorsResult = ExtendedPInvoke.EnumDisplayMonitors(
+            IntPtr.Zero,
+            IntPtr.Zero,
+            (IntPtr hMonitor, IntPtr hdcMonitor, ref PInvoke.RECT lpRect, IntPtr lParam) =>
+            {
+                monitorHandles.Add(hMonitor);
+
+                // return true to continue the enumeration
+                return true;
+            },
+            IntPtr.Zero);
+        if (enumDisplayMonitorsResult == false)
+        {
+            return MorphicResult.ErrorResult();
+        }
+
+        return MorphicResult.OkResult(monitorHandles);
+    }
+
     // NOTE: if the caller does not provide a windowHandle, we use the primary monitor instead
     private static MorphicResult<string, MorphicUnit> GetDisplayNameForMonitorHandle(IntPtr monitorHandle)
     {
-        ExtendedPInvoke.MONITORINFOEXW monitorInfo = new ExtendedPInvoke.MONITORINFOEXW();
-        monitorInfo.cbSize = (uint)Marshal.SizeOf(monitorInfo);
+        var monitorInfo = ExtendedPInvoke.MONITORINFOEXW.InitializeNew();
         bool getMonitorInfoSuccess = ExtendedPInvoke.GetMonitorInfo(monitorHandle, ref monitorInfo);
         if (getMonitorInfoSuccess == false)
         {
@@ -239,11 +317,11 @@ public struct Display
         public int CurrentDpiOffset;
         public int MaximumDpiOffset;
     }
+
     public MorphicResult<GetDpiOffsetResult, MorphicUnit> GetCurrentDpiOffsetAndRange()
     {
         // retrieve the DPI values (min, current and max) for the monitor
-        var getDpiInfo = new ExtendedPInvoke.DISPLAYCONFIG_GET_DPI();
-        getDpiInfo.header.size = (uint)Marshal.SizeOf(typeof(ExtendedPInvoke.DISPLAYCONFIG_GET_DPI));
+        var getDpiInfo = ExtendedPInvoke.DISPLAYCONFIG_GET_DPI.InitializeNew();
         getDpiInfo.header.type = ExtendedPInvoke.DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_DPI;
         getDpiInfo.header.adapterId = this.AdapterId;
         getDpiInfo.header.id = this.SourceId;
@@ -280,8 +358,7 @@ public struct Display
         return await Task.Run((Func<MorphicResult<MorphicUnit, MorphicUnit>>)(() =>
         {
             // retrieve the DPI values (min, current and max) for the monitor
-            var setDpiInfo = new ExtendedPInvoke.DISPLAYCONFIG_SET_DPI();
-            setDpiInfo.Init();
+            var setDpiInfo = ExtendedPInvoke.DISPLAYCONFIG_SET_DPI.InitializeNew();
             setDpiInfo.header.type = ExtendedPInvoke.DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_SET_DPI;
             setDpiInfo.header.adapterId = adapterId;
             setDpiInfo.header.id = sourceId;
@@ -303,12 +380,13 @@ public struct Display
 
             // verify that the DPI was set successfully
             // NOTE: this is not technically necessary since we already have a success/failure result, but it's a good sanity check; if it's too early to check this then it's reasonable for us to skip this verification step
-            var currentDpiOffsetAndRange = thisDisplay.GetCurrentDpiOffsetAndRange();
-            if (currentDpiOffsetAndRange.IsError == true)
+            var getCurrentDpiOffsetAndRangeResult = thisDisplay.GetCurrentDpiOffsetAndRange();
+            if (getCurrentDpiOffsetAndRangeResult.IsError == true)
             {
                 return MorphicResult.ErrorResult();
             }
-            if (currentDpiOffsetAndRange.Value.CurrentDpiOffset != dpiOffset)
+            var currentDpiOffsetAndRange = getCurrentDpiOffsetAndRangeResult.Value!;
+            if (currentDpiOffsetAndRange.CurrentDpiOffset != dpiOffset)
             {
                 System.Diagnostics.Debug.Assert(false, "Could not set DPI offset (or the system has not updated the current SPI offset value)");
                 return MorphicResult.ErrorResult();
@@ -428,7 +506,13 @@ public struct Display
         // special-case: if the DPI mode is using a "custom DPI" (which may be a backwards-compatible Windows 8.1 behavior), capture that value now
         if (Display.IsCustomDpiOffset(dpiOffset) == true)
         {
-            return Display.GetCustomDpiOffsetAsPercentage();
+            var getCustomDpiAsPercentageResult = Display.GetCustomDpiOffsetAsPercentage();
+            if (getCustomDpiAsPercentageResult.IsError == true)
+            {
+                return MorphicResult.ErrorResult();
+            }
+            var customDpiOffset = getCustomDpiAsPercentageResult.Value!;
+            return MorphicResult.OkResult(customDpiOffset);
         }
 
         /* 
@@ -626,7 +710,7 @@ public struct Display
         //{
         //    // NOTE: technically DpiX and DpiY are two separate scales, but in our testing and based on Windows usage models, they should always be the same
         //    var logPixelsAsPercentage = (double)graphics.DpiX / 96;
-        //    return IMorphicResult<double>.SuccessResult(logPixelsAsPercentage);
+        //    return MorphicResult.OkResult(logPixelsAsPercentage);
         //}
     }
 
@@ -636,8 +720,7 @@ public struct Display
     // for non-DPI-aware clients, this function will return the display rectangle in VIRTUAL pixels
     public MorphicResult<Rectangle, Win32ApiError> GetDisplayRectangleInPixels()
     {
-        ExtendedPInvoke.MONITORINFOEXW monitorInfo = new ExtendedPInvoke.MONITORINFOEXW();
-        monitorInfo.cbSize = (uint)Marshal.SizeOf(monitorInfo);
+        var monitorInfo = ExtendedPInvoke.MONITORINFOEXW.InitializeNew();
         bool getMonitorInfoSuccess = ExtendedPInvoke.GetMonitorInfo(this.MonitorHandle, ref monitorInfo);
         if (getMonitorInfoSuccess == false)
         {
@@ -656,16 +739,15 @@ public struct Display
     // for non-DPI-aware clients, this function will return the display rectangle in VIRTUAL pixels
     public MorphicResult<Rectangle, MorphicUnit> GetWorkAreaRectangleInPixels()
     {
-        ExtendedPInvoke.MONITORINFOEXW monitorInfo = new ExtendedPInvoke.MONITORINFOEXW();
-        monitorInfo.cbSize = (uint)Marshal.SizeOf(monitorInfo);
+        var monitorInfo = ExtendedPInvoke.MONITORINFOEXW.InitializeNew();
         bool getMonitorInfoSuccess = ExtendedPInvoke.GetMonitorInfo(this.MonitorHandle, ref monitorInfo);
         if (getMonitorInfoSuccess == false)
         {
             return MorphicResult.ErrorResult();
         }
 
-        var displayRect = new Rectangle(monitorInfo.rcWork.left, monitorInfo.rcWork.top, monitorInfo.rcWork.right - monitorInfo.rcWork.left, monitorInfo.rcWork.bottom - monitorInfo.rcWork.top);
-        return MorphicResult.OkResult(displayRect);
+        var workAreaRect = new Rectangle(monitorInfo.rcWork.left, monitorInfo.rcWork.top, monitorInfo.rcWork.right - monitorInfo.rcWork.left, monitorInfo.rcWork.bottom - monitorInfo.rcWork.top);
+        return MorphicResult.OkResult(workAreaRect);
     }
 
     // NOTE: this function will always return the resolution in physical pixels, regardless of whether the app is DPI aware or not
@@ -675,7 +757,7 @@ public struct Display
         // NOTE: if the WorkArea specified in SystemParameters.WorkArea has the wrong proportions, we can try using
         //       monitorInfo.rcWork instead
 
-        ExtendedPInvoke.DEVMODEW deviceMode = ExtendedPInvoke.DEVMODEW.CreateAndInitializeNew();
+        ExtendedPInvoke.DEVMODEW deviceMode = ExtendedPInvoke.DEVMODEW.InitializeNew();
         // get the display's resolution
         var enum_display_settings_result = ExtendedPInvoke.EnumDisplaySettingsEx(this.DisplayName, ExtendedPInvoke.ENUM_CURRENT_SETTINGS, ref deviceMode, 0);
         if (enum_display_settings_result == false)
