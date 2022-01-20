@@ -121,6 +121,6 @@
     <value>Inicie sesión en Morphic</value>
   </data>
   <data name="SignInWindow_MainHeader.Text" xml:space="preserve">
-    <value>Inicie sesión en su cuenta de Morphic</value>
+    <value>Inicie sesión en Morphic</value>
   </data>
 </root>

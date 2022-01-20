@@ -120,7 +120,28 @@
   <data name="SignInWindow.Title" xml:space="preserve">
     <value>Sign in to Morphic</value>
   </data>
+  <data name="SignInWindow_CreateAccountLink.Text" xml:space="preserve">
+    <value>Create an account</value>
+  </data>
+  <data name="SignInWindow_EmailAddressText.Text" xml:space="preserve">
+    <value>Sign in with email</value>
+  </data>
+  <data name="SignInWindow_ForgotPassword.Text" xml:space="preserve">
+    <value>Forgot password?</value>
+  </data>
+  <data name="SignInWindow_KeepMeSignedIn.Content" xml:space="preserve">
+    <value>Keep me signed in</value>
+  </data>
   <data name="SignInWindow_MainHeader.Text" xml:space="preserve">
-    <value>Sign in to your Morphic Account</value>
+    <value>Sign in to Morphic</value>
+  </data>
+  <data name="SignInWindow_NewToMorphic.Text" xml:space="preserve">
+    <value>New to Morphic?</value>
+  </data>
+  <data name="SignInWindow_PasswordText.Text" xml:space="preserve">
+    <value>Password for Morphic</value>
+  </data>
+  <data name="SignInWindow_SignInButton.Text" xml:space="preserve">
+    <value>Sign in with Morphic</value>
   </data>
 </root>

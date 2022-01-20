@@ -7,19 +7,72 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <StackPanel Orientation="Vertical">
+    <StackPanel Orientation="Vertical" Margin="20,0,20,0">
         <!-- Sign-in dialog section -->
         
         <!-- Morphic logo and title -->
-        <StackPanel Orientation="Vertical" Margin="0,20, 0, 20">
-            <Image Source="/Assets/Images/Square50x50Logo.png" HorizontalAlignment="Center" Width="60"/>
+        <StackPanel Orientation="Vertical" Margin="0,10,0,0">
             <TextBlock HorizontalAlignment="Center" FontSize="18" FontWeight="Bold" x:Uid="SignInWindow_MainHeader"/>
+            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                <TextBlock FontSize="14" x:Uid="SignInWindow_NewToMorphic"/>
+                <TextBlock FontSize="14" Margin="6,0,0,0">
+                    <Hyperlink NavigateUri="https://auth.morphic.org/legacy/signup.html">
+                        <Run x:Uid="SignInWindow_CreateAccountLink"/>
+                    </Hyperlink>
+                </TextBlock>
+            </StackPanel>
         </StackPanel>
         
-        <!-- "under construction" block -->
-        <StackPanel Orientation="Vertical" Margin="0,20, 0, 20">
-            <TextBlock HorizontalAlignment="Center" FontSize="24" FontWeight="ExtraBold">[window is under construction]</TextBlock>
+        <!-- e-mail/password sign-in block -->
+        <StackPanel Orientation="Vertical" Margin="0,20,0,20">
+            <TextBlock HorizontalAlignment="Left" FontSize="14" FontWeight="Bold" x:Uid="SignInWindow_EmailAddressText"/>
+            <Border BorderBrush="White" BorderThickness="1">
+                <TextBox x:Name="EmailAddressTextBox" HorizontalAlignment="Stretch" IsSpellCheckEnabled="False" FontSize="14"/>
+            </Border>
+
+            <Grid Margin="0,10,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition>*</ColumnDefinition>
+                    <ColumnDefinition>*</ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" HorizontalAlignment="Left" FontSize="14" FontWeight="Bold" x:Uid="SignInWindow_PasswordText"/>
+                <TextBlock Grid.Column="1" HorizontalAlignment="Right" FontSize="14">
+                    <Hyperlink NavigateUri="https://auth.morphic.org/legacy/password-reset.html">
+                        <Run x:Uid="SignInWindow_ForgotPassword"/>
+                    </Hyperlink>
+                </TextBlock>
+            </Grid>
+            <Border BorderBrush="White" BorderThickness="1">
+                <PasswordBox x:Name="PasswordPasswordBox" HorizontalAlignment="Stretch" FontSize="14"/>
+            </Border>
+
+            <CheckBox x:Name="KeepMeSignedInCheckBox" HorizontalAlignment="Left" FontSize="14" x:Uid="SignInWindow_KeepMeSignedIn"/>
+
+            <Button Margin="0,5,0,0" HorizontalAlignment="Right" Style="{ThemeResource MorphicGreenButtonStyle}" Click="EmailPasswordSignInButton_Click">
+                <TextBlock FontSize="16" FontWeight="Bold">
+                    <Run x:Uid="SignInWindow_SignInButton"/>
+                </TextBlock>
+            </Button>
         </StackPanel>
+
+        <!-- Separator line -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition>2*</ColumnDefinition>
+                <ColumnDefinition>6*</ColumnDefinition>
+                <ColumnDefinition>2*</ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Border Grid.Column="1" BorderThickness="2" BorderBrush="{StaticResource MorphicGreenColor}"></Border>
+        </Grid>
+        
+        <!-- Sign Sign-On options block -->
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,20">
+            <Button HorizontalContentAlignment="Center" VerticalContentAlignment="Center" BorderBrush="White">
+                <Image Source="/Assets/Images/google_material_design_icons/fingerprint.svg" Stretch="UniformToFill" Width="24" Height="24" />
+            </Button>
+            
+        </StackPanel>
+        
 
     </StackPanel>
 </Window>

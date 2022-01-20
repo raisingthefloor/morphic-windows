@@ -55,7 +55,7 @@ public sealed partial class SignInWindow : Window
 
         // app windows like this one get tray entries by default; make sure we hide that tray entry
         // NOTE: we need to do this NOW, in this constructor, before the window is activated
-        _ = Morphic.WindowsNative.Windowing.Utils.WindowUtils.SetShowInTaskbar(hWnd, false);
+//        _ = Morphic.WindowsNative.Windowing.Utils.WindowUtils.SetShowInTaskbar(hWnd, false);
 
         // set window properties
         // NOTE: at the time of writing, WinUI did not support setting these properties via XAML
@@ -75,5 +75,9 @@ public sealed partial class SignInWindow : Window
         //
         //FontSize = "17"
 
+    }
+
+    private void EmailPasswordSignInButton_Click(object sender, RoutedEventArgs e)
+    {
     }
 }
