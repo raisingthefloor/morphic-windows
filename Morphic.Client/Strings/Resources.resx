@@ -138,6 +138,117 @@
   <data name="LoginError_DidNotRecognizeLogin_Text" xml:space="preserve">
     <value>We did not recognize your login.  Please try again.</value>
   </data>
+  <data name="Menu_AboutMorphic_Header" xml:space="preserve">
+    <value>_About Morphic...</value>
+  </data>
+  <data name="Menu_ApplySavedSetup_Header" xml:space="preserve">
+    <value>Apply a Saved Setup...</value>
+  </data>
+  <data name="Menu_AutorunAfterLoginItem_Checkbox_Header" xml:space="preserve">
+    <value>_Automatically start Morphic</value>
+  </data>
+  <data name="Menu_ChangeMorphicBar_Header" xml:space="preserve">
+    <value>Change MorphicBar</value>
+  </data>
+  <data name="Menu_CustomizeMorphicBar_Header" xml:space="preserve">
+    <value>Customize MorphicBar...</value>
+  </data>
+  <data name="Menu_ExploreMorphicLink_Header" xml:space="preserve">
+    <value>_Explore everything Morphic can do...</value>
+  </data>
+  <data name="Menu_HideMorphicBar_Header" xml:space="preserve">
+    <value>Hide MorphicBar</value>
+  </data>
+  <data name="Menu_HideQuickHelp_Header" xml:space="preserve">
+    <value>_Hide QuickHelp (except with Alt key)</value>
+  </data>
+  <data name="Menu_HowToCopySettingsBetweenComputers_Header" xml:space="preserve">
+    <value>How to copy setups between computers...</value>
+  </data>
+  <data name="Menu_MoreSettingsToMakeComputerEasier_Header" xml:space="preserve">
+    <value>More settings to make the computer easier</value>
+  </data>
+  <data name="Menu_OsAllAccessibilityOptions_Header" xml:space="preserve">
+    <value>_All Accessibility Options</value>
+  </data>
+  <data name="Menu_OsBrightnessSettings_Header" xml:space="preserve">
+    <value>Brightness</value>
+  </data>
+  <data name="Menu_OsColorVisionSettings_Header" xml:space="preserve">
+    <value>_Color Vision Settings</value>
+  </data>
+  <data name="Menu_OsContrastSettings_Header" xml:space="preserve">
+    <value>_Contrast Settings</value>
+  </data>
+  <data name="Menu_OsDarkModeSettings_Header" xml:space="preserve">
+    <value>_Dark Mode Settings</value>
+  </data>
+  <data name="Menu_OsDirectionActionsSection_Header" xml:space="preserve">
+    <value>Direct actions</value>
+  </data>
+  <data name="Menu_OsKeyboardSettings_Header" xml:space="preserve">
+    <value>_Keyboard Settings</value>
+  </data>
+  <data name="Menu_OsLanguageSettings_Header" xml:space="preserve">
+    <value>_Language</value>
+  </data>
+  <data name="Menu_OsMagnifierSettings_Header" xml:space="preserve">
+    <value>_Magnifier Settings</value>
+  </data>
+  <data name="Menu_OsMouseSettings_Header" xml:space="preserve">
+    <value>M_ouse Settings</value>
+  </data>
+  <data name="Menu_OsNightModeSettings_Header" xml:space="preserve">
+    <value>_Night Mode Settings</value>
+  </data>
+  <data name="Menu_OsOtherSettingsSection_Header" xml:space="preserve">
+    <value>Other Key Windows Settings</value>
+  </data>
+  <data name="Menu_OsPointerSizeSettings_Header" xml:space="preserve">
+    <value>_Pointer Size</value>
+  </data>
+  <data name="Menu_OsReadAloudSettings_Header" xml:space="preserve">
+    <value>_Read Aloud Settings</value>
+  </data>
+  <data name="Menu_OsSettingsSection_Header" xml:space="preserve">
+    <value>Windows Settings for MorphicBar Controls</value>
+  </data>
+  <data name="Menu_OsStopKeyRepeatAction_Header" xml:space="preserve">
+    <value>_Stop Key-repeat</value>
+  </data>
+  <data name="Menu_OtherHelpfulThings_Header" xml:space="preserve">
+    <value>_Other resources to make computers easier...</value>
+  </data>
+  <data name="Menu_ProblemsContactUs_Header" xml:space="preserve">
+    <value>Problems? Contact us...</value>
+  </data>
+  <data name="Menu_QuickMorphicDemosLink_Header" xml:space="preserve">
+    <value>Quick Morphic _demo videos...</value>
+  </data>
+  <data name="Menu_QuitMorphic_Header" xml:space="preserve">
+    <value>_Quit Morphic</value>
+  </data>
+  <data name="Menu_RestoreSettingsFromBackup_Header" xml:space="preserve">
+    <value>_Restore settings from backup</value>
+  </data>
+  <data name="Menu_SaveCurrentSetupAs_Header" xml:space="preserve">
+    <value>Save Current Setup as...</value>
+  </data>
+  <data name="Menu_SelectBasicMorphicBar_Header" xml:space="preserve">
+    <value>Basic MorphicBar</value>
+  </data>
+  <data name="Menu_ShowMorphicBarLoginItem_Checkbox_Header" xml:space="preserve">
+    <value>_Show Morphic Bar at start</value>
+  </data>
+  <data name="Menu_ShowMorphicBar_Header" xml:space="preserve">
+    <value>Show MorphicBar</value>
+  </data>
+  <data name="Menu_SignIn_Header" xml:space="preserve">
+    <value>Sign into Morphic...</value>
+  </data>
+  <data name="Menu_SignOut_Header" xml:space="preserve">
+    <value>Sign out of Morphic</value>
+  </data>
   <data name="PasswordFieldLabel_Text" xml:space="preserve">
     <value>Password</value>
   </data>

@@ -5,69 +5,70 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:menu="clr-namespace:Morphic.Client.Menu"
              xmlns:dialogs="clr-namespace:Morphic.Client.Dialogs"
+             xmlns:l10n="clr-namespace:Morphic.Client.Strings"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance menu:MorphicMenu}">
 
 
-    <menu:MorphicMenuItem Header="Show MorphicBar" x:Name="ShowBar" Click="ShowBarClick" />
-    <menu:MorphicMenuItem Header="Hide MorphicBar" x:Name="HideBar" Click="HideBarClick" />
+    <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_ShowMorphicBar_Header}" x:Name="ShowBar" Click="ShowBarClick" />
+    <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_HideMorphicBar_Header}" x:Name="HideBar" Click="HideBarClick" />
 
     <Separator/>
 
-    <menu:MorphicMenuItem Header="Sign out of Morphic" x:Name="LogoutItem" Click="Logout" />
-    <menu:MorphicMenuItem Header="Sign into Morphic..." x:Name="LoginItem" Click="Login" />
+    <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_SignOut_Header}" x:Name="LogoutItem" Click="Logout" />
+    <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_SignIn_Header}" x:Name="LoginItem" Click="Login" />
 
     <Separator x:Name="ChangeMorphicBarSeparator"/>
-    <MenuItem Header="Change MorphicBar" x:Name="ChangeMorphicBar">
-        <MenuItem Header="Basic MorphicBar" x:Name="SelectBasicMorphicBar" Click="SelectBasicMorphicBarClick" />
+    <MenuItem Header="{x:Static l10n:Resources.Menu_ChangeMorphicBar_Header}" x:Name="ChangeMorphicBar">
+        <MenuItem Header="{x:Static l10n:Resources.Menu_SelectBasicMorphicBar_Header}" x:Name="SelectBasicMorphicBar" Click="SelectBasicMorphicBarClick" />
     </MenuItem>
     <!-- NOTE: ideally we should pull the URL from our appsetting (so that we capture the nuances of dev vs prod, direct to the proper on-premise enterprise URL, etc.) -->
-    <menu:MorphicMenuItem Header="Customize MorphicBar..." Click="CustomizeMorphicbarClicked" Open="https://custom.morphic.org" />
+    <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_CustomizeMorphicBar_Header}" Click="CustomizeMorphicbarClicked" Open="https://custom.morphic.org" />
 
     <Separator/>
-    <menu:MorphicMenuItem x:Name="ChangeSetupMenuItem" Header="Apply a Saved Setup..." Dialog="dialogs:TravelWindow" DialogAction="CopyFromCloud"/>
-    <menu:MorphicMenuItem x:Name="SaveMySetupMenuItem" Header="Save Current Setup as..." Dialog="dialogs:TravelWindow" DialogAction="CopyToCloud"/>
-    <menu:MorphicMenuItem x:Name="RestoreSettingsFromBackupMenuItem" Header="_Restore settings from backup" Dialog="dialogs:RestoreWindow" Visibility="Collapsed"/>
-    <menu:MorphicMenuItem Header="How to copy setups between computers..." Click="HowToCopySetupsClicked" Open="https://morphic.org/xfersetups" />
+    <menu:MorphicMenuItem x:Name="ChangeSetupMenuItem" Header="{x:Static l10n:Resources.Menu_ApplySavedSetup_Header}" Dialog="dialogs:TravelWindow" DialogAction="CopyFromCloud"/>
+    <menu:MorphicMenuItem x:Name="SaveMySetupMenuItem" Header="{x:Static l10n:Resources.Menu_SaveCurrentSetupAs_Header}" Dialog="dialogs:TravelWindow" DialogAction="CopyToCloud"/>
+    <menu:MorphicMenuItem x:Name="RestoreSettingsFromBackupMenuItem" Header="{x:Static l10n:Resources.Menu_RestoreSettingsFromBackup_Header}" Dialog="dialogs:RestoreWindow" Visibility="Collapsed"/>
+    <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_HowToCopySettingsBetweenComputers_Header}" Click="HowToCopySetupsClicked" Open="https://morphic.org/xfersetups" />
 
     <Separator x:Name="CloudSettingsSeparator" />
 
-    <menu:MorphicMenuItem Header="_Explore everything Morphic can do..." Click="ExploreMorphicClicked" Open="https://morphic.org/exploremorphic" />
-    <menu:MorphicMenuItem Header="Quick Morphic _demo videos..." Click="QuickDemoVideosClicked" Open="https://morphic.org/demos" />
+    <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_ExploreMorphicLink_Header}" Click="ExploreMorphicClicked" Open="https://morphic.org/exploremorphic" />
+    <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_QuickMorphicDemosLink_Header}" Click="QuickDemoVideosClicked" Open="https://morphic.org/demos" />
 
     <Separator/>
 
-    <menu:MorphicMenuItem Header="More settings to make the computer easier">
+    <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_MoreSettingsToMakeComputerEasier_Header}">
 
-        <menu:MorphicMenuHeader Header="Windows Settings for MorphicBar Controls"/>
-        <menu:MorphicMenuItem Header="_Magnifier Settings" Open="ms-settings:easeofaccess-magnifier" />
-        <menu:MorphicMenuItem Header="_Read Aloud Settings" Open="ms-settings:speech" />
-        <menu:MorphicMenuItem Header="_Color Vision Settings" Open="ms-settings:easeofaccess-colorfilter" />
-        <menu:MorphicMenuItem Header="_Night Mode Settings" Open="ms-settings:nightlight" />
-        <menu:MorphicMenuItem Header="_Dark Mode Settings" Open="ms-settings:colors" />
-        <menu:MorphicMenuItem Header="_Contrast Settings" Open="ms-settings:easeofaccess-highcontrast" />
+        <menu:MorphicMenuHeader Header="{x:Static l10n:Resources.Menu_OsSettingsSection_Header}"/>
+        <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_OsMagnifierSettings_Header}" Open="ms-settings:easeofaccess-magnifier" />
+        <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_OsReadAloudSettings_Header}" Open="ms-settings:speech" />
+        <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_OsColorVisionSettings_Header}" Open="ms-settings:easeofaccess-colorfilter" />
+        <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_OsNightModeSettings_Header}" Open="ms-settings:nightlight" />
+        <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_OsDarkModeSettings_Header}" Open="ms-settings:colors" />
+        <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_OsContrastSettings_Header}" Open="ms-settings:easeofaccess-highcontrast" />
 
-        <menu:MorphicMenuHeader Header="Other Key Windows Settings"/>
-        <menu:MorphicMenuItem Header="M_ouse Settings" Open="ms-settings:mousetouchpad" />
-        <menu:MorphicMenuItem Header="_Pointer Size" Click="WindowsSettingsPointerSizeClicked" />
-        <menu:MorphicMenuItem Header="_Keyboard Settings" Open="ms-settings:easeofaccess-keyboard" />
-        <!-- <l:MorphicMenuItem Header="Brightness" Shell="" /> -->
-        <menu:MorphicMenuItem Header="_Language" Open="ms-settings:regionlanguage" />
-        <menu:MorphicMenuItem Header="_All Accessibility Options" Click="WindowsSettingsAllAccessibilityOptionsClicked" />
+        <menu:MorphicMenuHeader Header="{x:Static l10n:Resources.Menu_OsOtherSettingsSection_Header}"/>
+        <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_OsMouseSettings_Header}" Open="ms-settings:mousetouchpad" />
+        <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_OsPointerSizeSettings_Header}" Click="WindowsSettingsPointerSizeClicked" />
+        <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_OsKeyboardSettings_Header}" Open="ms-settings:easeofaccess-keyboard" />
+        <!-- <l:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_OsBrightnessSettings_Header}" Shell="" /> -->
+        <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_OsLanguageSettings_Header}" Open="ms-settings:regionlanguage" />
+        <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_OsAllAccessibilityOptions_Header}" Click="WindowsSettingsAllAccessibilityOptionsClicked" />
 
-        <menu:MorphicMenuHeader Header="Direct actions"/>
-        <menu:MorphicMenuItem Header="_Stop Key-repeat" IsCheckable="True" Click="StopKeyRepeatToggle" Loaded="StopKeyRepeatInit" />
+        <menu:MorphicMenuHeader Header="{x:Static l10n:Resources.Menu_OsDirectionActionsSection_Header}"/>
+        <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_OsStopKeyRepeatAction_Header}" IsCheckable="True" Click="StopKeyRepeatToggle" Loaded="StopKeyRepeatInit" />
 
     </menu:MorphicMenuItem>
 
-    <menu:MorphicMenuItem Header="_Other resources to make computers easier..." Click="OtherHelpfulThingsClicked" Open="https://morphic.org/helpful" />
+    <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_OtherHelpfulThings_Header}" Click="OtherHelpfulThingsClicked" Open="https://morphic.org/helpful" />
 
     <Separator/>
 
-    <!--<menu:MorphicMenuItem Header="_Hide QuickHelp (except with Alt key)" IsCheckable="True" IsChecked="{Binding App.AppOptions.HideQuickHelp}" />-->
-    <menu:MorphicMenuItem Header="_Automatically start Morphic" x:Name="AutorunAfterLoginItem" Click="AutorunAfterLoginClicked" IsCheckable="True" IsChecked="{Binding App.AppOptions.AutoRun}" />
-    <menu:MorphicMenuItem Header="_Show Morphic Bar at start" x:Name="ShowMorphicBarAfterLoginItem" Click="ShowMorphicBarAfterLoginClicked" IsCheckable="True" IsChecked="{Binding App.AppOptions.AutoShow}" />
-    <menu:MorphicMenuItem Header="Problems? Contact us..." Click="ContactUsClicked" Open="https://morphic.org/contact-us" />
-    <menu:MorphicMenuItem Header="_About Morphic..." Click="AboutMorphicClicked" Dialog="dialogs:AboutWindow" />
-    <menu:MorphicMenuItem Header="_Quit Morphic" Click="QuitClick"/>
+    <!--<menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_HideQuickHelp_Header}" IsCheckable="True" IsChecked="{Binding App.AppOptions.HideQuickHelp}" />-->
+    <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_AutorunAfterLoginItem_Checkbox_Header}" x:Name="AutorunAfterLoginItem" Click="AutorunAfterLoginClicked" IsCheckable="True" IsChecked="{Binding App.AppOptions.AutoRun}" />
+    <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_ShowMorphicBarLoginItem_Checkbox_Header}" x:Name="ShowMorphicBarAfterLoginItem" Click="ShowMorphicBarAfterLoginClicked" IsCheckable="True" IsChecked="{Binding App.AppOptions.AutoShow}" />
+    <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_ProblemsContactUs_Header}" Click="ContactUsClicked" Open="https://morphic.org/contact-us" />
+    <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_AboutMorphic_Header}" Click="AboutMorphicClicked" Dialog="dialogs:AboutWindow" />
+    <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_QuitMorphic_Header}" Click="QuitClick"/>
 </ContextMenu>
