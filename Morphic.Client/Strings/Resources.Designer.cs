@@ -61,11 +61,83 @@ namespace Morphic.Client.Strings {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cancel Login.
+        /// </summary>
+        public static string CancelButton_AutomationHelpText {
+            get {
+                return ResourceManager.GetString("CancelButton_AutomationHelpText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cancel.
         /// </summary>
         public static string CancelButton_Text {
             get {
                 return ResourceManager.GetString("CancelButton_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Don&apos;t have an account yet?.
+        /// </summary>
+        public static string CreateAccountHyperlink_Text {
+            get {
+                return ResourceManager.GetString("CreateAccountHyperlink_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Email Address.
+        /// </summary>
+        public static string EmailFieldLabel_Text {
+            get {
+                return ResourceManager.GetString("EmailFieldLabel_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Forgot your password - Or not sure if you have an account?.
+        /// </summary>
+        public static string ForgotPasswordHyperlink_Text {
+            get {
+                return ResourceManager.GetString("ForgotPasswordHyperlink_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Login.
+        /// </summary>
+        public static string LoginButton_AutomationHelpText {
+            get {
+                return ResourceManager.GetString("LoginButton_AutomationHelpText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to We did not recognize your login.  Please try again..
+        /// </summary>
+        public static string LoginError_DidNotRecognizeLogin_Text {
+            get {
+                return ResourceManager.GetString("LoginError_DidNotRecognizeLogin_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enter your Morphic password.
+        /// </summary>
+        public static string PasswordField_AutomationHelpText {
+            get {
+                return ResourceManager.GetString("PasswordField_AutomationHelpText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Password.
+        /// </summary>
+        public static string PasswordFieldLabel_Text {
+            get {
+                return ResourceManager.GetString("PasswordFieldLabel_Text", resourceCulture);
             }
         }
         
@@ -79,11 +151,29 @@ namespace Morphic.Client.Strings {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Sign into your Morphic Account - Cloud Vault.
+        /// </summary>
+        public static string SignIntoMorphicAccountHeader_Text {
+            get {
+                return ResourceManager.GetString("SignIntoMorphicAccountHeader_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Sign in to Morphic.
         /// </summary>
         public static string SignInWindow_Title {
             get {
                 return ResourceManager.GetString("SignInWindow_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enter your email address.
+        /// </summary>
+        public static string UsernameField_AutomationHelpText {
+            get {
+                return ResourceManager.GetString("UsernameField_AutomationHelpText", resourceCulture);
             }
         }
     }

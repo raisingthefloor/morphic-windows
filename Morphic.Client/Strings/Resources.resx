@@ -117,13 +117,43 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="CancelButton_AutomationHelpText" xml:space="preserve">
+    <value>Cancel Login</value>
+  </data>
   <data name="CancelButton_Text" xml:space="preserve">
     <value>Cancel</value>
+  </data>
+  <data name="CreateAccountHyperlink_Text" xml:space="preserve">
+    <value>Don't have an account yet?</value>
+  </data>
+  <data name="EmailFieldLabel_Text" xml:space="preserve">
+    <value>Email Address</value>
+  </data>
+  <data name="ForgotPasswordHyperlink_Text" xml:space="preserve">
+    <value>Forgot your password - Or not sure if you have an account?</value>
+  </data>
+  <data name="LoginButton_AutomationHelpText" xml:space="preserve">
+    <value>Login</value>
+  </data>
+  <data name="LoginError_DidNotRecognizeLogin_Text" xml:space="preserve">
+    <value>We did not recognize your login.  Please try again.</value>
+  </data>
+  <data name="PasswordFieldLabel_Text" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="PasswordField_AutomationHelpText" xml:space="preserve">
+    <value>Enter your Morphic password</value>
   </data>
   <data name="SignInButton_Text" xml:space="preserve">
     <value>Login</value>
   </data>
+  <data name="SignIntoMorphicAccountHeader_Text" xml:space="preserve">
+    <value>Sign into your Morphic Account - Cloud Vault</value>
+  </data>
   <data name="SignInWindow_Title" xml:space="preserve">
     <value>Sign in to Morphic</value>
+  </data>
+  <data name="UsernameField_AutomationHelpText" xml:space="preserve">
+    <value>Enter your email address</value>
   </data>
 </root>
