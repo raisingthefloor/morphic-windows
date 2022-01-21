@@ -4,19 +4,18 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:Morphic.Client"
+      xmlns:l10n="clr-namespace:Morphic.Client.Strings"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800">
 
     <StackPanel x:Name="ReadyPanel" Visibility="Visible">
-        <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0">Apply my settings from my Cloud Vault</Label>
+        <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0" Content="{x:Static l10n:Resources.ApplySettingsFromCloudVaultTitle_Content}"/>
         <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,20">
-            Clicking the <Bold>Apply</Bold> button will cause the assistive
-            technology and system setting in your Morphic Cloud Vault to be applied to this computer.
+            <Run Text="{x:Static l10n:Resources.ApplySettingsFromCloudVaultInstructions_Part1_Text}"/>
+            <Run FontWeight="Bold" Text="{x:Static l10n:Resources.ApplyButton_Text}"/>
+            <Run Text="{x:Static l10n:Resources.ApplySettingsFromCloudVaultInstructions_Part3_Text}"/>
         </TextBlock>
-        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,20">
-            Note: The current settings on this computer will be backed up on this computer -- so you can revert back to
-            the current settings later.
-        </TextBlock>
+        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,20" Text="{x:Static l10n:Resources.ApplySettingsFromCloudVaultNote_Text}"/>
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition />
@@ -24,13 +23,13 @@
                 <ColumnDefinition />
             </Grid.ColumnDefinitions>
             <UniformGrid Grid.Column="1" Columns="2">
-                <Button x:Name="CancelButton" Width="Auto" HorizontalAlignment="Left" FontWeight="Bold" Margin="10,5,0,10" Click="OnCancel" IsEnabled="True" Content="Cancel"/>
-                <Button x:Name="ApplyButton" Width="Auto" HorizontalAlignment="Right" FontWeight="Bold" Margin="10,5,0,10" Click="OnApply" IsEnabled="True" Content="Apply"/>
+                <Button x:Name="CancelButton" Width="Auto" HorizontalAlignment="Left" FontWeight="Bold" Margin="10,5,0,10" Click="OnCancel" IsEnabled="True" Content="{x:Static l10n:Resources.CancelButton_Text}"/>
+                <Button x:Name="ApplyButton" Width="Auto" HorizontalAlignment="Right" FontWeight="Bold" Margin="10,5,0,10" Click="OnApply" IsEnabled="True" Content="{x:Static l10n:Resources.ApplyButton_Text}"/>
             </UniformGrid>
         </Grid>
     </StackPanel>
     <StackPanel x:Name="ApplyingPanel" MaxWidth="500" Visibility="Collapsed">
-        <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0">Applying settings on your computer...</Label>
+        <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0" Content="{x:Static l10n:Resources.ApplyingSettingsOnYourComputerLabel_Content}"/>
         <Image Height="270" Margin="0,30,0,0">
             <Image.RenderTransform>
                 <RotateTransform Angle="0" CenterX="135" CenterY="135"/>
@@ -81,14 +80,13 @@
         </Image>
     </StackPanel>
     <StackPanel x:Name="CompletePanel" Visibility="Collapsed">
-        <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0">Your Settings have been applied</Label>
-        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,10">
-            The settings on from your cloud vault have been applied to this Computer.
-        </TextBlock>
+        <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0" Content="{x:Static l10n:Resources.YourSettingsHaveBeenAppliedLabel_Content}"/>
+        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,10" Text="{x:Static l10n:Resources.SettingsFromCloudVaultHaveBeenApplied_Text}"/>
         <!--<TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,10">
-            Before they were applied, the old settings were backed up on this computer. To revert back to those settings
-            use the <Bold>"Restore settings from backup"</Bold> command in the Morphic menu.
+            <Run Text="{x:Static l10n:Resources.OldSettingsWereBackedUp_Part1_Text}"/>
+            <Run FontWeight="Bold" Text="{x:Static l10n:Resources.OldSettingsWereBackedUp_Part2_Text}"/>
+            <Run Text="{x:Static l10n:Resources.OldSettingsWereBackedUp_Part3_Text}"/>
         </TextBlock>-->
-        <Button x:Name="OkButton" Width="Auto" HorizontalAlignment="Center" FontWeight="Bold" Margin="10,20,0,10" Click="OnOk" IsEnabled="True" Content="OK"/>
+        <Button x:Name="OkButton" Width="Auto" HorizontalAlignment="Center" FontWeight="Bold" Margin="10,20,0,10" Click="OnOk" IsEnabled="True" Content="{x:Static l10n:Resources.OkButton_Text}"/>
     </StackPanel>
 </StackPanel>

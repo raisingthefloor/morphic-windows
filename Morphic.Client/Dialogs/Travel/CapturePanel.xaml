@@ -4,12 +4,13 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:Morphic.Client"
+      xmlns:l10n="clr-namespace:Morphic.Client.Strings"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800">
 
     <StackPanel x:Name="CollectingPanel" MaxWidth="500">
-        <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0">Collecting settings from your computer...</Label>
-        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,10,0,10">So you can securely take them anywhere</TextBlock>
+        <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0" Content="{x:Static l10n:Resources.CollectingSettingsFromComputerLabel_Content}"/>
+        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,10,0,10" Text="{x:Static l10n:Resources.SecurelyTakeSettingsAnywhere_Text}"/>
         <Image Height="270" Margin="0,30,0,0">
             <Image.RenderTransform>
                 <RotateTransform Angle="0" CenterX="135" CenterY="135"/>
@@ -60,14 +61,9 @@
         </Image>
     </StackPanel>
     <StackPanel x:Name="CompletePanel" Visibility="Collapsed">
-        <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0">Confirm saving to your Morphic Cloud Vault</Label>
-        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,20">
-            We have collected the settings of your assistive technologies
-            and of the accessibility and usability settings of your computer.
-        </TextBlock>
-        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,20">
-            Clicking save will save them to your secure Cloud Vault.
-        </TextBlock>
+        <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0" Content="{x:Static l10n:Resources.ConfirmSavingToCloudVaultLabel_Content}"/>
+        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,20" Text="{x:Static l10n:Resources.SettingsCollectionComplete_Text}"/>
+        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,20" Text="{x:Static l10n:Resources.ClickingSaveWillSaveSettingsToVault_Text}"/>
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition />
@@ -75,16 +71,14 @@
                 <ColumnDefinition />
             </Grid.ColumnDefinitions>
             <UniformGrid Grid.Column="1" Columns="2">
-                <Button x:Name="CancelButton" Width="Auto" FontWeight="Bold" Margin="10,5,0,10" Click="OnCancel" IsEnabled="True" Content="Cancel"/>
-                <Button x:Name="SaveButton" Width="Auto" FontWeight="Bold" Margin="10,5,0,10" Click="OnSave" IsEnabled="True" Content="Save" IsDefault="True"/>
+                <Button x:Name="CancelButton" Width="Auto" FontWeight="Bold" Margin="10,5,0,10" Click="OnCancel" IsEnabled="True" Content="{x:Static l10n:Resources.CancelButton_Text}"/>
+                <Button x:Name="SaveButton" Width="Auto" FontWeight="Bold" Margin="10,5,0,10" Click="OnSave" IsEnabled="True" Content="{x:Static l10n:Resources.SaveButton_Text}" IsDefault="True"/>
             </UniformGrid>
         </Grid>
     </StackPanel>
     <StackPanel x:Name="SavedPanel" Visibility="Collapsed">
-        <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0">Settings Saved to Cloud Vault</Label>
-        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,10">
-            You can now use Morphic to apply these settings to another computer that has Morphic installed.
-        </TextBlock>
+        <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0" Content="{x:Static l10n:Resources.SettingsSavedToCloudVaultLabel_Content}"/>
+        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,10" Text="{x:Static l10n:Resources.MorphicCanNowApplySavedSettingsToAnotherComputer_Text}"/>
         <Button x:Name="OkButton" Width="Auto" HorizontalAlignment="Center" FontWeight="Bold" Margin="10,20,0,10" Click="OnOk" IsEnabled="True" Content="OK"/>
     </StackPanel>
 </StackPanel>

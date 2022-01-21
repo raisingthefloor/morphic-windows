@@ -117,11 +117,47 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="AboutMorphicWindow_Title" xml:space="preserve">
+    <value>About Morphic</value>
+  </data>
+  <data name="ApplyButton_Text" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="ApplyingSettingsOnYourComputerLabel_Content" xml:space="preserve">
+    <value>Applying settings on your computer...</value>
+  </data>
+  <data name="ApplySettingsFromCloudVaultInstructions_Part1_Text" xml:space="preserve">
+    <value>Clicking the</value>
+  </data>
+  <data name="ApplySettingsFromCloudVaultInstructions_Part3_Text" xml:space="preserve">
+    <value>button will cause the assistive technology and system setting in your Morphic Cloud Vault to be applied to this computer.</value>
+  </data>
+  <data name="ApplySettingsFromCloudVaultNote_Text" xml:space="preserve">
+    <value>Note: The current settings on this computer will be backed up on this computer -- so you can revert back to the current settings later.</value>
+  </data>
+  <data name="ApplySettingsFromCloudVaultTitle_Content" xml:space="preserve">
+    <value>Apply my settings from my Cloud Vault</value>
+  </data>
   <data name="CancelButton_AutomationHelpText" xml:space="preserve">
     <value>Cancel Login</value>
   </data>
   <data name="CancelButton_Text" xml:space="preserve">
     <value>Cancel</value>
+  </data>
+  <data name="ChangePreferenceLaterUsingMorphicMenu_Text" xml:space="preserve">
+    <value>You can change this preference later, by using the Morphic Menu.</value>
+  </data>
+  <data name="CheckForUpdateHyperlink_Text" xml:space="preserve">
+    <value>Check for Update</value>
+  </data>
+  <data name="ClickingSaveWillSaveSettingsToVault_Text" xml:space="preserve">
+    <value>Clicking save will save them to your secure Cloud Vault.</value>
+  </data>
+  <data name="CollectingSettingsFromComputerLabel_Content" xml:space="preserve">
+    <value>Collecting settings from your computer...</value>
+  </data>
+  <data name="ConfirmSavingToCloudVaultLabel_Content" xml:space="preserve">
+    <value>Confirm saving to your Morphic Cloud Vault</value>
   </data>
   <data name="CreateAccountHyperlink_Text" xml:space="preserve">
     <value>Don't have an account yet?</value>
@@ -131,6 +167,9 @@
   </data>
   <data name="ForgotPasswordHyperlink_Text" xml:space="preserve">
     <value>Forgot your password - Or not sure if you have an account?</value>
+  </data>
+  <data name="LearnMoreAboutMorphicHyperlink_Text" xml:space="preserve">
+    <value>Learn More About Morphic</value>
   </data>
   <data name="LoginButton_AutomationHelpText" xml:space="preserve">
     <value>Login</value>
@@ -249,11 +288,44 @@
   <data name="Menu_SignOut_Header" xml:space="preserve">
     <value>Sign out of Morphic</value>
   </data>
+  <data name="MorphicCanNowApplySavedSettingsToAnotherComputer_Text" xml:space="preserve">
+    <value>You can now use Morphic to apply these settings to another computer that has Morphic installed.</value>
+  </data>
+  <data name="OkButton_Text" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="OldSettingsWereBackedUp_Part1_Text" xml:space="preserve">
+    <value>Before they were applied, the old settings were backed up on this computer. To revert back to those settings use the</value>
+  </data>
+  <data name="OldSettingsWereBackedUp_Part2_Text" xml:space="preserve">
+    <value>"Restore settings from backup"</value>
+  </data>
+  <data name="OldSettingsWereBackedUp_Part3_Text" xml:space="preserve">
+    <value>command in the Morphic menu.</value>
+  </data>
   <data name="PasswordFieldLabel_Text" xml:space="preserve">
     <value>Password</value>
   </data>
   <data name="PasswordField_AutomationHelpText" xml:space="preserve">
     <value>Enter your Morphic password</value>
+  </data>
+  <data name="SaveButton_Text" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="SecurelyTakeSettingsAnywhere_Text" xml:space="preserve">
+    <value>So you can securely take them anywhere</value>
+  </data>
+  <data name="SelectCurrentGroupHeader_Text" xml:space="preserve">
+    <value>Select the community whose bar you would like to see now:</value>
+  </data>
+  <data name="SettingsCollectionComplete_Text" xml:space="preserve">
+    <value>We have collected the settings of your assistive technologies and of the accessibility and usability settings of your computer.</value>
+  </data>
+  <data name="SettingsFromCloudVaultHaveBeenApplied_Text" xml:space="preserve">
+    <value>The settings on from your cloud vault have been applied to this Computer.</value>
+  </data>
+  <data name="SettingsSavedToCloudVaultLabel_Content" xml:space="preserve">
+    <value>Settings Saved to Cloud Vault</value>
   </data>
   <data name="SignInButton_Text" xml:space="preserve">
     <value>Login</value>
@@ -264,7 +336,16 @@
   <data name="SignInWindow_Title" xml:space="preserve">
     <value>Sign in to Morphic</value>
   </data>
+  <data name="TravelWindow_Title" xml:space="preserve">
+    <value>Travel with Settings</value>
+  </data>
   <data name="UsernameField_AutomationHelpText" xml:space="preserve">
     <value>Enter your email address</value>
+  </data>
+  <data name="YouAreMemberOfMultipleGroups_Text" xml:space="preserve">
+    <value>You are a member of several Morphic Groups.</value>
+  </data>
+  <data name="YourSettingsHaveBeenAppliedLabel_Content" xml:space="preserve">
+    <value>Your Settings have been applied</value>
   </data>
 </root>
