@@ -48,10 +48,13 @@
 
             <CheckBox x:Name="KeepMeSignedInCheckBox" HorizontalAlignment="Left" FontSize="14" x:Uid="SignInWindow_KeepMeSignedIn"/>
 
-            <Button Margin="0,5,0,0" HorizontalAlignment="Right" Style="{ThemeResource MorphicGreenButtonStyle}" Click="EmailPasswordSignInButton_Click">
-                <TextBlock FontSize="16" FontWeight="Bold">
-                    <Run x:Uid="SignInWindow_SignInButton"/>
-                </TextBlock>
+            <Button Margin="0,5,0,0" HorizontalAlignment="Right" Style="{ThemeResource MorphicGreenButtonStyle}" Foreground="White" Click="EmailPasswordSignInButton_Click">
+                <StackPanel Orientation="Horizontal">
+                    <Image Source="/Assets/Images/morphie-monochrome-white.svg" VerticalAlignment="Center" Width="28" Height="28" Margin="0,0,6,0"/>
+                    <TextBlock FontSize="16" FontWeight="Bold" VerticalAlignment="Center">
+                        <Run x:Uid="SignInWindow_SignInButton"/>
+                    </TextBlock>
+                </StackPanel>
             </Button>
         </StackPanel>
 
