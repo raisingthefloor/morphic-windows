@@ -1,0 +1,360 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
+              <xsd:attribute name="type" type="xsd:string"/>
+              <xsd:attribute name="mimetype" type="xsd:string"/>
+              <xsd:attribute ref="xml:space"/>
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string"/>
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
+              <xsd:attribute ref="xml:space"/>
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required"/>
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <data name="Icon" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Icon.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="LoginAnnounce" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Dialogs\LoginAnnounce.wav;System.IO.MemoryStream, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="QuickStrip_Advanced_HelpMessage" xml:space="preserve">
+    <value>Encuentra ajustes, inicia o cierra sesión, personaliza los botones, mueve los ajustes y más.</value>
+  </data>
+  <data name="QuickStrip_Advanced_HelpTitle" xml:space="preserve">
+    <value>Abre el menú morfológico</value>
+  </data>
+  <data name="QuickStrip_Contrast_Off_HelpMessage" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="QuickStrip_Contrast_Off_HelpTitle" xml:space="preserve">
+    <value>Desactiva el contrasto</value>
+  </data>
+  <data name="QuickStrip_Contrast_Off_Title" xml:space="preserve">
+    <value>Apagado</value>
+  </data>
+  <data name="QuickStrip_Contrast_On_HelpMessage" xml:space="preserve">
+    <value>Puede hacer que la pantalla sea más fácil de leer. Para cambiar la configuración, haga clic derecho en el botón.</value>
+  </data>
+  <data name="QuickStrip_Contrast_On_HelpTitle" xml:space="preserve">
+    <value>Enciende el contrato</value>
+  </data>
+  <data name="QuickStrip_Contrast_On_Title" xml:space="preserve">
+    <value>En</value>
+  </data>
+  <data name="QuickStrip_Colors_Contrast_Name" xml:space="preserve">
+    <value>Contrast encendido, apagado</value>
+  </data>
+  <data name="QuickStrip_Contrast_Title" xml:space="preserve">
+    <value>Alto contrato</value>
+  </data>
+  <data name="QuickStrip_NightMode_Off_HelpMessage" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="QuickStrip_NightMode_Off_HelpTitle" xml:space="preserve">
+    <value>Desactiva la función de luz nocturna</value>
+  </data>
+  <data name="QuickStrip_NightMode_Off_Title" xml:space="preserve">
+    <value>Apagado</value>
+  </data>
+  <data name="QuickStrip_NightMode_On_HelpMessage" xml:space="preserve">
+    <value>Reduce la cepa de los ojos y hace más fácil dormir por la noche.</value>
+  </data>
+  <data name="QuickStrip_NightMode_On_HelpTitle" xml:space="preserve">
+    <value>Activa la función de luz nocturna</value>
+  </data>
+  <data name="QuickStrip_NightMode_On_Title" xml:space="preserve">
+    <value>En</value>
+  </data>
+  <data name="QuickStrip_NightMode_Title" xml:space="preserve">
+    <value>Modo nocturno</value>
+  </data>
+  <data name="QuickStrip_Snip_HelpMessage" xml:space="preserve">
+    <value>Haga clic en Copiar. Luego haga clic y arrastre el ratón para tomar la foto. Pegue en cualquier documento.</value>
+  </data>
+  <data name="QuickStrip_Snip_HelpTitle" xml:space="preserve">
+    <value>Toma una foto de una parte seleccionada de la pantalla</value>
+  </data>
+  <data name="QuickStrip_Snip_Button_Title" xml:space="preserve">
+    <value>Copiar</value>
+  </data>
+  <data name="QuickStrip_Snip_Title" xml:space="preserve">
+    <value>Recorte</value>
+  </data>
+  <data name="QuickStrip_Snip_Name" xml:space="preserve">
+    <value>Cortar una copia de parte de la pantalla</value>
+  </data>
+  <data name="QuickStrip_Colors_Title" xml:space="preserve">
+    <value>Contraste y color</value>
+  </data>
+  <data name="QuickStrip_Colors_Contrast_Title" xml:space="preserve">
+    <value>Contrast</value>
+  </data>
+  <data name="QuickStrip_Colors_Color_Title" xml:space="preserve">
+    <value>Color</value>
+  </data>
+  <data name="QuickStrip_Colors_Color_Name" xml:space="preserve">
+    <value>Visión de color</value>
+  </data>
+  <data name="QuickStrip_Colors_Color_HelpTitle" xml:space="preserve">
+    <value>Activa y desactiva los filtros de color a ciegas</value>
+  </data>
+  <data name="QuickStrip_Colors_Color_HelpMessage" xml:space="preserve">
+    <value>Cambia los colores para adaptarse a las diferencias de visión de color. Para elegir el tipo, haga clic derecho en el botón.</value>
+  </data>
+  <data name="QuickStrip_Colors_Dark_Title" xml:space="preserve">
+    <value>Oscuro</value>
+  </data>
+  <data name="QuickStrip_Colors_Dark_HelpTitle" xml:space="preserve">
+    <value>Enciende y apaga el modo oscuro</value>
+  </data>
+  <data name="QuickStrip_Colors_Dark_HelpMessage" xml:space="preserve">
+    <value>Para cambiar la configuración, haga clic derecho en el botón.</value>
+  </data>
+  <data name="QuickStrip_Colors_Dark_Name" xml:space="preserve">
+    <value>Modo oscuro</value>
+  </data>
+
+  <data name="QuickStrip_Colors_Night_Title" xml:space="preserve">
+    <value>Noche</value>
+  </data>
+  <data name="QuickStrip_Colors_Night_Name" xml:space="preserve">
+    <value>Luz nocturna</value>
+  </data>
+
+  <data name="QuickStrip_Magnifier_Hide_HelpMessage" xml:space="preserve">
+    <value>Para cambiar la configuración de la lupa, haga clic derecho sobre el botón.</value>
+  </data>
+  <data name="QuickStrip_Magnifier_Hide_HelpTitle" xml:space="preserve">
+    <value>Desactiva la lupa</value>
+  </data>
+  <data name="QuickStrip_Magnifier_Hide_Title" xml:space="preserve">
+    <value>Ocultar</value>
+  </data>
+  <data name="QuickStrip_Magnifier_Show_HelpMessage" xml:space="preserve">
+    <value>La lupa sigue su ratón. Su ratón puede hacer clic a través de la caja.</value>
+  </data>
+  <data name="QuickStrip_Magnifier_Show_HelpTitle" xml:space="preserve">
+    <value>Activa un lente de lupa</value>
+  </data>
+  <data name="QuickStrip_Magnifier_Show_Title" xml:space="preserve">
+    <value>Mostrar</value>
+  </data>
+  <data name="QuickStrip_Magnifier_Title" xml:space="preserve">
+    <value>Magnifier</value>
+  </data>
+  <data name="QuickStrip_Magnifier_Show_Name" xml:space="preserve">
+    <value>Show Magnifier</value>
+  </data>
+  <data name="QuickStrip_Magnifier_Hide_Name" xml:space="preserve">
+    <value>Ocultar lupa</value>
+  </data>
+  <data name="QuickStrip_Reader_Start_HelpMessage" xml:space="preserve">
+    <value>Seleccione el texto a leer. Luego haga clic en el botón Reproducir para leer. Para cambiar la configuración, haga clic derecho en el botón.</value>
+  </data>
+  <data name="QuickStrip_Reader_Start_HelpTitle" xml:space="preserve">
+    <value>Lee el texto seleccionado</value>
+  </data>
+  <data name="QuickStrip_Reader_Stop_HelpMessage" xml:space="preserve">
+    <value>Para cambiar los ajustes de voz y velocidad, haga clic derecho sobre cualquiera de los dos botones.</value>
+  </data>
+  <data name="QuickStrip_Reader_Stop_HelpTitle" xml:space="preserve">
+    <value>Detener la lectura</value>
+  </data>
+  <data name="QuickStrip_Reader_Stop_Name" xml:space="preserve">
+    <value>Dejar de leer texto seleccionado</value>
+  </data>
+  <data name="QuickStrip_Reader_Start_Name" xml:space="preserve">
+    <value>Leer texto seleccionado</value>
+  </data>
+  <data name="QuickStrip_Reader_Title" xml:space="preserve">
+    <value>Leer seleccionados</value>
+  </data>
+  <data name="QuickStrip_Resolution_Bigger_HelpMessage" xml:space="preserve">
+    <value>Hace que todo en la pantalla sea más grande.</value>
+  </data>
+  <data name="QuickStrip_Resolution_Bigger_HelpTitle" xml:space="preserve">
+    <value>Aumenta el tamaño del texto en todas partes</value>
+  </data>
+  <data name="QuickStrip_Resolution_Bigger_Name" xml:space="preserve">
+    <value>Aumentar tamaño de texto</value>
+  </data>
+  <data name="QuickStrip_Resolution_Bigger_LimitMessage" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="QuickStrip_Resolution_Bigger_LimitTitle" xml:space="preserve">
+    <value>El tamaño del texto no puede ser mayor</value>
+  </data>
+  <data name="QuickStrip_Resolution_Smaller_HelpMessage" xml:space="preserve">
+    <value>Hace todo en la pantalla más pequeña.</value>
+  </data>
+  <data name="QuickStrip_Resolution_Smaller_HelpTitle" xml:space="preserve">
+    <value>Disminuye el tamaño del texto en todas partes</value>
+  </data>
+  <data name="QuickStrip_Resolution_Smaller_Name" xml:space="preserve">
+    <value>Reducir tamaño de texto</value>
+  </data>
+  <data name="QuickStrip_Resolution_Smaller_LimitMessage" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="QuickStrip_Resolution_Smaller_LimitTitle" xml:space="preserve">
+    <value>El tamaño del texto no puede ser menor</value>
+  </data>
+  <data name="QuickStrip_Resolution_Title" xml:space="preserve">
+    <value>Tamaño del texto</value>
+  </data>
+  <data name="QuickStrip_Volume_Down_HelpMessage" xml:space="preserve">
+    <value>Hace que todos los sonidos sean más silenciosos.</value>
+  </data>
+  <data name="QuickStrip_Volume_Down_HelpTitle" xml:space="preserve">
+    <value>Disminuye el volumen</value>
+  </data>
+  <data name="QuickStrip_Volume_Down_LimitMessage" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="QuickStrip_Volume_Down_LimitTitle" xml:space="preserve">
+    <value>El volumen no puede ser más silencioso</value>
+  </data>
+  <data name="QuickStrip_Volume_Mute_HelpMessage" xml:space="preserve">
+    <value>Silencia a los altavoces - pero NO silencia el micrófono.</value>
+  </data>
+  <data name="QuickStrip_Volume_Mute_HelpTitle" xml:space="preserve">
+    <value>Silencia todos los sonidos de tu computadora</value>
+  </data>
+  <data name="QuickStrip_Volume_Mute_MutedMessage" xml:space="preserve">
+    <value>Desactiva el silencio, permitiendo que los sonidos vuelvan de tu ordenador.</value>
+  </data>
+  <data name="QuickStrip_Volume_Mute_MutedTitle" xml:space="preserve">
+    <value>Retirar sonidos</value>
+  </data>
+  <data name="QuickStrip_Volume_Mute_Title" xml:space="preserve">
+    <value>Silenciar</value>
+  </data>
+  <data name="QuickStrip_Volume_Title" xml:space="preserve">
+    <value>Volumen</value>
+  </data>
+  <data name="QuickStrip_Volume_Unmute_HelpMessage" xml:space="preserve">
+    <value>Desactiva el silencio, permitiendo que los sonidos vuelvan de tu ordenador.</value>
+  </data>
+  <data name="QuickStrip_Volume_Unmute_HelpTitle" xml:space="preserve">
+    <value>Retirar sonidos</value>
+  </data>
+  <data name="QuickStrip_Volume_Up_HelpMessage" xml:space="preserve">
+    <value>Hace que todos los sonidos sean más fuertes.</value>
+  </data>
+  <data name="QuickStrip_Volume_Up_HelpTitle" xml:space="preserve">
+    <value>Aumenta el volumen</value>
+  </data>
+  <data name="QuickStrip_Volume_Up_LimitMessage" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="QuickStrip_Volume_Up_LimitTitle" xml:space="preserve">
+    <value>El volumen no puede ir más alto</value>
+  </data>
+</root>
