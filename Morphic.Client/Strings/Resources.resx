@@ -120,6 +120,9 @@
   <data name="AboutMorphicWindow_Title" xml:space="preserve">
     <value>About Morphic</value>
   </data>
+  <data name="AlreadyHaveAnAccountButton_Content" xml:space="preserve">
+    <value>Already have an account?</value>
+  </data>
   <data name="ApplyButton_Text" xml:space="preserve">
     <value>Apply</value>
   </data>
@@ -138,6 +141,9 @@
   <data name="ApplySettingsFromCloudVaultTitle_Content" xml:space="preserve">
     <value>Apply my settings from my Cloud Vault</value>
   </data>
+  <data name="BackupDate_Text" xml:space="preserve">
+    <value>Backup Date</value>
+  </data>
   <data name="CancelButton_AutomationHelpText" xml:space="preserve">
     <value>Cancel Login</value>
   </data>
@@ -150,14 +156,47 @@
   <data name="CheckForUpdateHyperlink_Text" xml:space="preserve">
     <value>Check for Update</value>
   </data>
+  <data name="ChooseAPassword_Content" xml:space="preserve">
+    <value>Choose a Password</value>
+  </data>
+  <data name="ClickingBelowWillRestoreSettings_Part1_Text" xml:space="preserve">
+    <value>Clicking</value>
+  </data>
+  <data name="ClickingBelowWillRestoreSettings_Part2_Text" xml:space="preserve">
+    <value>Restore from backup</value>
+  </data>
+  <data name="ClickingBelowWillRestoreSettings_Part3_Text" xml:space="preserve">
+    <value>below will restore those settings to this computer.</value>
+  </data>
   <data name="ClickingSaveWillSaveSettingsToVault_Text" xml:space="preserve">
     <value>Clicking save will save them to your secure Cloud Vault.</value>
+  </data>
+  <data name="CloseButton_Text" xml:space="preserve">
+    <value>Close</value>
   </data>
   <data name="CollectingSettingsFromComputerLabel_Content" xml:space="preserve">
     <value>Collecting settings from your computer...</value>
   </data>
   <data name="ConfirmSavingToCloudVaultLabel_Content" xml:space="preserve">
     <value>Confirm saving to your Morphic Cloud Vault</value>
+  </data>
+  <data name="ConfirmYourPassword_Content" xml:space="preserve">
+    <value>Confirm your Password</value>
+  </data>
+  <data name="CopySettingsBetweenComputersDescription_Text" xml:space="preserve">
+    <value>This feature allows you to move your accessibility and usability settings between computers - including the settings of your assistive technologies.</value>
+  </data>
+  <data name="CopySettingsBetweenComputersHeader_Text" xml:space="preserve">
+    <value>Copy Settings Between Computers</value>
+  </data>
+  <data name="CopySettingsFromCloudVaultHyperlink_Text" xml:space="preserve">
+    <value>Use the settings in my Cloud Vault to set up this computer.</value>
+  </data>
+  <data name="CopySettingsToCloudVaultHyperlink_Text" xml:space="preserve">
+    <value>Copy settings on this computer to my Cloud Vault</value>
+  </data>
+  <data name="CreateAccountAndRememberMySettingsButton_Content" xml:space="preserve">
+    <value>Create Account &amp; Remember My Settings</value>
   </data>
   <data name="CreateAccountHyperlink_Text" xml:space="preserve">
     <value>Don't have an account yet?</value>
@@ -309,6 +348,21 @@
   <data name="PasswordField_AutomationHelpText" xml:space="preserve">
     <value>Enter your Morphic password</value>
   </data>
+  <data name="RememberYourLoginEmailAddress_Text" xml:space="preserve">
+    <value>When you sit down at another computer with Morphic installed, remember to login with the email address you provided</value>
+  </data>
+  <data name="RestoreFromBackupButton_Text" xml:space="preserve">
+    <value>Restore from backup</value>
+  </data>
+  <data name="RestoreSettingsFromBackupHeaderDescription_Text" xml:space="preserve">
+    <value>The last time Morphic applied a user’s settings to this user account on this computer, Morphic captured the settings already on the computer and saved them to a backup.</value>
+  </data>
+  <data name="RestoreSettingsFromBackupHeader_Text" xml:space="preserve">
+    <value>Restore settings from backup</value>
+  </data>
+  <data name="RestoreSettingsFromBackupWindow_Title" xml:space="preserve">
+    <value>Restore settings from backup</value>
+  </data>
   <data name="SaveButton_Text" xml:space="preserve">
     <value>Save</value>
   </data>
@@ -324,6 +378,9 @@
   <data name="SettingsFromCloudVaultHaveBeenApplied_Text" xml:space="preserve">
     <value>The settings on from your cloud vault have been applied to this Computer.</value>
   </data>
+  <data name="SettingsSaveCompleteLabel_Content" xml:space="preserve">
+    <value>Complete!</value>
+  </data>
   <data name="SettingsSavedToCloudVaultLabel_Content" xml:space="preserve">
     <value>Settings Saved to Cloud Vault</value>
   </data>
@@ -336,14 +393,38 @@
   <data name="SignInWindow_Title" xml:space="preserve">
     <value>Sign in to Morphic</value>
   </data>
+  <data name="TakeYourSettingsAnywhereHeaderLabel_Content" xml:space="preserve">
+    <value>Take Your Settings Anywhere</value>
+  </data>
+  <data name="TakeYourSettingsAnywhereInstructions_Text" xml:space="preserve">
+    <value>You'll need to create an account so we can remember your settings and securely apply them to another computer</value>
+  </data>
+  <data name="TermsAndConditionsLinks_Part1_Content" xml:space="preserve">
+    <value>By signing up for Morphic you are agreeing to the</value>
+  </data>
+  <data name="TermsAndConditionsLinks_Part2_Content" xml:space="preserve">
+    <value>Terms of Service</value>
+  </data>
+  <data name="TermsAndConditionsLinks_Part3_Content" xml:space="preserve">
+    <value>and</value>
+  </data>
+  <data name="TermsAndConditionsLinks_Part4_Content" xml:space="preserve">
+    <value>Privacy Policy</value>
+  </data>
   <data name="TravelWindow_Title" xml:space="preserve">
     <value>Travel with Settings</value>
   </data>
   <data name="UsernameField_AutomationHelpText" xml:space="preserve">
     <value>Enter your email address</value>
   </data>
+  <data name="WeSavedYourSettings_Text" xml:space="preserve">
+    <value>We've saved your settings in a secure area only you can access.</value>
+  </data>
   <data name="YouAreMemberOfMultipleGroups_Text" xml:space="preserve">
     <value>You are a member of several Morphic Groups.</value>
+  </data>
+  <data name="YourEmailAddressLabel_Content" xml:space="preserve">
+    <value>Your Email Address</value>
   </data>
   <data name="YourSettingsHaveBeenAppliedLabel_Content" xml:space="preserve">
     <value>Your Settings have been applied</value>

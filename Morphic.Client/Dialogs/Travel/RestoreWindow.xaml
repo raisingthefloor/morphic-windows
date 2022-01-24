@@ -4,8 +4,9 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:dialogs="clr-namespace:Morphic.Client.Dialogs"
+        xmlns:l10n="clr-namespace:Morphic.Client.Strings"
         mc:Ignorable="d"
-        Title="Restore settings from backup"
+        Title="{x:Static l10n:Resources.RestoreSettingsFromBackupWindow_Title}"
         FontSize="17"
         ResizeMode="NoResize"
         Width="500"
@@ -44,21 +45,19 @@
     </Window.Resources>
 
     <StackPanel>
-        <TextBlock HorizontalAlignment="Center" Margin="20" FontWeight="Bold">Restore settings from backup</TextBlock>
-        <TextBlock HorizontalAlignment="Center" Margin="20" TextWrapping="Wrap" >
-            The last time Morphic applied a user’s settings to this user account on this computer, Morphic captured the
-            settings already on the computer and saved them to a backup.
-        </TextBlock>
+        <TextBlock HorizontalAlignment="Center" Margin="20" FontWeight="Bold" Text="{x:Static l10n:Resources.RestoreSettingsFromBackupHeader_Text}"/>
+        <TextBlock HorizontalAlignment="Center" Margin="20" TextWrapping="Wrap" Text="{x:Static l10n:Resources.RestoreSettingsFromBackupHeaderDescription_Text}"/>
         <TextBlock HorizontalAlignment="Left" Margin="40,20,0,20" Name="BackupTextBlock">
-            Backup Date: <Hyperlink x:Name="BackupLink" Click="BackupDateClick"><TextBlock Text="{Binding SelectedBackupDate}"></TextBlock></Hyperlink>
+            <Run Text="{x:Static l10n:Resources.BackupDate_Text}"/>: 
+            <Hyperlink x:Name="BackupLink" Click="BackupDateClick"><TextBlock Text="{Binding SelectedBackupDate}"></TextBlock></Hyperlink>
         </TextBlock>
         <TextBlock HorizontalAlignment="Center" Margin="20" TextWrapping="Wrap" >
-            Clicking "<Bold>Restore from backup</Bold>" below will restore those settings to this computer.
+            <Run Text="{x:Static l10n:Resources.ClickingBelowWillRestoreSettings_Part1_Text}"/> "<Bold><Run Text="{x:Static l10n:Resources.ClickingBelowWillRestoreSettings_Part2_Text}"/></Bold>" <Run Text="{x:Static l10n:Resources.ClickingBelowWillRestoreSettings_Part3_Text}"/>
         </TextBlock>
 
         <UniformGrid Columns="2" Margin="40,20,40,20">
-            <Button x:Name="CancelButton" Width="Auto" HorizontalAlignment="Left" FontWeight="Bold" Margin="10,5,0,10" Click="OnCancel" IsEnabled="True" Content="Cancel"/>
-            <Button x:Name="ApplyButton" Width="Auto" HorizontalAlignment="Right" FontWeight="Bold" Margin="10,5,0,10" Click="OnApply" IsEnabled="True" Content="Restore from backup"/>
+            <Button x:Name="CancelButton" Width="Auto" HorizontalAlignment="Left" FontWeight="Bold" Margin="10,5,0,10" Click="OnCancel" IsEnabled="True" Content="{x:Static l10n:Resources.CancelButton_Text}"/>
+            <Button x:Name="ApplyButton" Width="Auto" HorizontalAlignment="Right" FontWeight="Bold" Margin="10,5,0,10" Click="OnApply" IsEnabled="True" Content="{x:Static l10n:Resources.RestoreFromBackupButton_Text}"/>
         </UniformGrid>
 
     </StackPanel>

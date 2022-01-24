@@ -70,6 +70,15 @@ namespace Morphic.Client.Strings {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Already have an account?.
+        /// </summary>
+        public static string AlreadyHaveAnAccountButton_Content {
+            get {
+                return ResourceManager.GetString("AlreadyHaveAnAccountButton_Content", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Apply.
         /// </summary>
         public static string ApplyButton_Text {
@@ -124,6 +133,15 @@ namespace Morphic.Client.Strings {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Backup Date.
+        /// </summary>
+        public static string BackupDate_Text {
+            get {
+                return ResourceManager.GetString("BackupDate_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cancel Login.
         /// </summary>
         public static string CancelButton_AutomationHelpText {
@@ -160,11 +178,56 @@ namespace Morphic.Client.Strings {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Choose a Password.
+        /// </summary>
+        public static string ChooseAPassword_Content {
+            get {
+                return ResourceManager.GetString("ChooseAPassword_Content", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Clicking.
+        /// </summary>
+        public static string ClickingBelowWillRestoreSettings_Part1_Text {
+            get {
+                return ResourceManager.GetString("ClickingBelowWillRestoreSettings_Part1_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Restore from backup.
+        /// </summary>
+        public static string ClickingBelowWillRestoreSettings_Part2_Text {
+            get {
+                return ResourceManager.GetString("ClickingBelowWillRestoreSettings_Part2_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to below will restore those settings to this computer..
+        /// </summary>
+        public static string ClickingBelowWillRestoreSettings_Part3_Text {
+            get {
+                return ResourceManager.GetString("ClickingBelowWillRestoreSettings_Part3_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Clicking save will save them to your secure Cloud Vault..
         /// </summary>
         public static string ClickingSaveWillSaveSettingsToVault_Text {
             get {
                 return ResourceManager.GetString("ClickingSaveWillSaveSettingsToVault_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Close.
+        /// </summary>
+        public static string CloseButton_Text {
+            get {
+                return ResourceManager.GetString("CloseButton_Text", resourceCulture);
             }
         }
         
@@ -183,6 +246,60 @@ namespace Morphic.Client.Strings {
         public static string ConfirmSavingToCloudVaultLabel_Content {
             get {
                 return ResourceManager.GetString("ConfirmSavingToCloudVaultLabel_Content", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Confirm your Password.
+        /// </summary>
+        public static string ConfirmYourPassword_Content {
+            get {
+                return ResourceManager.GetString("ConfirmYourPassword_Content", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This feature allows you to move your accessibility and usability settings between computers - including the settings of your assistive technologies..
+        /// </summary>
+        public static string CopySettingsBetweenComputersDescription_Text {
+            get {
+                return ResourceManager.GetString("CopySettingsBetweenComputersDescription_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Copy Settings Between Computers.
+        /// </summary>
+        public static string CopySettingsBetweenComputersHeader_Text {
+            get {
+                return ResourceManager.GetString("CopySettingsBetweenComputersHeader_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use the settings in my Cloud Vault to set up this computer..
+        /// </summary>
+        public static string CopySettingsFromCloudVaultHyperlink_Text {
+            get {
+                return ResourceManager.GetString("CopySettingsFromCloudVaultHyperlink_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Copy settings on this computer to my Cloud Vault.
+        /// </summary>
+        public static string CopySettingsToCloudVaultHyperlink_Text {
+            get {
+                return ResourceManager.GetString("CopySettingsToCloudVaultHyperlink_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create Account &amp; Remember My Settings.
+        /// </summary>
+        public static string CreateAccountAndRememberMySettingsButton_Content {
+            get {
+                return ResourceManager.GetString("CreateAccountAndRememberMySettingsButton_Content", resourceCulture);
             }
         }
         
@@ -637,6 +754,51 @@ namespace Morphic.Client.Strings {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to When you sit down at another computer with Morphic installed, remember to login with the email address you provided.
+        /// </summary>
+        public static string RememberYourLoginEmailAddress_Text {
+            get {
+                return ResourceManager.GetString("RememberYourLoginEmailAddress_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Restore from backup.
+        /// </summary>
+        public static string RestoreFromBackupButton_Text {
+            get {
+                return ResourceManager.GetString("RestoreFromBackupButton_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Restore settings from backup.
+        /// </summary>
+        public static string RestoreSettingsFromBackupHeader_Text {
+            get {
+                return ResourceManager.GetString("RestoreSettingsFromBackupHeader_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The last time Morphic applied a user’s settings to this user account on this computer, Morphic captured the settings already on the computer and saved them to a backup..
+        /// </summary>
+        public static string RestoreSettingsFromBackupHeaderDescription_Text {
+            get {
+                return ResourceManager.GetString("RestoreSettingsFromBackupHeaderDescription_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Restore settings from backup.
+        /// </summary>
+        public static string RestoreSettingsFromBackupWindow_Title {
+            get {
+                return ResourceManager.GetString("RestoreSettingsFromBackupWindow_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Save.
         /// </summary>
         public static string SaveButton_Text {
@@ -682,6 +844,15 @@ namespace Morphic.Client.Strings {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Complete!.
+        /// </summary>
+        public static string SettingsSaveCompleteLabel_Content {
+            get {
+                return ResourceManager.GetString("SettingsSaveCompleteLabel_Content", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Settings Saved to Cloud Vault.
         /// </summary>
         public static string SettingsSavedToCloudVaultLabel_Content {
@@ -718,6 +889,60 @@ namespace Morphic.Client.Strings {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Take Your Settings Anywhere.
+        /// </summary>
+        public static string TakeYourSettingsAnywhereHeaderLabel_Content {
+            get {
+                return ResourceManager.GetString("TakeYourSettingsAnywhereHeaderLabel_Content", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You&apos;ll need to create an account so we can remember your settings and securely apply them to another computer.
+        /// </summary>
+        public static string TakeYourSettingsAnywhereInstructions_Text {
+            get {
+                return ResourceManager.GetString("TakeYourSettingsAnywhereInstructions_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to By signing up for Morphic you are agreeing to the.
+        /// </summary>
+        public static string TermsAndConditionsLinks_Part1_Content {
+            get {
+                return ResourceManager.GetString("TermsAndConditionsLinks_Part1_Content", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Terms of Service.
+        /// </summary>
+        public static string TermsAndConditionsLinks_Part2_Content {
+            get {
+                return ResourceManager.GetString("TermsAndConditionsLinks_Part2_Content", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to and.
+        /// </summary>
+        public static string TermsAndConditionsLinks_Part3_Content {
+            get {
+                return ResourceManager.GetString("TermsAndConditionsLinks_Part3_Content", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Privacy Policy.
+        /// </summary>
+        public static string TermsAndConditionsLinks_Part4_Content {
+            get {
+                return ResourceManager.GetString("TermsAndConditionsLinks_Part4_Content", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Travel with Settings.
         /// </summary>
         public static string TravelWindow_Title {
@@ -736,11 +961,29 @@ namespace Morphic.Client.Strings {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to We&apos;ve saved your settings in a secure area only you can access..
+        /// </summary>
+        public static string WeSavedYourSettings_Text {
+            get {
+                return ResourceManager.GetString("WeSavedYourSettings_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You are a member of several Morphic Groups..
         /// </summary>
         public static string YouAreMemberOfMultipleGroups_Text {
             get {
                 return ResourceManager.GetString("YouAreMemberOfMultipleGroups_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Your Email Address.
+        /// </summary>
+        public static string YourEmailAddressLabel_Content {
+            get {
+                return ResourceManager.GetString("YourEmailAddressLabel_Content", resourceCulture);
             }
         }
         
