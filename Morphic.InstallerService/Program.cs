@@ -357,12 +357,6 @@ class SelfSignedCertificate
         var subjectKeyIdentifier = new X509SubjectKeyIdentifierExtension(certRequest.PublicKey, false);
         extensions.Add(subjectKeyIdentifier);
 
-        //if(ForCertificateAuthority)
-        //{
-        //    var authorityKey = 
-        //}
-
-
         foreach(var extension in extensions)
         {
             certRequest.CertificateExtensions.Add(extension);
