@@ -146,6 +146,8 @@ namespace Morphic.Client
             public string? function { get; set; }
             // for type: control
             public string? feature { get; set; }
+            // for type: application
+            public string? appId { get; set; }
         }
         //
         public class TelemetryConfigSection
@@ -350,6 +352,8 @@ namespace Morphic.Client
                     var extraItemFunction = extraItem.function;
                     // for type: control
                     var extraItemFeature = extraItem.feature;
+                    // for type: application
+                    var extraItemAppId = extraItem.appId;
 
                     // if the item is invalid, log the error and skip this item
                     if (extraItemType is null)
@@ -358,7 +362,15 @@ namespace Morphic.Client
                         Logger?.LogError("Invalid MorphicBar item: " + extraItem.ToString());
                         continue;
                     }
-                    if ((extraItemType != "control") && ((extraItemLabel is null) || (extraItemTooltipHeader is null)))
+                    if ((extraItemType != "control") && (extraItemLabel is null))
+                    {
+                        // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
+                        Logger?.LogError("Invalid MorphicBar item: " + extraItem.ToString());
+                        continue;
+                    }
+
+                    // if the "application" is missing its appId, log the error and skip this item
+                    if ((extraItemType == "application") && (extraItemAppId is null))
                     {
                         // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
                         Logger?.LogError("Invalid MorphicBar item: " + extraItem.ToString());
@@ -396,6 +408,7 @@ namespace Morphic.Client
                     extraMorphicBarItem.url = extraItemUrl;
                     extraMorphicBarItem.function = extraItemFunction;
                     extraMorphicBarItem.feature = extraItemFeature;
+                    extraMorphicBarItem.appId = extraItemAppId;
                     result.ExtraMorphicBarItems.Add(extraMorphicBarItem);
                 }
             }
@@ -933,21 +946,22 @@ namespace Morphic.Client
                 await this.MorphicSession.SetSetting(SettingId.NightModeEnabled, nightModeIsEnabled);
             }
             //
-            // screen scaling
-            var monitorName = Morphic.Windows.Native.Display.Display.GetMonitorName(null);
-            if (monitorName is not null)
+            // screen scaling (on all monitors)
+            var getAllDisplaysResult = Morphic.Windows.Native.Display.Display.GetAllDisplays();
+            if (getAllDisplaysResult.IsSuccess == true) 
             {
-                // get the adapterId and sourceId for this monitor
-                var adapterIdAndSourceId = Morphic.Windows.Native.Display.Display.GetAdapterIdAndSourceId(monitorName);
-                if (adapterIdAndSourceId is not null)
+                var allDisplays = getAllDisplaysResult.Value!;
+
+                foreach (var display in allDisplays)
                 {
-                    // get the current DPI offset
-                    var currentDisplayDpiOffset = Morphic.Windows.Native.Display.Display.GetCurrentDpiOffsetAndRange(adapterIdAndSourceId.Value.adapterId, adapterIdAndSourceId.Value.sourceId);
-                    if (currentDisplayDpiOffset is not null)
+		            // get the current DPI offset for the monitor
+                    var getCurrentDisplayDpiOffsetAndRangeResult = display.GetCurrentDpiOffsetAndRange();
+                    if (getCurrentDisplayDpiOffsetAndRangeResult.IsSuccess == true)
                     {
-                        if (currentDisplayDpiOffset.Value.currentDpiOffset != displayDpiOffsetDefault)
+                        var currentDisplayDpiOffset = getCurrentDisplayDpiOffsetAndRangeResult.Value!;
+                        if (currentDisplayDpiOffset.CurrentDpiOffset != displayDpiOffsetDefault)
                         {
-                            _ = Morphic.Windows.Native.Display.Display.SetDpiOffset(displayDpiOffsetDefault, adapterIdAndSourceId.Value);
+                            _ = await display.SetDpiOffsetAsync(displayDpiOffsetDefault);
                         }
                     }
                 }

@@ -197,6 +197,19 @@ namespace Morphic.Client.Bar.Data
 
                             switch (extraItemData.type)
                             {
+                                case "application":
+                                    {
+                                        extraBarItem = new BarButton(defaultBar);
+                                        extraBarItem.ToolTipHeader = extraItemData.tooltipHeader;
+                                        extraBarItem.ToolTip = extraItemData.tooltipText;
+                                        extraBarItem.Text = extraItemData.label ?? "";
+                                        //
+                                        extraBarItem.Action = new Morphic.Client.Bar.Data.Actions.ApplicationAction();
+                                        ((Morphic.Client.Bar.Data.Actions.ApplicationAction)extraBarItem.Action!).ImageIsCollapsed = true; // for horizontal bars, we don't want an image to be visible
+                                        ((Morphic.Client.Bar.Data.Actions.ApplicationAction)extraBarItem.Action!).ExeName = extraItemData.appId ?? "";
+                                        extraBarItemShouldBeAdded = ((Morphic.Client.Bar.Data.Actions.ApplicationAction)extraBarItem.Action!).IsAvailable;
+                                    }
+                                    break;
                                 case "link":
                                     {
                                         extraBarItem = new BarButton(defaultBar);

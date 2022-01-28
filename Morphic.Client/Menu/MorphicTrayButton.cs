@@ -478,7 +478,7 @@ namespace Morphic.Client.Menu
                 {
                     var handle = WinApi.CreateWindowEx(
                         (WinApi.WindowStylesEx)cp.ExStyle,
-                        (IntPtr)Int64.Parse(cp.ClassName),
+                        classNameAsIntPtr,
                         cp.Caption,
                         (WinApi.WindowStyles)cp.Style,
                         cp.X,
@@ -503,7 +503,7 @@ namespace Morphic.Client.Menu
                 {
                     if (mustReleaseClassNameAsIntPtr == true)
                     {
-                        Marshal.Release(classNameAsIntPtr);
+                        Marshal.FreeHGlobal(classNameAsIntPtr);
                     }
                 }
             }

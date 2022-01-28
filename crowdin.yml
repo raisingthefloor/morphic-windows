@@ -1,0 +1,27 @@
+#
+# Your Crowdin credentials
+#
+"base_path" : "."
+"base_url" : "https://api.crowdin.com"
+
+#
+# Choose file structure in Crowdin
+# e.g. true or false
+#
+"preserve_hierarchy": true
+
+#
+# Files configuration
+#
+files: [
+ {
+  "source" : "Morphic.Client/Properties/Resources.resx",
+  "translation" : "Morphic.Client/Properties/Resources.%two_letters_code%.resx",
+  "update_option" : "update_as_unapproved",
+ },
+ {
+  "source" : "Morphic.Client/Strings/Resources.resx",
+  "translation" : "Morphic.Client/Strings/Resources.%two_letters_code%.resx",
+  "update_option" : "update_as_unapproved",
+ }
+]

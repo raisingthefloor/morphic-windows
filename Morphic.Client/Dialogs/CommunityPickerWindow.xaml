@@ -4,6 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:dialogs="clr-namespace:Morphic.Client.Dialogs"
+        xmlns:l10n="clr-namespace:Morphic.Client.Strings"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance dialogs:CommunityPickerWindow}"
         Title="Morphic Community Selection"
@@ -13,8 +14,8 @@
         WindowStyle="ToolWindow"
         >
     <StackPanel>
-        <TextBlock Margin="10 10 10 0" TextWrapping="Wrap" FontSize="14">You are a member of several Morphic Communities.</TextBlock>
-        <TextBlock Margin="10 5 10 5" TextWrapping="Wrap">Select the community whose bar you would like to see now:</TextBlock>
+        <TextBlock Margin="10 10 10 0" TextWrapping="Wrap" FontSize="14" Text="{x:Static l10n:Resources.YouAreMemberOfMultipleGroups_Text}"/>
+        <TextBlock Margin="10 5 10 5" TextWrapping="Wrap" Text="{x:Static l10n:Resources.SelectCurrentGroupHeader_Text}"/>
         <ItemsControl ItemsSource="{Binding Communities}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
@@ -26,6 +27,6 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
-        <TextBlock Margin="10" TextWrapping="Wrap">You can change this preference later, by using the Morphic Menu.</TextBlock>
+        <TextBlock Margin="10" TextWrapping="Wrap" Text="{x:Static l10n:Resources.ChangePreferenceLaterUsingMorphicMenu_Text}"/>
     </StackPanel>
 </Window>
