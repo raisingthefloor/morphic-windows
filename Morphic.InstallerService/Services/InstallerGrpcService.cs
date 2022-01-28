@@ -3,6 +3,7 @@ using IoDCLI;
 using IoDCLI.Workflows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Morphic.InstallerService.IoD;
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -97,26 +98,26 @@ namespace Morphic.InstallerService.Services
 
                 if (service != null)
                 {
-                    //await service.InstallJaws(arguments, (sender, args) => HandleProgress(args));
-                    Progress?.Invoke(this, new ProgressEventArgs(54d));
-                    await Task.Delay(1000);
-                    Progress?.Invoke(this, new ProgressEventArgs(67d));
-                    await Task.Delay(1000);
-                    Progress?.Invoke(this, new ProgressEventArgs(72d));
-                    await Task.Delay(1000);
-                    Progress?.Invoke(this, new ProgressEventArgs(78d));
-                    await Task.Delay(1000);
-                    Progress?.Invoke(this, new ProgressEventArgs(83d));
-                    await Task.Delay(1000);
-                    Progress?.Invoke(this, new ProgressEventArgs(91d));
-                    await Task.Delay(1000);
-                    Progress?.Invoke(this, new ProgressEventArgs(96d));
-                    await Task.Delay(1000);
-                    Progress?.Invoke(this, new ProgressEventArgs(99d));
-                    await Task.Delay(1000);
-                    Progress?.Invoke(this, new ProgressEventArgs(100d));
+                    using var systemRestore = new SystemRestore(_logger);
+                    var sequenceNumber = -1L;
 
-                    Complete?.Invoke(this, new EventArgs());
+                    try
+                    {
+                        systemRestore.Start("Moprhic AToD installed Read&Write.", RestoreType.ApplicationInstall, out sequenceNumber);
+
+                        InstallState.GetInstance().SequenceNumber = sequenceNumber;
+                        InstallState.GetInstance().IsInstalling = true;
+
+                        await service.InstallReadAndWrite(arguments, Progress, Complete);
+                    }
+                    finally
+                    {
+                        if (sequenceNumber != -1)
+                            systemRestore.End(sequenceNumber);
+
+                        InstallState.GetInstance().IsInstalling = false;
+                    }
+
                 }
                 else
                 {
@@ -139,8 +140,25 @@ namespace Morphic.InstallerService.Services
 
                 if (service != null)
                 {
-                    //await service.UninstallJaws(arguments);
-                    Progress?.Invoke(this, new ProgressEventArgs(75d));
+                    using var systemRestore = new SystemRestore(_logger);
+                    var sequenceNumber = -1L;
+
+                    try
+                    {
+                        systemRestore.Start("Moprhic AToD uninstalled Read&Write.", RestoreType.ApplicationUninstall, out sequenceNumber);
+
+                        InstallState.GetInstance().SequenceNumber = sequenceNumber;
+                        InstallState.GetInstance().IsInstalling = true;
+
+                        await service.UninstallReadAndWrite(arguments, Progress, Complete);
+                    }
+                    finally
+                    {
+                        if (sequenceNumber != -1)
+                            systemRestore.End(sequenceNumber);
+
+                        InstallState.GetInstance().IsInstalling = false;
+                    }
                 }
                 else
                 {
@@ -149,19 +167,19 @@ namespace Morphic.InstallerService.Services
             });
         }
 
-        private void HandleProgress(ProgressEventArgs progressEventArgs)
-        {
-            _logger.LogInformation($"Progress: {progressEventArgs.Value}%");
+        //private void HandleProgress(ProgressEventArgs progressEventArgs)
+        //{
+        //    _logger.LogInformation($"Progress: {progressEventArgs.Value}%");
 
-            Progress?.Invoke(this, progressEventArgs);
-        }
+        //    Progress?.Invoke(this, progressEventArgs);
+        //}
 
-        private void HandleComplete()
-        {
-            _logger.LogInformation($"Installation complete.");
+        //private void HandleComplete()
+        //{
+        //    _logger.LogInformation($"Installation complete.");
 
-            Complete?.Invoke(this, new EventArgs());
-        }
+        //    Complete?.Invoke(this, new EventArgs());
+        //}
 
         //private void HandleLog(string message)
         //{
@@ -170,17 +188,23 @@ namespace Morphic.InstallerService.Services
         //    Log?.Invoke(this, new EventArgs());
         //}
 
+        int _percentage;
         private async Task WriteProgressAsync(IServerStreamWriter<Response> stream, double percentage)
         {
             try
             {
-                await stream.WriteAsync(new Response
+                if (_percentage != (int)percentage)
                 {
-                    Progress = new ProgressMessage
+                    await stream.WriteAsync(new Response
                     {
-                        Percentage = percentage
-                    }
-                });
+                        Progress = new ProgressMessage
+                        {
+                            Percentage = percentage
+                        }
+                    });
+                }
+
+                _percentage = (int)percentage;
             }
             catch (Exception e)
             {

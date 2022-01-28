@@ -107,7 +107,7 @@ namespace IoDCLI
             await Task.CompletedTask;
         }
 
-        public async Task InstallReadAndWrite(string[] arguments, EventHandler<ProgressEventArgs> progressHandler = null)
+        public async Task InstallReadAndWrite(string[] arguments, EventHandler<ProgressEventArgs> progressHandler = null, EventHandler completionHandler = null)
         {
             if (arguments.Length > 0)
             {
@@ -129,21 +129,35 @@ namespace IoDCLI
                 }
 
                 await workflow.Install();
+                completionHandler?.Invoke(this, new EventArgs());
             }
 
             await Task.CompletedTask;
         }
 
-        public async Task UninstallReadAndWrite(string[] arguments)
+        public async Task UninstallReadAndWrite(string[] arguments, EventHandler<ProgressEventArgs> progressHandler = null, EventHandler completionHandler = null)
         {
             if (arguments.Length > 0)
             {
-                var workflow = new ReadAndWriteWorkflow(null, (sender, args) => HandleProgress(args), _logger)
+                ReadAndWriteWorkflow workflow = null;
+
+                if (progressHandler == null)
                 {
-                    SourcePath = arguments[0]
-                };
+                    workflow = new ReadAndWriteWorkflow(null, (sender, args) => HandleProgress(args), _logger)
+                    {
+                        SourcePath = arguments[0]
+                    };
+                }
+                else
+                {
+                    workflow = new ReadAndWriteWorkflow(null, progressHandler, _logger)
+                    {
+                        SourcePath = arguments[0]
+                    };
+                }
 
                 await workflow.Uninstall();
+                completionHandler?.Invoke(this, new EventArgs());
             }
 
             await Task.CompletedTask;

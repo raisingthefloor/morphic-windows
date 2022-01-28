@@ -22,7 +22,9 @@ namespace WpfApp1
 
         public event PropertyChangedEventHandler PropertyChanged;
 
+        private bool _isIndeterminate;
         private double _progressValue;
+        private string _description;
 
         public double ProgressValue
         {
@@ -30,6 +32,26 @@ namespace WpfApp1
             set
             {
                 _progressValue = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool IsIndeterminate
+        {
+            get { return _isIndeterminate; }
+            set
+            {
+                _isIndeterminate = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string Description
+        {
+            get { return _description; }
+            set
+            {
+                _description = value;
                 OnPropertyChanged();
             }
         }
@@ -44,6 +66,8 @@ namespace WpfApp1
             _task = RunAsync(_cancellationTokenSource.Token);
 
             DataContext = this;
+
+            Description = "Loading...";
         }
 
         private async Task RunAsync(CancellationToken token)
@@ -71,12 +95,24 @@ namespace WpfApp1
                     }
                 }
 
+                IsIndeterminate = true;
+
                 if (action == "install")
                 {
+                    await Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        Description = "Installing...";
+                    }));
+
                     await Install(application, arguments.ToArray());
                 }
                 else if (action == "uninstall")
                 {
+                    await Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        Description = "Uninstalling...";
+                    }));
+
                     await Uninstall(application, arguments.ToArray());
                 }
 
@@ -110,6 +146,11 @@ namespace WpfApp1
                             break;
                         case Response.ResponseOneofCase.Progress:
                             Console.WriteLine($"{response.Progress.Percentage}%");
+                            if (response.Progress.Percentage == 0d && !IsIndeterminate)
+                                IsIndeterminate = true;
+                            else if (response.Progress.Percentage != 0d && IsIndeterminate)
+                                IsIndeterminate = false;
+
                             ProgressValue = response.Progress.Percentage;
                             break;
                         case Response.ResponseOneofCase.Complete:

@@ -2,7 +2,10 @@
   "profiles": {
     "Morphic.InstallerService.Client": {
       "commandName": "Project",
-      "commandLineArgs": "install jaws \"C:\\JAWS\""
+      "commandLineArgs": "uninstall readandwrite \"C:\\Users\\codan\\Desktop\\read&write\"",
+      "remoteDebugEnabled": false,
+      "remoteDebugMachine": "",
+      "authenticationMode": "None"
     }
   }
 }

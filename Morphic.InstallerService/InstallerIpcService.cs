@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Morphic.InstallerService.Contracts;
+using Morphic.InstallerService.IoD;
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -19,6 +20,12 @@ namespace Morphic.InstallerService
         {
             _logger = logger;
             _serviceProvider = serviceProvider;
+
+            if(InstallState.GetInstance().IsInstalling)
+            {
+                using var systemRestore = new SystemRestore(_logger);
+                systemRestore.Cancel(InstallState.GetInstance().SequenceNumber);
+            }
         }
 
         public async Task Install(Package package)
@@ -90,7 +97,26 @@ namespace Morphic.InstallerService
 
                 if (service != null)
                 {
-                    await service.InstallReadAndWrite(arguments);
+                    using var systemRestore = new SystemRestore(_logger);
+                    var sequenceNumber = -1L;
+
+                    try
+                    {
+                        systemRestore.Start("Moprhic AToD installing Read&Write.", RestoreType.ApplicationInstall, out sequenceNumber);
+
+                        InstallState.GetInstance().SequenceNumber = sequenceNumber;
+                        InstallState.GetInstance().IsInstalling = true;
+
+                        await service.InstallReadAndWrite(arguments);
+                    }
+                    finally
+                    {
+                        if(sequenceNumber != -1)
+                            systemRestore.End(sequenceNumber);
+
+                        InstallState.GetInstance().IsInstalling = false;
+                    }
+
                 }
                 else
                 {
@@ -113,7 +139,25 @@ namespace Morphic.InstallerService
 
                 if (service != null)
                 {
-                    await service.UninstallReadAndWrite(arguments);
+                    using var systemRestore = new SystemRestore(_logger);
+                    var sequenceNumber = -1L;
+
+                    try
+                    {
+                        systemRestore.Start("Moprhic AToD uninstalling Read&Write.", RestoreType.ApplicationUninstall, out sequenceNumber);
+
+                        InstallState.GetInstance().SequenceNumber = sequenceNumber;
+                        InstallState.GetInstance().IsInstalling = true;
+
+                        await service.UninstallReadAndWrite(arguments);
+                    }
+                    finally
+                    {
+                        if (sequenceNumber != -1)
+                            systemRestore.End(sequenceNumber);
+
+                        InstallState.GetInstance().IsInstalling = false;
+                    }
                 }
                 else
                 {

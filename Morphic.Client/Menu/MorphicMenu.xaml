@@ -21,8 +21,7 @@
     <Separator/>
     
     <menu:MorphicMenuHeader Header="Read&amp;Write"/>
-    <menu:MorphicMenuItem Header="Install Read&amp;Write" Click="InstallReadAndWriteClick" />
-    <menu:MorphicMenuItem Header="Uninstall Read&amp;Write" Click="UninstallReadAndWriteClick" />
+    <menu:MorphicMenuItem Header="{Binding ReadAndWriteInstallerDescription}" Click="ReadAndWriteClick"/>
 
     <Separator x:Name="ChangeMorphicBarSeparator"/>
     <MenuItem Header="{x:Static l10n:Resources.Menu_ChangeMorphicBar_Header}" x:Name="ChangeMorphicBar">

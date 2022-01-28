@@ -218,7 +218,7 @@ namespace IoDCLI.Workflows.Msi
                     TrackProgress(messageRecord);
                     break;
                 default:
-                    Logger.LogInformation($"{messageRecord}");
+                    //Logger.LogInformation($"{messageRecord}");
                     break;
             }
 

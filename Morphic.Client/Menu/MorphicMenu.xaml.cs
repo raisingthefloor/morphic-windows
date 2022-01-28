@@ -7,9 +7,12 @@
     using Morphic.Windows.Native.OsVersion;
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel;
     using System.Diagnostics;
     using System.IO;
     using System.Reflection;
+    using System.Runtime.CompilerServices;
+    using System.Text;
     using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Controls;
@@ -19,8 +22,15 @@
 
     using Control = System.Windows.Controls.Control;
 
-    public partial class MorphicMenu : ContextMenu
+    public partial class MorphicMenu : ContextMenu, INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected void OnPropertyChanged([CallerMemberName] string name = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        }
+
         internal enum MenuOpenedSource
         {
             trayIcon,
@@ -70,6 +80,8 @@
 
             this.LoginItem.Visibility = (!this.App.MorphicSession.SignedIn).ToVisibility();
             this.LogoutItem.Visibility = this.App.MorphicSession.SignedIn.ToVisibility();
+
+            IsInstalled = InstallerHelper.IsInstalled("Read&Write");
 
             base.OnOpened(e);
         }
@@ -283,7 +295,7 @@
                 menuItem.IsChecked = Keyboard.KeyRepeat();
             }
         }
-		//
+        //
         private async void StopKeyRepeatToggle(object sender, RoutedEventArgs e)
         {
             if (sender is MenuItem menuItem)
@@ -432,46 +444,54 @@
             App.Current.BarManager.LoadBasicMorphicBar();
         }
 
-        private void InstallJawsClick(object sender, RoutedEventArgs e)
+        private bool _isInstalled = false;
+
+        public bool IsInstalled
         {
-            var dialog = new FolderBrowserDialog();
-
-            var result = dialog.ShowDialog();
-
-            if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(dialog.SelectedPath))
+            get { return _isInstalled; }
+            set
             {
-                var arguments = $"install jaws \"{dialog.SelectedPath}\"";
-                Execute(@"InstallerServiceClient\Morphic.InstallerService.Client.exe", arguments);
+                _isInstalled = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(ReadAndWriteInstallerDescription));
             }
         }
 
-        private void UninstallJawsClick(object sender, RoutedEventArgs e)
+        public string ReadAndWriteInstallerDescription
         {
-            var dialog = new FolderBrowserDialog();
-
-            var result = dialog.ShowDialog();
-
-            if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(dialog.SelectedPath))
+            get
             {
-                var arguments = $"uninstall jaws \"{dialog.SelectedPath}\"";
-                Execute(@"InstallerServiceClient\Morphic.InstallerService.Client.exe", arguments);
+                return IsInstalled ? "Uninstall Read&Write" : "Install Read&Write";
             }
         }
 
-        private void InstallReadAndWriteClick(object sender, RoutedEventArgs e)
+        public enum InstallerAction
         {
-            var dialog = new FolderBrowserDialog();
-
-            var result = dialog.ShowDialog();
-
-            if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(dialog.SelectedPath))
-            {
-                var arguments = $"install readandwrite \"{dialog.SelectedPath}\"";
-                Execute(@"InstallerServiceClient\Morphic.InstallerService.Client.exe", arguments);
-            }
+            Install,
+            Uninstall
         }
 
-        private void UninstallReadAndWriteClick(object sender, RoutedEventArgs e)
+        private async void ReadAndWriteClick(object sender, RoutedEventArgs e)
+        {
+            var installerAction = InstallerAction.Install;
+
+            if (InstallerHelper.IsInstalled("Read&Write"))
+                installerAction = InstallerAction.Uninstall;
+
+            await RunInstallerAction(installerAction, "readandwrite");
+        }
+
+        private async void JawsClick(object sender, RoutedEventArgs e)
+        {
+            var installerAction = InstallerAction.Install;
+
+            if (InstallerHelper.IsInstalled("Jaws"))
+                installerAction = InstallerAction.Uninstall;
+
+            await RunInstallerAction(installerAction, "jaws");
+        }
+
+        private async Task RunInstallerAction(InstallerAction installerAction, string appName)
         {
             var dialog = new FolderBrowserDialog();
 
@@ -479,8 +499,25 @@
 
             if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(dialog.SelectedPath))
             {
-                var arguments = $"uninstall readandwrite \"{dialog.SelectedPath}\"";
-                Execute(@"InstallerServiceClient\Morphic.InstallerService.Client.exe", arguments);
+                var sb = new StringBuilder();
+
+                switch (installerAction)
+                {
+                    case InstallerAction.Install:
+                        sb.Append("install");
+                        break;
+                    case InstallerAction.Uninstall:
+                        sb.Append("uninstall");
+                        break;
+                }
+
+                sb.Append(" ");
+                sb.Append(appName);
+                sb.Append(" ");
+                sb.Append($"\"{dialog.SelectedPath}\"");
+
+                var arguments = sb.ToString();
+                await Execute(@"InstallerServiceClient\Morphic.InstallerService.Client.exe", arguments);
             }
         }
 
@@ -503,7 +540,4 @@
             process.WaitForExit();
         }
     }
-
-
 }
-

@@ -62,14 +62,15 @@ namespace Morphic.InstallerService.IoD.Workflows.ReadAndWrite
 
         private void HandleProgress(ProgressEventArgs progressEventArgs)
         {
-            Logger.LogInformation($"Progress: {progressEventArgs.Value}%");
+            //Logger.LogInformation($"Progress: {progressEventArgs.Value}");
+            ProgressHandler?.Invoke(this, progressEventArgs);
         }
 
         public override async Task<IMorphicResult<bool, ReadAndWriteError>> Uninstall()
         {
             try
             {
-                await UninstallJaws();
+                await UninstallReadAndWrite();
             }
             catch (Exception ex)
             {
@@ -79,7 +80,7 @@ namespace Morphic.InstallerService.IoD.Workflows.ReadAndWrite
             return IMorphicResult<bool, ReadAndWriteError>.SuccessResult(true);
         }
 
-        private async Task UninstallJaws()
+        private async Task UninstallReadAndWrite()
         {
             foreach (var msiToInstall in _msiToInstall)
             {
