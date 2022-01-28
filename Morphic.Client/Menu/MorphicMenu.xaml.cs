@@ -461,7 +461,7 @@
         {
             get
             {
-                return IsInstalled ? "Uninstall Read&Write" : "Install Read&Write";
+                return IsInstalled ? Strings.Resources.Menu_Uninstall_ReadAndWrite_Header : Strings.Resources.Menu_Install_ReadAndWrite_Header;
             }
         }
 

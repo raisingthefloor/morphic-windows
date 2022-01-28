@@ -439,6 +439,15 @@ namespace Morphic.Client.Strings {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Install Read&amp;Write.
+        /// </summary>
+        public static string Menu_Install_ReadAndWrite_Header {
+            get {
+                return ResourceManager.GetString("Menu_Install_ReadAndWrite_Header", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to More settings to make the computer easier.
         /// </summary>
         public static string Menu_MoreSettingsToMakeComputerEasier_Header {
@@ -628,6 +637,15 @@ namespace Morphic.Client.Strings {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Read&amp;Write.
+        /// </summary>
+        public static string Menu_ReadAndWriteSection_Header {
+            get {
+                return ResourceManager.GetString("Menu_ReadAndWriteSection_Header", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to _Restore settings from backup.
         /// </summary>
         public static string Menu_RestoreSettingsFromBackup_Header {
@@ -687,6 +705,15 @@ namespace Morphic.Client.Strings {
         public static string Menu_SignOut_Header {
             get {
                 return ResourceManager.GetString("Menu_SignOut_Header", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Uninstall Read&amp;Write.
+        /// </summary>
+        public static string Menu_Uninstall_ReadAndWrite_Header {
+            get {
+                return ResourceManager.GetString("Menu_Uninstall_ReadAndWrite_Header", resourceCulture);
             }
         }
         

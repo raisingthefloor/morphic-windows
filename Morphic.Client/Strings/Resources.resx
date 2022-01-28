@@ -243,6 +243,9 @@
   <data name="Menu_HowToCopySettingsBetweenComputers_Header" xml:space="preserve">
     <value>How to copy setups between computers...</value>
   </data>
+  <data name="Menu_Install_ReadAndWrite_Header" xml:space="preserve">
+    <value>Install Read&amp;Write</value>
+  </data>
   <data name="Menu_MoreSettingsToMakeComputerEasier_Header" xml:space="preserve">
     <value>More settings to make the computer easier</value>
   </data>
@@ -306,6 +309,9 @@
   <data name="Menu_QuitMorphic_Header" xml:space="preserve">
     <value>_Quit Morphic</value>
   </data>
+  <data name="Menu_ReadAndWriteSection_Header" xml:space="preserve">
+    <value>Read&amp;Write</value>
+  </data>
   <data name="Menu_RestoreSettingsFromBackup_Header" xml:space="preserve">
     <value>_Restore settings from backup</value>
   </data>
@@ -326,6 +332,9 @@
   </data>
   <data name="Menu_SignOut_Header" xml:space="preserve">
     <value>Sign out of Morphic</value>
+  </data>
+  <data name="Menu_Uninstall_ReadAndWrite_Header" xml:space="preserve">
+    <value>Uninstall Read&amp;Write</value>
   </data>
   <data name="MorphicCanNowApplySavedSettingsToAnotherComputer_Text" xml:space="preserve">
     <value>You can now use Morphic to apply these settings to another computer that has Morphic installed.</value>
