@@ -2,11 +2,5 @@
 *.csproj.user
 bin/
 obj/
-Morphic.*Setup/Generated.wxs
-Morphic.Client/appsettings.Local.json
-Morphic.Client/appsettings.json
-Morphic.Client/app.manifest
-Morphic.Client/BuildVersion.txt
-Morphic.Bar
-/Morphic.Setup/InstallerServiceGenerated.wxs
-/Morphic.Setup/InstallerServiceClientGenerated.wxs
+/Morphic.AToD.Setup/InstallerServiceGenerated.wxs
+/Morphic.AToD.Setup/InstallerServiceClientGenerated.wxs

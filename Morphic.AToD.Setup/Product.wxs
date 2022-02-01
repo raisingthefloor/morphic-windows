@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Product Id="*" Name="AToD" Language="1033" Version="!(bind.FileVersion.fil7436AEE83C08445346530ACB01336CA9)"
+             Manufacturer="Raising the Floor" UpgradeCode="6e7cab8b-83e0-4a29-a352-84873b6ed5d2">
+        <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine"/>
+
+        <Icon Id="AToDIcon" SourceFile="$(var.Morphic.InstallerService.ProjectDir)\Icon.ico"/>
+        <Property Id="ARPPRODUCTICON" Value="AToDIcon"/>
+
+        <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed."/>
+
+        <Media Id="1" Cabinet="AToDSetup.cab" EmbedCab="yes"/>
+
+        <Feature Id="ProductFeature" Title="AToD" Level="1">
+            <ComponentGroupRef Id="InstallerServiceGeneratedComponents"/>
+            <ComponentGroupRef Id="InstallerServiceClientGeneratedComponents"/>
+        </Feature>
+
+        <UIRef Id="WixUI_Minimal" />
+        <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+
+        <Property Id="WINDOWSBUILDNUMBER" Secure="yes">
+            <RegistrySearch Id="BuildNumberSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="CurrentBuildNumber" Type="raw" />
+        </Property>
+        <Condition Message="This application is only supported on Windows 10 version 1809 (build 17763) or higher.">
+            <![CDATA[(WINDOWSBUILDNUMBER >= 17763)]]>
+        </Condition>        
+    </Product>
+
+  <Fragment>
+        <Directory Id="TARGETDIR" Name="SourceDir">
+            <Directory Id="ProgramFiles64Folder">
+              <Directory Id="INSTALLFOLDER" Name="Morphic">
+                <Directory Id="SERVICEFOLDER" Name="InstallerService"/>
+                <Directory Id="SERVICECLIENTFOLDER" Name="InstallerServiceClient"/>
+              </Directory>
+            </Directory>
+        </Directory>
+    </Fragment>
+</Wix>
