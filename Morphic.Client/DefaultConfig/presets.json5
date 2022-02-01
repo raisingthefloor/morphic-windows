@@ -15,12 +15,12 @@
           inc: {
             label: "+",
             tooltip: "{{QuickStrip_Resolution_Bigger_HelpTitle}}|{{QuickStrip_Resolution_Bigger_HelpMessage}}|{{QuickStrip_Resolution_Bigger_LimitTitle}}",
-            uiName: "Increase Text Size"
+            uiName: "{{QuickStrip_Resolution_Bigger_Name}}"
           },
           dec: {
             label: "-",
             tooltip: "{{QuickStrip_Resolution_Smaller_HelpTitle}}|{{QuickStrip_Resolution_Smaller_HelpMessage}}|{{QuickStrip_Resolution_Smaller_LimitTitle}}",
-            uiName: "Decrease Text Size"
+            uiName: "{{QuickStrip_Resolution_Smaller_Name}}"
           }
         }
       }
@@ -38,12 +38,12 @@
         buttons: {
           on: {
             label: "{{QuickStrip_Magnifier_Show_Title}}",
-            uiName: "Show Magnifier",
+            uiName: "{{QuickStrip_Magnifier_Show_Name}}",
             tooltip: "{{QuickStrip_Magnifier_Show_HelpTitle}}|{{QuickStrip_Magnifier_Show_HelpMessage}}",
           },
           off: {
             label: "{{QuickStrip_Magnifier_Hide_Title}}",
-            uiName: "Hide Magnifier",
+            uiName: "{{QuickStrip_Magnifier_Hide_Name}}",
             tooltip: "{{QuickStrip_Magnifier_Hide_HelpTitle}}|{{QuickStrip_Magnifier_Hide_HelpMessage}}"
           }
         }
@@ -90,12 +90,12 @@
         buttons: {
           on: {
             label: "{{QuickStrip_Magnifier_Show_Title}}",
-            uiName: "Show Magnifier",
+            uiName: "{{QuickStrip_Magnifier_Show_Name}}",
             tooltip: "{{QuickStrip_Magnifier_Show_HelpTitle}}|{{QuickStrip_Magnifier_Show_HelpMessage}}",
           },
           off: {
             label: "{{QuickStrip_Magnifier_Hide_Title}}",
-            uiName: "Hide Magnifier",
+            uiName: "{{QuickStrip_Magnifier_Hide_Name}}",
             tooltip: "{{QuickStrip_Magnifier_Hide_HelpTitle}}|{{QuickStrip_Magnifier_Hide_HelpMessage}}"
           }
         }
@@ -173,12 +173,12 @@
         buttons: {
           play: {
             label: "|>",
-            uiName: "Read selected text",
+            uiName: "{{QuickStrip_Reader_Start_UiName}}",
             tooltip: "{{QuickStrip_Reader_Start_HelpTitle}}|{{QuickStrip_Reader_Start_HelpMessage}}",
           },
           stop: {
             label: "[]",
-            uiName: "Stop reading selected text",
+            uiName: "{{QuickStrip_Reader_Stop_UiName}}",
             tooltip: "{{QuickStrip_Reader_Stop_HelpTitle}}|{{QuickStrip_Reader_Stop_HelpMessage}}"
           }
         }
@@ -312,7 +312,7 @@
         buttons: {
           copy: {
             label: "{{QuickStrip_Snip_Button_Title}}",
-            uiName: "Takes a picture of a selected part of the screen",
+            uiName: "{{QuickStrip_Snip_UiName}}",
             tooltip: "{{QuickStrip_Snip_HelpTitle}}|{{QuickStrip_Snip_HelpMessage}}"
           }
         }

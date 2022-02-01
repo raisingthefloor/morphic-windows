@@ -97,7 +97,7 @@ namespace Morphic.Client.Bar.Data
                     ? this.ToolTipHeader ?? this.ToolTip ?? string.Empty
                     : name;
             }
-            set => this.uiName = value;
+            set => this.uiName = App.Current.LocalizeTemplatedString(value);
         }
 
         /// <summary>

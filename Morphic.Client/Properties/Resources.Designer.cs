@@ -278,6 +278,15 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Color Vision on, off.
+        /// </summary>
+        internal static string QuickStrip_Colors_Color_UiName {
+            get {
+                return ResourceManager.GetString("QuickStrip_Colors_Color_UiName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Can make the screen easier to read. To change settings, right-click on button..
         /// </summary>
         internal static string QuickStrip_Colors_Contrast_HelpMessage {
@@ -350,6 +359,15 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Dark Mode on, off.
+        /// </summary>
+        internal static string QuickStrip_Colors_Dark_UiName {
+            get {
+                return ResourceManager.GetString("QuickStrip_Colors_Dark_UiName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Reduces eye strain and makes it easier to fall asleep at night..
         /// </summary>
         internal static string QuickStrip_Colors_Night_HelpMessage {
@@ -382,6 +400,15 @@ namespace Morphic.Client.Properties {
         internal static string QuickStrip_Colors_Night_Title {
             get {
                 return ResourceManager.GetString("QuickStrip_Colors_Night_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Night Light on, off.
+        /// </summary>
+        internal static string QuickStrip_Colors_Night_UiName {
+            get {
+                return ResourceManager.GetString("QuickStrip_Colors_Night_UiName", resourceCulture);
             }
         }
         
@@ -683,6 +710,15 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Read selected text.
+        /// </summary>
+        internal static string QuickStrip_Reader_Start_UiName {
+            get {
+                return ResourceManager.GetString("QuickStrip_Reader_Start_UiName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to To change voice and speed settings, right-click on either button..
         /// </summary>
         internal static string QuickStrip_Reader_Stop_HelpMessage {
@@ -701,11 +737,20 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Stop Reading Select Text.
+        ///   Looks up a localized string similar to Stop Reading Selected Text.
         /// </summary>
         internal static string QuickStrip_Reader_Stop_Name {
             get {
                 return ResourceManager.GetString("QuickStrip_Reader_Stop_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stop reading selected text.
+        /// </summary>
+        internal static string QuickStrip_Reader_Stop_UiName {
+            get {
+                return ResourceManager.GetString("QuickStrip_Reader_Stop_UiName", resourceCulture);
             }
         }
         
@@ -845,7 +890,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Snip a copy of part of screen.
+        ///   Looks up a localized string similar to Snip copy of part of the screen.
         /// </summary>
         internal static string QuickStrip_Snip_Name {
             get {
@@ -859,6 +904,60 @@ namespace Morphic.Client.Properties {
         internal static string QuickStrip_Snip_Title {
             get {
                 return ResourceManager.GetString("QuickStrip_Snip_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Takes a picture of a selected part of the screen.
+        /// </summary>
+        internal static string QuickStrip_Snip_UiName {
+            get {
+                return ResourceManager.GetString("QuickStrip_Snip_UiName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Eject All USB Drives.
+        /// </summary>
+        internal static string QuickStrip_UsbOpenEject_Eject_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_UsbOpenEject_Eject_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Eject.
+        /// </summary>
+        internal static string QuickStrip_UsbOpenEject_Eject_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_UsbOpenEject_Eject_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open All USB Drives.
+        /// </summary>
+        internal static string QuickStrip_UsbOpenEject_Open_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_UsbOpenEject_Open_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open.
+        /// </summary>
+        internal static string QuickStrip_UsbOpenEject_Open_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_UsbOpenEject_Open_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to USB Drives (All).
+        /// </summary>
+        internal static string QuickStrip_UsbOpenEject_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_UsbOpenEject_Title", resourceCulture);
             }
         }
         
@@ -1003,6 +1102,69 @@ namespace Morphic.Client.Properties {
         internal static string QuickStrip_Volume_Up_LimitTitle {
             get {
                 return ResourceManager.GetString("QuickStrip_Volume_Up_LimitTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gives you a new simpler ribbon with just the basic items on it..
+        /// </summary>
+        internal static string QuickStrip_WordSimplify_Basic_HelpMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_WordSimplify_Basic_HelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Adds a new &apos;Basic Items&apos; ribbon to Word.
+        /// </summary>
+        internal static string QuickStrip_WordSimplify_Basic_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_WordSimplify_Basic_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Basic.
+        /// </summary>
+        internal static string QuickStrip_WordSimplify_Basic_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_WordSimplify_Basic_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gives you a new ribbon with essential items gathered from all other ribbons..
+        /// </summary>
+        internal static string QuickStrip_WordSimplify_Essentials_HelpMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_WordSimplify_Essentials_HelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Adds a new &apos;Essential Items&apos; ribbon to Word.
+        /// </summary>
+        internal static string QuickStrip_WordSimplify_Essentials_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_WordSimplify_Essentials_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Essentials.
+        /// </summary>
+        internal static string QuickStrip_WordSimplify_Essentials_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_WordSimplify_Essentials_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Word Simplify.
+        /// </summary>
+        internal static string QuickStrip_WordSimplify_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_WordSimplify_Title", resourceCulture);
             }
         }
     }
