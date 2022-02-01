@@ -403,17 +403,26 @@
   <data name="QuickStrip_ColorFilters_On_Title" xml:space="preserve">
     <value>En</value>
   </data>
+  <data name="QuickStrip_Colors_Color_UiName" xml:space="preserve">
+    <value>Visión de color activada</value>
+  </data>
   <data name="QuickStrip_Colors_Contrast_HelpMessage" xml:space="preserve">
     <value>Puede hacer que la pantalla sea más fácil de leer. Para cambiar la configuración, haga clic derecho en el botón.</value>
   </data>
   <data name="QuickStrip_Colors_Contrast_HelpTitle" xml:space="preserve">
     <value>Activa y desactiva el contrato</value>
   </data>
+  <data name="QuickStrip_Colors_Dark_UiName" xml:space="preserve">
+    <value>Modo oscuro encendido, apagado</value>
+  </data>
   <data name="QuickStrip_Colors_Night_HelpMessage" xml:space="preserve">
     <value>Reduce la cepa de los ojos y hace más fácil dormir por la noche.</value>
   </data>
   <data name="QuickStrip_Colors_Night_HelpTitle" xml:space="preserve">
     <value>Turns the Night Light feature on and off</value>
+  </data>
+  <data name="QuickStrip_Colors_Night_UiName" xml:space="preserve">
+    <value>Night Light on, off</value>
   </data>
   <data name="QuickStrip_DarkMode_Off_HelpMessage" xml:space="preserve">
     <value></value>
@@ -432,5 +441,50 @@
   </data>
   <data name="QuickStrip_DarkMode_On_Title" xml:space="preserve">
     <value>En</value>
+  </data>
+  <data name="QuickStrip_Reader_Start_UiName" xml:space="preserve">
+    <value>Read selected text</value>
+  </data>
+  <data name="QuickStrip_Reader_Stop_UiName" xml:space="preserve">
+    <value>Stop reading selected text</value>
+  </data>
+  <data name="QuickStrip_Snip_UiName" xml:space="preserve">
+    <value>Toma una foto de una parte seleccionada de la pantalla</value>
+  </data>
+  <data name="QuickStrip_UsbOpenEject_Eject_HelpTitle" xml:space="preserve">
+    <value>Expulsar todas las unidades USB</value>
+  </data>
+  <data name="QuickStrip_UsbOpenEject_Eject_Title" xml:space="preserve">
+    <value>Eject</value>
+  </data>
+  <data name="QuickStrip_UsbOpenEject_Open_HelpTitle" xml:space="preserve">
+    <value>Abrir todas las unidades USB</value>
+  </data>
+  <data name="QuickStrip_UsbOpenEject_Open_Title" xml:space="preserve">
+    <value>Abrir</value>
+  </data>
+  <data name="QuickStrip_UsbOpenEject_Title" xml:space="preserve">
+    <value>Unidades USB (Todos)</value>
+  </data>
+  <data name="QuickStrip_WordSimplify_Basic_HelpMessage" xml:space="preserve">
+    <value>Gives you a new simpler ribbon with just the basic items on it.</value>
+  </data>
+  <data name="QuickStrip_WordSimplify_Basic_HelpTitle" xml:space="preserve">
+    <value>Adds a new 'Basic Items' ribbon to Word</value>
+  </data>
+  <data name="QuickStrip_WordSimplify_Basic_Title" xml:space="preserve">
+    <value>Basic</value>
+  </data>
+  <data name="QuickStrip_WordSimplify_Essentials_HelpMessage" xml:space="preserve">
+    <value>Gives you a new ribbon with essential items gathered from all other ribbons.</value>
+  </data>
+  <data name="QuickStrip_WordSimplify_Essentials_HelpTitle" xml:space="preserve">
+    <value>Adds a new 'Essential Items' ribbon to Word</value>
+  </data>
+  <data name="QuickStrip_WordSimplify_Essentials_Title" xml:space="preserve">
+    <value>Essentials</value>
+  </data>
+  <data name="QuickStrip_WordSimplify_Title" xml:space="preserve">
+    <value>Word Simplify</value>
   </data>
 </root>
