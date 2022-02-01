@@ -65,7 +65,7 @@
         buttons: {
           copy: {
             label: "{{QuickStrip_Snip_Button_Title}}",
-            uiName: "Snip copy of part of the screen",
+            uiName: "{{QuickStrip_Snip_Name}}",
             tooltip: "{{QuickStrip_Snip_HelpTitle}}|{{QuickStrip_Snip_HelpMessage}}"
           }
         }
@@ -88,7 +88,7 @@
         buttons: {
           "com.microsoft.windows.highContrast/enabled": {
             label: "{{QuickStrip_Colors_Contrast_Title}}",
-            uiName: "Contrast on, off",
+            uiName: "{{QuickStrip_Colors_Contrast_Name}}",
             tooltip: "{{QuickStrip_Colors_Contrast_HelpTitle}}|{{QuickStrip_Colors_Contrast_HelpMessage}}",
             menu: {
               setting: "easeofaccess-highcontrast",
@@ -99,7 +99,7 @@
           },
           "com.microsoft.windows.colorFilters/enabled": {
             label: "{{QuickStrip_Colors_Color_Title}}",
-            uiName: "Color Vision on, off",
+            uiName: "{{QuickStrip_Colors_Color_UiName}}",
             tooltip: "{{QuickStrip_Colors_Color_HelpTitle}}|{{QuickStrip_Colors_Color_HelpMessage}}",
             menu: {
               setting: "easeofaccess-colorfilter",
@@ -115,7 +115,7 @@
             },
             func: "menu",
             label: "{{QuickStrip_Colors_Dark_Title}}",
-            uiName: "Dark Mode on, off",
+            uiName: "{{QuickStrip_Colors_Dark_UiName}}",
             tooltip: "{{QuickStrip_Colors_Dark_HelpTitle}}|{{QuickStrip_Colors_Dark_HelpMessage}}",
             menu: {
               setting: "colors",
@@ -126,7 +126,7 @@
           },
           "com.microsoft.windows.nightMode/enabled": {
             label: "{{QuickStrip_Colors_Night_Title}}",
-            uiName: "Night Light on, off",
+            uiName: "{{QuickStrip_Colors_Night_UiName}}",
             tooltip: "{{QuickStrip_Colors_Night_HelpTitle}}|{{QuickStrip_Colors_Night_HelpMessage}}",
             menu: {
               setting: "nightlight",

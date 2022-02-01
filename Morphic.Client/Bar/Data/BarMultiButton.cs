@@ -109,7 +109,7 @@ namespace Morphic.Client.Bar.Data
                     };
                     return value;
                 }
-                set => this.uiName = value;
+                set => this.uiName = App.Current.LocalizeTemplatedString(value);
             }
 
             public bool Toggle { get; set; }
