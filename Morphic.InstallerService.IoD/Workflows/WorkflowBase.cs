@@ -27,8 +27,8 @@ namespace IoDCLI.Workflows
             ProgressHandler = progressHandler;
         }
 
-        public abstract Task<IMorphicResult<bool, TError>> Install();
-        public abstract Task<IMorphicResult<bool, TError>> Uninstall();
+        public abstract Task<MorphicResult<bool, TError>> Install();
+        public abstract Task<MorphicResult<bool, TError>> Uninstall();
 
         public abstract string GetFileExtension();
 

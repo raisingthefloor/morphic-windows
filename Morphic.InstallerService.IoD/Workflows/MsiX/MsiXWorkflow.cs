@@ -15,7 +15,7 @@ namespace IoDCLI.Workflows.MsiX
 
         }
 
-        public override async Task<IMorphicResult<bool, MSIXErrorForm>> Install()
+        public override async Task<MorphicResult<bool, MSIXErrorForm>> Install()
         {
             var error = false;
             var done = false;
@@ -30,7 +30,7 @@ namespace IoDCLI.Workflows.MsiX
             {
                 form.Type = MSIXErrorType.BadParams;
 
-                return new MorphicError<bool, MSIXErrorForm>(form);
+                return MorphicResult.ErrorResult(form);
             }
 
             var pm = new PackageManager();
@@ -101,17 +101,17 @@ namespace IoDCLI.Workflows.MsiX
             }
             if (error)
             {
-                return IMorphicResult<bool, MSIXErrorForm>.ErrorResult(form);
+                return MorphicResult.ErrorResult(form);
             }
             else
             {
-                return IMorphicResult<bool, MSIXErrorForm>.SuccessResult(true);
+                return MorphicResult.OkResult(true);
             }
         }
 
-        public override Task<IMorphicResult<bool, MSIXErrorForm>> Uninstall()
+        public override Task<MorphicResult<bool, MSIXErrorForm>> Uninstall()
         {
-            return Task.FromResult(IMorphicResult<bool, MSIXErrorForm>.SuccessResult(true));
+            return Task.FromResult((MorphicResult<bool, MSIXErrorForm>)MorphicResult.OkResult(true));
         }
 
         private MSIXErrorCode ParseCode(UInt32 code)

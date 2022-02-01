@@ -45,7 +45,7 @@ namespace IoDCLI.Workflows.Msi
             }
         }
 
-        public override Task<IMorphicResult<bool, InstallError>> Install()
+        public override Task<MorphicResult<bool, InstallError>> Install()
         {
             try
             {
@@ -86,7 +86,7 @@ namespace IoDCLI.Workflows.Msi
             {
                 Logger.LogError(ex, $"An error has occured.");
 
-                return Task.FromResult(IMorphicResult<bool, InstallError>.ErrorResult(InstallError.MiscFailure));
+                return Task.FromResult((MorphicResult<bool, InstallError>)MorphicResult.ErrorResult(InstallError.MiscFailure));
             }
             finally
             {
@@ -97,7 +97,7 @@ namespace IoDCLI.Workflows.Msi
                 }
             }
 
-            return Task.FromResult(IMorphicResult<bool, InstallError>.SuccessResult(true));
+            return Task.FromResult((MorphicResult<bool, InstallError>)MorphicResult.OkResult(true));
         }
 
         public override string GetFileExtension()
@@ -105,7 +105,7 @@ namespace IoDCLI.Workflows.Msi
             return FileExtension;
         }
 
-        public override Task<IMorphicResult<bool, InstallError>> Uninstall()
+        public override Task<MorphicResult<bool, InstallError>> Uninstall()
         {
             try
             {
@@ -148,7 +148,7 @@ namespace IoDCLI.Workflows.Msi
                     Cleanup();
             }
 
-            return Task.FromResult(IMorphicResult<bool, InstallError>.SuccessResult(true));
+            return Task.FromResult((MorphicResult<bool, InstallError>)MorphicResult.OkResult(true));
         }
 
         private void TrackProgress(Record messageRecord)

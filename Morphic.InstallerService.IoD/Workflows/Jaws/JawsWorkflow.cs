@@ -65,7 +65,7 @@ namespace IoDCLI.Workflows.Jaws
             return "exe";
         }
 
-        public override async Task<IMorphicResult<bool, JawsError>> Install()
+        public override async Task<MorphicResult<bool, JawsError>> Install()
         {
             try
             {
@@ -98,7 +98,7 @@ namespace IoDCLI.Workflows.Jaws
                 Logger.LogError(ex, "An error has occured.");
             }
 
-            return IMorphicResult<bool, JawsError>.SuccessResult(true);
+            return MorphicResult.OkResult(true);
         }
 
         private void CreateRegistryKey(RegistryKey root, string path)
@@ -110,7 +110,7 @@ namespace IoDCLI.Workflows.Jaws
             }
         }
 
-        public override async Task<IMorphicResult<bool, JawsError>> Uninstall()
+        public override async Task<MorphicResult<bool, JawsError>> Uninstall()
         {
             try
             {
@@ -127,7 +127,7 @@ namespace IoDCLI.Workflows.Jaws
                 Logger.LogError(ex, "An error has occured.");
             }
 
-            return IMorphicResult<bool, JawsError>.SuccessResult(true);
+            return MorphicResult.OkResult(true);
         }
 
         private void HandleProgress(ProgressEventArgs progressEventArgs)

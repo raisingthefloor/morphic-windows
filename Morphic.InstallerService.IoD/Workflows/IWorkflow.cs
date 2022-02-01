@@ -5,7 +5,7 @@ namespace IoDCLI.Workflows
 {
     public interface IWorkflow<TError> where TError : new()
     {
-        Task<IMorphicResult<bool, TError>> Install();
-        Task<IMorphicResult<bool, TError>> Uninstall();
+        Task<MorphicResult<bool, TError>> Install();
+        Task<MorphicResult<bool, TError>> Uninstall();
     }
 }

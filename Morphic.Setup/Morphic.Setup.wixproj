@@ -23,14 +23,6 @@
     <Compile Include="InstallerServiceClientGenerated.wxs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Morphic.Client\Morphic.Client.csproj">
-      <Name>Morphic.Client</Name>
-      <Project>{2485b22b-5c46-46f1-a466-f8a5b7e28c64}</Project>
-      <Private>True</Private>
-      <DoNotHarvest>True</DoNotHarvest>
-      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
-      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
-    </ProjectReference>
     <ProjectReference Include="..\Morphic.InstallerService\Morphic.InstallerService.csproj">
       <Name>Morphic.InstallerService</Name>
       <Project>{0a0f3809-e1bb-45cb-9ee9-605aae734208}</Project>

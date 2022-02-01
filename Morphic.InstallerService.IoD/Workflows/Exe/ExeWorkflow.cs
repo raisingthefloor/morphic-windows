@@ -20,7 +20,7 @@ namespace IoDCLI.Workflows.Exe
             return FileExtension;
         }
 
-        public override async Task<IMorphicResult<bool, ExeInstallError>> Install()
+        public override async Task<MorphicResult<bool, ExeInstallError>> Install()
         {
             try
             {
@@ -40,7 +40,7 @@ namespace IoDCLI.Workflows.Exe
                 Cleanup();
             }
 
-            return IMorphicResult<bool, ExeInstallError>.SuccessResult(true);
+            return MorphicResult.OkResult(true);
         }
 
         private async Task Execute(string path, string arguments)
@@ -59,7 +59,7 @@ namespace IoDCLI.Workflows.Exe
             await process.WaitForExitAsync();
         }
 
-        public override async Task<IMorphicResult<bool, ExeInstallError>> Uninstall()
+        public override async Task<MorphicResult<bool, ExeInstallError>> Uninstall()
         {
             try
             {
@@ -74,7 +74,7 @@ namespace IoDCLI.Workflows.Exe
                 Cleanup();
             }
 
-            return IMorphicResult<bool, ExeInstallError>.SuccessResult(true);
+            return MorphicResult.OkResult(true);
         }
     }
 }

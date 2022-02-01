@@ -21,7 +21,7 @@ namespace IoDCLI.Workflows.Zip
             return FileExtension;
         }
 
-        public override async Task<IMorphicResult<bool, ZipError>> Install()
+        public override async Task<MorphicResult<bool, ZipError>> Install()
         {
             try
             {
@@ -41,7 +41,7 @@ namespace IoDCLI.Workflows.Zip
                 Cleanup();
             }
 
-            return IMorphicResult<bool, ZipError>.SuccessResult(true);
+            return MorphicResult.OkResult(true);
         }
 
         private async Task Execute(string path, string arguments)
@@ -51,11 +51,11 @@ namespace IoDCLI.Workflows.Zip
             await Task.CompletedTask;
         }
 
-        public override async Task<IMorphicResult<bool, ZipError>> Uninstall()
+        public override async Task<MorphicResult<bool, ZipError>> Uninstall()
         {
             await Task.CompletedTask;
 
-            return IMorphicResult<bool, ZipError>.SuccessResult(true);
+            return MorphicResult.OkResult(true);
         }
     }
 }

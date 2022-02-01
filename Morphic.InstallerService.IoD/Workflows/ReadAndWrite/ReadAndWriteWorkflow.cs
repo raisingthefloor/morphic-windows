@@ -35,7 +35,7 @@ namespace Morphic.InstallerService.IoD.Workflows.ReadAndWrite
             return FileExtension;
         }
 
-        public override async Task<IMorphicResult<bool, ReadAndWriteError>> Install()
+        public override async Task<MorphicResult<bool, ReadAndWriteError>> Install()
         {
             try
             {
@@ -57,7 +57,7 @@ namespace Morphic.InstallerService.IoD.Workflows.ReadAndWrite
                 Cleanup();
             }
 
-            return IMorphicResult<bool, ReadAndWriteError>.SuccessResult(true);
+            return MorphicResult.OkResult(true);
         }
 
         private void HandleProgress(ProgressEventArgs progressEventArgs)
@@ -66,7 +66,7 @@ namespace Morphic.InstallerService.IoD.Workflows.ReadAndWrite
             ProgressHandler?.Invoke(this, progressEventArgs);
         }
 
-        public override async Task<IMorphicResult<bool, ReadAndWriteError>> Uninstall()
+        public override async Task<MorphicResult<bool, ReadAndWriteError>> Uninstall()
         {
             try
             {
@@ -77,7 +77,7 @@ namespace Morphic.InstallerService.IoD.Workflows.ReadAndWrite
                 Logger.LogError(ex, "An error has occured.");
             }
 
-            return IMorphicResult<bool, ReadAndWriteError>.SuccessResult(true);
+            return MorphicResult.OkResult(true);
         }
 
         private async Task UninstallReadAndWrite()
