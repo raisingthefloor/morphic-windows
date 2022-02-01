@@ -22,7 +22,7 @@ namespace Morphic.InstallerService.IoD.Workflows.ReadAndWrite
 
         private static readonly Package[] _msiToInstall =
         {
-            new Package { Url = @"Setup.msi", Hash = "A8CDA50D0859A7CDC063DD4FC403930B12562F8F33560D86A1664DEC2D648AA9", HashType = "SHA256", CommandArguments = "" },
+            new Package { Url = @"Setup.msi", Hash = "2BF379B1BF06C1536450274DEC9FBCAC6CF35EA8BFFDD2398067D1EBF9DCB2CC", HashType = "SHA256", CommandArguments = "" },
         };
 
         public ReadAndWriteWorkflow(Package package, EventHandler<ProgressEventArgs> progressHandler, ILogger logger) : base(package, progressHandler, logger)
