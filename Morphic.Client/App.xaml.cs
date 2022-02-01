@@ -436,6 +436,22 @@ namespace Morphic.Client
             return disableTelemetryFileExists;
         }
 
+        internal string LocalizeTemplatedString(string value)
+        {
+            if (value.Length >= 4 && value.Substring(0, 2) == "{{" && value.Substring(value.Length - 2) == "}}")
+            {
+                var resourceName = value.Substring(2, value.Length - 4).Trim();
+                var localizedValue = Morphic.Client.Properties.Resources.ResourceManager.GetString(resourceName, Morphic.Client.Properties.Resources.Culture);
+                if (localizedValue is not null)
+                {
+                    return localizedValue;
+                }
+            }
+
+            // if the string was not a localizable string or we could not find the localized text, return the original value
+            return value;
+        }
+
         /// <summary>
         /// Create a Configuration from appsettings.json
         /// </summary>

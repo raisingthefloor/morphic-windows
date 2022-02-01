@@ -79,7 +79,7 @@ namespace Morphic.Client.Bar.Data
         public string Text
         {
             get => this.text ?? this.DefaultText ?? string.Empty;
-            set => this.text = value;
+            set => this.text = App.Current.LocalizeTemplatedString(value);
         }
 
         /// <summary>

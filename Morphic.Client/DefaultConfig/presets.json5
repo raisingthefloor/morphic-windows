@@ -37,12 +37,12 @@
         telemetryCategory: "magnifier",
         buttons: {
           on: {
-            label: "Show",
+            label: "{{QuickStrip_Magnifier_Show_Title}}",
             uiName: "Show Magnifier",
             tooltip: "Turns on a Magnifying lens|Magnifier follows your mouse. Your mouse can click through the box.",
           },
           off: {
-            label: "Hide",
+            label: "{{QuickStrip_Magnifier_Hide_Title}}",
             uiName: "Hide Magnifier",
             tooltip: "Turns off Magnifier|To change Magnifier settings, right-click on button."
           }
@@ -54,7 +54,7 @@
       kind: "internal",
       widget: "multi",
       configuration: {
-        defaultLabel: "Volume",
+        defaultLabel: "{{QuickStrip_Volume_Title}}",
         function: "volume",
         args: {
           direction: "{button}"
@@ -77,7 +77,7 @@
       kind: "internal",
       widget: "multi",
       configuration: {
-        defaultLabel: "Magnifier",
+        defaultLabel: "{{QuickStrip_Magnifier_Title}}",
         function: "magnifier",
         args: {
           state: "{button}"
@@ -89,12 +89,12 @@
         },
         buttons: {
           on: {
-            label: "Show",
+            label: "{{QuickStrip_Magnifier_Show_Title}}",
             uiName: "Show Magnifier",
             tooltip: "Turn on Magnifier that follows mouse|Turns on a Magnifying Lens. (Right-click to change settings)",
           },
           off: {
-            label: "Hide",
+            label: "{{QuickStrip_Magnifier_Hide_Title}}",
             uiName: "Hide Magnifier",
             tooltip: "Turn off the magnifier|(Right-click to change magnifier settings)"
           }
@@ -106,7 +106,7 @@
       kind: "internal",
       widget: "multi",
       configuration: {
-        defaultLabel: "Night Mode",
+        defaultLabel: "{{QuickStrip_NightMode_Title}}",
         function: "nightMode",
         args: {
           state: "{button}"
@@ -114,11 +114,11 @@
         telemetryCategory: "nightMode",
         buttons: {
           on: {
-            label: "On",
+            label: "{{QuickStrip_NightMode_On_Title}}",
             tooltip: "Turns the Night Light feature on"
           },
           off: {
-            label: "Off",
+            label: "{{QuickStrip_NightMode_Off_Title}}",
             tooltip: "Turns the Night Light feature off"
           }
         }
@@ -130,7 +130,7 @@
       widget: "multi",
       configuration: {
         settingId: "com.microsoft.windows.nightMode/enabled",
-        defaultLabel: "Night Mode",
+        defaultLabel: "{{QuickStrip_NightMode_Title}}",
         args: {
           state: "{button}"
         },
@@ -142,12 +142,12 @@
         telemetryCategory: "nightMode",
         buttons: {
           on: {
-            label: "On",
+            label: "{{QuickStrip_NightMode_On_Title}}",
             value: "on",
             tooltip: "Turns the Night Light feature on"
           },
           off: {
-            label: "Off",
+            label: "{{QuickStrip_NightMode_Off_Title}}",
             value: "off",
             tooltip: "Turns the Night Light feature off"
           }
@@ -159,7 +159,7 @@
       kind: "internal",
       widget: "multi",
       configuration: {
-        defaultLabel: "Read Aloud",
+        defaultLabel: "{{QuickStrip_Reader_Title}}",
         function: "readAloud",
         args: {
           action: "{button}"
@@ -189,7 +189,7 @@
       kind: "internal",
       widget: "multi",
       configuration: {
-        defaultLabel: "Clipboard",
+        defaultLabel: "{{QuickStrip_Clipboard_Title}}",
         // Simulates the appropriate key for the action.
         function: "sendKeys",
         args: {
@@ -198,12 +198,12 @@
         telemetryCategory: "copyPaste",
         buttons: {
           copy: {
-            label: "Copy",
+            label: "{{QuickStrip_Clipboard_Copy_Title}}",
             value: "^c",
             tooltip: "Copies your selection|Copies text or other content you have selected so you can paste it somewhere."
           },
           paste: {
-            label: "Paste",
+            label: "{{QuickStrip_Clipboard_Paste_Title}}",
             value: "^v",
             tooltip: "Pastes what you copied|Inserts copied content where the text cursor is."
           }
@@ -215,16 +215,16 @@
       kind: "setting",
       widget: "multi",
       configuration: {
-        defaultLabel: "High-Contrast",
+        defaultLabel: "{{QuickStrip_Contrast_Title}}",
         settingId: "com.microsoft.windows.highContrast/enabled",
         telemetryCategory: "highContrast",
         buttons: {
           on: {
-            label: "On",
+            label: "{{QuickStrip_Contrast_On_Title}}",
             tooltip: "Turns Contrast on"
           },
           off: {
-            label: "Off",
+            label: "{{QuickStrip_Contrast_Off_Title}}",
             tooltip: "Turns Contrast off"
           }
         }
@@ -243,12 +243,12 @@
         telemetryCategory: "colorFilters",
         buttons: {
           on: {
-            label: "On",
+            label: "{{QuickStrip_ColorFilters_On_Title}}",
             value: "on",
             tooltip: "Turns Color Blindness filters on"
           },
           off: {
-            label: "Off",
+            label: "{{QuickStrip_ColorFilters_Off_Title}}",
             value: "off",
             tooltip: "Turns Color Blindness filters off"
           }
@@ -272,12 +272,12 @@
         telemetryCategory: "darkMode",
         buttons: {
           on: {
-            label: "On",
+            label: "{{QuickStrip_DarkMode_On_Title}}",
             value: "on",
             tooltip: "Turns Dark Mode on"
           },
           off: {
-            label: "Off",
+            label: "{{QuickStrip_DarkMode_Off_Title}}",
             value: "off",
             tooltip: "Turns Dark Mode off"
           }
@@ -303,7 +303,7 @@
       is_primary: true,
       configuration: {
         function: "snip",
-        label: "Snip",
+        label: "{{QuickStrip_Snip_Title}}",
         menu: {
           learn: "snip",
           demo: "snip"
@@ -311,7 +311,7 @@
         telemetryCategory: "screenSnip",
         buttons: {
           copy: {
-            label: "Copy",
+            label: "{{QuickStrip_Snip_Button_Title}}",
             uiName: "Takes a picture of a selected part of the screen",
             tooltip: "Click Copy. Then click and drag mouse to take picture. Paste into any document."
           }
