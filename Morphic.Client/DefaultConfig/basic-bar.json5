@@ -66,7 +66,7 @@
           copy: {
             label: "{{QuickStrip_Snip_Button_Title}}",
             uiName: "Snip copy of part of the screen",
-            tooltip: "Takes a picture of a selected part of the screen|Click Copy. Then click and drag mouse to take picture. Paste into any document."
+            tooltip: "{{QuickStrip_Snip_HelpTitle}}|{{QuickStrip_Snip_HelpMessage}}"
           }
         }
       }
@@ -89,7 +89,7 @@
           "com.microsoft.windows.highContrast/enabled": {
             label: "{{QuickStrip_Colors_Contrast_Title}}",
             uiName: "Contrast on, off",
-            tooltip: "Turns Contrast on and off|Can make the screen easier to read. To change settings, right-click on button.",
+            tooltip: "{{QuickStrip_Colors_Contrast_HelpTitle}}|{{QuickStrip_Colors_Contrast_HelpMessage}}",
             menu: {
               setting: "easeofaccess-highcontrast",
               learn: "contrast",
@@ -100,7 +100,7 @@
           "com.microsoft.windows.colorFilters/enabled": {
             label: "{{QuickStrip_Colors_Color_Title}}",
             uiName: "Color Vision on, off",
-            tooltip: "Turns Color Blindness filters on and off|Changes colors to adapt to color vision differences. To choose type, right-click on button.",
+            tooltip: "{{QuickStrip_Colors_Color_HelpTitle}}|{{QuickStrip_Colors_Color_HelpMessage}}",
             menu: {
               setting: "easeofaccess-colorfilter",
               learn: "color",
@@ -116,7 +116,7 @@
             func: "menu",
             label: "{{QuickStrip_Colors_Dark_Title}}",
             uiName: "Dark Mode on, off",
-            tooltip: "Turns Dark Mode on and off|To change settings, right-click on button.",
+            tooltip: "{{QuickStrip_Colors_Dark_HelpTitle}}|{{QuickStrip_Colors_Dark_HelpMessage}}",
             menu: {
               setting: "colors",
               learn: "darkmode",
@@ -127,7 +127,7 @@
           "com.microsoft.windows.nightMode/enabled": {
             label: "{{QuickStrip_Colors_Night_Title}}",
             uiName: "Night Light on, off",
-            tooltip: "Turns the Night Light feature on and off|Reduces eye strain and makes it easier to fall asleep at night.",
+            tooltip: "{{QuickStrip_Colors_Night_HelpTitle}}|{{QuickStrip_Colors_Night_HelpMessage}}",
             menu: {
               setting: "nightlight",
               learn: "nightmode",

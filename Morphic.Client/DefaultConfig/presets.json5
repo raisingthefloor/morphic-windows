@@ -14,12 +14,12 @@
         buttons: {
           inc: {
             label: "+",
-            tooltip: "Increases Text Size everywhere|Makes everything on the screen larger.|Text Size cannot go bigger",
+            tooltip: "{{QuickStrip_Resolution_Bigger_HelpTitle}}|{{QuickStrip_Resolution_Bigger_HelpMessage}}|{{QuickStrip_Resolution_Bigger_LimitTitle}}",
             uiName: "Increase Text Size"
           },
           dec: {
             label: "-",
-            tooltip: "Decreases Text Size everywhere|Makes everything on the screen smaller.|Text Size cannot go smaller",
+            tooltip: "{{QuickStrip_Resolution_Smaller_HelpTitle}}|{{QuickStrip_Resolution_Smaller_HelpMessage}}|{{QuickStrip_Resolution_Smaller_LimitTitle}}",
             uiName: "Decrease Text Size"
           }
         }
@@ -39,12 +39,12 @@
           on: {
             label: "{{QuickStrip_Magnifier_Show_Title}}",
             uiName: "Show Magnifier",
-            tooltip: "Turns on a Magnifying lens|Magnifier follows your mouse. Your mouse can click through the box.",
+            tooltip: "{{QuickStrip_Magnifier_Show_HelpTitle}}|{{QuickStrip_Magnifier_Show_HelpMessage}}",
           },
           off: {
             label: "{{QuickStrip_Magnifier_Hide_Title}}",
             uiName: "Hide Magnifier",
-            tooltip: "Turns off Magnifier|To change Magnifier settings, right-click on button."
+            tooltip: "{{QuickStrip_Magnifier_Hide_HelpTitle}}|{{QuickStrip_Magnifier_Hide_HelpMessage}}"
           }
         }
       }
@@ -63,11 +63,11 @@
         buttons: {
           up: {
             label: "+",
-            tooltip: "Increases the volume|Makes all sounds louder.|Volume cannot go louder",
+            tooltip: "{{QuickStrip_Volume_Up_HelpTitle}}|{{QuickStrip_Volume_Up_HelpMessage}}|{{QuickStrip_Volume_Up_LimitTitle}}",
           },
           down: {
             label: "-",
-            tooltip: "Decreases the volume|Makes all sounds quieter.|Volume cannot go quieter"
+            tooltip: "{{QuickStrip_Volume_Down_HelpTitle}}|{{QuickStrip_Volume_Down_HelpMessage}}|{{QuickStrip_Volume_Down_LimitTitle}}"
           }
         }
       }
@@ -91,12 +91,12 @@
           on: {
             label: "{{QuickStrip_Magnifier_Show_Title}}",
             uiName: "Show Magnifier",
-            tooltip: "Turn on Magnifier that follows mouse|Turns on a Magnifying Lens. (Right-click to change settings)",
+            tooltip: "{{QuickStrip_Magnifier_Show_HelpTitle}}|{{QuickStrip_Magnifier_Show_HelpMessage}}",
           },
           off: {
             label: "{{QuickStrip_Magnifier_Hide_Title}}",
             uiName: "Hide Magnifier",
-            tooltip: "Turn off the magnifier|(Right-click to change magnifier settings)"
+            tooltip: "{{QuickStrip_Magnifier_Hide_HelpTitle}}|{{QuickStrip_Magnifier_Hide_HelpMessage}}"
           }
         }
       }
@@ -115,11 +115,11 @@
         buttons: {
           on: {
             label: "{{QuickStrip_NightMode_On_Title}}",
-            tooltip: "Turns the Night Light feature on"
+            tooltip: "{{QuickStrip_NightMode_On_HelpTitle}}"
           },
           off: {
             label: "{{QuickStrip_NightMode_Off_Title}}",
-            tooltip: "Turns the Night Light feature off"
+            tooltip: "{{QuickStrip_NightMode_Off_HelpTitle}}"
           }
         }
       }
@@ -144,12 +144,12 @@
           on: {
             label: "{{QuickStrip_NightMode_On_Title}}",
             value: "on",
-            tooltip: "Turns the Night Light feature on"
+            tooltip: "{{QuickStrip_NightMode_On_HelpTitle}}"
           },
           off: {
             label: "{{QuickStrip_NightMode_Off_Title}}",
             value: "off",
-            tooltip: "Turns the Night Light feature off"
+            tooltip: "{{QuickStrip_NightMode_Off_HelpTitle}}"
           }
         }
       }
@@ -174,12 +174,12 @@
           play: {
             label: "|>",
             uiName: "Read selected text",
-            tooltip: "Reads text that is selected|Select text to be read. Then click play button to read. To change settings, right-click on button.",
+            tooltip: "{{QuickStrip_Reader_Start_HelpTitle}}|{{QuickStrip_Reader_Start_HelpMessage}}",
           },
           stop: {
             label: "[]",
             uiName: "Stop reading selected text",
-            tooltip: "Stops reading|To change voice and speed settings, right-click on either button."
+            tooltip: "{{QuickStrip_Reader_Stop_HelpTitle}}|{{QuickStrip_Reader_Stop_HelpMessage}}"
           }
         }
       }
@@ -200,12 +200,12 @@
           copy: {
             label: "{{QuickStrip_Clipboard_Copy_Title}}",
             value: "^c",
-            tooltip: "Copies your selection|Copies text or other content you have selected so you can paste it somewhere."
+            tooltip: "{{QuickStrip_Clipboard_Copy_HelpTitle}}|{{QuickStrip_Clipboard_Copy_HelpMessage}}"
           },
           paste: {
             label: "{{QuickStrip_Clipboard_Paste_Title}}",
             value: "^v",
-            tooltip: "Pastes what you copied|Inserts copied content where the text cursor is."
+            tooltip: "{{QuickStrip_Clipboard_Paste_HelpTitle}}|{{QuickStrip_Clipboard_Paste_HelpMessage}}"
           }
         }
       }
@@ -221,11 +221,11 @@
         buttons: {
           on: {
             label: "{{QuickStrip_Contrast_On_Title}}",
-            tooltip: "Turns Contrast on"
+            tooltip: "{{QuickStrip_Contrast_On_HelpTitle}}"
           },
           off: {
             label: "{{QuickStrip_Contrast_Off_Title}}",
-            tooltip: "Turns Contrast off"
+            tooltip: "{{QuickStrip_Contrast_Off_HelpTitle}}"
           }
         }
       }
@@ -245,12 +245,12 @@
           on: {
             label: "{{QuickStrip_ColorFilters_On_Title}}",
             value: "on",
-            tooltip: "Turns Color Blindness filters on"
+            tooltip: "{{QuickStrip_ColorFilters_On_HelpTitle}}"
           },
           off: {
             label: "{{QuickStrip_ColorFilters_Off_Title}}",
             value: "off",
-            tooltip: "Turns Color Blindness filters off"
+            tooltip: "{{QuickStrip_ColorFilters_Off_HelpTitle}}"
           }
         }
       }
@@ -274,12 +274,12 @@
           on: {
             label: "{{QuickStrip_DarkMode_On_Title}}",
             value: "on",
-            tooltip: "Turns Dark Mode on"
+            tooltip: "{{QuickStrip_DarkMode_On_HelpTitle}}"
           },
           off: {
             label: "{{QuickStrip_DarkMode_Off_Title}}",
             value: "off",
-            tooltip: "Turns Dark Mode off"
+            tooltip: "{{QuickStrip_DarkMode_Off_HelpTitle}}"
           }
         }
       }
@@ -313,7 +313,7 @@
           copy: {
             label: "{{QuickStrip_Snip_Button_Title}}",
             uiName: "Takes a picture of a selected part of the screen",
-            tooltip: "Click Copy. Then click and drag mouse to take picture. Paste into any document."
+            tooltip: "{{QuickStrip_Snip_HelpTitle}}|{{QuickStrip_Snip_HelpMessage}}"
           }
         }
       }

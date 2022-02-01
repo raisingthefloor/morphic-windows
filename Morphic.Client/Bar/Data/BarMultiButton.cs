@@ -48,6 +48,7 @@ namespace Morphic.Client.Bar.Data
             private string? value;
             private string? uiName;
             private string? text;
+            private string? tooltip;
             public BarMultiButton BarItem { get; internal set; } = null!;
 
             /// <summary>
@@ -82,7 +83,11 @@ namespace Morphic.Client.Bar.Data
             public BarAction? Action { get; set; }
 
             [JsonProperty("tooltip")]
-            public string? Tooltip { get; set; }
+            public string? Tooltip
+            {
+                get => this.tooltip;
+                set => this.tooltip = App.Current.LocalizeTemplatedString(value);
+            }
 
             [JsonProperty("menu")]
             public Dictionary<string, string> Menu { get; set; } = new Dictionary<string, string>();
