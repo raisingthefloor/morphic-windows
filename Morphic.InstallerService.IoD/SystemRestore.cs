@@ -15,6 +15,10 @@ namespace IoDCLI
         public SystemRestore(ILogger logger)
         {
             _logger = logger;
+
+            SetInfiniteCreationFrequency();
+
+            Enable();
         }
 
         private static string GetSystemDrive()
