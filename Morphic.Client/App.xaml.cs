@@ -436,6 +436,53 @@ namespace Morphic.Client
             return disableTelemetryFileExists;
         }
 
+        internal string? LocalizeTemplatedString(string? value)
+        {
+            // if value is null, return null now
+            if (value is null)
+            {
+                return value;
+            }
+
+            // replace any l10n-templated resource tags with their respective localized string
+            var remainingValue = value;
+            var result = new System.Text.StringBuilder();
+            while (remainingValue.Length > 0) {
+                var indexOfTemplateStart = remainingValue.IndexOf("{{");
+                var indexOfTemplateEnd = remainingValue.IndexOf("}}", indexOfTemplateStart + 2);
+                if (indexOfTemplateStart >= 0 && indexOfTemplateEnd >= indexOfTemplateStart + 2)
+                {
+                    // extract the resource name (and then remove the resource tag from the string)
+                    var resourceName = remainingValue.Substring(indexOfTemplateStart + 2, indexOfTemplateEnd - indexOfTemplateStart - 2);
+                    remainingValue = remainingValue.Remove(indexOfTemplateStart, indexOfTemplateEnd - indexOfTemplateStart + 2);
+
+                    // if the string contained content before the resource tag, capture it as part of the result before capturing the localized resource
+                    if (indexOfTemplateStart > 0)
+                    {
+                        var textBeforeTemplatedSection = remainingValue.Substring(0, indexOfTemplateStart);
+                        remainingValue = remainingValue.Remove(0, indexOfTemplateStart);
+                        result.Append(textBeforeTemplatedSection);
+                    }
+
+                    // get the localized resource; if it doesn't exist, revert to the resource tag instead
+                    var localizedText = Morphic.Client.Properties.Resources.ResourceManager.GetString(resourceName.Trim(), Morphic.Client.Properties.Resources.Culture);
+                    if (localizedText is null)
+                    {
+                        localizedText = "{{" + resourceName + "}}";
+                    }
+                    result.Append(localizedText);
+                }
+                else
+                {
+                    // no (more) resource tags to localize
+                    result.Append(remainingValue);
+                    remainingValue = string.Empty;
+                }
+            }
+
+            return result.ToString();
+        }
+
         /// <summary>
         /// Create a Configuration from appsettings.json
         /// </summary>

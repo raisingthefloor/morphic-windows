@@ -38,6 +38,8 @@ namespace Morphic.Client.Bar.Data
         protected ILogger Logger = App.Current.ServiceProvider.GetRequiredService<ILogger<BarItem>>();
         private string? text;
         private string? uiName;
+        private string? defaultText;
+        private string? tooltip;
 
         /// <summary>
         /// The bar that owns this item.
@@ -79,7 +81,7 @@ namespace Morphic.Client.Bar.Data
         public string Text
         {
             get => this.text ?? this.DefaultText ?? string.Empty;
-            set => this.text = value;
+            set => this.text = App.Current.LocalizeTemplatedString(value);
         }
 
         /// <summary>
@@ -95,14 +97,17 @@ namespace Morphic.Client.Bar.Data
                     ? this.ToolTipHeader ?? this.ToolTip ?? string.Empty
                     : name;
             }
-            set => this.uiName = value;
+            set => this.uiName = App.Current.LocalizeTemplatedString(value);
         }
 
         /// <summary>
         /// The text displayed on the item, if Text is not set.
         /// </summary>
         [JsonProperty("configuration.defaultLabel")]
-        public string? DefaultText { get; set; }
+        public string? DefaultText {
+            get => this.defaultText;
+            set => this.defaultText = App.Current.LocalizeTemplatedString(value);
+        }
 
         /// <summary>
         /// Tooltip header text (default is the this.Text).
@@ -114,7 +119,10 @@ namespace Morphic.Client.Bar.Data
         /// Tooltip smaller text.
         /// </summary>
         [JsonProperty("configuration.tooltip")]
-        public string? ToolTip { get; set; }
+        public string? ToolTip {
+            get => this.tooltip;
+            set => this.tooltip = App.Current.LocalizeTemplatedString(value);
+        }
 
         /// <summary>
         /// The background colour (setter from json to allow empty strings).

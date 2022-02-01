@@ -12,7 +12,7 @@
     <StackPanel Orientation="Vertical">
         <Image Source="/Icon.png" Width="60" Margin="30"/>
         <TextBlock x:Name="AppName" HorizontalAlignment="Center" FontWeight="Bold"
-                   Text="Morphic™ © 2020-2022 Raising the Floor"/>
+                   Text="Morphic® © 2020-2022 Raising the Floor"/>
         <TextBlock x:Name="VersionLabel" HorizontalAlignment="Center"
                    Text="{Binding Path=Version, StringFormat='version {0}'}" />
         <TextBlock x:Name="BuildLabel" HorizontalAlignment="Center" />

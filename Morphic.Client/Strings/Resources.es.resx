@@ -118,324 +118,324 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AboutMorphicWindow_Title" xml:space="preserve">
-    <value>About Morphic</value>
+    <value>Acerca de Morphic</value>
   </data>
   <data name="AlreadyHaveAnAccountButton_Content" xml:space="preserve">
-    <value>Already have an account?</value>
+    <value>¿Ya tienes una cuenta?</value>
   </data>
   <data name="ApplyButton_Text" xml:space="preserve">
-    <value>Apply</value>
+    <value>Aplicar</value>
   </data>
   <data name="ApplyingSettingsOnYourComputerLabel_Content" xml:space="preserve">
-    <value>Applying settings on your computer...</value>
+    <value>Aplicando configuraciones en el PC...</value>
   </data>
   <data name="ApplySettingsFromCloudVaultInstructions_Part1_Text" xml:space="preserve">
-    <value>Clicking the</value>
+    <value>Haciendo click</value>
   </data>
   <data name="ApplySettingsFromCloudVaultInstructions_Part3_Text" xml:space="preserve">
-    <value>button will cause the assistive technology and system setting in your Morphic Cloud Vault to be applied to this computer.</value>
+    <value>se aplicarán en el sistema las configuraciones que tenga guardadas en su Morphic Cloud Vault.</value>
   </data>
   <data name="ApplySettingsFromCloudVaultNote_Text" xml:space="preserve">
-    <value>Note: The current settings on this computer will be backed up on this computer -- so you can revert back to the current settings later.</value>
+    <value>Recuerde que la configuración actual del sistema se guardará en el equipo, de forma que podrá volver a aplicarla en cualquier momento.</value>
   </data>
   <data name="ApplySettingsFromCloudVaultTitle_Content" xml:space="preserve">
-    <value>Apply my settings from my Cloud Vault</value>
+    <value>Aplicar mis preferencias desde mi Morphic Cloud Vault</value>
   </data>
   <data name="BackupDate_Text" xml:space="preserve">
-    <value>Backup Date</value>
+    <value>Fecha de la copia de seguridad</value>
   </data>
   <data name="CancelButton_AutomationHelpText" xml:space="preserve">
-    <value>Cancel Login</value>
+    <value>Cancelar el inicio de sesión</value>
   </data>
   <data name="CancelButton_Text" xml:space="preserve">
     <value>Cancelar</value>
   </data>
   <data name="ChangePreferenceLaterUsingMorphicMenu_Text" xml:space="preserve">
-    <value>You can change this preference later, by using the Morphic Menu.</value>
+    <value>Puede cambiar esta preferencia más tarde usando el Menú de Morphic.</value>
   </data>
   <data name="CheckForUpdateHyperlink_Text" xml:space="preserve">
-    <value>Check for Update</value>
+    <value>Buscar actualizaciones</value>
   </data>
   <data name="ChooseAPassword_Content" xml:space="preserve">
-    <value>Choose a Password</value>
+    <value>Elija una contraseña</value>
   </data>
   <data name="ClickingBelowWillRestoreSettings_Part1_Text" xml:space="preserve">
     <value>Clicking</value>
   </data>
   <data name="ClickingBelowWillRestoreSettings_Part2_Text" xml:space="preserve">
-    <value>Restore from backup</value>
+    <value>Restaurar de la copia de seguridad</value>
   </data>
   <data name="ClickingBelowWillRestoreSettings_Part3_Text" xml:space="preserve">
-    <value>below will restore those settings to this computer.</value>
+    <value>Esto restaurará la configuración en este equipo.</value>
   </data>
   <data name="ClickingSaveWillSaveSettingsToVault_Text" xml:space="preserve">
-    <value>Clicking save will save them to your secure Cloud Vault.</value>
+    <value>Al hacer click en "Guardar" se guardarán en su Morphic Cloud Vault.</value>
   </data>
   <data name="CloseButton_Text" xml:space="preserve">
-    <value>Close</value>
+    <value>Cerrar</value>
   </data>
   <data name="CollectingSettingsFromComputerLabel_Content" xml:space="preserve">
-    <value>Collecting settings from your computer...</value>
+    <value>Recopilando la configuración de su PC...</value>
   </data>
   <data name="ConfirmSavingToCloudVaultLabel_Content" xml:space="preserve">
-    <value>Confirm saving to your Morphic Cloud Vault</value>
+    <value>Confirma que quieres guardar en tu Morphic Cloud Vault</value>
   </data>
   <data name="ConfirmYourPassword_Content" xml:space="preserve">
-    <value>Confirm your Password</value>
+    <value>Confirme su contraseña</value>
   </data>
   <data name="CopySettingsBetweenComputersDescription_Text" xml:space="preserve">
-    <value>This feature allows you to move your accessibility and usability settings between computers - including the settings of your assistive technologies.</value>
+    <value>Esta función le permitirá aplicar sus preferencias de usabilidad y accesibilidad en otros equipos - incluyendo la configuración de sus productos de apoyo.</value>
   </data>
   <data name="CopySettingsBetweenComputersHeader_Text" xml:space="preserve">
-    <value>Copy Settings Between Computers</value>
+    <value>Copiar configuración entre ordenadores</value>
   </data>
   <data name="CopySettingsFromCloudVaultHyperlink_Text" xml:space="preserve">
-    <value>Use the settings in my Cloud Vault to set up this computer.</value>
+    <value>Usar las configuraciones de mi Morphic Cloud Vault para configurar este equipo.</value>
   </data>
   <data name="CopySettingsToCloudVaultHyperlink_Text" xml:space="preserve">
-    <value>Copy settings on this computer to my Cloud Vault</value>
+    <value>Copiar la configuración de este equipo en mi Morphic Cloud Vault</value>
   </data>
   <data name="CreateAccountAndRememberMySettingsButton_Content" xml:space="preserve">
-    <value>Create Account &amp; Remember My Settings</value>
+    <value>Crear una cuenta y recordar mis preferencias</value>
   </data>
   <data name="CreateAccountHyperlink_Text" xml:space="preserve">
-    <value>Don't have an account yet?</value>
+    <value>¿Aún no tiene una cuenta?</value>
   </data>
   <data name="EmailFieldLabel_Text" xml:space="preserve">
-    <value>Email Address</value>
+    <value>Dirección email</value>
   </data>
   <data name="ForgotPasswordHyperlink_Text" xml:space="preserve">
-    <value>Forgot your password - Or not sure if you have an account?</value>
+    <value>¿Olvidó su contraseña o no está seguro si tiene una cuenta?</value>
   </data>
   <data name="LearnMoreAboutMorphicHyperlink_Text" xml:space="preserve">
-    <value>Learn More About Morphic</value>
+    <value>Más información acerca de Morphic</value>
   </data>
   <data name="LoginButton_AutomationHelpText" xml:space="preserve">
-    <value>Ingresar</value>
+    <value>Iniciar sesión</value>
   </data>
   <data name="LoginError_DidNotRecognizeLogin_Text" xml:space="preserve">
-    <value>We did not recognize your login.  Please try again.</value>
+    <value>No pudimos encontrar sus datos de acceso. Por favor, inténtelo de nuevo.</value>
   </data>
   <data name="Menu_AboutMorphic_Header" xml:space="preserve">
-    <value>_About Morphic...</value>
+    <value>_Acerca de Morphic...</value>
   </data>
   <data name="Menu_ApplySavedSetup_Header" xml:space="preserve">
-    <value>Apply a Saved Setup...</value>
+    <value>Aplicar una configuración guardada...</value>
   </data>
   <data name="Menu_AutorunAfterLoginItem_Checkbox_Header" xml:space="preserve">
-    <value>_Automatically start Morphic</value>
+    <value>_Iniciar Morphic automáticamente</value>
   </data>
   <data name="Menu_ChangeMorphicBar_Header" xml:space="preserve">
-    <value>Change MorphicBar</value>
+    <value>Cambiar la barra de Morphic</value>
   </data>
   <data name="Menu_CustomizeMorphicBar_Header" xml:space="preserve">
-    <value>Personalizar la barra morfológica...</value>
+    <value>Personalizar la barra de Morphic...</value>
   </data>
   <data name="Menu_ExploreMorphicLink_Header" xml:space="preserve">
-    <value>_Explore everything Morphic can do...</value>
+    <value>_Aprenda todo lo que Morphic puede hacer...</value>
   </data>
   <data name="Menu_HideMorphicBar_Header" xml:space="preserve">
-    <value>Ocultar MorphicBar</value>
+    <value>Ocultar la barra de Morphic</value>
   </data>
   <data name="Menu_HideQuickHelp_Header" xml:space="preserve">
-    <value>_Hide QuickHelp (except with Alt key)</value>
+    <value>_Ocultar la ayuda rápida</value>
   </data>
   <data name="Menu_HowToCopySettingsBetweenComputers_Header" xml:space="preserve">
-    <value>How to copy setups between computers...</value>
+    <value>Como copiar configuraciones entre equipos...</value>
   </data>
   <data name="Menu_Install_ReadAndWrite_Header" xml:space="preserve">
     <value>Install Read&amp;Write</value>
   </data>
   <data name="Menu_MoreSettingsToMakeComputerEasier_Header" xml:space="preserve">
-    <value>More settings to make the computer easier</value>
+    <value>Más configuraciones para facilitar el uso del PC</value>
   </data>
   <data name="Menu_OsAllAccessibilityOptions_Header" xml:space="preserve">
-    <value>_All Accessibility Options</value>
+    <value>_Todas las opciones de accesibilidad</value>
   </data>
   <data name="Menu_OsBrightnessSettings_Header" xml:space="preserve">
-    <value>Brightness</value>
+    <value>Brillo</value>
   </data>
   <data name="Menu_OsColorVisionSettings_Header" xml:space="preserve">
-    <value>_Color Vision Settings</value>
+    <value>_Opciones de los filtros de color</value>
   </data>
   <data name="Menu_OsContrastSettings_Header" xml:space="preserve">
-    <value>_Contrast Settings</value>
+    <value>_Opciones de alto contraste</value>
   </data>
   <data name="Menu_OsDarkModeSettings_Header" xml:space="preserve">
-    <value>_Dark Mode Settings</value>
+    <value>_Opciones del modo oscuro</value>
   </data>
   <data name="Menu_OsDirectionActionsSection_Header" xml:space="preserve">
-    <value>Direct actions</value>
+    <value>Acciones directas</value>
   </data>
   <data name="Menu_OsKeyboardSettings_Header" xml:space="preserve">
-    <value>_Keyboard Settings</value>
+    <value>_Opciones de teclado</value>
   </data>
   <data name="Menu_OsLanguageSettings_Header" xml:space="preserve">
-    <value>_Language</value>
+    <value>_Idioma</value>
   </data>
   <data name="Menu_OsMagnifierSettings_Header" xml:space="preserve">
-    <value>_Magnifier Settings</value>
+    <value>_Opciones del magnificador de pantalla</value>
   </data>
   <data name="Menu_OsMouseSettings_Header" xml:space="preserve">
-    <value>M_ouse Settings</value>
+    <value>_Opciones de ratón</value>
   </data>
   <data name="Menu_OsNightModeSettings_Header" xml:space="preserve">
-    <value>_Night Mode Settings</value>
+    <value>_Opciones del modo nocturno</value>
   </data>
   <data name="Menu_OsOtherSettingsSection_Header" xml:space="preserve">
-    <value>Other Key Windows Settings</value>
+    <value>Otras opciones de Windows</value>
   </data>
   <data name="Menu_OsPointerSizeSettings_Header" xml:space="preserve">
-    <value>_Pointer Size</value>
+    <value>_Tamaño del puntero</value>
   </data>
   <data name="Menu_OsReadAloudSettings_Header" xml:space="preserve">
-    <value>_Read Aloud Settings</value>
+    <value>_Opciones de Lectura en voz alta</value>
   </data>
   <data name="Menu_OsSettingsSection_Header" xml:space="preserve">
-    <value>Windows Settings for MorphicBar Controls</value>
+    <value>Opciones de Windows como controles en la barra de Morphic</value>
   </data>
   <data name="Menu_OsStopKeyRepeatAction_Header" xml:space="preserve">
-    <value>_Stop Key-repeat</value>
+    <value>_Parar repetición de tecla</value>
   </data>
   <data name="Menu_OtherHelpfulThings_Header" xml:space="preserve">
-    <value>_Other resources to make computers easier...</value>
+    <value>_Otros recursos para facilitar el uso del PC...</value>
   </data>
   <data name="Menu_ProblemsContactUs_Header" xml:space="preserve">
-    <value>Problems? Contact us...</value>
+    <value>¿Algún problema? Póngase en contacto con nosotros...</value>
   </data>
   <data name="Menu_QuickMorphicDemosLink_Header" xml:space="preserve">
-    <value>Quick Morphic _demo videos...</value>
+    <value>Videos de _demostración de Morphic...</value>
   </data>
   <data name="Menu_QuitMorphic_Header" xml:space="preserve">
-    <value>_Quit Morphic</value>
+    <value>_Cerrar Morphic</value>
   </data>
   <data name="Menu_ReadAndWriteSection_Header" xml:space="preserve">
     <value>Read&amp;Write</value>
   </data>
   <data name="Menu_RestoreSettingsFromBackup_Header" xml:space="preserve">
-    <value>_Restore settings from backup</value>
+    <value>_Restaurar configuración desde copia de seguridad</value>
   </data>
   <data name="Menu_SaveCurrentSetupAs_Header" xml:space="preserve">
-    <value>Save Current Setup as...</value>
+    <value>Guardar la configuración actual como...</value>
   </data>
   <data name="Menu_SelectBasicMorphicBar_Header" xml:space="preserve">
-    <value>Basic MorphicBar</value>
+    <value>Barra de Morphic básica</value>
   </data>
   <data name="Menu_ShowMorphicBarLoginItem_Checkbox_Header" xml:space="preserve">
-    <value>_Show Morphic Bar at start</value>
+    <value>_Mostrar la barra de Morphic al arrancar</value>
   </data>
   <data name="Menu_ShowMorphicBar_Header" xml:space="preserve">
-    <value>Show MorphicBar</value>
+    <value>Mostrar la barra de Morphic</value>
   </data>
   <data name="Menu_SignIn_Header" xml:space="preserve">
-    <value>Sign into Morphic...</value>
+    <value>Iniciar sesión en Morphic...</value>
   </data>
   <data name="Menu_SignOut_Header" xml:space="preserve">
-    <value>Sign out of Morphic</value>
+    <value>Salir de Morphic</value>
   </data>
   <data name="Menu_Uninstall_ReadAndWrite_Header" xml:space="preserve">
     <value>Uninstall Read&amp;Write</value>
   </data>
   <data name="MorphicCanNowApplySavedSettingsToAnotherComputer_Text" xml:space="preserve">
-    <value>You can now use Morphic to apply these settings to another computer that has Morphic installed.</value>
+    <value>Ahora puede usar Morphic para aplicar esta configuración en otro equipo que tenga Morphic instalado.</value>
   </data>
   <data name="OkButton_Text" xml:space="preserve">
-    <value>OK</value>
+    <value>Aceptar</value>
   </data>
   <data name="OldSettingsWereBackedUp_Part1_Text" xml:space="preserve">
-    <value>Before they were applied, the old settings were backed up on this computer. To revert back to those settings use the</value>
+    <value>Antes de ser aplicadas, la configuración anterior se guardó en una copia de seguridad. Para volver a ella, use</value>
   </data>
   <data name="OldSettingsWereBackedUp_Part2_Text" xml:space="preserve">
-    <value>"Restore settings from backup"</value>
+    <value>"Restaurar configuración desde copia de seguruidad"</value>
   </data>
   <data name="OldSettingsWereBackedUp_Part3_Text" xml:space="preserve">
-    <value>command in the Morphic menu.</value>
+    <value>comando en el menú de Morphic.</value>
   </data>
   <data name="PasswordFieldLabel_Text" xml:space="preserve">
-    <value>Password</value>
+    <value>Contraseña</value>
   </data>
   <data name="PasswordField_AutomationHelpText" xml:space="preserve">
-    <value>Enter your Morphic password</value>
+    <value>Introduzca su contraseña</value>
   </data>
   <data name="RememberYourLoginEmailAddress_Text" xml:space="preserve">
-    <value>When you sit down at another computer with Morphic installed, remember to login with the email address you provided</value>
+    <value>Cuando use otro equipo que tenga Morphic instalado, recuerde identificarse usando la dirección email que nos ha proporcionado</value>
   </data>
   <data name="RestoreFromBackupButton_Text" xml:space="preserve">
-    <value>Restore from backup</value>
+    <value>Restaurar desde copia de seguridad</value>
   </data>
   <data name="RestoreSettingsFromBackupHeaderDescription_Text" xml:space="preserve">
-    <value>The last time Morphic applied a user’s settings to this user account on this computer, Morphic captured the settings already on the computer and saved them to a backup.</value>
+    <value>La última vez que Morphic configuró este equipo, Morphic hizo una copia de seguridad de la configuración del equipo.</value>
   </data>
   <data name="RestoreSettingsFromBackupHeader_Text" xml:space="preserve">
-    <value>Restore settings from backup</value>
+    <value>Restaurar configuración desde copia de seguruidad</value>
   </data>
   <data name="RestoreSettingsFromBackupWindow_Title" xml:space="preserve">
-    <value>Restore settings from backup</value>
+    <value>Restaurar configuración desde copia de seguruidad</value>
   </data>
   <data name="SaveButton_Text" xml:space="preserve">
-    <value>Save</value>
+    <value>Guardar</value>
   </data>
   <data name="SecurelyTakeSettingsAnywhere_Text" xml:space="preserve">
-    <value>So you can securely take them anywhere</value>
+    <value>Así que puedes llevarlos a cualquier equipo</value>
   </data>
   <data name="SelectCurrentGroupHeader_Text" xml:space="preserve">
-    <value>Select the community whose bar you would like to see now:</value>
+    <value>Seleccione la comunidad cuya barra de Morphic le gustaría ver:</value>
   </data>
   <data name="SettingsCollectionComplete_Text" xml:space="preserve">
-    <value>We have collected the settings of your assistive technologies and of the accessibility and usability settings of your computer.</value>
+    <value>Hemos recogido los ajustes de sus tecnologías de asistencia, accesibilidad y usabilidad de su equipo.</value>
   </data>
   <data name="SettingsFromCloudVaultHaveBeenApplied_Text" xml:space="preserve">
-    <value>The settings on from your cloud vault have been applied to this Computer.</value>
+    <value>Se han aplicado las configuraciones de su Morphic Cloud Vault en este equipo.</value>
   </data>
   <data name="SettingsSaveCompleteLabel_Content" xml:space="preserve">
-    <value>Complete!</value>
+    <value>¡Completado!</value>
   </data>
   <data name="SettingsSavedToCloudVaultLabel_Content" xml:space="preserve">
-    <value>Settings Saved to Cloud Vault</value>
+    <value>Configuraciones guardadas en su Morphic Cloud Vault</value>
   </data>
   <data name="SignInButton_Text" xml:space="preserve">
-    <value>Ingresar</value>
+    <value>Iniciar sesión</value>
   </data>
   <data name="SignIntoMorphicAccountHeader_Text" xml:space="preserve">
-    <value>Sign into your Morphic Account - Cloud Vault</value>
+    <value>Inicie sesión en Morphic - Morphic Cloud Vault</value>
   </data>
   <data name="SignInWindow_Title" xml:space="preserve">
     <value>Inicie sesión en Morphic</value>
   </data>
   <data name="TakeYourSettingsAnywhereHeaderLabel_Content" xml:space="preserve">
-    <value>Take Your Settings Anywhere</value>
+    <value>Llévese su configuración a cualquier equipo</value>
   </data>
   <data name="TakeYourSettingsAnywhereInstructions_Text" xml:space="preserve">
-    <value>You'll need to create an account so we can remember your settings and securely apply them to another computer</value>
+    <value>Necesita crear una cuenta en Morphic para guardar sus configuraciones y aplicarlas en otro equipo</value>
   </data>
   <data name="TermsAndConditionsLinks_Part1_Content" xml:space="preserve">
-    <value>By signing up for Morphic you are agreeing to the</value>
+    <value>Al registrarse en Morphic está aceptando las</value>
   </data>
   <data name="TermsAndConditionsLinks_Part2_Content" xml:space="preserve">
-    <value>Terms of Service</value>
+    <value>Términos de Servicio</value>
   </data>
   <data name="TermsAndConditionsLinks_Part3_Content" xml:space="preserve">
-    <value>and</value>
+    <value>y</value>
   </data>
   <data name="TermsAndConditionsLinks_Part4_Content" xml:space="preserve">
-    <value>Privacy Policy</value>
+    <value>nuestras Políticas de Privacidad</value>
   </data>
   <data name="TravelWindow_Title" xml:space="preserve">
-    <value>Travel with Settings</value>
+    <value>Viaje con sus configuraciones</value>
   </data>
   <data name="UsernameField_AutomationHelpText" xml:space="preserve">
     <value>Introduzca su dirección de correo</value>
   </data>
   <data name="WeSavedYourSettings_Text" xml:space="preserve">
-    <value>We've saved your settings in a secure area only you can access.</value>
+    <value>Hemos guardado su configuración en un lugar seguro al que sólo usted puede acceder.</value>
   </data>
   <data name="YouAreMemberOfMultipleGroups_Text" xml:space="preserve">
-    <value>You are a member of several Morphic Groups.</value>
+    <value>Usted es miembro de varios Grupos de Morphic.</value>
   </data>
   <data name="YourEmailAddressLabel_Content" xml:space="preserve">
-    <value>Your Email Address</value>
+    <value>Su dirección email</value>
   </data>
   <data name="YourSettingsHaveBeenAppliedLabel_Content" xml:space="preserve">
-    <value>Your Settings have been applied</value>
+    <value>Se ha aplicado su configuración</value>
   </data>
 </root>
