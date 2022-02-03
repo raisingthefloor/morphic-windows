@@ -206,7 +206,7 @@
     <value>Turns Color Blindness filters on and off</value>
   </data>
   <data name="QuickStrip_Colors_Color_HelpMessage" xml:space="preserve">
-    <value>Changes colors to adapt to color vision differences. To choose type, right-click on button.</value>
+    <value>Changes colors to adapt to color vision differences.\nTo choose type, right-click on button.</value>
   </data>
   <data name="QuickStrip_Colors_Dark_Title" xml:space="preserve">
     <value>Dark</value>

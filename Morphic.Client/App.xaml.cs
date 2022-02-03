@@ -470,6 +470,10 @@ namespace Morphic.Client
                     {
                         localizedText = "{{" + resourceName + "}}";
                     }
+                    else
+                    {
+                        localizedText = localizedText.Replace("\\n", "\n");
+                    }
                     result.Append(localizedText);
                 }
                 else

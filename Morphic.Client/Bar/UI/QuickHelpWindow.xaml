@@ -45,6 +45,7 @@
         <Viewbox Grid.Row="1" Stretch="Uniform">
             <TextBlock Text="{Binding MessageText}"
                        HorizontalAlignment="Center"
+                       TextAlignment="Center"
                        FontWeight="Bold"
                        FontSize="25"
                        Foreground="White">

@@ -242,7 +242,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Changes colors to adapt to color vision differences. To choose type, right-click on button..
+        ///   Looks up a localized string similar to Changes colors to adapt to color vision differences.\nTo choose type, right-click on button..
         /// </summary>
         internal static string QuickStrip_Colors_Color_HelpMessage {
             get {
