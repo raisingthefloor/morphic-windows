@@ -5,14 +5,24 @@
     <TargetFramework>net6.0-windows10.0.19041.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <Platforms>x86;x64;arm64</Platforms>
+    <Nullable>enable</Nullable>
     <RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
   <ItemGroup>
+    <Folder Include="Assets\Icons\" />
+    <Folder Include="Assets\Images\" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22000.194" />
     <PackageReference Include="Morphic.Core" Version="1.1.0" />
     <PackageReference Include="Morphic.OAuth.Core" Version="1.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Morphic.WindowsNative\Morphic.WindowsNative.csproj" />
   </ItemGroup>
 
 </Project>
