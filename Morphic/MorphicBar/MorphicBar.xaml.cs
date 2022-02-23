@@ -46,4 +46,15 @@ public partial class MorphicBar : Window
     {
         InitializeComponent();
     }
+
+    private void Window_Loaded(object sender, RoutedEventArgs e)
+    {
+        // Temporary, for testing: set the background of the MorphicBar to an acrylic backgrouns
+        var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
+        var setAcrylicBackgroundResult = Morphic.WindowsNative.Windowing.Utils.AcrylicWindowUtils.SetAcrylicBackground(hwnd);
+        if (setAcrylicBackgroundResult.IsError == true)
+        {
+            System.Diagnostics.Debug.Assert(false, "Programming fault: could not enable acrylic background");
+        }
+    }
 }

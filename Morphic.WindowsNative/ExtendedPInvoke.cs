@@ -423,6 +423,86 @@ internal struct ExtendedPInvoke
 
     #endregion wingdi.h
 
+    #region user32.dll (reverse engineered, not WinUser.h)
+
+    // see: https://stackoverflow.com/questions/32724187/how-do-you-set-the-glass-blend-colour-on-windows-10
+    // see also: https://gist.github.com/ysc3839/b08d2bff1c7dacde529bed1d37e85ccf (this GIST corroborated the values we pulled form kernel32legacylib.etc, fileextd.lib, etc. -- and also appears to have a few newer attributes which weren't present in the 1809 SDK).
+
+    // NOTE: these attributes were painstakingly observed and captured by hand from "C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\um\x64\kernel32legacylib.lib" (Windows 10 1809 SDK) using direct hex view; they appear to be undocumented
+    // NOTE: the enum name, ACCENT_STATE, was observed in "C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\um\x64\kernel32legacylib.lib"; it appears to be undocumented
+    internal enum ACCENT_STATE: uint
+    {
+        ACCENT_DISABLED = 0x00,
+        ACCENT_ENABLE_GRADIENT = 0x01,
+        ACCENT_ENABLE_TRANSPARENTGRADIENT = 0x02,
+        ACCENT_ENABLE_BLURBEHIND = 0x03,
+        ACCENT_ENABLE_ACRYLICBLURBEHIND = 0x04,
+        ACCENT_ENABLE_HOSTBACKDROP = 0x05,
+        ACCENT_INVALID_STATE = 0x06,
+    }
+
+    // NOTE: the struct name, ACCENT_POLICY, was observed in "C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\um\x64\kernel32legacylib.lib"; it appears to be undocumented
+    // NOTE: this structure is used with WCA_ACCENT_POLICY; other structures would need to be used with other WINDOWCOMPOSITIONATTRIB attribute values
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct ACCENT_POLICY
+    {
+        public ACCENT_STATE AccentState;
+        public uint AccentFlags;
+        public uint GradientColor;
+        public uint AnimationId;
+    }
+
+    // NOTE: these attributes were painstakingly observed and captured by hand from "C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\um\x64\fileextd.lib" (Windows 10 1809 SDK) using Ghidra; they appear to be undocumented
+    // NOTE: these attributes were corroborated at: http://www.brandonfa.lk/win8/win8_devrel_head_x86/webcamui.h
+    // NOTE: the enum name, WINDOWCOMPOSITIONATTRIB, is assumed (based on the string immediately following the WCA_ values in fileextd.lib); these are grouped together for convenience (and may technically just be a list of consts)
+    internal enum WINDOWCOMPOSITIONATTRIB : uint
+    {
+        WCA_UNDEFINED = 0x00,
+        WCA_NCRENDERING_ENABLED = 0x01,
+        WCA_NCRENDERING_POLICY = 0x02,
+        WCA_TRANSITIONS_FORCEDISABLED = 0x03,
+        WCA_ALLOW_NCPAINT = 0x04,
+        WCA_CAPTION_BUTTON_BOUNDS = 0x05,
+        WCA_NONCLIENT_RTL_LAYOUT = 0x06,
+        WCA_FORCE_ICONIC_REPRESENTATION = 0x07,
+        WCA_EXTENDED_FRAME_BOUNDS = 0x08,
+        WCA_HAS_ICONIC_BITMAP = 0x09,
+        WCA_THEME_ATTRIBUTES = 0x0A,
+        WCA_NCRENDERING_EXILED = 0x0B,
+        WCA_NCADORNMENTINFO = 0x0C,
+        WCA_EXCLUDED_FROM_LIVEPREVIEW = 0x0D,
+        WCA_VIDEO_OVERLAY_ACTIVE = 0x0E,
+        WCA_FORCE_ACTIVEWINDOW_APPEARANCE = 0x0F,
+        WCA_DISALLOW_PEEK = 0x10,
+        WCA_CLOAK = 0x11,
+        WCA_CLOAKED = 0x12,
+        WCA_ACCENT_POLICY = 0x13,
+        WCA_FREEZE_REPRESENTATION = 0x14,
+        WCA_EVER_UNCLOAKED = 0x15,
+        WCA_VISUAL_OWNER = 0x16,
+        WCA_HOLOGRAPHIC = 0x17,
+        WCA_EXCLUDED_FROM_DDA = 0x18,
+        WCA_PASSIVEUPDATEMODE = 0x19,
+        WCA_LAST = 0x1A,
+    }
+
+    // NOTE; the struct name, WINDOWCOMPOSITIONATTRIBDATA, was observed in "C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\um\x64\kernel32legacylib.lib"; it appears to be undocumented
+    // NOTE: this undocumented struct was documented at http://undoc.airesoft.co.uk/user32.dll/GetWindowCompositionAttribute.php
+    // NOTE: the field names noted at https://gist.github.com/ysc3839/b08d2bff1c7dacde529bed1d37e85ccf are used here; cbData might be alternatively renamed to DataSize for clarity
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct WINDOWCOMPOSITIONATTRIBDATA
+    {
+        public WINDOWCOMPOSITIONATTRIB attribute;  // specify the attribute to set
+        public IntPtr pvData;                      // specify the data/value of the requested attribute
+        public uint cbData;                        // set to the size of pvData
+    };
+
+    // NOTE: this function is located in user32.dll (as exported by dumpbin and observed in Ghidra); it appears to be undocumented
+    // NOTE: this undocumented function was documented at http://undoc.airesoft.co.uk/user32.dll/SetWindowCompositionAttribute.php
+    [DllImport("user32.dll", SetLastError = true)]
+    internal static extern bool SetWindowCompositionAttribute(IntPtr hwnd, ref WINDOWCOMPOSITIONATTRIBDATA pAttrData);
+
+    #endregion user32.dll (reverse engineered, not WinUser.h)
 
     #region WinUser.h
 

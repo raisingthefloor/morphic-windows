@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Morphic.MorphicBar"
         mc:Ignorable="d"
-        Title="MorphicBar" Height="150" Width="800">
+        Title="MorphicBar" Height="150" Width="800" Loaded="Window_Loaded">
     <Grid>
         
     </Grid>
