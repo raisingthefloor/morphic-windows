@@ -52,7 +52,7 @@ namespace Morphic.Client
     using Menu;
     using Microsoft.Win32;
     using Morphic.Telemetry;
-    using Morphic.Windows.Native.OsVersion;
+    using Morphic.WindowsNative.OsVersion;
     using Settings.SettingsHandlers;
     using Settings.SolutionsRegistry;
     using System.Diagnostics;
@@ -998,7 +998,7 @@ namespace Morphic.Client
             }
             //
             // screen scaling (on all monitors)
-            var getAllDisplaysResult = Morphic.Windows.Native.Display.Display.GetAllDisplays();
+            var getAllDisplaysResult = Morphic.WindowsNative.Display.Display.GetAllDisplays();
             if (getAllDisplaysResult.IsSuccess == true) 
             {
                 var allDisplays = getAllDisplaysResult.Value!;

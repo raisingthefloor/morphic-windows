@@ -350,7 +350,7 @@ namespace Morphic.Client
             RECT screen = GetVirtualScreen().ToRECT();
 
             // NOTE: ideally our caller should simply use the display objects returned by...
-            // var allMonitorHandles = Morphic.Windows.Native.Display.Display.GetAllDisplays();
+            // var allMonitorHandles = Morphic.WindowsNative.Display.Display.GetAllDisplays();
 
             EnumDisplayMonitors(IntPtr.Zero, ref screen,
                 (IntPtr monitor, IntPtr hdcMonitor, ref RECT lprcMonitor, IntPtr data) =>

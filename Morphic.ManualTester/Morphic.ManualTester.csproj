@@ -23,7 +23,7 @@
     <ProjectReference Include="..\Morphic.Core\Morphic.Core.csproj" />
     <ProjectReference Include="..\Morphic.Integrations.Office\Morphic.Integrations.Office.csproj" />
     <ProjectReference Include="..\Morphic.Settings\Morphic.Settings.csproj" />
-    <ProjectReference Include="..\Morphic.Windows.Native\Morphic.Windows.Native.csproj" />
+    <ProjectReference Include="..\Morphic.WindowsNative\Morphic.WindowsNative.csproj" />
   </ItemGroup>
 
   <ItemGroup>

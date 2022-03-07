@@ -2,6 +2,8 @@ namespace Morphic.Client.Bar.Data.Actions
 {
     using Microsoft.Extensions.Logging;
     using Morphic.Core;
+    using Morphic.WindowsNative.Input;
+    using Morphic.WindowsNative.Speech;
     using Settings.SettingsHandlers;
     using Settings.SolutionsRegistry;
     using System;
@@ -17,8 +19,6 @@ namespace Morphic.Client.Bar.Data.Actions
     using System.Windows.Automation;
     using System.Windows.Automation.Text;
     using UI;
-    using Windows.Native.Input;
-    using Windows.Native.Speech;
 
     [HasInternalFunctions]
     // ReSharper disable once UnusedType.Global - accessed via reflection.
@@ -116,10 +116,20 @@ namespace Morphic.Client.Bar.Data.Actions
         {
             try
             {
-                var audioEndpoint = Windows.Native.Audio.AudioEndpoint.GetDefaultAudioOutputEndpoint();
+                var getDefaultAudioOutputEndpointResult = Morphic.WindowsNative.Audio.AudioEndpoint.GetDefaultAudioOutputEndpoint();
+                if (getDefaultAudioOutputEndpointResult.IsError == true)
+                {
+                    return MorphicResult.ErrorResult();
+                }
+                var audioEndpoint = getDefaultAudioOutputEndpointResult.Value!;
 
                 // if we didn't get a state in the request, try to reverse the state
-                var state = audioEndpoint.GetMasterMuteState();
+                var getMasterMuteStateResult = audioEndpoint.GetMasterMuteState();
+                if (getMasterMuteStateResult.IsError == true)
+                {
+                    return MorphicResult.ErrorResult();
+                }
+                var state = getMasterMuteStateResult.Value!;
 
                 return MorphicResult.OkResult(state);
             }
@@ -151,13 +161,16 @@ namespace Morphic.Client.Bar.Data.Actions
                 }
             }
 
-            try
+            // set the mute state to the new state value
+            var getDefaultAudioOutputEndpointResult = Morphic.WindowsNative.Audio.AudioEndpoint.GetDefaultAudioOutputEndpoint();
+            if (getDefaultAudioOutputEndpointResult.IsError == true)
             {
-                // set the mute state to the new state value
-                var audioEndpoint = Windows.Native.Audio.AudioEndpoint.GetDefaultAudioOutputEndpoint();
-                audioEndpoint.SetMasterMuteState(newState);
+                return MorphicResult.ErrorResult();
             }
-            catch
+            var audioEndpoint = getDefaultAudioOutputEndpointResult.Value!;
+
+            var setMasterMuteStateResult = audioEndpoint.SetMasterMuteState(newState);
+            if (setMasterMuteStateResult.IsError == true)
             {
                 return MorphicResult.ErrorResult();
             }
@@ -171,23 +184,35 @@ namespace Morphic.Client.Bar.Data.Actions
         /// <param name="args">direction: "up"/"down", amount: number of 1/100 to move</param>
         /// <returns></returns>
         [InternalFunction("volume", "direction", "amount=6")]
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> SetVolumeAsync(FunctionArgs args)
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             // NOTE: ideally we should switch this functionality to use AudioEndpoint.SetMasterVolumeLevel instead
+            //       [it may not be practical to do that, however, if AudioEndpoint.SetMasterVolumeLevel doesn't activate to on-screen volume change dialog in Windows 10/11; to be tested...]
 
-            IntPtr taskTray = WinApi.FindWindow("Shell_TrayWnd", IntPtr.Zero);
-            if (taskTray != IntPtr.Zero)
+            var percent = Convert.ToUInt32(args["amount"]);
+            // clean up the percent argument (if it's not even, is out of range, etc.)
+            if (percent % 2 != 0)
             {
-                int action = args["direction"] == "up"
-                    ? WinApi.APPCOMMAND_VOLUME_UP
-                    : WinApi.APPCOMMAND_VOLUME_DOWN;
-                
-                // Each command moves the volume by 2 notches.
-                int times = Math.Clamp(Convert.ToInt32(args["amount"]), 1, 20) / 2;
-                for (int n = 0; n < times; n++)
+                percent += 1;
+            }
+            percent = System.Math.Clamp(percent, 0, 100);
+
+            if (args["direction"] == "up")
+            {
+                var sendCommandResult = Morphic.WindowsNative.Audio.Utils.VolumeUtils.SendVolumeUpCommand(percent);
+                if (sendCommandResult.IsError == true)
                 {
-                    WinApi.SendMessage(taskTray, WinApi.WM_APPCOMMAND, IntPtr.Zero,
-                        (IntPtr)WinApi.MakeLong(0, (short)action));
+                    return MorphicResult.ErrorResult();
+                }
+            }
+            else
+            {
+                var sendCommandResult = Morphic.WindowsNative.Audio.Utils.VolumeUtils.SendVolumeDownCommand(percent);
+                if (sendCommandResult.IsError == true)
+                {
+                    return MorphicResult.ErrorResult();
                 }
             }
 
@@ -552,7 +577,7 @@ namespace Morphic.Client.Bar.Data.Actions
         [InternalFunction("signOut")]
         public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> SignOutAsync(FunctionArgs args)
         {
-            var success = Morphic.Windows.Native.WindowsSession.WindowsSession.LogOff();
+            var success = Morphic.WindowsNative.WindowsSession.WindowsSession.LogOff();
             return success ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
         }
 
@@ -571,7 +596,7 @@ namespace Morphic.Client.Bar.Data.Actions
             var removableDrives = getRemovableDisksAndDrivesResult.Value!.RemovableDrives;
 
             // as we only want to open usb drives which are mounted (i.e. not USB drives which have had their "media" ejected but who still have drive letters assigned)...
-            var mountedRemovableDrives = new List<Morphic.Windows.Native.Devices.Drive>();
+            var mountedRemovableDrives = new List<Morphic.WindowsNative.Devices.Drive>();
             foreach (var drive in removableDrives)
             {
                 var getIsMountedResult = await drive.GetIsMountedAsync();
@@ -662,15 +687,15 @@ namespace Morphic.Client.Bar.Data.Actions
 
         private struct GetRemovableDisksAndDrivesResult 
         {
-            public List<Morphic.Windows.Native.Devices.Disk> AllDisks;
-            public List<Morphic.Windows.Native.Devices.Disk> RemovableDisks; // physical volumes
-            public List<Morphic.Windows.Native.Devices.Drive> RemovableDrives; // logical volumes (media / partition); these can have drive letters
+            public List<Morphic.WindowsNative.Devices.Disk> AllDisks;
+            public List<Morphic.WindowsNative.Devices.Disk> RemovableDisks; // physical volumes
+            public List<Morphic.WindowsNative.Devices.Drive> RemovableDrives; // logical volumes (media / partition); these can have drive letters
         }
         //
         private static async Task<MorphicResult<GetRemovableDisksAndDrivesResult, MorphicUnit>> GetRemovableDisksAndDrivesAsync()
         {
             // get a list of all disks (but not non-disks such as CD-ROM drives)
-            var getAllDisksResult = await Morphic.Windows.Native.Devices.Disk.GetAllDisksAsync();
+            var getAllDisksResult = await Morphic.WindowsNative.Devices.Disk.GetAllDisksAsync();
             if (getAllDisksResult.IsError == true)
             {
                 Debug.Assert(false, "Cannot get list of disks");
@@ -679,7 +704,7 @@ namespace Morphic.Client.Bar.Data.Actions
 
             // filter out all disks which are not removable
             var allDisks = getAllDisksResult.Value!;
-            var removableDisks = new List<Morphic.Windows.Native.Devices.Disk>();
+            var removableDisks = new List<Morphic.WindowsNative.Devices.Disk>();
             foreach (var disk in allDisks)
             {
                 var getIsRemovableResult = disk.GetIsRemovable();
@@ -696,7 +721,7 @@ namespace Morphic.Client.Bar.Data.Actions
             }
 
             // now get all the drives associated with our removable disks
-            var removableDrives = new List<Morphic.Windows.Native.Devices.Drive>();
+            var removableDrives = new List<Morphic.WindowsNative.Devices.Drive>();
             foreach (var removableDisk in removableDisks)
             {
                 var getDrivesForDiskResult = await removableDisk.GetDrivesAsync();
@@ -723,8 +748,8 @@ namespace Morphic.Client.Bar.Data.Actions
 
         internal async static Task<MorphicResult<bool, MorphicUnit>> GetDarkModeStateAsync()
         {
-            var osVersion = Morphic.Windows.Native.OsVersion.OsVersion.GetWindowsVersion();
-            if (osVersion == Windows.Native.OsVersion.WindowsVersion.Win10_v1809)
+            var osVersion = Morphic.WindowsNative.OsVersion.OsVersion.GetWindowsVersion();
+            if (osVersion == Morphic.WindowsNative.OsVersion.WindowsVersion.Win10_v1809)
             {
                 // Windows 10 v1809
 
@@ -732,7 +757,7 @@ namespace Morphic.Client.Bar.Data.Actions
                 //       [and trying to call the Windows 10 v1903+ handlers for apps/system "light theme" will result in a memory access exception under v1809]
                 //       [also: only "AppsUseLightTheme" (and not "SystemUsesLightTheme") existed properly under Windows 10 v1809]
 
-                var openPersonalizeKeyResult = Morphic.Windows.Native.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize", true);
+                var openPersonalizeKeyResult = Morphic.WindowsNative.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize", true);
                 if (openPersonalizeKeyResult.IsError == true)
                 {
                     return MorphicResult.ErrorResult();
@@ -744,7 +769,7 @@ namespace Morphic.Client.Bar.Data.Actions
                 var getAppsUseLightThemeResult = personalizeKey.GetValue<uint>("AppsUseLightTheme");
                 if (getAppsUseLightThemeResult.IsError == true)
                 {
-                    if (getAppsUseLightThemeResult.Error == Windows.Native.Registry.RegistryKey.RegistryValueError.ValueDoesNotExist)
+                    if (getAppsUseLightThemeResult.Error == Morphic.WindowsNative.Registry.RegistryKey.RegistryValueError.ValueDoesNotExist)
                     {
                         // default AppsUseLightTheme (inverse of dark mode state) on Windows 10 v1809 is true
                         appsUseLightThemeAsBool = true;
@@ -802,8 +827,8 @@ namespace Morphic.Client.Bar.Data.Actions
 
         internal async static Task<MorphicResult<MorphicUnit, MorphicUnit>> SetDarkModeStateAsync(bool state)
         {
-            var osVersion = Morphic.Windows.Native.OsVersion.OsVersion.GetWindowsVersion();
-            if (osVersion == Windows.Native.OsVersion.WindowsVersion.Win10_v1809)
+            var osVersion = Morphic.WindowsNative.OsVersion.OsVersion.GetWindowsVersion();
+            if (osVersion == Morphic.WindowsNative.OsVersion.WindowsVersion.Win10_v1809)
             {
                 // Windows 10 v1809
 
@@ -811,7 +836,7 @@ namespace Morphic.Client.Bar.Data.Actions
                 //       [and trying to call the Windows 10 v1903+ handlers for apps/system "light theme" will result in a memory access exception under v1809]
                 //       [also: only "AppsUseLightTheme" (and not "SystemUsesLightTheme") existed properly under Windows 10 v1809]
 
-                var openPersonalizeKeyResult = Morphic.Windows.Native.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize", true);
+                var openPersonalizeKeyResult = Morphic.WindowsNative.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize", true);
                 if (openPersonalizeKeyResult.IsError == true)
                 {
                     return MorphicResult.ErrorResult();
@@ -999,29 +1024,6 @@ namespace Morphic.Client.Bar.Data.Actions
             {
                 var disableRibbonResult = Morphic.Integrations.Office.WordRibbon.DisableEssentialsSimplifyRibbon();
                 return disableRibbonResult.IsSuccess ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
-            }
-        }
-
-        //
-
-        [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "Windows API naming")]
-        [SuppressMessage("ReSharper", "IdentifierTypo", Justification = "Windows API naming")]
-        private static class WinApi
-        {
-            //public const int APPCOMMAND_VOLUME_MUTE = 8;
-            public const int APPCOMMAND_VOLUME_DOWN = 9;
-            public const int APPCOMMAND_VOLUME_UP = 10;
-            public const int WM_APPCOMMAND = 0x319;
-
-            [DllImport("user32.dll")]
-            public static extern IntPtr FindWindow(string lpClassName, IntPtr lpWindowName);
-
-            [DllImport("user32.dll")]
-            public static extern IntPtr SendMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
-
-            public static int MakeLong(short low, short high)
-            {
-                return (low & 0xffff) | ((high & 0xffff) << 16);
             }
         }
     }

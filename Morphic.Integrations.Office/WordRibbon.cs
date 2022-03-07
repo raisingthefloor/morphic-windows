@@ -466,7 +466,7 @@ namespace Morphic.Integrations.Office
         //    Microsoft.Office.Interop.Word.Application? wordApplication;
         //    try
         //    {
-        //        wordApplication = Morphic.Windows.Native.InteropServices.Marshal.GetActiveObject("Word.Application") as Microsoft.Office.Interop.Word.Application;
+        //        wordApplication = Morphic.WindowsNative.InteropServices.Marshal.GetActiveObject("Word.Application") as Microsoft.Office.Interop.Word.Application;
         //    }
         //    catch (COMException)
         //    {
@@ -516,8 +516,8 @@ namespace Morphic.Integrations.Office
         //                        continue;
         //                    }
 
-        //                    //Morphic.Windows.Native.SendMessage
-        //                    var nativeWordWindow = new Morphic.Windows.Native.Windowing.Window((IntPtr)wordWindow.Hwnd);
+        //                    //Morphic.WindowsNative.SendMessage
+        //                    var nativeWordWindow = new Morphic.WindowsNative.Windowing.Window((IntPtr)wordWindow.Hwnd);
         //                    var sendMessageResult = nativeWordWindow.Activate();
         //                    // NOTE: this 250m delay is somewhat arbitrary; we should do further examination to find the right delay (or to ask Word the right questions to know when it is done)
         //                    await System.Threading.Tasks.Task.Delay(250);

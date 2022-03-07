@@ -1,11 +1,11 @@
 ﻿namespace Morphic.Settings.SettingsHandlers.Theme
 {
+    using Morphic.WindowsNative;
     using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
-    using Windows.Native;
     using DotNetWindowsRegistry;
     using Ini;
     using Microsoft.Extensions.Logging;
@@ -140,7 +140,7 @@
             await s_setHighContrastSemaphore.WaitAsync();
             try
             {
-                var getHighContrastModeIsOnResult = Morphic.Windows.Native.Display.DisplayUtils.GetHighContrastModeIsOn();
+                var getHighContrastModeIsOnResult = Morphic.WindowsNative.Display.DisplayUtils.GetHighContrastModeIsOn();
                 if (getHighContrastModeIsOnResult.IsError == true)
                 {
                     Debug.Assert(false, "ERROR: Could not determine if high contrast mode is on or not.");
@@ -168,7 +168,7 @@
                     await this.SaveCurrentTheme(settingGroup.CurrentTheme, settingGroup.SavedTheme);
                 }
 
-                var setHighContrastModeIsOnResult = Morphic.Windows.Native.Display.DisplayUtils.SetHighContrastModeIsOn(newOnState);
+                var setHighContrastModeIsOnResult = Morphic.WindowsNative.Display.DisplayUtils.SetHighContrastModeIsOn(newOnState);
                 if (setHighContrastModeIsOnResult.IsError == true)
                 {
                     Debug.Assert(false, "ERROR: Could not turn high contrast mode on/off.");
@@ -186,7 +186,7 @@
         [Getter("highContrastEnabled")]
         public async Task<object?> GetHighContrast(Setting setting)
         {
-            var getHighContrastModeIsOnResult = Morphic.Windows.Native.Display.DisplayUtils.GetHighContrastModeIsOn();
+            var getHighContrastModeIsOnResult = Morphic.WindowsNative.Display.DisplayUtils.GetHighContrastModeIsOn();
             if (getHighContrastModeIsOnResult.IsError == true)
             {
                 Debug.Assert(false, "ERROR: Could not determine if high contrast mode is on or not.");

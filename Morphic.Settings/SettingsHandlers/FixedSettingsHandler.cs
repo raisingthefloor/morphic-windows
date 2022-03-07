@@ -163,21 +163,21 @@
                         {
                             // before showing the magnifier, move the cursor to the center of the screen where the mouse pointer currently resides
 
-                            var getCurrentPositionResult = Morphic.Windows.Native.Mouse.Mouse.GetCurrentPosition();
+                            var getCurrentPositionResult = Morphic.WindowsNative.Mouse.Mouse.GetCurrentPosition();
                             if (getCurrentPositionResult.IsError == true)
                             {
                                 return MorphicResult.ErrorResult();
                             }
                             var currentMousePosition = getCurrentPositionResult.Value!;
 
-                            var getDisplayForPointResult = Morphic.Windows.Native.Display.Display.GetDisplayForPoint(currentMousePosition);
+                            var getDisplayForPointResult = Morphic.WindowsNative.Display.Display.GetDisplayForPoint(currentMousePosition);
                             if (getDisplayForPointResult.IsError == true)
                             {
                                 return MorphicResult.ErrorResult();
                             }
                             var targetDisplay = getDisplayForPointResult.Value!;
 
-                            var moveCursorToCenterOfDisplayResult = Morphic.Windows.Native.Mouse.Mouse.MoveCursorToCenterOfDisplay(targetDisplay);
+                            var moveCursorToCenterOfDisplayResult = Morphic.WindowsNative.Mouse.Mouse.MoveCursorToCenterOfDisplay(targetDisplay);
                             if (moveCursorToCenterOfDisplayResult.IsError == true)
                             {
                                 return MorphicResult.ErrorResult();
