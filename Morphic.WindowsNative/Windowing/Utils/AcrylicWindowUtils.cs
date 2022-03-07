@@ -33,11 +33,10 @@ using System.Threading.Tasks;
 
 public class AcrylicWindowUtils
 {
-    public static MorphicResult<MorphicUnit, Win32ApiError> SetAcrylicBackground(IntPtr hwnd)
+    public static MorphicResult<MorphicUnit, Win32ApiError> EnableAcrylicBackground(IntPtr hwnd, uint argbBackgroundColor)
     {
-        uint backgroundColor = 0x19007700; // medium blue (NOTE: the opacity is critical here; it's the level of "blur opacity")
-        // NOTE: the API appears to use BGR color rather than RGB, so we convert it here before assigning it to "GradientColor"
-        uint gradientColor = AcrylicWindowUtils.ConvertRgbToBgr(backgroundColor);
+        // NOTE: the composition API appears to use ABGR color rather than ARGB, so we convert it here before assigning it to "GradientColor"
+        uint gradientColor = AcrylicWindowUtils.ConvertArgbToAbgr(argbBackgroundColor);
 
         var accentPolicy = new ExtendedPInvoke.ACCENT_POLICY()
         {
@@ -73,12 +72,12 @@ public class AcrylicWindowUtils
         return MorphicResult.OkResult();
     }
 
-    private static uint ConvertRgbToBgr(uint rgb)
+    private static uint ConvertArgbToAbgr(uint argb)
     {
-        var result = (rgb & 0xFF000000) |
-                     ((rgb & 0x00FF0000) >> 8) |
-                     ((rgb & 0x0000FF00) << 8) |
-                     ((rgb & 0x000000FF));
+        var result = (argb & 0xFF000000) |
+                     ((argb & 0x00FF0000) >> 8) |
+                     ((argb & 0x0000FF00) << 8) |
+                     ((argb & 0x000000FF));
 
         return result;
     }

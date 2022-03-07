@@ -38,7 +38,6 @@ internal struct ExtendedPInvoke
 
     #endregion devicetopology.h
 
-
     #region winerror.h
 
     public const nint S_OK = 0;
@@ -177,7 +176,7 @@ internal struct ExtendedPInvoke
         public DISPLAYCONFIG_PATH_TARGET_INFO targetInfo;
         public uint flags;
     }
-	
+
     [Flags]
     public enum DisplayConfigSourceInfoStatus : uint
     {
@@ -217,13 +216,13 @@ internal struct ExtendedPInvoke
 
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = CCHDEVICENAME)]
         public Char[] viewGdiDeviceName;
-		
+
         public static DISPLAYCONFIG_SOURCE_DEVICE_NAME InitializeNew()
         {
             var result = new DISPLAYCONFIG_SOURCE_DEVICE_NAME()
             {
                 viewGdiDeviceName = new char[CCHDEVICENAME],
-                header = new DISPLAYCONFIG_DEVICE_INFO_HEADER() 
+                header = new DISPLAYCONFIG_DEVICE_INFO_HEADER()
                 {
                     size = (uint)Marshal.SizeOf<DISPLAYCONFIG_SOURCE_DEVICE_NAME>()
                 }
@@ -532,6 +531,20 @@ internal struct ExtendedPInvoke
 
     private const int CCHDEVICENAME = 32;
 
+    internal const uint CDS_UPDATEREGISTRY = 0x00000001;
+
+    internal const ushort FAPPCOMMAND_KEY = 0;
+
+    // return values for ChangeDisplaySettings/ChangeDisplaySettingsEx
+    internal const int DISP_CHANGE_SUCCESSFUL = 0;
+    //internal const int DISP_CHANGE_RESTART = 1;
+    //internal const int DISP_CHANGE_FAILED = -1;
+    //internal const int DISP_CHANGE_BADMODE = -2;
+    //internal const int DISP_CHANGE_NOTUPDATED = -3;
+    //internal const int DISP_CHANGE_BADFLAGS = -4;
+    //internal const int DISP_CHANGE_BADPARAM = -5;
+    //internal const int DISP_CHANGE_BADDUALVIEW = -6;
+
     // WinUser.h (Windows 10 SDK v10.0.18632)
     internal static readonly uint ENUM_CURRENT_SETTINGS = BitConverter.ToUInt32(BitConverter.GetBytes((int)(-1)));
     //internal static readonly uint ENUM_REGISTRY_SETTINGS = BitConverter.ToUInt32(BitConverter.GetBytes((int)(-2)));
@@ -558,6 +571,10 @@ internal struct ExtendedPInvoke
             return result;
         }
     }
+
+    // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-changedisplaysettingsexw
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    internal static extern int ChangeDisplaySettingsEx(string? lpszDeviceName, ref DEVMODEW lpDevMode, IntPtr hwnd, uint dwFlags, IntPtr lParam);
 
     // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getdisplayconfigbuffersizes
     [DllImport("user32.dll")]
