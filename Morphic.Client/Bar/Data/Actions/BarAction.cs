@@ -237,6 +237,17 @@ namespace Morphic.Client.Bar.Data.Actions
                         case "ejectallusb":
                             await App.Current.Countly_RecordEventAsync("ejectUsbDrives");
                             break;
+                        case "volumeDown":
+                            // NOTE: this is captured here because telemetry for volumeDown on the +3 bar is not captured by SendTelemetryForBarAction
+                            await App.Current.Countly_RecordEventAsync("volumeDown");
+                            break;
+                        case "volumeMute":
+                            await App.Current.Countly_RecordEventAsync("volumeMute");
+                            break;
+                        case "volumeUp":
+                            // NOTE: this is captured here because telemetry for volumeUp on the +3 bar is not captured by SendTelemetryForBarAction
+                            await App.Current.Countly_RecordEventAsync("volumeUp");
+                            break;
                         case null:
                             // no tags; this is the Morphie button or another custom element with no known tags
                             break;
