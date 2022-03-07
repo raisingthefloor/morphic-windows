@@ -116,10 +116,20 @@ namespace Morphic.Client.Bar.Data.Actions
         {
             try
             {
-                var audioEndpoint = Morphic.WindowsNative.Audio.AudioEndpoint.GetDefaultAudioOutputEndpoint();
+                var getDefaultAudioOutputEndpointResult = Morphic.WindowsNative.Audio.AudioEndpoint.GetDefaultAudioOutputEndpoint();
+                if (getDefaultAudioOutputEndpointResult.IsError == true)
+                {
+                    return MorphicResult.ErrorResult();
+                }
+                var audioEndpoint = getDefaultAudioOutputEndpointResult.Value!;
 
                 // if we didn't get a state in the request, try to reverse the state
-                var state = audioEndpoint.GetMasterMuteState();
+                var getMasterMuteStateResult = audioEndpoint.GetMasterMuteState();
+                if (getMasterMuteStateResult.IsError == true)
+                {
+                    return MorphicResult.ErrorResult();
+                }
+                var state = getMasterMuteStateResult.Value!;
 
                 return MorphicResult.OkResult(state);
             }
@@ -151,13 +161,16 @@ namespace Morphic.Client.Bar.Data.Actions
                 }
             }
 
-            try
+            // set the mute state to the new state value
+            var getDefaultAudioOutputEndpointResult = Morphic.WindowsNative.Audio.AudioEndpoint.GetDefaultAudioOutputEndpoint();
+            if (getDefaultAudioOutputEndpointResult.IsError == true)
             {
-                // set the mute state to the new state value
-                var audioEndpoint = Morphic.WindowsNative.Audio.AudioEndpoint.GetDefaultAudioOutputEndpoint();
-                audioEndpoint.SetMasterMuteState(newState);
+                return MorphicResult.ErrorResult();
             }
-            catch
+            var audioEndpoint = getDefaultAudioOutputEndpointResult.Value!;
+
+            var setMasterMuteStateResult = audioEndpoint.SetMasterMuteState(newState);
+            if (setMasterMuteStateResult.IsError == true)
             {
                 return MorphicResult.ErrorResult();
             }
@@ -171,23 +184,35 @@ namespace Morphic.Client.Bar.Data.Actions
         /// <param name="args">direction: "up"/"down", amount: number of 1/100 to move</param>
         /// <returns></returns>
         [InternalFunction("volume", "direction", "amount=6")]
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> SetVolumeAsync(FunctionArgs args)
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             // NOTE: ideally we should switch this functionality to use AudioEndpoint.SetMasterVolumeLevel instead
+            //       [it may not be practical to do that, however, if AudioEndpoint.SetMasterVolumeLevel doesn't activate to on-screen volume change dialog in Windows 10/11; to be tested...]
 
-            IntPtr taskTray = WinApi.FindWindow("Shell_TrayWnd", IntPtr.Zero);
-            if (taskTray != IntPtr.Zero)
+            var percent = Convert.ToUInt32(args["amount"]);
+            // clean up the percent argument (if it's not even, is out of range, etc.)
+            if (percent % 2 != 0)
             {
-                int action = args["direction"] == "up"
-                    ? WinApi.APPCOMMAND_VOLUME_UP
-                    : WinApi.APPCOMMAND_VOLUME_DOWN;
-                
-                // Each command moves the volume by 2 notches.
-                int times = Math.Clamp(Convert.ToInt32(args["amount"]), 1, 20) / 2;
-                for (int n = 0; n < times; n++)
+                percent += 1;
+            }
+            percent = System.Math.Clamp(percent, 0, 100);
+
+            if (args["direction"] == "up")
+            {
+                var sendCommandResult = Morphic.WindowsNative.Audio.Utils.VolumeUtils.SendVolumeUpCommand(percent);
+                if (sendCommandResult.IsError == true)
                 {
-                    WinApi.SendMessage(taskTray, WinApi.WM_APPCOMMAND, IntPtr.Zero,
-                        (IntPtr)WinApi.MakeLong(0, (short)action));
+                    return MorphicResult.ErrorResult();
+                }
+            }
+            else
+            {
+                var sendCommandResult = Morphic.WindowsNative.Audio.Utils.VolumeUtils.SendVolumeDownCommand(percent);
+                if (sendCommandResult.IsError == true)
+                {
+                    return MorphicResult.ErrorResult();
                 }
             }
 
@@ -999,29 +1024,6 @@ namespace Morphic.Client.Bar.Data.Actions
             {
                 var disableRibbonResult = Morphic.Integrations.Office.WordRibbon.DisableEssentialsSimplifyRibbon();
                 return disableRibbonResult.IsSuccess ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
-            }
-        }
-
-        //
-
-        [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "Windows API naming")]
-        [SuppressMessage("ReSharper", "IdentifierTypo", Justification = "Windows API naming")]
-        private static class WinApi
-        {
-            //public const int APPCOMMAND_VOLUME_MUTE = 8;
-            public const int APPCOMMAND_VOLUME_DOWN = 9;
-            public const int APPCOMMAND_VOLUME_UP = 10;
-            public const int WM_APPCOMMAND = 0x319;
-
-            [DllImport("user32.dll")]
-            public static extern IntPtr FindWindow(string lpClassName, IntPtr lpWindowName);
-
-            [DllImport("user32.dll")]
-            public static extern IntPtr SendMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
-
-            public static int MakeLong(short low, short high)
-            {
-                return (low & 0xffff) | ((high & 0xffff) << 16);
             }
         }
     }

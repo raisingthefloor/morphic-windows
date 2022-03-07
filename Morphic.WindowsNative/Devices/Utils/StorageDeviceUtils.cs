@@ -34,15 +34,15 @@ namespace Morphic.WindowsNative.Devices.Utils
         public enum Values
         {
             CouldNotRetrieveStorageDeviceNumbers,
-            Win32Error/*(int win32ErrorCode)*/
+            Win32Error/*(uint win32ErrorCode)*/
         }
 
         // functions to create member instances
         public static StorageDeviceNumberError CouldNotRetrieveStorageDeviceNumbers = new StorageDeviceNumberError(Values.CouldNotRetrieveStorageDeviceNumbers);
-        public static StorageDeviceNumberError Win32Error(int win32ErrorCode) => new StorageDeviceNumberError(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
+        public static StorageDeviceNumberError Win32Error(uint win32ErrorCode) => new StorageDeviceNumberError(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
 
         // associated values
-        public int? Win32ErrorCode { get; private set; }
+        public uint? Win32ErrorCode { get; private set; }
 
         // verbatim required constructor implementation for MorphicAssociatedValueEnums
         private StorageDeviceNumberError(Values value) : base(value) { }
@@ -54,7 +54,7 @@ namespace Morphic.WindowsNative.Devices.Utils
             if (deviceHandle.IsInvalid == true)
             {
                 var win32ErrorCode = Marshal.GetLastWin32Error();
-                return MorphicResult.ErrorResult(StorageDeviceNumberError.Win32Error(win32ErrorCode));
+                return MorphicResult.ErrorResult(StorageDeviceNumberError.Win32Error((uint)win32ErrorCode));
             }
             //
             // get the device number for this storage device
@@ -75,7 +75,7 @@ namespace Morphic.WindowsNative.Devices.Utils
                 }
                 catch (PInvoke.Win32Exception ex)
                 {
-                    return MorphicResult.ErrorResult(StorageDeviceNumberError.Win32Error((int)ex.NativeErrorCode));
+                    return MorphicResult.ErrorResult(StorageDeviceNumberError.Win32Error((uint)ex.NativeErrorCode));
                 }
 
                 var storageDeviceNumberAsArray = storageDeviceNumberMemoryObject.ToArray();

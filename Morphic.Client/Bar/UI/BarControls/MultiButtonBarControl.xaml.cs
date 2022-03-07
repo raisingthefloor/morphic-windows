@@ -414,10 +414,20 @@ namespace Morphic.Client.Bar.UI.BarControls
                             var volumeMuteState = getMuteStateResult.Value!;
 
                             // NOTE: this.Control.Unloaded should capture 'defaultAudioEndpoint' so we don't need to create a class-level reference to it here
-                            var defaultAudioEndpoint = Morphic.WindowsNative.Audio.AudioEndpoint.GetDefaultAudioOutputEndpoint();
-                            defaultAudioEndpoint.MasterMuteStateChangedEvent += this.MasterMuteStateOnChanged;
-                            //
-                            this.Control.Unloaded += (sender, args) => defaultAudioEndpoint.MasterMuteStateChangedEvent -= this.MasterMuteStateOnChanged;
+                            var getDefaultAudioOutputEndpointResult = Morphic.WindowsNative.Audio.AudioEndpoint.GetDefaultAudioOutputEndpoint();
+                            if (getDefaultAudioOutputEndpointResult.IsError == true)
+                            {
+                                // TODO: we need to create a method through which we can return an error result
+                                Debug.Assert(false, "Could not get default audio output endpoint");
+                                //return MorphicResult.ErrorResult();
+                            }
+                            else
+                            {
+                                var defaultAudioEndpoint = getDefaultAudioOutputEndpointResult.Value!;
+                                defaultAudioEndpoint.MasterMuteStateChangedEvent += this.MasterMuteStateOnChanged;
+                                //
+                                this.Control.Unloaded += (sender, args) => defaultAudioEndpoint.MasterMuteStateChangedEvent -= this.MasterMuteStateOnChanged;
+                            }
 
                             ((ToggleButton)this.Control).IsChecked = volumeMuteState;
 

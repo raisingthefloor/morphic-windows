@@ -27,14 +27,14 @@ namespace Morphic.WindowsNative.WindowsCoreAudio
 	using System;
 	using System.Runtime.InteropServices;
 
-
+	// https://docs.microsoft.com/en-us/windows/win32/api/mmdeviceapi/nn-mmdeviceapi-immdevice
     [ComImport]
     [Guid("D666063F-1587-4E43-81F1-B948E807363F")]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     internal interface IMMDevice
     {
         // Activate
-        public Int32 Activate(Guid iid, CLSCTX dwClsCtx, IntPtr /* (IntPtr.Zero) */ activationParams, [MarshalAs(UnmanagedType.IUnknown)] out Object? @interface);
+        public int Activate(Guid iid, CLSCTX dwClsCtx, IntPtr /* (IntPtr.Zero) */ activationParams, [MarshalAs(UnmanagedType.IUnknown)] out Object? @interface);
 
         // OpenPropertyStore
 

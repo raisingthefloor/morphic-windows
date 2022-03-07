@@ -41,7 +41,7 @@ namespace Morphic.WindowsNative.InteropServices
 
             // get the CLSID for the supplied ProgId
             var getClsidResult = ExtendedPInvoke.CLSIDFromProgIDEx(progId, out var clsid);
-            if (getClsidResult != (uint)ExtendedPInvoke.Win32ErrorCode.S_OK)
+            if (getClsidResult != (uint)ExtendedPInvoke.S_OK)
             {
                 switch (getClsidResult)
                 {
@@ -53,7 +53,7 @@ namespace Morphic.WindowsNative.InteropServices
             }
 
             var getActiveObjectResult = ExtendedPInvoke.GetActiveObject(ref clsid, IntPtr.Zero, out var activeObject);
-            if (getActiveObjectResult != (uint)ExtendedPInvoke.Win32ErrorCode.S_OK)
+            if (getActiveObjectResult != (uint)ExtendedPInvoke.S_OK)
             {
                 // if we could not get the object, return null
                 // NOTE: if we want to distinguish between error results (i.e. object not active vs. others), we could read the win32 "last error" code

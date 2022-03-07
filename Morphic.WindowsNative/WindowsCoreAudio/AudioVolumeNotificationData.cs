@@ -40,7 +40,7 @@ namespace Morphic.WindowsNative.WindowsCoreAudio
             public bool bMuted;
             public float fMasterVolume;
             public uint nChannels;
-            // NOTE: afChannelVolumes is an array, but C# doesn't seem to want to marshal data to a variable-length array (i.e. System.AccessViolatedException, etc.) so we need to do manual marshalling math
+            // NOTE: afChannelVolumes is an array, but C# doesn't seem to want to marshal data to a variable-length array (i.e. System.AccessViolatedException, etc.) so we do manual marshalling math instead
             public float afChannelVolumes;
         }
 

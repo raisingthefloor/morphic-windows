@@ -735,7 +735,7 @@ namespace Morphic.WindowsNative.Display
                 var win32ErrorCode = PInvoke.Kernel32.GetLastError();
                 if (win32ErrorCode != PInvoke.Win32ErrorCode.ERROR_SUCCESS)
                 {
-                    return MorphicResult.ErrorResult(Win32ApiError.Win32Error((int)win32ErrorCode));
+                    return MorphicResult.ErrorResult(Win32ApiError.Win32Error((uint)win32ErrorCode));
                 }
             }
 

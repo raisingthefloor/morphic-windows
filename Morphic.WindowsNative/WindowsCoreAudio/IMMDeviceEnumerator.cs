@@ -32,7 +32,7 @@ namespace Morphic.WindowsNative.WindowsCoreAudio
     internal interface IMMDeviceEnumerator
     {
         // EnumAudioEndpoints
-        // NOTE: EnumAudioEndpoints is a filler declaration (required for COM); change IntPtr to IMMDeviceCollection? if we implement this function
+        // NOTE: EnumAudioEndpoints is a filler declaration (required for COM); change IntPtr to IMMDeviceCollection? if we use this function in the future
         public Int32 EnumAudioEndpoints(EDataFlow dataFlow, UInt32 stateMask, out IntPtr devices);
 
         // GetDefaultAudioEndpoint

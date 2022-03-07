@@ -23,13 +23,14 @@
 
 namespace Morphic.WindowsNative.Audio
 {
+    using Morphic.Core;
     using Morphic.WindowsNative.WindowsCom;
     using Morphic.WindowsNative.WindowsCoreAudio;
     using System;
     using System.Diagnostics;
     using System.Runtime.InteropServices;
 
-    public class AudioEndpoint: IDisposable
+    public class AudioEndpoint : IDisposable
     {
         private IAudioEndpointVolume _audioEndpointVolume;
         private AudioEndpointVolumeCallback? _audioEndpointVolumeCallback;
@@ -89,29 +90,36 @@ namespace Morphic.WindowsNative.Audio
             GC.SuppressFinalize(this);
         }
 
-        public static AudioEndpoint GetDefaultAudioOutputEndpoint()
+        public static MorphicResult<AudioEndpoint, WindowsComError> GetDefaultAudioOutputEndpoint()
         {
             // get a reference to our default output device
-            var mmDeviceEnumerator = new MMDeviceEnumerator();
+            var createDeviceEnumeratorResult = MMDeviceEnumerator.CreateNew();
+            if (createDeviceEnumeratorResult.IsError == true)
+            {
+                return MorphicResult.ErrorResult(createDeviceEnumeratorResult.Error!);
+            }
+            var mmDeviceEnumerator = createDeviceEnumeratorResult.Value!;
             //
             // NOTE: .NET should automatically release the defaultAudioOutputEndpoint
-            var defaultAudioOutputEndpoint = mmDeviceEnumerator.GetDefaultAudioEndpoint(EDataFlow.eRender, ERole.eMultimedia);
+            var getDefaultAudioEndpointResult = mmDeviceEnumerator.GetDefaultAudioEndpoint(EDataFlow.eRender, ERole.eMultimedia);
+            if (getDefaultAudioEndpointResult.IsError == true)
+            {
+                return MorphicResult.ErrorResult(getDefaultAudioEndpointResult.Error!);
+            }
+            var defaultAudioOutputEndpoint = getDefaultAudioEndpointResult.Value!;
 
             // activate the endpoint so we can read/write its volume and mute state, etc.
-            IAudioEndpointVolume audioEndpointVolume;
-            try
+            Guid IID_IAudioEndpointVolume = new Guid("5CDF2C82-841E-4546-9722-0CF74078229A");
+            var activateResult = defaultAudioOutputEndpoint.Activate(IID_IAudioEndpointVolume, CLSCTX.CLSCTX_INPROC_SERVER);
+            if (activateResult.IsError == true)
             {
-                Guid IID_IAudioEndpointVolume = new Guid("5CDF2C82-841E-4546-9722-0CF74078229A");
-                var audioEndpointVolumeAsObject = defaultAudioOutputEndpoint.Activate(IID_IAudioEndpointVolume, CLSCTX.CLSCTX_INPROC_SERVER);
-                audioEndpointVolume = (IAudioEndpointVolume)audioEndpointVolumeAsObject;
+                return MorphicResult.ErrorResult(activateResult.Error!);
             }
-            catch
-            {
-                // if we could not activate the endpoint, re-throw an exception
-                throw;
-            }
+            var audioEndpointVolumeAsObject = activateResult.Value!;
+            var audioEndpointVolume = (IAudioEndpointVolume)audioEndpointVolumeAsObject;
 
-            return new AudioEndpoint(audioEndpointVolume);
+            var result = new AudioEndpoint(audioEndpointVolume);
+            return MorphicResult.OkResult(result);
         }
 
         private void UpdateUnmanagedNotificationRegistration()
@@ -119,13 +127,13 @@ namespace Morphic.WindowsNative.Audio
             var shouldBeRegisteredForNotifications = false;
             // if any events are registered by our caller, we need to be registered for unmanaged volume/mute state change notifications
             //
-            // volume level
+            // volume level notifications
             if (_masterVolumeLevelChangedEvent is not null)
             {
                 shouldBeRegisteredForNotifications = true;
             }
             //
-            // mute state
+            // mute state notifications
             if (_masterMuteStateChangedEvent is not null)
             {
                 shouldBeRegisteredForNotifications = true;
@@ -169,12 +177,12 @@ namespace Morphic.WindowsNative.Audio
         {
             public float VolumeLevel;
         }
-        private EventHandler<MasterVolumeLevelChangedEventArgs> _masterVolumeLevelChangedEvent;
+        private event EventHandler<MasterVolumeLevelChangedEventArgs>? _masterVolumeLevelChangedEvent;
         public event EventHandler<MasterVolumeLevelChangedEventArgs> MasterVolumeLevelChangedEvent
         {
             add
             {
-                // if we have not already captured the master volume level, do so now
+                // if we have not already captured the master volume level, capture an initial value now
                 if (_lastMasterVolumeLevel is null)
                 {
                     try
@@ -197,23 +205,24 @@ namespace Morphic.WindowsNative.Audio
             }
         }
 
-        public Single GetMasterVolumeLevel()
+        public MorphicResult<float, WindowsComError> GetMasterVolumeLevel()
         {
             // get the master volume level
             Single volumeLevelScalar;
             var result = this._audioEndpointVolume.GetMasterVolumeLevelScalar(out volumeLevelScalar);
-            if (result != WindowsApi.S_OK)
+            if (result != ExtendedPInvoke.S_OK)
             {
                 // TODO: consider throwing more granular exceptions here
-                throw new COMException("IAudioEndpointVolume.GetMasterVolumeLevelScalar failed", Marshal.GetExceptionForHR(result));
+                var comException = new COMException("IAudioEndpointVolume.GetMasterVolumeLevelScalar failed", Marshal.GetExceptionForHR(result));
+                return MorphicResult.ErrorResult(WindowsComError.ComException(comException));
             }
 
             _lastMasterVolumeLevel = volumeLevelScalar;
 
-            return volumeLevelScalar;
+            return MorphicResult.OkResult(volumeLevelScalar);
         }
 
-        public void SetMasterVolumeLevel(Single volumeLevel)
+        public MorphicResult<MorphicUnit, WindowsComError> SetMasterVolumeLevel(float volumeLevel)
         {
             if (volumeLevel < 0.0 || volumeLevel > 1.0)
             {
@@ -222,23 +231,26 @@ namespace Morphic.WindowsNative.Audio
 
             // set the master volume level
             var result = this._audioEndpointVolume.SetMasterVolumeLevelScalar(volumeLevel, IntPtr.Zero);
-            if (result != WindowsApi.S_OK)
+            if (result != ExtendedPInvoke.S_OK)
             {
                 // TODO: consider throwing more granular exceptions here
-                throw new COMException("IAudioEndpointVolume.GetMasterVolumeLevelScalar failed", Marshal.GetExceptionForHR(result));
+                var comException = new COMException("IAudioEndpointVolume.GetMasterVolumeLevelScalar failed", Marshal.GetExceptionForHR(result));
+                return MorphicResult.ErrorResult(WindowsComError.ComException(comException));
             }
+
+            return MorphicResult.OkResult();
         }
 
         public class MasterMuteStateChangedEventArgs : EventArgs
         {
             public bool MuteState;
         }
-        private EventHandler<MasterMuteStateChangedEventArgs> _masterMuteStateChangedEvent;
+        private event EventHandler<MasterMuteStateChangedEventArgs>? _masterMuteStateChangedEvent;
         public event EventHandler<MasterMuteStateChangedEventArgs> MasterMuteStateChangedEvent
         {
             add
             {
-                // if we have not already captured the master mute state, do so now
+                // if we have not already captured the master mute state, capture an initial value now
                 if (_lastMasterMuteState is null)
                 {
                     try
@@ -258,33 +270,37 @@ namespace Morphic.WindowsNative.Audio
             }
         }
 
-        public Boolean GetMasterMuteState()
+        public MorphicResult<bool, WindowsComError> GetMasterMuteState()
         {
             // get the master mute state
             Int32 isMutedAsInt32;
             var result = this._audioEndpointVolume.GetMute(out isMutedAsInt32);
-            if (result != WindowsApi.S_OK)
+            if (result != ExtendedPInvoke.S_OK)
             {
                 // TODO: consider throwing more granular exceptions here
-                throw new COMException("IAudioEndpointVolume.GetMute failed", Marshal.GetExceptionForHR(result));
+                var comException = new COMException("IAudioEndpointVolume.GetMute failed", Marshal.GetExceptionForHR(result));
+                return MorphicResult.ErrorResult(WindowsComError.ComException(comException));
             }
 
             var muteState = (isMutedAsInt32 != 0) ? true : false;
 
             _lastMasterMuteState = muteState;
 
-            return muteState;
+            return MorphicResult.OkResult(muteState);
         }
 
-        public void SetMasterMuteState(Boolean muteState)
+        public MorphicResult<MorphicUnit, WindowsComError> SetMasterMuteState(bool muteState)
         {
             // set the master mute state
             var result = this._audioEndpointVolume.SetMute(muteState ? 1 : 0, IntPtr.Zero);
-            if (result != WindowsApi.S_OK)
+            if (result != ExtendedPInvoke.S_OK)
             {
                 // TODO: consider throwing more granular exceptions here
-                throw new COMException("IAudioEndpointVolume.SetMute failed", Marshal.GetExceptionForHR(result));
+                var comException = new COMException("IAudioEndpointVolume.SetMute failed", Marshal.GetExceptionForHR(result));
+                return MorphicResult.ErrorResult(WindowsComError.ComException(comException));
             }
+
+            return MorphicResult.OkResult();
         }
     }
 }

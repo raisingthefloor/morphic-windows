@@ -127,15 +127,15 @@ namespace Morphic.WindowsNative.Devices
             public enum Values
             {
                 CouldNotRetrieveStorageDeviceNumbers,
-                Win32Error/*(int win32ErrorCode)*/
+                Win32Error/*(uint win32ErrorCode)*/
             }
 
             // functions to create member instances
             public static TryGetDriveLetterError CouldNotRetrieveStorageDeviceNumbers => new TryGetDriveLetterError(Values.CouldNotRetrieveStorageDeviceNumbers);
-            public static TryGetDriveLetterError Win32Error(int win32ErrorCode) => new TryGetDriveLetterError(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
+            public static TryGetDriveLetterError Win32Error(uint win32ErrorCode) => new TryGetDriveLetterError(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
 
             // associated values
-            public int? Win32ErrorCode { get; private set; }
+            public uint? Win32ErrorCode { get; private set; }
 
             // verbatim required constructor implementation for MorphicAssociatedValueEnums
             private TryGetDriveLetterError(Values value) : base(value) { }
@@ -323,7 +323,7 @@ namespace Morphic.WindowsNative.Devices
                 if (numberOfChars == 0)
                 {
                     var win32ErrorCode = Marshal.GetLastWin32Error();
-                    return MorphicResult.ErrorResult(Win32ApiError.Win32Error(win32ErrorCode));
+                    return MorphicResult.ErrorResult(Win32ApiError.Win32Error((uint)win32ErrorCode));
                 }
 
                 var dosDevicesAsCharArray = new char[numberOfChars];
@@ -362,17 +362,17 @@ namespace Morphic.WindowsNative.Devices
                 CouldNotRetrieveStorageDeviceNumbers,
                 DiskInUse,
                 DriveHasNoDriveLetter,
-                Win32Error/*(int win32ErrorCode)*/
+                Win32Error/*(uint win32ErrorCode)*/
             }
 
             // functions to create member instances
             public static EjectDriveMediaError CouldNotRetrieveStorageDeviceNumbers => new EjectDriveMediaError(Values.CouldNotRetrieveStorageDeviceNumbers);
             public static EjectDriveMediaError DiskInUse => new EjectDriveMediaError(Values.DiskInUse);
             public static EjectDriveMediaError DriveHasNoDriveLetter => new EjectDriveMediaError(Values.DriveHasNoDriveLetter);
-            public static EjectDriveMediaError Win32Error(int win32ErrorCode) => new EjectDriveMediaError(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
+            public static EjectDriveMediaError Win32Error(uint win32ErrorCode) => new EjectDriveMediaError(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
 
             // associated values
-            public int? Win32ErrorCode { get; private set; }
+            public uint? Win32ErrorCode { get; private set; }
 
             // verbatim required constructor implementation for MorphicAssociatedValueEnums
             private EjectDriveMediaError(Values value) : base(value) { }
@@ -434,7 +434,7 @@ namespace Morphic.WindowsNative.Devices
                 {
                     // NOTE: in our testing, we got an exception with NativeErrorCode 1 (ERROR_INVALID_FUNCTION) when trying to eject a CD-ROM which was in use;
                     //       this seems like an odd error to get back, so we're just passing it through for now rather than returning an error of DiskInUse.
-                    return EjectDriveMediaError.Win32Error((int)ex.NativeErrorCode);
+                    return EjectDriveMediaError.Win32Error((uint)ex.NativeErrorCode);
                 }
 
                 return null;
@@ -451,7 +451,7 @@ namespace Morphic.WindowsNative.Devices
                     case (int)PInvoke.Win32ErrorCode.ERROR_SHARING_VIOLATION:
                         return MorphicResult.ErrorResult(EjectDriveMediaError.DiskInUse);
                     default:
-                        return MorphicResult.ErrorResult(EjectDriveMediaError.Win32Error(win32ErrorCode));
+                        return MorphicResult.ErrorResult(EjectDriveMediaError.Win32Error((uint)win32ErrorCode));
                 }
             }
             //
@@ -475,7 +475,7 @@ namespace Morphic.WindowsNative.Devices
                         case PInvoke.Win32ErrorCode.ERROR_ACCESS_DENIED:
                             return MorphicResult.ErrorResult(EjectDriveMediaError.DiskInUse);
                         default:
-                            return MorphicResult.ErrorResult(EjectDriveMediaError.Win32Error((int)ex.NativeErrorCode));
+                            return MorphicResult.ErrorResult(EjectDriveMediaError.Win32Error((uint)ex.NativeErrorCode));
                     }
                 }
                 var requiresAttemptToUnlock = true;
@@ -497,7 +497,7 @@ namespace Morphic.WindowsNative.Devices
                     {
                         // NOTE: in our testing, we got an exception with NativeErrorCode 1 (ERROR_INVALID_FUNCTION) when trying to eject a CD-ROM which was in use;
                         //       this seems like an odd error to get back, so we're just passing it through for now rather than returning an error of DiskInUse.
-                        return MorphicResult.ErrorResult(EjectDriveMediaError.Win32Error((int)ex.NativeErrorCode));
+                        return MorphicResult.ErrorResult(EjectDriveMediaError.Win32Error((uint)ex.NativeErrorCode));
                     }
 
                     // unlock the storage device
@@ -587,7 +587,7 @@ namespace Morphic.WindowsNative.Devices
             if (deviceHandle.IsInvalid == true)
             {
                 var win32ErrorCode = Marshal.GetLastWin32Error();
-                return MorphicResult.ErrorResult(Win32ApiError.Win32Error(win32ErrorCode));
+                return MorphicResult.ErrorResult(Win32ApiError.Win32Error((uint)win32ErrorCode));
             }
             try
             {
@@ -612,7 +612,7 @@ namespace Morphic.WindowsNative.Devices
                         case PInvoke.Win32ErrorCode.ERROR_INVALID_PARAMETER:
                             return MorphicResult.OkResult(false);
                         default:
-                            return MorphicResult.ErrorResult(Win32ApiError.Win32Error((int)ex.NativeErrorCode));
+                            return MorphicResult.ErrorResult(Win32ApiError.Win32Error((uint)ex.NativeErrorCode));
                     }
                 }
             }
