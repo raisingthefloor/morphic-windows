@@ -21,11 +21,11 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System;
-using System.Runtime.InteropServices;
-
 namespace Morphic.WindowsNative.WindowsCoreAudio
 {
+	using System;
+	using System.Runtime.InteropServices;
+
     internal struct AudioVolumeNotificationData
     {
         public Guid GuidEventContext;

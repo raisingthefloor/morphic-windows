@@ -21,12 +21,6 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace Morphic.WindowsNative
 {
     public record Win32ApiError : MorphicAssociatedValueEnum<Win32ApiError.Values>

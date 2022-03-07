@@ -21,12 +21,12 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System;
-using System.Runtime.InteropServices;
-
 namespace Morphic.WindowsNative.WindowsCoreAudio
 {
-    using WindowsCom;
+    using Morphic.WindowsNative.WindowsCom;
+	using System;
+	using System.Runtime.InteropServices;
+
 
     internal class MMDevice
     {

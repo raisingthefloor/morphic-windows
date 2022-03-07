@@ -21,11 +21,11 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System;
-using System.Runtime.InteropServices;
-
 namespace Morphic.WindowsNative.WindowsCoreAudio
 {
+	using System;
+	using System.Runtime.InteropServices;
+
     [ComImport]
     [Guid("5CDF2C82-841E-4546-9722-0CF74078229A")]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]

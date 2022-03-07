@@ -21,10 +21,10 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System;
-
 namespace Morphic.WindowsNative.WindowsCoreAudio
 {
+	using System;
+
     // https://docs.microsoft.com/en-us/windows/win32/api/mmdeviceapi/ne-mmdeviceapi-edataflow
     internal enum EDataFlow : Int32
     {

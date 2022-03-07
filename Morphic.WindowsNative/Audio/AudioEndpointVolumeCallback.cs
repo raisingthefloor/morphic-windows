@@ -21,14 +21,14 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace Morphic.WindowsNative.Audio
 {
+	using System;
+	using System.Collections.Generic;
+	using System.Diagnostics;
+	using System.Text;
+	using System.Threading.Tasks;
+
     internal class AudioEndpointVolumeCallback : WindowsCoreAudio.IAudioEndpointVolumeCallback
     {
         public delegate void CallbackReceived(WindowsCoreAudio.AudioVolumeNotificationData audioVolumeNotificationData);
