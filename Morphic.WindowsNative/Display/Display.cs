@@ -21,15 +21,14 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using Morphic.Core;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
-
 namespace Morphic.WindowsNative.Display
 {
+	using Morphic.Core;
+	using System;
+	using System.Collections.Generic;
+	using System.Drawing;
+	using System.Runtime.InteropServices;
+	using System.Threading.Tasks;
 
     // ReSharper disable InconsistentNaming - Uses naming from the Windows API
     // ReSharper disable IdentifierTypo - Uses naming from the Windows API
@@ -344,7 +343,6 @@ namespace Morphic.WindowsNative.Display
                     return MorphicResult.ErrorResult();
                 default:
                     // unknown error
-                    // failure; out of an abundance of caution, try to read the next display
                     System.Diagnostics.Debug.Assert(false, "Error getting dpi info");
 	                return MorphicResult.ErrorResult();
             }
@@ -383,7 +381,6 @@ namespace Morphic.WindowsNative.Display
 	                    return MorphicResult.ErrorResult();
 	                default:
 	                    // unknown error
-	                    // failure; out of an abundance of caution, try to read the next display
 	                    System.Diagnostics.Debug.Assert(false, "Error setting dpi info");
 	                    return MorphicResult.ErrorResult();
 	            }
@@ -767,8 +764,8 @@ namespace Morphic.WindowsNative.Display
 	
 	        ExtendedPInvoke.DEVMODEW deviceMode = ExtendedPInvoke.DEVMODEW.InitializeNew();
 	        // get the display's resolution
-	        var enum_display_settings_result = ExtendedPInvoke.EnumDisplaySettingsEx(this.DisplayName, ExtendedPInvoke.ENUM_CURRENT_SETTINGS, ref deviceMode, 0);
-	        if (enum_display_settings_result == false)
+	        var enumDisplaySettingsResult = ExtendedPInvoke.EnumDisplaySettingsEx(this.DisplayName, ExtendedPInvoke.ENUM_CURRENT_SETTINGS, ref deviceMode, 0);
+	        if (enumDisplaySettingsResult == false)
 	        {
 	            return MorphicResult.ErrorResult();
 	        }
@@ -833,55 +830,6 @@ namespace Morphic.WindowsNative.Display
                 return false;
             }
         }
-
-        ///// <summary>Gets the available resolutions for a display device.</summary>
-        //public static IEnumerable<Size> GetResolutions(string? deviceName = null)
-        //{
-        //    WindowsApi.DEVMODEW mode = new WindowsApi.DEVMODEW();
-        //    mode.Init();
-
-        //    uint modeNum = 0;
-
-        //    while (WindowsApi.EnumDisplaySettingsEx(deviceName, modeNum++, ref mode, 0))
-        //    {
-        //        yield return new Size((int)mode.dmPelsWidth, (int)mode.dmPelsHeight);
-        //    }
-        //}
-
-        //private static Size Resolution(Size? newSize, string? deviceName = null)
-        //{
-        //    WindowsApi.DEVMODEW mode = new WindowsApi.DEVMODEW();
-        //    mode.Init();
-        //    // When setting, the current display still needs to be retrieved, to pre-fill the mode struct.
-        //    WindowsApi.EnumDisplaySettingsEx(deviceName, WindowsApi.ENUM_CURRENT_SETTINGS, ref mode, 0);
-        //    Size originalSize = new Size((int)mode.dmPelsWidth, (int)mode.dmPelsHeight);
-
-        //    if (newSize.HasValue)
-        //    {
-        //        const uint CDS_UPDATEREGISTRY = 1;
-        //        mode.dmPelsWidth = (uint)newSize.Value.Width;
-        //        mode.dmPelsHeight = (uint)newSize.Value.Height;
-        //        WindowsApi.ChangeDisplaySettingsEx(deviceName, ref mode, IntPtr.Zero, CDS_UPDATEREGISTRY, IntPtr.Zero);
-        //    }
-
-        //    return originalSize;
-        //}
-
-        ///// <summary>Gets the current resolution for a display device.</summary>
-        ///// <returns>The current resolution.</returns>
-        //public static Size GetResolution(string? deviceName = null)
-        //{
-        //    return Resolution(null, deviceName);
-        //}
-
-        ///// <summary>Gets the current resolution for a display device.</summary>
-        ///// <returns>The previous resolution.</returns>
-        //public static Size SetResolution(Size resolution, string? deviceName = null)
-        //{
-        //    return Resolution(resolution, deviceName);
-        //}
-
-        //
 
         //// NOTE: if the caller does not provide an hWnd, we use the primary monitor instead
         //// NOTE: this function returns null if it could not obtain the monitor name
