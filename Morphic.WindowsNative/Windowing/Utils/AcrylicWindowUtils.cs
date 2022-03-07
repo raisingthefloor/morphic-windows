@@ -62,7 +62,7 @@ public class AcrylicWindowUtils
             if (result == false)
             {
                 var win32ErrorCode = Marshal.GetLastWin32Error();
-                return MorphicResult.ErrorResult(Win32ApiError.Win32Error(win32ErrorCode));
+                return MorphicResult.ErrorResult(Win32ApiError.Win32Error((uint)win32ErrorCode));
             }
         }
         finally

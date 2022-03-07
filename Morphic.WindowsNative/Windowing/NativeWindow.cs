@@ -68,7 +68,7 @@ public class NativeWindow
             if (cursorHandle == IntPtr.Zero)
             {
                 var win32ErrorCode = Marshal.GetLastWin32Error();
-                return MorphicResult.ErrorResult(Win32ApiError.Win32Error(win32ErrorCode));
+                return MorphicResult.ErrorResult(Win32ApiError.Win32Error((uint)win32ErrorCode));
             }
 
             // NOTE: we have modeled this class name after our Spy++ evaluation of WPF's ShowInTray "hidden window"; it used a class name of "HwndWrapper[Morphic;;725f87d8-4897-4321-b720-e2fcd113885b]" in our initial observation
@@ -93,7 +93,7 @@ public class NativeWindow
             if (registerWindowClassResult.IsError == true)
             {
                 var win32ErrorCode = Marshal.GetLastWin32Error();
-                return MorphicResult.ErrorResult(Win32ApiError.Win32Error(win32ErrorCode));
+                return MorphicResult.ErrorResult(Win32ApiError.Win32Error((uint)win32ErrorCode));
             }
             hiddenWindowClassAtom = registerWindowClassResult.Value;
                 
@@ -139,7 +139,7 @@ public class NativeWindow
         if (hWnd == IntPtr.Zero)
         {
             var win32Error = Marshal.GetLastWin32Error();
-            return MorphicResult.ErrorResult(Win32ApiError.Win32Error(win32Error));
+            return MorphicResult.ErrorResult(Win32ApiError.Win32Error((uint)win32Error));
         }
         var hWndAsSafeHandle = new SafeNativeWindowHandle(hWnd, true);
 
@@ -159,7 +159,7 @@ public class NativeWindow
         if (registerClassResult == 0)
         {
             var win32ErrorCode = Marshal.GetLastWin32Error();
-            return MorphicResult.ErrorResult(Win32ApiError.Win32Error(win32ErrorCode));
+            return MorphicResult.ErrorResult(Win32ApiError.Win32Error((uint)win32ErrorCode));
         }
 
         return MorphicResult.OkResult(registerClassResult);
