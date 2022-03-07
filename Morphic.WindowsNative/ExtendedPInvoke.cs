@@ -32,6 +32,30 @@ using System.Threading.Tasks;
 
 internal struct ExtendedPInvoke
 {
+    #region devicetopology.h
+
+    internal static uint E_NOTFOUND = HRESULT_FROM_WIN32((uint)PInvoke.Win32ErrorCode.ERROR_NOT_FOUND);
+
+    #endregion devicetopology.h
+
+
+    #region winerror.h
+
+    public const nint S_OK = 0;
+    public const nint S_FALSE = 1;
+
+    // facility codes
+    private const uint FACILITY_WIN32 = 7;
+
+    // https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-erref/0c0bcf55-277e-4120-b5dc-f6115fc8dc38
+    private static uint HRESULT_FROM_WIN32(uint x)
+    {
+        return unchecked((uint)(x) <= 0 ? ((uint)(x)) : ((uint)(((x) & 0x0000FFFF) | (FACILITY_WIN32 << 16) | 0x80000000)));
+    }
+
+
+    #endregion winerror.h
+
     #region wingdi.h
 
     private const int CCHFORMNAME = 32;
