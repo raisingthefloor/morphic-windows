@@ -15,7 +15,7 @@ namespace Morphic.Client.Bar.UI
     using CountlySDK;
     using Data;
     using Microsoft.Win32;
-    using Mouse = Windows.Native.Input.Mouse;
+    using Mouse = Morphic.WindowsNative.Input.Mouse;
     using Settings.SettingsHandlers;
     using System;
     using System.Collections.Generic;

@@ -8,7 +8,7 @@
 // You may obtain a copy of the License at
 // https://github.com/GPII/universal/blob/master/LICENSE.txt
 
-using Morphic.Windows.Native.WindowsCom;
+using Morphic.WindowsNative.WindowsCom;
 
 namespace Morphic.Client.Bar.Data.Actions
 {

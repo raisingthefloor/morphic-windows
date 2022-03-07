@@ -4,7 +4,8 @@
     using CountlySDK;
     using Morphic.Client.Config;
     using Morphic.Client.Dialogs;
-    using Morphic.Windows.Native.OsVersion;
+    using Morphic.WindowsNative.Input;
+    using Morphic.WindowsNative.OsVersion;
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
@@ -12,7 +13,6 @@
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Controls.Primitives;
-    using Windows.Native.Input;
 
     public partial class MorphicMenu : ContextMenu
     {
@@ -221,7 +221,7 @@
                         // NOTE: Microsoft changed the URL for this link somwhere between 10.0.19042.986 and 10.0.19042.1052;
                         //       if we get any bug reports that this link doesn't work with v20H2, be sure to get the "winver" full version #...so we can adjust the revision # below (to something between 986 and 1051) as appropriate
                         uint? updateBuildRevision;
-                        var getUpdateBuildRevisionResult = Morphic.Windows.Native.OsVersion.OsVersion.GetUpdateBuildRevision();
+                        var getUpdateBuildRevisionResult = Morphic.WindowsNative.OsVersion.OsVersion.GetUpdateBuildRevision();
                         if (getUpdateBuildRevisionResult.IsSuccess == true)
                         {
                             updateBuildRevision = getUpdateBuildRevisionResult.Value!;

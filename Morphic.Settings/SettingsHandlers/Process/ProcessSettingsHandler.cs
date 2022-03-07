@@ -1,10 +1,10 @@
 ﻿namespace Morphic.Settings.SettingsHandlers.Process
 {
+    using SolutionsRegistry;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
     using System.Threading.Tasks;
-    using SolutionsRegistry;
 
     [SrService]
     public class ProcessSettingsHandler : FixedSettingsHandler
@@ -47,7 +47,7 @@
 #else
                         // NOTE: we ignore the success/failure of closing all windows for the process; this is a "reasonable effort" kind of function call
                         // NOTE: a response of "true" means that all windows closed (or are closing), whereas "false" means that some windows didn't accept our close call; we may want to tweak the numberOfMillisecondsToWait based on this response
-                        _ = Windows.Native.Process.Process.CloseAllWindowsForProcess(process.Id);
+                        _ = Morphic.WindowsNative.Process.Process.CloseAllWindowsForProcess(process.Id);
 
                         // give this process up to numberOfMillisecondsToWait milliseconds (in this case: 2 seconds) to exit before we intervene to terminate it
                         // OBSERVATION: we may want to wait for all processes in parallel (if there are multiple processes) so that we don't wait 2 seconds TIMES the number of processes (i.e. so that we want 2 seconds maximum)

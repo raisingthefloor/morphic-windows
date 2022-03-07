@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Morphic.Core;
 using Morphic.Settings.SolutionsRegistry;
-using Morphic.Windows.Native.Ini;
+using Morphic.WindowsNative.Ini;
 
 namespace Morphic.Settings.SettingsHandlers.Ini
 {

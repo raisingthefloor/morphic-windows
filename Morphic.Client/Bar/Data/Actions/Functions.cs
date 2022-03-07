@@ -2,6 +2,8 @@ namespace Morphic.Client.Bar.Data.Actions
 {
     using Microsoft.Extensions.Logging;
     using Morphic.Core;
+    using Morphic.WindowsNative.Input;
+    using Morphic.WindowsNative.Speech;
     using Settings.SettingsHandlers;
     using Settings.SolutionsRegistry;
     using System;
@@ -17,8 +19,6 @@ namespace Morphic.Client.Bar.Data.Actions
     using System.Windows.Automation;
     using System.Windows.Automation.Text;
     using UI;
-    using Windows.Native.Input;
-    using Windows.Native.Speech;
 
     [HasInternalFunctions]
     // ReSharper disable once UnusedType.Global - accessed via reflection.
@@ -116,7 +116,7 @@ namespace Morphic.Client.Bar.Data.Actions
         {
             try
             {
-                var audioEndpoint = Windows.Native.Audio.AudioEndpoint.GetDefaultAudioOutputEndpoint();
+                var audioEndpoint = Morphic.WindowsNative.Audio.AudioEndpoint.GetDefaultAudioOutputEndpoint();
 
                 // if we didn't get a state in the request, try to reverse the state
                 var state = audioEndpoint.GetMasterMuteState();
@@ -154,7 +154,7 @@ namespace Morphic.Client.Bar.Data.Actions
             try
             {
                 // set the mute state to the new state value
-                var audioEndpoint = Windows.Native.Audio.AudioEndpoint.GetDefaultAudioOutputEndpoint();
+                var audioEndpoint = Morphic.WindowsNative.Audio.AudioEndpoint.GetDefaultAudioOutputEndpoint();
                 audioEndpoint.SetMasterMuteState(newState);
             }
             catch
@@ -552,7 +552,7 @@ namespace Morphic.Client.Bar.Data.Actions
         [InternalFunction("signOut")]
         public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> SignOutAsync(FunctionArgs args)
         {
-            var success = Morphic.Windows.Native.WindowsSession.WindowsSession.LogOff();
+            var success = Morphic.WindowsNative.WindowsSession.WindowsSession.LogOff();
             return success ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
         }
 
@@ -571,7 +571,7 @@ namespace Morphic.Client.Bar.Data.Actions
             var removableDrives = getRemovableDisksAndDrivesResult.Value!.RemovableDrives;
 
             // as we only want to open usb drives which are mounted (i.e. not USB drives which have had their "media" ejected but who still have drive letters assigned)...
-            var mountedRemovableDrives = new List<Morphic.Windows.Native.Devices.Drive>();
+            var mountedRemovableDrives = new List<Morphic.WindowsNative.Devices.Drive>();
             foreach (var drive in removableDrives)
             {
                 var getIsMountedResult = await drive.GetIsMountedAsync();
@@ -662,15 +662,15 @@ namespace Morphic.Client.Bar.Data.Actions
 
         private struct GetRemovableDisksAndDrivesResult 
         {
-            public List<Morphic.Windows.Native.Devices.Disk> AllDisks;
-            public List<Morphic.Windows.Native.Devices.Disk> RemovableDisks; // physical volumes
-            public List<Morphic.Windows.Native.Devices.Drive> RemovableDrives; // logical volumes (media / partition); these can have drive letters
+            public List<Morphic.WindowsNative.Devices.Disk> AllDisks;
+            public List<Morphic.WindowsNative.Devices.Disk> RemovableDisks; // physical volumes
+            public List<Morphic.WindowsNative.Devices.Drive> RemovableDrives; // logical volumes (media / partition); these can have drive letters
         }
         //
         private static async Task<MorphicResult<GetRemovableDisksAndDrivesResult, MorphicUnit>> GetRemovableDisksAndDrivesAsync()
         {
             // get a list of all disks (but not non-disks such as CD-ROM drives)
-            var getAllDisksResult = await Morphic.Windows.Native.Devices.Disk.GetAllDisksAsync();
+            var getAllDisksResult = await Morphic.WindowsNative.Devices.Disk.GetAllDisksAsync();
             if (getAllDisksResult.IsError == true)
             {
                 Debug.Assert(false, "Cannot get list of disks");
@@ -679,7 +679,7 @@ namespace Morphic.Client.Bar.Data.Actions
 
             // filter out all disks which are not removable
             var allDisks = getAllDisksResult.Value!;
-            var removableDisks = new List<Morphic.Windows.Native.Devices.Disk>();
+            var removableDisks = new List<Morphic.WindowsNative.Devices.Disk>();
             foreach (var disk in allDisks)
             {
                 var getIsRemovableResult = disk.GetIsRemovable();
@@ -696,7 +696,7 @@ namespace Morphic.Client.Bar.Data.Actions
             }
 
             // now get all the drives associated with our removable disks
-            var removableDrives = new List<Morphic.Windows.Native.Devices.Drive>();
+            var removableDrives = new List<Morphic.WindowsNative.Devices.Drive>();
             foreach (var removableDisk in removableDisks)
             {
                 var getDrivesForDiskResult = await removableDisk.GetDrivesAsync();
@@ -723,8 +723,8 @@ namespace Morphic.Client.Bar.Data.Actions
 
         internal async static Task<MorphicResult<bool, MorphicUnit>> GetDarkModeStateAsync()
         {
-            var osVersion = Morphic.Windows.Native.OsVersion.OsVersion.GetWindowsVersion();
-            if (osVersion == Windows.Native.OsVersion.WindowsVersion.Win10_v1809)
+            var osVersion = Morphic.WindowsNative.OsVersion.OsVersion.GetWindowsVersion();
+            if (osVersion == Morphic.WindowsNative.OsVersion.WindowsVersion.Win10_v1809)
             {
                 // Windows 10 v1809
 
@@ -732,7 +732,7 @@ namespace Morphic.Client.Bar.Data.Actions
                 //       [and trying to call the Windows 10 v1903+ handlers for apps/system "light theme" will result in a memory access exception under v1809]
                 //       [also: only "AppsUseLightTheme" (and not "SystemUsesLightTheme") existed properly under Windows 10 v1809]
 
-                var openPersonalizeKeyResult = Morphic.Windows.Native.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize", true);
+                var openPersonalizeKeyResult = Morphic.WindowsNative.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize", true);
                 if (openPersonalizeKeyResult.IsError == true)
                 {
                     return MorphicResult.ErrorResult();
@@ -744,7 +744,7 @@ namespace Morphic.Client.Bar.Data.Actions
                 var getAppsUseLightThemeResult = personalizeKey.GetValue<uint>("AppsUseLightTheme");
                 if (getAppsUseLightThemeResult.IsError == true)
                 {
-                    if (getAppsUseLightThemeResult.Error == Windows.Native.Registry.RegistryKey.RegistryValueError.ValueDoesNotExist)
+                    if (getAppsUseLightThemeResult.Error == Morphic.WindowsNative.Registry.RegistryKey.RegistryValueError.ValueDoesNotExist)
                     {
                         // default AppsUseLightTheme (inverse of dark mode state) on Windows 10 v1809 is true
                         appsUseLightThemeAsBool = true;
@@ -802,8 +802,8 @@ namespace Morphic.Client.Bar.Data.Actions
 
         internal async static Task<MorphicResult<MorphicUnit, MorphicUnit>> SetDarkModeStateAsync(bool state)
         {
-            var osVersion = Morphic.Windows.Native.OsVersion.OsVersion.GetWindowsVersion();
-            if (osVersion == Windows.Native.OsVersion.WindowsVersion.Win10_v1809)
+            var osVersion = Morphic.WindowsNative.OsVersion.OsVersion.GetWindowsVersion();
+            if (osVersion == Morphic.WindowsNative.OsVersion.WindowsVersion.Win10_v1809)
             {
                 // Windows 10 v1809
 
@@ -811,7 +811,7 @@ namespace Morphic.Client.Bar.Data.Actions
                 //       [and trying to call the Windows 10 v1903+ handlers for apps/system "light theme" will result in a memory access exception under v1809]
                 //       [also: only "AppsUseLightTheme" (and not "SystemUsesLightTheme") existed properly under Windows 10 v1809]
 
-                var openPersonalizeKeyResult = Morphic.Windows.Native.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize", true);
+                var openPersonalizeKeyResult = Morphic.WindowsNative.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize", true);
                 if (openPersonalizeKeyResult.IsError == true)
                 {
                     return MorphicResult.ErrorResult();

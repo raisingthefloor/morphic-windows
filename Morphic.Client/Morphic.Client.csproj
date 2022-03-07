@@ -97,6 +97,7 @@
     <ProjectReference Include="..\Morphic.Service\Morphic.Service.csproj" />
     <ProjectReference Include="..\Morphic.Settings\Morphic.Settings.csproj" />
     <ProjectReference Include="..\Morphic.Telemetry\Morphic.Telemetry.csproj" />
+    <ProjectReference Include="..\Morphic.WindowsNative\Morphic.WindowsNative.csproj" />
   </ItemGroup>
   
   <ItemGroup>

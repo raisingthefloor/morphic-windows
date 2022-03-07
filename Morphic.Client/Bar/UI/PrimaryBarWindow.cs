@@ -1,14 +1,14 @@
 namespace Morphic.Client.Bar.UI
 {
+    using AppBarWindow;
+    using Data;
+    using Morphic.WindowsNative;
+    using Morphic.WindowsNative.Speech;
     using System;
     using System.Linq;
     using System.Windows;
     using System.Windows.Interop;
     using System.Windows.Media.Animation;
-    using Windows.Native;
-    using Windows.Native.Speech;
-    using AppBarWindow;
-    using Data;
 
     public sealed class PrimaryBarWindow : BarWindow
     {
@@ -310,7 +310,7 @@ namespace Morphic.Client.Bar.UI
             var barWindowHandle = barWindowInteropHelper.EnsureHandle();
 
             // get the display which contains the majority of our window's frame
-            var getCurrentDisplayResult = Morphic.Windows.Native.Display.Display.GetDisplayForWindow(barWindowHandle);
+            var getCurrentDisplayResult = Morphic.WindowsNative.Display.Display.GetDisplayForWindow(barWindowHandle);
             if (getCurrentDisplayResult.IsSuccess == true)
             {
                 var currentDisplay = getCurrentDisplayResult.Value!;
@@ -323,7 +323,7 @@ namespace Morphic.Client.Bar.UI
                     // NOTE: WPF is sometimes out of sync (longer-term) with the actual system DPI, so we have chosen not to use this (far more accurate)
                     //       method for now; WPF thinks the virtual screen is bigger or smaller than it actually is
                     //// method 1: get monitor scale percentage from Windows API (including reverse-engineered 'dpiOffset')
-                    //var actualMonitorScale = Morphic.Windows.Native.Display.Display.GetMonitorScalePercentage(null);
+                    //var actualMonitorScale = Morphic.WindowsNative.Display.Display.GetMonitorScalePercentage(null);
                     //if (actualMonitorScale is not null)
                     //{
                     //    workAreaAsNullable = new Rect(

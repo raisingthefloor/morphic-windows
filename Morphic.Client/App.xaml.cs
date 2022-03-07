@@ -52,7 +52,7 @@ namespace Morphic.Client
     using Menu;
     using Microsoft.Win32;
     using Morphic.Telemetry;
-    using Morphic.Windows.Native.OsVersion;
+    using Morphic.WindowsNative.OsVersion;
     using Settings.SettingsHandlers;
     using Settings.SolutionsRegistry;
     using System.Diagnostics;

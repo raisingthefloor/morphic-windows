@@ -21,7 +21,7 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using Morphic.Windows.Native;
+using Morphic.WindowsNative;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -205,7 +205,7 @@ namespace Morphic.Client.Menu
             }
             private TrayButtonVisualStateFlags _visualState = TrayButtonVisualStateFlags.None;
 
-            private Windows.Native.WindowMessageHooks.MouseWindowMessageHook? _mouseHook = null;
+            private Morphic.WindowsNative.WindowMessageHooks.MouseWindowMessageHook? _mouseHook = null;
 
             internal MorphicTrayButtonNativeWindow(MorphicTrayButton owner)
             {
@@ -255,9 +255,9 @@ namespace Morphic.Client.Menu
                 Microsoft.Win32.SystemEvents.DisplaySettingsChanged += SystemEvents_DisplaySettingsChanged;
 
                 // if the user is using Windows 11, create a mouse message hook (so we can capture the mousemove and click events over our taskbar icon)
-                if (Morphic.Windows.Native.OsVersion.OsVersion.IsWindows11OrLater() == true)
+                if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
                 {
-                    _mouseHook = new Windows.Native.WindowMessageHooks.MouseWindowMessageHook();
+                    _mouseHook = new Morphic.WindowsNative.WindowMessageHooks.MouseWindowMessageHook();
                     _mouseHook.WndProcEvent += _mouseHook_WndProcEvent;
                 }
 
@@ -272,7 +272,7 @@ namespace Morphic.Client.Menu
             }
 
             // NOTE: this function is somewhat redundant and is provided to support Windows 11; we should refactor all of this code to handle window messages centrally
-            private void _mouseHook_WndProcEvent(object? sender, Windows.Native.WindowMessageHooks.MouseWindowMessageHook.WndProcEventArgs e)
+            private void _mouseHook_WndProcEvent(object? sender, Morphic.WindowsNative.WindowMessageHooks.MouseWindowMessageHook.WndProcEventArgs e)
             {
                 // TODO: we should ensure that calls are queued and then called from a sequential thread (ideally a UI dispatch thread)
                 switch ((WinApi.WindowMessage)e.Message) 

@@ -1,7 +1,7 @@
 ﻿namespace Morphic.Settings.SettingsHandlers.Display
 {
     using CountlySDK;
-    using Morphic.Windows.Native.Display;
+    using Morphic.WindowsNative.Display;
     using SolutionsRegistry;
     using System;
     using System.Collections.Generic;
@@ -62,14 +62,14 @@
                 }
                 //
                 // NOTE: due to current architectural limitations, Morphic v1.x uses the mouse cursor to determine which display to zoom (instead of finding the display the MorphicBar is on)
-                var getCurrentPositionResult = Morphic.Windows.Native.Mouse.Mouse.GetCurrentPosition();
+                var getCurrentPositionResult = Morphic.WindowsNative.Mouse.Mouse.GetCurrentPosition();
                 if (getCurrentPositionResult.IsError == true)
                 {
                     return false;
                 }
                 var currentMousePosition = getCurrentPositionResult.Value!;
                 //
-                var getDisplayForPointResult = Morphic.Windows.Native.Display.Display.GetDisplayForPoint(currentMousePosition);
+                var getDisplayForPointResult = Morphic.WindowsNative.Display.Display.GetDisplayForPoint(currentMousePosition);
                 if (getDisplayForPointResult.IsError == true)
                 {
                     return false;
@@ -158,14 +158,14 @@
             // method 2: get/set zoom level based on scale percentage
             //
             // NOTE: due to current architectural limitations, Morphic v1.x uses the mouse cursor to determine which display to zoom (instead of finding the display the MorphicBar is on)
-            var getCurrentPositionResult = Morphic.Windows.Native.Mouse.Mouse.GetCurrentPosition();
+            var getCurrentPositionResult = Morphic.WindowsNative.Mouse.Mouse.GetCurrentPosition();
             if (getCurrentPositionResult.IsError == true)
             {
                 return Task.FromResult<object?>(null);
             }
             var currentMousePosition = getCurrentPositionResult.Value!;
             //
-            var getDisplayForPointResult = Morphic.Windows.Native.Display.Display.GetDisplayForPoint(currentMousePosition);
+            var getDisplayForPointResult = Morphic.WindowsNative.Display.Display.GetDisplayForPoint(currentMousePosition);
             if (getDisplayForPointResult.IsError == true)
             {
                 return Task.FromResult<object?>(null);
