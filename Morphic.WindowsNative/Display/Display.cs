@@ -759,8 +759,8 @@ public struct Display
 
         ExtendedPInvoke.DEVMODEW deviceMode = ExtendedPInvoke.DEVMODEW.InitializeNew();
         // get the display's resolution
-        var enum_display_settings_result = ExtendedPInvoke.EnumDisplaySettingsEx(this.DisplayName, ExtendedPInvoke.ENUM_CURRENT_SETTINGS, ref deviceMode, 0);
-        if (enum_display_settings_result == false)
+        var enumDisplaySettingsResult = ExtendedPInvoke.EnumDisplaySettingsEx(this.DisplayName, ExtendedPInvoke.ENUM_CURRENT_SETTINGS, ref deviceMode, 0);
+        if (enumDisplaySettingsResult == false)
         {
             return MorphicResult.ErrorResult();
         }
@@ -790,5 +790,32 @@ public struct Display
         var result = new Size((int)(displayResolutionInPhysicalPixels.Width / scalePercentage), (int)(displayResolutionInPhysicalPixels.Height / scalePercentage));
         return MorphicResult.OkResult(result);
     }
-}
 
+    //// TODO: the following code is neither complete nor tested; additionally, it may actually set the display resolution in virtual pixels instead of physical pixels (in which case it must be renamed); it is included here only for completeness in portion Morphic 1.x to 2.x
+    //public MorphicResult<MorphicUnit, MorphicUnit> SetDisplayResolutionInPhysicalPixels(Size newSize)
+    //{
+    //    ExtendedPInvoke.DEVMODEW deviceMode = ExtendedPInvoke.DEVMODEW.InitializeNew();
+    //    // capture the display's current (mode) settings
+    //    var enumDisplaySettingsResult = ExtendedPInvoke.EnumDisplaySettingsEx(this.DisplayName, ExtendedPInvoke.ENUM_CURRENT_SETTINGS, ref deviceMode, 0);
+    //    if (enumDisplaySettingsResult == false)
+    //    {
+    //        return MorphicResult.ErrorResult();
+    //    }
+
+    //    // update the mode's width/height
+    //    // TODO: is this sufficient?  Do we need to scale or set other properties as well?
+    //    deviceMode.dmPelsWidth = (uint)newSize.Width;
+    //    deviceMode.dmPelsHeight = (uint)newSize.Height;
+
+    //    // see: https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-changedisplaysettingsexw
+    //    var changeDisplaySettingsResult = ExtendedPInvoke.ChangeDisplaySettingsEx(this.DisplayName, ref deviceMode, IntPtr.Zero, ExtendedPInvoke.CDS_UPDATEREGISTRY, IntPtr.Zero);
+    //    if (changeDisplaySettingsResult != ExtendedPInvoke.DISP_CHANGE_SUCCESSFUL)
+    //    {
+    //        // TODO: in the future, we may want to return the actual result; here are the expected error codes...
+    //        //       DISP_CHANGE_BADDUALVIEW; DISP_CHANGE_BADFLAGS; DISP_CHANGE_BADMODE; DISP_CHANGE_BADPARAM; DISP_CHANGE_FAILED; DISP_CHANGE_NOTUPDATED; DISP_CHANGE_RESTART
+    //        return MorphicResult.ErrorResult();
+    //    }
+
+    //    return MorphicResult.OkResult();
+    //}
+}
