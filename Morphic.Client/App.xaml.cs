@@ -998,7 +998,7 @@ namespace Morphic.Client
             }
             //
             // screen scaling (on all monitors)
-            var getAllDisplaysResult = Morphic.Windows.Native.Display.Display.GetAllDisplays();
+            var getAllDisplaysResult = Morphic.WindowsNative.Display.Display.GetAllDisplays();
             if (getAllDisplaysResult.IsSuccess == true) 
             {
                 var allDisplays = getAllDisplaysResult.Value!;
