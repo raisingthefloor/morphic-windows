@@ -40,29 +40,31 @@ using System.Windows.Shapes;
 /// <summary>
 /// Interaction logic for MorphicBar.xaml
 /// </summary>
-public partial class MorphicBar : Window
+public partial class MorphicBarWindow : Window
 {
     public static readonly DependencyProperty OrientationProperty;
 
-    static MorphicBar()
+    static MorphicBarWindow()
     {
         // wire up dependency properties
-        MorphicBar.OrientationProperty = DependencyProperty.Register("Orientation", typeof(System.Windows.Controls.Orientation), typeof(MorphicBar), new FrameworkPropertyMetadata(System.Windows.Controls.Orientation.Horizontal, new PropertyChangedCallback(OnOrientationChanged)));
+        MorphicBarWindow.OrientationProperty = DependencyProperty.Register("Orientation", typeof(System.Windows.Controls.Orientation), typeof(MorphicBarWindow), new FrameworkPropertyMetadata(System.Windows.Controls.Orientation.Horizontal, new PropertyChangedCallback(OnOrientationChanged)));
     }
 
     // .NET property wrapper for dependency property (NOTE: this is the standard .NET pattern; it must not be changed)
     public System.Windows.Controls.Orientation Orientation
     {
-        get { return (Orientation)GetValue(MorphicBar.OrientationProperty); }
-        set { SetValue(MorphicBar.OrientationProperty, value); }
+        get { return (Orientation)GetValue(MorphicBarWindow.OrientationProperty); }
+        set { SetValue(MorphicBarWindow.OrientationProperty, value); }
     }
 
     private static void OnOrientationChanged(DependencyObject obj, DependencyPropertyChangedEventArgs args)
     {
-        var morphicBar = (MorphicBar)obj;
+        var morphicBar = (MorphicBarWindow)obj;
+
+        // TODO: tell the morphicBar that its orientation has been changed so that it can modify its layout
     }
 
-    public MorphicBar()
+    public MorphicBarWindow()
     {
         InitializeComponent();
     }
