@@ -160,7 +160,7 @@
     <value>Elija una contraseña</value>
   </data>
   <data name="ClickingBelowWillRestoreSettings_Part1_Text" xml:space="preserve">
-    <value>Clicking</value>
+    <value>Haciendo clic</value>
   </data>
   <data name="ClickingBelowWillRestoreSettings_Part2_Text" xml:space="preserve">
     <value>Restaurar de la copia de seguridad</value>
