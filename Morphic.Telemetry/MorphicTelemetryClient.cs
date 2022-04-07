@@ -137,7 +137,7 @@ namespace Morphic.Telemetry
                     .WithWebSocketServer(path)
                     .WithCredentials(wsConfig.Username, wsConfig.Password)
                     .WithCleanSession(true) // we are a write-only client (i.e. no subscriptions), so always start with a clean session
-                                            //.WithTls(new MqttClientOptionsBuilderTlsParameters() { UseTls = false })
+                    //.WithTls(new MqttClientOptionsBuilderTlsParameters() { UseTls = false })
                     .WithTls(new MqttClientOptionsBuilderTlsParameters() { UseTls = wsConfig.UseTls })
                     .Build();
             }
