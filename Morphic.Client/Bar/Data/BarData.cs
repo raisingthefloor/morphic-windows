@@ -381,8 +381,17 @@ namespace Morphic.Client.Bar.Data
                                                     };
                                                     ((BarMultiButton)extraBarItem).AutoSize = true;
                                                     //
-                                                    // NOTE: we shouldonly show this item if Word is actually installed
-                                                    extraBarItemShouldBeAdded = Morphic.Integrations.Office.WordRibbon.IsOfficeInstalled();
+                                                    // NOTE: we should only show this item if Word is actually installed
+                                                    // NOTE: if Word is not installed, Morphic.Integrations.Office may fail to load as a DLL (or otherwise throw NotImplementedException); ideally we'd
+													//       dynamically load the DLL only if Word was installed...and would perhaps move .IsOfficeInstalled into a DLL which wasn't reliant on Office being installed.
+                                                    try
+                                                    {
+                                                        extraBarItemShouldBeAdded = Morphic.Integrations.Office.WordRibbon.IsOfficeInstalled();
+                                                    }
+                                                    catch (NotImplementedException)
+                                                    {
+                                                        extraBarItemShouldBeAdded = false;
+                                                    }
                                                 }
                                                 break;
                                             default:
