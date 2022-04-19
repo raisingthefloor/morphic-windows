@@ -113,6 +113,9 @@ namespace Morphic.Client.Dialogs
             }
             else if (this.ApplyPreferencesAfterLogin)
             {
+                // login successful
+                await App.Current.Countly_RecordEventAsync("signIn");
+
                 _ = this.morphicSession.ApplyAllPreferences();
                 this.Close();
             }
