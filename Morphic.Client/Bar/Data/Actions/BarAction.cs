@@ -92,7 +92,7 @@ namespace Morphic.Client.Bar.Data.Actions
             switch (this.Id)
             {
                 case "log-off":
-                    await App.Current.Countly_RecordEventAsync("SignOut");
+                    await App.Current.Countly_RecordEventAsync("signOut");
                     break;
                 case "volume":
                     {
