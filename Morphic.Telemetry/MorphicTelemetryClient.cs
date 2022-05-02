@@ -466,7 +466,7 @@ namespace Morphic.Telemetry
             public string EventName { get; set; }
             //
             [JsonPropertyName("data")]
-            public string? Data { get; set; }
+            public object? Data { get; set; }
         }
 
         private Lazy<string> CachedOsVersion = new Lazy<string>(() =>
@@ -480,7 +480,7 @@ namespace Morphic.Telemetry
                 .InformationalVersion ?? "0.0.0.0";
         });
 
-        public void EnqueueActionMessage(string eventName, string? data)
+        public void EnqueueActionMessage(string eventName, object? jsonSerializableData)
         {
             // NOTE: we capture the timestamp up front just to alleviate any potential for the timestamp to be captured late
             var capturedAtTimestamp = DateTimeOffset.UtcNow;
@@ -497,7 +497,7 @@ namespace Morphic.Telemetry
                 OsName = "Windows",
                 OsVersion = this.CachedOsVersion.Value,
                 EventName = eventName,
-                Data = data
+                Data = jsonSerializableData
             };
 
             lock (_messagesToSendSyncObject)

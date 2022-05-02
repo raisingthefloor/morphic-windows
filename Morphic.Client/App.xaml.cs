@@ -859,11 +859,10 @@ namespace Morphic.Client
                 // NOTE: for Morphic 2.0, enqueue this message as soon as we create the telemetry client object
                 var eventData = new SessionTelemetryEventData()
                 {
-                    State = "begin",
-                    SessionId = _telemetrySessionId
+                    SessionId = _telemetrySessionId,
+                    State = "begin"
                 };
-                var eventDataAsJson = JsonSerializer.Serialize(eventData);
-                telemetryClient.EnqueueActionMessage("@session", eventDataAsJson);
+                telemetryClient.EnqueueActionMessage("@session", eventData);
 
                 // initialize (and start) our heartbeat timer; it should send the heartbeat message every 12 hours
                 _telemetryHeartbeatTimer = new System.Threading.Timer(this.SendTelemetryHeartbeat, null, new TimeSpan(12, 0, 0), new TimeSpan(12, 0, 0));
@@ -872,11 +871,11 @@ namespace Morphic.Client
 
         internal record SessionTelemetryEventData
         {
-            [JsonPropertyName("state")]
-            public string? State { get; set; }
-            //
             [JsonPropertyName("sessionId")]
             public Guid? SessionId { get; set; }
+            //
+            [JsonPropertyName("state")]
+            public string? State { get; set; }
         }
 
         #endregion Telemetry
@@ -1477,11 +1476,10 @@ namespace Morphic.Client
             // send a ping/heartbeat telemetry message (@session heartbeat)
             var eventData = new SessionTelemetryEventData()
             {
-                State = "heartbeat",
-                SessionId = _telemetrySessionId
+                SessionId = _telemetrySessionId,
+                State = "heartbeat"
             };
-            var eventDataAsJson = JsonSerializer.Serialize(eventData);
-            _telemetryClient?.EnqueueActionMessage("@session", eventDataAsJson);
+            _telemetryClient?.EnqueueActionMessage("@session", eventData);
         }
 
         #region Shutdown
@@ -1504,11 +1502,10 @@ namespace Morphic.Client
                         // NOTE: for Morphic 2.0, enqueue this message as soon as we enter the OnExit function
                         var eventData = new SessionTelemetryEventData()
                         {
-                            State = "end",
-                            SessionId = _telemetrySessionId
+                            SessionId = _telemetrySessionId,
+                            State = "end"
                         };
-                        var eventDataAsJson = JsonSerializer.Serialize(eventData);
-                        _telemetryClient.EnqueueActionMessage("@session", eventDataAsJson);
+                        _telemetryClient.EnqueueActionMessage("@session", eventData);
 
                         // wait up to 2500 milliseconds for the event to be sent
                         await _telemetryClient.FlushMessageQueueAsync(2500);
