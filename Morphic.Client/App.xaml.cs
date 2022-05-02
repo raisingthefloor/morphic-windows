@@ -59,6 +59,7 @@ namespace Morphic.Client
     using System.Security.Cryptography;
     using System.Text;
     using System.Text.Json;
+    using System.Text.Json.Serialization;
 
     public class AppMain
     {
@@ -130,6 +131,8 @@ namespace Morphic.Client
         public const string ApplicationId = "A6E8092B-51F4-4CAA-A874-A791152B5698";
 
         #region Configuration & Startup
+
+        private Timer _telemetryHeartbeatTimer;
 
         public App()
         {
@@ -550,7 +553,7 @@ namespace Morphic.Client
             {
                 await Countly.RecordEvent(Key);
 
-                _telemetryClient?.EnqueueActionMessage(Key);
+                _telemetryClient?.EnqueueActionMessage(Key, null);
             }
         }
 
@@ -560,7 +563,7 @@ namespace Morphic.Client
             {
                 await Countly.RecordEvent(Key, Count, Segmentation);
 
-                _telemetryClient?.EnqueueActionMessage(Key);
+                _telemetryClient?.EnqueueActionMessage(Key, null);
             }
         }
 
@@ -811,9 +814,11 @@ namespace Morphic.Client
 
         #region Telemetry 
 
+        private Guid? _telemetrySessionId = null;
+
         private void ConfigureTelemetry()
         {
-            // TODO: Move metrics related things to own class.
+            // TODO: Move metrics-related things to their own class.
 
             // retrieve the telemetry device ID for this device; if it doesn't exist then create a new one
             var telemetryIds = this.GetOrCreateTelemetryIdComponents();
@@ -842,10 +847,36 @@ namespace Morphic.Client
             telemetryClient.SiteId = telemetrySiteId;
             _telemetryClient = telemetryClient;
 
+            // create random session id
+            _telemetrySessionId = Guid.NewGuid();
+
             Task.Run(async () =>
             {
+                // start the telemetry session
                 await telemetryClient.StartSessionAsync();
+
+                // send the first telemetry message (@session begin)
+                // NOTE: for Morphic 2.0, enqueue this message as soon as we create the telemetry client object
+                var eventData = new SessionTelemetryEventData()
+                {
+                    State = "begin",
+                    SessionId = _telemetrySessionId
+                };
+                var eventDataAsJson = JsonSerializer.Serialize(eventData);
+                telemetryClient.EnqueueActionMessage("@session", eventDataAsJson);
+
+                // initialize (and start) our heartbeat timer; it should send the heartbeat message every 12 hours
+                _telemetryHeartbeatTimer = new System.Threading.Timer(this.SendTelemetryHeartbeat, null, new TimeSpan(12, 0, 0), new TimeSpan(12, 0, 0));
             });
+        }
+
+        internal record SessionTelemetryEventData
+        {
+            [JsonPropertyName("state")]
+            public string? State { get; set; }
+            //
+            [JsonPropertyName("sessionId")]
+            public Guid? SessionId { get; set; }
         }
 
         #endregion Telemetry
@@ -1441,25 +1472,59 @@ namespace Morphic.Client
             this.BarManager.ShowBar();
         }
 
+        private void SendTelemetryHeartbeat(object? state)
+        {
+            // send a ping/heartbeat telemetry message (@session heartbeat)
+            var eventData = new SessionTelemetryEventData()
+            {
+                State = "heartbeat",
+                SessionId = _telemetrySessionId
+            };
+            var eventDataAsJson = JsonSerializer.Serialize(eventData);
+            _telemetryClient?.EnqueueActionMessage("@session", eventDataAsJson);
+        }
+
         #region Shutdown
 
         protected override async void OnExit(ExitEventArgs e)
         {
+            // NOTE: the CLR may shut down our application quicker than we can send the "session end" event; as we move to the Morphic 2.0 architecture (with cached telemetry messages), the "@session end" message should be more guaranteed to be transmitted
+
             _messageWatcherNativeWindow?.Dispose();
             if (ConfigurableFeatures.TelemetryIsEnabled == true)
             {
-                try
-                {
-                    await Countly.Instance.SessionEnd();
-                }
-                catch { }
-				//
+                // dispose of our heartbeat timer
+                _telemetryHeartbeatTimer.Dispose();
+
                 try
                 {
                     if (_telemetryClient is not null)
                     {
-                        _telemetryClient.StopSessionAsync();
+                        // send the final telemetry message (@session end)
+                        // NOTE: for Morphic 2.0, enqueue this message as soon as we enter the OnExit function
+                        var eventData = new SessionTelemetryEventData()
+                        {
+                            State = "end",
+                            SessionId = _telemetrySessionId
+                        };
+                        var eventDataAsJson = JsonSerializer.Serialize(eventData);
+                        _telemetryClient.EnqueueActionMessage("@session", eventDataAsJson);
+
+                        // wait up to 2500 milliseconds for the event to be sent
+                        await _telemetryClient.FlushMessageQueueAsync(2500);
+
+                        // NOTE: wait for the session to stop (up to 250ms)
+                        await Task.Run(() =>
+                        {
+                            _telemetryClient.StopSessionAsync().Wait(250);
+                        });
                     }
+                }
+                catch { }
+                //
+                try
+                {
+                    await Countly.Instance.SessionEnd();
                 }
                 catch { }
             }
