@@ -56,6 +56,8 @@ namespace Morphic.Client
     using Settings.SettingsHandlers;
     using Settings.SolutionsRegistry;
     using System.Diagnostics;
+    using System.Security.Cryptography;
+    using System.Text;
     using System.Text.Json;
 
     public class AppMain
@@ -562,6 +564,88 @@ namespace Morphic.Client
             }
         }
 
+        // NOTE: this function returns null if no network interface MAC could be determined
+        private Guid? GetHashedMacAddressForSiteTelemetryId()
+        {
+            // get the MAC address of the network interface which is handling Internet traffic
+            var macAddressAsByteArray = Morphic.WindowsNative.Networking.NetworkInterface.GetMacAddressOfInternetNetworkInterface();
+            //
+            // if we couldn't find the MAC address of a network card currently connected to the Internet, gracefully degrade and select the "most used" active network interface instead
+            if (macAddressAsByteArray is null)
+            {
+                macAddressAsByteArray = Morphic.WindowsNative.Networking.NetworkInterface.GetMacAddressOfHighestTrafficActiveNetworkInterface();
+            }
+            // if we couldn't find the MAC address of a network card which is currently active, gracefully degrade and select the "most used" network interface (presumably inactive, since we already checked for active ones) instead
+            if (macAddressAsByteArray is null)
+            {
+                macAddressAsByteArray = Morphic.WindowsNative.Networking.NetworkInterface.GetMacAddressOfHighestTrafficNetworkInterface();
+            }
+            // if we couldn't find the MAC address of _any_ network card, it might be because there are _no_ RX/TX cards available; in that scenario, look for _any_ network card (even an RX-only one)
+            if (macAddressAsByteArray is null)
+            {
+                macAddressAsByteArray = Morphic.WindowsNative.Networking.NetworkInterface.GetMacAddressOfFirstNetworkInterface();
+            }
+            //
+            // if we couldn't find any network interface with a non-zero MAC, then return null
+            if (macAddressAsByteArray is null)
+            {
+                return null;
+            }
+
+            StringBuilder macAddressAsHexStringBuilder = new();
+            foreach (var element in macAddressAsByteArray)
+            {
+                var elementAsHexString = element.ToString("X2");
+                macAddressAsHexStringBuilder.Append(elementAsHexString);
+            }
+            var macAddressAsHexString = macAddressAsHexStringBuilder.ToString();
+
+            // at this point, we have a network MAC address which is reasonably stable (i.e. is suitable to derive a telemetry GUID-sized value from)
+            // convert the mac address (hex string) to a type 3 UUID (MD5-hashed); note that we pre-pend "MAC_" before the mac address to avoid internal collissions from other types of potentially-derived site telemetry ids
+            var createUuidResult = this.CreateVersion3Uuid(macAddressAsHexString);
+            if (createUuidResult.IsError == true)
+            {
+                return null;
+            }
+            var macAddressAsMd5HashedGuid = createUuidResult.Value!;
+
+            return macAddressAsMd5HashedGuid;
+        }
+
+        private MorphicResult<Guid, MorphicUnit> CreateVersion3Uuid(string value)
+        {
+            var Namespace_MorphicMAC = new Guid("472c19e2-b87f-47c2-b7d3-dd9c175a5cfa");
+
+            var valueToHash = Namespace_MorphicMAC.ToString("B") + value;
+
+            // NOTE: type 3 GUIDs have 122 bits of "random" data; in this case, it'll be a one-way hash derived from a MAC address (so that we aren't capturing the raw mac addresses of site computers)
+            var md5 = MD5.Create();
+            var buffer = md5.ComputeHash(System.Text.Encoding.UTF8.GetBytes(valueToHash));
+
+            // NOTE: MD5 should create 16-byte hashes; if it created a longer array then cut it down to size; if it created a shorter array then return an error
+            if (buffer.Length > 16)
+            {
+                Array.Resize(ref buffer, 16);
+            } 
+            else if (buffer.Length < 16)
+            {
+                return MorphicResult.ErrorResult();
+            }
+
+            // clear the fields where version and variant will live
+            buffer[6] &= 0b0000_1111;
+            buffer[8] &= 0b0011_1111;
+            //
+            // set the version and variant bits
+            buffer[6] |= 0b0011_0000; // version 3
+            buffer[8] |= 0b1000_0000; // 0b10 represents an RFC 4122 UUID
+
+            // turn the buffer into a guid
+            var bufferAsGuid = new Guid(buffer);
+
+            return MorphicResult.OkResult(bufferAsGuid);
+        }
+
         private struct TelemetryIdComponents
         {
             public string CompositeId;
@@ -570,22 +654,38 @@ namespace Morphic.Client
         }
         private TelemetryIdComponents GetOrCreateTelemetryIdComponents()
         {
+            var telemetrySiteId = ConfigurableFeatures.TelemetrySiteId;
+            var hasValidTelemetrySiteId = (telemetrySiteId is not null) && (telemetrySiteId != String.Empty);
+
             // retrieve the telemetry device ID for this device; if it doesn't exist then create a new one
             var telemetryCompositeId = AppOptions.TelemetryDeviceUuid;
             if ((telemetryCompositeId is null) || (telemetryCompositeId == String.Empty) || (telemetryCompositeId.IndexOf("D_") < 0))
             {
-                telemetryCompositeId = "D_" + Guid.NewGuid().ToString();
+                Guid anonDeviceUuid;
+                // if the configuration file has a telemetry site id, hash the MAC address to derive a one-way hash for pseudonomized device telemetry; note that this will only happen when sites opt-in to site grouping by specifying the site id
+                if (hasValidTelemetrySiteId == true)
+                {
+                    // NOTE: this derivation is used because sites often reinstall computers frequently (sometimes even daily), so this provides some pseudonomous stability with the site's telemetry data
+                    var hashedMacAddressGuid = this.GetHashedMacAddressForSiteTelemetryId();
+                    anonDeviceUuid = hashedMacAddressGuid ?? Guid.NewGuid();
+                }
+                else
+                {
+                    // for non-siteID computers, just generate a GUID
+                    anonDeviceUuid = Guid.NewGuid();
+                }                    
+
+                telemetryCompositeId = "D_" + anonDeviceUuid.ToString();
                 AppOptions.TelemetryDeviceUuid = telemetryCompositeId;
             }
 
             // if a site id is (or is not) configured, modify the telemetry device uuid accordingly
             // NOTE: we handle cases of site ids changing, site IDs being added post-deployment, and site IDs being removed post-deployment
             var unmodifiedTelemetryDeviceCompositeId = telemetryCompositeId;
-            var telemetrySiteId = ConfigurableFeatures.TelemetrySiteId;
-            if ((telemetrySiteId is not null) && (telemetrySiteId != String.Empty))
+            if (hasValidTelemetrySiteId == true)
             {
                 // NOTE: in the future, consider reporting or throwing an error if the site id required sanitization (i.e. wasn't valid)
-                var sanitizedTelemetrySiteId = this.SanitizeSiteId(telemetrySiteId);
+                var sanitizedTelemetrySiteId = this.SanitizeSiteId(telemetrySiteId!);
                 if (sanitizedTelemetrySiteId != "")
                 {
                     // we have a telemetry site id; prepend it
