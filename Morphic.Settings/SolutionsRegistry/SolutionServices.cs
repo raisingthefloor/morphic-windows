@@ -1,10 +1,10 @@
 ﻿namespace Morphic.Settings.SolutionsRegistry
 {
-    using System;
-    using Windows.Native.Display;
     using DotNetWindowsRegistry;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.DependencyInjection.Extensions;
+    using Morphic.WindowsNative.Display;
+    using System;
 
     public static class SolutionServices
     {

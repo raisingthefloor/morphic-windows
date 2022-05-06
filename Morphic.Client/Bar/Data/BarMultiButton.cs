@@ -48,6 +48,7 @@ namespace Morphic.Client.Bar.Data
             private string? value;
             private string? uiName;
             private string? text;
+            private string? tooltip;
             public BarMultiButton BarItem { get; internal set; } = null!;
 
             /// <summary>
@@ -57,7 +58,7 @@ namespace Morphic.Client.Bar.Data
             public string Text
             {
                 get => this.text ?? string.Empty;
-                set => this.text = value;
+                set => this.text = App.Current.LocalizeTemplatedString(value);
             }
 
             /// <summary>
@@ -82,7 +83,11 @@ namespace Morphic.Client.Bar.Data
             public BarAction? Action { get; set; }
 
             [JsonProperty("tooltip")]
-            public string? Tooltip { get; set; }
+            public string? Tooltip
+            {
+                get => this.tooltip;
+                set => this.tooltip = App.Current.LocalizeTemplatedString(value);
+            }
 
             [JsonProperty("menu")]
             public Dictionary<string, string> Menu { get; set; } = new Dictionary<string, string>();
@@ -104,7 +109,7 @@ namespace Morphic.Client.Bar.Data
                     };
                     return value;
                 }
-                set => this.uiName = value;
+                set => this.uiName = App.Current.LocalizeTemplatedString(value);
             }
 
             public bool Toggle { get; set; }
@@ -116,7 +121,7 @@ namespace Morphic.Client.Bar.Data
 
             foreach (var (key, buttonInfo) in this.Buttons)
             {
-                if ((buttonInfo.Action == null) || (buttonInfo.Action is NoOpAction))
+                if ((buttonInfo.Action is null) || (buttonInfo.Action is NoOpAction))
                 {
                     buttonInfo.Action = this.Action;
                 }

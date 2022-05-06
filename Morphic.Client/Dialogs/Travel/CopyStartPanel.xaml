@@ -3,14 +3,12 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:l10n="clr-namespace:Morphic.Client.Strings"
         mc:Ignorable="d"
         ToolTipService.InitialShowDelay="0"
         >
-    <TextBlock HorizontalAlignment="Center"  Margin="20" FontWeight="Bold">Copy Settings Between Computers</TextBlock>
-    <TextBlock HorizontalAlignment="Center"  Margin="10,10,10,40" FontSize="15" TextWrapping="Wrap">
-        This feature allows you to move your accessibility and usability settings between computers - including the
-        settings of your assistive technologies.
-    </TextBlock>
-    <TextBlock HorizontalAlignment="Center" Margin="20" ><Hyperlink Click="CopyToCloud">Copy settings on this computer to my Cloud Vault</Hyperlink></TextBlock>
-    <TextBlock HorizontalAlignment="Center" Margin="20" ><Hyperlink Click="CopyFromCloud">Use the settings in my Cloud Vault to set up this computer.</Hyperlink></TextBlock>
+    <TextBlock HorizontalAlignment="Center"  Margin="20" FontWeight="Bold" Text="{x:Static l10n:Resources.CopySettingsBetweenComputersHeader_Text}"/>
+    <TextBlock HorizontalAlignment="Center"  Margin="10,10,10,40" FontSize="15" TextWrapping="Wrap" Text="{x:Static l10n:Resources.CopySettingsBetweenComputersDescription_Text}"/>
+    <TextBlock HorizontalAlignment="Center" Margin="20" ><Hyperlink Click="CopyToCloud"><Run Text="{x:Static l10n:Resources.CopySettingsToCloudVaultHyperlink_Text}"/></Hyperlink></TextBlock>
+    <TextBlock HorizontalAlignment="Center" Margin="20" ><Hyperlink Click="CopyFromCloud"><Run Text="{x:Static l10n:Resources.CopySettingsFromCloudVaultHyperlink_Text}"/></Hyperlink></TextBlock>
 </StackPanel>

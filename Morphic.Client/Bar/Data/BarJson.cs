@@ -195,7 +195,7 @@ namespace Morphic.Client.Bar.Data
             // Find the class which has the JsonTypeName attribute with the given name.
             Type? type = GetJsonType(baseType, name);
 
-            if (type == null)
+            if (type is null)
             {
                 if (baseType.GetCustomAttributes<JsonTypeNameAttribute>().Any())
                 {
@@ -211,19 +211,19 @@ namespace Morphic.Client.Bar.Data
 
             List<object?> ctorArgs = new List<object?>();
             bool gotCtor = false;
-            if (barData != null)
+            if (barData is not null)
             {
                 ctorArgs.Add(barData);
 
                 // Find a constructor of (BarData, string)
                 ConstructorInfo? ctor = type.GetConstructor(new[] { barData.GetType(), typeof(string) });
-                if (ctor != null)
+                if (ctor is not null)
                 {
                     // Get the property for the string argument.
                     ParameterInfo param = ctor.GetParameters().Last();
                     JsonPropertyAttribute? attr = param.GetCustomAttribute<JsonPropertyAttribute>();
                     string? propertyName = attr?.PropertyName;
-                    if (propertyName != null)
+                    if (propertyName is not null)
                     {
                         gotCtor = true;
                         string? value = jObject.SelectToken(propertyName)?.ToString();
@@ -234,7 +234,7 @@ namespace Morphic.Client.Bar.Data
                 // Find a constructor of (BarData)
                 if (!gotCtor)
                 {
-                    gotCtor = type.GetConstructor(new[] { barData.GetType() }) != null;
+                    gotCtor = type.GetConstructor(new[] { barData.GetType() }) is not null;
                 }
             }
 
@@ -242,7 +242,7 @@ namespace Morphic.Client.Bar.Data
                 ? Activator.CreateInstance(type, ctorArgs.ToArray())
                 : Activator.CreateInstance(type);
 
-            if (instance == null)
+            if (instance is null)
             {
                 throw new JsonSerializationException(
                     $"Unable to instantiate ${type.Name} from '${this.typeFieldName} = ${name}'.");
@@ -300,7 +300,7 @@ namespace Morphic.Client.Bar.Data
             
             // Create the class for the type.
             object? target = this.CreateInstance(jo, objectType, kindName, bar);
-            if (target == null)
+            if (target is null)
             {
                 return null;
             }
@@ -314,10 +314,10 @@ namespace Morphic.Client.Bar.Data
                 string jsonPath = GetFieldName(property);
                 JToken? token = jo.SelectToken(jsonPath);
 
-                if (token != null && token.Type != JTokenType.Null)
+                if (token is not null && token.Type != JTokenType.Null)
                 {
                     Type? newType = this.GetNewType(jo, property);
-                    object? value = newType == null
+                    object? value = newType is null
                         ? token.ToObject(property.PropertyType, serializer)
                         : token.ToObject(newType);
                     // Set the property value.
@@ -338,7 +338,7 @@ namespace Morphic.Client.Bar.Data
         {
             JsonConverterAttribute? converter = property.GetCustomAttribute<JsonConverterAttribute>()
                                                 ?? property.PropertyType.GetCustomAttribute<JsonConverterAttribute>();
-            if (converter?.ConverterParameters == null || converter.ConverterType != this.GetType())
+            if (converter?.ConverterParameters is null || converter.ConverterType != this.GetType())
             {
                 return null;
             }
@@ -372,7 +372,7 @@ namespace Morphic.Client.Bar.Data
             // Allow private members to be deserialised.
             if (!jsonProperty.Writable && member is PropertyInfo propertyInfo)
             {
-                jsonProperty.Writable = propertyInfo.GetSetMethod(true) != null;
+                jsonProperty.Writable = propertyInfo.GetSetMethod(true) is not null;
             }
 
             return jsonProperty;

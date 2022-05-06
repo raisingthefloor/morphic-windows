@@ -8,7 +8,7 @@
 // You may obtain a copy of the License at
 // https://github.com/GPII/universal/blob/master/LICENSE.txt
 
-using Morphic.Windows.Native.WindowsCom;
+using Morphic.WindowsNative.WindowsCom;
 
 namespace Morphic.Client.Bar.Data.Actions
 {
@@ -45,7 +45,7 @@ namespace Morphic.Client.Bar.Data.Actions
         {
             get
             {
-                if (this.AppPath != null)
+                if (this.ImageIsCollapsed == false && this.AppPath is not null)
                 {
                     return Imaging.CreateBitmapSourceFromHIcon(
                         System.Drawing.Icon.ExtractAssociatedIcon(this.AppPath).Handle,
@@ -57,6 +57,8 @@ namespace Morphic.Client.Bar.Data.Actions
                 }
             }
         }
+
+        internal bool ImageIsCollapsed { get; set; } = false;
 
         /// <summary>
         /// Start a default application. This value will be mapped locally
@@ -96,7 +98,7 @@ namespace Morphic.Client.Bar.Data.Actions
         }
         //
         // NOTE: we should consider returning error details (e.g. "executable not found", "unknown exeId", "win32 error") from this function
-        private static IMorphicResult<MorphicExecutablePathInfo> ConvertExeIdToExecutablePath(string exeId)
+        private static MorphicResult<MorphicExecutablePathInfo, MorphicUnit> ConvertExeIdToExecutablePath(string exeId)
         {
             bool isAppX = false;
             string? appPath = null;
@@ -198,7 +200,7 @@ namespace Morphic.Client.Bar.Data.Actions
                             var packageFamilyName = "MicrosoftTeams_8wekyb3d8bbwe";
                             var isPackageInstalledResult = Appx.IsPackageInstalled(packageFamilyName);
                             if (isPackageInstalledResult.IsError == true) {
-                                return new MorphicError<MorphicExecutablePathInfo>();
+                                return MorphicResult.ErrorResult();
                             }
                             var isPackageInstalled = isPackageInstalledResult.Value!;
 
@@ -221,21 +223,24 @@ namespace Morphic.Client.Bar.Data.Actions
                     }
                     break;
                 default:
-                    return null;
+                    {
+                        appPath = null;
+                    }
+                    break;
             }
 
-            if (appPath != null)
+            if (appPath is not null)
             {
                 var result = new MorphicExecutablePathInfo()
                 {
                     IsAppx = isAppX,
                     Path = appPath
                 };
-                return new MorphicSuccess<MorphicExecutablePathInfo>(result);
+                return MorphicResult.OkResult(result);
             }
             else
             {
-                return new MorphicError<MorphicExecutablePathInfo>();
+                return MorphicResult.ErrorResult();
             }
         }
 
@@ -253,13 +258,13 @@ namespace Morphic.Client.Bar.Data.Actions
 
                 // OBSERVATION: we currently do not check if a package is installed; we simply assume that it is installed (i.e. available) if the EXE name beings with "appx:"
 				// NOTE: the "exename" for an appx is "appx:" followed by the AUMID (which includes the package name, plus additional information after the package name)
-                if (value != null && value.StartsWith("appx:", StringComparison.InvariantCultureIgnoreCase))
+                if (value is not null && value.StartsWith("appx:", StringComparison.InvariantCultureIgnoreCase))
                 {
                     this.AppX = true;
                     this.AppPath = value.Substring(5);
                 }
 
-                if (value != null && value.Length > 0)
+                if (value is not null && value.Length > 0)
                 {
                     var convertExeToPathResult = ApplicationAction.ConvertExeIdToExecutablePath(value);
                     if (convertExeToPathResult.IsError == false)
@@ -270,7 +275,7 @@ namespace Morphic.Client.Bar.Data.Actions
                     }
                 }
 
-                this.IsAvailable = this.AppPath != null;
+                this.IsAvailable = this.AppPath is not null;
             }
         }
 
@@ -320,11 +325,11 @@ namespace Morphic.Client.Bar.Data.Actions
             {
                 RegistryKey? key =
                     rootKey.OpenSubKey($@"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\{file}");
-                if (key != null)
+                if (key is not null)
                 {
                     // capture the default key (which should be the full path with executable)
                     fullPath = key.GetValue(null) as string;
-                    if (fullPath != null)
+                    if (fullPath is not null)
                     {
                         break;
                     }
@@ -335,19 +340,19 @@ namespace Morphic.Client.Bar.Data.Actions
         }
 
         // NOTE: we should not use GetAppPathForProgId until we have dealt with removing command-line arguments (e.g. "C:\Program Files\Microsoft Office\Root\Office16\WINWORD.EXE /Automation")
-        private static IMorphicResult<string> GetAppPathForProgId(string progId)
+        private static MorphicResult<string, MorphicUnit> GetAppPathForProgId(string progId)
         {
             var getClassIdResult = ApplicationAction.GetClassIdForProgId(progId);
             if (getClassIdResult.IsError == true)
             {
-                return IMorphicResult<string>.ErrorResult();
+                return MorphicResult.ErrorResult();
             }
             var classId = getClassIdResult.Value!;
 
             var getPathResult = ApplicationAction.GetLocalServer32PathForClassId(classId);
             if (getPathResult.IsError == true)
             {
-                return IMorphicResult<string>.ErrorResult();
+                return MorphicResult.ErrorResult();
             }
             var path = getPathResult.Value!;
 
@@ -364,11 +369,11 @@ namespace Morphic.Client.Bar.Data.Actions
             // NOTE: we should check the actual path and remove any command-line arguments (in case the path includes the executable name and also command-line arguments)
             //       [this could be tricky]
 
-            return IMorphicResult<string>.SuccessResult(path);
+            return MorphicResult.OkResult(path);
         }
 
         // NOTE: this function should return the path to run an executable, given its classId (which can be retrieved from FindClassIdForProgId)
-        private static IMorphicResult<string> GetLocalServer32PathForClassId(string classId)
+        private static MorphicResult<string, MorphicUnit> GetLocalServer32PathForClassId(string classId)
         {
             string? result = null;
 
@@ -383,7 +388,7 @@ namespace Morphic.Client.Bar.Data.Actions
                     break;
                 default:
                     Debug.Assert(false, "OS is not 32-bit or 64-bit");
-                    return IMorphicResult<string>.ErrorResult();
+                    return MorphicResult.ErrorResult();
             }
 
             RegistryKey? key;
@@ -396,10 +401,10 @@ namespace Morphic.Client.Bar.Data.Actions
                 key = Registry.ClassesRoot.OpenSubKey($@"CLSID\{classId}\LocalServer32");
             }
 
-            if (key != null)
+            if (key is not null)
             {
                 var localServer32 = key.GetValue(null) as string;
-                if (localServer32 != null)
+                if (localServer32 is not null)
                 {
                     result = localServer32;
                 }
@@ -407,32 +412,32 @@ namespace Morphic.Client.Bar.Data.Actions
 
             if (result is not null)
             {
-                return IMorphicResult<string>.SuccessResult(result);
+                return MorphicResult.OkResult(result);
             }
             else
             {
                 // if we could not find the key or if its default value was null or invalid, return an error
-                return IMorphicResult<string>.ErrorResult();
+                return MorphicResult.ErrorResult();
             }
         }
 
-        private static IMorphicResult<string> GetClassIdForProgId(string progId)
+        private static MorphicResult<string, MorphicUnit> GetClassIdForProgId(string progId)
         {
             RegistryKey? key = Registry.ClassesRoot.OpenSubKey($@"{progId}\CLSID");
-            if (key != null)
+            if (key is not null)
             {
                 var classId = key.GetValue(null) as string;
-                if (classId != null)
+                if (classId is not null)
                 {
-                    return IMorphicResult<string>.SuccessResult(classId);
+                    return MorphicResult.OkResult(classId);
                 }
             }
 
             // if we could not find the key or if its default value was null, return an error
-            return IMorphicResult<string>.ErrorResult();
+            return MorphicResult.ErrorResult();
         }
 
-        private static IMorphicResult<string> StripExecutableFromCommand(string command)
+        private static MorphicResult<string, MorphicUnit> StripExecutableFromCommand(string command)
         {
             // we need to split off the executable name from any arguments; it is either enclosed in quotes or it's everything before a space
             //
@@ -445,11 +450,11 @@ namespace Morphic.Client.Bar.Data.Actions
                 if (indexOfSecondDoubleQuote > 1)
                 {
                     command = command.Substring(indexOfFirstDoubleQuote + 1, indexOfSecondDoubleQuote - indexOfFirstDoubleQuote - 1);
-                    return IMorphicResult<string>.SuccessResult(command);
+                    return MorphicResult.OkResult(command);
                 }
                 else
                 {
-                    return IMorphicResult<string>.ErrorResult();
+                    return MorphicResult.ErrorResult();
                 }
             }
             //
@@ -458,94 +463,94 @@ namespace Morphic.Client.Bar.Data.Actions
             if (indexOfFirstSpace > 0)
             {
                 command = command.Substring(0, indexOfFirstSpace);
-                return IMorphicResult<string>.SuccessResult(command);
+                return MorphicResult.OkResult(command);
             }
             else
             {
-                return IMorphicResult<string>.SuccessResult(command);
+                return MorphicResult.OkResult(command);
             }
         }
 
-        private static IMorphicResult<string> GetOpenCommandForProgIdClass(string progId) 
+        private static MorphicResult<string, MorphicUnit> GetOpenCommandForProgIdClass(string progId) 
         {
             // look up the browser progId's actual executable path (e.g. path to Edge, instead of "MSEdgeHtm")
             var browserOpenCommandRegistryKey = Registry.ClassesRoot.OpenSubKey(progId + @"\shell\open\command");
-            if (browserOpenCommandRegistryKey != null)
+            if (browserOpenCommandRegistryKey is not null)
             {
                 // get the string to launch the browser (e.g. the default registry key value); this result may include arguments
                 var browserOpenCommand = browserOpenCommandRegistryKey.GetValue(null) as string;
-                if (browserOpenCommand != null)
+                if (browserOpenCommand is not null)
                 {
                     var stripExecutableFromCommandResult = ApplicationAction.StripExecutableFromCommand(browserOpenCommand);
                     if (stripExecutableFromCommandResult.IsError == true)
                     {
-                        return IMorphicResult<string>.ErrorResult();
+                        return MorphicResult.ErrorResult();
                     }
                     browserOpenCommand = stripExecutableFromCommandResult.Value!;
 
-                    return IMorphicResult<string>.SuccessResult(browserOpenCommand);
+                    return MorphicResult.OkResult(browserOpenCommand);
                 }
             }
 
             // if we could not get the open command, return failure
-            return IMorphicResult<string>.ErrorResult();
+            return MorphicResult.ErrorResult();
         }
 
-        private static IMorphicResult<string> GetPathToExecutableForUrlAssociation(string urlAssociation)
+        private static MorphicResult<string, MorphicUnit> GetPathToExecutableForUrlAssociation(string urlAssociation)
         {
             var userSelectedBrowserRegistryKey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\Shell\Associations\UrlAssociations\" + urlAssociation + @"\UserChoice", false);
-            if (userSelectedBrowserRegistryKey != null)
+            if (userSelectedBrowserRegistryKey is not null)
             {
                 var progId = userSelectedBrowserRegistryKey.GetValue("ProgId") as string;
-                if (progId != null)
+                if (progId is not null)
                 {
                     var getOpenCommandForProgIdClassResult = ApplicationAction.GetOpenCommandForProgIdClass(progId);
                     if (getOpenCommandForProgIdClassResult.IsError == false)
                     {
                         var browserOpenCommand = getOpenCommandForProgIdClassResult.Value!;
-                        return IMorphicResult<string>.SuccessResult(browserOpenCommand);
+                        return MorphicResult.OkResult(browserOpenCommand);
                     }
                 }
             }
 
             // if we could not get the open command, return failure
-            return IMorphicResult<string>.ErrorResult();
+            return MorphicResult.ErrorResult();
         }
 
-        private static IMorphicResult<string> GetPathToExecutableForFileExtension(string fileExtension)
+        private static MorphicResult<string, MorphicUnit> GetPathToExecutableForFileExtension(string fileExtension)
         {
             var userSelectedBrowserRegistryKey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\" + fileExtension + @"\UserChoice", false);
-            if (userSelectedBrowserRegistryKey != null)
+            if (userSelectedBrowserRegistryKey is not null)
             {
                 var progId = userSelectedBrowserRegistryKey.GetValue("ProgId") as string;
-                if (progId != null)
+                if (progId is not null)
                 {
                     var getOpenCommandForProgIdClassResult = ApplicationAction.GetOpenCommandForProgIdClass(progId);
                     if (getOpenCommandForProgIdClassResult.IsError == false)
                     {
                         var browserOpenCommand = getOpenCommandForProgIdClassResult.Value!;
-                        return IMorphicResult<string>.SuccessResult(browserOpenCommand);
+                        return MorphicResult.OkResult(browserOpenCommand);
                     }
                 }
             }
 
             // if we could not get the open command, return failure
-            return IMorphicResult<string>.ErrorResult();
+            return MorphicResult.ErrorResult();
         }
 
-        private static IMorphicResult<string> GetDefaultBrowserPath()
+        private static MorphicResult<string, MorphicUnit> GetDefaultBrowserPath()
         {
             var userSelectedBrowserRegistryKey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\Shell\Associations\UrlAssociations\http\UserChoice", false);
-            if (userSelectedBrowserRegistryKey != null)
+            if (userSelectedBrowserRegistryKey is not null)
             {
                 var browserProgId = userSelectedBrowserRegistryKey.GetValue("ProgId") as string;
-                if (browserProgId != null)
+                if (browserProgId is not null)
                 {
                     var getOpenCommandForProgIdClassResult = ApplicationAction.GetOpenCommandForProgIdClass(browserProgId);
                     if (getOpenCommandForProgIdClassResult.IsError == false)
                     {
                         var browserOpenCommand = getOpenCommandForProgIdClassResult.Value!;
-                        return IMorphicResult<string>.SuccessResult(browserOpenCommand);
+                        return MorphicResult.OkResult(browserOpenCommand);
                     }
                 }
             }
@@ -556,12 +561,12 @@ namespace Morphic.Client.Bar.Data.Actions
 
 
             // if no path could be found, return failure
-            return IMorphicResult<string>.ErrorResult();
+            return MorphicResult.ErrorResult();
         }
 
-        protected override Task<IMorphicResult> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
+        protected override Task<MorphicResult<MorphicUnit, MorphicUnit>> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
         {
-            if (this.DefaultAppName != null)
+            if (this.DefaultAppName is not null)
             {
                 // use the default application for this type
                 switch (this.DefaultAppName!)
@@ -578,7 +583,7 @@ namespace Morphic.Client.Bar.Data.Actions
                             }
 
                             // if we haven't found the default browser yet, look for the default application to open ".htm" files
-                            if (associatedExecutablePath == null)
+                            if (associatedExecutablePath is null)
                             {
                                 var getAssociatedExecutableForHtmFilesResult = ApplicationAction.GetPathToExecutableForFileExtension(".htm");
                                 if (getAssociatedExecutableForHtmFilesResult.IsError == false)
@@ -588,7 +593,7 @@ namespace Morphic.Client.Bar.Data.Actions
                             }
 
                             // if we still haven't found the default browser, gracefully degrade by trying to use the launch process executable shortcut "https:" instead
-                            if (associatedExecutablePath == null)
+                            if (associatedExecutablePath is null)
                             {
                                 associatedExecutablePath = "https:";
                             }
@@ -607,7 +612,9 @@ namespace Morphic.Client.Bar.Data.Actions
                         {
                             // unknown
                             Debug.Assert(false, "Unknown 'default' application type: " + this.DefaultAppName!);
-                            return Task.FromResult(IMorphicResult.ErrorResult);
+                            //
+                            MorphicResult<MorphicUnit, MorphicUnit> result = MorphicResult.ErrorResult();
+                            return Task.FromResult(result);
                         }
                 }
             }
@@ -616,13 +623,17 @@ namespace Morphic.Client.Bar.Data.Actions
             if (string.IsNullOrEmpty(this.ExeName) || string.IsNullOrEmpty(this.AppPath))
             {
                 // if we don't have an exeName ID tag, we have failed
-                return Task.FromResult(IMorphicResult.ErrorResult);
+                //
+                MorphicResult<MorphicUnit, MorphicUnit> result = MorphicResult.ErrorResult();
+                return Task.FromResult(result);
             }
 
             if (this.AppX)
             {
                 var pid = Appx.Start(this.AppPath);
-                return Task.FromResult(pid > 0 ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult);
+                //
+                MorphicResult<MorphicUnit, MorphicUnit> result = pid > 0 ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
+                return Task.FromResult(result);
             }
 
             // for all other processes, launch the executable
@@ -642,7 +653,7 @@ namespace Morphic.Client.Bar.Data.Actions
                 foreach (string argument in this.Arguments)
                 {
                     var resolvedString = this.ResolveString(argument, source);
-                    if (resolvedString != null)
+                    if (resolvedString is not null)
                     {
                         arguments.Add(resolvedString);
                     }
@@ -651,7 +662,7 @@ namespace Morphic.Client.Bar.Data.Actions
             else
             {
                 var resolvedString = this.ResolveString(this.ArgumentsString, source);
-                if (resolvedString != null)
+                if (resolvedString is not null)
                 {
                     arguments.Add(resolvedString);
                 }
@@ -662,7 +673,7 @@ namespace Morphic.Client.Bar.Data.Actions
             foreach (var (key, value) in this.EnvironmentVariables)
             {
                 var resolvedString = this.ResolveString(value, source);
-                if (resolvedString != null)
+                if (resolvedString is not null)
                 {
                     environmentVariables.Add(key, resolvedString);
                 } 
@@ -679,7 +690,7 @@ namespace Morphic.Client.Bar.Data.Actions
             return Task.FromResult(launchProcessResult);
         }
 
-        private static IMorphicResult LaunchProcess(string pathToExecutable, List<string> arguments, Dictionary<string, string> environmentVariables, ProcessWindowStyle windowStyle, bool useShellExecute = true)
+        private static MorphicResult<MorphicUnit, MorphicUnit> LaunchProcess(string pathToExecutable, List<string> arguments, Dictionary<string, string> environmentVariables, ProcessWindowStyle windowStyle, bool useShellExecute = true)
         {
             ProcessStartInfo startInfo = new ProcessStartInfo()
             {
@@ -701,13 +712,13 @@ namespace Morphic.Client.Bar.Data.Actions
             }
 
             Process? process = Process.Start(startInfo);
-            if (process != null)
+            if (process is not null)
             {
-                return IMorphicResult.SuccessResult;
+                return MorphicResult.OkResult();
             }
             else
             {
-                return IMorphicResult.ErrorResult;
+                return MorphicResult.ErrorResult();
             }
         }
 
@@ -716,7 +727,7 @@ namespace Morphic.Client.Bar.Data.Actions
         /// </summary>
         /// <returns>false if it could not be done.</returns>
         /// <exception cref="NotImplementedException"></exception>
-        private IMorphicResult ActivateInstance()
+        private MorphicResult<MorphicUnit, MorphicUnit> ActivateInstance()
         {
             bool success = false;
             string? friendlyName = Path.GetFileNameWithoutExtension(this.AppPath);
@@ -728,7 +739,7 @@ namespace Morphic.Client.Bar.Data.Actions
                     .Any(process => WinApi.ActivateWindow(process.MainWindowHandle));
             }
 
-            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+            return success ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
         }
     }
 }

@@ -52,11 +52,14 @@ namespace Morphic.Client
     using Menu;
     using Microsoft.Win32;
     using Morphic.Telemetry;
-    using Morphic.Windows.Native.OsVersion;
+    using Morphic.WindowsNative.OsVersion;
     using Settings.SettingsHandlers;
     using Settings.SolutionsRegistry;
     using System.Diagnostics;
+    using System.Security.Cryptography;
+    using System.Text;
     using System.Text.Json;
+    using System.Text.Json.Serialization;
 
     public class AppMain
     {
@@ -129,6 +132,8 @@ namespace Morphic.Client
 
         #region Configuration & Startup
 
+        private Timer _telemetryHeartbeatTimer;
+
         public App()
         {
             App.Current = this;
@@ -146,6 +151,8 @@ namespace Morphic.Client
             public string? function { get; set; }
             // for type: control
             public string? feature { get; set; }
+            // for type: application
+            public string? appId { get; set; }
         }
         //
         public class TelemetryConfigSection
@@ -251,7 +258,7 @@ namespace Morphic.Client
                 return result;
             }
 
-            if ((deserializedJson.version == null) || (deserializedJson.version.Value < 0) || (deserializedJson.version.Value > 0))
+            if ((deserializedJson.version is null) || (deserializedJson.version.Value < 0) || (deserializedJson.version.Value > 0))
             {
                 // sorry, we don't understand this version of the file
                 // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
@@ -260,7 +267,7 @@ namespace Morphic.Client
             }
 
             // capture the autorun setting
-            if (deserializedJson.features?.autorunAfterLogin?.enabled != null)
+            if (deserializedJson.features?.autorunAfterLogin?.enabled is not null)
             {
                 if (deserializedJson.features!.autorunAfterLogin!.enabled == false)
                 {
@@ -289,19 +296,19 @@ namespace Morphic.Client
             }
 
             // capture the check for updates "is enabled" setting
-            if (deserializedJson.features?.checkForUpdates?.enabled != null)
+            if (deserializedJson.features?.checkForUpdates?.enabled is not null)
             {
                 result.CheckForUpdatesIsEnabled = deserializedJson.features.checkForUpdates.enabled.Value;
             }
 
             // capture the cloud settings transfer "is enabled" setting
-            if (deserializedJson.features?.cloudSettingsTransfer?.enabled != null)
+            if (deserializedJson.features?.cloudSettingsTransfer?.enabled is not null)
             {
                 result.CloudSettingsTransferIsEnabled = deserializedJson.features.cloudSettingsTransfer.enabled.Value;
             }
 
             // capture the reset settings (to standard) "is enabled" setting
-            if (deserializedJson.features?.resetSettings?.enabled != null)
+            if (deserializedJson.features?.resetSettings?.enabled is not null)
             {
                 result.ResetSettingsIsEnabled = deserializedJson.features.resetSettings.enabled.Value;
             }
@@ -330,7 +337,7 @@ namespace Morphic.Client
 
 
             // capture any extra items (up to 3)
-            if (deserializedJson.morphicBar?.extraItems != null)
+            if (deserializedJson.morphicBar?.extraItems is not null)
             {
                 foreach (var extraItem in deserializedJson.morphicBar!.extraItems)
                 {
@@ -350,15 +357,25 @@ namespace Morphic.Client
                     var extraItemFunction = extraItem.function;
                     // for type: control
                     var extraItemFeature = extraItem.feature;
+                    // for type: application
+                    var extraItemAppId = extraItem.appId;
 
                     // if the item is invalid, log the error and skip this item
-                    if (extraItemType == null)
+                    if (extraItemType is null)
                     {
                         // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
                         Logger?.LogError("Invalid MorphicBar item: " + extraItem.ToString());
                         continue;
                     }
-                    if ((extraItemType != "control") && ((extraItemLabel == null) || (extraItemTooltipHeader == null)))
+                    if ((extraItemType != "control") && (extraItemLabel is null))
+                    {
+                        // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
+                        Logger?.LogError("Invalid MorphicBar item: " + extraItem.ToString());
+                        continue;
+                    }
+
+                    // if the "application" is missing its appId, log the error and skip this item
+                    if ((extraItemType == "application") && (extraItemAppId is null))
                     {
                         // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
                         Logger?.LogError("Invalid MorphicBar item: " + extraItem.ToString());
@@ -366,7 +383,7 @@ namespace Morphic.Client
                     }
 
                     // if the "link" is missing its url, log the error and skip this item
-                    if ((extraItemType == "link") && (extraItemUrl == null))
+                    if ((extraItemType == "link") && (extraItemUrl is null))
                     {
                         // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
                         Logger?.LogError("Invalid MorphicBar item: " + extraItem.ToString());
@@ -374,7 +391,7 @@ namespace Morphic.Client
                     }
 
                     // if the "action" is missing its function, log the error and skip this item
-                    if ((extraItemType == "action") && (extraItemFunction == null || extraItemFunction == ""))
+                    if ((extraItemType == "action") && (extraItemFunction is null || extraItemFunction == ""))
                     {
                         // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
                         Logger?.LogError("Invalid MorphicBar item: " + extraItem.ToString());
@@ -382,7 +399,7 @@ namespace Morphic.Client
                     }
 
                     // if the "control" is missing its feature, log the error and skip this item
-                    if ((extraItem.type == "control") && (extraItemFeature == null || extraItemFeature == "")) {
+                    if ((extraItem.type == "control") && (extraItemFeature is null || extraItemFeature == "")) {
                         // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
                         Logger?.LogError("Invalid MorphicBar item: " + extraItem.ToString());
                         continue;
@@ -396,6 +413,7 @@ namespace Morphic.Client
                     extraMorphicBarItem.url = extraItemUrl;
                     extraMorphicBarItem.function = extraItemFunction;
                     extraMorphicBarItem.feature = extraItemFeature;
+                    extraMorphicBarItem.appId = extraItemAppId;
                     result.ExtraMorphicBarItems.Add(extraMorphicBarItem);
                 }
             }
@@ -421,6 +439,57 @@ namespace Morphic.Client
             // if disable_telemetry.txt exists, disable telemetry
             var disableTelemetryFileExists = File.Exists(disableTelemetryFilePath);
             return disableTelemetryFileExists;
+        }
+
+        internal string? LocalizeTemplatedString(string? value)
+        {
+            // if value is null, return null now
+            if (value is null)
+            {
+                return value;
+            }
+
+            // replace any l10n-templated resource tags with their respective localized string
+            var remainingValue = value;
+            var result = new System.Text.StringBuilder();
+            while (remainingValue.Length > 0) {
+                var indexOfTemplateStart = remainingValue.IndexOf("{{");
+                var indexOfTemplateEnd = remainingValue.IndexOf("}}", indexOfTemplateStart + 2);
+                if (indexOfTemplateStart >= 0 && indexOfTemplateEnd >= indexOfTemplateStart + 2)
+                {
+                    // extract the resource name (and then remove the resource tag from the string)
+                    var resourceName = remainingValue.Substring(indexOfTemplateStart + 2, indexOfTemplateEnd - indexOfTemplateStart - 2);
+                    remainingValue = remainingValue.Remove(indexOfTemplateStart, indexOfTemplateEnd - indexOfTemplateStart + 2);
+
+                    // if the string contained content before the resource tag, capture it as part of the result before capturing the localized resource
+                    if (indexOfTemplateStart > 0)
+                    {
+                        var textBeforeTemplatedSection = remainingValue.Substring(0, indexOfTemplateStart);
+                        remainingValue = remainingValue.Remove(0, indexOfTemplateStart);
+                        result.Append(textBeforeTemplatedSection);
+                    }
+
+                    // get the localized resource; if it doesn't exist, revert to the resource tag instead
+                    var localizedText = Morphic.Client.Properties.Resources.ResourceManager.GetString(resourceName.Trim(), Morphic.Client.Properties.Resources.Culture);
+                    if (localizedText is null)
+                    {
+                        localizedText = "{{" + resourceName + "}}";
+                    }
+                    else
+                    {
+                        localizedText = localizedText.Replace("\\n", "\n");
+                    }
+                    result.Append(localizedText);
+                }
+                else
+                {
+                    // no (more) resource tags to localize
+                    result.Append(remainingValue);
+                    remainingValue = string.Empty;
+                }
+            }
+
+            return result.ToString();
         }
 
         /// <summary>
@@ -484,7 +553,7 @@ namespace Morphic.Client
             {
                 await Countly.RecordEvent(Key);
 
-                _telemetryClient?.EnqueueActionMessage(Key);
+                _telemetryClient?.EnqueueActionMessage(Key, null);
             }
         }
 
@@ -494,8 +563,90 @@ namespace Morphic.Client
             {
                 await Countly.RecordEvent(Key, Count, Segmentation);
 
-                _telemetryClient?.EnqueueActionMessage(Key);
+                _telemetryClient?.EnqueueActionMessage(Key, null);
             }
+        }
+
+        // NOTE: this function returns null if no network interface MAC could be determined
+        private Guid? GetHashedMacAddressForSiteTelemetryId()
+        {
+            // get the MAC address of the network interface which is handling Internet traffic
+            var macAddressAsByteArray = Morphic.WindowsNative.Networking.NetworkInterface.GetMacAddressOfInternetNetworkInterface();
+            //
+            // if we couldn't find the MAC address of a network card currently connected to the Internet, gracefully degrade and select the "most used" active network interface instead
+            if (macAddressAsByteArray is null)
+            {
+                macAddressAsByteArray = Morphic.WindowsNative.Networking.NetworkInterface.GetMacAddressOfHighestTrafficActiveNetworkInterface();
+            }
+            // if we couldn't find the MAC address of a network card which is currently active, gracefully degrade and select the "most used" network interface (presumably inactive, since we already checked for active ones) instead
+            if (macAddressAsByteArray is null)
+            {
+                macAddressAsByteArray = Morphic.WindowsNative.Networking.NetworkInterface.GetMacAddressOfHighestTrafficNetworkInterface();
+            }
+            // if we couldn't find the MAC address of _any_ network card, it might be because there are _no_ RX/TX cards available; in that scenario, look for _any_ network card (even an RX-only one)
+            if (macAddressAsByteArray is null)
+            {
+                macAddressAsByteArray = Morphic.WindowsNative.Networking.NetworkInterface.GetMacAddressOfFirstNetworkInterface();
+            }
+            //
+            // if we couldn't find any network interface with a non-zero MAC, then return null
+            if (macAddressAsByteArray is null)
+            {
+                return null;
+            }
+
+            StringBuilder macAddressAsHexStringBuilder = new();
+            foreach (var element in macAddressAsByteArray)
+            {
+                var elementAsHexString = element.ToString("X2");
+                macAddressAsHexStringBuilder.Append(elementAsHexString);
+            }
+            var macAddressAsHexString = macAddressAsHexStringBuilder.ToString();
+
+            // at this point, we have a network MAC address which is reasonably stable (i.e. is suitable to derive a telemetry GUID-sized value from)
+            // convert the mac address (hex string) to a type 3 UUID (MD5-hashed); note that we pre-pend "MAC_" before the mac address to avoid internal collissions from other types of potentially-derived site telemetry ids
+            var createUuidResult = this.CreateVersion3Uuid(macAddressAsHexString);
+            if (createUuidResult.IsError == true)
+            {
+                return null;
+            }
+            var macAddressAsMd5HashedGuid = createUuidResult.Value!;
+
+            return macAddressAsMd5HashedGuid;
+        }
+
+        private MorphicResult<Guid, MorphicUnit> CreateVersion3Uuid(string value)
+        {
+            var Namespace_MorphicMAC = new Guid("472c19e2-b87f-47c2-b7d3-dd9c175a5cfa");
+
+            var valueToHash = Namespace_MorphicMAC.ToString("B") + value;
+
+            // NOTE: type 3 GUIDs have 122 bits of "random" data; in this case, it'll be a one-way hash derived from a MAC address (so that we aren't capturing the raw mac addresses of site computers)
+            var md5 = MD5.Create();
+            var buffer = md5.ComputeHash(System.Text.Encoding.UTF8.GetBytes(valueToHash));
+
+            // NOTE: MD5 should create 16-byte hashes; if it created a longer array then cut it down to size; if it created a shorter array then return an error
+            if (buffer.Length > 16)
+            {
+                Array.Resize(ref buffer, 16);
+            } 
+            else if (buffer.Length < 16)
+            {
+                return MorphicResult.ErrorResult();
+            }
+
+            // clear the fields where version and variant will live
+            buffer[6] &= 0b0000_1111;
+            buffer[8] &= 0b0011_1111;
+            //
+            // set the version and variant bits
+            buffer[6] |= 0b0011_0000; // version 3
+            buffer[8] |= 0b1000_0000; // 0b10 represents an RFC 4122 UUID
+
+            // turn the buffer into a guid
+            var bufferAsGuid = new Guid(buffer);
+
+            return MorphicResult.OkResult(bufferAsGuid);
         }
 
         private struct TelemetryIdComponents
@@ -506,22 +657,38 @@ namespace Morphic.Client
         }
         private TelemetryIdComponents GetOrCreateTelemetryIdComponents()
         {
+            var telemetrySiteId = ConfigurableFeatures.TelemetrySiteId;
+            var hasValidTelemetrySiteId = (telemetrySiteId is not null) && (telemetrySiteId != String.Empty);
+
             // retrieve the telemetry device ID for this device; if it doesn't exist then create a new one
             var telemetryCompositeId = AppOptions.TelemetryDeviceUuid;
-            if ((telemetryCompositeId == null) || (telemetryCompositeId == String.Empty) || (telemetryCompositeId.IndexOf("D_") < 0))
+            if ((telemetryCompositeId is null) || (telemetryCompositeId == String.Empty) || (telemetryCompositeId.IndexOf("D_") < 0))
             {
-                telemetryCompositeId = "D_" + Guid.NewGuid().ToString();
+                Guid anonDeviceUuid;
+                // if the configuration file has a telemetry site id, hash the MAC address to derive a one-way hash for pseudonomized device telemetry; note that this will only happen when sites opt-in to site grouping by specifying the site id
+                if (hasValidTelemetrySiteId == true)
+                {
+                    // NOTE: this derivation is used because sites often reinstall computers frequently (sometimes even daily), so this provides some pseudonomous stability with the site's telemetry data
+                    var hashedMacAddressGuid = this.GetHashedMacAddressForSiteTelemetryId();
+                    anonDeviceUuid = hashedMacAddressGuid ?? Guid.NewGuid();
+                }
+                else
+                {
+                    // for non-siteID computers, just generate a GUID
+                    anonDeviceUuid = Guid.NewGuid();
+                }                    
+
+                telemetryCompositeId = "D_" + anonDeviceUuid.ToString();
                 AppOptions.TelemetryDeviceUuid = telemetryCompositeId;
             }
 
             // if a site id is (or is not) configured, modify the telemetry device uuid accordingly
             // NOTE: we handle cases of site ids changing, site IDs being added post-deployment, and site IDs being removed post-deployment
             var unmodifiedTelemetryDeviceCompositeId = telemetryCompositeId;
-            var telemetrySiteId = ConfigurableFeatures.TelemetrySiteId;
-            if ((telemetrySiteId != null) && (telemetrySiteId != String.Empty))
+            if (hasValidTelemetrySiteId == true)
             {
                 // NOTE: in the future, consider reporting or throwing an error if the site id required sanitization (i.e. wasn't valid)
-                var sanitizedTelemetrySiteId = this.SanitizeSiteId(telemetrySiteId);
+                var sanitizedTelemetrySiteId = this.SanitizeSiteId(telemetrySiteId!);
                 if (sanitizedTelemetrySiteId != "")
                 {
                     // we have a telemetry site id; prepend it
@@ -647,9 +814,11 @@ namespace Morphic.Client
 
         #region Telemetry 
 
+        private Guid? _telemetrySessionId = null;
+
         private void ConfigureTelemetry()
         {
-            // TODO: Move metrics related things to own class.
+            // TODO: Move metrics-related things to their own class.
 
             // retrieve the telemetry device ID for this device; if it doesn't exist then create a new one
             var telemetryIds = this.GetOrCreateTelemetryIdComponents();
@@ -678,10 +847,35 @@ namespace Morphic.Client
             telemetryClient.SiteId = telemetrySiteId;
             _telemetryClient = telemetryClient;
 
+            // create random session id
+            _telemetrySessionId = Guid.NewGuid();
+
             Task.Run(async () =>
             {
+                // start the telemetry session
                 await telemetryClient.StartSessionAsync();
+
+                // send the first telemetry message (@session begin)
+                // NOTE: for Morphic 2.0, enqueue this message as soon as we create the telemetry client object
+                var eventData = new SessionTelemetryEventData()
+                {
+                    SessionId = _telemetrySessionId,
+                    State = "begin"
+                };
+                telemetryClient.EnqueueActionMessage("@session", eventData);
+
+                // initialize (and start) our heartbeat timer; it should send the heartbeat message every 12 hours
+                _telemetryHeartbeatTimer = new System.Threading.Timer(this.SendTelemetryHeartbeat, null, new TimeSpan(12, 0, 0), new TimeSpan(12, 0, 0));
             });
+        }
+
+        internal record SessionTelemetryEventData
+        {
+            [JsonPropertyName("sessionId")]
+            public Guid? SessionId { get; set; }
+            //
+            [JsonPropertyName("state")]
+            public string? State { get; set; }
         }
 
         #endregion Telemetry
@@ -780,7 +974,7 @@ namespace Morphic.Client
         {
             var windowsVersion = OsVersion.GetWindowsVersion();
 
-            if (windowsVersion == null) 
+            if (windowsVersion is null) 
             {
                 // not a valid version
                 return false;
@@ -933,21 +1127,22 @@ namespace Morphic.Client
                 await this.MorphicSession.SetSetting(SettingId.NightModeEnabled, nightModeIsEnabled);
             }
             //
-            // screen scaling
-            var monitorName = Morphic.Windows.Native.Display.Display.GetMonitorName(null);
-            if (monitorName != null)
+            // screen scaling (on all monitors)
+            var getAllDisplaysResult = Morphic.WindowsNative.Display.Display.GetAllDisplays();
+            if (getAllDisplaysResult.IsSuccess == true) 
             {
-                // get the adapterId and sourceId for this monitor
-                var adapterIdAndSourceId = Morphic.Windows.Native.Display.Display.GetAdapterIdAndSourceId(monitorName);
-                if (adapterIdAndSourceId != null)
+                var allDisplays = getAllDisplaysResult.Value!;
+
+                foreach (var display in allDisplays)
                 {
-                    // get the current DPI offset
-                    var currentDisplayDpiOffset = Morphic.Windows.Native.Display.Display.GetCurrentDpiOffsetAndRange(adapterIdAndSourceId.Value.adapterId, adapterIdAndSourceId.Value.sourceId);
-                    if (currentDisplayDpiOffset != null)
+		            // get the current DPI offset for the monitor
+                    var getCurrentDisplayDpiOffsetAndRangeResult = display.GetCurrentDpiOffsetAndRange();
+                    if (getCurrentDisplayDpiOffsetAndRangeResult.IsSuccess == true)
                     {
-                        if (currentDisplayDpiOffset.Value.currentDpiOffset != displayDpiOffsetDefault)
+                        var currentDisplayDpiOffset = getCurrentDisplayDpiOffsetAndRangeResult.Value!;
+                        if (currentDisplayDpiOffset.CurrentDpiOffset != displayDpiOffsetDefault)
                         {
-                            _ = Morphic.Windows.Native.Display.Display.SetDpiOffset(displayDpiOffsetDefault, adapterIdAndSourceId.Value);
+                            _ = await display.SetDpiOffsetAsync(displayDpiOffsetDefault);
                         }
                     }
                 }
@@ -1008,7 +1203,7 @@ namespace Morphic.Client
                 {
                     var lastCommunityId = AppOptions.Current.LastCommunity;
                     var lastMorphicbarId = AppOptions.Current.LastMorphicbarId;
-                    if (lastCommunityId != null)
+                    if (lastCommunityId is not null)
                     {
                         // if the user previously selected a community bar, show that one now
                         // NOTE: the behavior here may be inconsistent with Morphic on macOS.  If the previously-selected bar is no longer valid (e.g. the user was removed from the community),
@@ -1026,7 +1221,7 @@ namespace Morphic.Client
                             }
                         }
 
-                        if (newUserSelectedCommunityId != null)
+                        if (newUserSelectedCommunityId is not null)
                         {
                             await this.BarManager.LoadSessionBarAsync(morphicSession, newUserSelectedCommunityId, null);
                         }
@@ -1083,7 +1278,7 @@ namespace Morphic.Client
                 var community = this.MorphicSession.Communities[iCommunity];
                 //
                 var allBarsForCommunity = this.MorphicSession.MorphicBarsByCommunityId[community.Id];
-                if (allBarsForCommunity == null)
+                if (allBarsForCommunity is null)
                 {
                     // NOTE: this scenario shouldn't happen, but it's a gracefully-degrading failsafe just in case
                     continue;
@@ -1097,7 +1292,7 @@ namespace Morphic.Client
                     if (community.Id == AppOptions.Current.LastCommunity)
                     {
                         var markThisBar = false;
-                        if (AppOptions.Current.LastMorphicbarId == null && addedCheckmarkByCurrentCommunityBar == false)
+                        if (AppOptions.Current.LastMorphicbarId is null && addedCheckmarkByCurrentCommunityBar == false)
                         {
                             markThisBar = true;
                         }
@@ -1250,7 +1445,7 @@ namespace Morphic.Client
 
         protected override void OnActivated(EventArgs e)
         {
-            if (_messageWatcherNativeWindow == null)
+            if (_messageWatcherNativeWindow is null)
             {
                 // create a list of the messages we want to watch for
                 List<uint> messagesToWatch = new List<uint>();
@@ -1276,25 +1471,57 @@ namespace Morphic.Client
             this.BarManager.ShowBar();
         }
 
+        private void SendTelemetryHeartbeat(object? state)
+        {
+            // send a ping/heartbeat telemetry message (@session heartbeat)
+            var eventData = new SessionTelemetryEventData()
+            {
+                SessionId = _telemetrySessionId,
+                State = "heartbeat"
+            };
+            _telemetryClient?.EnqueueActionMessage("@session", eventData);
+        }
+
         #region Shutdown
 
         protected override async void OnExit(ExitEventArgs e)
         {
+            // NOTE: the CLR may shut down our application quicker than we can send the "session end" event; as we move to the Morphic 2.0 architecture (with cached telemetry messages), the "@session end" message should be more guaranteed to be transmitted
+
             _messageWatcherNativeWindow?.Dispose();
             if (ConfigurableFeatures.TelemetryIsEnabled == true)
             {
+                // dispose of our heartbeat timer
+                _telemetryHeartbeatTimer.Dispose();
+
+                try
+                {
+                    if (_telemetryClient is not null)
+                    {
+                        // send the final telemetry message (@session end)
+                        // NOTE: for Morphic 2.0, enqueue this message as soon as we enter the OnExit function
+                        var eventData = new SessionTelemetryEventData()
+                        {
+                            SessionId = _telemetrySessionId,
+                            State = "end"
+                        };
+                        _telemetryClient.EnqueueActionMessage("@session", eventData);
+
+                        // wait up to 2500 milliseconds for the event to be sent
+                        await _telemetryClient.FlushMessageQueueAsync(2500);
+
+                        // NOTE: wait for the session to stop (up to 250ms)
+                        await Task.Run(() =>
+                        {
+                            _telemetryClient.StopSessionAsync().Wait(250);
+                        });
+                    }
+                }
+                catch { }
+                //
                 try
                 {
                     await Countly.Instance.SessionEnd();
-                }
-                catch { }
-				//
-                try
-                {
-                    if (_telemetryClient != null)
-                    {
-                        _telemetryClient.StopSessionAsync();
-                    }
                 }
                 catch { }
             }

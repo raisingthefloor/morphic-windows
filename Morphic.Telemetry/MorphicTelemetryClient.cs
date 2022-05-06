@@ -1,4 +1,4 @@
-﻿// Copyright 2021 Raising the Floor - International
+﻿// Copyright 2021-2022 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -44,6 +44,7 @@ namespace Morphic.Telemetry
         private string _clientId;
 
         private List<MqttEventMessage> _messagesToSend;
+        private bool _isSendingMessage;
         private object _messagesToSendSyncObject;
         private AutoResetEvent _messagesToSendEvent;
 
@@ -87,6 +88,7 @@ namespace Morphic.Telemetry
         public MorphicTelemetryClient(TelemetryClientConfig config)
         {
             _messagesToSend = new List<MqttEventMessage>();
+            _isSendingMessage = false;
             _messagesToSendSyncObject = new object();
             _messagesToSendEvent = new AutoResetEvent(false);
 
@@ -109,7 +111,7 @@ namespace Morphic.Telemetry
             else if (config is WebsocketTelemetryClientConfig wsConfig) 
             {
                 var path = wsConfig.Hostname;
-                if (wsConfig.Port != null) 
+                if (wsConfig.Port is not null) 
                 {
                     path += ":" + wsConfig.Port.Value.ToString();
                 }
@@ -117,7 +119,7 @@ namespace Morphic.Telemetry
                 {
                     path += ":443";
                 }
-                if (wsConfig.Path != null)
+                if (wsConfig.Path is not null)
                 {
                     // sanity check: make sure the path component starts with "/" or "#"
 					if (wsConfig.Path.Length > 0) 
@@ -137,7 +139,7 @@ namespace Morphic.Telemetry
                     .WithWebSocketServer(path)
                     .WithCredentials(wsConfig.Username, wsConfig.Password)
                     .WithCleanSession(true) // we are a write-only client (i.e. no subscriptions), so always start with a clean session
-                                            //.WithTls(new MqttClientOptionsBuilderTlsParameters() { UseTls = false })
+                    //.WithTls(new MqttClientOptionsBuilderTlsParameters() { UseTls = false })
                     .WithTls(new MqttClientOptionsBuilderTlsParameters() { UseTls = wsConfig.UseTls })
                     .Build();
             }
@@ -230,6 +232,8 @@ namespace Morphic.Telemetry
                     {
                         messageToSend = _messagesToSend[0];
                         _messagesToSend.RemoveAt(0);
+
+                        _isSendingMessage = true;
                     }
                     else
                     {
@@ -279,6 +283,37 @@ namespace Morphic.Telemetry
                         _messagesToSend.Insert(0, messageToSend);
                     }
                 }
+
+                lock (_messagesToSendSyncObject)
+                {
+                    _isSendingMessage = false;
+                }
+            }
+        }
+
+        public async Task FlushMessageQueueAsync(int timeoutMilliseconds)
+        {
+            var stopwatch = Stopwatch.StartNew();
+            while (true)
+            {
+                lock (_messagesToSendSyncObject)
+                {
+                    var numberOfMessagesToSend = _messagesToSend.Count;
+                    var isSendingMessage = _isSendingMessage;
+
+                    if (_isSendingMessage == false && numberOfMessagesToSend == 0)
+                    {
+                        break;
+                    }
+                }
+
+                if (stopwatch.ElapsedMilliseconds >= timeoutMilliseconds)
+                {
+                    break;
+                }
+
+                // sleep 50ms between queue check
+                await Task.Delay(50);
             }
         }
 
@@ -379,7 +414,7 @@ namespace Morphic.Telemetry
             }
         }
 
-        private async Task<IMorphicResult> ConnectToMqttServerAsync()
+        private async Task<MorphicResult<MorphicUnit, MorphicUnit>> ConnectToMqttServerAsync()
         {
             try
             {
@@ -387,14 +422,14 @@ namespace Morphic.Telemetry
                 switch (connectResult.ResultCode)
                 {
                     case MQTTnet.Client.Connecting.MqttClientConnectResultCode.Success:
-                        return IMorphicResult.SuccessResult;
+                        return MorphicResult.OkResult();
                     default:
-                        return IMorphicResult.ErrorResult;
+                        return MorphicResult.ErrorResult();
                 }
             }
             catch
             {
-                return IMorphicResult.ErrorResult;
+                return MorphicResult.ErrorResult();
             }
         }
 
@@ -429,6 +464,9 @@ namespace Morphic.Telemetry
             //
             [JsonPropertyName("event_name")]
             public string EventName { get; set; }
+            //
+            [JsonPropertyName("data")]
+            public object? Data { get; set; }
         }
 
         private Lazy<string> CachedOsVersion = new Lazy<string>(() =>
@@ -442,7 +480,7 @@ namespace Morphic.Telemetry
                 .InformationalVersion ?? "0.0.0.0";
         });
 
-        public void EnqueueActionMessage(string eventName)
+        public void EnqueueActionMessage(string eventName, object? jsonSerializableData)
         {
             // NOTE: we capture the timestamp up front just to alleviate any potential for the timestamp to be captured late
             var capturedAtTimestamp = DateTimeOffset.UtcNow;
@@ -458,7 +496,8 @@ namespace Morphic.Telemetry
                 SoftwareVersion = this.CachedSoftwareVersion.Value,
                 OsName = "Windows",
                 OsVersion = this.CachedOsVersion.Value,
-                EventName = eventName
+                EventName = eventName,
+                Data = jsonSerializableData
             };
 
             lock (_messagesToSendSyncObject)

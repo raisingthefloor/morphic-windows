@@ -23,18 +23,18 @@
                 {
                     case "learn":
                         format = BarContextMenu.LearnMoreFormat;
-                        finalName = "_Learn more";
+                        finalName = "{{MorphicBarButtonContextMenuItem_LearnMore_Header}}";
                         telemetryType = MorphicMenuItem.MorphicMenuItemTelemetryType.LearnMore;
                         break;
                     case "demo":
                         format = BarContextMenu.DemoFormat;
-                        finalName = "Quick _Demo video";
+                        finalName = "{{MorphicBarButtonContextMenuItem_Demo_Header}}";
                         telemetryType = MorphicMenuItem.MorphicMenuItemTelemetryType.QuickDemoVideo;
                         break;
                     case "settings":
                     case "setting":
                         format = BarContextMenu.SettingsFormat;
-                        finalName = "_Settings";
+                        finalName = "{{MorphicBarButtonContextMenuItem_Settings_Header}}";
                         telemetryType = MorphicMenuItem.MorphicMenuItemTelemetryType.Settings;
                         break;
                     default:
@@ -44,17 +44,17 @@
                         break;
                 }
 
-                string finalTarget = (format == null)
+                string finalTarget = (format is null)
                     ? target
                     : string.Format(format, target);
 
                 MorphicMenuItem item = new MorphicMenuItem()
                 {
-                    Header = finalName,
+                    Header = App.Current.LocalizeTemplatedString(finalName),
                     Open = finalTarget,
                     ParentMenuType = MorphicMenuItem.MenuType.contextMenu,
                     TelemetryType = telemetryType,
-                    TelemetryCategory = (telemetryType != null) ? telemetryCategory : null
+                    TelemetryCategory = (telemetryType is not null) ? telemetryCategory : null
                 };
 
                 menu.Items.Add(item);

@@ -4,7 +4,8 @@
     using CountlySDK;
     using Morphic.Client.Config;
     using Morphic.Client.Dialogs;
-    using Morphic.Windows.Native.OsVersion;
+    using Morphic.WindowsNative.Input;
+    using Morphic.WindowsNative.OsVersion;
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
@@ -12,7 +13,6 @@
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Controls.Primitives;
-    using Windows.Native.Input;
 
     public partial class MorphicMenu : ContextMenu
     {
@@ -49,13 +49,13 @@
         protected override void OnOpened(RoutedEventArgs e)
         {
             // if autorun settings are configured by config.json, do not give the user the option to enable/disable
-            if (ConfigurableFeatures.AutorunConfig != null)
+            if (ConfigurableFeatures.AutorunConfig is not null)
             {
                 this.AutorunAfterLoginItem.Visibility = Visibility.Collapsed;
             }
 
             // if morphicBarVisibilityAfterLogin settings are configured by config.json, do not give the user the option to enable/disable
-            if (ConfigurableFeatures.MorphicBarVisibilityAfterLogin != null)
+            if (ConfigurableFeatures.MorphicBarVisibilityAfterLogin is not null)
             {
                 this.ShowMorphicBarAfterLoginItem.Visibility = Visibility.Collapsed;
             }
@@ -73,7 +73,7 @@
         {
             _menuOpenedSource = menuOpenedSource;
 
-            if (control == null)
+            if (control is null)
             {
                 this.Placement = PlacementMode.Mouse;
                 this.PlacementTarget = null;
@@ -93,7 +93,7 @@
         private CountlySDK.Segmentation CreateMenuOpenedSourceSegmentation(MenuOpenedSource? menuOpenedSource)
         {
             var segmentation = new CountlySDK.Segmentation();
-            if (_menuOpenedSource != null)
+            if (_menuOpenedSource is not null)
             {
                 segmentation.Add("eventSource", _menuOpenedSource.ToString() + "Menu");
             }
@@ -221,7 +221,7 @@
                         // NOTE: Microsoft changed the URL for this link somwhere between 10.0.19042.986 and 10.0.19042.1052;
                         //       if we get any bug reports that this link doesn't work with v20H2, be sure to get the "winver" full version #...so we can adjust the revision # below (to something between 986 and 1051) as appropriate
                         uint? updateBuildRevision;
-                        var getUpdateBuildRevisionResult = Morphic.Windows.Native.OsVersion.OsVersion.GetUpdateBuildRevision();
+                        var getUpdateBuildRevisionResult = Morphic.WindowsNative.OsVersion.OsVersion.GetUpdateBuildRevision();
                         if (getUpdateBuildRevisionResult.IsSuccess == true)
                         {
                             updateBuildRevision = getUpdateBuildRevisionResult.Value!;

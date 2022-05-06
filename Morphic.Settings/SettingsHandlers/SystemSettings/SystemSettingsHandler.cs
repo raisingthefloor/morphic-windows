@@ -15,7 +15,7 @@
     public class SystemSettingsHandler : SettingsHandler
     {
 		// NOTE: we return both success/failure and a list of results so that we can return partial results in case of partial failure
-        public override async Task<(IMorphicResult, Values)> GetAsync(SettingGroup settingGroup, IEnumerable<Setting> settings)
+        public override async Task<(MorphicResult<MorphicUnit, MorphicUnit>, Values)> GetAsync(SettingGroup settingGroup, IEnumerable<Setting> settings)
         {
             var success = true;
 
@@ -26,14 +26,14 @@
                 try
                 {
                     SystemSettingItem? settingItem = this.GetSettingItem(setting.Name);
-                    if(settingItem == null)
+                    if(settingItem is null)
                     {
                         success = false;
                         // skip to the next setting
                         continue;
                     }
 
-                    // NOTE: this is another area where changing the result of GetValue to an IMorphicResult could provide clear and granular success/error result
+                    // NOTE: this is another area where changing the result of GetValue to a MorphicResult<,> could provide clear and granular success/error result
                     object? value = await settingItem!.GetValue();
                     values.Add(setting, value);
                 }
@@ -45,17 +45,17 @@
                 }
             }
 
-            return (success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult, values);
+            return (success ? MorphicResult.OkResult() : MorphicResult.ErrorResult(), values);
         }
 
-        public override async Task<IMorphicResult> SetAsync(SettingGroup settingGroup, Values values)
+        public override async Task<MorphicResult<MorphicUnit, MorphicUnit>> SetAsync(SettingGroup settingGroup, Values values)
         {
             var success = true;
 
             foreach ((Setting setting, object? value) in values)
             {
                 SystemSettingItem? settingItem = this.GetSettingItem(setting.Name);
-                if (settingItem == null)
+                if (settingItem is null)
                 {
                     success = false;
                     // skip to the next setting
@@ -72,7 +72,7 @@
                 }
             }
 
-            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+            return success ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
         }
 
         private static Dictionary<string, SystemSettingItem> settingCache = new Dictionary<string, SystemSettingItem>();
@@ -80,7 +80,7 @@
         private SystemSettingItem? GetSettingItem(string settingName)
         {
             // certain setting(s) are not supported for "get" operations on Windows 10 v1809 under our current reverse-engineered "get value" scheme; filter those now
-            if (Morphic.Windows.Native.OsVersion.OsVersion.GetWindowsVersion() == Windows.Native.OsVersion.WindowsVersion.Win10_v1809)
+            if (Morphic.WindowsNative.OsVersion.OsVersion.GetWindowsVersion() == Morphic.WindowsNative.OsVersion.WindowsVersion.Win10_v1809)
             {
                 if (IsSettingSupportedInWindows10v1809(settingName) == false)
                 {

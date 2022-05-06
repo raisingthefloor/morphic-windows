@@ -1,14 +1,14 @@
 namespace Morphic.Client.Bar.UI
 {
+    using AppBarWindow;
+    using Data;
+    using Morphic.WindowsNative;
+    using Morphic.WindowsNative.Speech;
     using System;
     using System.Linq;
     using System.Windows;
     using System.Windows.Interop;
     using System.Windows.Media.Animation;
-    using Windows.Native;
-    using Windows.Native.Speech;
-    using AppBarWindow;
-    using Data;
 
     public sealed class PrimaryBarWindow : BarWindow
     {
@@ -49,7 +49,7 @@ namespace Morphic.Client.Bar.UI
             {
                 base.Scale = value;
                 // Apply the same scale to the secondary bar.
-                if (this.secondaryWindow != null)
+                if (this.secondaryWindow is not null)
                 {
                     this.secondaryWindow.Scale = value;
                 }
@@ -112,7 +112,7 @@ namespace Morphic.Client.Bar.UI
         /// </summary>
         private void LoadSecondaryBar()
         {
-            if (this.secondaryWindow == null && this.Bar.SecondaryItems.Any())
+            if (this.secondaryWindow is null && this.Bar.SecondaryItems.Any())
             {
                 this.secondaryWindow = new SecondaryBarWindow(this, this.Bar);
                 this.expanderWindow = new ExpanderWindow(this, this.secondaryWindow);
@@ -285,7 +285,7 @@ namespace Morphic.Client.Bar.UI
             // get a reference to our presentation source (to measure our DPI)
             // NOTE: this may cause problems on multi-monitor setups; we will need to revisit this in the future (but since our bar should be on the screen we're measuring...it should work well otherwise)
             var presentationSource = PresentationSource.FromVisual(this);
-            if (presentationSource == null)
+            if (presentationSource is null)
             {
                 // NOTE: presentationSource will usually be null if our window is not yet fully loaded
                 return null;
@@ -305,46 +305,59 @@ namespace Morphic.Client.Bar.UI
         private Rect GetCorrectedWorkArea()
         {
             Rect? workAreaAsNullable = null;
-            var physicalWorkArea = Morphic.Windows.Native.Display.Display.GetPhysicalMonitorWorkArea(null);
-            if (physicalWorkArea != null)
+
+            var barWindowInteropHelper = new WindowInteropHelper(this);
+            var barWindowHandle = barWindowInteropHelper.EnsureHandle();
+
+            // get the display which contains the majority of our window's frame
+            var getCurrentDisplayResult = Morphic.WindowsNative.Display.Display.GetDisplayForWindow(barWindowHandle);
+            if (getCurrentDisplayResult.IsSuccess == true)
             {
-                // NOTE: WPF is sometimes out of sync (longer-term) with the actual system DPI, so we have chosen not to use this (far more accurate)
-                //       method for now; WPF thinks the virtual screen is bigger or smaller than it actually is
-                //// method 1: get monitor scale percentage from Windows API (including reverse-engineered 'dpiOffset')
-                //var actualMonitorScale = Morphic.Windows.Native.Display.Display.GetMonitorScalePercentage(null);
-                //if (actualMonitorScale != null)
-                //{
-                //    workAreaAsNullable = new Rect(
-                //        (double)physicalWorkArea.Value.X / actualMonitorScale.Value,
-                //        (double)physicalWorkArea.Value.Y / actualMonitorScale.Value,
-                //        (double)physicalWorkArea.Value.Width / actualMonitorScale.Value,
-                //        (double)physicalWorkArea.Value.Height / actualMonitorScale.Value
-                //        );
-                //}
+                var currentDisplay = getCurrentDisplayResult.Value!;
 
-                // method 2: get monitor scale using WPF primitives (which should match up with what WPF expects for our positioning)
-                var wpfMonitorScale = this.GetWpfDisplayScale();
-                if (wpfMonitorScale != null)
+                var getWorkAreaRectangleInPixelsResult = currentDisplay.GetWorkAreaRectangleInPixels();
+                if (getWorkAreaRectangleInPixelsResult.IsSuccess == true)
                 {
-                    workAreaAsNullable = new Rect(
-                        (double)physicalWorkArea.Value.X / wpfMonitorScale.Value,
-                        (double)physicalWorkArea.Value.Y / wpfMonitorScale.Value,
-                        (double)physicalWorkArea.Value.Width / wpfMonitorScale.Value,
-                        (double)physicalWorkArea.Value.Height / wpfMonitorScale.Value
-                        );
-                }
+                    var physicalWorkArea = getWorkAreaRectangleInPixelsResult.Value!;
 
-                // method 3: get monitor scale using WinForms primitives
-                //var winformsMonitorScale = this.GetWinFormsDisplayScale();
-                //workAreaAsNullable = new Rect(
-                //    (double)physicalWorkArea.Value.X / winformsMonitorScale,
-                //    (double)physicalWorkArea.Value.Y / winformsMonitorScale,
-                //    (double)physicalWorkArea.Value.Width / winformsMonitorScale,
-                //    (double)physicalWorkArea.Value.Height / winformsMonitorScale
-                //    );
+                    // NOTE: WPF is sometimes out of sync (longer-term) with the actual system DPI, so we have chosen not to use this (far more accurate)
+                    //       method for now; WPF thinks the virtual screen is bigger or smaller than it actually is
+                    //// method 1: get monitor scale percentage from Windows API (including reverse-engineered 'dpiOffset')
+                    //var actualMonitorScale = Morphic.WindowsNative.Display.Display.GetMonitorScalePercentage(null);
+                    //if (actualMonitorScale is not null)
+                    //{
+                    //    workAreaAsNullable = new Rect(
+                    //        (double)physicalWorkArea.Value.X / actualMonitorScale.Value,
+                    //        (double)physicalWorkArea.Value.Y / actualMonitorScale.Value,
+                    //        (double)physicalWorkArea.Value.Width / actualMonitorScale.Value,
+                    //        (double)physicalWorkArea.Value.Height / actualMonitorScale.Value
+                    //        );
+                    //}
+
+                    // method 2: get monitor scale using WPF primitives (which should match up with what WPF expects for our positioning)
+                    var wpfMonitorScale = this.GetWpfDisplayScale();
+                    if (wpfMonitorScale is not null)
+                    {
+                        workAreaAsNullable = new Rect(
+                            (double)physicalWorkArea.X / wpfMonitorScale.Value,
+                            (double)physicalWorkArea.Y / wpfMonitorScale.Value,
+                            (double)physicalWorkArea.Width / wpfMonitorScale.Value,
+                            (double)physicalWorkArea.Height / wpfMonitorScale.Value
+                            );
+                    }
+
+                    // method 3: get monitor scale using WinForms primitives
+                    //var winformsMonitorScale = this.GetWinFormsDisplayScale();
+                    //workAreaAsNullable = new Rect(
+                    //    (double)physicalWorkArea.Value.X / winformsMonitorScale,
+                    //    (double)physicalWorkArea.Value.Y / winformsMonitorScale,
+                    //    (double)physicalWorkArea.Value.Width / winformsMonitorScale,
+                    //    (double)physicalWorkArea.Value.Height / winformsMonitorScale
+                    //    );
+                }
             }
 
-            if (workAreaAsNullable != null)
+            if (workAreaAsNullable is not null)
             {
                 return workAreaAsNullable.Value;
             }
@@ -363,7 +376,7 @@ namespace Morphic.Client.Bar.UI
             workArea.Inflate(-4, -4);
 
             CornerPosition targetCornerPosition;
-            if (_cornerPosition == null || userMoved == true)
+            if (_cornerPosition is null || userMoved == true)
             {
                 // if the user moved our bar (or we don't have a corner yet), then determine which corner position we should occupy
                 var moveToTopCorner = (this.Top + this.Height / 2 < workArea.Top + workArea.Height / 2);

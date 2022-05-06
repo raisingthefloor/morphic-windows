@@ -96,7 +96,7 @@ namespace Morphic.Client.Dialogs
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            if (this.StartPanelAction != null)
+            if (this.StartPanelAction is not null)
             {
                 var copyStartPanel = this.StepFrame.CurrentPanel as CopyStartPanel;
 

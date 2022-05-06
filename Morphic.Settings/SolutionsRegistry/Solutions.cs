@@ -98,7 +98,7 @@
         }
 
         // TODO: consider adding an "async" operation which can capture multiple settings in parallel; for now we're keeping it simple and using serial captures
-        public async Task<IMorphicResult> CapturePreferencesAsync(Preferences preferences)
+        public async Task<MorphicResult<MorphicUnit, MorphicUnit>> CapturePreferencesAsync(Preferences preferences)
         {
             var success = true; 
 
@@ -121,17 +121,17 @@
                 }
             }
 
-            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+            return success ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
         }
 
-        public async Task<IMorphicResult> ApplyPreferencesAsync(Preferences preferences, bool captureCurrent = false, bool async = false)
+        public async Task<MorphicResult<MorphicUnit, MorphicUnit>> ApplyPreferencesAsync(Preferences preferences, bool captureCurrent = false, bool async = false)
         {
             var success = true;
 
-            if (preferences.Default == null)
+            if (preferences.Default is null)
             {
                 // NOTE: unsure whether this is an error condition or a success condition
-                return IMorphicResult.ErrorResult;
+                return MorphicResult.ErrorResult();
             }
 
             foreach ((string solutionId, SolutionPreferences solutionPreferences) in preferences.Default)
@@ -154,7 +154,7 @@
                 }
             }
 
-            return success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult;
+            return success ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
         }
 
         public async Task RestorePreferences(Preferences preferences, bool async = false)

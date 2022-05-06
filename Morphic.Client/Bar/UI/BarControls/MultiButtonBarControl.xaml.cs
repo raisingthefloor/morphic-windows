@@ -10,6 +10,9 @@
 
 namespace Morphic.Client.Bar.UI.BarControls
 {
+    using Data;
+    using Data.Actions;
+    using Settings.SettingsHandlers;
     using System;
     using System.Collections.Generic;
     using System.ComponentModel;
@@ -23,9 +26,6 @@ namespace Morphic.Client.Bar.UI.BarControls
     using System.Windows.Controls.Primitives;
     using System.Windows.Input;
     using System.Windows.Media;
-    using Data;
-    using Data.Actions;
-    using Settings.SettingsHandlers;
 
     /// <summary>
     /// The control for Button bar items.
@@ -137,7 +137,7 @@ namespace Morphic.Client.Bar.UI.BarControls
                         .Select(b => b.Button)
                         .FirstOrDefault();
 
-                if (buttonInfo != null && !buttonInfo.Toggle)
+                if (buttonInfo is not null && !buttonInfo.Toggle)
                 {
                     button.IsChecked = false;
                     routedEventArgs.Handled = true;
@@ -151,7 +151,7 @@ namespace Morphic.Client.Bar.UI.BarControls
                     .Select(b => b.Button)
                     .FirstOrDefault();
 
-            if (buttonInfo != null)
+            if (buttonInfo is not null)
             {
                 e.Handled = this.OpenContextMenu(sender, buttonInfo.Menu, buttonInfo.TelemetryCategory);
             }
@@ -164,14 +164,14 @@ namespace Morphic.Client.Bar.UI.BarControls
                     .Select(b => b.Button)
                     .FirstOrDefault();
 
-            if (buttonInfo != null)
+            if (buttonInfo is not null)
             {
                 MultiButtonBarControl.LastClickedControl = sender as Control;
                 MultiButtonBarControl.LastClickedTime = DateTime.Now;
 
                 // Call the button action.
                 bool? state = (sender as ToggleButton)?.IsChecked;
-                if (buttonInfo.Action != null)
+                if (buttonInfo.Action is not null)
                 {
                     var result = await buttonInfo.Action.InvokeAsync(buttonInfo.Value, state);
 
@@ -231,7 +231,7 @@ namespace Morphic.Client.Bar.UI.BarControls
                 ? null
                 : BarImages.GetBarIconFile(icon);
 
-            return iconPath != null
+            return iconPath is not null
                 ? $"icon:{iconPath}"
                 : finalText;
         }
@@ -281,7 +281,7 @@ namespace Morphic.Client.Bar.UI.BarControls
                     if (args.PropertyName == nameof(this.itemControl.ActiveTheme))
                     {
                         this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(args.PropertyName));
-                        if (imageBrush != null && this.ActiveTheme.TextColor.HasValue)
+                        if (imageBrush is not null && this.ActiveTheme.TextColor.HasValue)
                         {
                             imageBrush.Color = this.ActiveTheme.TextColor.Value;
                         }
@@ -331,8 +331,8 @@ namespace Morphic.Client.Bar.UI.BarControls
                             }
                             var darkModeState = getDarkModeStateResult.Value!;
 
-                            var osVersion = Morphic.Windows.Native.OsVersion.OsVersion.GetWindowsVersion();
-                            if (osVersion == Windows.Native.OsVersion.WindowsVersion.Win10_v1809)
+                            var osVersion = Morphic.WindowsNative.OsVersion.OsVersion.GetWindowsVersion();
+                            if (osVersion == Morphic.WindowsNative.OsVersion.WindowsVersion.Win10_v1809)
                             {
                                 // Windows 10 v1809
 
@@ -340,7 +340,7 @@ namespace Morphic.Client.Bar.UI.BarControls
                                 //       [and trying to call the Windows 10 v1903+ handlers for apps/system "light theme" will result in a memory access exception under v1809]
                                 //       [also: only "AppsUseLightTheme" (and not "SystemUsesLightTheme") existed properly under Windows 10 v1809]
 
-                                var openPersonalizeKeyResult = Morphic.Windows.Native.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize", true);
+                                var openPersonalizeKeyResult = Morphic.WindowsNative.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize", true);
                                 if (openPersonalizeKeyResult.IsError == true)
                                 {
                                     Debug.Assert(false, "Could not get Personalize key from registry (so we cannot watch the dark mode state)");
@@ -349,7 +349,7 @@ namespace Morphic.Client.Bar.UI.BarControls
                                 {
                                     var personalizeKey = openPersonalizeKeyResult.Value!;
 
-                                    var registerForChangesEvent = new Morphic.Windows.Native.Registry.RegistryKey.RegistryKeyChangedEvent(async (sender, e) =>
+                                    var registerForChangesEvent = new Morphic.WindowsNative.Registry.RegistryKey.RegistryKeyChangedEvent(async (sender, e) =>
                                     {
                                         var getDarkModeStateResult = await Morphic.Client.Bar.Data.Actions.Functions.GetDarkModeStateAsync();
                                         if (getDarkModeStateResult.IsError == true)
@@ -380,7 +380,7 @@ namespace Morphic.Client.Bar.UI.BarControls
                                 ////
                                 //this.Control.Unloaded += (sender, args) => appsThemeRegistryKey.Changed -= this.InverseSettingOnChanged;
                             }
-                            else if (osVersion == null)
+                            else if (osVersion is null)
                             {
                                 // error
                                 //break;
@@ -414,10 +414,20 @@ namespace Morphic.Client.Bar.UI.BarControls
                             var volumeMuteState = getMuteStateResult.Value!;
 
                             // NOTE: this.Control.Unloaded should capture 'defaultAudioEndpoint' so we don't need to create a class-level reference to it here
-                            var defaultAudioEndpoint = Morphic.Windows.Native.Audio.AudioEndpoint.GetDefaultAudioOutputEndpoint();
-                            defaultAudioEndpoint.MasterMuteStateChangedEvent += this.MasterMuteStateOnChanged;
-                            //
-                            this.Control.Unloaded += (sender, args) => defaultAudioEndpoint.MasterMuteStateChangedEvent -= this.MasterMuteStateOnChanged;
+                            var getDefaultAudioOutputEndpointResult = Morphic.WindowsNative.Audio.AudioEndpoint.GetDefaultAudioOutputEndpoint();
+                            if (getDefaultAudioOutputEndpointResult.IsError == true)
+                            {
+                                // TODO: we need to create a method through which we can return an error result
+                                Debug.Assert(false, "Could not get default audio output endpoint");
+                                //return MorphicResult.ErrorResult();
+                            }
+                            else
+                            {
+                                var defaultAudioEndpoint = getDefaultAudioOutputEndpointResult.Value!;
+                                defaultAudioEndpoint.MasterMuteStateChangedEvent += this.MasterMuteStateOnChanged;
+                                //
+                                this.Control.Unloaded += (sender, args) => defaultAudioEndpoint.MasterMuteStateChangedEvent -= this.MasterMuteStateOnChanged;
+                            }
 
                             ((ToggleButton)this.Control).IsChecked = volumeMuteState;
 
@@ -458,7 +468,7 @@ namespace Morphic.Client.Bar.UI.BarControls
                 }
             }
 
-            private void MasterMuteStateOnChanged(object? sender, Morphic.Windows.Native.Audio.AudioEndpoint.MasterMuteStateChangedEventArgs e)
+            private void MasterMuteStateOnChanged(object? sender, Morphic.WindowsNative.Audio.AudioEndpoint.MasterMuteStateChangedEventArgs e)
             {
                 Application.Current.Dispatcher.Invoke(new Action(() =>
                 {

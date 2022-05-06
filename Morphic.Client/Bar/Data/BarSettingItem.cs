@@ -33,7 +33,7 @@
                 // Bar item is a pair of on/off or up/down buttons for a single setting.
                 Setting setting = this.Solutions.GetSetting(this.SettingId);
 
-                if (setting.Range != null)
+                if (setting.Range is not null)
                 {
                     this.Type = MultiButtonType.Additive;
                     this.Buttons["dec"] = new ButtonInfo()

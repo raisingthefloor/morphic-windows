@@ -63,20 +63,20 @@ namespace Morphic.Client.Bar.Data
                 {
                     Uri.TryCreate(this.imageValue, UriKind.Absolute, out Uri? uri);
                     string? localPath = null;
-                    if (uri == null || uri.IsFile)
+                    if (uri is null || uri.IsFile)
                     {
                         localPath = BarImages.GetBarIconFile(this.imageValue);
-                        if (localPath == null)
+                        if (localPath is null)
                         {
                             uri = new Uri(this.Bar.FrontEndUri, this.FrontendImagePath);
                         }
                     }
 
-                    if (localPath != null)
+                    if (localPath is not null)
                     {
                         this.ImagePath = localPath;
                     }
-                    else if (uri != null)
+                    else if (uri is not null)
                     {
                         // Download later.
                         this.RemoteImage = uri;
@@ -132,7 +132,7 @@ namespace Morphic.Client.Bar.Data
             bool success = false;
 
             // Download the remote image.
-            if (this.DownloadRequired && this.RemoteImage != null)
+            if (this.DownloadRequired && this.RemoteImage is not null)
             {
                 using WebClient wc = new WebClient();
                 string tempFile = this.ImagePath + ".new";
@@ -199,7 +199,7 @@ namespace Morphic.Client.Bar.Data
                 {
                     this.ImageSource = BarImages.CreateImageSource(this.ImagePath);
                     
-                    success = this.ImageValue != null;
+                    success = this.ImageValue is not null;
                 }
             }
 
@@ -207,7 +207,7 @@ namespace Morphic.Client.Bar.Data
             if (!success)
             {
                 ImageSource? source = this.Action?.DefaultImageSource;
-                if (source != null)
+                if (source is not null)
                 {
                     this.ImageSource = source;
                     success = true;
@@ -215,7 +215,7 @@ namespace Morphic.Client.Bar.Data
                 else
                 {
                     Uri? defaultUri = this.Action?.DefaultImageUri;
-                    if (defaultUri != null && this.RemoteImage != defaultUri)
+                    if (defaultUri is not null && this.RemoteImage != defaultUri)
                     {
                         this.RemoteImage = defaultUri;
                         success = await this.LoadImage();
@@ -240,7 +240,7 @@ namespace Morphic.Client.Bar.Data
             private set
             {
                 this.remoteImage = value;
-                if (this.remoteImage != null)
+                if (this.remoteImage is not null)
                 {
                     this.ImagePath = AppPaths.GetCacheFile(this.remoteImage, out bool exists);
                     this.DownloadRequired = !exists

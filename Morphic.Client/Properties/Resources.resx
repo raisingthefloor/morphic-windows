@@ -131,7 +131,7 @@
     <value>Opens the Morphic Menu</value>
   </data>
   <data name="QuickStrip_Contrast_Off_HelpMessage" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="QuickStrip_Contrast_Off_HelpTitle" xml:space="preserve">
     <value>Turns Contrast off</value>
@@ -155,7 +155,7 @@
     <value>High Contrast</value>
   </data>
   <data name="QuickStrip_NightMode_Off_HelpMessage" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="QuickStrip_NightMode_Off_HelpTitle" xml:space="preserve">
     <value>Turns the Night Light feature off</value>
@@ -188,7 +188,7 @@
     <value>Snip</value>
   </data>
   <data name="QuickStrip_Snip_Name" xml:space="preserve">
-    <value>Snip a copy of part of screen</value>
+    <value>Snip copy of part of the screen</value>
   </data>
   <data name="QuickStrip_Colors_Title" xml:space="preserve">
     <value>Contrast &amp; color</value>
@@ -206,7 +206,7 @@
     <value>Turns Color Blindness filters on and off</value>
   </data>
   <data name="QuickStrip_Colors_Color_HelpMessage" xml:space="preserve">
-    <value>Changes colors to adapt to color vision differences. To choose type, right-click on button.</value>
+    <value>Changes colors to adapt to color vision differences.\nTo choose type, right-click on button.</value>
   </data>
   <data name="QuickStrip_Colors_Dark_Title" xml:space="preserve">
     <value>Dark</value>
@@ -220,28 +220,26 @@
   <data name="QuickStrip_Colors_Dark_Name" xml:space="preserve">
     <value>Dark mode</value>
   </data>
-
   <data name="QuickStrip_Colors_Night_Title" xml:space="preserve">
     <value>Night</value>
   </data>
   <data name="QuickStrip_Colors_Night_Name" xml:space="preserve">
     <value>Night Light</value>
   </data>
-
   <data name="QuickStrip_Magnifier_Hide_HelpMessage" xml:space="preserve">
-    <value>To change Magnifier settings, right-click on button.</value>
+    <value>(Right-click to change magnifier settings)</value>
   </data>
   <data name="QuickStrip_Magnifier_Hide_HelpTitle" xml:space="preserve">
-    <value>Turns off Magnifier</value>
+    <value>Turn off the magnifier</value>
   </data>
   <data name="QuickStrip_Magnifier_Hide_Title" xml:space="preserve">
     <value>Hide</value>
   </data>
   <data name="QuickStrip_Magnifier_Show_HelpMessage" xml:space="preserve">
-    <value>Magnifier follows your mouse. Your mouse can click through the box.</value>
+    <value>Turns on a Magnifying Lens. (Right-click to change settings)</value>
   </data>
   <data name="QuickStrip_Magnifier_Show_HelpTitle" xml:space="preserve">
-    <value>Turns on a Magnifying lens</value>
+    <value>Turn on Magnifier that follows mouse</value>
   </data>
   <data name="QuickStrip_Magnifier_Show_Title" xml:space="preserve">
     <value>Show</value>
@@ -268,7 +266,7 @@
     <value>Stops reading</value>
   </data>
   <data name="QuickStrip_Reader_Stop_Name" xml:space="preserve">
-    <value>Stop Reading Select Text</value>
+    <value>Stop Reading Selected Text</value>
   </data>
   <data name="QuickStrip_Reader_Start_Name" xml:space="preserve">
     <value>Read Selected Text</value>
@@ -286,7 +284,7 @@
     <value>Increase Text Size</value>
   </data>
   <data name="QuickStrip_Resolution_Bigger_LimitMessage" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="QuickStrip_Resolution_Bigger_LimitTitle" xml:space="preserve">
     <value>Text Size cannot go bigger</value>
@@ -301,7 +299,7 @@
     <value>Decrease Text Size</value>
   </data>
   <data name="QuickStrip_Resolution_Smaller_LimitMessage" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="QuickStrip_Resolution_Smaller_LimitTitle" xml:space="preserve">
     <value>Text Size cannot go smaller</value>
@@ -316,7 +314,7 @@
     <value>Decreases the volume</value>
   </data>
   <data name="QuickStrip_Volume_Down_LimitMessage" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="QuickStrip_Volume_Down_LimitTitle" xml:space="preserve">
     <value>Volume cannot go quieter</value>
@@ -352,9 +350,141 @@
     <value>Increases the volume</value>
   </data>
   <data name="QuickStrip_Volume_Up_LimitMessage" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="QuickStrip_Volume_Up_LimitTitle" xml:space="preserve">
     <value>Volume cannot go louder</value>
+  </data>
+  <data name="MorphicBarButtonContextMenuItem_Demo_Header" xml:space="preserve">
+    <value>Quick _Demo video</value>
+  </data>
+  <data name="MorphicBarButtonContextMenuItem_LearnMore_Header" xml:space="preserve">
+    <value>_Learn more</value>
+  </data>
+  <data name="MorphicBarButtonContextMenuItem_Settings_Header" xml:space="preserve">
+    <value>_Settings</value>
+  </data>
+  <data name="QuickStrip_Clipboard_Copy_HelpMessage" xml:space="preserve">
+    <value>Copies text or other content you have selected so you can paste it somewhere.</value>
+  </data>
+  <data name="QuickStrip_Clipboard_Copy_HelpTitle" xml:space="preserve">
+    <value>Copies your selection</value>
+  </data>
+  <data name="QuickStrip_Clipboard_Copy_Title" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="QuickStrip_Clipboard_Paste_HelpMessage" xml:space="preserve">
+    <value>Inserts copied content where the text cursor is.</value>
+  </data>
+  <data name="QuickStrip_Clipboard_Paste_HelpTitle" xml:space="preserve">
+    <value>Pastes what you copied</value>
+  </data>
+  <data name="QuickStrip_Clipboard_Paste_Title" xml:space="preserve">
+    <value>Paste</value>
+  </data>
+  <data name="QuickStrip_Clipboard_Title" xml:space="preserve">
+    <value>Clipboard</value>
+  </data>
+  <data name="QuickStrip_ColorFilters_Off_HelpMessage" xml:space="preserve">
+    <value />
+  </data>
+  <data name="QuickStrip_ColorFilters_Off_HelpTitle" xml:space="preserve">
+    <value>Turns Color Blindness filters off</value>
+  </data>
+  <data name="QuickStrip_ColorFilters_Off_Title" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="QuickStrip_ColorFilters_On_HelpMessage" xml:space="preserve">
+    <value />
+  </data>
+  <data name="QuickStrip_ColorFilters_On_HelpTitle" xml:space="preserve">
+    <value>Turns Color Blindness filters on</value>
+  </data>
+  <data name="QuickStrip_ColorFilters_On_Title" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="QuickStrip_Colors_Color_UiName" xml:space="preserve">
+    <value>Color Vision on, off</value>
+  </data>
+  <data name="QuickStrip_Colors_Contrast_HelpMessage" xml:space="preserve">
+    <value>Can make the screen easier to read. To change settings, right-click on button.</value>
+  </data>
+  <data name="QuickStrip_Colors_Contrast_HelpTitle" xml:space="preserve">
+    <value>Turns Contrast on and off</value>
+  </data>
+  <data name="QuickStrip_Colors_Dark_UiName" xml:space="preserve">
+    <value>Dark Mode on, off</value>
+  </data>
+  <data name="QuickStrip_Colors_Night_HelpMessage" xml:space="preserve">
+    <value>Reduces eye strain and makes it easier to fall asleep at night.</value>
+  </data>
+  <data name="QuickStrip_Colors_Night_HelpTitle" xml:space="preserve">
+    <value>Turns the Night Light feature on and off</value>
+  </data>
+  <data name="QuickStrip_Colors_Night_UiName" xml:space="preserve">
+    <value>Night Light on, off</value>
+  </data>
+  <data name="QuickStrip_DarkMode_Off_HelpMessage" xml:space="preserve">
+    <value />
+  </data>
+  <data name="QuickStrip_DarkMode_Off_HelpTitle" xml:space="preserve">
+    <value>Turns Dark Mode off</value>
+  </data>
+  <data name="QuickStrip_DarkMode_Off_Title" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="QuickStrip_DarkMode_On_HelpMessage" xml:space="preserve">
+    <value />
+  </data>
+  <data name="QuickStrip_DarkMode_On_HelpTitle" xml:space="preserve">
+    <value>Turns Dark Mode on</value>
+  </data>
+  <data name="QuickStrip_DarkMode_On_Title" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="QuickStrip_Reader_Start_UiName" xml:space="preserve">
+    <value>Read selected text</value>
+  </data>
+  <data name="QuickStrip_Reader_Stop_UiName" xml:space="preserve">
+    <value>Stop reading selected text</value>
+  </data>
+  <data name="QuickStrip_Snip_UiName" xml:space="preserve">
+    <value>Takes a picture of a selected part of the screen</value>
+  </data>
+  <data name="QuickStrip_UsbOpenEject_Eject_HelpTitle" xml:space="preserve">
+    <value>Eject All USB Drives</value>
+  </data>
+  <data name="QuickStrip_UsbOpenEject_Eject_Title" xml:space="preserve">
+    <value>Eject</value>
+  </data>
+  <data name="QuickStrip_UsbOpenEject_Open_HelpTitle" xml:space="preserve">
+    <value>Open All USB Drives</value>
+  </data>
+  <data name="QuickStrip_UsbOpenEject_Open_Title" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="QuickStrip_UsbOpenEject_Title" xml:space="preserve">
+    <value>USB Drives (All)</value>
+  </data>
+  <data name="QuickStrip_WordSimplify_Basic_HelpMessage" xml:space="preserve">
+    <value>Gives you a new simpler ribbon with just the basic items on it.</value>
+  </data>
+  <data name="QuickStrip_WordSimplify_Basic_HelpTitle" xml:space="preserve">
+    <value>Adds a new 'Basic Items' ribbon to Word</value>
+  </data>
+  <data name="QuickStrip_WordSimplify_Basic_Title" xml:space="preserve">
+    <value>Basic</value>
+  </data>
+  <data name="QuickStrip_WordSimplify_Essentials_HelpMessage" xml:space="preserve">
+    <value>Gives you a new ribbon with essential items gathered from all other ribbons.</value>
+  </data>
+  <data name="QuickStrip_WordSimplify_Essentials_HelpTitle" xml:space="preserve">
+    <value>Adds a new 'Essential Items' ribbon to Word</value>
+  </data>
+  <data name="QuickStrip_WordSimplify_Essentials_Title" xml:space="preserve">
+    <value>Essentials</value>
+  </data>
+  <data name="QuickStrip_WordSimplify_Title" xml:space="preserve">
+    <value>Word Simplify</value>
   </data>
 </root>

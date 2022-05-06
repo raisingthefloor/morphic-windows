@@ -32,7 +32,7 @@
 
                 // assign the window properties from args
                 var windowWithArgs = window as MorphicWindowWithArgs;
-                if (windowWithArgs != null)
+                if (windowWithArgs is not null)
                 {
                     windowWithArgs.SetArguments(args);
                 }

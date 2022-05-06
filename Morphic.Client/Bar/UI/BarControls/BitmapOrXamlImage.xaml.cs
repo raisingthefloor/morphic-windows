@@ -48,7 +48,7 @@ namespace Morphic.Client.Bar.UI.BarControls
         {
             var senderAsBitmapOrXamlImage = ((BitmapOrXamlImage)sender);
             senderAsBitmapOrXamlImage.UpdateCurrentContent();
-            if (senderAsBitmapOrXamlImage.ImageSourceChanged != null)
+            if (senderAsBitmapOrXamlImage.ImageSourceChanged is not null)
             {
                 senderAsBitmapOrXamlImage.ImageSourceChanged(sender, new PropertyChangedEventArgs("ImageSource"));
             }
@@ -92,7 +92,7 @@ namespace Morphic.Client.Bar.UI.BarControls
             var xamlContent = (Canvas)GetValue(XamlContentProperty);
             var stretch = (Stretch)GetValue(StretchProperty);
 
-            if (imageSource != null)
+            if (imageSource is not null)
             {
                 this.ViewboxContent.Content = new Image()
                 {
@@ -100,7 +100,7 @@ namespace Morphic.Client.Bar.UI.BarControls
                     Stretch = stretch
                 };
             }
-            else if (xamlContent != null)
+            else if (xamlContent is not null)
             {
                 this.ViewboxContent.Content = xamlContent;
             }

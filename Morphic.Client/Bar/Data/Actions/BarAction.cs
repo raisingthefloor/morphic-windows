@@ -42,7 +42,7 @@ namespace Morphic.Client.Bar.Data.Actions
         /// <param name="source">Button ID, for multi-button bar items.</param>
         /// <param name="toggleState">New state, if the button is a toggle.</param>
         /// <returns></returns>
-        protected abstract Task<IMorphicResult> InvokeAsyncImpl(string? source = null, bool? toggleState = null);
+        protected abstract Task<MorphicResult<MorphicUnit, MorphicUnit>> InvokeAsyncImpl(string? source = null, bool? toggleState = null);
 
         /// <summary>
         /// Invokes the action.
@@ -50,9 +50,9 @@ namespace Morphic.Client.Bar.Data.Actions
         /// <param name="source">Button ID, for multi-button bar items.</param>
         /// <param name="toggleState">New state, if the button is a toggle.</param>
         /// <returns></returns>
-        public async Task<IMorphicResult> InvokeAsync(string? source = null, bool? toggleState = null)
+        public async Task<MorphicResult<MorphicUnit, MorphicUnit>> InvokeAsync(string? source = null, bool? toggleState = null)
         {
-            IMorphicResult result;
+            MorphicResult<MorphicUnit, MorphicUnit> result;
             try
             {
                 try
@@ -68,13 +68,13 @@ namespace Morphic.Client.Bar.Data.Actions
             {
                 App.Current.Logger.LogError(e, $"Error while invoking action for bar {this.Id} {this}");
 
-                if (e.UserMessage != null)
+                if (e.UserMessage is not null)
                 {
                     MessageBox.Show($"There was a problem performing the action:\n\n{e.UserMessage}",
                         "Custom MorphicBar", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 }
 
-                result = IMorphicResult.ErrorResult;
+                result = MorphicResult.ErrorResult();
             }
             finally
             {
@@ -92,7 +92,7 @@ namespace Morphic.Client.Bar.Data.Actions
             switch (this.Id)
             {
                 case "log-off":
-                    await App.Current.Countly_RecordEventAsync("SignOut");
+                    await App.Current.Countly_RecordEventAsync("signOut");
                     break;
                 case "volume":
                     {
@@ -237,6 +237,17 @@ namespace Morphic.Client.Bar.Data.Actions
                         case "ejectallusb":
                             await App.Current.Countly_RecordEventAsync("ejectUsbDrives");
                             break;
+                        case "volumeDown":
+                            // NOTE: this is captured here because telemetry for volumeDown on the +3 bar is not captured by SendTelemetryForBarAction
+                            await App.Current.Countly_RecordEventAsync("volumeDown");
+                            break;
+                        case "volumeMute":
+                            await App.Current.Countly_RecordEventAsync("volumeMute");
+                            break;
+                        case "volumeUp":
+                            // NOTE: this is captured here because telemetry for volumeUp on the +3 bar is not captured by SendTelemetryForBarAction
+                            await App.Current.Countly_RecordEventAsync("volumeUp");
+                            break;
                         case null:
                             // no tags; this is the Morphie button or another custom element with no known tags
                             break;
@@ -286,9 +297,10 @@ namespace Morphic.Client.Bar.Data.Actions
     [JsonTypeName("null")]
     public class NoOpAction : BarAction
     {
-        protected override Task<IMorphicResult> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
+        protected override Task<MorphicResult<MorphicUnit, MorphicUnit>> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
         {
-            return Task.FromResult(IMorphicResult.SuccessResult);
+            MorphicResult<MorphicUnit, MorphicUnit> result = MorphicResult.OkResult();
+            return Task.FromResult(result);
         }
     }
 
@@ -306,13 +318,13 @@ namespace Morphic.Client.Bar.Data.Actions
 
         public string? TelemetryEventName { get; set; }
         
-        protected async override Task<IMorphicResult> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
+        protected async override Task<MorphicResult<MorphicUnit, MorphicUnit>> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
         {
             try
             {
-                if (this.FunctionName == null)
+                if (this.FunctionName is null)
                 {
-                    return IMorphicResult.SuccessResult;
+                    return MorphicResult.OkResult();
                 }
 
                 Dictionary<string, string> resolvedArgs = this.Arguments
@@ -324,7 +336,7 @@ namespace Morphic.Client.Bar.Data.Actions
             }
             finally
             {
-                if (this.TelemetryEventName != null) 
+                if (this.TelemetryEventName is not null) 
                 {
                     await App.Current.Countly_RecordEventAsync(this.TelemetryEventName!);
                 }
@@ -338,7 +350,7 @@ namespace Morphic.Client.Bar.Data.Actions
         [JsonProperty("data", Required = Required.Always)]
         public JObject RequestObject { get; set; } = null!;
 
-        protected override async Task<IMorphicResult> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
+        protected override async Task<MorphicResult<MorphicUnit, MorphicUnit>> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
         {
             ClientWebSocket socket = new ClientWebSocket();
             CancellationTokenSource cancel = new CancellationTokenSource();
@@ -350,7 +362,7 @@ namespace Morphic.Client.Bar.Data.Actions
             ArraySegment<byte> sendBuffer = new ArraySegment<byte>(bytes);
             await socket.SendAsync(sendBuffer, WebSocketMessageType.Text, true, cancel.Token);
 
-            return IMorphicResult.SuccessResult;
+            return MorphicResult.OkResult();
         }
     }
 
@@ -360,7 +372,7 @@ namespace Morphic.Client.Bar.Data.Actions
         [JsonProperty("run")]
         public string? ShellCommand { get; set; }
 
-        protected override Task<IMorphicResult> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
+        protected override Task<MorphicResult<MorphicUnit, MorphicUnit>> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
         {
             bool success = true;
             if (!string.IsNullOrEmpty(this.ShellCommand))
@@ -370,10 +382,11 @@ namespace Morphic.Client.Bar.Data.Actions
                     FileName = this.ResolveString(this.ShellCommand, source),
                     UseShellExecute = true
                 });
-                success = process != null;
+                success = process is not null;
             }
 
-            return Task.FromResult(success ? IMorphicResult.SuccessResult : IMorphicResult.ErrorResult);
+            MorphicResult<MorphicUnit, MorphicUnit> result = success ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
+            return Task.FromResult(result);
         }
 
         public override void Deserialized(BarData barData)

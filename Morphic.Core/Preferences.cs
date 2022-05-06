@@ -98,7 +98,7 @@ namespace Morphic.Core
 
         public void Set(Key key, object? value)
         {
-            if (Default == null)
+            if (Default is null)
             {
                 Default = new Dictionary<string, SolutionPreferences>();
             }
@@ -111,7 +111,7 @@ namespace Morphic.Core
 
         public object? Get(Key key)
         {
-            if (Default != null)
+            if (Default is not null)
             {
                 if (Default.TryGetValue(key.Solution, out var preferencesSet))
                 {
@@ -130,7 +130,7 @@ namespace Morphic.Core
         /// <param name="key"></param>
         public void Remove(Key key)
         {
-            if (Default != null)
+            if (Default is not null)
             {
                 if (Default.TryGetValue(key.Solution, out var preferencesSet))
                 {
@@ -150,7 +150,7 @@ namespace Morphic.Core
         public Dictionary<Key, object?> GetValuesByKey()
         {
             var valuesByKey = new Dictionary<Key, object?>();
-            if (Default != null)
+            if (Default is not null)
             {
                 foreach (var solutionPair in Default)
                 {

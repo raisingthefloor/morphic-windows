@@ -3,11 +3,12 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:l10n="clr-namespace:Morphic.Client.Strings"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800">
 
     <StackPanel MaxWidth="500">
-        <Label HorizontalAlignment="Center" FontSize="24" Margin="0,30,0,0">Complete!</Label>
+        <Label HorizontalAlignment="Center" FontSize="24" Margin="0,30,0,0" Content="{x:Static l10n:Resources.SettingsSaveCompleteLabel_Content}"/>
         <Image Width="72" Margin="0,20">
             <Image.Source>
                 <DrawingImage>
@@ -28,8 +29,8 @@
                 </DrawingImage>
             </Image.Source>
         </Image>
-        <TextBlock Margin="0,10" HorizontalAlignment="Center" FontSize="17" TextWrapping="Wrap" TextAlignment="Center" Focusable="True">We've saved your settings in a secure area only you can access.</TextBlock>
-        <TextBlock Margin="0,10" HorizontalAlignment="Center" FontSize="17" TextWrapping="Wrap" TextAlignment="Center">When you sit down at another computer with Morphic installed, remember to login with the email address you provided:</TextBlock>
+        <TextBlock Margin="0,10" HorizontalAlignment="Center" FontSize="17" TextWrapping="Wrap" TextAlignment="Center" Focusable="True" Text="{x:Static l10n:Resources.WeSavedYourSettings_Text}"/>
+        <TextBlock Margin="0,10" HorizontalAlignment="Center" FontSize="17" TextWrapping="Wrap" TextAlignment="Center"><Run Text="{x:Static l10n:Resources.RememberYourLoginEmailAddress_Text}"/><Run Text=":"/></TextBlock>
         <Label Margin="0,10" x:Name="EmailLabel" HorizontalAlignment="Center" FontSize="17" FontWeight="Bold">test@example.com</Label>
         <Button x:Name="SubmitButton" Grid.Row="5" Margin="0,30,0,30" Grid.ColumnSpan="2" HorizontalAlignment="Center" FontSize="17" Click="OnClose" FontWeight="Bold" Padding="7">
             <Button.Style>
@@ -61,7 +62,9 @@
                     </Style.Triggers>
                 </Style>
             </Button.Style>
-            Close
+            <Button.Content>
+                <Run Text="{x:Static l10n:Resources.CloseButton_Text}"/>
+            </Button.Content>
         </Button>
     </StackPanel>
 </StackPanel>

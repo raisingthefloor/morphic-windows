@@ -21,7 +21,7 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using Morphic.Windows.Native;
+using Morphic.WindowsNative;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -103,14 +103,14 @@ namespace Morphic.Client.Menu
 
                 if (_visible == true)
                 {
-                    if (_nativeWindow == null)
+                    if (_nativeWindow is null)
                     {
                         CreateNativeWindow();
                     }
                 } 
                 else if (_visible == false)
                 {
-                    if (_nativeWindow != null)
+                    if (_nativeWindow is not null)
                     {
                         DestroyNativeWindow();
                     }
@@ -122,7 +122,7 @@ namespace Morphic.Client.Menu
         private void CreateNativeWindow()
         {
             // if the tray button window already exists; it cannot be created again
-            if (_nativeWindow != null)
+            if (_nativeWindow is not null)
             {
                 throw new InvalidOperationException();
             }
@@ -205,7 +205,7 @@ namespace Morphic.Client.Menu
             }
             private TrayButtonVisualStateFlags _visualState = TrayButtonVisualStateFlags.None;
 
-            private Windows.Native.WindowMessageHooks.MouseWindowMessageHook? _mouseHook = null;
+            private Morphic.WindowsNative.WindowMessageHooks.MouseWindowMessageHook? _mouseHook = null;
 
             internal MorphicTrayButtonNativeWindow(MorphicTrayButton owner)
             {
@@ -255,9 +255,9 @@ namespace Morphic.Client.Menu
                 Microsoft.Win32.SystemEvents.DisplaySettingsChanged += SystemEvents_DisplaySettingsChanged;
 
                 // if the user is using Windows 11, create a mouse message hook (so we can capture the mousemove and click events over our taskbar icon)
-                if (Morphic.Windows.Native.OsVersion.OsVersion.IsWindows11OrLater() == true)
+                if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
                 {
-                    _mouseHook = new Windows.Native.WindowMessageHooks.MouseWindowMessageHook();
+                    _mouseHook = new Morphic.WindowsNative.WindowMessageHooks.MouseWindowMessageHook();
                     _mouseHook.WndProcEvent += _mouseHook_WndProcEvent;
                 }
 
@@ -272,7 +272,7 @@ namespace Morphic.Client.Menu
             }
 
             // NOTE: this function is somewhat redundant and is provided to support Windows 11; we should refactor all of this code to handle window messages centrally
-            private void _mouseHook_WndProcEvent(object? sender, Windows.Native.WindowMessageHooks.MouseWindowMessageHook.WndProcEventArgs e)
+            private void _mouseHook_WndProcEvent(object? sender, Morphic.WindowsNative.WindowMessageHooks.MouseWindowMessageHook.WndProcEventArgs e)
             {
                 // TODO: we should ensure that calls are queued and then called from a sequential thread (ideally a UI dispatch thread)
                 switch ((WinApi.WindowMessage)e.Message) 
@@ -407,7 +407,7 @@ namespace Morphic.Client.Menu
                 try
                 {
                     Marshal.StructureToPtr(toolinfo, pointerToToolinfo, false);
-                    if (toolinfo.lpszText != null)
+                    if (toolinfo.lpszText is not null)
                     {
                         if (_tooltipInfoAdded == false)
                         {
@@ -478,7 +478,7 @@ namespace Morphic.Client.Menu
                 {
                     var handle = WinApi.CreateWindowEx(
                         (WinApi.WindowStylesEx)cp.ExStyle,
-                        (IntPtr)Int64.Parse(cp.ClassName),
+                        classNameAsIntPtr,
                         cp.Caption,
                         (WinApi.WindowStyles)cp.Style,
                         cp.X,
@@ -503,7 +503,7 @@ namespace Morphic.Client.Menu
                 {
                     if (mustReleaseClassNameAsIntPtr == true)
                     {
-                        Marshal.Release(classNameAsIntPtr);
+                        Marshal.FreeHGlobal(classNameAsIntPtr);
                     }
                 }
             }
@@ -551,7 +551,7 @@ namespace Morphic.Client.Menu
                         this.RequestRedraw();
                         {
                             var hitPoint = this.ConvertMouseMessageLParamToScreenPoint(m.LParam);
-                            if (hitPoint == null)
+                            if (hitPoint is null)
                             {
                                 // failed; abort
                                 Debug.Assert(false, "Could not map tray button hit point to screen coordinates");
@@ -633,7 +633,7 @@ namespace Morphic.Client.Menu
                         this.RequestRedraw();
                         {
                             var hitPoint = this.ConvertMouseMessageLParamToScreenPoint(m.LParam);
-                            if (hitPoint == null)
+                            if (hitPoint is null)
                             {
                                 // failed; abort
                                 Debug.Assert(false, "Could not map tray button hit point to screen coordinates");
@@ -737,9 +737,9 @@ namespace Morphic.Client.Menu
 
                 // check the current and desired positions of the notify tray icon
                 var calculateResult = this.CalculateCurrentAndTargetRectOfTrayButton();
-                if (calculateResult != null)
+                if (calculateResult is not null)
                 {
-                    if (calculateResult.Value.changeToRect != null)
+                    if (calculateResult.Value.changeToRect is not null)
                     {
                         this.PositionTrayButton();
                     }
@@ -961,7 +961,7 @@ namespace Morphic.Client.Menu
 
             public void SetIcon(Icon? icon)
             {
-                if (icon != null)
+                if (icon is not null)
                 {
                     _iconHandle = icon.Handle;
                 }
@@ -980,7 +980,7 @@ namespace Morphic.Client.Menu
             private void PositionTrayButton()
             {
                 var trayButtonRects = CalculateCurrentAndTargetRectOfTrayButton();
-                if (trayButtonRects == null)
+                if (trayButtonRects is null)
                 {
                     // fail; abort
                     Debug.Assert(false, "Could not calculate current and/or new rects for tray button");
@@ -1010,11 +1010,11 @@ namespace Morphic.Client.Menu
 
                 // if changeToRect is more leftmost/topmost than the task button container's right side, then shrink the task button container appropriately
                 WinApi.RECT? newTaskButtonContainerRect = null;
-                if (changeToRect != null)
+                if (changeToRect is not null)
                 {
                     var taskbarTripletHandles = this.GetTaskbarTripletHandles();
                     var taskbarTripletRects = this.GetTaskbarTripletRects(taskbarTripletHandles.TaskbarHandle, taskbarTripletHandles.TaskButtonContainerHandle, taskbarTripletHandles.NotifyTrayHandle);
-                    if (taskbarTripletRects == null)
+                    if (taskbarTripletRects is null)
                     {
                         // failed; abort
                         Debug.Assert(false, "could not get rects of taskbar or its important children");
@@ -1042,7 +1042,7 @@ namespace Morphic.Client.Menu
                     }
                 }
                 //
-                if (newTaskButtonContainerRect != null)
+                if (newTaskButtonContainerRect is not null)
                 {
                     var taskButtonContainerHandle = MorphicTrayButtonNativeWindow.FindWindowsTaskbarTaskButtonContainerHandle();
 
@@ -1069,7 +1069,7 @@ namespace Morphic.Client.Menu
                 }
 
                 // if our button needs to move (either because we don't know the old RECT or because the new RECT is different), do so now
-                if (changeToRect != null)
+                if (changeToRect is not null)
                 {
                     if (currentRect.HasValue == false || (currentRect.Value != changeToRect.Value))
                     {
@@ -1108,7 +1108,7 @@ namespace Morphic.Client.Menu
                     this.RequestRedraw();
 
                     // if we have tooltip text, update its tracking rectangle
-                    if (_tooltipText != null)
+                    if (_tooltipText is not null)
                     {
                         UpdateTooltipTextAndTracking();
                     }
@@ -1242,7 +1242,7 @@ namespace Morphic.Client.Menu
                 var taskbarHandle = taskbarTripletHandles.TaskbarHandle;
 
                 var taskbarRects = this.GetTaskbarTripletRects(taskbarTripletHandles.TaskbarHandle, taskbarTripletHandles.TaskButtonContainerHandle, taskbarTripletHandles.NotifyTrayHandle);
-                if (taskbarRects == null)
+                if (taskbarRects is null)
                 {
                     return null;
                 }
@@ -1309,7 +1309,7 @@ namespace Morphic.Client.Menu
                 }
 
                 // if the current position of our window isn't the right size for our icon, then set it to NULL so we don't try to reuse it.
-                if ((currentRect != null) &&
+                if ((currentRect is not null) &&
                     ((currentRect.Value.Right - currentRect.Value.Left != trayButtonWidth) || (currentRect.Value.Bottom - currentRect.Value.Top != trayButtonHeight)))
                 {
                     currentRect = null;
@@ -1319,7 +1319,7 @@ namespace Morphic.Client.Menu
                 WinApi.RECT? newRect = null;
 
                 // if the space occupied by our already-existing rect is not overlapped by anyone else and is in the free area, keep using the same space
-                if ((currentRect != null) && (currentRect.Value.Intersects(freeAreaAvailableRect) == true))
+                if ((currentRect is not null) && (currentRect.Value.Intersects(freeAreaAvailableRect) == true))
                 {
                     // by default, assume that our currentRect is still available (i.e. not overlapped)
                     bool currentRectIsNotOverlapped = true;
@@ -1343,7 +1343,7 @@ namespace Morphic.Client.Menu
                 }
 
                 // if our current (already-used-by-us) rect was not available, choose the leftmost/topmost space available
-                if (newRect == null)
+                if (newRect is null)
                 {
                     if (taskbarOrientation == Orientation.Horizontal)
                     {
@@ -1429,7 +1429,7 @@ namespace Morphic.Client.Menu
                 var resultGCHandle = GCHandle.FromIntPtr(lParam);
                 List<IntPtr>? result = resultGCHandle.Target as List<IntPtr>;
 
-                if (result != null)
+                if (result is not null)
                 {
                     result.Add(hwnd);
                 } 

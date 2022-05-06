@@ -19,7 +19,7 @@ namespace Morphic.Client.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -80,7 +80,34 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Customize buttons and take your settings with you anywhere.
+        ///   Looks up a localized string similar to Quick _Demo video.
+        /// </summary>
+        internal static string MorphicBarButtonContextMenuItem_Demo_Header {
+            get {
+                return ResourceManager.GetString("MorphicBarButtonContextMenuItem_Demo_Header", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to _Learn more.
+        /// </summary>
+        internal static string MorphicBarButtonContextMenuItem_LearnMore_Header {
+            get {
+                return ResourceManager.GetString("MorphicBarButtonContextMenuItem_LearnMore_Header", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to _Settings.
+        /// </summary>
+        internal static string MorphicBarButtonContextMenuItem_Settings_Header {
+            get {
+                return ResourceManager.GetString("MorphicBarButtonContextMenuItem_Settings_Header", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Find settings, sign in/out, customize buttons, move settings, and more..
         /// </summary>
         internal static string QuickStrip_Advanced_HelpMessage {
             get {
@@ -89,7 +116,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Advanced Features.
+        ///   Looks up a localized string similar to Opens the Morphic Menu.
         /// </summary>
         internal static string QuickStrip_Advanced_HelpTitle {
             get {
@@ -98,7 +125,124 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Changes colors to adapt for color blindness (Right-click to choose type).
+        ///   Looks up a localized string similar to Copies text or other content you have selected so you can paste it somewhere..
+        /// </summary>
+        internal static string QuickStrip_Clipboard_Copy_HelpMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_Clipboard_Copy_HelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Copies your selection.
+        /// </summary>
+        internal static string QuickStrip_Clipboard_Copy_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_Clipboard_Copy_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Copy.
+        /// </summary>
+        internal static string QuickStrip_Clipboard_Copy_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_Clipboard_Copy_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Inserts copied content where the text cursor is..
+        /// </summary>
+        internal static string QuickStrip_Clipboard_Paste_HelpMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_Clipboard_Paste_HelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pastes what you copied.
+        /// </summary>
+        internal static string QuickStrip_Clipboard_Paste_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_Clipboard_Paste_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Paste.
+        /// </summary>
+        internal static string QuickStrip_Clipboard_Paste_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_Clipboard_Paste_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Clipboard.
+        /// </summary>
+        internal static string QuickStrip_Clipboard_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_Clipboard_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to .
+        /// </summary>
+        internal static string QuickStrip_ColorFilters_Off_HelpMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_ColorFilters_Off_HelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Turns Color Blindness filters off.
+        /// </summary>
+        internal static string QuickStrip_ColorFilters_Off_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_ColorFilters_Off_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Off.
+        /// </summary>
+        internal static string QuickStrip_ColorFilters_Off_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_ColorFilters_Off_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to .
+        /// </summary>
+        internal static string QuickStrip_ColorFilters_On_HelpMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_ColorFilters_On_HelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Turns Color Blindness filters on.
+        /// </summary>
+        internal static string QuickStrip_ColorFilters_On_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_ColorFilters_On_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to On.
+        /// </summary>
+        internal static string QuickStrip_ColorFilters_On_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_ColorFilters_On_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Changes colors to adapt to color vision differences.\nTo choose type, right-click on button..
         /// </summary>
         internal static string QuickStrip_Colors_Color_HelpMessage {
             get {
@@ -107,7 +251,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Turn color vision filters on and off.
+        ///   Looks up a localized string similar to Turns Color Blindness filters on and off.
         /// </summary>
         internal static string QuickStrip_Colors_Color_HelpTitle {
             get {
@@ -134,6 +278,33 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Color Vision on, off.
+        /// </summary>
+        internal static string QuickStrip_Colors_Color_UiName {
+            get {
+                return ResourceManager.GetString("QuickStrip_Colors_Color_UiName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Can make the screen easier to read. To change settings, right-click on button..
+        /// </summary>
+        internal static string QuickStrip_Colors_Contrast_HelpMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_Colors_Contrast_HelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Turns Contrast on and off.
+        /// </summary>
+        internal static string QuickStrip_Colors_Contrast_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_Colors_Contrast_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Contrast on, off.
         /// </summary>
         internal static string QuickStrip_Colors_Contrast_Name {
@@ -152,7 +323,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Toggles dark mode on and off (Right-click to adjust).
+        ///   Looks up a localized string similar to To change settings, right-click on button..
         /// </summary>
         internal static string QuickStrip_Colors_Dark_HelpMessage {
             get {
@@ -161,7 +332,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Turn Dark mode on and off.
+        ///   Looks up a localized string similar to Turns Dark Mode on and off.
         /// </summary>
         internal static string QuickStrip_Colors_Dark_HelpTitle {
             get {
@@ -188,6 +359,33 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Dark Mode on, off.
+        /// </summary>
+        internal static string QuickStrip_Colors_Dark_UiName {
+            get {
+                return ResourceManager.GetString("QuickStrip_Colors_Dark_UiName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reduces eye strain and makes it easier to fall asleep at night..
+        /// </summary>
+        internal static string QuickStrip_Colors_Night_HelpMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_Colors_Night_HelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Turns the Night Light feature on and off.
+        /// </summary>
+        internal static string QuickStrip_Colors_Night_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_Colors_Night_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Night Light.
         /// </summary>
         internal static string QuickStrip_Colors_Night_Name {
@@ -206,6 +404,15 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Night Light on, off.
+        /// </summary>
+        internal static string QuickStrip_Colors_Night_UiName {
+            get {
+                return ResourceManager.GetString("QuickStrip_Colors_Night_UiName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Contrast &amp; color.
         /// </summary>
         internal static string QuickStrip_Colors_Title {
@@ -215,7 +422,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Make it harder to distinguish items.
+        ///   Looks up a localized string similar to .
         /// </summary>
         internal static string QuickStrip_Contrast_Off_HelpMessage {
             get {
@@ -224,7 +431,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Turn Off High Contrast.
+        ///   Looks up a localized string similar to Turns Contrast off.
         /// </summary>
         internal static string QuickStrip_Contrast_Off_HelpTitle {
             get {
@@ -242,7 +449,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Makes screen easier to read for some (Right-click to adjust contrast).
+        ///   Looks up a localized string similar to Can make the screen easier to read. To change settings, right-click on button..
         /// </summary>
         internal static string QuickStrip_Contrast_On_HelpMessage {
             get {
@@ -251,7 +458,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Turn Contrast on and off.
+        ///   Looks up a localized string similar to Turns Contrast on.
         /// </summary>
         internal static string QuickStrip_Contrast_On_HelpTitle {
             get {
@@ -278,6 +485,60 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to .
+        /// </summary>
+        internal static string QuickStrip_DarkMode_Off_HelpMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_DarkMode_Off_HelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Turns Dark Mode off.
+        /// </summary>
+        internal static string QuickStrip_DarkMode_Off_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_DarkMode_Off_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Off.
+        /// </summary>
+        internal static string QuickStrip_DarkMode_Off_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_DarkMode_Off_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to .
+        /// </summary>
+        internal static string QuickStrip_DarkMode_On_HelpMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_DarkMode_On_HelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Turns Dark Mode on.
+        /// </summary>
+        internal static string QuickStrip_DarkMode_On_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_DarkMode_On_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to On.
+        /// </summary>
+        internal static string QuickStrip_DarkMode_On_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_DarkMode_On_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to (Right-click to change magnifier settings).
         /// </summary>
         internal static string QuickStrip_Magnifier_Hide_HelpMessage {
@@ -287,7 +548,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Turn off Magnifier.
+        ///   Looks up a localized string similar to Turn off the magnifier.
         /// </summary>
         internal static string QuickStrip_Magnifier_Hide_HelpTitle {
             get {
@@ -314,7 +575,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Turns on a Magnifying Lens (Right-click to change settings).
+        ///   Looks up a localized string similar to Turns on a Magnifying Lens. (Right-click to change settings).
         /// </summary>
         internal static string QuickStrip_Magnifier_Show_HelpMessage {
             get {
@@ -323,7 +584,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Turn on Magnifier that Follows Mouse.
+        ///   Looks up a localized string similar to Turn on Magnifier that follows mouse.
         /// </summary>
         internal static string QuickStrip_Magnifier_Show_HelpTitle {
             get {
@@ -359,7 +620,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Apply color suitable for the daytime..
+        ///   Looks up a localized string similar to .
         /// </summary>
         internal static string QuickStrip_NightMode_Off_HelpMessage {
             get {
@@ -368,7 +629,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Turn Off Night Mode.
+        ///   Looks up a localized string similar to Turns the Night Light feature off.
         /// </summary>
         internal static string QuickStrip_NightMode_Off_HelpTitle {
             get {
@@ -386,7 +647,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Reduces eye strain and makes it easier to fall asleep at night.
+        ///   Looks up a localized string similar to Reduces eye strain and makes it easier to fall asleep at night..
         /// </summary>
         internal static string QuickStrip_NightMode_On_HelpMessage {
             get {
@@ -395,7 +656,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Turn &apos;Night Light&apos; feature on and off.
+        ///   Looks up a localized string similar to Turns the Night Light feature on.
         /// </summary>
         internal static string QuickStrip_NightMode_On_HelpTitle {
             get {
@@ -422,7 +683,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Select any text and then click to have it read.
+        ///   Looks up a localized string similar to Select text to be read. Then click play button to read. To change settings, right-click on button..
         /// </summary>
         internal static string QuickStrip_Reader_Start_HelpMessage {
             get {
@@ -431,7 +692,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Read the text that is selected.
+        ///   Looks up a localized string similar to Reads text that is selected.
         /// </summary>
         internal static string QuickStrip_Reader_Start_HelpTitle {
             get {
@@ -449,7 +710,16 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to (Right-click to adjust speed and voice).
+        ///   Looks up a localized string similar to Read selected text.
+        /// </summary>
+        internal static string QuickStrip_Reader_Start_UiName {
+            get {
+                return ResourceManager.GetString("QuickStrip_Reader_Start_UiName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to To change voice and speed settings, right-click on either button..
         /// </summary>
         internal static string QuickStrip_Reader_Stop_HelpMessage {
             get {
@@ -458,7 +728,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Stop Reading.
+        ///   Looks up a localized string similar to Stops reading.
         /// </summary>
         internal static string QuickStrip_Reader_Stop_HelpTitle {
             get {
@@ -467,11 +737,20 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Stop Reading Select Text.
+        ///   Looks up a localized string similar to Stop Reading Selected Text.
         /// </summary>
         internal static string QuickStrip_Reader_Stop_Name {
             get {
                 return ResourceManager.GetString("QuickStrip_Reader_Stop_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stop reading selected text.
+        /// </summary>
+        internal static string QuickStrip_Reader_Stop_UiName {
+            get {
+                return ResourceManager.GetString("QuickStrip_Reader_Stop_UiName", resourceCulture);
             }
         }
         
@@ -485,7 +764,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Makes everything on screen larger.
+        ///   Looks up a localized string similar to Makes everything on the screen larger..
         /// </summary>
         internal static string QuickStrip_Resolution_Bigger_HelpMessage {
             get {
@@ -494,7 +773,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Increase Text Size Everywhere.
+        ///   Looks up a localized string similar to Increases Text Size everywhere.
         /// </summary>
         internal static string QuickStrip_Resolution_Bigger_HelpTitle {
             get {
@@ -503,7 +782,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The text and icons are as large as they can be.
+        ///   Looks up a localized string similar to .
         /// </summary>
         internal static string QuickStrip_Resolution_Bigger_LimitMessage {
             get {
@@ -512,7 +791,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot Increase Screen Zoom.
+        ///   Looks up a localized string similar to Text Size cannot go bigger.
         /// </summary>
         internal static string QuickStrip_Resolution_Bigger_LimitTitle {
             get {
@@ -530,7 +809,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Makes everything on screen smaller.
+        ///   Looks up a localized string similar to Makes everything on the screen smaller..
         /// </summary>
         internal static string QuickStrip_Resolution_Smaller_HelpMessage {
             get {
@@ -539,7 +818,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Decrease Text Size Everywhere.
+        ///   Looks up a localized string similar to Decreases Text Size everywhere.
         /// </summary>
         internal static string QuickStrip_Resolution_Smaller_HelpTitle {
             get {
@@ -548,7 +827,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The text and icons are as small as they can be.
+        ///   Looks up a localized string similar to .
         /// </summary>
         internal static string QuickStrip_Resolution_Smaller_LimitMessage {
             get {
@@ -557,7 +836,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot Decrease Screen Zoom.
+        ///   Looks up a localized string similar to Text Size cannot go smaller.
         /// </summary>
         internal static string QuickStrip_Resolution_Smaller_LimitTitle {
             get {
@@ -593,7 +872,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Drag with your mouse to copy a part of screen. Paste into any document..
+        ///   Looks up a localized string similar to Click Copy. Then click and drag mouse to take picture. Paste into any document..
         /// </summary>
         internal static string QuickStrip_Snip_HelpMessage {
             get {
@@ -602,7 +881,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Copies a selected part of the screen.
+        ///   Looks up a localized string similar to Takes a picture of a selected part of the screen.
         /// </summary>
         internal static string QuickStrip_Snip_HelpTitle {
             get {
@@ -611,7 +890,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Snip a copy of part of screen.
+        ///   Looks up a localized string similar to Snip copy of part of the screen.
         /// </summary>
         internal static string QuickStrip_Snip_Name {
             get {
@@ -629,7 +908,61 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Make all the sounds quieter.
+        ///   Looks up a localized string similar to Takes a picture of a selected part of the screen.
+        /// </summary>
+        internal static string QuickStrip_Snip_UiName {
+            get {
+                return ResourceManager.GetString("QuickStrip_Snip_UiName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Eject All USB Drives.
+        /// </summary>
+        internal static string QuickStrip_UsbOpenEject_Eject_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_UsbOpenEject_Eject_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Eject.
+        /// </summary>
+        internal static string QuickStrip_UsbOpenEject_Eject_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_UsbOpenEject_Eject_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open All USB Drives.
+        /// </summary>
+        internal static string QuickStrip_UsbOpenEject_Open_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_UsbOpenEject_Open_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open.
+        /// </summary>
+        internal static string QuickStrip_UsbOpenEject_Open_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_UsbOpenEject_Open_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to USB Drives (All).
+        /// </summary>
+        internal static string QuickStrip_UsbOpenEject_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_UsbOpenEject_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Makes all sounds quieter..
         /// </summary>
         internal static string QuickStrip_Volume_Down_HelpMessage {
             get {
@@ -638,7 +971,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Turn the Volume Down.
+        ///   Looks up a localized string similar to Decreases the volume.
         /// </summary>
         internal static string QuickStrip_Volume_Down_HelpTitle {
             get {
@@ -647,7 +980,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The volume is all the way down.
+        ///   Looks up a localized string similar to .
         /// </summary>
         internal static string QuickStrip_Volume_Down_LimitMessage {
             get {
@@ -656,7 +989,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot Turn the Volume Down.
+        ///   Looks up a localized string similar to Volume cannot go quieter.
         /// </summary>
         internal static string QuickStrip_Volume_Down_LimitTitle {
             get {
@@ -665,7 +998,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Turn off all sounds from the computer.
+        ///   Looks up a localized string similar to Mutes your speakers - but does NOT mute your microphone..
         /// </summary>
         internal static string QuickStrip_Volume_Mute_HelpMessage {
             get {
@@ -674,7 +1007,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Mute All Sounds.
+        ///   Looks up a localized string similar to Mutes all sounds from your computer.
         /// </summary>
         internal static string QuickStrip_Volume_Mute_HelpTitle {
             get {
@@ -683,7 +1016,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unmute by pressing the volume up or down button.
+        ///   Looks up a localized string similar to Turns Mute off - allowing sounds to come from your computer again..
         /// </summary>
         internal static string QuickStrip_Volume_Mute_MutedMessage {
             get {
@@ -692,7 +1025,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Sounds Are Muted.
+        ///   Looks up a localized string similar to Unmutes sounds.
         /// </summary>
         internal static string QuickStrip_Volume_Mute_MutedTitle {
             get {
@@ -719,7 +1052,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Return to the previous volume level.
+        ///   Looks up a localized string similar to Turns Mute off - allowing sounds to come from your computer again..
         /// </summary>
         internal static string QuickStrip_Volume_Unmute_HelpMessage {
             get {
@@ -728,7 +1061,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unmute All Sounds.
+        ///   Looks up a localized string similar to Unmutes sounds.
         /// </summary>
         internal static string QuickStrip_Volume_Unmute_HelpTitle {
             get {
@@ -737,7 +1070,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Make all the sounds louder.
+        ///   Looks up a localized string similar to Makes all sounds louder..
         /// </summary>
         internal static string QuickStrip_Volume_Up_HelpMessage {
             get {
@@ -746,7 +1079,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Turn the Volume Up.
+        ///   Looks up a localized string similar to Increases the volume.
         /// </summary>
         internal static string QuickStrip_Volume_Up_HelpTitle {
             get {
@@ -755,7 +1088,7 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The volume is all the way up.
+        ///   Looks up a localized string similar to .
         /// </summary>
         internal static string QuickStrip_Volume_Up_LimitMessage {
             get {
@@ -764,11 +1097,74 @@ namespace Morphic.Client.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot Turn the Volume Up.
+        ///   Looks up a localized string similar to Volume cannot go louder.
         /// </summary>
         internal static string QuickStrip_Volume_Up_LimitTitle {
             get {
                 return ResourceManager.GetString("QuickStrip_Volume_Up_LimitTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gives you a new simpler ribbon with just the basic items on it..
+        /// </summary>
+        internal static string QuickStrip_WordSimplify_Basic_HelpMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_WordSimplify_Basic_HelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Adds a new &apos;Basic Items&apos; ribbon to Word.
+        /// </summary>
+        internal static string QuickStrip_WordSimplify_Basic_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_WordSimplify_Basic_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Basic.
+        /// </summary>
+        internal static string QuickStrip_WordSimplify_Basic_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_WordSimplify_Basic_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gives you a new ribbon with essential items gathered from all other ribbons..
+        /// </summary>
+        internal static string QuickStrip_WordSimplify_Essentials_HelpMessage {
+            get {
+                return ResourceManager.GetString("QuickStrip_WordSimplify_Essentials_HelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Adds a new &apos;Essential Items&apos; ribbon to Word.
+        /// </summary>
+        internal static string QuickStrip_WordSimplify_Essentials_HelpTitle {
+            get {
+                return ResourceManager.GetString("QuickStrip_WordSimplify_Essentials_HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Essentials.
+        /// </summary>
+        internal static string QuickStrip_WordSimplify_Essentials_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_WordSimplify_Essentials_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Word Simplify.
+        /// </summary>
+        internal static string QuickStrip_WordSimplify_Title {
+            get {
+                return ResourceManager.GetString("QuickStrip_WordSimplify_Title", resourceCulture);
             }
         }
     }

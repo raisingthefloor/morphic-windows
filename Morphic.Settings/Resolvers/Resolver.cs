@@ -78,14 +78,14 @@
             return Resolver.GetExpressions.Replace(input, match =>
             {
                 Resolver? resolver = Resolver.GetResolver(match.Groups["resolver"].Value);
-                if (resolver == null)
+                if (resolver is null)
                 {
                     return match.Value;
                 }
                 else
                 {
                     string? result = resolver.ResolveValue(match.Groups["value"].Value);
-                    if (result == null)
+                    if (result is null)
                     {
                         result = match.Groups["default"].Success
                             ? Resolver.Resolve(match.Groups["default"].Value)

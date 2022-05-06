@@ -329,5 +329,15 @@ namespace Morphic.Client.Dialogs
             // set focus to the username field once this panel is loaded
             this.UsernameField.Focus();
         }
+
+        private void TermsOfServiceButton_Click(object sender, RoutedEventArgs e)
+        {
+            Client.Menu.MorphicMenuItem.OpenMenuItemPath("https://morphic.org/terms-of-service/");
+        }
+
+        private void PrivacyPolicyButton_Click(object sender, RoutedEventArgs e)
+        {
+            Client.Menu.MorphicMenuItem.OpenMenuItemPath("https://morphic.org/privacy-policy/");
+        }
     }
 }
