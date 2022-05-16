@@ -871,7 +871,7 @@ namespace Morphic.Client
 
         internal record SessionTelemetryEventData
         {
-            [JsonPropertyName("sessionId")]
+            [JsonPropertyName("session_id")]
             public Guid? SessionId { get; set; }
             //
             [JsonPropertyName("state")]
