@@ -581,6 +581,34 @@ namespace Morphic.Client.Bar.Data.Actions
             return success ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
         }
 
+        [InternalFunction("allUsbAction")]
+        public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> AllUsbActionAsync(FunctionArgs args)
+        {
+            var value = args["value"];
+
+            switch (value)
+            {
+                case "openallusb":
+                    var openAllUsbDrivesResult = await Functions.OpenAllUsbDrivesAsync(args);
+                    if (openAllUsbDrivesResult.IsError == true)
+                    {
+                        Debug.Assert(false, "Could not open mounted drives");
+                        App.Current.Logger.LogError("Could not open mounted drives");
+                    }
+                    break;
+                case "ejectallusb":
+                    var ejectAllUsbDrivesResult = await Functions.EjectAllUsbDrivesAsync(args);
+                    if (ejectAllUsbDrivesResult.IsError == true)
+                    {
+                        Debug.Assert(false, "Could not eject mounted drives");
+                        App.Current.Logger.LogError("Could not eject mounted drives");
+                    }
+                    break;
+            }
+
+            return MorphicResult.OkResult();
+        }
+
         [InternalFunction("openAllUsbDrives")]
         public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> OpenAllUsbDrivesAsync(FunctionArgs args)
         {
