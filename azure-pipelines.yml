@@ -108,7 +108,7 @@ stages:
             platform: '$(buildPlatform)'
             configuration: '$(buildConfiguration)'
             vsVersion: '16.0'
-            msbuildArgs: '/p:BuildType=$(BUILD_TYPE)'
+            msbuildArgs: '-p:BuildType=$(BUILD_TYPE) -toolsversion:4.0'
         
         - task: VSTest@2
           displayName: "execute tests"
