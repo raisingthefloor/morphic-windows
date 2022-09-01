@@ -122,7 +122,7 @@ stages:
             publishWebProjects: false
             zipAfterPublish: false
             projects: 'Morphic.Client/Morphic.Client.csproj'
-            arguments: '-f netcoreapp3.1 -r win-x64 -c $(buildConfiguration) -p:BuildType=$(BUILD_TYPE)'
+            arguments: '-f netcoreapp3.1 -r win-x64 -c $(buildConfiguration) -p:BuildType=$(BUILD_TYPE) --no-build'
 
         - task: UseDotNet@2
           displayName: 'Use .NET Core SDK 2.1.816'
