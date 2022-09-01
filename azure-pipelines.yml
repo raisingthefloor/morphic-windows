@@ -99,7 +99,7 @@ stages:
             targetType: 'filePath'
             filePath: set-build-info.sh
         
-        - task: MSBuild@1
+        - task: VSBuild@1
           displayName: "build solutions"
           env:
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
@@ -107,7 +107,7 @@ stages:
             solution: '$(solution)'
             platform: '$(buildPlatform)'
             configuration: '$(buildConfiguration)'
-            msbuildArguments: '/p:BuildType=$(BUILD_TYPE)'
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE)'
         
         - task: VSTest@2
           displayName: "execute tests"
