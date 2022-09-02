@@ -91,18 +91,18 @@ stages:
         
         - task: MSBuild@1
           displayName: "Build Morphic Client"
-          inputs:
           env:
-            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'          
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
+          inputs:       
             solution: '$(Build.SourcesDirectory)\Morphic.Client\Morphic.Client.csproj'
             configuration: '$(buildConfiguration)'
             msbuildArguments: '/t:restore,build /p:RuntimeIdentifier=win-x64 /p:BuildType=$(BUILD_TYPE)'
 
         - task: MSBuild@1
           displayName: "Publish Morphic Client"
-          inputs:
           env:
-            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'          
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
+          inputs:       
             solution: '$(Build.SourcesDirectory)\Morphic.Client\Morphic.Client.csproj'
             configuration: '$(buildConfiguration)'
             msbuildArguments: '/t:publish /p:RuntimeIdentifier=win-x64 /p:BuildType=$(BUILD_TYPE)'
