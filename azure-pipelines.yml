@@ -109,6 +109,11 @@ stages:
             configuration: '$(buildConfiguration)'
             msbuildArgs: '/p:BuildType=$(BUILD_TYPE)'
         
+        - task: MSBuild@1
+          inputs:
+            solution: '$(ProjectDir)..\Morphic.Client\Morphic.Client.csproj'
+            msbuildArguments: '/t:publish /p:RuntimeIdentifier=win-x64 /p:Configuration=$(Configuration) /p:BuildType=$(BuildType)'
+
         - task: VSTest@2
           displayName: "execute tests"
           inputs:
