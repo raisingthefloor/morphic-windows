@@ -317,6 +317,30 @@
           }
         }
       }
+    },
+    "usbopeneject": {
+      kind: "internal",
+      widget: "multi",
+      configuration: {
+        function: "allUsbAction",
+        args: {
+          value: "{button}"
+        },
+        label: "{{QuickStrip_UsbOpenEject_Title}}",
+        telemetryCategory: "morphicBarExtraItem",
+        buttons: {
+          open: {
+            label: "{{QuickStrip_UsbOpenEject_Open_Title}}",
+            tooltip: "{{QuickStrip_UsbOpenEject_Open_HelpTitle}}",
+            value: "openallusb"
+          },
+          eject: {
+            label: "{{QuickStrip_UsbOpenEject_Eject_Title}}",
+            tooltip: "{{QuickStrip_UsbOpenEject_Eject_HelpTitle}}",
+            value: "ejectallusb"
+          }
+        }
+      }
     }
   },
   defaults: {
