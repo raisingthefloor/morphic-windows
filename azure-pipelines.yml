@@ -123,6 +123,7 @@ stages:
               **\bin\$(buildConfiguration)\**\*test*.dll
               !**\obj\**
               !**\ref\**
+              !**\Microsoft*.dll
               !**\xunit.runner.visualstudio.testadapter.dll
               !**\xunit.runner.visualstudio.dotnetcore.testadapter.dll
             platform: '$(buildPlatform)'
