@@ -98,6 +98,12 @@ stages:
             configuration: '$(buildConfiguration)'
             msbuildArguments: '/t:restore,build /p:RuntimeIdentifier=win-x64 /p:BuildType=$(BUILD_TYPE)'
 
+        - task: VSTest@2
+          displayName: "execute tests"
+          inputs:
+            platform: '$(buildPlatform)'
+            configuration: '$(buildConfiguration)'
+
         - task: MSBuild@1
           displayName: "Publish Morphic Client"
           env:
