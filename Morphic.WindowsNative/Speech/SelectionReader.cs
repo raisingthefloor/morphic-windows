@@ -65,12 +65,12 @@ namespace Morphic.WindowsNative.Speech
         }
 
         /// <summary>
-        /// Gets the selected text of the given window, or the last activate window.
+        /// Gets the selected text of the given window (default is the most recently activated window).
         /// </summary>
         /// <param name="sendKeys">The <c>SendKeys.SendWait</c> method.</param>
         /// <param name="windowHandle">The window.</param>
         /// <returns>The selected text.</returns>
-        public async Task GetSelectedTextAsync(Action<string> sendKeys, IntPtr? windowHandle = null)
+        public async Task CopySelectedTextToClipboardAsync(Action<string> sendKeys, IntPtr? windowHandle = null)
         {
             IntPtr hwnd = windowHandle ?? this.lastWindow;
             await Task.Run(() =>

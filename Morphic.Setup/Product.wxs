@@ -27,12 +27,14 @@
         <UIRef Id="WixUI_Minimal" />
         <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
 
+        <UIRef Id="WixUI_ErrorProgressText" />
+
         <Property Id="WINDOWSBUILDNUMBER" Secure="yes">
             <RegistrySearch Id="BuildNumberSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="CurrentBuildNumber" Type="raw" />
         </Property>
         <Condition Message="This application is only supported on Windows 10 version 1809 (build 17763) or higher.">
             <![CDATA[(WINDOWSBUILDNUMBER >= 17763)]]>
-        </Condition>        
+        </Condition>
     </Product>
 
   <Fragment>

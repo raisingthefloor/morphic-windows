@@ -57,10 +57,10 @@ stages:
         steps:
 
         - task: UseDotNet@2
-          displayName: 'Use .NET SDK 5.0.301'
+          displayName: 'Use .NET SDK 5.0.408'
           inputs:
             packageType: sdk
-            version: 5.0.301
+            version: 5.0.408
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
         # Set a $(BUILD_TYPE) variable
@@ -76,17 +76,7 @@ stages:
             BRANCH: $(Build.SourceBranch)
             BRANCH_NAME: $(Build.SourceBranchName)
         
-        - task: NuGetToolInstaller@1
-        
-        - task: NuGetCommand@2
-          displayName: "restore solutions"
-          inputs:
-            restoreSolution: '$(solution)'
-        
-        - task: NuGetCommand@2
-          displayName: "restore projects"
-          inputs:
-            restoreSolution: '$(projects)'
+
         
         - task: Bash@3
           displayName: "write build info"
@@ -99,30 +89,61 @@ stages:
             targetType: 'filePath'
             filePath: set-build-info.sh
         
-        - task: VSBuild@1
-          displayName: "build solutions"
+        - task: MSBuild@1
+          displayName: "Build Morphic Client"
           env:
-            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
-          inputs:
-            solution: '$(solution)'
-            platform: '$(buildPlatform)'
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
+          inputs:       
+            solution: '$(Build.SourcesDirectory)\Morphic.Client\Morphic.Client.csproj'
             configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:BuildType=$(BUILD_TYPE)'
-        
+            msbuildArguments: '/t:restore,build /p:RuntimeIdentifier=win-x64 /p:BuildType=$(BUILD_TYPE)'
+
+        - task: MSBuild@1
+          displayName: "Build Morphic Client Tests"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
+          inputs:       
+            solution: '$(Build.SourcesDirectory)\Morphic.Core.Tests\Morphic.Core.Tests.csproj'
+            configuration: '$(buildConfiguration)'
+            msbuildArguments: '/t:restore,build /p:RuntimeIdentifier=win-x64 /p:BuildType=$(BUILD_TYPE)'
+
+        - task: MSBuild@1
+          displayName: "Publish Morphic Client Tests"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
+          inputs:       
+            solution: '$(Build.SourcesDirectory)\Morphic.Core.Tests\Morphic.Core.Tests.csproj'
+            configuration: '$(buildConfiguration)'
+            msbuildArguments: '/t:publish /p:RuntimeIdentifier=win-x64 /p:BuildType=$(BUILD_TYPE)'
+
+        - task: UseDotNet@2
+          displayName: 'Use .NET Core SDK 3.1.422'
+          inputs:
+            packageType: sdk
+            version: 3.1.422
+            installationPath: $(Agent.ToolsDirectory)/dotnet
+
         - task: VSTest@2
           displayName: "execute tests"
           inputs:
+            testAssemblyVer2: |
+              **\bin\$(buildConfiguration)\**\publish\*.Tests.dll
+              !**\obj\**
+              !**\ref\**
+              !**\Microsoft*.dll
+              !**\xunit.runner.visualstudio.testadapter.dll
+              !**\xunit.runner.visualstudio.dotnetcore.testadapter.dll
             platform: '$(buildPlatform)'
             configuration: '$(buildConfiguration)'
 
-        - task: DotNetCoreCLI@2
-          displayName: Publish Morphic Client
-          inputs:
-            command: publish
-            publishWebProjects: false
-            zipAfterPublish: false
-            projects: 'Morphic.Client/Morphic.Client.csproj'
-            arguments: '-f netcoreapp3.1 -r win-x64 -c $(buildConfiguration) -p:BuildType=$(BUILD_TYPE)'
+        - task: MSBuild@1
+          displayName: "Publish Morphic Client"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
+          inputs:       
+            solution: '$(Build.SourcesDirectory)\Morphic.Client\Morphic.Client.csproj'
+            configuration: '$(buildConfiguration)'
+            msbuildArguments: '/t:publish /p:RuntimeIdentifier=win-x64 /p:BuildType=$(BUILD_TYPE)'
 
         - task: UseDotNet@2
           displayName: 'Use .NET Core SDK 2.1.816'
