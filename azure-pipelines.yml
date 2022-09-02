@@ -127,7 +127,7 @@ stages:
           displayName: "execute tests"
           inputs:
             testAssemblyVer2: |
-              **\bin\$(buildConfiguration)\**\*test*.dll
+              **\bin\$(buildConfiguration)\**\publish\*.Tests.dll
               !**\obj\**
               !**\ref\**
               !**\Microsoft*.dll
