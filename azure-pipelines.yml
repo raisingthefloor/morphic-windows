@@ -76,17 +76,7 @@ stages:
             BRANCH: $(Build.SourceBranch)
             BRANCH_NAME: $(Build.SourceBranchName)
         
-        - task: NuGetToolInstaller@1
-        
-        - task: NuGetCommand@2
-          displayName: "restore solutions"
-          inputs:
-            restoreSolution: '$(solution)'
-        
-        - task: NuGetCommand@2
-          displayName: "restore projects"
-          inputs:
-            restoreSolution: '$(projects)'
+
         
         - task: Bash@3
           displayName: "write build info"
@@ -99,27 +89,23 @@ stages:
             targetType: 'filePath'
             filePath: set-build-info.sh
         
-        - task: VSBuild@1
-          displayName: "build solutions"
-          env:
-            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
-          inputs:
-            solution: '$(solution)'
-            platform: '$(buildPlatform)'
-            configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:BuildType=$(BUILD_TYPE)'
-        
         - task: MSBuild@1
+          displayName: "Build Morphic Client"
           inputs:
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'          
+            solution: '$(Build.SourcesDirectory)\Morphic.Client\Morphic.Client.csproj'
+            configuration: '$(buildConfiguration)'
+            msbuildArguments: '/t:restore,build /p:RuntimeIdentifier=win-x64 /p:BuildType=$(BUILD_TYPE)'
+
+        - task: MSBuild@1
+          displayName: "Publish Morphic Client"
+          inputs:
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'          
             solution: '$(Build.SourcesDirectory)\Morphic.Client\Morphic.Client.csproj'
             configuration: '$(buildConfiguration)'
             msbuildArguments: '/t:publish /p:RuntimeIdentifier=win-x64 /p:BuildType=$(BUILD_TYPE)'
-
-        - task: VSTest@2
-          displayName: "execute tests"
-          inputs:
-            platform: '$(buildPlatform)'
-            configuration: '$(buildConfiguration)'
 
         - task: UseDotNet@2
           displayName: 'Use .NET Core SDK 2.1.816'
