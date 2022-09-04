@@ -67,6 +67,13 @@ public partial class MorphicBarWindow : Window
     public MorphicBarWindow()
     {
         InitializeComponent();
+
+        // TEMP (test): create a Windows App SDK Resource Manager using the resource index generated during build.
+        var resourceManager = new Microsoft.Windows.ApplicationModel.Resources.ResourceManager();
+
+        // TEMP (test): look up a string from our Resources.resw file using the file's name
+        var welcomePlaceholderMessage = resourceManager.MainResourceMap.GetValue("Resources/WelcomeMessage");
+        MessageBox.Show(welcomePlaceholderMessage.ValueAsString);
     }
 
     private void Window_Loaded(object sender, RoutedEventArgs e)

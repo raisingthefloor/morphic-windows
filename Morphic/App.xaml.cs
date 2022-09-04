@@ -36,4 +36,37 @@ using System.Windows;
 /// </summary>
 public partial class App : Application
 {
+    bool _windowsAppSdkWasManuallyBootstrapped = false;
+
+    private void Application_Startup(object sender, StartupEventArgs e)
+    {
+        bool isRunningAsPackagedApp;
+
+        var isRunningAsPackagedAppResult = Morphic.WindowsNative.Packaging.Package.IsRunningAsPackagedApp();
+        if (isRunningAsPackagedAppResult.IsError == true)
+        {
+            isRunningAsPackagedApp = false;
+        }
+        else
+        {
+            isRunningAsPackagedApp = isRunningAsPackagedAppResult.Value!;
+        }
+
+        if (isRunningAsPackagedApp == false)
+        {
+            // initialize the Windows App SDK using the appropriate bootstrapper
+            // NOTE: the majorMinor version specified here is v1.1 (major 0x0001, minor 0x0001)
+            Microsoft.Windows.ApplicationModel.DynamicDependency.Bootstrap.Initialize(0x0001_0001);
+            _windowsAppSdkWasManuallyBootstrapped = true;
+        }
+    }
+
+    private void Application_Exit(object sender, ExitEventArgs e)
+    {
+        if (_windowsAppSdkWasManuallyBootstrapped == true)
+        {
+            // release the Dynamic Dependency Lifetime Manager (DDLM) and clean up the Windows App SDK
+            Microsoft.Windows.ApplicationModel.DynamicDependency.Bootstrap.Shutdown();
+        }
+    }
 }
