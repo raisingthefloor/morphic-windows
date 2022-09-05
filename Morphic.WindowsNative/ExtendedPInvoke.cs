@@ -32,11 +32,20 @@ using System.Threading.Tasks;
 
 internal struct ExtendedPInvoke
 {
+    #region appmodel.h
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+    internal static extern int GetCurrentPackageFullName(ref uint packageFullNameLength, [MarshalAs(UnmanagedType.LPWStr)] string packageFullName);
+
+    #endregion appmodel.h
+
+
     #region devicetopology.h
 
     internal static uint E_NOTFOUND = HRESULT_FROM_WIN32((uint)PInvoke.Win32ErrorCode.ERROR_NOT_FOUND);
 
     #endregion devicetopology.h
+
 
     #region winerror.h
 
@@ -52,8 +61,8 @@ internal struct ExtendedPInvoke
         return unchecked((uint)(x) <= 0 ? ((uint)(x)) : ((uint)(((x) & 0x0000FFFF) | (FACILITY_WIN32 << 16) | 0x80000000)));
     }
 
-
     #endregion winerror.h
+
 
     #region wingdi.h
 
@@ -446,6 +455,7 @@ internal struct ExtendedPInvoke
 
     #endregion wingdi.h
 
+
     #region user32.dll (reverse engineered, not WinUser.h)
 
     // see: https://stackoverflow.com/questions/32724187/how-do-you-set-the-glass-blend-colour-on-windows-10
@@ -526,6 +536,7 @@ internal struct ExtendedPInvoke
     internal static extern bool SetWindowCompositionAttribute(IntPtr hwnd, ref WINDOWCOMPOSITIONATTRIBDATA pAttrData);
 
     #endregion user32.dll (reverse engineered, not WinUser.h)
+
 
     #region WinUser.h
 
