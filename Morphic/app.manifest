@@ -17,7 +17,7 @@
             compatibility.
         -->
 <!--        <requestedExecutionLevel level="asInvoker" uiAccess="true" /> -->
-        <requestedExecutionLevel level="asInvoker" uiAccess="false" />
+        <requestedExecutionLevel level="asInvoker" uiAccess="true" />
 	  </requestedPrivileges>
     </security>
   </trustInfo>
