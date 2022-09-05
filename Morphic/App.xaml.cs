@@ -58,14 +58,7 @@ public partial class App : Application
             // NOTE: the majorMinor version specified here is v1.1 (major 0x0001, minor 0x0001)
             Microsoft.Windows.ApplicationModel.DynamicDependency.Bootstrap.Initialize(0x0001_0001);
             _windowsAppSdkWasManuallyBootstrapped = true;
-        }
-		
-        // TEMP (test): create a Windows App SDK Resource Manager using the resource index generated during build.
-        var resourceManager = new Microsoft.Windows.ApplicationModel.Resources.ResourceManager();
-
-        // TEMP (test): look up a string from our Resources.resw file using the file's name
-        var welcomePlaceholderMessage = resourceManager.MainResourceMap.GetValue("Resources/WelcomeMessage");
-        MessageBox.Show(welcomePlaceholderMessage.ValueAsString);
+        }		
     }
 
     private void Application_Exit(object sender, ExitEventArgs e)
