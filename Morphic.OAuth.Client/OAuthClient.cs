@@ -22,6 +22,7 @@
 // * Consumer Electronics Association Foundation
 
 using Morphic.Core;
+using Morphic.OAuth.Rfc6749;
 using Morphic.OAuth.Rfc7591;
 using Morphic.OAuth.Utils;
 using System;
@@ -38,9 +39,73 @@ namespace Morphic.OAuth
 {
     public class OAuthClient
     {
+        public string? ClientId { get; private set; } = null;
+        public string? ClientSecret { get; private set; } = null;
+
+        private OAuthTokenEndpointAuthMethod _tokenEndpointAuthMethod;
+        public OAuthTokenEndpointAuthMethod TokenEndpointAuthMethod
+        {
+            get
+            {
+                return _tokenEndpointAuthMethod;
+            }
+            set
+            {
+                if (this.ClientSecret is null)
+                {
+                    switch (value)
+                    {
+                        case OAuthTokenEndpointAuthMethod.None:
+                            // this is fine
+                            break;
+                        case OAuthTokenEndpointAuthMethod.ClientSecretBasic:
+                        case OAuthTokenEndpointAuthMethod.ClientSecretPost:
+                            throw new ArgumentOutOfRangeException("OAuth clients without client secrets cannot use this token endpoint auth method");
+                        default:
+                            throw new Exception("invalid code path");
+                    }
+                }
+                else /* if (this.ClientSecret is not null) */
+                {
+                    switch (value)
+                    {
+                        case OAuthTokenEndpointAuthMethod.ClientSecretBasic:
+                        case OAuthTokenEndpointAuthMethod.ClientSecretPost:
+                            // these are fine
+                            break;
+                        case OAuthTokenEndpointAuthMethod.None:
+                            throw new ArgumentOutOfRangeException("OAuth clients with client secrets cannot use this token endpoint auth method");
+                        default:
+                            throw new Exception("invalid code path");
+                    }
+                }
+
+                _tokenEndpointAuthMethod = value;
+            }
+        }
+
         public OAuthClient()
         {
+            this.TokenEndpointAuthMethod = OAuthTokenEndpointAuthMethod.None;
         }
+
+        public OAuthClient(string clientId)
+        {
+            this.ClientId = clientId;
+            //
+            // default token endpoint auth method for a client with an clientId is ClientSecretBasic
+            this.TokenEndpointAuthMethod = OAuthTokenEndpointAuthMethod.ClientSecretBasic;
+        }
+
+        public OAuthClient(string clientId, string clientSecret)
+        {
+            this.ClientId = clientId;
+            this.ClientSecret = clientSecret;
+            //
+            // default token endpoint auth method for a client with an clientId is ClientSecretBasic
+            this.TokenEndpointAuthMethod = OAuthTokenEndpointAuthMethod.ClientSecretBasic;
+        }
+
 
         #region "Client Registration API"
 
@@ -61,20 +126,22 @@ namespace Morphic.OAuth
             public enum Values
             {
                 HttpError,
-                InvalidSuccessResponse,
+                InvalidClientInformationResponse,
                 NetworkError,
                 OAuthClientRegistrationError,
                 Timeout,
+                Unauthorized,
                 UnsupportedOAuthClientRegistrationError
             }
 
             // functions to create member instances
             public static RegisterClientError HttpError(HttpStatusCode httpStatusCode) => new RegisterClientError(Values.HttpError) { HttpStatusCode = httpStatusCode };
-            public static RegisterClientError InvalidClientInformationResponse(string? responseContent) => new RegisterClientError(Values.InvalidSuccessResponse) { ResponseContent = responseContent };
+            public static RegisterClientError InvalidClientInformationResponse(string? responseContent) => new RegisterClientError(Values.InvalidClientInformationResponse) { ResponseContent = responseContent };
             public static RegisterClientError NetworkError => new RegisterClientError(Values.NetworkError);
             public static RegisterClientError OAuthClientRegistrationError(Rfc7591ClientRegistrationErrorCodes error, string? errorDescription) => new RegisterClientError(Values.OAuthClientRegistrationError) { Error = error, ErrorDescription = errorDescription };
             public static RegisterClientError Timeout => new RegisterClientError(Values.Timeout);
             public static RegisterClientError UnsupportedOAuthClientRegistrationError(string unsupportedError, string? errorDescription) => new RegisterClientError(Values.UnsupportedOAuthClientRegistrationError) { UnsupportedError = unsupportedError, ErrorDescription = errorDescription };
+            public static RegisterClientError Unauthorized => new RegisterClientError(Values.Unauthorized);
 
             // associated values
             public Rfc7591ClientRegistrationErrorCodes? Error { get; private set; }
@@ -92,7 +159,7 @@ namespace Morphic.OAuth
             // [nothing to validate]
 
             // assemble our message content
-            Rfc7591ClientRegistrationRequestContent requestContent = new();
+            Rfc7591.Rfc7591ClientRegistrationRequestContent requestContent = new();
             //
             // redirect_uris
             requestContent.redirect_uris = metadata.RedirectUris;
@@ -204,7 +271,7 @@ namespace Morphic.OAuth
                                 Rfc7591ClientInformationResponseContent clientInformationResponseContent;
                                 try
                                 {
-                                    clientInformationResponseContent = JsonSerializer.Deserialize<Rfc7591ClientInformationResponseContent>(responseContent);
+                                    clientInformationResponseContent = JsonSerializer.Deserialize<Rfc7591.Rfc7591ClientInformationResponseContent>(responseContent);
                                 }
                                 catch
                                 {
@@ -364,6 +431,11 @@ namespace Morphic.OAuth
                                 return MorphicResult.ErrorResult(RegisterClientError.HttpError(responseMessage.StatusCode));
                             }
                         }
+                    case HttpStatusCode.Unauthorized:
+                        {
+                            // this would typically occur when an unauthorized initial access token was provided
+                            return MorphicResult.ErrorResult(RegisterClientError.Unauthorized);
+                        }
                     default:
                         return MorphicResult.ErrorResult(RegisterClientError.HttpError(responseMessage.StatusCode));
                 }
@@ -371,6 +443,279 @@ namespace Morphic.OAuth
         }
 
         #endregion "Client Registration API"
+
+
+        #region "Token Auth API"
+
+        public struct RequestAccessTokenResponse
+        {
+            public string AccessToken;
+            public string TokenType;
+            public double? ExpiresIn;
+            public string? RefreshToken;
+            public string? Scope;
+        }
+        public record RequestAccessTokenError : MorphicAssociatedValueEnum<RequestAccessTokenError.Values>
+        {
+            // enum members
+            public enum Values
+            {
+                HttpError,
+                InvalidAccessTokenResponse,
+                NetworkError,
+                OAuthAccessTokenRequestError,
+                Timeout,
+                Unauthorized,
+                UnsupportedOAuthAccessTokenErrorResponseError
+            }
+
+            // functions to create member instances
+            public static RequestAccessTokenError HttpError(HttpStatusCode httpStatusCode) => new RequestAccessTokenError(Values.HttpError) { HttpStatusCode = httpStatusCode };
+            public static RequestAccessTokenError InvalidAccessTokenResponse(string? responseContent) => new RequestAccessTokenError(Values.InvalidAccessTokenResponse) { ResponseContent = responseContent };
+            public static RequestAccessTokenError NetworkError => new RequestAccessTokenError(Values.NetworkError);
+            public static RequestAccessTokenError OAuthAccessTokenRequestError(Rfc6749AccessTokenErrorResponseErrorCodes error, string? errorDescription, string? errorUri) => new RequestAccessTokenError(Values.OAuthAccessTokenRequestError) { Error = error, ErrorDescription = errorDescription, ErrorUri = errorUri };
+            public static RequestAccessTokenError Timeout => new RequestAccessTokenError(Values.Timeout);
+            public static RequestAccessTokenError Unauthorized => new RequestAccessTokenError(Values.Unauthorized);
+            public static RequestAccessTokenError UnsupportedOAuthAccessTokenErrorResponseError(string unsupportedError, string? errorDescription, string? errorUri) => new RequestAccessTokenError(Values.UnsupportedOAuthAccessTokenErrorResponseError) { UnsupportedError = unsupportedError, ErrorDescription = errorDescription, ErrorUri = errorUri };
+
+            // associated values
+            public Rfc6749AccessTokenErrorResponseErrorCodes? Error { get; private set; }
+            public string? ErrorDescription { get; private set; }
+            public string? ErrorUri { get; private set; }
+            public HttpStatusCode? HttpStatusCode { get; private set; }
+            public string? ResponseContent { get; private set; }
+            public string? UnsupportedError { get; private set; }
+
+            // verbatim required constructor implementation for MorphicAssociatedValueEnums
+            private RequestAccessTokenError(Values value) : base(value) { }
+        }
+        public async Task<MorphicResult<RequestAccessTokenResponse, RequestAccessTokenError>> RequestAccessTokenUsingClientCredentialsGrantAsync(Uri tokenEndpointUri, string? scope)
+        {
+            // per RFC 6749 Section 2.3.1, all token requests using a password (i.e. a client secret) must be secured via TLS
+            if (tokenEndpointUri.Scheme.ToLowerInvariant() != "https")
+            {
+                throw new ArgumentException("Argument \"tokenEndpointUri\" must be secured via https; ClientSecrets may not be transmitted in cleartext", nameof(tokenEndpointUri));
+            }
+
+            // assemble our message's content
+            var postParameters = new List<KeyValuePair<string?, string?>>();
+            postParameters.Add(new KeyValuePair<string?, string?>("grant_type", "client_credentials"));
+            if (scope is not null)
+            {
+                postParameters.Add(new KeyValuePair<string?, string?>("scope", scope));
+            }
+
+            string? encodedClientIdAndSecret = null;
+
+            switch (this.TokenEndpointAuthMethod)
+            {
+                case OAuthTokenEndpointAuthMethod.ClientSecretPost:
+                    // if our token endpoint auth method is ClientSecretPost, then encode the client id and client secret (which must be present) as post parameters
+                    postParameters.Add(new KeyValuePair<string?, string?>("client_id", this.ClientId!));
+                    postParameters.Add(new KeyValuePair<string?, string?>("client_secret", this.ClientSecret!));
+                    break;
+                case OAuthTokenEndpointAuthMethod.ClientSecretBasic:
+                    // if our token endpoint auth method is ClientSecretBasic, then encode the client id and client secret for the Authorization header
+                    encodedClientIdAndSecret = Utils.EncodingUtils.EncodeUsernameAndPasswordForOAuthBasicAuthorization(this.ClientId!, this.ClientSecret!);
+                    break;
+                case OAuthTokenEndpointAuthMethod.None:
+                    throw new InvalidOperationException("To use this grant type to request an access token, a client's TokenEndpointAuthMethod must support transmitting the client secret");
+                default:
+                    throw new Exception("invalid code path");
+            }
+
+            // assemble our request message
+            //
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, tokenEndpointUri);
+            //
+            // set the content (along with the content-type header)
+            requestMessage.Content = new FormUrlEncodedContent(postParameters);
+            //
+            // set the authorization header (if we're using the ClientSecretBasic token endpoint auth method)
+            if (encodedClientIdAndSecret is not null)
+            {
+                requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Basic", encodedClientIdAndSecret);
+            }
+            //
+            // NOTE: although the OAuth spec doesn't specify it as a requirement, we set our accept header to "application/json"; if this causes troubles in production we can remove it
+            // set the Accept header
+            requestMessage.Headers.Accept.Clear();
+            requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(EncodingUtils.CONTENT_TYPE_APPLICATION_JSON));
+
+            // send our request (and capture the response)
+            using (var httpClient = new HttpClient())
+            {
+                HttpResponseMessage responseMessage;
+                try
+                {
+                    responseMessage = await httpClient.SendAsync(requestMessage);
+                }
+                catch (HttpRequestException)
+                {
+                    // network/http error (connectivity, dns, tls)
+                    return MorphicResult.ErrorResult(RequestAccessTokenError.NetworkError);
+                }
+                catch (TaskCanceledException ex)
+                {
+                    if (ex.InnerException?.GetType() == typeof(TimeoutException))
+                    {
+                        // timeout
+                        return MorphicResult.ErrorResult(RequestAccessTokenError.Timeout);
+                    }
+                    else
+                    {
+                        // we should not have any other TaskCanceledExceptions
+                        throw;
+                    }
+                }
+
+                switch (responseMessage.StatusCode)
+                {
+                    case HttpStatusCode.OK:
+                        {
+                            // (successful) response
+                            var responseContent = await responseMessage.Content.ReadAsStringAsync();
+
+                            if (responseContent is not null)
+                            {
+                                // verify that the response has a content-type of application/json
+                                // NOTE: we do not parse the optional character set; we assume the default character set
+                                var responseContentType = responseMessage.Content.Headers.ContentType?.MediaType;
+                                if (responseContentType is not null)
+                                {
+                                    var contentTypeIsApplicationJson = EncodingUtils.VerifyContentTypeIsApplicationJson(responseContentType);
+                                    if (contentTypeIsApplicationJson == false)
+                                    {
+                                        // invalid access token response; return the response content
+                                        return MorphicResult.ErrorResult(RequestAccessTokenError.InvalidAccessTokenResponse(responseContent));
+                                    }
+                                }
+                                else
+                                {
+                                    // invalid access token response; return the response content
+                                    return MorphicResult.ErrorResult(RequestAccessTokenError.InvalidAccessTokenResponse(responseContent));
+                                }
+
+                                // deserialize the response content
+                                Rfc6749AccessTokenSuccessfulResponseContent successfulResponse;
+                                try
+                                {
+                                    successfulResponse = JsonSerializer.Deserialize<Rfc6749AccessTokenSuccessfulResponseContent>(responseContent);
+                                }
+                                catch
+                                {
+                                    // invalid access token response; return the response content
+                                    return MorphicResult.ErrorResult(RequestAccessTokenError.InvalidAccessTokenResponse(responseContent));
+                                }
+
+                                RequestAccessTokenResponse result = new();
+                                // AccessToken
+                                if (successfulResponse.access_token is not null)
+                                {
+                                    result.AccessToken = successfulResponse.access_token!;
+                                }
+                                else
+                                {
+                                    // invalid access token response; return the response content
+                                    return MorphicResult.ErrorResult(RequestAccessTokenError.InvalidAccessTokenResponse(responseContent));
+                                }
+                                // TokenType
+                                if (successfulResponse.token_type is not null)
+                                {
+                                    result.TokenType = successfulResponse.token_type!;
+                                }
+                                else
+                                {
+                                    // invalid access token response; return the response content
+                                    return MorphicResult.ErrorResult(RequestAccessTokenError.InvalidAccessTokenResponse(responseContent));
+                                }
+                                // ExpiresIn
+                                result.ExpiresIn = successfulResponse.expires_in;
+                                // RefreshToken
+                                result.RefreshToken = successfulResponse.refresh_token;
+                                // Scope
+                                result.Scope = successfulResponse.scope;
+
+                                return MorphicResult.OkResult(result);
+                            }
+                            else
+                            {
+                                // invalid access token response; return the response content
+                                return MorphicResult.ErrorResult(RequestAccessTokenError.InvalidAccessTokenResponse(null /* responseContent */));
+                            }
+                        }
+                    case HttpStatusCode.BadRequest:
+                        {
+                            var responseContent = await responseMessage.Content.ReadAsStringAsync();
+
+                            // verify that the response has a content-type of application/json
+                            // NOTE: we do not parse the optional character set; we assume the default character set
+                            var responseContentType = responseMessage.Content.Headers.ContentType?.MediaType;
+                            if (responseContentType is not null)
+                            {
+                                var contentTypeIsApplicationJson = EncodingUtils.VerifyContentTypeIsApplicationJson(responseContentType);
+                                if (contentTypeIsApplicationJson == false)
+                                {
+                                    // invalid oauth error response; return the http error code
+                                    return MorphicResult.ErrorResult(RequestAccessTokenError.HttpError(responseMessage.StatusCode));
+                                }
+                            }
+                            else
+                            {
+                                // invalid oauth error response; return the http error code
+                                return MorphicResult.ErrorResult(RequestAccessTokenError.HttpError(responseMessage.StatusCode));
+                            }
+
+                            // deserialize the response content
+                            if (responseContent is not null)
+                            {
+                                Rfc6749AccessTokenErrorResponseContent errorResponse;
+                                try
+                                {
+                                    errorResponse = JsonSerializer.Deserialize<Rfc6749AccessTokenErrorResponseContent>(responseContent);
+                                }
+                                catch
+                                {
+                                    // invalid oauth error response; just return the http status code (as it's not an OAuth error)
+                                    return MorphicResult.ErrorResult(RequestAccessTokenError.HttpError(responseMessage.StatusCode));
+                                }
+
+                                Rfc6749AccessTokenErrorResponseErrorCodes? error = null;
+                                if (errorResponse.error is not null)
+                                {
+                                    error = MorphicEnum<Rfc6749AccessTokenErrorResponseErrorCodes>.FromStringValue(errorResponse.error);
+                                    if (error is null)
+                                    {
+                                        // missing or unknown oauth error code
+                                        return MorphicResult.ErrorResult(RequestAccessTokenError.UnsupportedOAuthAccessTokenErrorResponseError(errorResponse.error, errorResponse.error_description, errorResponse.error_uri));
+                                    }
+                                }
+                                else
+                                {
+                                    // if we did not get a valid response, return the HTTP error (as it's not an OAuth error)
+                                    return MorphicResult.ErrorResult(RequestAccessTokenError.HttpError(responseMessage.StatusCode));
+                                }
+
+                                return MorphicResult.ErrorResult(RequestAccessTokenError.OAuthAccessTokenRequestError(error.Value, errorResponse.error_description, errorResponse.error_uri));
+                            }
+                            else
+                            {
+                                // if we did not get a valid response, return the HTTP error (as it's not an OAuth error)
+                                return MorphicResult.ErrorResult(RequestAccessTokenError.HttpError(responseMessage.StatusCode));
+                            }
+                        }
+                    case HttpStatusCode.Unauthorized:
+                        {
+                            // this would typically occur when an unauthorized client id + secret was provided
+                            return MorphicResult.ErrorResult(RequestAccessTokenError.Unauthorized);
+                        }
+                    default:
+                        return MorphicResult.ErrorResult(RequestAccessTokenError.HttpError(responseMessage.StatusCode));
+                }
+            }
+        }
+
+        #endregion "Token Auth API"
 
     }
 }
