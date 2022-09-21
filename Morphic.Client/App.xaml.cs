@@ -871,7 +871,7 @@ namespace Morphic.Client
 
         internal record SessionTelemetryEventData
         {
-            [JsonPropertyName("sessionId")]
+            [JsonPropertyName("session_id")]
             public Guid? SessionId { get; set; }
             //
             [JsonPropertyName("state")]
@@ -1491,7 +1491,7 @@ namespace Morphic.Client
             _messageWatcherNativeWindow?.Dispose();
             if (ConfigurableFeatures.TelemetryIsEnabled == true)
             {
-                // dispose of our heartbeat timer
+                // dispose of our telemetry heartbeat timer
                 _telemetryHeartbeatTimer.Dispose();
 
                 try
