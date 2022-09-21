@@ -215,6 +215,7 @@ namespace Morphic.Client.Bar.Data.Actions
             return MorphicResult.OkResult();
         }
 
+     //   NOTE: this function is deprecated as of Morphic v1.6
      //   private static async Task<MorphicResult<MorphicUnit, MorphicUnit>> ClearClipboardAsync(uint numberOfRetries, TimeSpan interval)
      //   {
      //       // NOTE from Microsoft documentation (something to think about when working on this in the future...and perhaps something we need to handle):
