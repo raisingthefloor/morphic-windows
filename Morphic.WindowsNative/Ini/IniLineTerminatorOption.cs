@@ -21,7 +21,7 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-namespace Morphic.WindowsNative.Ini.Lexer
+namespace Morphic.WindowsNative.Ini
 {
     using System;
     using System.Collections.Generic;
@@ -29,12 +29,13 @@ namespace Morphic.WindowsNative.Ini.Lexer
     using System.Text;
     using System.Threading.Tasks;
 
-    internal enum IniTokenKind
+    public enum IniLineTerminatorOption
     {
-        Invalid,
-
-        Section,
-        Property,
-        EndOfFile,
+        None,
+        Cr,
+        CrLf,
+        Lf,
+        //
+        UseDefault,
     }
 }

@@ -139,7 +139,7 @@ namespace Morphic.Settings.SettingsHandlers.Ini
                 IniSection? section = this.IniFile.Sections.FirstOrDefault(s => s.Name == sectionName);
                 if (section is null)
                 {
-                    section = new IniSection(sectionName);
+                    section = new IniSection(sectionName, IniLineTerminatorOption.UseDefault);
                     this.IniFile.Sections.Add(section);
                 }
 
@@ -156,7 +156,7 @@ namespace Morphic.Settings.SettingsHandlers.Ini
             }
             else if (property is null)
             {
-                properties.Add(new IniProperty(propertyName, value));
+                properties.Add(new IniProperty(propertyName, value, IniLineTerminatorOption.UseDefault));
             }
             else
             {

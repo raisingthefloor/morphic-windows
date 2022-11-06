@@ -1,4 +1,12 @@
-﻿// The R&D leading to these results received funding from the:
+﻿// Copyright 2020-2022 Raising the Floor - US, Inc.
+//
+// Licensed under the New BSD license. You may not use this file except in
+// compliance with this License.
+//
+// You may obtain a copy of the License at
+// https://github.com/raisingthefloor/morphic-windows/blob/master/LICENSE.txt
+//
+// The R&D leading to these results received funding from the:
 // * Rehabilitation Services Administration, US Dept. of Education under
 //   grant H421A150006 (APCP)
 // * National Institute on Disability, Independent Living, and
@@ -13,34 +21,38 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace Morphic.WindowsNative.Ini
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+
     public class IniSection
     {
         public string Name;
         public List<IniProperty> Properties;
 
-        internal List<IniTrivia> LeadingTrivia = new List<IniTrivia>();
-        internal List<IniTrivia> TrailingTrivia = new List<IniTrivia>();
+        public IniLineTerminatorOption LineTerminator;
 
-        public IniSection(string name)
+        internal List<Lexer.IniTrivia> LeadingTrivia = new();
+        internal List<Lexer.IniTrivia> TrailingTrivia = new();
+
+        public IniSection(string name, IniLineTerminatorOption lineTerminator)
         {
-            if(name.IndexOf(']') > 0)
+            if (name.IndexOf(']') > 0)
             {
                 throw new ArgumentException("Argument 'name' may not contain the ']' character", nameof(name));
             }
 
             this.Name = name;
             this.Properties = new List<IniProperty>();
+
+            this.LineTerminator = lineTerminator;
         }
 
-        public override string ToString()
+        public string SectionNameAsSectionHeaderString()
         {
             var result = new StringBuilder();
 
@@ -51,15 +63,15 @@ namespace Morphic.WindowsNative.Ini
             return result.ToString();
         }
 
-        internal static IniSection CreateFromLexeme(List<char> lexeme, List<IniTrivia>? leadingTrivia = null, List<IniTrivia>? trailingTrivia = null)
+        internal static IniSection CreateFromLexeme(List<char> lexeme, IniLineTerminatorOption lineTerminator, List<Lexer.IniTrivia>? leadingTrivia = null, List<Lexer.IniTrivia>? trailingTrivia = null)
         {
             var sectionNameAsChars = IniSection.GetSectionNameFromSectionLexeme(lexeme);
             var sectionNameAsString = new string(sectionNameAsChars.ToArray());
             //
-            var result = new IniSection(sectionNameAsString)
+            var result = new IniSection(sectionNameAsString, lineTerminator)
             {
-                LeadingTrivia = leadingTrivia ?? new List<IniTrivia>(),
-                TrailingTrivia = trailingTrivia ?? new List<IniTrivia>()
+                LeadingTrivia = leadingTrivia ?? new List<Lexer.IniTrivia>(),
+                TrailingTrivia = trailingTrivia ?? new List<Lexer.IniTrivia>(),
             };
             return result;
         }
@@ -83,6 +95,5 @@ namespace Morphic.WindowsNative.Ini
             List<char> sectionName = lexeme.GetRange(indexOfLeftBracket + 1, indexOfRightBracket - indexOfLeftBracket - 1);
             return sectionName;
         }
-
     }
 }
