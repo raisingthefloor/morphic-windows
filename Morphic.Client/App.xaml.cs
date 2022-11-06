@@ -1,19 +1,19 @@
-﻿// Copyright 2020-2021 Raising the Floor - International
+﻿// Copyright 2020-2022 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
 //
 // You may obtain a copy of the License at
-// https://github.com/GPII/universal/blob/master/LICENSE.txt
+// https://github.com/raisingthefloor/morphic-windows/blob/master/LICENSE.txt
 //
 // The R&D leading to these results received funding from the:
-// * Rehabilitation Services Administration, US Dept. of Education under 
+// * Rehabilitation Services Administration, US Dept. of Education under
 //   grant H421A150006 (APCP)
-// * National Institute on Disability, Independent Living, and 
+// * National Institute on Disability, Independent Living, and
 //   Rehabilitation Research (NIDILRR)
-// * Administration for Independent Living & Dept. of Education under grants 
+// * Administration for Independent Living & Dept. of Education under grants
 //   H133E080022 (RERC-IT) and H133E130028/90RE5003-01-00 (UIITA-RERC)
-// * European Union's Seventh Framework Programme (FP7/2007-2013) grant 
+// * European Union's Seventh Framework Programme (FP7/2007-2013) grant
 //   agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 // * William and Flora Hewlett Foundation
 // * Ontario Ministry of Research and Innovation
@@ -1567,14 +1567,26 @@ namespace Morphic.Client
                 this.SystemSettingChanged?.Invoke(this, EventArgs.Empty);
             };
 
-            SystemEvents.DisplaySettingsChanged += this.SystemEventsOnDisplaySettingsChanged;
+            // NOTE: to avoid needing to handle exceptions when setting up our DisplaySettingsChanged handler, we first manually start up the display settings listener; if our process was
+            //       running without the ability or permissions to start up the appropriate system-/session-level listeners, we'd otherwise get an exception when wiring up the event(s).
+            var startListeningForDisplaySettingsEventsResult = Morphic.WindowsNative.Display.DisplaySettingsListener.Shared.StartListening();
+            if (startListeningForDisplaySettingsEventsResult.IsError == true)
+            {
+                // NOTE: in the future, we may want to log or otherwise capture the knowledge that we are unable to capture Win32 display settings changes
+                Debug.Assert(false, "Could not listen for Win32 display settings changes");
+            }
+            // NOTE: wiring up this event will result in an exception if the display settings listener could not be started successfully (see note immediately above)
+            Morphic.WindowsNative.Display.DisplaySettingsListener.Shared.DisplaySettingsChanged += this.SystemEventsOnDisplaySettingsChanged;
+            //
+            //
             SystemEvents.UserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
 
             SystemEvents.SessionEnding += SystemEvents_SessionEnding;
 
             this.Exit += (sender, args) =>
             {
-                SystemEvents.DisplaySettingsChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                // NOTE: technically, we no longer need to do this during exit because our finalizer SHOULD do it automatically [also: note that this Exit closure was not called in testing anyway]
+                Morphic.WindowsNative.Display.DisplaySettingsListener.Shared.DisplaySettingsChanged -= this.SystemEventsOnDisplaySettingsChanged;
                 SystemEvents.UserPreferenceChanged -= this.SystemEventsOnDisplaySettingsChanged;
             };
         }
