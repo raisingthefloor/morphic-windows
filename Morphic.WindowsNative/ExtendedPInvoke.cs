@@ -922,24 +922,33 @@ namespace Morphic.WindowsNative
             public HighContrastFlags dwFlags;
             public String? lpszDefaultScheme;
 
-            public void Init()
+            public static HIGHCONTRAST InitializeNew()
             {
-                this.cbSize = (uint)Marshal.SizeOf(typeof(HIGHCONTRAST));
+                var result = new HIGHCONTRAST()
+                {
+                    cbSize = (uint)Marshal.SizeOf(typeof(HIGHCONTRAST)),
+                };
+
+                return result;
             }
+
         }
 
         // flags for HIGHCONTRAST.dwFlags
-        public enum HighContrastFlags: uint 
+        // https://docs.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-highcontrastw
+        internal enum HighContrastFlags : uint
         {
-            HCF_HIGHCONTRASTON  = 0x00000001,
-            HCF_AVAILABLE       = 0x00000002,
-            HCF_HOTKEYACTIVE    = 0x00000004,
-            HCF_CONFIRMHOTKEY   = 0x00000008,
-            HCF_HOTKEYSOUND     = 0x00000010,
-            HCF_INDICATOR       = 0x00000020,
+            HCF_HIGHCONTRASTON = 0x00000001,
+            HCF_AVAILABLE = 0x00000002,
+            HCF_HOTKEYACTIVE = 0x00000004,
+            HCF_CONFIRMHOTKEY = 0x00000008,
+            HCF_HOTKEYSOUND = 0x00000010,
+            HCF_INDICATOR = 0x00000020,
             HCF_HOTKEYAVAILABLE = 0x00000040,
-            HCF_LOGONDESKTOP    = 0x00000100,
-            HCF_DEFAULTDESKTOP  = 0x00000200
+            HCF_LOGONDESKTOP = 0x00000100,
+            HCF_DEFAULTDESKTOP = 0x00000200,
+            // NOTE: HCF_OPTION_NOTHEMECHANGE is new (or newly documented), as of Windows 10 2004 (build 19041)
+            HCF_OPTION_NOTHEMECHANGE = 0x00001000,
         }
 
         [StructLayout(LayoutKind.Sequential)]
