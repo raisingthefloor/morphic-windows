@@ -1579,15 +1579,58 @@ namespace Morphic.Client
             Morphic.WindowsNative.Display.DisplaySettingsListener.Shared.DisplaySettingsChanged += this.SystemEventsOnDisplaySettingsChanged;
             //
             //
-            SystemEvents.UserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
+            // NOTE: to avoid needing to handle exceptions when setting up our UserPreferenceChanged handler, we first manually start up the user preference listener; if our process was
+            //       running without the ability or permissions to start up the appropriate system-/session-level listeners, we'd otherwise get an exception when wiring up the event(s).
+            var startListeningForUserPreferenceEventsResult = Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.StartListening();
+            if (startListeningForUserPreferenceEventsResult.IsError == true)
+            {
+                // NOTE: in the future, we may want to log or otherwise capture the knowledge that we are unable to capture Win32 user preference changes
+                Debug.Assert(false, "Could not listen for Win32 user preference changes");
+            }
+            // NOTE: wiring up this event will result in an exception if the user preference listener could not be started successfully (see note immediately above)
+            // NOTE: all of these events were effectively wired up in Morphic v1.6 and earlier; we are wiring them all up out of an abundance of caution, but realistically we should only
+            //       wire up the display-related user preference change notifications
+            Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.AccessibilityUserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
+            Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.ColorUserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
+            Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.DesktopUserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
+            Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.GeneralUserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
+            Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.IconUserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
+            Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.KeyboardUserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
+            Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.LocaleUserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
+            Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.MenuUserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
+            Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.MouseUserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
+            Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.PolicyUserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
+            Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.PowerUserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
+            Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.ScreensaverUserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
+            Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.VisualStyleUserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
+            Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.WindowUserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
 
             SystemEvents.SessionEnding += SystemEvents_SessionEnding;
 
             this.Exit += (sender, args) =>
             {
                 // NOTE: technically, we no longer need to do this during exit because our finalizer SHOULD do it automatically [also: note that this Exit closure was not called in testing anyway]
-                Morphic.WindowsNative.Display.DisplaySettingsListener.Shared.DisplaySettingsChanged -= this.SystemEventsOnDisplaySettingsChanged;
-                SystemEvents.UserPreferenceChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                //Morphic.WindowsNative.Display.DisplaySettingsListener.Shared.DisplaySettingsChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                Morphic.WindowsNative.Display.DisplaySettingsListener.Shared.StopListening();
+
+                // NOTE: technically, we no longer need to do this during exit because our finalizer SHOULD do it automatically [also: note that this Exit closure was not called in testing anyway]
+                //// NOTE: all of these events were effectively wired up in Morphic v1.6 and earlier; we are wiring them all up out of an abundance of caution, but realistically we should only
+                ////       wire up the display-related user preference change notifications
+                //Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.AccessibilityUserPreferenceChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                //Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.ColorUserPreferenceChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                //Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.DesktopUserPreferenceChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                //Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.GeneralUserPreferenceChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                //Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.IconUserPreferenceChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                //Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.KeyboardUserPreferenceChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                //Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.LocaleUserPreferenceChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                //Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.MenuUserPreferenceChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                //Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.MouseUserPreferenceChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                //Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.PolicyUserPreferenceChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                //Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.PowerUserPreferenceChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                //Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.ScreensaverUserPreferenceChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                //Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.VisualStyleUserPreferenceChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                //Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.WindowUserPreferenceChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.StopListening();
             };
         }
 
