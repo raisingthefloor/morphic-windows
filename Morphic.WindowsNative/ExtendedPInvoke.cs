@@ -485,6 +485,43 @@ internal struct ExtendedPInvoke
         public uint AnimationId;
     }
 
+    // https://docs.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-highcontrastw
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    internal struct HIGHCONTRAST
+    {
+        public uint cbSize;
+        public HighContrastFlags dwFlags;
+        public String? lpszDefaultScheme;
+
+        public static HIGHCONTRAST InitializeNew()
+        {
+            var result = new HIGHCONTRAST()
+            {
+                cbSize = (uint)Marshal.SizeOf(typeof(HIGHCONTRAST)),
+            };
+
+            return result;
+        }
+
+    }
+
+    // flags for HIGHCONTRAST.dwFlags
+    // https://docs.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-highcontrastw
+    internal enum HighContrastFlags : uint
+    {
+        HCF_HIGHCONTRASTON = 0x00000001,
+        HCF_AVAILABLE = 0x00000002,
+        HCF_HOTKEYACTIVE = 0x00000004,
+        HCF_CONFIRMHOTKEY = 0x00000008,
+        HCF_HOTKEYSOUND = 0x00000010,
+        HCF_INDICATOR = 0x00000020,
+        HCF_HOTKEYAVAILABLE = 0x00000040,
+        HCF_LOGONDESKTOP = 0x00000100,
+        HCF_DEFAULTDESKTOP = 0x00000200,
+        // NOTE: HCF_OPTION_NOTHEMECHANGE is new (or newly documented), as of Windows 10 2004 (build 19041)
+        HCF_OPTION_NOTHEMECHANGE = 0x00001000,
+    }
+
     // NOTE: these attributes were painstakingly observed and captured by hand from "C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\um\x64\fileextd.lib" (Windows 10 1809 SDK) using Ghidra; they appear to be undocumented
     // NOTE: these attributes were corroborated at: http://www.brandonfa.lk/win8/win8_devrel_head_x86/webcamui.h
     // NOTE: the enum name, WINDOWCOMPOSITIONATTRIB, is assumed (based on the string immediately following the WCA_ values in fileextd.lib); these are grouped together for convenience (and may technically just be a list of consts)
