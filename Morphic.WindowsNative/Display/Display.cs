@@ -791,7 +791,7 @@ public struct Display
         return MorphicResult.OkResult(result);
     }
 
-    //// TODO: the following code is neither complete nor tested; additionally, it may actually set the display resolution in virtual pixels instead of physical pixels (in which case it must be renamed); it is included here only for completeness in portion Morphic 1.x to 2.x
+    //// TODO: the following code is neither complete nor tested; additionally, it may actually set the display resolution in virtual pixels instead of physical pixels (in which case it must be renamed); it is included here only for completeness in migrating Morphic 1.x code to 2.x
     //public MorphicResult<MorphicUnit, MorphicUnit> SetDisplayResolutionInPhysicalPixels(Size newSize)
     //{
     //    ExtendedPInvoke.DEVMODEW deviceMode = ExtendedPInvoke.DEVMODEW.InitializeNew();
