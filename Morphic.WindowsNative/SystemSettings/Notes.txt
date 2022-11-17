@@ -1,0 +1,2 @@
+﻿// NOTE: here is the command we used to export the SystemSettings.DataModel.winmd file (to generate the SystemSettings.DataModel.cs class and related WinRT classes):
+cswinrt -verbose -target net6.0 -in 10.0.22621.0 -in %INPUT_PATH%\SystemSettings.DataModel.winmd -out %OUTPUT_FOLDER_PATH% -include SystemSettings -exclude Windows
