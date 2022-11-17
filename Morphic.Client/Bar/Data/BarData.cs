@@ -204,7 +204,9 @@ namespace Morphic.Client.Bar.Data
                                         extraBarItem.ToolTip = extraItemData.tooltipText;
                                         extraBarItem.Text = extraItemData.label ?? "";
                                         //
-                                        extraBarItem.Action = new Morphic.Client.Bar.Data.Actions.ApplicationAction();
+                                        var extraBarItemApplicationAction = new Morphic.Client.Bar.Data.Actions.ApplicationAction();
+                                        extraBarItemApplicationAction.TelemetryEventName = "morphicBarExtraItem";
+                                        extraBarItem.Action = extraBarItemApplicationAction;
                                         ((Morphic.Client.Bar.Data.Actions.ApplicationAction)extraBarItem.Action!).ImageIsCollapsed = true; // for horizontal bars, we don't want an image to be visible
                                         ((Morphic.Client.Bar.Data.Actions.ApplicationAction)extraBarItem.Action!).ExeName = extraItemData.appId ?? "";
                                         extraBarItemShouldBeAdded = ((Morphic.Client.Bar.Data.Actions.ApplicationAction)extraBarItem.Action!).IsAvailable;
@@ -217,7 +219,9 @@ namespace Morphic.Client.Bar.Data
                                         extraBarItem.ToolTip = extraItemData.tooltipText;
                                         extraBarItem.Text = extraItemData.label ?? "";
                                         //
-                                        extraBarItem.Action = new Morphic.Client.Bar.Data.Actions.WebAction();
+                                        var extraBarItemWebAction = new Morphic.Client.Bar.Data.Actions.WebAction();
+                                        extraBarItemWebAction.TelemetryEventName = "morphicBarExtraItem";
+                                        extraBarItem.Action = extraBarItemWebAction;
                                         ((Morphic.Client.Bar.Data.Actions.WebAction)extraBarItem.Action!).UrlString = extraItemData.url ?? "";
                                         extraBarItemShouldBeAdded = true;
                                     }

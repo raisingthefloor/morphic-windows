@@ -34,10 +34,6 @@ namespace Morphic.Settings.SettingsHandlers.SystemSettings
         /// <summary>An ISettingItem class that this class is wrapping.</summary>
         private SystemSettingsDataModel.ISettingItem SettingItem;
 
-        /// <summary>True to make SetValue and Invoke do nothing.</summary>
-        private bool dryRun;
-        private bool gotValue = false;
-
         /// <summary>The SystemSettings.DataModel.SettingType (WinRT-assigned setting type) of this setting.</summary>
         public SystemSettingsDataModel.SettingType SettingType { get; private set; }
 
@@ -47,11 +43,8 @@ namespace Morphic.Settings.SettingsHandlers.SystemSettings
         /// Initializes a new instance of the SettingItem class.
         /// </summary>
         /// <param name="settingId">The setting ID.</param>
-        /// <param name="dryRun">true to make Invoke and SetValue methods do nothing.</param>
-        public SystemSettingItem(string settingId, bool dryRun = false)
+        public SystemSettingItem(string settingId)
         {
-            this.dryRun = dryRun;
-
             if (_settingsDatabase is null)
             {
                 _settingsDatabase = new SystemSettingsDataModel.SettingsDatabase();
@@ -62,22 +55,22 @@ namespace Morphic.Settings.SettingsHandlers.SystemSettings
                 throw new SettingFailedException("Argument 'settingId' is null or empty");
             }
 
-            SystemSettingsDataModel.ISettingItem? getSettingResult;
+            SystemSettingsDataModel.ISettingItem? settingItem;
             try
             {
-                getSettingResult = _settingsDatabase!.GetSetting(settingId);
+                settingItem = _settingsDatabase!.GetSetting(settingId);
             }
             catch (Exception ex)
             {
                 // NOTE: when we move to .NET 6+, it's unknown as to whether or not the WinRT function will throw exceptions; we should capture them in any case
                 throw new SettingFailedException("Could not get setting item", ex);
             }
-            if (getSettingResult is null)
+            if (settingItem is null)
             {
                 throw new SettingFailedException("Failed to find setting item");
             }
 
-            this.SettingItem = getSettingResult!;
+            this.SettingItem = settingItem!;
             this.SettingType = this.SettingItem.Type;
         }
 
@@ -172,14 +165,9 @@ namespace Morphic.Settings.SettingsHandlers.SystemSettings
         /// <returns>The return value of the action function.</returns>
         public long Invoke(IntPtr n)
         {
-            if (this.dryRun)
-            {
-                return 0;
-            }
-            else
-            {
-                return this.SettingItem.Invoke(n, new SystemSettingsDataModel.Rect()).ToInt64();
-            }
+			// NOTE: the Invoke function appears to be declared incorrectly; it should use Windows.Foundation.Rect (which exposes doubles) instead of this custom Rect struct (which uses floats)
+            // return this.SettingItem.Invoke(n, new Windows.Foundation.Rect()).ToInt64();
+            return this.SettingItem.Invoke(n, new SystemSettingsDataModel.Rect()).ToInt64();
         }
 
         /// <summary>Gets the "IsEnabled" value.</summary>

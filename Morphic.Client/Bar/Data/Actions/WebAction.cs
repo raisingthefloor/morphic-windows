@@ -73,21 +73,37 @@ namespace Morphic.Client.Bar.Data.Actions
             }
         }
 
+        public string? TelemetryEventName { get; set; }
+
         protected override Task<MorphicResult<MorphicUnit, MorphicUnit>> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
         {
-            bool success = true;
-            if (this.Uri is not null)
+            try
             {
-                Process? process = Process.Start(new ProcessStartInfo()
+                bool success = true;
+                if (this.Uri is not null)
                 {
-                    FileName = this.ResolveString(this.Uri?.ToString(), source),
-                    UseShellExecute = true
-                });
-                success = process is not null;
-            }
+                    Process? process = Process.Start(new ProcessStartInfo()
+                    {
+                        FileName = this.ResolveString(this.Uri?.ToString(), source),
+                        UseShellExecute = true
+                    });
+                    success = process is not null;
+                }
 
-            MorphicResult<MorphicUnit, MorphicUnit> result = success ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
-            return Task.FromResult(result);
+                MorphicResult<MorphicUnit, MorphicUnit> result = success ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
+                return Task.FromResult(result);
+            }
+            finally
+            {
+                if (this.TelemetryEventName is not null)
+                {
+                    // NOTE: ideally we would change this whole function into an async function (instead of using the Task.FromResult pattern)
+                    Task.Run(async () =>
+                    {
+                        await App.Current.Countly_RecordEventAsync(this.TelemetryEventName!);
+                    });
+                }
+            }
         }
     }
 }

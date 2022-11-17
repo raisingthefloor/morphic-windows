@@ -77,6 +77,7 @@ namespace SystemSettings.DataModel
 
         // For Type = Action - performs the action.
         // NOTE: in WinRT, the window type is global::Windows.UI.Core.CoreWindow
+		// NOTE: the second parameter appears to be declared incorrectly; it should use Windows.Foundation.Rect (which exposes doubles) instead of the custom Rect struct (which uses floats)
         IntPtr Invoke(IntPtr window, Rect rect);
 
         // SettingChanged event
@@ -132,6 +133,7 @@ namespace SystemSettings.DataModel
     /// <summary>
     /// Used by ISettingsItem.Invoke (reason unknown).
     /// </summary>
+	// NOTE: the Invoke function appears to be declared incorrectly; it should use Windows.Foundation.Rect (which exposes doubles) instead of this custom Rect struct (which uses floats)
     public struct Rect
     {
         public float X;

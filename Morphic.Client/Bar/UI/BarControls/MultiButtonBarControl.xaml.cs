@@ -362,7 +362,8 @@ namespace Morphic.Client.Bar.UI.BarControls
                                             var darkModeState = getDarkModeStateResult.Value!;
 
                                             Setting appsThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(Settings.SolutionsRegistry.SettingId.LightThemeApps);
-                                            Application.Current.Dispatcher.Invoke(new Action(() => {
+                                            Application.Current.Dispatcher.Invoke(new Action(() =>
+                                            {
                                                 this.InverseSettingOnChanged(sender, new SettingEventArgs(appsThemeSetting, !darkModeState));
                                             }));
                                         });

@@ -95,7 +95,7 @@
             {
                 try 
                 {
-                    settingItem = new SystemSettingItem(settingName, false);
+                    settingItem = new SystemSettingItem(settingName);
                     settingCache[settingName] = settingItem;
                 }
                 catch (Exception ex)

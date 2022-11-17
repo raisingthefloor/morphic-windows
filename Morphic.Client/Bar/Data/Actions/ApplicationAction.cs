@@ -564,130 +564,146 @@ namespace Morphic.Client.Bar.Data.Actions
             return MorphicResult.ErrorResult();
         }
 
+        public string? TelemetryEventName { get; set; }
+
         protected override Task<MorphicResult<MorphicUnit, MorphicUnit>> InvokeAsyncImpl(string? source = null, bool? toggleState = null)
         {
-            if (this.DefaultAppName is not null)
+            try
             {
-                // use the default application for this type
-                switch (this.DefaultAppName!)
+                if (this.DefaultAppName is not null)
                 {
-                    case "browser":
-                        {
-                            string? associatedExecutablePath = null;
-
-                            // try to get the executable for https:// urls
-                            var getAssociatedExecutableForHttpUrlsResult = ApplicationAction.GetPathToExecutableForUrlAssociation("https");
-                            if (getAssociatedExecutableForHttpUrlsResult.IsError == false)
+                    // use the default application for this type
+                    switch (this.DefaultAppName!)
+                    {
+                        case "browser":
                             {
-                                associatedExecutablePath = getAssociatedExecutableForHttpUrlsResult.Value!;
-                            }
+                                string? associatedExecutablePath = null;
 
-                            // if we haven't found the default browser yet, look for the default application to open ".htm" files
-                            if (associatedExecutablePath is null)
-                            {
-                                var getAssociatedExecutableForHtmFilesResult = ApplicationAction.GetPathToExecutableForFileExtension(".htm");
-                                if (getAssociatedExecutableForHtmFilesResult.IsError == false)
+                                // try to get the executable for https:// urls
+                                var getAssociatedExecutableForHttpUrlsResult = ApplicationAction.GetPathToExecutableForUrlAssociation("https");
+                                if (getAssociatedExecutableForHttpUrlsResult.IsError == false)
                                 {
-                                    associatedExecutablePath = getAssociatedExecutableForHtmFilesResult.Value!;
+                                    associatedExecutablePath = getAssociatedExecutableForHttpUrlsResult.Value!;
                                 }
-                            }
 
-                            // if we still haven't found the default browser, gracefully degrade by trying to use the launch process executable shortcut "https:" instead
-                            if (associatedExecutablePath is null)
+                                // if we haven't found the default browser yet, look for the default application to open ".htm" files
+                                if (associatedExecutablePath is null)
+                                {
+                                    var getAssociatedExecutableForHtmFilesResult = ApplicationAction.GetPathToExecutableForFileExtension(".htm");
+                                    if (getAssociatedExecutableForHtmFilesResult.IsError == false)
+                                    {
+                                        associatedExecutablePath = getAssociatedExecutableForHtmFilesResult.Value!;
+                                    }
+                                }
+
+                                // if we still haven't found the default browser, gracefully degrade by trying to use the launch process executable shortcut "https:" instead
+                                if (associatedExecutablePath is null)
+                                {
+                                    associatedExecutablePath = "https:";
+                                }
+
+                                var launchBrowserProcessResult = ApplicationAction.LaunchProcess(associatedExecutablePath, new List<string>(), new Dictionary<string, string>(), this.WindowStyle);
+                                return Task.FromResult(launchBrowserProcessResult);
+                            }
+                        case "email":
                             {
-                                associatedExecutablePath = "https:";
+                                var launchTarget = "mailto:";
+
+                                var launchMailProcessResult = ApplicationAction.LaunchProcess(launchTarget, new List<string>(), new Dictionary<string, string>(), this.WindowStyle, true /* useShellExecute should be true for all protocols (e.g. 'mailto:') */);
+                                return Task.FromResult(launchMailProcessResult);
                             }
-
-                            var launchBrowserProcessResult = ApplicationAction.LaunchProcess(associatedExecutablePath, new List<string>(), new Dictionary<string, string>(), this.WindowStyle);
-                            return Task.FromResult(launchBrowserProcessResult);
-                        }
-                    case "email":
-                        {
-                            var launchTarget = "mailto:";
-
-                            var launchMailProcessResult = ApplicationAction.LaunchProcess(launchTarget, new List<string>(), new Dictionary<string, string>(), this.WindowStyle, true /* useShellExecute should be true for all protocols (e.g. 'mailto:') */);
-                            return Task.FromResult(launchMailProcessResult);
-                        }
-                    default:
-                        {
-                            // unknown
-                            Debug.Assert(false, "Unknown 'default' application type: " + this.DefaultAppName!);
-                            //
-                            MorphicResult<MorphicUnit, MorphicUnit> result = MorphicResult.ErrorResult();
-                            return Task.FromResult(result);
-                        }
+                        default:
+                            {
+                                // unknown
+                                Debug.Assert(false, "Unknown 'default' application type: " + this.DefaultAppName!);
+                                //
+                                MorphicResult<MorphicUnit, MorphicUnit> result = MorphicResult.ErrorResult();
+                                return Task.FromResult(result);
+                            }
+                    }
                 }
-            }
 
-            // if we reach here, we need to launch the executable related to this "exe" ID
-            if (string.IsNullOrEmpty(this.ExeName) || string.IsNullOrEmpty(this.AppPath))
-            {
-                // if we don't have an exeName ID tag, we have failed
-                //
-                MorphicResult<MorphicUnit, MorphicUnit> result = MorphicResult.ErrorResult();
-                return Task.FromResult(result);
-            }
-
-            if (this.AppX)
-            {
-                var pid = Appx.Start(this.AppPath);
-                //
-                MorphicResult<MorphicUnit, MorphicUnit> result = pid > 0 ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
-                return Task.FromResult(result);
-            }
-
-            // for all other processes, launch the executable
-            // pathToExecutable
-            var pathToExecutable = this.AppPath;
-            //
-            // useShellExecute
-            var useShellExecute = true; // default
-            if (this.Shell)
-            {
-                useShellExecute = true;
-            }
-            // arguments
-            List<string> arguments = new List<string>();
-            if (this.Arguments.Count > 0)
-            {
-                foreach (string argument in this.Arguments)
+                // if we reach here, we need to launch the executable related to this "exe" ID
+                if (string.IsNullOrEmpty(this.ExeName) || string.IsNullOrEmpty(this.AppPath))
                 {
-                    var resolvedString = this.ResolveString(argument, source);
+                    // if we don't have an exeName ID tag, we have failed
+                    //
+                    MorphicResult<MorphicUnit, MorphicUnit> result = MorphicResult.ErrorResult();
+                    return Task.FromResult(result);
+                }
+
+                if (this.AppX)
+                {
+                    var pid = Appx.Start(this.AppPath);
+                    //
+                    MorphicResult<MorphicUnit, MorphicUnit> result = pid > 0 ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
+                    return Task.FromResult(result);
+                }
+
+                // for all other processes, launch the executable
+                // pathToExecutable
+                var pathToExecutable = this.AppPath;
+                //
+                // useShellExecute
+                var useShellExecute = true; // default
+                if (this.Shell)
+                {
+                    useShellExecute = true;
+                }
+                // arguments
+                List<string> arguments = new List<string>();
+                if (this.Arguments.Count > 0)
+                {
+                    foreach (string argument in this.Arguments)
+                    {
+                        var resolvedString = this.ResolveString(argument, source);
+                        if (resolvedString is not null)
+                        {
+                            arguments.Add(resolvedString);
+                        }
+                    }
+                }
+                else
+                {
+                    var resolvedString = this.ResolveString(this.ArgumentsString, source);
                     if (resolvedString is not null)
                     {
                         arguments.Add(resolvedString);
                     }
                 }
-            }
-            else
-            {
-                var resolvedString = this.ResolveString(this.ArgumentsString, source);
-                if (resolvedString is not null)
+                //
+                // environmentVariables
+                Dictionary<string, string> environmentVariables = new Dictionary<string, string>();
+                foreach (var (key, value) in this.EnvironmentVariables)
                 {
-                    arguments.Add(resolvedString);
+                    var resolvedString = this.ResolveString(value, source);
+                    if (resolvedString is not null)
+                    {
+                        environmentVariables.Add(key, resolvedString);
+                    }
+                    else
+                    {
+                        Debug.Assert(false, "Could not resolve environment variable: key = " + key + ", value = '" + value + "'");
+                    }
                 }
-            }
-            //
-            // environmentVariables
-            Dictionary<string, string> environmentVariables = new Dictionary<string, string>();
-            foreach (var (key, value) in this.EnvironmentVariables)
-            {
-                var resolvedString = this.ResolveString(value, source);
-                if (resolvedString is not null)
-                {
-                    environmentVariables.Add(key, resolvedString);
-                } 
-                else
-                {
-                    Debug.Assert(false, "Could not resolve environment variable: key = " + key + ", value = '" + value + "'");
-                }
-            }
-            //
-            // windowStyle
-            var windowStyle = this.WindowStyle;
+                //
+                // windowStyle
+                var windowStyle = this.WindowStyle;
 
-            var launchProcessResult = ApplicationAction.LaunchProcess(pathToExecutable, arguments, environmentVariables, windowStyle, useShellExecute);
-            return Task.FromResult(launchProcessResult);
+                var launchProcessResult = ApplicationAction.LaunchProcess(pathToExecutable, arguments, environmentVariables, windowStyle, useShellExecute);
+                return Task.FromResult(launchProcessResult);
+            }
+            finally
+            {
+                if (this.TelemetryEventName is not null)
+                {
+                    // NOTE: ideally we would change this whole function into an async function (instead of using the Task.FromResult pattern)
+                    Task.Run(async () =>
+                    {
+                        await App.Current.Countly_RecordEventAsync(this.TelemetryEventName!);
+                    });
+                }
+            }
         }
 
         private static MorphicResult<MorphicUnit, MorphicUnit> LaunchProcess(string pathToExecutable, List<string> arguments, Dictionary<string, string> environmentVariables, ProcessWindowStyle windowStyle, bool useShellExecute = true)
