@@ -47,7 +47,7 @@
         public string Name { get; private set; } = string.Empty;
 
         [JsonProperty("dataType")]
-        public SettingType DataType { get; private set; }
+        public Morphic.Settings.SettingsHandlers.SettingType DataType { get; private set; }
 
         /// <summary>Don't copy this setting to/from another computer.</summary>
         [JsonProperty("local")]
@@ -175,7 +175,7 @@
             };
             if (parts.Length > 1)
             {
-                if (Enum.TryParse(parts[1], true, out SettingType t))
+                if (Enum.TryParse(parts[1], true, out Morphic.Settings.SettingsHandlers.SettingType t))
                 {
                     setting.DataType = t;
                 }

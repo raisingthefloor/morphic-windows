@@ -1,20 +1,27 @@
-﻿/*
- * Interface for the SettingItem Windows Runtime object.
- *
- * Copyright 2018 Raising the Floor - International
- *
- * Licensed under the New BSD license. You may not use this file except in
- * compliance with this License.
- *
- * The research leading to these results has received funding from the European Union's
- * Seventh Framework Programme (FP7/2007-2013)
- * under grant agreement no. 289016.
- *
- * You may obtain a copy of the License at
- * https://github.com/GPII/universal/blob/master/LICENSE.txt
- */
+﻿// Copyright 2018-2022 Raising the Floor - US, Inc.
+//
+// Licensed under the New BSD license. You may not use this file except in
+// compliance with this License.
+//
+// You may obtain a copy of the License at
+// https://github.com/raisingthefloor/morphic-windows/blob/master/LICENSE.txt
+//
+// The R&D leading to these results received funding from the:
+// * Rehabilitation Services Administration, US Dept. of Education under
+//   grant H421A150006 (APCP)
+// * National Institute on Disability, Independent Living, and
+//   Rehabilitation Research (NIDILRR)
+// * Administration for Independent Living & Dept. of Education under grants
+//   H133E080022 (RERC-IT) and H133E130028/90RE5003-01-00 (UIITA-RERC)
+// * European Union's Seventh Framework Programme (FP7/2007-2013) grant
+//   agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
+// * William and Flora Hewlett Foundation
+// * Ontario Ministry of Research and Innovation
+// * Canadian Foundation for Innovation
+// * Adobe Foundation
+// * Consumer Electronics Association Foundation
 
- namespace Morphic.Settings.SettingsHandlers.SystemSettings
+namespace SystemSettings.DataModel
 {
     using System;
     using System.Collections.Generic;
@@ -32,10 +39,10 @@
     /// native code from the call with the debugger where the function name will be displayed in the disassembled code.
     ///
     /// The binding of methods isn't by name, but by order, which is why the "unknown" methods must remain.
-    /// Not all methods work for some type of setting.
+    /// Not all methods work for some type(s) of settings.
     /// </remarks>
     [ComImport, Guid("40C037CC-D8BF-489E-8697-D66BAA3221BF"), InterfaceType(ComInterfaceType.InterfaceIsIInspectable)]
-    public interface ISystemSettingItem
+    public interface ISettingItem
     {
         int Id { get; }
         SettingType Type { get; }
@@ -62,17 +69,21 @@
         int SetValue(
             // Normally "Value"
             [MarshalAs(UnmanagedType.HString)] string name,
-            [MarshalAs(UnmanagedType.IInspectable)] object? value);
+            [MarshalAs(UnmanagedType.IInspectable)] object? pValue); // NOTE: the pValue parameter is not nullable in the CsWinRT-derived interface (but that may be an artifact of CsWinRT and WinRT)
 
         // Unknown usage
         int GetProperty(string name);
-        int SetProperty(string name, object value);
+        int SetProperty(string name, object pValue);
 
         // For Type = Action - performs the action.
-        IntPtr Invoke(IntPtr a, Rect b);
+        // NOTE: in WinRT, the window type is global::Windows.UI.Core.CoreWindow
+        IntPtr Invoke(IntPtr window, Rect rect);
 
         // SettingChanged event
+        // NOTE: in WinRT, the event type is global::Windows.Foundation.TypedEventHandler<object, string>
         event EventHandler<string> SettingChanged;
+
+        // NOTE: none of the following functions appear to be part of the ISettingItem interface; they might be part of a superinterface or they might just be incorrect; we do not use them
 
         // Unknown - setter for IsUpdating
         bool IsUpdating2 { set; }
@@ -104,26 +115,18 @@
     }
 
     /// <summary>The type of setting.</summary>
-    public enum SettingType
+    public enum SettingType : int
     {
-        // Needs investigating
-        Custom = 0,
-
-        // Read-only
-        DisplayString = 1,
-        LabeledString = 2,
-
-        // Values (use GetValue/SetValue)
-        Boolean = 3,
-        Range = 4,
-        String = 5,
-        List = 6,
-
-        // Performs an action
-        Action = 7,
-
-        // Needs investigating
-        SettingCollection = 8,
+        Plugin = unchecked((int)0xffffffff),
+        Custom = unchecked((int)0),
+        DisplayString = unchecked((int)0x1),
+        LabeledString = unchecked((int)0x2),
+        Boolean = unchecked((int)0x3),
+        Range = unchecked((int)0x4),
+        String = unchecked((int)0x5),
+        List = unchecked((int)0x6),
+        Action = unchecked((int)0x7),
+        SettingCollection = unchecked((int)0x8),
     }
 
     /// <summary>

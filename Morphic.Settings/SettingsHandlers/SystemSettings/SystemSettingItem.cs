@@ -14,6 +14,8 @@
  * https://github.com/GPII/universal/blob/master/LICENSE.txt
  */
 
+using SystemSettingsDataModel = SystemSettings.DataModel;
+
 namespace Morphic.Settings.SettingsHandlers.SystemSettings
 {
     using System;
@@ -36,7 +38,7 @@ namespace Morphic.Settings.SettingsHandlers.SystemSettings
         private const string GetSettingExport = "GetSetting";
 
         /// <summary>An ISettingItem class that this class is wrapping.</summary>
-        private ISystemSettingItem settingItem;
+        private SystemSettingsDataModel.ISettingItem settingItem;
 
         /// <summary>True to make SetValue and Invoke do nothing.</summary>
         private bool dryRun;
@@ -58,11 +60,11 @@ namespace Morphic.Settings.SettingsHandlers.SystemSettings
         [UnmanagedFunctionPointer(CallingConvention.Winapi)]
         private delegate IntPtr GetSettingFunc(
             [MarshalAs(UnmanagedType.HString)] string settingId,
-            out ISystemSettingItem settingItem,
+            out SystemSettingsDataModel.ISettingItem settingItem,
             IntPtr n);
 
-        /// <summary>The type of this setting.</summary>
-        public SettingType SettingType { get; private set; }
+        /// <summary>The SystemSettings.DataModel.SettingType (WinRT-assigned setting type) of this setting.</summary>
+        public SystemSettingsDataModel.SettingType SettingType { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the SettingItem class.
@@ -179,7 +181,7 @@ namespace Morphic.Settings.SettingsHandlers.SystemSettings
             }
             else
             {
-                return this.settingItem.Invoke(n, new Rect()).ToInt64();
+                return this.settingItem.Invoke(n, new SystemSettingsDataModel.Rect()).ToInt64();
             }
         }
 
@@ -236,7 +238,7 @@ namespace Morphic.Settings.SettingsHandlers.SystemSettings
         /// <param name="settingId">The setting.</param>
         /// <param name="dllPath">The dll containing the class.</param>
         /// <returns>An ISettingItem instance for the setting.</returns>
-        private ISystemSettingItem GetSettingItem(string settingId, string dllPath)
+        private SystemSettingsDataModel.ISettingItem GetSettingItem(string settingId, string dllPath)
         {
             // Load the dll.
             IntPtr lib = LoadLibrary(dllPath);
@@ -257,7 +259,7 @@ namespace Morphic.Settings.SettingsHandlers.SystemSettings
             GetSettingFunc getSetting = Marshal.GetDelegateForFunctionPointer<GetSettingFunc>(proc);
 
             // Call it.
-            ISystemSettingItem item;
+            SystemSettingsDataModel.ISettingItem item;
             IntPtr result = getSetting(settingId, out item, IntPtr.Zero);
             if (result != IntPtr.Zero || item is null)
             {

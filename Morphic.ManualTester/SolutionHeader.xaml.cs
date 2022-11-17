@@ -71,16 +71,16 @@
                 {
                     switch (setting.DataType)
                     {
-                        case SettingType.Bool:
+                        case Morphic.Settings.SettingsHandlers.SettingType.Bool:
                             this.ControlStack.Items.Add(new ManualControlBoolean(this.window, setting));
                             break;
-                        case SettingType.Real:
+                        case Morphic.Settings.SettingsHandlers.SettingType.Real:
                             this.ControlStack.Items.Add(new ManualControlDouble(this.window, setting));
                             break;
-                        case SettingType.Int:
+                        case Morphic.Settings.SettingsHandlers.SettingType.Int:
                             this.ControlStack.Items.Add(new ManualControlInteger(this.window, setting));
                             break;
-                        case SettingType.String:
+                        case Morphic.Settings.SettingsHandlers.SettingType.String:
                             this.ControlStack.Items.Add(new ManualControlString(this.window, setting));
                             break;
                     }
