@@ -173,6 +173,20 @@ namespace Morphic.WindowsNative
         #endregion fileapi.h
 
 
+        #region libloaderapi.h
+
+        // https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-getprocaddress
+        // NOTE: while coredll.dll has a unicode variant of GetProcAddress, kernel32 apparently does not have A (ANSI) and W (wide/UTF16) variants
+        [DllImport("kernel32.dll", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
+        internal static extern IntPtr GetProcAddress(IntPtr hModule, string lpProcName);
+
+        // https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-loadlibraryw
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        internal static extern IntPtr LoadLibrary(string lpLibFileName);
+
+        #endregion libloaderapi.h
+
+
         #region minwindef.h
 
         internal const int MAX_PATH = 260;

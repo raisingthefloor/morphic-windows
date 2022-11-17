@@ -57,8 +57,22 @@ namespace Morphic.Settings.SettingsHandlers.SystemSettings
                 _settingsDatabase = new SystemSettingsDataModel.SettingsDatabase();
             }
 
-            var getSettingResult = _settingsDatabase!.GetSetting(settingId);
-            if (getSettingResult is null) 
+            if (settingId is null || settingId == string.Empty)
+            {
+                throw new SettingFailedException("Argument 'settingId' is null or empty");
+            }
+
+            SystemSettingsDataModel.ISettingItem? getSettingResult;
+            try
+            {
+                getSettingResult = _settingsDatabase!.GetSetting(settingId);
+            }
+            catch (Exception ex)
+            {
+                // NOTE: when we move to .NET 6+, it's unknown as to whether or not the WinRT function will throw exceptions; we should capture them in any case
+                throw new SettingFailedException("Could not get setting item", ex);
+            }
+            if (getSettingResult is null)
             {
                 throw new SettingFailedException("Failed to find setting item");
             }
