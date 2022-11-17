@@ -965,9 +965,11 @@ namespace Morphic.Client
                 WindowsVersion.Win10_v20H2,
                 WindowsVersion.Win10_v21H1,
                 WindowsVersion.Win10_v21H2,
+                WindowsVersion.Win10_v22H2,
                 WindowsVersion.Win10_vFuture,
                 //
                 WindowsVersion.Win11_v21H2,
+                WindowsVersion.Win11_v22H2,
                 WindowsVersion.Win11_vFuture
             };
         private static bool IsOsCompatibleWithMorphic()
