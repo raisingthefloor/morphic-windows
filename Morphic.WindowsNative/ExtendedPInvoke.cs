@@ -30,7 +30,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-internal struct ExtendedPInvoke
+public struct ExtendedPInvoke
 {
     #region appmodel.h
 
@@ -49,8 +49,8 @@ internal struct ExtendedPInvoke
 
     #region winerror.h
 
-    public const nint S_OK = 0;
-    public const nint S_FALSE = 1;
+    internal const nint S_OK = 0;
+    internal const nint S_FALSE = 1;
 
     // facility codes
     private const uint FACILITY_WIN32 = 7;
@@ -69,7 +69,7 @@ internal struct ExtendedPInvoke
     private const int CCHFORMNAME = 32;
 
     [Flags]
-    public enum QueryDisplayConfigFlags : uint
+    internal enum QueryDisplayConfigFlags : uint
     {
         QDC_ALL_PATHS = 0x00000001,
         QDC_ONLY_ACTIVE_PATHS = 0x00000002,
@@ -78,7 +78,7 @@ internal struct ExtendedPInvoke
 
     // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_device_info_header
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-    public struct DISPLAYCONFIG_DEVICE_INFO_HEADER
+    internal struct DISPLAYCONFIG_DEVICE_INFO_HEADER
     {
         public DISPLAYCONFIG_DEVICE_INFO_TYPE type;
         public uint size;
@@ -87,7 +87,7 @@ internal struct ExtendedPInvoke
     }
 
     [Flags]
-    public enum DISPLAYCONFIG_DEVICE_INFO_TYPE : uint
+    internal enum DISPLAYCONFIG_DEVICE_INFO_TYPE : uint
     {
         // NOTE: the GET_DPI and SET_DPI values are undocumented and were reverse engineered as part of the Morphic Classic project
         DISPLAYCONFIG_DEVICE_INFO_SET_DPI = unchecked((uint)-4),
@@ -114,7 +114,7 @@ internal struct ExtendedPInvoke
     // NOTE: this structure is undocumented and was reverse engineered as part of the Morphic Classic project
     // NOTE: all offsets are indices (relative to the OS's recommended DPI scaling value; the recommended DPI scaling value is always zero)
     [StructLayout(LayoutKind.Sequential)]
-    public struct DISPLAYCONFIG_GET_DPI
+    internal struct DISPLAYCONFIG_GET_DPI
     {
         public DISPLAYCONFIG_DEVICE_INFO_HEADER header;
 
@@ -138,7 +138,7 @@ internal struct ExtendedPInvoke
     // NOTE: this structure is undocumented and was reverse engineered as part of the Morphic Classic project
     // NOTE: all offsets are indices (relative to the OS's recommended DPI scaling value; the recommended DPI scaling value is always zero)
     [StructLayout(LayoutKind.Sequential)]
-    public struct DISPLAYCONFIG_SET_DPI
+    internal struct DISPLAYCONFIG_SET_DPI
     {
         public DISPLAYCONFIG_DEVICE_INFO_HEADER header;
 
@@ -159,7 +159,7 @@ internal struct ExtendedPInvoke
 
     // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_mode_info
     [StructLayout(LayoutKind.Explicit)]
-    public struct DISPLAYCONFIG_MODE_INFO
+    internal struct DISPLAYCONFIG_MODE_INFO
     {
         [FieldOffset(0)]
         public PInvoke.User32.DISPLAYCONFIG_MODE_INFO_TYPE infoType;
@@ -179,7 +179,7 @@ internal struct ExtendedPInvoke
 
     // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_path_info
     [StructLayout(LayoutKind.Sequential)]
-    public struct DISPLAYCONFIG_PATH_INFO
+    internal struct DISPLAYCONFIG_PATH_INFO
     {
         public DISPLAYCONFIG_PATH_SOURCE_INFO sourceInfo;
         public DISPLAYCONFIG_PATH_TARGET_INFO targetInfo;
@@ -187,14 +187,14 @@ internal struct ExtendedPInvoke
     }
 
     [Flags]
-    public enum DisplayConfigSourceInfoStatus : uint
+    internal enum DisplayConfigSourceInfoStatus : uint
     {
         DISPLAYCONFIG_TARGET_IN_USE = 0x00000001,
     }
 
     // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_path_source_info
     [StructLayout(LayoutKind.Sequential)]
-    public struct DISPLAYCONFIG_PATH_SOURCE_INFO
+    internal struct DISPLAYCONFIG_PATH_SOURCE_INFO
     {
         public PInvoke.User32.LUID adapterId;
         public uint id;
@@ -204,7 +204,7 @@ internal struct ExtendedPInvoke
 
     // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_path_target_info
     [StructLayout(LayoutKind.Sequential)]
-    public struct DISPLAYCONFIG_PATH_TARGET_INFO
+    internal struct DISPLAYCONFIG_PATH_TARGET_INFO
     {
         public PInvoke.User32.LUID adapterId;
         public uint id;
@@ -219,7 +219,7 @@ internal struct ExtendedPInvoke
     }
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-    public struct DISPLAYCONFIG_SOURCE_DEVICE_NAME
+    internal struct DISPLAYCONFIG_SOURCE_DEVICE_NAME
     {
         public DISPLAYCONFIG_DEVICE_INFO_HEADER header;
 
@@ -242,14 +242,14 @@ internal struct ExtendedPInvoke
 
     // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_target_mode
     [StructLayout(LayoutKind.Sequential)]
-    public struct DISPLAYCONFIG_TARGET_MODE
+    internal struct DISPLAYCONFIG_TARGET_MODE
     {
         public DISPLAYCONFIG_VIDEO_SIGNAL_INFO targetVideoSignalInfo;
     }
 
     // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_video_signal_info
     [StructLayout(LayoutKind.Sequential)]
-    public struct DISPLAYCONFIG_VIDEO_SIGNAL_INFO
+    internal struct DISPLAYCONFIG_VIDEO_SIGNAL_INFO
     {
         public ulong pixelRate;
         public PInvoke.User32.DISPLAYCONFIG_RATIONAL hSyncFreq;
@@ -264,7 +264,7 @@ internal struct ExtendedPInvoke
     // https://docs.microsoft.com/en-us/windows-hardware/drivers/ddi/d3dkmdt/ne-d3dkmdt-_d3dkmdt_video_signal_standard
     // see: d3dkmdt.h (MSVC v142 - VS 2019 C++ x64/x86 build tools (14.25) [and Spectre-migrated libs] 
     [Flags]
-    public enum _D3DKMDT_VIDEO_SIGNAL_STANDARD : uint
+    internal enum _D3DKMDT_VIDEO_SIGNAL_STANDARD : uint
     {
         D3DKMDT_VSS_UNINITIALIZED = 0,
         //
@@ -309,7 +309,7 @@ internal struct ExtendedPInvoke
 
     // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-querydisplayconfig
     [DllImport("user32.dll")]
-    public static extern PInvoke.Win32ErrorCode QueryDisplayConfig(QueryDisplayConfigFlags flags, ref uint numPathArrayElements, [Out] DISPLAYCONFIG_PATH_INFO[] pathInfoArray,
+    internal static extern PInvoke.Win32ErrorCode QueryDisplayConfig(QueryDisplayConfigFlags flags, ref uint numPathArrayElements, [Out] DISPLAYCONFIG_PATH_INFO[] pathInfoArray,
         ref uint modeInfoArrayElements, [Out] DISPLAYCONFIG_MODE_INFO[] modeInfoArray, IntPtr currentTopologyId);
 
     //
@@ -369,7 +369,7 @@ internal struct ExtendedPInvoke
     }
     //
     [StructLayout(LayoutKind.Explicit)]
-    public struct DEVMODEW__DUMMYUNIONNAME
+    internal struct DEVMODEW__DUMMYUNIONNAME
     {
         [FieldOffset(0)]
         public DEVMODEW__DUMMYUNIONNAME__DUMMYSTRUCTNAME DUMMYSTRUCTNAME;
@@ -413,7 +413,7 @@ internal struct ExtendedPInvoke
 
     // https://docs.microsoft.com/en-us/windows/win32/api/windef/ns-windef-pointl
     [StructLayout(LayoutKind.Sequential)]
-    public struct POINTL
+    internal struct POINTL
     {
         public int x;
         public int y;
@@ -575,6 +575,89 @@ internal struct ExtendedPInvoke
     #endregion user32.dll (reverse engineered, not WinUser.h)
 
 
+    #region winnt.h
+
+    internal const uint SYNCHRONIZE = 0x00100000;
+
+    // registry-specific access rights
+
+    internal const uint KEY_QUERY_VALUE         = 0x0001;
+    internal const uint KEY_SET_VALUE           = 0x0002;
+    internal const uint KEY_CREATE_SUB_KEY      = 0x0004;
+    internal const uint KEY_ENUMERATE_SUB_KEYS  = 0x0008;
+    internal const uint KEY_NOTIFY              = 0x0010;
+    internal const uint KEY_CREATE_LINK         = 0x0020;
+    internal const uint KEY_WOW64_32KEY         = 0x0200;
+    internal const uint KEY_WOW64_64KEY         = 0x0100;
+    internal const uint KEY_WOW64_RES           = 0x0300;
+
+    internal const uint KEY_READ = ((uint)PInvoke.Kernel32.ACCESS_MASK.StandardRight.STANDARD_RIGHTS_READ |
+                                    KEY_QUERY_VALUE |
+                                    KEY_ENUMERATE_SUB_KEYS |
+                                    KEY_NOTIFY) 
+                                    & ~SYNCHRONIZE;
+    internal const uint KEY_WRITE = ((uint)PInvoke.Kernel32.ACCESS_MASK.StandardRight.STANDARD_RIGHTS_WRITE | 
+                                    KEY_SET_VALUE | 
+                                    KEY_CREATE_SUB_KEY)
+                                    & ~SYNCHRONIZE;
+
+    internal const uint KEY_EXECUTE = KEY_READ
+                                      & ~SYNCHRONIZE;
+
+    internal const uint KEY_ALL_ACCESS = ((uint)PInvoke.Kernel32.ACCESS_MASK.StandardRight.STANDARD_RIGHTS_ALL |
+                                         KEY_QUERY_VALUE |
+                                         KEY_SET_VALUE |
+                                         KEY_CREATE_SUB_KEY |
+                                         KEY_ENUMERATE_SUB_KEYS |
+                                         KEY_NOTIFY |
+                                         KEY_CREATE_LINK)
+                                      & ~SYNCHRONIZE;
+
+    //
+
+    internal enum RegistryValueType : uint
+    {
+        REG_NONE = 0,
+        REG_SZ = 1,
+        REG_EXPAND_SZ = 2,
+        REG_BINARY = 3,
+        REG_DWORD = 4,
+        REG_DWORD_LITTLE_ENDIAN = REG_DWORD,
+        REG_DWORD_BIG_ENDIAN = 5,
+        REG_LINK = 6,
+        REG_MULTI_SZ = 7,
+        REG_RESOURCE_LIST = 8,
+        REG_FULL_RESOURCE_DESCRIPTOR = 9,
+        REG_RESOURCE_REQUIREMENTS_LIST = 10,
+        REG_QWORD = 11,
+        REG_QWORD_LITTLE_ENDIAN = REG_QWORD
+    }
+
+    #endregion winnt.h
+
+
+    #region winreg.h
+
+    // https://learn.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regenumkeyw
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode)]
+    internal static extern PInvoke.Win32ErrorCode RegEnumKeyEx(UIntPtr hKey, uint dwIndex, StringBuilder lpName, ref uint lpcchName, IntPtr lpReserved, IntPtr lpClass, IntPtr lpcchClass, IntPtr lpftLastWriteTime);
+
+    // https://learn.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regenumvaluew
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode)]
+    //internal static extern PInvoke.Win32ErrorCode RegEnumValue(UIntPtr hKey, uint dwIndex, StringBuilder lpValueName, ref uint lpcchValueName, IntPtr lpReserved, out RegistryValueType lpType, IntPtr lpData, ref uint lpcbData);
+    internal static extern PInvoke.Win32ErrorCode RegEnumValue(UIntPtr hKey, uint dwIndex, StringBuilder lpValueName, ref uint lpcchValueName, IntPtr lpReserved, IntPtr lpType, IntPtr lpData, IntPtr lpcbData);
+
+    // https://learn.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regqueryvalueexw
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode)]
+    internal static extern PInvoke.Win32ErrorCode RegQueryValueEx(UIntPtr hKey, [MarshalAs(UnmanagedType.LPWStr)] string? lpValueName, IntPtr lpReserved, out RegistryValueType lpType, IntPtr lpData, ref uint lpcbData);
+
+    // https://learn.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regsetvalueexw
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode)]
+    internal static extern PInvoke.Win32ErrorCode RegSetValueEx(UIntPtr hKey, [MarshalAs(UnmanagedType.LPWStr)] string? lpValueName, uint reserved, RegistryValueType dwType, IntPtr lpData, uint cbData);
+
+    #endregion winreg.h
+
+
     #region WinUser.h
 
     private const int CCHDEVICENAME = 32;
@@ -626,17 +709,17 @@ internal struct ExtendedPInvoke
 
     // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getdisplayconfigbuffersizes
     [DllImport("user32.dll")]
-    public static extern PInvoke.Win32ErrorCode GetDisplayConfigBufferSizes(QueryDisplayConfigFlags flags, out uint numPathArrayElements, out uint numModeInfoArrayElements);
+    internal static extern PInvoke.Win32ErrorCode GetDisplayConfigBufferSizes(QueryDisplayConfigFlags flags, out uint numPathArrayElements, out uint numModeInfoArrayElements);
 
     // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-displayconfiggetdeviceinfo
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-    public static extern PInvoke.Win32ErrorCode DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_SOURCE_DEVICE_NAME requestPacket);
+    internal static extern PInvoke.Win32ErrorCode DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_SOURCE_DEVICE_NAME requestPacket);
     //
     [DllImport("user32.dll")]
-    public static extern PInvoke.Win32ErrorCode DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_GET_DPI requestPacket);
+    internal static extern PInvoke.Win32ErrorCode DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_GET_DPI requestPacket);
 
     [DllImport("user32.dll")]
-    public static extern PInvoke.Win32ErrorCode DisplayConfigSetDeviceInfo(ref DISPLAYCONFIG_SET_DPI requestPacket);
+    internal static extern PInvoke.Win32ErrorCode DisplayConfigSetDeviceInfo(ref DISPLAYCONFIG_SET_DPI requestPacket);
 
     // NOTE: this delegate is used as a callback by EnumDisplayMonitors
     // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nc-winuser-monitorenumproc
