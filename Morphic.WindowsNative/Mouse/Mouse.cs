@@ -21,17 +21,17 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using Morphic.Core;
-using Morphic.WindowsNative;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace Morphic.WindowsNative.Mouse
 {
+	using Morphic.Core;
+	using Morphic.WindowsNative;
+	using System;
+	using System.Collections.Generic;
+	using System.Drawing;
+	using System.Linq;
+	using System.Text;
+	using System.Threading.Tasks;
+
     public class Mouse
     {
         public static MorphicResult<Point, Win32ApiError> GetCurrentPosition()
@@ -50,7 +50,40 @@ namespace Morphic.WindowsNative.Mouse
             var result = new Point(point.x, point.y);
             return MorphicResult.OkResult(result);
         }
-        
+
+        public static MorphicResult<uint?, Win32ApiError> GetCursorSize()
+        {
+            var openCursorsSubKeyResult = Morphic.WindowsNative.Registry.CurrentUser.OpenSubKey(@"Control Panel\Cursors");
+            if (openCursorsSubKeyResult.IsError == true)
+            {
+                var win32ApiError = openCursorsSubKeyResult.Error!;
+                return MorphicResult.ErrorResult(win32ApiError);
+            }
+            var cursorsSubKey = openCursorsSubKeyResult.Value!;
+
+            var getValueDataResult = cursorsSubKey.GetValueDataOrNull<uint>("CursorBaseSize");
+            if (getValueDataResult.IsError == true)
+            {
+                switch (getValueDataResult.Error!.Value)
+                {
+                    case Registry.RegistryKey.RegistryGetValueError.Values.ValueDoesNotExist:
+                        return MorphicResult.OkResult<uint?>(null);
+                    case Registry.RegistryKey.RegistryGetValueError.Values.Win32Error:
+                        {
+                            var win32ApiError = openCursorsSubKeyResult.Error!;
+                            return MorphicResult.ErrorResult(win32ApiError);
+                        }
+                    case Registry.RegistryKey.RegistryGetValueError.Values.TypeMismatch:
+                    case Registry.RegistryKey.RegistryGetValueError.Values.UnsupportedType:
+                    default:
+                        throw new MorphicUnhandledErrorException();
+                }
+            }
+            var cursorBaseSize = getValueDataResult.Value!;
+
+            return MorphicResult.OkResult(cursorBaseSize);
+        }
+
         // NOTE: in the future, we may want to consider offering an animation of our cursor's move to the center of the display, via a second (options) parameter
         public static MorphicResult<MorphicUnit, Win32ApiError> MoveCursorToCenterOfDisplay(Morphic.WindowsNative.Display.Display display)
         {
