@@ -31,7 +31,7 @@ namespace Morphic.WindowsNative.OsVersion
             }
             var registryKey = openRegistryKeyResult.Value!;
 
-            var getValueResult = registryKey.GetValue<uint>("UBR");
+            var getValueResult = registryKey.GetValueData<uint>("UBR");
             if (getValueResult.IsError == true)
             {
                 return MorphicResult.ErrorResult();

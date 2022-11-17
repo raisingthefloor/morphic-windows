@@ -1129,17 +1129,17 @@ namespace Morphic.Client.Bar.Data.Actions
 
                 // get the current setting
                 bool appsUseLightThemeAsBool;
-                var getAppsUseLightThemeResult = personalizeKey.GetValue<uint>("AppsUseLightTheme");
+                var getAppsUseLightThemeResult = personalizeKey.GetValueData<uint>("AppsUseLightTheme");
                 if (getAppsUseLightThemeResult.IsError == true)
                 {
-                    if (getAppsUseLightThemeResult.Error == Morphic.WindowsNative.Registry.RegistryKey.RegistryValueError.ValueDoesNotExist)
+                    switch (getAppsUseLightThemeResult.Error!.Value) 
                     {
-                        // default AppsUseLightTheme (inverse of dark mode state) on Windows 10 v1809 is true
-                        appsUseLightThemeAsBool = true;
-                    }
-                    else
-                    {
-                        return MorphicResult.ErrorResult();
+                        case WindowsNative.Registry.RegistryKey.RegistryGetValueError.Values.ValueDoesNotExist:
+                            // default AppsUseLightTheme (inverse of dark mode state) on Windows 10 v1809 is true
+                            appsUseLightThemeAsBool = true;
+                            break;
+                        default:
+                            return MorphicResult.ErrorResult();
                     }
                 }
                 else

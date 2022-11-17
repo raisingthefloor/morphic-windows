@@ -1,4 +1,4 @@
-﻿// Copyright 2021-2022 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2022 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -814,6 +814,44 @@ namespace Morphic.WindowsNative
 
         #region winnt.h
 
+	    internal const uint SYNCHRONIZE = 0x00100000;
+
+	    // registry-specific access rights
+
+	    internal const uint KEY_QUERY_VALUE         = 0x0001;
+	    internal const uint KEY_SET_VALUE           = 0x0002;
+	    internal const uint KEY_CREATE_SUB_KEY      = 0x0004;
+	    internal const uint KEY_ENUMERATE_SUB_KEYS  = 0x0008;
+	    internal const uint KEY_NOTIFY              = 0x0010;
+	    internal const uint KEY_CREATE_LINK         = 0x0020;
+	    internal const uint KEY_WOW64_32KEY         = 0x0200;
+	    internal const uint KEY_WOW64_64KEY         = 0x0100;
+	    internal const uint KEY_WOW64_RES           = 0x0300;
+
+	    internal const uint KEY_READ = ((uint)PInvoke.Kernel32.ACCESS_MASK.StandardRight.STANDARD_RIGHTS_READ |
+	                                    KEY_QUERY_VALUE |
+	                                    KEY_ENUMERATE_SUB_KEYS |
+	                                    KEY_NOTIFY) 
+	                                    & ~SYNCHRONIZE;
+	    internal const uint KEY_WRITE = ((uint)PInvoke.Kernel32.ACCESS_MASK.StandardRight.STANDARD_RIGHTS_WRITE | 
+	                                    KEY_SET_VALUE | 
+	                                    KEY_CREATE_SUB_KEY)
+	                                    & ~SYNCHRONIZE;
+
+	    internal const uint KEY_EXECUTE = KEY_READ
+	                                      & ~SYNCHRONIZE;
+
+    	internal const uint KEY_ALL_ACCESS = ((uint)PInvoke.Kernel32.ACCESS_MASK.StandardRight.STANDARD_RIGHTS_ALL |
+	                                         KEY_QUERY_VALUE |
+	                                         KEY_SET_VALUE |
+	                                         KEY_CREATE_SUB_KEY |
+	                                         KEY_ENUMERATE_SUB_KEYS |
+	                                         KEY_NOTIFY |
+	                                         KEY_CREATE_LINK)
+	                                      & ~SYNCHRONIZE;
+
+    	//
+
         internal enum RegistryValueType : uint
         {
             REG_NONE = 0,
@@ -837,11 +875,22 @@ namespace Morphic.WindowsNative
 
         #region winreg.h
 
-        [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+	    // https://learn.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regenumkeyw
+	    [DllImport("advapi32.dll", CharSet = CharSet.Unicode)]
+	    internal static extern PInvoke.Win32ErrorCode RegEnumKeyEx(UIntPtr hKey, uint dwIndex, StringBuilder lpName, ref uint lpcchName, IntPtr lpReserved, IntPtr lpClass, IntPtr lpcchClass, IntPtr lpftLastWriteTime);
+
+	    // https://learn.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regenumvaluew
+	    [DllImport("advapi32.dll", CharSet = CharSet.Unicode)]
+	    //internal static extern PInvoke.Win32ErrorCode RegEnumValue(UIntPtr hKey, uint dwIndex, StringBuilder lpValueName, ref uint lpcchValueName, IntPtr lpReserved, out RegistryValueType lpType, IntPtr lpData, ref uint lpcbData);
+	    internal static extern PInvoke.Win32ErrorCode RegEnumValue(UIntPtr hKey, uint dwIndex, StringBuilder lpValueName, ref uint lpcchValueName, IntPtr lpReserved, IntPtr lpType, IntPtr lpData, IntPtr lpcbData);
+
+	    // https://learn.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regqueryvalueexw
+        [DllImport("advapi32.dll", CharSet = CharSet.Unicode)]
         internal static extern PInvoke.Win32ErrorCode RegQueryValueEx(UIntPtr hKey, [MarshalAs(UnmanagedType.LPWStr)] string? lpValueName, IntPtr lpReserved, out RegistryValueType lpType, IntPtr lpData, ref uint lpcbData);
 
-        [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        internal static extern PInvoke.Win32ErrorCode RegSetValueEx(UIntPtr hKey, [MarshalAs(UnmanagedType.LPWStr)] string? lpValueName, uint reserved, RegistryValueType lpType, IntPtr lpData, uint cbData);
+	    // https://learn.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regsetvalueexw
+        [DllImport("advapi32.dll", CharSet = CharSet.Unicode)]
+        internal static extern PInvoke.Win32ErrorCode RegSetValueEx(UIntPtr hKey, [MarshalAs(UnmanagedType.LPWStr)] string? lpValueName, uint reserved, RegistryValueType dwType, IntPtr lpData, uint cbData);
 
 	    #endregion winreg.h
 

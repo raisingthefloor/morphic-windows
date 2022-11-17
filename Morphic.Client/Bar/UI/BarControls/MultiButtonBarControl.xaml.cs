@@ -349,22 +349,25 @@ namespace Morphic.Client.Bar.UI.BarControls
                                 {
                                     var personalizeKey = openPersonalizeKeyResult.Value!;
 
-                                    var registerForChangesEvent = new Morphic.WindowsNative.Registry.RegistryKey.RegistryKeyChangedEvent(async (sender, e) =>
+                                    var registerForChangesEvent = new Morphic.WindowsNative.Registry.RegistryKey.RegistryKeyChangedEventHandler(async (sender, e) =>
                                     {
-                                        var getDarkModeStateResult = await Morphic.Client.Bar.Data.Actions.Functions.GetDarkModeStateAsync();
-                                        if (getDarkModeStateResult.IsError == true)
+                                        await Application.Current.Dispatcher.InvokeAsync(async () =>
                                         {
-                                            Debug.Assert(false, "Could not get dark mode state");
-                                            return;
-                                        }
-                                        var darkModeState = getDarkModeStateResult.Value!;
+                                            var getDarkModeStateResult = await Morphic.Client.Bar.Data.Actions.Functions.GetDarkModeStateAsync();
+                                            if (getDarkModeStateResult.IsError == true)
+                                            {
+                                                Debug.Assert(false, "Could not get dark mode state");
+                                                return;
+                                            }
+                                            var darkModeState = getDarkModeStateResult.Value!;
 
-                                        Setting appsThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(Settings.SolutionsRegistry.SettingId.LightThemeApps);
-                                        Application.Current.Dispatcher.Invoke(new Action(() => {
-                                            this.InverseSettingOnChanged(sender, new SettingEventArgs(appsThemeSetting, !darkModeState));
-                                        }));
+                                            Setting appsThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(Settings.SolutionsRegistry.SettingId.LightThemeApps);
+                                            Application.Current.Dispatcher.Invoke(new Action(() => {
+                                                this.InverseSettingOnChanged(sender, new SettingEventArgs(appsThemeSetting, !darkModeState));
+                                            }));
+                                        });
                                     });
-                                    personalizeKey.RegisterForValueChangeNotification(registerForChangesEvent);
+                                    personalizeKey.RegistryKeyChangedEvent += registerForChangesEvent;
 
                                     this.Control.Unloaded += (sender, SettingEventArgs) =>
                                     {
