@@ -59,7 +59,8 @@ namespace Morphic.WindowsNative.SystemSettings
             _settingItem = settingItem;
         }
 
-        public string Id => _settingItem.Id;
+        // NOTE: the Id property (which should be a String, not an int) is not currently supported in the Morphic v1.x codebase
+        //public string Id => _settingItem.Id;
         public bool IsApplicable => _settingItem.IsApplicable;
         public bool IsEnabled => _settingItem.IsEnabled;
 
