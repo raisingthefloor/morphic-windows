@@ -21,8 +21,6 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-namespace Morphic.WindowsNative;
-
 using Microsoft.Win32.SafeHandles;
 using Morphic.Core;
 using System;
@@ -33,6 +31,8 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+
+namespace Morphic.WindowsNative;
 
 public partial class Registry
 {
@@ -599,6 +599,25 @@ public partial class Registry
             {
                 Marshal.FreeHGlobal(ptrToValueData);
             }
+        }
+
+        public MorphicResult<MorphicUnit, Win32ApiError> DeleteValue(string? valueName)
+        {
+            var handleAsUIntPtr = (UIntPtr)(_handle.DangerousGetHandle().ToInt64());
+
+            PInvoke.Win32ErrorCode deleteValueErrorCode;
+            deleteValueErrorCode = ExtendedPInvoke.RegDeleteValue(handleAsUIntPtr, valueName);
+            switch (deleteValueErrorCode)
+            {
+                case PInvoke.Win32ErrorCode.ERROR_SUCCESS:
+                    break;
+                default:
+                    // NOTE: in the future, we may want to consider returning a specific result (i.e. "could not open for write access" etc.)
+                    return MorphicResult.ErrorResult(Win32ApiError.Win32Error(unchecked((uint)deleteValueErrorCode)));
+            }
+
+            // setting the value was a success
+            return MorphicResult.OkResult();
         }
 
         //
