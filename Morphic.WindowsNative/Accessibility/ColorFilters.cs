@@ -21,25 +21,27 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
+using Morphic.Core;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Windows.Services.Maps;
+
+using SystemSettingsDataModel = SystemSettings.DataModel;
+
 namespace Morphic.WindowsNative.Accessibility
 {
-    using Morphic.Core;
-    using System;
-    using System.Collections.Generic;
-    using System.Diagnostics;
-    using System.IO;
-    using System.Linq;
-    using System.Net;
-    using System.Runtime.InteropServices;
-    using System.Text;
-    using System.Threading;
-    using System.Threading.Tasks;
-    using Windows.Services.Maps;
-
     public class ColorFilters
     {
-        private static SystemSettings.DataModel.SettingsDatabase? _settingsDatabase;
-        private static SystemSettings.DataModel.SettingsDatabase? SettingsDatabase
+        private static SystemSettingsDataModel.SettingsDatabase? _settingsDatabase;
+        private static SystemSettingsDataModel.SettingsDatabase? SettingsDatabase
         {
             get
             {
@@ -47,7 +49,7 @@ namespace Morphic.WindowsNative.Accessibility
                 {
                     try
                     {
-                        _settingsDatabase = new SystemSettings.DataModel.SettingsDatabase();
+                        _settingsDatabase = new SystemSettingsDataModel.SettingsDatabase();
                     }
                     catch
                     {
@@ -59,8 +61,8 @@ namespace Morphic.WindowsNative.Accessibility
         }
         //
         private const string IS_ENABLED_SETTING_ID = "SystemSettings_Accessibility_ColorFiltering_IsEnabled";
-        private static SystemSettings.DataModel.ISettingItem? _isEnabledSettingItem;
-        private static SystemSettings.DataModel.ISettingItem? IsEnabledSettingItem
+        private static SystemSettingsDataModel.ISettingItem? _isEnabledSettingItem;
+        private static SystemSettingsDataModel.ISettingItem? IsEnabledSettingItem
         {
             get
             {

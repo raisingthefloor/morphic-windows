@@ -889,6 +889,10 @@ namespace Morphic.WindowsNative
 
         #region winreg.h
 
+    	// https://learn.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regdeletevaluew
+	    [DllImport("advapi32.dll", CharSet = CharSet.Unicode)]
+	    internal static extern PInvoke.Win32ErrorCode RegDeleteValue(UIntPtr hKey, [MarshalAs(UnmanagedType.LPWStr)] string? lpValueName);
+
 	    // https://learn.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regenumkeyw
 	    [DllImport("advapi32.dll", CharSet = CharSet.Unicode)]
 	    internal static extern PInvoke.Win32ErrorCode RegEnumKeyEx(UIntPtr hKey, uint dwIndex, StringBuilder lpName, ref uint lpcchName, IntPtr lpReserved, IntPtr lpClass, IntPtr lpcchClass, IntPtr lpftLastWriteTime);
