@@ -35,7 +35,7 @@ public record Win32ApiError : MorphicAssociatedValueEnum<Win32ApiError.Values>
     }
 
     // functions to create member instances
-    public static Win32ApiError Win32Error(uint win32ErrorCode) => new Win32ApiError(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
+    public static Win32ApiError Win32Error(uint win32ErrorCode) => new(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
 
     // associated values
     public uint? Win32ErrorCode { get; private set; }

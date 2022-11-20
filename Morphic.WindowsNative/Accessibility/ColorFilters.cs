@@ -21,8 +21,6 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-namespace Morphic.WindowsNative.Accessibility;
-
 using Morphic.Core;
 using System;
 using System.Collections.Generic;
@@ -35,6 +33,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Services.Maps;
+
+namespace Morphic.WindowsNative.Accessibility;
 
 public class ColorFilters
 {
