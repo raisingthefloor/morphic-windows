@@ -17,8 +17,9 @@
     <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications" Version="7.1.2" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22000.194" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.1.4" />
-    <PackageReference Include="Morphic.Core" Version="1.1.0" />
-    <PackageReference Include="Morphic.OAuth.Core" Version="1.1.0" />
+    <PackageReference Include="Morphic.Core" Version="1.2.0" />
+    <PackageReference Include="Morphic.OAuth.Client" Version="0.3.0" />
+    <PackageReference Include="Morphic.OAuth.Core" Version="1.2.0" />
   </ItemGroup>
 
   <ItemGroup>
