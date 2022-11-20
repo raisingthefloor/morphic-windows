@@ -34,12 +34,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.Services.Maps;
 
+using SystemSettingsDataModel = SystemSettings.DataModel;
+
 namespace Morphic.WindowsNative.Accessibility;
 
 public class ColorFilters
 {
-    private static SystemSettings.DataModel.SettingsDatabase? _settingsDatabase;
-    private static SystemSettings.DataModel.SettingsDatabase? SettingsDatabase
+    private static SystemSettingsDataModel.SettingsDatabase? _settingsDatabase;
+    private static SystemSettingsDataModel.SettingsDatabase? SettingsDatabase
     {
         get 
         {
@@ -47,7 +49,7 @@ public class ColorFilters
             {
                 try
                 {
-                    _settingsDatabase = new SystemSettings.DataModel.SettingsDatabase();
+                    _settingsDatabase = new SystemSettingsDataModel.SettingsDatabase();
                 }
                 catch
                 {
@@ -59,8 +61,8 @@ public class ColorFilters
     }
     //
     private const string IS_ENABLED_SETTING_ID = "SystemSettings_Accessibility_ColorFiltering_IsEnabled";
-    private static SystemSettings.DataModel.ISettingItem? _isEnabledSettingItem;
-    private static SystemSettings.DataModel.ISettingItem? IsEnabledSettingItem
+    private static SystemSettingsDataModel.ISettingItem? _isEnabledSettingItem;
+    private static SystemSettingsDataModel.ISettingItem? IsEnabledSettingItem
     {
         get
         {
@@ -132,19 +134,19 @@ public class ColorFilters
         {
             _isActiveChanged -= value;
 
-            if (_isActiveChanged is null)
+            if (_isActiveChanged is null || _isActiveChanged!.GetInvocationList().Length == 0)
             {
+                _isActiveChanged = null;
+
                 _lastIsActiveValue = null;
 
-                if (_isActiveChanged!.GetInvocationList().Length == 0)
-                {
-                    s_watchKey?.Dispose();
-                    s_watchKey = null;
-                }
+                s_watchKey?.Dispose();
+                s_watchKey = null;
             }
         }
     }
-    private static bool? _lastIsActiveValue;
+
+    private static bool? _lastIsActiveValue = null;
 
     private static void s_watchKey_RegistryKeyChangedEvent(Registry.RegistryKey sender, EventArgs e)
     {
