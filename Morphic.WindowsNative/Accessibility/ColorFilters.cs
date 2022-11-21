@@ -22,6 +22,7 @@
 // * Consumer Electronics Association Foundation
 
 using Morphic.Core;
+using Morphic.WindowsNative.SystemSettings;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -40,57 +41,36 @@ namespace Morphic.WindowsNative.Accessibility
 {
     public class ColorFilters
     {
-        private static SystemSettingsDataModel.SettingsDatabase? _settingsDatabase;
-        private static SystemSettingsDataModel.SettingsDatabase? SettingsDatabase
+        public static class SystemSettingId
+        {
+            public const string COLOR_FILTERING_IS_ENABLED_SETTING_ID = "SystemSettings_Accessibility_ColorFiltering_IsEnabled";
+        }
+
+        private static SettingItemProxy? _colorFilteringIsEnabledSettingItem;
+        private static SettingItemProxy? ColorFilteringIsEnabledSettingItem
         {
             get
             {
-                if (_settingsDatabase is null)
+                if (_colorFilteringIsEnabledSettingItem is null)
                 {
-                    try
-                    {
-                        _settingsDatabase = new SystemSettingsDataModel.SettingsDatabase();
-                    }
-                    catch
-                    {
-                        return null;
-                    }
+                    _colorFilteringIsEnabledSettingItem = SettingsDatabaseProxy.GetSettingItemOrNull(ColorFilters.SystemSettingId.COLOR_FILTERING_IS_ENABLED_SETTING_ID);
                 }
-                return _settingsDatabase!;
+
+                return _colorFilteringIsEnabledSettingItem;
             }
         }
+        // private const string COLOR_FILTERING_IS_ENABLED_VALUE = "Value";
+
         //
-        private const string IS_ENABLED_SETTING_ID = "SystemSettings_Accessibility_ColorFiltering_IsEnabled";
-        private static SystemSettingsDataModel.ISettingItem? _isEnabledSettingItem;
-        private static SystemSettingsDataModel.ISettingItem? IsEnabledSettingItem
-        {
-            get
-            {
-                if (_isEnabledSettingItem is null)
-                {
-                    try
-                    {
-                        _isEnabledSettingItem = ColorFilters.SettingsDatabase?.GetSetting(ColorFilters.IS_ENABLED_SETTING_ID);
-                    }
-                    catch
-                    {
-                        return null;
-                    }
-                }
 
-                return _isEnabledSettingItem;
-            }
-        }
-        private const string IS_ENABLED_VALUE_NAME = "Value";
-
-        private static Morphic.WindowsNative.Registry.RegistryKey? s_watchKey = null;
+        private static Morphic.WindowsNative.Registry.RegistryKey? s_colorFilteringIsActiveWatchKey = null;
         //
         private static EventHandler? _isActiveChanged = null;
         public static event EventHandler IsActiveChanged
         {
             add
             {
-                if (s_watchKey is null)
+                if (s_colorFilteringIsActiveWatchKey is null)
                 {
                     var openKeyResult = Morphic.WindowsNative.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\ColorFiltering");
                     if (openKeyResult.IsError == true)
@@ -107,25 +87,8 @@ namespace Morphic.WindowsNative.Accessibility
                     }
                     var watchKey = openKeyResult.Value!;
 
-                    var getIsActiveResult = ColorFilters.GetIsActive();
-                    if (getIsActiveResult.IsError == true)
-                    {
-                        switch (getIsActiveResult.Error!.Value)
-                        {
-                            case Win32ApiError.Values.Win32Error:
-                                Debug.Assert(false, "Could not get current active state (to set initial active state value); win32 error: " + getIsActiveResult.Error!.Win32ErrorCode.ToString());
-                                break;
-                            default:
-                                throw new MorphicUnhandledErrorException();
-                        }
-                        return;
-                    }
-                    var isActive = getIsActiveResult.Value!.Value;
-
-                    s_watchKey = watchKey;
-                    _lastIsActiveValue = isActive;
-
-                    s_watchKey.RegistryKeyChangedEvent += s_watchKey_RegistryKeyChangedEvent;
+                    s_colorFilteringIsActiveWatchKey = watchKey;
+                    s_colorFilteringIsActiveWatchKey.RegistryKeyChangedEvent += s_colorFilteringIsActiveWatchKey_RegistryKeyChangedEvent;
                 }
 
                 _isActiveChanged += value;
@@ -134,43 +97,36 @@ namespace Morphic.WindowsNative.Accessibility
             {
                 _isActiveChanged -= value;
 
-                if (_isActiveChanged is null)
+                if (_isActiveChanged is null || _isActiveChanged!.GetInvocationList().Length == 0)
                 {
-                    _lastIsActiveValue = null;
+                    _isActiveChanged = null;
 
-                    if (_isActiveChanged!.GetInvocationList().Length == 0)
-                    {
-                        s_watchKey?.Dispose();
-                        s_watchKey = null;
-                    }
+                    s_colorFilteringIsActiveWatchKey?.Dispose();
+                    s_colorFilteringIsActiveWatchKey = null;
                 }
             }
         }
-        private static bool? _lastIsActiveValue;
 
-        private static void s_watchKey_RegistryKeyChangedEvent(Registry.RegistryKey sender, EventArgs e)
+        private static void s_colorFilteringIsActiveWatchKey_RegistryKeyChangedEvent(Registry.RegistryKey sender, EventArgs e)
         {
-            var getIsActiveResult = ColorFilters.GetIsActive();
-            if (getIsActiveResult.IsError == true)
+            var invocationList = _isActiveChanged?.GetInvocationList();
+            if (invocationList is not null)
             {
-                switch (getIsActiveResult.Error!.Value)
+                foreach (EventHandler element in invocationList!)
                 {
-                    case Win32ApiError.Values.Win32Error:
-                        Debug.Assert(false, "Could not get current active state (to check value when registry key value(s) changed); win32 error: " + getIsActiveResult.Error!.Win32ErrorCode.ToString());
-                        break;
-                    default:
-                        throw new MorphicUnhandledErrorException();
+                    Task.Run(() =>
+                    {
+                        element.Invoke(null /* static class, no so type instance */, EventArgs.Empty);
+                    });
                 }
-                return;
             }
-            var isActive = getIsActiveResult.Value!.Value;
-
-            if (_lastIsActiveValue != isActive)
-            {
-                _lastIsActiveValue = isActive;
-                _isActiveChanged?.Invoke(null /* static class, no so type instance */, new EventArgs());
-            }
+            //Task.Run(() =>
+            //{
+            //    _isActiveChanged?.Invoke(null /* static class, no so type instance */, new EventArgs());
+            //});
         }
+
+        //
 
         public static MorphicResult<bool?, Win32ApiError> GetIsActive()
         {
@@ -216,30 +172,16 @@ namespace Morphic.WindowsNative.Accessibility
         }
 
         //// NOTE: this is an alternate implementation of GetIsActive (saved as a backup plan, just in case the registry entries aren't a reliable (or preferred) source of truth for the value
-        //public static MorphicResult<bool?, MorphicUnit> GetIsActive()
+        //public static async Task<MorphicResult<bool?, MorphicUnit>> GetIsActiveAsync(TimeSpan? timeout = null)
         //{
-        //    var settingItem = ColorFilters.IsEnabledSettingItem;
-        //    if (settingItem is null)
+        //    var getValueResult = await SettingItemProxy.GetSettingItemValueAsync<bool>(ColorFilters.ColorFilteringIsEnabledSettingItem, /*ColorFilters.COLOR_FILTERING_IS_ENABLED_VALUE, */timeout);
+        //    if (getValueResult.IsError == true)
         //    {
         //        return MorphicResult.ErrorResult();
         //    }
+        //    var result = getValueResult.Value;
 
-        //    object? resultAsObject;
-        //    try
-        //    {
-        //        resultAsObject = settingItem.GetValue(ColorFilters.IS_ENABLED_VALUE_NAME);
-        //    }
-        //    catch
-        //    {
-        //        return MorphicResult.ErrorResult();
-        //    }
-        //    var resultAsBool = resultAsObject as bool?;
-        //    if (resultAsBool is null)
-        //    {
-        //        return MorphicResult.ErrorResult();
-        //    }
-
-        //    return MorphicResult.OkResult<bool?>(resultAsBool!.Value);
+        //    return MorphicResult.OkResult(result);
         //}
 
         //// NOTE: this is an alternate implementation of SetIsActive (saved as a backup plan, just in case ISettingItem.SetValue(...) stops working at some point)
@@ -301,19 +243,10 @@ namespace Morphic.WindowsNative.Accessibility
         //    return MorphicResult.OkResult();
         //}
 
-        public static MorphicResult<MorphicUnit, MorphicUnit> SetIsActive(bool value)
+        public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> SetIsActiveAsync(bool value, TimeSpan? timeout = null)
         {
-            var settingItem = ColorFilters.IsEnabledSettingItem;
-            if (settingItem is null)
-            {
-                return MorphicResult.ErrorResult();
-            }
-
-            try
-            {
-                settingItem.SetValue(ColorFilters.IS_ENABLED_VALUE_NAME, value);
-            }
-            catch
+            var setValueResult = await SettingItemProxy.SetSettingItemValueAsync<bool>(ColorFilters.ColorFilteringIsEnabledSettingItem, /*ColorFilters.COLOR_FILTERING_IS_ENABLED_VALUE, */value, timeout);
+            if (setValueResult.IsError == true)
             {
                 return MorphicResult.ErrorResult();
             }

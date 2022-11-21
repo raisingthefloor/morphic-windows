@@ -188,9 +188,11 @@ namespace Morphic.WindowsNative.SystemSettings
             while (true)
             {
                 // step 1: make sure that the setting is both applicable and enabled
-                // NOTE: in our analysis of ISettingItem, these were always both true or always both false; we don't know the difference, so out of an abundance of caution we check both
+                // NOTE: in our analysis of ISettingItem, IsApplicable was usually set to true whenever IsEnabled was--but with some settings (like the apps/system dark theme settings),
+                //       IsApplicable was always false; if we feel like we need to be extra-cautious, we can pass an extra argument into "WaitForIsEnabledEventAsync" to also watch
+                //       for IsApplicable to be true
                 var remainingTimeout = (int)Math.Max(timeoutInMilliseconds - timeoutStopwatch.ElapsedMilliseconds, 0);
-                var waitResult = await this.WaitForIsApplicableOrIsEnabledAsync(remainingTimeout);
+                var waitResult = await this.WaitForIsEnabledEventAsync(remainingTimeout);
                 if (waitResult.IsError == true)
                 {
                     switch (waitResult.Error!.Value)
@@ -292,9 +294,11 @@ namespace Morphic.WindowsNative.SystemSettings
             Stopwatch timeoutStopwatch = Stopwatch.StartNew();
 
             // step 1: make sure that the setting is both applicable and enabled
-            // NOTE: in our analysis of ISettingItem, these were always both true or always both false; we don't know the difference, so out of an abundance of caution we check both
+            // NOTE: in our analysis of ISettingItem, IsApplicable was usually set to true whenever IsEnabled was--but with some settings (like the apps/system dark theme settings),
+            //       IsApplicable was always false; if we feel like we need to be extra-cautious, we can pass an extra argument into "WaitForIsEnabledEventAsync" to also watch
+            //       for IsApplicable to be true
             var remainingTimeout = (int)Math.Max(timeoutInMilliseconds - timeoutStopwatch.ElapsedMilliseconds, 0);
-            var waitResult = await this.WaitForIsApplicableOrIsEnabledAsync(remainingTimeout);
+            var waitResult = await this.WaitForIsEnabledEventAsync(remainingTimeout);
             if (waitResult.IsError == true)
             {
                 switch (waitResult.Error!.Value)
@@ -338,25 +342,41 @@ namespace Morphic.WindowsNative.SystemSettings
             return MorphicResult.OkResult();
         }
 
-        private async Task<MorphicResult<MorphicUnit, MorphicTimeoutError>> WaitForIsApplicableOrIsEnabledAsync(int timeoutInMilliseconds)
+        private async Task<MorphicResult<MorphicUnit, MorphicTimeoutError>> WaitForIsEnabledEventAsync(int timeoutInMilliseconds, bool alsoWaitForApplicable = false)
         {
             Stopwatch timeoutStopwatch = Stopwatch.StartNew();
-            // NOTE: in our analysis of ISettingItem, these were always both true or always both false; we don't know the difference, so out of an abundance of caution we check both
-            // NOTE: we use an infinite loop so that we can wait multiple times (if, for instance, we get events for one but not both states); it will terminate upon TIMEOUT in the 
+            // NOTE: we use an infinite loop so that we can wait multiple times (if, for instance, we get events for only one of multiple states); it will terminate upon TIMEOUT in the 
             //       worst-case scenario
             while (true)
             {
                 var isApplicable = _settingItem!.IsApplicable;
                 var isEnabled = _settingItem!.IsEnabled;
 
-                if (isApplicable == true && isEnabled == true)
+                var conditionSatisfied = false;
+                //
+                // check our base condition
+                if (isEnabled == true)
+                {
+                    conditionSatisfied = true;
+                }
+                //
+                // check our additional (optional) conditions
+                if (alsoWaitForApplicable == true)
+                {
+                    if (isApplicable == false)
+                    {
+                        conditionSatisfied = false;
+                    }
+                }
+
+                if (conditionSatisfied == true)
                 {
                     break;
                 }
 
-                // NOTE: if we reach this point, we need to wait for the event to change
+                // NOTE: if we reach this point, we are not ready yet; we need to wait for the corresponding event(s) to change
                 var remainingTimeout = (int)Math.Max(timeoutInMilliseconds - timeoutStopwatch.ElapsedMilliseconds, 0);
-                if (remainingTimeout < 0)
+                if (remainingTimeout == 0)
                 {
                     return MorphicResult.ErrorResult(MorphicTimeoutError.Timeout);
                 }
@@ -376,6 +396,31 @@ namespace Morphic.WindowsNative.SystemSettings
         //
         private object _eventsLock = new object();
 
+        public event EventHandler IsEnabledChanged
+        {
+            add
+            {
+                lock (_eventsLock)
+                {
+                    if (_settingsChangedEventHandlerIsSubscribed == false)
+                    {
+                        _settingItem.SettingChanged += _settingItem_SettingChanged;
+                        _settingsChangedEventHandlerIsSubscribed = true;
+                    }
+                    _isEnabledChanged += value;
+                }
+            }
+            remove
+            {
+                lock (_eventsLock)
+                {
+                    _isEnabledChanged -= value;
+                }
+
+                this.UnsubscribeSettingChangedEventHandlerIfEventsAreEmpty();
+            }
+        }
+        //
         public event EventHandler ValueChanged
         {
             add
@@ -481,5 +526,132 @@ namespace Morphic.WindowsNative.SystemSettings
                     break;
             }
         }
+
+        #region static helper/util functions
+
+        public record GetSettingItemValueError : MorphicAssociatedValueEnum<GetSettingItemValueError.Values>
+        {
+            // enum members
+            public enum Values
+            {
+                ExceptionError/*(Exception ex)*/,
+                SettingItemIsNull,
+                Timeout,
+                TypeMismatch,
+            }
+
+            // functions to create member instances
+            public static GetSettingItemValueError ExceptionError(Exception ex) => new(Values.ExceptionError) { Exception = ex };
+            public static GetSettingItemValueError SettingItemIsNull => new(Values.SettingItemIsNull);
+            public static GetSettingItemValueError Timeout => new(Values.Timeout);
+            public static GetSettingItemValueError TypeMismatch => new(Values.TypeMismatch);
+
+            // associated values
+            public Exception? Exception { get; private set; }
+
+            // verbatim required constructor implementation for MorphicAssociatedValueEnums
+            private GetSettingItemValueError(Values value) : base(value) { }
+        }
+        //
+        public async static Task<MorphicResult<T?, GetSettingItemValueError>> GetSettingItemValueAsync<T>(SettingItemProxy? settingItem, TimeSpan? timeout = null) where T : struct
+        {
+            return await SettingItemProxy.GetSettingItemValueAsync<T>(settingItem, "Value", timeout);
+        }
+        //
+        public async static Task<MorphicResult<T?, GetSettingItemValueError>> GetSettingItemValueAsync<T>(SettingItemProxy? settingItem, string name, TimeSpan? timeout = null) where T : struct
+        {
+            // NOTE: for convenience, we let the caller pass in a nullable SettingItem
+            if (settingItem is null)
+            {
+                return MorphicResult.ErrorResult(GetSettingItemValueError.SettingItemIsNull);
+            }
+
+            MorphicResult<T?, Morphic.WindowsNative.SystemSettings.SettingItemProxy.GetValueError> getSettingResult;
+            getSettingResult = await settingItem.GetValueAsync<T>(name, timeout);
+            if (getSettingResult.IsError == true)
+            {
+                switch (getSettingResult.Error!.Value)
+                {
+                    case GetValueError.Values.ExceptionError:
+                        {
+                            var ex = getSettingResult.Error!.Exception!;
+                            return MorphicResult.ErrorResult(GetSettingItemValueError.ExceptionError(ex));
+                        }
+                    case GetValueError.Values.Timeout:
+                        return MorphicResult.ErrorResult(GetSettingItemValueError.Timeout);
+                    case GetValueError.Values.TypeMismatch:
+                        return MorphicResult.ErrorResult(GetSettingItemValueError.TypeMismatch);
+                    default:
+                        throw new MorphicUnhandledErrorException();
+                }
+            }
+            var result = getSettingResult.Value;
+
+            return MorphicResult.OkResult(result);
+        }
+
+        //
+
+        public record SetSettingItemValueError : MorphicAssociatedValueEnum<SetSettingItemValueError.Values>
+        {
+            // enum members
+            public enum Values
+            {
+                ExceptionError/*(Exception ex)*/,
+                SettingItemIsNull,
+                //SettingNotApplicableOrNotEnabledAfterSet,
+                Timeout,
+                //TypeMismatch,
+            }
+
+            // functions to create member instances
+            public static SetSettingItemValueError ExceptionError(Exception ex) => new(Values.ExceptionError) { Exception = ex };
+            public static SetSettingItemValueError SettingItemIsNull => new(Values.SettingItemIsNull);
+            //public static SetSettingItemValueError SettingNotApplicableOrNotEnabledAfterSet => new(Values.SettingNotApplicableOrNotEnabledAfterSet);
+            public static SetSettingItemValueError Timeout => new(Values.Timeout);
+            //public static SetSettingItemValueError TypeMismatch => new(Values.TypeMismatch);
+
+            // associated values
+            public Exception? Exception { get; private set; }
+
+            // verbatim required constructor implementation for MorphicAssociatedValueEnums
+            private SetSettingItemValueError(Values value) : base(value) { }
+        }
+        //
+        public async static Task<MorphicResult<MorphicUnit, SetSettingItemValueError>> SetSettingItemValueAsync<T>(SettingItemProxy? settingItem, T value, TimeSpan? timeout = null) where T : struct
+        {
+            return await SettingItemProxy.SetSettingItemValueAsync<T>(settingItem, "Value", value, timeout);
+        }
+        //
+        public async static Task<MorphicResult<MorphicUnit, SetSettingItemValueError>> SetSettingItemValueAsync<T>(SettingItemProxy? settingItem, string name, T value, TimeSpan? timeout = null) where T : struct
+        {
+            // NOTE: for convenience, we let the caller pass in a nullable SettingItem
+            if (settingItem is null)
+            {
+                return MorphicResult.ErrorResult(SetSettingItemValueError.SettingItemIsNull);
+            }
+
+            MorphicResult<MorphicUnit, Morphic.WindowsNative.SystemSettings.SettingItemProxy.SetValueError> setSettingResult;
+            setSettingResult = await settingItem.SetValueAsync<T>(name, value, timeout);
+            if (setSettingResult.IsError == true)
+            {
+                switch (setSettingResult.Error!.Value)
+                {
+                    case SetValueError.Values.ExceptionError:
+                        {
+                            var ex = setSettingResult.Error!.Exception!;
+                            return MorphicResult.ErrorResult(SetSettingItemValueError.ExceptionError(ex));
+                        }
+                    case SetValueError.Values.Timeout:
+                        return MorphicResult.ErrorResult(SetSettingItemValueError.Timeout);
+                    default:
+                        throw new MorphicUnhandledErrorException();
+                }
+            }
+
+            return MorphicResult.OkResult();
+        }
+
+        #endregion static helper/util functions
     }
 }

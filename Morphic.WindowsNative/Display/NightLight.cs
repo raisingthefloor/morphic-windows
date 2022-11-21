@@ -34,36 +34,25 @@ namespace Morphic.WindowsNative.Display
 {
     public class NightLight
     {
-        private const string IS_ON_SETTING_ID = "SystemSettings_Display_BlueLight_ManualToggleQuickAction";
-        private static SettingItemProxy? _isOnSettingItem;
-        private static SettingItemProxy? IsOnSettingItem
+        public static class SystemSettingId
+        {
+            public const string NIGHT_LIGHT_IS_ON = "SystemSettings_Display_BlueLight_ManualToggleQuickAction";
+        }
+
+        private static SettingItemProxy? _nightLightIsOnSettingItem;
+        private static SettingItemProxy? NightLightIsOnSettingItem
         {
             get
             {
-                if (_isOnSettingItem is null)
+                if (_nightLightIsOnSettingItem is null)
                 {
-                    var getSettingItemResult = SettingsDatabaseProxy.GetSettingItem(NightLight.IS_ON_SETTING_ID);
-                    if (getSettingItemResult.IsError == true)
-                    {
-                        switch (getSettingItemResult.Error!.Value)
-                        {
-                            case SettingsDatabaseProxy.GetSettingItemError.Values.CouldNotInstantiateSettingsDatabase:
-                                return null;
-                            case SettingsDatabaseProxy.GetSettingItemError.Values.SettingNotFound:
-                                return null;
-                            case SettingsDatabaseProxy.GetSettingItemError.Values.ExceptionError:
-                                return null;
-                            default:
-                                throw new MorphicUnhandledErrorException();
-                        }
-                    }
-                    _isOnSettingItem = getSettingItemResult.Value;
+                    _nightLightIsOnSettingItem = SettingsDatabaseProxy.GetSettingItemOrNull(NightLight.SystemSettingId.NIGHT_LIGHT_IS_ON);
                 }
 
-                return _isOnSettingItem;
+                return _nightLightIsOnSettingItem;
             }
         }
-        //private const string IS_ON_VALUE_NAME = "Value";
+        //private const string NIGHT_LIGHT_IS_ON_VALUE_NAME = "Value";
 
         private static bool _isOnSettingChangedEventIsSubscribed = false;
         private static object _isOnSettingChangedEventLock = new();
@@ -73,10 +62,10 @@ namespace Morphic.WindowsNative.Display
         {
             add
             {
-                SettingItemProxy isOnSettingItem;
+                SettingItemProxy? isOnSettingItem;
                 if (_isOnChanged is null)
                 {
-                    isOnSettingItem = NightLight.IsOnSettingItem;
+                    isOnSettingItem = NightLight.NightLightIsOnSettingItem;
                     if (isOnSettingItem is null)
                     {
                         Debug.Assert(false, "Could not get setting item for NightLight");
@@ -87,7 +76,7 @@ namespace Morphic.WindowsNative.Display
                         {
                             if (_isOnSettingChangedEventIsSubscribed == false)
                             {
-                                isOnSettingItem.ValueChanged += SettingItem_ValueChanged;
+                                isOnSettingItem!.ValueChanged += SettingItem_ValueChanged;
                                 _isOnSettingChangedEventIsSubscribed = true;
                             }
                         }
@@ -104,7 +93,7 @@ namespace Morphic.WindowsNative.Display
                 {
                     _isOnChanged = null;
 
-                    var isOnSettingItem = NightLight.IsOnSettingItem;
+                    var isOnSettingItem = NightLight.NightLightIsOnSettingItem;
                     if (isOnSettingItem is null)
                     {
                         Debug.Assert(false, "Could not get setting item for NightLight");
@@ -146,31 +135,19 @@ namespace Morphic.WindowsNative.Display
 
         public async static Task<MorphicResult<bool?, MorphicUnit>> GetIsOnAsync(TimeSpan? timeout = null)
         {
-            var settingItem = NightLight.IsOnSettingItem;
-            if (settingItem is null)
+            var getValueResult = await SettingItemProxy.GetSettingItemValueAsync<bool>(NightLight.NightLightIsOnSettingItem, /*NightLight.NIGHT_LIGHT_IS_ON_VALUE_NAME, */timeout);
+            if (getValueResult.IsError == true)
             {
                 return MorphicResult.ErrorResult();
             }
-
-            var getSettingResult = await settingItem.GetValueAsync<bool>(/*NightLight.IS_ON_VALUE_NAME, */timeout);
-            if (getSettingResult.IsError == true)
-            {
-                return MorphicResult.ErrorResult();
-            }
-            var result = getSettingResult.Value;
+            var result = getValueResult.Value;
 
             return MorphicResult.OkResult(result);
         }
 
         public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> SetIsOnAsync(bool value, TimeSpan? timeout = null)
         {
-            var settingItem = NightLight.IsOnSettingItem;
-            if (settingItem is null)
-            {
-                return MorphicResult.ErrorResult();
-            }
-
-            var setValueResult = await settingItem.SetValueAsync(/*NightLight.IS_ON_VALUE_NAME, */value);
+            var setValueResult = await SettingItemProxy.SetSettingItemValueAsync<bool>(NightLight.NightLightIsOnSettingItem, /*NightLight.NIGHT_LIGHT_IS_ON_VALUE_NAME, */value, timeout);
             if (setValueResult.IsError == true)
             {
                 return MorphicResult.ErrorResult();
