@@ -13,6 +13,10 @@
     <Name>Morphic.Setup</Name>
     <BuildType Condition="'$(BuildType)' == '' ">Development</BuildType>
   </PropertyGroup>
+  <!-- WiX tools are 32bit EXEs, so run them out-of-proc when MSBuild is not 32bit. -->
+  <PropertyGroup>
+    <RunWixToolsOutOfProc Condition=" '$(PROCESSOR_ARCHITECTURE)'!='x86' ">true</RunWixToolsOutOfProc>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DefineConstants>Debug</DefineConstants>
   </PropertyGroup>
@@ -49,7 +53,7 @@
     <Error Text="The WiX Toolset v3.11 (or newer) build tools must be installed to build this project. To download the WiX Toolset, see http://wixtoolset.org/releases/" />
   </Target>
   <PropertyGroup>
-    <DefineConstants>ClientOutputDirectory=..\Morphic.Client\bin\$(Configuration)\netcoreapp3.1\win-x64\publish</DefineConstants>
+    <DefineConstants>ClientOutputDirectory=..\Morphic.Client\bin\$(Platform)\$(Configuration)\net6.0-windows10.0.22621.0</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
     <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
@@ -64,7 +68,7 @@
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
   </PropertyGroup>
   <Target Name="AfterPreBuild" AfterTargets="PreBuildEvent">
-    <HeatDirectory Directory="..\Morphic.Client\bin\$(Configuration)\netcoreapp3.1\win-x64\publish" PreprocessorVariable="var.ClientOutputDirectory" OutputFile="Generated.wxs" ComponentGroupName="GeneratedComponents" DirectoryRefId="INSTALLFOLDER" AutogenerateGuids="true" ToolPath="$(WixToolPath)" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" />
+    <HeatDirectory Directory="..\Morphic.Client\bin\$(Platform)\$(Configuration)\net6.0-windows10.0.22621.0" PreprocessorVariable="var.ClientOutputDirectory" OutputFile="Generated.wxs" ComponentGroupName="GeneratedComponents" DirectoryRefId="INSTALLFOLDER" AutogenerateGuids="true" ToolPath="$(WixToolPath)" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" RunAsSeparateProcess="$(RunWixToolsOutOfProc)" />
   </Target>
   <!--
 	To modify your build process, add your task inside one of the targets below and uncomment it.

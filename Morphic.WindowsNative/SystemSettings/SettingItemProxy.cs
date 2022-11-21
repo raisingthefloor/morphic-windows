@@ -59,8 +59,7 @@ namespace Morphic.WindowsNative.SystemSettings
             _settingItem = settingItem;
         }
 
-        // NOTE: the Id property (which should be a String, not an int) is not currently supported in the Morphic v1.x codebase
-        //public string Id => _settingItem.Id;
+        public string Id => _settingItem.Id;
         public bool IsApplicable => _settingItem.IsApplicable;
         public bool IsEnabled => _settingItem.IsEnabled;
 
@@ -344,48 +343,103 @@ namespace Morphic.WindowsNative.SystemSettings
 
         private async Task<MorphicResult<MorphicUnit, MorphicTimeoutError>> WaitForIsEnabledEventAsync(int timeoutInMilliseconds, bool alsoWaitForApplicable = false)
         {
-            Stopwatch timeoutStopwatch = Stopwatch.StartNew();
-            // NOTE: we use an infinite loop so that we can wait multiple times (if, for instance, we get events for only one of multiple states); it will terminate upon TIMEOUT in the 
-            //       worst-case scenario
-            while (true)
+            var propertyChangedWaitHandle = new AutoResetEvent(false);
+            var propertyChangedHandler = new Windows.Foundation.TypedEventHandler<object, string>((object sender, string args) =>
             {
-                var isApplicable = _settingItem!.IsApplicable;
-                var isEnabled = _settingItem!.IsEnabled;
-
-                var conditionSatisfied = false;
-                //
-                // check our base condition
-                if (isEnabled == true)
+                switch (args)
                 {
-                    conditionSatisfied = true;
+                    case "IsApplicable":
+                        if (alsoWaitForApplicable == true)
+                        {
+                            propertyChangedWaitHandle.Set();
+                        }
+                        break;
+                    case "IsEnabled":
+                        propertyChangedWaitHandle.Set();
+                        break;
+                    default:
+                        break;
                 }
-                //
-                // check our additional (optional) conditions
-                if (alsoWaitForApplicable == true)
+            });
+            var isWatchingForPropertyChangedEvent = false;
+
+            try
+            {
+                Stopwatch timeoutStopwatch = Stopwatch.StartNew();
+                // NOTE: we use an infinite loop so that we can wait multiple times (if, for instance, we get events for only one of multiple states); it will terminate upon TIMEOUT in the 
+                //       worst-case scenario
+                while (true)
                 {
-                    if (isApplicable == false)
+                    var isApplicable = _settingItem!.IsApplicable;
+                    var isEnabled = _settingItem!.IsEnabled;
+
+                    var conditionSatisfied = false;
+                    //
+                    // check our base condition
+                    if (isEnabled == true)
                     {
-                        conditionSatisfied = false;
+                        conditionSatisfied = true;
                     }
-                }
+                    //
+                    // check our additional (optional) conditions
+                    if (alsoWaitForApplicable == true)
+                    {
+                        if (isApplicable == false)
+                        {
+                            conditionSatisfied = false;
+                        }
+                    }
 
-                if (conditionSatisfied == true)
+                    if (conditionSatisfied == true)
+                    {
+                        break;
+                    }
+
+                    // NOTE: if we reach this point, we are not ready yet; we need to wait for the corresponding event(s) to change
+                    var remainingTimeout = (int)Math.Max(timeoutInMilliseconds - timeoutStopwatch.ElapsedMilliseconds, 0);
+                    if (remainingTimeout == 0)
+                    {
+                        return MorphicResult.ErrorResult(MorphicTimeoutError.Timeout);
+                    }
+
+                    // if we're not watching for the propert(ies) to change, wire up an event handler now
+                    if (isWatchingForPropertyChangedEvent == false)
+                    {
+                        _settingItem.SettingChanged += propertyChangedHandler;
+                        isWatchingForPropertyChangedEvent = true;
+                    }
+                    //
+                    // wait for the IsApplicable/IsEnabled event handler to fire (or for our timeout to expire, whichever comes first)
+                    TaskCompletionSource<bool>? taskCompletionSource = new TaskCompletionSource<bool>();
+                    //
+                    // NOTE: we treat taskCompletionSource as nullable here just in case it the delegate gets called after the function completes (which should not happen, but we saw a null taskCompletionSource once in testing)
+                    var waitHandleRegistration = ThreadPool.RegisterWaitForSingleObject(propertyChangedWaitHandle, delegate { taskCompletionSource?.SetResult(true); }, null, remainingTimeout, true);
+                    try
+                    {
+                        _ = await taskCompletionSource!.Task.WaitAsync(new TimeSpan(0, 0, 0, 0, remainingTimeout));
+                    }
+                    catch (TimeoutException)
+                    {
+                        // swallow the TimeoutException; we'll capture this timeout in the next loop iteration
+                        //return MorphicResult.ErrorResult(MorphicTimeoutError.Timeout);
+                    }
+                    finally
+                    {
+                        // NOTE: we do not need to signal any wait handle when we unregister the wait handle registration (i.e. the waitObject param is null)
+                        waitHandleRegistration.Unregister(null);
+                    }
+                };
+
+                return MorphicResult.OkResult();
+            }
+            finally
+            {
+                if (isWatchingForPropertyChangedEvent == true)
                 {
-                    break;
+                    _settingItem.SettingChanged -= propertyChangedHandler;
+                    isWatchingForPropertyChangedEvent = false;
                 }
-
-                // NOTE: if we reach this point, we are not ready yet; we need to wait for the corresponding event(s) to change
-                var remainingTimeout = (int)Math.Max(timeoutInMilliseconds - timeoutStopwatch.ElapsedMilliseconds, 0);
-                if (remainingTimeout == 0)
-                {
-                    return MorphicResult.ErrorResult(MorphicTimeoutError.Timeout);
-                }
-
-                // wait up to 50ms, then loop around (since we do not watch the IsApplicable/IsEnabled event handler in this implementation)
-                await Task.Delay(Math.Min(50, remainingTimeout));
-            };
-
-            return MorphicResult.OkResult();
+            }
         }
 
         private bool _settingsChangedEventHandlerIsSubscribed = false;
