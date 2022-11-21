@@ -82,7 +82,7 @@ public static class SettingsDatabaseProxy
 
         // STEP 2: if we have already created a proxy for this setting item, get it now; otherwise try to instantiate it
         //
-        SettingItemProxy? settingItemProxy = null;
+        SettingItemProxy? settingItemProxy;
         var settingItemProxyAlreadyCached = _settingItemProxies.TryGetValue(id, out settingItemProxy);
         if (settingItemProxyAlreadyCached == true)
         {
@@ -121,5 +121,27 @@ public static class SettingsDatabaseProxy
                 }
             }
         }
+    }
+
+    public static SettingItemProxy? GetSettingItemOrNull(string id)
+    {
+        var getSettingItemResult = SettingsDatabaseProxy.GetSettingItem(id);
+        if (getSettingItemResult.IsError == true)
+        {
+            switch (getSettingItemResult.Error!.Value)
+            {
+                case SettingsDatabaseProxy.GetSettingItemError.Values.CouldNotInstantiateSettingsDatabase:
+                    return null;
+                case SettingsDatabaseProxy.GetSettingItemError.Values.SettingNotFound:
+                    return null;
+                case SettingsDatabaseProxy.GetSettingItemError.Values.ExceptionError:
+                    return null;
+                default:
+                    throw new MorphicUnhandledErrorException();
+            }
+        }
+        var settingItem = getSettingItemResult.Value!;
+
+        return settingItem;
     }
 }
