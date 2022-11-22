@@ -123,52 +123,52 @@ namespace Morphic.Settings.SettingsHandlers.SystemSettings
             this.SettingItem.SetValue(valueName, newValue);
         }
 
-        /// <summary>Gets a list of possible values.</summary>
-        /// <returns>An enumeration of possible values.</returns>
-        public IEnumerable<object> GetPossibleValues()
-        {
-            IList<object> values;
-            this.SettingItem.GetPossibleValues(out values);
-            return values;
-        }
+        ///// <summary>Gets a list of possible values.</summary>
+        ///// <returns>An enumeration of possible values.</returns>
+        //public IEnumerable<object> GetPossibleValues()
+        //{
+        //    IList<object> values;
+        //    this.SettingItem.GetPossibleValues(out values);
+        //    return values;
+        //}
 
-        /// <summary>Invokes an Action setting.</summary>
-        /// <returns>The return value of the action function.</returns>
-        public long Invoke()
-        {
-            return this.Invoke(IntPtr.Zero);
-        }
+        ///// <summary>Invokes an Action setting.</summary>
+        ///// <returns>The return value of the action function.</returns>
+        //public long Invoke()
+        //{
+        //    return this.Invoke(IntPtr.Zero);
+        //}
 
-        /// <summary>Invokes an Action setting.</summary>
-        /// <returns>The return value of the action function.</returns>
-        public long Invoke(long n)
-        {
-            return this.Invoke(new IntPtr(n));
-        }
+        ///// <summary>Invokes an Action setting.</summary>
+        ///// <returns>The return value of the action function.</returns>
+        //public long Invoke(long n)
+        //{
+        //    return this.Invoke(new IntPtr(n));
+        //}
 
-        /// <summary>Invokes an Action setting.</summary>
-        /// <returns>The return value of the action function.</returns>
-        public long Invoke(string s)
-        {
-            IntPtr hstring = WindowsRuntimeMarshal.StringToHString(s);
-            try
-            {
-                return this.Invoke(hstring);
-            }
-            finally
-            {
-                WindowsRuntimeMarshal.FreeHString(hstring);
-            }
-        }
+        ///// <summary>Invokes an Action setting.</summary>
+        ///// <returns>The return value of the action function.</returns>
+        //public long Invoke(string s)
+        //{
+        //    IntPtr hstring = WindowsRuntimeMarshal.StringToHString(s);
+        //    try
+        //    {
+        //        return this.Invoke(hstring);
+        //    }
+        //    finally
+        //    {
+        //        WindowsRuntimeMarshal.FreeHString(hstring);
+        //    }
+        //}
 
-        /// <summary>Invokes an Action setting.</summary>
-        /// <returns>The return value of the action function.</returns>
-        public long Invoke(IntPtr n)
-        {
-			// NOTE: the Invoke function appears to be declared incorrectly; it should use Windows.Foundation.Rect (which exposes doubles) instead of this custom Rect struct (which uses floats)
-            // return this.SettingItem.Invoke(n, new Windows.Foundation.Rect()).ToInt64();
-            return this.SettingItem.Invoke(n, new SystemSettingsDataModel.Rect()).ToInt64();
-        }
+   //     /// <summary>Invokes an Action setting.</summary>
+   //     /// <returns>The return value of the action function.</returns>
+   //     public long Invoke(IntPtr n)
+   //     {
+			//// NOTE: the Invoke function appears to be declared incorrectly; it should use Windows.Foundation.Rect (which exposes doubles) instead of this custom Rect struct (which uses floats)
+   //         // return this.SettingItem.Invoke(n, new Windows.Foundation.Rect()).ToInt64();
+   //         return this.SettingItem.Invoke(n, new SystemSettingsDataModel.Rect()).ToInt64();
+   //     }
 
         /// <summary>Gets the "IsEnabled" value.</summary>
         /// <returns>The value of "IsEnabled".</returns>

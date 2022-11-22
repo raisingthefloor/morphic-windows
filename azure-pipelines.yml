@@ -24,7 +24,7 @@ trigger:
       - "staging/*"
 
 pool:
-  vmImage: 'windows-2019'
+  vmImage: 'windows-2022'
 
 variables:
 # must be created in the azure UI under Pipelines > Library and specify accessKey, secretKey, region, and bucket
@@ -57,10 +57,10 @@ stages:
         steps:
 
         - task: UseDotNet@2
-          displayName: 'Use .NET SDK 5.0.408'
+          displayName: 'Use .NET SDK 6.0.403'
           inputs:
             packageType: sdk
-            version: 5.0.408
+            version: 6.0.403
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
         # Set a $(BUILD_TYPE) variable
@@ -115,13 +115,6 @@ stages:
             solution: '$(Build.SourcesDirectory)\Morphic.Core.Tests\Morphic.Core.Tests.csproj'
             configuration: '$(buildConfiguration)'
             msbuildArguments: '/t:publish /p:RuntimeIdentifier=win-x64 /p:BuildType=$(BUILD_TYPE)'
-
-        - task: UseDotNet@2
-          displayName: 'Use .NET Core SDK 3.1.422'
-          inputs:
-            packageType: sdk
-            version: 3.1.422
-            installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - task: VSTest@2
           displayName: "execute tests"
@@ -187,13 +180,13 @@ stages:
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
               -v
-              $(Build.SourcesDirectory)\Morphic.Client\bin\$(buildConfiguration)\netcoreapp3.1\win-x64\publish\Morphic.exe
+              $(Build.SourcesDirectory)\Morphic.Client\bin\$(buildConfiguration)\net6.0-windows10.0.22621.0\win-x64\publish\Morphic.exe
         
         - task: UseDotNet@2
-          displayName: 'Use .NET SDK 5.0.301'
+          displayName: 'Use .NET SDK 6.0.403'
           inputs:
             packageType: sdk
-            version: 5.0.301
+            version: 6.0.403
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - task: VSBuild@1

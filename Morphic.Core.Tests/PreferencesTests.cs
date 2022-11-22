@@ -34,7 +34,7 @@ namespace Morphic.Core.Tests
         public void TestJsonDeserialize()
         {
             //testing fully populated
-            //TODO: get default serialization working
+			//TODO: get default serialization working
             TestResource tr = new TestResource();
             var options = new JsonSerializerOptions();
             options.Converters.Add(new JsonElementInferredTypeConverter());

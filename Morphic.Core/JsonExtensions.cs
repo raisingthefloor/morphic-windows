@@ -47,7 +47,9 @@ namespace Morphic.Core
 
         public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
         {
-            throw new InvalidOperationException("For JSON deserilization only");
+			// default serialization behavior
+            var serializedObject = JsonSerializer.Serialize(value, options);
+            writer.WriteRawValue(serializedObject);
         }
     }
 
