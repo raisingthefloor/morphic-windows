@@ -24,7 +24,7 @@ trigger:
       - "staging/*"
 
 pool:
-  vmImage: 'windows-2019'
+  vmImage: 'windows-2022'
 
 variables:
 # must be created in the azure UI under Pipelines > Library and specify accessKey, secretKey, region, and bucket
