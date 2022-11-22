@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-    <Product Id="*" Name="Morphic" Language="1033" Version="!(bind.FileVersion.filD3C96FB8193D8B30B5CF66EA0982371D)"
+    <Product Id="*" Name="Morphic" Language="1033" Version="!(bind.FileVersion.filD04FD7A000E8F2985248E10EC6CC63A2)"
              Manufacturer="Raising the Floor" UpgradeCode="7d0ee114-79e8-4ff6-b28b-0408551483f5">
         <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine"/>
 
@@ -17,7 +17,7 @@
             <ComponentRef Id="DesktopIconComponent"/>
         </Feature>
 
-        <Property Id="WixShellExecTarget" Value="[#filD3C96FB8193D8B30B5CF66EA0982371D]" />
+        <Property Id="WixShellExecTarget" Value="[#filD04FD7A000E8F2985248E10EC6CC63A2]" />
         <CustomAction Id="LaunchApplication" BinaryKey="WixCA" DllEntry="WixShellExec" Impersonate="yes"/>
 
         <InstallExecuteSequence>
@@ -52,7 +52,7 @@
                         Id="MorphicStartMenuShortcut"
                         Name="Morphic"
                         Icon="MorphicIcon"
-                        Target="[#filD3C96FB8193D8B30B5CF66EA0982371D]"
+                        Target="[#filD04FD7A000E8F2985248E10EC6CC63A2]"
                         WorkingDirectory="INSTALLFOLDER"/>
                 <RegistryValue Root="HKCU" Key="Software\Raising the Floor\Morphic" Name="installed" Type="integer"
                                Value="1" KeyPath="yes"/>
@@ -65,7 +65,7 @@
                         Id="MorphicDesktopShortcut"
                         Name="Morphic"
                         Icon="MorphicIcon"
-                        Target="[#filD3C96FB8193D8B30B5CF66EA0982371D]"
+                        Target="[#filD04FD7A000E8F2985248E10EC6CC63A2]"
                         WorkingDirectory="INSTALLFOLDER"/>
                 <RegistryValue Root="HKCU" Key="Software\Raising the Floor\Morphic" Name="installed" Type="integer"
                                Value="1" KeyPath="yes"/>
