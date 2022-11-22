@@ -116,13 +116,6 @@ stages:
             configuration: '$(buildConfiguration)'
             msbuildArguments: '/t:publish /p:RuntimeIdentifier=win-x64 /p:BuildType=$(BUILD_TYPE)'
 
-#        - task: UseDotNet@2
-#          displayName: 'Use .NET Core SDK 3.1.422'
-#          inputs:
-#            packageType: sdk
-#            version: 3.1.422
-#            installationPath: $(Agent.ToolsDirectory)/dotnet
-
         - task: VSTest@2
           displayName: "execute tests"
           inputs:
@@ -135,13 +128,6 @@ stages:
               !**\xunit.runner.visualstudio.dotnetcore.testadapter.dll
             platform: '$(buildPlatform)'
             configuration: '$(buildConfiguration)'
-
-#        - task: UseDotNet@2
-#          displayName: 'Use .NET SDK 6.0.403'
-#          inputs:
-#            packageType: sdk
-#            version: 6.0.403
-#            installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - task: MSBuild@1
           displayName: "Publish Morphic Client"
