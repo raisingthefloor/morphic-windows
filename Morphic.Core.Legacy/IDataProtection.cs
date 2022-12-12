@@ -21,25 +21,26 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System.Text.Json.Serialization;
+namespace Morphic.Core.Legacy;
 
-namespace Morphic.Core.Community
+/// <summary>
+/// An encryption interface for data protection
+/// </summary>
+public interface IDataProtection
 {
-    public class UserCommunity : IRecord
-    {
-        [JsonPropertyName("id")]
-        public string Id { get; set; } = "";
 
-        [JsonPropertyName("name")]
-        public string? Name { get; set; }
+    /// <summary>
+    /// Encrypt data
+    /// </summary>
+    /// <param name="userData">The data to be encrypted</param>
+    /// <returns>The encrypted data</returns>
+    public byte[] Protect(byte[] userData);
 
-        [JsonPropertyName("role")]
-        public MemberRole Role { get; set; }
-    }
+    /// <summary>
+    /// Decrypt data
+    /// </summary>
+    /// <param name="encryptedData">The data to decrypted</param>
+    /// <returns>The unencrypted data</returns>
+    public byte[] Unprotect(byte[] encryptedData);
 
-    public enum MemberRole
-    {
-        Member,
-        Manager
-    }
 }

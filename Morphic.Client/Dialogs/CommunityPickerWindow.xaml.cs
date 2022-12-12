@@ -14,7 +14,7 @@ namespace Morphic.Client.Dialogs
     using System.Linq;
     using System.Windows;
     using System.Windows.Controls;
-    using Core.Community;
+    using Morphic.Core.Legacy.Community;
 
     public partial class CommunityPickerWindow : Window
     {

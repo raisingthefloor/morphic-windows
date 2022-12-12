@@ -21,31 +21,19 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System;
-using System.Security.Cryptography;
+namespace Morphic.Core.Legacy;
 
-namespace Morphic.Core
+/// <summary>
+/// Username/password based credentials
+/// </summary>
+public class UsernameCredentials : ICredentials
 {
-
-    /// <summary>
-    /// Secret key based credentials
-    /// </summary>
-    public class KeyCredentials : ICredentials
+    public UsernameCredentials(string username, string password)
     {
-
-        public KeyCredentials()
-        {
-            var provider = RandomNumberGenerator.Create();
-            var data = new byte[64];
-            provider.GetBytes(data);
-            Key = Convert.ToBase64String(data);
-        }
-
-        public KeyCredentials(string key)
-        {
-            Key = key;
-        }
-
-        public string Key { get; set; }
+        Username = username;
+        Password = password;
     }
+
+    public string Username { get; set; }
+    public string Password { get; set; }
 }

@@ -30,7 +30,8 @@ namespace Morphic.Service
     using System.Timers;
     using Microsoft.Extensions.Logging;
     using Morphic.Core;
-    using Morphic.Core.Community;
+    using Morphic.Core.Legacy;
+    using Morphic.Core.Legacy.Community;
     using Settings.SolutionsRegistry;
 
     /// <summary>

@@ -25,7 +25,7 @@ using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Morphic.Core;
+using Morphic.Core.Legacy;
 using System.Text.Json.Serialization;
 using System.Collections.Generic;
 

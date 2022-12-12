@@ -19,10 +19,11 @@
 
   <ItemGroup>
     <PackageReference Include="EO.WebBrowser" Version="20.1.45" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Morphic.Core\Morphic.Core.csproj" />
+    <ProjectReference Include="..\Morphic.Core.Legacy\Morphic.Core.Legacy.csproj" />
     <ProjectReference Include="..\Morphic.Integrations.Office\Morphic.Integrations.Office.csproj" />
     <ProjectReference Include="..\Morphic.Settings\Morphic.Settings.csproj" />
     <ProjectReference Include="..\Morphic.WindowsNative\Morphic.WindowsNative.csproj" />

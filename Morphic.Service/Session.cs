@@ -2,7 +2,8 @@
 {
     using System;
     using System.Threading.Tasks;
-    using Core;
+    using Morphic.Core;
+    using Morphic.Core.Legacy;
     using Microsoft.Extensions.Logging;
     using Settings.SolutionsRegistry;
 

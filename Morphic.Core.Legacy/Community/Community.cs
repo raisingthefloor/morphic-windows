@@ -21,12 +21,24 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-namespace Morphic.Core
+using System.Text.Json.Serialization;
+
+namespace Morphic.Core.Legacy.Community;
+
+public class UserCommunity : IRecord
 {
-    /// <summary>
-    /// Interface to identify credential-holding classes
-    /// </summary>
-    public interface ICredentials
-    {
-    }
+    [JsonPropertyName("id")]
+    public string Id { get; set; } = "";
+
+    [JsonPropertyName("name")]
+    public string? Name { get; set; }
+
+    [JsonPropertyName("role")]
+    public MemberRole Role { get; set; }
+}
+
+public enum MemberRole
+{
+    Member,
+    Manager
 }

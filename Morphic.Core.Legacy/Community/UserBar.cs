@@ -21,20 +21,18 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-namespace Morphic.Core
-{
-    /// <summary>
-    /// Username/password based credentials
-    /// </summary>
-    public class UsernameCredentials : ICredentials
-    {
-        public UsernameCredentials(string username, string password)
-        {
-            Username = username;
-            Password = password;
-        }
+using System.Text.Json.Serialization;
 
-        public string Username { get; set; }
-        public string Password { get; set; }
-    }
+namespace Morphic.Core.Legacy.Community;
+
+public class UserBar : IRecord
+{
+    [JsonPropertyName("id")]
+    public string Id { get; set; } = "";
+
+    [JsonPropertyName("name")]
+    public string? Name { get; set; }
+
+    [JsonPropertyName("items")]
+    public BarItem[] Items { get; set; }
 }
