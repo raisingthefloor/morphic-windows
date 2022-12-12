@@ -19,8 +19,8 @@
 	  </COMReference>
 	</ItemGroup>
 	<ItemGroup>
-	  <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
-	  <PackageReference Include="Microsoft.Win32.SystemEvents" Version="6.0.1" />
+	  <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
+	  <PackageReference Include="Microsoft.Win32.SystemEvents" Version="7.0.0" />
           <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.1" />
           <PackageReference Include="Morphic.Core" Version="1.2.0" />
 	  <PackageReference Include="PInvoke.AdvApi32" Version="0.7.124" />

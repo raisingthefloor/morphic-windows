@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <PackageReference Include="EO.WebBrowser" Version="20.1.45" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
   </ItemGroup>
 
   <ItemGroup>
