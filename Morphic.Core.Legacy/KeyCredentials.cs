@@ -21,19 +21,29 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System.Text.Json.Serialization;
+using System;
+using System.Security.Cryptography;
 
-namespace Morphic.Core.Community
+namespace Morphic.Core.Legacy;
+
+/// <summary>
+/// Secret key based credentials
+/// </summary>
+public class KeyCredentials : ICredentials
 {
-    public class UserBar : IRecord
+
+    public KeyCredentials()
     {
-        [JsonPropertyName("id")]
-        public string Id { get; set; } = "";
-
-        [JsonPropertyName("name")]
-        public string? Name { get; set; }
-
-        [JsonPropertyName("items")]
-        public BarItem[] Items { get; set; }
+        var provider = RandomNumberGenerator.Create();
+        var data = new byte[64];
+        provider.GetBytes(data);
+        Key = Convert.ToBase64String(data);
     }
+
+    public KeyCredentials(string key)
+    {
+        Key = key;
+    }
+
+    public string Key { get; set; }
 }

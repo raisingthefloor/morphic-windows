@@ -23,6 +23,7 @@
 
 using System;
 using Morphic.Core;
+using Morphic.Core.Legacy;
 using System.Threading.Tasks;
 using System.Net.Http;
 using System.Text.Json.Serialization;

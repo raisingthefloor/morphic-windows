@@ -26,6 +26,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Text;
 using Morphic.Core;
+using Morphic.Core.Legacy;
 
 namespace Morphic.Service
 {

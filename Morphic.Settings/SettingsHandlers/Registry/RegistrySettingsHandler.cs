@@ -4,7 +4,7 @@
     using System.Collections.Generic;
     using System.Reflection;
     using System.Threading.Tasks;
-    using Core;
+    using Morphic.Core;
     using DotNetWindowsRegistry;
     using Microsoft.Win32;
     using SolutionsRegistry;

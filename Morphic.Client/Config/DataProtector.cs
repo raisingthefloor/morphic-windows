@@ -25,7 +25,7 @@ namespace Morphic.Client.Config
 {
     using System;
     using System.Security.Cryptography;
-    using Core;
+    using Morphic.Core.Legacy;
 
     class DataProtector : IDataProtection
     {

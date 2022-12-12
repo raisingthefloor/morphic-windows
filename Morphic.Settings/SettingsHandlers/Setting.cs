@@ -6,6 +6,7 @@
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
     using Morphic.Core;
+    using Morphic.Core.Legacy;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
 

@@ -5,7 +5,7 @@ namespace Morphic.Settings.Tests.SettingsHandlers.Ini
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
-    using Core;
+    using Morphic.Core.Legacy;
     using Microsoft.Extensions.DependencyInjection;
     using Settings.SettingsHandlers.Ini;
     using Settings.SolutionsRegistry;

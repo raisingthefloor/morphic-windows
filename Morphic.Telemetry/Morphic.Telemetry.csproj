@@ -1,17 +1,14 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
-    <Platforms>AnyCPU</Platforms>
+    <Platforms>x86;x64;ARM64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Morphic.Core" Version="1.2.0" />
     <PackageReference Include="MQTTnet" Version="3.0.15" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Morphic.Core\Morphic.Core.csproj" />
   </ItemGroup>
 
 </Project>

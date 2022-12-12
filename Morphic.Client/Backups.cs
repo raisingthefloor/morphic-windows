@@ -7,7 +7,7 @@
     using System.Text.Json;
     using System.Threading.Tasks;
     using Config;
-    using Core;
+    using Morphic.Core.Legacy;
     using Microsoft.Extensions.Logging;
     using Service;
     using Path = System.IO.Path;

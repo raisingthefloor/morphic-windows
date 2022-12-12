@@ -1,5 +1,6 @@
 ﻿namespace Morphic.ManualTester
 {
+    using Morphic.Core;
 	using Morphic.Integrations.Office;
     using System;
     using System.Collections.Generic;

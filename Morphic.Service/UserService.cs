@@ -21,8 +21,8 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using Morphic.Core;
-using Morphic.Core.Community;
+using Morphic.Core.Legacy;
+using Morphic.Core.Legacy.Community;
 using System.Threading.Tasks;
 using System.Net.Http;
 using System.Text.Json.Serialization;

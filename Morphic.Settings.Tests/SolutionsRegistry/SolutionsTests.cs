@@ -2,7 +2,7 @@
 {
     using System;
     using System.Threading.Tasks;
-    using Core;
+    using Morphic.Core.Legacy;
     using Microsoft.Extensions.DependencyInjection;
     using Settings.SolutionsRegistry;
     using Xunit;

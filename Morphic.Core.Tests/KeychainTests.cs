@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Morphic.Core.Legacy;
 using System;
 using System.IO;
 using Xunit;

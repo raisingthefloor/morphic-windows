@@ -8,7 +8,7 @@ Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "Morphic.Setup", "Morphic.Se
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Morphic.Client", "Morphic.Client\Morphic.Client.csproj", "{2485B22B-5C46-46F1-A466-F8A5B7E28C64}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Morphic.Core", "Morphic.Core\Morphic.Core.csproj", "{F05E2E47-8F9B-4C41-827A-2BBC23C1B276}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Morphic.Core.Legacy", "Morphic.Core.Legacy\Morphic.Core.Legacy.csproj", "{F05E2E47-8F9B-4C41-827A-2BBC23C1B276}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Morphic.Core.Tests", "Morphic.Core.Tests\Morphic.Core.Tests.csproj", "{2FECA817-61F1-4E33-8CDC-2918B87CA5EF}"
 EndProject
@@ -25,10 +25,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Morphic.Telemetry", "Morphic.Telemetry\Morphic.Telemetry.csproj", "{A816282D-5A96-4F0E-B011-3E5CC1E321FF}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Morphic.Integrations.Office", "Morphic.Integrations.Office\Morphic.Integrations.Office.csproj", "{D91EF666-04FB-4AC3-BBB8-A96C3E97BE72}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Morphic.OAuth.Client", "Morphic.OAuth.Client\Morphic.OAuth.Client.csproj", "{B6B435A7-B1F6-4AA1-9399-C81AF385D729}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Morphic.OAuth.Core", "Morphic.OAuth.Core\Morphic.OAuth.Core.csproj", "{F21221CE-1BD7-49FA-9203-2B5B02949357}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -180,30 +176,6 @@ Global
 		{D91EF666-04FB-4AC3-BBB8-A96C3E97BE72}.Release|x64.Build.0 = Release|x64
 		{D91EF666-04FB-4AC3-BBB8-A96C3E97BE72}.Release|x86.ActiveCfg = Release|x86
 		{D91EF666-04FB-4AC3-BBB8-A96C3E97BE72}.Release|x86.Build.0 = Release|x86
-		{B6B435A7-B1F6-4AA1-9399-C81AF385D729}.Debug|ARM64.ActiveCfg = Debug|Any CPU
-		{B6B435A7-B1F6-4AA1-9399-C81AF385D729}.Debug|ARM64.Build.0 = Debug|Any CPU
-		{B6B435A7-B1F6-4AA1-9399-C81AF385D729}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{B6B435A7-B1F6-4AA1-9399-C81AF385D729}.Debug|x64.Build.0 = Debug|Any CPU
-		{B6B435A7-B1F6-4AA1-9399-C81AF385D729}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{B6B435A7-B1F6-4AA1-9399-C81AF385D729}.Debug|x86.Build.0 = Debug|Any CPU
-		{B6B435A7-B1F6-4AA1-9399-C81AF385D729}.Release|ARM64.ActiveCfg = Release|Any CPU
-		{B6B435A7-B1F6-4AA1-9399-C81AF385D729}.Release|ARM64.Build.0 = Release|Any CPU
-		{B6B435A7-B1F6-4AA1-9399-C81AF385D729}.Release|x64.ActiveCfg = Release|Any CPU
-		{B6B435A7-B1F6-4AA1-9399-C81AF385D729}.Release|x64.Build.0 = Release|Any CPU
-		{B6B435A7-B1F6-4AA1-9399-C81AF385D729}.Release|x86.ActiveCfg = Release|Any CPU
-		{B6B435A7-B1F6-4AA1-9399-C81AF385D729}.Release|x86.Build.0 = Release|Any CPU
-		{F21221CE-1BD7-49FA-9203-2B5B02949357}.Debug|ARM64.ActiveCfg = Debug|Any CPU
-		{F21221CE-1BD7-49FA-9203-2B5B02949357}.Debug|ARM64.Build.0 = Debug|Any CPU
-		{F21221CE-1BD7-49FA-9203-2B5B02949357}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{F21221CE-1BD7-49FA-9203-2B5B02949357}.Debug|x64.Build.0 = Debug|Any CPU
-		{F21221CE-1BD7-49FA-9203-2B5B02949357}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{F21221CE-1BD7-49FA-9203-2B5B02949357}.Debug|x86.Build.0 = Debug|Any CPU
-		{F21221CE-1BD7-49FA-9203-2B5B02949357}.Release|ARM64.ActiveCfg = Release|Any CPU
-		{F21221CE-1BD7-49FA-9203-2B5B02949357}.Release|ARM64.Build.0 = Release|Any CPU
-		{F21221CE-1BD7-49FA-9203-2B5B02949357}.Release|x64.ActiveCfg = Release|Any CPU
-		{F21221CE-1BD7-49FA-9203-2B5B02949357}.Release|x64.Build.0 = Release|Any CPU
-		{F21221CE-1BD7-49FA-9203-2B5B02949357}.Release|x86.ActiveCfg = Release|Any CPU
-		{F21221CE-1BD7-49FA-9203-2B5B02949357}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

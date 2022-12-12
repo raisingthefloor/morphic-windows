@@ -22,13 +22,14 @@
 	  <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
 	  <PackageReference Include="Microsoft.Win32.SystemEvents" Version="6.0.1" />
           <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.1" />
+          <PackageReference Include="Morphic.Core" Version="1.2.0" />
 	  <PackageReference Include="PInvoke.AdvApi32" Version="0.7.124" />
 	  <PackageReference Include="PInvoke.Kernel32" Version="0.7.124" />
 	  <PackageReference Include="PInvoke.SetupApi" Version="0.7.124" />
 	</ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Morphic.Core\Morphic.Core.csproj" />
+    <ProjectReference Include="..\Morphic.Core.Legacy\Morphic.Core.Legacy.csproj" />
   </ItemGroup>
 
   <ItemGroup>
