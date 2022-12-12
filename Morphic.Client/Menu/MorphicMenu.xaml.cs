@@ -247,11 +247,13 @@
                         break;
                     case WindowsVersion.Win10_v21H1:
                     case WindowsVersion.Win10_v21H2:
+                    case WindowsVersion.Win10_v22H2:
                     case WindowsVersion.Win10_vFuture:
                         // Windows 10 21H1, Windows 10 21H2 (and assumed for the future)
                         settingsUrlAsPath = "ms-settings:easeofaccess-mousepointer";
                         break;
                     case WindowsVersion.Win11_v21H2:
+                    case WindowsVersion.Win11_v22H2:
                     case WindowsVersion.Win11_vFuture:
                         // Windows 11 21H2 (and assumed for the future)
                         settingsUrlAsPath = "ms-settings:easeofaccess-mousepointer";
