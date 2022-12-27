@@ -414,6 +414,9 @@
   <data name="TravelWindow_Title" xml:space="preserve">
     <value>Travel with Settings</value>
   </data>
+  <data name="UntitledWindow_Title" xml:space="preserve">
+    <value>Morphic</value>
+  </data>
   <data name="UsernameField_AutomationHelpText" xml:space="preserve">
     <value>Enter your email address</value>
   </data>
