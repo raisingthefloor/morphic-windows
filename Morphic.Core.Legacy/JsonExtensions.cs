@@ -46,8 +46,19 @@ public class JsonElementInferredTypeConverter : JsonConverter<object>
 
     public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
     {
-			// default serialization behavior
-        var serializedObject = JsonSerializer.Serialize(value, options);
+        // remove our type converter from the current options (or else we'd just create infinite recursion below, calling ourselves recursively)
+        var optionsWithoutThisConverter = new JsonSerializerOptions(options);
+        for (var iConverter = optionsWithoutThisConverter.Converters.Count - 1; iConverter >= 0; iConverter -= 1)
+        {
+            var converter = optionsWithoutThisConverter.Converters[iConverter];
+            if (converter.GetType() == typeof(JsonElementInferredTypeConverter))
+            {
+                optionsWithoutThisConverter.Converters.RemoveAt(iConverter);
+            }
+        }
+
+        // default serialization behavior (i.e. without this type converter in the loop)
+        var serializedObject = JsonSerializer.Serialize(value, optionsWithoutThisConverter);
         writer.WriteRawValue(serializedObject);
     }
 }
