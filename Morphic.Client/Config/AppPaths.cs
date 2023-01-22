@@ -29,7 +29,7 @@ namespace Morphic.Client.Config
 
         public static readonly string DefaultConfigDir = AppPaths.GetAppDir("DefaultConfig");
         public static readonly string AssetsDir = AppPaths.GetAppDir("Assets");
-        public static readonly string CacheDir = AppPaths.GetUserLocalConfigDir("cache", true);
+        public static readonly string CacheDir = AppPaths.GetUserLocalConfigDir("Cache", true);
 
         public const string RegistryPath = @"Software\Raising the Floor\Morphic\Bar";
 
