@@ -52,7 +52,7 @@ namespace Morphic.Client
     using Dialogs;
     using Menu;
     using Microsoft.Win32;
-    using Morphic.Telemetry;
+    using Morphic.TelemetryClient;
     using Morphic.WindowsNative.OsVersion;
     using Settings.SettingsHandlers;
     using Settings.SolutionsRegistry;
@@ -133,7 +133,7 @@ namespace Morphic.Client
 
         #region Configuration & Startup
 
-        private Timer _telemetryHeartbeatTimer;
+        private Timer? _telemetryHeartbeatTimer = null;
 
         public App()
         {
@@ -554,7 +554,7 @@ namespace Morphic.Client
             {
                 await Countly.RecordEvent(Key);
 
-                _telemetryClient?.EnqueueActionMessage(Key, null);
+                _telemetryClient?.EnqueueEvent(Key, null);
             }
         }
 
@@ -564,7 +564,7 @@ namespace Morphic.Client
             {
                 await Countly.RecordEvent(Key, Count, Segmentation);
 
-                _telemetryClient?.EnqueueActionMessage(Key, null);
+                _telemetryClient?.EnqueueEvent(Key, null);
             }
         }
 
@@ -817,7 +817,7 @@ namespace Morphic.Client
 
         private Guid? _telemetrySessionId = null;
 
-        private void ConfigureTelemetry()
+        private async Task ConfigureTelemetryAsync()
         {
             // TODO: Move metrics-related things to their own class.
 
@@ -834,40 +834,77 @@ namespace Morphic.Client
             var mqttUsername = section["AppName"];
             var mqttAnonymousPassword = section["AppKey"];
 
-            var mqttConfig = new MorphicTelemetryClient.WebsocketTelemetryClientConfig()
+            var mqttConfig = new MorphicTelemetryClient.WebsocketTelemetryClientConfig(
+                 hostname: mqttHostname,
+                 port: 443,
+                 path: "/ws",
+                 clientId: mqttClientId,
+                 username: mqttUsername,
+                 password: mqttAnonymousPassword,
+                 useTls: true
+            );
+            MorphicTelemetryClient? telemetryClient = null;
+            //
+            // TODO: place this log in the 
+            string? userLocalMorphicDirectory = null;
+            try
             {
-                 Hostname = mqttHostname,
-                 Port = 443,
-                 Path = "/ws",
-                 ClientId = mqttClientId,
-                 Username = mqttUsername,
-                 Password = mqttAnonymousPassword,
-                 UseTls = true
-            };
-            var telemetryClient = new MorphicTelemetryClient(mqttConfig);
-            telemetryClient.SiteId = telemetrySiteId;
+                userLocalMorphicDirectory = Morphic.Client.Config.AppPaths.UserLocalConfigDir;
+            }
+            catch { } 
+            //
+            if (userLocalMorphicDirectory is not null)
+            {
+                var pathToOnDiskTransactionLog = Path.Combine(userLocalMorphicDirectory, "telemetry.log");
+                var createTelemetryClientResult = await MorphicTelemetryClient.CreateUsingOnDiskTransactionLogAsync(mqttConfig, pathToOnDiskTransactionLog);
+                if (createTelemetryClientResult.IsSuccess == true)
+                {
+                    // we were able to read in the on-disk telemetry log (or create it); proceed with the newly-instantiated telemetry client
+                    telemetryClient = createTelemetryClientResult.Value!;
+                }
+                else // createTelemetryClientResult.IsError == true
+                {
+                    // if we could not open the on-disk transaction log, attempt to delete the log and try to create a new file instead
+                    try
+                    {
+                        // try to delete the existing file
+                        System.IO.File.Delete(pathToOnDiskTransactionLog);
+
+                        // try to create a new telemetry file at the specified path
+                        createTelemetryClientResult = await MorphicTelemetryClient.CreateUsingOnDiskTransactionLogAsync(mqttConfig, pathToOnDiskTransactionLog);
+                        if (createTelemetryClientResult.IsSuccess == true)
+                        {
+                            telemetryClient = createTelemetryClientResult.Value!;
+                        }
+                    }
+                    catch { }
+                }
+            }
+            if (telemetryClient is null)
+            {
+                // if we could not create a telemetry file at the specified path, simply create a telemetry client (without on-disk persistance)
+                telemetryClient = MorphicTelemetryClient.Create(mqttConfig);
+            }
+            //
+            telemetryClient.SetSiteId(telemetrySiteId);
             _telemetryClient = telemetryClient;
 
             // create random session id
             _telemetrySessionId = Guid.NewGuid();
 
-            Task.Run(async () =>
+            //
+
+            // send the first telemetry message (@session begin)
+            // NOTE: we enqueue this message as soon as we create the telemetry client object
+            var eventData = new SessionTelemetryEventData()
             {
-                // start the telemetry session
-                await telemetryClient.StartSessionAsync();
+                SessionId = _telemetrySessionId,
+                State = "begin"
+            };
+            telemetryClient.EnqueueEvent("@session", eventData);
 
-                // send the first telemetry message (@session begin)
-                // NOTE: for Morphic 2.0, enqueue this message as soon as we create the telemetry client object
-                var eventData = new SessionTelemetryEventData()
-                {
-                    SessionId = _telemetrySessionId,
-                    State = "begin"
-                };
-                telemetryClient.EnqueueActionMessage("@session", eventData);
-
-                // initialize (and start) our heartbeat timer; it should send the heartbeat message every 12 hours
-                _telemetryHeartbeatTimer = new System.Threading.Timer(this.SendTelemetryHeartbeat, null, new TimeSpan(12, 0, 0), new TimeSpan(12, 0, 0));
-            });
+            // initialize (and start) our heartbeat timer; it should send the heartbeat message every 12 hours (i.e. twice a day, so that at least one event is recorded per active session per day)
+            _telemetryHeartbeatTimer = new System.Threading.Timer(this.SendTelemetryHeartbeat, null, new TimeSpan(12, 0, 0), new TimeSpan(12, 0, 0));
         }
 
         internal record SessionTelemetryEventData
@@ -1044,7 +1081,7 @@ namespace Morphic.Client
             if (ConfigurableFeatures.TelemetryIsEnabled == true)
             {
                 await this.ConfigureCountlyAsync();
-                this.ConfigureTelemetry();
+                await this.ConfigureTelemetryAsync();
             }
 
             if (ConfigurableFeatures.CheckForUpdatesIsEnabled == true)
@@ -1482,7 +1519,7 @@ namespace Morphic.Client
                 SessionId = _telemetrySessionId,
                 State = "heartbeat"
             };
-            _telemetryClient?.EnqueueActionMessage("@session", eventData);
+            _telemetryClient?.EnqueueEvent("@session", eventData);
         }
 
         #region Shutdown
@@ -1495,7 +1532,7 @@ namespace Morphic.Client
             if (ConfigurableFeatures.TelemetryIsEnabled == true)
             {
                 // dispose of our telemetry heartbeat timer
-                _telemetryHeartbeatTimer.Dispose();
+                _telemetryHeartbeatTimer?.Dispose();
 
                 try
                 {
@@ -1508,16 +1545,33 @@ namespace Morphic.Client
                             SessionId = _telemetrySessionId,
                             State = "end"
                         };
-                        _telemetryClient.EnqueueActionMessage("@session", eventData);
+                        _telemetryClient.EnqueueEvent("@session", eventData);
 
-                        // wait up to 2500 milliseconds for the event to be sent
-                        await _telemetryClient.FlushMessageQueueAsync(2500);
-
-                        // NOTE: wait for the session to stop (up to 250ms)
-                        await Task.Run(() =>
+                        // wait up to two seconds for the event to be sent
+                        var waitTimeSpan = TimeSpan.FromSeconds(2);
+                        // NOTE: PrepareForDisposalAsync will attempt to finish sending the current message(s); this will not necessarily send the message we just enqueued, but if not
+                        //       then that message will be saved for the next telemetry server link-up and in the interim the telemetry server will count our last-sent event as the
+                        //       end of the session instead.  It will also attempt to flush any remaining queued items out to the on-disk persistant log (so they can sent on the next run)
+                        var cancellationTokenSource = new CancellationTokenSource();
+                        var cancellationToken = cancellationTokenSource.Token;
+                        var task = Task.Run(() =>
                         {
-                            _telemetryClient.StopSessionAsync().Wait(250);
+                            // NOTE: MorphicTelemetryClient.PrepareForDisposalAsync(...) may only be called once in the current implementation, so it's appropriate to call it here before shutdown
+                            _telemetryClient.PrepareForDisposalAsync(waitTimeSpan).GetAwaiter().GetResult();
+                            cancellationTokenSource.Cancel();
                         });
+                        try
+                        {
+                            Task.Delay(waitTimeSpan, cancellationToken).GetAwaiter().GetResult();
+                            // NOTE: if we reach here, the function did not return on time
+                        }
+                        catch (TaskCanceledException)
+                        {
+                            // task was ended before timeout, which is the expected behavior if we ended before timeout
+                        }
+
+                        // dispose of the telemetry client; note that this may take up to 250ms (as the dispose function waits up to 250ms for the in-memory logs to be flushed to disk)
+                        _telemetryClient.Dispose();
                     }
                 }
                 catch { }
