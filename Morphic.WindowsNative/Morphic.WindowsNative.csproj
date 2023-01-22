@@ -2,10 +2,16 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0-windows10.0.22621.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
     <Nullable>enable</Nullable>
     <Platforms>x86;x64;ARM64</Platforms>
     <RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
-    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <Authors>Raising the Floor - US, Inc.</Authors>
+    <Company>Raising the Floor - US, Inc.</Company>
+    <Product>Morphic Windows Native features library</Product>
+    <Copyright>Copyright 2021-2023 Raising the Floor - US, Inc.</Copyright>
+    <PackageLicenseExpression>BSD-3-Clause</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/raisingthefloor/morphic-windowsnative-lib-cs</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>

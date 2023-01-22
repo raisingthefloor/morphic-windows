@@ -4,7 +4,7 @@
 // compliance with this License.
 //
 // You may obtain a copy of the License at
-// https://github.com/raisingthefloor/morphic-windows/blob/master/LICENSE.txt
+// https://github.com/raisingthefloor/morphic-windowsnative-lib-cs/blob/main/LICENSE
 //
 // The R&D leading to these results received funding from the:
 // * Rehabilitation Services Administration, US Dept. of Education under
@@ -529,7 +529,8 @@ public class SettingItemProxy
                     {
                         foreach (EventHandler element in invocationList!)
                         {
-                            Task.Run(() => {
+                            Task.Run(() => 
+							{
                                 element.Invoke(sender, EventArgs.Empty);
                             });
                         }
@@ -546,7 +547,8 @@ public class SettingItemProxy
                     {
                         foreach (EventHandler element in invocationList!)
                         {
-                            Task.Run(() => {
+                            Task.Run(() => 
+							{
                                 element.Invoke(sender, EventArgs.Empty);
                             });
                         }
@@ -563,7 +565,8 @@ public class SettingItemProxy
                     {
                         foreach (EventHandler element in invocationList!)
                         {
-                            Task.Run(() => {
+                            Task.Run(() => 
+							{
                                 element.Invoke(sender, EventArgs.Empty);
                             });
                         }
