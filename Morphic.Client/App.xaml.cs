@@ -846,16 +846,20 @@ namespace Morphic.Client
             MorphicTelemetryClient? telemetryClient = null;
             //
             // TODO: place this log in the 
-            string? userLocalMorphicDirectory = null;
+            string? userLocalAppDirectory = null;
             try
             {
-                userLocalMorphicDirectory = Morphic.Client.Config.AppPaths.UserLocalConfigDir;
+                userLocalAppDirectory = Morphic.Client.Config.AppPaths.UserLocalConfigDir;
+                if (System.IO.Directory.Exists(userLocalAppDirectory) == false)
+                {
+                    System.IO.Directory.CreateDirectory(userLocalAppDirectory);
+                }
             }
             catch { } 
             //
-            if (userLocalMorphicDirectory is not null)
+            if (userLocalAppDirectory is not null)
             {
-                var pathToOnDiskTransactionLog = Path.Combine(userLocalMorphicDirectory, "telemetry.log");
+                var pathToOnDiskTransactionLog = Path.Combine(userLocalAppDirectory, "telemetry.log");
                 var createTelemetryClientResult = await MorphicTelemetryClient.CreateUsingOnDiskTransactionLogAsync(mqttConfig, pathToOnDiskTransactionLog);
                 if (createTelemetryClientResult.IsSuccess == true)
                 {
