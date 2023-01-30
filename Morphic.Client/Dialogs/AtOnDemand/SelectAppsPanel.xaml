@@ -22,7 +22,11 @@
             <StackPanel Orientation="Vertical">
                 <TextBlock FontWeight="Bold">Let's install your apps</TextBlock>
                 <TextBlock x:Name="SubtitleTextBlockLine1" TextWrapping="Wrap">Morphic and AT on Demand can install</TextBlock>
-                <TextBlock x:Name="SubtitleTextBlockLine2">all # of your assistive apps.</TextBlock>
+                <TextBlock>
+                <Run>all </Run>
+                <Run x:Name="NumberOfAvailableAppsTextBlockRun">#</Run>
+                <Run> of your assistive apps.</Run>
+                </TextBlock>
             </StackPanel>
         </StackPanel>
         <TextBlock Margin="0,0,0,5" Grid.Row="1">If you do not want to install and app, uncheck it.</TextBlock>

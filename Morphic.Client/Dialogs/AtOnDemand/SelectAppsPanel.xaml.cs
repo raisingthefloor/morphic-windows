@@ -53,6 +53,9 @@ public partial class SelectAppsPanel : StackPanel, IStepPanel
 
     private void Panel_Loaded(object sender, RoutedEventArgs e)
     {
+        // display the # of available apps
+        this.NumberOfAvailableAppsTextBlockRun.Text = this.ListOfAtSoftware.Count.ToString();
+
         // display a checkbox for each available app
         foreach (var availableApp in this.ListOfAtSoftware)
         {
