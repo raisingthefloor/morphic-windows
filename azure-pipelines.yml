@@ -63,6 +63,13 @@ stages:
             version: 6.0.403
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
+        - task: DotNetCoreCLI@2
+          displayName: 'Install AzureSignTool 4.0.1'
+          inputs:
+            command: 'custom'
+            custom: 'tool'
+            arguments: 'install --global AzureSignTool --version 4.0.1'
+        
         # Set a $(BUILD_TYPE) variable
         - bash: |
             BUILD_TYPE="Development"
@@ -75,9 +82,7 @@ stages:
           env:
             BRANCH: $(Build.SourceBranch)
             BRANCH_NAME: $(Build.SourceBranchName)
-        
-
-        
+                
         - task: Bash@3
           displayName: "write build info"
           env:
@@ -89,13 +94,6 @@ stages:
             targetType: 'filePath'
             filePath: set-build-info.sh
 
-        - task: DotNetCoreCLI@2
-          displayName: 'Install AzureSignTool 4.0.1'
-          inputs:
-            command: 'custom'
-            custom: 'tool'
-            arguments: 'install --global AzureSignTool --version 4.0.1'
-        
         - task: MSBuild@1
           displayName: "Build Morphic Client"
           env:

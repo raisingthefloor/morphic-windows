@@ -544,6 +544,12 @@ namespace Morphic.Client
             services.AddTransient<RestoreWindow>();
             services.AddSingleton<Backups>();
             services.AddTransient<BarData>();
+            //
+            // AToD-related
+            services.AddTransient<Morphic.Client.Dialogs.AtOnDemand.SelectAppsPanel>();
+            services.AddTransient<Morphic.Client.Dialogs.AtOnDemand.DownloadAndInstallAppsPanel>();
+            services.AddTransient<Morphic.Client.Dialogs.AtOnDemand.AtOnDemandCompletePanel>();
+            //
             services.AddSingleton<BarPresets>(s => BarPresets.Default);
             services.AddSolutionsRegistryServices();
             services.AddSingleton<Solutions>(s => Solutions.FromFile(s, AppPaths.GetAppFile("solutions.json5")));
