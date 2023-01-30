@@ -313,6 +313,15 @@ namespace Morphic.Client.Strings {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Done.
+        /// </summary>
+        public static string DoneButton_Text {
+            get {
+                return ResourceManager.GetString("DoneButton_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Email Address.
         /// </summary>
         public static string EmailFieldLabel_Text {
@@ -327,6 +336,15 @@ namespace Morphic.Client.Strings {
         public static string ForgotPasswordHyperlink_Text {
             get {
                 return ResourceManager.GetString("ForgotPasswordHyperlink_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Install.
+        /// </summary>
+        public static string InstallButton_Text {
+            get {
+                return ResourceManager.GetString("InstallButton_Text", resourceCulture);
             }
         }
         
@@ -885,6 +903,15 @@ namespace Morphic.Client.Strings {
         public static string SignInWindow_Title {
             get {
                 return ResourceManager.GetString("SignInWindow_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skip All.
+        /// </summary>
+        public static string SkipAllButton_Text {
+            get {
+                return ResourceManager.GetString("SkipAllButton_Text", resourceCulture);
             }
         }
         
