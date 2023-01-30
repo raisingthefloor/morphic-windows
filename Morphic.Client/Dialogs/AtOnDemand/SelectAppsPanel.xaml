@@ -29,7 +29,7 @@
                 </TextBlock>
             </StackPanel>
         </StackPanel>
-        <TextBlock Margin="0,0,0,5" Grid.Row="1">If you do not want to install and app, uncheck it.</TextBlock>
+        <TextBlock Margin="0,0,0,5" Grid.Row="1">If you do not want to install an app, uncheck it.</TextBlock>
         <StackPanel x:Name="AvailableAppsStackPanel" Margin="10,0,0,0" Grid.Row="2">
             <!-- list of apps that can be installed -->
             <!-- NOTE: we include the XAML here as a template sample -->
