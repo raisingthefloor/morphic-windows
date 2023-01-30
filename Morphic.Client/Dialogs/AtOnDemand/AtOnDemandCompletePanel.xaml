@@ -32,6 +32,7 @@
                 <TextBlock Margin="5,0,0,0">Read&amp;Write by Texthelp</TextBlock>    
             </StackPanel>-->
         </StackPanel>
+        <TextBlock x:Name="RebootRequiredTextBlock" FontWeight="Bold" Margin="5, 5" Visibility="Collapsed">A reboot is required to use one or more of the assistive apps.</TextBlock>
         <UniformGrid Grid.Row="2" Margin="0,20,0,0">
             <Button x:Name="DoneButton" Width="Auto" HorizontalAlignment="Right" FontWeight="Bold" Margin="10,5,0,10" Click="DoneButton_Clicked" IsEnabled="True" Content="{x:Static l10n:Resources.DoneButton_Text}"/>
         </UniformGrid>

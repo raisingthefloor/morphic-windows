@@ -43,6 +43,8 @@ public partial class AtOnDemandCompletePanel : StackPanel, IStepPanel
 
     internal List<AtSoftwareDetails> ListOfInstalledApps { get; set; } = new();
 
+    internal bool RebootRequired { get; set; } = false;
+
     public AtOnDemandCompletePanel(MorphicSession morphicSession, IServiceProvider serviceProvider)
     {
         this.morphicSession = morphicSession;
@@ -68,6 +70,11 @@ public partial class AtOnDemandCompletePanel : StackPanel, IStepPanel
             itemStackPanel.Children.Add(appNameTextBlock);
 
             this.InstalledAppsStackPanel.Children.Add(itemStackPanel);
+        }
+
+        if (this.RebootRequired == true)
+        {
+            this.RebootRequiredTextBlock.Visibility = Visibility.Visible;
         }
     }
 

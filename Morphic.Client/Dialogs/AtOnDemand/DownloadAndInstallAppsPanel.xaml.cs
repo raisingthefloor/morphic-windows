@@ -69,6 +69,8 @@ public partial class DownloadAndInstallAppsPanel : StackPanel, IStepPanel
     {
         List<AtSoftwareDetails> listOfInstalledApps = new();
 
+        var rebootRequired = false;
+
         foreach (var appToInstall in this.AppsToInstall)
         {
             var installWasSuccess = false;
@@ -80,6 +82,11 @@ public partial class DownloadAndInstallAppsPanel : StackPanel, IStepPanel
                     if (installResult.IsSuccess == true)
                     {
                         installWasSuccess = true;
+
+                        if (installResult.Value!.RebootRequired == true)
+                        {
+                            rebootRequired = true;
+                        }
                     }
                     break;
                 default:
@@ -105,12 +112,15 @@ public partial class DownloadAndInstallAppsPanel : StackPanel, IStepPanel
             var atOnDemandCompletePanel = this.StepFrame.PushPanel<Morphic.Client.Dialogs.AtOnDemand.AtOnDemandCompletePanel>();
             atOnDemandCompletePanel.ApplyPreferencesAfterLogin = this.ApplyPreferencesAfterLogin;
             atOnDemandCompletePanel.ListOfInstalledApps = listOfInstalledApps;
+            atOnDemandCompletePanel.RebootRequired = rebootRequired;
             atOnDemandCompletePanel.Completed += (o, args) => this.Completed?.Invoke(this, EventArgs.Empty);
         });
     }
 
-    private async Task<MorphicResult<MorphicUnit, MorphicUnit>> InstallZipFileWithEmbeddedMsiAsync(AtSoftwareDetails atSoftwareDetails)
+    private async Task<MorphicResult<InstallMsiResult, MorphicUnit>> InstallZipFileWithEmbeddedMsiAsync(AtSoftwareDetails atSoftwareDetails)
     {
+        bool rebootRequired;
+
         await Application.Current.Dispatcher.InvokeAsync(() =>
         {
             this.InstallStatusLabel.Content = "Downloading " + atSoftwareDetails.ProductName + "...";
@@ -159,6 +169,7 @@ public partial class DownloadAndInstallAppsPanel : StackPanel, IStepPanel
             {
                 return MorphicResult.ErrorResult();
             }
+            rebootRequired = installResult.Value!.RebootRequired;
         }
         finally
         {
@@ -173,13 +184,68 @@ public partial class DownloadAndInstallAppsPanel : StackPanel, IStepPanel
         }
 
         // if we reach here, the install was successful
-        return MorphicResult.OkResult();
+        var result = new InstallMsiResult()
+        {
+            RebootRequired = rebootRequired
+        };
+        return MorphicResult.OkResult(result);
     }
 
-    private async Task<MorphicResult<MorphicUnit, MorphicUnit>> InstallMsiAsync(string pathToMsi, Action<double>? progressFunction)
+    private struct InstallMsiResult
     {
-        // for now, always return success
-        return MorphicResult.OkResult();
+        public bool RebootRequired;
+    }
+    private async Task<MorphicResult<InstallMsiResult, MorphicUnit>> InstallMsiAsync(string pathToMsi, Action<double>? progressFunction)
+    {
+        // set up the command line settings (i.e. installer properties, etc.)
+        var commandLineSettings = new Dictionary<string, string>();
+
+        // suppress all reboot prompts and the actual reboots; this will cause the operation to return ERROR_SUCCESS_REBOOT_REQUIRED instead of ERROR_SUCCESS if a reboot is required
+        commandLineSettings.Add("REBOOT", "ReallySuppress");
+
+        var windowsInstaller = new AToD.Deployment.MSI.WindowsInstaller();
+
+        // NOTE: for now, we only call the progressComplete callback if progress has increased at least 0.1% since the last callback
+        const double MINIMUM_PERCENTAGE_INCREASE_BETWEEN_PROGRESS_CALLBACKS = 0.001;
+
+        double lastPercentageComplete = 0;
+        windowsInstaller.ProgressUpdate += (sender, args) =>
+        {
+            var percentageComplete = args.Percent;
+            if (percentageComplete != 0)
+            {
+                if (percentageComplete > lastPercentageComplete + MINIMUM_PERCENTAGE_INCREASE_BETWEEN_PROGRESS_CALLBACKS)
+                {
+                    lastPercentageComplete = percentageComplete;
+
+                    _ = Task.Run(() =>
+                    {
+                        progressFunction?.Invoke(percentageComplete);
+                    });
+                }
+            }
+        };
+
+        var installResult = await windowsInstaller.InstallAsync(pathToMsi, commandLineSettings);
+        if (installResult.IsError == true)
+        {
+            Debug.WriteLine(false, "AT on Demand was unable to install the application.");
+            return MorphicResult.ErrorResult();
+        }
+        var installResultValue = installResult.Value!;
+        var rebootRequired = installResultValue.RebootRequired;
+
+        // otherwise, we succeeded.
+        await Task.Run(() =>
+        {
+            progressFunction?.Invoke(1.0);
+        });
+
+        var result = new InstallMsiResult() 
+        { 
+            RebootRequired = rebootRequired 
+        };
+        return MorphicResult.OkResult(result);
     }
 
     // NOTE: this function returns the path to where the designated file was unzipped

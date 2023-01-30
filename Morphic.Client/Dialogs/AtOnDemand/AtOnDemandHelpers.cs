@@ -187,7 +187,9 @@ internal class AtOnDemandHelpers
         //       We tried using BackgroundDownloader, but that only works inside an AppContainer--and we have concerns about being able to protect the file between download and installation (i.e. know what our checksum is when downloaded and then again verify that when we open up the MSI installer)
         //       The one other potential option is BITS--which we need to look into.  It may be the best replacement (and may effectively be what the BackgroundDownloader which requires an AppContainer is using)
 
+#pragma warning disable SYSLIB0014 // Type or member is obsolete
         var webClient = new System.Net.WebClient();
+#pragma warning restore SYSLIB0014 // Type or member is obsolete
 
         // NOTE: for now, we only call the progressComplete callback if progress has increased at least 0.1% since the last callback
         const double MINIMUM_PERCENTAGE_INCREASE_BETWEEN_PROGRESS_CALLBACKS = 0.001;
