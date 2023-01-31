@@ -21,6 +21,8 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
+#define OFFLINE_INSTALL
+
 namespace Morphic.Client.Dialogs.AtOnDemand;
 
 using Morphic.Core;
@@ -30,6 +32,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Runtime.InteropServices;
 using System.Security.Policy;
 using System.Text;
 using System.Threading;
@@ -40,12 +43,87 @@ using Windows.Storage.Streams;
 
 internal class AtOnDemandHelpers
 {
+    // knownfolders.h
+    internal struct KNOWNFOLDERID
+    {
+        public static Guid FOLDERID_Downloads = new Guid(0x374de290, 0x123f, 0x4565, 0x91, 0x64, 0x39, 0xc4, 0x92, 0x5e, 0x46, 0x7b); // {374DE290-123F-4565-9164-39C4925E467B}
+    }
+
+    // NOTE: when using this function, ppszPath must be freed manually using FreeCoTaskMem
+    [DllImport("shell32.dll", CharSet=CharSet.Unicode)]
+    private static extern int SHGetKnownFolderPath(
+        [MarshalAs(UnmanagedType.LPStruct)] Guid rfid,
+        uint dwFlags,
+        IntPtr hToken,
+        out IntPtr ppszPath);
+
+    private const int S_OK = 0;
+
+    internal static MorphicResult<string, MorphicUnit> GetKnownFolderPath(Guid knownFolderId)
+    {
+        IntPtr pointerToPath;
+        var getKnownFolderPathResult = AtOnDemandHelpers.SHGetKnownFolderPath(knownFolderId, 0, IntPtr.Zero, out pointerToPath);
+        try
+        {
+            if (getKnownFolderPathResult == S_OK)
+            {
+                var path = Marshal.PtrToStringUni(pointerToPath);
+                return MorphicResult.OkResult(path!);
+            }
+            else
+            {
+                return MorphicResult.ErrorResult();
+            }
+        }
+        finally
+        {
+            Marshal.FreeCoTaskMem(pointerToPath);
+        }
+    }
+
     // TODO: make sure the user is logged in before calling this function (and make sure we get the user's login info/preferences so we can search for AT which is not installed)
     internal static List<AtSoftwareDetails> GetListOfAtSoftwareToInstall()
     {
+#if OFFLINE_INSTALL
+        var getKnownFolderPathResult = AtOnDemandHelpers.GetKnownFolderPath(KNOWNFOLDERID.FOLDERID_Downloads);
+        string pathToDownloadsFolder;
+        if (getKnownFolderPathResult.IsError == true)
+        {
+            Debug.Assert(false, "Could not get path to downloads folder");
+            return new();
+        }
+        pathToDownloadsFolder = getKnownFolderPathResult.Value!;
+#endif
+
         var listOfAllAtSoftware = new List<AtSoftwareDetails>();
+
         // NOTE: in the future, we should move the list of available AT to a data file (or to a trusted server)
         // TODO: check the user's preferences (and the set of available AT), to determine which AT they want to use (instead of adding the full list here)
+
+#if OFFLINE_INSTALL
+        //
+        // fusion
+        var fusionSoftware = new AtSoftwareDetails()
+        {
+            ShortName = "fusion",
+            ProductName = "Fusion",
+            ManufacturerName = "Freedom Scientific Inc.",
+            DownloadUri = new Uri(System.IO.Path.Combine(pathToDownloadsFolder, "atod\\fusion")), // local URI
+            InstallMethod = AtSoftwareInstallMethod.MultipleOfflineInstallers
+        };
+        listOfAllAtSoftware.Add(fusionSoftware);
+        //
+        // JAWS
+        var jawsSoftware = new AtSoftwareDetails()
+        {
+            ShortName = "jaws",
+            ProductName = "JAWS",
+            ManufacturerName = "Freedom Scientific Inc.",
+            DownloadUri = new Uri(System.IO.Path.Combine(pathToDownloadsFolder, "atod\\jaws")), // local URI
+            InstallMethod = AtSoftwareInstallMethod.MultipleOfflineInstallers
+        };
+        listOfAllAtSoftware.Add(jawsSoftware);
+#endif
         //
         // read&write
         var readAndWriteSoftware = new AtSoftwareDetails()
@@ -53,11 +131,28 @@ internal class AtOnDemandHelpers
             ShortName = "readandwrite",
             ProductName = "Read&Write",
             ManufacturerName = "Texthelp Ltd",
+#if OFFLINE_INSTALL
+            DownloadUri = new Uri(System.IO.Path.Combine(pathToDownloadsFolder, "atod\\readandwrite\\setup.zip")), // local URI
+#else
             DownloadUri = new Uri("https://fastdownloads2.texthelp.com/readwrite12/installers/us/setup.zip"), // US download URI
             //DownloadUri = new Uri("https://fastdownloads2.texthelp.com/readwrite12/installers/uk/setup.zip"), // UK download URI
+#endif
             InstallMethod = AtSoftwareInstallMethod.ZipFileWithEmbeddedMsi("setup.msi")
         };
         listOfAllAtSoftware.Add(readAndWriteSoftware);
+#if OFFLINE_INSTALL
+        //
+        // ZoomText
+        var zoomtextSoftware = new AtSoftwareDetails()
+        {
+            ShortName = "zoomtext",
+            ProductName = "ZoomText",
+            ManufacturerName = "Freedom Scientific Inc.",
+            DownloadUri = new Uri(System.IO.Path.Combine(pathToDownloadsFolder, "atod\\zoomtext")), // local URI
+            InstallMethod = AtSoftwareInstallMethod.MultipleOfflineInstallers
+        };
+        listOfAllAtSoftware.Add(zoomtextSoftware);
+#endif
 
         var result = new System.Collections.Generic.List<AtSoftwareDetails>();
 
@@ -88,8 +183,19 @@ internal class AtOnDemandHelpers
 
         switch (shortName)
         {
+            case "fusion":
+                installerGuid = new Guid(0x7FD10D99, 0x9C47, 0x448F, 0x90, 0x08, 0x9E, 0x1D, 0x2C, 0xC4, 0xE5, 0xEA); // {7FD10D99-9C47-448F-9008-9E1D2CC4E5EA}
+                break;
+            case "jaws":
+                // NOTE: this is not listed in the Program Files when JAWS is installed with Fusion; we should double-check against visible entries when JAWS is installed by itself
+                installerGuid = new Guid(0xCCEA40E1, 0x5E4E, 0x4707, 0xB2, 0xF4, 0xC1, 0x2A, 0x74, 0xA9, 0x09, 0x56); // {CCEA40E1-5E4E-4707-B2F4-C12A74A90956} // JAWS 2023 Base (from the Fusion Suite, is assumed to be JAWS itself)
+                break;
             case "readandwrite":
                 installerGuid = new Guid(0x355AB00F, 0x48E8, 0x474E, 0xAC, 0xC4, 0xD9, 0x17, 0xBA, 0xFA, 0x4D, 0x58); // {355AB00F-48E8-474E-ACC4-D917BAFA4D58}
+                break;
+            case "zoomtext":
+                // NOTE: this is not listed in the Program Files when ZoomText is installed with Fusion; we should double-check against visible entries when ZoomText is installed by itself
+                installerGuid = new Guid(0x06A0FE6D, 0xFB33, 0x45A0, 0xB7, 0x43, 0xFE, 0xFE, 0x21, 0xE8, 0xCD, 0x99); // {06A0FE6D-FB33-45A0-B743-FEFE21E8CD99}
                 break;
             default:
                 return MorphicResult.ErrorResult();
