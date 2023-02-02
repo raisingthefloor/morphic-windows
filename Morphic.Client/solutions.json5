@@ -102,5 +102,17 @@
         }
       }
     ]
+  },
+  "com.texthelp.readandwrite": {
+    settings: [
+      {
+        type: "installedApplication",
+        shortName: "readandwrite",
+        productCode: "355AB00F-48E8-474E-ACC4-D917BAFA4D58",
+        settings: {
+          installed: "isInstalled"
+        }
+      }
+    ]
   }
 }

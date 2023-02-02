@@ -33,6 +33,7 @@ using System.Windows.Controls;
 using Elements;
 using Service;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 public partial class DownloadAndInstallAppsPanel : StackPanel, IStepPanel
 {
@@ -78,14 +79,16 @@ public partial class DownloadAndInstallAppsPanel : StackPanel, IStepPanel
             switch (appToInstall.InstallMethod.Value)
             {
                 case AtSoftwareInstallMethod.Values.ZipFileWithEmbeddedMsi:
-                    var installResult = await this.InstallZipFileWithEmbeddedMsiAsync(appToInstall);
-                    if (installResult.IsSuccess == true)
                     {
-                        installWasSuccess = true;
-
-                        if (installResult.Value!.RebootRequired == true)
+                        var installResult = await this.InstallZipFileWithEmbeddedMsiAsync(appToInstall);
+                        if (installResult.IsSuccess == true)
                         {
-                            rebootRequired = true;
+                            installWasSuccess = true;
+
+                            if (installResult.Value!.RebootRequired == true)
+                            {
+                                rebootRequired = true;
+                            }
                         }
                     }
                     break;
@@ -117,6 +120,59 @@ public partial class DownloadAndInstallAppsPanel : StackPanel, IStepPanel
         });
     }
 
+    private Action<double> CreateProgressFunction()
+    {
+        return this.CreateProgressFunction(0, 1);
+    }
+    //
+    private Action<double> CreateProgressFunction(int index, int count)
+    {
+        SemaphoreSlim inFunctionSemaphore = new SemaphoreSlim(1, 1);
+
+        var result = new Action<double>(async (percentageComplete) =>
+        {
+            if (percentageComplete == 1.0)
+            {
+                await inFunctionSemaphore.WaitAsync();
+            }
+            else
+            {
+                var acquiredSemaphore = await inFunctionSemaphore.WaitAsync(0);
+                if (acquiredSemaphore == false)
+                {
+                    // for efficiency and to avoid rendering call overflows: if the progress function is already executing, return (unless this is the 100% completion mark)
+                    return;
+                }
+            }
+            try
+            {
+                double relativePercentComplete;
+                if (index >= count)
+                {
+                    relativePercentComplete = 1.0;
+                }
+                else
+                {
+                    var percentPerEntry = (double)1.0 / (double)count;
+                    //
+                    relativePercentComplete = (double)index / (double)count;
+                    relativePercentComplete += percentageComplete * percentPerEntry;
+                }
+
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    this.ProgressBar.Value = relativePercentComplete * 100;
+                });
+            }
+            finally
+            {
+                inFunctionSemaphore.Release();
+            }
+        });
+
+        return result;
+    }
+
     private async Task<MorphicResult<InstallMsiResult, MorphicUnit>> InstallZipFileWithEmbeddedMsiAsync(AtSoftwareDetails atSoftwareDetails)
     {
         bool rebootRequired;
@@ -128,13 +184,7 @@ public partial class DownloadAndInstallAppsPanel : StackPanel, IStepPanel
             this.ProgressBar.IsIndeterminate = false;
         });
 
-        var progressFunction = new Action<double>(async (percentageComplete) =>
-        {
-            await Application.Current.Dispatcher.InvokeAsync(() =>
-            {
-                this.ProgressBar.Value = percentageComplete * 100;
-            });
-        });
+        var progressFunction = this.CreateProgressFunction();
 
         // download the ZIP file
         var downloadFileResult = await AtOnDemandHelpers.DownloadFileAsync(atSoftwareDetails.DownloadUri, progressFunction);
@@ -191,17 +241,24 @@ public partial class DownloadAndInstallAppsPanel : StackPanel, IStepPanel
         return MorphicResult.OkResult(result);
     }
 
-    private struct InstallMsiResult
-    {
-        public bool RebootRequired;
-    }
     private async Task<MorphicResult<InstallMsiResult, MorphicUnit>> InstallMsiAsync(string pathToMsi, Action<double>? progressFunction)
     {
         // set up the command line settings (i.e. installer properties, etc.)
         var commandLineSettings = new Dictionary<string, string>();
 
+        var result = await this.InstallMsiAsync(pathToMsi, commandLineSettings, progressFunction);
+        return result;
+    }
+
+    private struct InstallMsiResult
+    {
+        public bool RebootRequired;
+    }
+    private async Task<MorphicResult<InstallMsiResult, MorphicUnit>> InstallMsiAsync(string pathToMsi, Dictionary<string, string> commandLineSettings, Action<double>? progressFunction)
+    {
         // suppress all reboot prompts and the actual reboots; this will cause the operation to return ERROR_SUCCESS_REBOOT_REQUIRED instead of ERROR_SUCCESS if a reboot is required
-        commandLineSettings.Add("REBOOT", "ReallySuppress");
+        var commandLineSettingsWithRebootSuppression = new Dictionary<string, string>(commandLineSettings);
+        commandLineSettingsWithRebootSuppression.Add("REBOOT", "ReallySuppress");
 
         var windowsInstaller = new AToD.Deployment.MSI.WindowsInstaller();
 
@@ -226,10 +283,10 @@ public partial class DownloadAndInstallAppsPanel : StackPanel, IStepPanel
             }
         };
 
-        var installResult = await windowsInstaller.InstallAsync(pathToMsi, commandLineSettings);
+        var installResult = await windowsInstaller.InstallAsync(pathToMsi, commandLineSettingsWithRebootSuppression);
         if (installResult.IsError == true)
         {
-            Debug.WriteLine(false, "AT on Demand was unable to install the application.");
+            Debug.Assert(false, "AT on Demand was unable to install the application.");
             return MorphicResult.ErrorResult();
         }
         var installResultValue = installResult.Value!;
@@ -246,6 +303,37 @@ public partial class DownloadAndInstallAppsPanel : StackPanel, IStepPanel
             RebootRequired = rebootRequired 
         };
         return MorphicResult.OkResult(result);
+    }
+
+    private async Task<MorphicResult<MorphicUnit, int?>> InstallExeAsync(string pathToExe, string arguments)
+    {
+        var startInfo = new ProcessStartInfo(pathToExe, arguments);
+        startInfo.Verb = "runas";
+        startInfo.UseShellExecute = true;
+        Process? process;
+        try
+        {
+            process = System.Diagnostics.Process.Start(startInfo);
+        }
+        catch
+        {
+            return MorphicResult.ErrorResult<int?>(null);
+        }
+        if (process is null)
+        {
+            return MorphicResult.ErrorResult<int?>(null);
+        }
+        await process.WaitForExitAsync();
+
+        var exitCode = process.ExitCode;
+        if (exitCode != 0)
+        {
+            Debug.Assert(false, "EXE exited with non-zero status code; make sure this is not a status code indicating a reboot requirement, etc.");
+            return MorphicResult.ErrorResult<int?>(exitCode);
+        }
+
+        // otherwise, we succeeded.
+        return MorphicResult.OkResult();
     }
 
     // NOTE: this function returns the path to where the designated file was unzipped
