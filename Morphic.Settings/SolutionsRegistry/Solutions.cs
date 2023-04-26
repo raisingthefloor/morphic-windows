@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
     using System.Threading.Tasks;
     using Morphic.Core;
     using Morphic.Core.Legacy;
@@ -123,6 +124,43 @@
             }
 
             return success ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
+        }
+
+        public List<string> GetListOfAtSoftwareToInstall(Preferences preferences)
+        {
+            if (preferences.Default is null)
+            {
+                return new List<string>();
+            }
+
+            var result = new List<string>();
+            foreach ((string solutionId, SolutionPreferences solutionPreferences) in preferences.Default)
+            {
+                if (this.All.TryGetValue(solutionId, out Solution? solution))
+                {
+                    foreach(SettingGroup settingGroup in solution.SettingGroups)
+                    {
+                        if (settingGroup is Morphic.Settings.SettingsHandlers.Install.InstalledApplicationSettingGroup)
+                        {
+                            foreach ((string settingId, object? value) in solutionPreferences.Values)
+                            {
+                                Setting? installedSetting;
+                                if (settingGroup.TryGetSetting("installed", out installedSetting))
+                                {
+                                    var valueAsBool = value as bool?;
+                                    if (valueAsBool is not null && valueAsBool == true)
+                                    {
+                                        var applicationShortName = ((Morphic.Settings.SettingsHandlers.Install.InstalledApplicationSettingGroup)settingGroup).ShortName;
+                                        result.Add(applicationShortName);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return result;
         }
 
         public async Task<MorphicResult<MorphicUnit, MorphicUnit>> ApplyPreferencesAsync(Preferences preferences, bool captureCurrent = false, bool async = false)
