@@ -35,7 +35,7 @@ namespace Morphic.Client.Menu
 
     /// <summary>
     /// Displays a system tray icon (NotifyIcon) in the notification area and/or an always-visible
-    /// button (MorphicTrayButton) next to the notification area on the task bar.
+    /// button (Morphic.Controls.TrayButton.TrayButton) next to the notification area on the task bar.
     /// </summary>
     public class MorphicHybridTrayIcon : IDisposable
     {
@@ -47,7 +47,7 @@ namespace Morphic.Client.Menu
         private NotifyIcon? _notifyIcon = null;
 
         // <summary>Used if a next-to-tray button is desired instead of a tray icon</summary>
-        private MorphicTrayButton? _trayButton = null;
+        private Morphic.Controls.TrayButton.TrayButton? _trayButton = null;
 
         public enum TrayIconLocationOption
         {
@@ -174,7 +174,7 @@ namespace Morphic.Client.Menu
                 return;
             }
 
-            _trayButton = new MorphicTrayButton();
+            _trayButton = new Morphic.Controls.TrayButton.TrayButton();
             _trayButton.Text = _text;
             _trayButton.Icon = _icon;
             //

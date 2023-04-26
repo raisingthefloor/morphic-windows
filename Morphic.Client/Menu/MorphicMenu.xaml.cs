@@ -319,7 +319,7 @@
             trayIcon.Icon = Client.Properties.Resources.Icon;
             trayIcon.Text = "Morphic";
             //trayIcon.TrayIconLocation = allNotificationIconsShown;
-            trayIcon.TrayIconLocation = MorphicHybridTrayIcon.TrayIconLocationOption.NextToNotificationTray;
+            trayIcon.TrayIconLocation = MorphicHybridTrayIcon.TrayIconLocationOption.NotificationTrayAndNextToNotificationTray;
             trayIcon.Visible = true;
             _trayIcon = trayIcon;
 
