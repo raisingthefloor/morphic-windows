@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Morphic.Core" Version="1.2.0" />
+    <PackageReference Include="PInvoke.Gdi32" Version="0.7.124" />
   </ItemGroup>
 
   <ItemGroup>

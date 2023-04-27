@@ -25,7 +25,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Windows;
 
-namespace Morphic.Controls;
+namespace Morphic.Controls.TrayButton.Windows10;
 
 internal class LegacyWindowsApi
 {
@@ -175,20 +175,20 @@ internal class LegacyWindowsApi
      [DllImport("gdi32.dll")]
      internal static extern IntPtr CreateDIBSection(IntPtr hdc, ref BITMAPINFO pbmi, uint usage, out IntPtr ppvBits, IntPtr hSection, uint offset);
 
-     [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-     internal static extern IntPtr CreateWindowEx(
-         WindowStylesEx dwExStyle,
-         IntPtr lpClassName,
-         string? lpWindowName,
-         WindowStyles dwStyle,
-         int x,
-         int y,
-         int nWidth,
-         int nHeight,
-         IntPtr hWndParent,
-         IntPtr hMenu,
-         IntPtr hInstance,
-         IntPtr lpParam);
+     //[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+     //internal static extern IntPtr CreateWindowEx(
+     //    WindowStylesEx dwExStyle,
+     //    IntPtr lpClassName,
+     //    string? lpWindowName,
+     //    WindowStyles dwStyle,
+     //    int x,
+     //    int y,
+     //    int nWidth,
+     //    int nHeight,
+     //    IntPtr hWndParent,
+     //    IntPtr hMenu,
+     //    IntPtr hInstance,
+     //    IntPtr lpParam);
 
      [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
      internal static extern IntPtr CreateWindowEx(
@@ -256,16 +256,6 @@ internal class LegacyWindowsApi
           IDC_WAIT = 32514,
      }
 
-     // see: https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-mapwindowpoints
-     // NOTE: this signature is the POINT option (in which cPoints must always be set to 1).
-     [DllImport("user32.dll", SetLastError = true)]
-     internal static extern int MapWindowPoints(IntPtr hWndFrom, IntPtr hWndTo, [In] ref POINT lpPoints, uint cPoints);
-
-     // see: https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-mapwindowpoints
-     // NOTE: this signature is the RECT option (in which cPoints must always be set to 2).
-     [DllImport("user32.dll", SetLastError = true)]
-     internal static extern int MapWindowPoints(IntPtr hWndFrom, IntPtr hWndTo, [In] ref RECT lpPoints, uint cPoints);
-
      [DllImport("user32.dll")]
      internal static extern bool RedrawWindow(IntPtr hWnd, IntPtr lprcUpdate, IntPtr hrgnUpdate, RedrawWindowFlags flags);
 
@@ -289,9 +279,6 @@ internal class LegacyWindowsApi
           RDW_ALLCHILDREN = 0x80,
           RDW_NOCHILDREN = 0x40
      }
-
-     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-     internal static extern ushort RegisterClassEx([In] ref WNDCLASSEX lpWndClass);
 
      [DllImport("gdi32.dll")]
      internal static extern IntPtr SelectObject(IntPtr hdc, IntPtr h);
@@ -559,28 +546,6 @@ internal class LegacyWindowsApi
      internal const uint TTS_ALWAYSTIP = 0x01;
      //internal const uint TTS_NOPREFIX = 0x02;
      //internal const uint TTS_BALLOON = 0x40;
-
-     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-     internal struct WNDCLASSEX
-     {
-          [MarshalAs(UnmanagedType.U4)]
-          public uint cbSize;
-          [MarshalAs(UnmanagedType.U4)]
-          //public ClassStyles style;
-          public uint style;
-          public IntPtr lpfnWndProc;
-          public int cbClsExtra;
-          public int cbWndExtra;
-          public IntPtr hInstance;
-          public IntPtr hIcon;
-          public IntPtr hCursor;
-          public IntPtr hbrBackground;
-          public string lpszMenuName;
-          public string lpszClassName;
-          public IntPtr hIconSm;
-     }
-     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-     internal delegate IntPtr WndProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
      #endregion
 

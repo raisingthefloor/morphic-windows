@@ -21,6 +21,7 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
+using Morphic.Core;
 using Morphic.WindowsNative;
 using System;
 using System.Collections.Generic;
@@ -215,16 +216,16 @@ internal class TrayButton : IDisposable
                const string nativeWindowClassName = "Morphic-TrayButton";
 
                // register our custom native window class
-               var pointerToWndProcCallback = Marshal.GetFunctionPointerForDelegate(new LegacyWindowsApi.WndProc(this.WndProcCallback));
-               var lpWndClass = new LegacyWindowsApi.WNDCLASSEX
+               var pointerToWndProcCallback = Marshal.GetFunctionPointerForDelegate(new WindowsApi.WndProc(this.WndProcCallback));
+               var lpWndClass = new WindowsApi.WNDCLASSEX
                {
-                    cbSize = (uint)Marshal.SizeOf(typeof(LegacyWindowsApi.WNDCLASSEX)),
+                    cbSize = (uint)Marshal.SizeOf(typeof(WindowsApi.WNDCLASSEX)),
                     lpfnWndProc = pointerToWndProcCallback,
                     lpszClassName = nativeWindowClassName,
                     hCursor = LegacyWindowsApi.LoadCursor(IntPtr.Zero, (int)LegacyWindowsApi.Cursors.IDC_ARROW)
                };
 
-               var registerClassResult = LegacyWindowsApi.RegisterClassEx(ref lpWndClass);
+               var registerClassResult = WindowsApi.RegisterClassEx(ref lpWndClass);
                if (registerClassResult == 0)
                {
                     throw new Win32Exception(Marshal.GetLastWin32Error());
@@ -475,11 +476,11 @@ internal class TrayButton : IDisposable
                // TODO: in some circumstances, it is possible that we are unable to create our window; consider creating a retry mechanism (dealing with async) or notify our caller
                try
                {
-                    var handle = LegacyWindowsApi.CreateWindowEx(
-                         (LegacyWindowsApi.WindowStylesEx)cp.ExStyle,
+                    var handle = WindowsApi.CreateWindowEx(
+                         (PInvoke.User32.WindowStylesEx)cp.ExStyle,
                          classNameAsIntPtr,
                          cp.Caption,
-                         (LegacyWindowsApi.WindowStyles)cp.Style,
+                         (PInvoke.User32.WindowStyles)cp.Style,
                          cp.X,
                          cp.Y,
                          cp.Width,
@@ -750,16 +751,22 @@ internal class TrayButton : IDisposable
                var x = (ushort)((lParam.ToInt64() >> 0) & 0xFFFF);
                var y = (ushort)((lParam.ToInt64() >> 16) & 0xFFFF);
                // convert x and y to screen coordinates
-               var hitPoint = new LegacyWindowsApi.POINT(x, y);
-               var mapWindowPointsResult = LegacyWindowsApi.MapWindowPoints(this.Handle, IntPtr.Zero, ref hitPoint, 1);
-               if (mapWindowPointsResult == 0 && Marshal.GetLastWin32Error() != LegacyWindowsApi.ERROR_SUCCESS)
+               var hitPoint = new PInvoke.POINT { x = x, y = y };
+
+               // NOTE: the instructions for MapWindowPoints instruct us to call SetLastError before calling MapWindowPoints to ensure that we can distinguish a result of 0 from an error if the last win32 error wasn't set (because it wasn't an error)
+               Marshal.SetLastPInvokeError(0);
+               //
+               // NOTE: the PInvoke implementation of MapWindowPoints did not support passing in a POINT struct, so we manually declared the function
+               var mapWindowPointsResult = WindowsApi.MapWindowPoints(this.Handle, IntPtr.Zero, ref hitPoint, 1);
+               if (mapWindowPointsResult == 0 && Marshal.GetLastWin32Error() != 0)
                {
                     // failed; abort
                     Debug.Assert(false, "Could not map tray button hit point to screen coordinates");
                     return null;
                }
 
-               return hitPoint;
+               var result = new LegacyWindowsApi.POINT(hitPoint.x, hitPoint.y);
+               return result;
           }
           private void Paint(IntPtr hWnd)
           {
@@ -1075,8 +1082,8 @@ internal class TrayButton : IDisposable
                          var taskbarHandle = TrayButtonNativeWindow.FindWindowsTaskbarHandle();
 
                          // convert our tray button's position from desktop coordinates to "child" coordinates within the taskbar
-                         LegacyWindowsApi.RECT childRect = changeToRect.Value;
-                         var mapWindowPointsResult = LegacyWindowsApi.MapWindowPoints(IntPtr.Zero /* use screen coordinates */, taskbarHandle, ref childRect, 2 /* 2 indicates that lpPoints is a RECT */);
+                         PInvoke.RECT childRect = new() { left = changeToRect.Value.Left, top = changeToRect.Value.Top, right = changeToRect.Value.Right, bottom = changeToRect.Value.Bottom };
+                         var mapWindowPointsResult = WindowsApi.MapWindowPoints(IntPtr.Zero /* use screen coordinates */, taskbarHandle, ref childRect, 2 /* 2 indicates that lpPoints is a RECT */);
                          if (mapWindowPointsResult == 0 && Marshal.GetLastWin32Error() != LegacyWindowsApi.ERROR_SUCCESS)
                          {
                               // failed; abort
@@ -1087,10 +1094,10 @@ internal class TrayButton : IDisposable
                          var repositionTrayButtonSuccess = LegacyWindowsApi.SetWindowPos(
                               this.Handle,
                               LegacyWindowsApi.HWND_TOP,
-                              childRect.Left,
-                              childRect.Top,
-                              childRect.Right - childRect.Left,
-                              childRect.Bottom - childRect.Top,
+                              childRect.left,
+                              childRect.top,
+                              childRect.right - childRect.left,
+                              childRect.bottom - childRect.top,
                               LegacyWindowsApi.SetWindowPosFlags.SWP_NOACTIVATE /* do not activate the window */ |
                               LegacyWindowsApi.SetWindowPosFlags.SWP_SHOWWINDOW /* display the tray button */
                               );
