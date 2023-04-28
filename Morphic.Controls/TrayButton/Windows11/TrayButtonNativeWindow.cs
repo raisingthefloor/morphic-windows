@@ -42,6 +42,10 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
 
      private static ushort? s_morphicTrayButtonClassInfoExAtom = null;
 
+     private PInvoke.RECT _positionAndSize;
+
+     private ArgbImageNativeWindow? _argbImageNativeWindow = null;
+
      private IntPtr _locationChangeWindowEventHook = IntPtr.Zero;
      private WindowsApi.WinEventProc? _locationChangeWindowEventProc = null;
 
@@ -98,14 +102,14 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
 
 
           /* calculate the initial position of the tray button */
-          var calculatePositionResult = TrayButtonNativeWindow.CalculatePositionForTrayButton(null);
+          var calculatePositionResult = TrayButtonNativeWindow.CalculatePositionAndSizeForTrayButton(null);
           if (calculatePositionResult.IsError)
           {
                Debug.Assert(false, "Cannot calculate position for tray button");
                return MorphicResult.ErrorResult(Morphic.Controls.TrayButton.Windows11.CreateNewError.CouldNotCalculateWindowPosition);
           }
-          var trayButtonPosition = calculatePositionResult.Value!;
-
+          var trayButtonPositionAndSize = calculatePositionResult.Value!;
+          result._positionAndSize = trayButtonPositionAndSize;
 
           /* get the handle for the taskbar; it will be the owner of our native window (so that our window sits above it in the zorder) */
           // NOTE: we will still need to push our window to the front of its owner's zorder stack in some circumstances, as certain actions (such as popping up the task list balloons above the task bar) will reorder the taskbar's zorder and push us behind the taskbar
@@ -122,10 +126,10 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
                Style = unchecked((int)(/*PInvoke.User32.WindowStyles.WS_CLIPSIBLINGS | */PInvoke.User32.WindowStyles.WS_POPUP /*| PInvoke.User32.WindowStyles.WS_TABSTOP*/ | PInvoke.User32.WindowStyles.WS_VISIBLE)),
                ExStyle = (int)(PInvoke.User32.WindowStylesEx.WS_EX_LAYERED/* | PInvoke.User32.WindowStylesEx.WS_EX_TOOLWINDOW*/),
                //ClassStyle = ?,
-               X = trayButtonPosition.left,
-               Y = trayButtonPosition.top,
-               Width = trayButtonPosition.right - trayButtonPosition.left,
-               Height = trayButtonPosition.bottom - trayButtonPosition.top,
+               X = trayButtonPositionAndSize.left,
+               Y = trayButtonPositionAndSize.top,
+               Width = trayButtonPositionAndSize.right - trayButtonPositionAndSize.left,
+               Height = trayButtonPositionAndSize.bottom - trayButtonPositionAndSize.top,
                Parent = taskbarHandle,
                //Param = ?,
           };
@@ -159,6 +163,15 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
                          throw new Exception("invalid code path");
                }
           }
+
+          // create an instance of the ArgbImageNativeWindow to hold our icon; we cannot draw the bitmap directly on this window as the bitmap would then be alphablended the same % as our background (instead of being independently blended over our window)
+          var argbImageNativeWindowResult = ArgbImageNativeWindow.CreateNew(result.Handle, windowParams.X, windowParams.Y, windowParams.Width, windowParams.Height);
+          if (argbImageNativeWindowResult.IsError == true)
+          {
+               result.Dispose();
+               return MorphicResult.ErrorResult(argbImageNativeWindowResult.Error!);
+          }
+          result._argbImageNativeWindow = argbImageNativeWindowResult.Value!;
 
           /* wire up windows event hook listeners, to watch for events which require adjusting the zorder of our window */
 
@@ -238,6 +251,13 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
                     Marshal.FreeHGlobal(classNameAsIntPtr);
                }
           }
+     }
+
+
+     // Listen to when the handle changes to keep the argb image native window synced
+     protected override void OnHandleChange()
+     {
+          _argbImageNativeWindow?.UpdateOwnerHWnd(this.Handle);
      }
 
      //
@@ -368,7 +388,7 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
                               _visualState |= TrayButtonVisualStateFlags.RightButtonPressed;
                               this.UpdateVisualStateAlpha();
                          }
-                         
+
                          result = IntPtr.Zero;
                     }
                     break;
@@ -377,7 +397,7 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
                          // NOTE: we are calling this in response to WM_NCDESTROY (instead of WM_DESTROY)
                          //       see: https://learn.microsoft.com/en-us/windows/win32/api/uxtheme/nf-uxtheme-bufferedpaintinit
                          _ = WindowsApi.BufferedPaintUnInit();
-                         
+
                          // NOTE: we pass along this message (i.e. we don't return a "handled" result)
                     }
                     break;
@@ -662,6 +682,16 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
 
      public void SetBitmap(Bitmap? bitmap)
      {
+          if (bitmap is not null)
+          {
+               var bitmapSize = bitmap.Size;
+               var argbImageNativeWindowSize = TrayButtonNativeWindow.CalculateWidthAndHeightForBitmap(_positionAndSize, bitmapSize);
+
+               var bitmapRect = TrayButtonNativeWindow.CalculateCenterRectInsideRect(_positionAndSize, bitmapSize);
+
+               _argbImageNativeWindow?.SetPositionAndSize(bitmapRect);
+          }
+          _argbImageNativeWindow?.SetBitmap(bitmap);
      }
 
      public void SetText(string? text)
@@ -672,7 +702,30 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
 
      /* helper functions */
 
-     internal static MorphicResult<PInvoke.RECT, MorphicUnit> CalculatePositionForTrayButton(IntPtr? trayButtonHandle)
+     internal static PInvoke.RECT CalculateCenterRectInsideRect(PInvoke.RECT outerRect, System.Drawing.Size innerSize)
+     {
+          var outerWidth = outerRect.right - outerRect.left;
+          var outerHeight = outerRect.bottom - outerRect.top;
+
+          var innerWidth = innerSize.Width;
+          var innerHeight = innerSize.Height;
+
+          var left = outerRect.left + ((outerWidth - innerWidth) / 2);
+          var top = outerRect.top + ((outerHeight - innerHeight) / 2);
+          var right = left + innerWidth;
+          var bottom = top + innerHeight;
+
+
+          return new PInvoke.RECT()
+          {
+               left = left,
+               top = top,
+               right = right,
+               bottom = bottom,
+          };
+     }
+
+     internal static MorphicResult<PInvoke.RECT, MorphicUnit> CalculatePositionAndSizeForTrayButton(IntPtr? trayButtonHandle)
      {
           // NOTE: in this implementation, we simply place the tray button over the taskbar, directly to the left of the system tray
           //       in the future, we may want to consider searching for any children which might occupy the area--and any system windows which are owned by the taskbar or any of its children--and then try to find a place to the "left" of those
@@ -766,6 +819,76 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
 
           var result = new System.Drawing.Point(hitPoint.x, hitPoint.y);
           return MorphicResult.OkResult(result);
+     }
+
+     //
+
+     // NOTE: this function takes the window size as input and calculates the size of the icon to display, centered, within the window.
+     private static System.Drawing.Size CalculateWidthAndHeightForBitmap(PInvoke.RECT availableRect, System.Drawing.Size bitmapSize)
+     {
+          var availableSize = new System.Drawing.Size(availableRect.right - availableRect.left, availableRect.bottom - availableRect.top);
+
+          /* determine the larger dimension (width or height) */
+          //int largerDimensionSize;
+          //int smallerDimensionSize;
+          System.Drawing.Size insideMarginsSize;
+          if (availableSize.Height > availableSize.Width)
+          {
+               //largerDimensionSize = availableSize.Height;
+               //smallerDimensionSize = availableSize.Width;
+               insideMarginsSize = new((int)((double)availableSize.Width * 0.9), (int)((double)availableSize.Height * (2.0/3.0)));
+          }
+          else
+          {
+               //largerDimensionSize = availableSize.Width;
+               //smallerDimensionSize = availableSize.Height;
+               insideMarginsSize = new((int)((double)availableSize.Width * (2.0/3.0)), (int)((double)availableSize.Height * 0.9));
+          }
+
+          /* shrink the bitmap size down so that it fits inside the available rect */
+
+          // by default, assume the bitmap will be the size of the source image
+          int bitmapWidth = bitmapSize.Width;
+          int bitmapHeight = bitmapSize.Height;
+          //
+          // if bitmap is wider than the available rect, shrink it equally in both directions
+          if (bitmapWidth > insideMarginsSize.Width)
+          {
+               double scaleFactor = (double)insideMarginsSize.Width / (double)bitmapWidth;
+               bitmapWidth = insideMarginsSize.Width;
+               bitmapHeight = (int)((double)bitmapHeight * scaleFactor);
+          }
+          //
+          // if bitmap is taller than the available rect, shrink it further (and equally in both directions)
+          if (bitmapHeight > insideMarginsSize.Height)
+          {
+               double scaleFactor = (double)insideMarginsSize.Height / (double)bitmapHeight;
+               bitmapWidth = (int)((double)bitmapWidth * scaleFactor);
+               bitmapHeight = insideMarginsSize.Height;
+          }
+
+          // if bitmap does not touch either of the two margins (i.e. is too small), enlarge it now.
+          if (bitmapWidth != insideMarginsSize.Width && bitmapHeight != insideMarginsSize.Height)
+          {
+               // if bitmap is not as wide as the insideMarginsWidth, enlarge it now (equally in both directions)
+               if (bitmapWidth < insideMarginsSize.Width) {
+                    double scaleFactor = (double)insideMarginsSize.Width / (double)bitmapWidth;
+                    bitmapWidth = insideMarginsSize.Width;
+                    bitmapHeight = (int)((double)bitmapHeight * scaleFactor);
+               }
+               //
+               // if bitmap is now too tall, shrink it back down (equally in both directions)
+               if (bitmapHeight > insideMarginsSize.Height)
+               {
+                    double scaleFactor = (double)insideMarginsSize.Height / (double)bitmapHeight;
+                    bitmapWidth = (int)((double)bitmapWidth * scaleFactor);
+                    bitmapHeight = insideMarginsSize.Height;
+               }
+          }
+
+
+
+          return new System.Drawing.Size(bitmapWidth, bitmapHeight);
      }
 
      //
