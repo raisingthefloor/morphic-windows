@@ -346,13 +346,13 @@ internal class TrayButton : IDisposable
 
                _tooltipWindowHandle = LegacyWindowsApi.CreateWindowEx(
                     0 /* no styles */,
-                    LegacyWindowsApi.TOOLTIPS_CLASS,
+                    WindowsApi.TOOLTIPS_CLASS,
                     null,
-                    LegacyWindowsApi.WindowStyles.WS_POPUP | (LegacyWindowsApi.WindowStyles)LegacyWindowsApi.TTS_ALWAYSTIP,
-                    LegacyWindowsApi.CW_USEDEFAULT,
-                    LegacyWindowsApi.CW_USEDEFAULT,
-                    LegacyWindowsApi.CW_USEDEFAULT,
-                    LegacyWindowsApi.CW_USEDEFAULT,
+                    LegacyWindowsApi.WindowStyles.WS_POPUP | (LegacyWindowsApi.WindowStyles)WindowsApi.TTS_ALWAYSTIP,
+                    WindowsApi.CW_USEDEFAULT,
+                    WindowsApi.CW_USEDEFAULT,
+                    WindowsApi.CW_USEDEFAULT,
+                    WindowsApi.CW_USEDEFAULT,
                     this.Handle,
                     IntPtr.Zero,
                     IntPtr.Zero,
@@ -385,8 +385,8 @@ internal class TrayButton : IDisposable
                     return;
                }
 
-               LegacyWindowsApi.RECT trayButtonClientRect;
-               var getClientRectSuccess = LegacyWindowsApi.GetClientRect(this.Handle, out trayButtonClientRect);
+               PInvoke.RECT trayButtonClientRect;
+               var getClientRectSuccess = PInvoke.User32.GetClientRect(this.Handle, out trayButtonClientRect);
                if (getClientRectSuccess == false)
                {
                     // failed; abort
@@ -394,12 +394,12 @@ internal class TrayButton : IDisposable
                     return;
                }
 
-               var toolinfo = new LegacyWindowsApi.TOOLINFO();
+               var toolinfo = new WindowsApi.TOOLINFO();
                toolinfo.cbSize = (uint)Marshal.SizeOf(toolinfo);
                toolinfo.hwnd = this.Handle;
                toolinfo.uFlags = LegacyWindowsApi.TTF_SUBCLASS;
                toolinfo.lpszText = _tooltipText;
-               toolinfo.uId = this.Handle; // unique identifier (for adding/deleting the tooltip)
+               toolinfo.uId = unchecked((nuint)(nint)this.Handle); // unique identifier (for adding/deleting the tooltip)
                toolinfo.rect = trayButtonClientRect;
                //
                var pointerToToolinfo = Marshal.AllocHGlobal(Marshal.SizeOf(toolinfo));
@@ -410,20 +410,20 @@ internal class TrayButton : IDisposable
                     {
                          if (_tooltipInfoAdded == false)
                          {
-                              _ = LegacyWindowsApi.SendMessage(_tooltipWindowHandle, (int)LegacyWindowsApi.TTM_ADDTOOL, 0, pointerToToolinfo);
+                              _ = LegacyWindowsApi.SendMessage(_tooltipWindowHandle, (int)WindowsApi.TTM_ADDTOOL, 0, pointerToToolinfo);
                               _tooltipInfoAdded = true;
                          }
                          else
                          {
                               // delete and re-add the tooltipinfo; this will update all the info (including the text and tracking rect)
-                              _ = LegacyWindowsApi.SendMessage(_tooltipWindowHandle, (int)LegacyWindowsApi.TTM_DELTOOL, 0, pointerToToolinfo);
-                              _ = LegacyWindowsApi.SendMessage(_tooltipWindowHandle, (int)LegacyWindowsApi.TTM_ADDTOOL, 0, pointerToToolinfo);
+                              _ = LegacyWindowsApi.SendMessage(_tooltipWindowHandle, (int)WindowsApi.TTM_DELTOOL, 0, pointerToToolinfo);
+                              _ = LegacyWindowsApi.SendMessage(_tooltipWindowHandle, (int)WindowsApi.TTM_ADDTOOL, 0, pointerToToolinfo);
                          }
                     }
                     else
                     {
                          // NOTE: we might technically call "deltool" even when a tooltipinfo was already removed
-                         _ = LegacyWindowsApi.SendMessage(_tooltipWindowHandle, (int)LegacyWindowsApi.TTM_DELTOOL, 0, pointerToToolinfo);
+                         _ = LegacyWindowsApi.SendMessage(_tooltipWindowHandle, (int)WindowsApi.TTM_DELTOOL, 0, pointerToToolinfo);
                          _tooltipInfoAdded = false;
                     }
                }

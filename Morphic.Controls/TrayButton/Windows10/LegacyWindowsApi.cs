@@ -305,20 +305,6 @@ internal class LegacyWindowsApi
           SWP_SHOWWINDOW = 0x0040
      }
 
-     internal struct TOOLINFO
-     {
-          public uint cbSize;
-          public uint uFlags;
-          public IntPtr hwnd;
-          public IntPtr uId;
-          public RECT rect;
-          public IntPtr hinst;
-          [MarshalAs(UnmanagedType.LPTStr)]
-          public string? lpszText;
-          public IntPtr lParam;
-          //public IntPtr reserved; // NOTE: this exists in the official documentation but adding it causes SendMessage to fail; pinvoke.net leaves it out and so do we
-     }
-
      [DllImport("user32.dll")]
      internal static extern bool TrackMouseEvent(ref TRACKMOUSEEVENT lpEventTrack);
 
@@ -402,15 +388,6 @@ internal class LegacyWindowsApi
      //internal static readonly IntPtr HWND_NOTOPMOST = new IntPtr(-2);
 
      internal const int MA_NOACTIVATEANDEAT = 4;
-
-     internal const int CW_USEDEFAULT = unchecked((int)0x80000000);
-
-     internal const string TOOLTIPS_CLASS = "tooltips_class32";
-
-     internal const uint WM_USER = 0x0400;
-
-     internal const uint TTM_ADDTOOL = WM_USER + 50;
-     internal const uint TTM_DELTOOL = WM_USER + 51;
 
      //
 

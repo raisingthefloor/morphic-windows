@@ -210,5 +210,4 @@ internal class TrayButton : IDisposable
           _nativeWindow?.Dispose();
           _nativeWindow = null;
      }
-
 }

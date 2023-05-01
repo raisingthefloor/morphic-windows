@@ -42,12 +42,20 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
 
      private static ushort? s_morphicTrayButtonClassInfoExAtom = null;
 
-     private PInvoke.RECT _positionAndSize;
+     private System.Windows.Visibility _visibility;
+     private bool _taskbarIsTopmost;
 
      private ArgbImageNativeWindow? _argbImageNativeWindow = null;
+     
+     private IntPtr _tooltipWindowHandle;
+     private bool _tooltipInfoAdded = false;
+     private string? _tooltipText;
 
      private IntPtr _locationChangeWindowEventHook = IntPtr.Zero;
      private WindowsApi.WinEventProc? _locationChangeWindowEventProc = null;
+
+     private IntPtr _objectReorderWindowEventHook = IntPtr.Zero;
+     private WindowsApi.WinEventProc? _objectReorderWindowEventProc = null;
 
      [Flags]
      private enum TrayButtonVisualStateFlags
@@ -100,7 +108,6 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
                s_morphicTrayButtonClassInfoExAtom = registerClassResult;
           }
 
-
           /* calculate the initial position of the tray button */
           var calculatePositionResult = TrayButtonNativeWindow.CalculatePositionAndSizeForTrayButton(null);
           if (calculatePositionResult.IsError)
@@ -109,12 +116,14 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
                return MorphicResult.ErrorResult(Morphic.Controls.TrayButton.Windows11.CreateNewError.CouldNotCalculateWindowPosition);
           }
           var trayButtonPositionAndSize = calculatePositionResult.Value!;
-          result._positionAndSize = trayButtonPositionAndSize;
 
           /* get the handle for the taskbar; it will be the owner of our native window (so that our window sits above it in the zorder) */
           // NOTE: we will still need to push our window to the front of its owner's zorder stack in some circumstances, as certain actions (such as popping up the task list balloons above the task bar) will reorder the taskbar's zorder and push us behind the taskbar
           // NOTE: making the taskbar our owner has the side-effect of putting our window above full-screen applications (even though our window is not itself "always on top"); we will need to hide our window whenever a window goes full-screen on the same monitor (and re-show our window whenever the window exits full-screen mode)
           var taskbarHandle = TrayButtonNativeWindow.GetWindowsTaskbarHandle();
+
+          // capture the current state of the taskbar; this is combined with the visibility value to determine whether or not the window is actually visible to the user
+          result._taskbarIsTopmost = TrayButtonNativeWindow.IsTaskbarTopmost();
 
 
           /* create an instance of our native window */
@@ -124,7 +133,7 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
                ClassName = s_morphicTrayButtonClassInfoExAtom.ToString(), // for simplicity, we pass the value of the custom class as its integer self but in string form; our CreateWindow function will parse this and convert it to an int
                Caption = nativeWindowClassName,
                Style = unchecked((int)(/*PInvoke.User32.WindowStyles.WS_CLIPSIBLINGS | */PInvoke.User32.WindowStyles.WS_POPUP /*| PInvoke.User32.WindowStyles.WS_TABSTOP*/ | PInvoke.User32.WindowStyles.WS_VISIBLE)),
-               ExStyle = (int)(PInvoke.User32.WindowStylesEx.WS_EX_LAYERED/* | PInvoke.User32.WindowStylesEx.WS_EX_TOOLWINDOW*/),
+               ExStyle = (int)(PInvoke.User32.WindowStylesEx.WS_EX_LAYERED/* | PInvoke.User32.WindowStylesEx.WS_EX_TOOLWINDOW*//* | PInvoke.User32.WindowStylesEx.WS_EX_TOPMOST*/),
                //ClassStyle = ?,
                X = trayButtonPositionAndSize.left,
                Y = trayButtonPositionAndSize.top,
@@ -164,6 +173,9 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
                }
           }
 
+          // since we are making the control visible by default, set its _visibility state
+          result._visibility = Visibility.Visible;
+
           // create an instance of the ArgbImageNativeWindow to hold our icon; we cannot draw the bitmap directly on this window as the bitmap would then be alphablended the same % as our background (instead of being independently blended over our window)
           var argbImageNativeWindowResult = ArgbImageNativeWindow.CreateNew(result.Handle, windowParams.X, windowParams.Y, windowParams.Width, windowParams.Height);
           if (argbImageNativeWindowResult.IsError == true)
@@ -191,6 +203,28 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
           result._locationChangeWindowEventHook = locationChangeWindowEventHook;
           // NOTE: we must capture the delegate so that it is not garbage collected; otherwise the native callbacks can crash the .NET execution engine
           result._locationChangeWindowEventProc = locationChangeWindowEventProc;
+          //
+          //
+          //
+          var objectReorderWindowEventProc = new WindowsApi.WinEventProc(result.ObjectReorderWindowEventProc);
+          var objectReorderWindowEventHook = WindowsApi.SetWinEventHook(
+               WindowsApi.WinEventHookType.EVENT_OBJECT_REORDER, // start index
+               WindowsApi.WinEventHookType.EVENT_OBJECT_REORDER, // end index
+               IntPtr.Zero,
+               objectReorderWindowEventProc,
+               0, // process handle (0 = all processes on current desktop)
+               0, // thread (0 = all existing threads on current desktop)
+               WindowsApi.WinEventHookFlags.WINEVENT_OUTOFCONTEXT | WindowsApi.WinEventHookFlags.WINEVENT_SKIPOWNPROCESS
+          );
+          Debug.Assert(objectReorderWindowEventHook != IntPtr.Zero, "Could not wire up object reorder window event listener for tray button");
+          //
+          result._objectReorderWindowEventHook = objectReorderWindowEventHook;
+          // NOTE: we must capture the delegate so that it is not garbage collected; otherwise the native callbacks can crash the .NET execution engine
+          result._objectReorderWindowEventProc = objectReorderWindowEventProc;
+
+          // create the tooltip window (although we won't provide it with any actual text until/unless the text is set
+          result._tooltipWindowHandle = result.CreateTooltipWindow();
+          result._tooltipText = null;
 
           return MorphicResult.OkResult(result);
      }
@@ -257,7 +291,9 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
      // Listen to when the handle changes to keep the argb image native window synced
      protected override void OnHandleChange()
      {
-          _argbImageNativeWindow?.UpdateOwnerHWnd(this.Handle);
+          base.OnHandleChange();
+
+          // NOTE: if we ever need to update our children (or other owned windows) to let them know that our handle had changed, this is where we would add that code
      }
 
      //
@@ -270,14 +306,21 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
                {
                     // dispose managed state (managed objects)
 
+                    if (_objectReorderWindowEventHook != IntPtr.Zero)
+                    {
+                         WindowsApi.UnhookWinEvent(_objectReorderWindowEventHook);
+                    }
                     if (_locationChangeWindowEventHook != IntPtr.Zero)
                     {
                          WindowsApi.UnhookWinEvent(_locationChangeWindowEventHook);
                     }
+
+                    _argbImageNativeWindow?.Dispose();
                }
 
                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
                this.DestroyHandle();
+               _ = this.DestroyTooltipWindow();
 
                // TODO: set large fields to null
                disposedValue = true;
@@ -606,23 +649,58 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
           }
      }
 
+     public System.Windows.Visibility Visibility
+     {
+          get
+          {
+               return _visibility;
+          }
+          set
+          {
+               if (_visibility != value)
+               {
+                    _visibility = value;
+                    this.UpdateVisibility();
+               }
+          }
+     }
+
+     private void UpdateVisibility()
+     {
+          _argbImageNativeWindow?.SetVisbile(this.ShouldWindowBeVisible());
+          this.UpdateVisualStateAlpha();
+     }
+
+     private bool ShouldWindowBeVisible()
+     {
+          return (_visibility == Visibility.Visible) && (_taskbarIsTopmost == true);
+     }
+
      private void UpdateVisualStateAlpha()
      {
           // default to "Normal" visual state
           Double highlightOpacity = 0.0;
 
-          if (((_visualState & TrayButtonVisualStateFlags.LeftButtonPressed) != 0) ||
-                  ((_visualState & TrayButtonVisualStateFlags.RightButtonPressed) != 0))
+          if (this.ShouldWindowBeVisible())
           {
-               highlightOpacity = 0.25;
-          }
-          else if ((_visualState & TrayButtonVisualStateFlags.Hover) != 0)
-          {
-               highlightOpacity = 0.1;
-          }
+               if (((_visualState & TrayButtonVisualStateFlags.LeftButtonPressed) != 0) ||
+                       ((_visualState & TrayButtonVisualStateFlags.RightButtonPressed) != 0))
+               {
+                    highlightOpacity = 0.25;
+               }
+               else if ((_visualState & TrayButtonVisualStateFlags.Hover) != 0)
+               {
+                    highlightOpacity = 0.1;
+               }
 
-          var alpha = (byte)((double)255 * highlightOpacity);
-          TrayButtonNativeWindow.SetBackgroundAlpha(this.Handle, Math.Max(alpha, ALPHA_VALUE_FOR_TRANSPARENT_BUT_HIT_TESTABLE));
+               var alpha = (byte)((double)255 * highlightOpacity);
+               TrayButtonNativeWindow.SetBackgroundAlpha(this.Handle, Math.Max(alpha, ALPHA_VALUE_FOR_TRANSPARENT_BUT_HIT_TESTABLE));
+          }
+          else
+          {
+               // collapsed or hidden controls should be invisible
+               TrayButtonNativeWindow.SetBackgroundAlpha(this.Handle, 0);
+          }
      }
 
      private static MorphicResult<MorphicUnit, Morphic.WindowsNative.Win32ApiError> SetBackgroundAlpha(IntPtr handle, byte alpha)
@@ -656,12 +734,88 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
                className = getWindowClassNameResult.Value!;
           }
 
-          // if the window being moved was one of the task list windows (i.e. the windows that pop up above the taskbar), then our zorder has probably been pushed down: bring our window to the top of its owner
           if (className == "TaskListThumbnailWnd" || className == "TaskListOverlayWnd")
           {
-               Debug.WriteLine("className: " + className);
-               var bringWindowToTopSuccess = PInvoke.User32.BringWindowToTop(this.Handle);
+               // if the window being moved was one of the task list windows (i.e. the windows that pop up above the taskbar), then our zorder has probably been pushed down.  To counteract this, we make sure our window is "TOPMOST"
+               // NOTE: in initial testing, we set the window to TOPMOST in the ExStyles during handle construction.  This was not always successful in keeping the window topmost, however, possibly because the taskbar becomes "more" topmost sometimes.  So we re-set the window zorder here instead (without activating the window).
+               PInvoke.User32.SetWindowPos(this.Handle, WindowsApi.HWND_TOPMOST, 0, 0, 0, 0, PInvoke.User32.SetWindowPosFlags.SWP_NOMOVE | PInvoke.User32.SetWindowPosFlags.SWP_NOSIZE | PInvoke.User32.SetWindowPosFlags.SWP_NOACTIVATE);
           }
+          else if (className == "Shell_TrayWnd"/* || className == "ReBarWindow32"*/ || className == "TrayNotifyWnd")
+          {
+               // if the window being moved was the taskbar or the taskbar's notification tray, recalculate and update our position
+               // NOTE: we might also consider watching for location changes of the task button container, but as we don't use it for position/size calculations at the present time we do not watch accordingly
+               var repositionResult = this.RecalculatePositionAndRepositionWindow();
+               Debug.Assert(repositionResult.IsSuccess, "Could not reposition Tray Button window");
+          }
+     }
+
+     private void ObjectReorderWindowEventProc(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint idEventThread, uint dwmsEventTime)
+     {
+          // we cannot process an object reorder message if the hwnd is zero
+          if (hwnd == IntPtr.Zero)
+          {
+               return;
+          }
+
+          // attempt to capture the class name for the window; if the window has already been destroyed, this will fail
+          string? className = null;
+          var getWindowClassNameResult = TrayButtonNativeWindow.GetWindowClassName(hwnd);
+          if (getWindowClassNameResult.IsSuccess)
+          {
+               className = getWindowClassNameResult.Value!;
+          }
+
+          if (className == "Shell_TrayWnd")
+          {
+               // determine if the taskbar is topmost; the taskbar's topmost flag is removed when an app goes full-screen and should cover the taskbar (e.g. a full-screen video)
+               _taskbarIsTopmost = TrayButtonNativeWindow.IsTaskbarTopmost(hwnd);
+               //
+               // NOTE: UpdateVisibility takes both the .Visibility property and the topmost state of the taskbar into consideration to determine whether or not to show the control
+               this.UpdateVisibility();
+          }
+     }
+
+     private static bool IsTaskbarTopmost(IntPtr? taskbarHWnd = null)
+     {
+          var taskbarHandle = taskbarHWnd ?? TrayButtonNativeWindow.GetWindowsTaskbarHandle();
+
+          var taskbarWindowExStyle = WindowsApi.GetWindowLongPtr_IntPtr(taskbarHandle, PInvoke.User32.WindowLongIndexFlags.GWL_EXSTYLE);
+          var taskbarIsTopmost = ((nint)taskbarWindowExStyle & (nint)PInvoke.User32.WindowStylesEx.WS_EX_TOPMOST) != 0;
+
+          return taskbarIsTopmost;
+     }
+
+     private MorphicResult<MorphicUnit, MorphicUnit> RecalculatePositionAndRepositionWindow()
+     {
+          // first, reposition our control (NOTE: this will be required to subsequently determine the position of our bitmap)
+          var calculatePositionResult = TrayButtonNativeWindow.CalculatePositionAndSizeForTrayButton(this.Handle);
+          if (calculatePositionResult.IsError)
+          {
+               Debug.Assert(false, "Cannot calculate position for tray button");
+               return MorphicResult.ErrorResult();
+          }
+          var trayButtonPositionAndSize = calculatePositionResult.Value!;
+          //
+          var size = new System.Drawing.Size(trayButtonPositionAndSize.right - trayButtonPositionAndSize.left, trayButtonPositionAndSize.bottom - trayButtonPositionAndSize.top);
+          PInvoke.User32.SetWindowPos(this.Handle, IntPtr.Zero, trayButtonPositionAndSize.left, trayButtonPositionAndSize.top, size.Width, size.Height, PInvoke.User32.SetWindowPosFlags.SWP_NOZORDER | PInvoke.User32.SetWindowPosFlags.SWP_NOACTIVATE);
+
+          // once the control is repositioned, reposition the bitmap
+          var bitmap = _argbImageNativeWindow?.GetBitmap();
+          if (bitmap is not null)
+          {
+               this.PositionAndResizeBitmap(bitmap);
+          }
+
+          // also reposition the tooltip's tracking rectangle
+          if (_tooltipText is not null)
+          {
+               this.UpdateTooltipTextAndTracking();
+          }
+
+
+          PInvoke.User32.BringWindowToTop(this.Handle);
+
+          return MorphicResult.OkResult();
      }
 
      private static MorphicResult<string, Morphic.WindowsNative.Win32ApiError> GetWindowClassName(IntPtr hWnd)
@@ -684,18 +838,134 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
      {
           if (bitmap is not null)
           {
-               var bitmapSize = bitmap.Size;
-               var argbImageNativeWindowSize = TrayButtonNativeWindow.CalculateWidthAndHeightForBitmap(_positionAndSize, bitmapSize);
-
-               var bitmapRect = TrayButtonNativeWindow.CalculateCenterRectInsideRect(_positionAndSize, bitmapSize);
-
-               _argbImageNativeWindow?.SetPositionAndSize(bitmapRect);
+               this.PositionAndResizeBitmap(bitmap);
           }
           _argbImageNativeWindow?.SetBitmap(bitmap);
      }
 
+     private void PositionAndResizeBitmap(Bitmap bitmap)
+     {
+          // then, reposition the bitmap
+          PInvoke.User32.GetWindowRect(this.Handle, out var positionAndSize);
+          var bitmapSize = bitmap.Size;
+
+          var argbImageNativeWindowSize = TrayButtonNativeWindow.CalculateWidthAndHeightForBitmap(positionAndSize, bitmapSize);
+          var bitmapRect = TrayButtonNativeWindow.CalculateCenterRectInsideRect(positionAndSize, bitmapSize);
+
+          _argbImageNativeWindow?.SetPositionAndSize(bitmapRect);
+     }
+
      public void SetText(string? text)
      {
+          _tooltipText = text;
+
+          this.UpdateTooltipTextAndTracking();
+     }
+
+     //
+
+     private IntPtr CreateTooltipWindow()
+     {
+          if (_tooltipWindowHandle != IntPtr.Zero)
+          {
+               // tooltip window already exists
+               return _tooltipWindowHandle;
+          }
+
+          var tooltipWindowHandle = PInvoke.User32.CreateWindowEx(
+               0 /* no styles */,
+               WindowsApi.TOOLTIPS_CLASS,
+               null,
+               PInvoke.User32.WindowStyles.WS_POPUP | (PInvoke.User32.WindowStyles)WindowsApi.TTS_ALWAYSTIP,
+               WindowsApi.CW_USEDEFAULT,
+               WindowsApi.CW_USEDEFAULT,
+               WindowsApi.CW_USEDEFAULT,
+               WindowsApi.CW_USEDEFAULT,
+               this.Handle,
+               IntPtr.Zero,
+               IntPtr.Zero,
+               IntPtr.Zero);
+
+          // NOTE: Microsoft's documentation seems to indicate that we should set the tooltip as topmost, but in our testing this was unnecessary.  It's possible that using SendMessage to add/remove tooltip text automatically handles this when the system handles showing the tooltip
+          //       see: https://learn.microsoft.com/en-us/windows/win32/controls/tooltip-controls
+          //PInvoke.User32.SetWindowPos(tooltipWindowHandle, WindowsApi.HWND_TOPMOST, 0, 0, 0, 0, PInvoke.User32.SetWindowPosFlags.SWP_NOMOVE | PInvoke.User32.SetWindowPosFlags.SWP_NOSIZE | PInvoke.User32.SetWindowPosFlags.SWP_NOACTIVATE);
+
+          Debug.Assert(tooltipWindowHandle != IntPtr.Zero, "Could not create tooltip window.");
+
+          return tooltipWindowHandle;
+     }
+
+     private bool DestroyTooltipWindow()
+     {
+          if (_tooltipWindowHandle == IntPtr.Zero)
+          {
+               return true;
+          }
+
+          // set the tooltip text to empty (so that UpdateTooltipText will clear out the tooltip), then update the tooltip text.
+          _tooltipText = null;
+          this.UpdateTooltipTextAndTracking();
+
+          var result = PInvoke.User32.DestroyWindow(_tooltipWindowHandle);
+          _tooltipWindowHandle = IntPtr.Zero;
+
+          return result;
+     }
+
+     private void UpdateTooltipTextAndTracking()
+     {
+          if (_tooltipWindowHandle == IntPtr.Zero)
+          {
+               // tooltip window does not exist; failed; abort
+               Debug.Assert(false, "Tooptip window does not exist; if this is an expected failure, remove this assert.");
+               return;
+          }
+
+          var getClientRectSuccess = PInvoke.User32.GetClientRect(this.Handle, out var trayButtonClientRect);
+          if (getClientRectSuccess == false)
+          {
+               // failed; abort
+               Debug.Assert(false, "Could not get client rect for tray button; could not set up tooltip");
+               return;
+          }
+
+          var toolinfo = new WindowsApi.TOOLINFO();
+          toolinfo.cbSize = (uint)Marshal.SizeOf(toolinfo);
+          toolinfo.hwnd = this.Handle;
+          toolinfo.uFlags = LegacyWindowsApi.TTF_SUBCLASS;
+          toolinfo.lpszText = _tooltipText;
+          toolinfo.uId = unchecked((nuint)(nint)this.Handle); // unique identifier (for adding/deleting the tooltip)
+          toolinfo.rect = trayButtonClientRect;
+          //
+          var pointerToToolinfo = Marshal.AllocHGlobal(Marshal.SizeOf(toolinfo));
+          try
+          {
+               Marshal.StructureToPtr(toolinfo, pointerToToolinfo, false);
+               if (toolinfo.lpszText is not null)
+               {
+                    if (_tooltipInfoAdded == false)
+                    {
+                         _ = PInvoke.User32.SendMessage(_tooltipWindowHandle, (PInvoke.User32.WindowMessage)WindowsApi.TTM_ADDTOOL, IntPtr.Zero, pointerToToolinfo);
+                         _tooltipInfoAdded = true;
+                    }
+                    else
+                    {
+                         // delete and re-add the tooltipinfo; this will update all the info (including the text and tracking rect)
+                         _ = PInvoke.User32.SendMessage(_tooltipWindowHandle, (PInvoke.User32.WindowMessage)WindowsApi.TTM_DELTOOL, IntPtr.Zero, pointerToToolinfo);
+                         _ = PInvoke.User32.SendMessage(_tooltipWindowHandle, (PInvoke.User32.WindowMessage)WindowsApi.TTM_ADDTOOL, IntPtr.Zero, pointerToToolinfo);
+                    }
+               }
+               else
+               {
+                    // NOTE: we might technically call "deltool" even when a tooltipinfo was already removed
+                    _ = PInvoke.User32.SendMessage(_tooltipWindowHandle, (PInvoke.User32.WindowMessage)WindowsApi.TTM_DELTOOL, IntPtr.Zero, pointerToToolinfo);
+                    _tooltipInfoAdded = false;
+               }
+          }
+          finally
+          {
+               Marshal.FreeHGlobal(pointerToToolinfo);
+          }
      }
 
      //

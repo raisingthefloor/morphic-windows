@@ -318,8 +318,8 @@
             trayIcon.SecondaryClick += this.OnTrayIconRightClicked;
             trayIcon.Icon = Client.Properties.Resources.Icon;
             trayIcon.Text = "Morphic";
-            //trayIcon.TrayIconLocation = allNotificationIconsShown;
-            trayIcon.TrayIconLocation = MorphicHybridTrayIcon.TrayIconLocationOption.NotificationTrayAndNextToNotificationTray;
+//            trayIcon.TrayIconLocation = allNotificationIconsShown;
+            trayIcon.TrayIconLocation = MorphicHybridTrayIcon.TrayIconLocationOption.NextToNotificationTray;
             trayIcon.Visible = true;
             _trayIcon = trayIcon;
 

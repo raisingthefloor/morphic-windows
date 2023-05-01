@@ -43,6 +43,32 @@ internal class WindowsApi
      #endregion common/well-known declarations
 
 
+     #region commctrl
+
+     internal const string TOOLTIPS_CLASS = "tooltips_class32";
+
+     internal const ushort TTM_ADDTOOL = WM_USER + 50;
+     internal const byte TTS_ALWAYSTIP = 0x01;
+     internal const ushort TTM_DELTOOL = WM_USER + 51;
+
+     // https://learn.microsoft.com/en-us/windows/win32/api/commctrl/ns-commctrl-tttoolinfow
+     internal struct TOOLINFO
+     {
+          public uint cbSize;
+          public uint uFlags;
+          public IntPtr hwnd;
+          public UIntPtr uId;
+          public PInvoke.RECT rect;
+          public IntPtr hinst;
+          [MarshalAs(UnmanagedType.LPTStr)]
+          public string? lpszText;
+          public IntPtr lParam;
+          //public IntPtr reserved; // NOTE: this exists in the official declaration as a void pointer but adding it causes SendMessage to fail; pinvoke.net leaves it out and so do we
+     }
+
+     #endregion commctrl
+
+
      #region uxtheme
 
      // https://learn.microsoft.com/en-us/windows/win32/api/uxtheme/ne-uxtheme-bp_bufferformat
@@ -108,8 +134,15 @@ internal class WindowsApi
 
      #region winuser
 
+     internal const int CW_USEDEFAULT = unchecked((int)0x80000000);
+
+     internal const nint HWND_TOPMOST = -1;
+
      internal const uint MK_LBUTTON = 0x0001;
      internal const uint MK_RBUTTON = 0x0002;
+
+     internal const ushort WM_USER = 0x0400;
+
 
      public enum WinEventHookType : uint
      {
@@ -332,6 +365,26 @@ internal class WindowsApi
      [DllImport("user32.dll", SetLastError = true)]
      internal static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
 
+     internal static IntPtr GetWindowLongPtr_IntPtr(IntPtr hWnd, PInvoke.User32.WindowLongIndexFlags nIndex)
+     {
+          if (IntPtr.Size == 4)
+          {
+               return (nint)WindowsApi.GetWindowLong(hWnd, nIndex);
+          } 
+          else
+          {
+               return WindowsApi.GetWindowLongPtr(hWnd, nIndex);
+          }
+     }
+
+     // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowlongw
+     [DllImport("user32.dll", SetLastError = true)]
+     private static extern int GetWindowLong(IntPtr hWnd, PInvoke.User32.WindowLongIndexFlags nIndex);
+
+     // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowlongptrw
+     [DllImport("user32.dll", SetLastError = true)]
+     private static extern IntPtr GetWindowLongPtr(IntPtr hWnd, PInvoke.User32.WindowLongIndexFlags nIndex);
+
      // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-fillrect
      [DllImport("user32.dll")]
      internal static extern int FillRect(IntPtr hDC, [In] ref PInvoke.RECT lprc, IntPtr hbr);
@@ -367,6 +420,23 @@ internal class WindowsApi
      // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwineventhook
      [DllImport("user32.dll")]
      internal static extern IntPtr SetWinEventHook(WinEventHookType eventMin, WinEventHookType eventMax, IntPtr hmodWinEventProc, WinEventProc lpfnWinEventProc, uint idProcess, uint idThread, WinEventHookFlags dwFlags);
+     internal static IntPtr SetWindowLongPtr_IntPtr(IntPtr hWnd, PInvoke.User32.WindowLongIndexFlags nIndex, IntPtr dwNewLong)
+     {
+          if (IntPtr.Size == 4)
+          {
+               return (nint)WindowsApi.SetWindowLong(hWnd, nIndex, (int)dwNewLong);
+          }
+          else
+          {
+               return WindowsApi.SetWindowLongPtr(hWnd, nIndex, dwNewLong);
+          }
+     }
+
+     [DllImport("user32.dll", SetLastError = true)]
+     private static extern int SetWindowLong(IntPtr hWnd, PInvoke.User32.WindowLongIndexFlags nIndex, int dwNewLong);
+
+     [DllImport("user32.dll", SetLastError = true)]
+     private static extern IntPtr SetWindowLongPtr(IntPtr hWnd, PInvoke.User32.WindowLongIndexFlags nIndex, IntPtr dwNewLong);
 
      // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-trackmouseevent
      [DllImport("user32.dll", SetLastError = true)]
@@ -377,6 +447,8 @@ internal class WindowsApi
      internal static extern bool UnhookWinEvent(IntPtr hWinEventHook);
 
      // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-updatelayeredwindow
+     //[DllImport("user32.dll", SetLastError = true)]
+     //internal static extern bool UpdateLayeredWindow(IntPtr hwnd, IntPtr hdcDst, [In] ref PInvoke.POINT pptDst, [In] ref System.Drawing.Size psize, IntPtr hdcSrc, [In] ref System.Drawing.Point pptSrc, /*COLORREF*/uint crKey, [In] ref BLENDFUNCTION pblend, UpdateLayeredWindowFlags dwFlags);
      [DllImport("user32.dll", SetLastError = true)]
      internal static extern bool UpdateLayeredWindow(IntPtr hwnd, IntPtr hdcDst, IntPtr pptDst, [In] ref System.Drawing.Size psize, IntPtr hdcSrc, [In] ref System.Drawing.Point pptSrc, /*COLORREF*/uint crKey, [In] ref BLENDFUNCTION pblend, UpdateLayeredWindowFlags dwFlags);
 

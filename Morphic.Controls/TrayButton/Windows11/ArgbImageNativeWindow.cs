@@ -40,13 +40,10 @@ internal class ArgbImageNativeWindow : NativeWindow, IDisposable
 {
      private bool disposedValue;
 
-     private IntPtr _ownerHWnd;
-
      private Bitmap? _sourceBitmap = null;
      private Bitmap? _sizedBitmap = null;
 
-     private Point _position;
-     private Size _size;
+     private bool _visible;
 
      private static ushort? s_morphicArgbImageClassInfoExAtom = null;
 
@@ -87,13 +84,6 @@ internal class ArgbImageNativeWindow : NativeWindow, IDisposable
                s_morphicArgbImageClassInfoExAtom = registerClassResult;
           }
 
-          // capture the initial position of the window (so that the painting/positioning code can draw the window/bitmap appropriately)
-          // NOTE: when our position and size are changed, we need to update these variables; we can do this by watching for locationchanged (and perhaps size changed) events or perhaps by relying on our caller to notify us
-          result._position = new Point(x, y);
-          result._size = new Size(width, height);
-
-          result._ownerHWnd = parentHWnd;
-
           /* create an instance of our native window */
 
           CreateParams windowParams = new CreateParams()
@@ -124,6 +114,9 @@ internal class ArgbImageNativeWindow : NativeWindow, IDisposable
           {
                return MorphicResult.ErrorResult(Morphic.Controls.TrayButton.Windows11.CreateNewError.OtherException(ex));
           }
+
+          // since we are making the image visible by default, set its visible state
+          result._visible = true;
 
           return MorphicResult.OkResult(result);
      }
@@ -175,10 +168,6 @@ internal class ArgbImageNativeWindow : NativeWindow, IDisposable
                     throw new PInvoke.Win32Exception(lastError);
                }
 
-               //// TODO: if we capture these, we MUST update them when the control position is updated!  Try to keep it simple!
-               //_position = new Point(cp.X, cp.Y);
-               //_size = new Size(cp.Width, cp.Height);
-
                this.AssignHandle(handle);
           }
           finally
@@ -188,11 +177,6 @@ internal class ArgbImageNativeWindow : NativeWindow, IDisposable
                     Marshal.FreeHGlobal(classNameAsIntPtr);
                }
           }
-     }
-
-     public void UpdateOwnerHWnd(IntPtr ownerHWnd)
-     {
-          _ownerHWnd = ownerHWnd;
      }
 
      //
@@ -293,6 +277,11 @@ internal class ArgbImageNativeWindow : NativeWindow, IDisposable
 
      //
 
+     public Bitmap? GetBitmap()
+     {
+          return _sourceBitmap;
+     }
+
      public void SetBitmap(Bitmap? bitmap)
      {
           _sourceBitmap = bitmap;
@@ -303,25 +292,49 @@ internal class ArgbImageNativeWindow : NativeWindow, IDisposable
 
      public void SetPositionAndSize(PInvoke.RECT rect)
      {
-          var size = new System.Drawing.Size(rect.right - rect.left, rect.bottom - rect.top);
-          _size = size;
-
-          PInvoke.User32.SetWindowPos(this.Handle, IntPtr.Zero, rect.left, rect.top, size.Width, size.Height, User32.SetWindowPosFlags.SWP_NOZORDER | User32.SetWindowPosFlags.SWP_NOACTIVATE);
+          // set the new window position (including size); we must resize the window before recreating the sized bitmap (which will be sized to the updated size)
+          PInvoke.User32.SetWindowPos(this.Handle, IntPtr.Zero, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, User32.SetWindowPosFlags.SWP_NOZORDER | User32.SetWindowPosFlags.SWP_NOACTIVATE);
 
           this.RecreateSizedBitmap(_sourceBitmap);
           this.RequestRedraw();
+     }
+
+     public void SetVisbile(bool value)
+     {
+          if (_visible != value)
+          {
+               _visible = value;
+
+               var windowStyle = WindowsApi.GetWindowLongPtr_IntPtr(this.Handle, PInvoke.User32.WindowLongIndexFlags.GWL_STYLE);
+               nint newWindowStyle;
+               if (_visible == true)
+               {
+                    newWindowStyle = (nint)windowStyle | (nint)PInvoke.User32.WindowStyles.WS_VISIBLE;
+               }
+               else
+               {
+                    newWindowStyle = (nint)windowStyle & ~(nint)PInvoke.User32.WindowStyles.WS_VISIBLE;
+               }
+               WindowsApi.SetWindowLongPtr_IntPtr(this.Handle, PInvoke.User32.WindowLongIndexFlags.GWL_STYLE, newWindowStyle);
+          }
      }
 
      private void RecreateSizedBitmap(Bitmap? bitmap)
      {
           if (bitmap != null)
           {
-               _sizedBitmap = new Bitmap(bitmap, _size);
+               _sizedBitmap = new Bitmap(bitmap, this.GetCurrentSize());
           }
           else
           {
                _sizedBitmap = null;
           }
+     }
+
+     private System.Drawing.Size GetCurrentSize()
+     {
+          PInvoke.User32.GetWindowRect(this.Handle, out var rect);
+          return new System.Drawing.Size(rect.right - rect.left, rect.bottom - rect.top);
      }
 
      //
@@ -337,10 +350,9 @@ internal class ArgbImageNativeWindow : NativeWindow, IDisposable
 
      private MorphicResult<MorphicUnit, MorphicUnit> UpdateLayeredPainting()
      {
-          var ownerHWnd = _ownerHWnd;
+          var ownerHWnd = PInvoke.User32.GetWindow(this.Handle, User32.GetWindowCommands.GW_OWNER);
           //
-          var position = _position;
-          var size = _size;
+          var size = this.GetCurrentSize();
           //
           var sizedBitmap = _sizedBitmap;
 
@@ -394,8 +406,8 @@ internal class ArgbImageNativeWindow : NativeWindow, IDisposable
                                    };
                                    var sourcePoint = new Point(0, 0);
                                    var flags = WindowsApi.UpdateLayeredWindowFlags.ULW_ALPHA; // this flag indicates the blendfunction should be used as the blend function
+                                   //var updateLayeredWindowSuccess = WindowsApi.UpdateLayeredWindow(this.Handle, ownerDC.DangerousGetHandle(), ref position/* captured position of our window */, ref size, sourceDC.DangerousGetHandle(), ref sourcePoint, 0 /* unused COLORREF*/, ref blendfunction, flags);
                                    var updateLayeredWindowSuccess = WindowsApi.UpdateLayeredWindow(this.Handle, ownerDC.DangerousGetHandle(), IntPtr.Zero /* current position is not changing */, ref size, sourceDC.DangerousGetHandle(), ref sourcePoint, 0 /* unused COLORREF*/, ref blendfunction, flags);
-                                   //var updateLayeredWindowSuccess = WindowsApi.UpdateLayeredWindow(this.Handle, ownerDC.DangerousGetHandle(), ref position/*offsetPosition*/, ref size, sourceDC.DangerousGetHandle(), ref sourcePoint, 0 /* unused COLORREF*/, ref blendfunction, flags);
                                    if (updateLayeredWindowSuccess == false)
                                    {
                                         var win32Error = Marshal.GetLastWin32Error();
@@ -431,6 +443,10 @@ internal class ArgbImageNativeWindow : NativeWindow, IDisposable
                     var deleteObjectSuccess = PInvoke.Gdi32.DeleteObject(sizedBitmapPointer);
                     Debug.Assert(deleteObjectSuccess == true, "Could not delete the GDI bitmap object which was created from the icon bitmap");
                }
+          }
+          else
+          {
+               // NOTE: we do not support erasing the bitmap once it's created, so there is nothing to do here; the caller may hide the image by setting its visible state to true
           }
 
           // if we reach here, the operation was successful          
