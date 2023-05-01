@@ -10,8 +10,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Morphic.Core\Morphic.Core.csproj" />
-    <ProjectReference Include="..\Morphic.Settings\Morphic.Settings.csproj" />
+       <PackageReference Include="Morphic.Core" Version="1.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+       <ProjectReference Include="..\Morphic.Settings\Morphic.Settings.csproj" />
   </ItemGroup>
 
 </Project>

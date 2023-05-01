@@ -108,6 +108,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Morphic.Controls\Morphic.Controls.csproj" />
     <ProjectReference Include="..\Morphic.Core.Legacy\Morphic.Core.Legacy.csproj" />
     <ProjectReference Include="..\Morphic.Integrations.Office\Morphic.Integrations.Office.csproj" />
     <ProjectReference Include="..\Morphic.Service\Morphic.Service.csproj" />
