@@ -1062,9 +1062,511 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
                trayButtonY = notifyTrayRect.top - trayButtonHeight;
           }
 
+          // TEMPORARY: WRITE OUT LOG CALCULATIONS 
+
+          var legacyCalculateResult = TrayButtonNativeWindow.CalculateCurrentAndTargetRectOfTrayButton(trayButtonHandle);
+          var logBuilder = new StringBuilder();
+          logBuilder.AppendLine("*** CalculatePositionAndSizeForTrayButton BEGIN ***");
+          logBuilder.AppendLine("***");
+          if (legacyCalculateResult is not null)
+          {
+               logBuilder.Append(legacyCalculateResult.Value.log);
+          }
+          else
+          {
+               logBuilder.Append("ERROR: CalculateCurrentAndTargetRectOfTrayButton RETURNED NULL...ERROR!");
+          }
+          logBuilder.AppendLine("***");
+
+          // END TEMPORARY
+
           var result = new PInvoke.RECT() { left = trayButtonX, top = trayButtonY, right = trayButtonX + trayButtonWidth, bottom = trayButtonY + trayButtonHeight };
+
+          // TEMPORARY: WRITE OUT LOG CALCULATIONS 
+          logBuilder.AppendLine("modern API result: new PInvoke.RECT() { left = " + trayButtonX + ", top = " + trayButtonY + ", right = " + trayButtonX + " + " + trayButtonWidth + ", bottom = " + trayButtonY + " + " + trayButtonHeight + " } :: " + TrayButtonNativeWindow.RectToString(new LegacyWindowsApi.RECT() { Left = result.left, Top = result.top, Right = result.right, Bottom = result.bottom}));
+
+          logBuilder.AppendLine("*** CalculatePositionAndSizeForTrayButton END ***");
+          logBuilder.AppendLine("***");
+          logBuilder.AppendLine("***");
+          logBuilder.AppendLine("***");
+
+          var getKnownFolderPathResult = TrayButtonNativeWindow.GetKnownFolderPath(KNOWNFOLDERID.FOLDERID_Downloads);
+          string pathToDownloadsFolder;
+          if (getKnownFolderPathResult.IsError == true)
+          {
+               Debug.Assert(false, "Could not get path to downloads folder");
+               return new();
+          }
+          pathToDownloadsFolder = getKnownFolderPathResult.Value!;
+          var pathToLogFile = System.IO.Path.Combine(pathToDownloadsFolder, "morphic_button_position_log.txt");
+          System.IO.File.AppendAllText(pathToLogFile, logBuilder.ToString());
+
+          // END TEMPORARY
+
           return MorphicResult.OkResult(result);
      }
+
+     // NOTE: when using this function, ppszPath must be freed manually using FreeCoTaskMem
+     [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+     private static extern int SHGetKnownFolderPath(
+         [MarshalAs(UnmanagedType.LPStruct)] Guid rfid,
+         uint dwFlags,
+         IntPtr hToken,
+         out IntPtr ppszPath);
+
+     private const int S_OK = 0;
+
+     // knownfolders.h
+     internal struct KNOWNFOLDERID
+     {
+          public static Guid FOLDERID_Downloads = new Guid(0x374de290, 0x123f, 0x4565, 0x91, 0x64, 0x39, 0xc4, 0x92, 0x5e, 0x46, 0x7b); // {374DE290-123F-4565-9164-39C4925E467B}
+     }
+
+     internal static MorphicResult<string, MorphicUnit> GetKnownFolderPath(Guid knownFolderId)
+     {
+          IntPtr pointerToPath;
+          var getKnownFolderPathResult = TrayButtonNativeWindow.SHGetKnownFolderPath(knownFolderId, 0, IntPtr.Zero, out pointerToPath);
+          try
+          {
+               if (getKnownFolderPathResult == S_OK)
+               {
+                    var path = Marshal.PtrToStringUni(pointerToPath);
+                    return MorphicResult.OkResult(path!);
+               }
+               else
+               {
+                    return MorphicResult.ErrorResult();
+               }
+          }
+          finally
+          {
+               Marshal.FreeCoTaskMem(pointerToPath);
+          }
+     }
+
+     // //
+
+     private static string RectToString(LegacyWindowsApi.RECT rect)
+     {
+          return "RECT(left: " + rect.Left + "; top: " + rect.Top + "; right: " + rect.Right + "; bottom: " + rect.Bottom + ")";
+     }
+
+     // NOTE: this function is temporary, used only for calculating the position and size for layout of the tray button using our old calculations (to validate our new calculations)
+     private static (LegacyWindowsApi.RECT? rect, Orientation orientation, string log)? CalculateCurrentAndTargetRectOfTrayButton(IntPtr? trayButtonHandle)
+     {
+          StringBuilder logBuilder = new();
+          logBuilder.Append("CalculateCurrentAndTargetRectOfTrayButton() BEGIN\n");
+
+          // NOTE: there are scenarios we must deal with where there may be multiple potential "taskbar button" icons to the left of the notification tray; in those scenarios, we must:
+          // 1. Position ourself to the left of the other icon-button(s) (or in an empty space in between them)
+          // 2. Reposition our icon when the other icon-button(s) are removed from the taskbar (e.g. when their host applications close them)
+          // 3. If we detect that we and another application are writing on top of each other (or repositioning the taskbar button container on top of our icon), then we must fail
+          //    gracefully and let our host application know so it can warn the user, place the icon in the notification tray instead, etc.
+
+          // To position the tray button, we need to find three windows:
+          // 1. the taskbar itself
+          // 2. the section of the taskbar which holds the taskbar buttons (i.e. to the right of the start button and find/cortana/taskview buttons, but to the left of the notification tray) */
+          // 3. the notification tray
+          //
+          // We will then resize the section of the taskbar that holds the taskbar buttons so that we can place our tray button to its right (i.e. to the left of the notification tray).
+
+          var taskbarTripletHandles = TrayButtonNativeWindow.GetTaskbarTripletHandles();
+          var taskbarHandle = taskbarTripletHandles.TaskbarHandle;
+          logBuilder.Append("taskbarHandle: " + taskbarTripletHandles.TaskbarHandle.ToString() + "\n");
+          logBuilder.Append("taskButtonContainerHandle: " + taskbarTripletHandles.TaskButtonContainerHandle.ToString() + "\n");
+          logBuilder.Append("notifyTrayHandle: " + taskbarTripletHandles.NotifyTrayHandle.ToString() + "\n");
+          logBuilder.Append("...\n");
+
+          var taskbarRects = TrayButtonNativeWindow.GetTaskbarTripletRects(taskbarTripletHandles.TaskbarHandle, taskbarTripletHandles.TaskButtonContainerHandle, taskbarTripletHandles.NotifyTrayHandle);
+          if (taskbarRects is null)
+          {
+               return null;
+          }
+          var taskbarRect = taskbarRects.Value.TaskbarRect;
+          var taskButtonContainerRect = taskbarRects.Value.TaskButtonContainerRect;
+          var notifyTrayRect = taskbarRects.Value.NotifyTrayRect;
+          logBuilder.Append("taskbarRect: " + TrayButtonNativeWindow.RectToString(taskbarRects.Value.TaskbarRect) + "\n");
+          logBuilder.Append("taskButtonContainerRect: " + TrayButtonNativeWindow.RectToString(taskbarRects.Value.TaskButtonContainerRect) + "\n");
+          logBuilder.Append("notifyTrayRect: " + TrayButtonNativeWindow.RectToString(taskbarRects.Value.NotifyTrayRect) + "\n");
+          logBuilder.Append("...\n");
+
+          // determine the taskbar's orientation
+          System.Windows.Forms.Orientation taskbarOrientation;
+          if ((taskbarRect.Right - taskbarRect.Left) > (taskbarRect.Bottom - taskbarRect.Top))
+          {
+               taskbarOrientation = Orientation.Horizontal;
+               logBuilder.Append("taskbarOrientation: Horizontal\n");
+          }
+          else
+          {
+               taskbarOrientation = Orientation.Vertical;
+               logBuilder.Append("taskbarOrientation: Vertical\n");
+          }
+          logBuilder.Append("...\n");
+
+          // calculate all of the free rects between the task button container and notify tray
+          var calculateEmptyRectsResult = TrayButtonNativeWindow.CalculateEmptyRectsBetweenTaskButtonContainerAndNotifyTray(trayButtonHandle, taskbarHandle, taskbarOrientation, taskbarRect, taskButtonContainerRect, notifyTrayRect);
+          logBuilder.AppendLine("***");
+          logBuilder.Append(calculateEmptyRectsResult.log);
+          logBuilder.AppendLine("***");
+          var freeAreaChildRects = calculateEmptyRectsResult.childRects;
+          var freeAreaAvailableRect = calculateEmptyRectsResult.availableAreaRect;
+          foreach (var freeAreaChildRect in freeAreaChildRects)
+          {
+               logBuilder.Append("freeAreaChildRect: " + TrayButtonNativeWindow.RectToString(freeAreaChildRect) + "\n");
+
+          }
+          logBuilder.Append("freeAreaAvailableRect: " + TrayButtonNativeWindow.RectToString(freeAreaAvailableRect) + "\n");
+          logBuilder.Append("...\n");
+
+          /* determine the rect for our tray button; based on our current positioning strategy, this will either be its existing position or the leftmost/topmost "next to tray" position.  
+               * If we are determining the leftmost/topmost "next to tray" position, we will find the available space between the task button container and the notification tray (or any 
+               * already-present controls that are already left/top of the notification tray); if there is not enough free space available in that area then we will shrink the task button
+               * container to make room. */
+          //
+          /* NOTE: there are some deficiencies to our current positioning strategy.  Of note...
+               * 1. In some circumstances, it might be possible that we are leaving "holes" of available space between the task button container and the notification tray; but if that
+               *    happens, it might be something beyond our control (as other apps may have created that space).  One concern is if we shrink our icon (in which case we should in theory
+               *    shrink the space to our top/left)
+               * 2. If other apps draw their next-to-tray buttons after us and are not watching for conflicts then they could draw over us; a mitigation measure in that instance might be to
+               *    use a timer to check that our tray button is not obscured and then remedy the situation; if we got into a "fight" over real estate that appeared to never terminate then
+               *    we could destroy our icon and raise an event letting the application know it should choose an alternate strategy (such as a notification tray icon) instead.
+               * 3. If a more-rightmost/bottommost icon's application is closed while we are running, the taskbar could be resized to obscure us; we might need a timer (or we might need to
+               *    capture the appropriate window message) to discover this scenario.
+               * In summary there is no standardized system (other than perhaps the "(dock) toolbar in taskbar" mechanism); if we find that we encounter problems in the field with our current
+               * strategy, we may want to consider rebuilding this functionality via the "toolbar in taskbar" mechanism.  See HP Support Assistant for an example of another application
+               * which is doing what we are trying to do with the next-to-tray button strategy */
+
+          // establish the appropriate size for our tray button (i.e. same height/width as taskbar, and with an aspect ratio of 8:10)
+          int trayButtonHeight;
+          int trayButtonWidth;
+          if (taskbarOrientation == Orientation.Horizontal)
+          {
+               trayButtonHeight = taskbarRect.Bottom - taskbarRect.Top;
+               trayButtonWidth = (int)((Double)trayButtonHeight * 0.8);
+          }
+          else
+          {
+               trayButtonWidth = taskbarRect.Right - taskbarRect.Left;
+               trayButtonHeight = (int)((Double)trayButtonWidth * 0.8);
+          }
+          logBuilder.Append("trayButtonWidth: " + trayButtonWidth.ToString() + "\n");
+          logBuilder.Append("trayButtonHeight: " + trayButtonHeight.ToString() + "\n");
+          logBuilder.Append("...\n");
+
+          // get our current rect (in case we can just reuse the current position...and also to make sure it doesn't need to be resized)
+          LegacyWindowsApi.RECT currentRectAsNonNullable;
+          LegacyWindowsApi.RECT? currentRect = null;
+          LegacyWindowsApi.RECT? currentRectForResult = null;
+          if (LegacyWindowsApi.GetWindowRect(trayButtonHandle is not null ? trayButtonHandle.Value : IntPtr.Zero, out currentRectAsNonNullable) == true)
+          {
+               currentRect = currentRectAsNonNullable;
+               currentRectForResult = currentRectAsNonNullable;
+               logBuilder.Append("currentRect: " + TrayButtonNativeWindow.RectToString(currentRect.Value) + "\n");
+          }
+          else
+          {
+               logBuilder.Append("currentRect: [NULL]\n");
+          }
+
+          // if the current position of our window isn't the right size for our icon, then set it to NULL so we don't try to reuse it.
+          if ((currentRect is not null) &&
+               ((currentRect.Value.Right - currentRect.Value.Left != trayButtonWidth) || (currentRect.Value.Bottom - currentRect.Value.Top != trayButtonHeight)))
+          {
+               currentRect = null;
+               logBuilder.Append("current position of window is acceptable for reuse.\n");
+          }
+          else
+          {
+               logBuilder.Append("current position of window is NOT ACCEPTABLE for reuse; discarding.\n");
+          }
+          logBuilder.Append("...\n");
+
+          // calculate the new rect for our tray button's window
+          LegacyWindowsApi.RECT? newRect = null;
+
+          // if the space occupied by our already-existing rect is not overlapped by anyone else and is in the free area, keep using the same space
+          if (currentRect is not null)
+          {
+               logBuilder.Append("currentRect.Value.Intersects(freeAreaAvailableRect): " + currentRect.Value.Intersects(freeAreaAvailableRect).ToString() + "\n");
+          }
+          else
+          {
+               logBuilder.AppendLine("currentRect IS NULL");
+          }
+          if ((currentRect is not null) && (currentRect.Value.Intersects(freeAreaAvailableRect) == true))
+          {
+               // by default, assume that our currentRect is still available (i.e. not overlapped)
+               bool currentRectIsNotOverlapped = true;
+
+               // make sure we do not overlap another control in the free area
+               foreach (var freeAreaChildRect in freeAreaChildRects)
+               {
+                    logBuilder.Append("currentRect.Value.Intersects(freeAreaChildRect: " + TrayButtonNativeWindow.RectToString(freeAreaChildRect) + "): " + currentRect.Value.Intersects(freeAreaChildRect).ToString() + "\n");
+                    if (currentRect.Value.Intersects(freeAreaChildRect) == true)
+                    {
+                         // overlap conflict
+                         currentRectIsNotOverlapped = false;
+                         break;
+                    }
+               }
+
+               logBuilder.Append("currentRectIsNotOverlapped: " + currentRectIsNotOverlapped.ToString() + "\n");
+               if (currentRectIsNotOverlapped == true)
+               {
+                    // set "newRect" (the variable for where we will now place our tray button) to the same position we were already at
+                    newRect = currentRect;
+               }
+          }
+
+          logBuilder.Append("...\n");
+          // if our current (already-used-by-us) rect was not available, choose the leftmost/topmost space available
+          if (newRect is null)
+          {
+               if (taskbarOrientation == Orientation.Horizontal)
+               {
+                    logBuilder.AppendLine("taskbarOrientation == Orientation.Horizontal");
+                    // horizontal taskbar: find the leftmost rect in the available space (which we'll then carve the "rightmost" section out of)
+                    LegacyWindowsApi.RECT leftmostRect = freeAreaAvailableRect;
+
+                    foreach (var freeAreaChildRect in freeAreaChildRects)
+                    {
+                         logBuilder.Append("freeAreaChildRect.Left < leftmostRect.Right [" + freeAreaChildRect.Left + " < " + leftmostRect.Right + "]: " + (freeAreaChildRect.Left < leftmostRect.Right).ToString() + "\n");
+                         if (freeAreaChildRect.Left < leftmostRect.Right)
+                         {
+                              leftmostRect.Right = freeAreaChildRect.Left;
+                         }
+                    }
+
+                    // choose the rightmost space in the leftmostRect area; expand our tray button towards the left if/as necessary
+                    newRect = new LegacyWindowsApi.RECT(new System.Windows.Rect(leftmostRect.Right - trayButtonWidth, leftmostRect.Bottom - trayButtonHeight, trayButtonWidth, trayButtonHeight));
+                    logBuilder.Append("SETTING newRect to: {" + leftmostRect.Right + " - " + trayButtonWidth + ", " + leftmostRect.Bottom + " - " + trayButtonHeight + ", " + trayButtonWidth + ", " + trayButtonHeight + "}\n");
+                    logBuilder.AppendLine("newRect: " + TrayButtonNativeWindow.RectToString(newRect.Value));
+                    logBuilder.Append("...\n");
+               }
+               else
+               {
+                    logBuilder.AppendLine("taskbarOrientation != Orientation.Horizontal");
+                    // vertical taskbar: find the topmost rect in the available space (which we'll then carve the "bottommost" section out of)
+                    LegacyWindowsApi.RECT topmostRect = freeAreaAvailableRect;
+
+                    foreach (var freeAreaChildRect in freeAreaChildRects)
+                    {
+                         logBuilder.Append("freeAreaChildRect.Top < topmostRect.Bottom [" + freeAreaChildRect.Top + " < " + topmostRect.Bottom + "]: " + (freeAreaChildRect.Top < topmostRect.Bottom).ToString() + "\n");
+                         if (freeAreaChildRect.Top < topmostRect.Bottom)
+                         {
+                              topmostRect.Bottom = freeAreaChildRect.Top;
+                         }
+                    }
+
+                    // choose the bottommost space in the topmostRect area; expand our tray button towards the top if/as necessary
+                    newRect = new LegacyWindowsApi.RECT(new System.Windows.Rect(topmostRect.Right - trayButtonWidth, topmostRect.Bottom - trayButtonHeight, trayButtonWidth, trayButtonHeight));
+                    logBuilder.Append("SETTING newRect to: {" + topmostRect.Right + " - " + trayButtonWidth + ", " + topmostRect.Bottom + " - " + trayButtonHeight + ", " + trayButtonWidth + ", " + trayButtonHeight + "}\n");
+                    logBuilder.AppendLine("newRect: " + TrayButtonNativeWindow.RectToString(newRect.Value));
+                    logBuilder.Append("...\n");
+               }
+          }
+
+          logBuilder.Append("CalculateCurrentAndTargetRectOfTrayButton() END\n");
+
+          return (newRect, taskbarOrientation, logBuilder.ToString());
+     }
+
+     private static (IntPtr TaskbarHandle, IntPtr TaskButtonContainerHandle, IntPtr NotifyTrayHandle) GetTaskbarTripletHandles()
+     {
+          var taskbarHandle = TrayButtonNativeWindow.GetWindowsTaskbarHandle();
+          var taskButtonContainerHandle = TrayButtonNativeWindow.GetWindowsTaskbarTaskButtonContainerHandle();
+          var notifyTrayHandle = TrayButtonNativeWindow.GetWindowsTaskbarNotificationTrayHandle();
+
+          return (taskbarHandle, taskButtonContainerHandle, notifyTrayHandle);
+     }
+
+     private static IntPtr GetWindowsTaskbarTaskButtonContainerHandle()
+     {
+          var taskbarHandle = TrayButtonNativeWindow.GetWindowsTaskbarHandle();
+          if (taskbarHandle == IntPtr.Zero)
+          {
+               return IntPtr.Zero;
+          }
+          return LegacyWindowsApi.FindWindowEx(taskbarHandle, IntPtr.Zero, "ReBarWindow32", null);
+     }
+
+     private static IntPtr GetWindowsTaskbarNotificationTrayHandle()
+     {
+          var taskbarHandle = TrayButtonNativeWindow.GetWindowsTaskbarHandle();
+          if (taskbarHandle == IntPtr.Zero)
+          {
+               return IntPtr.Zero;
+          }
+          return LegacyWindowsApi.FindWindowEx(taskbarHandle, IntPtr.Zero, "TrayNotifyWnd", null);
+     }
+
+     private static (LegacyWindowsApi.RECT TaskbarRect, LegacyWindowsApi.RECT TaskButtonContainerRect, LegacyWindowsApi.RECT NotifyTrayRect)? GetTaskbarTripletRects(IntPtr taskbarHandle, IntPtr taskButtonContainerHandle, IntPtr notifyTrayHandle)
+     {
+          // find the taskbar and its rect
+          LegacyWindowsApi.RECT taskbarRect = new LegacyWindowsApi.RECT();
+          if (LegacyWindowsApi.GetWindowRect(taskbarHandle, out taskbarRect) == false)
+          {
+               // failed; abort
+               Debug.Assert(false, "Could not obtain window handle to taskbar.");
+               return null;
+          }
+
+          // find the window handles and rects of the task button container and the notify tray (which are children inside of the taskbar)
+          //
+          LegacyWindowsApi.RECT taskButtonContainerRect = new LegacyWindowsApi.RECT();
+          if (LegacyWindowsApi.GetWindowRect(taskButtonContainerHandle, out taskButtonContainerRect) == false)
+          {
+               // failed; abort
+               Debug.Assert(false, "Could not obtain window handle to taskbar's task button list container.");
+               return null;
+          }
+          //
+          LegacyWindowsApi.RECT notifyTrayRect = new LegacyWindowsApi.RECT();
+          if (LegacyWindowsApi.GetWindowRect(notifyTrayHandle, out notifyTrayRect) == false)
+          {
+               // failed; abort
+               Debug.Assert(false, "Could not obtain window handle to taskbar's notify tray.");
+               return null;
+          }
+
+          return (taskbarRect, taskButtonContainerRect, notifyTrayRect);
+     }
+
+     private static (LegacyWindowsApi.RECT availableAreaRect, List<LegacyWindowsApi.RECT> childRects, string log) CalculateEmptyRectsBetweenTaskButtonContainerAndNotifyTray(IntPtr? trayButtonHandle, IntPtr taskbarHandle, Orientation taskbarOrientation, LegacyWindowsApi.RECT taskbarRect, LegacyWindowsApi.RECT taskButtonContainerRect, LegacyWindowsApi.RECT notifyTrayRect)
+     {
+          StringBuilder logBuilder = new();
+          logBuilder.Append("CalculateEmptyRectsBetweenTaskButtonContainerAndNotifyTray() BEGIN\n");
+
+          // calculate the total "free area" rectangle (the area between the task button container and the notify tray where we want to place our tray button)
+          LegacyWindowsApi.RECT freeAreaAvailableRect;
+          if (taskbarOrientation == Orientation.Horizontal)
+          {
+               logBuilder.AppendLine("taskbarOrientation == Orientation.Horizontal");
+               freeAreaAvailableRect = new LegacyWindowsApi.RECT(new System.Windows.Rect(taskButtonContainerRect.Right, taskbarRect.Top, Math.Max(notifyTrayRect.Left - taskButtonContainerRect.Right, 0), Math.Max(taskbarRect.Bottom - taskbarRect.Top, 0)));
+               logBuilder.AppendLine("freeAreaAvailableRect = RECT(" + taskButtonContainerRect.Right + ", " + taskbarRect.Top + ", " + Math.Max(notifyTrayRect.Left - taskButtonContainerRect.Right, 0) + ", " + Math.Max(taskbarRect.Bottom - taskbarRect.Top, 0) + ") :: " + TrayButtonNativeWindow.RectToString(freeAreaAvailableRect));
+          }
+          else
+          {
+               logBuilder.AppendLine("taskbarOrientation != Orientation.Horizontal");
+               freeAreaAvailableRect = new LegacyWindowsApi.RECT(new System.Windows.Rect(taskbarRect.Left, taskButtonContainerRect.Bottom, Math.Max(taskbarRect.Right - taskbarRect.Left, 0), Math.Max(notifyTrayRect.Top - taskButtonContainerRect.Bottom, 0)));
+               logBuilder.AppendLine("freeAreaAvailableRect = RECT(" + taskbarRect.Left + ", " + taskButtonContainerRect.Bottom + ", " + Math.Max(taskbarRect.Right - taskbarRect.Left, 0) + ", " + Math.Max(notifyTrayRect.Top - taskButtonContainerRect.Bottom, 0) + ") :: " + TrayButtonNativeWindow.RectToString(freeAreaAvailableRect));
+          }
+          logBuilder.AppendLine("........");
+
+          // capture a list of all child windows within the taskbar; we'll use this list to enumerate the rects of all the taskbar's children
+          var taskbarChildHandles = TrayButtonNativeWindow.EnumerateChildWindows(taskbarHandle);
+          //
+          // find the rects of all windows within the taskbar; we need this information so that we do not overlap any other accessory windows which are trying to sit in the same area as us
+          var taskbarChildHandlesWithRects = new Dictionary<IntPtr, LegacyWindowsApi.RECT>();
+          foreach (var taskbarChildHandle in taskbarChildHandles)
+          {
+               logBuilder.AppendLine("taskbarChildHandle: " + taskbarChildHandle.ToString());
+               LegacyWindowsApi.RECT taskbarChildRect = new LegacyWindowsApi.RECT();
+               if (LegacyWindowsApi.GetWindowRect(taskbarChildHandle, out taskbarChildRect) == true)
+               {
+                    logBuilder.AppendLine("taskbarChildRect: " + TrayButtonNativeWindow.RectToString(taskbarChildRect));
+                    taskbarChildHandlesWithRects.Add(taskbarChildHandle, taskbarChildRect);
+               }
+               else
+               {
+                    logBuilder.AppendLine("taskbarChildRect: ERR COULD NOT CAPTURE");
+                    Debug.Assert(false, "Could not capture RECTs of all taskbar child windows");
+               }
+          }
+          logBuilder.AppendLine("........");
+
+          // remove any child rects which are contained inside the task button container (so that we eliminate any subchildren from our calculations)
+          foreach (var taskbarChildHandle in taskbarChildHandles)
+          {
+               if (taskbarChildHandlesWithRects.ContainsKey(taskbarChildHandle) == true)
+               {
+                    var taskbarChildRect = taskbarChildHandlesWithRects[taskbarChildHandle];
+                    if (taskbarChildRect.IsInside(taskButtonContainerRect))
+                    {
+                         logBuilder.AppendLine("taskbarChildRect " + TrayButtonNativeWindow.RectToString(taskbarChildRect) + " IsInside " + TrayButtonNativeWindow.RectToString(taskButtonContainerRect) + "taskButtonContainerRect");
+                         taskbarChildHandlesWithRects.Remove(taskbarChildHandle);
+                    }
+                    else
+                    {
+                         logBuilder.AppendLine("taskbarChildRect " + TrayButtonNativeWindow.RectToString(taskbarChildRect) + " IS NOT INSIDE" + TrayButtonNativeWindow.RectToString(taskButtonContainerRect) + "taskButtonContainerRect");
+                    }
+               }
+          }
+          logBuilder.AppendLine("........");
+
+          // remove our own (tray button) window handle from the list (so that we don't see our current screen rect as "taken" in the list of occupied RECTs)
+          if (trayButtonHandle is not null)
+          {
+               taskbarChildHandlesWithRects.Remove(trayButtonHandle.Value);
+          }
+
+          // create a list of children which are located between the task button container and the notify tray (i.e. windows which are occupying the same region we want to
+          // occupy...so we can try to avoid overlapping)
+          List<LegacyWindowsApi.RECT> freeAreaChildRects = new List<LegacyWindowsApi.RECT>();
+          foreach (var taskbarChildHandle in taskbarChildHandles)
+          {
+               if (taskbarChildHandlesWithRects.ContainsKey(taskbarChildHandle) == true)
+               {
+                    var taskbarChildRect = taskbarChildHandlesWithRects[taskbarChildHandle];
+                    if ((taskbarChildRect.IsInside(freeAreaAvailableRect) == true) &&
+                    (taskbarChildRect.HasNonZeroWidthOrHeight() == false))
+                    {
+                         logBuilder.AppendLine("freeAreaChildRects.Add(" + TrayButtonNativeWindow.RectToString(taskbarChildRect) + ")");
+                         freeAreaChildRects.Add(taskbarChildRect);
+                    }
+               }
+          }
+
+          logBuilder.Append("CalculateEmptyRectsBetweenTaskButtonContainerAndNotifyTray() END\n");
+
+          return (freeAreaAvailableRect, freeAreaChildRects, logBuilder.ToString());
+     }
+
+     internal static List<IntPtr> EnumerateChildWindows(IntPtr parentHwnd)
+     {
+          var result = new List<IntPtr>();
+
+          // create an unmanaged pointer to our list (using a GC-managed handle)
+          GCHandle resultGCHandle = GCHandle.Alloc(result, GCHandleType.Normal);
+          // convert our GCHandle into an IntPtr (which we will unconvert back to a GCHandler in the EnumChildWindows callback) 
+          IntPtr resultGCHandleAsIntPtr = GCHandle.ToIntPtr(resultGCHandle);
+
+          try
+          {
+               var enumFunction = new LegacyWindowsApi.EnumWindowsProc(TrayButtonNativeWindow.EnumerateChildWindowsCallback);
+               LegacyWindowsApi.EnumChildWindows(parentHwnd, enumFunction, resultGCHandleAsIntPtr);
+
+          }
+          finally
+          {
+               if (resultGCHandle.IsAllocated)
+               {
+                    resultGCHandle.Free();
+               }
+          }
+
+          return result;
+     }
+     internal static bool EnumerateChildWindowsCallback(IntPtr hwnd, IntPtr lParam)
+     {
+          // convert lParam back into the result list object
+          var resultGCHandle = GCHandle.FromIntPtr(lParam);
+          List<IntPtr>? result = resultGCHandle.Target as List<IntPtr>;
+
+          if (result is not null)
+          {
+               result.Add(hwnd);
+          }
+          else
+          {
+               Debug.Assert(false, "Could not enumerate child windows");
+          }
+
+          return true;
+     }
+
+     // //
 
      //
 
