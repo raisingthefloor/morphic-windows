@@ -1566,8 +1566,6 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
           return true;
      }
 
-     // //
-
      //
 
      private MorphicResult<System.Drawing.Point, MorphicUnit> ConvertMouseMessageLParamToScreenPoint(IntPtr lParam)

@@ -20,6 +20,8 @@
             Hide // always hide the MorphicBar after login
         }
 
+        public static bool AtOnDemandIsEnabled = true;
+        //
         public static AutorunConfigOption? AutorunConfig = null;
         //
         public static bool CheckForUpdatesIsEnabled = false;
@@ -37,6 +39,7 @@
         public static string? TelemetrySiteId = null;
 
         public static void SetFeatures(
+            bool atOnDemandIsEnabled,
             AutorunConfigOption? autorunConfig,
             bool checkForUpdatesIsEnabled,
             bool cloudSettingsTransferIsEnabled,
@@ -47,6 +50,7 @@
             string? telemetrySiteId
             )
         {
+            ConfigurableFeatures.AtOnDemandIsEnabled = atOnDemandIsEnabled;
             ConfigurableFeatures.AutorunConfig = autorunConfig;
             ConfigurableFeatures.CheckForUpdatesIsEnabled = checkForUpdatesIsEnabled;
             ConfigurableFeatures.CloudSettingsTransferIsEnabled = cloudSettingsTransferIsEnabled;
