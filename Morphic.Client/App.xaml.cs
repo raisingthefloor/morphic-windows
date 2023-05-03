@@ -171,7 +171,6 @@ namespace Morphic.Client
                     public string? scope { get; set; }
                 }
                 //
-                public EnabledFeature? atOnDemand { get; set; }
                 public EnabledFeature? autorunAfterLogin { get; set; }
                 public EnabledFeature? checkForUpdates { get; set; }
                 public EnabledFeature? cloudSettingsTransfer { get; set; }
@@ -191,7 +190,6 @@ namespace Morphic.Client
         //
         private struct CommonConfigurationContents
         {
-            public bool AtOnDemandIsEnabled;
             public ConfigurableFeatures.AutorunConfigOption? AutorunConfig;
             public bool CheckForUpdatesIsEnabled;
             public bool CloudSettingsTransferIsEnabled;
@@ -205,9 +203,6 @@ namespace Morphic.Client
             // set up default configuration
             var result = new CommonConfigurationContents();
             //
-			// at on demand
-            result.AtOnDemandIsEnabled = true;
-			//
             // autorun
             result.AutorunConfig = null;
             //
@@ -299,20 +294,6 @@ namespace Morphic.Client
                             return result;
                     }
                 }
-            }
-
-            // capture the at on demand "is enabled" setting
-            if (deserializedJson.features?.atOnDemand?.enabled is not null)
-            {
-                 result.AtOnDemandIsEnabled = deserializedJson.features.atOnDemand.enabled.Value;
-            }
-            else
-            {
-                 // NOTE: for version 0 of the config.json file, we set AtOnDemandIsEnabled to FALSE by default
-                 if (deserializedJson.version == 0)
-                 {
-                    result.AtOnDemandIsEnabled = false;
-                 }
             }
 
             // capture the check for updates "is enabled" setting
@@ -1088,7 +1069,6 @@ namespace Morphic.Client
             // NOTE: we currently load this AFTER setting up the logger because the GetCommonConfigurationAsync function logs config file errors to the logger
             var commonConfiguration = await this.GetCommonConfigurationAsync();
             ConfigurableFeatures.SetFeatures(
-                atOnDemandIsEnabled: commonConfiguration.AtOnDemandIsEnabled,
                 autorunConfig: commonConfiguration.AutorunConfig,
                 checkForUpdatesIsEnabled: commonConfiguration.CheckForUpdatesIsEnabled,
                 cloudSettingsTransferIsEnabled: commonConfiguration.CloudSettingsTransferIsEnabled,
