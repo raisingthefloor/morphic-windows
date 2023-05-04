@@ -1005,8 +1005,8 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
           var taskbarHandle = TrayButtonNativeWindow.GetWindowsTaskbarHandle();
           if (taskbarHandle == IntPtr.Zero) { return MorphicResult.ErrorResult(); }
           //
-          //var taskButtonContainerHandle = TrayButtonNativeWindow.GetWindowsTaskbarTaskButtonContainerHandle(taskbarHandle);
-          //if (taskButtonContainerHandle == IntPtr.Zero) { return MorphicResult.ErrorResult(); }
+          var taskButtonContainerHandle = TrayButtonNativeWindow.GetWindowsTaskbarTaskButtonContainerHandle(taskbarHandle);
+          if (taskButtonContainerHandle == IntPtr.Zero) { return MorphicResult.ErrorResult(); }
           //
           var notifyTrayHandle = TrayButtonNativeWindow.GetWindowsTaskbarNotificationTrayHandle(taskbarHandle);
           if (notifyTrayHandle == IntPtr.Zero) { return MorphicResult.ErrorResult(); }
@@ -1016,8 +1016,8 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
           var getTaskbarRectSuccess = PInvoke.User32.GetWindowRect(taskbarHandle, out var taskbarRect);
           if (getTaskbarRectSuccess == false) { return MorphicResult.ErrorResult(); }
           //
-          //var getTaskButtonContainerRectSuccess = PInvoke.User32.GetWindowRect(taskButtonContainerHandle, out var taskButtonContainerRect);
-          //if (getTaskButtonContainerRectSuccess == false) { return MorphicResult.ErrorResult(); }
+          var getTaskButtonContainerRectSuccess = PInvoke.User32.GetWindowRect(taskButtonContainerHandle, out var taskButtonContainerRect);
+          if (getTaskButtonContainerRectSuccess == false) { return MorphicResult.ErrorResult(); }
           //
           var getNotifyTrayRectSuccess = PInvoke.User32.GetWindowRect(notifyTrayHandle, out var notifyTrayRect);
           if (getNotifyTrayRectSuccess == false) { return MorphicResult.ErrorResult(); }
@@ -1037,14 +1037,27 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
           // establish the appropriate size for our tray button (i.e. same height/width as taskbar, and with an aspect ratio of 8:10)
           int trayButtonHeight;
           int trayButtonWidth;
+          // NOTE: on some computers, the taskbar and notify tray return an inaccurate size, but the task button container appears to always return the correct size; therefore we match our primary dimension to the taskbutton container's same dimension
           if (taskbarOrientation == Orientation.Horizontal)
           {
-               trayButtonHeight = taskbarRect.bottom - taskbarRect.top;
+               // option 1: base our primary dimension off of the taskbutton container's same dimension
+               trayButtonHeight = taskButtonContainerRect.bottom - taskButtonContainerRect.top;
+               //
+               // option 2: base our primary dimension off of the taskbar's same dimension
+               //trayButtonHeight = taskbarRect.bottom - taskbarRect.top;
+               //
+               // [and then scale the secondary dimension to 80% of the size of the primary dimension]
                trayButtonWidth = (int)((Double)trayButtonHeight * 0.8);
           }
           else
           {
-               trayButtonWidth = taskbarRect.right - taskbarRect.left;
+               // option 1: base our primary dimension off of the taskbutton container's same dimension
+               trayButtonWidth = taskButtonContainerRect.right - taskButtonContainerRect.left;
+               //
+               // option 2: base our primary dimension off of the taskbar's same dimension
+               //trayButtonWidth = taskbarRect.right - taskbarRect.left;
+               //
+               // [and then scale the secondary dimension to 80% of the size of the primary dimension]
                trayButtonHeight = (int)((Double)trayButtonWidth * 0.8);
           }
 
@@ -1054,11 +1067,13 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
           if (taskbarOrientation == Orientation.Horizontal)
           {
                trayButtonX = notifyTrayRect.left - trayButtonWidth;
-               trayButtonY = taskbarRect.top;
+			   // NOTE: if we have any issues with positioning, try to replace taskbarRect.bottom with taskButtoncontainerRect.bottom (if we chose option #1 for our size calculations above)
+               trayButtonY = taskbarRect.bottom - trayButtonHeight;
           }
           else
           {
-               trayButtonX = taskbarRect.left;
+			   // NOTE: if we have any issues with positioning, try to replace taskbarRect.bottom with taskButtoncontainerRect.right (if we chose option #1 for our size calculations above)
+               trayButtonX = taskbarRect.right - trayButtonWidth;
                trayButtonY = notifyTrayRect.top - trayButtonHeight;
           }
 
