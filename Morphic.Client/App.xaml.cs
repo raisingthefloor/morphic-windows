@@ -571,6 +571,12 @@ namespace Morphic.Client
             services.AddSingleton<Solutions>(s => Solutions.FromFile(s, AppPaths.GetAppFile("solutions.json5")));
         }
 
+        internal void SuppressTaskbarButtonResurfaceChecks(bool suppress)
+        {
+            // OBSERVATION: in the current implementation, the taskbar ("tray") button is owned by the menu control
+            this.morphicMenu?.SuppressTaskbarButtonResurfaceChecks(suppress);
+        }
+
         internal async Task Telemetry_RecordEventAsync(string Key) {
             if (ConfigurableFeatures.TelemetryIsEnabled == true)
             {

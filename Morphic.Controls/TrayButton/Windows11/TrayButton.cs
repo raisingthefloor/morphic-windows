@@ -171,6 +171,13 @@ internal class TrayButton : IDisposable
 
      //
 
+     public void SuppressTaskbarButtonResurfaceChecks(bool suppress)
+     {
+          _nativeWindow?.SuppressTaskbarButtonResurfaceChecks(suppress);
+     }
+
+     //
+
      private MorphicResult<MorphicUnit, MorphicUnit> CreateNativeWindow()
      {
           // if our native window already exists, return an error
