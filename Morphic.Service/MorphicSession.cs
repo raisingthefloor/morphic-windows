@@ -219,18 +219,6 @@ namespace Morphic.Service
             }
         }
 
-        public List<string> GetListOfAtSoftwareToInstall()
-        {
-            if (this.Preferences is not null)
-            {
-                return this.Solutions.GetListOfAtSoftwareToInstall(this.Preferences);
-            }
-            else
-            {
-                return new List<string>();
-            }
-        }
-
         /// <summary>
         /// Get a string preference
         /// </summary>

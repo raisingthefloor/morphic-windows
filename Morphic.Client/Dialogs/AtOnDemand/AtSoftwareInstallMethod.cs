@@ -35,10 +35,12 @@ public record AtSoftwareInstallMethod : MorphicAssociatedValueEnum<AtSoftwareIns
     // enum members
     public enum Values
     {
+        MultipleOfflineInstallers,
         ZipFileWithEmbeddedMsi/*(string pathToMsi)*/,
     }
 
     // functions to create member instances
+    public static AtSoftwareInstallMethod MultipleOfflineInstallers => new(Values.MultipleOfflineInstallers);
     public static AtSoftwareInstallMethod ZipFileWithEmbeddedMsi(string pathToMsi) => new(Values.ZipFileWithEmbeddedMsi) { PathToMsi = pathToMsi };
 
     // associated values

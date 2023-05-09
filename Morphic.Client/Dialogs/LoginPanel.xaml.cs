@@ -33,8 +33,6 @@ namespace Morphic.Client.Dialogs
     using Microsoft.Extensions.Logging;
     using Service;
     using Settings.SolutionsRegistry;
-    using System.Linq;
-    using Morphic.Client.Config;
 
     /// <summary>
     /// Login window for authenticating users and applying their settings
@@ -127,25 +125,14 @@ namespace Morphic.Client.Dialogs
                 }
 
                 // before we apply preferences, offer to install any necessary AT software using AToD
-                System.Collections.Generic.List<AtOnDemand.AtSoftwareDetails> atSoftwareToInstall = new();
-                if (ConfigurableFeatures.AtOnDemandIsEnabled == true)
-                {
-                    // get the list of AT software which could be installed on this computer
-                    var availableAtSoftwareToInstall = Morphic.Client.Dialogs.AtOnDemand.AtOnDemandHelpers.GetListOfAtSoftwareToInstall();
-                    //
-                    // capture a list of AT software which the user's cloud vault says should be installed (or at least offered to be installed)
-                    var userPreferencesAtSoftwareToInstall = this.morphicSession.GetListOfAtSoftwareToInstall();
-                    //
-                    // create a final list of AT software to offer to the user (based on the list of software which can be installed, filtered by the list of which software the user would like to be installed)
-                    atSoftwareToInstall = availableAtSoftwareToInstall.Where((atSoftware) => userPreferencesAtSoftwareToInstall.Contains(atSoftware.ShortName) == true).ToList();
-                }
+                var atSoftwareToInstall = Morphic.Client.Dialogs.AtOnDemand.AtOnDemandHelpers.GetListOfAtSoftwareToInstall();
 
                 // if some AT needs to be installed (or at least offered to the user for install), do so now; otherwise apply preferences and complete the login process
                 if (atSoftwareToInstall.Count > 0)
                 {
                     var selectAppsPanel = this.StepFrame.PushPanel<Morphic.Client.Dialogs.AtOnDemand.SelectAppsPanel>();
                     selectAppsPanel.ApplyPreferencesAfterLogin = this.ApplyPreferencesAfterLogin;
-                    selectAppsPanel.ListOfAtSoftware = atSoftwareToInstall!;
+                    selectAppsPanel.ListOfAtSoftware = atSoftwareToInstall;
                     selectAppsPanel.Completed += (o, args) => this.Completed?.Invoke(this, EventArgs.Empty);
                 }
                 else
