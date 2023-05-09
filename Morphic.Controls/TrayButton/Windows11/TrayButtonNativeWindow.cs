@@ -921,6 +921,13 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
                return;
           }
 
+          var trayButtonNativeWindowHandle = this.Handle;
+          if (trayButtonNativeWindowHandle == IntPtr.Zero)
+          {
+               // tray button window does not exist; there is no tool window to update
+               return;
+          }
+
           var getClientRectSuccess = PInvoke.User32.GetClientRect(this.Handle, out var trayButtonClientRect);
           if (getClientRectSuccess == false)
           {

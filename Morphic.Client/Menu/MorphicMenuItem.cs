@@ -1,7 +1,6 @@
 ﻿namespace Morphic.Client.Menu
 {
     using Config;
-    using CountlySDK;
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
@@ -64,45 +63,17 @@
             {
                 case MorphicMenuItemTelemetryType.Settings:
                     {
-                        var segmentation = new Segmentation();
-                        var settingCategoryName = telemetryCategory;
-                        if (settingCategoryName is not null)
-                        {
-                            segmentation.Add("category", settingCategoryName);
-                        }
-                        //
-                        segmentation.Add("eventSource", eventSource);
-                        //
-                        await App.Current.Countly_RecordEventAsync("systemSettings", 1, segmentation);
-                        //await App.Current.Countly_RecordEventAsync("systemSettings" + settingCategoryName);
+                        await App.Current.Telemetry_RecordEventAsync("systemSettings");
                     }
                     break;
                 case MorphicMenuItemTelemetryType.LearnMore:
                     {
-                        var segmentation = new Segmentation();
-                        var settingCategoryName = telemetryCategory;
-                        if (settingCategoryName is not null)
-                        {
-                            segmentation.Add("category", settingCategoryName);
-                        }
-                        //
-                        segmentation.Add("eventSource", eventSource);
-                        //
-                        await App.Current.Countly_RecordEventAsync("learnMore", 1, segmentation);
+                        await App.Current.Telemetry_RecordEventAsync("learnMore");
                     }
                     break;
                 case MorphicMenuItemTelemetryType.QuickDemoVideo:
                     {
-                        var segmentation = new Segmentation();
-                        var settingCategoryName = telemetryCategory;
-                        if (settingCategoryName is not null)
-                        {
-                            segmentation.Add("category", settingCategoryName);
-                        }
-                        //
-                        segmentation.Add("eventSource", eventSource);
-                        //
-                        await App.Current.Countly_RecordEventAsync("quickDemoVideo", 1, segmentation);
+                        await App.Current.Telemetry_RecordEventAsync("quickDemoVideo");
                     }
                     break;
                 default:
@@ -159,12 +130,7 @@
                         }
                         if (settingCategoryName is not null)
                         {
-                            var segmentation = new Segmentation();
-                            segmentation.Add("category", settingCategoryName);
-                            segmentation.Add("eventSource", eventSource);
-                            //
-                            await App.Current.Countly_RecordEventAsync("systemSettings", 1, segmentation);
-                            //await App.Current.Countly_RecordEventAsync("systemSettings" + settingCategoryName);
+                            await App.Current.Telemetry_RecordEventAsync("systemSettings");
                         }
                     }
                     break;

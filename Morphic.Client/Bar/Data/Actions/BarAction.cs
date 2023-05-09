@@ -10,7 +10,6 @@
 
 namespace Morphic.Client.Bar.Data.Actions
 {
-    using CountlySDK;
     using Microsoft.Extensions.Logging;
     using Morphic.Core;
     using Newtonsoft.Json;
@@ -92,17 +91,17 @@ namespace Morphic.Client.Bar.Data.Actions
             switch (this.Id)
             {
                 case "log-off":
-                    await App.Current.Countly_RecordEventAsync("signOut");
+                    await App.Current.Telemetry_RecordEventAsync("signOut");
                     break;
                 case "volume":
                     {
                         if (source == "up")
                         {
-                            await App.Current.Countly_RecordEventAsync("volumeUp");
+                            await App.Current.Telemetry_RecordEventAsync("volumeUp");
                         }
                         else if (source == "down")
                         {
-                            await App.Current.Countly_RecordEventAsync("volumeDown");
+                            await App.Current.Telemetry_RecordEventAsync("volumeDown");
                         }
                     }
                     break;
@@ -110,11 +109,11 @@ namespace Morphic.Client.Bar.Data.Actions
                     {
                         if (source == "on") 
                         {
-                            await App.Current.Countly_RecordEventAsync("magnifierShow");
+                            await App.Current.Telemetry_RecordEventAsync("magnifierShow");
                         }
                         else if (source == "off")
                         {
-                            await App.Current.Countly_RecordEventAsync("magnifierHide");
+                            await App.Current.Telemetry_RecordEventAsync("magnifierHide");
                         }
                     }
                     break;
@@ -122,11 +121,11 @@ namespace Morphic.Client.Bar.Data.Actions
                     {
                         if (source == "play")
                         {
-                            await App.Current.Countly_RecordEventAsync("readSelectedPlay");
+                            await App.Current.Telemetry_RecordEventAsync("readSelectedPlay");
                         } 
                         else if (source == "stop")
                         {
-                            await App.Current.Countly_RecordEventAsync("readSelectedStop");
+                            await App.Current.Telemetry_RecordEventAsync("readSelectedStop");
                         }
                     }
                     break;
@@ -134,10 +133,10 @@ namespace Morphic.Client.Bar.Data.Actions
                     switch (source)
                     {
                         case "on":
-                            await App.Current.Countly_RecordEventAsync("colorFiltersOn");
+                            await App.Current.Telemetry_RecordEventAsync("colorFiltersOn");
                             break;
                         case "off":
-                            await App.Current.Countly_RecordEventAsync("colorFiltersOff");
+                            await App.Current.Telemetry_RecordEventAsync("colorFiltersOff");
                             break;
                     }
                     break;
@@ -145,10 +144,10 @@ namespace Morphic.Client.Bar.Data.Actions
                     switch (source)
                     {
                         case "on":
-                            await App.Current.Countly_RecordEventAsync("darkModeOn");
+                            await App.Current.Telemetry_RecordEventAsync("darkModeOn");
                             break;
                         case "off":
-                            await App.Current.Countly_RecordEventAsync("darkModeOff");
+                            await App.Current.Telemetry_RecordEventAsync("darkModeOff");
                             break;
                     }
                     break;
@@ -156,10 +155,10 @@ namespace Morphic.Client.Bar.Data.Actions
                     switch (source)
                     {
                         case "100":
-                            await App.Current.Countly_RecordEventAsync("highContrastOn");
+                            await App.Current.Telemetry_RecordEventAsync("highContrastOn");
                             break;
                         case "1":
-                            await App.Current.Countly_RecordEventAsync("highContrastOff");
+                            await App.Current.Telemetry_RecordEventAsync("highContrastOff");
                             break;
                     }
                     break;
@@ -167,10 +166,10 @@ namespace Morphic.Client.Bar.Data.Actions
                     switch (source)
                     {
                         case "on":
-                            await App.Current.Countly_RecordEventAsync("nightModeOn");
+                            await App.Current.Telemetry_RecordEventAsync("nightModeOn");
                             break;
                         case "off":
-                            await App.Current.Countly_RecordEventAsync("nightModeOff");
+                            await App.Current.Telemetry_RecordEventAsync("nightModeOff");
                             break;
                     }
                     break;
@@ -181,11 +180,11 @@ namespace Morphic.Client.Bar.Data.Actions
                             {
                                 if (toggleState == true)
                                 {
-                                    await App.Current.Countly_RecordEventAsync("colorFiltersOn");
+                                    await App.Current.Telemetry_RecordEventAsync("colorFiltersOn");
                                 }
                                 else
                                 {
-                                    await App.Current.Countly_RecordEventAsync("colorFiltersOff");
+                                    await App.Current.Telemetry_RecordEventAsync("colorFiltersOff");
                                 }
                             }
                             break;
@@ -193,11 +192,11 @@ namespace Morphic.Client.Bar.Data.Actions
                             {
                                 if (toggleState == true)
                                 {
-                                    await App.Current.Countly_RecordEventAsync("highContrastOn");
+                                    await App.Current.Telemetry_RecordEventAsync("highContrastOn");
                                 }
                                 else
                                 {
-                                    await App.Current.Countly_RecordEventAsync("highContrastOff");
+                                    await App.Current.Telemetry_RecordEventAsync("highContrastOff");
                                 }
                             }
                             break;
@@ -205,48 +204,48 @@ namespace Morphic.Client.Bar.Data.Actions
                             {
                                 if (toggleState == true)
                                 {
-                                    await App.Current.Countly_RecordEventAsync("nightModeOn");
+                                    await App.Current.Telemetry_RecordEventAsync("nightModeOn");
                                 }
                                 else
                                 {
-                                    await App.Current.Countly_RecordEventAsync("nightModeOff");
+                                    await App.Current.Telemetry_RecordEventAsync("nightModeOff");
                                 }
                             }
                             break;
                         case "copy":
                             // NOTE: this is the basic bar variant of "copy" (below)
                             {
-                                await App.Current.Countly_RecordEventAsync("screenSnip");
+                                await App.Current.Telemetry_RecordEventAsync("screenSnip");
                             }
                             break;
                         case "dark-mode":
                             {
                                 if (toggleState == true)
                                 {
-                                    await App.Current.Countly_RecordEventAsync("darkModeOn");
+                                    await App.Current.Telemetry_RecordEventAsync("darkModeOn");
                                 }
                                 else
                                 {
-                                    await App.Current.Countly_RecordEventAsync("darkModeOff");
+                                    await App.Current.Telemetry_RecordEventAsync("darkModeOff");
                                 }
                             }
                             break;
                         case "openallusb":
-                            await App.Current.Countly_RecordEventAsync("openUsbDrives");
+                            await App.Current.Telemetry_RecordEventAsync("openUsbDrives");
                             break;
                         case "ejectallusb":
-                            await App.Current.Countly_RecordEventAsync("ejectUsbDrives");
+                            await App.Current.Telemetry_RecordEventAsync("ejectUsbDrives");
                             break;
                         case "volumeDown":
                             // NOTE: this is captured here because telemetry for volumeDown on the +3 bar is not captured by SendTelemetryForBarAction
-                            await App.Current.Countly_RecordEventAsync("volumeDown");
+                            await App.Current.Telemetry_RecordEventAsync("volumeDown");
                             break;
                         case "volumeMute":
-                            await App.Current.Countly_RecordEventAsync("volumeMute");
+                            await App.Current.Telemetry_RecordEventAsync("volumeMute");
                             break;
                         case "volumeUp":
                             // NOTE: this is captured here because telemetry for volumeUp on the +3 bar is not captured by SendTelemetryForBarAction
-                            await App.Current.Countly_RecordEventAsync("volumeUp");
+                            await App.Current.Telemetry_RecordEventAsync("volumeUp");
                             break;
                         case null:
                             // no tags; this is the Morphie button or another custom element with no known tags
@@ -258,12 +257,20 @@ namespace Morphic.Client.Bar.Data.Actions
                     }
                     break;
                 case "screen-zoom":
-                    // this action type's telemetry is logged elsewhere
+                    switch (source)
+                    {
+                         case "inc":
+                              await App.Current.Telemetry_RecordEventAsync("textSizeIncrease");
+                              break;
+                         case "dec":
+                              await App.Current.Telemetry_RecordEventAsync("textSizeDecrease");
+                              break;
+                    }
                     break;
                 case "snip":
                     // NOTE: this is the custom bar variant of "copy" (above)
                     {
-                        await App.Current.Countly_RecordEventAsync("screenSnip");
+                        await App.Current.Telemetry_RecordEventAsync("screenSnip");
                     }
                     break;
                 default:
@@ -338,7 +345,7 @@ namespace Morphic.Client.Bar.Data.Actions
             {
                 if (this.TelemetryEventName is not null) 
                 {
-                    await App.Current.Countly_RecordEventAsync(this.TelemetryEventName!);
+                    await App.Current.Telemetry_RecordEventAsync(this.TelemetryEventName!);
                 }
             }
         }

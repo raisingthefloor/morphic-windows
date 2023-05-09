@@ -700,7 +700,7 @@ namespace Morphic.Client.Bar.Data.Actions
                     // NOTE: ideally we would change this whole function into an async function (instead of using the Task.FromResult pattern)
                     Task.Run(async () =>
                     {
-                        await App.Current.Countly_RecordEventAsync(this.TelemetryEventName!);
+                        await App.Current.Telemetry_RecordEventAsync(this.TelemetryEventName!);
                     });
                 }
             }
