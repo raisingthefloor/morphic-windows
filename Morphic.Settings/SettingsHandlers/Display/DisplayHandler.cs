@@ -1,6 +1,5 @@
 ﻿namespace Morphic.Settings.SettingsHandlers.Display
 {
-    using CountlySDK;
     using Morphic.WindowsNative.Display;
     using SolutionsRegistry;
     using System;
@@ -106,42 +105,6 @@
                     //
                     // set the new percentage
                     _ = await targetDisplay.SetDpiScaleAsync(newDpiScale.Value);
-                    // report the display scale (percentage) change
-                    if (oldDpiScale is not null)
-                    {
-                        var segmentation = new Segmentation();
-                        if (recommendedDpiScale is not null)
-                        {
-                            var relativePercent = newDpiScale / recommendedDpiScale;
-                            segmentation.Add("scalePercent", ((int)(relativePercent * 100)).ToString());
-
-                            var recommendedDpiIndex = -currentDpiOffsetAndRange!.Value.MinimumDpiOffset;
-                            var relativeDotOffset = index - recommendedDpiIndex;
-                            segmentation.Add("dotOffset", relativeDotOffset.ToString());
-                        }
-                        //
-                        if (newDpiScale > oldDpiScale) {
-                            // NOTE: we can't call our main Countly logic from here (which skips Countly event recording if it's not enabled), so we just swallow any "not init'd" errors here
-                            try
-                            {
-                                await Countly.RecordEvent("textSizeIncrease", 1, segmentation);
-                            }
-                            catch (InvalidOperationException)
-                            {
-                            }
-                        }
-                        else
-                        {
-                            // NOTE: we can't call our main Countly logic from here (which skips Countly event recording if it's not enabled), so we just swallow any "not init'd" errors here
-                            try
-                            {
-                                await Countly.RecordEvent("textSizeDecrease", 1, segmentation);
-                            }
-                            catch (InvalidOperationException)
-                            {
-                            }
-                        }
-                    }
                 }
             }
 

@@ -12,7 +12,6 @@ namespace Morphic.Client.Bar.UI
 {
     using AppBarWindow;
     using BarControls;
-    using CountlySDK;
     using Data;
     using Microsoft.Win32;
     using Mouse = Morphic.WindowsNative.Input.Mouse;
@@ -575,9 +574,7 @@ namespace Morphic.Client.Bar.UI
             } 
             finally 
             {
-                var segmentation = new Segmentation();
-                segmentation.Add("eventSource", "closeButton");
-                await App.Current.Countly_RecordEventAsync("morphicBarHide", 1, segmentation);
+                await App.Current.Telemetry_RecordEventAsync("morphicBarHide");
             }
         }
     }
