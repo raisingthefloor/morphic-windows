@@ -921,6 +921,13 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
                return;
           }
 
+          var trayButtonNativeWindowHandle = this.Handle;
+          if (trayButtonNativeWindowHandle == IntPtr.Zero)
+          {
+               // tray button window does not exist; there is no tool window to update
+               return;
+          }
+
           var getClientRectSuccess = PInvoke.User32.GetClientRect(this.Handle, out var trayButtonClientRect);
           if (getClientRectSuccess == false)
           {
@@ -1038,6 +1045,9 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
           int trayButtonHeight;
           int trayButtonWidth;
           // NOTE: on some computers, the taskbar and notify tray return an inaccurate size, but the task button container appears to always return the correct size; therefore we match our primary dimension to the taskbutton container's same dimension
+          // NOTE: the inaccurate size returned by GetWindowRect may be due to our moving this class from the main application to a helper library (i.e. perhaps the pixel scaling isn't applying correctly), or it could just be a weird quirk on some computers.
+          //       [The GetWindowRect issue hapepns with both our own homebuilt PINVOKE methods as well as with PInvoke.User32.GetWindowRect; the function is returning the correct left, bottom and right positions of the taskbar and notify tray--but is
+          //       sometimes misrepresenting the top (i.e. height) value of both the taskbar and notify tray rects]
           if (taskbarOrientation == Orientation.Horizontal)
           {
                // option 1: base our primary dimension off of the taskbutton container's same dimension
@@ -1067,12 +1077,12 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
           if (taskbarOrientation == Orientation.Horizontal)
           {
                trayButtonX = notifyTrayRect.left - trayButtonWidth;
-			   // NOTE: if we have any issues with positioning, try to replace taskbarRect.bottom with taskButtoncontainerRect.bottom (if we chose option #1 for our size calculations above)
+               // NOTE: if we have any issues with positioning, try to replace taskbarRect.bottom with taskButtoncontainerRect.bottom (if we chose option #1 for our size calculations above)
                trayButtonY = taskbarRect.bottom - trayButtonHeight;
           }
           else
           {
-			   // NOTE: if we have any issues with positioning, try to replace taskbarRect.bottom with taskButtoncontainerRect.right (if we chose option #1 for our size calculations above)
+               // NOTE: if we have any issues with positioning, try to replace taskbarRect.bottom with taskButtoncontainerRect.right (if we chose option #1 for our size calculations above)
                trayButtonX = taskbarRect.right - trayButtonWidth;
                trayButtonY = notifyTrayRect.top - trayButtonHeight;
           }

@@ -22,8 +22,6 @@
 // * Consumer Electronics Association Foundation
 
 using AutoUpdaterDotNET;
-using CountlySDK;
-using CountlySDK.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -48,7 +46,6 @@ namespace Morphic.Client
     using Bar;
     using Bar.Data;
     using Config;
-    using CountlySDK.CountlyCommon;
     using Dialogs;
     using Menu;
     using Microsoft.Win32;
@@ -555,21 +552,9 @@ namespace Morphic.Client
             services.AddSingleton<Solutions>(s => Solutions.FromFile(s, AppPaths.GetAppFile("solutions.json5")));
         }
 
-        internal async Task Countly_RecordEventAsync(string Key) {
+        internal async Task Telemetry_RecordEventAsync(string Key) {
             if (ConfigurableFeatures.TelemetryIsEnabled == true)
             {
-                await Countly.RecordEvent(Key);
-
-                _telemetryClient?.EnqueueEvent(Key, null);
-            }
-        }
-
-        internal async Task Countly_RecordEventAsync(string Key, int Count, Segmentation Segmentation)
-        {
-            if (ConfigurableFeatures.TelemetryIsEnabled == true)
-            {
-                await Countly.RecordEvent(Key, Count, Segmentation);
-
                 _telemetryClient?.EnqueueEvent(Key, null);
             }
         }
@@ -724,27 +709,6 @@ namespace Morphic.Client
             var telemetryDeviceUuid = telemetryCompositeId.Substring(indexOfTelemetryDeviceUuid);
 
             return new TelemetryIdComponents() { CompositeId = telemetryCompositeId, SiteId = telemetrySiteId, DeviceUuid = telemetryDeviceUuid };
-        }
-
-        private async Task ConfigureCountlyAsync()
-        {
-            // TODO: Move metrics related things to own class.
-
-            // retrieve the telemetry composite ID for this device; if it doesn't exist then create a new one
-            var telemetryDeviceCompositeId = this.GetOrCreateTelemetryIdComponents().CompositeId;
-
-            IConfigurationSection? section = this.Configuration.GetSection("Countly");
-            CountlyConfig cc = new CountlyConfig
-            {
-                serverUrl = section["ServerUrl"],
-                appKey = section["AppKey"],
-                appVersion = BuildInfo.Current.InformationalVersion,
-                developerProvidedDeviceId = telemetryDeviceCompositeId
-            };
-
-            await Countly.Instance.Init(cc);
-            await Countly.Instance.SessionBegin();
-            CountlyBase.IsLoggingEnabled = true;
         }
 
         private string PrependSiteIdToTelemetryCompositeId(string value, string telemetrySiteId) 
@@ -928,16 +892,6 @@ namespace Morphic.Client
 
         #endregion Telemetry
 
-        private void RecordedException(Task task)
-        {
-            if (task.Exception is Exception e)
-            {
-                this.Logger.LogError("exception thrown while countly recording exception: {msg}", e.Message);
-                throw e;
-            }
-            this.Logger.LogDebug("successfully recorded countly exception");
-        }
-
         void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
         {
             // TODO: Improve error logging/reporting.
@@ -948,10 +902,6 @@ namespace Morphic.Client
             {
                 this.Logger.LogError("handled uncaught exception: {msg}", ex.Message);
                 this.Logger.LogError(ex.StackTrace);
-
-                Dictionary<String, String> extraData = new Dictionary<string, string>();
-                CountlyBase.RecordException(ex.Message, ex.StackTrace, extraData, true)
-                    .ContinueWith(this.RecordedException, TaskScheduler.FromCurrentSynchronizationContext());
             }
             catch (Exception)
             {
@@ -1090,7 +1040,6 @@ namespace Morphic.Client
 
             if (ConfigurableFeatures.TelemetryIsEnabled == true)
             {
-                await this.ConfigureCountlyAsync();
                 await this.ConfigureTelemetryAsync();
             }
 
@@ -1583,12 +1532,6 @@ namespace Morphic.Client
                         // dispose of the telemetry client; note that this may take up to 250ms (as the dispose function waits up to 250ms for the in-memory logs to be flushed to disk)
                         _telemetryClient.Dispose();
                     }
-                }
-                catch { }
-                //
-                try
-                {
-                    await Countly.Instance.SessionEnd();
                 }
                 catch { }
             }

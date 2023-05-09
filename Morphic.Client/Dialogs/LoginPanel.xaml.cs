@@ -114,7 +114,7 @@ namespace Morphic.Client.Dialogs
             else
             {
                 // login successful
-                await App.Current.Countly_RecordEventAsync("signIn");
+                await App.Current.Telemetry_RecordEventAsync("signIn");
 
                 // first, apply preferences
                 // NOTE: in the future, we should filter out any preferences which are specific to an AT application which is not yet installed (and then we can apply THOSE preferences immediately after installing those applications--or perhaps after reboot if the applications needed a reboot after installation and we haven't marked them as "okay to apply settings before reboot")
