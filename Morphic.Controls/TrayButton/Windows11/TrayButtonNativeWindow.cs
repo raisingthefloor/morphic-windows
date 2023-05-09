@@ -45,6 +45,9 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
      private System.Windows.Visibility _visibility;
      private bool _taskbarIsTopmost;
 
+     private System.Threading.Timer? _resurfaceTaskbarButtonTimer;
+     private static readonly TimeSpan RESURFACE_TASKBAR_BUTTON_INTERVAL_TIMESPAN = new TimeSpan(0, 0, 30);
+
      private ArgbImageNativeWindow? _argbImageNativeWindow = null;
      
      private IntPtr _tooltipWindowHandle;
@@ -225,6 +228,9 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
           // create the tooltip window (although we won't provide it with any actual text until/unless the text is set
           result._tooltipWindowHandle = result.CreateTooltipWindow();
           result._tooltipText = null;
+
+          // start a timer on the new instance, to resurface the Morphic tray button icon from time to time (just in case it gets hidden under the taskbar)
+          result._resurfaceTaskbarButtonTimer = new(result.ResurfaceTaskButtonTimerCallback, null, TrayButtonNativeWindow.RESURFACE_TASKBAR_BUTTON_INTERVAL_TIMESPAN, TrayButtonNativeWindow.RESURFACE_TASKBAR_BUTTON_INTERVAL_TIMESPAN);
 
           return MorphicResult.OkResult(result);
      }
@@ -738,7 +744,7 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
           {
                // if the window being moved was one of the task list windows (i.e. the windows that pop up above the taskbar), then our zorder has probably been pushed down.  To counteract this, we make sure our window is "TOPMOST"
                // NOTE: in initial testing, we set the window to TOPMOST in the ExStyles during handle construction.  This was not always successful in keeping the window topmost, however, possibly because the taskbar becomes "more" topmost sometimes.  So we re-set the window zorder here instead (without activating the window).
-               PInvoke.User32.SetWindowPos(this.Handle, WindowsApi.HWND_TOPMOST, 0, 0, 0, 0, PInvoke.User32.SetWindowPosFlags.SWP_NOMOVE | PInvoke.User32.SetWindowPosFlags.SWP_NOSIZE | PInvoke.User32.SetWindowPosFlags.SWP_NOACTIVATE);
+               this.BringTaskButtonTopmostWithoutActivating();
           }
           else if (className == "Shell_TrayWnd"/* || className == "ReBarWindow32"*/ || className == "TrayNotifyWnd")
           {
@@ -747,6 +753,31 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
                var repositionResult = this.RecalculatePositionAndRepositionWindow();
                Debug.Assert(repositionResult.IsSuccess, "Could not reposition Tray Button window");
           }
+     }
+
+     // NOTE: this function is used to temporary suppress taskbar button resurface checks (which are done when the app needs to place other content above the taskbar and above our control...such as a right-click context menu)
+     public void SuppressTaskbarButtonResurfaceChecks(bool suppress)
+     {
+          if (suppress == true)
+          {
+               _resurfaceTaskbarButtonTimer?.Dispose();
+               _resurfaceTaskbarButtonTimer = null;
+          }
+          else
+          {
+               _resurfaceTaskbarButtonTimer = new(this.ResurfaceTaskButtonTimerCallback, null, TrayButtonNativeWindow.RESURFACE_TASKBAR_BUTTON_INTERVAL_TIMESPAN, TrayButtonNativeWindow.RESURFACE_TASKBAR_BUTTON_INTERVAL_TIMESPAN);
+          }
+     }
+
+     // NOTE: just in case we miss any edge cases to resurface our button, we resurface it from time to time on a timer
+     private void ResurfaceTaskButtonTimerCallback(object? state)
+     {
+          this.BringTaskButtonTopmostWithoutActivating();
+     }
+
+     private void BringTaskButtonTopmostWithoutActivating()
+     {
+          PInvoke.User32.SetWindowPos(this.Handle, WindowsApi.HWND_TOPMOST, 0, 0, 0, 0, PInvoke.User32.SetWindowPosFlags.SWP_NOMOVE | PInvoke.User32.SetWindowPosFlags.SWP_NOSIZE | PInvoke.User32.SetWindowPosFlags.SWP_NOACTIVATE);
      }
 
      private void ObjectReorderWindowEventProc(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint idEventThread, uint dwmsEventTime)
@@ -765,10 +796,17 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
                className = getWindowClassNameResult.Value!;
           }
 
-          if (className == "Shell_TrayWnd")
+          // capture the desktop handle
+          var desktopHandle = PInvoke.User32.GetDesktopWindow();
+
+          // if the reordered window was either the taskbar or the desktop, update the _taskbarIsTopmost state; this will generally be triggered when an app goes full-screen (or full-screen mode is exited)
+          if (className == "Shell_TrayWnd" || hwnd == desktopHandle)
           {
+               // whenever the window ordering changes, resurface our control
+               this.BringTaskButtonTopmostWithoutActivating();
+
                // determine if the taskbar is topmost; the taskbar's topmost flag is removed when an app goes full-screen and should cover the taskbar (e.g. a full-screen video)
-               _taskbarIsTopmost = TrayButtonNativeWindow.IsTaskbarTopmost(hwnd);
+               _taskbarIsTopmost = TrayButtonNativeWindow.IsTaskbarTopmost(/*hwnd -- not passed in, since the handle could be the desktop */);
                //
                // NOTE: UpdateVisibility takes both the .Visibility property and the topmost state of the taskbar into consideration to determine whether or not to show the control
                this.UpdateVisibility();

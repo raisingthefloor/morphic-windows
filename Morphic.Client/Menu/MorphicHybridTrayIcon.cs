@@ -141,6 +141,13 @@ namespace Morphic.Client.Menu
             }
         }
 
+          //
+
+        public void SuppressTaskbarButtonResurfaceChecks(bool suppress)
+        {
+             _trayButton?.SuppressTaskbarButtonResurfaceChecks(suppress);
+        }
+
         //
 
         private void InitializeTrayIcon()
