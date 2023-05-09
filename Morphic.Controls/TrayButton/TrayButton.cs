@@ -208,4 +208,10 @@ public class TrayButton : IDisposable
                }
           }
      }
+
+     public void SuppressTaskbarButtonResurfaceChecks(bool suppress)
+     {
+          _trayButton?.SuppressTaskbarButtonResurfaceChecks(suppress);
+     }
+
 }

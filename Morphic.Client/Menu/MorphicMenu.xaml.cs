@@ -83,6 +83,15 @@
                 this.PlacementTarget = control;
             }
 
+            // to prevent the bottom of our menu from being covered, defer any "resurface task button" checks until our menu is closed; we do this because resurfacing the tray button--whose owner is the taskbar--can cause our menu to be covered by the taskbar; this is especially problematic when a timer does this frequently
+            App.Current.SuppressTaskbarButtonResurfaceChecks(true);
+            //
+            // [when the menu is closed, we will cancel the suppression so that our task button can continue resurfacing itself
+            this.Closed += (sender, eventArgs) => {
+                 App.Current.SuppressTaskbarButtonResurfaceChecks(false);
+            };
+            //
+            // open our menu
             this.IsOpen = true;
 
             await App.Current.Telemetry_RecordEventAsync("showMenu");
@@ -288,6 +297,12 @@
         #region TrayIcon
 
         private MorphicHybridTrayIcon? _trayIcon = null;
+
+        internal void SuppressTaskbarButtonResurfaceChecks(bool suppress)
+        {
+            // OBSERVATION: in the current implementation, the taskbar ("tray") button is owned by the menu control
+            _trayIcon?.SuppressTaskbarButtonResurfaceChecks(suppress);
+        }
 
         private void ShowTrayIcon()
         {
