@@ -68,6 +68,7 @@ namespace Morphic.WindowsNative.Display
             var displayName = getDisplayNameResult.Value!;
 
             // retrieve the buffer sizes needed to call QueryDisplayConfig (i.e. to get our displays' configs)
+            // OBSERVATION: while testing in a virtual machine, this function returned zero for both OUT parameters; that may not be related to VMs and it may have been temporary--but it's an issue we need to be aware of and which will cause QueryDisplayConfig to return an INVALID PARAMETERS error in the next call.
             uint numPathArrayElements;
             uint numModeInfoArrayElements;
             var getDisplayConfigBufferSizesSuccess = ExtendedPInvoke.GetDisplayConfigBufferSizes(ExtendedPInvoke.QueryDisplayConfigFlags.QDC_ONLY_ACTIVE_PATHS, out numPathArrayElements, out numModeInfoArrayElements);

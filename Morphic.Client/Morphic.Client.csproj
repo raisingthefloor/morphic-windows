@@ -103,7 +103,6 @@
 <!--    <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications" Version="7.1.2" /> -->
     <PackageReference Include="NHotkey.Wpf" Version="2.1.0" />
     <PackageReference Include="NReco.Logging.File" Version="1.1.5" />
-    <PackageReference Include="PInvoke.User32" Version="0.7.124" />
   </ItemGroup>
 
   <ItemGroup>
