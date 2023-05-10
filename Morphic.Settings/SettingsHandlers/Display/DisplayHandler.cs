@@ -143,7 +143,8 @@
 
             //List<Size> all = this.GetResolutions().ToList();
             var all = Display.GetDPIScales();
-            return Task.FromResult<object?>(all.IndexOf(scale.Value)); //all.IndexOf(this.display.GetResolution());
+            // TODO: in theory, the scale should match up--but it's a double (which could in theory have small rounding issues) and it could be a custom zoom level; we may want to consider returning the percentage and having OTHER code do the "dot" thing which can also highlight two dots (or the closest dot) if the numbers don't match up
+            return Task.FromResult<object?>(all?.IndexOf(scale.Value)); //all.IndexOf(this.display.GetResolution());
         }
 
         [Getter("zoomLevelCount")]
@@ -153,7 +154,7 @@
             //return Task.FromResult<object?>(this.GetResolutions().Length);
 
 			// method 2: get/set zoom level based on scale percentage
-            return Task.FromResult<object?>(Display.GetDPIScales().Count);
+            return Task.FromResult<object?>(Display.GetDPIScales()?.Count);
         }
     }
 }
