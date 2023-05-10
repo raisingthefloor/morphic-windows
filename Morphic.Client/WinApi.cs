@@ -189,6 +189,8 @@ namespace Morphic.Client
         public const int WS_EX_TOOLWINDOW = 0x00000080;
         public const int SPI_GETWORKAREA = 0x0030;
 
+        internal const uint WM_WININICHANGE = 0x001A;
+
 
         [DllImport("user32.dll", EntryPoint = "SetWindowLong")]
         private static extern IntPtr SetWindowLong32(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
@@ -202,8 +204,13 @@ namespace Morphic.Client
         [DllImport("user32.dll", EntryPoint = "GetWindowLongPtr")]
         private static extern IntPtr GetWindowLongPtr64(IntPtr hWnd, int nIndex);
 
+        // observation: wParam should be a UIntPtr (or an IntPtr) instead of an int
         [DllImport("user32.dll")]
         public static extern IntPtr SendMessage(IntPtr hWnd, int Msg, int wParam, IntPtr lParam);
+
+        // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-sendnotifymessagew
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        internal static extern bool SendNotifyMessage(IntPtr hWnd, uint Msg, UIntPtr wParam, IntPtr lParam);
 
         [DllImport("user32.dll", EntryPoint = "SystemParametersInfoW")]
         internal static extern bool SystemParametersInfoRect(int uiAction, int uiParam, ref RECT pvParam, int fWinIni);
@@ -383,7 +390,7 @@ namespace Morphic.Client
         [DllImport("dwmapi.dll")]
         internal static extern int DwmSetWindowAttribute(IntPtr hWnd, int attr, ref int attrValue, int attrSize);
 
-//        internal static readonly IntPtr HWND_BROADCAST = new IntPtr(0xffff);
+        internal static readonly IntPtr HWND_BROADCAST = new IntPtr(0xffff);
         internal static readonly IntPtr HWND_MESSAGE = new IntPtr(-3);
 
         #endregion
