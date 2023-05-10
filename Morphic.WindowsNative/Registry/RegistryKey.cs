@@ -798,6 +798,17 @@ namespace Morphic.WindowsNative
                                     var regNotifyChangeKeyValueResult = notificationPoolEntry.RegistryKey.RegisterWaitHandleForValueChangeNotification(notificationPoolEntry.WaitHandle);
                                     if (regNotifyChangeKeyValueResult.IsError == true)
                                     {
+                                        switch (regNotifyChangeKeyValueResult.Error!.Value)
+                                        {
+                                            case RegisterWaitHandleForValueChangeNotificationError.Values.ObjectDisposed:
+                                                // if the object has been disposed but the pool entry was not already marked for disposal, mark it for disposal now
+                                                notificationPoolEntry.MarkForDisposal();
+                                                break;
+                                            case RegisterWaitHandleForValueChangeNotificationError.Values.Win32Error:
+                                            default:
+                                                break;
+                                        }
+
                                         // NOTE: we may want to consider logging this error, for in-field diagnostics of notification failures
                                         Debug.Assert(false, "Error: could not re-register notification pool entry to watch for changes to values for registry key");
                                     }
@@ -808,7 +819,27 @@ namespace Morphic.WindowsNative
                 }
             }
 
-            private MorphicResult<MorphicUnit, MorphicUnit> RegisterWaitHandleForValueChangeNotification(WaitHandle waitHandle)
+            public record RegisterWaitHandleForValueChangeNotificationError : MorphicAssociatedValueEnum<RegisterWaitHandleForValueChangeNotificationError.Values>
+            {
+                // enum members
+                public enum Values
+                {
+                    ObjectDisposed,
+                    Win32Error,
+                }
+
+                // functions to create member instances
+                public static RegisterWaitHandleForValueChangeNotificationError ObjectDisposed => new(Values.ObjectDisposed);
+                public static RegisterWaitHandleForValueChangeNotificationError Win32Error(int win32ErrorCode) => new(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
+
+                // associated values
+                public int? Win32ErrorCode { get; private set; }
+
+                // verbatim required constructor implementation for MorphicAssociatedValueEnums
+                private RegisterWaitHandleForValueChangeNotificationError(Values value) : base(value) { }
+            }
+
+            private MorphicResult<MorphicUnit, RegisterWaitHandleForValueChangeNotificationError> RegisterWaitHandleForValueChangeNotification(WaitHandle waitHandle)
             {
                 // NOTE: registration will auto-unregister after the wait handle is triggered once.  Registration will also auto-unregister when the RegistryKey is closed/disposed.
                 PInvoke.Win32ErrorCode regNotifyErrorCode;
@@ -828,7 +859,7 @@ namespace Morphic.WindowsNative
                 }
                 catch (ObjectDisposedException)
                 {
-                    return MorphicResult.ErrorResult();
+                    return MorphicResult.ErrorResult(RegisterWaitHandleForValueChangeNotificationError.ObjectDisposed);
                 }
                 //
                 switch (regNotifyErrorCode)
@@ -836,7 +867,7 @@ namespace Morphic.WindowsNative
                     case PInvoke.Win32ErrorCode.ERROR_SUCCESS:
                         return MorphicResult.OkResult();
                     default:
-                        return MorphicResult.ErrorResult();
+                        return MorphicResult.ErrorResult(RegisterWaitHandleForValueChangeNotificationError.Win32Error((int)regNotifyErrorCode));
                 }
             }
         }
