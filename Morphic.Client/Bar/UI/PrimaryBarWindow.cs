@@ -357,15 +357,30 @@ namespace Morphic.Client.Bar.UI
                 }
             }
 
-            if (workAreaAsNullable is not null)
-            {
-                return workAreaAsNullable.Value;
-            }
-            else
+            if (workAreaAsNullable is null)
             {
                 // not ideal, but we can fall back to the SystemParameters' WorkArea property (which is often wrong because of changing resolutions/zoom levels during program runtime)
-                return SystemParameters.WorkArea;
+                var systemParametersWorkArea = SystemParameters.WorkArea;
+
+                var wpfMonitorScale = this.GetWpfDisplayScale();
+                if (wpfMonitorScale is not null)
+                {
+                    workAreaAsNullable = new Rect(
+                        (double)systemParametersWorkArea.X / wpfMonitorScale.Value,
+                        (double)systemParametersWorkArea.Y / wpfMonitorScale.Value,
+                        (double)systemParametersWorkArea.Width / wpfMonitorScale.Value,
+                        (double)systemParametersWorkArea.Height / wpfMonitorScale.Value
+                    );
+                }
+                else
+                {
+                    // NOTE: SystemParameters.WorkArea appears to return physical screen resolution in some or all scenarios, instead of the virtual pixels that WPF uses to align our window; this can result in the MorphicBar going below or to the right of the actual display screen real estate).  This was tested in Win10 1809 x64 in a VM.
+                    workAreaAsNullable = systemParametersWorkArea;
+                }
             }
+
+            // NOTE: at this point, workAreaAsNullable is not null
+            return workAreaAsNullable!.Value;
         }
 
         /// <summary>Moves the window to the nearest corner.</summary>
