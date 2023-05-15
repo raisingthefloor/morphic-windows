@@ -141,7 +141,7 @@ namespace Morphic.Client.Menu
             }
         }
 
-          //
+        //
 
         public void SuppressTaskbarButtonResurfaceChecks(bool suppress)
         {

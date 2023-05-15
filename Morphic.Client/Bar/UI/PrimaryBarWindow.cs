@@ -307,53 +307,64 @@ namespace Morphic.Client.Bar.UI
             Rect? workAreaAsNullable = null;
 
             var barWindowInteropHelper = new WindowInteropHelper(this);
-            var barWindowHandle = barWindowInteropHelper.EnsureHandle();
-
-            // get the display which contains the majority of our window's frame
-            var getCurrentDisplayResult = Morphic.WindowsNative.Display.Display.GetDisplayForWindow(barWindowHandle);
-            if (getCurrentDisplayResult.IsSuccess == true)
+            IntPtr barWindowHandle;
+            try
             {
-                var currentDisplay = getCurrentDisplayResult.Value!;
-
-                var getWorkAreaRectangleInPixelsResult = currentDisplay.GetWorkAreaRectangleInPixels();
-                if (getWorkAreaRectangleInPixelsResult.IsSuccess == true)
+                barWindowHandle = barWindowInteropHelper.EnsureHandle();
+            }
+            catch (InvalidOperationException)
+            {
+                // NOTE: this error can happen if the window is currently being torn down or rebuilt (such as when switching between bars, signing in, etc.)
+                barWindowHandle = IntPtr.Zero;
+            }
+            if (barWindowHandle != IntPtr.Zero)
+            {
+                // get the display which contains the majority of our window's frame
+                var getCurrentDisplayResult = Morphic.WindowsNative.Display.Display.GetDisplayForWindow(barWindowHandle);
+                if (getCurrentDisplayResult.IsSuccess == true)
                 {
-                    var physicalWorkArea = getWorkAreaRectangleInPixelsResult.Value!;
+                    var currentDisplay = getCurrentDisplayResult.Value!;
 
-                    // NOTE: WPF is sometimes out of sync (longer-term) with the actual system DPI, so we have chosen not to use this (far more accurate)
-                    //       method for now; WPF thinks the virtual screen is bigger or smaller than it actually is
-                    //// method 1: get monitor scale percentage from Windows API (including reverse-engineered 'dpiOffset')
-                    //var actualMonitorScale = Morphic.WindowsNative.Display.Display.GetMonitorScalePercentage(null);
-                    //if (actualMonitorScale is not null)
-                    //{
-                    //    workAreaAsNullable = new Rect(
-                    //        (double)physicalWorkArea.Value.X / actualMonitorScale.Value,
-                    //        (double)physicalWorkArea.Value.Y / actualMonitorScale.Value,
-                    //        (double)physicalWorkArea.Value.Width / actualMonitorScale.Value,
-                    //        (double)physicalWorkArea.Value.Height / actualMonitorScale.Value
-                    //        );
-                    //}
-
-                    // method 2: get monitor scale using WPF primitives (which should match up with what WPF expects for our positioning)
-                    var wpfMonitorScale = this.GetWpfDisplayScale();
-                    if (wpfMonitorScale is not null)
+                    var getWorkAreaRectangleInPixelsResult = currentDisplay.GetWorkAreaRectangleInPixels();
+                    if (getWorkAreaRectangleInPixelsResult.IsSuccess == true)
                     {
-                        workAreaAsNullable = new Rect(
-                            (double)physicalWorkArea.X / wpfMonitorScale.Value,
-                            (double)physicalWorkArea.Y / wpfMonitorScale.Value,
-                            (double)physicalWorkArea.Width / wpfMonitorScale.Value,
-                            (double)physicalWorkArea.Height / wpfMonitorScale.Value
-                            );
-                    }
+                        var physicalWorkArea = getWorkAreaRectangleInPixelsResult.Value!;
 
-                    // method 3: get monitor scale using WinForms primitives
-                    //var winformsMonitorScale = this.GetWinFormsDisplayScale();
-                    //workAreaAsNullable = new Rect(
-                    //    (double)physicalWorkArea.Value.X / winformsMonitorScale,
-                    //    (double)physicalWorkArea.Value.Y / winformsMonitorScale,
-                    //    (double)physicalWorkArea.Value.Width / winformsMonitorScale,
-                    //    (double)physicalWorkArea.Value.Height / winformsMonitorScale
-                    //    );
+                        // NOTE: WPF is sometimes out of sync (longer-term) with the actual system DPI, so we have chosen not to use this (far more accurate)
+                        //       method for now; WPF thinks the virtual screen is bigger or smaller than it actually is
+                        //// method 1: get monitor scale percentage from Windows API (including reverse-engineered 'dpiOffset')
+                        //var actualMonitorScale = Morphic.WindowsNative.Display.Display.GetMonitorScalePercentage(null);
+                        //if (actualMonitorScale is not null)
+                        //{
+                        //    workAreaAsNullable = new Rect(
+                        //        (double)physicalWorkArea.Value.X / actualMonitorScale.Value,
+                        //        (double)physicalWorkArea.Value.Y / actualMonitorScale.Value,
+                        //        (double)physicalWorkArea.Value.Width / actualMonitorScale.Value,
+                        //        (double)physicalWorkArea.Value.Height / actualMonitorScale.Value
+                        //        );
+                        //}
+
+                        // method 2: get monitor scale using WPF primitives (which should match up with what WPF expects for our positioning)
+                        var wpfMonitorScale = this.GetWpfDisplayScale();
+                        if (wpfMonitorScale is not null)
+                        {
+                            workAreaAsNullable = new Rect(
+                                (double)physicalWorkArea.X / wpfMonitorScale.Value,
+                                (double)physicalWorkArea.Y / wpfMonitorScale.Value,
+                                (double)physicalWorkArea.Width / wpfMonitorScale.Value,
+                                (double)physicalWorkArea.Height / wpfMonitorScale.Value
+                                );
+                        }
+
+                        // method 3: get monitor scale using WinForms primitives
+                        //var winformsMonitorScale = this.GetWinFormsDisplayScale();
+                        //workAreaAsNullable = new Rect(
+                        //    (double)physicalWorkArea.Value.X / winformsMonitorScale,
+                        //    (double)physicalWorkArea.Value.Y / winformsMonitorScale,
+                        //    (double)physicalWorkArea.Value.Width / winformsMonitorScale,
+                        //    (double)physicalWorkArea.Value.Height / winformsMonitorScale
+                        //    );
+                    }
                 }
             }
 
