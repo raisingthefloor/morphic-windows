@@ -201,11 +201,17 @@
   <data name="CreateAccountHyperlink_Text" xml:space="preserve">
     <value>Don't have an account yet?</value>
   </data>
+  <data name="DoneButton_Text" xml:space="preserve">
+    <value>Done</value>
+  </data>
   <data name="EmailFieldLabel_Text" xml:space="preserve">
     <value>Email Address</value>
   </data>
   <data name="ForgotPasswordHyperlink_Text" xml:space="preserve">
     <value>Forgot your password - Or not sure if you have an account?</value>
+  </data>
+  <data name="InstallButton_Text" xml:space="preserve">
+    <value>Install</value>
   </data>
   <data name="LearnMoreAboutMorphicHyperlink_Text" xml:space="preserve">
     <value>Learn More About Morphic</value>
@@ -393,6 +399,9 @@
   <data name="SignInWindow_Title" xml:space="preserve">
     <value>Sign in to Morphic</value>
   </data>
+  <data name="SkipAllButton_Text" xml:space="preserve">
+    <value>Skip All</value>
+  </data>
   <data name="TakeYourSettingsAnywhereHeaderLabel_Content" xml:space="preserve">
     <value>Take Your Settings Anywhere</value>
   </data>
@@ -413,6 +422,9 @@
   </data>
   <data name="TravelWindow_Title" xml:space="preserve">
     <value>Travel with Settings</value>
+  </data>
+  <data name="UntitledWindow_Title" xml:space="preserve">
+    <value>Morphic</value>
   </data>
   <data name="UsernameField_AutomationHelpText" xml:space="preserve">
     <value>Enter your email address</value>

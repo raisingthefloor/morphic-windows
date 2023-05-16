@@ -3,7 +3,9 @@
     using Microsoft.Extensions.DependencyInjection;
     using Morphic.Core;
     using SolutionsRegistry;
+    using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Threading.Tasks;
 
     [SettingsHandlerType("systemSettings", typeof(SystemSettingsHandler))]
@@ -91,8 +93,16 @@
             // Cache the instance, in case it's re-used.
             if (!settingCache.TryGetValue(settingName, out SystemSettingItem? settingItem))
             {
-                settingItem = new SystemSettingItem(settingName, false);
-                settingCache[settingName] = settingItem;
+                try 
+                {
+                    settingItem = new SystemSettingItem(settingName);
+                    settingCache[settingName] = settingItem;
+                }
+                catch (Exception ex)
+                {
+                    Debug.Assert(false, "Tried to get setting item; got exception: " + ex.Message);
+                    return null;
+                }
             }
 
             return settingItem;

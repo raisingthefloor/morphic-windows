@@ -33,10 +33,10 @@ namespace Morphic.WindowsNative.Devices
     public class Device
     {
         private PInvoke.SetupApi.SafeDeviceInfoSetHandle DeviceInfoSetHandle;
-        public string DeviceInstanceId { get; private set; }
+        public string DeviceInstanceId { get; private init; }
         // NOTE: in the future, if we want to save the devicePaths for all nodes (including parents/children), we should change DevicePath to be non-optional
-        public string? DevicePath { get; private set; }
-        internal PInvoke.SetupApi.SP_DEVINFO_DATA DeviceInfoData { get; private set; }
+        public string? DevicePath { get; private init; }
+        internal PInvoke.SetupApi.SP_DEVINFO_DATA DeviceInfoData { get; private init; }
         public bool IsRemovable => (this.Capabilities & ExtendedPInvoke.CmDeviceCapabilitiesFlags.Removable) != 0;
         //
         private ExtendedPInvoke.CmDeviceCapabilitiesFlags Capabilities;

@@ -20,8 +20,8 @@ namespace Morphic.Client.Bar
     using System.Threading.Tasks;
     using System.Windows;
     using Config;
-    using Core;
-    using Core.Community;
+    using Morphic.Core.Legacy;
+    using Morphic.Core.Legacy.Community;
     using Data;
     using Dialogs;
     using Microsoft.Extensions.Logging;

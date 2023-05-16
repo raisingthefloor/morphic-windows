@@ -21,6 +21,7 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
+using Morphic.Core.Legacy;
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
@@ -34,7 +35,7 @@ namespace Morphic.Core.Tests
         public void TestJsonDeserialize()
         {
             //testing fully populated
-            //TODO: get default serialization working
+			//TODO: get default serialization working
             TestResource tr = new TestResource();
             var options = new JsonSerializerOptions();
             options.Converters.Add(new JsonElementInferredTypeConverter());

@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2021 Raising the Floor - International
+﻿// Copyright 2020-2022 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -21,26 +21,26 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Morphic.WindowsNative.Ini
+namespace Morphic.WindowsNative.Ini.Lexer
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+
     internal record IniToken
     {
         public IniTokenKind Kind;
         public List<char> Lexeme;
 
-        public IniLineTerminatorOption? LineTerminator;
+        public IniExplicitLineTerminatorOption LineTerminator;
         
         public List<IniTrivia> LeadingTrivia;
         public List<IniTrivia> TrailingTrivia;
 
         // NOTE: for convenience, we allow callers to pass in a null list for leading/trailing trivia, but we always translate nulls to empty lists
-        public IniToken(IniTokenKind kind, List<char> lexeme, IniLineTerminatorOption lineTerminator, List<IniTrivia>? leadingTrivia, List<IniTrivia>? trailingTrivia)
+    	public IniToken(IniTokenKind kind, List<char> lexeme, IniExplicitLineTerminatorOption lineTerminator, List<IniTrivia>? leadingTrivia, List<IniTrivia>? trailingTrivia)
         {
             this.Kind = kind;
             this.Lexeme = lexeme;

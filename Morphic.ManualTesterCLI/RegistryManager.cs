@@ -99,7 +99,7 @@ namespace Morphic.ManualTesterCLI
             {
                 var setting = solutions.GetSetting(solution, preference);
                 var type = setting.DataType;
-                if(type == Settings.SettingsHandlers.SettingType.Unknown)
+                if(type == Morphic.Settings.SettingsHandlers.SettingType.Unknown)
                 {
                     Console.WriteLine("[UNKNOWN DATA TYPE]");
                     return;
@@ -128,17 +128,17 @@ namespace Morphic.ManualTesterCLI
                 bool success = false;
                 switch(setting.DataType)
                 {
-                    case Settings.SettingsHandlers.SettingType.Bool:
+                    case Morphic.Settings.SettingsHandlers.SettingType.Bool:
                         if (value.ToLower() == "0" || value.ToLower() == "false") success = (await setting.SetValueAsync(false)).IsSuccess;
                         else if (value.ToLower() == "1" || value.ToLower() == "true") success = (await setting.SetValueAsync(true)).IsSuccess;
                         break;
-                    case Settings.SettingsHandlers.SettingType.Int:
+                    case Morphic.Settings.SettingsHandlers.SettingType.Int:
                         success = (await setting.SetValueAsync(int.Parse(value))).IsSuccess;
                         break;
-                    case Settings.SettingsHandlers.SettingType.Real:
+                    case Morphic.Settings.SettingsHandlers.SettingType.Real:
                         success = (await setting.SetValueAsync(double.Parse(value))).IsSuccess;
                         break;
-                    case Settings.SettingsHandlers.SettingType.String:
+                    case Morphic.Settings.SettingsHandlers.SettingType.String:
                         success = (await setting.SetValueAsync(value)).IsSuccess;
                         break;
                 }

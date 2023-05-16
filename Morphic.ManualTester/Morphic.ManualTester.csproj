@@ -1,13 +1,15 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+	<TargetFramework>net6.0-windows10.0.22621.0</TargetFramework>
+	<TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+	  <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+	<Nullable>enable</Nullable>
+	  <Platforms>x86;x64;ARM64</Platforms>
     <UseWPF>true</UseWPF>
-    <Nullable>enable</Nullable>
     <ApplicationIcon>Icon.ico</ApplicationIcon>
     <AssemblyName>MorphicManualTester</AssemblyName>
-    <LangVersion>9.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,10 +19,11 @@
 
   <ItemGroup>
     <PackageReference Include="EO.WebBrowser" Version="20.1.45" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Morphic.Core\Morphic.Core.csproj" />
+    <ProjectReference Include="..\Morphic.Core.Legacy\Morphic.Core.Legacy.csproj" />
     <ProjectReference Include="..\Morphic.Integrations.Office\Morphic.Integrations.Office.csproj" />
     <ProjectReference Include="..\Morphic.Settings\Morphic.Settings.csproj" />
     <ProjectReference Include="..\Morphic.WindowsNative\Morphic.WindowsNative.csproj" />

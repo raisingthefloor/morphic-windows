@@ -4,7 +4,7 @@
 // compliance with this License.
 //
 // You may obtain a copy of the License at
-// https://github.com/raisingthefloor/morphic-windows/blob/master/LICENSE.txt
+// https://github.com/raisingthefloor/morphic-windowsnative-lib-cs/blob/main/LICENSE
 //
 // The R&D leading to these results received funding from the:
 // * Rehabilitation Services Administration, US Dept. of Education under
@@ -35,7 +35,7 @@ namespace Morphic.WindowsNative
         }
 
         // functions to create member instances
-        public static Win32ApiError Win32Error(uint win32ErrorCode) => new Win32ApiError(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
+        public static Win32ApiError Win32Error(uint win32ErrorCode) => new(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
 
         // associated values
         public uint? Win32ErrorCode { get; private set; }

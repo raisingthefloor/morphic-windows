@@ -1,19 +1,19 @@
-﻿// Copyright 2020-2021 Raising the Floor - International
+﻿// Copyright 2020-2022 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
 //
 // You may obtain a copy of the License at
-// https://github.com/GPII/universal/blob/master/LICENSE.txt
+// https://github.com/raisingthefloor/morphic-windows/blob/master/LICENSE.txt
 //
 // The R&D leading to these results received funding from the:
-// * Rehabilitation Services Administration, US Dept. of Education under 
+// * Rehabilitation Services Administration, US Dept. of Education under
 //   grant H421A150006 (APCP)
-// * National Institute on Disability, Independent Living, and 
+// * National Institute on Disability, Independent Living, and
 //   Rehabilitation Research (NIDILRR)
-// * Administration for Independent Living & Dept. of Education under grants 
+// * Administration for Independent Living & Dept. of Education under grants
 //   H133E080022 (RERC-IT) and H133E130028/90RE5003-01-00 (UIITA-RERC)
-// * European Union's Seventh Framework Programme (FP7/2007-2013) grant 
+// * European Union's Seventh Framework Programme (FP7/2007-2013) grant
 //   agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 // * William and Flora Hewlett Foundation
 // * Ontario Ministry of Research and Innovation
@@ -22,13 +22,12 @@
 // * Consumer Electronics Association Foundation
 
 using AutoUpdaterDotNET;
-using CountlySDK;
-using CountlySDK.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Morphic.Core;
+using Morphic.Core.Legacy;
 using Morphic.Service;
 using NHotkey.Wpf;
 using System;
@@ -47,11 +46,10 @@ namespace Morphic.Client
     using Bar;
     using Bar.Data;
     using Config;
-    using CountlySDK.CountlyCommon;
     using Dialogs;
     using Menu;
     using Microsoft.Win32;
-    using Morphic.Telemetry;
+    using Morphic.TelemetryClient;
     using Morphic.WindowsNative.OsVersion;
     using Settings.SettingsHandlers;
     using Settings.SolutionsRegistry;
@@ -132,7 +130,7 @@ namespace Morphic.Client
 
         #region Configuration & Startup
 
-        private Timer _telemetryHeartbeatTimer;
+        private Timer? _telemetryHeartbeatTimer = null;
 
         public App()
         {
@@ -170,6 +168,7 @@ namespace Morphic.Client
                     public string? scope { get; set; }
                 }
                 //
+                public EnabledFeature? atOnDemand { get; set; }
                 public EnabledFeature? autorunAfterLogin { get; set; }
                 public EnabledFeature? checkForUpdates { get; set; }
                 public EnabledFeature? cloudSettingsTransfer { get; set; }
@@ -189,6 +188,7 @@ namespace Morphic.Client
         //
         private struct CommonConfigurationContents
         {
+            public bool AtOnDemandIsEnabled;
             public ConfigurableFeatures.AutorunConfigOption? AutorunConfig;
             public bool CheckForUpdatesIsEnabled;
             public bool CloudSettingsTransferIsEnabled;
@@ -202,6 +202,9 @@ namespace Morphic.Client
             // set up default configuration
             var result = new CommonConfigurationContents();
             //
+			// at on demand
+            result.AtOnDemandIsEnabled = true;
+			//
             // autorun
             result.AutorunConfig = null;
             //
@@ -293,6 +296,20 @@ namespace Morphic.Client
                             return result;
                     }
                 }
+            }
+
+            // capture the at on demand "is enabled" setting
+            if (deserializedJson.features?.atOnDemand?.enabled is not null)
+            {
+                 result.AtOnDemandIsEnabled = deserializedJson.features.atOnDemand.enabled.Value;
+            }
+            else
+            {
+                 // NOTE: for version 0 of the config.json file, we set AtOnDemandIsEnabled to FALSE by default
+                 if (deserializedJson.version == 0)
+                 {
+                    result.AtOnDemandIsEnabled = false;
+                 }
             }
 
             // capture the check for updates "is enabled" setting
@@ -543,27 +560,27 @@ namespace Morphic.Client
             services.AddTransient<RestoreWindow>();
             services.AddSingleton<Backups>();
             services.AddTransient<BarData>();
+            //
+            // AToD-related
+            services.AddTransient<Morphic.Client.Dialogs.AtOnDemand.SelectAppsPanel>();
+            services.AddTransient<Morphic.Client.Dialogs.AtOnDemand.DownloadAndInstallAppsPanel>();
+            services.AddTransient<Morphic.Client.Dialogs.AtOnDemand.AtOnDemandCompletePanel>();
+            //
             services.AddSingleton<BarPresets>(s => BarPresets.Default);
             services.AddSolutionsRegistryServices();
             services.AddSingleton<Solutions>(s => Solutions.FromFile(s, AppPaths.GetAppFile("solutions.json5")));
         }
 
-        internal async Task Countly_RecordEventAsync(string Key) {
-            if (ConfigurableFeatures.TelemetryIsEnabled == true)
-            {
-                await Countly.RecordEvent(Key);
-
-                _telemetryClient?.EnqueueActionMessage(Key, null);
-            }
+        internal void SuppressTaskbarButtonResurfaceChecks(bool suppress)
+        {
+            // OBSERVATION: in the current implementation, the taskbar ("tray") button is owned by the menu control
+            this.morphicMenu?.SuppressTaskbarButtonResurfaceChecks(suppress);
         }
 
-        internal async Task Countly_RecordEventAsync(string Key, int Count, Segmentation Segmentation)
-        {
+        internal async Task Telemetry_RecordEventAsync(string Key) {
             if (ConfigurableFeatures.TelemetryIsEnabled == true)
             {
-                await Countly.RecordEvent(Key, Count, Segmentation);
-
-                _telemetryClient?.EnqueueActionMessage(Key, null);
+                _telemetryClient?.EnqueueEvent(Key, null);
             }
         }
 
@@ -719,27 +736,6 @@ namespace Morphic.Client
             return new TelemetryIdComponents() { CompositeId = telemetryCompositeId, SiteId = telemetrySiteId, DeviceUuid = telemetryDeviceUuid };
         }
 
-        private async Task ConfigureCountlyAsync()
-        {
-            // TODO: Move metrics related things to own class.
-
-            // retrieve the telemetry composite ID for this device; if it doesn't exist then create a new one
-            var telemetryDeviceCompositeId = this.GetOrCreateTelemetryIdComponents().CompositeId;
-
-            IConfigurationSection? section = this.Configuration.GetSection("Countly");
-            CountlyConfig cc = new CountlyConfig
-            {
-                serverUrl = section["ServerUrl"],
-                appKey = section["AppKey"],
-                appVersion = BuildInfo.Current.InformationalVersion,
-                developerProvidedDeviceId = telemetryDeviceCompositeId
-            };
-
-            await Countly.Instance.Init(cc);
-            await Countly.Instance.SessionBegin();
-            CountlyBase.IsLoggingEnabled = true;
-        }
-
         private string PrependSiteIdToTelemetryCompositeId(string value, string telemetrySiteId) 
         {
             var telemetryDeviceUuid = value;
@@ -816,7 +812,7 @@ namespace Morphic.Client
 
         private Guid? _telemetrySessionId = null;
 
-        private void ConfigureTelemetry()
+        private async Task ConfigureTelemetryAsync()
         {
             // TODO: Move metrics-related things to their own class.
 
@@ -833,40 +829,81 @@ namespace Morphic.Client
             var mqttUsername = section["AppName"];
             var mqttAnonymousPassword = section["AppKey"];
 
-            var mqttConfig = new MorphicTelemetryClient.WebsocketTelemetryClientConfig()
+            var mqttConfig = new MorphicTelemetryClient.WebsocketTelemetryClientConfig(
+                 hostname: mqttHostname,
+                 port: 443,
+                 path: "/ws",
+                 clientId: mqttClientId,
+                 username: mqttUsername,
+                 password: mqttAnonymousPassword,
+                 useTls: true
+            );
+            MorphicTelemetryClient? telemetryClient = null;
+            //
+            // TODO: place this log in the 
+            string? userLocalAppDirectory = null;
+            try
             {
-                 Hostname = mqttHostname,
-                 Port = 443,
-                 Path = "/ws",
-                 ClientId = mqttClientId,
-                 Username = mqttUsername,
-                 Password = mqttAnonymousPassword,
-                 UseTls = true
-            };
-            var telemetryClient = new MorphicTelemetryClient(mqttConfig);
-            telemetryClient.SiteId = telemetrySiteId;
+                userLocalAppDirectory = Morphic.Client.Config.AppPaths.UserLocalConfigDir;
+                if (System.IO.Directory.Exists(userLocalAppDirectory) == false)
+                {
+                    System.IO.Directory.CreateDirectory(userLocalAppDirectory);
+                }
+            }
+            catch { } 
+            //
+            if (userLocalAppDirectory is not null)
+            {
+                var pathToOnDiskTransactionLog = Path.Combine(userLocalAppDirectory, "telemetry.log");
+                var createTelemetryClientResult = await MorphicTelemetryClient.CreateUsingOnDiskTransactionLogAsync(mqttConfig, pathToOnDiskTransactionLog);
+                if (createTelemetryClientResult.IsSuccess == true)
+                {
+                    // we were able to read in the on-disk telemetry log (or create it); proceed with the newly-instantiated telemetry client
+                    telemetryClient = createTelemetryClientResult.Value!;
+                }
+                else // createTelemetryClientResult.IsError == true
+                {
+                    // if we could not open the on-disk transaction log, attempt to delete the log and try to create a new file instead
+                    try
+                    {
+                        // try to delete the existing file
+                        System.IO.File.Delete(pathToOnDiskTransactionLog);
+
+                        // try to create a new telemetry file at the specified path
+                        createTelemetryClientResult = await MorphicTelemetryClient.CreateUsingOnDiskTransactionLogAsync(mqttConfig, pathToOnDiskTransactionLog);
+                        if (createTelemetryClientResult.IsSuccess == true)
+                        {
+                            telemetryClient = createTelemetryClientResult.Value!;
+                        }
+                    }
+                    catch { }
+                }
+            }
+            if (telemetryClient is null)
+            {
+                // if we could not create a telemetry file at the specified path, simply create a telemetry client (without on-disk persistance)
+                telemetryClient = MorphicTelemetryClient.Create(mqttConfig);
+            }
+            //
+            telemetryClient.SetSiteId(telemetrySiteId);
             _telemetryClient = telemetryClient;
 
             // create random session id
             _telemetrySessionId = Guid.NewGuid();
 
-            Task.Run(async () =>
+            //
+
+            // send the first telemetry message (@session begin)
+            // NOTE: we enqueue this message as soon as we create the telemetry client object
+            var eventData = new SessionTelemetryEventData()
             {
-                // start the telemetry session
-                await telemetryClient.StartSessionAsync();
+                SessionId = _telemetrySessionId,
+                State = "begin"
+            };
+            telemetryClient.EnqueueEvent("@session", eventData);
 
-                // send the first telemetry message (@session begin)
-                // NOTE: for Morphic 2.0, enqueue this message as soon as we create the telemetry client object
-                var eventData = new SessionTelemetryEventData()
-                {
-                    SessionId = _telemetrySessionId,
-                    State = "begin"
-                };
-                telemetryClient.EnqueueActionMessage("@session", eventData);
-
-                // initialize (and start) our heartbeat timer; it should send the heartbeat message every 12 hours
-                _telemetryHeartbeatTimer = new System.Threading.Timer(this.SendTelemetryHeartbeat, null, new TimeSpan(12, 0, 0), new TimeSpan(12, 0, 0));
-            });
+            // initialize (and start) our heartbeat timer; it should send the heartbeat message every 12 hours (i.e. twice a day, so that at least one event is recorded per active session per day)
+            _telemetryHeartbeatTimer = new System.Threading.Timer(this.SendTelemetryHeartbeat, null, new TimeSpan(12, 0, 0), new TimeSpan(12, 0, 0));
         }
 
         internal record SessionTelemetryEventData
@@ -880,16 +917,6 @@ namespace Morphic.Client
 
         #endregion Telemetry
 
-        private void RecordedException(Task task)
-        {
-            if (task.Exception is Exception e)
-            {
-                this.Logger.LogError("exception thrown while countly recording exception: {msg}", e.Message);
-                throw e;
-            }
-            this.Logger.LogDebug("successfully recorded countly exception");
-        }
-
         void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
         {
             // TODO: Improve error logging/reporting.
@@ -900,10 +927,6 @@ namespace Morphic.Client
             {
                 this.Logger.LogError("handled uncaught exception: {msg}", ex.Message);
                 this.Logger.LogError(ex.StackTrace);
-
-                Dictionary<String, String> extraData = new Dictionary<string, string>();
-                CountlyBase.RecordException(ex.Message, ex.StackTrace, extraData, true)
-                    .ContinueWith(this.RecordedException, TaskScheduler.FromCurrentSynchronizationContext());
             }
             catch (Exception)
             {
@@ -965,9 +988,11 @@ namespace Morphic.Client
                 WindowsVersion.Win10_v20H2,
                 WindowsVersion.Win10_v21H1,
                 WindowsVersion.Win10_v21H2,
+                WindowsVersion.Win10_v22H2,
                 WindowsVersion.Win10_vFuture,
                 //
                 WindowsVersion.Win11_v21H2,
+                WindowsVersion.Win11_v22H2,
                 WindowsVersion.Win11_vFuture
             };
         private static bool IsOsCompatibleWithMorphic()
@@ -997,7 +1022,7 @@ namespace Morphic.Client
 
             if (App.IsOsCompatibleWithMorphic() == false)
             {
-                MessageBox.Show($"Morphic is not compatible with the current version of Windows.\r\n\r\nPlease upgrade to Windows 10 " + App.CompatibleWindowsVersions[0] + " or newer.");
+                MessageBox.Show($"Morphic is not compatible with the current version of Windows.\r\n\r\nPlease upgrade to Windows 10 " + App.CompatibleWindowsVersions[0] + " or newer (or to Windows 11 or newer).");
 
                 this.Shutdown();
                 return;
@@ -1019,6 +1044,7 @@ namespace Morphic.Client
             // NOTE: we currently load this AFTER setting up the logger because the GetCommonConfigurationAsync function logs config file errors to the logger
             var commonConfiguration = await this.GetCommonConfigurationAsync();
             ConfigurableFeatures.SetFeatures(
+                atOnDemandIsEnabled: commonConfiguration.AtOnDemandIsEnabled,
                 autorunConfig: commonConfiguration.AutorunConfig,
                 checkForUpdatesIsEnabled: commonConfiguration.CheckForUpdatesIsEnabled,
                 cloudSettingsTransferIsEnabled: commonConfiguration.CloudSettingsTransferIsEnabled,
@@ -1040,8 +1066,7 @@ namespace Morphic.Client
 
             if (ConfigurableFeatures.TelemetryIsEnabled == true)
             {
-                await this.ConfigureCountlyAsync();
-                this.ConfigureTelemetry();
+                await this.ConfigureTelemetryAsync();
             }
 
             if (ConfigurableFeatures.CheckForUpdatesIsEnabled == true)
@@ -1479,7 +1504,7 @@ namespace Morphic.Client
                 SessionId = _telemetrySessionId,
                 State = "heartbeat"
             };
-            _telemetryClient?.EnqueueActionMessage("@session", eventData);
+            _telemetryClient?.EnqueueEvent("@session", eventData);
         }
 
         #region Shutdown
@@ -1492,7 +1517,7 @@ namespace Morphic.Client
             if (ConfigurableFeatures.TelemetryIsEnabled == true)
             {
                 // dispose of our telemetry heartbeat timer
-                _telemetryHeartbeatTimer.Dispose();
+                _telemetryHeartbeatTimer?.Dispose();
 
                 try
                 {
@@ -1505,23 +1530,34 @@ namespace Morphic.Client
                             SessionId = _telemetrySessionId,
                             State = "end"
                         };
-                        _telemetryClient.EnqueueActionMessage("@session", eventData);
+                        _telemetryClient.EnqueueEvent("@session", eventData);
 
-                        // wait up to 2500 milliseconds for the event to be sent
-                        await _telemetryClient.FlushMessageQueueAsync(2500);
-
-                        // NOTE: wait for the session to stop (up to 250ms)
-                        await Task.Run(() =>
+                        // wait up to two seconds for the event to be sent
+                        var waitTimeSpan = TimeSpan.FromSeconds(2);
+                        // NOTE: PrepareForDisposalAsync will attempt to finish sending the current message(s); this will not necessarily send the message we just enqueued, but if not
+                        //       then that message will be saved for the next telemetry server link-up and in the interim the telemetry server will count our last-sent event as the
+                        //       end of the session instead.  It will also attempt to flush any remaining queued items out to the on-disk persistant log (so they can sent on the next run)
+                        var cancellationTokenSource = new CancellationTokenSource();
+                        var cancellationToken = cancellationTokenSource.Token;
+                        var task = Task.Run(() =>
                         {
-                            _telemetryClient.StopSessionAsync().Wait(250);
+                            // NOTE: MorphicTelemetryClient.PrepareForDisposalAsync(...) may only be called once in the current implementation, so it's appropriate to call it here before shutdown
+                            _telemetryClient.PrepareForDisposalAsync(waitTimeSpan).GetAwaiter().GetResult();
+                            cancellationTokenSource.Cancel();
                         });
+                        try
+                        {
+                            Task.Delay(waitTimeSpan, cancellationToken).GetAwaiter().GetResult();
+                            // NOTE: if we reach here, the function did not return on time
+                        }
+                        catch (TaskCanceledException)
+                        {
+                            // task was ended before timeout, which is the expected behavior if we ended before timeout
+                        }
+
+                        // dispose of the telemetry client; note that this may take up to 250ms (as the dispose function waits up to 250ms for the in-memory logs to be flushed to disk)
+                        _telemetryClient.Dispose();
                     }
-                }
-                catch { }
-                //
-                try
-                {
-                    await Countly.Instance.SessionEnd();
                 }
                 catch { }
             }
@@ -1567,15 +1603,70 @@ namespace Morphic.Client
                 this.SystemSettingChanged?.Invoke(this, EventArgs.Empty);
             };
 
-            SystemEvents.DisplaySettingsChanged += this.SystemEventsOnDisplaySettingsChanged;
-            SystemEvents.UserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
+            // NOTE: to avoid needing to handle exceptions when setting up our DisplaySettingsChanged handler, we first manually start up the display settings listener; if our process was
+            //       running without the ability or permissions to start up the appropriate system-/session-level listeners, we'd otherwise get an exception when wiring up the event(s).
+            var startListeningForDisplaySettingsEventsResult = Morphic.WindowsNative.Display.DisplaySettingsListener.Shared.StartListening();
+            if (startListeningForDisplaySettingsEventsResult.IsError == true)
+            {
+                // NOTE: in the future, we may want to log or otherwise capture the knowledge that we are unable to capture Win32 display settings changes
+                Debug.Assert(false, "Could not listen for Win32 display settings changes");
+            }
+            // NOTE: wiring up this event will result in an exception if the display settings listener could not be started successfully (see note immediately above)
+            Morphic.WindowsNative.Display.DisplaySettingsListener.Shared.DisplaySettingsChanged += this.SystemEventsOnDisplaySettingsChanged;
+            //
+            //
+            // NOTE: to avoid needing to handle exceptions when setting up our UserPreferenceChanged handler, we first manually start up the user preference listener; if our process was
+            //       running without the ability or permissions to start up the appropriate system-/session-level listeners, we'd otherwise get an exception when wiring up the event(s).
+            var startListeningForUserPreferenceEventsResult = Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.StartListening();
+            if (startListeningForUserPreferenceEventsResult.IsError == true)
+            {
+                // NOTE: in the future, we may want to log or otherwise capture the knowledge that we are unable to capture Win32 user preference changes
+                Debug.Assert(false, "Could not listen for Win32 user preference changes");
+            }
+            // NOTE: wiring up this event will result in an exception if the user preference listener could not be started successfully (see note immediately above)
+            // NOTE: all of these events were effectively wired up in Morphic v1.6 and earlier; we are wiring them all up out of an abundance of caution, but realistically we should only
+            //       wire up the display-related user preference change notifications
+            Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.AccessibilityUserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
+            Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.ColorUserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
+            Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.DesktopUserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
+            Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.GeneralUserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
+            Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.IconUserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
+            Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.KeyboardUserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
+            Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.LocaleUserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
+            Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.MenuUserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
+            Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.MouseUserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
+            Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.PolicyUserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
+            Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.PowerUserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
+            Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.ScreensaverUserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
+            Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.VisualStyleUserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
+            Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.WindowUserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
 
             SystemEvents.SessionEnding += SystemEvents_SessionEnding;
 
             this.Exit += (sender, args) =>
             {
-                SystemEvents.DisplaySettingsChanged -= this.SystemEventsOnDisplaySettingsChanged;
-                SystemEvents.UserPreferenceChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                // NOTE: technically, we no longer need to do this during exit because our finalizer SHOULD do it automatically [also: note that this Exit closure was not called in testing anyway]
+                //Morphic.WindowsNative.Display.DisplaySettingsListener.Shared.DisplaySettingsChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                Morphic.WindowsNative.Display.DisplaySettingsListener.Shared.StopListening();
+
+                // NOTE: technically, we no longer need to do this during exit because our finalizer SHOULD do it automatically [also: note that this Exit closure was not called in testing anyway]
+                //// NOTE: all of these events were effectively wired up in Morphic v1.6 and earlier; we are wiring them all up out of an abundance of caution, but realistically we should only
+                ////       wire up the display-related user preference change notifications
+                //Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.AccessibilityUserPreferenceChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                //Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.ColorUserPreferenceChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                //Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.DesktopUserPreferenceChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                //Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.GeneralUserPreferenceChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                //Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.IconUserPreferenceChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                //Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.KeyboardUserPreferenceChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                //Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.LocaleUserPreferenceChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                //Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.MenuUserPreferenceChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                //Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.MouseUserPreferenceChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                //Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.PolicyUserPreferenceChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                //Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.PowerUserPreferenceChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                //Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.ScreensaverUserPreferenceChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                //Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.VisualStyleUserPreferenceChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                //Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.WindowUserPreferenceChanged -= this.SystemEventsOnDisplaySettingsChanged;
+                Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.StopListening();
             };
         }
 

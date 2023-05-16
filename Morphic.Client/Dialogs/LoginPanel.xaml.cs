@@ -1,19 +1,19 @@
-﻿// Copyright 2020 Raising the Floor - International
+﻿// Copyright 2020-2023 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
 //
 // You may obtain a copy of the License at
-// https://github.com/GPII/universal/blob/master/LICENSE.txt
+// https://github.com/raisingthefloor/morphic-windows/blob/master/LICENSE.txt
 //
 // The R&D leading to these results received funding from the:
-// * Rehabilitation Services Administration, US Dept. of Education under 
+// * Rehabilitation Services Administration, US Dept. of Education under
 //   grant H421A150006 (APCP)
-// * National Institute on Disability, Independent Living, and 
+// * National Institute on Disability, Independent Living, and
 //   Rehabilitation Research (NIDILRR)
-// * Administration for Independent Living & Dept. of Education under grants 
+// * Administration for Independent Living & Dept. of Education under grants
 //   H133E080022 (RERC-IT) and H133E130028/90RE5003-01-00 (UIITA-RERC)
-// * European Union's Seventh Framework Programme (FP7/2007-2013) grant 
+// * European Union's Seventh Framework Programme (FP7/2007-2013) grant
 //   agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 // * William and Flora Hewlett Foundation
 // * Ontario Ministry of Research and Innovation
@@ -28,11 +28,13 @@ namespace Morphic.Client.Dialogs
     using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Controls;
-    using Core;
+    using Morphic.Core.Legacy;
     using Elements;
     using Microsoft.Extensions.Logging;
     using Service;
     using Settings.SolutionsRegistry;
+    using System.Linq;
+    using Morphic.Client.Config;
 
     /// <summary>
     /// Login window for authenticating users and applying their settings
@@ -111,20 +113,58 @@ namespace Morphic.Client.Dialogs
                 this.ErrorLabel.Focus(); // Makes narrator read the error label
                 this.SetFieldsEnabled(true);
             }
-            else if (this.ApplyPreferencesAfterLogin)
-            {
-                // login successful
-                await App.Current.Countly_RecordEventAsync("signIn");
-
-                _ = this.morphicSession.ApplyAllPreferences();
-                this.Close();
-            }
             else
             {
-                this.OnComplete();
+                // login successful
+                await App.Current.Telemetry_RecordEventAsync("signIn");
+
+                // first, apply preferences
+                // NOTE: in the future, we should filter out any preferences which are specific to an AT application which is not yet installed (and then we can apply THOSE preferences immediately after installing those applications--or perhaps after reboot if the applications needed a reboot after installation and we haven't marked them as "okay to apply settings before reboot")
+                if (this.ApplyPreferencesAfterLogin)
+                {
+                    // OBSERVATION: preference application is an async task, but we don't wait for it to complete
+                    _ = this.morphicSession.ApplyAllPreferences();
+                }
+
+                // before we apply preferences, offer to install any necessary AT software using AToD
+                System.Collections.Generic.List<AtOnDemand.AtSoftwareDetails> atSoftwareToInstall = new();
+                if (ConfigurableFeatures.AtOnDemandIsEnabled == true)
+                {
+                    // get the list of AT software which could be installed on this computer
+                    var availableAtSoftwareToInstall = Morphic.Client.Dialogs.AtOnDemand.AtOnDemandHelpers.GetListOfAtSoftwareToInstall();
+                    //
+                    // capture a list of AT software which the user's cloud vault says should be installed (or at least offered to be installed)
+                    var userPreferencesAtSoftwareToInstall = this.morphicSession.GetListOfAtSoftwareToInstall();
+                    //
+                    // create a final list of AT software to offer to the user (based on the list of software which can be installed, filtered by the list of which software the user would like to be installed)
+                    atSoftwareToInstall = availableAtSoftwareToInstall.Where((atSoftware) => userPreferencesAtSoftwareToInstall.Contains(atSoftware.ShortName) == true).ToList();
+                }
+
+                // if some AT needs to be installed (or at least offered to the user for install), do so now; otherwise apply preferences and complete the login process
+                if (atSoftwareToInstall.Count > 0)
+                {
+                    var selectAppsPanel = this.StepFrame.PushPanel<Morphic.Client.Dialogs.AtOnDemand.SelectAppsPanel>();
+                    selectAppsPanel.ApplyPreferencesAfterLogin = this.ApplyPreferencesAfterLogin;
+                    selectAppsPanel.ListOfAtSoftware = atSoftwareToInstall!;
+                    selectAppsPanel.Completed += (o, args) => this.Completed?.Invoke(this, EventArgs.Empty);
+                }
+                else
+                {
+                    // no AT software to install
+
+                    // NOTE: we also do this after the AToD process has completed; we should consolidate this code to only do it in one place (which gets called after AToD has completed)
+                    // NOTE: this distinction between close and complete was done to mirror the Morphic v1.0 implementation in LoginPanel; it may be unnecessary and should be revisited with as part of login/capture/apply/atod UI flow updates
+                    if (this.ApplyPreferencesAfterLogin)
+                    {
+                        this.Close();
+                    }
+                    else
+                    {
+                        this.OnComplete();
+                    }
+                }
             }
         }
-
         private void SetFieldsEnabled(bool enabled)
         {
             this.UsernameField.IsEnabled = enabled;

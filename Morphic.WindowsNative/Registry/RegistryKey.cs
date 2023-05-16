@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2021 Raising the Floor - International
+﻿// Copyright 2020-2022 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -26,15 +26,11 @@ using Morphic.Core;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Threading.Tasks.Dataflow;
 
 namespace Morphic.WindowsNative
 {
@@ -42,24 +38,88 @@ namespace Morphic.WindowsNative
     {
         public class RegistryKey : IDisposable
         {
-            bool _disposed = false;
+        	private bool _disposedValue;
 
-            SafeRegistryHandle _handle;
+	        private SafeRegistryHandle _handle;
 
-            public delegate void RegistryKeyChangedEvent(RegistryKey sender, EventArgs e);
-			//
-            private struct RegistryKeyNotificationInfo
+            public delegate void RegistryKeyChangedEventHandler(RegistryKey sender, EventArgs e);
+
+            private record RegistryKeyNotificationInfo
             {
                 public RegistryKey RegistryKey;
                 public WaitHandle WaitHandle;
                 //
-                public RegistryKeyChangedEvent EventHandler;
+                private List<RegistryKeyChangedEventHandler> _eventHandlers;
+                private object _eventHandlersLock = new object();
 
-                public RegistryKeyNotificationInfo(RegistryKey registryKey, WaitHandle waitHandle, RegistryKeyChangedEvent eventHandler)
+                internal bool MarkedForDisposal { get; private set; } = false;
+
+                public RegistryKeyNotificationInfo(RegistryKey registryKey, WaitHandle waitHandle, RegistryKeyChangedEventHandler eventHandler)
                 {
                     this.RegistryKey = registryKey;
                     this.WaitHandle = waitHandle;
-                    this.EventHandler = eventHandler;
+                    //
+                    _eventHandlers = new() { eventHandler };
+                }
+
+                internal List<RegistryKeyChangedEventHandler> GetCopyOfEventHandlers()
+                {
+                    List<RegistryKeyChangedEventHandler> result = new();
+                    lock (_eventHandlers)
+                    {
+                        foreach (var eventHandler in _eventHandlers)
+                        {
+                            result.Add(eventHandler);
+                        }
+                    }
+                    return result;
+                }
+
+                internal int GetEventHandlersCount()
+                {
+                    return _eventHandlers.Count;
+                }
+
+                internal void AddEventHandler(RegistryKeyChangedEventHandler eventHandler)
+                {
+                    lock (_eventHandlersLock)
+                    {
+                        // if the event handler is already in our list, return early
+                        foreach (var handler in _eventHandlers)
+                        {
+                            if (handler == eventHandler)
+                            {
+                                return;
+                            }
+                        }
+
+                        _eventHandlers.Add(eventHandler);
+                    }
+                }
+
+                // NOTE: this function returns true if the event handler was removed and false if the event handler was not present
+                internal bool RemoveEventHandler(RegistryKeyChangedEventHandler eventHandler)
+                {
+                    lock (_eventHandlersLock)
+                    {
+                        // if the event handler is already in our list, return early
+                        for (var index = 0; index < _eventHandlers.Count; index += 1)
+                        {
+                            var handler = _eventHandlers[index];
+                            if (handler == eventHandler)
+                            {
+                                _eventHandlers.RemoveAt(index);
+                                return true;
+                            }
+                        }
+                    }
+
+                    return false;
+                }
+
+                internal void MarkForDisposal()
+                {
+                    this.MarkedForDisposal = true;
                 }
             }
             private static List<RegistryKeyNotificationInfo> s_registerKeyNotifyPool = new List<RegistryKeyNotificationInfo>();
@@ -67,291 +127,469 @@ namespace Morphic.WindowsNative
             private static Thread? s_registryKeyNotifyPoolThread = null;
             private static object s_registryKeyNotifyPoolLock = new object();
 
+        	private RegistryKeyNotificationInfo? _registryKeyNotifyPoolEntry;
+        	private static object _registryKeyNotifyPoolEntriesLock = new object();
+
             internal RegistryKey(SafeRegistryHandle handle)
             {
                 _handle = handle;
             }
 
-            ~RegistryKey() => Dispose(false);
-            //
-            public void Dispose()
-            {
-                this.Dispose(true);
-                GC.SuppressFinalize(this);
-            }
-            //
+	        // NOTE: we override the finalizer because 'Dispose(bool disposing)' has code to free unmanaged resources
+	        ~RegistryKey()
+	        {
+        	    // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+    	        Dispose(disposing: false);
+	        }
+
             protected virtual void Dispose(bool disposing)
             {
-                if (_disposed == true)
+                if (!_disposedValue)
                 {
-                    return;
-                }
+                    if (disposing)
+                    {
+                        var lockEntered = Monitor.TryEnter(_registryKeyNotifyPoolEntriesLock);
+                        try
+                        {
+                            if (_registryKeyNotifyPoolEntry is not null)
+                            {
+                                // if we are subscribed to notifications, mark our notify pool's entry as "being disposed"
+                                // NOTE: this will indicate to the registry key notify pool handler thread that this registry key should be removed from the pool once its wait handle is
+                                //       triggered; its wait handle should be triggered when our handle is disposed
+                                _registryKeyNotifyPoolEntry.MarkForDisposal();
+                            }
+                        }
+                        finally
+                        {
+                            if (lockEntered == true)
+                            {
+                                Monitor.Exit(_registryKeyNotifyPoolEntriesLock);
+                            }
+                        }
 
-                if (disposing == true)
-                {
-                    // dispose of our underlying registry key's access handle
-                    _handle.Dispose();
-                }
+                        // dispose of our underlying registry key's access handle
+                        _handle.Dispose();
+                    }
 
-                _disposed = true;
+                    // free unmanaged resources (unmanaged objects)
+                    // NOTE: if we have unmanaged resources to free, we need to implement the finalizer (~RegistryKey) function for this class
+                
+                    // set large fields to null
 
-                // trigger the notification pool to remove our entry (if we were subscribed)
-                try
-                {
-					// TODO: consider having a "SubscribedToNotifications" flag in the RegistryKey (and using that flag to determine if this is necessary/appropriate)
-                    s_registryKeyNotifyPoolUpdatedEvent.Set();
+                    _disposedValue = true;
                 }
-                catch { }
             }
 
-            public record RegistryValueError : MorphicAssociatedValueEnum<RegistryValueError.Values>
+            public void Dispose()
             {
-                // enum members
-                public enum Values
-                {
-
-                    ValueDoesNotExist,
-                    TypeMismatch,
-                    Win32Error/*(int win32ErrorCode)*/
-                }
-
-                // functions to create member instances
-                public static RegistryValueError TypeMismatch => new RegistryValueError(Values.TypeMismatch);
-                public static RegistryValueError ValueDoesNotExist => new RegistryValueError(Values.ValueDoesNotExist);
-                public static RegistryValueError Win32Error(int win32ErrorCode) => new RegistryValueError(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
-
-                // associated values
-                public int? Win32ErrorCode { get; private set; }
-
-                // verbatim required constructor implementation for MorphicAssociatedValueEnums
-                private RegistryValueError(Values value) : base(value) { }
+	            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+                this.Dispose(disposing: true);
+                GC.SuppressFinalize(this);
             }
 
-            public MorphicResult<RegistryKey, MorphicUnit> OpenSubKey(string name, bool writable = false)
+            //
+
+            public MorphicResult<bool, Win32ApiError> SubKeyExists(string name)
+            {
+                var getSubKeyNamesResult = this.GetSubKeyNames();
+                if (getSubKeyNamesResult.IsError == true)
+                {
+                    switch (getSubKeyNamesResult.Error!.Value)
+                    {
+                        case Win32ApiError.Values.Win32Error:
+                            return MorphicResult.ErrorResult(Win32ApiError.Win32Error(getSubKeyNamesResult.Error!.Win32ErrorCode!.Value));
+                        default:
+                            throw new MorphicUnhandledErrorException();
+                    }
+                }
+                var keyNames = getSubKeyNamesResult.Value!;
+
+                var subKeyExists = false;
+                foreach (var keyName in keyNames)
+                {
+                    if (String.Equals(keyName, name, StringComparison.InvariantCultureIgnoreCase) == true)
+                    {
+                        subKeyExists = true;
+                        break;
+                    }
+                }
+
+                return MorphicResult.OkResult(subKeyExists);
+            }
+
+            public MorphicResult<List<string>, Win32ApiError> GetSubKeyNames()
+            {
+                var handleAsUIntPtr = (UIntPtr)(_handle.DangerousGetHandle().ToInt64());
+
+                // see: https://learn.microsoft.com/en-us/windows/win32/sysinfo/registry-element-size-limits
+                const int MAX_KEY_NAME_LENGTH = 256; // 255 characters (plus null terminator to be safe)
+
+                List<string> result = new();
+
+                uint index = 0;
+                while (true)
+                {
+                    var keyName = new StringBuilder(MAX_KEY_NAME_LENGTH);
+                    var keyNameLength = (uint)MAX_KEY_NAME_LENGTH;
+
+                    var enumKeyErrorCode = ExtendedPInvoke.RegEnumKeyEx(handleAsUIntPtr, index, keyName, ref keyNameLength, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+                    if (enumKeyErrorCode == PInvoke.Win32ErrorCode.ERROR_SUCCESS)
+                    {
+                        // expected condition; nothing to do
+                    }
+                    else if (enumKeyErrorCode == PInvoke.Win32ErrorCode.ERROR_NO_MORE_ITEMS)
+                    {
+                        // no more items
+                        break;
+                    }
+                    else
+                    {
+                        return MorphicResult.ErrorResult(Win32ApiError.Win32Error((uint)enumKeyErrorCode));
+                    }
+
+                    // NOTE: the RegEnumKeyEx function returns the string length in characters, without including the null terminator in the count
+                    var element = keyName.ToString(0, (int)keyNameLength);
+                    result.Add(element);
+
+                    index += 1;
+                }
+
+                return MorphicResult.OkResult(result);
+            }
+
+            public MorphicResult<RegistryKey, Win32ApiError> OpenSubKey(string name, bool writable = false)
             {
                 // configure key access requirements
-                PInvoke.Kernel32.ACCESS_MASK accessMask = (PInvoke.Kernel32.ACCESS_MASK)131097 /* READ_KEY [0x2_0000 | KEY_NOTIFY = 0x0010 | KEY_ENUMERATE_SUB_KEYS = 0x0008 | KEY_QUERY_VALUE = 0x0001] */;
+                // see: https://learn.microsoft.com/en-us/windows/win32/sysinfo/registry-key-security-and-access-rights
+                // NOTE: "notify" is already included in the standard KEY_READ access flags, so we don't make it an optional permission for the caller (i.e. we didn't include "bool notifiable" as a parameter)
+                //
+                // set our base permissions as read (i.e. read, query value, enumerate subkeys, notify)
+                var accessMaskAsUInt32 = ExtendedPInvoke.KEY_READ;
+                //
                 if (writable == true)
                 {
-                    accessMask |= (PInvoke.Kernel32.ACCESS_MASK)131078 /* WRITE_KEY [0x2_0000 | KEY_CREATE_SUB_KEY = 0x0004 | KEY_SET_VALUE = 0x0002] */;
+                    // add write permissions (i.e. write, set value, create subkey)
+                    accessMaskAsUInt32 |= ExtendedPInvoke.KEY_WRITE;
                 }
-
-                // TODO: make "notify" access an option (although it looks like it's already in the READ access mask specified above)
-                accessMask |= 0x0010 /* KEY_NOTIFY */;
+                PInvoke.Kernel32.ACCESS_MASK accessMask = (PInvoke.Kernel32.ACCESS_MASK)accessMaskAsUInt32;
 
                 // open our key
                 SafeRegistryHandle subKeyHandle;
-                var openKeyErrorCode = PInvoke.AdvApi32.RegOpenKeyEx(_handle, name, PInvoke.AdvApi32.RegOpenKeyOptions.None, accessMask, out subKeyHandle);
+                var openKeyErrorCode = PInvoke.AdvApi32.RegOpenKeyEx(_handle, name, PInvoke.AdvApi32.RegOpenKeyOptions.None, accessMaskAsUInt32, out subKeyHandle);
                 switch (openKeyErrorCode)
                 {
                     case PInvoke.Win32ErrorCode.ERROR_SUCCESS:
                         break;
                     default:
-                        // NOTE: in the future, we may want to consider returning a specific result (i.e. "could not open for write access" etc.)
-                        return MorphicResult.ErrorResult();
+                        // NOTE: in the future, we may want to consider returning a specific result (i.e. "could not open for write access" etc.) rather than the Win32 error code
+                        return MorphicResult.ErrorResult(Win32ApiError.Win32Error(unchecked((uint)openKeyErrorCode)));
                 }
                 var subKey = new RegistryKey(subKeyHandle);
 
                 return MorphicResult.OkResult(subKey);
             }
 
-            // NOTE: this function is provided for legacy code compatibility (i.e. for code designed around Microsoft.Win32 registry functions)
-            public MorphicResult<object, RegistryValueError> GetValue(string? name)
+            //
+
+            public MorphicResult<List<string?>, Win32ApiError> GetValueNames()
             {
-                var getValueAndTypeAsObjectResult = this.GetValueAndTypeAsObject(name);
+                var handleAsUIntPtr = (UIntPtr)(_handle.DangerousGetHandle().ToInt64());
+
+                // see: https://learn.microsoft.com/en-us/windows/win32/sysinfo/registry-element-size-limits
+                const int MAX_VALUE_NAME_LENGTH = 16_384; // 16383 characters (plus null terminator to be safe)
+
+                List<string?> result = new();
+
+                uint index = 0;
+                while (true)
+                {
+                    var valueName = new StringBuilder(MAX_VALUE_NAME_LENGTH);
+                    var valueNameLength = (uint)MAX_VALUE_NAME_LENGTH;
+
+                    var enumValueErrorCode = ExtendedPInvoke.RegEnumValue(handleAsUIntPtr, index, valueName, ref valueNameLength, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+                    if (enumValueErrorCode == PInvoke.Win32ErrorCode.ERROR_SUCCESS)
+                    {
+                        // expected condition; nothing to do
+                    }
+                    else if (enumValueErrorCode == PInvoke.Win32ErrorCode.ERROR_NO_MORE_ITEMS)
+                    {
+                        // no more items
+                        break;
+                    }
+                    else
+                    {
+                        return MorphicResult.ErrorResult(Win32ApiError.Win32Error((uint)enumValueErrorCode));
+                    }
+
+                    // NOTE: the RegEnumValue function returns the string length in characters, without including the null terminator in the count
+                    var element = valueName.ToString(0, (int)valueNameLength);
+                    result.Add(element);
+
+                    index += 1;
+                }
+
+                return MorphicResult.OkResult(result);
+            }
+
+            //
+
+            public record RegistryGetValueError : MorphicAssociatedValueEnum<RegistryGetValueError.Values>
+            {
+                // enum members
+                public enum Values
+                {
+                    TypeMismatch,
+                    UnsupportedType,
+                    ValueDoesNotExist,
+                    Win32Error/*(int win32ErrorCode)*/
+                }
+
+                // functions to create member instances
+                public static RegistryGetValueError TypeMismatch => new(Values.TypeMismatch);
+                public static RegistryGetValueError UnsupportedType => new(Values.UnsupportedType);
+                public static RegistryGetValueError ValueDoesNotExist => new(Values.ValueDoesNotExist);
+                public static RegistryGetValueError Win32Error(int win32ErrorCode) => new(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
+
+                // associated values
+                public int? Win32ErrorCode { get; private set; }
+
+                // verbatim required constructor implementation for MorphicAssociatedValueEnums
+                private RegistryGetValueError(Values value) : base(value) { }
+            }
+
+            // NOTE: this function is provided for legacy code compatibility (i.e. for code designed around Microsoft.Win32 registry functions)
+            public MorphicResult<object, RegistryGetValueError> GetValueData(string? valueName)
+            {
+                var getValueAndTypeAsObjectResult = this.GetValueDataAndTypeAsObject(valueName);
                 if (getValueAndTypeAsObjectResult.IsError == true)
                 {
                     return MorphicResult.ErrorResult(getValueAndTypeAsObjectResult.Error!);
                 }
-                var valueType = getValueAndTypeAsObjectResult.Value.ValueType;
-                var data = getValueAndTypeAsObjectResult.Value.Data;
+                //var valueType = getValueAndTypeAsObjectResult.Value.ValueType;
+                var data = getValueAndTypeAsObjectResult.Value.ValueData;
 
                 return MorphicResult.OkResult(data);
             }
 
-            public MorphicResult<T, RegistryValueError> GetValue<T>(string? name)
+            // NOTE: see both implementations of GetValueDataOrNull; they (both struct- and class-specific) must be kept in sync
+            public MorphicResult<T?, RegistryGetValueError> GetValueDataOrNull<T>(string? valueName) where T : struct
             {
-                var getValueAndTypeAsObjectResult = this.GetValueAndTypeAsObject(name);
+                var getValueDataResult = this.GetValueData<T>(valueName);
+                if (getValueDataResult.IsError! == true)
+                {
+                    if (getValueDataResult.Error!.Value == RegistryGetValueError.Values.ValueDoesNotExist)
+                    {
+                        return MorphicResult.OkResult<T?>(null);
+                    }
+                    else
+                    {
+                        return MorphicResult.ErrorResult(getValueDataResult.Error!);
+                    }
+                }
+                var valueData = getValueDataResult.Value!;
+
+                return MorphicResult.OkResult<T?>(valueData);
+            }
+            //
+            // NOTE: this second implementation of GetValueDataOrNull (with the _ param to allow overload) is a kludge so that C# will work with both Nullable value types and (traditionally nullable) reference types
+            public MorphicResult<T?, RegistryGetValueError> GetValueDataOrNull<T>(string? valueName, object? _ = null) where T : class
+            {
+                var getValueDataResult = this.GetValueData<T>(valueName);
+                if (getValueDataResult.IsError! == true)
+                {
+                    if (getValueDataResult.Error!.Value == RegistryGetValueError.Values.ValueDoesNotExist)
+                    {
+                        return MorphicResult.OkResult<T?>(null);
+                    }
+                    else
+                    {
+                        return MorphicResult.ErrorResult(getValueDataResult.Error!);
+                    }
+                }
+                var valueData = getValueDataResult.Value!;
+
+                return MorphicResult.OkResult<T?>(valueData);
+            }
+
+            public MorphicResult<T, RegistryGetValueError> GetValueData<T>(string? valueName)
+            {
+                var getValueAndTypeAsObjectResult = this.GetValueDataAndTypeAsObject(valueName);
                 if (getValueAndTypeAsObjectResult.IsError == true)
                 {
                     return MorphicResult.ErrorResult(getValueAndTypeAsObjectResult.Error!);
                 }
                 var valueType = getValueAndTypeAsObjectResult.Value.ValueType;
-                var data = getValueAndTypeAsObjectResult.Value.Data;
+                var valueData = getValueAndTypeAsObjectResult.Value.ValueData;
 
-                if ((typeof(T) == typeof(uint)) && (valueType == ExtendedPInvoke.RegistryValueType.REG_DWORD))
+                if (typeof(T) == typeof(string))
                 {
-                    return MorphicResult.OkResult((T)data);
+                    if (valueType == ExtendedPInvoke.RegistryValueType.REG_SZ)
+                    {
+                        return MorphicResult.OkResult((T)valueData);
+                    }
+                    else
+                    {
+                        return MorphicResult.ErrorResult(RegistryGetValueError.TypeMismatch);
+                    }
+                }
+                if (typeof(T) == typeof(uint))
+                {
+                    if (valueType == ExtendedPInvoke.RegistryValueType.REG_DWORD)
+                    {
+                        return MorphicResult.OkResult((T)valueData);
+                    }
+                    else
+                    {
+                        return MorphicResult.ErrorResult(RegistryGetValueError.TypeMismatch);
+                    }
                 }
                 else
                 {
-                    // for all other types (and for type mismatches), return an error
-                    return MorphicResult.ErrorResult(RegistryValueError.TypeMismatch);
+                    // for all other types, return an error
+                    return MorphicResult.ErrorResult(RegistryGetValueError.UnsupportedType);
                 }
             }
 
-            private struct GetValueAndTypeAsObjectResult
+            private struct GetValueDataAndTypeAsObjectResult
             {
-                public object Data;
+                public object ValueData;
                 public ExtendedPInvoke.RegistryValueType ValueType;
 
-                public GetValueAndTypeAsObjectResult(object data, ExtendedPInvoke.RegistryValueType valueType) {
-                    this.Data = data;
+                public GetValueDataAndTypeAsObjectResult(object data, ExtendedPInvoke.RegistryValueType valueType)
+                {
+                    this.ValueData = data;
                     this.ValueType = valueType;
                 }
             }
-			//
-            private MorphicResult<GetValueAndTypeAsObjectResult, RegistryValueError> GetValueAndTypeAsObject(string? name)
+            //
+            private MorphicResult<GetValueDataAndTypeAsObjectResult, RegistryGetValueError> GetValueDataAndTypeAsObject(string? valueName)
             {
                 var handleAsUIntPtr = (UIntPtr)(_handle.DangerousGetHandle().ToInt64());
 
-                // pass 1: set dataSize to zero (so that RegQueryValueEx returns the size of the value
-                uint dataSize = 0;
+                // pass 1: set dataSize to zero (so that RegQueryValueEx returns the size of the value)
+                uint valueDataSize = 0;
                 ExtendedPInvoke.RegistryValueType valueType;
-                var queryValueErrorCode = ExtendedPInvoke.RegQueryValueEx(handleAsUIntPtr, name, IntPtr.Zero, out valueType, IntPtr.Zero, ref dataSize);
+                var queryValueErrorCode = ExtendedPInvoke.RegQueryValueEx(handleAsUIntPtr, valueName, IntPtr.Zero, out valueType, IntPtr.Zero, ref valueDataSize);
                 switch (queryValueErrorCode)
                 {
                     case PInvoke.Win32ErrorCode.ERROR_SUCCESS:
                         break;
                     case PInvoke.Win32ErrorCode.ERROR_FILE_NOT_FOUND:
-                        return MorphicResult.ErrorResult(RegistryValueError.ValueDoesNotExist);
+                        return MorphicResult.ErrorResult(RegistryGetValueError.ValueDoesNotExist);
                     default:
                         // NOTE: in the future, we may want to consider returning a specific result (i.e. "could not open for write access" etc.)
-                        return MorphicResult.ErrorResult(RegistryValueError.Win32Error((int)queryValueErrorCode));
+                        return MorphicResult.ErrorResult(RegistryGetValueError.Win32Error((int)queryValueErrorCode));
                 }
 
-                // pass 2: capture the actual data
-                var getValueResult = RegistryKey.GetValueForHandleAsUInt32(handleAsUIntPtr, name, dataSize);
-                if (getValueResult.IsError)
-                {
-                    return MorphicResult.ErrorResult(getValueResult.Error!);
-                }
-
-                var data = getValueResult.Value;
-                return MorphicResult.OkResult(new GetValueAndTypeAsObjectResult(data, valueType));
-            }
-
-            #region GetValue helper functions
-
-            private static MorphicResult<uint, RegistryValueError> GetValueForHandleAsUInt32(UIntPtr handle, string? name, uint dataSize)
-            {
-                var ptrToData = Marshal.AllocHGlobal((int)dataSize);
+                // pass 2: capture the actual value data
+                var ptrToData = Marshal.AllocHGlobal((int)valueDataSize);
+                object valueData;
                 try
                 {
-                    var mutableDataSize = dataSize;
-                    ExtendedPInvoke.RegistryValueType valueType;
-                    var queryValueErrorCode = ExtendedPInvoke.RegQueryValueEx(handle, name, IntPtr.Zero, out valueType, ptrToData, ref mutableDataSize);
+                    var mutableDataSize = valueDataSize;
+                    queryValueErrorCode = ExtendedPInvoke.RegQueryValueEx(handleAsUIntPtr, valueName, IntPtr.Zero, out valueType, ptrToData, ref mutableDataSize);
                     switch (queryValueErrorCode)
                     {
                         case PInvoke.Win32ErrorCode.ERROR_SUCCESS:
                             break;
                         default:
                             // NOTE: in the future, we may want to consider returning a specific result (i.e. "could not open for write access" etc.)
-                            return MorphicResult.ErrorResult(RegistryValueError.Win32Error((int)queryValueErrorCode));
-                    }
-
-                    // validate value type and data size
-                    if (valueType != ExtendedPInvoke.RegistryValueType.REG_DWORD)
-                    {
-                        return MorphicResult.ErrorResult(RegistryValueError.TypeMismatch);
-                    }
-                    //
-                    if (mutableDataSize != dataSize)
-                    {
-                        return MorphicResult.ErrorResult(RegistryValueError.TypeMismatch);
+                            return MorphicResult.ErrorResult(RegistryGetValueError.Win32Error((int)queryValueErrorCode));
                     }
 
                     // capture and return result
-                    var data = Marshal.PtrToStructure<uint>(ptrToData);
-                    return MorphicResult.OkResult(data);
+                    switch (valueType)
+                    {
+                        case ExtendedPInvoke.RegistryValueType.REG_DWORD:
+                            {
+                                valueData = Marshal.PtrToStructure<uint>(ptrToData);
+                            }
+                            break;
+                        case ExtendedPInvoke.RegistryValueType.REG_SZ:
+                            {
+                                valueData = Marshal.PtrToStringUni(ptrToData)!;
+                            }
+                            break;
+                        default:
+                            {
+                                Debug.Assert(false, "Support for this registry value type is not yet implemented.");
+                                return MorphicResult.ErrorResult(RegistryGetValueError.UnsupportedType);
+                            }
+                    }
                 }
                 finally
                 {
                     Marshal.FreeHGlobal(ptrToData);
                 }
+
+                return MorphicResult.OkResult(new GetValueDataAndTypeAsObjectResult(valueData, valueType));
             }
 
-            #endregion GetValue helper functions
+            //
 
-            // NOTE: this function is provided for legacy code compatibility (i.e. for code designed around Microsoft.Win32 registry functions)
-            public MorphicResult<MorphicUnit, MorphicUnit> SetValue(string? name, object value)
+            public record RegistrySetValueError : MorphicAssociatedValueEnum<RegistrySetValueError.Values>
             {
-                if (value.GetType() == typeof(uint))
+                // enum members
+                public enum Values
                 {
-                    return this.SetValue<uint>(name, (uint)value);
+                    UnsupportedType,
+                    Win32Error/*(int win32ErrorCode)*/
                 }
-                else
-                {
-                    // unknown type
-                    return MorphicResult.ErrorResult();
-                }
+
+                // functions to create member instances
+                public static RegistrySetValueError UnsupportedType => new(Values.UnsupportedType);
+                public static RegistrySetValueError Win32Error(int win32ErrorCode) => new(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
+
+                // associated values
+                public int? Win32ErrorCode { get; private set; }
+
+                // verbatim required constructor implementation for MorphicAssociatedValueEnums
+                private RegistrySetValueError(Values value) : base(value) { }
             }
 
-            public MorphicResult<MorphicUnit, MorphicUnit> SetValue<T>(string? name, T value)
+            public MorphicResult<MorphicUnit, RegistrySetValueError> SetValue<T>(string? valueName, T valueData)
             {
                 var handleAsUIntPtr = (UIntPtr)(_handle.DangerousGetHandle().ToInt64());
 
-                MorphicResult<MorphicUnit, MorphicUnit> setValueResult;
-                if ((typeof(T) == typeof(uint)) ||
-                    typeof(T) == typeof(System.String))
-                {
-                    setValueResult = RegistryKey.SetValueForHandle(handleAsUIntPtr, name, value!);
-                }
-                else
-                {
-                    // unknown type
-                    return MorphicResult.ErrorResult();
-                }
-                if (setValueResult.IsError == true)
-                {
-                    return MorphicResult.ErrorResult();
-                }
-
-                return MorphicResult.OkResult();
-            }
-
-            #region SetValue helper functions
-
-            private static MorphicResult<MorphicUnit, MorphicUnit> SetValueForHandle<T>(UIntPtr handle, string? name, T value)
-            {
-                IntPtr ptrToData;
-                uint dataSize;
+                IntPtr ptrToValueData;
+                uint valueDataSize;
                 ExtendedPInvoke.RegistryValueType valueType;
 
                 if (typeof(T) == typeof(uint))
                 {
                     var dataSizeAsInt = Marshal.SizeOf<uint>();
-                    ptrToData = Marshal.AllocHGlobal(dataSizeAsInt);
-                    var valueAsUInt = (uint)(object)value!;
-                    Marshal.StructureToPtr<uint>(valueAsUInt, ptrToData, false);
+                    ptrToValueData = Marshal.AllocHGlobal(dataSizeAsInt);
+                    var valueAsUInt = (uint)(object)valueData!;
+                    Marshal.StructureToPtr<uint>(valueAsUInt, ptrToValueData, false);
                     //
-                    dataSize = (uint)dataSizeAsInt;
+                    valueDataSize = (uint)dataSizeAsInt;
                     valueType = ExtendedPInvoke.RegistryValueType.REG_DWORD;
                 }
                 else if (typeof(T) == typeof(System.String))
                 {
-                    var valueAsString = (value as System.String)!;
-                    ptrToData = Marshal.StringToHGlobalUni(valueAsString);
+                    var valueAsString = (valueData as System.String)!;
+                    ptrToValueData = Marshal.StringToHGlobalUni(valueAsString);
                     //
-                    dataSize = (uint)((valueAsString.Length + 1 /* +1 for the null terminator */) * 2);
+                    valueDataSize = (uint)((valueAsString.Length + 1 /* +1 for the null terminator */) * 2);
                     valueType = ExtendedPInvoke.RegistryValueType.REG_SZ;
                 }
                 else
                 {
                     // unknown type
-                    return MorphicResult.ErrorResult();
+                    return MorphicResult.ErrorResult(RegistrySetValueError.UnsupportedType);
                 }
                 //
                 try
                 {
-                    var setValueErrorCode = ExtendedPInvoke.RegSetValueEx(handle, name, 0, valueType, ptrToData, dataSize);
+                    PInvoke.Win32ErrorCode setValueErrorCode;
+                    setValueErrorCode = ExtendedPInvoke.RegSetValueEx(handleAsUIntPtr, valueName, 0, valueType, ptrToValueData, valueDataSize);
                     switch (setValueErrorCode)
                     {
                         case PInvoke.Win32ErrorCode.ERROR_SUCCESS:
                             break;
                         default:
                             // NOTE: in the future, we may want to consider returning a specific result (i.e. "could not open for write access" etc.)
-                            return MorphicResult.ErrorResult();
+                            return MorphicResult.ErrorResult(RegistrySetValueError.Win32Error(unchecked((int)setValueErrorCode)));
                     }
 
                     // setting the value was a success
@@ -359,65 +597,86 @@ namespace Morphic.WindowsNative
                 }
                 finally
                 {
-                    Marshal.FreeHGlobal(ptrToData);
+                    Marshal.FreeHGlobal(ptrToValueData);
                 }
             }
 
-            private static int CalculateUnicodeNullTerminatedLengthOfString(string value)
+            public MorphicResult<MorphicUnit, Win32ApiError> DeleteValue(string? valueName)
             {
-                // NOTE: this has been tested with unicode characters that are both one code unit and two code units; the System.String type automatically increases "length" as appropriate 
-                //       when surrogate characters (i.e. 2 chars for 1 symbol) are required
-                return (value.Length + 1 /* +1 for the null terminator */) * 2 /* *2 because each character is 2 bytes wide */;
+                var handleAsUIntPtr = (UIntPtr)(_handle.DangerousGetHandle().ToInt64());
+
+                PInvoke.Win32ErrorCode deleteValueErrorCode;
+                deleteValueErrorCode = ExtendedPInvoke.RegDeleteValue(handleAsUIntPtr, valueName);
+                switch (deleteValueErrorCode)
+                {
+                    case PInvoke.Win32ErrorCode.ERROR_SUCCESS:
+                        break;
+                    default:
+                        // NOTE: in the future, we may want to consider returning a specific result (i.e. "could not open for write access" etc.)
+                        return MorphicResult.ErrorResult(Win32ApiError.Win32Error(unchecked((uint)deleteValueErrorCode)));
+                }
+
+                // setting the value was a success
+                return MorphicResult.OkResult();
             }
 
-            #endregion SetValue helper functions
+            //
 
-            public MorphicResult<MorphicUnit, MorphicUnit> RegisterForValueChangeNotification(RegistryKeyChangedEvent eventHandler)
+            public event RegistryKeyChangedEventHandler RegistryKeyChangedEvent
             {
-                if (_disposed == true)
+                add
+                {
+                    this.RegisterForValueChangeNotification(value);
+                }
+                remove
+                {
+                    this.UnregisterFromValueChangeNotification(value);
+                }
+            }
+
+            private MorphicResult<MorphicUnit, MorphicUnit> RegisterForValueChangeNotification(RegistryKeyChangedEventHandler eventHandler)
+            {
+                // if we are have already registered with the win32 API, simply add our event handler to our existing list
+                lock (_registryKeyNotifyPoolEntriesLock)
+                {
+                    if (_registryKeyNotifyPoolEntry is not null)
+                    {
+                        _registryKeyNotifyPoolEntry.AddEventHandler(eventHandler);
+                        return MorphicResult.OkResult();
+                    }
+                }
+
+                if (_disposedValue == true)
                 {
                     return MorphicResult.ErrorResult();
                 }
 
                 var waitHandle = new ManualResetEvent(false);
 
-                // NOTE: REG_NOTIFY_CHANGE_LAST_SET will trigger on any changes to the key's values
-                // NOTE: registration will auto-unregister after the wait handle is trigger once.  Registration will also auto-unregister when the RegistryKey is closed/disposed
-                PInvoke.Win32ErrorCode regNotifyErrorCode;
-                try
-                {
-                    // NOTE: if _handle has been disposed, this will throw an ObjectDisposedException
-                    regNotifyErrorCode = PInvoke.AdvApi32.RegNotifyChangeKeyValue(_handle, false, PInvoke.AdvApi32.RegNotifyFilter.REG_NOTIFY_CHANGE_LAST_SET, waitHandle.SafeWaitHandle, true);
-                }
-                catch(ObjectDisposedException ex)
+                // NOTE: registration will auto-unregister after the wait handle is triggered once.  Registration will also auto-unregister when the RegistryKey is closed/disposed.
+                var regNotifyChangeKeyValueResult = this.RegisterWaitHandleForValueChangeNotification(waitHandle);
+                if (regNotifyChangeKeyValueResult.IsError == true)
                 {
                     return MorphicResult.ErrorResult();
                 }
-                //
-                switch (regNotifyErrorCode)
-                {
-                    case PInvoke.Win32ErrorCode.ERROR_SUCCESS:
-                        break;
-                    default:
-                        return MorphicResult.ErrorResult();
-                }
 
                 // add our registry key (and accompanying wait handle) to the notify pool
-                // NOTE: this must be the only code which is allowed to add to the notify pool; if we change this behavior, we must re-evaluate and QA the corresponding lock strategy change
-                lock(s_registryKeyNotifyPoolLock)
+                // NOTE: this must be the only code which is allowed to add to the notify pool; if we change this behavior, we must re-evaluate and QA the corresponding change in lock strategy
+                lock (s_registryKeyNotifyPoolLock)
                 {
                     var notifyInfo = new RegistryKeyNotificationInfo(this, waitHandle, eventHandler);
                     s_registerKeyNotifyPool.Add(notifyInfo);
 
                     if (s_registryKeyNotifyPoolThread is null)
                     {
+                        // start up our notify pool thread
                         s_registryKeyNotifyPoolThread = new Thread(RegistryKey.ListenForRegistryKeyChanges);
                         s_registryKeyNotifyPoolThread.IsBackground = true; // set up as a background thread (so that it shuts down automatically with our application, even if all the RegistryKeys weren't fully disposed)
                         s_registryKeyNotifyPoolThread.Start();
-                    } 
+                    }
                     else
                     {
-                        // trigger our notify pool thread to see and watch for the new entries
+                        // trigger our already-started notify pool thread--so that it's aware of the new entries
                         s_registryKeyNotifyPoolUpdatedEvent.Set();
                     }
                 }
@@ -425,15 +684,44 @@ namespace Morphic.WindowsNative
                 return MorphicResult.OkResult();
             }
 
+            private void UnregisterFromValueChangeNotification(RegistryKeyChangedEventHandler eventHandler)
+            {
+                lock (_registryKeyNotifyPoolEntriesLock)
+                {
+                    if (_registryKeyNotifyPoolEntry is not null)
+                    {
+                        _registryKeyNotifyPoolEntry?.RemoveEventHandler(eventHandler);
+
+                        if (_registryKeyNotifyPoolEntry?.GetEventHandlersCount() == 0)
+                        {
+                            // if we are subscribed to notifications, mark our notify pool's entry as "being disposed"
+                            // NOTE: this will indicate to the registry key notify pool handler thread that this registry key should be removed from the pool once its wait handle is
+                            //       triggered; its wait handle should be triggered when our handle is disposed
+                            _registryKeyNotifyPoolEntry?.MarkForDisposal();
+                            _registryKeyNotifyPoolEntry = null;
+
+                            // NOTE: there is no way to de-register a notification from the system other than closing out its registration thread (if REG_NOTIFY_THREAD_AGNOSTIC was not supplied
+                            //       as a parameter) or by closing the handle; therefore we will technically continue watching for the notification--but we will clear the entry out once the
+                            //       notification expires
+
+                            // NOTE: in an ideal scenario, we would close out the notification's wait handle to unregister; unfortunately the documentation for RegNotifyChangeKeyValue does not indicate 
+                            //       that this will actually cancel the notification request; therefore we persist our notification request data (out of an abundance of caution) until it is definitely
+                            //       no longer needed; this may have the side-effect of creating a large list of old notifications--so our caller should be careful not to register too many
+                            //       notification requests (and should not repeatedly subscribe, unsubscribe and then resubscribe to notifications for the same open registry key.
+                        }
+                    }
+                }
+            }
+
             private static void ListenForRegistryKeyChanges()
             {
-                while(true)
+                while (true)
                 {
                     // get a copy of our current registry key notification pool (i.e. all registry keys which we are watching)
                     RegistryKeyNotificationInfo[] copyOfNotificationPool;
                     lock (s_registryKeyNotifyPoolLock)
                     {
-						// NOTE: we intentionally copy the list into an array to make sure we have a clone of the original list (not a shared reference)
+                        // NOTE: we intentionally copy the list into an array to make sure we have a clone of the original list (not a shared reference)
                         copyOfNotificationPool = s_registerKeyNotifyPool.ToArray();
 
                         // if there are no registry keys which we are subscribed to, exit our function (and shut down our thread) now
@@ -444,28 +732,9 @@ namespace Morphic.WindowsNative
                         }
                     }
 
-                    // if any of the registry keys have been disposed, then remove them from our list
-                    int index = 0;
-                    while(index < copyOfNotificationPool.Length)
-                    {
-                        if (copyOfNotificationPool[index].RegistryKey._disposed == true)
-                        {
-                            // remove this item from the list
-                            var newCopyOfNotificationPool = new RegistryKeyNotificationInfo[copyOfNotificationPool.Length - 1];
-                            Array.Copy(copyOfNotificationPool, 0, newCopyOfNotificationPool, 0, index);
-                            Array.Copy(copyOfNotificationPool, index + 1, newCopyOfNotificationPool, index, copyOfNotificationPool.Length - index - 1);
-                            copyOfNotificationPool = newCopyOfNotificationPool;
-                        }
-                        else
-                        {
-                            // continue to the next item
-                            index++;
-                        }
-                    }
-
                     // create a list of handles to wait on (first the ones which we are watching...and then the one that triggers when the list is updated)
                     var handlesToWaitOn = new WaitHandle[copyOfNotificationPool.Length + 1];
-                    for (index = 0; index < copyOfNotificationPool.Length; index++)
+                    for (var index = 0; index < copyOfNotificationPool.Length; index++)
                     {
                         handlesToWaitOn[index] = copyOfNotificationPool[index].WaitHandle;
                     }
@@ -484,33 +753,121 @@ namespace Morphic.WindowsNative
                         //
                         // capture the notification pool entry which triggered
                         var notificationPoolEntry = copyOfNotificationPool[indexOfSetHandle];
-                        // call the event handler on a thread pool thread
-                        Task.Run(() => { notificationPoolEntry.EventHandler(notificationPoolEntry.RegistryKey, EventArgs.Empty); });
-                        // remove the registry key from our pool
-                        lock(s_registryKeyNotifyPoolLock)
+                        //
+                        // if the entry whose wait handle was triggered (by its handle being closed) has been marked for disposal, remove it from our main notification pool
+                        if (notificationPoolEntry.MarkedForDisposal == true)
                         {
-                            for(index = 0; index < s_registerKeyNotifyPool.Count; index++)
+                            // remove this registry keys' entry from the notification pool
+                            lock (s_registryKeyNotifyPoolLock)
                             {
-                                // NOTE: type WaitHandle is a class, so this comparison is a reference comparison
-                                if (s_registerKeyNotifyPool[index].WaitHandle == notificationPoolEntry.WaitHandle)
+                                for (var index = 0; index < s_registerKeyNotifyPool.Count; index += 1)
                                 {
-                                    s_registerKeyNotifyPool.RemoveAt(index);
-                                    break;
+                                    // NOTE: type WaitHandle is a class, so this comparison is a reference comparison
+                                    if (s_registerKeyNotifyPool[index].WaitHandle == notificationPoolEntry.WaitHandle)
+                                    {
+                                        s_registerKeyNotifyPool.RemoveAt(index);
+                                        break;
+                                    }
                                 }
                             }
                         }
-                        //
-                        // if the entry we just removed hasn't been disposed, re-register it for notifications
-                        if (notificationPoolEntry.RegistryKey._disposed == false)
+                        else
                         {
-                            // re-register the registry key for notification (using its existing event handler), since Windows auto-unregisters registrations every time the handle is triggered
-                            var registerForValuechangeNotificationResult = notificationPoolEntry.RegistryKey.RegisterForValueChangeNotification(notificationPoolEntry.EventHandler);
-                            if (registerForValuechangeNotificationResult.IsError)
+                            try
                             {
-                                Debug.Assert(false, "Could not re-register registry key for notification after raising event.");
+                                // otherwise, call the event handler on a thread pool thread
+                                var eventHandlers = notificationPoolEntry.GetCopyOfEventHandlers();
+                                foreach (var eventHandler in eventHandlers)
+                                {
+                                    // NOTE: we launch the events in separate tasks; this may result in multiple events being called simultaneously for the same registry key notification
+                                    //       event (and in multiple threads); the caller should queue these using a concurrent task scheduler (e.g. MorphicSequentialTaskScheduler) or dispatch them
+                                    //       to their main/UI thread if the events need to be handled sequentially or one at a time
+                                    Task.Run(() => {
+                                        eventHandler(notificationPoolEntry.RegistryKey, EventArgs.Empty);
+                                    });
+                                }
+                            }
+                            finally
+                            {
+                                // if the entry hasn't been marked for disposal, re-register it for notifications
+                                // NOTE: normally, notificationPoolEntry.MarkedForDisposal would always be false here; however some time may have lapsed while we were calling the
+                                //       event handlers, and they may have themselves unsubscribed from the event, so we check here one more time
+                                if (notificationPoolEntry.MarkedForDisposal == false)
+                                {
+                                    // NOTE: registration will auto-unregister after the wait handle is triggered once.  Registration will also auto-unregister when the RegistryKey is closed/disposed.
+                                    var regNotifyChangeKeyValueResult = notificationPoolEntry.RegistryKey.RegisterWaitHandleForValueChangeNotification(notificationPoolEntry.WaitHandle);
+                                    if (regNotifyChangeKeyValueResult.IsError == true)
+                                    {
+                                        switch (regNotifyChangeKeyValueResult.Error!.Value)
+                                        {
+                                            case RegisterWaitHandleForValueChangeNotificationError.Values.ObjectDisposed:
+                                                // if the object has been disposed but the pool entry was not already marked for disposal, mark it for disposal now
+                                                notificationPoolEntry.MarkForDisposal();
+                                                break;
+                                            case RegisterWaitHandleForValueChangeNotificationError.Values.Win32Error:
+                                            default:
+                                                break;
+                                        }
+
+                                        // NOTE: we may want to consider logging this error, for in-field diagnostics of notification failures
+                                        Debug.Assert(false, "Error: could not re-register notification pool entry to watch for changes to values for registry key");
+                                    }
+                                }
                             }
                         }
-                    }                    
+                    }
+                }
+            }
+
+            public record RegisterWaitHandleForValueChangeNotificationError : MorphicAssociatedValueEnum<RegisterWaitHandleForValueChangeNotificationError.Values>
+            {
+                // enum members
+                public enum Values
+                {
+                    ObjectDisposed,
+                    Win32Error,
+                }
+
+                // functions to create member instances
+                public static RegisterWaitHandleForValueChangeNotificationError ObjectDisposed => new(Values.ObjectDisposed);
+                public static RegisterWaitHandleForValueChangeNotificationError Win32Error(int win32ErrorCode) => new(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
+
+                // associated values
+                public int? Win32ErrorCode { get; private set; }
+
+                // verbatim required constructor implementation for MorphicAssociatedValueEnums
+                private RegisterWaitHandleForValueChangeNotificationError(Values value) : base(value) { }
+            }
+
+            private MorphicResult<MorphicUnit, RegisterWaitHandleForValueChangeNotificationError> RegisterWaitHandleForValueChangeNotification(WaitHandle waitHandle)
+            {
+                // NOTE: registration will auto-unregister after the wait handle is triggered once.  Registration will also auto-unregister when the RegistryKey is closed/disposed.
+                PInvoke.Win32ErrorCode regNotifyErrorCode;
+                try
+                {
+                    // set up our notify filter; we are only watching for value changes (and not for changes to the names of subkeys, to attributes of the key, etc.)
+                    // NOTE: to change the notification filter, one must close and re-open a registry key; if we want to expand this watch in the future, we need to do it centrally 
+                    //       and then filter out the unwanted messages; alternatively we could make the watch properties a constructor overload
+                    // NOTE: REG_NOTIFY_CHANGE_LAST_SET will trigger on any changes to the key's values
+                    PInvoke.AdvApi32.RegNotifyFilter notifyFilter = PInvoke.AdvApi32.RegNotifyFilter.REG_NOTIFY_CHANGE_LAST_SET;
+                    // NOTE: normally, RegNotifyChangeKeyValue must be called on a thread which is persistent (i.e. either the main thread or a persistent thread pool thread); however,
+                    //       by specifying a notify filter of REG_NOTIFY_THREAD_AGNOSTIC our notification thread pool will be notified when any original thread terminates so that it can
+                    //       re-register the notification (this functionality is available on Windows 8 or newer)
+                    notifyFilter |= PInvoke.AdvApi32.RegNotifyFilter.REG_NOTIFY_THREAD_AGNOSTIC;
+                    // NOTE: if _handle has been disposed, this will throw an ObjectDisposedException
+                    regNotifyErrorCode = PInvoke.AdvApi32.RegNotifyChangeKeyValue(_handle, false, notifyFilter, waitHandle.SafeWaitHandle, true);
+                }
+                catch (ObjectDisposedException)
+                {
+                    return MorphicResult.ErrorResult(RegisterWaitHandleForValueChangeNotificationError.ObjectDisposed);
+                }
+                //
+                switch (regNotifyErrorCode)
+                {
+                    case PInvoke.Win32ErrorCode.ERROR_SUCCESS:
+                        return MorphicResult.OkResult();
+                    default:
+                        return MorphicResult.ErrorResult(RegisterWaitHandleForValueChangeNotificationError.Win32Error((int)regNotifyErrorCode));
                 }
             }
         }

@@ -21,21 +21,17 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using Morphic.Core;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace Morphic.WindowsNative
 {
+	using System;
+	using System.Collections.Generic;
+	using System.Linq;
+	using System.Text;
+	using System.Threading.Tasks;
+
     public partial class Registry
     {
-        private static Lazy<RegistryKey> _classesRootRegistryKey = new Lazy<RegistryKey>(() => new RegistryKey(PInvoke.AdvApi32.HKEY_CLASSES_ROOT));
+        private static Lazy<RegistryKey> _classesRootRegistryKey = new(() => new RegistryKey(PInvoke.AdvApi32.HKEY_CLASSES_ROOT));
         public static RegistryKey ClassesRoot
         {
             get
@@ -44,7 +40,7 @@ namespace Morphic.WindowsNative
             }
         }
 
-        private static Lazy<RegistryKey> _currentUserRegistryKey = new Lazy<RegistryKey>(() => new RegistryKey(PInvoke.AdvApi32.HKEY_CURRENT_USER));
+        private static Lazy<RegistryKey> _currentUserRegistryKey = new(() => new RegistryKey(PInvoke.AdvApi32.HKEY_CURRENT_USER));
         public static RegistryKey CurrentUser
         {
             get
@@ -53,7 +49,7 @@ namespace Morphic.WindowsNative
             }
         }
 
-        private static Lazy<RegistryKey> _localMachineRegistryKey = new Lazy<RegistryKey>(() => new RegistryKey(PInvoke.AdvApi32.HKEY_LOCAL_MACHINE));
+        private static Lazy<RegistryKey> _localMachineRegistryKey = new(() => new RegistryKey(PInvoke.AdvApi32.HKEY_LOCAL_MACHINE));
         public static RegistryKey LocalMachine
         {
             get
@@ -62,7 +58,7 @@ namespace Morphic.WindowsNative
             }
         }
 
-        private static Lazy<RegistryKey> _usersRegistryKey = new Lazy<RegistryKey>(() => new RegistryKey(PInvoke.AdvApi32.HKEY_USERS));
+        private static Lazy<RegistryKey> _usersRegistryKey = new(() => new RegistryKey(PInvoke.AdvApi32.HKEY_USERS));
         public static RegistryKey Users
         {
             get
@@ -71,7 +67,7 @@ namespace Morphic.WindowsNative
             }
         }
 
-        private static Lazy<RegistryKey> _currentConfigRegistryKey = new Lazy<RegistryKey>(() => new RegistryKey(PInvoke.AdvApi32.HKEY_CURRENT_CONFIG));
+        private static Lazy<RegistryKey> _currentConfigRegistryKey = new(() => new RegistryKey(PInvoke.AdvApi32.HKEY_CURRENT_CONFIG));
         public static RegistryKey CurrentConfig
         {
             get

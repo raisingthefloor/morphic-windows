@@ -1,25 +1,38 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <Nullable>enable</Nullable>
+    <TargetFramework>net6.0-windows10.0.22621.0</TargetFramework>
+	  <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <Platforms>x86;x64;ARM64</Platforms>
+	<Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>Icon.ico</ApplicationIcon>
     <Win32Resource />
     <AssemblyName>Morphic</AssemblyName>
     <PublishTrimmed>false</PublishTrimmed>
-    <Platforms>AnyCPU;x64</Platforms>
-    <VersionPrefix>1.6$(VersionBuildComponents)</VersionPrefix>
+    <VersionPrefix>1.7$(VersionBuildComponents)</VersionPrefix>
     <VersionSuffix Condition="'$(Configuration)' == 'Debug'">localdev</VersionSuffix>
     <VersionSuffix Condition="'$(Configuration)' == 'Release'">$(VersionSuffix)</VersionSuffix>
     <StartupObject>Morphic.Client.AppMain</StartupObject>
     <Company>Raising the Floor</Company>
     <BuildType Condition="'$(BuildType)' == ''">Development</BuildType>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <LangVersion>9.0</LangVersion>
+	<SelfContained>true</SelfContained>
+	<GenerateSatelliteAssembliesForCore>true</GenerateSatelliteAssembliesForCore>
   </PropertyGroup>
+
+	<PropertyGroup Condition=" '$(Platform)' == 'x86' ">
+		<RuntimeIdentifier>win10-x86</RuntimeIdentifier>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Platform)' == 'x64' ">
+		<RuntimeIdentifier>win10-x64</RuntimeIdentifier>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Platform)' == 'ARM64' ">
+		<RuntimeIdentifier>win10-arm64</RuntimeIdentifier>
+	</PropertyGroup>
 
   <ItemGroup>
     <None Remove="appsettings.json" />
@@ -73,31 +86,31 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Autoupdater.NET.Official" Version="1.6.4" />
-    <PackageReference Include="CommandLineParser" Version="2.8.0" />
-    <PackageReference Include="Countly" Version="20.5.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="3.1.3" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.1.3" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.3" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.3" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.1.3" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="3.1.3" />
-    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="3.1.3" />
+    <PackageReference Include="AToD.Deployment.MSI" Version="0.9.0" />
+    <PackageReference Include="Autoupdater.NET.Official" Version="1.7.6" />
+    <PackageReference Include="CommandLineParser" Version="2.9.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="7.0.0" />
+    <PackageReference Include="Morphic.Core" Version="1.2.0" />
+    <PackageReference Include="Morphic.OAuth.Client" Version="0.3.0" />
+    <PackageReference Include="Morphic.OAuth.Core" Version="1.2.0" />
+    <PackageReference Include="Morphic.TelemetryClient" Version="2.0.2" />
 <!--    <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications" Version="7.1.2" /> -->
-    <PackageReference Include="Microsoft.Windows.SDK.Contracts" Version="10.0.17763.1000" />
-    <PackageReference Include="NHotkey.Wpf" Version="2.0.1" />
-    <PackageReference Include="NReco.Logging.File" Version="1.1.1" />
-    <PackageReference Include="PInvoke.User32" Version="0.7.104" />
+    <PackageReference Include="NHotkey.Wpf" Version="2.1.0" />
+    <PackageReference Include="NReco.Logging.File" Version="1.1.5" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Morphic.Core\Morphic.Core.csproj" />
+    <ProjectReference Include="..\Morphic.Controls\Morphic.Controls.csproj" />
+    <ProjectReference Include="..\Morphic.Core.Legacy\Morphic.Core.Legacy.csproj" />
     <ProjectReference Include="..\Morphic.Integrations.Office\Morphic.Integrations.Office.csproj" />
-    <ProjectReference Include="..\Morphic.OAuth.Client\Morphic.OAuth.Client.csproj" />
-    <ProjectReference Include="..\Morphic.OAuth.Core\Morphic.OAuth.Core.csproj" />
     <ProjectReference Include="..\Morphic.Service\Morphic.Service.csproj" />
     <ProjectReference Include="..\Morphic.Settings\Morphic.Settings.csproj" />
-    <ProjectReference Include="..\Morphic.Telemetry\Morphic.Telemetry.csproj" />
     <ProjectReference Include="..\Morphic.WindowsNative\Morphic.WindowsNative.csproj" />
   </ItemGroup>
   

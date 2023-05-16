@@ -20,10 +20,6 @@ namespace Morphic.Client
     [SuppressMessage("ReSharper", "IdentifierTypo", Justification = "Names come from the Windows API")]
     internal static class WinApi
     {
-        #region Win32 error codes
-        public const uint ERROR_SUCCESS = 0;
-        #endregion
-
         #region Window Positioning
 
         public static RECT ToRECT(this Rect rc)
@@ -72,10 +68,6 @@ namespace Morphic.Client
                 return new Rect(this.Left, this.Top, this.Right - this.Left, this.Bottom - this.Top);
             }
 
-            public PInvoke.RECT ToPInvokeRect()
-            {
-                return new PInvoke.RECT() { left = this.Left, top = this.Top, right = this.Right, bottom = this.Bottom };
-            }
 
             /// <summary>
             /// Creates a win32 RECT from a .NET Rect.
@@ -87,86 +79,6 @@ namespace Morphic.Client
                 this.Top = (int)rect.Top;
                 this.Right = (int)rect.Right;
                 this.Bottom = (int)rect.Bottom;
-            }
-
-            public static RECT Empty
-            {
-                get
-                {
-                    return new RECT(new Rect(0, 0, 0, 0));
-                }
-            }
-
-            public override string ToString()
-            {
-                return $"{this.Left} {this.Top} {this.Right} {this.Bottom}";
-            }
-
-            public bool HasNonZeroWidthOrHeight()
-            {
-                return ((this.Left == this.Right) || (this.Top == this.Bottom));
-            }
-
-            public bool IsInside(RECT rect)
-            {
-                return ((this.Left >= rect.Left) && (this.Right <= rect.Right) && (this.Top >= rect.Top) && (this.Bottom <= rect.Bottom));
-            }
-
-            public bool Intersects(RECT rect)
-            {
-                bool overlapsHorizontally = false;
-                bool overlapsVertically = false;
-
-                // horizontal check
-                if ((this.Right > rect.Left) && (this.Left < rect.Right))
-                {
-                    // partially or fully overlaps horizontally
-                    overlapsHorizontally = true;
-                }
-
-                // vertical check
-                if ((this.Bottom > rect.Top) && (this.Top < rect.Bottom))
-                {
-                    // partially or fully overlaps vertically
-                    overlapsVertically = true;
-                }
-
-                if ((overlapsHorizontally == true) && (overlapsVertically == true)) {
-                    return true;
-                }
-
-                // if we could not find overlap, then return false
-                return false;
-            }
-
-            public static bool operator ==(RECT lhs, RECT rhs)
-            {
-                if ((lhs.Left == rhs.Left) &&
-                    (lhs.Top == rhs.Top) &&
-                    (lhs.Right == rhs.Right) &&
-                    (lhs.Bottom == rhs.Bottom))
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-
-            public static bool operator !=(RECT lhs, RECT rhs)
-            {
-                if ((lhs.Left != rhs.Left) ||
-                    (lhs.Top != rhs.Top) ||
-                    (lhs.Right != rhs.Right) ||
-                    (lhs.Bottom != rhs.Bottom))
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
             }
         }
 
@@ -277,6 +189,8 @@ namespace Morphic.Client
         public const int WS_EX_TOOLWINDOW = 0x00000080;
         public const int SPI_GETWORKAREA = 0x0030;
 
+        internal const uint WM_WININICHANGE = 0x001A;
+
 
         [DllImport("user32.dll", EntryPoint = "SetWindowLong")]
         private static extern IntPtr SetWindowLong32(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
@@ -290,8 +204,13 @@ namespace Morphic.Client
         [DllImport("user32.dll", EntryPoint = "GetWindowLongPtr")]
         private static extern IntPtr GetWindowLongPtr64(IntPtr hWnd, int nIndex);
 
+        // observation: wParam should be a UIntPtr (or an IntPtr) instead of an int
         [DllImport("user32.dll")]
         public static extern IntPtr SendMessage(IntPtr hWnd, int Msg, int wParam, IntPtr lParam);
+
+        // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-sendnotifymessagew
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        internal static extern bool SendNotifyMessage(IntPtr hWnd, uint Msg, UIntPtr wParam, IntPtr lParam);
 
         [DllImport("user32.dll", EntryPoint = "SystemParametersInfoW")]
         internal static extern bool SystemParametersInfoRect(int uiAction, int uiParam, ref RECT pvParam, int fWinIni);
@@ -471,7 +390,7 @@ namespace Morphic.Client
         [DllImport("dwmapi.dll")]
         internal static extern int DwmSetWindowAttribute(IntPtr hWnd, int attr, ref int attrValue, int attrSize);
 
-//        internal static readonly IntPtr HWND_BROADCAST = new IntPtr(0xffff);
+        internal static readonly IntPtr HWND_BROADCAST = new IntPtr(0xffff);
         internal static readonly IntPtr HWND_MESSAGE = new IntPtr(-3);
 
         #endregion
@@ -488,12 +407,6 @@ namespace Morphic.Client
             return SetForegroundWindow(hwnd);
         }
 
-        [DllImport("gdi32.dll")]
-        internal static extern IntPtr CreateCompatibleDC(IntPtr hdc);
-
-        [DllImport("gdi32.dll")]
-        internal static extern IntPtr CreateDIBSection(IntPtr hdc, ref BITMAPINFO pbmi, uint usage, out IntPtr ppvBits, IntPtr hSection, uint offset);
-
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         internal static extern IntPtr CreateWindowEx(
             WindowStylesEx dwExStyle,
@@ -509,50 +422,29 @@ namespace Morphic.Client
             IntPtr hInstance,
             IntPtr lpParam);
 
-        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        internal static extern IntPtr CreateWindowEx(
-            WindowStylesEx dwExStyle,
-            string lpClassName,
-            string? lpWindowName,
-            WindowStyles dwStyle,
-            int x,
-            int y,
-            int nWidth,
-            int nHeight,
-            IntPtr hWndParent,
-            IntPtr hMenu,
-            IntPtr hInstance,
-            IntPtr lpParam);
+          //[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+          //internal static extern IntPtr CreateWindowEx(
+          //    WindowStylesEx dwExStyle,
+          //    string lpClassName,
+          //    string? lpWindowName,
+          //    WindowStyles dwStyle,
+          //    int x,
+          //    int y,
+          //    int nWidth,
+          //    int nHeight,
+          //    IntPtr hWndParent,
+          //    IntPtr hMenu,
+          //    IntPtr hInstance,
+          //    IntPtr lpParam);
 
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         internal static extern IntPtr DefWindowProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
-        [DllImport("gdi32.dll")]
-        internal static extern bool DeleteDC(IntPtr hdc);
-
-        [DllImport("gdi32.dll")]
-        internal static extern bool DeleteObject(IntPtr ho);
-
-        [DllImport("user32.dll")]
-        internal static extern bool DestroyWindow(IntPtr hWnd);
-
-        internal delegate bool EnumWindowsProc(IntPtr hwnd, IntPtr lParam);
-
-        [DllImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        internal static extern bool EnumChildWindows(IntPtr hwndParent, EnumWindowsProc lpEnumFunc, IntPtr lParam);
-
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         internal static extern IntPtr FindWindow(string? lpClassName, string? lpWindowName);
 
-        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        internal static extern IntPtr FindWindowEx(IntPtr hWndParent, IntPtr hWndChildAfter, string lpszClass, string? lpszWindow);
-
         [DllImport("user32.dll")]
         internal static extern UInt32 GetDpiForWindow(IntPtr hwnd);
-
-        [DllImport("user32.dll")]
-        internal static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);
 
         [DllImport("user32.dll")]
         private static extern bool IsIconic(IntPtr hWnd);
@@ -581,246 +473,15 @@ namespace Morphic.Client
             IDC_WAIT = 32514,
         }
 
-        // see: https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-mapwindowpoints
-        // NOTE: this signature is the POINT option (in which cPoints must always be set to 1).
-        [DllImport("user32.dll", SetLastError = true)]
-        internal static extern int MapWindowPoints(IntPtr hWndFrom, IntPtr hWndTo, [In] ref POINT lpPoints, uint cPoints);
-
-        // see: https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-mapwindowpoints
-        // NOTE: this signature is the RECT option (in which cPoints must always be set to 2).
-        [DllImport("user32.dll", SetLastError = true)]
-        internal static extern int MapWindowPoints(IntPtr hWndFrom, IntPtr hWndTo, [In] ref RECT lpPoints, uint cPoints);
-
-        [DllImport("user32.dll")]
-        internal static extern bool RedrawWindow(IntPtr hWnd, IntPtr lprcUpdate, IntPtr hrgnUpdate, RedrawWindowFlags flags);
-
-        // source for values: http://www.pinvoke.net/default.aspx/Enums/RedrawWindowFlags.html
-        internal enum RedrawWindowFlags : uint
-        {
-            // invalidation flags
-            RDW_ERASE = 0x4,
-            RDW_FRAME = 0x400,
-            RDW_INTERNALPAINT = 0x2,
-            RDW_INVALIDATE = 0x1,
-            // validation flags
-            RDW_NOERASE = 0x20,
-            RDW_NOFRAME = 0x800,
-            RDW_NOINTERNALPAINT = 0x10,
-            RDW_VALIDATE = 0x8,
-            // repainting flags
-            RDW_ERASENOW = 0x200,
-            RDW_UPDATENOW = 0x100,
-            // misc. control flags
-            RDW_ALLCHILDREN = 0x80,
-            RDW_NOCHILDREN = 0x40
-        }
-
         [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         internal static extern ushort RegisterClassEx([In] ref WNDCLASSEX lpWndClass);
-
-        [DllImport("gdi32.dll")]
-        internal static extern IntPtr SelectObject(IntPtr hdc, IntPtr h);
 
         [DllImport("user32.dll")]
         private static extern bool SetForegroundWindow(IntPtr hWnd);
 
         [DllImport("user32.dll")]
-        internal static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, SetWindowPosFlags uFlags);
-
-        internal enum SetWindowPosFlags : uint
-        {
-            SWP_ASYNCWINDOWPOS = 0x4000,
-            SWP_DEFERERASE = 0x2000,
-            SWP_DRAWFRAME = 0x0020,
-            SWP_FRAMECHANGED = 0x0020,
-            SWP_HIDEWINDOW = 0x0080,
-            SWP_NOACTIVATE = 0x0010,
-            SWP_NOCOPYBITS = 0x0100,
-            SWP_NOMOVE = 0x0002,
-            SWP_NOOWNERZORDER = 0x0200,
-            SWP_NOREDRAW = 0x0008,
-            SWP_NOREPOSITION = 0x0200,
-            SWP_NOSENDCHANGING = 0x0400,
-            SWP_NOSIZE = 0x0001,
-            SWP_NOZORDER = 0x0004,
-            SWP_SHOWWINDOW = 0x0040
-        }
-
-        internal struct TOOLINFO
-        {
-            public uint cbSize;
-            public uint uFlags;
-            public IntPtr hwnd;
-            public IntPtr uId;
-            public RECT rect;
-            public IntPtr hinst;
-            [MarshalAs(UnmanagedType.LPTStr)]
-            public string? lpszText;
-            public IntPtr lParam;
-            //public IntPtr reserved; // NOTE: this exists in the official documentation but adding it causes SendMessage to fail; pinvoke.net leaves it out and so do we
-        }
-
-        [DllImport("user32.dll")]
-        internal static extern bool TrackMouseEvent(ref TRACKMOUSEEVENT lpEventTrack);
-
-        [StructLayout(LayoutKind.Sequential)]
-        internal struct TRACKMOUSEEVENT
-        {
-            public uint cbSize;
-            public TMEFlags dwFlags;
-            public IntPtr hWnd;
-            public uint dwHoverTime;
-
-            public TRACKMOUSEEVENT(TMEFlags dwFlags, IntPtr hWnd, uint dwHoverTime)
-            {
-                this.cbSize = (uint)Marshal.SizeOf(typeof(TRACKMOUSEEVENT));
-                this.dwFlags = dwFlags;
-                this.hWnd = hWnd;
-                this.dwHoverTime = dwHoverTime;
-            }
-        }
-
-        // WinUser.h (Windows 10 1809 SDK)
-        internal static readonly uint HOVER_DEFAULT = 0xFFFFFFFF;
-
-        [Flags]
-        internal enum TMEFlags : uint
-        {
-            TME_CANCEL = 0x80000000,
-            TME_HOVER = 0x00000001,
-            TME_LEAVE = 0x00000002,
-            TME_NONCLIENT = 0x00000010,
-            TME_QUERY = 0x40000000
-        }
-
-        [DllImport("user32.dll")]
         private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
-        [StructLayout(LayoutKind.Sequential)]
-        internal struct BITMAPINFO
-        {
-            public BITMAPINFOHEADER bmiHeader;
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)] // NOTE: in other implementations, this was represented as a uint instead (with 256 elements instead of 1 element)
-            public RGBQUAD[] bmiColors;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct BITMAPINFOHEADER
-        {
-            public uint biSize;
-            public int biWidth;
-            public int biHeight;
-            public ushort biPlanes;
-            public ushort biBitCount;
-            public BitmapCompressionType biCompression;
-            public uint biSizeImage;
-            public int biXPelsPerMeter;
-            public int biYPelsPerMeter;
-            public uint biClrUsed;
-            public uint biClrImportant;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        internal struct RGBQUAD
-        {
-            byte rgbBlue;
-            byte rgbGreen;
-            byte rgbRed;
-            byte rgbReserved;
-        }
-
-        // wingdi.h (Windows 10 1809 SDK)
-        internal enum BitmapCompressionType : uint
-        {
-            BI_RGB = 0,
-            BI_RLE8 = 1,
-            BI_RLE4 = 2,
-            BI_BITFIELDS = 3,
-            BI_JPEG = 4,
-            BI_PNG = 5
-        }
-
-        internal static readonly IntPtr HWND_TOP = new IntPtr(0);
-        internal static readonly IntPtr HWND_BOTTOM = new IntPtr(1);
-        internal static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
-        internal static readonly IntPtr HWND_NOTOPMOST = new IntPtr(-2);
-
-        internal const int MA_NOACTIVATEANDEAT = 4;
-
-        internal const int CW_USEDEFAULT = unchecked((int)0x80000000);
-
-        internal const string TOOLTIPS_CLASS = "tooltips_class32";
-
-        internal const uint WM_USER = 0x0400;
-
-        internal const uint TTM_ADDTOOL = WM_USER + 50;
-        internal const uint TTM_DELTOOL = WM_USER + 51;
-
-        //
-
-        internal const uint MK_LBUTTON = 0x0001;
-        internal const uint MK_RBUTTON = 0x0002;
-
-        internal const uint S_OK = 0;
-
-        // WinUser.h (Windows 10 1809 SDK)
-        public enum WindowMessage : uint
-        {
-            // https://docs.microsoft.com/en-us/windows/win32/winmsg/wm-create
-            WM_CREATE = 0x0001,
-
-            // https://docs.microsoft.com/en-us/windows/win32/winmsg/wm-destroy
-            WM_DESTROY = 0x0002,
-
-            // https://docs.microsoft.com/en-us/windows/win32/gdi/wm-displaychange
-            WM_DISPLAYCHANGE = 0x007E,
-
-            // https://docs.microsoft.com/en-us/windows/win32/winmsg/wm-erasebkgnd
-            WM_ERASEBKGND = 0x0014,
-
-            // https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-lbuttondown
-            WM_LBUTTONDOWN = 0x0201,
-
-            // https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-lbuttonup
-            WM_LBUTTONUP = 0x0202,
-
-            // https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-mouseactivate
-            WM_MOUSEACTIVATE = 0x0021,
-
-            // https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-mouseleave
-            WM_MOUSELEAVE = 0x02A3,
-
-            // https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-mousemove
-            WM_MOUSEMOVE = 0x0200,
-
-            // https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-nchittest
-            WM_NCHITTEST = 0x0084,
-
-            // https://docs.microsoft.com/en-us/windows/win32/gdi/wm-ncpaint
-            WM_NCPAINT = 0x0085,
-
-            // https://docs.microsoft.com/en-us/windows/win32/gdi/wm-paint
-            WM_PAINT = 0x000F,
-
-            // https://docs.microsoft.com/en-us/windows/win32/winmsg/wm-windowposchanged
-            WM_WINDOWPOSCHANGED = 0x0047,
-
-            // https://docs.microsoft.com/en-us/windows/win32/winmsg/wm-windowposchanging
-            WM_WINDOWPOSCHANGING = 0x0046,
-
-            // https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-rbuttondown
-            WM_RBUTTONDOWN = 0x0204,
-
-            // https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-rbuttonup
-            WM_RBUTTONUP = 0x0205,
-
-            // https://docs.microsoft.com/en-us/windows/win32/menurc/wm-setcursor
-            WM_SETCURSOR = 0x0020,
-
-            // https://docs.microsoft.com/en-us/windows/win32/winmsg/wm-size
-            WM_SIZE = 0x0005,
-        }
-		
         [Flags]
         internal enum WindowStyles : uint
         {
@@ -885,12 +546,6 @@ namespace Morphic.Client
             WS_EX_WINDOWEDGE = 0x00000100
         }
 
-        internal const uint TTF_SUBCLASS = 0x0010;
-
-        internal const uint TTS_ALWAYSTIP = 0x01;
-        internal const uint TTS_NOPREFIX = 0x02;
-        internal const uint TTS_BALLOON = 0x40;
-
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
         internal struct WNDCLASSEX
         {
@@ -912,97 +567,6 @@ namespace Morphic.Client
         }
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         internal delegate IntPtr WndProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
-
-        #endregion
-
-        #region Window Painting
-
-        // NOTE: per pinvoke.net, this function is called "GdiAlphaBlend" even though the Microsoft documentation calls it AlphaBlend
-        [DllImport("gdi32.dll", EntryPoint = "GdiAlphaBlend")]
-        internal static extern bool AlphaBlend(IntPtr hdcDest, int xOriginDest, int yOriginDest, int wDest, int hDest, IntPtr hdcSrc, int xOriginSrc, int yOriginSrc, int wSrc, int hSrc, BLENDFUNCTION ftn);
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct BLENDFUNCTION
-        {
-            public byte BlendOp;
-            public byte BlendFlags;
-            public byte SourceConstantAlpha;
-            public byte AlphaFormat;
-        }
-
-        internal const byte AC_SRC_OVER = 0x00;
-        //internal const byte AC_SRC_ALPHA = 0x01;
-
-        internal const uint DIB_RGB_COLORS = 0;
-
-        // https://docs.microsoft.com/en-us/windows/win32/api/uxtheme/nf-uxtheme-beginbufferedpaint
-        [DllImport("uxtheme.dll")]
-        internal static extern IntPtr BeginBufferedPaint(IntPtr hdcTarget, [In] ref RECT prcTarget, BP_BUFFERFORMAT dwFormat, IntPtr pPaintParams, out IntPtr phdc);
-
-        // https://docs.microsoft.com/en-us/windows/win32/api/uxtheme/ne-uxtheme-bp_bufferformat
-        internal enum BP_BUFFERFORMAT: uint
-        {
-            BPBF_COMPATIBLEBITMAP,
-            BPBF_DIB,
-            BPBF_TOPDOWNDIB,
-            BPBF_TOPDOWNMONODIB
-        }
-
-        [DllImport("user32.dll")]
-        internal static extern IntPtr BeginPaint(IntPtr hwnd, out PAINTSTRUCT lpPaint);
-
-        // https://docs.microsoft.com/en-us/windows/win32/api/uxtheme/nf-uxtheme-bufferedpaintclear
-        [DllImport("uxtheme.dll")]
-        internal static extern uint BufferedPaintClear(IntPtr hBufferedPaint, ref RECT prc);
-        //
-        [DllImport("uxtheme.dll")]
-        internal static extern uint BufferedPaintClear(IntPtr hBufferedPaint, IntPtr prc);
-
-        [DllImport("uxtheme.dll")]
-        internal static extern int BufferedPaintInit();
-
-        [DllImport("uxtheme.dll")]
-        internal static extern int BufferedPaintUnInit();
-
-        // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-drawiconex
-        [DllImport("user32.dll")]
-        internal static extern bool DrawIconEx(IntPtr hdc, int xLeft, int yTop, IntPtr hIcon, int cxWidth, int cyHeight, uint istepIfAniCur, IntPtr hbrFlickerFreeDraw, DrawIconFlags diFlags);
-
-        [Flags]
-        internal enum DrawIconFlags: uint
-        {
-            DI_COMPAT = 0x0004,
-            DI_DEFAULTSIZE = 0x0008,
-            DI_IMAGE = 0x0002,
-            DI_MASK = 0x0001,
-            DI_NOMIRROR = 0x0010,
-            DI_NORMAL = DI_IMAGE | DI_MASK // 0x0003
-        }
-
-        // https://docs.microsoft.com/en-us/windows/win32/api/uxtheme/nf-uxtheme-endbufferedpaint
-        [DllImport("uxtheme.dll")]
-        internal static extern uint EndBufferedPaint(IntPtr hBufferedPaint, bool fUpdateTarget);
-
-        [DllImport("user32.dll")]
-        internal static extern bool EndPaint(IntPtr hWnd, [In] ref PAINTSTRUCT lpPaint);
-
-        // TODO: remove FILLRECT!
-        [DllImport("user32.dll")]
-        internal static extern int FillRect(IntPtr hDC, [In] ref RECT lprc, IntPtr hbr);
-
-        //
-
-        [StructLayout(LayoutKind.Sequential)]
-        internal struct PAINTSTRUCT
-        {
-            public IntPtr hdc;
-            public bool fErase;
-            public RECT rcPaint;
-            public bool fRestore;
-            public bool fIncUpdate;
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)]
-            public byte[] rgbReserved;
-        }
 
         #endregion
     }

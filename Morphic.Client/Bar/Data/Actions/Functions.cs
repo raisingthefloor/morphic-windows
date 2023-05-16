@@ -1129,17 +1129,17 @@ namespace Morphic.Client.Bar.Data.Actions
 
                 // get the current setting
                 bool appsUseLightThemeAsBool;
-                var getAppsUseLightThemeResult = personalizeKey.GetValue<uint>("AppsUseLightTheme");
+                var getAppsUseLightThemeResult = personalizeKey.GetValueData<uint>("AppsUseLightTheme");
                 if (getAppsUseLightThemeResult.IsError == true)
                 {
-                    if (getAppsUseLightThemeResult.Error == Morphic.WindowsNative.Registry.RegistryKey.RegistryValueError.ValueDoesNotExist)
+                    switch (getAppsUseLightThemeResult.Error!.Value) 
                     {
-                        // default AppsUseLightTheme (inverse of dark mode state) on Windows 10 v1809 is true
-                        appsUseLightThemeAsBool = true;
-                    }
-                    else
-                    {
-                        return MorphicResult.ErrorResult();
+                        case WindowsNative.Registry.RegistryKey.RegistryGetValueError.Values.ValueDoesNotExist:
+                            // default AppsUseLightTheme (inverse of dark mode state) on Windows 10 v1809 is true
+                            appsUseLightThemeAsBool = true;
+                            break;
+                        default:
+                            return MorphicResult.ErrorResult();
                     }
                 }
                 else
@@ -1222,7 +1222,9 @@ namespace Morphic.Client.Bar.Data.Actions
                 try
                 {
                     // notify all windows that we have changed a setting in the "win ini" settings
-                    _ = PInvoke.User32.SendMessage(PInvoke.User32.HWND_BROADCAST, PInvoke.User32.WindowMessage.WM_WININICHANGE, IntPtr.Zero, pointerToImmersiveColorSetString);
+                    // NOTE: we use SendNotifyMessage instead of SendMessage since we are broadcasting the message and we want to avoid any chance that a locked-up top-level window would lock up our app (since SendMessage does not return until all windows have processed a broadcast message)
+                    //       [in the future, we may want to consider using SendMessageCallback so that we can wait some time for the action to complete as a UI optimization]
+                    _ = WinApi.SendNotifyMessage(WinApi.HWND_BROADCAST, WinApi.WM_WININICHANGE, UIntPtr.Zero, pointerToImmersiveColorSetString);
                 }
                 finally
                 {

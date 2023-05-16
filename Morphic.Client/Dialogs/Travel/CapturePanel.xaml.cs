@@ -27,7 +27,7 @@ namespace Morphic.Client.Dialogs
     using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Controls;
-    using Core;
+    using Morphic.Core.Legacy;
     using Elements;
     using Microsoft.Extensions.Logging;
     using Service;

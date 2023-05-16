@@ -1,9 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>netcoreapp3.1</TargetFramework>
-		<LangVersion>9.0</LangVersion>
-		<Nullable>enable</Nullable>
-		<Platforms>AnyCPU;x64</Platforms>
+	  <TargetFramework>net6.0-windows10.0.22621.0</TargetFramework>
+	  <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+	  <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+	  <Nullable>enable</Nullable>
+		<Platforms>x86;x64;ARM64</Platforms>
+		<RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
 	</PropertyGroup>
 	<ItemGroup>
 	  <COMReference Include="UIAutomationClient">
@@ -17,15 +19,17 @@
 	  </COMReference>
 	</ItemGroup>
 	<ItemGroup>
-	  <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
-	  <PackageReference Include="Microsoft.Windows.SDK.Contracts" Version="10.0.17763.1000" />
-	  <PackageReference Include="PInvoke.AdvApi32" Version="0.7.104" />
-	  <PackageReference Include="PInvoke.Kernel32" Version="0.7.104" />
-	  <PackageReference Include="PInvoke.SetupApi" Version="0.7.104" />
+	  <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
+	  <PackageReference Include="Microsoft.Win32.SystemEvents" Version="7.0.0" />
+          <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.1" />
+          <PackageReference Include="Morphic.Core" Version="1.2.0" />
+	  <PackageReference Include="PInvoke.AdvApi32" Version="0.7.124" />
+	  <PackageReference Include="PInvoke.Kernel32" Version="0.7.124" />
+	  <PackageReference Include="PInvoke.SetupApi" Version="0.7.124" />
 	</ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Morphic.Core\Morphic.Core.csproj" />
+    <ProjectReference Include="..\Morphic.Core.Legacy\Morphic.Core.Legacy.csproj" />
   </ItemGroup>
 
   <ItemGroup>

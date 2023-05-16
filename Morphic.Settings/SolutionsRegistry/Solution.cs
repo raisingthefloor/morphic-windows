@@ -3,7 +3,8 @@
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
-    using Core;
+    using Morphic.Core;
+    using Morphic.Core.Legacy;
     using Newtonsoft.Json;
     using SettingsHandlers;
 

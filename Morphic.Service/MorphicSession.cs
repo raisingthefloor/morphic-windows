@@ -30,7 +30,8 @@ namespace Morphic.Service
     using System.Timers;
     using Microsoft.Extensions.Logging;
     using Morphic.Core;
-    using Morphic.Core.Community;
+    using Morphic.Core.Legacy;
+    using Morphic.Core.Legacy.Community;
     using Settings.SolutionsRegistry;
 
     /// <summary>
@@ -215,6 +216,18 @@ namespace Morphic.Service
             if (this.Preferences is not null)
             {
                 await this.Solutions.ApplyPreferencesAsync(this.Preferences, true);
+            }
+        }
+
+        public List<string> GetListOfAtSoftwareToInstall()
+        {
+            if (this.Preferences is not null)
+            {
+                return this.Solutions.GetListOfAtSoftwareToInstall(this.Preferences);
+            }
+            else
+            {
+                return new List<string>();
             }
         }
 

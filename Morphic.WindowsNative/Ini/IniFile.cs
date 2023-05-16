@@ -1,4 +1,12 @@
-﻿// The R&D leading to these results received funding from the:
+﻿// Copyright 2020-2022 Raising the Floor - US, Inc.
+//
+// Licensed under the New BSD license. You may not use this file except in
+// compliance with this License.
+//
+// You may obtain a copy of the License at
+// https://github.com/raisingthefloor/morphic-windows/blob/master/LICENSE.txt
+//
+// The R&D leading to these results received funding from the:
 // * Rehabilitation Services Administration, US Dept. of Education under
 //   grant H421A150006 (APCP)
 // * National Institute on Disability, Independent Living, and
@@ -13,30 +21,52 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using Morphic.Core;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace Morphic.WindowsNative.Ini
 {
+    using Morphic.Core;
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+
     public class IniFile
     {
-        // NOTE: properties indicates properties which do not belong to a section
+        // NOTE: IniFile.Properties contains top-level properties (i.e. properties which do not belong to a section)
         public List<IniProperty> Properties;
 
-        // NOTE: each section contains zero or more properties (in addition to properties in the root)
+        // NOTE: each section contains zero or more properties (in addition to properties at the top level)
         public List<IniSection> Sections;
+
+        private IniLineTerminatorOption _defaultLineTerminator = IniLineTerminatorOption.CrLf;
+        public IniLineTerminatorOption DefaultLineTerminator
+        {
+            get 
+            {
+                return _defaultLineTerminator;
+            }
+            set
+            {
+                switch (value)
+                {
+                    case IniLineTerminatorOption.Cr:
+                    case IniLineTerminatorOption.CrLf:
+                    case IniLineTerminatorOption.Lf:
+                        _defaultLineTerminator = value;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+        }
 
         private struct EndOfFileContentsStruct
         {
             public List<char> Lexeme;
-            public List<IniTrivia> LeadingTrivia;
+            public List<Lexer.IniTrivia> LeadingTrivia;
 
-            public EndOfFileContentsStruct(List<char> lexeme, List<IniTrivia> leadingTrivia)
+            public EndOfFileContentsStruct(List<char> lexeme, List<Lexer.IniTrivia> leadingTrivia)
             {
                 this.Lexeme = lexeme;
                 this.LeadingTrivia = leadingTrivia;
@@ -50,23 +80,27 @@ namespace Morphic.WindowsNative.Ini
             this.Sections = sections;
         }
 
-        #region Parser 
+
+        #region Parser (deserializer)
 
         public static MorphicResult<IniFile, MorphicUnit> CreateFromString(string contents)
         {
             var properties = new List<IniProperty>();
             var sections = new List<IniSection>();
-            var endOfFileContents = new EndOfFileContentsStruct(new List<char>(), new List<IniTrivia>());
+            var endOfFileContents = new EndOfFileContentsStruct(new List<char>(), new List<Lexer.IniTrivia>());
+
+    	    // NOTE: since INI is a Windows file format, we use CrLf as the default line terminator option
+	        IniLineTerminatorOption defaultLineTerminator = IniLineTerminatorOption.CrLf;
 
             IniSection? currentSection = null;
 
-            var lexer = new IniLexer(contents);
+            var lexer = new Lexer.IniLexer(contents);
             while (true)
             {
-                IniToken iniToken = lexer.GetNextToken();
+                Lexer.IniToken iniToken = lexer.GetNextToken();
 
                 // if we've reached the last token, capture the end of file content and break out of this loop
-                if (iniToken.Kind == IniTokenKind.EndOfFile)
+                if (iniToken.Kind == Lexer.IniTokenKind.EndOfFile)
                 {
                     endOfFileContents.Lexeme = iniToken.Lexeme;
                     endOfFileContents.LeadingTrivia = iniToken.LeadingTrivia;
@@ -74,21 +108,37 @@ namespace Morphic.WindowsNative.Ini
                     break;
                 }
 
+                // capture the last line terminator we find on any section/property line as the "default" line terminator for this IniFile instance
                 switch(iniToken.Kind)
                 {
-                    case IniTokenKind.Section:
+                    case Lexer.IniTokenKind.Section:
+                    case Lexer.IniTokenKind.Property:
+                        switch (iniToken.LineTerminator)
+                        {
+                            case Lexer.IniExplicitLineTerminatorOption.Cr:
+                            case Lexer.IniExplicitLineTerminatorOption.CrLf:
+                            case Lexer.IniExplicitLineTerminatorOption.Lf:
+                                defaultLineTerminator = IniFile.FromIniExplicitLineTerminatorOption(iniToken.LineTerminator);
+                                break;
+                        }
+                        break;
+                }
+
+                switch (iniToken.Kind)
+                {
+                    case Lexer.IniTokenKind.Section:
                         {
                             // new section
-                            var newSection = IniSection.CreateFromLexeme(iniToken.Lexeme, iniToken.LeadingTrivia, iniToken.TrailingTrivia);
+                            var newSection = IniSection.CreateFromLexeme(iniToken.Lexeme, IniFile.FromIniExplicitLineTerminatorOption(iniToken.LineTerminator), iniToken.LeadingTrivia, iniToken.TrailingTrivia);
                             currentSection = newSection;
                             //
                             sections.Add(newSection);
                         }
                         break;
-                    case IniTokenKind.Property:
+                    case Lexer.IniTokenKind.Property:
                         {
                             // new property
-                            var newProperty = IniProperty.CreateFromLexeme(iniToken.Lexeme, iniToken.LeadingTrivia, iniToken.TrailingTrivia);
+                            var newProperty = IniProperty.CreateFromLexeme(iniToken.Lexeme, IniFile.FromIniExplicitLineTerminatorOption(iniToken.LineTerminator), iniToken.LeadingTrivia, iniToken.TrailingTrivia);
                             //
                             if (currentSection is not null)
                             {
@@ -97,45 +147,46 @@ namespace Morphic.WindowsNative.Ini
                             }
                             else
                             {
-                                // root property (i.e. outside of any sections)
+                                // top-level property (i.e. outside of any sections)
                                 properties.Add(newProperty);
                             }
                         }
                         break;
-                    case IniTokenKind.Invalid:
+                    case Lexer.IniTokenKind.Invalid:
                         return MorphicResult.ErrorResult();
                 }
             }
 
             var result = new IniFile(properties, sections);
+            result.DefaultLineTerminator = defaultLineTerminator;
             result.EndOfFileContents = endOfFileContents;
 
             return MorphicResult.OkResult(result);
         }
 
-        #endregion Parser
+        #endregion Parser (deserializer)
+
 
         #region Serializer
 
-        public override string ToString()
+        public string PropertyAndValueAsString()
         {
-            var result = new StringBuilder();
+            var resultBuilder = new StringBuilder();
 
             // top-level properties
             foreach (var property in this.Properties)
             {
                 foreach (var trivia in property.LeadingTrivia)
                 {
-                    IniFile.AppendTriviaToStringBuilder(trivia, ref result);
+                    IniFile.AppendTriviaToStringBuilder(trivia, ref resultBuilder);
                 }
 
-                result.Append(property.ToString());
-                // TODO: consider storing and reproducing the "original" line terminator instead (or a default one, if none was specified)
-                IniFile.AppendLineTerminatorToStringBuilder(IniLineTerminatorOption.CrLf, ref result);
+                resultBuilder.Append(property.PropertyAndValueAsPropertyString());
+                IniFile.AppendLineTerminatorToStringBuilder(this.ToIniExplicitLineTerminatorOption(property.LineTerminator), ref resultBuilder);
 
                 foreach (var trivia in property.TrailingTrivia)
                 {
-                    IniFile.AppendTriviaToStringBuilder(trivia, ref result);
+                    IniFile.AppendTriviaToStringBuilder(trivia, ref resultBuilder);
                 }
             }
 
@@ -144,66 +195,64 @@ namespace Morphic.WindowsNative.Ini
             {
                 foreach (var trivia in section.LeadingTrivia)
                 {
-                    IniFile.AppendTriviaToStringBuilder(trivia, ref result);
+                    IniFile.AppendTriviaToStringBuilder(trivia, ref resultBuilder);
                 }
 
-                result.Append(section.ToString());
-                // TODO: consider storing and reproducing the "original" line terminator instead (or a default one, if none was specified)
-                IniFile.AppendLineTerminatorToStringBuilder(IniLineTerminatorOption.CrLf, ref result);
+                resultBuilder.Append(section.SectionNameAsSectionHeaderString());
+                IniFile.AppendLineTerminatorToStringBuilder(this.ToIniExplicitLineTerminatorOption(section.LineTerminator), ref resultBuilder);
 
                 foreach (var property in section.Properties)
                 {
                     foreach (var trivia in property.LeadingTrivia)
                     {
-                        IniFile.AppendTriviaToStringBuilder(trivia, ref result);
+                        IniFile.AppendTriviaToStringBuilder(trivia, ref resultBuilder);
                     }
 
-                    result.Append(property.ToString());
-                    // TODO: consider storing and reproducing the "original" line terminator instead (or a default one, if none was specified)
-                    IniFile.AppendLineTerminatorToStringBuilder(IniLineTerminatorOption.CrLf, ref result);
+                    resultBuilder.Append(property.PropertyAndValueAsPropertyString());
+                    IniFile.AppendLineTerminatorToStringBuilder(this.ToIniExplicitLineTerminatorOption(property.LineTerminator), ref resultBuilder);
 
                     foreach (var trivia in property.TrailingTrivia)
                     {
-                        IniFile.AppendTriviaToStringBuilder(trivia, ref result);
+                        IniFile.AppendTriviaToStringBuilder(trivia, ref resultBuilder);
                     }
                 }
 
                 foreach (var trivia in section.TrailingTrivia)
                 {
-                    IniFile.AppendTriviaToStringBuilder(trivia, ref result);
+                    IniFile.AppendTriviaToStringBuilder(trivia, ref resultBuilder);
                 }
             }
 
             // end of file contents
             foreach (var trivia in this.EndOfFileContents.LeadingTrivia)
             {
-                IniFile.AppendTriviaToStringBuilder(trivia, ref result);
+                IniFile.AppendTriviaToStringBuilder(trivia, ref resultBuilder);
             }
-            result.Append(this.EndOfFileContents.Lexeme.ToArray());
+            resultBuilder.Append(this.EndOfFileContents.Lexeme.ToArray());
 
-            return result.ToString();
+            return resultBuilder.ToString();
         }
 
-        private static void AppendTriviaToStringBuilder(IniTrivia trivia, ref StringBuilder builder)
+        private static void AppendTriviaToStringBuilder(Lexer.IniTrivia trivia, ref StringBuilder builder)
         {
             builder.Append(trivia.Lexeme.ToArray());
-            IniFile.AppendLineTerminatorToStringBuilder(trivia.LineTerminator ?? IniLineTerminatorOption.None, ref builder);
+            IniFile.AppendLineTerminatorToStringBuilder(trivia.LineTerminator, ref builder);
         }
 
-        private static void AppendLineTerminatorToStringBuilder(IniLineTerminatorOption lineTerminator, ref StringBuilder builder)
+        private static void AppendLineTerminatorToStringBuilder(Lexer.IniExplicitLineTerminatorOption lineTerminator, ref StringBuilder builder)
         {
             switch (lineTerminator)
             {
-                case IniLineTerminatorOption.Cr:
+                case Lexer.IniExplicitLineTerminatorOption.Cr:
                     builder.Append("\r");
                     break;
-                case IniLineTerminatorOption.CrLf:
+                case Lexer.IniExplicitLineTerminatorOption.CrLf:
                     builder.Append("\r\n");
                     break;
-                case IniLineTerminatorOption.Lf:
+                case Lexer.IniExplicitLineTerminatorOption.Lf:
                     builder.Append("\n");
                     break;
-                case IniLineTerminatorOption.None:
+                case Lexer.IniExplicitLineTerminatorOption.None:
                     break;
                 default:
                     Debug.Assert(false, "Invalid line terminator option (i.e. code bug)");
@@ -213,5 +262,45 @@ namespace Morphic.WindowsNative.Ini
 
         #endregion Serializer
 
+
+        #region Line Terminator helpers
+
+        private static IniLineTerminatorOption FromIniExplicitLineTerminatorOption(Lexer.IniExplicitLineTerminatorOption explicitLineTerminatorOption)
+        {
+            switch(explicitLineTerminatorOption)
+            {
+                case Lexer.IniExplicitLineTerminatorOption.None:
+                    return IniLineTerminatorOption.None;
+                case Lexer.IniExplicitLineTerminatorOption.Cr:
+                    return IniLineTerminatorOption.Cr;
+                case Lexer.IniExplicitLineTerminatorOption.CrLf:
+                    return IniLineTerminatorOption.CrLf;
+                case Lexer.IniExplicitLineTerminatorOption.Lf:
+                    return IniLineTerminatorOption.Lf;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        private Lexer.IniExplicitLineTerminatorOption ToIniExplicitLineTerminatorOption(IniLineTerminatorOption lineTerminatorOption)
+        {
+            switch (lineTerminatorOption)
+            {
+                case IniLineTerminatorOption.None:
+                    return Lexer.IniExplicitLineTerminatorOption.None;
+                case IniLineTerminatorOption.Cr:
+                    return Lexer.IniExplicitLineTerminatorOption.Cr;
+                case IniLineTerminatorOption.CrLf:
+                    return Lexer.IniExplicitLineTerminatorOption.CrLf;
+                case IniLineTerminatorOption.Lf:
+                    return Lexer.IniExplicitLineTerminatorOption.Lf;
+                case IniLineTerminatorOption.UseDefault:
+                    return this.ToIniExplicitLineTerminatorOption(this.DefaultLineTerminator);
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        #endregion Line Terminator helpers
     }
 }

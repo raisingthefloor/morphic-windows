@@ -1,10 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <IsPackable>false</IsPackable>
-    <Platforms>AnyCPU;x64</Platforms>
-    <LangVersion>9.0</LangVersion>
+	  <Platforms>AnyCPU</Platforms>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
@@ -16,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Morphic.Core\Morphic.Core.csproj" />
+    <ProjectReference Include="..\Morphic.Core.Legacy\Morphic.Core.Legacy.csproj" />
   </ItemGroup>
 
 </Project>

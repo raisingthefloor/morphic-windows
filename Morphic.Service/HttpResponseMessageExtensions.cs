@@ -25,6 +25,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Morphic.Core;
+using Morphic.Core.Legacy;
 using System.Text.Json.Serialization;
 
 #nullable enable

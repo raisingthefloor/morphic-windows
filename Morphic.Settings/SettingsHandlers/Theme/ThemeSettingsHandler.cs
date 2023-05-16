@@ -140,7 +140,7 @@
             await s_setHighContrastSemaphore.WaitAsync();
             try
             {
-                var getHighContrastModeIsOnResult = Morphic.WindowsNative.Display.DisplayUtils.GetHighContrastModeIsOn();
+                var getHighContrastModeIsOnResult = Morphic.WindowsNative.Display.HighContrastUtils.GetHighContrastModeIsOn();
                 if (getHighContrastModeIsOnResult.IsError == true)
                 {
                     Debug.Assert(false, "ERROR: Could not determine if high contrast mode is on or not.");
@@ -168,7 +168,7 @@
                     await this.SaveCurrentTheme(settingGroup.CurrentTheme, settingGroup.SavedTheme);
                 }
 
-                var setHighContrastModeIsOnResult = Morphic.WindowsNative.Display.DisplayUtils.SetHighContrastModeIsOn(newOnState);
+                var setHighContrastModeIsOnResult = Morphic.WindowsNative.Display.HighContrastUtils.SetHighContrastModeIsOn(newOnState);
                 if (setHighContrastModeIsOnResult.IsError == true)
                 {
                     Debug.Assert(false, "ERROR: Could not turn high contrast mode on/off.");
@@ -186,7 +186,7 @@
         [Getter("highContrastEnabled")]
         public async Task<object?> GetHighContrast(Setting setting)
         {
-            var getHighContrastModeIsOnResult = Morphic.WindowsNative.Display.DisplayUtils.GetHighContrastModeIsOn();
+            var getHighContrastModeIsOnResult = Morphic.WindowsNative.Display.HighContrastUtils.GetHighContrastModeIsOn();
             if (getHighContrastModeIsOnResult.IsError == true)
             {
                 Debug.Assert(false, "ERROR: Could not determine if high contrast mode is on or not.");

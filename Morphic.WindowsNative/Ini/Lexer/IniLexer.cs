@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2021 Raising the Floor - International
+﻿// Copyright 2020-2022 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -21,18 +21,16 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+namespace Morphic.WindowsNative.Ini.Lexer 
+{ 
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
 
-namespace Morphic.WindowsNative.Ini
-{
-    // NOTE: this lexer is simplified in that it reads entire lines (instead of following goals and parsing out individual keys, equal signs, tokens, etc.)
+    // NOTE: this lexer is simplified: it reads entire lines (instead of following goals and parsing out individual keys, equal signs, tokens, etc.)
     //       the parser takes on the additional responsibility of interpreting the "KeyValuePair" tokens to parse out the key and value, deal with double-quotes or escaped characters, etc.
     internal class IniLexer
     {
@@ -50,13 +48,13 @@ namespace Morphic.WindowsNative.Ini
             var leadingTrivia = new List<IniTrivia>();
 
             // NOTE: this loop will continue until we parse a line or read eof of file
-            while(true)
+            while (true)
             {
                 var nextLine = this.ReadIniTextLine();
 
                 if (nextLine is null)
                 {
-                    return new IniToken(IniTokenKind.EndOfFile, new List<char>() /* empty lexeme, rather than null */, IniLineTerminatorOption.None, leadingTrivia, null);
+                    return new IniToken(IniTokenKind.EndOfFile, new List<char>() /* empty lexeme, rather than null */, IniExplicitLineTerminatorOption.None, leadingTrivia, null);
                 }
 
                 var lexeme = nextLine.Text!;
@@ -88,7 +86,7 @@ namespace Morphic.WindowsNative.Ini
                     // check for whitespace lines
                     var lineIsWhitespace = lexeme.All(ch =>
                     {
-                        switch(ch)
+                        switch (ch)
                         {
                             case ' ':
                             case '\t':
@@ -97,7 +95,7 @@ namespace Morphic.WindowsNative.Ini
                                 return false;
                         }
                     });
-                    if(lineIsWhitespace == true)
+                    if (lineIsWhitespace == true)
                     {
                         var whitespaceTrivia = new IniTrivia(IniTriviaKind.Whitespace, lexeme, lineTerminator);
                         leadingTrivia.Add(whitespaceTrivia);
@@ -115,9 +113,9 @@ namespace Morphic.WindowsNative.Ini
 
                     // now categorize our lexeme (or mark it as invalid)
                     char? firstNonWhitespaceCharacter = null;
-                    foreach(var ch in lexeme)
+                    foreach (var ch in lexeme)
                     {
-                        switch(ch)
+                        switch (ch)
                         {
                             case ' ':
                             case '\t':
@@ -127,23 +125,23 @@ namespace Morphic.WindowsNative.Ini
                                 break;
                         }
 
-                        if(firstNonWhitespaceCharacter is not null)
+                        if (firstNonWhitespaceCharacter is not null)
                         {
                             break;
                         }
                     }
 
                     // check for sections
-                    if(firstNonWhitespaceCharacter == '[')
+                    if (firstNonWhitespaceCharacter == '[')
                     {
                         // make sure that the line contains an ending (right) bracket
                         var indexOfRightBracket = lexeme.IndexOf(']');
-                        if(indexOfRightBracket > 0)
+                        if (indexOfRightBracket > 0)
                         {
                             // found right bracket; make sure that the line does not contain any non-whitespace characters after the bracket
-                            for(var index = indexOfRightBracket + 1; index < lexeme.Count; index += 1)
+                            for (var index = indexOfRightBracket + 1; index < lexeme.Count; index += 1)
                             {
-                                switch(lexeme[index])
+                                switch (lexeme[index])
                                 {
                                     case ' ':
                                     case '\t':
@@ -169,7 +167,7 @@ namespace Morphic.WindowsNative.Ini
 
                     // check for an equals sign; we will treat anything to the left as the key and anything to the right as the value
                     var indexOfEqualsCharacter = lexeme.IndexOf('=');
-                    if(indexOfEqualsCharacter >= 0)
+                    if (indexOfEqualsCharacter >= 0)
                     {
                         // key/value pair
                         // NOTE: our parser is responsible for parsing out the key and value (and dealing with leading/trailing whitespace, double quotes around values, etc.)
@@ -187,9 +185,9 @@ namespace Morphic.WindowsNative.Ini
         private record IniTextLine
         {
             public List<char> Text;
-            public IniLineTerminatorOption LineTerminator;
+            public IniExplicitLineTerminatorOption LineTerminator;
 
-            public IniTextLine(List<char> text, IniLineTerminatorOption lineTerminator)
+            public IniTextLine(List<char> text, IniExplicitLineTerminatorOption lineTerminator)
             {
                 this.Text = text;
                 this.LineTerminator = lineTerminator;
@@ -206,10 +204,10 @@ namespace Morphic.WindowsNative.Ini
             var text = new List<char>();
 
             // capture all contents up to end of line or end of file
-            while (_remainingContents.Count > 0) 
+            while (_remainingContents.Count > 0)
             {
                 var ch = _remainingContents.First();
-                switch(ch)
+                switch (ch)
                 {
                     case '\r':
                     case '\n':
@@ -228,7 +226,7 @@ namespace Morphic.WindowsNative.Ini
                         // empty any remaining contents (i.e. stop at a hard EOF marker)
                         _remainingContents.Clear();
 
-                        return new IniTextLine(text, IniLineTerminatorOption.None);
+                        return new IniTextLine(text, IniExplicitLineTerminatorOption.None);
                     default:
                         // any other character
 
@@ -241,19 +239,19 @@ namespace Morphic.WindowsNative.Ini
             }
 
             // if we reach here, we have captured a line without an end of line marker; return the contents
-            return new IniTextLine(text, IniLineTerminatorOption.None);
+            return new IniTextLine(text, IniExplicitLineTerminatorOption.None);
         }
 
-        private IniLineTerminatorOption GetLineTerminator()
+        private IniExplicitLineTerminatorOption GetLineTerminator()
         {
             if (_remainingContents.Count == 0)
             {
-                return IniLineTerminatorOption.None;
+                return IniExplicitLineTerminatorOption.None;
             }
 
             var ch0 = _remainingContents[0];
 
-            switch(ch0)
+            switch (ch0)
             {
                 case '\r':
                     // \r or \r\n
@@ -268,25 +266,25 @@ namespace Morphic.WindowsNative.Ini
                             {
                                 // \r\n
                                 _remainingContents.RemoveAt(0);
-                                return IniLineTerminatorOption.CrLf;
+                                return IniExplicitLineTerminatorOption.CrLf;
                             }
                         }
 
                         // if we did not find an \n after the \r, return just \r
 
                         // \r
-                        return IniLineTerminatorOption.Cr;
+                        return IniExplicitLineTerminatorOption.Cr;
                     }
                 case '\n':
                     // \n
                     {
                         _remainingContents.RemoveAt(0);
 
-                        return IniLineTerminatorOption.Lf;
+                        return IniExplicitLineTerminatorOption.Lf;
                     }
                 default:
                     Debug.Assert(false, "Seeking line terminator characters but found another character instead.");
-                    return IniLineTerminatorOption.None;
+                    return IniExplicitLineTerminatorOption.None;
             }
         }
 
