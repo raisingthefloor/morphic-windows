@@ -1372,25 +1372,26 @@ namespace Morphic.Client
 
         private void RegisterGlobalHotKeys()
         {
-            EventHandler<NHotkey.HotkeyEventArgs> loginHotKeyPressed = async (sender, e) =>
-            {
-                // NOTE: if we want the login menu item to apply cloud-saved preferences after login, we should set this flag to true
-                var applyPreferencesAfterLogin = ConfigurableFeatures.CloudSettingsTransferIsEnabled;
-                var args = new Dictionary<string, object?>() { { "applyPreferencesAfterLogin", applyPreferencesAfterLogin } };
-                await this.Dialogs.OpenDialogAsync<LoginWindow>(args);
-            };
-            try
-            {
-                HotkeyManager.Current.AddOrReplace("Login with Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift, loginHotKeyPressed);
-            }
-            catch
-            {
-                this.Logger.LogError("Could not register hotkey Ctrl+Shift+M for 'Login with Morphic'");
-            }
+			// NOTE: we have chosen to disable the "login hot key" feature in Morphic; we may bring this back in a future release (or we can rely on the user activating the MorphicBar and then opening the menu)
+            //EventHandler<NHotkey.HotkeyEventArgs> loginHotKeyPressed = async (sender, e) =>
+            //{
+            //    // NOTE: if we want the login menu item to apply cloud-saved preferences after login, we should set this flag to true
+            //    var applyPreferencesAfterLogin = ConfigurableFeatures.CloudSettingsTransferIsEnabled;
+            //    var args = new Dictionary<string, object?>() { { "applyPreferencesAfterLogin", applyPreferencesAfterLogin } };
+            //    await this.Dialogs.OpenDialogAsync<LoginWindow>(args);
+            //};
+            //try
+            //{
+            //    HotkeyManager.Current.AddOrReplace("Login with Morphic", Key.M, ModifierKeys.Control | ModifierKeys.Shift, loginHotKeyPressed);
+            //}
+            //catch
+            //{
+            //    this.Logger.LogError("Could not register hotkey Ctrl+Shift+M for 'Login with Morphic'");
+            //}
 
             EventHandler<NHotkey.HotkeyEventArgs> showMorphicBarHotKeyPressed = (sender, e) =>
             {
-                this.BarManager.ShowBar();
+                this.BarManager.ShowBar(/*setFocusToMorphicButton: */true);
             };
             try
             {

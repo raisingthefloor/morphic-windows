@@ -513,5 +513,18 @@ namespace Morphic.Client.Bar.UI
             
             this.ExpandedChange?.Invoke(this, EventArgs.Empty);
         }
-    }
+
+        internal void SetFocusToMorphicButton()
+          {
+               // find the "menu" button and set focus to that button
+               foreach (var barItemControl in this.BarControl.ItemControls)
+               {
+                    if (barItemControl.BarItem.UiName.ToUpperInvariant() == "MENU")
+                    {
+                         barItemControl.Focus();
+                         break;
+                    }
+               }
+          }
+     }
 }
