@@ -54,13 +54,18 @@ namespace Morphic.Client.Bar
         /// <summary>
         /// Show a bar that's already loaded.
         /// </summary>
-        public void ShowBar()
+        public void ShowBar(bool setFocusToMorphicButton = false)
         {
             if (this.barWindow is not null)
             {
                 AppOptions.Current.MorphicBarIsVisible = true;
                 this.barWindow.Visibility = Visibility.Visible;
                 this.barWindow.Focus();
+                if (setFocusToMorphicButton == true)
+                {
+                    this.barWindow.SetFocusToMorphicButton();
+                    this.barWindow.Activate();
+                }
             }
         }
 
