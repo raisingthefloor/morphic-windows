@@ -885,6 +885,12 @@ namespace Morphic.Client
                 telemetryClient = MorphicTelemetryClient.Create(mqttConfig);
             }
             //
+            if (telemetrySiteId is not null)
+            {
+                // if a site id is provided, remove any disallowed characters; if no characters remain, set the siteid to null
+                var sanitizedTelemetrySiteId = this.SanitizeSiteId(telemetrySiteId!);
+                telemetrySiteId = sanitizedTelemetrySiteId != "" ? sanitizedTelemetrySiteId : null;
+            }
             telemetryClient.SetSiteId(telemetrySiteId);
             _telemetryClient = telemetryClient;
 
