@@ -24,7 +24,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Morphic.ManualTesterCLI", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Morphic.Integrations.Office", "Morphic.Integrations.Office\Morphic.Integrations.Office.csproj", "{D91EF666-04FB-4AC3-BBB8-A96C3E97BE72}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Morphic.Controls", "Morphic.Controls\Morphic.Controls.csproj", "{2AF5B336-8D00-40E8-8C3C-398E6934F2FC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Morphic.Controls", "Morphic.Controls\Morphic.Controls.csproj", "{2AF5B336-8D00-40E8-8C3C-398E6934F2FC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

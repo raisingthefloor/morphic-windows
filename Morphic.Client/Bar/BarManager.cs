@@ -60,9 +60,11 @@ namespace Morphic.Client.Bar
             {
                 AppOptions.Current.MorphicBarIsVisible = true;
                 this.barWindow.Visibility = Visibility.Visible;
+                // OBSERVATION: setting focus to the bar window doesn't necessarily move the keyboard focus away from the current app
                 this.barWindow.Focus();
                 if (setFocusToMorphicButton == true)
                 {
+                    // NOTE: we set focus to the morphic button first, and then we activate the bar window
                     this.barWindow.SetFocusToMorphicButton();
                     this.barWindow.Activate();
                 }
