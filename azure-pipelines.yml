@@ -95,7 +95,7 @@ stages:
             filePath: set-build-info.sh
 
         - task: MSBuild@1
-          displayName: "Build Morphic Client"
+          displayName: "Build Morphic Client (x64)"
           env:
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
           inputs:       
@@ -104,7 +104,7 @@ stages:
             msbuildArguments: '/t:restore,build /p:RuntimeIdentifier=win-x64 /p:BuildType=$(BUILD_TYPE)'
 
 #        - task: MSBuild@1
-#          displayName: "Build Morphic Client Tests"
+#          displayName: "Build Morphic Client Tests (x64)"
 #          env:
 #            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
 #          inputs:       
@@ -113,7 +113,7 @@ stages:
 #            msbuildArguments: '/t:restore,build /p:RuntimeIdentifier=win-x64 /p:BuildType=$(BUILD_TYPE)'
 
 #        - task: MSBuild@1
-#          displayName: "Publish Morphic Client Tests"
+#          displayName: "Publish Morphic Client Tests (x64)"
 #          env:
 #            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
 #          inputs:       
@@ -122,7 +122,7 @@ stages:
 #            msbuildArguments: '/t:publish /p:RuntimeIdentifier=win-x64 /p:BuildType=$(BUILD_TYPE)'
 
 #        - task: VSTest@2
-#          displayName: "execute tests"
+#          displayName: "execute tests (x64)"
 #          inputs:
 #            testAssemblyVer2: |
 #              **\bin\$(buildConfiguration)\**\publish\*.Tests.dll
@@ -135,7 +135,7 @@ stages:
 #            configuration: '$(buildConfiguration)'
 
         - task: MSBuild@1
-          displayName: "Publish Morphic Client"
+          displayName: "Publish Morphic Client (x64)"
           env:
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
           inputs:       
@@ -150,7 +150,7 @@ stages:
               tree $(Build.SourcesDirectory)\Morphic.Client\bin /f
               
         - task: CmdLine@2
-          displayName: 'sign morphic client exe'
+          displayName: 'sign morphic client exe (x64)'
           inputs:
             targetType: 'inline'
 # NOTE: if we experience downtime with our cert provider's timestamp servers (which causes signing to fail), 
@@ -183,7 +183,7 @@ stages:
             msbuildArgs: '/t:restore'
         
         - task: VSBuild@1
-          displayName: "build x64 installer"
+          displayName: "build installer (x64)"
           env:
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
           inputs:
@@ -193,7 +193,7 @@ stages:
             msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false'
 
         - task: CmdLine@2
-          displayName: 'sign x64 installer'
+          displayName: 'sign installer (x64)'
           inputs:
             targetType: 'inline'
 # NOTE: if we experience downtime with our cert provider's timestamp servers (which causes signing to fail), 
@@ -216,12 +216,12 @@ stages:
               -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\en-US\MorphicSetup.msi
         - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\en-US\MorphicSetup.msi
           displayName: "save x64 installer for later"
-          artifact: x64-installer
+          artifact: msi-x64
 
         - publish: $(System.DefaultWorkingDirectory)\Morphic.Client\BuildVersion.txt
           displayName: "save build version numbers"
           artifact: build-version
-            
+           
   - stage: upload
     jobs:
       - job: publish_installer
@@ -233,7 +233,7 @@ stages:
 #            persistCredentials: true
 #            path: deploy-morphicweb
           - download: current
-            artifact: x64-installer
+            artifact: msi-x64
           - download: current
             artifact: build-version
           - task: Bash@3
@@ -298,7 +298,7 @@ stages:
                 }
 
                 INSTALLER_NAME_BASE="MorphicSetup"
-                LOCAL_MSI_DIR="x64-installer"
+                LOCAL_MSI_DIR="msi-x64"
                 publishInstaller
 
                 MORPHIC_S3_MSI_OBJECT_NAME=$S3_MSI_OBJECT_NAME
