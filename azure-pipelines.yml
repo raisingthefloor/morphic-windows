@@ -57,10 +57,10 @@ stages:
         steps:
 
         - task: UseDotNet@2
-          displayName: 'Use .NET SDK 6.0.403'
+          displayName: 'Use .NET SDK 6.0.405'
           inputs:
             packageType: sdk
-            version: 6.0.403
+            version: 6.0.405
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - task: DotNetCoreCLI@2
