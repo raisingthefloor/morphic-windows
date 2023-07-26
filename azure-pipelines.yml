@@ -472,7 +472,7 @@ stages:
 
                 EXTRA_ARGS=""
                 S3_BUILD_OPERATING_SYSTEM="win"
-#                S3_BUILD_ARCHITECTURE=""
+                S3_BUILD_ARCHITECTURE=""
                 S3_BUILD_TYPE=""
 
                 if [[ "${BRANCH_NAME}" == "master" ]]; then
