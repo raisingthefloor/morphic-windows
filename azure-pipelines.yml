@@ -226,7 +226,7 @@ stages:
     jobs:
       - job: publish_installer
         pool:
-          vmImage: "ubuntu-20.04"
+          vmImage: "ubuntu-22.04"
         steps:
 #          # We actually want to operate in the web project so we can update URLs (when necessary)
 #          - checkout: deploy-morphicweb
