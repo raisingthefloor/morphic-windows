@@ -1378,7 +1378,7 @@ namespace Morphic.Client
 
         private void RegisterGlobalHotKeys()
         {
-			// NOTE: we have chosen to disable the "login hot key" feature in Morphic; we may bring this back in a future release (or we can rely on the user activating the MorphicBar and then opening the menu)
+            // NOTE: we have chosen to disable the "login hot key" feature in Morphic; we may bring this back in a future release (or we can rely on the user activating the MorphicBar and then opening the menu)
             //EventHandler<NHotkey.HotkeyEventArgs> loginHotKeyPressed = async (sender, e) =>
             //{
             //    // NOTE: if we want the login menu item to apply cloud-saved preferences after login, we should set this flag to true
@@ -1397,7 +1397,7 @@ namespace Morphic.Client
 
             EventHandler<NHotkey.HotkeyEventArgs> showMorphicBarHotKeyPressed = (sender, e) =>
             {
-                this.BarManager.ShowBar(/*setFocusToMorphicButton: */true);
+                this.BarManager.ShowBar(setFocusToMorphicButton: true);
             };
             try
             {
