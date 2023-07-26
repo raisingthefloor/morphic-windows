@@ -183,10 +183,11 @@ stages:
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
               -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x86\en-US\MorphicSetup.msi
+
         - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x86\en-US\MorphicSetup.msi
           displayName: "save x86 installer for later"
           artifact: msi-x86
-	  
+
         - task: MSBuild@1
           displayName: "Build Morphic Client (x64)"
           env:
@@ -307,6 +308,7 @@ stages:
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
               -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\en-US\MorphicSetup.msi
+
         - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\en-US\MorphicSetup.msi
           displayName: "save x64 installer for later"
           artifact: msi-x64
@@ -400,6 +402,7 @@ stages:
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
               -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\arm64\en-US\MorphicSetup.msi
+
         - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\arm64\en-US\MorphicSetup.msi
           displayName: "save arm64 installer for later"
           artifact: msi-arm64
