@@ -33,7 +33,7 @@
 	</Package>
 
 	<Fragment>
-		<StandardDirectory Id="ProgramFiles64Folder">
+		<StandardDirectory Id="ProgramFiles6432Folder">
 			<Directory Id="INSTALLFOLDER" Name="Morphic" />
 		</StandardDirectory>
 
