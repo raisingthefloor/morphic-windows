@@ -428,26 +428,26 @@ stages:
           - download: current
             artifact: build-version
 
-        - task: DownloadPipelineArtifact@2
-          displayName: "Capture MSI for upload (x86)"
-          inputs:
-            source: 'current'
-            artifact: msi-x86
-            path: msi-x86
+          - task: DownloadPipelineArtifact@2
+            displayName: "Capture MSI for upload (x86)"
+            inputs:
+              source: 'current'
+              artifact: msi-x86
+              path: msi-x86
 
-        - task: DownloadPipelineArtifact@2
-          displayName: "Capture MSI for upload (x64)"
-          inputs:
-            source: 'current'
-            artifact: msi-x64
-            path: msi-x64
+          - task: DownloadPipelineArtifact@2
+            displayName: "Capture MSI for upload (x64)"
+            inputs:
+              source: 'current'
+              artifact: msi-x64
+              path: msi-x64
 
-        - task: DownloadPipelineArtifact@2
-          displayName: "Capture MSI for upload (arm64)"
-          inputs:
-            source: 'current'
-            artifact: msi-arm64
-            path: msi-arm64
+          - task: DownloadPipelineArtifact@2
+            displayName: "Capture MSI for upload (arm64)"
+            inputs:
+              source: 'current'
+              artifact: msi-arm64
+              path: msi-arm64
 
           - task: Bash@3
             displayName: "upload MSIs to s3"
