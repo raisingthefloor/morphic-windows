@@ -172,6 +172,15 @@ stages:
               -tr "$(TimestampUrl2)"
               -v
               $(Build.SourcesDirectory)\Morphic.Client\bin\$(buildConfiguration)\net6.0-windows10.0.22621.0\win-x64\publish\Morphic.exe
+
+        - task: VSBuild@1
+          displayName: "restore installer dependencies"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
+          inputs:
+            solution: 'Morphic.Setup\Morphic.Setup.wixproj'
+            configuration: '$(buildConfiguration)'
+            msbuildArgs: '/t:restore'
         
         - task: VSBuild@1
           displayName: "build x64 installer"
