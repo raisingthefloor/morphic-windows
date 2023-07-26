@@ -471,22 +471,24 @@ stages:
                 set -x
 
                 EXTRA_ARGS=""
-                S3_OBJECT_PREFIX=""
+                S3_BUILD_OPERATING_SYSTEM="win"
+#                S3_BUILD_ARCHITECTURE=""
+                S3_BUILD_TYPE=""
 
                 if [[ "${BRANCH_NAME}" == "master" ]]; then
                   echo "detected master build"
-                  S3_OBJECT_PREFIX="win/x64/edge"
+                  S3_BUILD_TYPE="edge"
                   EXTRA_ARGS="--expires $(date -d '+42 days' --iso-8601=seconds)"
                 elif [[ "${BRANCH}" == *"staging/"* ]]; then
                   echo "detected staging build"
-                  S3_OBJECT_PREFIX="win/x64/staging"
+                  S3_BUILD_TYPE="staging"
                   EXTRA_ARGS="--expires $(date -d '+14 days' --iso-8601=seconds)"
                 elif [[ "${BRANCH}" == *"release/"* ]]; then
                   echo "detected release build"
-                  S3_OBJECT_PREFIX="win/x64/stable"
+                  S3_BUILD_TYPE="stable"
                 else
                   echo "detected PR build"
-                  S3_OBJECT_PREFIX="win/x64/internal"
+                  S3_BUILD_TYPE="internal"
                   EXTRA_ARGS="--expires $(date -d '+2 days' --iso-8601=seconds)"
                 fi
 
@@ -497,8 +499,8 @@ stages:
                   ASSEMBLY_VERSION=$(sed -n 2p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
                   LOCAL_MSI_SOURCE="${AGENT_BUILDDIRECTORY}/${LOCAL_MSI_DIR}/${MSI_NAME_BASE}.msi"
                   LOCAL_APPCAST_SOURCE="${AGENT_BUILDDIRECTORY}/${MSI_NAME_BASE}-v${VERSION}.appcast.xml"
-                  S3_MSI_OBJECT_NAME="${S3_OBJECT_PREFIX}/${MSI_NAME_BASE}-v${VERSION}-${S3_BUILD_ARCHITECTURE}.msi"
-                  S3_APPCAST_OBJECT_NAME="${S3_OBJECT_PREFIX}/${MSI_NAME_BASE}-v${VERSION}.appcast.xml"
+                  S3_MSI_OBJECT_NAME="${S3_BUILD_OPERATING_SYSTEM}/${S3_BUILD_ARCHITECTURE}/${S3_BUILD_TYPE}/${MSI_NAME_BASE}-v${VERSION}-${S3_BUILD_ARCHITECTURE}.msi"
+                  S3_APPCAST_OBJECT_NAME="${S3_BUILD_OPERATING_SYSTEM}/${S3_BUILD_ARCHITECTURE}/${S3_BUILD_TYPE}/${MSI_NAME_BASE}-v${VERSION}.appcast.xml"
 
                   cat > "${LOCAL_APPCAST_SOURCE}" <<EOF
                 <?xml version="1.0" encoding="utf-8"?>
