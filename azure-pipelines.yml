@@ -95,6 +95,99 @@ stages:
             filePath: set-build-info.sh
 
         - task: MSBuild@1
+          displayName: "Build Morphic Client (x86)"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
+          inputs:       
+            solution: '$(Build.SourcesDirectory)\Morphic.Client\Morphic.Client.csproj'
+            configuration: '$(buildConfiguration)'
+            msbuildArguments: '/t:restore,build /p:RuntimeIdentifier=win-x86 /p:BuildType=$(BUILD_TYPE)'
+
+        - task: MSBuild@1
+          displayName: "Publish Morphic Client (x86)"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
+          inputs:       
+            solution: '$(Build.SourcesDirectory)\Morphic.Client\Morphic.Client.csproj'
+            configuration: '$(buildConfiguration)'
+            msbuildArguments: '/t:publish /p:RuntimeIdentifier=win-x86 /p:BuildType=$(BUILD_TYPE)'
+
+#        - task: CmdLine@2
+#          inputs:
+#            targetType: 'inline'
+#            script: >
+#              tree $(Build.SourcesDirectory)\Morphic.Client\bin /f
+              
+        - task: CmdLine@2
+          displayName: 'sign morphic client exe (x86)'
+          inputs:
+            targetType: 'inline'
+# NOTE: if we experience downtime with our cert provider's timestamp servers (which causes signing to fail), 
+#       we can use the test server (production timestamps, but from a 2nd provider); note that we should NOT do
+#       this for any public preview or release builds...only for internal testing or emergency scenarios.
+#              -tr "$(TimestampUrl)"
+#              -tr "$(TimestampUrl2)"
+#              vs.
+#              -tr "$(TestOnlyTimestampUrl)"
+            script: >
+              AzureSignTool sign
+              -d Morphic
+              -du "$(SigningURL)"
+              -kvu "$(SigningVaultURL)"
+              -kvi "$(SigningClientId)"
+              -kvs "$(SigningClientSecret)"
+              -kvt "$(AzureTenantId)"
+              -kvc "$(SigningCertName)"
+              -tr "$(TimestampUrl2)"
+              -v
+              $(Build.SourcesDirectory)\Morphic.Client\bin\$(buildConfiguration)\net6.0-windows10.0.22621.0\win-x86\publish\Morphic.exe
+
+        - task: VSBuild@1
+          displayName: "restore installer dependencies"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
+          inputs:
+            solution: 'Morphic.Setup\Morphic.Setup.wixproj'
+            configuration: '$(buildConfiguration)'
+            msbuildArgs: '/t:restore'
+        
+        - task: VSBuild@1
+          displayName: "build installer (x86)"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
+          inputs:
+            solution: 'Morphic.Setup\Morphic.Setup.wixproj'
+            platform: 'x86'
+            configuration: '$(buildConfiguration)'
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false'
+
+        - task: CmdLine@2
+          displayName: 'sign installer (x86)'
+          inputs:
+            targetType: 'inline'
+# NOTE: if we experience downtime with our cert provider's timestamp servers (which causes signing to fail), 
+#       we can use the test server (production timestamps, but from a 2nd provider); note that we should NOT do
+#       this for any public preview or release builds...only for internal testing or emergency scenarios.
+#              -tr "$(TimestampUrl)"
+#              -tr "$(TimestampUrl2)"
+#              vs.
+#              -tr "$(TestOnlyTimestampUrl)"
+            script: >
+              AzureSignTool sign
+              -d Morphic
+              -du "$(SigningURL)"
+              -kvu "$(SigningVaultURL)"
+              -kvi "$(SigningClientId)"
+              -kvt "$(AzureTenantId)"
+              -kvs "$(SigningClientSecret)"
+              -kvc "$(SigningCertName)"
+              -tr "$(TimestampUrl2)"
+              -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x86\en-US\MorphicSetup.msi
+        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x86\en-US\MorphicSetup.msi
+          displayName: "save x86 installer for later"
+          artifact: msi-x86
+	  
+        - task: MSBuild@1
           displayName: "Build Morphic Client (x64)"
           env:
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
