@@ -29,7 +29,7 @@
 	        <Property Id="WINDOWSBUILDNUMBER" Secure="yes">
 	        	<RegistrySearch Id="BuildNumberSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="CurrentBuildNumber" Type="raw" />
 	        </Property>
-        	<Launch Condition="(WINDOWSBUILDNUMBER &gt;= 17763)" Message="This application is only supported on Windows 10 version 1809 (build 17763) or higher." />
+        	<Launch Condition="(WINDOWSBUILDNUMBER &gt;= 17763)" Message="!(loc.MinimumOsError)" />
 	</Package>
 
 	<Fragment>

@@ -213,8 +213,8 @@ stages:
               -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
-              -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicSetup.msi
-        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\MorphicSetup.msi
+              -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\en-US\MorphicSetup.msi
+        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\en-US\MorphicSetup.msi
           displayName: "save x64 installer for later"
           artifact: x64-installer
 
