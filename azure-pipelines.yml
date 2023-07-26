@@ -185,7 +185,7 @@ stages:
               -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x86\en-US\MorphicSetup.msi
 
         - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x86\en-US\MorphicSetup.msi
-          displayName: "save x86 installer for later"
+          displayName: "Cache MSI for upload (x86)"
           artifact: msi-x86
 
         - task: MSBuild@1
@@ -310,7 +310,7 @@ stages:
               -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\en-US\MorphicSetup.msi
 
         - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\en-US\MorphicSetup.msi
-          displayName: "save x64 installer for later"
+          displayName: "Cache MSI for upload (x64)"
           artifact: msi-x64
 
         - task: MSBuild@1
@@ -404,7 +404,7 @@ stages:
               -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\arm64\en-US\MorphicSetup.msi
 
         - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\arm64\en-US\MorphicSetup.msi
-          displayName: "save arm64 installer for later"
+          displayName: "Cache MSI for upload (arm64)"
           artifact: msi-arm64
 
         - publish: $(System.DefaultWorkingDirectory)\Morphic.Client\BuildVersion.txt
@@ -421,17 +421,41 @@ stages:
 #          - checkout: deploy-morphicweb
 #            persistCredentials: true
 #            path: deploy-morphicweb
-          - download: current
-            artifact: msi-x64
+
+#          - download: current
+#            artifact: msi-x64
+
           - download: current
             artifact: build-version
+
+        - task: DownloadPipelineArtifact@2
+          displayName: "Capture MSI for upload (x86)"
+          inputs:
+            source: 'current'
+            artifact: msi-x86
+            path: msi-x86
+
+        - task: DownloadPipelineArtifact@2
+          displayName: "Capture MSI for upload (x64)"
+          inputs:
+            source: 'current'
+            artifact: msi-x64
+            path: msi-x64
+
+        - task: DownloadPipelineArtifact@2
+          displayName: "Capture MSI for upload (arm64)"
+          inputs:
+            source: 'current'
+            artifact: msi-arm64
+            path: msi-arm64
+
           - task: Bash@3
-            displayName: "upload MSI to s3"
+            displayName: "upload MSIs to s3"
             env:
               AWS_ACCESS_KEY_ID: $(accessKey)
               AWS_SECRET_ACCESS_KEY: $(secretKey)
-              BUCKET: $(bucket)
               AWS_DEFAULT_REGION: $(region)
+              BUCKET: $(bucket)
               BRANCH: $(Build.SourceBranch)
               BRANCH_NAME: $(Build.SourceBranchName)
             inputs:
@@ -465,10 +489,10 @@ stages:
                 publishInstaller() {
                   VERSION=$(sed -n 1p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
                   ASSEMBLY_VERSION=$(sed -n 2p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
-                  LOCAL_MSI_SOURCE="${AGENT_BUILDDIRECTORY}/${LOCAL_MSI_DIR}/${INSTALLER_NAME_BASE}.msi"
-                  LOCAL_APPCAST_SOURCE="${AGENT_BUILDDIRECTORY}/${INSTALLER_NAME_BASE}-v${VERSION}.appcast.xml"
-                  S3_MSI_OBJECT_NAME="${S3_OBJECT_PREFIX}/${INSTALLER_NAME_BASE}-v${VERSION}.msi"
-                  S3_APPCAST_OBJECT_NAME="${S3_OBJECT_PREFIX}/${INSTALLER_NAME_BASE}-v${VERSION}.appcast.xml"
+                  LOCAL_MSI_SOURCE="${AGENT_BUILDDIRECTORY}/${LOCAL_MSI_DIR}/${MSI_NAME_BASE}.msi"
+                  LOCAL_APPCAST_SOURCE="${AGENT_BUILDDIRECTORY}/${MSI_NAME_BASE}-v${VERSION}.appcast.xml"
+                  S3_MSI_OBJECT_NAME="${S3_OBJECT_PREFIX}/${MSI_NAME_BASE}-v${VERSION}-${S3_BUILD_ARCHITECTURE}.msi"
+                  S3_APPCAST_OBJECT_NAME="${S3_OBJECT_PREFIX}/${MSI_NAME_BASE}-v${VERSION}.appcast.xml"
 
                   cat > "${LOCAL_APPCAST_SOURCE}" <<EOF
                 <?xml version="1.0" encoding="utf-8"?>
@@ -486,8 +510,22 @@ stages:
                   aws s3 cp $EXTRA_ARGS "${LOCAL_APPCAST_SOURCE}" "s3://${BUCKET}/${S3_APPCAST_OBJECT_NAME}"
                 }
 
-                INSTALLER_NAME_BASE="MorphicSetup"
+                echo "Upload MSI to S3 (x86)"
+                MSI_NAME_BASE="MorphicSetup"
+                LOCAL_MSI_DIR="msi-x86"
+                S3_BUILD_ARCHITECTURE="x86"
+                publishInstaller
+
+                echo "Upload MSI to S3 (x64)"
+                MSI_NAME_BASE="MorphicSetup"
                 LOCAL_MSI_DIR="msi-x64"
+                S3_BUILD_ARCHITECTURE="x64"
+                publishInstaller
+
+                echo "Upload MSI to S3 (arm64)"
+                MSI_NAME_BASE="MorphicSetup"
+                LOCAL_MSI_DIR="msi-arm64"
+                S3_BUILD_ARCHITECTURE="arm64"
                 publishInstaller
 
                 MORPHIC_S3_MSI_OBJECT_NAME=$S3_MSI_OBJECT_NAME
