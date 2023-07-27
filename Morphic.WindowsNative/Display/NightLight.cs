@@ -1,10 +1,10 @@
-﻿// Copyright 2022 Raising the Floor - US, Inc.
+﻿// Copyright 2023 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
 //
 // You may obtain a copy of the License at
-// https://github.com/raisingthefloor/morphic-windows/blob/master/LICENSE.txt
+// https://github.com/raisingthefloor/morphic-windowsnative-lib-cs/blob/main/LICENSE
 //
 // The R&D leading to these results received funding from the:
 // * Rehabilitation Services Administration, US Dept. of Education under
@@ -30,130 +30,129 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Morphic.WindowsNative.Display
+namespace Morphic.WindowsNative.Display;
+
+public class NightLight
 {
-    public class NightLight
-    {
-        public static class SystemSettingId
-        {
-            public const string NIGHT_LIGHT_IS_ON = "SystemSettings_Display_BlueLight_ManualToggleQuickAction";
-        }
+   public static class SystemSettingId
+   {
+       public const string NIGHT_LIGHT_IS_ON = "SystemSettings_Display_BlueLight_ManualToggleQuickAction";
+   }
 
-        private static SettingItemProxy? _nightLightIsOnSettingItem;
-        private static SettingItemProxy? NightLightIsOnSettingItem
-        {
-            get
-            {
-                if (_nightLightIsOnSettingItem is null)
-                {
-                    _nightLightIsOnSettingItem = SettingsDatabaseProxy.GetSettingItemOrNull(NightLight.SystemSettingId.NIGHT_LIGHT_IS_ON);
-                }
+   private static SettingItemProxy? _nightLightIsOnSettingItem;
+   private static SettingItemProxy? NightLightIsOnSettingItem
+   {
+       get
+       {
+           if (_nightLightIsOnSettingItem is null)
+           {
+               _nightLightIsOnSettingItem = SettingsDatabaseProxy.GetSettingItemOrNull(NightLight.SystemSettingId.NIGHT_LIGHT_IS_ON);
+           }
 
-                return _nightLightIsOnSettingItem;
-            }
-        }
-        //private const string NIGHT_LIGHT_IS_ON_VALUE_NAME = "Value";
+           return _nightLightIsOnSettingItem;
+       }
+   }
+   //private const string NIGHT_LIGHT_IS_ON_VALUE_NAME = "Value";
 
-        private static bool _isOnSettingChangedEventIsSubscribed = false;
-        private static object _isOnSettingChangedEventLock = new();
+   private static bool _isOnSettingChangedEventIsSubscribed = false;
+   private static object _isOnSettingChangedEventLock = new();
 
-        private static EventHandler? _isOnChanged = null;
-        public static event EventHandler IsOnChanged
-        {
-            add
-            {
-                SettingItemProxy? isOnSettingItem;
-                if (_isOnChanged is null)
-                {
-                    isOnSettingItem = NightLight.NightLightIsOnSettingItem;
-                    if (isOnSettingItem is null)
-                    {
-                        Debug.Assert(false, "Could not get setting item for NightLight");
-                    }
-                    else
-                    {
-                        lock (_isOnSettingChangedEventLock)
-                        {
-                            if (_isOnSettingChangedEventIsSubscribed == false)
-                            {
-                                isOnSettingItem!.ValueChanged += SettingItem_ValueChanged;
-                                _isOnSettingChangedEventIsSubscribed = true;
-                            }
-                        }
-                    }
-                }
+   private static EventHandler? _isOnChanged = null;
+   public static event EventHandler IsOnChanged
+   {
+       add
+       {
+           SettingItemProxy? isOnSettingItem;
+           if (_isOnChanged is null)
+           {
+               isOnSettingItem = NightLight.NightLightIsOnSettingItem;
+               if (isOnSettingItem is null)
+               {
+                   Debug.Assert(false, "Could not get setting item for NightLight");
+               }
+               else
+               {
+                   lock (_isOnSettingChangedEventLock)
+                   {
+                       if (_isOnSettingChangedEventIsSubscribed == false)
+                       {
+                           isOnSettingItem!.ValueChanged += SettingItem_ValueChanged;
+                           _isOnSettingChangedEventIsSubscribed = true;
+                       }
+                   }
+               }
+           }
 
-                _isOnChanged += value;
-            }
-            remove
-            {
-                _isOnChanged -= value;
+           _isOnChanged += value;
+       }
+       remove
+       {
+           _isOnChanged -= value;
 
-                if (_isOnChanged is null || _isOnChanged!.GetInvocationList().Length == 0)
-                {
-                    _isOnChanged = null;
+           if (_isOnChanged is null || _isOnChanged!.GetInvocationList().Length == 0)
+           {
+               _isOnChanged = null;
 
-                    var isOnSettingItem = NightLight.NightLightIsOnSettingItem;
-                    if (isOnSettingItem is null)
-                    {
-                        Debug.Assert(false, "Could not get setting item for NightLight");
-                    }
-                    else
-                    {
-                        lock (_isOnSettingChangedEventLock)
-                        {
-                            if (_isOnSettingChangedEventIsSubscribed == true)
-                            {
-                                isOnSettingItem.ValueChanged -= SettingItem_ValueChanged;
-                                _isOnSettingChangedEventIsSubscribed = false;
-                            }
-                        }
-                    }
-                }
-            }
-        }
+               var isOnSettingItem = NightLight.NightLightIsOnSettingItem;
+               if (isOnSettingItem is null)
+               {
+                   Debug.Assert(false, "Could not get setting item for NightLight");
+               }
+               else
+               {
+                   lock (_isOnSettingChangedEventLock)
+                   {
+                       if (_isOnSettingChangedEventIsSubscribed == true)
+                       {
+                           isOnSettingItem.ValueChanged -= SettingItem_ValueChanged;
+                           _isOnSettingChangedEventIsSubscribed = false;
+                       }
+                   }
+               }
+           }
+       }
+   }
 
-        private static void SettingItem_ValueChanged(object? sender, EventArgs e)
-        {
-            var invocationList = _isOnChanged?.GetInvocationList();
-            if (invocationList is not null)
-            {
-                foreach (EventHandler element in invocationList!)
-                {
-                    Task.Run(() =>
-                    {
-                        element.Invoke(null /* static class, no so type instance */, EventArgs.Empty);
-                    });
-                }
-            }
-            //Task.Run(() => {
-            //    _isOnChanged?.Invoke(null /* static class, no so type instance */, EventArgs.Empty);
-            //});
-        }
+   private static void SettingItem_ValueChanged(object? sender, EventArgs e)
+   {
+       var invocationList = _isOnChanged?.GetInvocationList();
+       if (invocationList is not null)
+       {
+           foreach (EventHandler element in invocationList!)
+           {
+               Task.Run(() =>
+               {
+                   element.Invoke(null /* static class, no so type instance */, EventArgs.Empty);
+               });
+           }
+       }
+       //Task.Run(() => {
+       //    _isOnChanged?.Invoke(null /* static class, no so type instance */, EventArgs.Empty);
+       //});
+   }
 
-        //
+   //
 
-        public async static Task<MorphicResult<bool?, MorphicUnit>> GetIsOnAsync(TimeSpan? timeout = null)
-        {
-            var getValueResult = await SettingItemProxy.GetSettingItemValueAsync<bool>(NightLight.NightLightIsOnSettingItem, /*NightLight.NIGHT_LIGHT_IS_ON_VALUE_NAME, */timeout);
-            if (getValueResult.IsError == true)
-            {
-                return MorphicResult.ErrorResult();
-            }
-            var result = getValueResult.Value;
+   public async static Task<MorphicResult<bool?, MorphicUnit>> GetIsOnAsync(TimeSpan? timeout = null)
+   {
+       var getValueResult = await SettingItemProxy.GetSettingItemValueAsync<bool>(NightLight.NightLightIsOnSettingItem, /*NightLight.NIGHT_LIGHT_IS_ON_VALUE_NAME, */timeout);
+       if (getValueResult.IsError == true)
+       {
+           return MorphicResult.ErrorResult();
+       }
+       var result = getValueResult.Value;
 
-            return MorphicResult.OkResult(result);
-        }
+       return MorphicResult.OkResult(result);
+   }
 
-        public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> SetIsOnAsync(bool value, TimeSpan? timeout = null)
-        {
-            var setValueResult = await SettingItemProxy.SetSettingItemValueAsync<bool>(NightLight.NightLightIsOnSettingItem, /*NightLight.NIGHT_LIGHT_IS_ON_VALUE_NAME, */value, timeout);
-            if (setValueResult.IsError == true)
-            {
-                return MorphicResult.ErrorResult();
-            }
+   public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> SetIsOnAsync(bool value, TimeSpan? timeout = null)
+   {
+       var setValueResult = await SettingItemProxy.SetSettingItemValueAsync<bool>(NightLight.NightLightIsOnSettingItem, /*NightLight.NIGHT_LIGHT_IS_ON_VALUE_NAME, */value, timeout);
+       if (setValueResult.IsError == true)
+       {
+           return MorphicResult.ErrorResult();
+       }
 
-            return MorphicResult.OkResult();
-        }
-    }
+       return MorphicResult.OkResult();
+   }
 }

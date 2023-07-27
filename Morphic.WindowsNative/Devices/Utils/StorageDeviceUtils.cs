@@ -1,10 +1,10 @@
-﻿// Copyright 2021 Raising the Floor - International
+﻿// Copyright 2021-2023 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
 //
 // You may obtain a copy of the License at
-// https://github.com/raisingthefloor/morphic-windows/blob/master/LICENSE.txt
+// https://github.com/raisingthefloor/morphic-windowsnative-lib-cs/blob/main/LICENSE
 //
 // The R&D leading to these results received funding from the:
 // * Rehabilitation Services Administration, US Dept. of Education under
@@ -26,71 +26,70 @@ using System;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
-namespace Morphic.WindowsNative.Devices.Utils
+namespace Morphic.WindowsNative.Devices.Utils;
+
+internal record StorageDeviceNumberError : MorphicAssociatedValueEnum<StorageDeviceNumberError.Values>
 {
-    internal record StorageDeviceNumberError : MorphicAssociatedValueEnum<StorageDeviceNumberError.Values>
-    {
-        // enum members
-        public enum Values
-        {
-            CouldNotRetrieveStorageDeviceNumbers,
-            Win32Error/*(uint win32ErrorCode)*/
-        }
+   // enum members
+   public enum Values
+   {
+       CouldNotRetrieveStorageDeviceNumbers,
+       Win32Error/*(uint win32ErrorCode)*/
+   }
 
-        // functions to create member instances
-        public static StorageDeviceNumberError CouldNotRetrieveStorageDeviceNumbers = new StorageDeviceNumberError(Values.CouldNotRetrieveStorageDeviceNumbers);
-        public static StorageDeviceNumberError Win32Error(uint win32ErrorCode) => new StorageDeviceNumberError(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
+   // functions to create member instances
+   public static StorageDeviceNumberError CouldNotRetrieveStorageDeviceNumbers = new StorageDeviceNumberError(Values.CouldNotRetrieveStorageDeviceNumbers);
+   public static StorageDeviceNumberError Win32Error(uint win32ErrorCode) => new StorageDeviceNumberError(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
 
-        // associated values
-        public uint? Win32ErrorCode { get; private set; }
+   // associated values
+   public uint? Win32ErrorCode { get; private set; }
 
-        // verbatim required constructor implementation for MorphicAssociatedValueEnums
-        private StorageDeviceNumberError(Values value) : base(value) { }
-    }
-    internal struct StorageDeviceUtils {
-        internal static async Task<MorphicResult<ExtendedPInvoke.STORAGE_DEVICE_NUMBER, StorageDeviceNumberError>> GetStorageDeviceNumberAsync(string devicePath)
-        {
-            var deviceHandle = PInvoke.Kernel32.CreateFile(devicePath, (PInvoke.Kernel32.ACCESS_MASK)0, PInvoke.Kernel32.FileShare.FILE_SHARE_READ, IntPtr.Zero, PInvoke.Kernel32.CreationDisposition.OPEN_EXISTING, (PInvoke.Kernel32.CreateFileFlags)0, PInvoke.Kernel32.SafeObjectHandle.Null);
-            if (deviceHandle.IsInvalid == true)
-            {
-                var win32ErrorCode = Marshal.GetLastWin32Error();
-                return MorphicResult.ErrorResult(StorageDeviceNumberError.Win32Error((uint)win32ErrorCode));
-            }
-            //
-            // get the device number for this storage device
-            var storageDeviceNumber = new ExtendedPInvoke.STORAGE_DEVICE_NUMBER();
-            var storageDeviceNumberMemoryObject = new Memory<ExtendedPInvoke.STORAGE_DEVICE_NUMBER>(new ExtendedPInvoke.STORAGE_DEVICE_NUMBER[] { storageDeviceNumber });
-            //
-            try
-            {
-                uint numberOfBytes;
-                try
-                {
-                    numberOfBytes = await PInvoke.Kernel32.DeviceIoControlAsync<byte /* for null */, ExtendedPInvoke.STORAGE_DEVICE_NUMBER>(
-                        hDevice: deviceHandle,
-                        dwIoControlCode: ExtendedPInvoke.IOCTL_STORAGE_GET_DEVICE_NUMBER,
-                        inBuffer: null,
-                        outBuffer: storageDeviceNumberMemoryObject,
-                        cancellationToken: System.Threading.CancellationToken.None);
-                }
-                catch (PInvoke.Win32Exception ex)
-                {
-                    return MorphicResult.ErrorResult(StorageDeviceNumberError.Win32Error((uint)ex.NativeErrorCode));
-                }
+   // verbatim required constructor implementation for MorphicAssociatedValueEnums
+   private StorageDeviceNumberError(Values value) : base(value) { }
+}
+internal struct StorageDeviceUtils {
+   internal static async Task<MorphicResult<ExtendedPInvoke.STORAGE_DEVICE_NUMBER, StorageDeviceNumberError>> GetStorageDeviceNumberAsync(string devicePath)
+   {
+       var deviceHandle = PInvoke.Kernel32.CreateFile(devicePath, (PInvoke.Kernel32.ACCESS_MASK)0, PInvoke.Kernel32.FileShare.FILE_SHARE_READ, IntPtr.Zero, PInvoke.Kernel32.CreationDisposition.OPEN_EXISTING, (PInvoke.Kernel32.CreateFileFlags)0, PInvoke.Kernel32.SafeObjectHandle.Null);
+       if (deviceHandle.IsInvalid == true)
+       {
+           var win32ErrorCode = Marshal.GetLastWin32Error();
+           return MorphicResult.ErrorResult(StorageDeviceNumberError.Win32Error((uint)win32ErrorCode));
+       }
+       //
+       // get the device number for this storage device
+       var storageDeviceNumber = new ExtendedPInvoke.STORAGE_DEVICE_NUMBER();
+       var storageDeviceNumberMemoryObject = new Memory<ExtendedPInvoke.STORAGE_DEVICE_NUMBER>(new ExtendedPInvoke.STORAGE_DEVICE_NUMBER[] { storageDeviceNumber });
+       //
+       try
+       {
+           uint numberOfBytes;
+           try
+           {
+               numberOfBytes = await PInvoke.Kernel32.DeviceIoControlAsync<byte /* for null */, ExtendedPInvoke.STORAGE_DEVICE_NUMBER>(
+                   hDevice: deviceHandle,
+                   dwIoControlCode: ExtendedPInvoke.IOCTL_STORAGE_GET_DEVICE_NUMBER,
+                   inBuffer: null,
+                   outBuffer: storageDeviceNumberMemoryObject,
+                   cancellationToken: System.Threading.CancellationToken.None);
+           }
+           catch (PInvoke.Win32Exception ex)
+           {
+               return MorphicResult.ErrorResult(StorageDeviceNumberError.Win32Error((uint)ex.NativeErrorCode));
+           }
 
-                var storageDeviceNumberAsArray = storageDeviceNumberMemoryObject.ToArray();
-                if (storageDeviceNumberAsArray.Length != 1)
-                {
-                    return MorphicResult.ErrorResult(StorageDeviceNumberError.CouldNotRetrieveStorageDeviceNumbers);
-                }
-                storageDeviceNumber = storageDeviceNumberAsArray[0];
-            }
-            finally
-            {
-                deviceHandle.Close();
-            }
+           var storageDeviceNumberAsArray = storageDeviceNumberMemoryObject.ToArray();
+           if (storageDeviceNumberAsArray.Length != 1)
+           {
+               return MorphicResult.ErrorResult(StorageDeviceNumberError.CouldNotRetrieveStorageDeviceNumbers);
+           }
+           storageDeviceNumber = storageDeviceNumberAsArray[0];
+       }
+       finally
+       {
+           deviceHandle.Close();
+       }
 
-            return MorphicResult.OkResult(storageDeviceNumber);
-        }
-    }
+       return MorphicResult.OkResult(storageDeviceNumber);
+   }
 }
