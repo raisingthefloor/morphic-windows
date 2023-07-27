@@ -1,10 +1,10 @@
-﻿// Copyright 2020-2022 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2023 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
 //
 // You may obtain a copy of the License at
-// https://github.com/raisingthefloor/morphic-windows/blob/master/LICENSE.txt
+// https://github.com/raisingthefloor/morphic-windowsnative-lib-cs/blob/main/LICENSE
 //
 // The R&D leading to these results received funding from the:
 // * Rehabilitation Services Administration, US Dept. of Education under
@@ -21,36 +21,35 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-namespace Morphic.WindowsNative.Audio
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Morphic.WindowsNative.Audio;
+
+internal class AudioEndpointVolumeCallback : WindowsCoreAudio.IAudioEndpointVolumeCallback
 {
-	using System;
-	using System.Collections.Generic;
-	using System.Diagnostics;
-	using System.Text;
-	using System.Threading.Tasks;
+   public delegate void CallbackReceived(WindowsCoreAudio.AudioVolumeNotificationData audioVolumeNotificationData);
+   private CallbackReceived _callbackReceivedHandler;
 
-    internal class AudioEndpointVolumeCallback : WindowsCoreAudio.IAudioEndpointVolumeCallback
-    {
-        public delegate void CallbackReceived(WindowsCoreAudio.AudioVolumeNotificationData audioVolumeNotificationData);
-        private CallbackReceived _callbackReceivedHandler;
+   public AudioEndpointVolumeCallback(CallbackReceived callbackReceivedHandler)
+   {
+       _callbackReceivedHandler = callbackReceivedHandler;
+   }
 
-        public AudioEndpointVolumeCallback(CallbackReceived callbackReceivedHandler)
-        {
-            _callbackReceivedHandler = callbackReceivedHandler;
-        }
+   // see: https://github.com/MicrosoftDocs/win32/blob/docs/desktop-src/CoreAudio/endpoint-volume-controls.md
+   public void OnNotify(IntPtr pNotify /* PAUDIO_VOLUME_NOTIFICATION_DATA */)
+   {
+       // NOTE: as the incoming data is variable in length, we need to receive it as an IntPtr and then call a helper function to marshal it properly
+       var audioVolumeNotificationData = WindowsCoreAudio.AudioVolumeNotificationData.MarshalFromIntPtr(pNotify);
 
-        // see: https://github.com/MicrosoftDocs/win32/blob/docs/desktop-src/CoreAudio/endpoint-volume-controls.md
-        public void OnNotify(IntPtr pNotify /* PAUDIO_VOLUME_NOTIFICATION_DATA */)
-        {
-            // NOTE: as the incoming data is variable in length, we need to receive it as an IntPtr and then call a helper function to marshal it properly
-            var audioVolumeNotificationData = WindowsCoreAudio.AudioVolumeNotificationData.MarshalFromIntPtr(pNotify);
-
-            // NOTE: this function must NOT be blocking; as such we call the managed event asynchronously and return immediately...avoiding any potential of waiting on synchronization locks, etc.
-            // see: https://github.com/MicrosoftDocs/sdk-api/blob/docs/sdk-api-src/content/endpointvolume/nn-endpointvolume-iaudioendpointvolumecallback.md
-            Task.Run(() =>
-            {
-                _callbackReceivedHandler(audioVolumeNotificationData);
-            });
-        }
-    }
+       // NOTE: this function must NOT be blocking; as such we call the managed event asynchronously and return immediately...avoiding any potential of waiting on synchronization locks, etc.
+       // see: https://github.com/MicrosoftDocs/sdk-api/blob/docs/sdk-api-src/content/endpointvolume/nn-endpointvolume-iaudioendpointvolumecallback.md
+       Task.Run(() =>
+       {
+           _callbackReceivedHandler(audioVolumeNotificationData);
+       });
+   }
 }

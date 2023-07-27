@@ -1,10 +1,10 @@
-﻿// Copyright 2020-2022 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2023 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
 //
 // You may obtain a copy of the License at
-// https://github.com/raisingthefloor/morphic-windows/blob/master/LICENSE.txt
+// https://github.com/raisingthefloor/morphic-windowsnative-lib-cs/blob/main/LICENSE
 //
 // The R&D leading to these results received funding from the:
 // * Rehabilitation Services Administration, US Dept. of Education under
@@ -21,28 +21,27 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-namespace Morphic.WindowsNative.WindowsCoreAudio
+using System;
+using System.Runtime.InteropServices;
+
+namespace Morphic.WindowsNative.WindowsCoreAudio;
+
+//[ComImport]
+[Guid("A95664D2-9614-4F35-A746-DE8DB63617E6")]
+[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+internal interface IMMDeviceEnumerator
 {
-	using System;
-	using System.Runtime.InteropServices;
+   // EnumAudioEndpoints
+   // NOTE: EnumAudioEndpoints is a filler declaration (required for COM); change IntPtr to IMMDeviceCollection? if we use this function in the future
+   public Int32 EnumAudioEndpoints(EDataFlow dataFlow, UInt32 stateMask, out IntPtr devices);
 
-    //[ComImport]
-    [Guid("A95664D2-9614-4F35-A746-DE8DB63617E6")]
-    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    internal interface IMMDeviceEnumerator
-    {
-        // EnumAudioEndpoints
-        // NOTE: EnumAudioEndpoints is a filler declaration (required for COM); change IntPtr to IMMDeviceCollection? if we use this function in the future
-        public Int32 EnumAudioEndpoints(EDataFlow dataFlow, UInt32 stateMask, out IntPtr devices);
+   // GetDefaultAudioEndpoint
+   public Int32 GetDefaultAudioEndpoint(EDataFlow dataFlow, ERole role, [MarshalAs(UnmanagedType.Interface)] out IMMDevice? endpoint);
 
-        // GetDefaultAudioEndpoint
-        public Int32 GetDefaultAudioEndpoint(EDataFlow dataFlow, ERole role, [MarshalAs(UnmanagedType.Interface)] out IMMDevice? endpoint);
+   // GetDevice
 
-        // GetDevice
+   // RegisterEndpointNotificationCallback
 
-        // RegisterEndpointNotificationCallback
+   // UnregisterEndpointNotificationCallback
 
-        // UnregisterEndpointNotificationCallback
-
-    }
 }

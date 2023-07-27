@@ -1,10 +1,10 @@
-﻿// Copyright 2020-2022 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2023 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
 //
 // You may obtain a copy of the License at
-// https://github.com/raisingthefloor/morphic-windows/blob/master/LICENSE.txt
+// https://github.com/raisingthefloor/morphic-windowsnative-lib-cs/blob/main/LICENSE
 //
 // The R&D leading to these results received funding from the:
 // * Rehabilitation Services Administration, US Dept. of Education under
@@ -21,57 +21,56 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-namespace Morphic.WindowsNative.WindowsCoreAudio
+using System;
+using System.Runtime.InteropServices;
+
+namespace Morphic.WindowsNative.WindowsCoreAudio;
+
+internal struct AudioVolumeNotificationData
 {
-	using System;
-	using System.Runtime.InteropServices;
+   public Guid GuidEventContext;
+   public bool Muted;
+   public float MasterVolume;
+   public float[] ChannelVolumes;
 
-    internal struct AudioVolumeNotificationData
-    {
-        public Guid GuidEventContext;
-        public bool Muted;
-        public float MasterVolume;
-        public float[] ChannelVolumes;
+   [StructLayout(LayoutKind.Sequential)]
+   private struct AUDIO_VOLUME_NOTIFICATION_DATA
+   {
+       public Guid guidEventContext;
+       public bool bMuted;
+       public float fMasterVolume;
+       public uint nChannels;
+       // NOTE: afChannelVolumes is an array, but C# doesn't seem to want to marshal data to a variable-length array (i.e. System.AccessViolatedException, etc.) so we do manual marshalling math instead
+       public float afChannelVolumes;
+   }
 
-        [StructLayout(LayoutKind.Sequential)]
-        private struct AUDIO_VOLUME_NOTIFICATION_DATA
-        {
-            public Guid guidEventContext;
-            public bool bMuted;
-            public float fMasterVolume;
-            public uint nChannels;
-            // NOTE: afChannelVolumes is an array, but C# doesn't seem to want to marshal data to a variable-length array (i.e. System.AccessViolatedException, etc.) so we do manual marshalling math instead
-            public float afChannelVolumes;
-        }
+   public static AudioVolumeNotificationData MarshalFromIntPtr(IntPtr ptr)
+   {
+       // capture the structure (including the count of how many channels are represented...but not the full array of afChannelVolumes data)
+       var audioVolumeNotificationData = Marshal.PtrToStructure<AUDIO_VOLUME_NOTIFICATION_DATA>(ptr);
+       var numberOfChannels = audioVolumeNotificationData.nChannels;
 
-        public static AudioVolumeNotificationData MarshalFromIntPtr(IntPtr ptr)
-        {
-            // capture the structure (including the count of how many channels are represented...but not the full array of afChannelVolumes data)
-            var audioVolumeNotificationData = Marshal.PtrToStructure<AUDIO_VOLUME_NOTIFICATION_DATA>(ptr);
-            var numberOfChannels = audioVolumeNotificationData.nChannels;
+       // determine the location of audioVolumeNotificationData.afChannelVolumes in memory so that we can capture all channels' volumes
+       var offsetOfChannelVolumes = Marshal.OffsetOf<AUDIO_VOLUME_NOTIFICATION_DATA>("afChannelVolumes");
+       var pointerToChannelVolumes = IntPtr.Add(ptr, (int)offsetOfChannelVolumes);
 
-            // determine the location of audioVolumeNotificationData.afChannelVolumes in memory so that we can capture all channels' volumes
-            var offsetOfChannelVolumes = Marshal.OffsetOf<AUDIO_VOLUME_NOTIFICATION_DATA>("afChannelVolumes");
-            var pointerToChannelVolumes = IntPtr.Add(ptr, (int)offsetOfChannelVolumes);
+       // capture the channel volumes [through manual marshalling]
+       var channelVolumes = new float[numberOfChannels];
+       var pointerToCurrentChannelVolume = pointerToChannelVolumes;
+       for (var index = 0; index < numberOfChannels; index += 1)
+       {
+           channelVolumes[index] = Marshal.PtrToStructure<float>(pointerToCurrentChannelVolume);
+           pointerToCurrentChannelVolume = IntPtr.Add(pointerToCurrentChannelVolume, Marshal.SizeOf<float>());
+       }
 
-            // capture the channel volumes [through manual marshalling]
-            var channelVolumes = new float[numberOfChannels];
-            var pointerToCurrentChannelVolume = pointerToChannelVolumes;
-            for (var index = 0; index < numberOfChannels; index += 1)
-            {
-                channelVolumes[index] = Marshal.PtrToStructure<float>(pointerToCurrentChannelVolume);
-                pointerToCurrentChannelVolume = IntPtr.Add(pointerToCurrentChannelVolume, Marshal.SizeOf<float>());
-            }
+       var result = new AudioVolumeNotificationData()
+       {
+           GuidEventContext = audioVolumeNotificationData.guidEventContext,
+           Muted = audioVolumeNotificationData.bMuted,
+           MasterVolume = audioVolumeNotificationData.fMasterVolume,
+           ChannelVolumes = channelVolumes
+       };
 
-            var result = new AudioVolumeNotificationData()
-            {
-                GuidEventContext = audioVolumeNotificationData.guidEventContext,
-                Muted = audioVolumeNotificationData.bMuted,
-                MasterVolume = audioVolumeNotificationData.fMasterVolume,
-                ChannelVolumes = channelVolumes
-            };
-
-            return result;
-        }
-    }
+       return result;
+   }
 }
