@@ -31,25 +31,25 @@ namespace Morphic.WindowsNative.Audio;
 
 internal class AudioEndpointVolumeCallback : WindowsCoreAudio.IAudioEndpointVolumeCallback
 {
-   public delegate void CallbackReceived(WindowsCoreAudio.AudioVolumeNotificationData audioVolumeNotificationData);
-   private CallbackReceived _callbackReceivedHandler;
+    public delegate void CallbackReceived(WindowsCoreAudio.AudioVolumeNotificationData audioVolumeNotificationData);
+    private CallbackReceived _callbackReceivedHandler;
 
-   public AudioEndpointVolumeCallback(CallbackReceived callbackReceivedHandler)
-   {
-       _callbackReceivedHandler = callbackReceivedHandler;
-   }
+    public AudioEndpointVolumeCallback(CallbackReceived callbackReceivedHandler)
+    {
+        _callbackReceivedHandler = callbackReceivedHandler;
+    }
 
-   // see: https://github.com/MicrosoftDocs/win32/blob/docs/desktop-src/CoreAudio/endpoint-volume-controls.md
-   public void OnNotify(IntPtr pNotify /* PAUDIO_VOLUME_NOTIFICATION_DATA */)
-   {
-       // NOTE: as the incoming data is variable in length, we need to receive it as an IntPtr and then call a helper function to marshal it properly
-       var audioVolumeNotificationData = WindowsCoreAudio.AudioVolumeNotificationData.MarshalFromIntPtr(pNotify);
+    // see: https://github.com/MicrosoftDocs/win32/blob/docs/desktop-src/CoreAudio/endpoint-volume-controls.md
+    public void OnNotify(IntPtr pNotify /* PAUDIO_VOLUME_NOTIFICATION_DATA */)
+    {
+        // NOTE: as the incoming data is variable in length, we need to receive it as an IntPtr and then call a helper function to marshal it properly
+        var audioVolumeNotificationData = WindowsCoreAudio.AudioVolumeNotificationData.MarshalFromIntPtr(pNotify);
 
-       // NOTE: this function must NOT be blocking; as such we call the managed event asynchronously and return immediately...avoiding any potential of waiting on synchronization locks, etc.
-       // see: https://github.com/MicrosoftDocs/sdk-api/blob/docs/sdk-api-src/content/endpointvolume/nn-endpointvolume-iaudioendpointvolumecallback.md
-       Task.Run(() =>
-       {
-           _callbackReceivedHandler(audioVolumeNotificationData);
-       });
-   }
+        // NOTE: this function must NOT be blocking; as such we call the managed event asynchronously and return immediately...avoiding any potential of waiting on synchronization locks, etc.
+        // see: https://github.com/MicrosoftDocs/sdk-api/blob/docs/sdk-api-src/content/endpointvolume/nn-endpointvolume-iaudioendpointvolumecallback.md
+        Task.Run(() =>
+        {
+            _callbackReceivedHandler(audioVolumeNotificationData);
+        });
+    }
 }

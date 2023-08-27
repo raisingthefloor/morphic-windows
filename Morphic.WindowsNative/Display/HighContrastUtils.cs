@@ -43,7 +43,7 @@ public class HighContrastUtils
        public bool HotKeyPresentsConfirmationDialog;
        public bool HotKeyPlaysSound;
        //public bool ShowsVisualIndicatorWhenOn;
-       public bool HotKeyCanBeEnabled { get; set; }
+       public bool HotKeyCanBeEnabled { get; init; }
        //
        public String? DefaultColorScheme;
    }

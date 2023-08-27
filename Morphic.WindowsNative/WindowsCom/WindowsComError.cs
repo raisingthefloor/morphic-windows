@@ -37,7 +37,7 @@ public record WindowsComError : MorphicAssociatedValueEnum<WindowsComError.Value
    }
 
    // functions to create member instances
-   public static WindowsComError ComException(COMException comException) => new WindowsComError(Values.ComException) { Exception = comException };
+   public static WindowsComError ComException(COMException comException) => new(Values.ComException) { Exception = comException };
 
    // associated values
    public COMException? Exception { get; private set; }

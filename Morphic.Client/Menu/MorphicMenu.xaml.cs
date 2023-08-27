@@ -296,7 +296,7 @@
 
         #region TrayIcon
 
-        private MorphicHybridTrayIcon? _trayIcon = null;
+        private Morphic.Controls.HybridTrayIcon? _trayIcon = null;
 
         internal void SuppressTaskbarButtonResurfaceChecks(bool suppress)
         {
@@ -312,14 +312,13 @@
             // var allNotificationIconsShown = (await filterType.GetValue() as bool? == true) ? TrayIcon.TrayIconLocationOption.NotificationTray : TrayIcon.TrayIconLocationOption.NextToNotificationTry;
 
             WindowMessageHook windowMessageHook = WindowMessageHook.GetGlobalMessageHook();
-            MorphicHybridTrayIcon trayIcon = new MorphicHybridTrayIcon();
-            trayIcon = new MorphicHybridTrayIcon();
+            var trayIcon = new Morphic.Controls.HybridTrayIcon();
             trayIcon.Click += this.OnTrayIconClicked;
             trayIcon.SecondaryClick += this.OnTrayIconRightClicked;
             trayIcon.Icon = Client.Properties.Resources.Icon;
             trayIcon.Text = "Morphic";
 //            trayIcon.TrayIconLocation = allNotificationIconsShown;
-            trayIcon.TrayIconLocation = MorphicHybridTrayIcon.TrayIconLocationOption.NextToNotificationTray;
+            trayIcon.TrayIconLocation = Morphic.Controls.HybridTrayIcon.TrayIconLocationOption.NextToNotificationTray;
             trayIcon.Visible = true;
             _trayIcon = trayIcon;
 
