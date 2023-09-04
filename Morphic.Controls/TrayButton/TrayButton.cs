@@ -4,7 +4,7 @@
 // compliance with this License.
 //
 // You may obtain a copy of the License at
-// https://github.com/raisingthefloor/morphic-windows/blob/master/LICENSE.txt
+// https://github.com/raisingthefloor/morphic-controls-lib-cs/blob/master/LICENSE.txt
 //
 // The R&D leading to these results received funding from the:
 // * Rehabilitation Services Administration, US Dept. of Education under
@@ -27,7 +27,6 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace Morphic.Controls.TrayButton;
 
@@ -38,7 +37,7 @@ public class TrayButton : IDisposable
      Morphic.Controls.TrayButton.Windows10.TrayButton? _legacyTrayButton;
      Morphic.Controls.TrayButton.Windows11.TrayButton? _trayButton;
 
-     public event MouseEventHandler? MouseUp;
+     public event System.Windows.Forms.MouseEventHandler? MouseUp;
 
      public TrayButton()
      {
@@ -50,7 +49,7 @@ public class TrayButton : IDisposable
                {
                     this.MouseUp?.Invoke(s, e);
                };
-          } 
+          }
           else
           {
                // Windows 10 (i.e. legacy tray button)
@@ -67,7 +66,7 @@ public class TrayButton : IDisposable
           if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
           {
                _trayButton?.Dispose();
-          } 
+          }
           else
           {
                _legacyTrayButton?.Dispose();
@@ -82,7 +81,7 @@ public class TrayButton : IDisposable
                {
                     return _trayButton!.Bitmap;
                }
-               else
+               else //if (.IsWindows10() == true)
                {
                     var icon = _legacyTrayButton!.Icon;
                     return (icon is not null) ? icon!.ToBitmap() : null;
@@ -94,18 +93,18 @@ public class TrayButton : IDisposable
                {
                     _trayButton!.Bitmap = value;
                }
-               else
+               else //if (.IsWindows10() == true)
                {
                     if (value is not null)
                     {
-                         var bitmapAsIconHandle = value.GetHicon();
+                         var bitmapAsIconHandlePointer = value.GetHicon();
                          try
                          {
-                              _legacyTrayButton!.Icon = (Icon)Icon.FromHandle(bitmapAsIconHandle).Clone();
+                              _legacyTrayButton!.Icon = (Icon)Icon.FromHandle(bitmapAsIconHandlePointer).Clone();
                          }
                          finally
                          {
-                              PInvoke.User32.DestroyIcon(bitmapAsIconHandle);
+                              _ = Windows.Win32.PInvoke.DestroyIcon((Windows.Win32.UI.WindowsAndMessaging.HICON)bitmapAsIconHandlePointer);
                          }
                     }
                     else
@@ -124,14 +123,14 @@ public class TrayButton : IDisposable
                {
                     if (_trayButton!.Bitmap is not null)
                     {
-                         var bitmapAsIconHandle = _trayButton!.Bitmap!.GetHicon();
+                         var bitmapAsIconHandlePointer = _trayButton!.Bitmap!.GetHicon();
                          try
                          {
-                              return (Icon)Icon.FromHandle(bitmapAsIconHandle).Clone();
+                              return (Icon)Icon.FromHandle(bitmapAsIconHandlePointer).Clone();
                          }
                          finally
                          {
-                              PInvoke.User32.DestroyIcon(bitmapAsIconHandle);
+                              Windows.Win32.PInvoke.DestroyIcon((Windows.Win32.UI.WindowsAndMessaging.HICON)bitmapAsIconHandlePointer);
                          }
                     }
                     else
@@ -139,7 +138,7 @@ public class TrayButton : IDisposable
                          return null;
                     }
                }
-               else
+               else //if (.IsWindows10() == true)
                {
                     return _legacyTrayButton!.Icon;
                }
@@ -150,7 +149,7 @@ public class TrayButton : IDisposable
                {
                     _trayButton!.Bitmap = (value is not null) ? value!.ToBitmap() : null;
                }
-               else
+               else //if (.IsWindows10() == true)
                {
                     _legacyTrayButton!.Icon = value;
                }
@@ -165,7 +164,7 @@ public class TrayButton : IDisposable
                {
                     return _trayButton!.Text;
                }
-               else
+               else //if (.IsWindows10() == true)
                {
                     return _legacyTrayButton!.Text;
                }
@@ -176,7 +175,7 @@ public class TrayButton : IDisposable
                {
                     _trayButton!.Text = value;
                }
-               else
+               else //if (.IsWindows10() == true)
                {
                     _legacyTrayButton!.Text = value;
                }
@@ -191,7 +190,7 @@ public class TrayButton : IDisposable
                {
                     return _trayButton!.Visible;
                }
-               else
+               else //if (.IsWindows10() == true)
                {
                     return _legacyTrayButton!.Visible;
                }
@@ -202,7 +201,7 @@ public class TrayButton : IDisposable
                {
                     _trayButton!.Visible = value;
                }
-               else
+               else //if (.IsWindows10() == true)
                {
                     _legacyTrayButton!.Visible = value;
                }

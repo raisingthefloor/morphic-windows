@@ -4,7 +4,7 @@
 // compliance with this License.
 //
 // You may obtain a copy of the License at
-// https://github.com/raisingthefloor/morphic-windows/blob/master/LICENSE.txt
+// https://github.com/raisingthefloor/morphic-controls-lib-cs/blob/master/LICENSE.txt
 //
 // The R&D leading to these results received funding from the:
 // * Rehabilitation Services Administration, US Dept. of Education under
@@ -22,12 +22,7 @@
 // * Consumer Electronics Association Foundation
 
 using System;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
-using System.IO;
-using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace Morphic.Controls;
@@ -55,7 +50,7 @@ public class HybridTrayIcon : IDisposable
           NextToNotificationTray,
           NotificationTrayAndNextToNotificationTray
      }
-
+     //
      private TrayIconLocationOption _trayIconLocation = TrayIconLocationOption.None;
 
      /// <summary>Raised when the button is clicked.</summary>
