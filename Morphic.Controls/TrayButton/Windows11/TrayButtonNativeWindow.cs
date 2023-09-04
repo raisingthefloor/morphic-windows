@@ -101,7 +101,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
                     {
                          Debug.Assert(false, "Class was already registered; we should have recorded this ATOM, and we cannot proceed");
                     }
-                    return MorphicResult.ErrorResult(Morphic.Controls.TrayButton.Windows11.CreateNewError.Win32Exception(win32Exception));
+                    return MorphicResult.ErrorResult(Morphic.Controls.TrayButton.Windows11.CreateNewError.Win32Error((uint)win32Exception.ErrorCode));
                }
                s_morphicTrayButtonClassInfoExAtom = registerClassResult;
           }
@@ -148,7 +148,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
           }
           catch (PInvoke.Win32Exception ex)
           {
-               return MorphicResult.ErrorResult(Morphic.Controls.TrayButton.Windows11.CreateNewError.Win32Exception(ex));
+               return MorphicResult.ErrorResult(Morphic.Controls.TrayButton.Windows11.CreateNewError.Win32Error((uint)ex.ErrorCode));
           }
           catch (Exception ex)
           {
@@ -165,7 +165,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
                {
                     case Morphic.WindowsNative.Win32ApiError.Values.Win32Error:
                          var win32Error = setBackgroundAlphaResult.Error!.Win32ErrorCode!.Value;
-                         return MorphicResult.ErrorResult(Morphic.Controls.TrayButton.Windows11.CreateNewError.Win32Exception(new PInvoke.Win32Exception((PInvoke.Win32ErrorCode)win32Error)));
+                         return MorphicResult.ErrorResult(Morphic.Controls.TrayButton.Windows11.CreateNewError.Win32Error(win32Error));
                     default:
                          throw new Exception("invalid code path");
                }

@@ -74,7 +74,7 @@ internal class ArgbImageNativeWindow : NativeWindow, IDisposable
                     {
                          Debug.Assert(false, "Class was already registered; we should have recorded this ATOM, and we cannot proceed");
                     }
-                    return MorphicResult.ErrorResult(Morphic.Controls.TrayButton.Windows11.CreateNewError.Win32Exception(win32Exception));
+                    return MorphicResult.ErrorResult(Morphic.Controls.TrayButton.Windows11.CreateNewError.Win32Error((uint)win32Exception.ErrorCode));
                }
                s_morphicArgbImageClassInfoExAtom = registerClassResult;
           }
@@ -103,7 +103,7 @@ internal class ArgbImageNativeWindow : NativeWindow, IDisposable
           }
           catch (PInvoke.Win32Exception ex)
           {
-               return MorphicResult.ErrorResult(Morphic.Controls.TrayButton.Windows11.CreateNewError.Win32Exception(ex));
+               return MorphicResult.ErrorResult(Morphic.Controls.TrayButton.Windows11.CreateNewError.Win32Error((uint)ex.ErrorCode));
           }
           catch (Exception ex)
           {
