@@ -27,7 +27,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
@@ -40,7 +39,7 @@ namespace Morphic.Controls.TrayButton.Windows10;
 
 internal class TrayButton : IDisposable
 {
-     private Icon? _icon = null;
+     private System.Drawing.Icon? _icon = null;
      private string? _text = null;
      private bool _visible = false;
 
@@ -60,7 +59,7 @@ internal class TrayButton : IDisposable
      }
 
      /// <summary>The icon for the tray button</summary>
-     public Icon? Icon
+     public System.Drawing.Icon? Icon
      {
           get
           {
@@ -107,7 +106,7 @@ internal class TrayButton : IDisposable
                          CreateNativeWindow();
                     }
                }
-               else if (_visible == false)
+               else //if (_visible == false)
                {
                     if (_nativeWindow is not null)
                     {
@@ -808,7 +807,7 @@ internal class TrayButton : IDisposable
                          //
                          if (highlightOpacity > 0.0)
                          {
-                              this.DrawHighlightBackground(bufferedPaintDc, ps.rcPaint, Color.White, highlightOpacity);
+                              this.DrawHighlightBackground(bufferedPaintDc, ps.rcPaint, System.Drawing.Color.White, highlightOpacity);
                          }
 
                          // calculate the size and position of our icon
@@ -878,7 +877,7 @@ internal class TrayButton : IDisposable
                return result;
           }
 
-          private void DrawHighlightBackground(IntPtr hdc, LegacyWindowsApi.RECT rect, Color color, Double opacity)
+          private void DrawHighlightBackground(IntPtr hdc, LegacyWindowsApi.RECT rect, System.Drawing.Color color, Double opacity)
           {
                // GDI doesn't have a concept of semi-transparent pixels - the only function that honours them is AlphaBlend.
                // Create a bitmap containing a single pixel - and then use AlphaBlend to stretch it to the size of the rect.
@@ -965,7 +964,7 @@ internal class TrayButton : IDisposable
                }
           }
 
-          public void SetIcon(Icon? icon)
+          public void SetIcon(System.Drawing.Icon? icon)
           {
                if (icon is not null)
                {

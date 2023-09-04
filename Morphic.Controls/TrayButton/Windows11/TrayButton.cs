@@ -34,8 +34,6 @@ using Morphic.Core;
 using System;
 using System.Diagnostics;
 using System.Drawing;
-using System.Windows.Forms;
-using static PInvoke.User32;
 
 namespace Morphic.Controls.TrayButton.Windows11;
 
@@ -45,7 +43,7 @@ internal class TrayButton : IDisposable
      private string? _text = null;
      private bool _visible = false;
 
-     public event MouseEventHandler? MouseUp;
+     public event System.Windows.Forms.MouseEventHandler? MouseUp;
 
      private TrayButtonNativeWindow? _nativeWindow = null;
 
@@ -66,9 +64,9 @@ internal class TrayButton : IDisposable
                     // TODO: dispose managed state (managed objects)
                }
 
+               // TODO: free unmanaged resources (unmanaged objects) and override finalizer
                this.DestroyNativeWindow();
 
-               // TODO: free unmanaged resources (unmanaged objects) and override finalizer
                // TODO: set large fields to null
                disposedValue = true;
           }

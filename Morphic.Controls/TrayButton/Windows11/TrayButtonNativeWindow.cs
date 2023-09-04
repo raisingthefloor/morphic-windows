@@ -21,22 +21,17 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using Morphic.Controls.TrayButton.Windows10;
 using Morphic.Core;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Forms;
 
 namespace Morphic.Controls.TrayButton.Windows11;
 
-internal class TrayButtonNativeWindow : NativeWindow, IDisposable
+internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisposable
 {
      private bool disposedValue;
 
@@ -72,7 +67,7 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
 
      private const byte ALPHA_VALUE_FOR_TRANSPARENT_BUT_HIT_TESTABLE = 1;
 
-     public event MouseEventHandler? MouseUp;
+     public event System.Windows.Forms.MouseEventHandler? MouseUp;
 
      private TrayButtonNativeWindow()
      {
@@ -131,7 +126,7 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
 
           /* create an instance of our native window */
 
-          CreateParams windowParams = new CreateParams()
+          var windowParams = new System.Windows.Forms.CreateParams()
           {
                ClassName = s_morphicTrayButtonClassInfoExAtom.ToString(), // for simplicity, we pass the value of the custom class as its integer self but in string form; our CreateWindow function will parse this and convert it to an int
                Caption = nativeWindowClassName,
@@ -168,7 +163,7 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
           {
                switch (setBackgroundAlphaResult.Error!.Value)
                {
-                    case WindowsNative.Win32ApiError.Values.Win32Error:
+                    case Morphic.WindowsNative.Win32ApiError.Values.Win32Error:
                          var win32Error = setBackgroundAlphaResult.Error!.Win32ErrorCode!.Value;
                          return MorphicResult.ErrorResult(Morphic.Controls.TrayButton.Windows11.CreateNewError.Win32Exception(new PInvoke.Win32Exception((PInvoke.Win32ErrorCode)win32Error)));
                     default:
@@ -177,7 +172,7 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
           }
 
           // since we are making the control visible by default, set its _visibility state
-          result._visibility = Visibility.Visible;
+          result._visibility = System.Windows.Visibility.Visible;
 
           // create an instance of the ArgbImageNativeWindow to hold our icon; we cannot draw the bitmap directly on this window as the bitmap would then be alphablended the same % as our background (instead of being independently blended over our window)
           var argbImageNativeWindowResult = ArgbImageNativeWindow.CreateNew(result.Handle, windowParams.X, windowParams.Y, windowParams.Width, windowParams.Height);
@@ -237,7 +232,7 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
 
      // NOTE: the built-in CreateHandle function couldn't accept our custom class (an ATOM rather than a string) as input, so we have overridden CreateHandle and are calling CreateWindowEx manually
      // NOTE: in some circumstances, it is possible that we are unable to create our window; our caller may want to consider retrying mechanism
-     public override void CreateHandle(CreateParams cp)
+     public override void CreateHandle(System.Windows.Forms.CreateParams cp)
      {
           // NOTE: if cp.ClassName is a string parseable as a short unsigned integer, parse it into an unsigned short; otherwise use the string as the classname
           IntPtr classNameAsIntPtr;
@@ -371,7 +366,7 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
      }
 
      // NOTE: this WndProc method processes all messages after the initial creation of the window
-     protected override void WndProc(ref Message m)
+     protected override void WndProc(ref System.Windows.Forms.Message m)
      {
           IntPtr? result = null;
 
@@ -395,7 +390,7 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
                          {
                               var hitPoint = convertLParamResult.Value!;
 
-                              var mouseArgs = new MouseEventArgs(MouseButtons.Left, 1, hitPoint.X, hitPoint.Y, 0);
+                              var mouseArgs = new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.Left, 1, hitPoint.X, hitPoint.Y, 0);
                               Task.Run(() => this.MouseUp?.Invoke(this, mouseArgs));
                          }
                          else
@@ -484,7 +479,7 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
                          {
                               var hitPoint = convertLParamResult.Value!;
 
-                              var mouseArgs = new MouseEventArgs(MouseButtons.Right, 1, hitPoint.X, hitPoint.Y, 0);
+                              var mouseArgs = new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.Right, 1, hitPoint.X, hitPoint.Y, 0);
                               Task.Run(() => this.MouseUp?.Invoke(this, mouseArgs));
                          }
                          else
@@ -679,7 +674,7 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
 
      private bool ShouldWindowBeVisible()
      {
-          return (_visibility == Visibility.Visible) && (_taskbarIsTopmost == true);
+          return (_visibility == System.Windows.Visibility.Visible) && (_taskbarIsTopmost == true);
      }
 
      private void UpdateVisualStateAlpha()
@@ -977,7 +972,7 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
           var toolinfo = new WindowsApi.TOOLINFO();
           toolinfo.cbSize = (uint)Marshal.SizeOf(toolinfo);
           toolinfo.hwnd = this.Handle;
-          toolinfo.uFlags = LegacyWindowsApi.TTF_SUBCLASS;
+          toolinfo.uFlags = Morphic.Controls.TrayButton.Windows10.LegacyWindowsApi.TTF_SUBCLASS;
           toolinfo.lpszText = _tooltipText;
           toolinfo.uId = unchecked((nuint)(nint)this.Handle); // unique identifier (for adding/deleting the tooltip)
           toolinfo.rect = trayButtonClientRect;
@@ -1072,11 +1067,11 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
           System.Windows.Forms.Orientation taskbarOrientation;
           if ((taskbarRect.right - taskbarRect.left) > (taskbarRect.bottom - taskbarRect.top))
           {
-               taskbarOrientation = Orientation.Horizontal;
+               taskbarOrientation = System.Windows.Forms.Orientation.Horizontal;
           }
           else
           {
-               taskbarOrientation = Orientation.Vertical;
+               taskbarOrientation = System.Windows.Forms.Orientation.Vertical;
           }
 
           // establish the appropriate size for our tray button (i.e. same height/width as taskbar, and with an aspect ratio of 8:10)
@@ -1086,7 +1081,7 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
           // NOTE: the inaccurate size returned by GetWindowRect may be due to our moving this class from the main application to a helper library (i.e. perhaps the pixel scaling isn't applying correctly), or it could just be a weird quirk on some computers.
           //       [The GetWindowRect issue hapepns with both our own homebuilt PINVOKE methods as well as with PInvoke.User32.GetWindowRect; the function is returning the correct left, bottom and right positions of the taskbar and notify tray--but is
           //       sometimes misrepresenting the top (i.e. height) value of both the taskbar and notify tray rects]
-          if (taskbarOrientation == Orientation.Horizontal)
+          if (taskbarOrientation == System.Windows.Forms.Orientation.Horizontal)
           {
                // option 1: base our primary dimension off of the taskbutton container's same dimension
                trayButtonHeight = taskButtonContainerRect.bottom - taskButtonContainerRect.top;
@@ -1112,7 +1107,7 @@ internal class TrayButtonNativeWindow : NativeWindow, IDisposable
           // choose a space in the rightmost/bottommost position of the taskbar
           int trayButtonX;
           int trayButtonY;
-          if (taskbarOrientation == Orientation.Horizontal)
+          if (taskbarOrientation == System.Windows.Forms.Orientation.Horizontal)
           {
                trayButtonX = notifyTrayRect.left - trayButtonWidth;
                // NOTE: if we have any issues with positioning, try to replace taskbarRect.bottom with taskButtoncontainerRect.bottom (if we chose option #1 for our size calculations above)

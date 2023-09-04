@@ -31,7 +31,7 @@ using System.Threading.Tasks;
 namespace Morphic.Controls.TrayButton.Windows11;
 
 // NOTE: this type is designed to be returned as the Error type in MorphicResult<TResult, Win32ApiError> function results
-public record CreateNewError : MorphicAssociatedValueEnum<CreateNewError.Values>
+internal record CreateNewError : MorphicAssociatedValueEnum<CreateNewError.Values>
 {
      // enum members
      public enum Values

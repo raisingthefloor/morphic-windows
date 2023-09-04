@@ -23,7 +23,6 @@
 
 using System;
 using System.Runtime.InteropServices;
-using System.Windows;
 
 namespace Morphic.Controls.TrayButton.Windows10;
 
@@ -52,7 +51,7 @@ internal class LegacyWindowsApi
           /// Creates a win32 RECT from a .NET Rect.
           /// </summary>
           /// <param name="rect">The rectangle.</param>
-          public RECT(Rect rect)
+          public RECT(System.Windows.Rect rect)
           {
                this.Left = (int)rect.Left;
                this.Top = (int)rect.Top;
@@ -64,7 +63,7 @@ internal class LegacyWindowsApi
           {
                get
                {
-                    return new RECT(new Rect(0, 0, 0, 0));
+                    return new RECT(new System.Windows.Rect(0, 0, 0, 0));
                }
           }
 
@@ -149,13 +148,13 @@ internal class LegacyWindowsApi
                this.Y = y;
           }
 
-          public POINT(Point pt) : this((int)pt.X, (int)pt.Y)
+          public POINT(System.Windows.Point pt) : this((int)pt.X, (int)pt.Y)
           {
           }
 
-          public Point ToPoint()
+          public System.Windows.Point ToPoint()
           {
-               return new Point(this.X, this.Y);
+               return new System.Windows.Point(this.X, this.Y);
           }
      }
 
