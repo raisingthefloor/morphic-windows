@@ -24,9 +24,7 @@
 using Morphic.Core;
 using System;
 using System.Diagnostics;
-using System.Drawing;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Morphic.Controls.TrayButton.Windows11;
@@ -853,7 +851,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
 
      private static MorphicResult<string, Morphic.WindowsNative.Win32ApiError> GetWindowClassName(IntPtr hWnd)
      {
-          StringBuilder classNameBuilder = new(256);
+          System.Text.StringBuilder classNameBuilder = new(256);
           var getClassNameResult = WindowsApi.GetClassName(hWnd, classNameBuilder, classNameBuilder.Capacity);
           if (getClassNameResult == 0)
           {
@@ -867,7 +865,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
 
      //
 
-     public void SetBitmap(Bitmap? bitmap)
+     public void SetBitmap(System.Drawing.Bitmap? bitmap)
      {
           if (bitmap is not null)
           {
@@ -876,7 +874,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
           _argbImageNativeWindow?.SetBitmap(bitmap);
      }
 
-     private void PositionAndResizeBitmap(Bitmap bitmap)
+     private void PositionAndResizeBitmap(System.Drawing.Bitmap bitmap)
      {
           // then, reposition the bitmap
           PInvoke.User32.GetWindowRect(this.Handle, out var positionAndSize);

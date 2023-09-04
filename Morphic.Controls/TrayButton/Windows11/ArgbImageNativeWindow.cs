@@ -25,18 +25,16 @@ using Morphic.Core;
 using PInvoke;
 using System;
 using System.Diagnostics;
-using System.Drawing;
 using System.Runtime.InteropServices;
-using System.Windows.Forms;
 
 namespace Morphic.Controls.TrayButton.Windows11;
 
-internal class ArgbImageNativeWindow : NativeWindow, IDisposable
+internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDisposable
 {
      private bool disposedValue;
 
-     private Bitmap? _sourceBitmap = null;
-     private Bitmap? _sizedBitmap = null;
+     private System.Drawing.Bitmap? _sourceBitmap = null;
+     private System.Drawing.Bitmap? _sizedBitmap = null;
 
      private bool _visible;
 
@@ -81,7 +79,7 @@ internal class ArgbImageNativeWindow : NativeWindow, IDisposable
 
           /* create an instance of our native window */
 
-          CreateParams windowParams = new CreateParams()
+          var windowParams = new System.Windows.Forms.CreateParams()
           {
                ClassName = s_morphicArgbImageClassInfoExAtom.ToString(), // for simplicity, we pass the value of the custom class as its integer self but in string form; our CreateWindow function will parse this and convert it to an int
                Caption = nativeWindowClassName,
@@ -118,7 +116,7 @@ internal class ArgbImageNativeWindow : NativeWindow, IDisposable
 
      // NOTE: the built-in CreateHandle function couldn't accept our custom class (an ATOM rather than a string) as input, so we have overridden CreateHandle and are calling CreateWindowEx manually
      // NOTE: in some circumstances, it is possible that we are unable to create our window; our caller may want to consider retrying mechanism
-     public override void CreateHandle(CreateParams cp)
+     public override void CreateHandle(System.Windows.Forms.CreateParams cp)
      {
           // NOTE: if cp.ClassName is a string parseable as a short unsigned integer, parse it into an unsigned short; otherwise use the string as the classname
           IntPtr classNameAsIntPtr;
@@ -229,7 +227,7 @@ internal class ArgbImageNativeWindow : NativeWindow, IDisposable
      }
 
      // NOTE: this WndProc method processes all messages after the initial creation of the window
-     protected override void WndProc(ref Message m)
+     protected override void WndProc(ref System.Windows.Forms.Message m)
      {
           IntPtr? result = null;
 
@@ -272,12 +270,12 @@ internal class ArgbImageNativeWindow : NativeWindow, IDisposable
 
      //
 
-     public Bitmap? GetBitmap()
+     public System.Drawing.Bitmap? GetBitmap()
      {
           return _sourceBitmap;
      }
 
-     public void SetBitmap(Bitmap? bitmap)
+     public void SetBitmap(System.Drawing.Bitmap? bitmap)
      {
           _sourceBitmap = bitmap;
           this.RecreateSizedBitmap(bitmap);
@@ -314,11 +312,11 @@ internal class ArgbImageNativeWindow : NativeWindow, IDisposable
           }
      }
 
-     private void RecreateSizedBitmap(Bitmap? bitmap)
+     private void RecreateSizedBitmap(System.Drawing.Bitmap? bitmap)
      {
           if (bitmap != null)
           {
-               _sizedBitmap = new Bitmap(bitmap, this.GetCurrentSize());
+               _sizedBitmap = new System.Drawing.Bitmap(bitmap, this.GetCurrentSize());
           }
           else
           {
@@ -357,7 +355,7 @@ internal class ArgbImageNativeWindow : NativeWindow, IDisposable
                IntPtr sizedBitmapPointer;
                try
                {
-                    sizedBitmapPointer = sizedBitmap.GetHbitmap(Color.FromArgb(0));
+                    sizedBitmapPointer = sizedBitmap.GetHbitmap(System.Drawing.Color.FromArgb(0));
                }
                catch
                {
@@ -399,7 +397,7 @@ internal class ArgbImageNativeWindow : NativeWindow, IDisposable
                                         SourceConstantAlpha = 255, /* use per-pixel alpha values */
                                         AlphaFormat = WindowsApi.AC_SRC_ALPHA, /* the bitmap has an alpha channel; it MUST be a 32bpp bitmap */
                                    };
-                                   var sourcePoint = new Point(0, 0);
+                                   var sourcePoint = new System.Drawing.Point(0, 0);
                                    var flags = WindowsApi.UpdateLayeredWindowFlags.ULW_ALPHA; // this flag indicates the blendfunction should be used as the blend function
                                    //var updateLayeredWindowSuccess = WindowsApi.UpdateLayeredWindow(this.Handle, ownerDC.DangerousGetHandle(), ref position/* captured position of our window */, ref size, sourceDC.DangerousGetHandle(), ref sourcePoint, 0 /* unused COLORREF*/, ref blendfunction, flags);
                                    var updateLayeredWindowSuccess = WindowsApi.UpdateLayeredWindow(this.Handle, ownerDC.DangerousGetHandle(), IntPtr.Zero /* current position is not changing */, ref size, sourceDC.DangerousGetHandle(), ref sourcePoint, 0 /* unused COLORREF*/, ref blendfunction, flags);
@@ -447,5 +445,4 @@ internal class ArgbImageNativeWindow : NativeWindow, IDisposable
           // if we reach here, the operation was successful          
           return MorphicResult.OkResult();
      }
-
 }

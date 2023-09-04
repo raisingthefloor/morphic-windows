@@ -21,25 +21,15 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-//using Morphic.WindowsNative;
-//using System;
-//using System.Collections.Generic;
-//using System.ComponentModel;
-//using System.Diagnostics;
-//using System.Drawing;
-//using System.Runtime.InteropServices;
-//using System.Windows.Forms;
-
 using Morphic.Core;
 using System;
 using System.Diagnostics;
-using System.Drawing;
 
 namespace Morphic.Controls.TrayButton.Windows11;
 
 internal class TrayButton : IDisposable
 {
-     private Bitmap? _bitmap = null;
+     private System.Drawing.Bitmap? _bitmap = null;
      private string? _text = null;
      private bool _visible = false;
 
@@ -87,7 +77,7 @@ internal class TrayButton : IDisposable
 
      //
 
-     public Bitmap? Bitmap
+     public System.Drawing.Bitmap? Bitmap
      {
           get
           {
