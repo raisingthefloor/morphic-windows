@@ -22,11 +22,6 @@
 // * Consumer Electronics Association Foundation
 
 using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Morphic.Controls.TrayButton;
 
@@ -73,7 +68,7 @@ public class TrayButton : IDisposable
           }
      }
 
-     public Bitmap? Bitmap
+     public System.Drawing.Bitmap? Bitmap
      {
           get
           {
@@ -100,7 +95,7 @@ public class TrayButton : IDisposable
                          var bitmapAsIconHandlePointer = value.GetHicon();
                          try
                          {
-                              _legacyTrayButton!.Icon = (Icon)Icon.FromHandle(bitmapAsIconHandlePointer).Clone();
+                              _legacyTrayButton!.Icon = (System.Drawing.Icon)(System.Drawing.Icon.FromHandle(bitmapAsIconHandlePointer).Clone());
                          }
                          finally
                          {
@@ -115,7 +110,7 @@ public class TrayButton : IDisposable
           }
      }
 
-     public Icon? Icon
+     public System.Drawing.Icon? Icon
      {
           get
           {
@@ -126,7 +121,7 @@ public class TrayButton : IDisposable
                          var bitmapAsIconHandlePointer = _trayButton!.Bitmap!.GetHicon();
                          try
                          {
-                              return (Icon)Icon.FromHandle(bitmapAsIconHandlePointer).Clone();
+                              return (System.Drawing.Icon)(System.Drawing.Icon.FromHandle(bitmapAsIconHandlePointer).Clone());
                          }
                          finally
                          {
