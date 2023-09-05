@@ -211,7 +211,7 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
           {
                case PInvoke.User32.WindowMessage.WM_CREATE:
                     // see: https://learn.microsoft.com/en-us/windows/win32/api/uxtheme/nf-uxtheme-bufferedpaintinit
-                    if (WindowsApi.BufferedPaintInit() != WindowsApi.S_OK)
+                    if (Windows.Win32.PInvoke.BufferedPaintInit() != Windows.Win32.Foundation.HRESULT.S_OK)
                     {
                          // failed; abort
                          Debug.Assert(false, "Could not initialize buffered paint");
@@ -237,7 +237,7 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
                     {
                          // NOTE: we are calling this in response to WM_NCDESTROY (instead of WM_DESTROY)
                          //       see: https://learn.microsoft.com/en-us/windows/win32/api/uxtheme/nf-uxtheme-bufferedpaintinit
-                         _ = WindowsApi.BufferedPaintUnInit();
+                         _ = Windows.Win32.PInvoke.BufferedPaintUnInit();
 
                          // NOTE: we pass along this message (i.e. we don't return a "handled" result)
                     }
@@ -283,7 +283,7 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
           this.RequestRedraw();
      }
 
-     public void SetPositionAndSize(PInvoke.RECT rect)
+     public void SetPositionAndSize(Windows.Win32.Foundation.RECT rect)
      {
           // set the new window position (including size); we must resize the window before recreating the sized bitmap (which will be sized to the updated size)
           Windows.Win32.PInvoke.SetWindowPos((Windows.Win32.Foundation.HWND)this.Handle, (Windows.Win32.Foundation.HWND)IntPtr.Zero, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOZORDER | Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);

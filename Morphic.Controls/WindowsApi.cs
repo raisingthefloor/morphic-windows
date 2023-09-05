@@ -67,44 +67,6 @@ internal class WindowsApi
      #endregion commctrl
 
 
-     #region uxtheme
-
-     // https://learn.microsoft.com/en-us/windows/win32/api/uxtheme/ne-uxtheme-bp_bufferformat
-     internal enum BP_BUFFERFORMAT : int
-     {
-          BPBF_COMPATIBLEBITMAP,
-          BPBF_DIB,
-          BPBF_TOPDOWNDIB,
-          BPBF_TOPDOWNMONODIB
-     }
-
-     // https://docs.microsoft.com/en-us/windows/win32/api/uxtheme/nf-uxtheme-beginbufferedpaint
-     [DllImport("uxtheme.dll")]
-     internal static extern IntPtr BeginBufferedPaint(IntPtr hdcTarget, [In] ref PInvoke.RECT prcTarget, BP_BUFFERFORMAT dwFormat, IntPtr /* [In] BP_PAINTPARAMS */ pPaintParams, out IntPtr phdc);
-
-     // https://docs.microsoft.com/en-us/windows/win32/api/uxtheme/nf-uxtheme-bufferedpaintclear
-     [DllImport("uxtheme.dll")]
-     internal static extern uint BufferedPaintClear(IntPtr hBufferedPaint, ref PInvoke.RECT prc);
-     // // alternative implementation (i.e. to pass in null for RECT)
-     //[DllImport("uxtheme.dll")]
-     //internal static extern uint BufferedPaintClear(IntPtr hBufferedPaint, IntPtr prc);
-
-     // https://learn.microsoft.com/en-us/windows/win32/api/uxtheme/nf-uxtheme-bufferedpaintinit
-     [DllImport("uxtheme.dll")]
-     internal static extern int BufferedPaintInit();
-
-     // https://learn.microsoft.com/en-us/windows/win32/api/uxtheme/nf-uxtheme-bufferedpaintuninit
-     [DllImport("uxtheme.dll")]
-     internal static extern int BufferedPaintUnInit();
-
-
-     // https://docs.microsoft.com/en-us/windows/win32/api/uxtheme/nf-uxtheme-endbufferedpaint
-     [DllImport("uxtheme.dll")]
-     internal static extern uint EndBufferedPaint(IntPtr hBufferedPaint, bool fUpdateTarget);
-
-     #endregion uxtheme
-
-
      #region windgi
 
      // https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-createsolidbrush
@@ -333,16 +295,6 @@ internal class WindowsApi
      // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-registerclassexw
      [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
      internal static extern ushort RegisterClassEx([In] ref WNDCLASSEX lpWndClass);
-
-     internal enum SetLayeredWindowAttributesFlags : uint
-     {
-          LWA_COLORKEY = 0x00000001,
-          LWA_ALPHA = 0x00000002
-     }
-     //
-     // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setlayeredwindowattributes
-     [DllImport("user32.dll", SetLastError = true)]
-     internal static extern bool SetLayeredWindowAttributes(IntPtr hwnd, /* COLORREF */uint crKey, byte bAlpha, uint dwFlags);
 
      // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwineventhook
      [DllImport("user32.dll")]

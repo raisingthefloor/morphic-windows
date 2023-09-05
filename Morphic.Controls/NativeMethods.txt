@@ -1,18 +1,34 @@
-﻿CreateCompatibleDC
+﻿BeginBufferedPaint
+BeginPaint
+BringWindowToTop
+BufferedPaintClear
+BufferedPaintInit
+BufferedPaintUnInit
+CreateCompatibleDC
+CreateSolidBrush
 DeleteDC
 DeleteObject
 DestroyIcon
+DestroyWindow
+EndBufferedPaint
+EndPaint
+FillRect
+FindWindowW
+FindWindowExW
 GetDC
+GetDesktopWindow
 GetWindow
 GetWindowLong
 GetWindowRect
 ReleaseDC
 SelectObject
+SetLayeredWindowAttributes
 SetWindowLong
 SetWindowPos
 UpdateLayeredWindow
 
 BLENDFUNCTION
+PAINTSTRUCT
 
 REDRAW_WINDOW_FLAGS
 WINDOW_EX_STYLE
@@ -20,3 +36,5 @@ WINDOW_STYLE
 
 AC_SRC_ALPHA
 AC_SRC_OVER
+HWND_TOPMOST
+S_OK

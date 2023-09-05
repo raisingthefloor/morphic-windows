@@ -135,7 +135,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
                Y = trayButtonPositionAndSize.top,
                Width = trayButtonPositionAndSize.right - trayButtonPositionAndSize.left,
                Height = trayButtonPositionAndSize.bottom - trayButtonPositionAndSize.top,
-               Parent = taskbarHandle,
+               Parent = taskbarHandle.Value,
                //Param = ?,
           };
 
@@ -156,7 +156,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
           // set the window's background transparency to 0% (in the range of a 0 to 255 alpha channel, with 255 being 100%)
           // NOTE: an alpha value of 0 (0%) makes our window complete see-through but it has the side-effect of not capturing any mouse events; to counteract this,
           //       we set our "tranparent" alpha value to 1 instead.  We will only use an alpha value of 0 when we want our window to be invisible and also not capture mouse events
-          var setBackgroundAlphaResult = TrayButtonNativeWindow.SetBackgroundAlpha(result.Handle, ALPHA_VALUE_FOR_TRANSPARENT_BUT_HIT_TESTABLE);
+          var setBackgroundAlphaResult = TrayButtonNativeWindow.SetBackgroundAlpha((Windows.Win32.Foundation.HWND)result.Handle, ALPHA_VALUE_FOR_TRANSPARENT_BUT_HIT_TESTABLE);
           if (setBackgroundAlphaResult.IsError)
           {
                switch (setBackgroundAlphaResult.Error!.Value)
@@ -348,7 +348,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
                     // NOTE: it may not technically be necessary for us to use buffered painting for this control since we're effectively just painting it with a single fill color--but 
                     //       we do so to maintain consistency with the ArgbImageNativeWindow class and other user-painted forms
                     // see: https://learn.microsoft.com/en-us/windows/win32/api/uxtheme/nf-uxtheme-bufferedpaintinit
-                    if (WindowsApi.BufferedPaintInit() != WindowsApi.S_OK)
+                    if (Windows.Win32.PInvoke.BufferedPaintInit() != Windows.Win32.Foundation.HRESULT.S_OK)
                     {
                          // failed; abort
                          Debug.Assert(false, "Could not initialize buffered paint");
@@ -438,7 +438,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
                     {
                          // NOTE: we are calling this in response to WM_NCDESTROY (instead of WM_DESTROY)
                          //       see: https://learn.microsoft.com/en-us/windows/win32/api/uxtheme/nf-uxtheme-bufferedpaintinit
-                         _ = WindowsApi.BufferedPaintUnInit();
+                         _ = Windows.Win32.PInvoke.BufferedPaintUnInit();
 
                          // NOTE: we pass along this message (i.e. we don't return a "handled" result)
                     }
@@ -453,7 +453,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
                case PInvoke.User32.WindowMessage.WM_PAINT:
                     {
                          // NOTE: we override the built-in paint functionality with our own Paint function
-                         this.OnPaintWindowsMessage(m.HWnd);
+                         this.OnPaintWindowsMessage((Windows.Win32.Foundation.HWND)m.HWnd);
                          //
                          // return zero, indicating that we processed the message
                          result = IntPtr.Zero;
@@ -579,12 +579,12 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
      }
 
      // NOTE: this function may ONLY be called when responding to a WM_PAINT message
-     private void OnPaintWindowsMessage(IntPtr hWnd)
+     private void OnPaintWindowsMessage(Windows.Win32.Foundation.HWND hWnd)
      {
           // create a device context for drawing; we must destroy this automatically in a finally block.  We are effectively replicating the functionality of C++'s CPaintDC.
-          WindowsApi.PAINTSTRUCT paintStruct;
+          Windows.Win32.Graphics.Gdi.PAINTSTRUCT paintStruct;
           // NOTE: we experienced significant issues using PInvoke.User32.BeginPaint (possibly due to its IntPtr result wrapper), so we have redeclared the BeginPaint function ourselves
-          var deviceContext = WindowsApi.BeginPaint(hWnd, out paintStruct)!;
+          var deviceContext = Windows.Win32.PInvoke.BeginPaint(hWnd, out paintStruct)!;
           if (deviceContext == IntPtr.Zero)
           {
                // no display context is available
@@ -594,8 +594,8 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
           try
           {
                // NOTE: to avoid flickering, we use buffered painting to erase the background, fill the background with a single (white) brush, and then apply the painted area to the window in a single paint operation
-               IntPtr bufferedPaintDc;
-               var paintBufferHandle = WindowsApi.BeginBufferedPaint(paintStruct.hdc, ref paintStruct.rcPaint, WindowsApi.BP_BUFFERFORMAT.BPBF_TOPDOWNDIB, IntPtr.Zero, out bufferedPaintDc);
+               Windows.Win32.Graphics.Gdi.HDC bufferedPaintDc;
+               var paintBufferHandle = Windows.Win32.PInvoke.BeginBufferedPaint(paintStruct.hdc, in paintStruct.rcPaint, Windows.Win32.UI.Controls.BP_BUFFERFORMAT.BPBF_TOPDOWNDIB, null, out bufferedPaintDc);
                if (paintBufferHandle == IntPtr.Zero)
                {
                     Debug.Assert(false, "Cannot begin a buffered paint operation for TrayButton (when responding to a WM_PAINT message).");
@@ -606,15 +606,15 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
                     // NOTE: this is the section where we call all of our actual (buffered) paint operations
 
                     // clear our window's background (i.e. the buffer background)
-                    var bufferedPaintClearHresult = WindowsApi.BufferedPaintClear(paintBufferHandle, ref paintStruct.rcPaint);
-                    if (bufferedPaintClearHresult != WindowsApi.S_OK)
+                    var bufferedPaintClearHresult = Windows.Win32.PInvoke.BufferedPaintClear(paintBufferHandle, paintStruct.rcPaint);
+                    if (bufferedPaintClearHresult != Windows.Win32.Foundation.HRESULT.S_OK)
                     {
                          Debug.Assert(false, "Could not clear background of TrayButton window--using buffered clearing (when responding to a WM_Paint message).");
                          return;
                     }
 
                     // create a solid white brush
-                    var createSolidBrushResult = WindowsApi.CreateSolidBrush(0x00FFFFFF);
+                    var createSolidBrushResult = Windows.Win32.PInvoke.CreateSolidBrush((Windows.Win32.Foundation.COLORREF)0x00FFFFFF);
                     if (createSolidBrushResult == IntPtr.Zero)
                     {
                          Debug.Assert(false, "Could not create white brush to paint the background of the TrayButton window (when responding to a WM_Paint message).");
@@ -623,28 +623,32 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
                     var whiteBrush = createSolidBrushResult;
                     try
                     {
-                         var fillRectResult = WindowsApi.FillRect(bufferedPaintDc, ref paintStruct.rcPaint, whiteBrush);
+                         int fillRectResult;
+                         unsafe
+                         {
+                              fillRectResult = Windows.Win32.PInvoke.FillRect(bufferedPaintDc, &paintStruct.rcPaint, whiteBrush);
+                         }
                          Debug.Assert(fillRectResult != 0, "Could not fill highlight background of Tray icon with white brush");
                     }
                     finally
                     {
                          // clean up the white solid brush we created for the fill operation
-                         var deleteObjectSuccess = PInvoke.Gdi32.DeleteObject(whiteBrush);
+                         var deleteObjectSuccess = Windows.Win32.PInvoke.DeleteObject(whiteBrush);
                          Debug.Assert(deleteObjectSuccess == true, "Could not delete white brush object used to highlight Tray icon");
                     }
                }
                finally
                {
                     // complete the buffered paint operation and free the buffered paint handle
-                    var endBufferedPaintHresult = WindowsApi.EndBufferedPaint(paintBufferHandle, true /* copy buffer to DC, completing hte paint operation */);
-                    Debug.Assert(endBufferedPaintHresult == WindowsApi.S_OK, "Error while attempting to end buffered paint operation for TrayButton; hresult: " + endBufferedPaintHresult);
+                    var endBufferedPaintHresult = Windows.Win32.PInvoke.EndBufferedPaint(paintBufferHandle, true /* copy buffer to DC, completing the paint operation */);
+                    Debug.Assert(endBufferedPaintHresult == Windows.Win32.Foundation.HRESULT.S_OK, "Error while attempting to end buffered paint operation for TrayButton; hresult: " + endBufferedPaintHresult);
                }
           }
           finally
           {
                // mark the end of painting; this function must always be called when BeginPaint was called (and succeeded), and only after drawing is complete
                // NOTE: per the MSDN docs, this function never returns zero (so there is no result to check)
-               _ = WindowsApi.EndPaint(hWnd, ref paintStruct);
+               _ = Windows.Win32.PInvoke.EndPaint(hWnd, in paintStruct);
           }
      }
 
@@ -693,23 +697,23 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
                }
 
                var alpha = (byte)((double)255 * highlightOpacity);
-               TrayButtonNativeWindow.SetBackgroundAlpha(this.Handle, Math.Max(alpha, ALPHA_VALUE_FOR_TRANSPARENT_BUT_HIT_TESTABLE));
+               TrayButtonNativeWindow.SetBackgroundAlpha((Windows.Win32.Foundation.HWND)this.Handle, Math.Max(alpha, ALPHA_VALUE_FOR_TRANSPARENT_BUT_HIT_TESTABLE));
           }
           else
           {
                // collapsed or hidden controls should be invisible
-               TrayButtonNativeWindow.SetBackgroundAlpha(this.Handle, 0);
+               TrayButtonNativeWindow.SetBackgroundAlpha((Windows.Win32.Foundation.HWND)this.Handle, 0);
           }
      }
 
-     private static MorphicResult<MorphicUnit, Morphic.WindowsNative.Win32ApiError> SetBackgroundAlpha(IntPtr handle, byte alpha)
+     private static MorphicResult<MorphicUnit, Morphic.WindowsNative.Win32ApiError> SetBackgroundAlpha(Windows.Win32.Foundation.HWND handle, byte alpha)
      {
           // set the window's background transparency to 0% (in the range of a 0 to 255 alpha channel, with 255 being 100%)
-          var setLayeredWindowAttributesSuccess = WindowsApi.SetLayeredWindowAttributes(handle, 0, alpha, (uint)WindowsApi.SetLayeredWindowAttributesFlags.LWA_ALPHA);
+          var setLayeredWindowAttributesSuccess = Windows.Win32.PInvoke.SetLayeredWindowAttributes(handle, (Windows.Win32.Foundation.COLORREF)0, alpha, Windows.Win32.UI.WindowsAndMessaging.LAYERED_WINDOW_ATTRIBUTES_FLAGS.LWA_ALPHA);
           if (setLayeredWindowAttributesSuccess == false)
           {
-               var win32Error = Marshal.GetLastWin32Error();
-               return MorphicResult.ErrorResult(Morphic.WindowsNative.Win32ApiError.Win32Error((uint)win32Error));
+               var win32Error = (uint)System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+               return MorphicResult.ErrorResult(Morphic.WindowsNative.Win32ApiError.Win32Error(win32Error));
           }
 
           return MorphicResult.OkResult();
@@ -770,7 +774,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
 
      private void BringTaskButtonTopmostWithoutActivating()
      {
-          PInvoke.User32.SetWindowPos(this.Handle, WindowsApi.HWND_TOPMOST, 0, 0, 0, 0, PInvoke.User32.SetWindowPosFlags.SWP_NOMOVE | PInvoke.User32.SetWindowPosFlags.SWP_NOSIZE | PInvoke.User32.SetWindowPosFlags.SWP_NOACTIVATE);
+          Windows.Win32.PInvoke.SetWindowPos((Windows.Win32.Foundation.HWND)this.Handle, Windows.Win32.Foundation.HWND.HWND_TOPMOST, 0, 0, 0, 0, Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOMOVE | Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOSIZE | Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
      }
 
      private void ObjectReorderWindowEventProc(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint idEventThread, uint dwmsEventTime)
@@ -790,10 +794,10 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
           }
 
           // capture the desktop handle
-          var desktopHandle = PInvoke.User32.GetDesktopWindow();
+          var desktopHandle = Windows.Win32.PInvoke.GetDesktopWindow();
 
           // if the reordered window was either the taskbar or the desktop, update the _taskbarIsTopmost state; this will generally be triggered when an app goes full-screen (or full-screen mode is exited)
-          if (className == "Shell_TrayWnd" || hwnd == desktopHandle)
+          if (className == "Shell_TrayWnd" || hwnd == desktopHandle.Value)
           {
                // whenever the window ordering changes, resurface our control
                this.BringTaskButtonTopmostWithoutActivating();
@@ -806,11 +810,11 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
           }
      }
 
-     private static bool IsTaskbarTopmost(IntPtr? taskbarHWnd = null)
+     private static bool IsTaskbarTopmost(Windows.Win32.Foundation.HWND? taskbarHWnd = null)
      {
           var taskbarHandle = taskbarHWnd ?? TrayButtonNativeWindow.GetWindowsTaskbarHandle();
 
-          var taskbarWindowExStyle = PInvokeExtensions.GetWindowLongPtr_IntPtr((Windows.Win32.Foundation.HWND)taskbarHandle, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE);
+          var taskbarWindowExStyle = PInvokeExtensions.GetWindowLongPtr_IntPtr(taskbarHandle, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE);
           var taskbarIsTopmost = ((nint)taskbarWindowExStyle & (nint)Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE.WS_EX_TOPMOST) != 0;
 
           return taskbarIsTopmost;
@@ -828,7 +832,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
           var trayButtonPositionAndSize = calculatePositionResult.Value!;
           //
           var size = new System.Drawing.Size(trayButtonPositionAndSize.right - trayButtonPositionAndSize.left, trayButtonPositionAndSize.bottom - trayButtonPositionAndSize.top);
-          PInvoke.User32.SetWindowPos(this.Handle, IntPtr.Zero, trayButtonPositionAndSize.left, trayButtonPositionAndSize.top, size.Width, size.Height, PInvoke.User32.SetWindowPosFlags.SWP_NOZORDER | PInvoke.User32.SetWindowPosFlags.SWP_NOACTIVATE);
+          Windows.Win32.PInvoke.SetWindowPos((Windows.Win32.Foundation.HWND)this.Handle, (Windows.Win32.Foundation.HWND)IntPtr.Zero, trayButtonPositionAndSize.left, trayButtonPositionAndSize.top, size.Width, size.Height, Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOZORDER | Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
 
           // once the control is repositioned, reposition the bitmap
           var bitmap = _argbImageNativeWindow?.GetBitmap();
@@ -844,7 +848,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
           }
 
 
-          PInvoke.User32.BringWindowToTop(this.Handle);
+          _ = Windows.Win32.PInvoke.BringWindowToTop((Windows.Win32.Foundation.HWND)this.Handle);
 
           return MorphicResult.OkResult();
      }
@@ -877,11 +881,11 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
      private void PositionAndResizeBitmap(System.Drawing.Bitmap bitmap)
      {
           // then, reposition the bitmap
-          PInvoke.User32.GetWindowRect(this.Handle, out var positionAndSize);
+          Windows.Win32.PInvoke.GetWindowRect((Windows.Win32.Foundation.HWND)this.Handle, out var positionAndSize);
           var bitmapSize = bitmap.Size;
 
           var argbImageNativeWindowSize = TrayButtonNativeWindow.CalculateWidthAndHeightForBitmap(positionAndSize, bitmapSize);
-          var bitmapRect = TrayButtonNativeWindow.CalculateCenterRectInsideRect(positionAndSize, bitmapSize);
+          var bitmapRect = TrayButtonNativeWindow.CalculateCenterRectInsideRect(positionAndSize, argbImageNativeWindowSize);
 
           _argbImageNativeWindow?.SetPositionAndSize(bitmapRect);
      }
@@ -937,8 +941,8 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
           _tooltipText = null;
           this.UpdateTooltipTextAndTracking();
 
-          var result = PInvoke.User32.DestroyWindow(_tooltipWindowHandle);
-          _tooltipWindowHandle = IntPtr.Zero;
+          var result = Windows.Win32.PInvoke.DestroyWindow((Windows.Win32.Foundation.HWND)_tooltipWindowHandle);
+          _tooltipWindowHandle = (Windows.Win32.Foundation.HWND)IntPtr.Zero;
 
           return result;
      }
@@ -1010,7 +1014,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
 
      /* helper functions */
 
-     internal static PInvoke.RECT CalculateCenterRectInsideRect(PInvoke.RECT outerRect, System.Drawing.Size innerSize)
+     internal static Windows.Win32.Foundation.RECT CalculateCenterRectInsideRect(Windows.Win32.Foundation.RECT outerRect, System.Drawing.Size innerSize)
      {
           var outerWidth = outerRect.right - outerRect.left;
           var outerHeight = outerRect.bottom - outerRect.top;
@@ -1024,7 +1028,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
           var bottom = top + innerHeight;
 
 
-          return new PInvoke.RECT()
+          return new Windows.Win32.Foundation.RECT()
           {
                left = left,
                top = top,
@@ -1033,7 +1037,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
           };
      }
 
-     internal static MorphicResult<PInvoke.RECT, MorphicUnit> CalculatePositionAndSizeForTrayButton(IntPtr? trayButtonHandle)
+     internal static MorphicResult<Windows.Win32.Foundation.RECT, MorphicUnit> CalculatePositionAndSizeForTrayButton(IntPtr? trayButtonHandle)
      {
           // NOTE: in this implementation, we simply place the tray button over the taskbar, directly to the left of the system tray
           //       in the future, we may want to consider searching for any children which might occupy the area--and any system windows which are owned by the taskbar or any of its children--and then try to find a place to the "left" of those
@@ -1051,13 +1055,13 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
 
           // get the RECTs for the taskbar, task button container and the notify tray
           //
-          var getTaskbarRectSuccess = PInvoke.User32.GetWindowRect(taskbarHandle, out var taskbarRect);
+          var getTaskbarRectSuccess = Windows.Win32.PInvoke.GetWindowRect(taskbarHandle, out var taskbarRect);
           if (getTaskbarRectSuccess == false) { return MorphicResult.ErrorResult(); }
           //
-          var getTaskButtonContainerRectSuccess = PInvoke.User32.GetWindowRect(taskButtonContainerHandle, out var taskButtonContainerRect);
+          var getTaskButtonContainerRectSuccess = Windows.Win32.PInvoke.GetWindowRect(taskButtonContainerHandle, out var taskButtonContainerRect);
           if (getTaskButtonContainerRectSuccess == false) { return MorphicResult.ErrorResult(); }
           //
-          var getNotifyTrayRectSuccess = PInvoke.User32.GetWindowRect(notifyTrayHandle, out var notifyTrayRect);
+          var getNotifyTrayRectSuccess = Windows.Win32.PInvoke.GetWindowRect(notifyTrayHandle, out var notifyTrayRect);
           if (getNotifyTrayRectSuccess == false) { return MorphicResult.ErrorResult(); }
 
           // determine the taskbar's orientation
@@ -1118,7 +1122,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
                trayButtonY = notifyTrayRect.top - trayButtonHeight;
           }
 
-          var result = new PInvoke.RECT() { left = trayButtonX, top = trayButtonY, right = trayButtonX + trayButtonWidth, bottom = trayButtonY + trayButtonHeight };
+          var result = new Windows.Win32.Foundation.RECT() { left = trayButtonX, top = trayButtonY, right = trayButtonX + trayButtonWidth, bottom = trayButtonY + trayButtonHeight };
           return MorphicResult.OkResult(result);
      }
 
@@ -1150,7 +1154,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
      //
 
      // NOTE: this function takes the window size as input and calculates the size of the icon to display, centered, within the window.
-     private static System.Drawing.Size CalculateWidthAndHeightForBitmap(PInvoke.RECT availableRect, System.Drawing.Size bitmapSize)
+     private static System.Drawing.Size CalculateWidthAndHeightForBitmap(Windows.Win32.Foundation.RECT availableRect, System.Drawing.Size bitmapSize)
      {
           var availableSize = new System.Drawing.Size(availableRect.right - availableRect.left, availableRect.bottom - availableRect.top);
 
@@ -1162,13 +1166,23 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
           {
                //largerDimensionSize = availableSize.Height;
                //smallerDimensionSize = availableSize.Width;
-               insideMarginsSize = new((int)((double)availableSize.Width * 0.9), (int)((double)availableSize.Height * (2.0/3.0)));
+               //
+               // strategy 1: consume up to 90% of the width of the box and up to 66% of the height
+               //insideMarginsSize = new((int)((double)availableSize.Width * 0.9), (int)((double)availableSize.Height * (2.0 / 3.0)));
+               //
+               // strategy 2: consume up to 66% of the width of the box and up to 66% of the height
+               insideMarginsSize = new((int)((double)availableSize.Width * (2.0 / 3.0)), (int)((double)availableSize.Height * (2.0 / 3.0)));
           }
           else
           {
                //largerDimensionSize = availableSize.Width;
                //smallerDimensionSize = availableSize.Height;
-               insideMarginsSize = new((int)((double)availableSize.Width * (2.0/3.0)), (int)((double)availableSize.Height * 0.9));
+               //
+               // strategy 1: consume up to 66% of the width of the box and up to 90% of the height
+               //insideMarginsSize = new((int)((double)availableSize.Width * (2.0 / 3.0)), (int)((double)availableSize.Height * 0.9));
+               //
+               // strategy 2: consume up to 66% of the width of the box and up to 66% of the height
+               insideMarginsSize = new((int)((double)availableSize.Width * (2.0 / 3.0)), (int)((double)availableSize.Height * (2.0 / 3.0)));
           }
 
           /* shrink the bitmap size down so that it fits inside the available rect */
@@ -1197,7 +1211,8 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
           if (bitmapWidth != insideMarginsSize.Width && bitmapHeight != insideMarginsSize.Height)
           {
                // if bitmap is not as wide as the insideMarginsWidth, enlarge it now (equally in both directions)
-               if (bitmapWidth < insideMarginsSize.Width) {
+               if (bitmapWidth < insideMarginsSize.Width)
+               {
                     double scaleFactor = (double)insideMarginsSize.Width / (double)bitmapWidth;
                     bitmapWidth = insideMarginsSize.Width;
                     bitmapHeight = (int)((double)bitmapHeight * scaleFactor);
@@ -1212,33 +1227,31 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
                }
           }
 
-
-
           return new System.Drawing.Size(bitmapWidth, bitmapHeight);
      }
 
      //
 
-     private static IntPtr GetWindowsTaskbarHandle()
+     private static Windows.Win32.Foundation.HWND GetWindowsTaskbarHandle()
      {
-          return PInvoke.User32.FindWindow("Shell_TrayWnd", null);
+          return Windows.Win32.PInvoke.FindWindow("Shell_TrayWnd", null);
      }
      //
-     private static IntPtr GetWindowsTaskbarTaskButtonContainerHandle(IntPtr taskbarHandle)
+     private static Windows.Win32.Foundation.HWND GetWindowsTaskbarTaskButtonContainerHandle(Windows.Win32.Foundation.HWND taskbarHandle)
      {
-          if (taskbarHandle == IntPtr.Zero)
+          if (taskbarHandle.Value == IntPtr.Zero)
           {
-               return IntPtr.Zero;
+               return (Windows.Win32.Foundation.HWND)IntPtr.Zero;
           }
-          return PInvoke.User32.FindWindowEx(taskbarHandle, IntPtr.Zero, "ReBarWindow32", null);
+          return Windows.Win32.PInvoke.FindWindowEx(taskbarHandle, (Windows.Win32.Foundation.HWND)IntPtr.Zero, "ReBarWindow32", null);
      }
      //
-     private static IntPtr GetWindowsTaskbarNotificationTrayHandle(IntPtr taskbarHandle)
+     private static Windows.Win32.Foundation.HWND GetWindowsTaskbarNotificationTrayHandle(Windows.Win32.Foundation.HWND taskbarHandle)
      {
-          if (taskbarHandle == IntPtr.Zero)
+          if (taskbarHandle.Value == IntPtr.Zero)
           {
-               return IntPtr.Zero;
+               return (Windows.Win32.Foundation.HWND)IntPtr.Zero;
           }
-          return PInvoke.User32.FindWindowEx(taskbarHandle, IntPtr.Zero, "TrayNotifyWnd", null);
+          return Windows.Win32.PInvoke.FindWindowEx(taskbarHandle, (Windows.Win32.Foundation.HWND)IntPtr.Zero, "TrayNotifyWnd", null);
      }
 }
