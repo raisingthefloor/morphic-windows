@@ -4,7 +4,7 @@
 // compliance with this License.
 //
 // You may obtain a copy of the License at
-// https://github.com/raisingthefloor/morphic-windows/blob/master/LICENSE.txt
+// https://github.com/raisingthefloor/morphic-controls-lib-cs/blob/master/LICENSE.txt
 //
 // The R&D leading to these results received funding from the:
 // * Rehabilitation Services Administration, US Dept. of Education under
@@ -23,31 +23,28 @@
 
 using Morphic.Core;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Morphic.Controls.TrayButton.Windows11;
 
 // NOTE: this type is designed to be returned as the Error type in MorphicResult<TResult, Win32ApiError> function results
-public record CreateNewError : MorphicAssociatedValueEnum<CreateNewError.Values>
+internal record CreateNewError : MorphicAssociatedValueEnum<CreateNewError.Values>
 {
      // enum members
      public enum Values
      {
           CouldNotCalculateWindowPosition,
           OtherException/*(Exception exception)*/,
-          Win32Exception/*(Win32Exception exception)*/
+          Win32Error/*(uint win32ErrorCode)*/
      }
 
      // functions to create member instances
      public static CreateNewError CouldNotCalculateWindowPosition => new(Values.CouldNotCalculateWindowPosition);
      public static CreateNewError OtherException(Exception ex) => new(Values.OtherException) { Exception = ex };
-     public static CreateNewError Win32Exception(PInvoke.Win32Exception ex) => new(Values.Win32Exception) { Exception = ex };
+     public static CreateNewError Win32Error(uint win32ErrorCode) => new(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
 
      // associated values
-     public Exception? Exception { get; private set; }
+     public Exception? Exception { get; private init; }
+     public uint? Win32ErrorCode { get; private init; }
 
      // verbatim required constructor implementation for MorphicAssociatedValueEnums
      private CreateNewError(Values value) : base(value) { }

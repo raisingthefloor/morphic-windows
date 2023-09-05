@@ -4,7 +4,7 @@
 // compliance with this License.
 //
 // You may obtain a copy of the License at
-// https://github.com/raisingthefloor/morphic-windows/blob/master/LICENSE.txt
+// https://github.com/raisingthefloor/morphic-controls-lib-cs/blob/master/LICENSE.txt
 //
 // The R&D leading to these results received funding from the:
 // * Rehabilitation Services Administration, US Dept. of Education under
@@ -22,13 +22,6 @@
 // * Consumer Electronics Association Foundation
 
 using System;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Drawing;
-using System.IO;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Windows.Forms;
 
 namespace Morphic.Controls;
 
@@ -38,12 +31,12 @@ namespace Morphic.Controls;
 /// </summary>
 public class HybridTrayIcon : IDisposable
 {
-     private Icon? _icon = null;
+     private System.Drawing.Icon? _icon = null;
      private string? _text = null;
      private bool _visible = false;
 
      // <summary>Used if a tray icon is desired instead of a next-to-tray taskbar button</summary>
-     private NotifyIcon? _notifyIcon = null;
+     private System.Windows.Forms.NotifyIcon? _notifyIcon = null;
 
      // <summary>Used if a next-to-tray button is desired instead of a tray icon</summary>
      private Morphic.Controls.TrayButton.TrayButton? _trayButton = null;
@@ -55,7 +48,7 @@ public class HybridTrayIcon : IDisposable
           NextToNotificationTray,
           NotificationTrayAndNextToNotificationTray
      }
-
+     //
      private TrayIconLocationOption _trayIconLocation = TrayIconLocationOption.None;
 
      /// <summary>Raised when the button is clicked.</summary>
@@ -77,7 +70,7 @@ public class HybridTrayIcon : IDisposable
      }
 
      /// <summary>The icon for the tray icon</summary>
-     public Icon? Icon
+     public System.Drawing.Icon? Icon
      {
           get
           {
@@ -156,17 +149,17 @@ public class HybridTrayIcon : IDisposable
                return;
           }
 
-          _notifyIcon = new NotifyIcon();
+          _notifyIcon = new System.Windows.Forms.NotifyIcon();
           _notifyIcon.Text = _text;
           _notifyIcon.Icon = _icon;
           //
           _notifyIcon.MouseUp += (sender, args) =>
           {
-               if (args.Button == MouseButtons.Right)
+               if (args.Button == System.Windows.Forms.MouseButtons.Right)
                {
                     this.SecondaryClick?.Invoke(this, args);
                }
-               else if (args.Button == MouseButtons.Left)
+               else if (args.Button == System.Windows.Forms.MouseButtons.Left)
                {
                     this.Click?.Invoke(this, args);
                }
@@ -187,11 +180,11 @@ public class HybridTrayIcon : IDisposable
           //
           _trayButton.MouseUp += (sender, args) =>
           {
-               if (args.Button == MouseButtons.Right)
+               if (args.Button == System.Windows.Forms.MouseButtons.Right)
                {
                     this.SecondaryClick?.Invoke(this, args);
                }
-               else if (args.Button == MouseButtons.Left)
+               else if (args.Button == System.Windows.Forms.MouseButtons.Left)
                {
                     this.Click?.Invoke(this, args);
                }

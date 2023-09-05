@@ -4,7 +4,7 @@
 // compliance with this License.
 //
 // You may obtain a copy of the License at
-// https://github.com/raisingthefloor/morphic-windows/blob/master/LICENSE.txt
+// https://github.com/raisingthefloor/morphic-controls-lib-cs/blob/master/LICENSE.txt
 //
 // The R&D leading to these results received funding from the:
 // * Rehabilitation Services Administration, US Dept. of Education under
@@ -21,15 +21,10 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using Morphic.Core;
-using Morphic.WindowsNative;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
-using System.Drawing;
 using System.Runtime.InteropServices;
-using System.Windows.Forms;
 
 namespace Morphic.Controls.TrayButton.Windows10;
 
@@ -40,7 +35,7 @@ namespace Morphic.Controls.TrayButton.Windows10;
 
 internal class TrayButton : IDisposable
 {
-     private Icon? _icon = null;
+     private System.Drawing.Icon? _icon = null;
      private string? _text = null;
      private bool _visible = false;
 
@@ -48,7 +43,7 @@ internal class TrayButton : IDisposable
 
      //private bool _highContrastModeIsOn_Cached = false;
 
-     public event MouseEventHandler? MouseUp;
+     public event System.Windows.Forms.MouseEventHandler? MouseUp;
 
      internal TrayButton()
      {
@@ -60,7 +55,7 @@ internal class TrayButton : IDisposable
      }
 
      /// <summary>The icon for the tray button</summary>
-     public Icon? Icon
+     public System.Drawing.Icon? Icon
      {
           get
           {
@@ -107,7 +102,7 @@ internal class TrayButton : IDisposable
                          CreateNativeWindow();
                     }
                }
-               else if (_visible == false)
+               else //if (_visible == false)
                {
                     if (_nativeWindow is not null)
                     {
@@ -148,7 +143,7 @@ internal class TrayButton : IDisposable
           {
                nativeWindow.Initialize(taskbarHandle);
           }
-          catch (Win32Exception ex)
+          catch (System.ComponentModel.Win32Exception/* ex*/)
           {
                // TODO: consider what exceptions we could get here, how to handle them and how to bubble them up to our caller, etc.
                throw;
@@ -181,7 +176,7 @@ internal class TrayButton : IDisposable
 
      #region Tray Button (Native Window)
 
-     private class TrayButtonNativeWindow : NativeWindow, IDisposable
+     private class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisposable
      {
           private TrayButton _owner;
 
@@ -228,10 +223,10 @@ internal class TrayButton : IDisposable
                var registerClassResult = WindowsApi.RegisterClassEx(ref lpWndClass);
                if (registerClassResult == 0)
                {
-                    throw new Win32Exception(Marshal.GetLastWin32Error());
+                    throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
                }
 
-               var windowParams = new CreateParams();
+               var windowParams = new System.Windows.Forms.CreateParams();
                windowParams.ExStyle = (int)LegacyWindowsApi.WindowStylesEx.WS_EX_TOOLWINDOW;
                /* NOTE: as we want to be able to ensure that we're referencing the exact class we just registered, we pass the RegisterClassEx results into the 
                     * CreateWindow function (and we encode that result as a ushort here in a proprietary way) */
@@ -244,7 +239,7 @@ internal class TrayButton : IDisposable
                windowParams.Height = 40;
                windowParams.Parent = taskbarHandle;
                //
-               // NOTE: CreateHandle can throw InvalidOperationException, OutOfMemoryException, or Win32Exception
+               // NOTE: CreateHandle can throw InvalidOperationException, OutOfMemoryException, or System.ComponentModel.Win32Exception
                this.CreateHandle(windowParams);
 
                // create the tooltip window (although we won't provide it with any actual text until/unless the text is set
@@ -284,7 +279,7 @@ internal class TrayButton : IDisposable
                          _visualState &= ~TrayButtonVisualStateFlags.LeftButtonPressed;
                          this.RequestRedraw();
                          {
-                              var mouseArgs = new MouseEventArgs(MouseButtons.Left, 1, e.X, e.Y, 0);
+                              var mouseArgs = new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.Left, 1, e.X, e.Y, 0);
                               _owner.MouseUp?.Invoke(_owner, mouseArgs);
                          }
                          break;
@@ -323,7 +318,7 @@ internal class TrayButton : IDisposable
                          _visualState &= ~TrayButtonVisualStateFlags.RightButtonPressed;
                          this.RequestRedraw();
                          {
-                              var mouseArgs = new MouseEventArgs(MouseButtons.Right, 1, e.X, e.Y, 0);
+                              var mouseArgs = new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.Right, 1, e.X, e.Y, 0);
                               _owner.MouseUp?.Invoke(_owner, mouseArgs);
                          }
                          break;
@@ -455,7 +450,7 @@ internal class TrayButton : IDisposable
           }
 
           // NOTE: the built-in CreateHandle function couldn't handle our custom class, so we have overridden CreateHandle and are calling CreateWindowEx ourselves
-          public override void CreateHandle(CreateParams cp)
+          public override void CreateHandle(System.Windows.Forms.CreateParams cp)
           {
                // NOTE: if cp.ClassName is a string parseable as a (UInt16) number, convert that value to an IntPtr; otherwise capture a pointer to the string
                IntPtr classNameAsIntPtr;
@@ -523,7 +518,7 @@ internal class TrayButton : IDisposable
                this.DestroyHandle();
           }
 
-          protected override void WndProc(ref Message m)
+          protected override void WndProc(ref System.Windows.Forms.Message m)
           {
                var uMsg = (uint)m.Msg;
 
@@ -557,7 +552,7 @@ internal class TrayButton : IDisposable
                                    Debug.Assert(false, "Could not map tray button hit point to screen coordinates");
                                    break;
                               }
-                              var mouseArgs = new MouseEventArgs(MouseButtons.Left, 1, hitPoint.Value.X, hitPoint.Value.Y, 0);
+                              var mouseArgs = new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.Left, 1, hitPoint.Value.X, hitPoint.Value.Y, 0);
                               _owner.MouseUp?.Invoke(_owner, mouseArgs);
                          }
                          result = new IntPtr(0);
@@ -639,7 +634,7 @@ internal class TrayButton : IDisposable
                                    Debug.Assert(false, "Could not map tray button hit point to screen coordinates");
                                    break;
                               }
-                              var mouseArgs = new MouseEventArgs(MouseButtons.Right, 1, hitPoint.Value.X, hitPoint.Value.Y, 0);
+                              var mouseArgs = new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.Right, 1, hitPoint.Value.X, hitPoint.Value.Y, 0);
                               _owner.MouseUp?.Invoke(_owner, mouseArgs);
                          }
                          result = new IntPtr(0);
@@ -808,7 +803,7 @@ internal class TrayButton : IDisposable
                          //
                          if (highlightOpacity > 0.0)
                          {
-                              this.DrawHighlightBackground(bufferedPaintDc, ps.rcPaint, Color.White, highlightOpacity);
+                              this.DrawHighlightBackground(bufferedPaintDc, ps.rcPaint, System.Drawing.Color.White, highlightOpacity);
                          }
 
                          // calculate the size and position of our icon
@@ -878,7 +873,7 @@ internal class TrayButton : IDisposable
                return result;
           }
 
-          private void DrawHighlightBackground(IntPtr hdc, LegacyWindowsApi.RECT rect, Color color, Double opacity)
+          private void DrawHighlightBackground(IntPtr hdc, LegacyWindowsApi.RECT rect, System.Drawing.Color color, Double opacity)
           {
                // GDI doesn't have a concept of semi-transparent pixels - the only function that honours them is AlphaBlend.
                // Create a bitmap containing a single pixel - and then use AlphaBlend to stretch it to the size of the rect.
@@ -965,7 +960,7 @@ internal class TrayButton : IDisposable
                }
           }
 
-          public void SetIcon(Icon? icon)
+          public void SetIcon(System.Drawing.Icon? icon)
           {
                if (icon is not null)
                {
@@ -1028,7 +1023,7 @@ internal class TrayButton : IDisposable
                     }
                     var taskButtonContainerRect = taskbarTripletRects.Value.TaskButtonContainerRect;
 
-                    if ((taskbarOrientation == Orientation.Horizontal) && (taskButtonContainerRect.Right > changeToRect.Value.Left))
+                    if ((taskbarOrientation == System.Windows.Forms.Orientation.Horizontal) && (taskButtonContainerRect.Right > changeToRect.Value.Left))
                     {
                          newTaskButtonContainerRect = new LegacyWindowsApi.RECT(new System.Windows.Rect(
                               taskButtonContainerRect.Left,
@@ -1037,7 +1032,7 @@ internal class TrayButton : IDisposable
                               taskButtonContainerRect.Bottom - taskButtonContainerRect.Top
                               ));
                     }
-                    else if ((taskbarOrientation == Orientation.Vertical) && taskButtonContainerRect.Bottom > changeToRect.Value.Top)
+                    else if ((taskbarOrientation == System.Windows.Forms.Orientation.Vertical) && taskButtonContainerRect.Bottom > changeToRect.Value.Top)
                     {
                          newTaskButtonContainerRect = new LegacyWindowsApi.RECT(new System.Windows.Rect(
                               taskButtonContainerRect.Left,
@@ -1162,11 +1157,11 @@ internal class TrayButton : IDisposable
                return (taskbarRect, taskButtonContainerRect, notifyTrayRect);
           }
 
-          private (LegacyWindowsApi.RECT availableAreaRect, List<LegacyWindowsApi.RECT> childRects) CalculateEmptyRectsBetweenTaskButtonContainerAndNotifyTray(IntPtr taskbarHandle, Orientation taskbarOrientation, LegacyWindowsApi.RECT taskbarRect, LegacyWindowsApi.RECT taskButtonContainerRect, LegacyWindowsApi.RECT notifyTrayRect)
+          private (LegacyWindowsApi.RECT availableAreaRect, List<LegacyWindowsApi.RECT> childRects) CalculateEmptyRectsBetweenTaskButtonContainerAndNotifyTray(IntPtr taskbarHandle, System.Windows.Forms.Orientation taskbarOrientation, LegacyWindowsApi.RECT taskbarRect, LegacyWindowsApi.RECT taskButtonContainerRect, LegacyWindowsApi.RECT notifyTrayRect)
           {
                // calculate the total "free area" rectangle (the area between the task button container and the notify tray where we want to place our tray button)
                LegacyWindowsApi.RECT freeAreaAvailableRect;
-               if (taskbarOrientation == Orientation.Horizontal)
+               if (taskbarOrientation == System.Windows.Forms.Orientation.Horizontal)
                {
                     freeAreaAvailableRect = new LegacyWindowsApi.RECT(new System.Windows.Rect(taskButtonContainerRect.Right, taskbarRect.Top, Math.Max(notifyTrayRect.Left - taskButtonContainerRect.Right, 0), Math.Max(taskbarRect.Bottom - taskbarRect.Top, 0)));
                }
@@ -1229,7 +1224,7 @@ internal class TrayButton : IDisposable
           }
 
           // NOTE: this function returns a newPosition IF the tray button should be moved
-          private (LegacyWindowsApi.RECT? currentRect, LegacyWindowsApi.RECT? changeToRect, Orientation orientation)? CalculateCurrentAndTargetRectOfTrayButton()
+          private (LegacyWindowsApi.RECT? currentRect, LegacyWindowsApi.RECT? changeToRect, System.Windows.Forms.Orientation orientation)? CalculateCurrentAndTargetRectOfTrayButton()
           {
                // NOTE: there are scenarios we must deal with where there may be multiple potential "taskbar button" icons to the left of the notification tray; in those scenarios, we must:
                // 1. Position ourself to the left of the other icon-button(s) (or in an empty space in between them)
@@ -1260,11 +1255,11 @@ internal class TrayButton : IDisposable
                System.Windows.Forms.Orientation taskbarOrientation;
                if ((taskbarRect.Right - taskbarRect.Left) > (taskbarRect.Bottom - taskbarRect.Top))
                {
-                    taskbarOrientation = Orientation.Horizontal;
+                    taskbarOrientation = System.Windows.Forms.Orientation.Horizontal;
                }
                else
                {
-                    taskbarOrientation = Orientation.Vertical;
+                    taskbarOrientation = System.Windows.Forms.Orientation.Vertical;
                }
 
                // calculate all of the free rects between the task button container and notify tray
@@ -1293,7 +1288,7 @@ internal class TrayButton : IDisposable
                // establish the appropriate size for our tray button (i.e. same height/width as taskbar, and with an aspect ratio of 8:10)
                int trayButtonHeight;
                int trayButtonWidth;
-               if (taskbarOrientation == Orientation.Horizontal)
+               if (taskbarOrientation == System.Windows.Forms.Orientation.Horizontal)
                {
                     trayButtonHeight = taskbarRect.Bottom - taskbarRect.Top;
                     trayButtonWidth = (int)((Double)trayButtonHeight * 0.8);
@@ -1351,7 +1346,7 @@ internal class TrayButton : IDisposable
                // if our current (already-used-by-us) rect was not available, choose the leftmost/topmost space available
                if (newRect is null)
                {
-                    if (taskbarOrientation == Orientation.Horizontal)
+                    if (taskbarOrientation == System.Windows.Forms.Orientation.Horizontal)
                     {
                          // horizontal taskbar: find the leftmost rect in the available space (which we'll then carve the "rightmost" section out of)
                          LegacyWindowsApi.RECT leftmostRect = freeAreaAvailableRect;
