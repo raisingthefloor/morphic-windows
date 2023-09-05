@@ -286,7 +286,7 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
      public void SetPositionAndSize(PInvoke.RECT rect)
      {
           // set the new window position (including size); we must resize the window before recreating the sized bitmap (which will be sized to the updated size)
-          PInvoke.User32.SetWindowPos(this.Handle, IntPtr.Zero, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, User32.SetWindowPosFlags.SWP_NOZORDER | User32.SetWindowPosFlags.SWP_NOACTIVATE);
+          Windows.Win32.PInvoke.SetWindowPos((Windows.Win32.Foundation.HWND)this.Handle, (Windows.Win32.Foundation.HWND)IntPtr.Zero, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOZORDER | Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
 
           this.RecreateSizedBitmap(_sourceBitmap);
           this.RequestRedraw();
@@ -298,17 +298,17 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
           {
                _visible = value;
 
-               var windowStyle = WindowsApi.GetWindowLongPtr_IntPtr(this.Handle, PInvoke.User32.WindowLongIndexFlags.GWL_STYLE);
+               var windowStyle = PInvokeExtensions.GetWindowLongPtr_IntPtr((Windows.Win32.Foundation.HWND)this.Handle, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWL_STYLE);
                nint newWindowStyle;
                if (_visible == true)
                {
-                    newWindowStyle = (nint)windowStyle | (nint)PInvoke.User32.WindowStyles.WS_VISIBLE;
+                    newWindowStyle = (nint)windowStyle | (nint)Windows.Win32.UI.WindowsAndMessaging.WINDOW_STYLE.WS_VISIBLE;
                }
                else
                {
-                    newWindowStyle = (nint)windowStyle & ~(nint)PInvoke.User32.WindowStyles.WS_VISIBLE;
+                    newWindowStyle = (nint)windowStyle & ~(nint)Windows.Win32.UI.WindowsAndMessaging.WINDOW_STYLE.WS_VISIBLE;
                }
-               WindowsApi.SetWindowLongPtr_IntPtr(this.Handle, PInvoke.User32.WindowLongIndexFlags.GWL_STYLE, newWindowStyle);
+               PInvokeExtensions.SetWindowLongPtr_IntPtr((Windows.Win32.Foundation.HWND)this.Handle, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWL_STYLE, newWindowStyle);
           }
      }
 
@@ -326,7 +326,7 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
 
      private System.Drawing.Size GetCurrentSize()
      {
-          PInvoke.User32.GetWindowRect(this.Handle, out var rect);
+          Windows.Win32.PInvoke.GetWindowRect((Windows.Win32.Foundation.HWND)this.Handle, out var rect);
           return new System.Drawing.Size(rect.right - rect.left, rect.bottom - rect.top);
      }
 
@@ -338,12 +338,12 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
           this.UpdateLayeredPainting();
 
           // invalidate the window
-          WindowsApi.RedrawWindow(this.Handle, IntPtr.Zero, IntPtr.Zero, /*WindowsApi.RedrawWindowFlags.Erase | */WindowsApi.RedrawWindowFlags.Invalidate/* | WindowsApi.RedrawWindowFlags.Allchildren*/);
+          PInvokeExtensions.RedrawWindow(this.Handle, IntPtr.Zero, IntPtr.Zero, /*Windows.Win32.Graphics.Gdi.REDRAW_WINDOW_FLAGS.RDW_ERASE | */Windows.Win32.Graphics.Gdi.REDRAW_WINDOW_FLAGS.RDW_INVALIDATE/* | Windows.Win32.Graphics.Gdi.REDRAW_WINDOW_FLAGS.RDW_ALLCHILDREN*/);
      }
 
      private MorphicResult<MorphicUnit, MorphicUnit> UpdateLayeredPainting()
      {
-          var ownerHWnd = PInvoke.User32.GetWindow(this.Handle, User32.GetWindowCommands.GW_OWNER);
+          var ownerHWnd = Windows.Win32.PInvoke.GetWindow((Windows.Win32.Foundation.HWND)this.Handle, Windows.Win32.UI.WindowsAndMessaging.GET_WINDOW_CMD.GW_OWNER);
           //
           var size = this.GetCurrentSize();
           //
@@ -352,10 +352,10 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
           if (sizedBitmap is not null)
           {
                // create a GDI bitmap from the Bitmap (using (0, 0, 0, 0) as the color of the ARGB background i.e. transparent)
-               IntPtr sizedBitmapPointer;
+               Windows.Win32.Graphics.Gdi.HGDIOBJ sizedBitmapPointer;
                try
                {
-                    sizedBitmapPointer = sizedBitmap.GetHbitmap(System.Drawing.Color.FromArgb(0));
+                    sizedBitmapPointer = (Windows.Win32.Graphics.Gdi.HGDIOBJ)sizedBitmap.GetHbitmap(System.Drawing.Color.FromArgb(0));
                }
                catch
                {
@@ -364,16 +364,16 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
                }
                try
                {
-                    var ownerDC = PInvoke.User32.GetDC(ownerHWnd);
-                    if (ownerDC is null || ownerDC == PInvoke.User32.SafeDCHandle.Null)
+                    var ownerDC = Windows.Win32.PInvoke.GetDC(ownerHWnd);
+                    if (ownerDC.Value == IntPtr.Zero)
                     {
                          Debug.Assert(false, "Could not get owner DC so that we can draw the icon bitmap.");
                          return MorphicResult.ErrorResult();
                     }
                     try
                     {
-                         var sourceDC = PInvoke.Gdi32.CreateCompatibleDC(ownerDC);
-                         if (sourceDC is null || sourceDC == PInvoke.User32.SafeDCHandle.Null)
+                         var sourceDC = Windows.Win32.PInvoke.CreateCompatibleDC(ownerDC);
+                         if (sourceDC.Value == IntPtr.Zero)
                          {
                               Debug.Assert(false, "Could not get create compatible DC for screen DC so that we can draw the icon bitmap.");
                               return MorphicResult.ErrorResult();
@@ -381,8 +381,8 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
                          try
                          {
                               // select our bitmap in the source DC
-                              var oldSourceDCObject = PInvoke.Gdi32.SelectObject(sourceDC, sizedBitmapPointer);
-                              if (oldSourceDCObject == new IntPtr(-1) /*HGDI_ERROR*/)
+                              var oldSourceDCObject = Windows.Win32.PInvoke.SelectObject(sourceDC, sizedBitmapPointer);
+                              if (oldSourceDCObject.Value == new IntPtr(-1) /*HGDI_ERROR*/)
                               {
                                    Debug.Assert(false, "Could not select the icon bitmap GDI object to update the layered window with the alpha-blended bitmap.");
                                    return MorphicResult.ErrorResult();
@@ -390,17 +390,17 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
                               try
                               {
                                    // configure our blend function to blend the bitmap into its background
-                                   var blendfunction = new WindowsApi.BLENDFUNCTION
+                                   var blendfunction = new Windows.Win32.Graphics.Gdi.BLENDFUNCTION()
                                    {
-                                        BlendOp = WindowsApi.AC_SRC_OVER, /* the only available blend op, this will place the source bitmap over the destination bitmap based on the alpha values of the source pixels */
+                                        BlendOp = (byte)Windows.Win32.PInvoke.AC_SRC_OVER, /* the only available blend op, this will place the source bitmap over the destination bitmap based on the alpha values of the source pixels */
                                         BlendFlags = 0, /* must be zero */
                                         SourceConstantAlpha = 255, /* use per-pixel alpha values */
-                                        AlphaFormat = WindowsApi.AC_SRC_ALPHA, /* the bitmap has an alpha channel; it MUST be a 32bpp bitmap */
+                                        AlphaFormat = (byte)Windows.Win32.PInvoke.AC_SRC_ALPHA, /* the bitmap has an alpha channel; it MUST be a 32bpp bitmap */
                                    };
                                    var sourcePoint = new System.Drawing.Point(0, 0);
-                                   var flags = WindowsApi.UpdateLayeredWindowFlags.ULW_ALPHA; // this flag indicates the blendfunction should be used as the blend function
-                                   //var updateLayeredWindowSuccess = WindowsApi.UpdateLayeredWindow(this.Handle, ownerDC.DangerousGetHandle(), ref position/* captured position of our window */, ref size, sourceDC.DangerousGetHandle(), ref sourcePoint, 0 /* unused COLORREF*/, ref blendfunction, flags);
-                                   var updateLayeredWindowSuccess = WindowsApi.UpdateLayeredWindow(this.Handle, ownerDC.DangerousGetHandle(), IntPtr.Zero /* current position is not changing */, ref size, sourceDC.DangerousGetHandle(), ref sourcePoint, 0 /* unused COLORREF*/, ref blendfunction, flags);
+                                   var flags = Windows.Win32.UI.WindowsAndMessaging.UPDATE_LAYERED_WINDOW_FLAGS.ULW_ALPHA; // this flag indicates the blendfunction should be used as the blend function
+                                   //var updateLayeredWindowSuccess = Windows.Win32.PInvoke.UpdateLayeredWindow((Windows.Win32.Foundation.HWND)this.Handle, ownerDC, position/* captured position of our window */, size, sourceDC, sourcePoint, (Windows.Win32.Foundation.COLORREF)0/* unused COLORREF*/, blendfunction, flags);
+                                   var updateLayeredWindowSuccess = Windows.Win32.PInvoke.UpdateLayeredWindow((Windows.Win32.Foundation.HWND)this.Handle, ownerDC, null/* current position is not changing */, size, sourceDC, sourcePoint, (Windows.Win32.Foundation.COLORREF)0/* unused COLORREF*/, blendfunction, flags);
                                    if (updateLayeredWindowSuccess == false)
                                    {
                                         var win32Error = Marshal.GetLastWin32Error();
@@ -411,7 +411,7 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
                               finally
                               {
                                    // restore the old source object for the source DC
-                                   var selectObjectResult = PInvoke.Gdi32.SelectObject(sourceDC, oldSourceDCObject);
+                                   var selectObjectResult = Windows.Win32.PInvoke.SelectObject(sourceDC, oldSourceDCObject);
                                    if (selectObjectResult == new IntPtr(-1) /*HGDI_ERROR*/)
                                    {
                                         Debug.Assert(false, "Could not restore the screen's compatible DC to its previous object after attempting to update the layered window.");
@@ -420,20 +420,20 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
                          }
                          finally
                          {
-                              var deleteDCSuccess = PInvoke.Gdi32.DeleteDC(sourceDC);
+                              var deleteDCSuccess = Windows.Win32.PInvoke.DeleteDC(sourceDC);
                               Debug.Assert(deleteDCSuccess == true, "Could not delete the compatible DC for the owner DC.");
                          }
 
                     }
                     finally
                     {
-                         var releaseDcResult = PInvoke.User32.ReleaseDC(ownerHWnd, ownerDC.DangerousGetHandle());
+                         var releaseDcResult = Windows.Win32.PInvoke.ReleaseDC(ownerHWnd, ownerDC);
                          Debug.Assert(releaseDcResult == 1, "Could not release owner DC.");
                     }
                }
                finally
                {
-                    var deleteObjectSuccess = PInvoke.Gdi32.DeleteObject(sizedBitmapPointer);
+                    var deleteObjectSuccess = Windows.Win32.PInvoke.DeleteObject(sizedBitmapPointer);
                     Debug.Assert(deleteObjectSuccess == true, "Could not delete the GDI bitmap object which was created from the icon bitmap");
                }
           }

@@ -810,8 +810,8 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
      {
           var taskbarHandle = taskbarHWnd ?? TrayButtonNativeWindow.GetWindowsTaskbarHandle();
 
-          var taskbarWindowExStyle = WindowsApi.GetWindowLongPtr_IntPtr(taskbarHandle, PInvoke.User32.WindowLongIndexFlags.GWL_EXSTYLE);
-          var taskbarIsTopmost = ((nint)taskbarWindowExStyle & (nint)PInvoke.User32.WindowStylesEx.WS_EX_TOPMOST) != 0;
+          var taskbarWindowExStyle = PInvokeExtensions.GetWindowLongPtr_IntPtr((Windows.Win32.Foundation.HWND)taskbarHandle, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE);
+          var taskbarIsTopmost = ((nint)taskbarWindowExStyle & (nint)Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE.WS_EX_TOPMOST) != 0;
 
           return taskbarIsTopmost;
      }

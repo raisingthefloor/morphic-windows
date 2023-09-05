@@ -28,4 +28,42 @@ namespace Morphic.Controls;
 
 internal class PInvokeExtensions
 {
+     #region winuser
+
+     internal static IntPtr GetWindowLongPtr_IntPtr(Windows.Win32.Foundation.HWND hWnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX nIndex)
+     {
+          if (IntPtr.Size == 4)
+          {
+               return (nint)Windows.Win32.PInvoke.GetWindowLong(hWnd, nIndex);
+          }
+          else
+          {
+               return PInvokeExtensions.GetWindowLongPtr(hWnd.Value, nIndex);
+          }
+     }
+
+     // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowlongptrw
+     [DllImport("user32.dll", SetLastError = true)]
+     private static extern IntPtr GetWindowLongPtr(IntPtr hWnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX nIndex);
+
+     // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-redrawwindow
+     [DllImport("user32.dll")]
+     internal static extern bool RedrawWindow(IntPtr hWnd, IntPtr lprcUpdate, IntPtr hrgnUpdate, Windows.Win32.Graphics.Gdi.REDRAW_WINDOW_FLAGS flags);
+
+     internal static IntPtr SetWindowLongPtr_IntPtr(Windows.Win32.Foundation.HWND hWnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX nIndex, IntPtr dwNewLong)
+     {
+          if (IntPtr.Size == 4)
+          {
+               return (nint)Windows.Win32.PInvoke.SetWindowLong(hWnd, nIndex, (int)dwNewLong);
+          }
+          else
+          {
+               return PInvokeExtensions.SetWindowLongPtr(hWnd, nIndex, dwNewLong);
+          }
+     }
+
+     [DllImport("user32.dll", SetLastError = true)]
+     private static extern IntPtr SetWindowLongPtr(IntPtr hWnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX nIndex, IntPtr dwNewLong);
+
+     #endregion winuser
 }

@@ -27,8 +27,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-//using static Morphic.Controls.TrayButton.Windows10.LegacyWindowsApi;
-//using static PInvoke.User32;
 
 namespace Morphic.Controls;
 
@@ -108,22 +106,6 @@ internal class WindowsApi
 
 
      #region windgi
-
-     // currently-defined blend functions
-     internal const byte AC_SRC_OVER = 0x00;
-
-     // alpha format flags
-     internal const byte AC_SRC_ALPHA = 0x01;
-
-     // https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-blendfunction
-     [StructLayout(LayoutKind.Sequential)]
-     internal struct BLENDFUNCTION
-     {
-          public byte BlendOp;
-          public byte BlendFlags;
-          public byte SourceConstantAlpha;
-          public byte AlphaFormat;
-     }
 
      // https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-createsolidbrush
      [DllImport("gdi32.dll")]
@@ -244,28 +226,6 @@ internal class WindowsApi
           public byte[] rgbReserved;
      }
 
-     // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-redrawwindow
-     [Flags]
-     internal enum RedrawWindowFlags : uint
-     {
-          Invalidate = 0x0001,
-          Internalpaint = 0x0002,
-          Erase = 0x0004,
-          //
-          Validate = 0x0008,
-          Nointernalpaint = 0x0010,
-          Noerase = 0x0020,
-          //
-          Nochildren = 0x0040,
-          Allchildren = 0x0080,
-          //
-          Updatenow = 0x0100,
-          Erasenow = 0x0200,
-          //
-          Frame = 0x0400,
-          Noframe = 0x0800,
-     }
-
      // https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-trackmouseevent
      [Flags]
      internal enum TRACKMOUSEEVENTFlags : uint
@@ -299,15 +259,6 @@ internal class WindowsApi
                };
                return result;
           }
-     }
-
-     // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-updatelayeredwindow
-     internal enum UpdateLayeredWindowFlags : uint
-     {
-          ULW_COLORKEY = 0x00000001,
-          ULW_ALPHA = 0x00000002,
-          ULW_OPAQUE = 0x00000004,
-          ULW_EX_NORESIZE = 0x00000008,
      }
 
      // https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-wndclassexw
@@ -365,26 +316,6 @@ internal class WindowsApi
      [DllImport("user32.dll", SetLastError = true)]
      internal static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
 
-     internal static IntPtr GetWindowLongPtr_IntPtr(IntPtr hWnd, PInvoke.User32.WindowLongIndexFlags nIndex)
-     {
-          if (IntPtr.Size == 4)
-          {
-               return (nint)WindowsApi.GetWindowLong(hWnd, nIndex);
-          } 
-          else
-          {
-               return WindowsApi.GetWindowLongPtr(hWnd, nIndex);
-          }
-     }
-
-     // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowlongw
-     [DllImport("user32.dll", SetLastError = true)]
-     private static extern int GetWindowLong(IntPtr hWnd, PInvoke.User32.WindowLongIndexFlags nIndex);
-
-     // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowlongptrw
-     [DllImport("user32.dll", SetLastError = true)]
-     private static extern IntPtr GetWindowLongPtr(IntPtr hWnd, PInvoke.User32.WindowLongIndexFlags nIndex);
-
      // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-fillrect
      [DllImport("user32.dll")]
      internal static extern int FillRect(IntPtr hDC, [In] ref PInvoke.RECT lprc, IntPtr hbr);
@@ -398,10 +329,6 @@ internal class WindowsApi
      // NOTE: this signature is the RECT option (in which cPoints must always be set to 2).
      [DllImport("user32.dll", SetLastError = true)]
      internal static extern int MapWindowPoints(IntPtr hWndFrom, IntPtr hWndTo, ref PInvoke.RECT lpPoints, uint cPoints);
-
-     // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-redrawwindow
-     [DllImport("user32.dll")]
-     internal static extern bool RedrawWindow(IntPtr hWnd, IntPtr lprcUpdate, IntPtr hrgnUpdate, RedrawWindowFlags flags);
 
      // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-registerclassexw
      [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
@@ -420,23 +347,6 @@ internal class WindowsApi
      // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwineventhook
      [DllImport("user32.dll")]
      internal static extern IntPtr SetWinEventHook(WinEventHookType eventMin, WinEventHookType eventMax, IntPtr hmodWinEventProc, WinEventProc lpfnWinEventProc, uint idProcess, uint idThread, WinEventHookFlags dwFlags);
-     internal static IntPtr SetWindowLongPtr_IntPtr(IntPtr hWnd, PInvoke.User32.WindowLongIndexFlags nIndex, IntPtr dwNewLong)
-     {
-          if (IntPtr.Size == 4)
-          {
-               return (nint)WindowsApi.SetWindowLong(hWnd, nIndex, (int)dwNewLong);
-          }
-          else
-          {
-               return WindowsApi.SetWindowLongPtr(hWnd, nIndex, dwNewLong);
-          }
-     }
-
-     [DllImport("user32.dll", SetLastError = true)]
-     private static extern int SetWindowLong(IntPtr hWnd, PInvoke.User32.WindowLongIndexFlags nIndex, int dwNewLong);
-
-     [DllImport("user32.dll", SetLastError = true)]
-     private static extern IntPtr SetWindowLongPtr(IntPtr hWnd, PInvoke.User32.WindowLongIndexFlags nIndex, IntPtr dwNewLong);
 
      // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-trackmouseevent
      [DllImport("user32.dll", SetLastError = true)]
@@ -445,12 +355,6 @@ internal class WindowsApi
      // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-unhookwinevent
      [DllImport("user32.dll")]
      internal static extern bool UnhookWinEvent(IntPtr hWinEventHook);
-
-     // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-updatelayeredwindow
-     //[DllImport("user32.dll", SetLastError = true)]
-     //internal static extern bool UpdateLayeredWindow(IntPtr hwnd, IntPtr hdcDst, [In] ref PInvoke.POINT pptDst, [In] ref System.Drawing.Size psize, IntPtr hdcSrc, [In] ref System.Drawing.Point pptSrc, /*COLORREF*/uint crKey, [In] ref BLENDFUNCTION pblend, UpdateLayeredWindowFlags dwFlags);
-     [DllImport("user32.dll", SetLastError = true)]
-     internal static extern bool UpdateLayeredWindow(IntPtr hwnd, IntPtr hdcDst, IntPtr pptDst, [In] ref System.Drawing.Size psize, IntPtr hdcSrc, [In] ref System.Drawing.Point pptSrc, /*COLORREF*/uint crKey, [In] ref BLENDFUNCTION pblend, UpdateLayeredWindowFlags dwFlags);
 
      // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nc-winuser-wineventproc
      internal delegate void WinEventProc(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint idEventThread, uint dwmsEventTime);
