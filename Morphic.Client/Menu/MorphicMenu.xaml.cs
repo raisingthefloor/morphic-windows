@@ -154,7 +154,6 @@
             {
                 switch (windowsVersion)
                 {
-                    case WindowsVersion.Win10_v1809:
                     case WindowsVersion.Win10_v1903:
                     case WindowsVersion.Win10_v1909:
                     case WindowsVersion.Win10_v2004:
@@ -162,7 +161,7 @@
                     case WindowsVersion.Win10_v21H1:
                     case WindowsVersion.Win10_v21H2:
                     case WindowsVersion.Win10_v22H2:
-                        // Windows 10 1809, 1903, 1909, 2004, 20H2, 21H1, 21H2
+                        // Windows 10 1903, 1909, 2004, 20H2, 21H1, 21H2
                         // NOTE: we should re-evaluate this path in all versions of Windows (to verify that it shouldn't be simply "ms-settings:easeofaccess" instead)
                         settingsUrlAsPath = "ms-settings:easeofaccess-display";
                         break;
@@ -172,6 +171,7 @@
                         break;
                     case WindowsVersion.Win11_v21H2:
                     case WindowsVersion.Win11_v22H2:
+                    case WindowsVersion.Win11_v23H2:
                     case WindowsVersion.Win11_vFuture:
                         // Windows 11 21H2 (and assumed for the future)
                         settingsUrlAsPath = "ms-settings:easeofaccess";
@@ -202,10 +202,9 @@
             {
                 switch (windowsVersion)
                 {
-                    case WindowsVersion.Win10_v1809:
                     case WindowsVersion.Win10_v1903:
                     case WindowsVersion.Win10_v1909:
-                        // Windows 10 1809, 1903, 1909
+                        // Windows 10 1903, 1909
                         settingsUrlAsPath = "ms-settings:easeofaccess-cursorandpointersize";
                         break;
                     case WindowsVersion.Win10_v2004:
@@ -248,6 +247,7 @@
                         break;
                     case WindowsVersion.Win11_v21H2:
                     case WindowsVersion.Win11_v22H2:
+                    case WindowsVersion.Win11_v23H2:
                     case WindowsVersion.Win11_vFuture:
                         // Windows 11 21H2 (and assumed for the future)
                         settingsUrlAsPath = "ms-settings:easeofaccess-mousepointer";
