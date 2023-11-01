@@ -169,6 +169,7 @@ namespace Morphic.Client
                 }
                 //
                 public EnabledFeature? atOnDemand { get; set; }
+                public EnabledFeature? atUseCounter { get; set; }
                 public EnabledFeature? autorunAfterLogin { get; set; }
                 public EnabledFeature? checkForUpdates { get; set; }
                 public EnabledFeature? cloudSettingsTransfer { get; set; }
@@ -189,6 +190,7 @@ namespace Morphic.Client
         private struct CommonConfigurationContents
         {
             public bool AtOnDemandIsEnabled;
+            public bool AtUseCounterIsEnabled;
             public ConfigurableFeatures.AutorunConfigOption? AutorunConfig;
             public bool CheckForUpdatesIsEnabled;
             public bool CloudSettingsTransferIsEnabled;
@@ -202,9 +204,12 @@ namespace Morphic.Client
             // set up default configuration
             var result = new CommonConfigurationContents();
             //
-			// at on demand
+	        // at on demand
             result.AtOnDemandIsEnabled = true;
-			//
+            //
+            // at use counter
+            result.AtUseCounterIsEnabled = false;
+		    //
             // autorun
             result.AutorunConfig = null;
             //
@@ -252,7 +257,14 @@ namespace Morphic.Client
             ConfigFileContents deserializedJson;
             try
             {
-                deserializedJson = JsonSerializer.Deserialize<ConfigFileContents>(json);
+                ConfigFileContents? nullableDeserializedJson;
+                nullableDeserializedJson = JsonSerializer.Deserialize<ConfigFileContents>(json);
+                if (nullableDeserializedJson is null)
+                {
+                    Logger?.LogError("Could not deserialize json configuration file: " + morphicConfigFilePath + "; deserialized json is null");
+                    return result;
+                }
+                deserializedJson = nullableDeserializedJson!;
             }
             catch (Exception ex)
             {
@@ -310,6 +322,12 @@ namespace Morphic.Client
                  {
                     result.AtOnDemandIsEnabled = false;
                  }
+            }
+
+            // capture the at use counter "is enabled" setting
+            if (deserializedJson.features?.atUseCounter?.enabled is not null)
+            {
+                 result.AtUseCounterIsEnabled = deserializedJson.features.atUseCounter.enabled.Value;
             }
 
             // capture the check for updates "is enabled" setting
@@ -1051,6 +1069,7 @@ namespace Morphic.Client
             var commonConfiguration = await this.GetCommonConfigurationAsync();
             ConfigurableFeatures.SetFeatures(
                 atOnDemandIsEnabled: commonConfiguration.AtOnDemandIsEnabled,
+                atUseCounterIsEnabled: commonConfiguration.AtUseCounterIsEnabled,
                 autorunConfig: commonConfiguration.AutorunConfig,
                 checkForUpdatesIsEnabled: commonConfiguration.CheckForUpdatesIsEnabled,
                 cloudSettingsTransferIsEnabled: commonConfiguration.CloudSettingsTransferIsEnabled,
@@ -1073,6 +1092,11 @@ namespace Morphic.Client
             if (ConfigurableFeatures.TelemetryIsEnabled == true)
             {
                 await this.ConfigureTelemetryAsync();
+            }
+
+            if (ConfigurableFeatures.AtUseCounterIsEnabled == true)
+            {
+                //TODO: await this.ConfigureAndStartAtUseCounterAsync();
             }
 
             if (ConfigurableFeatures.CheckForUpdatesIsEnabled == true)
@@ -1121,7 +1145,7 @@ namespace Morphic.Client
                     "LastHighContrastTheme", @"%SystemRoot\resources\Ease of Access Themes\hc1.theme",
                     RegistryValueKind.ExpandString);
                 //
-                // For windows 10 1809+
+                // For windows 10 1903+
                 Registry.SetValue(@"HKEY_CURRENT_USER\Control Panel\Accessibility\HighContrast",
                     "High Contrast Scheme", "High Contrast #1");
             }
