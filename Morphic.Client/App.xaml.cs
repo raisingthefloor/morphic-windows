@@ -872,7 +872,16 @@ namespace Morphic.Client
             // NOTE: in the current implementation, we must call GetCommonConfigurationAsync (above) before calling ConfigureAndStartAtUseCounterAsync (because it relies on the site id already being established)
             if (ConfigurableFeatures.AtUseCounterIsEnabled == true)
             {
-                //TODO: await this.ConfigureAndStartAtUseCounterAsync();
+                // retrieve the telemetry device ID for this device; if it doesn't exist then create a new one
+                var telemetryIds = await Morphic.Client.Utils.TelemetryUtils.GetOrCreateTelemetryIdComponentsAsync();
+
+                // configure our telemetry uplink
+                IConfigurationSection? section = this.Configuration.GetSection("AtUseCounter");
+                var mqttHostname = section["ServerHostname"];
+                var mqttUsername = section["AppName"];
+                var mqttAnonymousPassword = section["AppKey"];
+
+                await Morphic.Client.AtUseCounter.AtUseCounterEngine.ConfigureAndStartAtUseCounterAsync(mqttHostname, mqttUsername, mqttAnonymousPassword, telemetryIds);
             }
 
             if (ConfigurableFeatures.CheckForUpdatesIsEnabled == true)
@@ -1367,6 +1376,13 @@ namespace Morphic.Client
                     }
                 }
                 catch { }
+            }
+
+            if (ConfigurableFeatures.AtUseCounterIsEnabled == true)
+            {
+                // shutdown the AT Use Counter engine
+                // NOTE: this function will wait up to two seconds (similar to the telemetry code above); we might want to move that "wait" code to this function instead (and perhaps wait on the telemetry and AtUseCounter telemetry systems to shut down in parallel instead of sequentially)
+                await Morphic.Client.AtUseCounter.AtUseCounterEngine.ShutdownAtUseCounterAsync();
             }
 
             if (ConfigurableFeatures.ResetSettingsIsEnabled == true)
