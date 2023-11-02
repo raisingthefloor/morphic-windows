@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
-    <PackageReference Include="Morphic.Core" Version="1.2.0" />
+    <PackageReference Include="Morphic.Core" Version="1.3.0" />
   </ItemGroup>
 
 </Project>
