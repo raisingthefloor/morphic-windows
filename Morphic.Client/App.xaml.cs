@@ -781,8 +781,6 @@ namespace Morphic.Client
         private static List<WindowsVersion> CompatibleWindowsVersions = new List<WindowsVersion>() 
             {
                 // NOTE: the first entry in this list represents the "minimum" version of Windows which we support
-                WindowsVersion.Win10_v1903,
-                WindowsVersion.Win10_v1909,
                 WindowsVersion.Win10_v2004,
                 WindowsVersion.Win10_v20H2,
                 WindowsVersion.Win10_v21H1,
