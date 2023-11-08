@@ -24,6 +24,8 @@
         //
         public static bool AtUseCounterIsEnabled = false;
         //
+        public static DateTime? HideMorphicAfterLoginUntil = null;
+        //
         public static AutorunConfigOption? AutorunConfig = null;
         //
         public static bool CheckForUpdatesIsEnabled = false;
@@ -43,6 +45,7 @@
         public static void SetFeatures(
             bool atOnDemandIsEnabled,
             bool atUseCounterIsEnabled,
+            DateTime? hideMorphicAfterLoginUntil,
             AutorunConfigOption? autorunConfig,
             bool checkForUpdatesIsEnabled,
             bool cloudSettingsTransferIsEnabled,
@@ -55,6 +58,7 @@
         {
             ConfigurableFeatures.AtOnDemandIsEnabled = atOnDemandIsEnabled;
             ConfigurableFeatures.AtUseCounterIsEnabled = atUseCounterIsEnabled;
+            ConfigurableFeatures.HideMorphicAfterLoginUntil = hideMorphicAfterLoginUntil;
             ConfigurableFeatures.AutorunConfig = autorunConfig;
             ConfigurableFeatures.CheckForUpdatesIsEnabled = checkForUpdatesIsEnabled;
             ConfigurableFeatures.CloudSettingsTransferIsEnabled = cloudSettingsTransferIsEnabled;

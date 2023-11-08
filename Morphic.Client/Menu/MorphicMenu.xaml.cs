@@ -22,10 +22,13 @@
         }
         private MenuOpenedSource? _menuOpenedSource;
 
+        private bool _initialTrayIconVisibility;
+
         public App App => App.Current;
 
-        public MorphicMenu()
+        public MorphicMenu(bool initialTrayIconVisibility = true)
         {
+            _initialTrayIconVisibility = initialTrayIconVisibility;
             this.DataContext = this;
             this.InitializeComponent();
         }
@@ -41,7 +44,7 @@
                 this.CloudSettingsSeparator.Visibility = Visibility.Collapsed;
             }
 
-            this.ShowTrayIcon();
+            this.InitializeTrayIcon(_initialTrayIconVisibility);
             base.OnInitialized(e);
         }
 
@@ -297,7 +300,7 @@
             _trayIcon?.SuppressTaskbarButtonResurfaceChecks(suppress);
         }
 
-        private void ShowTrayIcon()
+        private void InitializeTrayIcon(bool initialVisibility)
         {
             // TODO: re-implement using solutions registry.
             // SystemSetting filterType = new SystemSetting("SystemSettings_Notifications_ShowIconsOnTaskbar",
@@ -312,16 +315,27 @@
             trayIcon.Text = "Morphic";
 //            trayIcon.TrayIconLocation = allNotificationIconsShown;
             trayIcon.TrayIconLocation = Morphic.Controls.HybridTrayIcon.TrayIconLocationOption.NextToNotificationTray;
-            trayIcon.Visible = true;
+            trayIcon.Visible = initialVisibility;
             _trayIcon = trayIcon;
 
             this.App.Exit += (sender, args) =>
             {
-                _trayIcon.Visible = false;
-                _trayIcon.Dispose();
-                _trayIcon = null;
+               if (_trayIcon is not null)
+               {
+                    _trayIcon!.Visible = false;
+               }
+               _trayIcon?.Dispose();
+               _trayIcon = null;
             };
         }
+
+        public void SetTrayIconVisibility(bool value)
+        {
+            if (_trayIcon is not null)
+            {
+                _trayIcon!.Visible = value;
+            }
+          }
 
         private async void OnTrayIconRightClicked(object? sender, EventArgs e)
         {

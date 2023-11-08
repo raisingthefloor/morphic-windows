@@ -96,7 +96,7 @@ namespace Morphic.Client.Bar
             }
         }
 
-        public BarWindow CreateBarWindow(BarData bar)
+        public BarWindow CreateBarWindow(BarData bar, bool? morphicBarVisibleOverride = null)
         {
             this.barWindow = new PrimaryBarWindow(bar);
             this.barWindow.BarLoaded += this.OnBarLoaded;
@@ -136,6 +136,10 @@ namespace Morphic.Client.Bar
             if (Environment.GetCommandLineArgs().Contains("--run-after-login") == false)
             {
                 showMorphicBar = true;
+            }
+            if (morphicBarVisibleOverride is not null)
+            {
+                showMorphicBar = morphicBarVisibleOverride!.Value;
             }
 
             if (showMorphicBar == true)
@@ -187,9 +191,9 @@ namespace Morphic.Client.Bar
             }
         }
 
-        public BarData? LoadBasicMorphicBar()
+        public BarData? LoadBasicMorphicBar(bool morphicBarVisible = true)
         {
-            var result = LoadFromBarJson(AppPaths.GetConfigFile("basic-bar.json5", true));
+            var result = LoadFromBarJson(AppPaths.GetConfigFile("basic-bar.json5", true), null, null, morphicBarVisible);
             AppOptions.Current.LastCommunity = null;
             AppOptions.Current.LastMorphicbarId = null;
             return result;
@@ -201,7 +205,7 @@ namespace Morphic.Client.Bar
         /// <param name="path">JSON file containing the bar data.</param>
         /// <param name="content">The file content (if it's already loaded).</param>
         /// <param name="serviceProvider"></param>
-        public BarData? LoadFromBarJson(string path, string? content = null, IServiceProvider? serviceProvider = null)
+        public BarData? LoadFromBarJson(string path, string? content = null, IServiceProvider? serviceProvider = null, bool morphicBarVisible = true)
         {
             if (this.firstBar && AppOptions.Current.Launch.BarFile is not null)
             {
@@ -244,7 +248,7 @@ namespace Morphic.Client.Bar
                     index += 1;
                 }
 
-                this.CreateBarWindow(bar);
+                this.CreateBarWindow(bar, morphicBarVisible);
                 bar.ReloadRequired += this.OnBarOnReloadRequired;
             }
 
