@@ -334,11 +334,10 @@ public partial class App : Application
        }
        else
        {
-            // NOTE: for version 0 of the config.json file, we set AtOnDemandIsEnabled to FALSE and we set CheckForUpdatesIsEnabled to FALSE by default
+            // NOTE: for version 0 of the config.json file, we set AtOnDemandIsEnabled to FALSE by default
             if (deserializedJson.version == 0)
             {
                result.AtOnDemandIsEnabled = false;
-               result.CheckForUpdatesIsEnabled = false;
             }
        }
 
@@ -347,6 +346,14 @@ public partial class App : Application
        {
             result.AtUseCounterIsEnabled = deserializedJson.features.atUseCounter.enabled.Value;
        }
+       //else
+       //{
+       //     // NOTE: for version 0 of the config.json file, we set AtUseCounterIsEnabled to FALSE by default
+       //     if (deserializedJson.version == 0)
+       //     {
+       //          // result.AtUseCounterIsEnabled = false; // not needed, as this feature is disabled by default for all users
+       //     }
+       //}
 
        // capture the "hide MorphicBar until" setting (date only)
        if (deserializedJson.hideMorphicAfterLoginUntil is not null)
@@ -365,6 +372,14 @@ public partial class App : Application
        if (deserializedJson.features?.checkForUpdates?.enabled is not null)
        {
            result.CheckForUpdatesIsEnabled = deserializedJson.features.checkForUpdates.enabled.Value;
+       }
+       else
+       {
+            // NOTE: for version 0 of the config.json file, we set CheckForUpdatesIsEnabled to FALSE by default
+            if (deserializedJson.version == 0)
+            {
+                 result.CheckForUpdatesIsEnabled = false;
+            }
        }
 
        // capture the cloud settings transfer "is enabled" setting
@@ -1329,11 +1344,35 @@ public partial class App : Application
 
    void StartCheckingForUpdates()
    {
-       UpdateOptions? options = this.ServiceProvider.GetRequiredService<UpdateOptions>();
-       if (options.AppCastUrl != "")
+       UpdateOptions? updateOptions = this.ServiceProvider.GetRequiredService<UpdateOptions>();
+       string appCastUrl = App.GetAppCastUrlForCurrentProcessor(updateOptions);
+       if (string.IsNullOrEmpty(appCastUrl) == false)
        {
-           AutoUpdater.Start(options.AppCastUrl);
+           AutoUpdater.Start(appCastUrl);
        }
+   }
+
+   internal static string GetAppCastUrlForCurrentProcessor(UpdateOptions updateOptions)
+   {
+        string appCastUrl;
+        // NOTE: GetProcessorArchitecture might return the emulated architecture (in the case of X86 emulation on ARM64) instead of the actual architecture
+        switch (Morphic.WindowsNative.Processor.Processor.GetProcessorArchitecture())
+        {
+             case WindowsNative.Processor.Processor.ProcessorArchitecture.X86:
+                  appCastUrl = updateOptions.AppCastUrlX86;
+                  break;
+             case WindowsNative.Processor.Processor.ProcessorArchitecture.X64:
+                  appCastUrl = updateOptions.AppCastUrlX64;
+                  break;
+             case WindowsNative.Processor.Processor.ProcessorArchitecture.Arm64:
+                  appCastUrl = updateOptions.AppCastUrlArm64;
+                  break;
+             default:
+                  appCastUrl = updateOptions.AppCastUrl;
+                  Debug.Assert(false, "Could not detect architecture (to select auto-update URL)");
+                  break;
+        }
+        return appCastUrl;
    }
 
    #endregion

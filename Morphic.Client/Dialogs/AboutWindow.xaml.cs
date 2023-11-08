@@ -26,9 +26,10 @@
             Task.Delay(3000).ContinueWith(t => this.Dispatcher.Invoke(() => Mouse.OverrideCursor = oldCursor));
 
             UpdateOptions? updateOptions = App.Current.ServiceProvider.GetRequiredService<UpdateOptions>();
-            if (!string.IsNullOrEmpty(updateOptions?.AppCastUrl))
+            string appCastUrl = App.GetAppCastUrlForCurrentProcessor(updateOptions);
+            if (string.IsNullOrEmpty(appCastUrl) == false)
             {
-                AutoUpdater.Start(updateOptions.AppCastUrl);
+                 AutoUpdater.Start(appCastUrl);
             }
             e.Handled = true;
         }
