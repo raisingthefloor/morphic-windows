@@ -50,9 +50,11 @@
 			</Component>
 		</StandardDirectory>
 
-          <Component Id="RegistryEntries" Guid="84EBEB5E-274F-4C1D-B5A2-5408557AFD78">
-               <RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Run" Name="Morphic" 
-				Type="string" Value="&quot;[#filFa4krMwL6ueyj_tX_uB0JUHWusc]&quot; --run-after-login" />
-          </Component>
+		<DirectoryRef Id="ApplicationProgramsFolder">
+			<Component Id="RegistryEntries" Guid="84EBEB5E-274F-4C1D-B5A2-5408557AFD78">
+				<RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Run" Name="Morphic" 
+					Type="string" Value="&quot;[#filFa4krMwL6ueyj_tX_uB0JUHWusc]&quot; --run-after-login" />
+			</Component>
+		</DirectoryRef>
     	</Fragment>
 </Wix>
