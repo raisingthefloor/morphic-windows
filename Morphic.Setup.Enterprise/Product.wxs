@@ -6,7 +6,7 @@
 	
 	        <MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeError)" />
 	
-	        <Media Id="1" Cabinet="MorphicSetup.cab" EmbedCab="yes" />
+	        <Media Id="1" Cabinet="MorphicEnterpriseSetup.cab" EmbedCab="yes" />
 	
 	        <Feature Id="ProductFeature" Title="Morphic" Level="1">
 	        	<ComponentGroupRef Id="GeneratedComponents" />

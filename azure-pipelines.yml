@@ -314,7 +314,7 @@ stages:
           artifact: msi-x64
 
         - task: VSBuild@1
-          displayName: "build installer (enterprise x64)"
+          displayName: "build installer (x64 enterprise)"
           env:
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
           inputs:
@@ -324,7 +324,7 @@ stages:
             msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false'
 
         - task: CmdLine@2
-          displayName: 'sign installer (enterprise x64)'
+          displayName: 'sign installer (x64 enterprise)'
           inputs:
             targetType: 'inline'
 # NOTE: if we experience downtime with our cert provider's timestamp servers (which causes signing to fail), 
@@ -347,7 +347,7 @@ stages:
               -v $(System.DefaultWorkingDirectory)\Morphic.Setup.Enterprise\bin\Release\x64\en-US\MorphicEnterpriseSetup.msi
 
         - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup.Enterprise\bin\Release\x64\en-US\MorphicEnterpriseSetup.msi
-          displayName: "Cache MSI for upload (enterprise x64)"
+          displayName: "Cache MSI for upload (x64 enterprise)"
           artifact: msi-x64-enterprise
 
         - task: MSBuild@1
@@ -570,7 +570,7 @@ stages:
                 S3_BUILD_ARCHITECTURE="x64"
                 publishInstaller
 
-                echo "Upload MSI to S3 (enterprise x64)"
+                echo "Upload MSI to S3 (x64 enterprise)"
                 MSI_NAME_BASE="MorphicEnterpriseSetup"
                 LOCAL_MSI_DIR="msi-x64-enterprise"
                 S3_BUILD_ARCHITECTURE="x64"
