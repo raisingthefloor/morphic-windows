@@ -275,7 +275,16 @@ stages:
             solution: 'Morphic.Setup\Morphic.Setup.wixproj'
             configuration: '$(buildConfiguration)'
             msbuildArgs: '/t:restore'
-        
+
+        - task: VSBuild@1
+          displayName: "restore installer dependencies (enterprise)"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
+          inputs:
+            solution: 'Morphic.Setup.Enterprise\Morphic.Setup.Enterprise.wixproj'
+            configuration: '$(buildConfiguration)'
+            msbuildArgs: '/t:restore'
+                
         - task: VSBuild@1
           displayName: "build installer (x64)"
           env:
