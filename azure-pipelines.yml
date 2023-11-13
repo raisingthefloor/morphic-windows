@@ -313,6 +313,43 @@ stages:
           displayName: "Cache MSI for upload (x64)"
           artifact: msi-x64
 
+        - task: VSBuild@1
+          displayName: "build installer (enterprise x64)"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
+          inputs:
+            solution: 'Morphic.Setup.Enterprise\Morphic.Setup.Enterprise.wixproj'
+            platform: 'x64'
+            configuration: '$(buildConfiguration)'
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false'
+
+        - task: CmdLine@2
+          displayName: 'sign installer (enterprise x64)'
+          inputs:
+            targetType: 'inline'
+# NOTE: if we experience downtime with our cert provider's timestamp servers (which causes signing to fail), 
+#       we can use the test server (production timestamps, but from a 2nd provider); note that we should NOT do
+#       this for any public preview or release builds...only for internal testing or emergency scenarios.
+#              -tr "$(TimestampUrl)"
+#              -tr "$(TimestampUrl2)"
+#              vs.
+#              -tr "$(TestOnlyTimestampUrl)"
+            script: >
+              AzureSignTool sign
+              -d Morphic
+              -du "$(SigningURL)"
+              -kvu "$(SigningVaultURL)"
+              -kvi "$(SigningClientId)"
+              -kvt "$(AzureTenantId)"
+              -kvs "$(SigningClientSecret)"
+              -kvc "$(SigningCertName)"
+              -tr "$(TimestampUrl2)"
+              -v $(System.DefaultWorkingDirectory)\Morphic.Setup.Enterprise\bin\Release\x64\en-US\MorphicEnterpriseSetup.msi
+
+        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup.Enterprise\bin\Release\x64\en-US\MorphicEnterpriseSetup.msi
+          displayName: "Cache MSI for upload (enterprise x64)"
+          artifact: msi-x64-enterprise
+
         - task: MSBuild@1
           displayName: "Build Morphic Client (arm64)"
           env:
@@ -429,6 +466,9 @@ stages:
             artifact: msi-x64
 
           - download: current
+            artifact: msi-x64-enterprise
+
+          - download: current
             artifact: msi-arm64
 
           - download: current
@@ -527,6 +567,12 @@ stages:
                 echo "Upload MSI to S3 (x64)"
                 MSI_NAME_BASE="MorphicSetup"
                 LOCAL_MSI_DIR="msi-x64"
+                S3_BUILD_ARCHITECTURE="x64"
+                publishInstaller
+
+                echo "Upload MSI to S3 (enterprise x64)"
+                MSI_NAME_BASE="MorphicEnterpriseSetup"
+                LOCAL_MSI_DIR="msi-x64-enterprise"
                 S3_BUILD_ARCHITECTURE="x64"
                 publishInstaller
 
