@@ -152,6 +152,15 @@ stages:
             msbuildArgs: '/t:restore'
         
         - task: VSBuild@1
+          displayName: "restore installer dependencies (enterprise)"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
+          inputs:
+            solution: 'Morphic.Setup.Enterprise\Morphic.Setup.Enterprise.wixproj'
+            configuration: '$(buildConfiguration)'
+            msbuildArgs: '/t:restore'
+        
+        - task: VSBuild@1
           displayName: "build installer (x86)"
           env:
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
@@ -187,6 +196,43 @@ stages:
         - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x86\en-US\MorphicSetup.msi
           displayName: "Cache MSI for upload (x86)"
           artifact: msi-x86
+
+        - task: VSBuild@1
+          displayName: "build installer (x86 enterprise)"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
+          inputs:
+            solution: 'Morphic.Setup.Enterprise\Morphic.Setup.Enterprise.wixproj'
+            platform: 'x86'
+            configuration: '$(buildConfiguration)'
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false'
+
+        - task: CmdLine@2
+          displayName: 'sign installer (x86 enterprise)'
+          inputs:
+            targetType: 'inline'
+# NOTE: if we experience downtime with our cert provider's timestamp servers (which causes signing to fail), 
+#       we can use the test server (production timestamps, but from a 2nd provider); note that we should NOT do
+#       this for any public preview or release builds...only for internal testing or emergency scenarios.
+#              -tr "$(TimestampUrl)"
+#              -tr "$(TimestampUrl2)"
+#              vs.
+#              -tr "$(TestOnlyTimestampUrl)"
+            script: >
+              AzureSignTool sign
+              -d Morphic
+              -du "$(SigningURL)"
+              -kvu "$(SigningVaultURL)"
+              -kvi "$(SigningClientId)"
+              -kvt "$(AzureTenantId)"
+              -kvs "$(SigningClientSecret)"
+              -kvc "$(SigningCertName)"
+              -tr "$(TimestampUrl2)"
+              -v $(System.DefaultWorkingDirectory)\Morphic.Setup.Enterprise\bin\Release\x86\en-US\MorphicEnterpriseSetup.msi
+
+        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup.Enterprise\bin\Release\x86\en-US\MorphicEnterpriseSetup.msi
+          displayName: "Cache MSI for upload (x86 enterprise)"
+          artifact: msi-x86-enterprise
 
         - task: MSBuild@1
           displayName: "Build Morphic Client (x64)"
@@ -275,7 +321,16 @@ stages:
             solution: 'Morphic.Setup\Morphic.Setup.wixproj'
             configuration: '$(buildConfiguration)'
             msbuildArgs: '/t:restore'
-        
+
+        - task: VSBuild@1
+          displayName: "restore installer dependencies (enterprise)"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
+          inputs:
+            solution: 'Morphic.Setup.Enterprise\Morphic.Setup.Enterprise.wixproj'
+            configuration: '$(buildConfiguration)'
+            msbuildArgs: '/t:restore'
+                
         - task: VSBuild@1
           displayName: "build installer (x64)"
           env:
@@ -312,6 +367,43 @@ stages:
         - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\en-US\MorphicSetup.msi
           displayName: "Cache MSI for upload (x64)"
           artifact: msi-x64
+
+        - task: VSBuild@1
+          displayName: "build installer (x64 enterprise)"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
+          inputs:
+            solution: 'Morphic.Setup.Enterprise\Morphic.Setup.Enterprise.wixproj'
+            platform: 'x64'
+            configuration: '$(buildConfiguration)'
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false'
+
+        - task: CmdLine@2
+          displayName: 'sign installer (x64 enterprise)'
+          inputs:
+            targetType: 'inline'
+# NOTE: if we experience downtime with our cert provider's timestamp servers (which causes signing to fail), 
+#       we can use the test server (production timestamps, but from a 2nd provider); note that we should NOT do
+#       this for any public preview or release builds...only for internal testing or emergency scenarios.
+#              -tr "$(TimestampUrl)"
+#              -tr "$(TimestampUrl2)"
+#              vs.
+#              -tr "$(TestOnlyTimestampUrl)"
+            script: >
+              AzureSignTool sign
+              -d Morphic
+              -du "$(SigningURL)"
+              -kvu "$(SigningVaultURL)"
+              -kvi "$(SigningClientId)"
+              -kvt "$(AzureTenantId)"
+              -kvs "$(SigningClientSecret)"
+              -kvc "$(SigningCertName)"
+              -tr "$(TimestampUrl2)"
+              -v $(System.DefaultWorkingDirectory)\Morphic.Setup.Enterprise\bin\Release\x64\en-US\MorphicEnterpriseSetup.msi
+
+        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup.Enterprise\bin\Release\x64\en-US\MorphicEnterpriseSetup.msi
+          displayName: "Cache MSI for upload (x64 enterprise)"
+          artifact: msi-x64-enterprise
 
         - task: MSBuild@1
           displayName: "Build Morphic Client (arm64)"
@@ -371,6 +463,15 @@ stages:
             msbuildArgs: '/t:restore'
         
         - task: VSBuild@1
+          displayName: "restore installer dependencies (enterprise)"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
+          inputs:
+            solution: 'Morphic.Setup.Enterprise\Morphic.Setup.Enterprise.wixproj'
+            configuration: '$(buildConfiguration)'
+            msbuildArgs: '/t:restore'
+                
+        - task: VSBuild@1
           displayName: "build installer (arm64)"
           env:
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
@@ -407,6 +508,43 @@ stages:
           displayName: "Cache MSI for upload (arm64)"
           artifact: msi-arm64
 
+        - task: VSBuild@1
+          displayName: "build installer (arm64 enterprise)"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
+          inputs:
+            solution: 'Morphic.Setup.Enterprise\Morphic.Setup.Enterprise.wixproj'
+            platform: 'arm64'
+            configuration: '$(buildConfiguration)'
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false'
+
+        - task: CmdLine@2
+          displayName: 'sign installer (arm64 enterprise)'
+          inputs:
+            targetType: 'inline'
+# NOTE: if we experience downtime with our cert provider's timestamp servers (which causes signing to fail), 
+#       we can use the test server (production timestamps, but from a 2nd provider); note that we should NOT do
+#       this for any public preview or release builds...only for internal testing or emergency scenarios.
+#              -tr "$(TimestampUrl)"
+#              -tr "$(TimestampUrl2)"
+#              vs.
+#              -tr "$(TestOnlyTimestampUrl)"
+            script: >
+              AzureSignTool sign
+              -d Morphic
+              -du "$(SigningURL)"
+              -kvu "$(SigningVaultURL)"
+              -kvi "$(SigningClientId)"
+              -kvt "$(AzureTenantId)"
+              -kvs "$(SigningClientSecret)"
+              -kvc "$(SigningCertName)"
+              -tr "$(TimestampUrl2)"
+              -v $(System.DefaultWorkingDirectory)\Morphic.Setup.Enterprise\bin\Release\arm64\en-US\MorphicEnterpriseSetup.msi
+
+        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup.Enterprise\bin\Release\arm64\en-US\MorphicEnterpriseSetup.msi
+          displayName: "Cache MSI for upload (arm64 enterprise)"
+          artifact: msi-arm64-enterprise
+
         - publish: $(System.DefaultWorkingDirectory)\Morphic.Client\BuildVersion.txt
           displayName: "save build version numbers"
           artifact: build-version
@@ -426,10 +564,19 @@ stages:
             artifact: msi-x86
 
           - download: current
+            artifact: msi-x86-enterprise
+
+          - download: current
             artifact: msi-x64
 
           - download: current
+            artifact: msi-x64-enterprise
+
+          - download: current
             artifact: msi-arm64
+
+          - download: current
+            artifact: msi-arm64-enterprise
 
           - download: current
             artifact: build-version
@@ -524,15 +671,33 @@ stages:
                 S3_BUILD_ARCHITECTURE="x86"
                 publishInstaller
 
+                echo "Upload MSI to S3 (x86 enterprise)"
+                MSI_NAME_BASE="MorphicEnterpriseSetup"
+                LOCAL_MSI_DIR="msi-x86-enterprise"
+                S3_BUILD_ARCHITECTURE="x86"
+                publishInstaller
+
                 echo "Upload MSI to S3 (x64)"
                 MSI_NAME_BASE="MorphicSetup"
                 LOCAL_MSI_DIR="msi-x64"
                 S3_BUILD_ARCHITECTURE="x64"
                 publishInstaller
 
+                echo "Upload MSI to S3 (x64 enterprise)"
+                MSI_NAME_BASE="MorphicEnterpriseSetup"
+                LOCAL_MSI_DIR="msi-x64-enterprise"
+                S3_BUILD_ARCHITECTURE="x64"
+                publishInstaller
+
                 echo "Upload MSI to S3 (arm64)"
                 MSI_NAME_BASE="MorphicSetup"
                 LOCAL_MSI_DIR="msi-arm64"
+                S3_BUILD_ARCHITECTURE="arm64"
+                publishInstaller
+
+                echo "Upload MSI to S3 (arm64 enterprise)"
+                MSI_NAME_BASE="MorphicEnterpriseSetup"
+                LOCAL_MSI_DIR="msi-arm64-enterprise"
                 S3_BUILD_ARCHITECTURE="arm64"
                 publishInstaller
 

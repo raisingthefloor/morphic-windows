@@ -26,6 +26,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Morphic.Integrations.Office
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Morphic.Controls", "Morphic.Controls\Morphic.Controls.csproj", "{2AF5B336-8D00-40E8-8C3C-398E6934F2FC}"
 EndProject
+Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "Morphic.Setup.Enterprise", "Morphic.Setup.Enterprise\Morphic.Setup.Enterprise.wixproj", "{FEE9766B-69F3-48A1-9087-64B460E4BFC7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64

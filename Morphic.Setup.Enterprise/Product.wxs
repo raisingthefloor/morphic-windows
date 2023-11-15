@@ -1,17 +1,16 @@
 ﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
-	<Package Name="Morphic" Language="1033" Version="!(bind.FileVersion.filFa4krMwL6ueyj_tX_uB0JUHWusc)" Manufacturer="Raising the Floor" UpgradeCode="7d0ee114-79e8-4ff6-b28b-0408551483f5" InstallerVersion="200">
+	<Package Name="Morphic" Language="1033" Version="!(bind.FileVersion.filFa4krMwL6ueyj_tX_uB0JUHWusc)" Manufacturer="Raising the Floor" UpgradeCode="7d0ee114-79e8-4ff6-b28b-0408551483f5" InstallerVersion="200" Scope="perMachine">
 	
 		<Icon Id="MorphicIcon" SourceFile="$(var.Morphic.Client.ProjectDir)\Icon.ico" />
 		<Property Id="ARPPRODUCTICON" Value="MorphicIcon" />
 	
 	        <MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeError)" />
 	
-	        <Media Id="1" Cabinet="MorphicSetup.cab" EmbedCab="yes" />
+	        <Media Id="1" Cabinet="MorphicEnterpriseSetup.cab" EmbedCab="yes" />
 	
 	        <Feature Id="ProductFeature" Title="Morphic" Level="1">
 	        	<ComponentGroupRef Id="GeneratedComponents" />
 	        	<ComponentRef Id="ApplicationComponent" />
-	        	<ComponentRef Id="DesktopIconComponent" />
 	        	<ComponentRef Id="RegistryEntries" />
 	        </Feature>
 	
@@ -50,26 +49,13 @@
 					Value="1" KeyPath="yes" />
 			</Component>
 		</StandardDirectory>
-        
-		<StandardDirectory Id="DesktopFolder">
-			<Component Id="DesktopIconComponent" Guid="5A043CA6-3EE9-4572-AB62-4B4FDDCFF016">
-				<Shortcut 
-					Id="MorphicDesktopShortcut" 
-					Name="Morphic" 
-					Icon="MorphicIcon" 
-					Target="[#filFa4krMwL6ueyj_tX_uB0JUHWusc]" 
-					WorkingDirectory="INSTALLFOLDER" />
-				<RegistryValue Root="HKCU" Key="Software\Raising the Floor\Morphic" Name="installed" Type="integer" 
-					Value="1" KeyPath="yes" />
-			</Component>
-		</StandardDirectory>
 
 		<StandardDirectory Id="ProgramFiles6432Folder">
 			<Component Id="RegistryEntries" Guid="84EBEB5E-274F-4C1D-B5A2-5408557AFD78">
-				<RegistryValue Root="HKCU" Key="Software\Microsoft\Windows\CurrentVersion\Run" Name="Morphic" 
+				<RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Run" Name="Morphic" 
 					Type="string" Value="&quot;[#filFa4krMwL6ueyj_tX_uB0JUHWusc]&quot; --run-after-login" />
-				<RegistryValue Root="HKCU" Key="Software\Raising the Floor\Morphic" Name="setupPackageVariant" Type="string" 
-					Value="morphicMsi" />
+				<RegistryValue Root="HKLM" Key="Software\Raising the Floor\Morphic" Name="setupPackageVariant" Type="string" 
+					Value="morphicEnterpriseMsi" />
 			</Component>
 		</StandardDirectory>
     	</Fragment>
