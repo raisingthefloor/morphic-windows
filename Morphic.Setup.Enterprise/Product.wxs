@@ -45,7 +45,7 @@
 					Icon="MorphicIcon" 
 					Target="[#filFa4krMwL6ueyj_tX_uB0JUHWusc]" 
 					WorkingDirectory="INSTALLFOLDER" />
-				<RegistryValue Root="HKMU" Key="Software\Raising the Floor\Morphic" Name="installed" Type="integer" 
+				<RegistryValue Root="HKCU" Key="Software\Raising the Floor\Morphic" Name="installed" Type="integer" 
 					Value="1" KeyPath="yes" />
 			</Component>
 		</StandardDirectory>
