@@ -2,6 +2,7 @@
 	<Package Name="Morphic" Language="1033" Version="!(bind.FileVersion.filFa4krMwL6ueyj_tX_uB0JUHWusc)" Manufacturer="Raising the Floor" UpgradeCode="7d0ee114-79e8-4ff6-b28b-0408551483f5" InstallerVersion="200">
 	
 		<Icon Id="MorphicIcon" SourceFile="$(var.Morphic.Client.ProjectDir)\Icon.ico" />
+		<Property Id="ALLUSERS" Value="1" />
 		<Property Id="ARPPRODUCTICON" Value="MorphicIcon" />
 	
 	        <MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeError)" />
