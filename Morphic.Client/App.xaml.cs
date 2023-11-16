@@ -1345,12 +1345,83 @@ public partial class App : Application
    void StartCheckingForUpdates()
    {
        UpdateOptions? updateOptions = this.ServiceProvider.GetRequiredService<UpdateOptions>();
-       string appCastUrl = App.GetAppCastUrlForCurrentProcessor(updateOptions);
+       string? appCastUrl;
+       if (App.WasInstalledUsingEnterpriseInstaller() == true)
+       {
+            appCastUrl = App.GetEnterpriseAppCastUrlForCurrentProcessor(updateOptions);
+       }
+       else
+       {
+            appCastUrl = App.GetAppCastUrlForCurrentProcessor(updateOptions);
+       }
        if (string.IsNullOrEmpty(appCastUrl) == false)
        {
            AutoUpdater.Start(appCastUrl);
        }
    }
+
+     internal static bool WasInstalledUsingEnterpriseInstaller()
+     {
+          string? setupPackageVariantAsString = null;
+
+          var openMachineMorphicRegistryKeyResult = Morphic.WindowsNative.Registry.LocalMachine.OpenSubKey(@"Software\Raising the Floor\Morphic");
+          if (openMachineMorphicRegistryKeyResult.IsSuccess == true)
+          {
+               var morphicRegistryKey = openMachineMorphicRegistryKeyResult.Value!;
+               var getSetupPackageVariantResult = morphicRegistryKey.GetValueData("setupPackageVariant");
+               if (getSetupPackageVariantResult.IsSuccess == true)
+               {
+                    try
+                    {
+                         setupPackageVariantAsString = (string)getSetupPackageVariantResult.Value!;
+                    }
+                    catch
+                    {
+                         Debug.Assert(false, "Registry value 'setupPackageVariant' did not contain valid string data.");
+                    }
+               }
+          }
+
+          if (setupPackageVariantAsString is null)
+          {
+               var openUserMorphicRegistryKeyResult = Morphic.WindowsNative.Registry.CurrentUser.OpenSubKey(@"Software\Raising the Floor\Morphic");
+               if (openUserMorphicRegistryKeyResult.IsSuccess == true)
+               {
+                    var morphicRegistryKey = openUserMorphicRegistryKeyResult.Value!;
+                    var getSetupPackageVariantResult = morphicRegistryKey.GetValueData("setupPackageVariant");
+                    if (getSetupPackageVariantResult.IsSuccess == true)
+                    {
+                         try
+                         {
+                              setupPackageVariantAsString = (string)getSetupPackageVariantResult.Value!;
+                         }
+                         catch
+                         {
+                              Debug.Assert(false, "Registry value 'setupPackageVariant' did not contain valid string data.");
+                         }
+                    }
+               }
+          }
+
+          if (setupPackageVariantAsString is null)
+          {
+               Debug.Assert(false, "Could not detect whether Morphic was installed with Enterprise or non-Enterprise installer");
+               // default to "not installed with enterprise installer"
+               return false;
+          }
+
+          switch (setupPackageVariantAsString!.ToLowerInvariant())
+          {
+               case "morphicmsi":
+                    return false;
+               case "morphicenterprisemsi":
+                    return false;
+               default:
+                    Debug.Assert(false, "Registry value 'setupPackageVariant' contains unrecognized string data");
+                    // default to "not installed with enterprise installer"
+                    return false;
+          }
+     }
 
    internal static string GetAppCastUrlForCurrentProcessor(UpdateOptions updateOptions)
    {
@@ -1369,6 +1440,29 @@ public partial class App : Application
                   break;
              default:
                   appCastUrl = updateOptions.AppCastUrl;
+                  Debug.Assert(false, "Could not detect architecture (to select auto-update URL)");
+                  break;
+        }
+        return appCastUrl;
+   }
+
+   internal static string? GetEnterpriseAppCastUrlForCurrentProcessor(UpdateOptions updateOptions)
+   {
+        string? appCastUrl;
+        // NOTE: GetProcessorArchitecture might return the emulated architecture (in the case of X86 emulation on ARM64) instead of the actual architecture
+        switch (Morphic.WindowsNative.Processor.Processor.GetProcessorArchitecture())
+        {
+             case WindowsNative.Processor.Processor.ProcessorArchitecture.X86:
+                  appCastUrl = updateOptions.AppCastUrlEnterpriseX86;
+                  break;
+             case WindowsNative.Processor.Processor.ProcessorArchitecture.X64:
+                  appCastUrl = updateOptions.AppCastUrlEnterpriseX64;
+                  break;
+             case WindowsNative.Processor.Processor.ProcessorArchitecture.Arm64:
+                  appCastUrl = updateOptions.AppCastUrlEnterpriseArm64;
+                  break;
+             default:
+                  appCastUrl = null;
                   Debug.Assert(false, "Could not detect architecture (to select auto-update URL)");
                   break;
         }
