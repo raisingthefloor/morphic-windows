@@ -11,6 +11,7 @@
                          MinWidth="25"
                          MaxWidth="50"
                          Margin="5"
+                         GotKeyboardFocus="BarItemControl_GotKeyboardFocus"
                          d:DataContext="{d:DesignInstance barControls:ButtonBarControl, IsDesignTimeCreatable=True}"
                          >
     <barControls:BarItemControl.Resources>

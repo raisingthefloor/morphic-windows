@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2022 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2023 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -1018,11 +1018,12 @@ internal struct ExtendedPInvoke
         HCF_OPTION_NOTHEMECHANGE = 0x00001000,
     }
 
+    // https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-msllhookstruct
     [StructLayout(LayoutKind.Sequential)]
     internal struct MSLLHOOKSTRUCT
     {
         public PInvoke.POINT pt;
-        // NOTE: the mouseData DWORD is apparently used as a signed integer (rather than as an uint)
+        // NOTE: the mouseData DWORD is apparently used as a signed integer (rather than as a uint)
         public int mouseData;
         public uint flags;
         public uint time;

@@ -230,7 +230,7 @@
                 if (newValue is null)
                 {
                     // Get the configured value
-                    object value = morphicKey.GetValue("AutoRun");
+                    object? value = morphicKey.GetValue("AutoRun");
                     if (value is null)
                     {
                         // This might be the first time running, enable auto-run by default.
@@ -253,11 +253,11 @@
             // NOTE: Morphic rewrites over the autorun setting every time this function is called (as long as Morphic has the appropriate registry permissions)
             if (enabled)
             {
-                string processPath = Process.GetCurrentProcess().MainModule.FileName;
+                string? processPath = Process.GetCurrentProcess().MainModule?.FileName;
                 // Only add it to the auto-run if running a release.
-                if (!processPath.EndsWith("dotnet.exe"))
+                if ((processPath is not null) && (processPath.EndsWith("dotnet.exe") == false))
                 {
-                    var pathAndArguments = processPath + " --run-after-login";
+                    var pathAndArguments = processPath! + " --run-after-login";
 
                     if (limitAutorunToCurrentUser == true)
                     {

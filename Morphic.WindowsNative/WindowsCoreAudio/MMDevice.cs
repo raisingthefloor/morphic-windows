@@ -1,10 +1,10 @@
-﻿// Copyright 2020-2022 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2023 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
 //
 // You may obtain a copy of the License at
-// https://github.com/raisingthefloor/morphic-windows/blob/master/LICENSE.txt
+// https://github.com/raisingthefloor/morphic-windowsnative-lib-cs/blob/main/LICENSE
 //
 // The R&D leading to these results received funding from the:
 // * Rehabilitation Services Administration, US Dept. of Education under
@@ -21,49 +21,48 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-namespace Morphic.WindowsNative.WindowsCoreAudio
+using Morphic.Core;
+using Morphic.WindowsNative.WindowsCom;
+using System;
+using System.Runtime.InteropServices;
+
+namespace Morphic.WindowsNative.WindowsCoreAudio;
+
+internal class MMDevice
 {
-    using Morphic.Core;
-    using Morphic.WindowsNative.WindowsCom;
-    using System;
-    using System.Runtime.InteropServices;
+   private IMMDevice _immDevice;
 
-    internal class MMDevice
-    {
-        private IMMDevice _immDevice;
+   private MMDevice(IMMDevice immDevice)
+   {
+       _immDevice = immDevice;
+   }
 
-        private MMDevice(IMMDevice immDevice)
-        {
-            _immDevice = immDevice;
-        }
+   internal static MMDevice CreateFromIMMDevice(IMMDevice immDevice)
+   {
+       var result = new MMDevice(immDevice);
+       //
+       return result;
+   }
 
-        internal static MMDevice CreateFromIMMDevice(IMMDevice immDevice)
-        {
-            var result = new MMDevice(immDevice);
-            //
-            return result;
-        }
+   public MorphicResult<Object, WindowsComError> Activate(Guid iid, CLSCTX clsCtx)
+   {
+       Object? @interface;
+       var result = _immDevice.Activate(iid, clsCtx, IntPtr.Zero, out @interface);
+       if (result != ExtendedPInvoke.S_OK)
+       {
+           // TODO: consider throwing more granular exceptions here
+           var comException = new COMException("IMMDeviceEnumerator.GetDefaultAudioEndpoint failed", Marshal.GetExceptionForHR(result));
+           return MorphicResult.ErrorResult(WindowsComError.ComException(comException));
+       }
 
-        public MorphicResult<Object, WindowsComError> Activate(Guid iid, CLSCTX clsCtx)
-        {
-            Object? @interface;
-            var result = _immDevice.Activate(iid, clsCtx, IntPtr.Zero, out @interface);
-            if (result != ExtendedPInvoke.S_OK)
-            {
-                // TODO: consider throwing more granular exceptions here
-                var comException = new COMException("IMMDeviceEnumerator.GetDefaultAudioEndpoint failed", Marshal.GetExceptionForHR(result));
-                return MorphicResult.ErrorResult(WindowsComError.ComException(comException));
-            }
+       if (@interface is null)
+       {
+           // NOTE: this code should never be executed since Activate should have returned an HRESULT of E_POINTER if it failed
+           var comException = new COMException("IMMDevice.Activate returned a null pointer", new NullReferenceException());
+           return MorphicResult.ErrorResult(WindowsComError.ComException(comException));
+       }
 
-            if (@interface is null)
-            {
-                // NOTE: this code should never be executed since Activate should have returned an HRESULT of E_POINTER if it failed
-                var comException = new COMException("IMMDevice.Activate returned a null pointer", new NullReferenceException());
-                return MorphicResult.ErrorResult(WindowsComError.ComException(comException));
-            }
+       return MorphicResult.OkResult(@interface!);
+   }
 
-            return MorphicResult.OkResult(@interface!);
-        }
-
-    }
 }

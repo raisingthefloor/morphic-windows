@@ -1112,48 +1112,7 @@ namespace Morphic.Client.Bar.Data.Actions
         internal async static Task<MorphicResult<bool, MorphicUnit>> GetDarkModeStateAsync()
         {
             var osVersion = Morphic.WindowsNative.OsVersion.OsVersion.GetWindowsVersion();
-            if (osVersion == Morphic.WindowsNative.OsVersion.WindowsVersion.Win10_v1809)
-            {
-                // Windows 10 v1809
-
-                // NOTE: this is hard-coded, as a patch, because the solutions registry does not yet understand how to capture/apply settings across incompatible handlers
-                //       [and trying to call the Windows 10 v1903+ handlers for apps/system "light theme" will result in a memory access exception under v1809]
-                //       [also: only "AppsUseLightTheme" (and not "SystemUsesLightTheme") existed properly under Windows 10 v1809]
-
-                var openPersonalizeKeyResult = Morphic.WindowsNative.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize", true);
-                if (openPersonalizeKeyResult.IsError == true)
-                {
-                    return MorphicResult.ErrorResult();
-                }
-                var personalizeKey = openPersonalizeKeyResult.Value!;
-
-                // get the current setting
-                bool appsUseLightThemeAsBool;
-                var getAppsUseLightThemeResult = personalizeKey.GetValueData<uint>("AppsUseLightTheme");
-                if (getAppsUseLightThemeResult.IsError == true)
-                {
-                    switch (getAppsUseLightThemeResult.Error!.Value) 
-                    {
-                        case WindowsNative.Registry.RegistryKey.RegistryGetValueError.Values.ValueDoesNotExist:
-                            // default AppsUseLightTheme (inverse of dark mode state) on Windows 10 v1809 is true
-                            appsUseLightThemeAsBool = true;
-                            break;
-                        default:
-                            return MorphicResult.ErrorResult();
-                    }
-                }
-                else
-                {
-                    var appsUseLightThemeAsUInt32 = getAppsUseLightThemeResult.Value!;
-                    appsUseLightThemeAsBool = (appsUseLightThemeAsUInt32 != 0) ? true : false;
-                }
-
-                // dark theme state is the inverse of AppsUseLightTheme
-                var darkThemeState = !appsUseLightThemeAsBool;
-
-                return MorphicResult.OkResult(darkThemeState);
-            }
-            else if (osVersion is null)
+            if (osVersion is null)
             {
                 // error
                 return MorphicResult.ErrorResult();
@@ -1191,47 +1150,7 @@ namespace Morphic.Client.Bar.Data.Actions
         internal async static Task<MorphicResult<MorphicUnit, MorphicUnit>> SetDarkModeStateAsync(bool state)
         {
             var osVersion = Morphic.WindowsNative.OsVersion.OsVersion.GetWindowsVersion();
-            if (osVersion == Morphic.WindowsNative.OsVersion.WindowsVersion.Win10_v1809)
-            {
-                // Windows 10 v1809
-
-                // NOTE: this is hard-coded, as a patch, because the solutions registry does not yet understand how to capture/apply settings across incompatible handlers
-                //       [and trying to call the Windows 10 v1903+ handlers for apps/system "light theme" will result in a memory access exception under v1809]
-                //       [also: only "AppsUseLightTheme" (and not "SystemUsesLightTheme") existed properly under Windows 10 v1809]
-
-                var openPersonalizeKeyResult = Morphic.WindowsNative.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize", true);
-                if (openPersonalizeKeyResult.IsError == true)
-                {
-                    return MorphicResult.ErrorResult();
-                }
-                var personalizeKey = openPersonalizeKeyResult.Value!;
-
-                // set apps dark/light theme
-                //
-                uint newAppsUseLightThemeAsUInt32 = state ? (uint)0 : (uint)1; // NOTE: these are inverted (because we are setting "light state" using the inverse of the "dark state" parameter
-                //
-                // set the setting to the inverted state
-                var setAppsUseLightThemeResult = personalizeKey.SetValue<uint>("AppsUseLightTheme", newAppsUseLightThemeAsUInt32);
-                if (setAppsUseLightThemeResult.IsError == true)
-                {
-                    return MorphicResult.ErrorResult();
-                }
-
-                // see: https://docs.microsoft.com/en-us/windows/win32/winmsg/wm-wininichange
-                var pointerToImmersiveColorSetString = Marshal.StringToHGlobalUni("ImmersiveColorSet");
-                try
-                {
-                    // notify all windows that we have changed a setting in the "win ini" settings
-                    // NOTE: we use SendNotifyMessage instead of SendMessage since we are broadcasting the message and we want to avoid any chance that a locked-up top-level window would lock up our app (since SendMessage does not return until all windows have processed a broadcast message)
-                    //       [in the future, we may want to consider using SendMessageCallback so that we can wait some time for the action to complete as a UI optimization]
-                    _ = WinApi.SendNotifyMessage(WinApi.HWND_BROADCAST, WinApi.WM_WININICHANGE, UIntPtr.Zero, pointerToImmersiveColorSetString);
-                }
-                finally
-                {
-                    Marshal.FreeHGlobal(pointerToImmersiveColorSetString);
-                }
-            }
-            else if (osVersion is null)
+            if (osVersion is null)
             {
                 // error
                 return MorphicResult.ErrorResult();
@@ -1242,7 +1161,8 @@ namespace Morphic.Client.Bar.Data.Actions
 
                 /*
                  * NOTE: in addition to the SPI implementation (in code, below), we could also turn on/off the dark theme (via powershell...or possibly via direct registry access); here are the corresponding PowerShell commands
-                 * NOTE: we use registry access to get/set dark mode under Windows 10 <=v1809 (see code above); the "system dark theme" was introduced in Windows 10 v1903
+                 * NOTE: we used registry access to get/set dark mode prior to  Windows 10 v1903
+                 * NOTE: the "system dark theme" was introduced in Windows 10 v1903
                  * 
                  * SWITCH TO LIGHT MODE:
                  * New-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name SystemUsesLightTheme -Value 1 -Type Dword -Force

@@ -1,18 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-	  <TargetFramework>net6.0-windows10.0.22621.0</TargetFramework>
-	  <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
-	  <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
-	  <Nullable>enable</Nullable>
-	  <Platforms>x86;x64;ARM64;x86</Platforms>
+    <TargetFramework>net6.0-windows10.0.22621.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <Nullable>enable</Nullable>
+    <Platforms>x86;x64;ARM64;x86</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="DotNetWindowsRegsitry" Version="0.1.0-alpha1" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
     <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
-    <PackageReference Include="Morphic.Core" Version="1.2.0" />
+    <PackageReference Include="Morphic.Core" Version="1.3.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
   </ItemGroup>
 

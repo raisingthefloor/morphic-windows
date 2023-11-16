@@ -81,15 +81,6 @@
 
         private SystemSettingItem? GetSettingItem(string settingName)
         {
-            // certain setting(s) are not supported for "get" operations on Windows 10 v1809 under our current reverse-engineered "get value" scheme; filter those now
-            if (Morphic.WindowsNative.OsVersion.OsVersion.GetWindowsVersion() == Morphic.WindowsNative.OsVersion.WindowsVersion.Win10_v1809)
-            {
-                if (IsSettingSupportedInWindows10v1809(settingName) == false)
-                {
-                    return null;
-                }
-            }
-
             // Cache the instance, in case it's re-used.
             if (!settingCache.TryGetValue(settingName, out SystemSettingItem? settingItem))
             {
@@ -106,18 +97,6 @@
             }
 
             return settingItem;
-        }
-
-        private bool IsSettingSupportedInWindows10v1809(string settingName)
-        {
-            switch(settingName)
-            {
-                case "SystemSettings_Personalize_Color_AppsUseLightTheme":
-                case "SystemSettings_Personalize_Color_SystemUsesLightTheme":
-                    return false;
-                default:
-                    return true;
-            }
         }
     }
 }

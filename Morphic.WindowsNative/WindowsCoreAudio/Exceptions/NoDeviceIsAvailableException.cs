@@ -1,10 +1,10 @@
-﻿// Copyright 2020-2022 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2023 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
 //
 // You may obtain a copy of the License at
-// https://github.com/raisingthefloor/morphic-windows/blob/master/LICENSE.txt
+// https://github.com/raisingthefloor/morphic-windowsnative-lib-cs/blob/main/LICENSE
 //
 // The R&D leading to these results received funding from the:
 // * Rehabilitation Services Administration, US Dept. of Education under
@@ -21,11 +21,10 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-namespace Morphic.WindowsNative.WindowsCoreAudio.Exceptions
-{
-    using System;
+using System;
 
-    class NoDeviceIsAvailableException : Exception
-    {
-    }
+namespace Morphic.WindowsNative.WindowsCoreAudio.Exceptions;
+
+class NoDeviceIsAvailableException : Exception
+{
 }
