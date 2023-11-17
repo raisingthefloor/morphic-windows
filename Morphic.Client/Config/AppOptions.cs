@@ -250,41 +250,45 @@
                 morphicKey.SetValue("AutoRun", enabled ? "1" : "0", RegistryValueKind.String);
             }
 
-            // NOTE: Morphic rewrites over the autorun setting every time this function is called (as long as Morphic has the appropriate registry permissions)
-            if (enabled)
+            // NOTE: if the app was installed using the enterprise installer, we do not read/write the registry entries (as that was taken care of up-front by the enterprise installer)
+            if (App.WasInstalledUsingEnterpriseInstaller() == false)
             {
-                string? processPath = Process.GetCurrentProcess().MainModule?.FileName;
-                // Only add it to the auto-run if running a release.
-                if ((processPath is not null) && (processPath.EndsWith("dotnet.exe") == false))
-                {
-                    var pathAndArguments = processPath! + " --run-after-login";
-
-                    if (limitAutorunToCurrentUser == true)
-                    {
-                        currentUserAutorunKey.SetValue("Morphic", pathAndArguments);
-                    }
-                    else
-                    {
-                        // NOTE: if we do not have (administrator or other HKLM) write access, this code will not execute
-                        localMachineAutorunKey?.SetValue("Morphic", pathAndArguments);
-                    }
-                }
-                else
-                {
-                    // if we're running as a debug build, do not add the autorun key
-                }
-            }
-            else
-            {
-                if (limitAutorunToCurrentUser == true)
-                {
-                    currentUserAutorunKey.DeleteValue("Morphic", false);
-                }
-                else
-                {
-                    // NOTE: if we do not have (administrator or other HKLM) write access, this code will not execute
-                    localMachineAutorunKey?.DeleteValue("Morphic", false);
-                }
+               // NOTE: Morphic rewrites over the autorun setting every time this function is called (as long as Morphic has the appropriate registry permissions)
+               if (enabled)
+               {
+                   string? processPath = Process.GetCurrentProcess().MainModule?.FileName;
+                   // Only add it to the auto-run if running a release.
+                   if ((processPath is not null) && (processPath.EndsWith("dotnet.exe") == false))
+                   {
+                       var pathAndArguments = processPath! + " --run-after-login";
+                       
+                       if (limitAutorunToCurrentUser == true)
+                       {
+                           currentUserAutorunKey.SetValue("Morphic", pathAndArguments);
+                       }
+                       else
+                       {
+                           // NOTE: if we do not have (administrator or other HKLM) write access, this code will not execute
+                           localMachineAutorunKey?.SetValue("Morphic", pathAndArguments);
+                       }
+                   }
+                   else
+                   {
+                       // if we're running as a debug build, do not add the autorun key
+                   }
+               }
+               else
+               {
+                   if (limitAutorunToCurrentUser == true)
+                   {
+                       currentUserAutorunKey.DeleteValue("Morphic", false);
+                   }
+                   else
+                   {
+                       // NOTE: if we do not have (administrator or other HKLM) write access, this code will not execute
+                       localMachineAutorunKey?.DeleteValue("Morphic", false);
+                   }
+               }
             }
 
             return enabled;
