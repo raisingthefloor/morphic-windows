@@ -118,6 +118,13 @@ stages:
 #            script: >
 #              tree $(Build.SourcesDirectory)\Morphic.Client\bin /f
               
+        - task: UseDotNet@2
+          displayName: 'Use .NET SDK 6.0.417'
+          inputs:
+            packageType: sdk
+            version: 6.0.417
+            installationPath: $(Agent.ToolsDirectory)/dotnet
+
         - task: CmdLine@2
           displayName: 'sign morphic client exe (x86)'
           inputs:
@@ -141,6 +148,13 @@ stages:
               -tr "$(TimestampUrl2)"
               -v
               $(Build.SourcesDirectory)\Morphic.Client\bin\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-x86\publish\Morphic.exe
+
+        - task: UseDotNet@2
+          displayName: 'Use .NET SDK 8.0.100'
+          inputs:
+            packageType: sdk
+            version: 8.0.100
+            installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - task: VSBuild@1
           displayName: "restore installer dependencies"
@@ -170,6 +184,13 @@ stages:
             configuration: '$(buildConfiguration)'
             msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false'
 
+        - task: UseDotNet@2
+          displayName: 'Use .NET SDK 6.0.417'
+          inputs:
+            packageType: sdk
+            version: 6.0.417
+            installationPath: $(Agent.ToolsDirectory)/dotnet
+
         - task: CmdLine@2
           displayName: 'sign installer (x86)'
           inputs:
@@ -193,6 +214,13 @@ stages:
               -tr "$(TimestampUrl2)"
               -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x86\en-US\MorphicSetup.msi
 
+        - task: UseDotNet@2
+          displayName: 'Use .NET SDK 8.0.100'
+          inputs:
+            packageType: sdk
+            version: 8.0.100
+            installationPath: $(Agent.ToolsDirectory)/dotnet
+
         - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x86\en-US\MorphicSetup.msi
           displayName: "Cache MSI for upload (x86)"
           artifact: msi-x86
@@ -206,6 +234,13 @@ stages:
             platform: 'x86'
             configuration: '$(buildConfiguration)'
             msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false'
+
+        - task: UseDotNet@2
+          displayName: 'Use .NET SDK 6.0.417'
+          inputs:
+            packageType: sdk
+            version: 6.0.417
+            installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - task: CmdLine@2
           displayName: 'sign installer (x86 enterprise)'
@@ -229,6 +264,13 @@ stages:
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
               -v $(System.DefaultWorkingDirectory)\Morphic.Setup.Enterprise\bin\Release\x86\en-US\MorphicEnterpriseSetup.msi
+
+        - task: UseDotNet@2
+          displayName: 'Use .NET SDK 8.0.100'
+          inputs:
+            packageType: sdk
+            version: 8.0.100
+            installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup.Enterprise\bin\Release\x86\en-US\MorphicEnterpriseSetup.msi
           displayName: "Cache MSI for upload (x86 enterprise)"
