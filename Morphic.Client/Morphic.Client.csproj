@@ -12,7 +12,7 @@
     <Win32Resource />
     <AssemblyName>Morphic</AssemblyName>
     <PublishTrimmed>false</PublishTrimmed>
-    <VersionPrefix>1.8$(VersionBuildComponents)</VersionPrefix>
+    <VersionPrefix>1.9$(VersionBuildComponents)</VersionPrefix>
     <VersionSuffix Condition="'$(Configuration)' == 'Debug'">localdev</VersionSuffix>
     <VersionSuffix Condition="'$(Configuration)' == 'Release'">$(VersionSuffix)</VersionSuffix>
     <StartupObject>Morphic.Client.AppMain</StartupObject>
