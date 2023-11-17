@@ -50,6 +50,13 @@
 
         protected override void OnOpened(RoutedEventArgs e)
         {
+            // if Morphic was installed for all users, disable the ability to enable/disable autorun
+            // NOTE: in Morphic v2.0, we should let each user specify whether the app should start or not--even in this circumstance--possibly by just immediately shutting down if Morphic is started
+            if (App.WasInstalledUsingEnterpriseInstaller() == true)
+            {
+                this.AutorunAfterLoginItem.Visibility = Visibility.Collapsed;
+            }
+            //
             // if autorun settings are configured by config.json, do not give the user the option to enable/disable
             if (ConfigurableFeatures.AutorunConfig is not null)
             {
