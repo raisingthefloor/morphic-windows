@@ -1301,14 +1301,14 @@ public partial class App : Application
        // TODO: when the user first runs Morphic, we probably want to open a welcome window (where the user could then log in)
        //await this.Dialogs.OpenDialog<CommunityLoginWindow>();
 
-       this.OnSessionOpened(morphicBarVisible: morphicBarVisibilityOverride ?? true);
+       this.OnSessionOpened(morphicBarVisibilityOverride: morphicBarVisibilityOverride);
    }
 
    /// <summary>
    /// Called when the session open task completes
    /// </summary>
    /// <param name="task"></param>
-   private async void OnSessionOpened(bool morphicBarVisible)
+   private async void OnSessionOpened(bool? morphicBarVisibilityOverride)
    {
        this.Logger.LogInformation("Session Open");
 
@@ -1324,7 +1324,7 @@ public partial class App : Application
 
        // if no bar was already loaded, load the Basic bar
        if (this.BarManager.BarIsLoaded == false) {
-           this.BarManager.LoadBasicMorphicBar(morphicBarVisible);
+           this.BarManager.LoadBasicMorphicBar(morphicBarVisibilityOverride);
        }
    }
 
