@@ -1415,7 +1415,7 @@ public partial class App : Application
                case "morphicmsi":
                     return false;
                case "morphicenterprisemsi":
-                    return false;
+                    return true;
                default:
                     Debug.Assert(false, "Registry value 'setupPackageVariant' contains unrecognized string data");
                     // default to "not installed with enterprise installer"
