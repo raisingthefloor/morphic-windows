@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net6.0-windows10.0.22621.0</TargetFramework>
+    <TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>
     <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
     <Platforms>x86;x64;ARM64</Platforms>
     <Nullable>enable</Nullable>
@@ -24,13 +24,13 @@
   </PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Platform)' == 'x86' ">
-		<RuntimeIdentifier>win10-x86</RuntimeIdentifier>
+		<RuntimeIdentifier>win-x86</RuntimeIdentifier>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(Platform)' == 'x64' ">
-		<RuntimeIdentifier>win10-x64</RuntimeIdentifier>
+		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(Platform)' == 'ARM64' ">
-		<RuntimeIdentifier>win10-arm64</RuntimeIdentifier>
+		<RuntimeIdentifier>win-arm64</RuntimeIdentifier>
 	</PropertyGroup>
 
   <ItemGroup>
