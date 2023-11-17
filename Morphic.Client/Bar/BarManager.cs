@@ -96,7 +96,7 @@ namespace Morphic.Client.Bar
             }
         }
 
-        public BarWindow CreateBarWindow(BarData bar, bool? morphicBarVisibleOverride = null)
+        public BarWindow CreateBarWindow(BarData bar, bool? morphicBarVisibilityOverride = null)
         {
             this.barWindow = new PrimaryBarWindow(bar);
             this.barWindow.BarLoaded += this.OnBarLoaded;
@@ -137,9 +137,9 @@ namespace Morphic.Client.Bar
             {
                 showMorphicBar = true;
             }
-            if (morphicBarVisibleOverride is not null)
+            if (morphicBarVisibilityOverride is not null)
             {
-                showMorphicBar = morphicBarVisibleOverride!.Value;
+                showMorphicBar = morphicBarVisibilityOverride!.Value;
             }
 
             if (showMorphicBar == true)
@@ -191,9 +191,9 @@ namespace Morphic.Client.Bar
             }
         }
 
-        public BarData? LoadBasicMorphicBar(bool morphicBarVisible = true)
+        public BarData? LoadBasicMorphicBar(bool? morphicBarVisibilityOverride = null)
         {
-            var result = LoadFromBarJson(AppPaths.GetConfigFile("basic-bar.json5", true), null, null, morphicBarVisible);
+            var result = LoadFromBarJson(AppPaths.GetConfigFile("basic-bar.json5", true), null, null, morphicBarVisibilityOverride);
             AppOptions.Current.LastCommunity = null;
             AppOptions.Current.LastMorphicbarId = null;
             return result;
@@ -205,7 +205,7 @@ namespace Morphic.Client.Bar
         /// <param name="path">JSON file containing the bar data.</param>
         /// <param name="content">The file content (if it's already loaded).</param>
         /// <param name="serviceProvider"></param>
-        public BarData? LoadFromBarJson(string path, string? content = null, IServiceProvider? serviceProvider = null, bool morphicBarVisible = true)
+        public BarData? LoadFromBarJson(string path, string? content = null, IServiceProvider? serviceProvider = null, bool? morphicBarVisibilityOverride = null)
         {
             if (this.firstBar && AppOptions.Current.Launch.BarFile is not null)
             {
@@ -248,7 +248,7 @@ namespace Morphic.Client.Bar
                     index += 1;
                 }
 
-                this.CreateBarWindow(bar, morphicBarVisible);
+                this.CreateBarWindow(bar, morphicBarVisibilityOverride);
                 bar.ReloadRequired += this.OnBarOnReloadRequired;
             }
 
