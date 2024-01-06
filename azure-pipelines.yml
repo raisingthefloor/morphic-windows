@@ -621,7 +621,9 @@ stages:
             inputs:
               targetType: 'inline'
               script: |
+                # automatically exit if any command returns an error exit code
                 set -e
+                # print all commands to the terminal output
                 set -x
 
                 EXTRA_ARGS=""
@@ -667,6 +669,7 @@ stages:
                   echo ${S3_PUBLISHED_HTTP_URL}/${S3_APPCAST_OBJECT_NAME}
                   cat "${LOCAL_APPCAST_SOURCE}"
 
+                  # debug: output the contents of the build directory
                   ls -al ${AGENT_BUILDDIRECTORY}
                   aws s3 cp $EXTRA_ARGS "${LOCAL_MSI_SOURCE}" "s3://${BUCKET}/${S3_MSI_OBJECT_NAME}"
                   aws s3 cp $EXTRA_ARGS "${LOCAL_APPCAST_SOURCE}" "s3://${BUCKET}/${S3_APPCAST_OBJECT_NAME}"

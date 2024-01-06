@@ -315,7 +315,8 @@ public class Drive
    {
        var listOfDosDeviceNames = new List<string>();
 
-       var maxSize = UInt16.MaxValue;
+       // OBSERVATION: we are not handling the Win32 error condition of "buffer not large enough"; 128KB should be plenty big for most/all computers, but there is a chance we'll fail due to a buffer not being large enough
+       var maxSize = 131072;
        var pointerToListOfDosDeviceNames = Marshal.AllocHGlobal(maxSize);
        try
        {
@@ -326,6 +327,7 @@ public class Drive
                return MorphicResult.ErrorResult(Win32ApiError.Win32Error((uint)win32ErrorCode));
            }
 
+           // OBSERVATION: we don't seem to be handling the dual-null termination sequence here (and so we may be including a final "empty string" as the final element of our result)
            var dosDevicesAsCharArray = new char[numberOfChars];
            Marshal.Copy(pointerToListOfDosDeviceNames, dosDevicesAsCharArray, 0, (int)numberOfChars);
            int startIndex = 0;

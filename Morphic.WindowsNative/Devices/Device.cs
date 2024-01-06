@@ -323,6 +323,9 @@ public class Device
        }
        // when we reach here, we have a device information set (which is a list of attached and enumerated disks)
 
+       // NOTE: we are calling SetupDiGetClassDevs, but we are not freeing the deviceInfoSetHandle; this is intentional, as we are returning the handle (which is a SafeHandle) as part of the Device objects returned as our function's successful result
+       //       see: https://learn.microsoft.com/en-us/windows/win32/api/setupapi/nf-setupapi-setupdigetclassdevsw
+
        // get the device path and DeviceInfoData for each enumerated member in our list
        var deviceInterfaceData = PInvoke.SetupApi.SP_DEVICE_INTERFACE_DATA.Create();
        int memberIndex = 0;
