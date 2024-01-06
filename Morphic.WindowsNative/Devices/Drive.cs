@@ -1,4 +1,4 @@
-﻿// Copyright 2021-2023 Raising the Floor - US, Inc.
+﻿// Copyright 2021-2024 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -59,12 +59,12 @@ public class Drive
        }
 
        // functions to create member instances
-       public static GetDrivesError ConfigManagerError(uint configManagerErrorCode) => new GetDrivesError(Values.ConfigManagerError) { ConfigManagerErrorCode = configManagerErrorCode };
-       public static GetDrivesError CouldNotEnumerateViaWin32Api => new GetDrivesError(Values.CouldNotEnumerateViaWin32Api);
-       public static GetDrivesError CouldNotGetDeviceCapabilities => new GetDrivesError(Values.CouldNotGetDeviceCapabilities);
-       public static GetDrivesError CouldNotGetDeviceInstanceId => new GetDrivesError(Values.CouldNotGetDeviceInstanceId);
-       public static GetDrivesError CouldNotRetrieveStorageDeviceNumbers => new GetDrivesError(Values.CouldNotRetrieveStorageDeviceNumbers);
-       public static GetDrivesError Win32Error(int win32ErrorCode) => new GetDrivesError(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
+       public static GetDrivesError ConfigManagerError(uint configManagerErrorCode) => new(Values.ConfigManagerError) { ConfigManagerErrorCode = configManagerErrorCode };
+       public static GetDrivesError CouldNotEnumerateViaWin32Api => new(Values.CouldNotEnumerateViaWin32Api);
+       public static GetDrivesError CouldNotGetDeviceCapabilities => new(Values.CouldNotGetDeviceCapabilities);
+       public static GetDrivesError CouldNotGetDeviceInstanceId => new(Values.CouldNotGetDeviceInstanceId);
+       public static GetDrivesError CouldNotRetrieveStorageDeviceNumbers => new(Values.CouldNotRetrieveStorageDeviceNumbers);
+       public static GetDrivesError Win32Error(int win32ErrorCode) => new(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
 
        // associated values
        public uint? ConfigManagerErrorCode { get; private set; }
@@ -131,8 +131,8 @@ public class Drive
        }
 
        // functions to create member instances
-       public static TryGetDriveLetterError CouldNotRetrieveStorageDeviceNumbers => new TryGetDriveLetterError(Values.CouldNotRetrieveStorageDeviceNumbers);
-       public static TryGetDriveLetterError Win32Error(uint win32ErrorCode) => new TryGetDriveLetterError(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
+       public static TryGetDriveLetterError CouldNotRetrieveStorageDeviceNumbers => new(Values.CouldNotRetrieveStorageDeviceNumbers);
+       public static TryGetDriveLetterError Win32Error(uint win32ErrorCode) => new(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
 
        // associated values
        public uint? Win32ErrorCode { get; private set; }
@@ -368,10 +368,10 @@ public class Drive
        }
 
        // functions to create member instances
-       public static EjectDriveMediaError CouldNotRetrieveStorageDeviceNumbers => new EjectDriveMediaError(Values.CouldNotRetrieveStorageDeviceNumbers);
-       public static EjectDriveMediaError DiskInUse => new EjectDriveMediaError(Values.DiskInUse);
-       public static EjectDriveMediaError DriveHasNoDriveLetter => new EjectDriveMediaError(Values.DriveHasNoDriveLetter);
-       public static EjectDriveMediaError Win32Error(uint win32ErrorCode) => new EjectDriveMediaError(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
+       public static EjectDriveMediaError CouldNotRetrieveStorageDeviceNumbers => new(Values.CouldNotRetrieveStorageDeviceNumbers);
+       public static EjectDriveMediaError DiskInUse => new(Values.DiskInUse);
+       public static EjectDriveMediaError DriveHasNoDriveLetter => new(Values.DriveHasNoDriveLetter);
+       public static EjectDriveMediaError Win32Error(uint win32ErrorCode) => new(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
 
        // associated values
        public uint? Win32ErrorCode { get; private set; }

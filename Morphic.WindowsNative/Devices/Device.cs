@@ -1,4 +1,4 @@
-﻿// Copyright 2021-2023 Raising the Floor - US, Inc.
+﻿// Copyright 2021-2024 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -62,9 +62,9 @@ public class Device
        }
 
        // functions to create member instances
-       public static GetParentOrChildError ConfigManagerError(uint configManagerErrorCode) => new GetParentOrChildError(Values.ConfigManagerError) { ConfigManagerErrorCode = configManagerErrorCode };
-       public static GetParentOrChildError CouldNotGetDeviceCapabilities => new GetParentOrChildError(Values.CouldNotGetDeviceCapabilities);
-       public static GetParentOrChildError Win32Error(int win32ErrorCode) => new GetParentOrChildError(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
+       public static GetParentOrChildError ConfigManagerError(uint configManagerErrorCode) => new(Values.ConfigManagerError) { ConfigManagerErrorCode = configManagerErrorCode };
+       public static GetParentOrChildError CouldNotGetDeviceCapabilities => new(Values.CouldNotGetDeviceCapabilities);
+       public static GetParentOrChildError Win32Error(int win32ErrorCode) => new(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
 
        // associated values
        public uint? ConfigManagerErrorCode { get; private set; }
@@ -296,11 +296,11 @@ public class Device
        }
 
        // functions to create member instances
-       public static GetDevicesForClassGuidError ConfigManagerError(uint configManagerErrorCode) => new GetDevicesForClassGuidError(Values.ConfigManagerError) { ConfigManagerErrorCode = configManagerErrorCode };
-       public static GetDevicesForClassGuidError CouldNotEnumerateViaWin32Api => new GetDevicesForClassGuidError(Values.CouldNotEnumerateViaWin32Api);
-       public static GetDevicesForClassGuidError CouldNotGetDeviceCapabilities => new GetDevicesForClassGuidError(Values.CouldNotGetDeviceCapabilities);
-       public static GetDevicesForClassGuidError CouldNotGetDeviceInstanceId => new GetDevicesForClassGuidError(Values.CouldNotGetDeviceInstanceId);
-       public static GetDevicesForClassGuidError Win32Error(int win32ErrorCode) => new GetDevicesForClassGuidError(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
+       public static GetDevicesForClassGuidError ConfigManagerError(uint configManagerErrorCode) => new(Values.ConfigManagerError) { ConfigManagerErrorCode = configManagerErrorCode };
+       public static GetDevicesForClassGuidError CouldNotEnumerateViaWin32Api => new(Values.CouldNotEnumerateViaWin32Api);
+       public static GetDevicesForClassGuidError CouldNotGetDeviceCapabilities => new(Values.CouldNotGetDeviceCapabilities);
+       public static GetDevicesForClassGuidError CouldNotGetDeviceInstanceId => new(Values.CouldNotGetDeviceInstanceId);
+       public static GetDevicesForClassGuidError Win32Error(int win32ErrorCode) => new(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
 
        // associated values
        public uint? ConfigManagerErrorCode { get; private set; }
@@ -480,10 +480,10 @@ public class Device
        }
 
        // functions to create member instances
-       public static SafeEjectError ConfigManagerError(uint configManagerErrorCode) => new SafeEjectError(Values.ConfigManagerError) { ConfigManagerErrorCode = configManagerErrorCode };
-       public static SafeEjectError DeviceInUse => new SafeEjectError(Values.DeviceInUse);
-       public static SafeEjectError DeviceWasAlreadyRemoved => new SafeEjectError(Values.DeviceWasAlreadyRemoved);
-       public static SafeEjectError SafeEjectVetoed(int vetoType, string vetoName) => new SafeEjectError(Values.SafeEjectVetoed) { VetoType = vetoType, VetoName = vetoName };
+       public static SafeEjectError ConfigManagerError(uint configManagerErrorCode) => new(Values.ConfigManagerError) { ConfigManagerErrorCode = configManagerErrorCode };
+       public static SafeEjectError DeviceInUse => new(Values.DeviceInUse);
+       public static SafeEjectError DeviceWasAlreadyRemoved => new(Values.DeviceWasAlreadyRemoved);
+       public static SafeEjectError SafeEjectVetoed(int vetoType, string vetoName) => new(Values.SafeEjectVetoed) { VetoType = vetoType, VetoName = vetoName };
 
        // associated values
        public uint? ConfigManagerErrorCode { get; private set; }
@@ -550,9 +550,9 @@ public class Device
        }
 
        // functions to create member instances
-       public static GetDevicePlugAndPlayPropertyError PropertyDoesNotExistOrIsInvalid => new GetDevicePlugAndPlayPropertyError(Values.PropertyDoesNotExistOrIsInvalid);
-       public static GetDevicePlugAndPlayPropertyError SizeOfReturnTypeDoesNotMatchPropertyValue => new GetDevicePlugAndPlayPropertyError(Values.SizeOfReturnTypeDoesNotMatchPropertyValue);
-       public static GetDevicePlugAndPlayPropertyError Win32Error(int win32ErrorCode) => new GetDevicePlugAndPlayPropertyError(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
+       public static GetDevicePlugAndPlayPropertyError PropertyDoesNotExistOrIsInvalid => new(Values.PropertyDoesNotExistOrIsInvalid);
+       public static GetDevicePlugAndPlayPropertyError SizeOfReturnTypeDoesNotMatchPropertyValue => new(Values.SizeOfReturnTypeDoesNotMatchPropertyValue);
+       public static GetDevicePlugAndPlayPropertyError Win32Error(int win32ErrorCode) => new(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
 
        // associated values
        public int? Win32ErrorCode { get; private set; }
@@ -655,13 +655,13 @@ public class Device
        }
 
        // functions to create member instances
-       public static SafelyRemoveDeviceError ConfigManagerError(uint configManagerErrorCode) => new SafelyRemoveDeviceError(Values.ConfigManagerError) { ConfigManagerErrorCode = configManagerErrorCode };
-       public static SafelyRemoveDeviceError CouldNotGetDeviceCapabilities => new SafelyRemoveDeviceError(Values.CouldNotGetDeviceCapabilities);
-       public static SafelyRemoveDeviceError DeviceInUse => new SafelyRemoveDeviceError(Values.DeviceInUse);
-       public static SafelyRemoveDeviceError DeviceIsNotRemovable => new SafelyRemoveDeviceError(Values.DeviceIsNotRemovable);
-       public static SafelyRemoveDeviceError DeviceWasAlreadyRemoved => new SafelyRemoveDeviceError(Values.DeviceWasAlreadyRemoved);
-       public static SafelyRemoveDeviceError SafeEjectVetoed(int vetoType, string vetoName) => new SafelyRemoveDeviceError(Values.SafeEjectVetoed) { VetoType = vetoType, VetoName = vetoName };
-       public static SafelyRemoveDeviceError Win32Error(int win32ErrorCode) => new SafelyRemoveDeviceError(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
+       public static SafelyRemoveDeviceError ConfigManagerError(uint configManagerErrorCode) => new(Values.ConfigManagerError) { ConfigManagerErrorCode = configManagerErrorCode };
+       public static SafelyRemoveDeviceError CouldNotGetDeviceCapabilities => new(Values.CouldNotGetDeviceCapabilities);
+       public static SafelyRemoveDeviceError DeviceInUse => new(Values.DeviceInUse);
+       public static SafelyRemoveDeviceError DeviceIsNotRemovable => new(Values.DeviceIsNotRemovable);
+       public static SafelyRemoveDeviceError DeviceWasAlreadyRemoved => new(Values.DeviceWasAlreadyRemoved);
+       public static SafelyRemoveDeviceError SafeEjectVetoed(int vetoType, string vetoName) => new(Values.SafeEjectVetoed) { VetoType = vetoType, VetoName = vetoName };
+       public static SafelyRemoveDeviceError Win32Error(int win32ErrorCode) => new(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
 
        // associated values
        public uint? ConfigManagerErrorCode { get; private set; }
