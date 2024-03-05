@@ -21,52 +21,88 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-namespace Morphic;
-
-using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+
+namespace Morphic;
 
 /// <summary>
 /// Interaction logic for App.xaml
 /// </summary>
 public partial class App : Application
 {
-    bool _windowsAppSdkWasManuallyBootstrapped = false;
+    public interface IWindowsAppSdkStatus
+    {
+        public record Disabled(IWindowsAppSdkDisabledReason reason) : IWindowsAppSdkStatus;
+        public record Initialized(bool manuallyInitialized) : IWindowsAppSdkStatus;
+        public record Uninitialized : IWindowsAppSdkStatus;
+    }
+    //
+    public interface IWindowsAppSdkDisabledReason
+    {
+        public record CouldNotDetectIfRunningAsPackagedApp : IWindowsAppSdkDisabledReason;
+        public record InitializationFailed(int hresult) : IWindowsAppSdkDisabledReason;
+        public record UninitializationFailed() : IWindowsAppSdkDisabledReason;
+    }
+
+    public IWindowsAppSdkStatus WindowsAppSdkStatus { get; private set; } = new IWindowsAppSdkStatus.Uninitialized();
 
     private void Application_Startup(object sender, StartupEventArgs e)
     {
-        bool isRunningAsPackagedApp;
-
         var isRunningAsPackagedAppResult = Morphic.WindowsNative.Packaging.Package.IsRunningAsPackagedApp();
         if (isRunningAsPackagedAppResult.IsError == true)
         {
-            isRunningAsPackagedApp = false;
+            this.WindowsAppSdkStatus = new IWindowsAppSdkStatus.Disabled(new IWindowsAppSdkDisabledReason.CouldNotDetectIfRunningAsPackagedApp());
         }
         else
         {
-            isRunningAsPackagedApp = isRunningAsPackagedAppResult.Value!;
-        }
+            bool isRunningAsPackagedApp = isRunningAsPackagedAppResult.Value!;
 
-        if (isRunningAsPackagedApp == false)
-        {
-            // initialize the Windows App SDK using the appropriate bootstrapper
-            // NOTE: the majorMinor version specified here is v1.1 (major 0x0001, minor 0x0001)
-            Microsoft.Windows.ApplicationModel.DynamicDependency.Bootstrap.Initialize(0x0001_0001);
-            _windowsAppSdkWasManuallyBootstrapped = true;
-        }		
+            if (isRunningAsPackagedApp == true)
+            {
+                // change the Windows App SDK status to "initialized" (since it would have been automatically initialized by the app packaging startup)
+                this.WindowsAppSdkStatus = new IWindowsAppSdkStatus.Initialized(manuallyInitialized: false);
+            }
+            else // if (isRunningAsPackagedApp == false)
+            {
+                // if our app is not running as a packaged app, then manually start up the Windows App SDK functionality using the appropriate bootstrapper
+                //
+                // initialize the Windows App SDK using the manual bootstrapper API
+                // NOTE: the majorMinor version specified here is v1.5 (major 0x0001, minor 0x0005)
+                int tryInitializeHResult;
+                Microsoft.Windows.ApplicationModel.DynamicDependency.Bootstrap.TryInitialize(0x0001_0005, out tryInitializeHResult);
+                if (tryInitializeHResult == 0)
+                {
+                    this.WindowsAppSdkStatus = new IWindowsAppSdkStatus.Initialized(manuallyInitialized: true);
+                }
+                else
+                {
+                    this.WindowsAppSdkStatus = new IWindowsAppSdkStatus.Disabled(new IWindowsAppSdkDisabledReason.InitializationFailed(hresult: tryInitializeHResult));
+                }
+            }
+        }
     }
 
     private void Application_Exit(object sender, ExitEventArgs e)
     {
-        if (_windowsAppSdkWasManuallyBootstrapped == true)
+        if (this.WindowsAppSdkStatus is IWindowsAppSdkStatus.Initialized(var manuallyInitialized))
         {
-            // release the Dynamic Dependency Lifetime Manager (DDLM) and clean up the Windows App SDK
-            Microsoft.Windows.ApplicationModel.DynamicDependency.Bootstrap.Shutdown();
+            if (manuallyInitialized == true)
+            {
+                // release the Dynamic Dependency Lifetime Manager (DDLM) and clean up the Windows App SDK
+                // see: https://learn.microsoft.com/en-us/windows/apps/api-reference/cs-bootstrapper-apis/microsoft.windows.applicationmodel.dynamicdependency/microsoft.windows.applicationmodel.dynamicdependency.bootstrap
+                try
+                {
+                    // NOTE: Microsoft does not document any exceptions for this function; out of an abundance of caution, we are catching exceptions anyway
+                    Microsoft.Windows.ApplicationModel.DynamicDependency.Bootstrap.Shutdown();
+                    this.WindowsAppSdkStatus = new IWindowsAppSdkStatus.Uninitialized();
+                }
+                catch
+                {
+                    this.WindowsAppSdkStatus = new IWindowsAppSdkStatus.Disabled(new IWindowsAppSdkDisabledReason.UninitializationFailed());
+
+                }
+            }
         }
     }
 }

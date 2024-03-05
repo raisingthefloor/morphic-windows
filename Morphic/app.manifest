@@ -40,8 +40,8 @@
       <!-- Windows 8.1 -->
       <!--<supportedOS Id="{1f676c76-80e1-4239-95bb-83d0f6d0da78}" />-->
 
-      <!-- Windows 10 v1809 (10.0; Build 17763) and newer, Windows 11 -->
-      <maxversiontested Id="10.0.17763.0"/>
+      <!-- Windows 10 v1809 (10.0; Build 19041) and newer, Windows 11 -->
+      <maxversiontested Id="10.0.22621.0"/>
       <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}" />
 
     </application>
