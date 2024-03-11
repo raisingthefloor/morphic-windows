@@ -58,10 +58,10 @@ stages:
           vmImage: 'windows-2022'
         steps:
         - task: UseDotNet@2
-          displayName: 'Use .NET SDK 6.0.400'
+          displayName: 'Use .NET SDK 8.0.201'
           inputs:
             packageType: sdk
-            version: 6.0.400
+            version: 8.0.201
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
         # NOTE: although NuGet restore is traditional for msbuild-based builds (and 'dotnet restore' for 'dotnet build'-based builds), 'dotnet restore' works with both
@@ -204,7 +204,7 @@ stages:
     jobs:
       - job: publish
         pool:
-          vmImage: "ubuntu-20.04"
+          vmImage: "ubuntu-22.04"
         steps:
 # TODO: determine how to capture (download) the artifacts into the root folder (i.e. not "./s/")
         - task: DownloadPipelineArtifact@2
