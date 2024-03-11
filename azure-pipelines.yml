@@ -57,6 +57,14 @@ stages:
         pool:
           vmImage: 'windows-2022'
         steps:
+
+        - task: UseDotNet@2
+          displayName: 'Use .NET Runtime 6.0.25 (install for AuzreSignTool 4.0.1)'
+          inputs:
+            packageType: runtime
+            version: 6.0.25
+            installationPath: $(Agent.ToolsDirectory)/dotnet
+
         - task: UseDotNet@2
           displayName: 'Use .NET SDK 8.0.201'
           inputs:
@@ -64,6 +72,13 @@ stages:
             version: 8.0.201
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
+        - task: DotNetCoreCLI@2
+          displayName: 'Install AzureSignTool 4.0.1'
+          inputs:
+            command: 'custom'
+            custom: 'tool'
+            arguments: 'install --global AzureSignTool --version 4.0.1'
+        
         # NOTE: although NuGet restore is traditional for msbuild-based builds (and 'dotnet restore' for 'dotnet build'-based builds), 'dotnet restore' works with both
         - task: DotNetCoreCLI@2
           displayName: 'dotnet restore'
@@ -115,20 +130,6 @@ stages:
             configuration: Release
             msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-arm64.msix /p:AppxPackageSigningEnabled=false'
 
-        - task: UseDotNet@2
-          displayName: 'Use .NET Core SDK 2.1'
-          inputs:
-            packageType: sdk
-            version: 2.1.811
-            installationPath: $(Agent.ToolsDirectory)/dotnet
-
-        - task: DotNetCoreCLI@2
-          displayName: 'Install AzureSignTool 2.0.17'
-          inputs:
-            command: 'custom'
-            custom: 'tool'
-            arguments: 'install --global --version 2.0.17 azuresigntool'
-
 # ### SIGNING NOTE (applicable to all signed files) ###
 # NOTE: if we experience downtime with our cert provider's timestamp servers (which causes signing to fail), 
 #       we can use the test server (production timestamps, but from a 2nd provider); note that we should NOT do
@@ -147,6 +148,7 @@ stages:
               -du "$(SigningURL)"
               -kvu "$(SigningVaultURL)"
               -kvi "$(SigningClientId)"
+              -kvt "$(AzureTenantId)"
               -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
@@ -168,6 +170,7 @@ stages:
               -du "$(SigningURL)"
               -kvu "$(SigningVaultURL)"
               -kvi "$(SigningClientId)"
+              -kvt "$(AzureTenantId)"
               -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
@@ -189,6 +192,7 @@ stages:
               -du "$(SigningURL)"
               -kvu "$(SigningVaultURL)"
               -kvi "$(SigningClientId)"
+              -kvt "$(AzureTenantId)"
               -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
