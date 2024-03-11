@@ -8,7 +8,7 @@
 
   <Identity
     Name="2f791d34-762d-47cd-b697-161c18b14920"
-    Publisher='E=eugene@raisingthefloor.org, CN=Raising the Floor - US Inc, O=Raising the Floor - US Inc, STREET="1667 K Street, NW", L=Washington, S=District of Columbia, C=US, OID.1.3.6.1.4.1.311.60.2.1.2=District of Columbia, OID.1.3.6.1.4.1.311.60.2.1.3=US, SERIALNUMBER=N0000456I803, OID.2.5.4.15=Private Organization'
+    Publisher='E=eugene@raisingthefloor.org, CN=RAISING THE FLOOR - US. INC, O=RAISING THE FLOOR - US. INC, STREET=1140 3rd Street NE, L=Washington, S=District of Columbia, C=US, OID.1.3.6.1.4.1.311.60.2.1.2=District of Columbia, OID.1.3.6.1.4.1.311.60.2.1.3=US, SERIALNUMBER=N00004561803, OID.2.5.4.15=Private Organization'
     Version="2.0.0.0" />
 
   <Properties>
