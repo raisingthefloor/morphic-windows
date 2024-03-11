@@ -106,6 +106,7 @@ stages:
             msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-x64.msix /p:AppxPackageSigningEnabled=false'
 
 # NOTE: as of 2021-12-03, msbuild is including 32-bit dependencies for some files in the package (as seen by uncompressing the MSIX and comparing it to a VS-built package); we need to remedy this issue soon
+# NOTE: this may not be an issue any longer with .NET 8+.
         - task: MSBuild@1
           displayName: 'Build packaged app (arm64)'
           inputs:
