@@ -114,6 +114,7 @@ stages:
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
           inputs:       
             solution: '$(Build.SourcesDirectory)\Morphic\Morphic.csproj'
+            platform: x64
             configuration: 'Release'
             msbuildArguments: '/t:publish /p:RuntimeIdentifier=win-x64'
 
