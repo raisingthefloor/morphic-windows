@@ -205,7 +205,7 @@ stages:
         - powershell: |
             # Update MorphicPackage's appmanifest with a version number before building it
             [xml]$manifest= get-content ".\Morphic (Package)\Package.appxmanifest"
-            $manifest.Package.Identity.Version = "$(versionMajor).$(versionMinor).$(versionBuildComponents)"
+            $manifest.Package.Identity.Version = "$(versionMajor).$(versionMinor)$(versionBuildComponents)"
             $manifest.save("Morphic (Package)/Package.appxmanifest")
           displayName: 'Assign version to package manifest'
 
