@@ -1,4 +1,12 @@
 ﻿<Project Sdk="WixToolset.Sdk/4.0.4">
+	
+  <!-- necesssary to resolve incorrect ICE03 validation errors -->
+  <PropertyGroup>
+    <RunWixToolsOutOfProc Condition=" '$(PROCESSOR_ARCHITECTURE)'!='x86' ">true</RunWixToolsOutOfProc>
+    <SuppressValidation>false</SuppressValidation>
+    <SuppressIces>ICE03</SuppressIces>
+  </PropertyGroup>
+	
   <ItemGroup>
     <ProjectReference Include="..\Morphic\Morphic.csproj" Publish="true" />
 
@@ -8,7 +16,7 @@
       <SuppressRootDirectory>true</SuppressRootDirectory>
       <SuppressRegistry>true</SuppressRegistry>
       <Transforms>heatfilter.xsl</Transforms>
-    </HarvestDirectory>  
+    </HarvestDirectory>
   </ItemGroup>
   
   <ItemGroup>
