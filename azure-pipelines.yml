@@ -196,9 +196,9 @@ stages:
               -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
-              -v $(System.DefaultWorkingDirectory)\MorphicSetup\bin\Release\x64\en-US\MorphicSetup.msi
+              -v $(System.DefaultWorkingDirectory)\MorphicSetup\bin\x64\Release\en-US\MorphicSetup.msi
 
-        - publish: $(System.DefaultWorkingDirectory)\MorphicSetup\bin\Release\x64\en-US\MorphicSetup.msi
+        - publish: $(System.DefaultWorkingDirectory)\MorphicSetup\bin\x64\Release\en-US\MorphicSetup.msi
           displayName: "Cache MSI for upload (x64)"
           artifact: msi-x64
 
