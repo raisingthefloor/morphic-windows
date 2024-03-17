@@ -40,6 +40,8 @@ variables:
          Morphic.Windows.Native/Morphic.Windows.Native.csproj
          Morphic/Morphic.csproj
          MorphicSetup/MorphicSetup.csproj
+- name: versionBuildComponents
+  value: '.$(Build.BuildNumber)'
   
 # TODO: these are temporary values; replace them with actual (semver-compatible) values for production
 - name: versionMajor
@@ -184,6 +186,100 @@ stages:
             artifactName: msix-x64
             artifactType: pipeline
 
+        - task: MSBuild@1
+          displayName: "Build Morphic Client (x64)"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
+          inputs:       
+            solution: '$(Build.SourcesDirectory)\Morphic\Morphic.csproj'
+            configuration: '$(buildConfiguration)'
+            msbuildArguments: '/t:restore,build /p:RuntimeIdentifier=win-x64 /p:BuildType=$(BUILD_TYPE)'
+
+        - task: MSBuild@1
+          displayName: "Publish Morphic Client (x64)"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
+          inputs:       
+            solution: '$(Build.SourcesDirectory)\Morphic\Morphic.csproj'
+            configuration: '$(buildConfiguration)'
+            msbuildArguments: '/t:publish /p:RuntimeIdentifier=win-x64 /p:BuildType=$(BUILD_TYPE)'
+
+#        - task: CmdLine@2
+#          inputs:
+#            targetType: 'inline'
+#            script: >
+#              tree $(Build.SourcesDirectory)\Morphic.Client\bin /f
+              
+        - task: CmdLine@2
+          displayName: 'sign morphic client exe (x64)'
+          inputs:
+            targetType: 'inline'
+# NOTE: if we experience downtime with our cert provider's timestamp servers (which causes signing to fail), 
+#       we can use the test server (production timestamps, but from a 2nd provider); note that we should NOT do
+#       this for any public preview or release builds...only for internal testing or emergency scenarios.
+#              -tr "$(TimestampUrl)"
+#              -tr "$(TimestampUrl2)"
+#              vs.
+#              -tr "$(TestOnlyTimestampUrl)"
+            script: >
+              AzureSignTool sign
+              -d Morphic
+              -du "$(SigningURL)"
+              -kvu "$(SigningVaultURL)"
+              -kvi "$(SigningClientId)"
+              -kvs "$(SigningClientSecret)"
+              -kvt "$(AzureTenantId)"
+              -kvc "$(SigningCertName)"
+              -tr "$(TimestampUrl2)"
+              -v
+              $(Build.SourcesDirectory)\Morphic\bin\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-x64\publish\Morphic.exe
+
+        - task: VSBuild@1
+          displayName: "restore installer dependencies"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
+          inputs:
+            solution: 'MorphicSetup\MorphicSetup.wixproj'
+            configuration: '$(buildConfiguration)'
+            msbuildArgs: '/t:restore'
+
+        - task: VSBuild@1
+          displayName: "build installer (x64)"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
+          inputs:
+            solution: 'MorphicSetup\MorphicSetup.wixproj'
+            platform: 'x64'
+            configuration: '$(buildConfiguration)'
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false'
+
+        - task: CmdLine@2
+          displayName: 'sign installer (x64)'
+          inputs:
+            targetType: 'inline'
+# NOTE: if we experience downtime with our cert provider's timestamp servers (which causes signing to fail), 
+#       we can use the test server (production timestamps, but from a 2nd provider); note that we should NOT do
+#       this for any public preview or release builds...only for internal testing or emergency scenarios.
+#              -tr "$(TimestampUrl)"
+#              -tr "$(TimestampUrl2)"
+#              vs.
+#              -tr "$(TestOnlyTimestampUrl)"
+            script: >
+              AzureSignTool sign
+              -d Morphic
+              -du "$(SigningURL)"
+              -kvu "$(SigningVaultURL)"
+              -kvi "$(SigningClientId)"
+              -kvt "$(AzureTenantId)"
+              -kvs "$(SigningClientSecret)"
+              -kvc "$(SigningCertName)"
+              -tr "$(TimestampUrl2)"
+              -v $(System.DefaultWorkingDirectory)\MorphicSetup\bin\Release\x64\en-US\MorphicSetup.msi
+
+        - publish: $(System.DefaultWorkingDirectory)\MorphicSetup\bin\Release\x64\en-US\MorphicSetup.msi
+          displayName: "Cache MSI for upload (x64)"
+          artifact: msi-x64
+
         - task: CmdLine@2
           displayName: 'Sign MSIX (arm64)'
           inputs:
@@ -227,6 +323,9 @@ stages:
             artifact: msix-x64
             path: msix-x64
 
+        - download: current
+          artifact: msi-x64
+
         - task: DownloadPipelineArtifact@2
           displayName: "Capture MSIX (arm64) for upload"
           inputs:
@@ -257,13 +356,38 @@ stages:
 
                     S3_PUBLISHED_HTTP_URL="https://d23vryjv7k8eyb.cloudfront.net"
 
-                    publishInstaller() {
+                    publishMsixInstaller() {
                       LOCAL_MSIX_SOURCE="${AGENT_BUILDDIRECTORY}/${LOCAL_MSIX_DIR}/${MSIX_NAME_BASE}.msix"
                       S3_MSIX_OBJECT_NAME="${S3_BUILD_OPERATING_SYSTEM}/${S3_BUILD_ARCHITECTURE}/${S3_BUILD_TYPE}/MorphicSetup-v${VERSION}-${S3_BUILD_TYPE}-${BUILD_NUMBER}-${S3_BUILD_ARCHITECTURE}.msix"
 
                       # debug: output the contents of the build directory
                       ls -al ${AGENT_BUILDDIRECTORY}/${LOCAL_MSIX_DIR}
                       aws s3 cp $EXTRA_ARGS "${LOCAL_MSIX_SOURCE}" "s3://${BUCKET}/${S3_MSIX_OBJECT_NAME}"
+                    }
+
+                    publishMsiInstaller() {
+                      VERSION=$(sed -n 1p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
+                      ASSEMBLY_VERSION=$(sed -n 2p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
+                      LOCAL_MSI_SOURCE="${AGENT_BUILDDIRECTORY}/${LOCAL_MSI_DIR}/${MSI_NAME_BASE}.msi"
+                      LOCAL_APPCAST_SOURCE="${AGENT_BUILDDIRECTORY}/${MSI_NAME_BASE}-v${VERSION}.appcast.xml"
+                      S3_MSI_OBJECT_NAME="${S3_BUILD_OPERATING_SYSTEM}/${S3_BUILD_ARCHITECTURE}/${S3_BUILD_TYPE}/${MSI_NAME_BASE}-v${VERSION}-${S3_BUILD_ARCHITECTURE}.msi"
+                      S3_APPCAST_OBJECT_NAME="${S3_BUILD_OPERATING_SYSTEM}/${S3_BUILD_ARCHITECTURE}/${S3_BUILD_TYPE}/${MSI_NAME_BASE}-v${VERSION}.appcast.xml"
+
+                      cat > "${LOCAL_APPCAST_SOURCE}" <<EOF
+                    <?xml version="1.0" encoding="utf-8"?>
+                    <item>
+                        <version>${ASSEMBLY_VERSION}</version>
+                        <url>${S3_PUBLISHED_HTTP_URL}/${S3_MSI_OBJECT_NAME}</url>
+                    </item>
+                    EOF
+
+                      echo ${S3_PUBLISHED_HTTP_URL}/${S3_APPCAST_OBJECT_NAME}
+                      cat "${LOCAL_APPCAST_SOURCE}"
+
+                      # debug: output the contents of the build directory
+                      ls -al ${AGENT_BUILDDIRECTORY}
+                      aws s3 cp $EXTRA_ARGS "${LOCAL_MSI_SOURCE}" "s3://${BUCKET}/${S3_MSI_OBJECT_NAME}"
+                      aws s3 cp $EXTRA_ARGS "${LOCAL_APPCAST_SOURCE}" "s3://${BUCKET}/${S3_APPCAST_OBJECT_NAME}"
                     }
 
                     # set version (to be appended to the filenames); this is set to the semver version; the name (i.e. Build.BuildNumber) is appended as part of the filename
@@ -276,19 +400,25 @@ stages:
                     # NOTE: "s/" is a temporary path requirement; we may also consider calling these folders just "x86" etc.
                     LOCAL_MSIX_DIR="s/msix-x86"
                     S3_BUILD_ARCHITECTURE="x86"
-                    publishInstaller
+                    publishMsixInstaller
 
                     echo "Uploading MSIX (x64) to S3"
                     MSIX_NAME_BASE="MorphicSetup-x64"
                     # NOTE: "s/" is a temporary path requirement; we may also consider calling these folders just "x64" etc.
                     LOCAL_MSIX_DIR="s/msix-x64"
                     S3_BUILD_ARCHITECTURE="x64"
-                    publishInstaller
+                    publishMsixInstaller
+
+                    echo "Upload MSI to S3 (x64)"
+                    MSI_NAME_BASE="MorphicSetup"
+                    LOCAL_MSI_DIR="msi-x64"
+                    S3_BUILD_ARCHITECTURE="x64"
+                    publishMsiInstaller
 
                     echo "Uploading MSIX (arm64) to S3"
                     MSIX_NAME_BASE="MorphicSetup-arm64"
                     # NOTE: "s/" is a temporary path requirement; we may also consider calling these folders just "arm64" etc.
                     LOCAL_MSIX_DIR="s/msix-arm64"
                     S3_BUILD_ARCHITECTURE="arm64"
-                    publishInstaller
+                    publishMsixInstaller
 
