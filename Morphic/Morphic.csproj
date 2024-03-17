@@ -13,17 +13,6 @@
 <!--    <WindowsAppSdkBootstrapInitialize>false</WindowsAppSdkBootstrapInitialize> -->
   </PropertyGroup>
 
-  <!-- required for WindowsAppSDKSelfContained to be set to true in non-MSIX pipelines build -->
-  <PropertyGroup Condition=" '$(Platform)' == 'x86' ">
-    <RuntimeIdentifier>win-x86</RuntimeIdentifier>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Platform)' == 'x64' ">
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Platform)' == 'ARM64' ">
-    <RuntimeIdentifier>win-arm64</RuntimeIdentifier>
-  </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications" Version="7.1.2" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.5.240227000" />
