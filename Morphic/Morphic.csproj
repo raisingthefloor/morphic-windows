@@ -8,6 +8,7 @@
     <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
+    <VersionPrefix>2.0$(VersionBuildComponents)</VersionPrefix>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
 <!--    <WindowsAppSdkBootstrapInitialize>false</WindowsAppSdkBootstrapInitialize> -->

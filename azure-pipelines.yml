@@ -312,6 +312,10 @@ stages:
             artifactName: msix-arm64
             artifactType: pipeline
 
+        - publish: $(System.DefaultWorkingDirectory)\Morphic\BuildVersion.txt
+          displayName: "Save build version number"
+          artifact: build-version
+
   - stage: publish
     jobs:
       - job: publish
@@ -344,7 +348,7 @@ stages:
             path: msix-arm64
 
         - task: Bash@3
-          displayName: "Upload MSIXs to S3"
+          displayName: "Upload MSIs/MSIXs to S3"
           env:
               AWS_ACCESS_KEY_ID: $(accessKey)
               AWS_SECRET_ACCESS_KEY: $(secretKey)
@@ -367,6 +371,7 @@ stages:
                     S3_PUBLISHED_HTTP_URL="https://d23vryjv7k8eyb.cloudfront.net"
 
                     publishMsixInstaller() {
+                      VERSION=$(sed -n 1p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
                       LOCAL_MSIX_SOURCE="${AGENT_BUILDDIRECTORY}/${LOCAL_MSIX_DIR}/${MSIX_NAME_BASE}.msix"
                       S3_MSIX_OBJECT_NAME="${S3_BUILD_OPERATING_SYSTEM}/${S3_BUILD_ARCHITECTURE}/${S3_BUILD_TYPE}/MorphicSetup-v${VERSION}-${S3_BUILD_TYPE}-${BUILD_NUMBER}-${S3_BUILD_ARCHITECTURE}.msix"
 
@@ -400,10 +405,11 @@ stages:
                       aws s3 cp $EXTRA_ARGS "${LOCAL_APPCAST_SOURCE}" "s3://${BUCKET}/${S3_APPCAST_OBJECT_NAME}"
                     }
 
-                    # set version (to be appended to the filenames); this is set to the semver version; the name (i.e. Build.BuildNumber) is appended as part of the filename
-                    # NOTE: we are temporarily setting this to "2.0"; in the future we should retrieve this from the installer (both here and in the version components at the beginning of this script)
-                    VERSION=2.0.0
-                    BUILD_NUMBER=$(Build.BuildNumber)
+                    echo "Upload MSI (x64) to S3"
+                    MSI_NAME_BASE="MorphicSetup"
+                    LOCAL_MSI_DIR="msi-x64"
+                    S3_BUILD_ARCHITECTURE="x64"
+                    publishMsiInstaller
 
                     echo "Uploading MSIX (x86) to S3"
                     MSIX_NAME_BASE="MorphicSetup-x86"
@@ -418,12 +424,6 @@ stages:
                     LOCAL_MSIX_DIR="s/msix-x64"
                     S3_BUILD_ARCHITECTURE="x64"
                     publishMsixInstaller
-
-                    echo "Upload MSI to S3 (x64)"
-                    MSI_NAME_BASE="MorphicSetup"
-                    LOCAL_MSI_DIR="msi-x64"
-                    S3_BUILD_ARCHITECTURE="x64"
-                    publishMsiInstaller
 
                     echo "Uploading MSIX (arm64) to S3"
                     MSIX_NAME_BASE="MorphicSetup-arm64"
