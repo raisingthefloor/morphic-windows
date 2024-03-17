@@ -532,6 +532,9 @@ stages:
         steps:
 # TODO: determine how to capture (download) the artifacts into the root folder (i.e. not "./s/")
         - download: current
+          artifact: build-version
+
+        - download: current
           artifact: msi-x86
 
         - download: current
