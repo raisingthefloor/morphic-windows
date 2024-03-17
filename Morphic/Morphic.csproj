@@ -11,6 +11,7 @@
     <VersionPrefix>2.0$(VersionBuildComponents)</VersionPrefix>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <SelfContained>true</SelfContained>
 <!--    <WindowsAppSdkBootstrapInitialize>false</WindowsAppSdkBootstrapInitialize> -->
   </PropertyGroup>
 
