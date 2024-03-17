@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Morphic", "Morphic\Morphic.
 EndProject
 Project("{C7167F0D-BC9F-4E6E-AFE1-012C56B48DB5}") = "Morphic (Package)", "Morphic (Package)\Morphic (Package).wapproj", "{623E4CCF-6C54-4ACD-80E7-951E62780A84}"
 EndProject
+Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "MorphicSetup", "MorphicSetup\MorphicSetup.wixproj", "{37E8195D-D65B-4835-9747-137F536A82E0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -47,6 +49,18 @@ Global
 		{623E4CCF-6C54-4ACD-80E7-951E62780A84}.Release|x86.ActiveCfg = Release|x86
 		{623E4CCF-6C54-4ACD-80E7-951E62780A84}.Release|x86.Build.0 = Release|x86
 		{623E4CCF-6C54-4ACD-80E7-951E62780A84}.Release|x86.Deploy.0 = Release|x86
+		{37E8195D-D65B-4835-9747-137F536A82E0}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{37E8195D-D65B-4835-9747-137F536A82E0}.Debug|ARM64.Build.0 = Debug|ARM64
+		{37E8195D-D65B-4835-9747-137F536A82E0}.Debug|x64.ActiveCfg = Debug|x64
+		{37E8195D-D65B-4835-9747-137F536A82E0}.Debug|x64.Build.0 = Debug|x64
+		{37E8195D-D65B-4835-9747-137F536A82E0}.Debug|x86.ActiveCfg = Debug|x86
+		{37E8195D-D65B-4835-9747-137F536A82E0}.Debug|x86.Build.0 = Debug|x86
+		{37E8195D-D65B-4835-9747-137F536A82E0}.Release|ARM64.ActiveCfg = Release|ARM64
+		{37E8195D-D65B-4835-9747-137F536A82E0}.Release|ARM64.Build.0 = Release|ARM64
+		{37E8195D-D65B-4835-9747-137F536A82E0}.Release|x64.ActiveCfg = Release|x64
+		{37E8195D-D65B-4835-9747-137F536A82E0}.Release|x64.Build.0 = Release|x64
+		{37E8195D-D65B-4835-9747-137F536A82E0}.Release|x86.ActiveCfg = Release|x86
+		{37E8195D-D65B-4835-9747-137F536A82E0}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

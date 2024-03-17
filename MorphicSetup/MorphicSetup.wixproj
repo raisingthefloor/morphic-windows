@@ -1,0 +1,22 @@
+﻿<Project Sdk="WixToolset.Sdk/4.0.4">
+  <ItemGroup>
+    <ProjectReference Include="..\Morphic\Morphic.csproj" Publish="true" />
+
+    <HarvestDirectory Include="$(IntermediateOutputPath)\publish\Morphic">
+      <ComponentGroupName>MorphicSupportComponents</ComponentGroupName>
+      <DirectoryRefId>INSTALLFOLDER</DirectoryRefId>
+      <SuppressRootDirectory>true</SuppressRootDirectory>
+      <SuppressRegistry>true</SuppressRegistry>
+      <Transforms>heatfilter.xsl</Transforms>
+    </HarvestDirectory>  
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Content Include="License.rtf" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="WixToolset.Heat" Version="4.0.4" />
+    <PackageReference Include="WixToolset.UI.wixext" Version="4.0.4" />
+  </ItemGroup>
+</Project>

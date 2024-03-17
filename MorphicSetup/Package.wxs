@@ -1,0 +1,38 @@
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+  <Package Name="Morphic" Manufacturer="Raising the Floor - US, Inc." Version="!(bind.FileVersion.morphic_exe)" UpgradeCode="7d0ee114-79e8-4ff6-b28b-0408551483f5" InstallerVersion="500">
+    <MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeError)" />
+
+    <MediaTemplate EmbedCab="yes" />
+
+    <Feature Id="Main">
+      <ComponentGroupRef Id="MorphicComponents" />
+    </Feature>
+
+    <ui:WixUI Id="WixUI_Minimal" />
+    <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+
+    <UIRef Id="WixUI_ErrorProgressText" />
+	
+    <Property Id="WINDOWSBUILDNUMBER" Secure="yes">
+      <RegistrySearch Id="BuildNumberSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="CurrentBuildNumber" Type="raw" />
+    </Property>
+    <Launch Condition="(WINDOWSBUILDNUMBER &gt;= 19041)" Message="!(loc.MinimumOsError)" />
+  </Package>
+
+  <Fragment>
+    <StandardDirectory Id="ProgramFiles6432Folder">
+      <Directory Id="INSTALLFOLDER" Name="!(bind.Property.ProductName)" />
+    </StandardDirectory>
+  </Fragment>
+
+  <Fragment>
+    <ComponentGroup Id="MorphicComponents" Directory="INSTALLFOLDER">
+      <Component>
+<!--        <File Id="morphic_exe" Source="$(IntermediateOutputPath)\publish\Morphic\Morphic.exe" /> -->
+        <File Id="morphic_exe" Source="Morphic.exe" />
+      </Component>
+      <ComponentGroupRef Id="MorphicSupportComponents" />
+    </ComponentGroup>
+  </Fragment>
+	
+</Wix>

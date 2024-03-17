@@ -39,6 +39,7 @@ variables:
   value: |
          Morphic.Windows.Native/Morphic.Windows.Native.csproj
          Morphic/Morphic.csproj
+         MorphicSetup/MorphicSetup.csproj
   
 # TODO: these are temporary values; replace them with actual (semver-compatible) values for production
 - name: versionMajor
