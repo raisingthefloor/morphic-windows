@@ -57,10 +57,17 @@ stages:
         steps:
 
         - task: UseDotNet@2
-          displayName: 'Use .NET SDK 6.0.405'
+          displayName: 'Use .NET Runtime 6.0.25 (install for AuzreSignTool 4.0.1)'
+          inputs:
+            packageType: runtime
+            version: 6.0.25
+            installationPath: $(Agent.ToolsDirectory)/dotnet
+
+        - task: UseDotNet@2
+          displayName: 'Use .NET SDK 8.0.201'
           inputs:
             packageType: sdk
-            version: 6.0.405
+            version: 8.0.201
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - task: DotNetCoreCLI@2
@@ -140,7 +147,7 @@ stages:
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
               -v
-              $(Build.SourcesDirectory)\Morphic.Client\bin\$(buildConfiguration)\net6.0-windows10.0.22621.0\win-x86\publish\Morphic.exe
+              $(Build.SourcesDirectory)\Morphic.Client\bin\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-x86\publish\Morphic.exe
 
         - task: VSBuild@1
           displayName: "restore installer dependencies"
@@ -311,7 +318,7 @@ stages:
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
               -v
-              $(Build.SourcesDirectory)\Morphic.Client\bin\$(buildConfiguration)\net6.0-windows10.0.22621.0\win-x64\publish\Morphic.exe
+              $(Build.SourcesDirectory)\Morphic.Client\bin\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-x64\publish\Morphic.exe
 
         - task: VSBuild@1
           displayName: "restore installer dependencies"
@@ -451,7 +458,7 @@ stages:
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
               -v
-              $(Build.SourcesDirectory)\Morphic.Client\bin\$(buildConfiguration)\net6.0-windows10.0.22621.0\win-arm64\publish\Morphic.exe
+              $(Build.SourcesDirectory)\Morphic.Client\bin\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-arm64\publish\Morphic.exe
 
         - task: VSBuild@1
           displayName: "restore installer dependencies"
@@ -614,7 +621,9 @@ stages:
             inputs:
               targetType: 'inline'
               script: |
+                # automatically exit if any command returns an error exit code
                 set -e
+                # print all commands to the terminal output
                 set -x
 
                 EXTRA_ARGS=""
@@ -660,6 +669,7 @@ stages:
                   echo ${S3_PUBLISHED_HTTP_URL}/${S3_APPCAST_OBJECT_NAME}
                   cat "${LOCAL_APPCAST_SOURCE}"
 
+                  # debug: output the contents of the build directory
                   ls -al ${AGENT_BUILDDIRECTORY}
                   aws s3 cp $EXTRA_ARGS "${LOCAL_MSI_SOURCE}" "s3://${BUCKET}/${S3_MSI_OBJECT_NAME}"
                   aws s3 cp $EXTRA_ARGS "${LOCAL_APPCAST_SOURCE}" "s3://${BUCKET}/${S3_APPCAST_OBJECT_NAME}"

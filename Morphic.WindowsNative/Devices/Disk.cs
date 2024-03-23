@@ -1,4 +1,4 @@
-﻿// Copyright 2021-2023 Raising the Floor - US, Inc.
+﻿// Copyright 2021-2024 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -58,12 +58,12 @@ public class Disk
        }
 
        // functions to create member instances
-       public static GetDisksError ConfigManagerError(uint configManagerErrorCode) => new GetDisksError(Values.ConfigManagerError) { ConfigManagerErrorCode = configManagerErrorCode };
-       public static GetDisksError CouldNotEnumerateViaWin32Api => new GetDisksError(Values.CouldNotEnumerateViaWin32Api);
-       public static GetDisksError CouldNotGetDeviceCapabilities => new GetDisksError(Values.CouldNotGetDeviceCapabilities);
-       public static GetDisksError CouldNotGetDeviceInstanceId => new GetDisksError(Values.CouldNotGetDeviceInstanceId);
-       public static GetDisksError CouldNotRetrieveStorageDeviceNumbers => new GetDisksError(Values.CouldNotRetrieveStorageDeviceNumbers);
-       public static GetDisksError Win32Error(int win32ErrorCode) => new GetDisksError(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
+       public static GetDisksError ConfigManagerError(uint configManagerErrorCode) => new(Values.ConfigManagerError) { ConfigManagerErrorCode = configManagerErrorCode };
+       public static GetDisksError CouldNotEnumerateViaWin32Api => new(Values.CouldNotEnumerateViaWin32Api);
+       public static GetDisksError CouldNotGetDeviceCapabilities => new(Values.CouldNotGetDeviceCapabilities);
+       public static GetDisksError CouldNotGetDeviceInstanceId => new(Values.CouldNotGetDeviceInstanceId);
+       public static GetDisksError CouldNotRetrieveStorageDeviceNumbers => new(Values.CouldNotRetrieveStorageDeviceNumbers);
+       public static GetDisksError Win32Error(int win32ErrorCode) => new(Values.Win32Error) { Win32ErrorCode = win32ErrorCode };
 
        // associated values
        public uint? ConfigManagerErrorCode { get; private set; }

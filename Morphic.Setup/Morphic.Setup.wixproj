@@ -1,4 +1,4 @@
-<Project Sdk="WixToolset.Sdk/4.0.1">
+<Project Sdk="WixToolset.Sdk/4.0.4">
   <PropertyGroup>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
@@ -35,18 +35,18 @@
     <Content Include="License.rtf" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="WixToolset.Heat" Version="4.0.1" />
-    <PackageReference Include="WixToolset.Util.wixext" Version="4.0.1" />
-    <PackageReference Include="WixToolset.UI.wixext" Version="4.0.1" />
+    <PackageReference Include="WixToolset.Heat" Version="4.0.4" />
+    <PackageReference Include="WixToolset.Util.wixext" Version="4.0.4" />
+    <PackageReference Include="WixToolset.UI.wixext" Version="4.0.4" />
   </ItemGroup>
   <PropertyGroup>
-    <DefineConstants>ClientOutputDirectory=..\Morphic.Client\bin\$(Configuration)\net6.0-windows10.0.22621.0\win-$(Platform)\publish</DefineConstants>
+    <DefineConstants>ClientOutputDirectory=..\Morphic.Client\bin\$(Configuration)\net8.0-windows10.0.22621.0\win-$(Platform)\publish</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
   </PropertyGroup>
   <Target Name="AfterPreBuild" AfterTargets="PreBuildEvent">
-    <HeatDirectory Directory="..\Morphic.Client\bin\$(Configuration)\net6.0-windows10.0.22621.0\win-$(Platform)\publish" PreprocessorVariable="var.ClientOutputDirectory" OutputFile="Generated.wxs" ComponentGroupName="GeneratedComponents" DirectoryRefId="INSTALLFOLDER" AutogenerateGuids="true" ToolPath="$(WixToolPath)" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" />
+    <HeatDirectory Directory="..\Morphic.Client\bin\$(Configuration)\net8.0-windows10.0.22621.0\win-$(Platform)\publish" PreprocessorVariable="var.ClientOutputDirectory" OutputFile="Generated.wxs" ComponentGroupName="GeneratedComponents" DirectoryRefId="INSTALLFOLDER" AutogenerateGuids="true" ToolPath="$(WixToolPath)" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" />
   </Target>
 </Project>

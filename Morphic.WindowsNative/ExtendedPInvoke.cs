@@ -1018,21 +1018,6 @@ internal struct ExtendedPInvoke
         HCF_OPTION_NOTHEMECHANGE = 0x00001000,
     }
 
-    // https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-msllhookstruct
-    [StructLayout(LayoutKind.Sequential)]
-    internal struct MSLLHOOKSTRUCT
-    {
-        public PInvoke.POINT pt;
-        // NOTE: the mouseData DWORD is apparently used as a signed integer (rather than as a uint)
-        public int mouseData;
-        public uint flags;
-        public uint time;
-        public UIntPtr dwExtraInfo;
-    }
-
-    [DllImport("user32.dll")]
-    internal static extern bool UnhookWindowsHookEx(IntPtr hhk);
-
     #endregion WinUser.h
 
 }

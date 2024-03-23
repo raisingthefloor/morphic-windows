@@ -13,8 +13,8 @@ DestroyWindow
 EndBufferedPaint
 EndPaint
 FillRect
-FindWindowW
-FindWindowExW
+FindWindow
+FindWindowEx
 GetDC
 GetDesktopWindow
 GetWindow
