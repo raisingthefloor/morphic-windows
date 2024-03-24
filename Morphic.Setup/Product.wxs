@@ -1,5 +1,5 @@
 ﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
-	<Package Name="Morphic" Language="1033" Version="!(bind.FileVersion.filFa4krMwL6ueyj_tX_uB0JUHWusc)" Manufacturer="Raising the Floor" UpgradeCode="7d0ee114-79e8-4ff6-b28b-0408551483f5" InstallerVersion="500">
+	<Package Name="Morphic" Language="1033" Version="!(bind.FileVersion.filFa4krMwL6ueyj_tX_uB0JUHWusc)" Manufacturer="Raising the Floor - US, Inc." UpgradeCode="7d0ee114-79e8-4ff6-b28b-0408551483f5" InstallerVersion="500">
 	
 		<Icon Id="MorphicIcon" SourceFile="$(var.Morphic.Client.ProjectDir)\Icon.ico" />
 		<Property Id="ARPPRODUCTICON" Value="MorphicIcon" />
