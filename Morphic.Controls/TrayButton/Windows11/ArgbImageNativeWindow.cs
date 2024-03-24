@@ -79,7 +79,7 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
 
     //
 
-    public static MorphicResult<ArgbImageNativeWindow, Morphic.Controls.TrayButton.Windows11.CreateNewError> CreateNew(IntPtr parentHWnd, int x, int y, int width, int height)
+    public static MorphicResult<ArgbImageNativeWindow, Morphic.Controls.TrayButton.Windows11.ICreateNewError> CreateNew(IntPtr parentHWnd, int x, int y, int width, int height)
     {
         var result = new ArgbImageNativeWindow();
 
@@ -107,7 +107,7 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
                 {
                     Debug.Assert(false, "Class was already registered; we should have recorded this ATOM, and we cannot proceed");
                 }
-                return MorphicResult.ErrorResult(Morphic.Controls.TrayButton.Windows11.CreateNewError.Win32Error((uint)win32Exception.ErrorCode));
+                return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.Win32Error((uint)win32Exception.ErrorCode));
             }
             s_morphicArgbImageClassInfoExAtom = registerClassResult;
         }
@@ -136,11 +136,11 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
         }
         catch (PInvoke.Win32Exception ex)
         {
-            return MorphicResult.ErrorResult(Morphic.Controls.TrayButton.Windows11.CreateNewError.Win32Error((uint)ex.ErrorCode));
+            return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.Win32Error((uint)ex.ErrorCode));
         }
         catch (Exception ex)
         {
-            return MorphicResult.ErrorResult(Morphic.Controls.TrayButton.Windows11.CreateNewError.OtherException(ex));
+            return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.OtherException(ex));
         }
 
         // since we are making the image visible by default, set its visible state
@@ -297,7 +297,7 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
         this.RequestRedraw();
     }
 
-    public void SetVisbile(bool value)
+    public void SetVisible(bool value)
     {
         if (_visible != value)
         {

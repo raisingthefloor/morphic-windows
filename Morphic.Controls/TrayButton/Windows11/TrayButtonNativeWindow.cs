@@ -119,7 +119,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
 
     //
 
-    public static MorphicResult<TrayButtonNativeWindow, Morphic.Controls.TrayButton.Windows11.CreateNewError> CreateNew()
+    public static MorphicResult<TrayButtonNativeWindow, ICreateNewError> CreateNew()
     {
         var result = new TrayButtonNativeWindow();
 
@@ -147,7 +147,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
                 {
                     Debug.Assert(false, "Class was already registered; we should have recorded this ATOM, and we cannot proceed");
                 }
-                return MorphicResult.ErrorResult(Morphic.Controls.TrayButton.Windows11.CreateNewError.Win32Error((uint)win32Exception.ErrorCode));
+                return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.Win32Error((uint)win32Exception.ErrorCode));
             }
             s_morphicTrayButtonClassInfoExAtom = registerClassResult;
         }
@@ -157,7 +157,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
         if (calculatePositionResult.IsError)
         {
             Debug.Assert(false, "Cannot calculate position for tray button");
-            return MorphicResult.ErrorResult(Morphic.Controls.TrayButton.Windows11.CreateNewError.CouldNotCalculateWindowPosition);
+            return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.CouldNotCalculateWindowPosition());
         }
         var trayButtonPositionAndSize = calculatePositionResult.Value!;
 
@@ -194,11 +194,11 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
         }
         catch (PInvoke.Win32Exception ex)
         {
-            return MorphicResult.ErrorResult(Morphic.Controls.TrayButton.Windows11.CreateNewError.Win32Error((uint)ex.ErrorCode));
+            return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.Win32Error((uint)ex.ErrorCode));
         }
         catch (Exception ex)
         {
-            return MorphicResult.ErrorResult(Morphic.Controls.TrayButton.Windows11.CreateNewError.OtherException(ex));
+            return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.OtherException(ex));
         }
 
         // set the window's background transparency to 0% (in the range of a 0 to 255 alpha channel, with 255 being 100%)
@@ -207,13 +207,12 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
         var setBackgroundAlphaResult = TrayButtonNativeWindow.SetBackgroundAlpha((Windows.Win32.Foundation.HWND)result.Handle, ALPHA_VALUE_FOR_TRANSPARENT_BUT_HIT_TESTABLE);
         if (setBackgroundAlphaResult.IsError)
         {
-            switch (setBackgroundAlphaResult.Error!.Value)
+            switch (setBackgroundAlphaResult.Error!)
             {
-                case Morphic.WindowsNative.Win32ApiError.Values.Win32Error:
-                    var win32Error = setBackgroundAlphaResult.Error!.Win32ErrorCode!.Value;
-                    return MorphicResult.ErrorResult(Morphic.Controls.TrayButton.Windows11.CreateNewError.Win32Error(win32Error));
+                case Morphic.WindowsNative.IWin32ApiError.Win32Error(uint win32ErrorCode):
+                    return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.Win32Error(win32ErrorCode));
                 default:
-                    throw new Exception("invalid code path");
+                    throw new MorphicUnhandledErrorException();
             }
         }
 
@@ -674,7 +673,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
 
     private void UpdateVisibility()
     {
-        _argbImageNativeWindow?.SetVisbile(this.ShouldWindowBeVisible());
+        _argbImageNativeWindow?.SetVisible(this.ShouldWindowBeVisible());
         this.UpdateVisualStateAlpha();
     }
 
@@ -710,14 +709,14 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
         }
     }
 
-    private static MorphicResult<MorphicUnit, Morphic.WindowsNative.Win32ApiError> SetBackgroundAlpha(Windows.Win32.Foundation.HWND handle, byte alpha)
+    private static MorphicResult<MorphicUnit, Morphic.WindowsNative.IWin32ApiError> SetBackgroundAlpha(Windows.Win32.Foundation.HWND handle, byte alpha)
     {
         // set the window's background transparency to 0% (in the range of a 0 to 255 alpha channel, with 255 being 100%)
         var setLayeredWindowAttributesSuccess = Windows.Win32.PInvoke.SetLayeredWindowAttributes(handle, (Windows.Win32.Foundation.COLORREF)0, alpha, Windows.Win32.UI.WindowsAndMessaging.LAYERED_WINDOW_ATTRIBUTES_FLAGS.LWA_ALPHA);
         if (setLayeredWindowAttributesSuccess == false)
         {
             var win32Error = (uint)System.Runtime.InteropServices.Marshal.GetLastWin32Error();
-            return MorphicResult.ErrorResult(Morphic.WindowsNative.Win32ApiError.Win32Error(win32Error));
+            return MorphicResult.ErrorResult<Morphic.WindowsNative.IWin32ApiError>(new Morphic.WindowsNative.IWin32ApiError.Win32Error(win32Error));
         }
 
         return MorphicResult.OkResult();
@@ -857,14 +856,14 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
         return MorphicResult.OkResult();
     }
 
-    private static MorphicResult<string, Morphic.WindowsNative.Win32ApiError> GetWindowClassName(IntPtr hWnd)
+    private static MorphicResult<string, Morphic.WindowsNative.IWin32ApiError> GetWindowClassName(IntPtr hWnd)
     {
         System.Text.StringBuilder classNameBuilder = new(256);
         var getClassNameResult = PInvokeExtensions.GetClassName(hWnd, classNameBuilder, classNameBuilder.Capacity);
         if (getClassNameResult == 0)
         {
             var win32Error = Marshal.GetLastWin32Error();
-            return MorphicResult.ErrorResult(Morphic.WindowsNative.Win32ApiError.Win32Error((uint)win32Error));
+            return MorphicResult.ErrorResult<Morphic.WindowsNative.IWin32ApiError>(new Morphic.WindowsNative.IWin32ApiError.Win32Error((uint)win32Error));
         }
 
         var classNameAsString = classNameBuilder.ToString();
