@@ -29,11 +29,15 @@ namespace Morphic.Controls.TrayButton.Windows10;
 internal class LegacyWindowsApi
 {
     #region Win32 error codes
+
     public const uint ERROR_SUCCESS = 0;
+
     #endregion
 
     #region Window Positioning
 
+#pragma warning disable CS0660 // Code should override Object.Equals(object o) when defining == and != operations, but the legacy struct RECT does not.
+#pragma warning disable CS0661 // Code should override Object.GetHashCode() when defining == and != operations, but the legacy struct RECT does not.
     [StructLayout(LayoutKind.Sequential)]
     public struct RECT
     {
@@ -135,6 +139,8 @@ internal class LegacyWindowsApi
             }
         }
     }
+#pragma warning restore CS0660 // Code should override Object.Equals(object o) when defining == and != operations, but the legacy struct RECT does not.
+#pragma warning restore CS0661 // Code should override Object.GetHashCode() when defining == and != operations, but the legacy struct RECT does not.
 
     [StructLayout(LayoutKind.Sequential)]
     public struct POINT
@@ -243,8 +249,8 @@ internal class LegacyWindowsApi
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     internal static extern IntPtr FindWindowEx(IntPtr hWndParent, IntPtr hWndChildAfter, string lpszClass, string? lpszWindow);
 
-    [DllImport("user32.dll")]
-    internal static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);
+    //[DllImport("user32.dll")]
+    //internal static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);
 
     // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-loadcursorw
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
@@ -618,5 +624,6 @@ internal class LegacyWindowsApi
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)]
         public byte[] rgbReserved;
     }
+
     #endregion
 }
