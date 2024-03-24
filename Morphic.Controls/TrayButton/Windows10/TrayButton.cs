@@ -35,6 +35,8 @@ namespace Morphic.Controls.TrayButton.Windows10;
 
 internal class TrayButton : IDisposable
 {
+    private bool disposedValue;
+
     private System.Drawing.Icon? _icon = null;
     private string? _text = null;
     private bool _visible = false;
@@ -49,9 +51,38 @@ internal class TrayButton : IDisposable
     {
     }
 
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                // dispose managed state (managed objects)
+                this.DestroyManagedNativeWindow();
+            }
+
+            // free unmanaged resources (unmanaged objects) and override finalizer
+            // [none]
+
+            // set large fields to null
+            // [none]
+
+            disposedValue = true;
+        }
+    }
+
+    // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
+    // ~TrayButton()
+    // {
+    //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+    //     Dispose(disposing: false);
+    // }
+
     public void Dispose()
     {
-        this.DestroyNativeWindow();
+        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 
     /// <summary>The icon for the tray button</summary>
@@ -106,7 +137,7 @@ internal class TrayButton : IDisposable
             {
                 if (_nativeWindow is not null)
                 {
-                    DestroyNativeWindow();
+                    this.DestroyManagedNativeWindow();
                 }
             }
         }
@@ -162,7 +193,7 @@ internal class TrayButton : IDisposable
         _nativeWindow = nativeWindow;
     }
 
-    private void DestroyNativeWindow()
+    private void DestroyManagedNativeWindow()
     {
         _nativeWindow?.Dispose();
         _nativeWindow = null;
