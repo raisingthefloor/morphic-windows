@@ -29,180 +29,184 @@ namespace Morphic.Controls.TrayButton.Windows11;
 
 internal class TrayButton : IDisposable
 {
-     private System.Drawing.Bitmap? _bitmap = null;
-     private string? _text = null;
-     private bool _visible = false;
+    private bool disposedValue;
 
-     public event System.Windows.Forms.MouseEventHandler? MouseUp;
+    private System.Drawing.Bitmap? _bitmap = null;
+    private string? _text = null;
+    private bool _visible = false;
 
-     private TrayButtonNativeWindow? _nativeWindow = null;
+    public event System.Windows.Forms.MouseEventHandler? MouseUp;
 
-     private bool disposedValue;
+    private TrayButtonNativeWindow? _nativeWindow = null;
 
-     internal TrayButton()
-     {
-     }
+    internal TrayButton()
+    {
+    }
 
-     //
+    //
 
-     protected virtual void Dispose(bool disposing)
-     {
-          if (!disposedValue)
-          {
-               if (disposing)
-               {
-                    // TODO: dispose managed state (managed objects)
-               }
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                // dispose managed state (managed objects)
+                this.DestroyManagedNativeWindow();
+            }
 
-               // TODO: free unmanaged resources (unmanaged objects) and override finalizer
-               this.DestroyNativeWindow();
+            // free unmanaged resources (unmanaged objects) and override finalizer
+            // [none]
 
-               // TODO: set large fields to null
-               disposedValue = true;
-          }
-     }
+            // set large fields to null
+            // [none]
 
-     ~TrayButton()
-     {
-          // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-          Dispose(disposing: false);
-     }
+            disposedValue = true;
+        }
+    }
 
-     public void Dispose()
-     {
-          // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-          Dispose(disposing: true);
-          GC.SuppressFinalize(this);
-     }
+    // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
+    // ~TrayButton()
+    // {
+    //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+    //     Dispose(disposing: false);
+    // }
 
-     //
+    public void Dispose()
+    {
+        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
 
-     public System.Drawing.Bitmap? Bitmap
-     {
-          get
-          {
-               return _bitmap;
-          }
-          set
-          {
-               _bitmap = value;
+    //
 
-               _nativeWindow?.SetBitmap(_bitmap);
-          }
-     }
+    public System.Drawing.Bitmap? Bitmap
+    {
+        get
+        {
+            return _bitmap;
+        }
+        set
+        {
+            _bitmap = value;
 
-     public string? Text
-     {
-          get
-          {
-               return _text;
-          }
-          set
-          {
-               _text = value;
+            _nativeWindow?.SetBitmap(_bitmap);
+        }
+    }
 
-               _nativeWindow?.SetText(_text);
-          }
-     }
+    public string? Text
+    {
+        get
+        {
+            return _text;
+        }
+        set
+        {
+            _text = value;
 
-     public bool Visible
-     {
-          set
-          {
-               if (_visible != value)
-               {
-                    switch (value)
-                    {
-                         case true:
-                              var showResult = this.Show();
-                              Debug.Assert(showResult.IsSuccess == true, "Could not show Morphic icon on task bar.");
-                              break;
-                         case false:
-                              this.Hide();
-                              break;
-                    }
-               }
-          }
-          get
-          {
-               return _visible;
-          }
-     }
+            _nativeWindow?.SetText(_text);
+        }
+    }
 
-     //
+    public bool Visible
+    {
+        set
+        {
+            if (_visible != value)
+            {
+                switch (value)
+                {
+                    case true:
+                        var showResult = this.Show();
+                        Debug.Assert(showResult.IsSuccess == true, "Could not show Morphic icon (taskbar button) on taskbar.");
+                        break;
+                    case false:
+                        this.Hide();
+                        break;
+                }
+            }
+        }
+        get
+        {
+            return _visible;
+        }
+    }
 
-     public MorphicResult<MorphicUnit, MorphicUnit> Show()
-     {
-          _visible = true;
+    //
 
-          if (_nativeWindow is null)
-          {
-               var createNativeWindowResult = this.CreateNativeWindow();
-               if (createNativeWindowResult.IsError == true)
-               {
-                    return MorphicResult.ErrorResult();
-               }
-          }
+    public MorphicResult<MorphicUnit, MorphicUnit> Show()
+    {
+        _visible = true;
 
-          return MorphicResult.OkResult();
-     }
+        if (_nativeWindow is null)
+        {
+            var createNativeWindowResult = this.CreateNativeWindow();
+            if (createNativeWindowResult.IsError == true)
+            {
+                return MorphicResult.ErrorResult();
+            }
+        }
 
-     public void Hide()
-     {
-          _visible = false;
+        return MorphicResult.OkResult();
+    }
 
-          if (_nativeWindow is not null)
-          {
-               this.DestroyNativeWindow();
-          }
-     }
+    public void Hide()
+    {
+        _visible = false;
 
-     //
+        if (_nativeWindow is not null)
+        {
+            this.DestroyManagedNativeWindow();
+        }
+    }
 
-     public void SuppressTaskbarButtonResurfaceChecks(bool suppress)
-     {
-          _nativeWindow?.SuppressTaskbarButtonResurfaceChecks(suppress);
-     }
+    //
 
-     //
+    public void SuppressTaskbarButtonResurfaceChecks(bool suppress)
+    {
+        _nativeWindow?.SuppressTaskbarButtonResurfaceChecks(suppress);
+    }
 
-     private MorphicResult<MorphicUnit, MorphicUnit> CreateNativeWindow()
-     {
-          // if our native window already exists, return an error
-          if (_nativeWindow is not null)
-          {
-               return MorphicResult.ErrorResult();
-          }
+    //
 
-          // create the native window
-          var createNewResult = TrayButtonNativeWindow.CreateNew();
-          if (createNewResult.IsError)
-          {
-               return MorphicResult.ErrorResult();
-          }
-          var nativeWindow = createNewResult.Value!;
+    private MorphicResult<MorphicUnit, MorphicUnit> CreateNativeWindow()
+    {
+        // if our native window already exists, return an error
+        if (_nativeWindow is not null)
+        {
+            return MorphicResult.ErrorResult();
+        }
 
-          // wire up the native window's MouseUp event (so that we pass along its event to our creator)
-          nativeWindow.MouseUp += (s, e) =>
-          {
-               this.MouseUp?.Invoke(s, e);
-          };
+        // create the native window
+        var createNewResult = TrayButtonNativeWindow.CreateNew();
+        if (createNewResult.IsError)
+        {
+            return MorphicResult.ErrorResult();
+        }
+        var nativeWindow = createNewResult.Value!;
 
-          // set the bitmap ("icon") for the native window
-          nativeWindow.SetBitmap(_bitmap);
-          //
-          // set the (tooltip) text for the native window
-          nativeWindow.SetText(_text);
+        // wire up the native window's MouseUp event (so that we bubble up its event to our creator)
+        nativeWindow.MouseUp += (s, e) =>
+        {
+            this.MouseUp?.Invoke(s, e);
+        };
 
-          // store the reference to our new native window
-          _nativeWindow = nativeWindow;
+        // set the bitmap ("icon") for the native window
+        nativeWindow.SetBitmap(_bitmap);
+        //
+        // set the (tooltip) text for the native window
+        nativeWindow.SetText(_text);
 
-          return MorphicResult.OkResult();
-     }
+        // store the reference to our new native window
+        _nativeWindow = nativeWindow;
 
-     private void DestroyNativeWindow()
-     {
-          _nativeWindow?.Dispose();
-          _nativeWindow = null;
-     }
+        return MorphicResult.OkResult();
+    }
+
+    private void DestroyManagedNativeWindow()
+    {
+        _nativeWindow?.Dispose();
+        _nativeWindow = null;
+    }
 }
