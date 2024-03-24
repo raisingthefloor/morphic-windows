@@ -158,6 +158,21 @@ internal class LegacyWindowsApi
         }
     }
 
+    // https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-msllhookstruct
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct MSLLHOOKSTRUCT
+    {
+        public PInvoke.POINT pt;
+        // NOTE: the mouseData DWORD is apparently used as a signed integer (rather than as a uint)
+        public int mouseData;
+        public uint flags;
+        public uint time;
+        public UIntPtr dwExtraInfo;
+    }
+
+    [DllImport("user32.dll")]
+    internal static extern bool UnhookWindowsHookEx(IntPtr hhk);
+
     [DllImport("user32.dll")]
     public static extern IntPtr SendMessage(IntPtr hWnd, int Msg, int wParam, IntPtr lParam);
 
@@ -188,7 +203,7 @@ internal class LegacyWindowsApi
     //    IntPtr hMenu,
     //    IntPtr hInstance,
     //    IntPtr lpParam);
-
+    //
     [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
     internal static extern IntPtr CreateWindowEx(
         WindowStylesEx dwExStyle,

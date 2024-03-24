@@ -230,7 +230,7 @@ internal class TrayButton : IDisposable
         }
         private TrayButtonVisualStateFlags _visualState = TrayButtonVisualStateFlags.None;
 
-        private Morphic.WindowsNative.WindowMessageHooks.MouseWindowMessageHook? _mouseHook = null;
+        private Morphic.Controls.TrayButton.Windows10.WindowsNative.MouseWindowMessageHook? _mouseHook = null;
 
         internal TrayButtonNativeWindow(TrayButton owner)
         {
@@ -282,7 +282,7 @@ internal class TrayButton : IDisposable
             // if the user is using Windows 11, create a mouse message hook (so we can capture the mousemove and click events over our taskbar icon)
             if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
             {
-                _mouseHook = new Morphic.WindowsNative.WindowMessageHooks.MouseWindowMessageHook();
+                _mouseHook = new Morphic.Controls.TrayButton.Windows10.WindowsNative.MouseWindowMessageHook();
                 _mouseHook.WndProcEvent += _mouseHook_WndProcEvent;
             }
 
@@ -297,7 +297,7 @@ internal class TrayButton : IDisposable
         }
 
         // NOTE: this function is somewhat redundant and is provided to support Windows 11; we should refactor all of this code to handle window messages centrally
-        private void _mouseHook_WndProcEvent(object? sender, Morphic.WindowsNative.WindowMessageHooks.MouseWindowMessageHook.WndProcEventArgs e)
+        private void _mouseHook_WndProcEvent(object? sender, Morphic.Controls.TrayButton.Windows10.WindowsNative.MouseWindowMessageHook.WndProcEventArgs e)
         {
             // TODO: we should ensure that calls are queued and then called from a sequential thread (ideally a UI dispatch thread)
             switch ((LegacyWindowsApi.WindowMessage)e.Message)
