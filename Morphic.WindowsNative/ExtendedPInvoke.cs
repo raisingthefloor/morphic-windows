@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2023 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2024 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -1017,21 +1017,6 @@ internal struct ExtendedPInvoke
         // NOTE: HCF_OPTION_NOTHEMECHANGE is new (or newly documented), as of Windows 10 2004 (build 19041)
         HCF_OPTION_NOTHEMECHANGE = 0x00001000,
     }
-
-    // https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-msllhookstruct
-    [StructLayout(LayoutKind.Sequential)]
-    internal struct MSLLHOOKSTRUCT
-    {
-        public PInvoke.POINT pt;
-        // NOTE: the mouseData DWORD is apparently used as a signed integer (rather than as a uint)
-        public int mouseData;
-        public uint flags;
-        public uint time;
-        public UIntPtr dwExtraInfo;
-    }
-
-    [DllImport("user32.dll")]
-    internal static extern bool UnhookWindowsHookEx(IntPtr hhk);
 
     #endregion WinUser.h
 
