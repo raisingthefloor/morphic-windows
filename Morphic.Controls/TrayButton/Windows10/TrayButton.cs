@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2023 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2024 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -211,16 +211,16 @@ internal class TrayButton : IDisposable
                const string nativeWindowClassName = "Morphic-TrayButton";
 
                // register our custom native window class
-               var pointerToWndProcCallback = Marshal.GetFunctionPointerForDelegate(new WindowsApi.WndProc(this.WndProcCallback));
-               var lpWndClass = new WindowsApi.WNDCLASSEX
+               var pointerToWndProcCallback = Marshal.GetFunctionPointerForDelegate(new PInvokeExtensions.WndProc(this.WndProcCallback));
+               var lpWndClass = new PInvokeExtensions.WNDCLASSEX
                {
-                    cbSize = (uint)Marshal.SizeOf(typeof(WindowsApi.WNDCLASSEX)),
+                    cbSize = (uint)Marshal.SizeOf(typeof(PInvokeExtensions.WNDCLASSEX)),
                     lpfnWndProc = pointerToWndProcCallback,
                     lpszClassName = nativeWindowClassName,
                     hCursor = LegacyWindowsApi.LoadCursor(IntPtr.Zero, (int)LegacyWindowsApi.Cursors.IDC_ARROW)
                };
 
-               var registerClassResult = WindowsApi.RegisterClassEx(ref lpWndClass);
+               var registerClassResult = PInvokeExtensions.RegisterClassEx(ref lpWndClass);
                if (registerClassResult == 0)
                {
                     throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
@@ -341,13 +341,13 @@ internal class TrayButton : IDisposable
 
                _tooltipWindowHandle = LegacyWindowsApi.CreateWindowEx(
                     0 /* no styles */,
-                    WindowsApi.TOOLTIPS_CLASS,
+                    PInvokeExtensions.TOOLTIPS_CLASS,
                     null,
-                    LegacyWindowsApi.WindowStyles.WS_POPUP | (LegacyWindowsApi.WindowStyles)WindowsApi.TTS_ALWAYSTIP,
-                    WindowsApi.CW_USEDEFAULT,
-                    WindowsApi.CW_USEDEFAULT,
-                    WindowsApi.CW_USEDEFAULT,
-                    WindowsApi.CW_USEDEFAULT,
+                    LegacyWindowsApi.WindowStyles.WS_POPUP | (LegacyWindowsApi.WindowStyles)PInvokeExtensions.TTS_ALWAYSTIP,
+                    PInvokeExtensions.CW_USEDEFAULT,
+                    PInvokeExtensions.CW_USEDEFAULT,
+                    PInvokeExtensions.CW_USEDEFAULT,
+                    PInvokeExtensions.CW_USEDEFAULT,
                     this.Handle,
                     IntPtr.Zero,
                     IntPtr.Zero,
@@ -389,10 +389,10 @@ internal class TrayButton : IDisposable
                     return;
                }
 
-               var toolinfo = new WindowsApi.TOOLINFO();
+               var toolinfo = new PInvokeExtensions.TOOLINFO();
                toolinfo.cbSize = (uint)Marshal.SizeOf(toolinfo);
                toolinfo.hwnd = this.Handle;
-               toolinfo.uFlags = LegacyWindowsApi.TTF_SUBCLASS;
+               toolinfo.uFlags = PInvokeExtensions.TTF_SUBCLASS;
                toolinfo.lpszText = _tooltipText;
                toolinfo.uId = unchecked((nuint)(nint)this.Handle); // unique identifier (for adding/deleting the tooltip)
                toolinfo.rect = trayButtonClientRect;
@@ -405,20 +405,20 @@ internal class TrayButton : IDisposable
                     {
                          if (_tooltipInfoAdded == false)
                          {
-                              _ = LegacyWindowsApi.SendMessage(_tooltipWindowHandle, (int)WindowsApi.TTM_ADDTOOL, 0, pointerToToolinfo);
+                              _ = LegacyWindowsApi.SendMessage(_tooltipWindowHandle, (int)PInvokeExtensions.TTM_ADDTOOL, 0, pointerToToolinfo);
                               _tooltipInfoAdded = true;
                          }
                          else
                          {
                               // delete and re-add the tooltipinfo; this will update all the info (including the text and tracking rect)
-                              _ = LegacyWindowsApi.SendMessage(_tooltipWindowHandle, (int)WindowsApi.TTM_DELTOOL, 0, pointerToToolinfo);
-                              _ = LegacyWindowsApi.SendMessage(_tooltipWindowHandle, (int)WindowsApi.TTM_ADDTOOL, 0, pointerToToolinfo);
+                              _ = LegacyWindowsApi.SendMessage(_tooltipWindowHandle, (int)PInvokeExtensions.TTM_DELTOOL, 0, pointerToToolinfo);
+                              _ = LegacyWindowsApi.SendMessage(_tooltipWindowHandle, (int)PInvokeExtensions.TTM_ADDTOOL, 0, pointerToToolinfo);
                          }
                     }
                     else
                     {
                          // NOTE: we might technically call "deltool" even when a tooltipinfo was already removed
-                         _ = LegacyWindowsApi.SendMessage(_tooltipWindowHandle, (int)WindowsApi.TTM_DELTOOL, 0, pointerToToolinfo);
+                         _ = LegacyWindowsApi.SendMessage(_tooltipWindowHandle, (int)PInvokeExtensions.TTM_DELTOOL, 0, pointerToToolinfo);
                          _tooltipInfoAdded = false;
                     }
                }
@@ -471,7 +471,7 @@ internal class TrayButton : IDisposable
                // TODO: in some circumstances, it is possible that we are unable to create our window; consider creating a retry mechanism (dealing with async) or notify our caller
                try
                {
-                    var handle = WindowsApi.CreateWindowEx(
+                    var handle = PInvokeExtensions.CreateWindowEx(
                          (PInvoke.User32.WindowStylesEx)cp.ExStyle,
                          classNameAsIntPtr,
                          cp.Caption,
@@ -752,7 +752,7 @@ internal class TrayButton : IDisposable
                Marshal.SetLastPInvokeError(0);
                //
                // NOTE: the PInvoke implementation of MapWindowPoints did not support passing in a POINT struct, so we manually declared the function
-               var mapWindowPointsResult = WindowsApi.MapWindowPoints(this.Handle, IntPtr.Zero, ref hitPoint, 1);
+               var mapWindowPointsResult = PInvokeExtensions.MapWindowPoints(this.Handle, IntPtr.Zero, ref hitPoint, 1);
                if (mapWindowPointsResult == 0 && Marshal.GetLastWin32Error() != 0)
                {
                     // failed; abort
@@ -1078,7 +1078,7 @@ internal class TrayButton : IDisposable
 
                          // convert our tray button's position from desktop coordinates to "child" coordinates within the taskbar
                          PInvoke.RECT childRect = new() { left = changeToRect.Value.Left, top = changeToRect.Value.Top, right = changeToRect.Value.Right, bottom = changeToRect.Value.Bottom };
-                         var mapWindowPointsResult = WindowsApi.MapWindowPoints(IntPtr.Zero /* use screen coordinates */, taskbarHandle, ref childRect, 2 /* 2 indicates that lpPoints is a RECT */);
+                         var mapWindowPointsResult = PInvokeExtensions.MapWindowPoints(IntPtr.Zero /* use screen coordinates */, taskbarHandle, ref childRect, 2 /* 2 indicates that lpPoints is a RECT */);
                          if (mapWindowPointsResult == 0 && Marshal.GetLastWin32Error() != LegacyWindowsApi.ERROR_SUCCESS)
                          {
                               // failed; abort

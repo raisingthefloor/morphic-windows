@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2023 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2024 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -54,17 +54,17 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
           if (s_morphicArgbImageClassInfoExAtom is null)
           {
                // register our control's custom native window class
-               var pointerToWndProcCallback = Marshal.GetFunctionPointerForDelegate(new WindowsApi.WndProc(result.WndProcCallback));
-               var lpWndClassEx = new WindowsApi.WNDCLASSEX
+               var pointerToWndProcCallback = Marshal.GetFunctionPointerForDelegate(new PInvokeExtensions.WndProc(result.WndProcCallback));
+               var lpWndClassEx = new PInvokeExtensions.WNDCLASSEX
                {
-                    cbSize = (uint)Marshal.SizeOf(typeof(WindowsApi.WNDCLASSEX)),
+                    cbSize = (uint)Marshal.SizeOf(typeof(PInvokeExtensions.WNDCLASSEX)),
                     lpfnWndProc = pointerToWndProcCallback,
                     lpszClassName = nativeWindowClassName,
                     hCursor = PInvoke.User32.LoadCursor(IntPtr.Zero, (IntPtr)PInvoke.User32.Cursors.IDC_ARROW).DangerousGetHandle()
                };
 
                // NOTE: RegisterClassEx returns an ATOM (or 0 if the call failed)
-               var registerClassResult = WindowsApi.RegisterClassEx(ref lpWndClassEx);
+               var registerClassResult = PInvokeExtensions.RegisterClassEx(ref lpWndClassEx);
                if (registerClassResult == 0) // failure
                {
                     var win32Exception = new PInvoke.Win32Exception(Marshal.GetLastWin32Error());
@@ -141,7 +141,7 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
           try
           {
                // NOTE: CreateWindowEx will return IntPtr.Zero ("NULL") if it fails
-               var handle = WindowsApi.CreateWindowEx(
+               var handle = PInvokeExtensions.CreateWindowEx(
                     (PInvoke.User32.WindowStylesEx)cp.ExStyle,
                     classNameAsIntPtr,
                     cp.Caption,

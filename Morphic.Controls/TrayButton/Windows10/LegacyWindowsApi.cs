@@ -1,4 +1,4 @@
-// Copyright 2020-2023 Raising the Floor - US, Inc.
+// Copyright 2020-2024 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -516,12 +516,6 @@ internal class LegacyWindowsApi
           WS_EX_TRANSPARENT = 0x00000020,
           WS_EX_WINDOWEDGE = 0x00000100
      }
-
-     internal const uint TTF_SUBCLASS = 0x0010;
-
-     internal const uint TTS_ALWAYSTIP = 0x01;
-     //internal const uint TTS_NOPREFIX = 0x02;
-     //internal const uint TTS_BALLOON = 0x40;
 
      #endregion
 
