@@ -22,10 +22,28 @@
 // * Consumer Electronics Association Foundation
 
 using Morphic.Core;
+using System.Runtime.InteropServices;
 
-namespace Morphic.WindowsNative;
+namespace Morphic.WindowsNative.Theme;
 
-public interface IWin32ApiError
+public static class WindowUtils
 {
-    public record Win32Error(uint Win32ErrorCode) : IWin32ApiError;
+    public static MorphicResult<MorphicUnit, MorphicUnit> SetNonClientUIDarkModeAttribute(nint hWnd, bool value)
+    {
+        var hwnd = new Windows.Win32.Foundation.HWND(hWnd);
+
+        var sizeOfValue = (uint)Marshal.SizeOf(value);
+
+        Windows.Win32.Foundation.HRESULT setWindowAttributeResult;
+        unsafe
+        {
+            setWindowAttributeResult = Windows.Win32.PInvoke.DwmSetWindowAttribute(hwnd, Windows.Win32.Graphics.Dwm.DWMWINDOWATTRIBUTE.DWMWA_USE_IMMERSIVE_DARK_MODE, &value, sizeOfValue);
+        }
+        if (setWindowAttributeResult != Windows.Win32.Foundation.HRESULT.S_OK)
+        {
+            return MorphicResult.ErrorResult();
+        }
+
+        return MorphicResult.OkResult();
+    }
 }

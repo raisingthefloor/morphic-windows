@@ -34,9 +34,9 @@ internal class PInvokeExtensions
     internal const string TOOLTIPS_CLASS = "tooltips_class32";
     //
     internal const byte TTS_ALWAYSTIP = 0x01;
-    //internal const uint TTS_NOPREFIX = 0x02;
-    //internal const uint TTS_BALLOON = 0x40;
-    internal const uint TTF_SUBCLASS = 0x0010;
+    //internal const byte TTS_NOPREFIX = 0x02;
+    //internal const byte TTS_BALLOON = 0x40;
+    internal const ushort TTF_SUBCLASS = 0x0010;
     //
     internal const ushort TTM_ADDTOOL = WM_USER + 50;
     internal const ushort TTM_DELTOOL = WM_USER + 51;
@@ -66,8 +66,8 @@ internal class PInvokeExtensions
 
     internal const int CW_USEDEFAULT = unchecked((int)0x80000000);
 
-    internal const uint MK_LBUTTON = 0x0001;
-    internal const uint MK_RBUTTON = 0x0002;
+    internal const ushort MK_LBUTTON = 0x0001;
+    internal const ushort MK_RBUTTON = 0x0002;
 
     internal const ushort WM_USER = 0x0400;
 

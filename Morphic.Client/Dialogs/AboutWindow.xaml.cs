@@ -9,7 +9,7 @@
     using Config;
     using Microsoft.Extensions.DependencyInjection;
 
-    public partial class AboutWindow : Window
+    public partial class AboutWindow : Morphic.Client.UI.ThemeAwareWindow
     {
 
         public AboutWindow()

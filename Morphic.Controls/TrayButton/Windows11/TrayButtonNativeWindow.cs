@@ -665,8 +665,8 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
         {
             if (_visibility != value)
             {
-                this.UpdateVisibility();
                 _visibility = value;
+                this.UpdateVisibility();
             }
         }
     }
@@ -1084,7 +1084,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
         int trayButtonWidth;
         // NOTE: on some computers, the taskbar and notify tray return an inaccurate size, but the task button container appears to always return the correct size; therefore we match our primary dimension to the taskbutton container's same dimension
         // NOTE: the inaccurate size returned by GetWindowRect may be due to our moving this class from the main application to a helper library (i.e. perhaps the pixel scaling isn't applying correctly), or it could just be a weird quirk on some computers.
-        //       [The GetWindowRect issue hapepns with both our own homebuilt PINVOKE methods as well as with PInvoke.User32.GetWindowRect; the function is returning the correct left, bottom and right positions of the taskbar and notify tray--but is
+        //       [The GetWindowRect issue happens with both our own home-built PINVOKE methods as well as with PInvoke.User32.GetWindowRect; the function is returning the correct left, bottom and right positions of the taskbar and notify tray--but is
         //       sometimes misrepresenting the top (i.e. height) value of both the taskbar and notify tray rects]
         if (taskbarOrientation == System.Windows.Forms.Orientation.Horizontal)
         {

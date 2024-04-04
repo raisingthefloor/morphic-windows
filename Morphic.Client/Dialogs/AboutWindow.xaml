@@ -1,4 +1,4 @@
-﻿<Window x:Class="Morphic.Client.Dialogs.AboutWindow"
+﻿<ui:ThemeAwareWindow x:Class="Morphic.Client.Dialogs.AboutWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -6,6 +6,7 @@
         xmlns:client="clr-namespace:Morphic.Client"
         xmlns:config="clr-namespace:Morphic.Client.Config"
         xmlns:l10n="clr-namespace:Morphic.Client.Strings"
+        xmlns:ui="clr-namespace:Morphic.Client.UI"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance config:BuildInfo}"
         Title="{x:Static l10n:Resources.AboutMorphicWindow_Title}" Height="280" Width="300" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
@@ -24,4 +25,4 @@
             <Hyperlink RequestNavigate="WebLink_OnClick" NavigateUri="https://morphic.org/rd/basic"><Run Text="{x:Static l10n:Resources.LearnMoreAboutMorphicHyperlink_Text}"/></Hyperlink>
         </TextBlock>
     </StackPanel>
-</Window>
+</ui:ThemeAwareWindow>

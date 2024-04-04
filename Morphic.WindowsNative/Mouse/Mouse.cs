@@ -1,4 +1,4 @@
-﻿// Copyright 2022-2023 Raising the Floor - US, Inc.
+﻿// Copyright 2022-2024 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -51,7 +51,7 @@ public class Mouse
        return MorphicResult.OkResult(result);
    }
 
-   public static MorphicResult<uint?, Win32ApiError> GetCursorSize()
+   public static MorphicResult<uint?, IWin32ApiError> GetCursorSize()
    {
        var openCursorsSubKeyResult = Morphic.WindowsNative.Registry.CurrentUser.OpenSubKey(@"Control Panel\Cursors");
        if (openCursorsSubKeyResult.IsError == true)
@@ -64,17 +64,17 @@ public class Mouse
        var getValueDataResult = cursorsSubKey.GetValueDataOrNull<uint>("CursorBaseSize");
        if (getValueDataResult.IsError == true)
        {
-           switch (getValueDataResult.Error!.Value)
+           switch (getValueDataResult.Error!)
            {
-               case Registry.RegistryKey.RegistryGetValueError.Values.ValueDoesNotExist:
+                case Registry.RegistryKey.IRegistryGetValueError.ValueDoesNotExist:
                    return MorphicResult.OkResult<uint?>(null);
-               case Registry.RegistryKey.RegistryGetValueError.Values.Win32Error:
+                case Registry.RegistryKey.IRegistryGetValueError.Win32Error(Win32ErrorCode: var win32ErrorCode):
                    {
-                       var win32ApiError = openCursorsSubKeyResult.Error!;
-                       return MorphicResult.ErrorResult(win32ApiError);
+                        var win32ApiError = new IWin32ApiError.Win32Error(unchecked((uint)win32ErrorCode));
+                        return MorphicResult.ErrorResult<IWin32ApiError>(win32ApiError);
                    }
-               case Registry.RegistryKey.RegistryGetValueError.Values.TypeMismatch:
-               case Registry.RegistryKey.RegistryGetValueError.Values.UnsupportedType:
+               case Registry.RegistryKey.IRegistryGetValueError.TypeMismatch:
+               case Registry.RegistryKey.IRegistryGetValueError.UnsupportedType:
                default:
                    throw new MorphicUnhandledErrorException();
            }

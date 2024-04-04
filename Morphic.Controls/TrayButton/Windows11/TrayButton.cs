@@ -89,8 +89,9 @@ internal class TrayButton : IDisposable
         }
         set
         {
-            _nativeWindow?.SetBitmap(_bitmap);
             _bitmap = value;
+
+            _nativeWindow?.SetBitmap(_bitmap);
         }
     }
 
@@ -102,8 +103,9 @@ internal class TrayButton : IDisposable
         }
         set
         {
-            _nativeWindow?.SetText(_text);
             _text = value;
+
+            _nativeWindow?.SetText(_text);
         }
     }
 
