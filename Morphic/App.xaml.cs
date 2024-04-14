@@ -31,6 +31,8 @@ namespace Morphic;
 /// </summary>
 public partial class App : Application
 {
+    private Morphic.Controls.HybridTrayIcon HybridTrayIcon;
+
     public interface IWindowsAppSdkStatus
     {
         public record Disabled(IWindowsAppSdkDisabledReason reason) : IWindowsAppSdkStatus;
@@ -46,6 +48,25 @@ public partial class App : Application
     }
 
     public IWindowsAppSdkStatus WindowsAppSdkStatus { get; private set; } = new IWindowsAppSdkStatus.Uninitialized();
+
+    private App()
+    {
+        // load our application's icon
+        var morphicIconStream = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("Morphic.Assets.Icons.morphic.ico")!;
+        System.Drawing.Icon morphicIcon = new(morphicIconStream);
+
+
+        // create an instance of our tray icon (button)
+        HybridTrayIcon = new()
+        {
+            Icon = morphicIcon,
+            Text = "Morphic",
+            TrayIconLocation = Controls.HybridTrayIcon.TrayIconLocationOption.NextToNotificationTray,
+            Visible = false,
+        };
+    }
+
+     #region Lifecycle
 
     private void Application_Startup(object sender, StartupEventArgs e)
     {
@@ -81,10 +102,17 @@ public partial class App : Application
                 }
             }
         }
+
+        // show our tray icon (button)
+        HybridTrayIcon.Visible = true;
     }
 
     private void Application_Exit(object sender, ExitEventArgs e)
     {
+        // immediately hide our tray icon (and dispose of it for good measure, to help ensure that unmanaged resources are cleaned up)
+        HybridTrayIcon.Visible = false;
+        HybridTrayIcon.Dispose();
+
         if (this.WindowsAppSdkStatus is IWindowsAppSdkStatus.Initialized(var manuallyInitialized))
         {
             if (manuallyInitialized == true)
@@ -105,4 +133,14 @@ public partial class App : Application
             }
         }
     }
+
+     #endregion Lifecycle
+
+     //
+
+     #region Taskbar Tray Icon
+
+
+     #endregion Taskbar Tray Icon
+
 }

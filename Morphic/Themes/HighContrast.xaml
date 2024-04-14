@@ -1,0 +1,10 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <SolidColorBrush x:Key="ThemeAwareBackground" Color="#FF000000"/>
+    <SolidColorBrush x:Key="ThemeAwareForeground" Color="#FFFFFFFF"/>
+
+    <!-- theme-specific images -->
+    <ImageSource x:Key="Images_Square50x50Logo">/Morphic;component/Assets/Images/theme-highcontrast/Square50x50Logo.scale-400.png</ImageSource>
+
+</ResourceDictionary>

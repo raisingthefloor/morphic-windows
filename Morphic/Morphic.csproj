@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Morphic.Controls\Morphic.Controls.csproj" />
+    <ProjectReference Include="..\Morphic.WindowsNative\Morphic.WindowsNative.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,6 +35,14 @@
 	  <Content Include="Assets\Images\**">
 		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="Assets\Icons\morphic.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\Icons\morphic.ico" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
