@@ -71,13 +71,13 @@ public partial class MorphicBarWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        // Temporary, for testing: set the background of the MorphicBar to an acrylic backgrounds
-        uint backgroundColor = 0x19007700; // medium blue (NOTE: the opacity is critical here; it's the level of "blur opacity")
-        var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
-        var enableAcrylicBackgroundResult = Morphic.WindowsNative.Windowing.Utils.AcrylicWindowUtils.EnableAcrylicBackground(hwnd, backgroundColor);
-        if (enableAcrylicBackgroundResult.IsError == true)
-        {
-            System.Diagnostics.Debug.Assert(false, "Programming fault: could not enable acrylic background");
-        }
+//        // Temporary, for testing: set the background of the MorphicBar to an acrylic backgrounds
+//        uint backgroundColor = 0x19007700; // medium blue (NOTE: the opacity is critical here; it's the level of "blur opacity")
+//        var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
+//        var enableAcrylicBackgroundResult = Morphic.WindowsNative.Windowing.Utils.AcrylicWindowUtils.EnableAcrylicBackground(hwnd, backgroundColor);
+//        if (enableAcrylicBackgroundResult.IsError == true)
+//        {
+//            System.Diagnostics.Debug.Assert(false, "Programming fault: could not enable acrylic background");
+//        }
     }
 }
