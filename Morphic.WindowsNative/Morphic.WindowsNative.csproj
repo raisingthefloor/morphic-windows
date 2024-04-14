@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>
+		<SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+		<Platforms>x86;x64;ARM64</Platforms>
+		<RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+		<Nullable>enable</Nullable>
+		<Version>2.0.0</Version>
+		<Authors>Raising the Floor - US, Inc.</Authors>
+		<Company>Raising the Floor - US, Inc.</Company>
+		<Product>Morphic Windows Native features library</Product>
+		<Copyright>Copyright 2020-2024 Raising the Floor - US, Inc.</Copyright>
+		<PackageLicenseExpression>BSD-3-Clause</PackageLicenseExpression>
+		<RepositoryUrl>https://github.com/raisingthefloor/morphic-windowsnative-lib-cs</RepositoryUrl>
+	</PropertyGroup>
+	<ItemGroup>
+	  <PackageReference Include="Microsoft.Win32.SystemEvents" Version="8.0.0" />
+	  <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.49-beta">
+	    <PrivateAssets>all</PrivateAssets>
+	  </PackageReference>
+	  <PackageReference Include="Morphic.Core" Version="1.3.1" />
+	</ItemGroup>
+
+	<PropertyGroup>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
+	
+</Project>
