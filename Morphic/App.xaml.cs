@@ -32,6 +32,9 @@ namespace Morphic;
 public partial class App : Application
 {
     private Morphic.Controls.HybridTrayIcon HybridTrayIcon;
+    //
+    // NOTE: as we cannot initialize this object in the App() constructor, we make it nullable -- but we initialize it during application startup so it should always be available
+    private Morphic.MainMenu.MorphicMainMenu? MorphicMainMenu = null;
 
     public interface IWindowsAppSdkStatus
     {
@@ -55,7 +58,6 @@ public partial class App : Application
         var morphicIconStream = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("Morphic.Assets.Icons.morphic.ico")!;
         System.Drawing.Icon morphicIcon = new(morphicIconStream);
 
-
         // create an instance of our tray icon (button)
         HybridTrayIcon = new()
         {
@@ -70,6 +72,9 @@ public partial class App : Application
 
     private void Application_Startup(object sender, StartupEventArgs e)
     {
+        // create a single instance of our main menu
+        this.MorphicMainMenu = new Morphic.MainMenu.MorphicMainMenu();
+
         var isRunningAsPackagedAppResult = Morphic.WindowsNative.Packaging.Package.IsRunningAsPackagedApp();
         if (isRunningAsPackagedAppResult.IsError == true)
         {
@@ -140,6 +145,77 @@ public partial class App : Application
 
      #region Taskbar Tray Icon
 
+    // NOTE: this event is called on a non-UI thread
+    private void HybridTrayIcon_Click(object? sender, System.EventArgs e)
+    {
+        Application.Current.Dispatcher.Invoke(() =>
+        {
+            MessageBox.Show("tray button clicked");
+        });
+        //throw new System.NotImplementedException();
+    }
+
+    // NOTE: this event is called on a non-UI thread
+    private void HybridTrayIcon_SecondaryClick(object? sender, System.EventArgs e)
+    {
+        // capture the position and size of the tray icon, if possible (so that we can align the menu to its corner)
+        System.Windows.Rect? physicalBoundingRectangle = null;
+        //
+        var getPositionsAndSizesResult = this.HybridTrayIcon.GetPositionsAndSizes();
+        if (getPositionsAndSizesResult.IsSuccess)
+        {
+            var positionsAndSizes = getPositionsAndSizesResult.Value!;
+            if (positionsAndSizes.Count == 1)
+            {
+                var positionAndSize = positionsAndSizes[0];
+                physicalBoundingRectangle = new System.Windows.Rect(positionAndSize.X, positionAndSize.Y, positionAndSize.Width, positionAndSize.Height);
+            }
+            else
+            {
+                Debug.Assert(false, "Could not get positions and sizes of tray icon(s); this is to be expected if we cannot capture the rectangle (which may be the case if we're putting the icon in the system tray itself)");
+            }
+        }
+
+        // NOTE: if we cannot calculate the scaled bounding rectangle for the Morphic tray button, scaledBoundingRectangle will remain null.
+        Rect? scaledBoundingRectangle = null;
+        if (physicalBoundingRectangle is not null)
+        {
+            var getDisplayForPointResult = Morphic.WindowsNative.Display.Display.GetDisplayForPoint(new System.Drawing.Point((int)physicalBoundingRectangle.Value!.X, (int)physicalBoundingRectangle.Value!.Y));
+            if (getDisplayForPointResult.IsSuccess == true)
+            {
+                var displayForPoint = getDisplayForPointResult.Value!;
+
+                var getScalePercentageResult = displayForPoint.GetScalePercentage();
+                if (getScalePercentageResult.IsSuccess == true)
+                {
+                    var scalePercentage = getScalePercentageResult.Value!;
+
+                    scaledBoundingRectangle = new Rect(
+                        physicalBoundingRectangle.Value!.X / scalePercentage,
+                        physicalBoundingRectangle.Value!.Y / scalePercentage,
+                        physicalBoundingRectangle.Value!.Width / scalePercentage,
+                        physicalBoundingRectangle.Value!.Height / scalePercentage
+                    );
+                }
+            }
+        }
+
+        Application.Current.Dispatcher.Invoke(() =>
+        {
+            if (scaledBoundingRectangle is not null)
+            {
+                // if we can find the virtual (scaled) rectangle of our tray button, pop up above it instead
+                //
+                // NOTE: the passed-in rect must be divided by the current screen scaling before being passed into this function (as WPF will not recognize the absolute position correctly otherwise)
+                this.MorphicMainMenu!.Show(new Morphic.MainMenu.MorphicMainMenu.IShowPlacement.ScaledAbsolutePosition(scaledBoundingRectangle.Value!));
+            }
+            else
+            {
+                // otherwise, show the pop-up menu at the current mouse cursor position
+                this.MorphicMainMenu!.Show(new Morphic.MainMenu.MorphicMainMenu.IShowPlacement.MouseCursor());
+            }
+        });
+    }
 
      #endregion Taskbar Tray Icon
 
