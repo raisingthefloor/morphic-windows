@@ -21,8 +21,11 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System.Threading.Tasks;
+using System;
+using System.Diagnostics;
+using System.Reflection;
 using System.Windows;
+using System.Windows.Media;
 
 namespace Morphic;
 
@@ -31,84 +34,45 @@ namespace Morphic;
 /// </summary>
 public partial class App : Application
 {
-    private Morphic.Controls.HybridTrayIcon HybridTrayIcon;
+    private Morphic.Controls.HybridTrayIcon HybridTrayIcon = new();
     //
     // NOTE: as we cannot initialize this object in the App() constructor, we make it nullable -- but we initialize it during application startup so it should always be available
     private Morphic.MainMenu.MorphicMainMenu? MorphicMainMenu = null;
 
-    public interface IWindowsAppSdkStatus
-    {
-        public record Disabled(IWindowsAppSdkDisabledReason reason) : IWindowsAppSdkStatus;
-        public record Initialized(bool manuallyInitialized) : IWindowsAppSdkStatus;
-        public record Uninitialized : IWindowsAppSdkStatus;
-    }
-    //
-    public interface IWindowsAppSdkDisabledReason
-    {
-        public record CouldNotDetectIfRunningAsPackagedApp : IWindowsAppSdkDisabledReason;
-        public record InitializationFailed(int hresult) : IWindowsAppSdkDisabledReason;
-        public record UninitializationFailed() : IWindowsAppSdkDisabledReason;
-    }
 
-    public IWindowsAppSdkStatus WindowsAppSdkStatus { get; private set; } = new IWindowsAppSdkStatus.Uninitialized();
-
-    private App()
-    {
-        // load our application's icon
-        var morphicIconStream = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("Morphic.Assets.Icons.morphic.ico")!;
-        System.Drawing.Icon morphicIcon = new(morphicIconStream);
-
-        // create an instance of our tray icon (button)
-        HybridTrayIcon = new()
-        {
-            Icon = morphicIcon,
-            Text = "Morphic",
-            TrayIconLocation = Controls.HybridTrayIcon.TrayIconLocationOption.NextToNotificationTray,
-            Visible = false,
-        };
-    }
-
-     #region Lifecycle
+    #region Lifecycle
 
     private void Application_Startup(object sender, StartupEventArgs e)
     {
         // create a single instance of our main menu
         this.MorphicMainMenu = new Morphic.MainMenu.MorphicMainMenu();
 
-        var isRunningAsPackagedAppResult = Morphic.WindowsNative.Packaging.Package.IsRunningAsPackagedApp();
-        if (isRunningAsPackagedAppResult.IsError == true)
+        /*** start up the Windows App SDK (if it's not already running) ***/
+        // NOTE: we do not await the function call here, and we also do not listen for its result; if we want to know if the SDK is initialized, we can retrieve the WindowsAppSdkManager.WindowsAppSdkStatus value (or create and wire up an event)
+        _ = Morphic.WindowsAppSdk.WindowsAppSdkManager.InitializeAsync();
+
+        //
+
+        // capture the initial light/dark theme state
+        var appsUseLightTheme = !Morphic.UI.ThemeColors.GetIsDarkColorTheme();
+        //
+        // capture the initial high contrast on/off state
+        bool highContrastIsOn;
+        var getHighContrastIsOnResult = Morphic.WindowsNative.Theme.HighContrast.GetIsOn();
+        if (getHighContrastIsOnResult.IsSuccess == true)
         {
-            this.WindowsAppSdkStatus = new IWindowsAppSdkStatus.Disabled(new IWindowsAppSdkDisabledReason.CouldNotDetectIfRunningAsPackagedApp());
+            highContrastIsOn = getHighContrastIsOnResult.Value!;
         }
         else
         {
-            bool isRunningAsPackagedApp = isRunningAsPackagedAppResult.Value!;
-
-            if (isRunningAsPackagedApp == true)
-            {
-                // change the Windows App SDK status to "initialized" (since it would have been automatically initialized by the app packaging startup)
-                this.WindowsAppSdkStatus = new IWindowsAppSdkStatus.Initialized(manuallyInitialized: false);
-            }
-            else // if (isRunningAsPackagedApp == false)
-            {
-                // if our app is not running as a packaged app, then manually start up the Windows App SDK functionality using the appropriate bootstrapper
-                //
-                // initialize the Windows App SDK using the manual bootstrapper API
-                // NOTE: the majorMinor version specified here is v1.5 (major 0x0001, minor 0x0005)
-                int tryInitializeHResult;
-                Microsoft.Windows.ApplicationModel.DynamicDependency.Bootstrap.TryInitialize(0x0001_0005, out tryInitializeHResult);
-                if (tryInitializeHResult == 0)
-                {
-                    this.WindowsAppSdkStatus = new IWindowsAppSdkStatus.Initialized(manuallyInitialized: true);
-                }
-                else
-                {
-                    this.WindowsAppSdkStatus = new IWindowsAppSdkStatus.Disabled(new IWindowsAppSdkDisabledReason.InitializationFailed(hresult: tryInitializeHResult));
-                }
-            }
+            Debug.Assert(false, "Could not get high contrast on/off state");
+            highContrastIsOn = false; // default to "high contrast is not on"
         }
 
-        // show our tray icon (button)
+        // initialize our taskbar icon (button); this will not show the button
+        this.InitTaskbarIconWithoutShowing(highContrastIsOn);
+
+        // show our taskbar icon (button)
         HybridTrayIcon.Visible = true;
     }
 
@@ -118,32 +82,60 @@ public partial class App : Application
         HybridTrayIcon.Visible = false;
         HybridTrayIcon.Dispose();
 
-        if (this.WindowsAppSdkStatus is IWindowsAppSdkStatus.Initialized(var manuallyInitialized))
-        {
-            if (manuallyInitialized == true)
-            {
-                // release the Dynamic Dependency Lifetime Manager (DDLM) and clean up the Windows App SDK
-                // see: https://learn.microsoft.com/en-us/windows/apps/api-reference/cs-bootstrapper-apis/microsoft.windows.applicationmodel.dynamicdependency/microsoft.windows.applicationmodel.dynamicdependency.bootstrap
-                try
-                {
-                    // NOTE: Microsoft does not document any exceptions for this function; out of an abundance of caution, we are catching exceptions anyway
-                    Microsoft.Windows.ApplicationModel.DynamicDependency.Bootstrap.Shutdown();
-                    this.WindowsAppSdkStatus = new IWindowsAppSdkStatus.Uninitialized();
-                }
-                catch
-                {
-                    this.WindowsAppSdkStatus = new IWindowsAppSdkStatus.Disabled(new IWindowsAppSdkDisabledReason.UninitializationFailed());
-
-                }
-            }
-        }
+        // shutdown the Windows App SDK (NOTE: this is only applicable to unpackaged apps; for packaged apps or if the SDK is disabled then this will just turn OkResult)
+        var windowsAppSdkShutdownResult = Morphic.WindowsAppSdk.WindowsAppSdkManager.Shutdown();
+        Debug.Assert(windowsAppSdkShutdownResult.IsSuccess == true, "Error: failure while attempting to shut down Windows App SDK (during application exit)");
     }
 
-     #endregion Lifecycle
+    #endregion Lifecycle
 
-     //
 
-     #region Taskbar Tray Icon
+    #region Taskbar Icon (Button)
+
+    private void InitTaskbarIconWithoutShowing(bool highContrastIsOn)
+    {
+        // load our application's icon
+        var morphicIconStream = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("Morphic.Assets.Icons.morphic.ico")!;
+        System.Drawing.Icon morphicIcon = new(morphicIconStream);
+
+        // create an instance of our tray icon (button)
+        this.HybridTrayIcon.Text = "Morphic";
+        this.HybridTrayIcon.TrayIconLocation = Controls.HybridTrayIcon.TrayIconLocationOption.NextToNotificationTray;
+        this.HybridTrayIcon.Visible = false;
+        //
+        // set the icon for our tray icon (button)
+        this.UpdateTaskbarButtonIcon(highContrastIsOn);
+        //
+        // wire up click and right-click events for our hybrid tray icon
+        this.HybridTrayIcon.Click += HybridTrayIcon_Click;
+        this.HybridTrayIcon.SecondaryClick += HybridTrayIcon_SecondaryClick;
+    }
+
+    private void UpdateTaskbarButtonIcon(bool highContrastIsOn)
+    {
+        System.Drawing.Icon morphicSmallIcon;
+        switch (highContrastIsOn)
+        {
+            case true:
+                {
+                    // NOTE: high contrast icon is not yet available
+                    var morphicSmallIconStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Morphic.Assets.Icons.morphic.ico")!;
+                    morphicSmallIcon = new(morphicSmallIconStream);
+                }
+                break;
+            case false:
+                {
+                    var morphicSmallIconStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Morphic.Assets.Icons.morphic.ico")!;
+                    morphicSmallIcon = new(morphicSmallIconStream);
+                }
+                break;
+            default:
+                throw new Exception("invalid case");
+        }
+        this.HybridTrayIcon.Icon = morphicSmallIcon;
+    }
+
+    //
 
     // NOTE: this event is called on a non-UI thread
     private void HybridTrayIcon_Click(object? sender, System.EventArgs e)
@@ -217,6 +209,6 @@ public partial class App : Application
         });
     }
 
-     #endregion Taskbar Tray Icon
+    #endregion Taskbar Icon (Button)
 
 }
