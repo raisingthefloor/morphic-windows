@@ -1,52 +1,55 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>
 		<TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
 		<SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
-    <Platforms>x86;x64;ARM64</Platforms>
-    <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
-    <Nullable>enable</Nullable>
-    <UseWPF>true</UseWPF>
-    <VersionPrefix>2.0$(VersionBuildComponents)</VersionPrefix>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
+		<Platforms>x86;x64;ARM64</Platforms>
+		<RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+		<Nullable>enable</Nullable>
+		<UseWPF>true</UseWPF>
+		<VersionPrefix>2.0$(VersionBuildComponents)</VersionPrefix>
+		<ApplicationManifest>app.manifest</ApplicationManifest>
+
+		<StartupObject>Morphic.Program</StartupObject>
+		
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
     <SelfContained>true</SelfContained>
 <!--    <WindowsAppSdkBootstrapInitialize>false</WindowsAppSdkBootstrapInitialize> -->
-  </PropertyGroup>
+	</PropertyGroup>
 
-  <ItemGroup>
+	<ItemGroup>
     <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications" Version="7.1.2" />
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.5.240227000" />
-    <PackageReference Include="Morphic.Core" Version="1.3.1" />
+		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.5.240227000" />
+		<PackageReference Include="Morphic.Core" Version="1.3.1" />
     <PackageReference Include="Morphic.OAuth.Client" Version="0.3.0" />
     <PackageReference Include="Morphic.OAuth.Core" Version="1.2.0" />
-  </ItemGroup>
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Morphic.Controls\Morphic.Controls.csproj" />
-    <ProjectReference Include="..\Morphic.WindowsNative\Morphic.WindowsNative.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Morphic.Controls\Morphic.Controls.csproj" />
+		<ProjectReference Include="..\Morphic.WindowsNative\Morphic.WindowsNative.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-	  <Content Include="Assets\Icons\**">
-		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="Assets\Images\**">
-		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </Content>
-  </ItemGroup>
+	<ItemGroup>
+		<Content Include="Assets\Icons\**">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Include="Assets\Images\**">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
 
-  <ItemGroup>
-    <Content Remove="Assets\Icons\morphic.ico" />
-  </ItemGroup>
+	<ItemGroup>
+		<Content Remove="Assets\Icons\morphic.ico" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Include="Assets\Icons\morphic.ico" />
-  </ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="Assets\Icons\morphic.ico" />
+	</ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="IF &quot;$(ConfigurationName)&quot; == &quot;Release&quot; (&#xD;&#xA;    echo $(Version) &gt; BuildVersion.txt&#xD;&#xA;    echo $(AssemblyVersion) &gt;&gt; BuildVersion.txt&#xD;&#xA;)" />
-  </Target>
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+		<Exec Command="IF &quot;$(ConfigurationName)&quot; == &quot;Release&quot; (&#xD;&#xA;    echo $(Version) &gt; BuildVersion.txt&#xD;&#xA;    echo $(AssemblyVersion) &gt;&gt; BuildVersion.txt&#xD;&#xA;)" />
+	</Target>
 </Project>
