@@ -23,12 +23,17 @@
 
 using Morphic.Core;
 using System;
+using System.Diagnostics;
 using System.Windows;
 
 namespace Morphic.UI;
 
 public class ThemeAwareWindow : Window
 {
+    private System.Windows.Media.ImageSource? _highContrastBlackIcon;
+    private System.Windows.Media.ImageSource? _highContrastWhiteIcon;
+    private System.Windows.Media.ImageSource? _standardContrastIcon;
+
     protected override void OnSourceInitialized(EventArgs e)
     {
         base.OnSourceInitialized(e);
@@ -60,5 +65,42 @@ public class ThemeAwareWindow : Window
     private void ThemeColors_ThemeColorsChanged(object? sender, ThemeColors.ThemeColorsChangedEventArgs e)
     {
         this.SetNonClientUIDarkModeAttribute(!e.IsDarkColorTheme);
+    }
+    //
+
+    public System.Windows.Media.ImageSource? HighContrastBlackIcon
+    {
+        get
+        {
+            return _highContrastBlackIcon;
+        }
+        set
+        {
+            _highContrastBlackIcon = value;
+        }
+    }
+
+    public System.Windows.Media.ImageSource? HighContrastWhiteIcon
+    {
+        get
+        {
+            return _highContrastWhiteIcon;
+        }
+        set
+        {
+            _highContrastWhiteIcon = value;
+        }
+    }
+
+    public System.Windows.Media.ImageSource? StandardContrastIcon
+    {
+        get
+        {
+            return _standardContrastIcon;
+        }
+        set
+        {
+            _standardContrastIcon = value;
+        }
     }
 }

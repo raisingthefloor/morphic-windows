@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2022 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2024 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -21,8 +21,6 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-namespace Morphic.MorphicBar;
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,8 +35,10 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
+namespace Morphic.MorphicBar;
+
 /// <summary>
-/// Interaction logic for MorphicBar.xaml
+/// Interaction logic for MorphicBarWindow.xaml
 /// </summary>
 public partial class MorphicBarWindow : Window
 {
@@ -64,20 +64,10 @@ public partial class MorphicBarWindow : Window
         // TODO: tell the morphicBar that its orientation has been changed so that it can modify its layout
     }
 
+    //
+
     public MorphicBarWindow()
     {
         InitializeComponent();
-    }
-
-    private void Window_Loaded(object sender, RoutedEventArgs e)
-    {
-//        // Temporary, for testing: set the background of the MorphicBar to an acrylic backgrounds
-//        uint backgroundColor = 0x19007700; // medium blue (NOTE: the opacity is critical here; it's the level of "blur opacity")
-//        var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
-//        var enableAcrylicBackgroundResult = Morphic.WindowsNative.Windowing.Utils.AcrylicWindowUtils.EnableAcrylicBackground(hwnd, backgroundColor);
-//        if (enableAcrylicBackgroundResult.IsError == true)
-//        {
-//            System.Diagnostics.Debug.Assert(false, "Programming fault: could not enable acrylic background");
-//        }
     }
 }

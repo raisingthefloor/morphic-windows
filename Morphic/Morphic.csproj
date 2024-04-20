@@ -13,9 +13,11 @@
 		<ApplicationManifest>app.manifest</ApplicationManifest>
 
 		<StartupObject>Morphic.Program</StartupObject>
-		
-    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
-    <SelfContained>true</SelfContained>
+
+		<ApplicationIcon>Assets\Icons\morphic.ico</ApplicationIcon>
+
+		<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+		<SelfContained>true</SelfContained>
 <!--    <WindowsAppSdkBootstrapInitialize>false</WindowsAppSdkBootstrapInitialize> -->
 	</PropertyGroup>
 
@@ -42,11 +44,23 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Content Remove="Assets\Icons\morphic-highcontrastblack.ico" />
+		<Content Remove="Assets\Icons\morphic-highcontrastwhite.ico" />
+		<Content Remove="Assets\Icons\morphic-standardcontrast.ico" />
 		<Content Remove="Assets\Icons\morphic.ico" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<EmbeddedResource Include="Assets\Icons\morphic.ico" />
+	  <Resource Include="Assets\Icons\morphic-highcontrastwhite.ico">
+		<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Resource>
+	  <Resource Include="Assets\Icons\morphic-standardcontrast.ico">
+		<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Resource>
+	  <Resource Include="Assets\Icons\morphic-highcontrastblack.ico">
+		<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Resource>
+	  <EmbeddedResource Include="Assets\Icons\morphic.ico" />
 	</ItemGroup>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">

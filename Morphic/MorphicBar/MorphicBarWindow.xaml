@@ -5,12 +5,15 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Morphic.MorphicBar"
         mc:Ignorable="d"
-        Title="MorphicBar"
-        AutomationProperties.Name="Morphic Bar"
-        Width="800" Height="150" ResizeMode="NoResize"
-        Topmost="True" ShowInTaskbar="False"
-        Loaded="Window_Loaded">
-    <Grid>
-        
-    </Grid>
+        SizeToContent="WidthAndHeight"
+        WindowStyle="None" ResizeMode="NoResize" 
+        AllowsTransparency="True" Background="Transparent"
+        ShowInTaskbar="False"
+        Topmost="True">
+
+    <Border CornerRadius="5" Background="{DynamicResource ThemeAwareBackground}">
+        <Grid>
+
+        </Grid>
+    </Border>
 </Window>
