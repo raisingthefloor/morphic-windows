@@ -46,6 +46,20 @@ public class ThemeAwareWindow : Window
 
         // wire up theme color change event (to detect dark/light mode changes as well as high contrast-related color changes and other theme color changes)
         Morphic.UI.ThemeColors.ThemeColorsChanged += ThemeColors_ThemeColorsChanged;
+
+        // wire up the high contrast change event (to detect when to use high contrast vs standard contrast icons)
+        Morphic.WindowsNative.Theme.HighContrast.HighContrastIsOnChanged += HighContrast_HighContrastIsOnChanged;
+    }
+
+    protected override void OnInitialized(EventArgs e)
+    {
+        base.OnInitialized(e);
+
+        // if any of the theme-aware icons was provided, then try to update our window icon; note that this will not do anything if the needed icon is missing
+        if (_highContrastBlackIcon is not null || _highContrastWhiteIcon is not null || _standardContrastIcon is not null)
+        {
+            this.UpdateWindowIcon();
+        }
     }
 
     private MorphicResult<MorphicUnit, MorphicUnit> SetNonClientUIDarkModeAttribute(bool value)
@@ -62,10 +76,68 @@ public class ThemeAwareWindow : Window
         return success == true ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
     }
 
+    private void UpdateWindowIcon()
+    {
+        bool highContrastIsOn;
+        var getHighContrastIsOnResult = Morphic.WindowsNative.Theme.HighContrast.GetIsOn();
+        if (getHighContrastIsOnResult.IsSuccess == true)
+        {
+            highContrastIsOn = getHighContrastIsOnResult.Value!;
+        }
+        else
+        {
+            Debug.Assert(false, "Cannot update window icon because high contrast on/off state capture failed");
+            highContrastIsOn = false; // gracefully degrade
+        }
+        var isDarkColorTheme = Morphic.UI.ThemeColors.GetIsDarkColorTheme();
+
+        if (highContrastIsOn == true)
+        {
+            if (isDarkColorTheme == true)
+            {
+                if (_highContrastBlackIcon is not null)
+                {
+                    this.Icon = _highContrastBlackIcon;
+                }
+            }
+            else
+            {
+                if (_highContrastWhiteIcon is not null)
+                {
+
+                    this.Icon = _highContrastWhiteIcon;
+                }
+            }
+        }
+        else
+        {
+            if (_standardContrastIcon is not null)
+            {
+                this.Icon = _standardContrastIcon;
+            }
+        }
+    }
+
+    //
+
     private void ThemeColors_ThemeColorsChanged(object? sender, ThemeColors.ThemeColorsChangedEventArgs e)
     {
         this.SetNonClientUIDarkModeAttribute(!e.IsDarkColorTheme);
+
+        Application.Current.Dispatcher.Invoke(() =>
+        {
+            this.UpdateWindowIcon();
+        });
     }
+
+    private void HighContrast_HighContrastIsOnChanged(object? sender, WindowsNative.Theme.HighContrast.HighContrastIsOnChangedEventArgs e)
+    {
+        Application.Current.Dispatcher.Invoke(() =>
+        {
+            this.UpdateWindowIcon();
+        });
+    }
+
     //
 
     public System.Windows.Media.ImageSource? HighContrastBlackIcon
@@ -77,6 +149,7 @@ public class ThemeAwareWindow : Window
         set
         {
             _highContrastBlackIcon = value;
+            this.UpdateWindowIcon();
         }
     }
 
@@ -89,6 +162,7 @@ public class ThemeAwareWindow : Window
         set
         {
             _highContrastWhiteIcon = value;
+            this.UpdateWindowIcon();
         }
     }
 
@@ -101,6 +175,7 @@ public class ThemeAwareWindow : Window
         set
         {
             _standardContrastIcon = value;
+            this.UpdateWindowIcon();
         }
     }
 }
