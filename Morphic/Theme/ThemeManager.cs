@@ -252,7 +252,10 @@ internal class ThemeManager : IDisposable
         }
 		
         // NOTE: Application.Current.HybridTrayIcon should always be non-null, but we use the nullable operator out of an abundance of caution (mostly to deal with the potential for out-of-order initialization at startup)
-        ((App)Application.Current).HybridTrayIcon?.Icon = morphicIcon;
+        if (((App)Application.Current).HybridTrayIcon is not null)
+        {
+            ((App)Application.Current).HybridTrayIcon.Icon = morphicIcon;
+        }
     }
 
     //
