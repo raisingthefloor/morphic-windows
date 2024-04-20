@@ -115,7 +115,7 @@ internal static class ThemeColors
         //var accentDark2Color = s_uiSettings.GetColorValue(Windows.UI.ViewManagement.UIColorType.AccentDark2);
         //var accentDark3Color = s_uiSettings.GetColorValue(Windows.UI.ViewManagement.UIColorType.AccentDark3);
 
-        bool isDarkColorTheme = !ThemeColors.IsColorLight(foregroundColor);
+        bool isDarkColorTheme = ThemeColors.IsColorLight(foregroundColor);
 
         var themeColorsChangedEventArgs = new ThemeColorsChangedEventArgs()
         {

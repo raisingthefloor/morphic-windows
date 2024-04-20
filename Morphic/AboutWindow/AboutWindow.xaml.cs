@@ -53,7 +53,7 @@ namespace Morphic.AboutWindow
                 }
                 else
                 {
-                    return "[build version is unknown]";
+                    return "unknown";
                 }
             }
         }
