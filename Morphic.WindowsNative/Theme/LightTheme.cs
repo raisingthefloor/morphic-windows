@@ -48,9 +48,6 @@ public static class LightTheme
     private static bool? _appsUseLightThemeSetting = null;
     private static bool? _systemUsesLightThemeSetting = null;
 
-    private static bool s_AppSettingsThemeWatchEventIsActive = false;
-    private static object s_AppSettingsThemeWatchEventLock = new();
-
     public static MorphicResult<bool, MorphicUnit> GetAppsUseLightThemeSetting()
     {
         var openPersonalizeKeyResult = Morphic.WindowsNative.Registry.CurrentUser.OpenSubKey(LightTheme.HKCU_THEMES_PERSONALIZE_PATH, false);

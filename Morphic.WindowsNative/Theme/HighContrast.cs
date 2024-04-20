@@ -39,7 +39,7 @@ public class HighContrast
     {
         public bool IsOn = isOn;
     }
-    public delegate void HighContrastIsOnChangedEventHandler(object? sender, HighContrastIsOnChangedEventArgs args);
+    public delegate void HighContrastIsOnChangedEventHandler(object? sender, HighContrastIsOnChangedEventArgs e);
     //
     private static HighContrastIsOnChangedEventHandler? s_highContrastIsOnChanged = null;
     private static bool s_HighContrastIsOnWatchEventIsActive = false;
