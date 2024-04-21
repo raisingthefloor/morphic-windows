@@ -36,30 +36,6 @@
   <ItemGroup>
     <None Remove="appsettings.json" />
     <None Remove="app.manifest" />
-    <None Remove="Assets\Icons\morphic-highcontrastblack.ico" />
-    <None Remove="Assets\Icons\morphic-highcontrastwhite.ico" />
-    <None Remove="Assets\Icons\morphic-standardcontrast.ico" />
-    <None Remove="Assets\Icons\morphic.ico" />
-    <None Remove="Assets\Images\theme_contrast_black\Square50x50Logo.scale-100.png" />
-    <None Remove="Assets\Images\theme_contrast_black\Square50x50Logo.scale-125.png" />
-    <None Remove="Assets\Images\theme_contrast_black\Square50x50Logo.scale-150.png" />
-    <None Remove="Assets\Images\theme_contrast_black\Square50x50Logo.scale-200.png" />
-    <None Remove="Assets\Images\theme_contrast_black\Square50x50Logo.scale-400.png" />
-    <None Remove="Assets\Images\theme_contrast_white\Square50x50Logo.scale-100.png" />
-    <None Remove="Assets\Images\theme_contrast_white\Square50x50Logo.scale-125.png" />
-    <None Remove="Assets\Images\theme_contrast_white\Square50x50Logo.scale-150.png" />
-    <None Remove="Assets\Images\theme_contrast_white\Square50x50Logo.scale-200.png" />
-    <None Remove="Assets\Images\theme_contrast_white\Square50x50Logo.scale-400.png" />
-    <None Remove="Assets\Images\theme_dark\Square50x50Logo.scale-100.png" />
-    <None Remove="Assets\Images\theme_dark\Square50x50Logo.scale-125.png" />
-    <None Remove="Assets\Images\theme_dark\Square50x50Logo.scale-150.png" />
-    <None Remove="Assets\Images\theme_dark\Square50x50Logo.scale-200.png" />
-    <None Remove="Assets\Images\theme_dark\Square50x50Logo.scale-400.png" />
-    <None Remove="Assets\Images\theme_light\Square50x50Logo.scale-100.png" />
-    <None Remove="Assets\Images\theme_light\Square50x50Logo.scale-125.png" />
-    <None Remove="Assets\Images\theme_light\Square50x50Logo.scale-150.png" />
-    <None Remove="Assets\Images\theme_light\Square50x50Logo.scale-200.png" />
-    <None Remove="Assets\Images\theme_light\Square50x50Logo.scale-400.png" />
     <None Remove="DefaultPreferences.json" />
     <None Remove="Icon.png" />
     <None Remove="Dialogs\LoginAnnounce.wav" />
@@ -75,26 +51,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Remove="solutions.json5" />
-    <Content Include="Assets\Images\theme_contrast_black\Square50x50Logo.scale-100.png" />
-    <Content Include="Assets\Images\theme_contrast_black\Square50x50Logo.scale-125.png" />
-    <Content Include="Assets\Images\theme_contrast_black\Square50x50Logo.scale-150.png" />
-    <Content Include="Assets\Images\theme_contrast_black\Square50x50Logo.scale-200.png" />
-    <Content Include="Assets\Images\theme_contrast_black\Square50x50Logo.scale-400.png" />
-    <Content Include="Assets\Images\theme_contrast_white\Square50x50Logo.scale-100.png" />
-    <Content Include="Assets\Images\theme_contrast_white\Square50x50Logo.scale-125.png" />
-    <Content Include="Assets\Images\theme_contrast_white\Square50x50Logo.scale-150.png" />
-    <Content Include="Assets\Images\theme_contrast_white\Square50x50Logo.scale-200.png" />
-    <Content Include="Assets\Images\theme_contrast_white\Square50x50Logo.scale-400.png" />
-    <Content Include="Assets\Images\theme_dark\Square50x50Logo.scale-100.png" />
-    <Content Include="Assets\Images\theme_dark\Square50x50Logo.scale-125.png" />
-    <Content Include="Assets\Images\theme_dark\Square50x50Logo.scale-150.png" />
-    <Content Include="Assets\Images\theme_dark\Square50x50Logo.scale-200.png" />
-    <Content Include="Assets\Images\theme_dark\Square50x50Logo.scale-400.png" />
-    <Content Include="Assets\Images\theme_light\Square50x50Logo.scale-100.png" />
-    <Content Include="Assets\Images\theme_light\Square50x50Logo.scale-125.png" />
-    <Content Include="Assets\Images\theme_light\Square50x50Logo.scale-150.png" />
-    <Content Include="Assets\Images\theme_light\Square50x50Logo.scale-200.png" />
-    <Content Include="Assets\Images\theme_light\Square50x50Logo.scale-400.png" />
     <Content Include="solutions.json5">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
