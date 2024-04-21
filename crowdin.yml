@@ -15,6 +15,11 @@
 #
 files: [
  {
+  "source" : "Morphic.Client/StringResources.resx",
+  "translation" : "Morphic.Client/StringResources.%two_letters_code%.resx",
+  "update_option" : "update_as_unapproved",
+ },
+ {
   "source" : "Morphic.Client/Properties/Resources.resx",
   "translation" : "Morphic.Client/Properties/Resources.%two_letters_code%.resx",
   "update_option" : "update_as_unapproved",
