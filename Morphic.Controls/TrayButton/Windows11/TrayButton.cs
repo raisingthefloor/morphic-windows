@@ -39,6 +39,14 @@ internal class TrayButton : IDisposable
 
     private TrayButtonNativeWindow? _nativeWindow = null;
 
+    public System.Drawing.Rectangle? PositionAndSize
+    {
+        get
+        {
+            return _nativeWindow?.PositionAndSize;
+        }
+    }
+
     internal TrayButton()
     {
     }

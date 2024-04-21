@@ -63,7 +63,22 @@
 
     <Content Include="Assets\*" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Assets\bar-icons\*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\Icons\**">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Images\**">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 
+  <ItemGroup>
+    <Content Remove="Assets\Icons\morphic-highcontrastblack.ico" />
+    <Content Remove="Assets\Icons\morphic-highcontrastwhite.ico" />
+    <Content Remove="Assets\Icons\morphic-standardcontrast.ico" />
+    <Content Remove="Assets\Icons\morphic.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="quickstrip.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -121,6 +136,16 @@
     <Content Include="DefaultPreferences.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Assets\Icons\morphic.ico" />
+    <Resource Include="Assets\Icons\morphic-highcontrastblack.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Assets\Icons\morphic-highcontrastwhite.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Assets\Icons\morphic-standardcontrast.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
     <Resource Include="Dialogs\LoginAnnounce.wav" />
     <Resource Include="Icon.png" />
   </ItemGroup>

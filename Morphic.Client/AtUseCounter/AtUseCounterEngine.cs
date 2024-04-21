@@ -344,7 +344,7 @@ internal class AtUseCounterEngine
 
           // high contrast mode
           bool highContrastModeIsOn;
-          var getHighContrastModeResult = Morphic.WindowsNative.Display.HighContrastUtils.GetHighContrastModeIsOn();
+          var getHighContrastModeResult = Morphic.WindowsNative.Theme.HighContrast.GetIsOn();
           if (getHighContrastModeResult.IsError == true)
           {
                Debug.Assert(false, "Could not get initial high contrast mode state");
@@ -732,7 +732,7 @@ internal class AtUseCounterEngine
      static void CheckForHighContrastIsOnChange()
      {
           // high contrast mode
-          var getHighContrastModeResult = Morphic.WindowsNative.Display.HighContrastUtils.GetHighContrastModeIsOn();
+          var getHighContrastModeResult = Morphic.WindowsNative.Theme.HighContrast.GetIsOn();
           if (getHighContrastModeResult.IsError == true)
           {
                Debug.Assert(false, "Could not get high contrast mode state");

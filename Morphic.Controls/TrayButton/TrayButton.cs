@@ -36,6 +36,23 @@ public class TrayButton : IDisposable
 
     public event System.Windows.Forms.MouseEventHandler? MouseUp;
 
+    public System.Drawing.Rectangle? PositionAndSize
+    {
+        get
+        {
+            if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
+            {
+                // Windows 11 and newer (i.e. modern tray button)
+                return _trayButton?.PositionAndSize;
+            }
+            else
+            {
+                // Windows 10 (i.e. legacy tray button)
+                return _legacyTrayButton?.PositionAndSize;
+            }
+        }
+    }
+
     public TrayButton()
     {
         if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)

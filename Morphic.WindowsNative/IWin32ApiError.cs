@@ -27,5 +27,5 @@ namespace Morphic.WindowsNative;
 
 public interface IWin32ApiError
 {
-    public record Win32Error(uint win32ErrorCode) : IWin32ApiError;
+    public record Win32Error(uint Win32ErrorCode) : IWin32ApiError;
 }

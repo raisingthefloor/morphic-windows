@@ -1,13 +1,13 @@
-﻿<ContextMenu x:Class="Morphic.Client.Menu.MorphicMenu"
+﻿<ContextMenu x:Class="Morphic.Client.MainMenu.MorphicMainMenu"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:menu="clr-namespace:Morphic.Client.Menu"
+             xmlns:menu="clr-namespace:Morphic.Client.MainMenu"
              xmlns:dialogs="clr-namespace:Morphic.Client.Dialogs"
              xmlns:l10n="clr-namespace:Morphic.Client.Strings"
              mc:Ignorable="d"
-             d:DataContext="{d:DesignInstance menu:MorphicMenu}">
+             d:DataContext="{d:DesignInstance menu:MorphicMainMenu}">
 
 
     <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_ShowMorphicBar_Header}" x:Name="ShowBar" Click="ShowBarClick" />
@@ -69,6 +69,6 @@
     <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_AutorunAfterLoginItem_Checkbox_Header}" x:Name="AutorunAfterLoginItem" Click="AutorunAfterLoginClicked" IsCheckable="True" IsChecked="{Binding App.AppOptions.AutoRun}" />
     <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_ShowMorphicBarLoginItem_Checkbox_Header}" x:Name="ShowMorphicBarAfterLoginItem" Click="ShowMorphicBarAfterLoginClicked" IsCheckable="True" IsChecked="{Binding App.AppOptions.AutoShow}" />
     <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_ProblemsContactUs_Header}" Click="ContactUsClicked" Open="https://morphic.org/contact-us" />
-    <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_AboutMorphic_Header}" Click="AboutMorphicClicked" Dialog="dialogs:AboutWindow" />
-    <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_QuitMorphic_Header}" Click="QuitClick"/>
+    <menu:MorphicMenuItem Header="{StaticResource MainMenuItem_AboutMorphic}" Click="AboutMorphicMenuItem_Click" />
+    <menu:MorphicMenuItem Header="{StaticResource MainMenuItem_QuitMorphic}" Click="QuitMorphicMenuItem_Click"/>
 </ContextMenu>

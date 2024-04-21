@@ -21,7 +21,9 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
+using Morphic.Core;
 using System;
+using System.Collections.Generic;
 
 namespace Morphic.Controls;
 
@@ -162,6 +164,31 @@ public class HybridTrayIcon : IDisposable
                 _trayButton.Visible = _visible;
             }
         }
+    }
+
+    //
+
+    public MorphicResult<List<System.Drawing.Rectangle>, MorphicUnit> GetPositionsAndSizes()
+    {
+        var result = new List<System.Drawing.Rectangle>();
+
+        if (_notifyIcon is not null)
+        {
+            // NOTE: if we can find the exact position and size of the icon in the system notification tray, we should return that value instead
+            // NOTE: since we cannot currently and reliably return a list of actual positions+sizes in this circumstance, we return an error
+            return MorphicResult.ErrorResult();
+        } 
+
+        if (_trayButton is not null)
+        {
+            var positionAndSize = _trayButton.PositionAndSize;
+            if (positionAndSize.HasValue == true)
+            {
+                result.Add(positionAndSize.Value);
+            }
+        }
+
+        return MorphicResult.OkResult(result);
     }
 
     //

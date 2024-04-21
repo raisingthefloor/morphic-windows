@@ -27,48 +27,48 @@ namespace Morphic.WindowsNative;
 
 public partial class Registry
 {
-   private static Lazy<RegistryKey> _classesRootRegistryKey = new(() => new RegistryKey(PInvoke.AdvApi32.HKEY_CLASSES_ROOT));
-   public static RegistryKey ClassesRoot
-   {
-       get
-       {
-           return _classesRootRegistryKey.Value;
-       }
-   }
+    private static Lazy<RegistryKey> _classesRootRegistryKey = new(() => new RegistryKey(Windows.Win32.System.Registry.HKEY.HKEY_CLASSES_ROOT));
+    public static RegistryKey ClassesRoot
+    {
+        get
+        {
+            return _classesRootRegistryKey.Value;
+        }
+    }
 
-   private static Lazy<RegistryKey> _currentUserRegistryKey = new(() => new RegistryKey(PInvoke.AdvApi32.HKEY_CURRENT_USER));
-   public static RegistryKey CurrentUser
-   {
-       get
-       {
-           return _currentUserRegistryKey.Value;
-       }
-   }
+    private static Lazy<RegistryKey> _currentUserRegistryKey = new(() => new RegistryKey(Windows.Win32.System.Registry.HKEY.HKEY_CURRENT_USER));
+    public static RegistryKey CurrentUser
+    {
+        get
+        {
+            return _currentUserRegistryKey.Value;
+        }
+    }
 
-   private static Lazy<RegistryKey> _localMachineRegistryKey = new(() => new RegistryKey(PInvoke.AdvApi32.HKEY_LOCAL_MACHINE));
-   public static RegistryKey LocalMachine
-   {
-       get
-       {
-           return _localMachineRegistryKey.Value;
-       }
-   }
+    private static Lazy<RegistryKey> _localMachineRegistryKey = new(() => new RegistryKey(Windows.Win32.System.Registry.HKEY.HKEY_LOCAL_MACHINE));
+    public static RegistryKey LocalMachine
+    {
+        get
+        {
+            return _localMachineRegistryKey.Value;
+        }
+    }
 
-   private static Lazy<RegistryKey> _usersRegistryKey = new(() => new RegistryKey(PInvoke.AdvApi32.HKEY_USERS));
-   public static RegistryKey Users
-   {
-       get
-       {
-           return _usersRegistryKey.Value;
-       }
-   }
+    private static Lazy<RegistryKey> _usersRegistryKey = new(() => new RegistryKey(Windows.Win32.System.Registry.HKEY.HKEY_USERS));
+    public static RegistryKey Users
+    {
+        get
+        {
+            return _usersRegistryKey.Value;
+        }
+    }
 
-   private static Lazy<RegistryKey> _currentConfigRegistryKey = new(() => new RegistryKey(PInvoke.AdvApi32.HKEY_CURRENT_CONFIG));
-   public static RegistryKey CurrentConfig
-   {
-       get
-       {
-           return _currentConfigRegistryKey.Value;
-       }
-   }
+    private static Lazy<RegistryKey> _currentConfigRegistryKey = new(() => new RegistryKey(Windows.Win32.System.Registry.HKEY.HKEY_CURRENT_CONFIG));
+    public static RegistryKey CurrentConfig
+    {
+        get
+        {
+            return _currentConfigRegistryKey.Value;
+        }
+    }
 }

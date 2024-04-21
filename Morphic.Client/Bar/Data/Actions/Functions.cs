@@ -88,7 +88,7 @@ namespace Morphic.Client.Bar.Data.Actions
         public async static Task<MorphicResult<MorphicUnit, MorphicUnit>> ShowMenuAsync(FunctionArgs args)
         {
             // NOTE: this internal function is only called by the MorphicBar's Morphie menu button
-            await App.Current.ShowMenuAsync(null, Morphic.Client.Menu.MorphicMenu.MenuOpenedSource.morphicBarIcon);
+            await App.Current.ShowMenuAsync(null, Morphic.Client.MainMenu.MorphicMainMenu.MenuOpenedSource.morphicBarIcon);
             return MorphicResult.OkResult();
         }
 

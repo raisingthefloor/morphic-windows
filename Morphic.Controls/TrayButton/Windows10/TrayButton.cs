@@ -47,6 +47,14 @@ internal class TrayButton : IDisposable
 
     public event System.Windows.Forms.MouseEventHandler? MouseUp;
 
+    public System.Drawing.Rectangle? PositionAndSize
+    {
+        get
+        {
+            return _nativeWindow?.PositionAndSize;
+        }
+    }
+
     internal TrayButton()
     {
     }
@@ -231,6 +239,15 @@ internal class TrayButton : IDisposable
         private TrayButtonVisualStateFlags _visualState = TrayButtonVisualStateFlags.None;
 
         private Morphic.Controls.TrayButton.Windows10.WindowsNative.MouseWindowMessageHook? _mouseHook = null;
+
+        private System.Drawing.Rectangle _trayButtonPositionAndSize;
+        public System.Drawing.Rectangle PositionAndSize
+        {
+            get
+            {
+                return _trayButtonPositionAndSize;
+            }
+        }
 
         internal TrayButtonNativeWindow(TrayButton owner)
         {
@@ -1098,6 +1115,11 @@ internal class TrayButton : IDisposable
                     Debug.Assert(false, "Could not resize taskbar's task button container");
                     return;
                 }
+
+                // capture our control's native window's new position and size
+                // NOTE: since we suppressed repositioning of the taskbar container above (i.e. just resizing it), we are only capturing the updated size here (out of an abundance of caution)
+                _trayButtonPositionAndSize.Width = newTaskButtonContainerRect!.Value.Right - newTaskButtonContainerRect!.Value.Left;
+                _trayButtonPositionAndSize.Height = newTaskButtonContainerRect!.Value.Bottom - newTaskButtonContainerRect!.Value.Top;
             }
 
             // if our button needs to move (either because we don't know the old RECT or because the new RECT is different), do so now
@@ -1134,6 +1156,9 @@ internal class TrayButton : IDisposable
                         Debug.Assert(false, "Could not reposition and/or resize tray button");
                         return;
                     }
+
+                    // capture our control's native window's new position and size
+                    _trayButtonPositionAndSize = new(childRect.left, childRect.top, childRect.right - childRect.left, childRect.bottom - childRect.top);
                 }
 
                 // as we have moved/resized, request a repaint
