@@ -22,20 +22,9 @@
 // * Consumer Electronics Association Foundation
 
 using Morphic.Core;
-using Morphic.WindowsNative.SystemSettings;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using Windows.Services.Maps;
-
-using SystemSettingsDataModel = SystemSettings.DataModel;
 
 namespace Morphic.WindowsNative.Accessibility;
 
@@ -46,14 +35,14 @@ public class ColorFilters
         public const string COLOR_FILTERING_IS_ENABLED_SETTING_ID = "SystemSettings_Accessibility_ColorFiltering_IsEnabled";
     }
 
-    private static SettingItemProxy? _colorFilteringIsEnabledSettingItem;
-    private static SettingItemProxy? ColorFilteringIsEnabledSettingItem
+    private static Morphic.WindowsNative.SystemSettings.SettingItemProxy? _colorFilteringIsEnabledSettingItem;
+    private static Morphic.WindowsNative.SystemSettings.SettingItemProxy? ColorFilteringIsEnabledSettingItem
     {
         get
         {
             if (_colorFilteringIsEnabledSettingItem is null)
             {
-                _colorFilteringIsEnabledSettingItem = SettingsDatabaseProxy.GetSettingItemOrNull(ColorFilters.SystemSettingId.COLOR_FILTERING_IS_ENABLED_SETTING_ID);
+                _colorFilteringIsEnabledSettingItem = Morphic.WindowsNative.SystemSettings.SettingsDatabaseProxy.GetSettingItemOrNull(ColorFilters.SystemSettingId.COLOR_FILTERING_IS_ENABLED_SETTING_ID);
             }
 
             return _colorFilteringIsEnabledSettingItem;
@@ -175,7 +164,7 @@ public class ColorFilters
     //// NOTE: this is an alternate implementation of GetIsActive (saved as a backup plan, just in case the registry entries aren't a reliable (or preferred) source of truth for the value
     //public static async Task<MorphicResult<bool?, MorphicUnit>> GetIsActiveAsync(TimeSpan? timeout = null)
     //{
-    //    var getValueResult = await SettingItemProxy.GetSettingItemValueAsync<bool>(ColorFilters.ColorFilteringIsEnabledSettingItem, /*ColorFilters.COLOR_FILTERING_IS_ENABLED_VALUE, */timeout);
+    //    var getValueResult = await Morphic.WindowsNative.SystemSettings.SettingItemProxy.GetSettingItemValueAsync<bool>(ColorFilters.ColorFilteringIsEnabledSettingItem, /*ColorFilters.COLOR_FILTERING_IS_ENABLED_VALUE, */timeout);
     //    if (getValueResult.IsError == true)
     //    {
     //        return MorphicResult.ErrorResult();
@@ -246,7 +235,7 @@ public class ColorFilters
 
     public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> SetIsActiveAsync(bool value, TimeSpan? timeout = null)
     {
-        var setValueResult = await SettingItemProxy.SetSettingItemValueAsync<bool>(ColorFilters.ColorFilteringIsEnabledSettingItem, /*ColorFilters.COLOR_FILTERING_IS_ENABLED_VALUE, */value, timeout);
+        var setValueResult = await Morphic.WindowsNative.SystemSettings.SettingItemProxy.SetSettingItemValueAsync<bool>(ColorFilters.ColorFilteringIsEnabledSettingItem, /*ColorFilters.COLOR_FILTERING_IS_ENABLED_VALUE, */value, timeout);
         if (setValueResult.IsError == true)
         {
             return MorphicResult.ErrorResult();

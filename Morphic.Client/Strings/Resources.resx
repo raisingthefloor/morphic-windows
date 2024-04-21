@@ -117,9 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="AboutMorphicWindow_Title" xml:space="preserve">
-    <value>About Morphic</value>
-  </data>
   <data name="AlreadyHaveAnAccountButton_Content" xml:space="preserve">
     <value>Already have an account?</value>
   </data>
@@ -213,17 +210,11 @@
   <data name="InstallButton_Text" xml:space="preserve">
     <value>Install</value>
   </data>
-  <data name="LearnMoreAboutMorphicHyperlink_Text" xml:space="preserve">
-    <value>Learn More About Morphic</value>
-  </data>
   <data name="LoginButton_AutomationHelpText" xml:space="preserve">
     <value>Login</value>
   </data>
   <data name="LoginError_DidNotRecognizeLogin_Text" xml:space="preserve">
     <value>We did not recognize your login.  Please try again.</value>
-  </data>
-  <data name="Menu_AboutMorphic_Header" xml:space="preserve">
-    <value>_About Morphic...</value>
   </data>
   <data name="Menu_ApplySavedSetup_Header" xml:space="preserve">
     <value>Apply a Saved Setup...</value>
@@ -308,9 +299,6 @@
   </data>
   <data name="Menu_QuickMorphicDemosLink_Header" xml:space="preserve">
     <value>Quick Morphic _demo videos...</value>
-  </data>
-  <data name="Menu_QuitMorphic_Header" xml:space="preserve">
-    <value>_Quit Morphic</value>
   </data>
   <data name="Menu_RestoreSettingsFromBackup_Header" xml:space="preserve">
     <value>_Restore settings from backup</value>

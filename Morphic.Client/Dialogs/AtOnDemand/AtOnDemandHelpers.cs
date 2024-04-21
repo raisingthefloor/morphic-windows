@@ -205,6 +205,7 @@ internal class AtOnDemandHelpers
                 if (percentageComplete > lastPercentageComplete + MINIMUM_PERCENTAGE_INCREASE_BETWEEN_PROGRESS_CALLBACKS)
                 {
                     lastPercentageComplete = percentageComplete;
+
                     _ = Task.Run(() =>
                     {
                         progressFunction?.Invoke(percentageComplete);

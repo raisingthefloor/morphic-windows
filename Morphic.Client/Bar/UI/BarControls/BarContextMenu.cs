@@ -2,7 +2,7 @@
 {
     using System.Collections.Generic;
     using System.Windows.Controls;
-    using Menu;
+    using MainMenu;
 
     public class BarContextMenu
     {

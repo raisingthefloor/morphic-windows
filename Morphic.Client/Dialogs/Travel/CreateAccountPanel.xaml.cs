@@ -332,12 +332,12 @@ namespace Morphic.Client.Dialogs
 
         private void TermsOfServiceButton_Click(object sender, RoutedEventArgs e)
         {
-            Client.Menu.MorphicMenuItem.OpenMenuItemPath("https://morphic.org/terms-of-service/");
+            Client.MainMenu.MorphicMenuItem.OpenMenuItemPath("https://morphic.org/terms-of-service/");
         }
 
         private void PrivacyPolicyButton_Click(object sender, RoutedEventArgs e)
         {
-            Client.Menu.MorphicMenuItem.OpenMenuItemPath("https://morphic.org/privacy-policy/");
+            Client.MainMenu.MorphicMenuItem.OpenMenuItemPath("https://morphic.org/privacy-policy/");
         }
     }
 }

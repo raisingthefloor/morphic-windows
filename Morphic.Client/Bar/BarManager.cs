@@ -12,7 +12,6 @@
 namespace Morphic.Client.Bar
 {
     using System;
-    using System.Collections.Generic;
     using System.ComponentModel;
     using System.IO;
     using System.Linq;
@@ -23,11 +22,9 @@ namespace Morphic.Client.Bar
     using Morphic.Core.Legacy;
     using Morphic.Core.Legacy.Community;
     using Data;
-    using Dialogs;
     using Microsoft.Extensions.Logging;
     using Service;
     using UI;
-    using MessageBox = System.Windows.Forms.MessageBox;
     using SystemJson = System.Text.Json;
 
     /// <summary>

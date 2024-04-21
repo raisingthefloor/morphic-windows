@@ -1,4 +1,15 @@
-﻿DwmSetWindowAttribute
+﻿DisplayConfigGetDeviceInfo
+DwmSetWindowAttribute
+EnumDisplayMonitors
+EnumDisplaySettings
+GetCurrentPackageFullName
+GetCursorPos
+GetDesktopWindow
+GetDisplayConfigBufferSizes
+GetMonitorInfo
+MonitorFromPoint
+MonitorFromWindow
+QueryDisplayConfig
 RegDeleteValue
 RegEnumKeyEx
 RegEnumValue
@@ -6,7 +17,15 @@ RegNotifyChangeKeyValue
 RegOpenKeyEx
 RegQueryValueEx
 RegSetValueEx
+SystemParametersInfo
 
+DISPLAYCONFIG_MODE_INFO
+DISPLAYCONFIG_PATH_INFO
+DISPLAYCONFIG_SOURCE_DEVICE_NAME
+HIGHCONTRASTW
+LUID
+
+CCHDEVICENAME
 HKEY_CLASSES_ROOT
 HKEY_CURRENT_CONFIG
 HKEY_CURRENT_USER

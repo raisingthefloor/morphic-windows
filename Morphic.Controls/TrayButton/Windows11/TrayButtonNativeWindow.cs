@@ -47,6 +47,15 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
     private bool _tooltipInfoAdded = false;
     private string? _tooltipText;
 
+    private Windows.Win32.Foundation.RECT _trayButtonPositionAndSize;
+    public System.Drawing.Rectangle PositionAndSize
+    {
+        get
+        {
+            return new(_trayButtonPositionAndSize.X, _trayButtonPositionAndSize.Y, _trayButtonPositionAndSize.Width, _trayButtonPositionAndSize.Height);
+        }
+    }
+
     private IntPtr _locationChangeWindowEventHook = IntPtr.Zero;
     private PInvokeExtensions.WinEventProc? _locationChangeWindowEventProc = null;
 
@@ -160,6 +169,9 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
             return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.CouldNotCalculateWindowPosition());
         }
         var trayButtonPositionAndSize = calculatePositionResult.Value!;
+        //
+        // capture our initial position and size
+        result._trayButtonPositionAndSize = trayButtonPositionAndSize;
 
         /* get the handle for the taskbar; it will be the owner of our native window (so that our window sits above it in the zorder) */
         // NOTE: we will still need to push our window to the front of its owner's zorder stack in some circumstances, as certain actions (such as popping up the task list balloons above the task bar) will reorder the taskbar's zorder and push us behind the taskbar
@@ -835,7 +847,17 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
         var trayButtonPositionAndSize = calculatePositionResult.Value!;
         //
         var size = new System.Drawing.Size(trayButtonPositionAndSize.right - trayButtonPositionAndSize.left, trayButtonPositionAndSize.bottom - trayButtonPositionAndSize.top);
-        Windows.Win32.PInvoke.SetWindowPos((Windows.Win32.Foundation.HWND)this.Handle, (Windows.Win32.Foundation.HWND)IntPtr.Zero, trayButtonPositionAndSize.left, trayButtonPositionAndSize.top, size.Width, size.Height, Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOZORDER | Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
+        var setWindowPosResult = Windows.Win32.PInvoke.SetWindowPos((Windows.Win32.Foundation.HWND)this.Handle, (Windows.Win32.Foundation.HWND)IntPtr.Zero, trayButtonPositionAndSize.left, trayButtonPositionAndSize.top, size.Width, size.Height, Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOZORDER | Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
+        if (setWindowPosResult == 0)
+        {
+            var win32Error = (uint)System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+            Debug.Assert(false, "SetWindowPos failed while trying to reposition TrayButton native window; win32 error: " + win32Error.ToString() + ".");
+            return MorphicResult.ErrorResult();
+            //return MorphicResult.ErrorResult<Morphic.WindowsNative.IWin32ApiError>(new Morphic.WindowsNative.IWin32ApiError.Win32Error(win32Error));
+        }
+        //
+        // capture our updated position and size
+        _trayButtonPositionAndSize = trayButtonPositionAndSize;
 
         // once the control is repositioned, reposition the bitmap
         var bitmap = _argbImageNativeWindow?.GetBitmap();
@@ -849,7 +871,6 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
         {
             this.UpdateTooltipTextAndTracking();
         }
-
 
         _ = Windows.Win32.PInvoke.BringWindowToTop((Windows.Win32.Foundation.HWND)this.Handle);
 
@@ -1084,7 +1105,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
         int trayButtonWidth;
         // NOTE: on some computers, the taskbar and notify tray return an inaccurate size, but the task button container appears to always return the correct size; therefore we match our primary dimension to the taskbutton container's same dimension
         // NOTE: the inaccurate size returned by GetWindowRect may be due to our moving this class from the main application to a helper library (i.e. perhaps the pixel scaling isn't applying correctly), or it could just be a weird quirk on some computers.
-        //       [The GetWindowRect issue happens with both our own home-built PINVOKE methods as well as with PInvoke.User32.GetWindowRect; the function is returning the correct left, bottom and right positions of the taskbar and notify tray--but is
+        //       [The GetWindowRect issue happens with both our own homebuilt PINVOKE methods as well as with PInvoke.User32.GetWindowRect; the function is returning the correct left, bottom and right positions of the taskbar and notify tray--but is
         //       sometimes misrepresenting the top (i.e. height) value of both the taskbar and notify tray rects]
         if (taskbarOrientation == System.Windows.Forms.Orientation.Horizontal)
         {

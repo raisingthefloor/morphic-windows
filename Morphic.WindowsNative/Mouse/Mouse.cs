@@ -34,22 +34,25 @@ namespace Morphic.WindowsNative.Mouse;
 
 public class Mouse
 {
-   public static MorphicResult<Point, Win32ApiError> GetCurrentPosition()
-   {
-       var point = new PInvoke.POINT();
-       var getCursorPosResult = PInvoke.User32.GetCursorPos(out point);
-       if (getCursorPosResult == false)
-       {
-           var win32ErrorCode = PInvoke.Kernel32.GetLastError();
-           if (win32ErrorCode != PInvoke.Win32ErrorCode.ERROR_SUCCESS)
-           {
-               return MorphicResult.ErrorResult(Win32ApiError.Win32Error((uint)win32ErrorCode));
-           }
-       }
+    // NOTE: the GetCursorPos API returns the mouse position in logical pixels; however if the app is DPI-aware then testing has shown that GetCursorPos returns the position in physical pixels (just like GetPhysicalCursorPos)
+    public static MorphicResult<Point, IWin32ApiError> GetCurrentPosition()
+    {
+        // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getcursorpos
+        // NOTE: the input desktop must be the current desktop when this function is called; that should not be an issue, but if it is then we need to call OpenInputDesktop (and maybe SetThreadDesktop, using the HDESK returned by OpenInputDesktop) to switch to the proper desktop.
+        //       see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getcursorpos#remarks
+        System.Drawing.Point point;
+        var getCursorPosResult = Windows.Win32.PInvoke.GetCursorPos(out point);
+        if (getCursorPosResult == 0)
+        {
+            var win32ErrorCode = (Windows.Win32.Foundation.WIN32_ERROR)System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+            if (win32ErrorCode != Windows.Win32.Foundation.WIN32_ERROR.ERROR_SUCCESS)
+            {
+                return MorphicResult.ErrorResult<IWin32ApiError>(new IWin32ApiError.Win32Error((uint)win32ErrorCode));
+            }
+        }
 
-       var result = new Point(point.x, point.y);
-       return MorphicResult.OkResult(result);
-   }
+        return MorphicResult.OkResult(point);
+    }
 
    public static MorphicResult<uint?, IWin32ApiError> GetCursorSize()
    {

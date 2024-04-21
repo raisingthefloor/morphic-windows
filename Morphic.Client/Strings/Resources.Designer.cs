@@ -61,15 +61,6 @@ namespace Morphic.Client.Strings {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to About Morphic.
-        /// </summary>
-        public static string AboutMorphicWindow_Title {
-            get {
-                return ResourceManager.GetString("AboutMorphicWindow_Title", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Already have an account?.
         /// </summary>
         public static string AlreadyHaveAnAccountButton_Content {
@@ -349,15 +340,6 @@ namespace Morphic.Client.Strings {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Learn More About Morphic.
-        /// </summary>
-        public static string LearnMoreAboutMorphicHyperlink_Text {
-            get {
-                return ResourceManager.GetString("LearnMoreAboutMorphicHyperlink_Text", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Login.
         /// </summary>
         public static string LoginButton_AutomationHelpText {
@@ -372,15 +354,6 @@ namespace Morphic.Client.Strings {
         public static string LoginError_DidNotRecognizeLogin_Text {
             get {
                 return ResourceManager.GetString("LoginError_DidNotRecognizeLogin_Text", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to _About Morphic....
-        /// </summary>
-        public static string Menu_AboutMorphic_Header {
-            get {
-                return ResourceManager.GetString("Menu_AboutMorphic_Header", resourceCulture);
             }
         }
         
@@ -633,15 +606,6 @@ namespace Morphic.Client.Strings {
         public static string Menu_QuickMorphicDemosLink_Header {
             get {
                 return ResourceManager.GetString("Menu_QuickMorphicDemosLink_Header", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to _Quit Morphic.
-        /// </summary>
-        public static string Menu_QuitMorphic_Header {
-            get {
-                return ResourceManager.GetString("Menu_QuitMorphic_Header", resourceCulture);
             }
         }
         

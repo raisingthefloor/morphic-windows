@@ -41,13 +41,13 @@ public static class LightTheme
     }
     public delegate void LightThemeChangedEventHandler(object? sender, LightThemeChangedEventArgs args);
     //
-    private static LightThemeChangedEventHandler? s_appsUseLightThemeChanged = null;
-    private static LightThemeChangedEventHandler? s_systemUsesLightThemeChanged = null;
+    private static LightThemeChangedEventHandler? s_appsUseLightThemeSettingChanged = null;
+    private static LightThemeChangedEventHandler? s_systemUsesLightThemeSettingChanged = null;
 
-    private static bool? _appsUseLightTheme = null;
-    private static bool? _systemUsesLightTheme = null;
+    private static bool? _appsUseLightThemeSetting = null;
+    private static bool? _systemUsesLightThemeSetting = null;
 
-    public static MorphicResult<bool, MorphicUnit> GetAppsUseLightTheme()
+    public static MorphicResult<bool, MorphicUnit> GetAppsUseLightThemeSetting()
     {
         var openPersonalizeKeyResult = Morphic.WindowsNative.Registry.CurrentUser.OpenSubKey(LightTheme.HKCU_THEMES_PERSONALIZE_PATH, false);
         if (openPersonalizeKeyResult.IsError == true)
@@ -57,26 +57,26 @@ public static class LightTheme
         var personalizeKey = openPersonalizeKeyResult.Value!;
 
         // get the current light theme settings for apps
-        bool? appsUseLightThemeAsBool = null;
-        var getAppsUseLightThemeResult = personalizeKey.GetValueDataOrNull<uint>("AppsUseLightTheme");
-        if (getAppsUseLightThemeResult.IsError == true)
+        bool? appsUseLightThemeSettingAsBool = null;
+        var getAppsUseLightThemeSettingResult = personalizeKey.GetValueDataOrNull<uint>("AppsUseLightTheme");
+        if (getAppsUseLightThemeSettingResult.IsError == true)
         {
             return MorphicResult.ErrorResult();
         }
-        var appsUseLightThemeAsUInt32 = getAppsUseLightThemeResult.Value;
-        if (appsUseLightThemeAsUInt32 is not null)
+        var appsUseLightThemeSettingAsUInt32 = getAppsUseLightThemeSettingResult.Value;
+        if (appsUseLightThemeSettingAsUInt32 is not null)
         {
-            appsUseLightThemeAsBool = (appsUseLightThemeAsUInt32 != 0) ? true : false;
+            appsUseLightThemeSettingAsBool = (appsUseLightThemeSettingAsUInt32 != 0) ? true : false;
         }
 
         // NOTE: the default light theme state (if no registry value is present) is true
-        bool result = appsUseLightThemeAsBool is null ? true : appsUseLightThemeAsBool.Value!;
+        bool result = appsUseLightThemeSettingAsBool is null ? true : appsUseLightThemeSettingAsBool.Value!;
 
         return MorphicResult.OkResult(result);
     }
 
     // NOTE: it is the target event's responsibility to run any UI-related code on the main UI thread; this event should be considered to be fired from a background thread
-    public static event LightThemeChangedEventHandler AppsUseLightThemeChanged
+    public static event LightThemeChangedEventHandler AppsUseLightThemeSettingChanged
     {
         add
         {
@@ -86,15 +86,15 @@ public static class LightTheme
                 return;
             }
 
-            s_appsUseLightThemeChanged += value;
+            s_appsUseLightThemeSettingChanged += value;
         }
         remove
         {
-            s_appsUseLightThemeChanged -= value;
+            s_appsUseLightThemeSettingChanged -= value;
 
-            if (s_appsUseLightThemeChanged is null || s_appsUseLightThemeChanged!.GetInvocationList().Length == 0)
+            if (s_appsUseLightThemeSettingChanged is null || s_appsUseLightThemeSettingChanged!.GetInvocationList().Length == 0)
             {
-                s_appsUseLightThemeChanged = null;
+                s_appsUseLightThemeSettingChanged = null;
 
                 LightTheme.DestroyThemePersonalizationWatchKeyIfUnused();
             }
@@ -103,7 +103,7 @@ public static class LightTheme
 
     //
 
-    public static MorphicResult<bool, MorphicUnit> GetSystemUsesLightTheme()
+    public static MorphicResult<bool, MorphicUnit> GetSystemUsesLightThemeSetting()
     {
         var openPersonalizeKeyResult = Morphic.WindowsNative.Registry.CurrentUser.OpenSubKey(LightTheme.HKCU_THEMES_PERSONALIZE_PATH, false);
         if (openPersonalizeKeyResult.IsError == true)
@@ -113,26 +113,26 @@ public static class LightTheme
         var personalizeKey = openPersonalizeKeyResult.Value!;
 
         // get the current light theme settings for Windows (i.e. the system)
-        bool? systemUsesLightThemeAsBool = null;
-        var getSystemUsesLightThemeResult = personalizeKey.GetValueDataOrNull<uint>("SystemUsesLightTheme");
-        if (getSystemUsesLightThemeResult.IsError == true)
+        bool? systemUsesLightThemeSettingAsBool = null;
+        var getSystemUsesLightThemeSettingResult = personalizeKey.GetValueDataOrNull<uint>("SystemUsesLightTheme");
+        if (getSystemUsesLightThemeSettingResult.IsError == true)
         {
             return MorphicResult.ErrorResult();
         }
-        var systemUsesLightThemeAsUInt32 = getSystemUsesLightThemeResult.Value;
-        if (systemUsesLightThemeAsUInt32 is not null)
+        var systemUsesLightThemeSettingAsUInt32 = getSystemUsesLightThemeSettingResult.Value;
+        if (systemUsesLightThemeSettingAsUInt32 is not null)
         {
-            systemUsesLightThemeAsBool = (systemUsesLightThemeAsUInt32 != 0) ? true : false;
+            systemUsesLightThemeSettingAsBool = (systemUsesLightThemeSettingAsUInt32 != 0) ? true : false;
         }
 
         // NOTE: the default light theme state (if no registry value is present) is true
-        bool result = systemUsesLightThemeAsBool is null ? true : systemUsesLightThemeAsBool.Value!;
+        bool result = systemUsesLightThemeSettingAsBool is null ? true : systemUsesLightThemeSettingAsBool.Value!;
 
         return MorphicResult.OkResult(result);
     }
 
     // NOTE: it is the target event's responsibility to run any UI-related code on the main UI thread; this event should be considered to be fired from a background thread
-    public static event LightThemeChangedEventHandler SystemUsesLightThemeChanged
+    public static event LightThemeChangedEventHandler SystemUsesLightThemeSettingChanged
     {
         add
         {
@@ -142,15 +142,15 @@ public static class LightTheme
                 return;
             }
 
-            s_systemUsesLightThemeChanged += value;
+            s_systemUsesLightThemeSettingChanged += value;
         }
         remove
         {
-            s_systemUsesLightThemeChanged -= value;
+            s_systemUsesLightThemeSettingChanged -= value;
 
-            if (s_systemUsesLightThemeChanged is null || s_systemUsesLightThemeChanged!.GetInvocationList().Length == 0)
+            if (s_systemUsesLightThemeSettingChanged is null || s_systemUsesLightThemeSettingChanged!.GetInvocationList().Length == 0)
             {
-                s_systemUsesLightThemeChanged = null;
+                s_systemUsesLightThemeSettingChanged = null;
 
                 LightTheme.DestroyThemePersonalizationWatchKeyIfUnused();
             }
@@ -162,18 +162,18 @@ public static class LightTheme
     private static void s_ThemePersonalizationWatchKey_RegistryKeyChangedEvent(Registry.RegistryKey sender, EventArgs e)
     {
         // apps use light mode
-        var getAppsUseLightThemeResult = LightTheme.GetAppsUseLightTheme();
-        if (getAppsUseLightThemeResult.IsSuccess == true)
+        var getAppsUseLightThemeSettingResult = LightTheme.GetAppsUseLightThemeSetting();
+        if (getAppsUseLightThemeSettingResult.IsSuccess == true)
         {
-            var appsUseLightTheme = getAppsUseLightThemeResult.Value!;
-            if (_appsUseLightTheme != appsUseLightTheme)
+            var appsUseLightThemeSetting = getAppsUseLightThemeSettingResult.Value!;
+            if (_appsUseLightThemeSetting != appsUseLightThemeSetting)
             {
-                _appsUseLightTheme = appsUseLightTheme;
+                _appsUseLightThemeSetting = appsUseLightThemeSetting;
 
-                var lightThemeChangedEventArgs = new LightThemeChangedEventArgs(appsUseLightTheme);
+                var lightThemeChangedEventArgs = new LightThemeChangedEventArgs(appsUseLightThemeSetting);
 
                 // NOTE: to ensure that each event handler runs (even if one throws an exception), we send an event to each window separately in parallel
-                var invocationList = s_appsUseLightThemeChanged?.GetInvocationList();
+                var invocationList = s_appsUseLightThemeSettingChanged?.GetInvocationList();
                 if (invocationList is not null)
                 {
                     foreach (LightThemeChangedEventHandler element in invocationList!)
@@ -186,7 +186,7 @@ public static class LightTheme
                 }
                 //Task.Run(() =>
                 //{
-                //    _appsUseLightThemeChanged?.Invoke(null /* static class, no so type instance */, new EventArgs());
+                //    _appsUseLightThemeChanged?.Invoke(null /* static class, no so type instance */, lightThemeChangedEventArgs);
                 //});
             }
         }
@@ -196,18 +196,18 @@ public static class LightTheme
         }
 
         // system uses light mode
-        var getSystemUsesLightThemeResult = LightTheme.GetSystemUsesLightTheme();
-        if (getSystemUsesLightThemeResult.IsSuccess == true)
+        var getSystemUsesLightThemeSettingResult = LightTheme.GetSystemUsesLightThemeSetting();
+        if (getSystemUsesLightThemeSettingResult.IsSuccess == true)
         {
-            var systemUsesLightTheme = getSystemUsesLightThemeResult.Value!;
-            if (_systemUsesLightTheme != systemUsesLightTheme)
+            var systemUsesLightThemeSetting = getSystemUsesLightThemeSettingResult.Value!;
+            if (_systemUsesLightThemeSetting != systemUsesLightThemeSetting)
             {
-                _systemUsesLightTheme = systemUsesLightTheme;
+                _systemUsesLightThemeSetting = systemUsesLightThemeSetting;
 
-                var lightThemeChangedEventArgs = new LightThemeChangedEventArgs(systemUsesLightTheme);
+                var lightThemeChangedEventArgs = new LightThemeChangedEventArgs(systemUsesLightThemeSetting);
 
                 // NOTE: to ensure that each event handler runs (even if one throws an exception), we send an event to each window separately in parallel
-                var invocationList = s_systemUsesLightThemeChanged?.GetInvocationList();
+                var invocationList = s_systemUsesLightThemeSettingChanged?.GetInvocationList();
                 if (invocationList is not null)
                 {
                     foreach (LightThemeChangedEventHandler element in invocationList!)
@@ -247,7 +247,7 @@ public static class LightTheme
                     switch (openKeyResult.Error!)
                     {
                         case IWin32ApiError.Win32Error(Win32ErrorCode: var win32ErrorCode):
-                            Debug.Assert(false, "Could not open theme key for notifications; win32 error: " + win32ErrorCode.ToString());
+                            Debug.Assert(false, "Could not open theme personalization registry key for notifications; win32 error: " + win32ErrorCode.ToString());
                             break;
                         default:
                             throw new MorphicUnhandledErrorException();
@@ -268,8 +268,8 @@ public static class LightTheme
     {
         lock (s_ThemePersonalizationWatchKeyLock)
         {
-            if ((s_appsUseLightThemeChanged is null || s_appsUseLightThemeChanged!.GetInvocationList().Length == 0) &&
-                (s_systemUsesLightThemeChanged is null || s_systemUsesLightThemeChanged!.GetInvocationList().Length == 0))
+            if ((s_appsUseLightThemeSettingChanged is null || s_appsUseLightThemeSettingChanged!.GetInvocationList().Length == 0) &&
+                (s_systemUsesLightThemeSettingChanged is null || s_systemUsesLightThemeSettingChanged!.GetInvocationList().Length == 0))
             {
                 s_ThemePersonalizationWatchKey?.Dispose();
                 s_ThemePersonalizationWatchKey = null;
