@@ -1087,7 +1087,7 @@ public partial class App : Application
     {
         await Application.Current.Dispatcher.InvokeAsync(async () =>
         {
-            await this.MorphicMainMenu.ShowAsync(null, Morphic.Client.MorphicMainMenu.MenuOpenedSource.trayIcon);
+            await this.MorphicMainMenu.ShowAsync(null, Morphic.Client.MainMenu.MorphicMainMenu.MenuOpenedSource.trayIcon);
         });
     }
 
