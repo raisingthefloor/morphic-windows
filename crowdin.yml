@@ -15,8 +15,8 @@
 #
 files: [
  {
-  "source" : "Morphic.Client/StringResources.resx",
-  "translation" : "Morphic.Client/StringResources.%two_letters_code%.resx",
+  "source" : "Morphic.Client/StringResources.xaml",
+  "translation" : "Morphic.Client/StringResources.%two_letters_code%.xaml",
   "update_option" : "update_as_unapproved",
  },
  {
