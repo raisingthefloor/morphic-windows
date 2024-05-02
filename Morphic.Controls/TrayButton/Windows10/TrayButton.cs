@@ -862,7 +862,7 @@ internal class TrayButton : IDisposable
 
                     if (_iconHandle != IntPtr.Zero && iconWidthAndHeight > 0)
                     {
-                        var drawIconSuccess = LegacyWindowsApi.DrawIconEx(bufferedPaintDc, xLeft, yTop, _iconHandle, iconWidthAndHeight, iconWidthAndHeight, 0 /* not animated */, IntPtr.Zero /* no triple-buffering */, LegacyWindowsApi.DrawIconFlags.DI_NORMAL);
+                        var drawIconSuccess = LegacyWindowsApi.DrawIconEx(bufferedPaintDc, xLeft, yTop, _iconHandle, iconWidthAndHeight, iconWidthAndHeight, 0 /* not animated */, IntPtr.Zero /* no triple-buffering */, LegacyWindowsApi.DrawIconFlags.DI_NORMAL | LegacyWindowsApi.DrawIconFlags.DI_NOMIRROR);
                         if (drawIconSuccess == false)
                         {
                             // failed; abort
@@ -1213,13 +1213,20 @@ internal class TrayButton : IDisposable
             return (taskbarRect, taskButtonContainerRect, notifyTrayRect);
         }
 
-        private (LegacyWindowsApi.RECT availableAreaRect, List<LegacyWindowsApi.RECT> childRects) CalculateEmptyRectsBetweenTaskButtonContainerAndNotifyTray(IntPtr taskbarHandle, System.Windows.Forms.Orientation taskbarOrientation, LegacyWindowsApi.RECT taskbarRect, LegacyWindowsApi.RECT taskButtonContainerRect, LegacyWindowsApi.RECT notifyTrayRect)
+        private (LegacyWindowsApi.RECT availableAreaRect, List<LegacyWindowsApi.RECT> childRects) CalculateEmptyRectsBetweenTaskButtonContainerAndNotifyTray(IntPtr taskbarHandle, System.Windows.Forms.Orientation taskbarOrientation, bool isRightToLeft, LegacyWindowsApi.RECT taskbarRect, LegacyWindowsApi.RECT taskButtonContainerRect, LegacyWindowsApi.RECT notifyTrayRect)
         {
             // calculate the total "free area" rectangle (the area between the task button container and the notify tray where we want to place our tray button)
             LegacyWindowsApi.RECT freeAreaAvailableRect;
             if (taskbarOrientation == System.Windows.Forms.Orientation.Horizontal)
             {
-                freeAreaAvailableRect = new LegacyWindowsApi.RECT(new System.Windows.Rect(taskButtonContainerRect.Right, taskbarRect.Top, Math.Max(notifyTrayRect.Left - taskButtonContainerRect.Right, 0), Math.Max(taskbarRect.Bottom - taskbarRect.Top, 0)));
+                if (isRightToLeft == false)
+                {
+                    freeAreaAvailableRect = new LegacyWindowsApi.RECT(new System.Windows.Rect(taskButtonContainerRect.Right, taskbarRect.Top, Math.Max(notifyTrayRect.Left - taskButtonContainerRect.Right, 0), Math.Max(taskbarRect.Bottom - taskbarRect.Top, 0)));
+                }
+                else
+                {
+                    freeAreaAvailableRect = new LegacyWindowsApi.RECT(new System.Windows.Rect(notifyTrayRect.Right, taskbarRect.Top, Math.Max(taskButtonContainerRect.Left - notifyTrayRect.Right, 0), Math.Max(taskbarRect.Bottom - taskbarRect.Top, 0)));
+                }
             }
             else
             {
@@ -1318,8 +1325,19 @@ internal class TrayButton : IDisposable
                 taskbarOrientation = System.Windows.Forms.Orientation.Vertical;
             }
 
+            // if the taskbar is horizontal, determine if it's LeftToRight (standard) or RightToLeft (for Arabic, Hebrew, etc.)
+            bool isRightToLeft = false;
+            if (taskbarOrientation == System.Windows.Forms.Orientation.Horizontal)
+            {
+                var centerXOfTaskbar = taskbarRect.Left + ((taskbarRect.Right - taskbarRect.Left) / 2);
+                if (notifyTrayRect.Right < centerXOfTaskbar)
+                {
+                    isRightToLeft = true;
+                }
+            }
+
             // calculate all of the free rects between the task button container and notify tray
-            var calculateEmptyRectsResult = this.CalculateEmptyRectsBetweenTaskButtonContainerAndNotifyTray(taskbarHandle, taskbarOrientation, taskbarRect, taskButtonContainerRect, notifyTrayRect);
+            var calculateEmptyRectsResult = this.CalculateEmptyRectsBetweenTaskButtonContainerAndNotifyTray(taskbarHandle, taskbarOrientation, isRightToLeft, taskbarRect, taskButtonContainerRect, notifyTrayRect);
             var freeAreaChildRects = calculateEmptyRectsResult.childRects;
             var freeAreaAvailableRect = calculateEmptyRectsResult.availableAreaRect;
 
@@ -1399,24 +1417,42 @@ internal class TrayButton : IDisposable
                 }
             }
 
-            // if our current (already-used-by-us) rect was not available, choose the leftmost/topmost space available
+            // if our current (already-used-by-us) rect was not available, choose the leftmost/topmost space available; note that "rightmost" is actually leftmost when the system is using an RTL orientation (e.g. Arabic, Hebrew)
             if (newRect is null)
             {
                 if (taskbarOrientation == System.Windows.Forms.Orientation.Horizontal)
                 {
                     // horizontal taskbar: find the leftmost rect in the available space (which we'll then carve the "rightmost" section out of)
+                    // OBSERVATION: leftmost is actually rightmost in RTL layouts (e.g. Arabic, Hebrew)
                     LegacyWindowsApi.RECT leftmostRect = freeAreaAvailableRect;
 
                     foreach (var freeAreaChildRect in freeAreaChildRects)
                     {
-                        if (freeAreaChildRect.Left < leftmostRect.Right)
+                        if (isRightToLeft == false)
                         {
-                            leftmostRect.Right = freeAreaChildRect.Left;
+                            if (freeAreaChildRect.Left < leftmostRect.Right)
+                            {
+                                leftmostRect.Right = freeAreaChildRect.Left;
+                            }
+                        }
+                        else
+                        {
+                            if (freeAreaChildRect.Right > leftmostRect.Left)
+                            {
+                                leftmostRect.Left = freeAreaChildRect.Right;
+                            }
                         }
                     }
 
-                    // choose the rightmost space in the leftmostRect area; expand our tray button towards the left if/as necessary
-                    newRect = new LegacyWindowsApi.RECT(new System.Windows.Rect(leftmostRect.Right - trayButtonWidth, leftmostRect.Bottom - trayButtonHeight, trayButtonWidth, trayButtonHeight));
+                    // choose the rightmost space in the leftmostRect area (or leftmost for RTL layouts); expand our tray button towards the left (right for RTL) if/as necessary
+                    if (isRightToLeft == false)
+                    {
+                        newRect = new LegacyWindowsApi.RECT(new System.Windows.Rect(leftmostRect.Right - trayButtonWidth, leftmostRect.Bottom - trayButtonHeight, trayButtonWidth, trayButtonHeight));
+                    }
+                    else
+                    {
+                        newRect = new LegacyWindowsApi.RECT(new System.Windows.Rect(leftmostRect.Left, leftmostRect.Bottom - trayButtonHeight, trayButtonWidth, trayButtonHeight));
+                    }
                 }
                 else
                 {
