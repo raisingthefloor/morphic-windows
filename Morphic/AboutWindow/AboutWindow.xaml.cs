@@ -23,51 +23,49 @@
 
 using System;
 using System.Reflection;
-using System.Windows;
 
-namespace Morphic.AboutWindow
+namespace Morphic.AboutWindow;
+
+/// <summary>
+/// Interaction logic for AboutWindow.xaml
+/// </summary>
+public partial class AboutWindow : Morphic.UI.ThemeAwareWindow
 {
-    /// <summary>
-    /// Interaction logic for AboutWindow.xaml
-    /// </summary>
-    public partial class AboutWindow : Morphic.UI.ThemeAwareWindow
+    private readonly Version ApplicationVersion;
+    //
+    public string MajorMinorVersionString
     {
-        private readonly Version ApplicationVersion;
-        //
-        public string MajorMinorVersionString
+        get
         {
-            get
+            return this.ApplicationVersion.Major.ToString() + "." + this.ApplicationVersion.Minor.ToString();
+        }
+    }
+    //
+    public string BuildVersionString
+    {
+        get
+        {
+            var build = this.ApplicationVersion.Build;
+            if (build != 0)
             {
-                return this.ApplicationVersion.Major.ToString() + "." + this.ApplicationVersion.Minor.ToString();
+                return this.ApplicationVersion.Build.ToString();
+            }
+            else
+            {
+                return "unknown";
             }
         }
-        //
-        public string BuildVersionString
-        {
-            get
-            {
-                var build = this.ApplicationVersion.Build;
-                if (build != 0)
-                {
-                    return this.ApplicationVersion.Build.ToString();
-                }
-                else
-                {
-                    return "unknown";
-                }
-            }
-        }
+    }
 
-        public AboutWindow()
-        {
-            this.ApplicationVersion = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0,0,0,0);
-            InitializeComponent();
-        }
+    public AboutWindow()
+    {
+        this.ApplicationVersion = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0,0,0,0);
+        this.InitializeComponent();
+    }
 
-        private void LearnMoreHyperlink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
-        {
-            Morphic.Utils.WebBrowserUtils.OpenBrowserToUri(e.Uri);
-            e.Handled = true;
-        }
+    private void LearnMoreHyperlink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+    {
+        Morphic.Utils.WebBrowserUtils.OpenBrowserToUri(e.Uri);
+        e.Handled = true;
     }
 }

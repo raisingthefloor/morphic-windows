@@ -122,7 +122,7 @@ public class ThemeAwareWindow : Window
 
     private void ThemeColors_ThemeColorsChanged(object? sender, ThemeColors.ThemeColorsChangedEventArgs e)
     {
-        this.SetNonClientUIDarkModeAttribute(!e.IsDarkColorTheme);
+        this.SetNonClientUIDarkModeAttribute(e.IsDarkColorTheme);
 
         Application.Current.Dispatcher.Invoke(() =>
         {

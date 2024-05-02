@@ -25,7 +25,6 @@ using Morphic.Core;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using Windows.UI.ViewManagement;
 
 namespace Morphic.WindowsNative.Theme;
 

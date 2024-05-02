@@ -11,7 +11,9 @@
     <ContextMenu.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="pack://application:,,,/Morphic;component/StringResources.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/Morphic;component/Localization/NonLocalizedResources.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/Morphic;component/Localization/StringResources.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/Morphic;component/Localization/UIResources.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </ContextMenu.Resources>

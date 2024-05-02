@@ -1103,6 +1103,17 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
             taskbarOrientation = System.Windows.Forms.Orientation.Vertical;
         }
 
+        // if the taskbar is horizontal, determine if it's LeftToRight (standard) or RightToLeft (for Arabic, Hebrew, etc.)
+        bool isRightToLeft = false;
+        if (taskbarOrientation == System.Windows.Forms.Orientation.Horizontal)
+        {
+            var centerXOfTaskbar = taskbarRect.X + (taskbarRect.Width / 2);
+            if (notifyTrayRect.right < centerXOfTaskbar)
+            {
+                isRightToLeft = true;
+            }
+        }
+
         // establish the appropriate size for our tray button (i.e. same height/width as taskbar, and with an aspect ratio of 8:10)
         int trayButtonHeight;
         int trayButtonWidth;
@@ -1133,12 +1144,19 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
             trayButtonHeight = (int)((Double)trayButtonWidth * 0.8);
         }
 
-        // choose a space in the rightmost/bottommost position of the taskbar
+        // choose a space in the rightmost/bottommost position of the taskbar; note that "rightmost" is actually leftmost when the system is using an RTL orientation (e.g. Arabic, Hebrew)
         int trayButtonX;
         int trayButtonY;
         if (taskbarOrientation == System.Windows.Forms.Orientation.Horizontal)
         {
-            trayButtonX = notifyTrayRect.left - trayButtonWidth;
+            if (isRightToLeft == false)
+            {
+                trayButtonX = notifyTrayRect.left - trayButtonWidth;
+            }
+            else
+            {
+                trayButtonX = notifyTrayRect.right;
+            }
             // NOTE: if we have any issues with positioning, try to replace taskbarRect.bottom with taskButtoncontainerRect.bottom (if we chose option #1 for our size calculations above)
             trayButtonY = taskbarRect.bottom - trayButtonHeight;
         }
