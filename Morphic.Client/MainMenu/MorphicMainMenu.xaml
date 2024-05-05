@@ -7,8 +7,21 @@
              xmlns:dialogs="clr-namespace:Morphic.Client.Dialogs"
              xmlns:l10n="clr-namespace:Morphic.Client.Strings"
              mc:Ignorable="d"
-             d:DataContext="{d:DesignInstance menu:MorphicMainMenu}">
+             d:DataContext="{d:DesignInstance menu:MorphicMainMenu}"
+             FlowDirection="{DynamicResource CultureFlowDirection}">
 
+    <!-- NOTE: this ad-hoc control will not see the application's string resource dictionary, so we must redeclare it here -->
+    <ContextMenu.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/Morphic;component/Localization/NonLocalizedResources.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/Morphic;component/Localization/StringResources.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/Morphic;component/Localization/UIResources.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </ContextMenu.Resources>
+
+    <!-- NOTE: since the MainMenu is loaded before updating the resource dictionaries, we must dynamically load the menu item's headers (text) -->
 
     <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_ShowMorphicBar_Header}" x:Name="ShowBar" Click="ShowBarClick" />
     <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_HideMorphicBar_Header}" x:Name="HideBar" Click="HideBarClick" />
@@ -69,6 +82,6 @@
     <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_AutorunAfterLoginItem_Checkbox_Header}" x:Name="AutorunAfterLoginItem" Click="AutorunAfterLoginClicked" IsCheckable="True" IsChecked="{Binding App.AppOptions.AutoRun}" />
     <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_ShowMorphicBarLoginItem_Checkbox_Header}" x:Name="ShowMorphicBarAfterLoginItem" Click="ShowMorphicBarAfterLoginClicked" IsCheckable="True" IsChecked="{Binding App.AppOptions.AutoShow}" />
     <menu:MorphicMenuItem Header="{x:Static l10n:Resources.Menu_ProblemsContactUs_Header}" Click="ContactUsClicked" Open="https://morphic.org/contact-us" />
-    <menu:MorphicMenuItem Header="{StaticResource MainMenuItem_AboutMorphic}" Click="AboutMorphicMenuItem_Click" />
-    <menu:MorphicMenuItem Header="{StaticResource MainMenuItem_QuitMorphic}" Click="QuitMorphicMenuItem_Click"/>
+    <menu:MorphicMenuItem Header="{DynamicResource MainMenuItem_AboutMorphic}" Click="AboutMorphicMenuItem_Click" />
+    <menu:MorphicMenuItem Header="{DynamicResource MainMenuItem_QuitMorphic}" Click="QuitMorphicMenuItem_Click"/>
 </ContextMenu>
