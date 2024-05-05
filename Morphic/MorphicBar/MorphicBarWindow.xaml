@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:Morphic.MorphicBar"
         mc:Ignorable="d"
         SizeToContent="WidthAndHeight"
+        FlowDirection="{DynamicResource CultureFlowDirection}"
         WindowStyle="None" ResizeMode="NoResize" 
         AllowsTransparency="True" Background="Transparent"
         ShowInTaskbar="False"

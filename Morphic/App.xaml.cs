@@ -50,8 +50,18 @@ public partial class App : Application
 
     private void Application_Startup(object sender, StartupEventArgs e)
     {
+        // before initializing any user interface, initialize our localization culture
+        var currentUICulture = System.Threading.Thread.CurrentThread.CurrentUICulture;
+        var iso639LanguageCode = Morphic.Localization.LocalizationManager.GetIso639LanguageCode(currentUICulture);
+        //
+        // NOTE: if the current culture is not supported (or if it's the same as the base culture), fail silently and use the base settings
+        _ = Morphic.Localization.LocalizationManager.SetUICulture(App.Current.Resources, iso639LanguageCode);
+
         // create a single instance of our main menu
         this.MorphicMainMenu = new();
+        //
+        // NOTE: if the current culture is not supported (or if it's the same as the base culture), fail silently and use the base settings
+        _ = Morphic.Localization.LocalizationManager.SetUICulture(this.MorphicMainMenu.Resources, iso639LanguageCode);
 
         // initialize our taskbar icon (button); this will not show the button
         this.InitTaskbarIconWithoutShowing();

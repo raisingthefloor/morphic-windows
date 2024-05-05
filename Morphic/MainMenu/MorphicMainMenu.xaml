@@ -5,7 +5,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Morphic.MainMenu"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DesignHeight="450" d:DesignWidth="800"
+             FlowDirection="{DynamicResource CultureFlowDirection}">
 
     <!-- NOTE: this ad-hoc control will not see the application's string resource dictionary, so we must redeclare it here -->
     <ContextMenu.Resources>
@@ -18,7 +19,8 @@
         </ResourceDictionary>
     </ContextMenu.Resources>
 
-    <MenuItem Header="{StaticResource MainMenuItem_AboutMorphic}" Click="AboutMorphicMenuItem_Click" />
-    <MenuItem Header="{StaticResource MainMenuItem_QuitMorphic}" Click="QuitMorphicMenuItem_Click" />
+    <!-- NOTE: since the MainMenu is loaded before updating the resource dictionaries, we must dynamically load the menu item's headers (text) -->
+    <MenuItem Header="{DynamicResource MainMenuItem_AboutMorphic}" Click="AboutMorphicMenuItem_Click" />
+    <MenuItem Header="{DynamicResource MainMenuItem_QuitMorphic}" Click="QuitMorphicMenuItem_Click" />
 
 </ContextMenu>

@@ -15,10 +15,9 @@
                 <!--<ResourceDictionary Source="pack://application:,,,/StringResources.xaml" />-->
                 <!-- -->
                 <!-- more explicit pack declaration with assembly -->
-<!--                <ResourceDictionary Source="pack://application:,,,/Morphic;component/Localization/StringResources.xaml" /> -->
-                <ResourceDictionary Source="Localization/NonLocalizedResources.xaml"/>
-                <ResourceDictionary Source="Localization/StringResources.xaml"/>
-                <ResourceDictionary Source="Localization/UIResources.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/Morphic;component/Localization/NonLocalizedResources.xaml" /> 
+                <ResourceDictionary Source="pack://application:,,,/Morphic;component/Localization/StringResources.xaml" /> 
+                <ResourceDictionary Source="pack://application:,,,/Morphic;component/Localization/UIResources.xaml" /> 
 
                 <ResourceDictionary Source="Themes/Light.xaml"/>
             </ResourceDictionary.MergedDictionaries>

@@ -10,6 +10,7 @@
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         Title="{StaticResource AboutMorphicWindow_Title}" 
         Height="280" Width="300" ResizeMode="NoResize" 
+        FlowDirection="{DynamicResource CultureFlowDirection}"
         HighContrastBlackIcon="pack://application:,,,/Morphic;component/Assets/Icons/morphic-highcontrastblack.ico"
         HighContrastWhiteIcon="pack://application:,,,/Morphic;component/Assets/Icons/morphic-highcontrastwhite.ico"
         StandardContrastIcon="pack://application:,,,/Morphic;component/Assets/Icons/morphic-standardcontrast.ico"
