@@ -176,10 +176,16 @@ public class MorphicMenuHeader : Separator
             propertyType: typeof(string),
             ownerType: typeof(MorphicMenuHeader),
             typeMetadata: new FrameworkPropertyMetadata(defaultValue: null));
-
+    //
     public string? Header { 
-        get => (string?)this.GetValue(HeaderProperty); 
-        set => this.SetValue(HeaderProperty, value); 
+        get => (string?)this.GetValue(HeaderProperty);
+        set => this.SetValue(HeaderProperty, value);
+    }
+    //
+    private void OnHeaderChanged(DependencyPropertyChangedEventArgs e)
+    {
+        // Update the header label
+        this.UpdateVisualTree();
     }
 
     public override void EndInit()
@@ -187,6 +193,11 @@ public class MorphicMenuHeader : Separator
         base.EndInit();
 
         // Add the header label
+        this.UpdateVisualTree();
+    }
+
+    private void UpdateVisualTree()
+    {
         ControlTemplate template = new ControlTemplate(this.GetType());
         FrameworkElementFactory factory = new FrameworkElementFactory(typeof(Label));
         factory.SetValue(ContentControl.ContentProperty, this.Header);
@@ -195,5 +206,15 @@ public class MorphicMenuHeader : Separator
         factory.SetValue(Label.BackgroundProperty, SystemColors.MenuBarBrush);
         template.VisualTree = factory;
         this.Template = template;
+    }
+
+    protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+    {
+        base.OnPropertyChanged(e);
+
+        if (e.Property == MorphicMenuHeader.HeaderProperty)
+        {
+            this.OnHeaderChanged(e);
+        }
     }
 }

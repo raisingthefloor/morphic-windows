@@ -14,7 +14,7 @@
     <system:String x:Key="MainMenuItem_MoreSettingsToMakeComputerEasier">More settings to make the computer easier</system:String>
     <system:String x:Key="MainMenuItem_OtherHelpfulThings">_Other resources to make computers easier...</system:String>
     <system:String x:Key="MainMenuItem_ProblemsContactUs">Problems? Contact us...</system:String>
-    <system:String x:Key="MainMenuItem_QuickMorphicDemosLink">Quick Morphic _demo videos...</system:String>
+    <system:String x:Key="MainMenuItem_QuickMorphicDemos">Quick Morphic _demo videos...</system:String>
     <system:String x:Key="MainMenuItem_QuitMorphic">_Quit Morphic</system:String>
     <system:String x:Key="MainMenuItem_RestoreSettingsFromBackup">_Restore settings from backup</system:String>
     <system:String x:Key="MainMenuItem_SaveCurrentSetupAs">Save Current Setup as...</system:String>

@@ -14,7 +14,7 @@
     <system:String x:Key="MainMenuItem_MoreSettingsToMakeComputerEasier">Más configuraciones para facilitar el uso del PC</system:String>
     <system:String x:Key="MainMenuItem_OtherHelpfulThings">_Otros recursos para facilitar el uso del PC...</system:String>
     <system:String x:Key="MainMenuItem_ProblemsContactUs">¿Algún problema? Póngase en contacto con nosotros...</system:String>
-    <system:String x:Key="MainMenuItem_QuickMorphicDemosLink">Videos de _demostración de Morphic...</system:String>
+    <system:String x:Key="MainMenuItem_QuickMorphicDemos">Videos de _demostración de Morphic...</system:String>
     <system:String x:Key="MainMenuItem_QuitMorphic">_Cerrar Morphic</system:String>
     <system:String x:Key="MainMenuItem_RestoreSettingsFromBackup">_Restaurar configuración desde copia de seguridad</system:String>
     <system:String x:Key="MainMenuItem_SaveCurrentSetupAs">Guardar la configuración actual como...</system:String>
