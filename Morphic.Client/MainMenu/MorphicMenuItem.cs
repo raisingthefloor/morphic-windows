@@ -170,7 +170,17 @@ public class MorphicMenuItem : MenuItem
 /// </summary>
 public class MorphicMenuHeader : Separator
 {
-    public string? Header { get; set; } = null;
+    public static readonly DependencyProperty HeaderProperty =
+        DependencyProperty.Register(
+            name: "Header",
+            propertyType: typeof(string),
+            ownerType: typeof(MorphicMenuHeader),
+            typeMetadata: new FrameworkPropertyMetadata(defaultValue: null));
+
+    public string? Header { 
+        get => (string?)this.GetValue(HeaderProperty); 
+        set => this.SetValue(HeaderProperty, value); 
+    }
 
     public override void EndInit()
     {

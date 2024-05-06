@@ -3,7 +3,42 @@
                     xmlns:system="clr-namespace:System;assembly=mscorlib">
 
     <system:String x:Key="MainMenuItem_AboutMorphic">_Acerca de Morphic...</system:String>
+    <system:String x:Key="MainMenuItem_ApplySavedSetup">Aplicar una configuración guardada...</system:String>
+    <system:String x:Key="MainMenuItem_AutorunAfterLoginOnOff">_Iniciar Morphic automáticamente</system:String>
+    <system:String x:Key="MainMenuItem_ChangeMorphicBar">Cambiar la barra de Morphic</system:String>
+    <system:String x:Key="MainMenuItem_CustomizeMorphicBar">Personalizar la barra de Morphic...</system:String>
+    <system:String x:Key="MainMenuItem_ExploreMorphic">_Aprenda todo lo que Morphic puede hacer...</system:String>
+    <system:String x:Key="MainMenuItem_HideMorphicBar">Ocultar la barra de Morphic</system:String>
+    <system:String x:Key="MainMenuItem_HideQuickHelp">_Ocultar la ayuda rápida</system:String>
+    <system:String x:Key="MainMenuItem_HowToCopySettingsBetweenComputers">Como copiar configuraciones entre equipos...</system:String>
+    <system:String x:Key="MainMenuItem_MoreSettingsToMakeComputerEasier">Más configuraciones para facilitar el uso del PC</system:String>
+    <system:String x:Key="MainMenuItem_OtherHelpfulThings">_Otros recursos para facilitar el uso del PC...</system:String>
+    <system:String x:Key="MainMenuItem_ProblemsContactUs">¿Algún problema? Póngase en contacto con nosotros...</system:String>
+    <system:String x:Key="MainMenuItem_QuickMorphicDemosLink">Videos de _demostración de Morphic...</system:String>
     <system:String x:Key="MainMenuItem_QuitMorphic">_Cerrar Morphic</system:String>
+    <system:String x:Key="MainMenuItem_RestoreSettingsFromBackup">_Restaurar configuración desde copia de seguridad</system:String>
+    <system:String x:Key="MainMenuItem_SaveCurrentSetupAs">Guardar la configuración actual como...</system:String>
+    <system:String x:Key="MainMenuItem_SelectBasicMorphicBar">Barra de Morphic básica</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsAllAccessibilityOptions">_Todas las opciones de accesibilidad</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsBrightnessSettings">Brillo</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsColorVisionSettings">_Opciones de los filtros de color</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsContrastSettings">_Opciones de alto contraste</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsDarkModeSettings">_Opciones del modo oscuro</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsDirectionActionsSection">Acciones directas</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsKeyboardSettings">_Opciones de teclado</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsLanguageSettings">_Idioma</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsMagnifierSettings">_Opciones del magnificador de pantalla</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsMouseSettings">_Opciones de ratón</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsNightModeSettings">_Opciones del modo nocturno</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsOtherSettingsSection">Otras opciones de Windows</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsPointerSizeSettings">_Tamaño del puntero</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsReadAloudSettings">_Opciones de Lectura en voz alta</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsSettingsSection">Opciones de Windows como controles en la barra de Morphic</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsStopKeyRepeatAction">_Parar repetición de tecla</system:String>
+    <system:String x:Key="MainMenuItem_ShowMorphicBar">Mostrar la barra de Morphic</system:String>
+    <system:String x:Key="MainMenuItem_ShowMorphicBarAfterLoginOnOff">_Mostrar la barra de Morphic al arrancar</system:String>
+    <system:String x:Key="MainMenuItem_SignIn">Iniciar sesión en Morphic...</system:String>
+    <system:String x:Key="MainMenuItem_SignOut">Salir sesión de Morphic</system:String>
 
     <system:String x:Key="AboutMorphicWindow_Title">Acerca de Morphic</system:String>
 

@@ -3,7 +3,42 @@
                     xmlns:system="clr-namespace:System;assembly=mscorlib">
 
     <system:String x:Key="MainMenuItem_AboutMorphic">_About Morphic...</system:String>
+    <system:String x:Key="MainMenuItem_ApplySavedSetup">Apply a Saved Setup...</system:String>
+    <system:String x:Key="MainMenuItem_AutorunAfterLoginOnOff">_Automatically start Morphic</system:String>
+    <system:String x:Key="MainMenuItem_ChangeMorphicBar">Change MorphicBar</system:String>
+    <system:String x:Key="MainMenuItem_CustomizeMorphicBar">Customize MorphicBar...</system:String>
+    <system:String x:Key="MainMenuItem_ExploreMorphic">_Explore everything Morphic can do...</system:String>
+    <system:String x:Key="MainMenuItem_HideMorphicBar">Hide MorphicBar</system:String>
+    <system:String x:Key="MainMenuItem_HideQuickHelp">_Hide QuickHelp (except with Alt key)</system:String>
+    <system:String x:Key="MainMenuItem_HowToCopySettingsBetweenComputers">How to copy setups between computers...</system:String>
+    <system:String x:Key="MainMenuItem_MoreSettingsToMakeComputerEasier">More settings to make the computer easier</system:String>
+    <system:String x:Key="MainMenuItem_OtherHelpfulThings">_Other resources to make computers easier...</system:String>
+    <system:String x:Key="MainMenuItem_ProblemsContactUs">Problems? Contact us...</system:String>
+    <system:String x:Key="MainMenuItem_QuickMorphicDemosLink">Quick Morphic _demo videos...</system:String>
     <system:String x:Key="MainMenuItem_QuitMorphic">_Quit Morphic</system:String>
+    <system:String x:Key="MainMenuItem_RestoreSettingsFromBackup">_Restore settings from backup</system:String>
+    <system:String x:Key="MainMenuItem_SaveCurrentSetupAs">Save Current Setup as...</system:String>
+    <system:String x:Key="MainMenuItem_SelectBasicMorphicBar">Basic MorphicBar</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsAllAccessibilityOptions">_All Accessibility Options</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsBrightnessSettings">Brightness</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsColorVisionSettings">_Color Vision Settings</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsContrastSettings">_Contrast Settings</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsDarkModeSettings">_Dark Mode Settings</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsDirectionActionsSection">Direct actions</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsKeyboardSettings">_Keyboard Settings</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsLanguageSettings">_Language</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsMagnifierSettings">_Magnifier Settings</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsMouseSettings">M_ouse Settings</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsNightModeSettings">_Night Mode Settings</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsOtherSettingsSection">Other Key Windows Settings</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsPointerSizeSettings">_Pointer Size</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsReadAloudSettings">_Read Aloud Settings</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsSettingsSection">Windows Settings for MorphicBar Controls</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsStopKeyRepeatAction">_Stop Key-repeat</system:String>
+    <system:String x:Key="MainMenuItem_ShowMorphicBar">Show MorphicBar</system:String>
+    <system:String x:Key="MainMenuItem_ShowMorphicBarAfterLoginOnOff">_Show Morphic Bar at start</system:String>
+    <system:String x:Key="MainMenuItem_SignIn">Sign into Morphic...</system:String>
+    <system:String x:Key="MainMenuItem_SignOut">Sign out of Morphic</system:String>
 
     <system:String x:Key="AboutMorphicWindow_Title">About Morphic</system:String>
 
