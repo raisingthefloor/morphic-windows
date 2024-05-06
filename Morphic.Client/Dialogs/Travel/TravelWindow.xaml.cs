@@ -34,7 +34,7 @@ namespace Morphic.Client.Dialogs
     /// Window that walks the user the the capture and, if necessary, account creation process.
     /// Loads each panel one at time depending on what steps are required
     /// </summary>
-    public partial class TravelWindow : Window, MorphicWindowWithArgs
+    public partial class TravelWindow : Morphic.Client.UI.ThemeAwareWindow, MorphicWindowWithArgs
     {
 
         #region Create a Window

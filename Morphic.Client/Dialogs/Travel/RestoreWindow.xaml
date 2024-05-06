@@ -1,17 +1,22 @@
-﻿<Window x:Class="Morphic.Client.Dialogs.RestoreWindow"
+﻿<ui:ThemeAwareWindow 
+        x:Class="Morphic.Client.Dialogs.RestoreWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:dialogs="clr-namespace:Morphic.Client.Dialogs"
         xmlns:l10n="clr-namespace:Morphic.Client.Strings"
+        xmlns:ui="clr-namespace:Morphic.Client.UI"
         mc:Ignorable="d"
         Title="{x:Static l10n:Resources.RestoreSettingsFromBackupWindow_Title}"
         FontSize="17"
         ResizeMode="NoResize"
         Width="500"
         SizeToContent="Height"
-        Icon="/Icon.png"
+        FlowDirection="{DynamicResource CultureFlowDirection}"
+        HighContrastBlackIcon="pack://application:,,,/Morphic;component/Assets/Icons/morphic-highcontrastblack.ico"
+        HighContrastWhiteIcon="pack://application:,,,/Morphic;component/Assets/Icons/morphic-highcontrastwhite.ico"
+        StandardContrastIcon="pack://application:,,,/Morphic;component/Assets/Icons/morphic-standardcontrast.ico"
         d:DataContext="{d:DesignInstance dialogs:RestoreWindow}"
         WindowStartupLocation="CenterScreen">
     <Window.Resources>
@@ -56,10 +61,10 @@
         </TextBlock>
 
         <UniformGrid Columns="2" Margin="40,20,40,20">
-            <Button x:Name="CancelButton" Width="Auto" HorizontalAlignment="Left" FontWeight="Bold" Margin="10,5,0,10" Click="OnCancel" IsEnabled="True" Content="{x:Static l10n:Resources.CancelButton_Text}"/>
+            <Button x:Name="CancelButton" Width="Auto" HorizontalAlignment="Left" FontWeight="Bold" Margin="10,5,0,10" Click="OnCancel" IsEnabled="True" Content="{StaticResource CancelButton}"/>
             <Button x:Name="ApplyButton" Width="Auto" HorizontalAlignment="Right" FontWeight="Bold" Margin="10,5,0,10" Click="OnApply" IsEnabled="True" Content="{x:Static l10n:Resources.RestoreFromBackupButton_Text}"/>
         </UniformGrid>
 
     </StackPanel>
 
-</Window>
+</ui:ThemeAwareWindow>

@@ -61,15 +61,6 @@ namespace Morphic.Client.Strings {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Already have an account?.
-        /// </summary>
-        public static string AlreadyHaveAnAccountButton_Content {
-            get {
-                return ResourceManager.GetString("AlreadyHaveAnAccountButton_Content", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Apply.
         /// </summary>
         public static string ApplyButton_Text {
@@ -133,24 +124,6 @@ namespace Morphic.Client.Strings {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cancel Login.
-        /// </summary>
-        public static string CancelButton_AutomationHelpText {
-            get {
-                return ResourceManager.GetString("CancelButton_AutomationHelpText", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Cancel.
-        /// </summary>
-        public static string CancelButton_Text {
-            get {
-                return ResourceManager.GetString("CancelButton_Text", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to You can change this preference later, by using the Morphic Menu..
         /// </summary>
         public static string ChangePreferenceLaterUsingMorphicMenu_Text {
@@ -165,15 +138,6 @@ namespace Morphic.Client.Strings {
         public static string CheckForUpdateHyperlink_Text {
             get {
                 return ResourceManager.GetString("CheckForUpdateHyperlink_Text", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Choose a Password.
-        /// </summary>
-        public static string ChooseAPassword_Content {
-            get {
-                return ResourceManager.GetString("ChooseAPassword_Content", resourceCulture);
             }
         }
         
@@ -241,15 +205,6 @@ namespace Morphic.Client.Strings {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Confirm your Password.
-        /// </summary>
-        public static string ConfirmYourPassword_Content {
-            get {
-                return ResourceManager.GetString("ConfirmYourPassword_Content", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to This feature allows you to move your accessibility and usability settings between computers - including the settings of your assistive technologies..
         /// </summary>
         public static string CopySettingsBetweenComputersDescription_Text {
@@ -286,24 +241,6 @@ namespace Morphic.Client.Strings {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Create Account &amp; Remember My Settings.
-        /// </summary>
-        public static string CreateAccountAndRememberMySettingsButton_Content {
-            get {
-                return ResourceManager.GetString("CreateAccountAndRememberMySettingsButton_Content", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Don&apos;t have an account yet?.
-        /// </summary>
-        public static string CreateAccountHyperlink_Text {
-            get {
-                return ResourceManager.GetString("CreateAccountHyperlink_Text", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Done.
         /// </summary>
         public static string DoneButton_Text {
@@ -313,47 +250,11 @@ namespace Morphic.Client.Strings {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Email Address.
-        /// </summary>
-        public static string EmailFieldLabel_Text {
-            get {
-                return ResourceManager.GetString("EmailFieldLabel_Text", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Forgot your password - Or not sure if you have an account?.
-        /// </summary>
-        public static string ForgotPasswordHyperlink_Text {
-            get {
-                return ResourceManager.GetString("ForgotPasswordHyperlink_Text", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Install.
-        /// </summary>
-        public static string InstallButton_Text {
-            get {
-                return ResourceManager.GetString("InstallButton_Text", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Login.
         /// </summary>
         public static string LoginButton_AutomationHelpText {
             get {
                 return ResourceManager.GetString("LoginButton_AutomationHelpText", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to We did not recognize your login.  Please try again..
-        /// </summary>
-        public static string LoginError_DidNotRecognizeLogin_Text {
-            get {
-                return ResourceManager.GetString("LoginError_DidNotRecognizeLogin_Text", resourceCulture);
             }
         }
         
@@ -399,24 +300,6 @@ namespace Morphic.Client.Strings {
         public static string OldSettingsWereBackedUp_Part3_Text {
             get {
                 return ResourceManager.GetString("OldSettingsWereBackedUp_Part3_Text", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Enter your Morphic password.
-        /// </summary>
-        public static string PasswordField_AutomationHelpText {
-            get {
-                return ResourceManager.GetString("PasswordField_AutomationHelpText", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Password.
-        /// </summary>
-        public static string PasswordFieldLabel_Text {
-            get {
-                return ResourceManager.GetString("PasswordFieldLabel_Text", resourceCulture);
             }
         }
         
@@ -529,92 +412,11 @@ namespace Morphic.Client.Strings {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Login.
-        /// </summary>
-        public static string SignInButton_Text {
-            get {
-                return ResourceManager.GetString("SignInButton_Text", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Sign into your Morphic Account - Cloud Vault.
-        /// </summary>
-        public static string SignIntoMorphicAccountHeader_Text {
-            get {
-                return ResourceManager.GetString("SignIntoMorphicAccountHeader_Text", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Sign in to Morphic.
         /// </summary>
         public static string SignInWindow_Title {
             get {
                 return ResourceManager.GetString("SignInWindow_Title", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Skip All.
-        /// </summary>
-        public static string SkipAllButton_Text {
-            get {
-                return ResourceManager.GetString("SkipAllButton_Text", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Take Your Settings Anywhere.
-        /// </summary>
-        public static string TakeYourSettingsAnywhereHeaderLabel_Content {
-            get {
-                return ResourceManager.GetString("TakeYourSettingsAnywhereHeaderLabel_Content", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to You&apos;ll need to create an account so we can remember your settings and securely apply them to another computer.
-        /// </summary>
-        public static string TakeYourSettingsAnywhereInstructions_Text {
-            get {
-                return ResourceManager.GetString("TakeYourSettingsAnywhereInstructions_Text", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to By signing up for Morphic you are agreeing to the.
-        /// </summary>
-        public static string TermsAndConditionsLinks_Part1_Content {
-            get {
-                return ResourceManager.GetString("TermsAndConditionsLinks_Part1_Content", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Terms of Service.
-        /// </summary>
-        public static string TermsAndConditionsLinks_Part2_Content {
-            get {
-                return ResourceManager.GetString("TermsAndConditionsLinks_Part2_Content", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to and.
-        /// </summary>
-        public static string TermsAndConditionsLinks_Part3_Content {
-            get {
-                return ResourceManager.GetString("TermsAndConditionsLinks_Part3_Content", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Privacy Policy.
-        /// </summary>
-        public static string TermsAndConditionsLinks_Part4_Content {
-            get {
-                return ResourceManager.GetString("TermsAndConditionsLinks_Part4_Content", resourceCulture);
             }
         }
         
@@ -637,15 +439,6 @@ namespace Morphic.Client.Strings {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Enter your email address.
-        /// </summary>
-        public static string UsernameField_AutomationHelpText {
-            get {
-                return ResourceManager.GetString("UsernameField_AutomationHelpText", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to We&apos;ve saved your settings in a secure area only you can access..
         /// </summary>
         public static string WeSavedYourSettings_Text {
@@ -660,15 +453,6 @@ namespace Morphic.Client.Strings {
         public static string YouAreMemberOfMultipleGroups_Text {
             get {
                 return ResourceManager.GetString("YouAreMemberOfMultipleGroups_Text", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Your Email Address.
-        /// </summary>
-        public static string YourEmailAddressLabel_Content {
-            get {
-                return ResourceManager.GetString("YourEmailAddressLabel_Content", resourceCulture);
             }
         }
         

@@ -6,7 +6,8 @@
       xmlns:local="clr-namespace:Morphic.Client"
       xmlns:l10n="clr-namespace:Morphic.Client.Strings"
       mc:Ignorable="d" 
-      d:DesignHeight="450" d:DesignWidth="800">
+      d:DesignHeight="450" d:DesignWidth="800"
+      Background="{DynamicResource ThemeAwareBackground}">
 
     <StackPanel x:Name="ReadyPanel" Visibility="Visible">
         <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0" Content="{x:Static l10n:Resources.ApplySettingsFromCloudVaultTitle_Content}"/>
@@ -23,7 +24,7 @@
                 <ColumnDefinition />
             </Grid.ColumnDefinitions>
             <UniformGrid Grid.Column="1" Columns="2">
-                <Button x:Name="CancelButton" Width="Auto" HorizontalAlignment="Left" FontWeight="Bold" Margin="10,5,0,10" Click="OnCancel" IsEnabled="True" Content="{x:Static l10n:Resources.CancelButton_Text}"/>
+                <Button x:Name="CancelButton" Width="Auto" HorizontalAlignment="Left" FontWeight="Bold" Margin="10,5,0,10" Click="OnCancel" IsEnabled="True" Content="{StaticResource CancelButton}"/>
                 <Button x:Name="ApplyButton" Width="Auto" HorizontalAlignment="Right" FontWeight="Bold" Margin="10,5,0,10" Click="OnApply" IsEnabled="True" Content="{x:Static l10n:Resources.ApplyButton_Text}"/>
             </UniformGrid>
         </Grid>

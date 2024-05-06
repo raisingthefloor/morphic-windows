@@ -6,6 +6,7 @@
         xmlns:l10n="clr-namespace:Morphic.Client.Strings"
         mc:Ignorable="d"
         ToolTipService.InitialShowDelay="0"
+        Background="{DynamicResource ThemeAwareBackground}"
         >
     <TextBlock HorizontalAlignment="Center"  Margin="20" FontWeight="Bold" Text="{x:Static l10n:Resources.CopySettingsBetweenComputersHeader_Text}"/>
     <TextBlock HorizontalAlignment="Center"  Margin="10,10,10,40" FontSize="15" TextWrapping="Wrap" Text="{x:Static l10n:Resources.CopySettingsBetweenComputersDescription_Text}"/>

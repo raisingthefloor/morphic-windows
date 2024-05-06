@@ -5,7 +5,8 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:l10n="clr-namespace:Morphic.Client.Strings"
       mc:Ignorable="d" 
-      d:DesignHeight="450" d:DesignWidth="800">
+      d:DesignHeight="450" d:DesignWidth="800"
+      Background="{DynamicResource ThemeAwareBackground}">
 
     <StackPanel MaxWidth="500">
         <Label HorizontalAlignment="Center" FontSize="24" Margin="0,30,0,0" Content="{x:Static l10n:Resources.SettingsSaveCompleteLabel_Content}"/>

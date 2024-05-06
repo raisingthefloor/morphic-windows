@@ -16,7 +16,7 @@ namespace Morphic.Client.Dialogs
     using System.Windows.Controls;
     using Morphic.Core.Legacy.Community;
 
-    public partial class CommunityPickerWindow : Window
+    public partial class CommunityPickerWindow : Morphic.Client.UI.ThemeAwareWindow
     {
         public List<UserCommunity> Communities { get; set; }
 

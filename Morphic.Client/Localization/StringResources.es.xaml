@@ -2,6 +2,33 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:system="clr-namespace:System;assembly=mscorlib">
 
+    <system:String x:Key="CancelButton">Cancelar</system:String>
+    <system:String x:Key="CancelButton_AutomationHelpText">Cancelar el inicio de sesión</system:String>
+
+    <system:String x:Key="AboutMorphicWindow_Title">Acerca de Morphic</system:String>
+
+    <system:String x:Key="CreateAccountWindow_Button_AlreadyHaveAnAccount">¿Ya tienes una cuenta?</system:String>
+    <system:String x:Key="CreateAccountWindow_Button_CreateAccountAndRememberMySettings">Crear una cuenta y recordar mis preferencias</system:String>
+    <system:String x:Key="CreateAccountWindow_ChooseAPassword">Elija una contraseña</system:String>
+    <system:String x:Key="CreateAccountWindow_ConfirmYourPassword">Confirme su contraseña</system:String>
+    <system:String x:Key="CreateAccountWindow_TakeYourSettingsAnywhereHeader">Llévese su configuración a cualquier equipo</system:String>
+    <system:String x:Key="CreateAccountWindow_TakeYourSettingsAnywhereInstructions">Necesita crear una cuenta en Morphic para guardar sus configuraciones y aplicarlas en otro equipo</system:String>
+    <system:String x:Key="CreateAccountWindow_TermsAndConditions_Part1">Al registrarse en Morphic está aceptando las</system:String>
+    <system:String x:Key="CreateAccountWindow_TermsAndConditions_Part2">Términos de Servicio</system:String>
+    <system:String x:Key="CreateAccountWindow_TermsAndConditions_Part3">y</system:String>
+    <system:String x:Key="CreateAccountWindow_TermsAndConditions_Part4">nuestras Políticas de Privacidad</system:String>
+    <system:String x:Key="CreateAccountWindow_YourEmailAddress">Su dirección email</system:String>
+
+    <system:String x:Key="LoginPanel_CreateAccountHyperlink">¿Aún no tiene una cuenta?</system:String>
+    <system:String x:Key="LoginPanel_EmailField">Dirección email</system:String>
+    <system:String x:Key="LoginPanel_ForgotPasswordHyperlink">¿Olvidó su contraseña o no está seguro si tiene una cuenta?</system:String>
+    <system:String x:Key="LoginPanel_LoginError_DidNotRecognizeLogin">No pudimos encontrar sus datos de acceso. Por favor, inténtelo de nuevo.</system:String>
+    <system:String x:Key="LoginPanel_PasswordField">Contraseña</system:String>
+    <system:String x:Key="LoginPanel_PasswordField_AutomationHelpText">Introduzca su contraseña</system:String>
+    <system:String x:Key="LoginPanel_SignInButton">Iniciar sesión</system:String>
+    <system:String x:Key="LoginPanel_SignIntoMorphicAccountHeader">Inicie sesión en Morphic - Morphic Cloud Vault</system:String>
+    <system:String x:Key="LoginPanel_UsernameField_AutomationHelpText">Introduzca su dirección de correo</system:String>
+
     <system:String x:Key="MainMenuItem_AboutMorphic">_Acerca de Morphic...</system:String>
     <system:String x:Key="MainMenuItem_ApplySavedSetup">Aplicar una configuración guardada...</system:String>
     <system:String x:Key="MainMenuItem_AutorunAfterLoginOnOff">_Iniciar Morphic automáticamente</system:String>
@@ -39,8 +66,6 @@
     <system:String x:Key="MainMenuItem_ShowMorphicBarAfterLoginOnOff">_Mostrar la barra de Morphic al arrancar</system:String>
     <system:String x:Key="MainMenuItem_SignIn">Iniciar sesión en Morphic...</system:String>
     <system:String x:Key="MainMenuItem_SignOut">Salir sesión de Morphic</system:String>
-
-    <system:String x:Key="AboutMorphicWindow_Title">Acerca de Morphic</system:String>
 
     <system:String x:Key="LearnMoreAboutMorphicHyperlink_Text">Más información acerca de Morphic</system:String>
 

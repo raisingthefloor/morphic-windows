@@ -1,17 +1,22 @@
-﻿<Window x:Class="Morphic.Client.Dialogs.LoginWindow"
+﻿<ui:ThemeAwareWindow 
+        x:Class="Morphic.Client.Dialogs.LoginWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:elements="clr-namespace:Morphic.Client.Dialogs.Elements"
         xmlns:l10n="clr-namespace:Morphic.Client.Strings"
+        xmlns:ui="clr-namespace:Morphic.Client.UI"
         mc:Ignorable="d"
         Title="{x:Static l10n:Resources.SignInWindow_Title}" 
         Height="500"
         Width="600"
         FontSize="17"
         ResizeMode="NoResize"
-        Icon="/Icon.png"
+        FlowDirection="{DynamicResource CultureFlowDirection}"
+        HighContrastBlackIcon="pack://application:,,,/Morphic;component/Assets/Icons/morphic-highcontrastblack.ico"
+        HighContrastWhiteIcon="pack://application:,,,/Morphic;component/Assets/Icons/morphic-highcontrastwhite.ico"
+        StandardContrastIcon="pack://application:,,,/Morphic;component/Assets/Icons/morphic-standardcontrast.ico"
         WindowStartupLocation="CenterScreen">
     <Window.Resources>
         <Style TargetType="{x:Type Button}">
@@ -43,4 +48,4 @@
         </Style>
     </Window.Resources>
     <elements:StepFrame x:Name="StepFrame" Margin="20"></elements:StepFrame>
-</Window>
+</ui:ThemeAwareWindow>

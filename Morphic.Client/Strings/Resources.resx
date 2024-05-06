@@ -117,9 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="AlreadyHaveAnAccountButton_Content" xml:space="preserve">
-    <value>Already have an account?</value>
-  </data>
   <data name="ApplyButton_Text" xml:space="preserve">
     <value>Apply</value>
   </data>
@@ -141,20 +138,11 @@
   <data name="BackupDate_Text" xml:space="preserve">
     <value>Backup Date</value>
   </data>
-  <data name="CancelButton_AutomationHelpText" xml:space="preserve">
-    <value>Cancel Login</value>
-  </data>
-  <data name="CancelButton_Text" xml:space="preserve">
-    <value>Cancel</value>
-  </data>
   <data name="ChangePreferenceLaterUsingMorphicMenu_Text" xml:space="preserve">
     <value>You can change this preference later, by using the Morphic Menu.</value>
   </data>
   <data name="CheckForUpdateHyperlink_Text" xml:space="preserve">
     <value>Check for Update</value>
-  </data>
-  <data name="ChooseAPassword_Content" xml:space="preserve">
-    <value>Choose a Password</value>
   </data>
   <data name="ClickingBelowWillRestoreSettings_Part1_Text" xml:space="preserve">
     <value>Clicking</value>
@@ -177,9 +165,6 @@
   <data name="ConfirmSavingToCloudVaultLabel_Content" xml:space="preserve">
     <value>Confirm saving to your Morphic Cloud Vault</value>
   </data>
-  <data name="ConfirmYourPassword_Content" xml:space="preserve">
-    <value>Confirm your Password</value>
-  </data>
   <data name="CopySettingsBetweenComputersDescription_Text" xml:space="preserve">
     <value>This feature allows you to move your accessibility and usability settings between computers - including the settings of your assistive technologies.</value>
   </data>
@@ -192,29 +177,11 @@
   <data name="CopySettingsToCloudVaultHyperlink_Text" xml:space="preserve">
     <value>Copy settings on this computer to my Cloud Vault</value>
   </data>
-  <data name="CreateAccountAndRememberMySettingsButton_Content" xml:space="preserve">
-    <value>Create Account &amp; Remember My Settings</value>
-  </data>
-  <data name="CreateAccountHyperlink_Text" xml:space="preserve">
-    <value>Don't have an account yet?</value>
-  </data>
   <data name="DoneButton_Text" xml:space="preserve">
     <value>Done</value>
   </data>
-  <data name="EmailFieldLabel_Text" xml:space="preserve">
-    <value>Email Address</value>
-  </data>
-  <data name="ForgotPasswordHyperlink_Text" xml:space="preserve">
-    <value>Forgot your password - Or not sure if you have an account?</value>
-  </data>
-  <data name="InstallButton_Text" xml:space="preserve">
-    <value>Install</value>
-  </data>
   <data name="LoginButton_AutomationHelpText" xml:space="preserve">
     <value>Login</value>
-  </data>
-  <data name="LoginError_DidNotRecognizeLogin_Text" xml:space="preserve">
-    <value>We did not recognize your login.  Please try again.</value>
   </data>
   <data name="MorphicCanNowApplySavedSettingsToAnotherComputer_Text" xml:space="preserve">
     <value>You can now use Morphic to apply these settings to another computer that has Morphic installed.</value>
@@ -230,12 +197,6 @@
   </data>
   <data name="OldSettingsWereBackedUp_Part3_Text" xml:space="preserve">
     <value>command in the Morphic menu.</value>
-  </data>
-  <data name="PasswordFieldLabel_Text" xml:space="preserve">
-    <value>Password</value>
-  </data>
-  <data name="PasswordField_AutomationHelpText" xml:space="preserve">
-    <value>Enter your Morphic password</value>
   </data>
   <data name="RememberYourLoginEmailAddress_Text" xml:space="preserve">
     <value>When you sit down at another computer with Morphic installed, remember to login with the email address you provided</value>
@@ -273,35 +234,8 @@
   <data name="SettingsSavedToCloudVaultLabel_Content" xml:space="preserve">
     <value>Settings Saved to Cloud Vault</value>
   </data>
-  <data name="SignInButton_Text" xml:space="preserve">
-    <value>Login</value>
-  </data>
-  <data name="SignIntoMorphicAccountHeader_Text" xml:space="preserve">
-    <value>Sign into your Morphic Account - Cloud Vault</value>
-  </data>
   <data name="SignInWindow_Title" xml:space="preserve">
     <value>Sign in to Morphic</value>
-  </data>
-  <data name="SkipAllButton_Text" xml:space="preserve">
-    <value>Skip All</value>
-  </data>
-  <data name="TakeYourSettingsAnywhereHeaderLabel_Content" xml:space="preserve">
-    <value>Take Your Settings Anywhere</value>
-  </data>
-  <data name="TakeYourSettingsAnywhereInstructions_Text" xml:space="preserve">
-    <value>You'll need to create an account so we can remember your settings and securely apply them to another computer</value>
-  </data>
-  <data name="TermsAndConditionsLinks_Part1_Content" xml:space="preserve">
-    <value>By signing up for Morphic you are agreeing to the</value>
-  </data>
-  <data name="TermsAndConditionsLinks_Part2_Content" xml:space="preserve">
-    <value>Terms of Service</value>
-  </data>
-  <data name="TermsAndConditionsLinks_Part3_Content" xml:space="preserve">
-    <value>and</value>
-  </data>
-  <data name="TermsAndConditionsLinks_Part4_Content" xml:space="preserve">
-    <value>Privacy Policy</value>
   </data>
   <data name="TravelWindow_Title" xml:space="preserve">
     <value>Travel with Settings</value>
@@ -309,17 +243,11 @@
   <data name="UntitledWindow_Title" xml:space="preserve">
     <value>Morphic</value>
   </data>
-  <data name="UsernameField_AutomationHelpText" xml:space="preserve">
-    <value>Enter your email address</value>
-  </data>
   <data name="WeSavedYourSettings_Text" xml:space="preserve">
     <value>We've saved your settings in a secure area only you can access.</value>
   </data>
   <data name="YouAreMemberOfMultipleGroups_Text" xml:space="preserve">
     <value>You are a member of several Morphic Groups.</value>
-  </data>
-  <data name="YourEmailAddressLabel_Content" xml:space="preserve">
-    <value>Your Email Address</value>
   </data>
   <data name="YourSettingsHaveBeenAppliedLabel_Content" xml:space="preserve">
     <value>Your Settings have been applied</value>
