@@ -2,26 +2,51 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:system="clr-namespace:System;assembly=mscorlib">
 
-    <system:String x:Key="CancelButton">Cancelar</system:String>
-    <system:String x:Key="CancelButton_AutomationHelpText">Cancelar el inicio de sesión</system:String>
+    <system:String x:Key="AboutMorphicDialog_CheckForUpdateHyperlink">Buscar actualizaciones</system:String>
+    <system:String x:Key="AboutMorphicDialog_LearnMoreAboutMorphicHyperlink">Más información acerca de Morphic</system:String>
+    <system:String x:Key="AboutMorphicDialog_WindowTitle">Acerca de Morphic</system:String>
 
-    <system:String x:Key="AboutMorphicWindow_Title">Acerca de Morphic</system:String>
+    <system:String x:Key="ApplyPanel_ApplyingSettingsOnYourComputer">Aplicando configuraciones en el PC...</system:String>
+    <system:String x:Key="ApplyPanel_ApplySettingsFromCloudVaultInstructions_Part1">Haciendo click</system:String>
+    <system:String x:Key="ApplyPanel_ApplySettingsFromCloudVaultInstructions_Part3">se aplicarán en el sistema las configuraciones que tenga guardadas en su Morphic Cloud Vault.</system:String>
+    <system:String x:Key="ApplyPanel_ApplySettingsFromCloudVaultNote">Recuerde que la configuración actual del sistema se guardará en el equipo, de forma que podrá volver a aplicarla en cualquier momento.</system:String>
+    <system:String x:Key="ApplyPanel_ApplySettingsFromCloudVaultTitle">Aplicar mis preferencias desde mi Morphic Cloud Vault</system:String>
+    <system:String x:Key="ApplyPanel_OldSettingsWereBackedUp_Part1">Antes de ser aplicadas, la configuración anterior se guardó en una copia de seguridad. Para volver a ella, use</system:String>
+    <system:String x:Key="ApplyPanel_OldSettingsWereBackedUp_Part2">"Restaurar configuración desde copia de seguruidad"</system:String>
+    <system:String x:Key="ApplyPanel_OldSettingsWereBackedUp_Part3">comando en el menú de Morphic.</system:String>
+    <system:String x:Key="ApplyPanel_SettingsFromCloudVaultHaveBeenApplied">Se han aplicado las configuraciones de su Morphic Cloud Vault en este equipo.</system:String>
+    <system:String x:Key="ApplyPanel_YourSettingsHaveBeenApplied">Se ha aplicado su configuración</system:String>
 
-    <system:String x:Key="CreateAccountWindow_Button_AlreadyHaveAnAccount">¿Ya tienes una cuenta?</system:String>
-    <system:String x:Key="CreateAccountWindow_Button_CreateAccountAndRememberMySettings">Crear una cuenta y recordar mis preferencias</system:String>
-    <system:String x:Key="CreateAccountWindow_ChooseAPassword">Elija una contraseña</system:String>
-    <system:String x:Key="CreateAccountWindow_ConfirmYourPassword">Confirme su contraseña</system:String>
-    <system:String x:Key="CreateAccountWindow_TakeYourSettingsAnywhereHeader">Llévese su configuración a cualquier equipo</system:String>
-    <system:String x:Key="CreateAccountWindow_TakeYourSettingsAnywhereInstructions">Necesita crear una cuenta en Morphic para guardar sus configuraciones y aplicarlas en otro equipo</system:String>
-    <system:String x:Key="CreateAccountWindow_TermsAndConditions_Part1">Al registrarse en Morphic está aceptando las</system:String>
-    <system:String x:Key="CreateAccountWindow_TermsAndConditions_Part2">Términos de Servicio</system:String>
-    <system:String x:Key="CreateAccountWindow_TermsAndConditions_Part3">y</system:String>
-    <system:String x:Key="CreateAccountWindow_TermsAndConditions_Part4">nuestras Políticas de Privacidad</system:String>
-    <system:String x:Key="CreateAccountWindow_YourEmailAddress">Su dirección email</system:String>
+    <system:String x:Key="CaptureSettingsPanel_ClickingSaveWillSaveSettingsToVault">Al hacer click en "Guardar" se guardarán en su Morphic Cloud Vault.</system:String>
+    <system:String x:Key="CaptureSettingsPanel_CollectingSettingsFromComputer">Recopilando la configuración de su PC...</system:String>
+    <system:String x:Key="CaptureSettingsPanel_ConfirmSavingToCloudVault">Confirma que quieres guardar en tu Morphic Cloud Vault</system:String>
+    <system:String x:Key="CaptureSettingsPanel_MorphicCanNowApplySavedSettingsToAnotherComputer">Ahora puede usar Morphic para aplicar esta configuración en otro equipo que tenga Morphic instalado.</system:String>
+    <system:String x:Key="CaptureSettingsPanel_SecurelyTakeSettingsAnywhere">Así que puedes llevarlos a cualquier equipo</system:String>
+    <system:String x:Key="CaptureSettingsPanel_SettingsCollectionComplete">Hemos recogido los ajustes de sus tecnologías de asistencia, accesibilidad y usabilidad de su equipo.</system:String>
+    <system:String x:Key="CaptureSettingsPanel_SettingsSavedToCloudVault">Configuraciones guardadas en su Morphic Cloud Vault</system:String>
 
+    <system:String x:Key="CopyStartPanel_CopySettingsBetweenComputersDescription">Esta función le permitirá aplicar sus preferencias de usabilidad y accesibilidad en otros equipos - incluyendo la configuración de sus productos de apoyo.</system:String>
+    <system:String x:Key="CopyStartPanel_CopySettingsBetweenComputersHeader">Copiar configuración entre ordenadores</system:String>
+    <system:String x:Key="CopyStartPanel_CopySettingsFromCloudVaultHyperlink">Usar las configuraciones de mi Morphic Cloud Vault para configurar este equipo.</system:String>
+    <system:String x:Key="CopyStartPanel_CopySettingsToCloudVaultHyperlink">Copiar la configuración de este equipo en mi Morphic Cloud Vault</system:String>
+
+    <system:String x:Key="CreateAccountDialog_Button_AlreadyHaveAnAccount">¿Ya tienes una cuenta?</system:String>
+    <system:String x:Key="CreateAccountDialog_Button_CreateAccountAndRememberMySettings">Crear una cuenta y recordar mis preferencias</system:String>
+    <system:String x:Key="CreateAccountDialog_ChooseAPassword">Elija una contraseña</system:String>
+    <system:String x:Key="CreateAccountDialog_ConfirmYourPassword">Confirme su contraseña</system:String>
+    <system:String x:Key="CreateAccountDialog_TakeYourSettingsAnywhereHeader">Llévese su configuración a cualquier equipo</system:String>
+    <system:String x:Key="CreateAccountDialog_TakeYourSettingsAnywhereInstructions">Necesita crear una cuenta en Morphic para guardar sus configuraciones y aplicarlas en otro equipo</system:String>
+    <system:String x:Key="CreateAccountDialog_TermsAndConditions_Part1">Al registrarse en Morphic está aceptando las</system:String>
+    <system:String x:Key="CreateAccountDialog_TermsAndConditions_Part2">Términos de Servicio</system:String>
+    <system:String x:Key="CreateAccountDialog_TermsAndConditions_Part3">y</system:String>
+    <system:String x:Key="CreateAccountDialog_TermsAndConditions_Part4">nuestras Políticas de Privacidad</system:String>
+    <system:String x:Key="CreateAccountDialog_YourEmailAddress">Su dirección email</system:String>
+
+    <system:String x:Key="LoginPanel_CancelButton_AutomationHelpText">Cancelar el inicio de sesión</system:String>
     <system:String x:Key="LoginPanel_CreateAccountHyperlink">¿Aún no tiene una cuenta?</system:String>
     <system:String x:Key="LoginPanel_EmailField">Dirección email</system:String>
     <system:String x:Key="LoginPanel_ForgotPasswordHyperlink">¿Olvidó su contraseña o no está seguro si tiene una cuenta?</system:String>
+    <!-- <system:String x:Key="LoginPanel_LoginButton_AutomationHelpText">Iniciar sesión</system:String> -->
     <system:String x:Key="LoginPanel_LoginError_DidNotRecognizeLogin">No pudimos encontrar sus datos de acceso. Por favor, inténtelo de nuevo.</system:String>
     <system:String x:Key="LoginPanel_PasswordField">Contraseña</system:String>
     <system:String x:Key="LoginPanel_PasswordField_AutomationHelpText">Introduzca su contraseña</system:String>
@@ -67,6 +92,31 @@
     <system:String x:Key="MainMenuItem_SignIn">Iniciar sesión en Morphic...</system:String>
     <system:String x:Key="MainMenuItem_SignOut">Salir sesión de Morphic</system:String>
 
-    <system:String x:Key="LearnMoreAboutMorphicHyperlink_Text">Más información acerca de Morphic</system:String>
+    <system:String x:Key="MiscDialog_ApplyButton">Aplicar</system:String>
+    <system:String x:Key="MiscDialog_CancelButton">Cancelar</system:String>
+    <system:String x:Key="MiscDialog_CloseButton">Cerrar</system:String>
+    <system:String x:Key="MiscDialog_OkButton">Aceptar</system:String>
+    <system:String x:Key="MiscDialog_SaveButton">Guardar</system:String>
+
+    <system:String x:Key="MorphicGroupPickerDialog_ChangePreferenceLaterUsingMorphicMenuNote">Puede cambiar esta preferencia más tarde usando el Menú de Morphic.</system:String>
+    <system:String x:Key="MorphicGroupPickerDialog_SelectGroupHeader">Seleccione el grupo cuya barra de Morphic le gustaría ver:</system:String>
+    <system:String x:Key="MorphicGroupPickerDialog_YouAreMemberOfMultipleGroups">Usted es miembro de varios Grupos de Morphic.</system:String>
+
+    <system:String x:Key="RestoreDialog_BackupDate">Fecha de la copia de seguridad</system:String>
+    <system:String x:Key="RestoreDialog_ClickingBelowWillRestoreSettings_Part1">Haciendo clic</system:String>
+    <system:String x:Key="RestoreDialog_ClickingBelowWillRestoreSettings_Part2">Restaurar de la copia de seguridad</system:String>
+    <system:String x:Key="RestoreDialog_ClickingBelowWillRestoreSettings_Part3">Esto restaurará la configuración en este equipo.</system:String>
+    <system:String x:Key="RestoreDialog_RestoreFromBackupButton">Restaurar desde copia de seguridad</system:String>
+    <system:String x:Key="RestoreDialog_RestoreFromBackupHeader">Restaurar configuración desde copia de seguruidad</system:String>
+    <system:String x:Key="RestoreDialog_RestoreFromBackupHeaderDescription">La última vez que Morphic configuró este equipo, Morphic hizo una copia de seguridad de la configuración del equipo.</system:String>
+    <system:String x:Key="RestoreDialog_WindowTitle">Restaurar configuración desde copia de seguruidad</system:String>
+
+    <system:String x:Key="SignInDialog_WindowTitle">Inicie sesión en Morphic</system:String>
+
+    <system:String x:Key="TravelCompletedPanel_RememberYourLoginEmailAddress">Cuando use otro equipo que tenga Morphic instalado, recuerde identificarse usando la dirección email que nos ha proporcionado</system:String>
+    <system:String x:Key="TravelCompletedPanel_SettingsSaveComplete">¡Completado!</system:String>
+    <system:String x:Key="TravelCompletedPanel_WeSavedYourSettings">Hemos guardado su configuración en un lugar seguro al que sólo usted puede acceder.</system:String>
+
+    <system:String x:Key="TravelDialog_WindowTitle">Viaje con sus configuraciones</system:String>
 
 </ResourceDictionary>

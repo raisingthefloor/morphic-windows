@@ -4,7 +4,6 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:local="clr-namespace:Morphic.Client"
-    xmlns:l10n="clr-namespace:Morphic.Client.Strings"
     mc:Ignorable="d"
     Background="{DynamicResource ThemeAwareBackground}"
     Loaded="Panel_Loaded">

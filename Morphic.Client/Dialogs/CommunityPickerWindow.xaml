@@ -5,7 +5,6 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:dialogs="clr-namespace:Morphic.Client.Dialogs"
-        xmlns:l10n="clr-namespace:Morphic.Client.Strings"
         xmlns:ui="clr-namespace:Morphic.Client.UI"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance dialogs:CommunityPickerWindow}"
@@ -17,8 +16,8 @@
         WindowStyle="ToolWindow"
         >
     <StackPanel Background="{DynamicResource ThemeAwareBackground}">
-        <TextBlock Margin="10 10 10 0" TextWrapping="Wrap" FontSize="14" Text="{x:Static l10n:Resources.YouAreMemberOfMultipleGroups_Text}"/>
-        <TextBlock Margin="10 5 10 5" TextWrapping="Wrap" Text="{x:Static l10n:Resources.SelectCurrentGroupHeader_Text}"/>
+        <TextBlock Margin="10 10 10 0" TextWrapping="Wrap" FontSize="14" Text="{StaticResource MorphicGroupPickerDialog_YouAreMemberOfMultipleGroups}"/>
+        <TextBlock Margin="10 5 10 5" TextWrapping="Wrap" Text="{StaticResource MorphicGroupPickerDialog_SelectGroupHeader}"/>
         <ItemsControl ItemsSource="{Binding Communities}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
@@ -30,6 +29,6 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
-        <TextBlock Margin="10" TextWrapping="Wrap" Text="{x:Static l10n:Resources.ChangePreferenceLaterUsingMorphicMenu_Text}"/>
+        <TextBlock Margin="10" TextWrapping="Wrap" Text="{StaticResource MorphicGroupPickerDialog_ChangePreferenceLaterUsingMorphicMenuNote}"/>
     </StackPanel>
 </ui:ThemeAwareWindow>

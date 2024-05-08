@@ -8,7 +8,7 @@
         xmlns:ui="clr-namespace:Morphic.Client.UI"
         mc:Ignorable="d"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
-        Title="{StaticResource AboutMorphicWindow_Title}" 
+        Title="{StaticResource AboutMorphicDialog_WindowTitle}" 
         Height="280" Width="300" ResizeMode="NoResize" 
         FlowDirection="{DynamicResource CultureFlowDirection}"
         HighContrastBlackIcon="pack://application:,,,/Morphic;component/Assets/Icons/morphic-highcontrastblack.ico"
@@ -31,11 +31,11 @@
 		   
 <!--
         <TextBlock HorizontalAlignment="Center" FontSize="10">
-            <Hyperlink RequestNavigate="CheckUpdate_OnClick" NavigateUri="#update"><Run Text="{x:Static l10n:Resources.CheckForUpdateHyperlink_Text}"/></Hyperlink>
+            <Hyperlink RequestNavigate="CheckUpdate_OnClick" NavigateUri="#update"><Run Text="{StaticResource AboutMorphicDialog_CheckForUpdateHyperlink}"/></Hyperlink>
         </TextBlock>
 -->
         <TextBlock HorizontalAlignment="Center" FontSize="10" Margin="0,10,0,0">
-            <Hyperlink x:Name="LearnMoreHyperlink" RequestNavigate="LearnMoreHyperlink_RequestNavigate" NavigateUri="https://morphic.org"><Run Text="{StaticResource LearnMoreAboutMorphicHyperlink_Text}"/></Hyperlink>
+            <Hyperlink x:Name="LearnMoreHyperlink" RequestNavigate="LearnMoreHyperlink_RequestNavigate" NavigateUri="https://morphic.org"><Run Text="{StaticResource AboutMorphicDialog_LearnMoreAboutMorphicHyperlink}"/></Hyperlink>
         </TextBlock>
     </StackPanel>
 </ui:ThemeAwareWindow>

@@ -36,8 +36,8 @@
             <!--<CheckBox Margin="0,5" IsChecked="True">Read&amp;Write by Texthelp</CheckBox>-->
         </StackPanel>
         <UniformGrid Grid.Row="3" Margin="0,20,0,0">
-            <Button x:Name="SkipAllButton" Width="Auto" HorizontalAlignment="Left" FontWeight="Bold" Margin="10,5,0,10" Click="SkipAllButton_Clicked" IsEnabled="True" Content="{StaticResource SkipAllButton}"/>
-            <Button x:Name="InstallButton" Width="Auto" HorizontalAlignment="Right" FontWeight="Bold" Margin="10,5,0,10" Click="InstallButton_Clicked" IsEnabled="True" Content="{StaticResource InstallButton}"/>
+            <Button x:Name="SkipAllButton" Width="Auto" HorizontalAlignment="Left" FontWeight="Bold" Margin="10,5,0,10" Click="SkipAllButton_Clicked" IsEnabled="True" Content="{StaticResource MiscDialog_SkipAllButton}"/>
+            <Button x:Name="InstallButton" Width="Auto" HorizontalAlignment="Right" FontWeight="Bold" Margin="10,5,0,10" Click="InstallButton_Clicked" IsEnabled="True" Content="{StaticResource MiscDialog_InstallButton}"/>
         </UniformGrid>
     </Grid>
     <!--
@@ -48,7 +48,7 @@
         <PasswordBox Grid.Column="1" Grid.Row="2" Margin="0,4" x:Name="PasswordField" PasswordChanged="PasswordField_PasswordChanged" VerticalAlignment="Center" Padding="0,4,0,4" AutomationProperties.IsRequiredForForm="True" AutomationProperties.HelpText="{StaticResource LoginPanel_PasswordField_AutomationHelpText}" AutomationProperties.LabeledBy="{Binding ElementName=PasswordFieldLabel}"/>
         <Label x:Name="ErrorLabel" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Center" FontWeight="SemiBold" Foreground="#ffcc0000" Visibility="Hidden" AutomationProperties.AutomationId="ErrorLabel" Focusable="True" Content="{StaticResource LoginPanel_LoginError_DidNotRecognizeLogin}"/>
         <UniformGrid Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Columns="2" Rows="1">
-            <Button x:Name="CancelButton" Width="Auto" HorizontalAlignment="Left" FontWeight="Bold" Margin="10,5,0,10" Click="OnCancel" IsEnabled="True" AutomationProperties.HelpText="{StaticResource CancelButton_AutomationHelpText}" Content="{StaticResource CancelButton}"/>
+            <Button x:Name="CancelButton" Width="Auto" HorizontalAlignment="Left" FontWeight="Bold" Margin="10,5,0,10" Click="OnCancel" IsEnabled="True" AutomationProperties.HelpText="{StaticResource LoginPanel_CancelButton_AutomationHelpText}" Content="{StaticResource MiscDialog_CancelButton}"/>
             <Button x:Name="LoginButton" Width="Auto" HorizontalAlignment="Right" FontWeight="Bold" Margin="10,5,0,10" Click="OnLogin" IsEnabled="False" AutomationProperties.HelpText="Login" Content="{StaticResource LoginPanel_SignInButton}" IsDefault="True"/>
         </UniformGrid>
     </Grid>

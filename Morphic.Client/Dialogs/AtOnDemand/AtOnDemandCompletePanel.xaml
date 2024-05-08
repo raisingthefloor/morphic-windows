@@ -4,7 +4,6 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:local="clr-namespace:Morphic.Client"
-    xmlns:l10n="clr-namespace:Morphic.Client.Strings"
     mc:Ignorable="d"
     Background="{DynamicResource ThemeAwareBackground}"
     Loaded="Panel_Loaded">
@@ -36,7 +35,7 @@
         </StackPanel>
         <TextBlock x:Name="RebootRequiredTextBlock" Grid.Row="2" FontWeight="Bold" Margin="5, 5" Visibility="Collapsed">A reboot is required to use the installed apps.</TextBlock>
         <UniformGrid Grid.Row="3" Margin="0,20,0,0">
-            <Button x:Name="DoneButton" Width="Auto" HorizontalAlignment="Right" FontWeight="Bold" Margin="10,5,0,10" Click="DoneButton_Clicked" IsEnabled="True" Content="{x:Static l10n:Resources.DoneButton_Text}"/>
+            <Button x:Name="DoneButton" Width="Auto" HorizontalAlignment="Right" FontWeight="Bold" Margin="10,5,0,10" Click="DoneButton_Clicked" IsEnabled="True" Content="{StaticResource AtodOnDemandPanel_DoneButton}"/>
         </UniformGrid>
     </Grid>
 </StackPanel>

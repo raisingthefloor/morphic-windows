@@ -23,10 +23,5 @@ files: [
   "source" : "Morphic.Client/Properties/Resources.resx",
   "translation" : "Morphic.Client/Properties/Resources.%two_letters_code%.resx",
   "update_option" : "update_as_unapproved",
- },
- {
-  "source" : "Morphic.Client/Strings/Resources.resx",
-  "translation" : "Morphic.Client/Strings/Resources.%two_letters_code%.resx",
-  "update_option" : "update_as_unapproved",
  }
 ]

@@ -5,10 +5,9 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:dialogs="clr-namespace:Morphic.Client.Dialogs"
-        xmlns:l10n="clr-namespace:Morphic.Client.Strings"
         xmlns:ui="clr-namespace:Morphic.Client.UI"
         mc:Ignorable="d"
-        Title="{x:Static l10n:Resources.RestoreSettingsFromBackupWindow_Title}"
+        Title="{StaticResource RestoreDialog_WindowTitle}"
         FontSize="17"
         ResizeMode="NoResize"
         Width="500"
@@ -49,20 +48,20 @@
         </Style>
     </Window.Resources>
 
-    <StackPanel>
-        <TextBlock HorizontalAlignment="Center" Margin="20" FontWeight="Bold" Text="{x:Static l10n:Resources.RestoreSettingsFromBackupHeader_Text}"/>
-        <TextBlock HorizontalAlignment="Center" Margin="20" TextWrapping="Wrap" Text="{x:Static l10n:Resources.RestoreSettingsFromBackupHeaderDescription_Text}"/>
+    <StackPanel Background="{DynamicResource ThemeAwareBackground}">
+        <TextBlock HorizontalAlignment="Center" Margin="20" FontWeight="Bold" Text="{StaticResource RestoreDialog_RestoreFromBackupHeader}"/>
+        <TextBlock HorizontalAlignment="Center" Margin="20" TextWrapping="Wrap" Text="{StaticResource RestoreDialog_RestoreFromBackupHeaderDescription}"/>
         <TextBlock HorizontalAlignment="Left" Margin="40,20,0,20" Name="BackupTextBlock">
-            <Run Text="{x:Static l10n:Resources.BackupDate_Text}"/>: 
+            <Run Text="{StaticResource RestoreDialog_BackupDate}"/>: 
             <Hyperlink x:Name="BackupLink" Click="BackupDateClick"><TextBlock Text="{Binding SelectedBackupDate}"></TextBlock></Hyperlink>
         </TextBlock>
         <TextBlock HorizontalAlignment="Center" Margin="20" TextWrapping="Wrap" >
-            <Run Text="{x:Static l10n:Resources.ClickingBelowWillRestoreSettings_Part1_Text}"/> "<Bold><Run Text="{x:Static l10n:Resources.ClickingBelowWillRestoreSettings_Part2_Text}"/></Bold>" <Run Text="{x:Static l10n:Resources.ClickingBelowWillRestoreSettings_Part3_Text}"/>
+            <Run Text="{StaticResource RestoreDialog_ClickingBelowWillRestoreSettings_Part1}"/> "<Bold><Run Text="{StaticResource RestoreDialog_ClickingBelowWillRestoreSettings_Part2}"/></Bold>" <Run Text="{StaticResource RestoreDialog_ClickingBelowWillRestoreSettings_Part3}"/>
         </TextBlock>
 
         <UniformGrid Columns="2" Margin="40,20,40,20">
-            <Button x:Name="CancelButton" Width="Auto" HorizontalAlignment="Left" FontWeight="Bold" Margin="10,5,0,10" Click="OnCancel" IsEnabled="True" Content="{StaticResource CancelButton}"/>
-            <Button x:Name="ApplyButton" Width="Auto" HorizontalAlignment="Right" FontWeight="Bold" Margin="10,5,0,10" Click="OnApply" IsEnabled="True" Content="{x:Static l10n:Resources.RestoreFromBackupButton_Text}"/>
+            <Button x:Name="CancelButton" Width="Auto" HorizontalAlignment="Left" FontWeight="Bold" Margin="10,5,0,10" Click="OnCancel" IsEnabled="True" Content="{StaticResource MiscDialog_CancelButton}"/>
+            <Button x:Name="ApplyButton" Width="Auto" HorizontalAlignment="Right" FontWeight="Bold" Margin="10,5,0,10" Click="OnApply" IsEnabled="True" Content="{StaticResource RestoreDialog_RestoreFromBackupButton}"/>
         </UniformGrid>
 
     </StackPanel>
