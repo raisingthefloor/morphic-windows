@@ -2,14 +2,7 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:system="clr-namespace:System;assembly=mscorlib">
 
-    <system:String x:Key="MainMenuItem_AboutMorphic">_About Morphic...</system:String>
-    <system:String x:Key="MainMenuItem_QuitMorphic">_Quit Morphic</system:String>
-
-    <system:String x:Key="AboutMorphicWindow_Title">About Morphic</system:String>
-
-    <system:String x:Key="LearnMoreAboutMorphicHyperlink_Text">Learn More about Morphic</system:String>
-
     <system:String x:Key="App_ProductAndOSName">Morphic for Windows</system:String>
     <system:String x:Key="App_Copyright">Copyright 2020-2024 Raising the Floor - US, Inc.</system:String>
-    
+
 </ResourceDictionary>

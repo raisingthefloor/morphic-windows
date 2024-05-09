@@ -562,7 +562,7 @@ public partial class App : Application
                 }
 
                 // get the localized resource; if it doesn't exist, revert to the resource tag instead
-                var localizedText = Morphic.Client.Properties.Resources.ResourceManager.GetString(resourceName.Trim(), Morphic.Client.Properties.Resources.Culture);
+                string? localizedText = (string?)Application.Current.FindResource(resourceName.Trim());
                 if (localizedText is null)
                 {
                     localizedText = "{{" + resourceName + "}}";
@@ -908,6 +908,13 @@ public partial class App : Application
             telemetrySiteId: commonConfiguration.TelemetrySiteId
             );
 
+        // before initializing any user interface, initialize our localization culture
+        var currentUICulture = System.Threading.Thread.CurrentThread.CurrentUICulture;
+        var iso639LanguageCode = Morphic.Localization.LocalizationManager.GetIso639LanguageCode(currentUICulture);
+        //
+        // NOTE: if the current culture is not supported (or if it's the same as the base culture), fail silently and use the base settings
+        _ = Morphic.Localization.LocalizationManager.SetUICulture(App.Current.Resources, iso639LanguageCode);
+
         // determine if Morphic (i.e. the taskbar icon, the MorphicBar, etc.) should be shown
         bool morphicShouldBeHidden = false;
         if (isRunningAfterLogin == true)
@@ -923,9 +930,11 @@ public partial class App : Application
 
         this.Logger.LogInformation("App Started");
 
-        // NOTE: we pass an initial TrayButton visibility state opposite of morphicShouldBeHidden to the MorphicMenu initializer (since MorphicMenu controls the taskbar button and its visibility)
         // create a single instance of our main menu
-        this.MorphicMainMenu = new MorphicMainMenu();
+        this.MorphicMainMenu = new();
+        //
+        // NOTE: if the current culture is not supported (or if it's the same as the base culture), fail silently and use the base settings
+        _ = Morphic.Localization.LocalizationManager.SetUICulture(this.MorphicMainMenu.Resources, iso639LanguageCode);
 
         // initialize our taskbar icon (button); this will not show the button
         this.InitTaskbarIconWithoutShowing();

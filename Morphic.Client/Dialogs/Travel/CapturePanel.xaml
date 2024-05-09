@@ -4,13 +4,12 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:Morphic.Client"
-      xmlns:l10n="clr-namespace:Morphic.Client.Strings"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800">
 
     <StackPanel x:Name="CollectingPanel" MaxWidth="500">
-        <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0" Content="{x:Static l10n:Resources.CollectingSettingsFromComputerLabel_Content}"/>
-        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,10,0,10" Text="{x:Static l10n:Resources.SecurelyTakeSettingsAnywhere_Text}"/>
+        <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0" Content="{StaticResource CaptureSettingsPanel_CollectingSettingsFromComputer}"/>
+        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,10,0,10" Text="{StaticResource CaptureSettingsPanel_SecurelyTakeSettingsAnywhere}"/>
         <Image Height="270" Margin="0,30,0,0">
             <Image.RenderTransform>
                 <RotateTransform Angle="0" CenterX="135" CenterY="135"/>
@@ -61,9 +60,9 @@
         </Image>
     </StackPanel>
     <StackPanel x:Name="CompletePanel" Visibility="Collapsed">
-        <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0" Content="{x:Static l10n:Resources.ConfirmSavingToCloudVaultLabel_Content}"/>
-        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,20" Text="{x:Static l10n:Resources.SettingsCollectionComplete_Text}"/>
-        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,20" Text="{x:Static l10n:Resources.ClickingSaveWillSaveSettingsToVault_Text}"/>
+        <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0" Content="{StaticResource CaptureSettingsPanel_ConfirmSavingToCloudVault}"/>
+        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,20" Text="{StaticResource CaptureSettingsPanel_SettingsCollectionComplete}"/>
+        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,20" Text="{StaticResource CaptureSettingsPanel_ClickingSaveWillSaveSettingsToVault}"/>
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition />
@@ -71,14 +70,14 @@
                 <ColumnDefinition />
             </Grid.ColumnDefinitions>
             <UniformGrid Grid.Column="1" Columns="2">
-                <Button x:Name="CancelButton" Width="Auto" FontWeight="Bold" Margin="10,5,0,10" Click="OnCancel" IsEnabled="True" Content="{x:Static l10n:Resources.CancelButton_Text}"/>
-                <Button x:Name="SaveButton" Width="Auto" FontWeight="Bold" Margin="10,5,0,10" Click="OnSave" IsEnabled="True" Content="{x:Static l10n:Resources.SaveButton_Text}" IsDefault="True"/>
+                <Button x:Name="CancelButton" Width="Auto" FontWeight="Bold" Margin="10,5,0,10" Click="OnCancel" IsEnabled="True" Content="{StaticResource MiscDialog_CancelButton}"/>
+                <Button x:Name="SaveButton" Width="Auto" FontWeight="Bold" Margin="10,5,0,10" Click="OnSave" IsEnabled="True" Content="{StaticResource MiscDialog_SaveButton}" IsDefault="True"/>
             </UniformGrid>
         </Grid>
     </StackPanel>
     <StackPanel x:Name="SavedPanel" Visibility="Collapsed">
-        <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0" Content="{x:Static l10n:Resources.SettingsSavedToCloudVaultLabel_Content}"/>
-        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,10" Text="{x:Static l10n:Resources.MorphicCanNowApplySavedSettingsToAnotherComputer_Text}"/>
+        <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0" Content="{StaticResource CaptureSettingsPanel_SettingsSavedToCloudVault}"/>
+        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,10" Text="{StaticResource CaptureSettingsPanel_MorphicCanNowApplySavedSettingsToAnotherComputer}"/>
         <Button x:Name="OkButton" Width="Auto" HorizontalAlignment="Center" FontWeight="Bold" Margin="10,20,0,10" Click="OnOk" IsEnabled="True" Content="OK"/>
     </StackPanel>
 </StackPanel>
