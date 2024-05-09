@@ -5,7 +5,6 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:local="clr-namespace:Morphic.Client"
     mc:Ignorable="d"
-    Background="{DynamicResource ThemeAwareBackground}"
     Loaded="Panel_Loaded">
     <StackPanel Margin="20" Orientation="Vertical">
         <StackPanel x:Name="CollectingPanel" MaxWidth="500" Orientation="Vertical">

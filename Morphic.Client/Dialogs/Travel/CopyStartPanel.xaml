@@ -4,8 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         mc:Ignorable="d"
-        ToolTipService.InitialShowDelay="0"
-        Background="{DynamicResource ThemeAwareBackground}">
+        ToolTipService.InitialShowDelay="0">
     <TextBlock HorizontalAlignment="Center"  Margin="20" FontWeight="Bold" Text="{StaticResource CopyStartPanel_CopySettingsBetweenComputersHeader}"/>
     <TextBlock HorizontalAlignment="Center"  Margin="10,10,10,40" FontSize="15" TextWrapping="Wrap" Text="{StaticResource CopyStartPanel_CopySettingsBetweenComputersDescription}"/>
     <TextBlock HorizontalAlignment="Center" Margin="20" ><Hyperlink Click="CopyToCloud"><Run Text="{StaticResource CopyStartPanel_CopySettingsToCloudVaultHyperlink}"/></Hyperlink></TextBlock>

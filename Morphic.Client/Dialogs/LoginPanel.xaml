@@ -5,7 +5,6 @@
             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
             xmlns:local="clr-namespace:Morphic.Client"
             mc:Ignorable="d"
-            Background="{DynamicResource ThemeAwareBackground}"
             Loaded="Panel_Loaded">
     <StackPanel.Resources>
     </StackPanel.Resources>
@@ -25,14 +24,14 @@
             <Image Source="../Icon.png" HorizontalAlignment="Center" Width="60"/>
             <TextBlock FontSize="18" FontWeight="Bold" Text="{StaticResource LoginPanel_SignIntoMorphicAccountHeader}"/>
         </StackPanel>
-        <Label x:Name="EmailFieldLabel" Grid.Row="1" Grid.Column="0" Margin="0,4" Foreground="{DynamicResource ThemeAwareForeground}" Content="{StaticResource LoginPanel_EmailField}"/>
+        <Label x:Name="EmailFieldLabel" Grid.Row="1" Grid.Column="0" Margin="0,4" Content="{StaticResource LoginPanel_EmailField}"/>
         <TextBox Grid.Column="1" Grid.Row="1" Margin="0,4" x:Name="UsernameField" AcceptsReturn="False" AcceptsTab="False" MaxLines="1" TextWrapping="NoWrap" TextChanged="UsernameField_TextChanged" VerticalAlignment="Center" Padding="0,4,0,4" AutomationProperties.HelpText="{StaticResource LoginPanel_UsernameField_AutomationHelpText}" AutomationProperties.IsRequiredForForm="True" AutomationProperties.LabeledBy="{Binding ElementName=EmailFieldLabel}" />
-        <Label x:Name="PasswordFieldLabel" Grid.Row="2" Grid.Column="0" Margin="0,4" Foreground="{DynamicResource ThemeAwareForeground}" Content="{StaticResource LoginPanel_PasswordField}"/>
+        <Label x:Name="PasswordFieldLabel" Grid.Row="2" Grid.Column="0" Margin="0,4" Content="{StaticResource LoginPanel_PasswordField}"/>
         <PasswordBox Grid.Column="1" Grid.Row="2" Margin="0,4" x:Name="PasswordField" PasswordChanged="PasswordField_PasswordChanged" VerticalAlignment="Center" Padding="0,4,0,4" AutomationProperties.IsRequiredForForm="True" AutomationProperties.HelpText="{StaticResource LoginPanel_PasswordField_AutomationHelpText}" AutomationProperties.LabeledBy="{Binding ElementName=PasswordFieldLabel}"/>
         <Label x:Name="ErrorLabel" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Center" FontWeight="SemiBold" Foreground="#ffcc0000" Visibility="Hidden" AutomationProperties.AutomationId="ErrorLabel" Focusable="True" Content="{StaticResource LoginPanel_LoginError_DidNotRecognizeLogin}"/>
         <UniformGrid Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Columns="2" Rows="1">
-            <Button x:Name="CancelButton" Width="Auto" HorizontalAlignment="Left" FontWeight="Bold" Margin="10,5,0,10" Click="OnCancel" IsEnabled="True" AutomationProperties.HelpText="{StaticResource LoginPanel_CancelButton_AutomationHelpText}" Foreground="{DynamicResource ThemeAwareForeground}" Content="{StaticResource MiscDialog_CancelButton}"/>
-            <Button x:Name="LoginButton" Width="Auto" HorizontalAlignment="Right" FontWeight="Bold" Margin="10,5,0,10" Click="OnLogin" IsEnabled="False" AutomationProperties.HelpText="Login" Content="{StaticResource LoginPanel_SignInButton}" Foreground="{DynamicResource ThemeAwareForeground}" IsDefault="True"/>
+            <Button x:Name="CancelButton" Width="Auto" HorizontalAlignment="Left" FontWeight="Bold" Margin="10,5,0,10" Click="OnCancel" IsEnabled="True" AutomationProperties.HelpText="{StaticResource LoginPanel_CancelButton_AutomationHelpText}" Content="{StaticResource MiscDialog_CancelButton}"/>
+            <Button x:Name="LoginButton" Width="Auto" HorizontalAlignment="Right" FontWeight="Bold" Margin="10,5,0,10" Click="OnLogin" IsEnabled="False" AutomationProperties.HelpText="Login" Content="{StaticResource LoginPanel_SignInButton}" IsDefault="True"/>
         </UniformGrid>
     </Grid>
     <TextBlock Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Margin="10" HorizontalAlignment="Center">

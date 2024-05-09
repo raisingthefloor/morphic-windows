@@ -9,10 +9,10 @@
         d:DataContext="{d:DesignInstance ui:BarWindow, IsDesignTimeCreatable=True}"
 
         Title="{Binding Bar.Title}" Width="100" Height="100"
-	SizeToContent="WidthAndHeight" 
+        SizeToContent="WidthAndHeight" 
         WindowStyle="None" ResizeMode="NoResize" 
         FlowDirection="{DynamicResource CultureFlowDirection}"
-	Topmost="True" ShowInTaskbar="False"
+        Topmost="True" ShowInTaskbar="False"
         Background="Transparent"
         Padding="0"
         AllowsTransparency="True"

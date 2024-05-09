@@ -5,7 +5,6 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Morphic.Client"
         mc:Ignorable="d"
-        Background="{DynamicResource ThemeAwareBackground}"
         Loaded="Panel_Loaded">
         <Grid MaxWidth="400">
             <Grid.ColumnDefinitions>
@@ -20,8 +19,8 @@
         <StackPanel Grid.Row="0" Margin="0,20" Orientation="Horizontal">
             <Image Margin="0,0,10,0" Source="../../Icon.png" Width="60"/>
             <StackPanel Orientation="Vertical">
-                <TextBlock Foreground="{DynamicResource ThemeAwareForeground}" FontWeight="Bold">Let's install your apps</TextBlock>
-                <TextBlock x:Name="SubtitleTextBlockLine1" Foreground="{DynamicResource ThemeAwareForeground}" TextWrapping="Wrap">Morphic and AT on Demand can install</TextBlock>
+                <TextBlock FontWeight="Bold">Let's install your apps</TextBlock>
+                <TextBlock x:Name="SubtitleTextBlockLine1" TextWrapping="Wrap">Morphic and AT on Demand can install</TextBlock>
                 <TextBlock>
                 <Run>all </Run>
                 <Run x:Name="NumberOfAvailableAppsTextBlockRun">#</Run>
@@ -29,7 +28,7 @@
                 </TextBlock>
             </StackPanel>
         </StackPanel>
-        <TextBlock Foreground="{DynamicResource ThemeAwareForeground}" Margin="0,0,0,5" Grid.Row="1">If you do not want to install an app, uncheck it.</TextBlock>
+        <TextBlock Margin="0,0,0,5" Grid.Row="1">If you do not want to install an app, uncheck it.</TextBlock>
         <StackPanel x:Name="AvailableAppsStackPanel" Margin="10,0,0,0" Grid.Row="2">
             <!-- list of apps that can be installed -->
             <!-- NOTE: we include the XAML here as a template sample -->

@@ -48,7 +48,7 @@
         </Style>
     </Window.Resources>
 
-    <StackPanel Background="{DynamicResource ThemeAwareBackground}">
+    <StackPanel>
         <TextBlock HorizontalAlignment="Center" Margin="20" FontWeight="Bold" Text="{StaticResource RestoreDialog_RestoreFromBackupHeader}"/>
         <TextBlock HorizontalAlignment="Center" Margin="20" TextWrapping="Wrap" Text="{StaticResource RestoreDialog_RestoreFromBackupHeaderDescription}"/>
         <TextBlock HorizontalAlignment="Left" Margin="40,20,0,20" Name="BackupTextBlock">

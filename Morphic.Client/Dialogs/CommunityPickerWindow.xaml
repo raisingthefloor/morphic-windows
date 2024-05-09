@@ -15,7 +15,7 @@
         FlowDirection="{DynamicResource CultureFlowDirection}"
         WindowStyle="ToolWindow"
         >
-    <StackPanel Background="{DynamicResource ThemeAwareBackground}">
+    <StackPanel>
         <TextBlock Margin="10 10 10 0" TextWrapping="Wrap" FontSize="14" Text="{StaticResource MorphicGroupPickerDialog_YouAreMemberOfMultipleGroups}"/>
         <TextBlock Margin="10 5 10 5" TextWrapping="Wrap" Text="{StaticResource MorphicGroupPickerDialog_SelectGroupHeader}"/>
         <ItemsControl ItemsSource="{Binding Communities}">

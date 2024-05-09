@@ -5,8 +5,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:Morphic.Client"
       mc:Ignorable="d" 
-      d:DesignHeight="450" d:DesignWidth="800"
-      Background="{DynamicResource ThemeAwareBackground}">
+      d:DesignHeight="450" d:DesignWidth="800">
 
     <StackPanel x:Name="ReadyPanel" Visibility="Visible">
         <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0" Content="{StaticResource ApplyPanel_ApplySettingsFromCloudVaultTitle}"/>
