@@ -562,7 +562,7 @@ public partial class App : Application
                 }
 
                 // get the localized resource; if it doesn't exist, revert to the resource tag instead
-                var localizedText = Morphic.Client.Properties.Resources.ResourceManager.GetString(resourceName.Trim(), Morphic.Client.Properties.Resources.Culture);
+                string? localizedText = (string?)Application.Current.FindResource(resourceName.Trim());
                 if (localizedText is null)
                 {
                     localizedText = "{{" + resourceName + "}}";

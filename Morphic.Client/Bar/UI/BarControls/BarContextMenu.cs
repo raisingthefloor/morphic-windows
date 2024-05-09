@@ -23,18 +23,18 @@
                 {
                     case "learn":
                         format = BarContextMenu.LearnMoreFormat;
-                        finalName = "{{MorphicBarButtonContextMenuItem_LearnMore_Header}}";
+                        finalName = "{{MorphicBarButtonContextMenuItem_LearnMore}}";
                         telemetryType = MorphicMenuItem.MorphicMenuItemTelemetryType.LearnMore;
                         break;
                     case "demo":
                         format = BarContextMenu.DemoFormat;
-                        finalName = "{{MorphicBarButtonContextMenuItem_Demo_Header}}";
+                        finalName = "{{MorphicBarButtonContextMenuItem_Demo}}";
                         telemetryType = MorphicMenuItem.MorphicMenuItemTelemetryType.QuickDemoVideo;
                         break;
                     case "settings":
                     case "setting":
                         format = BarContextMenu.SettingsFormat;
-                        finalName = "{{MorphicBarButtonContextMenuItem_Settings_Header}}";
+                        finalName = "{{MorphicBarButtonContextMenuItem_Settings}}";
                         telemetryType = MorphicMenuItem.MorphicMenuItemTelemetryType.Settings;
                         break;
                     default:
