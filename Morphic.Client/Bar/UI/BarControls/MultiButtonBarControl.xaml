@@ -54,6 +54,7 @@
                                  TextWrapping="Wrap"
                                  FontSize="{Binding Bar.Sizes.ControlLabelFontSize}"
                                  FontWeight="{Binding Bar.Sizes.ControlLabelFontWeight}"
+                                 Foreground="{DynamicResource ThemeAwareForeground}"
                                  TextAlignment="Center"
                                  MaxLines="{Binding Bar.Sizes.ButtonTextLines}"
                                  Margin="{Binding Bar.Sizes.ControlLabelMargin}" />
