@@ -81,7 +81,6 @@
             CornerRadius="{Binding IsDocked, Converter={StaticResource CornerRadius}}"
             BorderBrush="{DynamicResource BorderBrush}"
             BorderThickness="{Binding Bar.BarTheme.BorderSize, FallbackValue=0, Mode=OneWay}"
-<!--            Background="{DynamicResource Background}"> -->
             Background="{DynamicResource ThemeAwareBackground}">
         <Grid>
             <Grid.ColumnDefinitions>

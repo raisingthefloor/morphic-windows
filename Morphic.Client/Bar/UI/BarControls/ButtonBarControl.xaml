@@ -47,7 +47,6 @@
                    FontSize="{Binding Bar.Sizes.ButtonFontSize}"
 
 
-<!--                   Foreground="{DynamicResource Foreground}" -->
                    Foreground="{DynamicResource ThemeAwareForeground}"
                    HorizontalAlignment="Center"
                    Margin="{Binding Bar.Sizes.ButtonTextPadding}"
@@ -90,7 +89,6 @@
                 MaxLines="{Binding Bar.Sizes.ButtonTextLines}" 
                 FontWeight="{Binding Bar.Sizes.ButtonFontWeight}"
                 FontSize="{Binding Bar.Sizes.ButtonFontSize}"
-<!--                Foreground="{DynamicResource Foreground}" -->
                 Foreground="{DynamicResource ThemeAwareForeground}"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
