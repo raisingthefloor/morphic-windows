@@ -22,14 +22,14 @@
             <RowDefinition/>
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0" Grid.ColumnSpan="2">
-            <Label FontSize="24" HorizontalAlignment="Center" Margin="0,0,0,0" Content="{StaticResource CreateAccountDialog_TakeYourSettingsAnywhereHeader}"/>
-            <TextBlock FontSize="17" TextWrapping="Wrap" TextAlignment="Center" Margin="0,10,0,30" Text="{StaticResource CreateAccountDialog_TakeYourSettingsAnywhereInstructions}"/>
+            <Label FontSize="24" HorizontalAlignment="Center" Margin="0,0,0,0" Foreground="{DynamicResource ThemeAwareForeground}" Content="{StaticResource CreateAccountDialog_TakeYourSettingsAnywhereHeader}"/>
+            <TextBlock FontSize="17" TextWrapping="Wrap" TextAlignment="Center" Margin="0,10,0,30" Foreground="{DynamicResource ThemeAwareForeground}" Text="{StaticResource CreateAccountDialog_TakeYourSettingsAnywhereInstructions}"/>
         </StackPanel>
-        <Label x:Name="EmailFieldLabel" Grid.Column="0" Grid.Row="1" Margin="0,4" FontSize="17" Content="{StaticResource CreateAccountDialog_YourEmailAddress}"/>
+        <Label x:Name="EmailFieldLabel" Grid.Column="0" Grid.Row="1" Margin="0,4" FontSize="17" Foreground="{DynamicResource ThemeAwareForeground}" Content="{StaticResource CreateAccountDialog_YourEmailAddress}"/>
         <TextBox Grid.Column="1" Grid.Row="1" Margin="0,4" x:Name="UsernameField" AcceptsReturn="False" AcceptsTab="False" MaxLines="1" TextWrapping="NoWrap" TextChanged="UsernameField_TextChanged" LostFocus="UsernameField_LostFocus" FontSize="17" VerticalAlignment="Center" Padding="0,4,0,4" AutomationProperties.LabeledBy="{Binding ElementName=EmailFieldLabel, Mode=OneWay}" AutomationProperties.IsRequiredForForm="True" />
-        <Label x:Name="PasswordFieldLabel" Grid.Column="0" Grid.Row="2" Margin="0,4" FontSize="17" Content="{StaticResource CreateAccountDialog_ChooseAPassword}"/>
+        <Label x:Name="PasswordFieldLabel" Grid.Column="0" Grid.Row="2" Margin="0,4" FontSize="17" Foreground="{DynamicResource ThemeAwareForeground}" Content="{StaticResource CreateAccountDialog_ChooseAPassword}"/>
         <PasswordBox Grid.Column="1" Grid.Row="2" Margin="0,4" x:Name="PasswordField" PasswordChanged="PasswordField_PasswordChanged" LostFocus="PasswordField_LostFocus" FontSize="17" VerticalAlignment="Center" Padding="0,4,0,4" AutomationProperties.LabeledBy="{Binding ElementName=PasswordFieldLabel, Mode=OneWay}" AutomationProperties.IsRequiredForForm="True"/>
-        <Label x:Name="ConfirmFieldLabel" Grid.Column="0" Grid.Row="3" Margin="0,4" FontSize="17" Content="{StaticResource CreateAccountDialog_ConfirmYourPassword}"/>
+        <Label x:Name="ConfirmFieldLabel" Grid.Column="0" Grid.Row="3" Margin="0,4" FontSize="17" Foreground="{DynamicResource ThemeAwareForeground}" Content="{StaticResource CreateAccountDialog_ConfirmYourPassword}"/>
         <PasswordBox Grid.Column="1" Grid.Row="3" Margin="0,4" x:Name="ConfirmPasswordField" PasswordChanged="ConfirmPasswordField_PasswordChanged" LostFocus="ConfirmPasswordField_LostFocus" FontSize="17" VerticalAlignment="Center" Padding="0,4,0,4" AutomationProperties.LabeledBy="{Binding ElementName=ConfirmFieldLabel, Mode=OneWay}" AutomationProperties.IsRequiredForForm="True"/>
         <Label x:Name="ErrorLabel" Grid.Row="4" Grid.ColumnSpan="2" HorizontalAlignment="Center" Foreground="#FFCC0000" FontWeight="SemiBold" FontSize="17" Visibility="Hidden" Focusable="True">x</Label>
         <Button x:Name="SubmitButton" Grid.Row="5" Margin="0,0,0,15" Grid.ColumnSpan="2" HorizontalAlignment="Center" FontSize="17" Click="OnSubmit" FontWeight="Bold" Padding="1,7,1,7" IsEnabled="False" IsDefault="True">
@@ -68,9 +68,9 @@
         </Button>
         <Button x:Name="LoginButton" Grid.Row="6" Grid.ColumnSpan="2" Margin="0,0,0,10" HorizontalAlignment="Center" Background="{x:Null}" Foreground="#FF004BFF" BorderBrush="{x:Null}" Click="OnAlreadyHaveAccount" Cursor="Hand" Content="{StaticResource CreateAccountDialog_Button_AlreadyHaveAnAccount}"/>
         <StackPanel Grid.Row="7" Grid.ColumnSpan="2" HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
-            <Button FontSize="12"  Background="{x:Null}" BorderBrush="{x:Null}" Margin="0,0,-7,0" Content="{StaticResource CreateAccountDialog_TermsAndConditions_Part1}"/>
+            <Button FontSize="12"  Background="{x:Null}"  Foreground="{DynamicResource ThemeAwareForeground}" BorderBrush="{x:Null}" Margin="0,0,-7,0" Content="{StaticResource CreateAccountDialog_TermsAndConditions_Part1}"/>
             <Button x:Name="TermsOfServiceButton" FontSize="12" Background="{x:Null}" Foreground="#FF004BFF" BorderBrush="{x:Null}" Margin="-10,0,-13,0" Cursor="Hand" Click="TermsOfServiceButton_Click" Content="{StaticResource CreateAccountDialog_TermsAndConditions_Part2}"/>
-            <Button FontSize="12" Background="{x:Null}" BorderBrush="{x:Null}" Margin="-33,0,-33,0" Content="{StaticResource CreateAccountDialog_TermsAndConditions_Part3}"/>
+            <Button FontSize="12" Background="{x:Null}"  Foreground="{DynamicResource ThemeAwareForeground}" BorderBrush="{x:Null}" Margin="-33,0,-33,0" Content="{StaticResource CreateAccountDialog_TermsAndConditions_Part3}"/>
             <Button x:Name="PrivacyPolicyButton" FontSize="12" Background="{x:Null}" Foreground="#FF004BFF" BorderBrush="{x:Null}" Margin="-18,0,-10,0" Cursor="Hand" Click="PrivacyPolicyButton_Click" Content="{StaticResource CreateAccountDialog_TermsAndConditions_Part4}"/>
         </StackPanel>
     </Grid>

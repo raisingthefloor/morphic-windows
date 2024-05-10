@@ -61,6 +61,7 @@ public partial class AtOnDemandCompletePanel : StackPanel, IStepPanel
         {
             var itemStackPanel = new StackPanel() { Orientation = Orientation.Horizontal };
             //
+            // OBSERVATION: we may want to change this color based on the dark/light mode and high contrast settings
             var darkGreenColor = System.Drawing.Color.DarkGreen;
             var bulletTextBlock = new TextBlock() { Margin = new Thickness(5, 0, 0, 0), Foreground = new SolidColorBrush(System.Windows.Media.Color.FromArgb(darkGreenColor.A, darkGreenColor.R, darkGreenColor.G, darkGreenColor.B)), Text = "•" };
             itemStackPanel.Children.Add(bulletTextBlock);

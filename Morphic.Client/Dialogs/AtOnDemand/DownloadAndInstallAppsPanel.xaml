@@ -61,9 +61,9 @@
         
         <!-- Progress Bar with text -->
         <StackPanel Width="400" Orientation="Vertical" HorizontalAlignment="Center">
-            <Label FontSize="24" HorizontalAlignment="Left" Margin="0,0,0,0" Content="Your apps are installing..."/>
+            <Label Foreground="{DynamicResource ThemeAwareForeground}" FontSize="24" HorizontalAlignment="Left" Margin="0,0,0,0" Content="Your apps are installing..."/>
             <ProgressBar x:Name="ProgressBar" Height="10" Foreground="#FF008145" Margin="0,5"/>
-            <Label x:Name="InstallStatusLabel" FontSize="16" HorizontalAlignment="Left" Margin="0,0,0,10" Content="ShortAppName: Installing"/>
+            <Label x:Name="InstallStatusLabel" Foreground="{DynamicResource ThemeAwareForeground}" FontSize="16" HorizontalAlignment="Left" Margin="0,0,0,10" Content="ShortAppName: Installing"/>
         </StackPanel>
     </StackPanel>
 </StackPanel>

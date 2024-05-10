@@ -19,16 +19,16 @@
         <StackPanel Grid.Row="0" Margin="0,20" Orientation="Horizontal">
             <Image Margin="0,0,10,0" Source="../../Icon.png" Width="60"/>
             <StackPanel Orientation="Vertical">
-                <TextBlock FontWeight="Bold">Let's install your apps</TextBlock>
-                <TextBlock x:Name="SubtitleTextBlockLine1" TextWrapping="Wrap">Morphic and AT on Demand can install</TextBlock>
-                <TextBlock>
-                <Run>all </Run>
-                <Run x:Name="NumberOfAvailableAppsTextBlockRun">#</Run>
-                <Run> of your assistive apps.</Run>
+                <TextBlock Foreground="{DynamicResource ThemeAwareForeground}" FontWeight="Bold">Let's install your apps</TextBlock>
+                <TextBlock x:Name="SubtitleTextBlockLine1" Foreground="{DynamicResource ThemeAwareForeground}" TextWrapping="Wrap">Morphic and AT on Demand can install</TextBlock>
+                <TextBlock Foreground="{DynamicResource ThemeAwareForeground}">
+                    <Run>all </Run>
+                    <Run x:Name="NumberOfAvailableAppsTextBlockRun">#</Run>
+                    <Run> of your assistive apps.</Run>
                 </TextBlock>
             </StackPanel>
         </StackPanel>
-        <TextBlock Margin="0,0,0,5" Grid.Row="1">If you do not want to install an app, uncheck it.</TextBlock>
+        <TextBlock Foreground="{DynamicResource ThemeAwareForeground}" Margin="0,0,0,5" Grid.Row="1">If you do not want to install an app, uncheck it.</TextBlock>
         <StackPanel x:Name="AvailableAppsStackPanel" Margin="10,0,0,0" Grid.Row="2">
             <!-- list of apps that can be installed -->
             <!-- NOTE: we include the XAML here as a template sample -->
