@@ -12,7 +12,7 @@
     <barControls:BarItemControl.Resources>
         <!-- Colours based on the active theme -->
         <SolidColorBrush x:Key="Background" Color="{Binding ActiveTheme.Background, FallbackValue=Yellow}"/>
-        <SolidColorBrush x:Key="Foreground" Color="{Binding ActiveTheme.TextColor, FallbackValue=Black}"/>
+        <!--<SolidColorBrush x:Key="Foreground" Color="{Binding ActiveTheme.TextColor, FallbackValue=Black}"/>-->
         <SolidColorBrush x:Key="BorderColor" Color="{Binding ActiveTheme.BorderColor, FallbackValue=Transparent}"/>
         <!-- Convert a boolean to a visibility -->
         <ui:Ternary x:Key="BoolVisibility" False="Collapse" True="Visible" />
@@ -47,7 +47,7 @@
                    FontSize="{Binding Bar.Sizes.ButtonFontSize}"
 
 
-                   Foreground="{DynamicResource Foreground}"
+                   Foreground="{DynamicResource ThemeAwareForeground}"
                    HorizontalAlignment="Center"
                    Margin="{Binding Bar.Sizes.ButtonTextPadding}"
                    />
@@ -89,7 +89,7 @@
                 MaxLines="{Binding Bar.Sizes.ButtonTextLines}" 
                 FontWeight="{Binding Bar.Sizes.ButtonFontWeight}"
                 FontSize="{Binding Bar.Sizes.ButtonFontSize}"
-                Foreground="{DynamicResource Foreground}"
+                Foreground="{DynamicResource ThemeAwareForeground}"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Padding="10 0 10 0"

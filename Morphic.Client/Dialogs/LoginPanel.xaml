@@ -22,11 +22,11 @@
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Margin="0,20">
             <Image Source="../Icon.png" HorizontalAlignment="Center" Width="60"/>
-            <TextBlock FontSize="18" FontWeight="Bold" Text="{StaticResource LoginPanel_SignIntoMorphicAccountHeader}"/>
+            <TextBlock FontSize="18" FontWeight="Bold" Foreground="{DynamicResource ThemeAwareForeground}" Text="{StaticResource LoginPanel_SignIntoMorphicAccountHeader}"/>
         </StackPanel>
-        <Label x:Name="EmailFieldLabel" Grid.Row="1" Grid.Column="0" Margin="0,4" Content="{StaticResource LoginPanel_EmailField}"/>
+        <Label x:Name="EmailFieldLabel" Foreground="{DynamicResource ThemeAwareForeground}" Grid.Row="1" Grid.Column="0" Margin="0,4" Content="{StaticResource LoginPanel_EmailField}"/>
         <TextBox Grid.Column="1" Grid.Row="1" Margin="0,4" x:Name="UsernameField" AcceptsReturn="False" AcceptsTab="False" MaxLines="1" TextWrapping="NoWrap" TextChanged="UsernameField_TextChanged" VerticalAlignment="Center" Padding="0,4,0,4" AutomationProperties.HelpText="{StaticResource LoginPanel_UsernameField_AutomationHelpText}" AutomationProperties.IsRequiredForForm="True" AutomationProperties.LabeledBy="{Binding ElementName=EmailFieldLabel}" />
-        <Label x:Name="PasswordFieldLabel" Grid.Row="2" Grid.Column="0" Margin="0,4" Content="{StaticResource LoginPanel_PasswordField}"/>
+        <Label x:Name="PasswordFieldLabel" Foreground="{DynamicResource ThemeAwareForeground}" Grid.Row="2" Grid.Column="0" Margin="0,4" Content="{StaticResource LoginPanel_PasswordField}"/>
         <PasswordBox Grid.Column="1" Grid.Row="2" Margin="0,4" x:Name="PasswordField" PasswordChanged="PasswordField_PasswordChanged" VerticalAlignment="Center" Padding="0,4,0,4" AutomationProperties.IsRequiredForForm="True" AutomationProperties.HelpText="{StaticResource LoginPanel_PasswordField_AutomationHelpText}" AutomationProperties.LabeledBy="{Binding ElementName=PasswordFieldLabel}"/>
         <Label x:Name="ErrorLabel" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Center" FontWeight="SemiBold" Foreground="#ffcc0000" Visibility="Hidden" AutomationProperties.AutomationId="ErrorLabel" Focusable="True" Content="{StaticResource LoginPanel_LoginError_DidNotRecognizeLogin}"/>
         <UniformGrid Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Columns="2" Rows="1">

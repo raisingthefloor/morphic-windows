@@ -13,6 +13,7 @@
         FontSize="17"
         ResizeMode="NoResize"
         FlowDirection="{DynamicResource CultureFlowDirection}"
+        Background="{DynamicResource ThemeAwareBackground}"
         HighContrastBlackIcon="pack://application:,,,/Morphic;component/Assets/Icons/morphic-highcontrastblack.ico"
         HighContrastWhiteIcon="pack://application:,,,/Morphic;component/Assets/Icons/morphic-highcontrastwhite.ico"
         StandardContrastIcon="pack://application:,,,/Morphic;component/Assets/Icons/morphic-standardcontrast.ico"

@@ -13,11 +13,12 @@
         Width="300"
         SizeToContent="Height"
         FlowDirection="{DynamicResource CultureFlowDirection}"
+        Background="{DynamicResource ThemeAwareBackground}"
         WindowStyle="ToolWindow"
         >
     <StackPanel>
-        <TextBlock Margin="10 10 10 0" TextWrapping="Wrap" FontSize="14" Text="{StaticResource MorphicGroupPickerDialog_YouAreMemberOfMultipleGroups}"/>
-        <TextBlock Margin="10 5 10 5" TextWrapping="Wrap" Text="{StaticResource MorphicGroupPickerDialog_SelectGroupHeader}"/>
+        <TextBlock Foreground="{DynamicResource ThemeAwareForeground}" Margin="10 10 10 0" TextWrapping="Wrap" FontSize="14" Text="{StaticResource MorphicGroupPickerDialog_YouAreMemberOfMultipleGroups}"/>
+        <TextBlock Foreground="{DynamicResource ThemeAwareForeground}" Margin="10 5 10 5" TextWrapping="Wrap" Text="{StaticResource MorphicGroupPickerDialog_SelectGroupHeader}"/>
         <ItemsControl ItemsSource="{Binding Communities}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
@@ -29,6 +30,6 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
-        <TextBlock Margin="10" TextWrapping="Wrap" Text="{StaticResource MorphicGroupPickerDialog_ChangePreferenceLaterUsingMorphicMenuNote}"/>
+        <TextBlock Foreground="{DynamicResource ThemeAwareForeground}" Margin="10" TextWrapping="Wrap" Text="{StaticResource MorphicGroupPickerDialog_ChangePreferenceLaterUsingMorphicMenuNote}"/>
     </StackPanel>
 </ui:ThemeAwareWindow>

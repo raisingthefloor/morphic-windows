@@ -23,7 +23,7 @@
         >
 
     <Window.Resources>
-        <SolidColorBrush x:Key="Background" Color="{Binding Bar.BarTheme.Background, FallbackValue=White, Mode=OneWay}"/>
+<!--        <SolidColorBrush x:Key="Background" Color="{Binding Bar.BarTheme.Background, FallbackValue=White, Mode=OneWay}"/> -->
         <SolidColorBrush x:Key="BorderBrush" Color="{Binding Bar.BarTheme.BorderColor, FallbackValue=Black, Mode=OneWay}"/>
         <!-- Convert a boolean to a visibility -->
         <ui:Ternary x:Key="CornerRadius" False="5" True="0" />
@@ -49,7 +49,8 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="grid" Background="White">
+<!--                        <Border x:Name="grid" Background="White"> -->
+                        <Border x:Name="grid" Background="{DynamicResource ThemeAwareBackground}">
                             <Border.CornerRadius>
                                 <CornerRadius TopRight="5"/>
                             </Border.CornerRadius>
@@ -80,7 +81,7 @@
             CornerRadius="{Binding IsDocked, Converter={StaticResource CornerRadius}}"
             BorderBrush="{DynamicResource BorderBrush}"
             BorderThickness="{Binding Bar.BarTheme.BorderSize, FallbackValue=0, Mode=OneWay}"
-            Background="{DynamicResource Background}">
+            Background="{DynamicResource ThemeAwareBackground}">
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="auto"></ColumnDefinition>
