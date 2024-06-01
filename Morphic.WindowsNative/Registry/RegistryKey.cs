@@ -229,10 +229,9 @@ public partial class Registry
 
         public interface IRegistryGetValueError
         {
-            // functions to create member instances
-            public record TypeMismatch() : IRegistryGetValueError;
-            public record UnsupportedType() : IRegistryGetValueError;
-            public record ValueDoesNotExist() : IRegistryGetValueError;
+            public record TypeMismatch : IRegistryGetValueError;
+            public record UnsupportedType : IRegistryGetValueError;
+            public record ValueDoesNotExist : IRegistryGetValueError;
             public record Win32Error(int Win32ErrorCode) : IRegistryGetValueError;
         }
 
@@ -406,6 +405,91 @@ public partial class Registry
             }
 
             return MorphicResult.OkResult(new GetValueDataAndTypeAsObjectResult(valueData, valueType));
+        }
+
+        //
+
+        public interface IRegistryDeleteValueError
+        {
+            public record ValueDoesNotExist : IRegistryDeleteValueError;
+            public record Win32Error(int Win32ErrorCode) : IRegistryDeleteValueError;
+        }
+
+        public MorphicResult<MorphicUnit, IRegistryDeleteValueError> DeleteValue(string? valueName)
+        {
+            Windows.Win32.Foundation.WIN32_ERROR deleteValueErrorCode;
+            deleteValueErrorCode = Windows.Win32.PInvoke.RegDeleteValue(_handle, valueName);
+            switch (deleteValueErrorCode)
+            {
+                case Windows.Win32.Foundation.WIN32_ERROR.ERROR_SUCCESS:
+                    break;
+                case Windows.Win32.Foundation.WIN32_ERROR.ERROR_FILE_NOT_FOUND:
+                    return MorphicResult.ErrorResult<IRegistryDeleteValueError>(new IRegistryDeleteValueError.ValueDoesNotExist());
+                default:
+                    // NOTE: in the future, we may want to consider returning a specific result (i.e. "could not open for write access" etc.)
+                    return MorphicResult.ErrorResult<IRegistryDeleteValueError>(new IRegistryDeleteValueError.Win32Error((int)deleteValueErrorCode));
+            }
+
+            // deleting the value was a success
+            return MorphicResult.OkResult();
+        }
+
+        //
+
+        public interface IRegistrySetValueError
+        {
+            public record UnsupportedType : IRegistrySetValueError;
+            public record Win32Error(int Win32ErrorCode) : IRegistrySetValueError;
+        }
+
+        public MorphicResult<MorphicUnit, IRegistrySetValueError> SetValue<T>(string? valueName, T valueData)
+        {
+            ReadOnlySpan<byte> readOnlyValueData;
+            uint valueDataSize;
+            Windows.Win32.System.Registry.REG_VALUE_TYPE valueType;
+
+            if (typeof(T) == typeof(uint))
+            {
+                var dataSizeAsInt = Marshal.SizeOf<uint>();
+                //
+                var valueAsUInt = (uint)(object)valueData!;
+                var valueAsBytes = BitConverter.GetBytes((uint)valueAsUInt);
+                readOnlyValueData = new ReadOnlySpan<byte>(valueAsBytes);
+                //
+                valueDataSize = (uint)dataSizeAsInt;
+                valueType = Windows.Win32.System.Registry.REG_VALUE_TYPE.REG_DWORD;
+            }
+            else if (typeof(T) == typeof(System.String))
+            {
+                var valueAsString = (valueData as System.String)!;
+                var valueAsBytes = System.Text.Encoding.Unicode.GetBytes(valueAsString);
+                readOnlyValueData = new ReadOnlySpan<byte>(valueAsBytes);
+                //
+                valueDataSize = (uint)((valueAsString.Length + 1 /* +1 for the null terminator */) * 2);
+                valueType = Windows.Win32.System.Registry.REG_VALUE_TYPE.REG_SZ;
+            }
+            else
+            {
+                // unknown type
+                return MorphicResult.ErrorResult<IRegistrySetValueError>(new IRegistrySetValueError.UnsupportedType());
+            }
+            //
+            Windows.Win32.Foundation.WIN32_ERROR setValueErrorCode;
+            unsafe
+            {
+                setValueErrorCode = Windows.Win32.PInvoke.RegSetValueEx(_handle, valueName, valueType, readOnlyValueData);
+            }
+            switch (setValueErrorCode)
+            {
+                case Windows.Win32.Foundation.WIN32_ERROR.ERROR_SUCCESS:
+                    break;
+                default:
+                    // NOTE: in the future, we may want to consider returning a specific result (i.e. "could not open for write access" etc.)
+                    return MorphicResult.ErrorResult<IRegistrySetValueError>(new IRegistrySetValueError.Win32Error(unchecked((int)setValueErrorCode)));
+            }
+
+            // setting the value was a success
+            return MorphicResult.OkResult();
         }
 
         //

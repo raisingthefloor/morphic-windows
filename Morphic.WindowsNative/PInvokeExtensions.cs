@@ -32,6 +32,12 @@ namespace Morphic.WindowsNative;
 
 internal class PInvokeExtensions
 {
+    #region SrRestorePtApi
+
+    internal const int MAX_DESC_W = 256;
+
+    #endregion SrRestorePtApi
+
     #region wingdi
 
     public static readonly Windows.Win32.Devices.Display.DISPLAYCONFIG_DEVICE_INFO_TYPE DISPLAYCONFIG_DEVICE_INFO_GET_DPI = unchecked((Windows.Win32.Devices.Display.DISPLAYCONFIG_DEVICE_INFO_TYPE)(-3));
