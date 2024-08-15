@@ -842,6 +842,7 @@ public partial class App : Application
            WindowsVersion.Win11_v21H2,
            WindowsVersion.Win11_v22H2,
            WindowsVersion.Win11_v23H2,
+           WindowsVersion.Win11_v24H2,
            WindowsVersion.Win11_vFuture
        };
     private static bool IsOsCompatibleWithMorphic()

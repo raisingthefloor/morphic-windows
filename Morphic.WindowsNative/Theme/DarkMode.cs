@@ -39,6 +39,7 @@ public class DarkMode
     {
         public const string APPS_USE_LIGHT_THEME = "SystemSettings_Personalize_Color_AppsUseLightTheme";
         public const string SYSTEM_USES_LIGHT_THEME = "SystemSettings_Personalize_Color_SystemUsesLightTheme";
+        public const string SYSTEM_THEME = "SystemSettings_Personalize_Color_SystemTheme";
     }
 
     private static SettingItemProxy? _appsUseLightThemeSettingItem;
@@ -198,6 +199,25 @@ public class DarkMode
     }
     //private const string SYSTEM_USES_LIGHT_THEME_VALUE_NAME = "Value";
 
+    //
+
+    private static SettingItemProxy? _systemThemeSettingItem;
+    private static SettingItemProxy? SystemThemeSettingItem
+    {
+        get
+        {
+            if (_systemThemeSettingItem is null)
+            {
+                _systemThemeSettingItem = SettingsDatabaseProxy.GetSettingItemOrNull(DarkMode.SystemSettingId.SYSTEM_THEME);
+            }
+
+            return _systemThemeSettingItem;
+        }
+    }
+    //private const string SYSTEM_THEME_VALUE_NAME = "Value";
+
+    //
+
     //// NOTE: this is an alternate implementation; we don't currently use this, but the code remains here just in case
     //public static async Task<MorphicResult<bool?, MorphicUnit>> GetAppsUseDarkModeAsync(TimeSpan? timeout = null)
     //{
@@ -289,6 +309,33 @@ public class DarkMode
     //    return MorphicResult.OkResult(!result);
     //}
 
+    public static bool TryConvertSystemThemeNameToDarkModeState(string systemTheme)
+    {
+        if (systemTheme is null)
+        {
+            throw new ArgumentNullException(nameof(systemTheme));
+        }
+
+        bool systemUsesLightThemeAsBool;
+
+        switch (systemTheme)
+        {
+            case "Light":
+                systemUsesLightThemeAsBool = true;
+                break;
+            case "Dark":
+                systemUsesLightThemeAsBool = false;
+                break;
+            default:
+                // NOTE: if "Contrast" or another theme were ever returned, we might need to return a different result
+                systemUsesLightThemeAsBool = true;
+                Debug.Assert(false, "SystemTheme is neither Light nor Dark; this is an unexpected reponse; we are assuming 'light' mode -- but we should return an 'unknown theme' result ideally.");
+                break;
+        }
+
+        return !systemUsesLightThemeAsBool;
+    }
+
     public static MorphicResult<bool?, MorphicUnit> GetSystemUsesDarkMode()
     {
         var openPersonalizeKeyResult = Morphic.WindowsNative.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize", false);
@@ -300,15 +347,32 @@ public class DarkMode
 
         // get the current light theme settings for Windows (i.e. the system)
         bool? systemUsesLightThemeAsBool = null;
-        var getSystemUsesLightThemeResult = personalizeKey.GetValueDataOrNull<uint>("SystemUsesLightTheme");
-        if (getSystemUsesLightThemeResult.IsError == true)
+        if (Morphic.WindowsNative.OsVersion.OsVersion.IsEqualOrNewerThanVersion(WindowsNative.OsVersion.WindowsVersion.Win11_v24H2) == true)
         {
-            return MorphicResult.ErrorResult();
+            var getSystemThemeResult = personalizeKey.GetValueDataOrNull<string>("SystemTheme");
+            if (getSystemThemeResult.IsError == true)
+            {
+                return MorphicResult.ErrorResult();
+            }
+            var systemTheme = getSystemThemeResult.Value;
+            // NOTE: it is not known whether this value will ever return null, but out of an abundance of caution we check for that condition
+            if (systemTheme is not null)
+            {
+                systemUsesLightThemeAsBool = !DarkMode.TryConvertSystemThemeNameToDarkModeState(systemTheme);
+            }
         }
-        var systemUsesLightThemeAsUInt32 = getSystemUsesLightThemeResult.Value;
-        if (systemUsesLightThemeAsUInt32 is not null)
+        else
         {
-            systemUsesLightThemeAsBool = (systemUsesLightThemeAsUInt32 != 0) ? true : false;
+            var getSystemUsesLightThemeResult = personalizeKey.GetValueDataOrNull<uint>("SystemUsesLightTheme");
+            if (getSystemUsesLightThemeResult.IsError == true)
+            {
+                return MorphicResult.ErrorResult();
+            }
+            var systemUsesLightThemeAsUInt32 = getSystemUsesLightThemeResult.Value;
+            if (systemUsesLightThemeAsUInt32 is not null)
+            {
+                systemUsesLightThemeAsBool = (systemUsesLightThemeAsUInt32 != 0) ? true : false;
+            }
         }
 
         // dark mode states are the inverse of AppsUseLightTheme/SystemUsesLightTheme
@@ -321,11 +385,30 @@ public class DarkMode
     {
         Stopwatch stopwatch = Stopwatch.StartNew();
 
-        // NOTE: we invert the caller's supplied argument (since the caller is setting the 'uses dark mode' value, not the 'uses light mode' value)
-        var setValueResult = await SettingItemProxy.SetSettingItemValueAsync<bool>(DarkMode.SystemUsesLightThemeSettingItem, /*DarkMode.SYSTEM_USES_LIGHT_THEME_VALUE_NAME, */!value, timeout);
-        if (setValueResult.IsError == true)
+        if (Morphic.WindowsNative.OsVersion.OsVersion.IsEqualOrNewerThanVersion(WindowsNative.OsVersion.WindowsVersion.Win11_v24H2) == true)
         {
-            return MorphicResult.ErrorResult();
+            // Windows 11 24H2+
+
+            var themeName = value switch
+            {
+                true => "Dark",
+                false => "Light"
+            };
+            var setValueResult = await SettingItemProxy.SetSettingItemValueAsync<string>(DarkMode.SystemThemeSettingItem, themeName, timeout);
+            if (setValueResult.IsError == true)
+            {
+                return MorphicResult.ErrorResult();
+            }
+        }
+        else
+        {
+            // Windows 10 1903+
+
+            var setValueResult = await SettingItemProxy.SetSettingItemValueAsync<bool>(DarkMode.SystemUsesLightThemeSettingItem, /*DarkMode.SYSTEM_USES_LIGHT_THEME_VALUE_NAME, */!value, timeout);
+            if (setValueResult.IsError == true)
+            {
+                return MorphicResult.ErrorResult();
+            }
         }
 
         TimeSpan? remainingTimeout = null;

@@ -321,8 +321,6 @@ namespace Morphic.Client.Bar.UI.BarControls
                     switch (internalAction.FunctionName)
                     {
                         case "darkMode":
-                            bool systemThemeIsLightTheme;
-
                             var getDarkModeStateResult = await Morphic.Client.Bar.Data.Actions.Functions.GetDarkModeStateAsync();
                             if (getDarkModeStateResult.IsError == true)
                             {
@@ -336,6 +334,22 @@ namespace Morphic.Client.Bar.UI.BarControls
                             {
                                 // error
                                 //break;
+                            }
+                            else if (Morphic.WindowsNative.OsVersion.OsVersion.IsEqualOrNewerThanVersion(WindowsNative.OsVersion.WindowsVersion.Win11_v24H2) == true)
+                            {
+                                // Windows 11 v24H2+
+
+                                // capture changes to system dark theme (triggering our this.InverseSettingOnChanged event handler)
+                                Setting systemThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(Settings.SolutionsRegistry.SettingId.SystemTheme);
+                                systemThemeSetting.Changed += this.SystemThemeChanged;
+                                //
+                                this.Control.Unloaded += (sender, args) => systemThemeSetting.Changed -= this.SystemThemeChanged;
+
+                                // capture changes to apps dark theme (triggering our this.InverseSettingOnChanged event handler)
+                                Setting appsThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(Settings.SolutionsRegistry.SettingId.LightThemeApps);
+                                appsThemeSetting.Changed += this.InverseSettingOnChanged;
+                                //
+                                this.Control.Unloaded += (sender, args) => appsThemeSetting.Changed -= this.InverseSettingOnChanged;
                             }
                             else
                             {
@@ -404,6 +418,7 @@ namespace Morphic.Client.Bar.UI.BarControls
                 }
             }
 
+            // OBSERVATION: with all of the setting/inverseSetting/systemTheme change events, we are not dealing with the dual selector nature of dark mode settings (i.e. we should not be toggling the button if only one of the two elements changes; we should instead be re-querying the dark mode state to update the button)
             private void SettingOnChanged(object? sender, SettingEventArgs e)
             {
                 if (this.Control is ToggleButton button)
@@ -411,12 +426,26 @@ namespace Morphic.Client.Bar.UI.BarControls
                     button.IsChecked = e.NewValue as bool? ?? false;
                 }
             }
-
+			//
             private void InverseSettingOnChanged(object? sender, SettingEventArgs e)
             {
                 if (this.Control is ToggleButton button)
                 {
                     button.IsChecked = !(e.NewValue as bool? ?? false);
+                }
+            }
+			//
+            private void SystemThemeChanged(object? sender, SettingEventArgs e)
+            {
+                if (this.Control is ToggleButton button)
+                {
+                    bool? systemDarkModeEnabled = false;
+                    if (e.NewValue is not null)
+                    {
+                        var systemTheme = (string)e.NewValue!;
+                        systemDarkModeEnabled = Morphic.WindowsNative.Theme.DarkMode.TryConvertSystemThemeNameToDarkModeState(systemTheme);
+                    }
+                    button.IsChecked = systemDarkModeEnabled;
                 }
             }
 
