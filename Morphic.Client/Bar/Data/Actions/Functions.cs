@@ -1122,24 +1122,40 @@ namespace Morphic.Client.Bar.Data.Actions
                 // Windows 10 v1903+
 
                 // get system dark/light theme
-                Setting systemThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(SettingId.LightThemeSystem);
-                var getSystemThemeValueResult = await systemThemeSetting.GetValueAsync();
-                if (getSystemThemeValueResult.IsError == true)
+                //
+                //Setting systemThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(SettingId.LightThemeSystem);
+                //var getSystemThemeValueResult = await systemThemeSetting.GetValueAsync();
+                //if (getSystemThemeValueResult.IsError == true)
+                //{
+                //    return MorphicResult.ErrorResult();
+                //}
+                //var lightThemeSystemAsObject = getSystemThemeValueResult.Value!;
+                //var lightThemeSystemAsBool = (bool)lightThemeSystemAsObject;
+                //
+                var getSystemUsesLightThemeSettingResult = Morphic.WindowsNative.Theme.LightTheme.GetSystemUsesLightThemeSetting();
+                if (getSystemUsesLightThemeSettingResult.IsError == true)
                 {
                     return MorphicResult.ErrorResult();
                 }
-                var lightThemeSystemAsObject = getSystemThemeValueResult.Value!;
-                var lightThemeSystemAsBool = (bool)lightThemeSystemAsObject;
+                var lightThemeSystemAsBool = getSystemUsesLightThemeSettingResult.Value!;
 
-                // set apps dark/light theme
-                Setting appsThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(SettingId.LightThemeApps);
-                var getAppsThemeValueResult = await appsThemeSetting.GetValueAsync();
-                if (getAppsThemeValueResult.IsError == true)
+                // get apps dark/light theme
+                //
+                //Setting appsThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(SettingId.LightThemeApps);
+                //var getAppsThemeValueResult = await appsThemeSetting.GetValueAsync();
+                //if (getAppsThemeValueResult.IsError == true)
+                //{
+                //    return MorphicResult.ErrorResult();
+                //}
+                //var lightThemeAppsAsObject = getAppsThemeValueResult.Value!;
+                //var lightThemeAppsAsBool = (bool)lightThemeAppsAsObject;
+				//
+                var getAppsUseLightThemeSettingResult = Morphic.WindowsNative.Theme.LightTheme.GetAppsUseLightThemeSetting();
+                if (getAppsUseLightThemeSettingResult.IsError == true)
                 {
                     return MorphicResult.ErrorResult();
                 }
-                var lightThemeAppsAsObject = getAppsThemeValueResult.Value!;
-                var lightThemeAppsAsBool = (bool)lightThemeSystemAsObject;
+                var lightThemeAppsAsBool = getAppsUseLightThemeSettingResult.Value!;
 
                 // if either apps or system theme is set to "not light", then return true 
                 var darkModeIsEnabled = ((lightThemeSystemAsBool == false) || (lightThemeAppsAsBool == false));
@@ -1174,12 +1190,22 @@ namespace Morphic.Client.Bar.Data.Actions
                 */
 
                 // set system dark/light theme
-                Setting systemThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(SettingId.LightThemeSystem);
-                await systemThemeSetting.SetValueAsync(!state);
+                //
+                // implementation option 1: use SystemSettings
+                _ = await Morphic.WindowsNative.Theme.DarkMode.SetSystemUsesDarkModeAsync(state);
+                //
+                // implementation option 2: use registry setting (NOTE: may require follow-up theme change notification broadcast message)
+                //Setting systemThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(SettingId.LightThemeSystem);
+                //_ = await systemThemeSetting.SetValueAsync(!state);
 
                 // set apps dark/light theme
-                Setting appsThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(SettingId.LightThemeApps);
-                await appsThemeSetting.SetValueAsync(!state);
+                //
+                // implementation option 1: use SystemSettings
+                _ = await Morphic.WindowsNative.Theme.DarkMode.SetAppsUseDarkModeAsync(state);
+                //
+                // implementation option 2: use registry setting (NOTE: may require follow-up theme change notification broadcast message)
+                //Setting appsThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(SettingId.LightThemeApps);
+                //_ = await appsThemeSetting.SetValueAsync(!state);
             }
 
             return MorphicResult.OkResult();

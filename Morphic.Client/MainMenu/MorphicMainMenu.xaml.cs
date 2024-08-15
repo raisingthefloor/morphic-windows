@@ -170,6 +170,7 @@ public partial class MorphicMainMenu : ContextMenu
                 case WindowsVersion.Win11_v21H2:
                 case WindowsVersion.Win11_v22H2:
                 case WindowsVersion.Win11_v23H2:
+                case WindowsVersion.Win11_v24H2:
                 case WindowsVersion.Win11_vFuture:
                     // Windows 11 21H2 (and assumed for the future)
                     settingsUrlAsPath = "ms-settings:easeofaccess";
@@ -241,6 +242,7 @@ public partial class MorphicMainMenu : ContextMenu
                 case WindowsVersion.Win11_v21H2:
                 case WindowsVersion.Win11_v22H2:
                 case WindowsVersion.Win11_v23H2:
+                case WindowsVersion.Win11_v24H2:
                 case WindowsVersion.Win11_vFuture:
                     // Windows 11 21H2 (and assumed for the future)
                     settingsUrlAsPath = "ms-settings:easeofaccess-mousepointer";
