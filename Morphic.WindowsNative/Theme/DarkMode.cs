@@ -347,8 +347,10 @@ public class DarkMode
 
         // get the current light theme settings for Windows (i.e. the system)
         bool? systemUsesLightThemeAsBool = null;
-        if (Morphic.WindowsNative.OsVersion.OsVersion.IsEqualOrNewerThanVersion(WindowsNative.OsVersion.WindowsVersion.Win11_v24H2) == true)
+        if (Morphic.WindowsNative.OsVersion.OsVersion.IsEqualOrNewerThanVersion(WindowsNative.OsVersion.WindowsVersion.Win11_v23H2, 4037 /* not required in build 22631.3447, but required in build 22631.4037 */) == true)
         {
+            // Windows 11 v23H2 revision 4037+, Windows 11 v24H2+
+
             var getSystemThemeResult = personalizeKey.GetValueDataOrNull<string>("SystemTheme");
             if (getSystemThemeResult.IsError == true)
             {
@@ -363,6 +365,8 @@ public class DarkMode
         }
         else
         {
+            // Windows 10 1903+
+
             var getSystemUsesLightThemeResult = personalizeKey.GetValueDataOrNull<uint>("SystemUsesLightTheme");
             if (getSystemUsesLightThemeResult.IsError == true)
             {
@@ -385,9 +389,9 @@ public class DarkMode
     {
         Stopwatch stopwatch = Stopwatch.StartNew();
 
-        if (Morphic.WindowsNative.OsVersion.OsVersion.IsEqualOrNewerThanVersion(WindowsNative.OsVersion.WindowsVersion.Win11_v24H2) == true)
+        if (Morphic.WindowsNative.OsVersion.OsVersion.IsEqualOrNewerThanVersion(WindowsNative.OsVersion.WindowsVersion.Win11_v23H2, 4037 /* not required in build 22631.3447, but required in build 22631.4037 */) == true)
         {
-            // Windows 11 24H2+
+            // Windows 11 v23H2 revision 4037+, Windows 11 v24H2+
 
             var themeName = value switch
             {

@@ -335,9 +335,9 @@ namespace Morphic.Client.Bar.UI.BarControls
                                 // error
                                 //break;
                             }
-                            else if (Morphic.WindowsNative.OsVersion.OsVersion.IsEqualOrNewerThanVersion(WindowsNative.OsVersion.WindowsVersion.Win11_v24H2) == true)
+                            else if (Morphic.WindowsNative.OsVersion.OsVersion.IsEqualOrNewerThanVersion(WindowsNative.OsVersion.WindowsVersion.Win11_v23H2, 4037 /* not required in build 22631.3447, but required in build 22631.4037 */) == true)
                             {
-                                // Windows 11 v24H2+
+                                // Windows 11 v23H2 revision 4037+, Windows 11 v24H2+
 
                                 // capture changes to system dark theme (triggering our this.InverseSettingOnChanged event handler)
                                 Setting systemThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(Settings.SolutionsRegistry.SettingId.SystemTheme);
