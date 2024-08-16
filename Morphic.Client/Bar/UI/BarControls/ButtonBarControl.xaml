@@ -47,7 +47,7 @@
                    FontSize="{Binding Bar.Sizes.ButtonFontSize}"
 
 
-                   Foreground="{DynamicResource ThemeAwareForeground}"
+                   Foreground="White"
                    HorizontalAlignment="Center"
                    Margin="{Binding Bar.Sizes.ButtonTextPadding}"
                    />
