@@ -194,7 +194,7 @@ public struct OsVersion
         }
     }
 
-    public static bool IsEqualOrNewerThanVersion(WindowsVersion version)
+    public static bool IsEqualOrNewerThanVersion(WindowsVersion version, int? revision = null)
     {
         var versionBuild = OsVersion.GetBuildVersionForOsVersion(version);
         if (versionBuild is null)
@@ -206,7 +206,22 @@ public struct OsVersion
         // for both windows 10 and windows 11, we can do straightforward build number matching
         if (currentVersionBuild >= versionBuild)
         {
-            return true;
+            if (currentVersionBuild == versionBuild && revision is not null)
+            {
+                var getUpdateBuildRevisionResult = OsVersion.GetUpdateBuildRevision();
+                if (getUpdateBuildRevisionResult.IsError == true)
+                {
+                    Debug.Assert(false, "Could not retrieve current OS revision");
+                    return false;
+                }
+                var currentVersionRevision = getUpdateBuildRevisionResult.Value!;
+
+                return (currentVersionRevision >= revision!.Value);
+            }
+            else
+            {
+                return true;
+            }
         }
         else /* if (currentVersionBuild <= versionBuild) */
         {
@@ -214,7 +229,7 @@ public struct OsVersion
         }
     }
 
-    public static bool IsNewerThanVersion(WindowsVersion version)
+    public static bool IsNewerThanVersion(WindowsVersion version, int? revision = null)
     {
         var versionBuild = OsVersion.GetBuildVersionForOsVersion(version);
         if (versionBuild is null)
@@ -224,7 +239,19 @@ public struct OsVersion
         var currentVersionBuild = System.Environment.OSVersion.Version.Build;
 
         // for both windows 10 and windows 11, we can do straightforward build number matching
-        if (currentVersionBuild > versionBuild)
+        if (currentVersionBuild == versionBuild && revision is not null)
+        {
+            var getUpdateBuildRevisionResult = OsVersion.GetUpdateBuildRevision();
+            if (getUpdateBuildRevisionResult.IsError == true)
+            {
+                Debug.Assert(false, "Could not retrieve current OS revision");
+                return false;
+            }
+            var currentVersionRevision = getUpdateBuildRevisionResult.Value!;
+
+            return (currentVersionRevision > revision!.Value);
+        }
+        else if (currentVersionBuild > versionBuild)
         {
             return true;
         }
