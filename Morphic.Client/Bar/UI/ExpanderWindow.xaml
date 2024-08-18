@@ -12,7 +12,7 @@
         ShowActivated="False"
         d:DataContext="{d:DesignInstance ui:ExpanderWindow}"
         >
-    <Expander x:Name="Expander" ExpandDirection="Right" Expanded="Expander_OnExpanded" Collapsed="Expander_OnExpanded" >
+    <Expander x:Name="Expander" ExpandDirection="Right" Expanded="Expander_OnExpanded" Collapsed="Expander_OnExpanded">
         <Expander.LayoutTransform>
             <ScaleTransform ScaleX="{Binding Scale}" ScaleY="{Binding Scale}"></ScaleTransform>
         </Expander.LayoutTransform>
