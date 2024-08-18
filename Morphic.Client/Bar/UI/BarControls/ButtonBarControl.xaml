@@ -89,7 +89,7 @@
                 MaxLines="{Binding Bar.Sizes.ButtonTextLines}" 
                 FontWeight="{Binding Bar.Sizes.ButtonFontWeight}"
                 FontSize="{Binding Bar.Sizes.ButtonFontSize}"
-                Foreground="{DynamicResource ThemeAwareForeground}"
+                Foreground="White"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Padding="10 0 10 0"
