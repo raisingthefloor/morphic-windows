@@ -67,7 +67,13 @@ namespace Morphic.Service
             // NOTE: ideally we would not re-authenticate and re-load the MorphicBars before loading the current bar (i.e. ideally we would cache this data, like we do on macOS)
             if (this.CurrentCredentials is UsernameCredentials credentials)
             {
-                await this.Authenticate(credentials, false);
+                var authenticateSuccess = await this.Authenticate(credentials, false);
+                if (authenticateSuccess == false)
+                {
+                    // user could not be logged in; reverse user to null
+                    // OBSERVATION: this is not the cleanest way to handle a failed authentication attempt; in the future, we should prompt the user to let them know that authentication failed (and why...either a busy server or a bad login credential, etc.)--and they should know they're not logged in AND they should have the opportunity to sign in (assuming the server is not busy)
+                    this.User = null;
+                }
             }
             //
             // cache our user id (so that we don't re-call "user changed" if our user doesn't actually change here)
