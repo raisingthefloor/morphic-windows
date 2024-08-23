@@ -34,13 +34,32 @@ public partial class MorphicMainMenu : ContextMenu
 
     protected override void OnInitialized(EventArgs e)
     {
+        // if ConfigurableFeatures.SignInIsEnabled is false, then hide the settings which allow the user to sign in
+        if (ConfigurableFeatures.SignInIsEnabled == false)
+        {
+            this.LoginItem.Visibility = Visibility.Collapsed;
+            //this.LogoutItem.Visibility = Visibility.Collapsed; // NOTE: this is not necessary because it is invisible by default; in a future update, we should consider using one menu item to sign in/out and relabel it (i.e. treat it as a toggle) for simplicity
+            //
+            this.LoginSeparator.Visibility = Visibility.Collapsed;
+        }
+
         // if ConfigurableFeatures.CloudSettingsTransferIsEnabled is false, then hide the settings which can transfer/restore settings
         if (ConfigurableFeatures.CloudSettingsTransferIsEnabled == false)
         {
             this.ChangeSetupMenuItem.Visibility = Visibility.Collapsed;
             this.SaveMySetupMenuItem.Visibility = Visibility.Collapsed;
             this.RestoreSettingsFromBackupMenuItem.Visibility = Visibility.Collapsed;
+            //
             this.CloudSettingsSeparator.Visibility = Visibility.Collapsed;
+        }
+
+        // if ConfigurableFeatures.CustomMorphicBarsIsEnabled is false, then hide the settings which can change the current MorphicBar
+        if (ConfigurableFeatures.CustomMorphicBarsIsEnabled == false)
+        {
+            this.ChangeMorphicBar.Visibility = Visibility.Collapsed;
+            this.CustomizeMorphicBar.Visibility = Visibility.Collapsed;
+            //
+            this.ChangeMorphicBarSeparator.Visibility = Visibility.Collapsed;
         }
 
         base.OnInitialized(e);
@@ -70,8 +89,16 @@ public partial class MorphicMainMenu : ContextMenu
         this.ShowBar.Visibility = (!this.App.BarManager.BarVisible).ToVisibility();
         this.HideBar.Visibility = this.App.BarManager.BarVisible.ToVisibility();
 
-        this.LoginItem.Visibility = (!this.App.MorphicSession.SignedIn).ToVisibility();
-        this.LogoutItem.Visibility = this.App.MorphicSession.SignedIn.ToVisibility();
+        if (ConfigurableFeatures.SignInIsEnabled == true)
+        {
+            this.LoginItem.Visibility = (!this.App.MorphicSession.SignedIn).ToVisibility();
+            this.LogoutItem.Visibility = this.App.MorphicSession.SignedIn.ToVisibility();
+        }
+        else
+        {
+            this.LoginItem.Visibility = Visibility.Collapsed;
+            this.LogoutItem.Visibility = Visibility.Collapsed;
+        }
 
         base.OnOpened(e);
     }

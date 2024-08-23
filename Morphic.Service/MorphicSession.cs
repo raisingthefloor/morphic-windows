@@ -70,8 +70,9 @@ namespace Morphic.Service
                 var authenticateSuccess = await this.Authenticate(credentials, false);
                 if (authenticateSuccess == false)
                 {
-                    // user could not be logged in; reverse user to null
+                    // user could not be logged in; revert this.User to null
                     // OBSERVATION: this is not the cleanest way to handle a failed authentication attempt; in the future, we should prompt the user to let them know that authentication failed (and why...either a busy server or a bad login credential, etc.)--and they should know they're not logged in AND they should have the opportunity to sign in (assuming the server is not busy)
+                    this.CurrentUserId = null;
                     this.User = null;
                 }
             }

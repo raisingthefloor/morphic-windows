@@ -25,7 +25,7 @@
     <menu:MorphicMenuItem Header="{DynamicResource MainMenuItem_ShowMorphicBar}" x:Name="ShowBar" Click="ShowBarClick" />
     <menu:MorphicMenuItem Header="{DynamicResource MainMenuItem_HideMorphicBar}" x:Name="HideBar" Click="HideBarClick" />
 
-    <Separator/>
+    <Separator x:Name="LoginSeparator"/>
 
     <menu:MorphicMenuItem Header="{DynamicResource MainMenuItem_SignOut}" x:Name="LogoutItem" Click="Logout" />
     <menu:MorphicMenuItem Header="{DynamicResource MainMenuItem_SignIn}" x:Name="LoginItem" Click="Login" />
@@ -35,7 +35,7 @@
         <MenuItem Header="{DynamicResource MainMenuItem_SelectBasicMorphicBar}" x:Name="SelectBasicMorphicBar" Click="SelectBasicMorphicBarClick" />
     </MenuItem>
     <!-- NOTE: ideally we should pull the URL from our appsetting (so that we capture the nuances of dev vs prod, direct to the proper on-premise enterprise URL, etc.) -->
-    <menu:MorphicMenuItem Header="{DynamicResource MainMenuItem_CustomizeMorphicBar}" Click="CustomizeMorphicbarClicked" Open="https://custom.morphic.org" />
+    <menu:MorphicMenuItem Header="{DynamicResource MainMenuItem_CustomizeMorphicBar}" x:Name="CustomizeMorphicBar" Click="CustomizeMorphicbarClicked" Open="https://custom.morphic.org" />
 
     <Separator/>
     <menu:MorphicMenuItem x:Name="ChangeSetupMenuItem" Header="{DynamicResource MainMenuItem_ApplySavedSetup}" Dialog="dialogs:TravelWindow" DialogAction="CopyFromCloud"/>
