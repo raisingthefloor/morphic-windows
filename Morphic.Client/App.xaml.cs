@@ -194,7 +194,9 @@ public partial class App : Application
             public EnabledFeature? autorunAfterLogin { get; set; }
             public EnabledFeature? checkForUpdates { get; set; }
             public EnabledFeature? cloudSettingsTransfer { get; set; }
+            public EnabledFeature? customMorphicBars { get; set; }
             public EnabledFeature? resetSettings { get; set; }
+            public EnabledFeature? signIn { get; set; }
         }
         public class MorphicBarConfigSection
         {
@@ -217,7 +219,9 @@ public partial class App : Application
         public ConfigurableFeatures.AutorunConfigOption? AutorunConfig;
         public bool CheckForUpdatesIsEnabled;
         public bool CloudSettingsTransferIsEnabled;
+        public bool CustomMorphicBarsIsEnabled;
         public bool ResetSettingsIsEnabled;
+        public bool SignInIsEnabled;
         public ConfigurableFeatures.MorphicBarVisibilityAfterLoginOption? MorphicBarVisibilityAfterLogin;
         public List<MorphicBarExtraItem> ExtraMorphicBarItems;
         public string? TelemetrySiteId;
@@ -245,8 +249,14 @@ public partial class App : Application
         // copy settings to/from cloud
         result.CloudSettingsTransferIsEnabled = true;
         //
+        // custom Morphic bars
+        result.CustomMorphicBarsIsEnabled = true;
+        //
         // reset settings (to standard)
         result.ResetSettingsIsEnabled = false;
+        //
+        // allow users to sign in to Morphic accounts
+        result.SignInIsEnabled = true;
         //
         // morphic bar (visibility and extra items)
         result.MorphicBarVisibilityAfterLogin = null;
@@ -397,10 +407,22 @@ public partial class App : Application
             result.CloudSettingsTransferIsEnabled = deserializedJson.features.cloudSettingsTransfer.enabled.Value;
         }
 
+        // capture the custom MorphicBars "is enabled" setting
+        if (deserializedJson.features?.customMorphicBars?.enabled is not null)
+        {
+            result.CustomMorphicBarsIsEnabled = deserializedJson.features.customMorphicBars.enabled.Value;
+        }
+
         // capture the reset settings (to standard) "is enabled" setting
         if (deserializedJson.features?.resetSettings?.enabled is not null)
         {
             result.ResetSettingsIsEnabled = deserializedJson.features.resetSettings.enabled.Value;
+        }
+
+        // capture the sign in "is enabled" setting
+        if (deserializedJson.features?.signIn?.enabled is not null)
+        {
+            result.SignInIsEnabled = deserializedJson.features.signIn.enabled.Value;
         }
 
         // capture the desired after-login (autorun) visibility of the MorphicBar
@@ -902,7 +924,9 @@ public partial class App : Application
             autorunConfig: commonConfiguration.AutorunConfig,
             checkForUpdatesIsEnabled: commonConfiguration.CheckForUpdatesIsEnabled,
             cloudSettingsTransferIsEnabled: commonConfiguration.CloudSettingsTransferIsEnabled,
+            customMorphicBarsIsEnabled: commonConfiguration.CustomMorphicBarsIsEnabled,
             resetSettingsIsEnabled: commonConfiguration.ResetSettingsIsEnabled,
+            signInIsEnabled: commonConfiguration.SignInIsEnabled,
             telemetryIsEnabled: telemetryIsEnabled,
             morphicBarvisibilityAfterLogin: commonConfiguration.MorphicBarVisibilityAfterLogin,
             morphicBarExtraItems: commonConfiguration.ExtraMorphicBarItems,
@@ -1206,7 +1230,7 @@ public partial class App : Application
     {
         if (sender is MorphicSession morphicSession)
         {
-            if (morphicSession.SignedIn)
+            if (morphicSession.SignedIn == true && ConfigurableFeatures.CustomMorphicBarsIsEnabled == true)
             {
                 var lastCommunityId = AppOptions.Current.LastCommunity;
                 var lastMorphicbarId = AppOptions.Current.LastMorphicbarId;
@@ -1393,6 +1417,12 @@ public partial class App : Application
 
     public async Task OpenSessionAsync(bool? morphicBarVisibilityOverride = null)
     {
+        if (ConfigurableFeatures.SignInIsEnabled == false)
+        {
+            this.MorphicSession.CurrentUserId = null;
+            this.MorphicSession.User = null;
+        }
+
         await this.MorphicSession.OpenAsync();
 
         // TODO: when the user first runs Morphic, we probably want to open a welcome window (where the user could then log in)

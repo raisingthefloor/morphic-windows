@@ -804,7 +804,7 @@ internal class TrayButton : IDisposable
         //
         private void TrayButtonWidgetPositionCheckup(object? state)
         {
-            const int NUM_CHANGE_HISTORY_ENTRIES_TO_AVERAGE = 20;
+            const int NUM_CHANGE_HISTORY_ENTRIES_TO_AVERAGE = 10;
             const int WIDGET_POSITION_INTERVAL_BACKOFF_MULTIPLIER = 2;
 
             // check the current and desired positions of the notify tray icon
