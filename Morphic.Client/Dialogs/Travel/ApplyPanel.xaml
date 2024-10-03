@@ -28,7 +28,7 @@
         </Grid>
     </StackPanel>
     <StackPanel x:Name="ApplyingPanel" MaxWidth="500" Visibility="Collapsed">
-        <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0" Content="{StaticResource ApplyPanel_ApplyingSettingsOnYourComputer}"/>
+        <Label Foreground="{DynamicResource ThemeAwareForeground}" FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0" Content="{StaticResource ApplyPanel_ApplyingSettingsOnYourComputer}"/>
         <Image Height="270" Margin="0,30,0,0">
             <Image.RenderTransform>
                 <RotateTransform Angle="0" CenterX="135" CenterY="135"/>
@@ -79,8 +79,8 @@
         </Image>
     </StackPanel>
     <StackPanel x:Name="CompletePanel" Visibility="Collapsed">
-        <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0" Content="{StaticResource ApplyPanel_YourSettingsHaveBeenApplied}"/>
-        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,10" Text="{StaticResource ApplyPanel_SettingsFromCloudVaultHaveBeenApplied}"/>
+        <Label Foreground="{DynamicResource ThemeAwareForeground}" FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0" Content="{StaticResource ApplyPanel_YourSettingsHaveBeenApplied}"/>
+        <TextBlock Foreground="{DynamicResource ThemeAwareForeground}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,10" Text="{StaticResource ApplyPanel_SettingsFromCloudVaultHaveBeenApplied}"/>
         <!--<TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,10">
             <Run Text="{StaticResource ApplyPanel_OldSettingsWereBackedUp_Part1}"/>
             <Run FontWeight="Bold" Text="{StaticResource ApplyPanel_OldSettingsWereBackedUp_Part2}"/>
