@@ -30,9 +30,14 @@
         //
         public static bool CheckForUpdatesIsEnabled = false;
         //
+        // OBSERVATION: should this instead be set to true by default?
         public static bool CloudSettingsTransferIsEnabled = false;
         //
+        public static bool CustomMorphicBarsIsEnabled = true;
+        //
         public static bool ResetSettingsIsEnabled = false;
+        //
+        public static bool SignInIsEnabled = true;
         //
         public static bool TelemetryIsEnabled = true;
         //
@@ -49,20 +54,31 @@
             AutorunConfigOption? autorunConfig,
             bool checkForUpdatesIsEnabled,
             bool cloudSettingsTransferIsEnabled,
+            bool customMorphicBarsIsEnabled,
             bool resetSettingsIsEnabled,
+            bool signInIsEnabled,
             bool telemetryIsEnabled,
             MorphicBarVisibilityAfterLoginOption? morphicBarvisibilityAfterLogin,
             List<Morphic.Client.App.MorphicBarExtraItem> morphicBarExtraItems,
             string? telemetrySiteId
             )
         {
+            // NOTE: if ConfigurableFeatures.SignInIsEnabled is false, then cascade this 'false' setting to force-disable related login-related features
+            if (signInIsEnabled == false)
+            {
+                cloudSettingsTransferIsEnabled = false;
+                customMorphicBarsIsEnabled = false;
+            }
+
             ConfigurableFeatures.AtOnDemandIsEnabled = atOnDemandIsEnabled;
             ConfigurableFeatures.AtUseCounterIsEnabled = atUseCounterIsEnabled;
             ConfigurableFeatures.HideMorphicAfterLoginUntil = hideMorphicAfterLoginUntil;
             ConfigurableFeatures.AutorunConfig = autorunConfig;
             ConfigurableFeatures.CheckForUpdatesIsEnabled = checkForUpdatesIsEnabled;
             ConfigurableFeatures.CloudSettingsTransferIsEnabled = cloudSettingsTransferIsEnabled;
+            ConfigurableFeatures.CustomMorphicBarsIsEnabled = customMorphicBarsIsEnabled;
             ConfigurableFeatures.ResetSettingsIsEnabled = resetSettingsIsEnabled;
+            ConfigurableFeatures.SignInIsEnabled = signInIsEnabled;
             ConfigurableFeatures.TelemetryIsEnabled = telemetryIsEnabled;
             ConfigurableFeatures.MorphicBarVisibilityAfterLogin = morphicBarvisibilityAfterLogin;
             ConfigurableFeatures.MorphicBarExtraItems = morphicBarExtraItems;

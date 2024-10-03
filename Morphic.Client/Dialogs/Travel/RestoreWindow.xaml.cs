@@ -21,7 +21,7 @@ namespace Morphic.Client.Dialogs
     /// <summary>
     /// Select a back-up and restores it.
     /// </summary>
-    public partial class RestoreWindow : Window
+    public partial class RestoreWindow : Morphic.Client.UI.ThemeAwareWindow
     {
         private readonly Backups backups;
 

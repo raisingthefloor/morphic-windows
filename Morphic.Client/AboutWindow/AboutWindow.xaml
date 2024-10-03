@@ -1,0 +1,41 @@
+﻿<ui:ThemeAwareWindow 
+        x:Class="Morphic.Client.AboutWindow.AboutWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Morphic.Client.AboutWindow"
+        xmlns:ui="clr-namespace:Morphic.Client.UI"
+        mc:Ignorable="d"
+        DataContext="{Binding RelativeSource={RelativeSource Self}}"
+        Title="{StaticResource AboutMorphicDialog_WindowTitle}" 
+        Height="280" Width="300" ResizeMode="NoResize" 
+        FlowDirection="{DynamicResource CultureFlowDirection}"
+        HighContrastBlackIcon="pack://application:,,,/Morphic;component/Assets/Icons/morphic-highcontrastblack.ico"
+        HighContrastWhiteIcon="pack://application:,,,/Morphic;component/Assets/Icons/morphic-highcontrastwhite.ico"
+        StandardContrastIcon="pack://application:,,,/Morphic;component/Assets/Icons/morphic-standardcontrast.ico"
+        WindowStartupLocation="CenterScreen">
+    <StackPanel Orientation="Vertical" Background="{DynamicResource ThemeAwareBackground}">
+        <Image Source="{DynamicResource Images_Square50x50Logo}" Width="50" Height="50" Margin="30,30,30,20"/>
+
+        <TextBlock HorizontalAlignment="Center" Foreground="{DynamicResource ThemeAwareForeground}" FontWeight="Bold" FontSize="13"
+                   Text="{DynamicResource App_ProductAndOSName}"/>
+
+        <TextBlock HorizontalAlignment="Center" Foreground="{DynamicResource ThemeAwareForeground}" Margin="0,5,0,0"
+                   Text="{Binding Path=MajorMinorVersionString, StringFormat='version {0}'}" />
+        <TextBlock HorizontalAlignment="Center" Foreground="{DynamicResource ThemeAwareForeground}" Margin="0,2,0,0"
+                   Text="{Binding Path=BuildVersionString, StringFormat='(build {0})'}"/>
+
+        <TextBlock HorizontalAlignment="Center" Foreground="{DynamicResource ThemeAwareForeground}" Margin="0,10,0,0"
+                   Text="{DynamicResource App_Copyright}"/>
+		   
+<!--
+        <TextBlock HorizontalAlignment="Center" FontSize="10">
+            <Hyperlink RequestNavigate="CheckUpdate_OnClick" NavigateUri="#update"><Run Text="{StaticResource AboutMorphicDialog_CheckForUpdateHyperlink}"/></Hyperlink>
+        </TextBlock>
+-->
+        <TextBlock HorizontalAlignment="Center" FontSize="10" Margin="0,10,0,0">
+            <Hyperlink x:Name="LearnMoreHyperlink" RequestNavigate="LearnMoreHyperlink_RequestNavigate" NavigateUri="https://morphic.org"><Run Text="{StaticResource AboutMorphicDialog_LearnMoreAboutMorphicHyperlink}"/></Hyperlink>
+        </TextBlock>
+    </StackPanel>
+</ui:ThemeAwareWindow>

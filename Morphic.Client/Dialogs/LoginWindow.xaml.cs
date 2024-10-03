@@ -29,7 +29,7 @@ namespace Morphic.Client.Dialogs
     using System.Windows;
     using Microsoft.Extensions.Logging;
 
-    public partial class LoginWindow : Window, MorphicWindowWithArgs
+    public partial class LoginWindow : Morphic.Client.UI.ThemeAwareWindow, MorphicWindowWithArgs
     {
 
         public LoginWindow(ILogger<TravelWindow> logger, IServiceProvider serviceProvider)

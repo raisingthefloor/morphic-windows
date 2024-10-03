@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2023 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2024 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -27,185 +27,235 @@ namespace Morphic.Controls.TrayButton;
 
 public class TrayButton : IDisposable
 {
-     // NOTE: only one of the two tray button variants will be populated (i.e. based on the OS version)
-     //       [we have chosen not to create a common interface between them, as the plan is to deprecate the Windows 10 variant once Windows 10 is no longer supported...and the Windows 11+ variant should be allowed to get a new API surface if/as needed]
-     Morphic.Controls.TrayButton.Windows10.TrayButton? _legacyTrayButton;
-     Morphic.Controls.TrayButton.Windows11.TrayButton? _trayButton;
+    private bool disposedValue;
 
-     public event System.Windows.Forms.MouseEventHandler? MouseUp;
+    // NOTE: only one of the two tray button variants will be populated (i.e. based on the OS version)
+    //       [we have chosen not to create a common interface between them, as the plan is to deprecate the Windows 10 variant once Windows 10 is no longer supported...and the Windows 11+ variant should be allowed to get a new API surface if/as needed]
+    Morphic.Controls.TrayButton.Windows10.TrayButton? _legacyTrayButton;
+    Morphic.Controls.TrayButton.Windows11.TrayButton? _trayButton;
 
-     public TrayButton()
-     {
-          if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
-          {
-               // Windows 11 and newer (i.e. modern tray button)
-               _trayButton = new();
-               _trayButton.MouseUp += (s, e) =>
-               {
-                    this.MouseUp?.Invoke(s, e);
-               };
-          }
-          else
-          {
-               // Windows 10 (i.e. legacy tray button)
-               _legacyTrayButton = new();
-               _legacyTrayButton.MouseUp += (s, e) =>
-               {
-                    this.MouseUp?.Invoke(s, e);
-               };
-          }
-     }
+    public event System.Windows.Forms.MouseEventHandler? MouseUp;
 
-     public void Dispose()
-     {
-          if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
-          {
-               _trayButton?.Dispose();
-          }
-          else
-          {
-               _legacyTrayButton?.Dispose();
-          }
-     }
+    public System.Drawing.Rectangle? PositionAndSize
+    {
+        get
+        {
+            if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
+            {
+                // Windows 11 and newer (i.e. modern tray button)
+                return _trayButton?.PositionAndSize;
+            }
+            else
+            {
+                // Windows 10 (i.e. legacy tray button)
+                return _legacyTrayButton?.PositionAndSize;
+            }
+        }
+    }
 
-     public System.Drawing.Bitmap? Bitmap
-     {
-          get
-          {
-               if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
-               {
-                    return _trayButton!.Bitmap;
-               }
-               else //if (.IsWindows10() == true)
-               {
-                    var icon = _legacyTrayButton!.Icon;
-                    return (icon is not null) ? icon!.ToBitmap() : null;
-               }
-          }
-          set
-          {
-               if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
-               {
-                    _trayButton!.Bitmap = value;
-               }
-               else //if (.IsWindows10() == true)
-               {
-                    if (value is not null)
+    public TrayButton()
+    {
+        if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
+        {
+            // Windows 11 and newer (i.e. modern tray button)
+            _trayButton = new();
+            _trayButton.MouseUp += (s, e) =>
+            {
+                this.MouseUp?.Invoke(s, e);
+            };
+        }
+        else
+        {
+            // Windows 10 (i.e. legacy tray button)
+            _legacyTrayButton = new();
+            _legacyTrayButton.MouseUp += (s, e) =>
+            {
+                this.MouseUp?.Invoke(s, e);
+            };
+        }
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                // dispose managed state (managed objects)
+                if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
+                {
+                    _trayButton?.Dispose();
+                }
+                else
+                {
+                    _legacyTrayButton?.Dispose();
+                }
+            }
+
+            // free unmanaged resources (unmanaged objects) and override finalizer
+            // [none]
+
+            // set large fields to null
+            // [none]
+
+            disposedValue = true;
+        }
+    }
+
+    // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
+    // ~TrayButton()
+    // {
+    //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+    //     Dispose(disposing: false);
+    // }
+
+    public void Dispose()
+    {
+        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
+
+    //
+
+    public System.Drawing.Bitmap? Bitmap
+    {
+        get
+        {
+            if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
+            {
+                return _trayButton!.Bitmap;
+            }
+            else //if (.IsWindows10() == true)
+            {
+                var icon = _legacyTrayButton!.Icon;
+                return (icon is not null) ? icon!.ToBitmap() : null;
+            }
+        }
+        set
+        {
+            if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
+            {
+                _trayButton!.Bitmap = value;
+            }
+            else //if (.IsWindows10() == true)
+            {
+                if (value is not null)
+                {
+                    var bitmapAsIconHandlePointer = value.GetHicon();
+                    try
                     {
-                         var bitmapAsIconHandlePointer = value.GetHicon();
-                         try
-                         {
-                              _legacyTrayButton!.Icon = (System.Drawing.Icon)(System.Drawing.Icon.FromHandle(bitmapAsIconHandlePointer).Clone());
-                         }
-                         finally
-                         {
-                              _ = Windows.Win32.PInvoke.DestroyIcon((Windows.Win32.UI.WindowsAndMessaging.HICON)bitmapAsIconHandlePointer);
-                         }
+                        _legacyTrayButton!.Icon = (System.Drawing.Icon)(System.Drawing.Icon.FromHandle(bitmapAsIconHandlePointer).Clone());
                     }
-                    else
+                    finally
                     {
-                         _legacyTrayButton!.Icon = null;
+                        _ = Windows.Win32.PInvoke.DestroyIcon((Windows.Win32.UI.WindowsAndMessaging.HICON)bitmapAsIconHandlePointer);
                     }
-               }
-          }
-     }
+                }
+                else
+                {
+                    _legacyTrayButton!.Icon = null;
+                }
+            }
+        }
+    }
 
-     public System.Drawing.Icon? Icon
-     {
-          get
-          {
-               if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
-               {
-                    if (_trayButton!.Bitmap is not null)
+    public System.Drawing.Icon? Icon
+    {
+        get
+        {
+            if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
+            {
+                if (_trayButton!.Bitmap is not null)
+                {
+                    var bitmapAsIconHandlePointer = _trayButton!.Bitmap!.GetHicon();
+                    try
                     {
-                         var bitmapAsIconHandlePointer = _trayButton!.Bitmap!.GetHicon();
-                         try
-                         {
-                              return (System.Drawing.Icon)(System.Drawing.Icon.FromHandle(bitmapAsIconHandlePointer).Clone());
-                         }
-                         finally
-                         {
-                              Windows.Win32.PInvoke.DestroyIcon((Windows.Win32.UI.WindowsAndMessaging.HICON)bitmapAsIconHandlePointer);
-                         }
+                        return (System.Drawing.Icon)(System.Drawing.Icon.FromHandle(bitmapAsIconHandlePointer).Clone());
                     }
-                    else
+                    finally
                     {
-                         return null;
+                        Windows.Win32.PInvoke.DestroyIcon((Windows.Win32.UI.WindowsAndMessaging.HICON)bitmapAsIconHandlePointer);
                     }
-               }
-               else //if (.IsWindows10() == true)
-               {
-                    return _legacyTrayButton!.Icon;
-               }
-          }
-          set
-          {
-               if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
-               {
-                    _trayButton!.Bitmap = (value is not null) ? value!.ToBitmap() : null;
-               }
-               else //if (.IsWindows10() == true)
-               {
-                    _legacyTrayButton!.Icon = value;
-               }
-          }
-     }
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else //if (.IsWindows10() == true)
+            {
+                return _legacyTrayButton!.Icon;
+            }
+        }
+        set
+        {
+            if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
+            {
+                _trayButton!.Bitmap = (value is not null) ? value!.ToBitmap() : null;
+            }
+            else //if (.IsWindows10() == true)
+            {
+                _legacyTrayButton!.Icon = value;
+            }
+        }
+    }
 
-     public string? Text
-     {
-          get
-          {
-               if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
-               {
-                    return _trayButton!.Text;
-               }
-               else //if (.IsWindows10() == true)
-               {
-                    return _legacyTrayButton!.Text;
-               }
-          }
-          set
-          {
-               if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
-               {
-                    _trayButton!.Text = value;
-               }
-               else //if (.IsWindows10() == true)
-               {
-                    _legacyTrayButton!.Text = value;
-               }
-          }
-     }
+    public string? Text
+    {
+        get
+        {
+            if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
+            {
+                return _trayButton!.Text;
+            }
+            else //if (.IsWindows10() == true)
+            {
+                return _legacyTrayButton!.Text;
+            }
+        }
+        set
+        {
+            if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
+            {
+                _trayButton!.Text = value;
+            }
+            else //if (.IsWindows10() == true)
+            {
+                _legacyTrayButton!.Text = value;
+            }
+        }
+    }
 
-     public bool Visible
-     {
-          get
-          {
-               if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
-               {
-                    return _trayButton!.Visible;
-               }
-               else //if (.IsWindows10() == true)
-               {
-                    return _legacyTrayButton!.Visible;
-               }
-          }
-          set
-          {
-               if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
-               {
-                    _trayButton!.Visible = value;
-               }
-               else //if (.IsWindows10() == true)
-               {
-                    _legacyTrayButton!.Visible = value;
-               }
-          }
-     }
+    public bool Visible
+    {
+        get
+        {
+            if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
+            {
+                return _trayButton!.Visible;
+            }
+            else //if (.IsWindows10() == true)
+            {
+                return _legacyTrayButton!.Visible;
+            }
+        }
+        set
+        {
+            if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
+            {
+                _trayButton!.Visible = value;
+            }
+            else //if (.IsWindows10() == true)
+            {
+                _legacyTrayButton!.Visible = value;
+            }
+        }
+    }
 
-     public void SuppressTaskbarButtonResurfaceChecks(bool suppress)
-     {
-          _trayButton?.SuppressTaskbarButtonResurfaceChecks(suppress);
-     }
+    public void SuppressTaskbarButtonResurfaceChecks(bool suppress)
+    {
+        _trayButton?.SuppressTaskbarButtonResurfaceChecks(suppress);
+    }
 
 }

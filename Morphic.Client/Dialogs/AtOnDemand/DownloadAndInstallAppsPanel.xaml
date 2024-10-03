@@ -4,7 +4,6 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:local="clr-namespace:Morphic.Client"
-    xmlns:l10n="clr-namespace:Morphic.Client.Strings"
     mc:Ignorable="d"
     Loaded="Panel_Loaded">
     <StackPanel Margin="20" Orientation="Vertical">
@@ -62,9 +61,9 @@
         
         <!-- Progress Bar with text -->
         <StackPanel Width="400" Orientation="Vertical" HorizontalAlignment="Center">
-            <Label FontSize="24" HorizontalAlignment="Left" Margin="0,0,0,0" Content="Your apps are installing..."/>
+            <Label Foreground="{DynamicResource ThemeAwareForeground}" FontSize="24" HorizontalAlignment="Left" Margin="0,0,0,0" Content="Your apps are installing..."/>
             <ProgressBar x:Name="ProgressBar" Height="10" Foreground="#FF008145" Margin="0,5"/>
-            <Label x:Name="InstallStatusLabel" FontSize="16" HorizontalAlignment="Left" Margin="0,0,0,10" Content="ShortAppName: Installing"/>
+            <Label x:Name="InstallStatusLabel" Foreground="{DynamicResource ThemeAwareForeground}" FontSize="16" HorizontalAlignment="Left" Margin="0,0,0,10" Content="ShortAppName: Installing"/>
         </StackPanel>
     </StackPanel>
 </StackPanel>

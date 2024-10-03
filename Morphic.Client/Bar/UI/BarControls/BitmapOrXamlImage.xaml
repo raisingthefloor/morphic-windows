@@ -8,7 +8,8 @@
              d:DesignHeight="24" d:DesignWidth="24" x:Name="Root">
     <Grid>
         <Viewbox Stretch="{Binding Stretch, ElementName=Root}">
-            <ContentControl x:Name="ViewboxContent"/>
+            <!-- NOTE: viewbox images should not be flipped when using an RTL culture; if we need them to be flipped SOMETIMES then we would need to create a related property ('currentuiculture' vs 'lefttoright') for this control -->
+            <ContentControl x:Name="ViewboxContent" FlowDirection="LeftToRight"/>
         </Viewbox>
     </Grid>
 </UserControl>

@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2023 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2024 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -21,7 +21,9 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
+using Morphic.Core;
 using System;
+using System.Collections.Generic;
 
 namespace Morphic.Controls;
 
@@ -31,228 +33,284 @@ namespace Morphic.Controls;
 /// </summary>
 public class HybridTrayIcon : IDisposable
 {
-     private System.Drawing.Icon? _icon = null;
-     private string? _text = null;
-     private bool _visible = false;
+    private bool disposedValue;
 
-     // <summary>Used if a tray icon is desired instead of a next-to-tray taskbar button</summary>
-     private System.Windows.Forms.NotifyIcon? _notifyIcon = null;
+    private System.Drawing.Icon? _icon = null;
+    private string? _text = null;
+    private bool _visible = false;
 
-     // <summary>Used if a next-to-tray button is desired instead of a tray icon</summary>
-     private Morphic.Controls.TrayButton.TrayButton? _trayButton = null;
+    // <summary>Used if a tray icon is desired instead of a next-to-tray taskbar button</summary>
+    private System.Windows.Forms.NotifyIcon? _notifyIcon = null;
 
-     public enum TrayIconLocationOption
-     {
-          None,
-          NotificationTray,
-          NextToNotificationTray,
-          NotificationTrayAndNextToNotificationTray
-     }
-     //
-     private TrayIconLocationOption _trayIconLocation = TrayIconLocationOption.None;
+    // <summary>Used if a next-to-tray button is desired instead of a tray icon</summary>
+    private Morphic.Controls.TrayButton.TrayButton? _trayButton = null;
 
-     /// <summary>Raised when the button is clicked.</summary>
-     public event EventHandler<EventArgs>? Click;
-     /// <summary>Raised when the button is right-clicked.</summary>
-     public event EventHandler<EventArgs>? SecondaryClick;
+    public enum TrayIconLocationOption
+    {
+        None,
+        NotificationTray,
+        NextToNotificationTray,
+        NotificationTrayAndNextToNotificationTray
+    }
+    //
+    private TrayIconLocationOption _trayIconLocation = TrayIconLocationOption.None;
 
-     public HybridTrayIcon()
-     {
-     }
+    /// <summary>Raised when the button is clicked.</summary>
+    public event EventHandler<EventArgs>? Click;
+    /// <summary>Raised when the button is right-clicked.</summary>
+    public event EventHandler<EventArgs>? SecondaryClick;
 
-     public void Dispose()
-     {
-          _notifyIcon?.Dispose();
-          _notifyIcon = null;
+    public HybridTrayIcon()
+    {
+    }
 
-          _trayButton?.Dispose();
-          _trayButton = null;
-     }
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                // dispose managed state (managed objects)
+                _notifyIcon?.Dispose();
+                _notifyIcon = null;
 
-     /// <summary>The icon for the tray icon</summary>
-     public System.Drawing.Icon? Icon
-     {
-          get
-          {
-               return _icon;
-          }
-          set
-          {
-               _icon = value;
-               if (_notifyIcon is not null)
-               {
-                    _notifyIcon.Icon = _icon;
-               }
-               if (_trayButton is not null)
-               {
-                    _trayButton.Icon = _icon;
-               }
-          }
-     }
+                _trayButton?.Dispose();
+                _trayButton = null;
+            }
 
-     /// <summary>Tooltip for the tray icon.</summary>
-     public string? Text
-     {
-          get
-          {
-               return _text;
-          }
-          set
-          {
-               _text = value;
-               if (_notifyIcon is not null)
-               {
-                    _notifyIcon.Text = _text;
-               }
-               if (_trayButton is not null)
-               {
-                    _trayButton.Text = _text;
-               }
-          }
-     }
+            // free unmanaged resources (unmanaged objects) and override finalizer
+            // [none]
 
-     /// <summary>Show or hide the tray icon.</summary>
-     public bool Visible
-     {
-          get
-          {
-               return _visible;
-          }
-          set
-          {
-               _visible = value;
+            // set large fields to null
+            // [none]
 
-               if (_notifyIcon is not null)
-               {
-                    _notifyIcon.Visible = _visible;
-               }
-               if (_trayButton is not null)
-               {
-                    _trayButton.Visible = _visible;
-               }
-          }
-     }
+            disposedValue = true;
+        }
+    }
 
-     //
+    // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
+    // ~TrayButton()
+    // {
+    //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+    //     Dispose(disposing: false);
+    // }
 
-     public void SuppressTaskbarButtonResurfaceChecks(bool suppress)
-     {
-          _trayButton?.SuppressTaskbarButtonResurfaceChecks(suppress);
-     }
+    public void Dispose()
+    {
+        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
 
-     //
+    /// <summary>The icon for the tray icon</summary>
+    public System.Drawing.Icon? Icon
+    {
+        get
+        {
+            return _icon;
+        }
+        set
+        {
+            _icon = value;
+            if (_notifyIcon is not null)
+            {
+                _notifyIcon.Icon = _icon;
+            }
+            if (_trayButton is not null)
+            {
+                _trayButton.Icon = _icon;
+            }
+        }
+    }
 
-     private void InitializeTrayIcon()
-     {
-          if (_notifyIcon is not null)
-          {
-               return;
-          }
+    /// <summary>Tooltip for the tray icon.</summary>
+    public string? Text
+    {
+        get
+        {
+            return _text;
+        }
+        set
+        {
+            _text = value;
+            if (_notifyIcon is not null)
+            {
+                _notifyIcon.Text = _text;
+            }
+            if (_trayButton is not null)
+            {
+                _trayButton.Text = _text;
+            }
+        }
+    }
 
-          _notifyIcon = new System.Windows.Forms.NotifyIcon();
-          _notifyIcon.Text = _text;
-          _notifyIcon.Icon = _icon;
-          //
-          _notifyIcon.MouseUp += (sender, args) =>
-          {
-               if (args.Button == System.Windows.Forms.MouseButtons.Right)
-               {
-                    this.SecondaryClick?.Invoke(this, args);
-               }
-               else if (args.Button == System.Windows.Forms.MouseButtons.Left)
-               {
-                    this.Click?.Invoke(this, args);
-               }
-          };
-          _notifyIcon.Visible = _visible;
-     }
+    /// <summary>Show or hide the tray icon.</summary>
+    public bool Visible
+    {
+        get
+        {
+            return _visible;
+        }
+        set
+        {
+            _visible = value;
 
-     private void InitializeTrayButton()
-     {
-          if (_trayButton is not null)
-          {
-               return;
-          }
+            if (_notifyIcon is not null)
+            {
+                _notifyIcon.Visible = _visible;
+            }
+            if (_trayButton is not null)
+            {
+                _trayButton.Visible = _visible;
+            }
+        }
+    }
 
-          _trayButton = new Morphic.Controls.TrayButton.TrayButton();
-          _trayButton.Text = _text;
-          _trayButton.Icon = _icon;
-          //
-          _trayButton.MouseUp += (sender, args) =>
-          {
-               if (args.Button == System.Windows.Forms.MouseButtons.Right)
-               {
-                    this.SecondaryClick?.Invoke(this, args);
-               }
-               else if (args.Button == System.Windows.Forms.MouseButtons.Left)
-               {
-                    this.Click?.Invoke(this, args);
-               }
-          };
-          _trayButton.Visible = _visible;
-     }
+    //
 
-     //
+    public MorphicResult<List<System.Drawing.Rectangle>, MorphicUnit> GetPositionsAndSizes()
+    {
+        var result = new List<System.Drawing.Rectangle>();
 
-     public TrayIconLocationOption TrayIconLocation
-     {
-          get
-          {
-               return _trayIconLocation;
-          }
-          set
-          {
-               _trayIconLocation = value;
+        if (_notifyIcon is not null)
+        {
+            // NOTE: if we can find the exact position and size of the icon in the system notification tray, we should return that value instead
+            // NOTE: since we cannot currently and reliably return a list of actual positions+sizes in this circumstance, we return an error
+            return MorphicResult.ErrorResult();
+        } 
 
-               // create notify icon if requested
-               switch (value)
-               {
-                    case TrayIconLocationOption.NotificationTray:
-                    case TrayIconLocationOption.NotificationTrayAndNextToNotificationTray:
-                         if (_notifyIcon is null)
-                         {
-                              this.InitializeTrayIcon();
-                         }
-                         break;
-               }
+        if (_trayButton is not null)
+        {
+            var positionAndSize = _trayButton.PositionAndSize;
+            if (positionAndSize.HasValue == true)
+            {
+                result.Add(positionAndSize.Value);
+            }
+        }
 
-               // create tray button if requested
-               switch (value)
-               {
-                    case TrayIconLocationOption.NextToNotificationTray:
-                    case TrayIconLocationOption.NotificationTrayAndNextToNotificationTray:
-                         if (_trayButton is null)
-                         {
-                              this.InitializeTrayButton();
-                         }
-                         break;
-               }
+        return MorphicResult.OkResult(result);
+    }
 
-               // destroy notify icon if no longer wanted
-               switch (value)
-               {
-                    case TrayIconLocationOption.None:
-                    case TrayIconLocationOption.NextToNotificationTray:
-                         if (_notifyIcon is not null)
-                         {
-                              _notifyIcon.Dispose();
-                              _notifyIcon = null;
-                         }
-                         break;
-               }
+    //
 
-               // destroy tray button if no longer wanted
-               switch (value)
-               {
-                    case TrayIconLocationOption.None:
-                    case TrayIconLocationOption.NotificationTray:
-                         if (_trayButton is not null)
-                         {
-                              _trayButton.Dispose();
-                              _trayButton = null;
-                         }
-                         break;
-               }
-          }
-     }
+    public void SuppressTaskbarButtonResurfaceChecks(bool suppress)
+    {
+        _trayButton?.SuppressTaskbarButtonResurfaceChecks(suppress);
+    }
+
+    //
+
+    private void InitializeTrayIcon()
+    {
+        if (_notifyIcon is not null)
+        {
+            return;
+        }
+
+        _notifyIcon = new System.Windows.Forms.NotifyIcon();
+        _notifyIcon.Text = _text;
+        _notifyIcon.Icon = _icon;
+        //
+        _notifyIcon.MouseUp += (sender, args) =>
+        {
+            if (args.Button == System.Windows.Forms.MouseButtons.Right)
+            {
+                this.SecondaryClick?.Invoke(this, args);
+            }
+            else if (args.Button == System.Windows.Forms.MouseButtons.Left)
+            {
+                this.Click?.Invoke(this, args);
+            }
+        };
+        _notifyIcon.Visible = _visible;
+    }
+
+    private void InitializeTrayButton()
+    {
+        if (_trayButton is not null)
+        {
+            return;
+        }
+
+        _trayButton = new Morphic.Controls.TrayButton.TrayButton();
+        _trayButton.Text = _text;
+        _trayButton.Icon = _icon;
+        //
+        _trayButton.MouseUp += (sender, args) =>
+        {
+            if (args.Button == System.Windows.Forms.MouseButtons.Right)
+            {
+                this.SecondaryClick?.Invoke(this, args);
+            }
+            else if (args.Button == System.Windows.Forms.MouseButtons.Left)
+            {
+                this.Click?.Invoke(this, args);
+            }
+        };
+        _trayButton.Visible = _visible;
+    }
+
+    //
+
+    public TrayIconLocationOption TrayIconLocation
+    {
+        get
+        {
+            return _trayIconLocation;
+        }
+        set
+        {
+            _trayIconLocation = value;
+
+            // create notify icon if requested
+            switch (value)
+            {
+                case TrayIconLocationOption.NotificationTray:
+                case TrayIconLocationOption.NotificationTrayAndNextToNotificationTray:
+                    if (_notifyIcon is null)
+                    {
+                        this.InitializeTrayIcon();
+                    }
+                    break;
+            }
+
+            // create tray button if requested
+            switch (value)
+            {
+                case TrayIconLocationOption.NextToNotificationTray:
+                case TrayIconLocationOption.NotificationTrayAndNextToNotificationTray:
+                    if (_trayButton is null)
+                    {
+                        this.InitializeTrayButton();
+                    }
+                    break;
+            }
+
+            // destroy notify icon if no longer wanted
+            switch (value)
+            {
+                case TrayIconLocationOption.None:
+                case TrayIconLocationOption.NextToNotificationTray:
+                    if (_notifyIcon is not null)
+                    {
+                        _notifyIcon.Dispose();
+                        _notifyIcon = null;
+                    }
+                    break;
+            }
+
+            // destroy tray button if no longer wanted
+            switch (value)
+            {
+                case TrayIconLocationOption.None:
+                case TrayIconLocationOption.NotificationTray:
+                    if (_trayButton is not null)
+                    {
+                        _trayButton.Dispose();
+                        _trayButton = null;
+                    }
+                    break;
+            }
+        }
+    }
 }

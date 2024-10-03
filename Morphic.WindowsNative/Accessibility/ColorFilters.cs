@@ -1,4 +1,4 @@
-﻿// Copyright 2022-2023 Raising the Floor - US, Inc.
+﻿// Copyright 2022-2024 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -22,20 +22,9 @@
 // * Consumer Electronics Association Foundation
 
 using Morphic.Core;
-using Morphic.WindowsNative.SystemSettings;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using Windows.Services.Maps;
-
-using SystemSettingsDataModel = SystemSettings.DataModel;
 
 namespace Morphic.WindowsNative.Accessibility;
 
@@ -46,14 +35,14 @@ public class ColorFilters
         public const string COLOR_FILTERING_IS_ENABLED_SETTING_ID = "SystemSettings_Accessibility_ColorFiltering_IsEnabled";
     }
 
-    private static SettingItemProxy? _colorFilteringIsEnabledSettingItem;
-    private static SettingItemProxy? ColorFilteringIsEnabledSettingItem
+    private static Morphic.WindowsNative.SystemSettings.SettingItemProxy? _colorFilteringIsEnabledSettingItem;
+    private static Morphic.WindowsNative.SystemSettings.SettingItemProxy? ColorFilteringIsEnabledSettingItem
     {
         get
         {
             if (_colorFilteringIsEnabledSettingItem is null)
             {
-                _colorFilteringIsEnabledSettingItem = SettingsDatabaseProxy.GetSettingItemOrNull(ColorFilters.SystemSettingId.COLOR_FILTERING_IS_ENABLED_SETTING_ID);
+                _colorFilteringIsEnabledSettingItem = Morphic.WindowsNative.SystemSettings.SettingsDatabaseProxy.GetSettingItemOrNull(ColorFilters.SystemSettingId.COLOR_FILTERING_IS_ENABLED_SETTING_ID);
             }
 
             return _colorFilteringIsEnabledSettingItem;
@@ -75,10 +64,10 @@ public class ColorFilters
                 var openKeyResult = Morphic.WindowsNative.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\ColorFiltering");
                 if (openKeyResult.IsError == true)
                 {
-                    switch (openKeyResult.Error!.Value)
+                    switch (openKeyResult.Error!)
                     {
-                        case Win32ApiError.Values.Win32Error:
-                            Debug.Assert(false, "Could not open color filtering key for notifications; win32 error: " + openKeyResult.Error!.Win32ErrorCode.ToString());
+                        case IWin32ApiError.Win32Error(Win32ErrorCode: var win32ErrorCode):
+                            Debug.Assert(false, "Could not open color filtering key for notifications; win32 error: " + win32ErrorCode.ToString());
                             break;
                         default:
                             throw new MorphicUnhandledErrorException();
@@ -128,15 +117,16 @@ public class ColorFilters
 
     //
 
-    public static MorphicResult<bool?, Win32ApiError> GetIsActive()
+    public static MorphicResult<bool?, IWin32ApiError> GetIsActive()
     {
         var openKeyResult = Morphic.WindowsNative.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\ColorFiltering");
         if (openKeyResult.IsError == true)
         {
-            switch (openKeyResult.Error!.Value)
+            switch (openKeyResult.Error!)
             {
-                case Win32ApiError.Values.Win32Error:
-                    return MorphicResult.ErrorResult(openKeyResult.Error!);
+                case IWin32ApiError.Win32Error(Win32ErrorCode: var win32ErrorCode):
+                    var win32ApiError = new IWin32ApiError.Win32Error(win32ErrorCode);
+                    return MorphicResult.ErrorResult<IWin32ApiError>(win32ApiError);
                 default:
                     throw new MorphicUnhandledErrorException();
             }
@@ -147,12 +137,12 @@ public class ColorFilters
         var getValueResult = colorFilteringKey.GetValueDataOrNull<uint>("Active");
         if (getValueResult.IsError == true)
         {
-            switch (getValueResult.Error!.Value)
+            switch (getValueResult.Error!)
             {
-                case Registry.RegistryKey.RegistryGetValueError.Values.Win32Error:
-                    return MorphicResult.ErrorResult(Win32ApiError.Win32Error((uint)getValueResult.Error!.Win32ErrorCode!));
-                case Registry.RegistryKey.RegistryGetValueError.Values.TypeMismatch:
-                case Registry.RegistryKey.RegistryGetValueError.Values.UnsupportedType:
+                case Registry.RegistryKey.IRegistryGetValueError.Win32Error(Win32ErrorCode: var win32ErrorCode):
+                    return MorphicResult.ErrorResult<IWin32ApiError>(new IWin32ApiError.Win32Error(unchecked((uint)win32ErrorCode)));
+                case Registry.RegistryKey.IRegistryGetValueError.TypeMismatch:
+                case Registry.RegistryKey.IRegistryGetValueError.UnsupportedType:
                 default:
                     throw new MorphicUnhandledErrorException();
             }
@@ -174,7 +164,7 @@ public class ColorFilters
     //// NOTE: this is an alternate implementation of GetIsActive (saved as a backup plan, just in case the registry entries aren't a reliable (or preferred) source of truth for the value
     //public static async Task<MorphicResult<bool?, MorphicUnit>> GetIsActiveAsync(TimeSpan? timeout = null)
     //{
-    //    var getValueResult = await SettingItemProxy.GetSettingItemValueAsync<bool>(ColorFilters.ColorFilteringIsEnabledSettingItem, /*ColorFilters.COLOR_FILTERING_IS_ENABLED_VALUE, */timeout);
+    //    var getValueResult = await Morphic.WindowsNative.SystemSettings.SettingItemProxy.GetSettingItemValueAsync<bool>(ColorFilters.ColorFilteringIsEnabledSettingItem, /*ColorFilters.COLOR_FILTERING_IS_ENABLED_VALUE, */timeout);
     //    if (getValueResult.IsError == true)
     //    {
     //        return MorphicResult.ErrorResult();
@@ -245,7 +235,7 @@ public class ColorFilters
 
     public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> SetIsActiveAsync(bool value, TimeSpan? timeout = null)
     {
-        var setValueResult = await SettingItemProxy.SetSettingItemValueAsync<bool>(ColorFilters.ColorFilteringIsEnabledSettingItem, /*ColorFilters.COLOR_FILTERING_IS_ENABLED_VALUE, */value, timeout);
+        var setValueResult = await Morphic.WindowsNative.SystemSettings.SettingItemProxy.SetSettingItemValueAsync<bool>(ColorFilters.ColorFilteringIsEnabledSettingItem, /*ColorFilters.COLOR_FILTERING_IS_ENABLED_VALUE, */value, timeout);
         if (setValueResult.IsError == true)
         {
             return MorphicResult.ErrorResult();
@@ -264,15 +254,16 @@ public class ColorFilters
         Protanopia = 4,
         Tritanopia = 5
     }
-    public static MorphicResult<FilterType?, Win32ApiError> GetFilterType()
+    public static MorphicResult<FilterType?, IWin32ApiError> GetFilterType()
     {
         var openKeyResult = Morphic.WindowsNative.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\ColorFiltering");
         if (openKeyResult.IsError == true)
         {
-            switch (openKeyResult.Error!.Value)
+            switch (openKeyResult.Error!)
             {
-                case Win32ApiError.Values.Win32Error:
-                    return MorphicResult.ErrorResult(openKeyResult.Error!);
+                case IWin32ApiError.Win32Error(Win32ErrorCode: var win32ErrorCode):
+                    var win32ApiError = new IWin32ApiError.Win32Error(unchecked((uint)win32ErrorCode));
+                    return MorphicResult.ErrorResult<IWin32ApiError>(win32ApiError);
                 default:
                     throw new MorphicUnhandledErrorException();
             }
@@ -284,12 +275,12 @@ public class ColorFilters
         var getValueResult = colorFilteringKey.GetValueDataOrNull<uint>("FilterType");
         if (getValueResult.IsError == true)
         {
-            switch (getValueResult.Error!.Value)
+            switch (getValueResult.Error!)
             {
-                case Registry.RegistryKey.RegistryGetValueError.Values.Win32Error:
-                    return MorphicResult.ErrorResult(Win32ApiError.Win32Error((uint)getValueResult.Error!.Win32ErrorCode!));
-                case Registry.RegistryKey.RegistryGetValueError.Values.TypeMismatch:
-                case Registry.RegistryKey.RegistryGetValueError.Values.UnsupportedType:
+                case Registry.RegistryKey.IRegistryGetValueError.Win32Error(Win32ErrorCode: var win32ErrorCode):
+                    return MorphicResult.ErrorResult<IWin32ApiError>(new IWin32ApiError.Win32Error(unchecked((uint)win32ErrorCode!)));
+                case Registry.RegistryKey.IRegistryGetValueError.TypeMismatch:
+                case Registry.RegistryKey.IRegistryGetValueError.UnsupportedType:
                 default:
                     throw new MorphicUnhandledErrorException();
             }

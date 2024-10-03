@@ -106,7 +106,11 @@ namespace Morphic.Service
             }
             catch (BadRequestException e)
             {
-                throw e;
+                // OBSERVATION: in our testing, this occurred in scenarios like logging in with an invalid username/password combination (such as after changing a password online); throwing an unhandled exception would not be an appropriate response
+                System.Diagnostics.Debug.Assert(false, "BadRequest; exception: " + e.Message);
+                logger.LogError(e, "Request failed");
+                return null;
+//                throw e;
             }
             catch (Exception e)
             {

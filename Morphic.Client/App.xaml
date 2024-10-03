@@ -7,4 +7,22 @@
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance local:App}"
              ShutdownMode="OnExplicitShutdown">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- simple declaration -->
+                <!--<ResourceDictionary Source="StringResources.xaml" />-->
+                <!-- -->
+                <!-- pack declaration -->
+                <!--<ResourceDictionary Source="pack://application:,,,/StringResources.xaml" />-->
+                <!-- -->
+                <!-- more explicit pack declaration with assembly -->
+                <ResourceDictionary Source="pack://application:,,,/Morphic;component/Localization/NonLocalizedResources.xaml" /> 
+                <ResourceDictionary Source="pack://application:,,,/Morphic;component/Localization/StringResources.xaml" /> 
+                <ResourceDictionary Source="pack://application:,,,/Morphic;component/Localization/UIResources.xaml" /> 
+
+                <ResourceDictionary Source="Themes/Light.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
 </Application>

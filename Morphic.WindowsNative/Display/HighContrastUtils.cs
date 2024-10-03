@@ -35,67 +35,6 @@ public class HighContrastUtils
 {
    private static Object s_modifyHighContrastLock = new Object();
 
-   private struct HighContrastInfo 
-   {
-       public bool FeatureIsOn;
-       public bool FeatureCanBeTurnedOnAndOff;
-       public bool HotKeyIsEnabled;
-       public bool HotKeyPresentsConfirmationDialog;
-       public bool HotKeyPlaysSound;
-       //public bool ShowsVisualIndicatorWhenOn;
-       public bool HotKeyCanBeEnabled { get; init; }
-       //
-       public String? DefaultColorScheme;
-   }
-   private static MorphicResult<HighContrastInfo, MorphicUnit> GetHighContrastInfo()
-   {
-       var highContrastInfo = ExtendedPInvoke.HIGHCONTRAST.InitializeNew();
-       IntPtr pointerToHighContrastInfo = Marshal.AllocHGlobal((int)highContrastInfo.cbSize);
-       Marshal.StructureToPtr(highContrastInfo, pointerToHighContrastInfo, false);
-       try
-       {
-           var spiSuccess = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_GETHIGHCONTRAST, highContrastInfo.cbSize, pointerToHighContrastInfo, PInvoke.User32.SystemParametersInfoFlags.None);
-           if (spiSuccess == false)
-           {
-               return MorphicResult.ErrorResult();
-           }
-
-           highContrastInfo = Marshal.PtrToStructure<ExtendedPInvoke.HIGHCONTRAST>(pointerToHighContrastInfo);
-       }
-       finally
-       {
-           Marshal.FreeHGlobal(pointerToHighContrastInfo);
-       }
-
-       var result = new HighContrastInfo()
-       {
-           FeatureIsOn = ((highContrastInfo.dwFlags & ExtendedPInvoke.HighContrastFlags.HCF_HIGHCONTRASTON) == ExtendedPInvoke.HighContrastFlags.HCF_HIGHCONTRASTON),
-           FeatureCanBeTurnedOnAndOff = ((highContrastInfo.dwFlags & ExtendedPInvoke.HighContrastFlags.HCF_AVAILABLE) == ExtendedPInvoke.HighContrastFlags.HCF_AVAILABLE),
-           HotKeyIsEnabled = ((highContrastInfo.dwFlags & ExtendedPInvoke.HighContrastFlags.HCF_HOTKEYACTIVE) == ExtendedPInvoke.HighContrastFlags.HCF_HOTKEYACTIVE),
-           HotKeyPresentsConfirmationDialog = ((highContrastInfo.dwFlags & ExtendedPInvoke.HighContrastFlags.HCF_CONFIRMHOTKEY) == ExtendedPInvoke.HighContrastFlags.HCF_CONFIRMHOTKEY),
-           HotKeyPlaysSound = ((highContrastInfo.dwFlags & ExtendedPInvoke.HighContrastFlags.HCF_HOTKEYSOUND) == ExtendedPInvoke.HighContrastFlags.HCF_HOTKEYSOUND),
-           //ShowsVisualIndicatorWhenOn = ((highContrastInfo.dwFlags & ExtendedPInvoke.HighContrastFlags.HCF_INDICATOR) == ExtendedPInvoke.HighContrastFlags.HCF_INDICATOR),
-           HotKeyCanBeEnabled = ((highContrastInfo.dwFlags & ExtendedPInvoke.HighContrastFlags.HCF_HOTKEYAVAILABLE) == ExtendedPInvoke.HighContrastFlags.HCF_HOTKEYAVAILABLE),
-           //
-           DefaultColorScheme = highContrastInfo.lpszDefaultScheme
-       };
-       return MorphicResult.OkResult(result);
-   }
-
-   //
-
-   public static MorphicResult<bool, MorphicUnit> GetHighContrastModeIsOn()
-   {
-       var getHighContrastInfoResult = HighContrastUtils.GetHighContrastInfo();
-       if (getHighContrastInfoResult.IsError == true)
-       {
-           return MorphicResult.ErrorResult();
-       }
-       var highContrastInfo = getHighContrastInfoResult.Value!;
-
-       return MorphicResult.OkResult(highContrastInfo.FeatureIsOn);
-   }
-
    public static MorphicResult<MorphicUnit, MorphicUnit> SetHighContrastModeIsOn(bool isOn, bool updateUserProfile = false)
    {
        // NOTE: we lock on s_modifyHighContrastLock here to ensure that our application doesn't modify the system's HIGHCONTRAST settings while we're reading, updating and rewriting them
@@ -156,18 +95,6 @@ public class HighContrastUtils
    }
 
    //
-
-   public static MorphicResult<String?, MorphicUnit> GetHighContrastModeDefaultColorScheme()
-   {
-       var getHighContrastInfoResult = HighContrastUtils.GetHighContrastInfo();
-       if (getHighContrastInfoResult.IsError == true)
-       {
-           return MorphicResult.ErrorResult();
-       }
-       var highContrastInfo = getHighContrastInfoResult.Value!;
-
-       return MorphicResult.OkResult(highContrastInfo.DefaultColorScheme);
-   }
 
    public static MorphicResult<MorphicUnit, MorphicUnit> SetHighContrastModeDefaultColorScheme(String defaultColorScheme, bool updateUserProfile = false)
    {

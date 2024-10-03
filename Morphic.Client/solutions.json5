@@ -103,6 +103,16 @@
       }
     ]
   },
+  "com.microsoft.windows.systemTheme": {
+    settings: [
+      {
+        type: "systemSettings",
+        settings: {
+          value: "SystemSettings_Personalize_Color_SystemTheme:string",
+        }
+      }
+    ]
+  },
   "com.texthelp.readandwrite": {
     settings: [
       {

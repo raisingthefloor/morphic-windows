@@ -4,18 +4,17 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:Morphic.Client"
-      xmlns:l10n="clr-namespace:Morphic.Client.Strings"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800">
 
     <StackPanel x:Name="ReadyPanel" Visibility="Visible">
-        <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0" Content="{x:Static l10n:Resources.ApplySettingsFromCloudVaultTitle_Content}"/>
-        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,20">
-            <Run Text="{x:Static l10n:Resources.ApplySettingsFromCloudVaultInstructions_Part1_Text}"/>
-            <Run FontWeight="Bold" Text="{x:Static l10n:Resources.ApplyButton_Text}"/>
-            <Run Text="{x:Static l10n:Resources.ApplySettingsFromCloudVaultInstructions_Part3_Text}"/>
+        <Label FontSize="24" Foreground="{DynamicResource ThemeAwareForeground}" HorizontalAlignment="Center" Margin="0,20,0,0" Content="{StaticResource ApplyPanel_ApplySettingsFromCloudVaultTitle}"/>
+        <TextBlock Foreground="{DynamicResource ThemeAwareForeground}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,20">
+            <Run Text="{StaticResource ApplyPanel_ApplySettingsFromCloudVaultInstructions_Part1}"/>
+            <Run FontWeight="Bold" Text="{StaticResource MiscDialog_ApplyButton}"/>
+            <Run Text="{StaticResource ApplyPanel_ApplySettingsFromCloudVaultInstructions_Part3}"/>
         </TextBlock>
-        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,20" Text="{x:Static l10n:Resources.ApplySettingsFromCloudVaultNote_Text}"/>
+        <TextBlock Foreground="{DynamicResource ThemeAwareForeground}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,20" Text="{StaticResource ApplyPanel_ApplySettingsFromCloudVaultNote}"/>
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition />
@@ -23,13 +22,13 @@
                 <ColumnDefinition />
             </Grid.ColumnDefinitions>
             <UniformGrid Grid.Column="1" Columns="2">
-                <Button x:Name="CancelButton" Width="Auto" HorizontalAlignment="Left" FontWeight="Bold" Margin="10,5,0,10" Click="OnCancel" IsEnabled="True" Content="{x:Static l10n:Resources.CancelButton_Text}"/>
-                <Button x:Name="ApplyButton" Width="Auto" HorizontalAlignment="Right" FontWeight="Bold" Margin="10,5,0,10" Click="OnApply" IsEnabled="True" Content="{x:Static l10n:Resources.ApplyButton_Text}"/>
+                <Button x:Name="CancelButton" Width="Auto" HorizontalAlignment="Left" FontWeight="Bold" Margin="10,5,0,10" Click="OnCancel" IsEnabled="True" Content="{StaticResource MiscDialog_CancelButton}"/>
+                <Button x:Name="ApplyButton" Width="Auto" HorizontalAlignment="Right" FontWeight="Bold" Margin="10,5,0,10" Click="OnApply" IsEnabled="True" Content="{StaticResource MiscDialog_ApplyButton}"/>
             </UniformGrid>
         </Grid>
     </StackPanel>
     <StackPanel x:Name="ApplyingPanel" MaxWidth="500" Visibility="Collapsed">
-        <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0" Content="{x:Static l10n:Resources.ApplyingSettingsOnYourComputerLabel_Content}"/>
+        <Label Foreground="{DynamicResource ThemeAwareForeground}" FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0" Content="{StaticResource ApplyPanel_ApplyingSettingsOnYourComputer}"/>
         <Image Height="270" Margin="0,30,0,0">
             <Image.RenderTransform>
                 <RotateTransform Angle="0" CenterX="135" CenterY="135"/>
@@ -80,13 +79,13 @@
         </Image>
     </StackPanel>
     <StackPanel x:Name="CompletePanel" Visibility="Collapsed">
-        <Label FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0" Content="{x:Static l10n:Resources.YourSettingsHaveBeenAppliedLabel_Content}"/>
-        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,10" Text="{x:Static l10n:Resources.SettingsFromCloudVaultHaveBeenApplied_Text}"/>
+        <Label Foreground="{DynamicResource ThemeAwareForeground}" FontSize="24" HorizontalAlignment="Center" Margin="0,20,0,0" Content="{StaticResource ApplyPanel_YourSettingsHaveBeenApplied}"/>
+        <TextBlock Foreground="{DynamicResource ThemeAwareForeground}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,10" Text="{StaticResource ApplyPanel_SettingsFromCloudVaultHaveBeenApplied}"/>
         <!--<TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,10">
-            <Run Text="{x:Static l10n:Resources.OldSettingsWereBackedUp_Part1_Text}"/>
-            <Run FontWeight="Bold" Text="{x:Static l10n:Resources.OldSettingsWereBackedUp_Part2_Text}"/>
-            <Run Text="{x:Static l10n:Resources.OldSettingsWereBackedUp_Part3_Text}"/>
+            <Run Text="{StaticResource ApplyPanel_OldSettingsWereBackedUp_Part1}"/>
+            <Run FontWeight="Bold" Text="{StaticResource ApplyPanel_OldSettingsWereBackedUp_Part2}"/>
+            <Run Text="{StaticResource ApplyPanel_OldSettingsWereBackedUp_Part3}"/>
         </TextBlock>-->
-        <Button x:Name="OkButton" Width="Auto" HorizontalAlignment="Center" FontWeight="Bold" Margin="10,20,0,10" Click="OnOk" IsEnabled="True" Content="{x:Static l10n:Resources.OkButton_Text}"/>
+        <Button x:Name="OkButton" Width="Auto" HorizontalAlignment="Center" FontWeight="Bold" Margin="10,20,0,10" Click="OnOk" IsEnabled="True" Content="{StaticResource MiscDialog_OkButton}"/>
     </StackPanel>
 </StackPanel>
