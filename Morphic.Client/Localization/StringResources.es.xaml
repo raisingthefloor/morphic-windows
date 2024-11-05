@@ -221,10 +221,6 @@
     <system:String x:Key="MorphicBarButtonContextMenuItem_LearnMore">Más información</system:String>
     <system:String x:Key="MorphicBarButtonContextMenuItem_Settings">Ajustes</system:String>
 
-    <system:String x:Key="MorphicGroupPickerDialog_ChangePreferenceLaterUsingMorphicMenuNote">Puede cambiar esta preferencia más tarde usando el Menú de Morphic.</system:String>
-    <system:String x:Key="MorphicGroupPickerDialog_SelectGroupHeader">Seleccione el grupo cuya barra de Morphic le gustaría ver:</system:String>
-    <system:String x:Key="MorphicGroupPickerDialog_YouAreMemberOfMultipleGroups">Usted es miembro de varios Grupos de Morphic.</system:String>
-
     <system:String x:Key="RestoreDialog_BackupDate">Fecha de la copia de seguridad</system:String>
     <system:String x:Key="RestoreDialog_ClickingBelowWillRestoreSettings_Part1">Haciendo clic</system:String>
     <system:String x:Key="RestoreDialog_ClickingBelowWillRestoreSettings_Part2">Restaurar de la copia de seguridad</system:String>
