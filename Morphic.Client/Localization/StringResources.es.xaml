@@ -1,6 +1,5 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:system="clr-namespace:System;assembly=mscorlib">
+﻿<?xml version="1.0"?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:system="clr-namespace:System;assembly=mscorlib">
 
     <system:String x:Key="AboutMorphicDialog_CheckForUpdateHyperlink">Buscar actualizaciones</system:String>
     <system:String x:Key="AboutMorphicDialog_LearnMoreAboutMorphicHyperlink">Más información acerca de Morphic</system:String>
@@ -12,12 +11,14 @@
     <system:String x:Key="ApplyPanel_ApplySettingsFromCloudVaultNote">Recuerde que la configuración actual del sistema se guardará en el equipo, de forma que podrá volver a aplicarla en cualquier momento.</system:String>
     <system:String x:Key="ApplyPanel_ApplySettingsFromCloudVaultTitle">Aplicar mis preferencias desde mi Morphic Cloud Vault</system:String>
     <system:String x:Key="ApplyPanel_OldSettingsWereBackedUp_Part1">Antes de ser aplicadas, la configuración anterior se guardó en una copia de seguridad. Para volver a ella, use</system:String>
-    <system:String x:Key="ApplyPanel_OldSettingsWereBackedUp_Part2">"Restaurar configuración desde copia de seguruidad"</system:String>
+    <system:String x:Key="ApplyPanel_OldSettingsWereBackedUp_Part2">&quot;Restaurar configuración desde copia de seguruidad&quot;</system:String>
     <system:String x:Key="ApplyPanel_OldSettingsWereBackedUp_Part3">comando en el menú de Morphic.</system:String>
     <system:String x:Key="ApplyPanel_SettingsFromCloudVaultHaveBeenApplied">Se han aplicado las configuraciones de su Morphic Cloud Vault en este equipo.</system:String>
     <system:String x:Key="ApplyPanel_YourSettingsHaveBeenApplied">Se ha aplicado su configuración</system:String>
 
-    <system:String x:Key="CaptureSettingsPanel_ClickingSaveWillSaveSettingsToVault">Al hacer click en "Guardar" se guardarán en su Morphic Cloud Vault.</system:String>
+    <system:String x:Key="AtodOnDemandPanel_DoneButton">Hecho</system:String>
+    
+    <system:String x:Key="CaptureSettingsPanel_ClickingSaveWillSaveSettingsToVault">Al hacer click en &quot;Guardar&quot; se guardarán en su Morphic Cloud Vault.</system:String>
     <system:String x:Key="CaptureSettingsPanel_CollectingSettingsFromComputer">Recopilando la configuración de su PC...</system:String>
     <system:String x:Key="CaptureSettingsPanel_ConfirmSavingToCloudVault">Confirma que quieres guardar en tu Morphic Cloud Vault</system:String>
     <system:String x:Key="CaptureSettingsPanel_MorphicCanNowApplySavedSettingsToAnotherComputer">Ahora puede usar Morphic para aplicar esta configuración en otro equipo que tenga Morphic instalado.</system:String>
@@ -29,7 +30,7 @@
     <system:String x:Key="CopyStartPanel_CopySettingsBetweenComputersHeader">Copiar configuración entre ordenadores</system:String>
     <system:String x:Key="CopyStartPanel_CopySettingsFromCloudVaultHyperlink">Usar las configuraciones de mi Morphic Cloud Vault para configurar este equipo.</system:String>
     <system:String x:Key="CopyStartPanel_CopySettingsToCloudVaultHyperlink">Copiar la configuración de este equipo en mi Morphic Cloud Vault</system:String>
-
+    
     <system:String x:Key="CreateAccountDialog_Button_AlreadyHaveAnAccount">¿Ya tienes una cuenta?</system:String>
     <system:String x:Key="CreateAccountDialog_Button_CreateAccountAndRememberMySettings">Crear una cuenta y recordar mis preferencias</system:String>
     <system:String x:Key="CreateAccountDialog_ChooseAPassword">Elija una contraseña</system:String>
@@ -46,14 +47,14 @@
     <system:String x:Key="LoginPanel_CreateAccountHyperlink">¿Aún no tiene una cuenta?</system:String>
     <system:String x:Key="LoginPanel_EmailField">Dirección email</system:String>
     <system:String x:Key="LoginPanel_ForgotPasswordHyperlink">¿Olvidó su contraseña o no está seguro si tiene una cuenta?</system:String>
-    <!-- <system:String x:Key="LoginPanel_LoginButton_AutomationHelpText">Iniciar sesión</system:String> -->
+    <!-- <system:String x:Key="LoginPanel_LoginButton_AutomationHelpText">Login</system:String> -->
     <system:String x:Key="LoginPanel_LoginError_DidNotRecognizeLogin">No pudimos encontrar sus datos de acceso. Por favor, inténtelo de nuevo.</system:String>
     <system:String x:Key="LoginPanel_PasswordField">Contraseña</system:String>
     <system:String x:Key="LoginPanel_PasswordField_AutomationHelpText">Introduzca su contraseña</system:String>
     <system:String x:Key="LoginPanel_SignInButton">Iniciar sesión</system:String>
     <system:String x:Key="LoginPanel_SignIntoMorphicAccountHeader">Inicie sesión en Morphic - Morphic Cloud Vault</system:String>
     <system:String x:Key="LoginPanel_UsernameField_AutomationHelpText">Introduzca su dirección de correo</system:String>
-
+    
     <system:String x:Key="MainMenuItem_AboutMorphic">_Acerca de Morphic...</system:String>
     <system:String x:Key="MainMenuItem_ApplySavedSetup">Aplicar una configuración guardada...</system:String>
     <system:String x:Key="MainMenuItem_AutorunAfterLoginOnOff">_Iniciar Morphic automáticamente</system:String>
@@ -95,8 +96,10 @@
     <system:String x:Key="MiscDialog_ApplyButton">Aplicar</system:String>
     <system:String x:Key="MiscDialog_CancelButton">Cancelar</system:String>
     <system:String x:Key="MiscDialog_CloseButton">Cerrar</system:String>
+    <system:String x:Key="MiscDialog_InstallButton">Instalar</system:String>
     <system:String x:Key="MiscDialog_OkButton">Aceptar</system:String>
     <system:String x:Key="MiscDialog_SaveButton">Guardar</system:String>
+    <system:String x:Key="MiscDialog_SkipAllButton">Saltar Todo</system:String>
 
     <system:String x:Key="QuickStrip_Advanced_HelpMessage">Encuentre preferencias, inicie o cierre sesión, personalice los botones y más.</system:String>
     <system:String x:Key="QuickStrip_Advanced_HelpTitle">Abrir el menú de Morphic</system:String>
@@ -210,17 +213,17 @@
     <system:String x:Key="QuickStrip_UsbOpenEject_Open_Title">Abrir</system:String>
     <system:String x:Key="QuickStrip_UsbOpenEject_Title">Unidades USB (Todas)</system:String>
     <system:String x:Key="QuickStrip_WordSimplify_Basic_HelpMessage">Proporciona un panel en Word con los elementos más comunes.</system:String>
-    <system:String x:Key="QuickStrip_WordSimplify_Basic_HelpTitle">Añade el panel "Elementos Básicos" en Word</system:String>
+    <system:String x:Key="QuickStrip_WordSimplify_Basic_HelpTitle">Añade el panel &quot;Elementos Básicos&quot; en Word</system:String>
     <system:String x:Key="QuickStrip_WordSimplify_Basic_Title">Elementos Básicos</system:String>
     <system:String x:Key="QuickStrip_WordSimplify_Essentials_HelpMessage">Le proporciona un nuevo panel en Word con elementos imprescindibles de otros paneles.</system:String>
-    <system:String x:Key="QuickStrip_WordSimplify_Essentials_HelpTitle">Añade un panel "Elementos Imprescindibles" en Word</system:String>
+    <system:String x:Key="QuickStrip_WordSimplify_Essentials_HelpTitle">Añade un panel &quot;Elementos Imprescindibles&quot; en Word</system:String>
     <system:String x:Key="QuickStrip_WordSimplify_Essentials_Title">Elementos Imprescindibles</system:String>
     <system:String x:Key="QuickStrip_WordSimplify_Title">Simplificación de MS Word</system:String>
-    
+
     <system:String x:Key="MorphicBarButtonContextMenuItem_Demo">Video de demostración</system:String>
     <system:String x:Key="MorphicBarButtonContextMenuItem_LearnMore">Más información</system:String>
     <system:String x:Key="MorphicBarButtonContextMenuItem_Settings">Ajustes</system:String>
-
+    
     <system:String x:Key="RestoreDialog_BackupDate">Fecha de la copia de seguridad</system:String>
     <system:String x:Key="RestoreDialog_ClickingBelowWillRestoreSettings_Part1">Haciendo clic</system:String>
     <system:String x:Key="RestoreDialog_ClickingBelowWillRestoreSettings_Part2">Restaurar de la copia de seguridad</system:String>
@@ -237,5 +240,7 @@
     <system:String x:Key="TravelCompletedPanel_WeSavedYourSettings">Hemos guardado su configuración en un lugar seguro al que sólo usted puede acceder.</system:String>
 
     <system:String x:Key="TravelDialog_WindowTitle">Viaje con sus configuraciones</system:String>
-
+        
+    <!-- <system:String x:Key="UntitledDialog_WindowTitle">Morphic</system:String> -->
+        
 </ResourceDictionary>

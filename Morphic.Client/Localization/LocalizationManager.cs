@@ -32,6 +32,11 @@ internal class LocalizationManager
     private static readonly string[] ISO_639_LANGUAGE_CODES = [
         "ar", // Arabic
         "es", // Spanish
+        "gu", // Gujarati
+        "hi", // Hindi
+        "ko", // Korean
+        "vi", // Vietnamese
+        "zh", // Chinese
     ];
 
     private static readonly string STRING_RESOURCES_BASE_URI_STRING = "pack://application:,,,/Morphic;component/Localization/StringResources.xaml";
