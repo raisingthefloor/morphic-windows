@@ -61,8 +61,7 @@
     <system:String x:Key="MainMenuItem_ChangeMorphicBar">MorphicBar બદલો</system:String>
     <system:String x:Key="MainMenuItem_CustomizeMorphicBar">MorphicBar ને કસ્ટમાઇઝ કરો...</system:String>
     <system:String x:Key="MainMenuItem_ExploreMorphic">_ Morphic જે કરી શકે તે બધું અન્વેષણ કરો...</system:String>
-    <system:String x:Key="MainMenuItem_HideMorphicBar">MorphicBar છુપાવો
-</system:String>
+    <system:String x:Key="MainMenuItem_HideMorphicBar">MorphicBar છુપાવો</system:String>
     <system:String x:Key="MainMenuItem_HideQuickHelp">_ક્વિકહેલ્પ છુપાવો (Alt કી સિવાય)</system:String>
     <system:String x:Key="MainMenuItem_HowToCopySettingsBetweenComputers">કમ્પ્યુટર્સ વચ્ચે સેટઅપની કોપી કેવી રીતે કરવી...</system:String>
     <system:String x:Key="MainMenuItem_MoreSettingsToMakeComputerEasier">કમ્પ્યુટરને સરળ બનાવવા માટે વધુ સેટિંગ્સ</system:String>
@@ -123,8 +122,7 @@
     <system:String x:Key="QuickStrip_Snip_HelpTitle">સ્ક્રીનના પસંદ કરેલા ભાગનું ચિત્ર લે છે</system:String>
     <system:String x:Key="QuickStrip_Snip_Button_Title">કોપી કરો</system:String>
     <system:String x:Key="QuickStrip_Snip_Title">કાપો</system:String>
-    <system:String x:Key="QuickStrip_Snip_Name">સ્ક્રીનની ભાગની કૉપિ કાપો
-</system:String>
+    <system:String x:Key="QuickStrip_Snip_Name">સ્ક્રીનની ભાગની કૉપિ કાપો</system:String>
     <system:String x:Key="QuickStrip_Colors_Title">કોન્ટ્રાસ્ટ અને રંગ</system:String>
     <system:String x:Key="QuickStrip_Colors_Contrast_Title">કોન્ટ્રાસ્ટ</system:String>
     <system:String x:Key="QuickStrip_Colors_Color_Title">રંગ</system:String>

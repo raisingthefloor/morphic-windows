@@ -64,7 +64,7 @@
     <system:String x:Key="MainMenuItem_HideMorphicBar">إخفاء شريط المورفيك</system:String>
     <system:String x:Key="MainMenuItem_HideQuickHelp">_إخفاء المساعدة السريعة (باستثناء مفتاح Alt)</system:String>
     <system:String x:Key="MainMenuItem_HowToCopySettingsBetweenComputers">كيفية نسخ الإعدادات بين أجهزة الكمبيوتر...</system:String>
-    <system:String x:Key="MainMenuItem_MoreSettingsToMakeComputerEasier">المزيد من الإعدادات لتسهيل استخدام الكمبيوتر </system:String>
+    <system:String x:Key="MainMenuItem_MoreSettingsToMakeComputerEasier">المزيد من الإعدادات لتسهيل استخدام الكمبيوتر</system:String>
     <system:String x:Key="MainMenuItem_OtherHelpfulThings">موارد أخرى لتسهيل استخدام أجهزة الكمبيوتر ...</system:String>
     <system:String x:Key="MainMenuItem_ProblemsContactUs">واجهتك مشكلة؟ اتصل بنا...</system:String>
     <system:String x:Key="MainMenuItem_QuickMorphicDemos">موارد أخرى لتسهيل استخدام أجهزة الكمبيوتر ...</system:String>
@@ -142,7 +142,7 @@
     <system:String x:Key="QuickStrip_Magnifier_Show_HelpTitle">تشغيل المكبر الذي يتبع الفأرة</system:String>
     <system:String x:Key="QuickStrip_Magnifier_Show_Title">إظهار</system:String>
     <system:String x:Key="QuickStrip_Magnifier_Title">المكبر</system:String>
-    <system:String x:Key="QuickStrip_Magnifier_Show_Name">  إظهار المكبر</system:String>
+    <system:String x:Key="QuickStrip_Magnifier_Show_Name">إظهار المكبر</system:String>
     <system:String x:Key="QuickStrip_Magnifier_Hide_Name"></system:String>
     <system:String x:Key="QuickStrip_Reader_Start_HelpMessage">اختر النص للقراءة. ثم انقر فوق زر التشغيل للقراءة. لتغيير الإعدادات، انقر على الزر الأيمن.</system:String>
     <system:String x:Key="QuickStrip_Reader_Start_HelpTitle">يقرأ النص المختار</system:String>
@@ -155,7 +155,7 @@
     <system:String x:Key="QuickStrip_Resolution_Bigger_HelpTitle">يكبر حجم النص في كل مكان</system:String>
     <system:String x:Key="QuickStrip_Resolution_Bigger_Name">زيادة حجم النص</system:String>
     <system:String x:Key="QuickStrip_Resolution_Bigger_LimitMessage"></system:String>
-    <system:String x:Key="QuickStrip_Resolution_Bigger_LimitTitle">لا يمكن تكبير حجم النص </system:String>
+    <system:String x:Key="QuickStrip_Resolution_Bigger_LimitTitle">لا يمكن تكبير حجم النص</system:String>
     <system:String x:Key="QuickStrip_Resolution_Smaller_HelpMessage">يصغر كل شيء على الشاشة.</system:String>
     <system:String x:Key="QuickStrip_Resolution_Smaller_HelpTitle">يصغر حجم النص في كل مكان</system:String>
     <system:String x:Key="QuickStrip_Resolution_Smaller_Name">تصغير حجم النص</system:String>

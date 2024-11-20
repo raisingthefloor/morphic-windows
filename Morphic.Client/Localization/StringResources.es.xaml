@@ -47,7 +47,7 @@
     <system:String x:Key="LoginPanel_CreateAccountHyperlink">¿Aún no tiene una cuenta?</system:String>
     <system:String x:Key="LoginPanel_EmailField">Dirección email</system:String>
     <system:String x:Key="LoginPanel_ForgotPasswordHyperlink">¿Olvidó su contraseña o no está seguro si tiene una cuenta?</system:String>
-    <!-- <system:String x:Key="LoginPanel_LoginButton_AutomationHelpText">Login</system:String> -->
+    <!-- <system:String x:Key="LoginPanel_LoginButton_AutomationHelpText">Iniciar sesión</system:String> -->
     <system:String x:Key="LoginPanel_LoginError_DidNotRecognizeLogin">No pudimos encontrar sus datos de acceso. Por favor, inténtelo de nuevo.</system:String>
     <system:String x:Key="LoginPanel_PasswordField">Contraseña</system:String>
     <system:String x:Key="LoginPanel_PasswordField_AutomationHelpText">Introduzca su contraseña</system:String>

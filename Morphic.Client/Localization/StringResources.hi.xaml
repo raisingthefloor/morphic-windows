@@ -26,8 +26,7 @@
     <system:String x:Key="CaptureSettingsPanel_SettingsCollectionComplete">हमने आपकी सहायक तकनीकों और आपके कंप्यूटर की एक्सेसिबिलिटी और युसॆबिलिटी सेटिंग्स की सेटिंग्स एकत्रित कर ली हैं</system:String>
     <system:String x:Key="CaptureSettingsPanel_SettingsSavedToCloudVault">सेटिंग्स क्लाउड वॉल्ट में सहेजी गईं</system:String>
 
-    <system:String x:Key="CopyStartPanel_CopySettingsBetweenComputersDescription">यह सुविधा आपको कंप्यूटर के बीच अपनी एक्सेसिबिलिटी (अभिगम्यता) और युसॆबिलिटी (प्रयोज्य) सेटिंग्स को स्थानांतरित करने की अनुमति देती है - जिसमें आपकी सहायक तकनीकों की सेटिंग्स भी शामिल हैं
-</system:String>
+    <system:String x:Key="CopyStartPanel_CopySettingsBetweenComputersDescription">यह सुविधा आपको कंप्यूटर के बीच अपनी एक्सेसिबिलिटी (अभिगम्यता) और युसॆबिलिटी (प्रयोज्य) सेटिंग्स को स्थानांतरित करने की अनुमति देती है - जिसमें आपकी सहायक तकनीकों की सेटिंग्स भी शामिल हैं</system:String>
     <system:String x:Key="CopyStartPanel_CopySettingsBetweenComputersHeader">कंप्यूटर के बीच सेटिंग्स कॉपी करें</system:String>
     <system:String x:Key="CopyStartPanel_CopySettingsFromCloudVaultHyperlink">इस कंप्यूटर को सेट करने के लिए मेरे क्लाउड वॉल्ट में सेटिंग्स का उपयोग करें</system:String>
     <system:String x:Key="CopyStartPanel_CopySettingsToCloudVaultHyperlink">इस कंप्यूटर की सेटिंग्स को मेरे क्लाउड वॉल्ट में कॉपी करें</system:String>
@@ -44,8 +43,7 @@
     <system:String x:Key="CreateAccountDialog_TermsAndConditions_Part4">प्राइवेसी पालिसी (गोपनीयता नीति)</system:String>
     <system:String x:Key="CreateAccountDialog_YourEmailAddress">आपका ईमेल पता</system:String>
 
-    <system:String x:Key="LoginPanel_CancelButton_AutomationHelpText">यह सुविधा आपको कंप्यूटर के बीच अपनी एक्सेसिबिलिटी (अभिगम्यता) और युसॆबिलिटी (प्रयोज्य) सेटिंग्स को स्थानांतरित करने की अनुमति देती है - जिसमें आपकी सहायक तकनीकों की सेटिंग्स भी शामिल हैं
-</system:String>
+    <system:String x:Key="LoginPanel_CancelButton_AutomationHelpText">यह सुविधा आपको कंप्यूटर के बीच अपनी एक्सेसिबिलिटी (अभिगम्यता) और युसॆबिलिटी (प्रयोज्य) सेटिंग्स को स्थानांतरित करने की अनुमति देती है - जिसमें आपकी सहायक तकनीकों की सेटिंग्स भी शामिल हैं</system:String>
     <system:String x:Key="LoginPanel_CreateAccountHyperlink">अब तक कोई खाता नहीं है?</system:String>
     <system:String x:Key="LoginPanel_EmailField">ईमेल पता</system:String>
     <system:String x:Key="LoginPanel_ForgotPasswordHyperlink">अपना पासवर्ड भूल गए - या निश्चित नहीं कि आपके पास कोई खाता है या नहीं?</system:String>
@@ -103,8 +101,7 @@
     <system:String x:Key="MiscDialog_SaveButton">सेव (सहेजें)</system:String>
     <system:String x:Key="MiscDialog_SkipAllButton">सभी को स्किप करें</system:String>
 
-    <system:String x:Key="QuickStrip_Advanced_HelpMessage">
-सेटिंग्स ढूंढें, साइन इन/आउट करें, बटन कस्टमाइज (अनुकूलित) करें, सेटिंग्स स्थानांतरित करें और बहुत कुछ करें</system:String>
+    <system:String x:Key="QuickStrip_Advanced_HelpMessage">सेटिंग्स ढूंढें, साइन इन/आउट करें, बटन कस्टमाइज (अनुकूलित) करें, सेटिंग्स स्थानांतरित करें और बहुत कुछ करें</system:String>
     <system:String x:Key="QuickStrip_Advanced_HelpTitle">मॉर्फ़िक मेनू खोलता है</system:String>
     <system:String x:Key="QuickStrip_Contrast_Off_HelpMessage"></system:String>
     <system:String x:Key="QuickStrip_Contrast_Off_HelpTitle">कंट्रास्ट बंद कर देता है</system:String>
@@ -123,7 +120,7 @@
     <system:String x:Key="QuickStrip_NightMode_Title">नाइट मोड</system:String>
     <system:String x:Key="QuickStrip_Snip_HelpMessage">कॉपी पर क्लिक करें. फिर चित्र लेने के लिए माउस को क्लिक करें और खींचें। किसी भी दस्तावेज़ में पेस्ट करें.</system:String>
     <system:String x:Key="QuickStrip_Snip_HelpTitle">स्क्रीन के चुने हुए भाग का चित्र लेता है</system:String>
-    <system:String x:Key="QuickStrip_Snip_Button_Title">कॉपी (प्रतिलिपि) </system:String>
+    <system:String x:Key="QuickStrip_Snip_Button_Title">कॉपी (प्रतिलिपि)</system:String>
     <system:String x:Key="QuickStrip_Snip_Title">स्निप (कटाव)</system:String>
     <system:String x:Key="QuickStrip_Snip_Name">स्क्रीन के हिस्से की स्निप कॉपी</system:String>
     <system:String x:Key="QuickStrip_Colors_Title">कंट्रास्ट और कलर</system:String>
@@ -170,7 +167,7 @@
     <system:String x:Key="QuickStrip_Volume_Down_LimitMessage"></system:String>
     <system:String x:Key="QuickStrip_Volume_Down_LimitTitle">वॉल्यूम (आवाज़) शांत नहीं हो सकता</system:String>
     <system:String x:Key="QuickStrip_Volume_Mute_HelpMessage">आपके स्पीकर को म्यूट करता है - लेकिन आपके माइक्रोफ़ोन को म्यूट नहीं करता है</system:String>
-    <system:String x:Key="QuickStrip_Volume_Mute_HelpTitle">आपके कंप्यूटर से सभी ध्वनियाँ म्यूट (आवाज़ बंद)करता है </system:String>
+    <system:String x:Key="QuickStrip_Volume_Mute_HelpTitle">आपके कंप्यूटर से सभी ध्वनियाँ म्यूट (आवाज़ बंद)करता है</system:String>
     <system:String x:Key="QuickStrip_Volume_Mute_MutedMessage">म्यूट को बंद कर देता है - आपके कंप्यूटर से ध्वनियाँ फिर से आने देता है</system:String>
     <system:String x:Key="QuickStrip_Volume_Mute_MutedTitle">ध्वनियों को अनम्यूट करता है</system:String>
     <system:String x:Key="QuickStrip_Volume_Mute_Title">म्यूट (आवाज़ बंद)</system:String>
@@ -183,7 +180,7 @@
     <system:String x:Key="QuickStrip_Volume_Up_LimitTitle">वॉल्यूम तेज़ नहीं हो सकती</system:String>
     <system:String x:Key="QuickStrip_Clipboard_Copy_HelpMessage">आपके द्वारा चुने हुए पाठ या अन्य सामग्री की कॉपी बनाता है ताकि आप उसे कहीं पेस्ट सकें</system:String>
     <system:String x:Key="QuickStrip_Clipboard_Copy_HelpTitle">आपके चयन की कॉपीस (प्रतिलिपि) बनाता है</system:String>
-    <system:String x:Key="QuickStrip_Clipboard_Copy_Title">कॉपी (प्रतिलिपि) </system:String>
+    <system:String x:Key="QuickStrip_Clipboard_Copy_Title">कॉपी (प्रतिलिपि)</system:String>
     <system:String x:Key="QuickStrip_Clipboard_Paste_HelpMessage">कॉपी की गई सामग्री को वहां सम्मिलित करता है जहां टेक्स्ट कर्सर है।</system:String>
     <system:String x:Key="QuickStrip_Clipboard_Paste_HelpTitle">आपने जो कॉपी किया है उसे पेस्ट है</system:String>
     <system:String x:Key="QuickStrip_Clipboard_Paste_Title">पेस्ट (चिपकाएं)</system:String>
@@ -220,7 +217,7 @@
     <system:String x:Key="QuickStrip_WordSimplify_Basic_Title">बेसिक (सामान्य)</system:String>
     <system:String x:Key="QuickStrip_WordSimplify_Essentials_HelpMessage">आपको अन्य सभी रिबन से एकत्रित आवश्यक वस्तुओं के साथ एक नया रिबन देता है</system:String>
     <system:String x:Key="QuickStrip_WordSimplify_Essentials_HelpTitle">Word में एक नया 'आवश्यक आइटम' रिबन जोड़ता है</system:String>
-    <system:String x:Key="QuickStrip_WordSimplify_Essentials_Title">आवश्यक </system:String>
+    <system:String x:Key="QuickStrip_WordSimplify_Essentials_Title">आवश्यक</system:String>
     <system:String x:Key="QuickStrip_WordSimplify_Title">शब्द सरलीकरण</system:String>
 
     <system:String x:Key="MorphicBarButtonContextMenuItem_Demo">त्वरित _डेमो वीडियो</system:String>

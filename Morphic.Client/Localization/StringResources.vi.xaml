@@ -22,8 +22,7 @@
     <system:String x:Key="CaptureSettingsPanel_CollectingSettingsFromComputer">Đang thu thập cài đặt từ máy tính của bạn...</system:String>
     <system:String x:Key="CaptureSettingsPanel_ConfirmSavingToCloudVault">Xác nhận lưu vào Morphic Cloud Vault của bạn</system:String>
     <system:String x:Key="CaptureSettingsPanel_MorphicCanNowApplySavedSettingsToAnotherComputer">Bây giờ bạn có thể sử dụng Morphic để áp dụng các cài đặt này cho một máy tính khác đã cài đặt Morphic.</system:String>
-    <system:String x:Key="CaptureSettingsPanel_SecurelyTakeSettingsAnywhere">Vì vậy bạn có thể an tâm mang chúng đi bất cứ đâu
-</system:String>
+    <system:String x:Key="CaptureSettingsPanel_SecurelyTakeSettingsAnywhere">Vì vậy bạn có thể an tâm mang chúng đi bất cứ đâu</system:String>
     <system:String x:Key="CaptureSettingsPanel_SettingsCollectionComplete">Chúng tôi đã thu thập cài đặt công nghệ hỗ trợ cũng như cài đặt khả năng truy cập và khả năng sử dụng trên máy tính của bạn.</system:String>
     <system:String x:Key="CaptureSettingsPanel_SettingsSavedToCloudVault">Cài đặt đã lưu vào Cloud Vault</system:String>
 
@@ -139,8 +138,7 @@
     <system:String x:Key="QuickStrip_Magnifier_Hide_HelpMessage">(Nhấp chuột phải để thay đổi cài đặt kính lúp)</system:String>
     <system:String x:Key="QuickStrip_Magnifier_Hide_HelpTitle">Tắt kính lúp</system:String>
     <system:String x:Key="QuickStrip_Magnifier_Hide_Title">Ẩn</system:String>
-    <system:String x:Key="QuickStrip_Magnifier_Show_HelpMessage">Bật ống kính phóng đại. (Click chuột phải để thay đổi cài đặt)
-</system:String>
+    <system:String x:Key="QuickStrip_Magnifier_Show_HelpMessage">Bật ống kính phóng đại. (Click chuột phải để thay đổi cài đặt)</system:String>
     <system:String x:Key="QuickStrip_Magnifier_Show_HelpTitle">Bật Kính lúp theo dõi chuột</system:String>
     <system:String x:Key="QuickStrip_Magnifier_Show_Title">Hiển thị</system:String>
     <system:String x:Key="QuickStrip_Magnifier_Title">kính lúp</system:String>
@@ -214,8 +212,7 @@
     <system:String x:Key="QuickStrip_UsbOpenEject_Open_HelpTitle">Mở tất cả các ổ USB</system:String>
     <system:String x:Key="QuickStrip_UsbOpenEject_Open_Title">Mở</system:String>
     <system:String x:Key="QuickStrip_UsbOpenEject_Title">Ổ USB (Tất cả)</system:String>
-    <system:String x:Key="QuickStrip_WordSimplify_Basic_HelpMessage">Cung cấp cho bạn một dải băng mới đơn giản hơn chỉ với các mục cơ bản trên đó.
-</system:String>
+    <system:String x:Key="QuickStrip_WordSimplify_Basic_HelpMessage">Cung cấp cho bạn một dải băng mới đơn giản hơn chỉ với các mục cơ bản trên đó.</system:String>
     <system:String x:Key="QuickStrip_WordSimplify_Basic_HelpTitle">Thêm dải băng 'Các mục cơ bản' mới vào Word</system:String>
     <system:String x:Key="QuickStrip_WordSimplify_Basic_Title">Nền tảng</system:String>
     <system:String x:Key="QuickStrip_WordSimplify_Essentials_HelpMessage">Cung cấp cho bạn một dải băng mới với các vật phẩm thiết yếu được thu thập từ tất cả các dải băng khác.</system:String>
@@ -223,8 +220,7 @@
     <system:String x:Key="QuickStrip_WordSimplify_Essentials_Title">Yếu tố cần thiết</system:String>
     <system:String x:Key="QuickStrip_WordSimplify_Title">Đơn giản hóa từ</system:String>
 
-    <system:String x:Key="MorphicBarButtonContextMenuItem_Demo">_Video demo nhanh
-</system:String>
+    <system:String x:Key="MorphicBarButtonContextMenuItem_Demo">_Video demo nhanh</system:String>
     <system:String x:Key="MorphicBarButtonContextMenuItem_LearnMore">_Tìm hiểu thêm</system:String>
     <system:String x:Key="MorphicBarButtonContextMenuItem_Settings">_Cài đặt</system:String>
     
