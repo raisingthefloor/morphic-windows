@@ -66,8 +66,7 @@
     <system:String x:Key="MainMenuItem_HowToCopySettingsBetweenComputers">نحوه کپی کردن تنظیمات بین کامپیوتر...</system:String>
     <system:String x:Key="MainMenuItem_MoreSettingsToMakeComputerEasier">تنظیمات بیشتر برای آسان کردن رایانه</system:String>
     <system:String x:Key="MainMenuItem_OtherHelpfulThings">_منابع دیگر برای آسان کردن رایانه...</system:String>
-    <system:String x:Key="MainMenuItem_ProblemsContactUs">مشکلات؟ تماس با ما...
-</system:String>
+    <system:String x:Key="MainMenuItem_ProblemsContactUs">مشکلات؟ تماس با ما...</system:String>
     <system:String x:Key="MainMenuItem_QuickMorphicDemos">فیلم های دمو Quick Morphic...</system:String>
     <system:String x:Key="MainMenuItem_QuitMorphic">_مورفیک را ترک کنید</system:String>
     <system:String x:Key="MainMenuItem_RestoreSettingsFromBackup">_بازیابی تنظیمات از پشتیبان گیری</system:String>
