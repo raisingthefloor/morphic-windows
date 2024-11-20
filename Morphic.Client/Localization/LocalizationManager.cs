@@ -32,9 +32,12 @@ internal class LocalizationManager
     private static readonly string[] ISO_639_LANGUAGE_CODES = [
         "ar", // Arabic
         "es", // Spanish
+        "fa", // Persian
         "gu", // Gujarati
         "hi", // Hindi
         "ko", // Korean
+        "mr", // Marathi
+        "ur", // Urdu
         "vi", // Vietnamese
         "zh", // Chinese
     ];
