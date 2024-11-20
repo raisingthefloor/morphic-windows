@@ -936,9 +936,10 @@ public partial class App : Application
         // before initializing any user interface, initialize our localization culture
         var currentUICulture = System.Threading.Thread.CurrentThread.CurrentUICulture;
         var iso639LanguageCode = Morphic.Localization.LocalizationManager.GetIso639LanguageCode(currentUICulture);
+        var cultureName = Morphic.Localization.LocalizationManager.GetCultureName(currentUICulture);
         //
         // NOTE: if the current culture is not supported (or if it's the same as the base culture), fail silently and use the base settings
-        _ = Morphic.Localization.LocalizationManager.SetUICulture(App.Current.Resources, iso639LanguageCode);
+        _ = Morphic.Localization.LocalizationManager.SetUICulture(App.Current.Resources, iso639LanguageCode, cultureName);
 
         // determine if Morphic (i.e. the taskbar icon, the MorphicBar, etc.) should be shown
         bool morphicShouldBeHidden = false;
@@ -959,7 +960,7 @@ public partial class App : Application
         this.MorphicMainMenu = new();
         //
         // NOTE: if the current culture is not supported (or if it's the same as the base culture), fail silently and use the base settings
-        _ = Morphic.Localization.LocalizationManager.SetUICulture(this.MorphicMainMenu.Resources, iso639LanguageCode);
+        _ = Morphic.Localization.LocalizationManager.SetUICulture(this.MorphicMainMenu.Resources, iso639LanguageCode, cultureName);
 
         // initialize our taskbar icon (button); this will not show the button
         this.InitTaskbarIconWithoutShowing();
