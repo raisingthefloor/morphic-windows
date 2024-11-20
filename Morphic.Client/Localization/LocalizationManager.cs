@@ -77,8 +77,8 @@ internal class LocalizationManager
             case "mr":
                 return "mr-IN";
             case "ur":
-                return "ur-IN";
-                //return "ur-PK";
+                //return "ur-IN";
+                return "ur-PK";
             case "vi":
                 return "vi-VN";
             case "zh":
