@@ -16,7 +16,7 @@
 files: [
  {
   "source" : "Morphic.Client/Localization/StringResources.xaml",
-  "translation" : "Morphic.Client/Localization/StringResources.%two_letters_code%.xaml",
+  "translation" : "Morphic.Client/Localization/StringResources.%locale%.xaml",
   "update_option" : "update_as_unapproved",
  }
 ]
