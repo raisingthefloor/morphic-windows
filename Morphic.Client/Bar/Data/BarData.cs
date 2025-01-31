@@ -419,11 +419,12 @@ namespace Morphic.Client.Bar.Data
                         }
 
                         // add a spacer entry
+                        // TODO: we need to make this button invisible to mouse input (so that dragging in this position will still drag the MorphicBar)
                         BarButton spacerBarItem = new BarButton(defaultBar);
                         spacerBarItem.ToolTipHeader = "";
                         spacerBarItem.ToolTip = "";
                         spacerBarItem.Text = "";
-                        spacerBarItem.ColorValue = "#FFFFFF";
+                        spacerBarItem.ColorValue = "#00FFFFFF";
                         //
                         defaultBar?.AllItems.Add(spacerBarItem);
                     }
