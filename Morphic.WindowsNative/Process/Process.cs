@@ -25,7 +25,8 @@ using Morphic.Core;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Morphic.WindowsNative.Process;
 
@@ -89,11 +90,95 @@ public class Process
         }
     }
 
+    //
+
+    public struct StartProcessResult
+    {
+        public int ProcessId;
+    }
+    public interface IStartProcessError
+    {
+        public record NotStarted : IStartProcessError;
+        public record Win32Exception(System.ComponentModel.Win32Exception Exception) : IStartProcessError;
+    }
+    public static MorphicResult<StartProcessResult, IStartProcessError> StartProcess(string path)
+    {
+        var startInfo = new System.Diagnostics.ProcessStartInfo(path)
+        {
+            UseShellExecute = true
+        };
+        System.Diagnostics.Process? startedProcess;
+        try
+        {
+            startedProcess = System.Diagnostics.Process.Start(startInfo);
+        }
+        catch (System.ComponentModel.Win32Exception ex)
+        {
+            return MorphicResult.ErrorResult<IStartProcessError>(new IStartProcessError.Win32Exception(ex));
+        }
+        if (startedProcess is not null)
+        {
+            var result = new StartProcessResult()
+            {
+                ProcessId = startedProcess!.Id,
+            };
+            return MorphicResult.OkResult(result);
+        }
+        else
+        {
+            return MorphicResult.ErrorResult<IStartProcessError>(new IStartProcessError.NotStarted());
+        }
+    }
+
+    public interface IStopProcessError
+    {
+        public record NotRunning : IStopProcessError;
+        public record Win32Exception(System.ComponentModel.Win32Exception Exception) : IStopProcessError;
+    }
+    public static async Task<MorphicResult<MorphicUnit, IStopProcessError>> StopProcessWithIdAsync(int processId, TimeSpan maximumWaitBeforeForceStop)
+    {
+        System.Diagnostics.Process? runningProcess;
+        // see: https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process.getprocessbyid
+        try
+        {
+            runningProcess = System.Diagnostics.Process.GetProcessById(processId);
+        }
+        catch (ArgumentException)
+        {
+            return MorphicResult.ErrorResult<IStopProcessError>(new IStopProcessError.NotRunning());
+        }
+
+        // try to exit the process; if it doesn't exit after 'maximum' time, then force-stop the process
+        try
+        {
+            await runningProcess.WaitForExitAsync(new CancellationTokenSource(maximumWaitBeforeForceStop).Token);
+        }
+        catch (OperationCanceledException)
+        {
+            // if the process doesn't exit after maximumWaitBeforeForceStop, kill the process and all of its subchildren
+            // see: https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process.kill
+            try
+            {
+                runningProcess.Kill(true);
+            }
+            catch (InvalidOperationException)
+            {
+                return MorphicResult.ErrorResult<IStopProcessError>(new IStopProcessError.NotRunning());
+            }
+            catch (System.ComponentModel.Win32Exception ex)
+            {
+                return MorphicResult.ErrorResult<IStopProcessError>(new IStopProcessError.Win32Exception(ex));
+            }
+        }
+
+        return MorphicResult.OkResult();
+    }
+
     public interface IGetAllWindowHandlesForProcessError
     {
         public record NotRunning : IGetAllWindowHandlesForProcessError;
     }
-    public static MorphicResult<IEnumerable<IntPtr>, IGetAllWindowHandlesForProcessError> GetAllWindowHandlesForProcess(int processId)
+    public static MorphicResult<IEnumerable<IntPtr>, IGetAllWindowHandlesForProcessError> GetAllWindowHandlesForProcessWithId(int processId)
     {
         List<IntPtr> handles = [];
         List<int> failedProcessThreads = [];
@@ -133,7 +218,7 @@ public class Process
     {
         IEnumerable<IntPtr> windowHandlesForProcess = [];
         //
-        var windowHandlesForProcessResult = GetAllWindowHandlesForProcess(processId);
+        var windowHandlesForProcessResult = GetAllWindowHandlesForProcessWithId(processId);
         if (windowHandlesForProcessResult.IsError)
         {
             switch (windowHandlesForProcessResult.Error!)
@@ -173,6 +258,12 @@ public class Process
         {
             return MorphicResult.OkResult(closedWindowHandles);
         }
+    }
+
+    public static bool GetProcessIsRunningByProcessName(string processName)
+    {
+        var runningProcessNames = Process.GetCurrentProcessNames();
+        return runningProcessNames.Contains(processName);
     }
 
     public static List<string> GetCurrentProcessNames()
