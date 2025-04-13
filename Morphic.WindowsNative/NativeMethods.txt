@@ -17,6 +17,7 @@ RegNotifyChangeKeyValue
 RegOpenKeyEx
 RegQueryValueEx
 RegSetValueEx
+SendNotifyMessage
 SystemParametersInfo
 
 DISPLAYCONFIG_MODE_INFO
