@@ -133,9 +133,10 @@ public class Process
     public interface IStopProcessError
     {
         public record NotRunning : IStopProcessError;
+        public record Timeout : IStopProcessError;
         public record Win32Exception(System.ComponentModel.Win32Exception Exception) : IStopProcessError;
     }
-    public static async Task<MorphicResult<MorphicUnit, IStopProcessError>> StopProcessWithIdAsync(int processId, TimeSpan maximumWaitBeforeForceStop)
+    public static async Task<MorphicResult<MorphicUnit, IStopProcessError>> StopProcessWithIdAsync(int processId, TimeSpan maximumWaitBeforeForceStop, bool forceKillAfterMaximumWait)
     {
         System.Diagnostics.Process? runningProcess;
         // see: https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process.getprocessbyid
@@ -151,10 +152,20 @@ public class Process
         // try to exit the process; if it doesn't exit after 'maximum' time, then force-stop the process
         try
         {
+#if DEBUG
+            // in debug, we throw OperationCanceledException (since we can't call WAitForExitAsync without elevated (uiAccess or admin) permissions; this will simply kill the process instead (i.e. gracefully degrade)
+            throw new OperationCanceledException();
+#else
             await runningProcess.WaitForExitAsync(new CancellationTokenSource(maximumWaitBeforeForceStop).Token);
+#endif
         }
         catch (OperationCanceledException)
         {
+            if (forceKillAfterMaximumWait == false)
+            {
+                return MorphicResult.ErrorResult<IStopProcessError>(new IStopProcessError.Timeout());
+            }
+
             // if the process doesn't exit after maximumWaitBeforeForceStop, kill the process and all of its subchildren
             // see: https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process.kill
             try
@@ -264,6 +275,22 @@ public class Process
     {
         var runningProcessNames = Process.GetCurrentProcessNames();
         return runningProcessNames.Contains(processName);
+    }
+
+    public static int? GetProcessIdOrNullByProcessName(string processName)
+    {
+        var processes = System.Diagnostics.Process.GetProcesses();
+        foreach (var process in processes)
+        {
+            // NOTE: we do not check process.HasExited here, as we should never get any exited processes in a fresh process list (i.e. checking the property would consume unnecessary processor cycles)
+            if (process.ProcessName == processName)
+            {
+                return process.Id;
+            }
+        }
+
+        // could not get process id
+        return null;
     }
 
     public static List<string> GetCurrentProcessNames()
