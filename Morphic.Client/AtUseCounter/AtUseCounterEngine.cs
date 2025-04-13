@@ -67,6 +67,8 @@ internal class AtUseCounterEngine
      private static Morphic.Core.MorphicSequentialTaskScheduler _sequentialTaskScheduler;
      private static TaskFactory _sequentialTaskFactory;
 
+     private static Morphic.WindowsNative.Process.ProcessWatcher _processWatcher;
+
      static public async Task ConfigureAndStartAtUseCounterAsync(string mqttServerHostname, string appName, string appKey, Utils.TelemetryUtils.TelemetryIdComponents telemetryIds)
      {
           // start a stopwatch; we'll use this to help understand when rapid sequences of changes are really just one change (e.g. mouse cursor size changes)
@@ -173,11 +175,13 @@ internal class AtUseCounterEngine
           }
 
           // triggered when watched processes are started/stopped
-          var processWatcher = new Morphic.WindowsNative.Process.ProcessWatcher();
+          var processWatcher = Morphic.WindowsNative.Process.ProcessWatcher.CreateNew();
           processWatcher.ProcessNamesWatchFilter = new(new string[] { "Magnify.exe", "Magnify", "ScreenClippingHost.exe", "ScreenClippingHost", "SystemSettings.exe", "SystemSettings" });
           processWatcher.ProcessStarted += AtUseCounterEngine.ProcessWatcher_ProcessStarted;
           processWatcher.ProcessStopped += AtUseCounterEngine.ProcessWatcher_ProcessStopped;
-          processWatcher.Start(new TimeSpan(0, 0, 1));
+          _processWatcher = processWatcher;
+          //
+          Morphic.WindowsNative.Process.ProcessWatcher.Start(new TimeSpan(0, 0, 1));
      }
 
      // NOTE: this function waits up to two seconds for the telemetry client to close
