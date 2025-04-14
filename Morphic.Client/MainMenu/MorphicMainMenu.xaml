@@ -59,6 +59,7 @@
         <menu:MorphicMenuItem Header="{DynamicResource MainMenuItem_Setting_OsNightModeSettings}" Open="ms-settings:nightlight" />
         <menu:MorphicMenuItem Header="{DynamicResource MainMenuItem_Setting_OsDarkModeSettings}" Open="ms-settings:colors" />
         <menu:MorphicMenuItem Header="{DynamicResource MainMenuItem_Setting_OsContrastSettings}" Open="ms-settings:easeofaccess-highcontrast" />
+        <menu:MorphicMenuItem Header="{DynamicResource MainMenuItem_Setting_OsVoiceSettings}" Open="ms-settings:easeofaccess-speechrecognition" />
 
         <menu:MorphicMenuHeader Header="{DynamicResource MainMenuItem_Setting_OsOtherSettingsSection}"/>
         <menu:MorphicMenuItem Header="{DynamicResource MainMenuItem_Setting_OsMouseSettings}" Open="ms-settings:mousetouchpad" />
