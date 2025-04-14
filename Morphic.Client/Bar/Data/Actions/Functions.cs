@@ -1255,6 +1255,7 @@ namespace Morphic.Client.Bar.Data.Actions
             {
                 // Windows 10 v1903+
 
+System.Windows.MessageBox.Show("SetVoiceAccessStateAsync: Functions.GetPathToVoiceAccess()");
                 var pathToVoiceAccess = Functions.GetPathToVoiceAccess();
                 if (pathToVoiceAccess is null)
                 {
@@ -1264,19 +1265,25 @@ namespace Morphic.Client.Bar.Data.Actions
 
                 if (state == true)
                 {
+System.Windows.MessageBox.Show(String.Format("SetVoiceAccessStateAsync: path == {0}", pathToVoiceAccess));
+System.Windows.MessageBox.Show("SetVoiceAccessStateAsync: ApplicationProcessUtils.StartApplication(pathToVoiceAccess)");
                     var startResult = ApplicationProcessUtils.StartApplication(pathToVoiceAccess);
+System.Windows.MessageBox.Show("SetVoiceAccessStateAsync: startResult.IsError == " + startResult.IsError.ToString());
                     if (startResult.IsError == true)
                     {
                         switch (startResult.Error!)
                         {
                             case ApplicationProcessUtils.IStartApplicationError.CannotFindExecutable:
                                 Debug.WriteLine("Could not start Pointing Magnifier.\n\nCannot find application's executable file.");
+System.Windows.MessageBox.Show("Could not start Pointing Magnifier.\n\nCannot find application's executable file.");
                                 return MorphicResult.ErrorResult();
                             case ApplicationProcessUtils.IStartApplicationError.NotStarted:
                                 Debug.WriteLine("Could not start Pointing Magnifier.\n\nApplication was not started.");
+System.Windows.MessageBox.Show("Could not start Pointing Magnifier.\n\nApplication was not started.");
                                 return MorphicResult.ErrorResult();
                             case ApplicationProcessUtils.IStartApplicationError.Win32Exception(var exception):
                                 Debug.WriteLine("Could not start Pointing Magnifier.\n\nWin32 error code: " + exception.NativeErrorCode.ToString());
+System.Windows.MessageBox.Show("Could not start Pointing Magnifier.\n\nWin32 error code: " + exception.NativeErrorCode.ToString());
                                 return MorphicResult.ErrorResult();
                             default:
                                 throw new MorphicUnhandledErrorException();
@@ -1285,7 +1292,9 @@ namespace Morphic.Client.Bar.Data.Actions
                 }
                 else
                 {
+System.Windows.MessageBox.Show("SetVoiceAccessStateAsync: ApplicationProcessUtils.StopApplicationAsync(VOICE_ACCESS_PROCESS_NAME, new TimeSpan(0, 0, 0, 1))");
                     var stopResult = await ApplicationProcessUtils.StopApplicationAsync(VOICE_ACCESS_PROCESS_NAME, new TimeSpan(0, 0, 0, 1));
+System.Windows.MessageBox.Show("SetVoiceAccessStateAsync: stopResult.IsError == " + stopResult.IsError.ToString());
                     if (stopResult.IsError == true)
                     {
                         switch (stopResult.Error!)
@@ -1293,9 +1302,11 @@ namespace Morphic.Client.Bar.Data.Actions
                             case ApplicationProcessUtils.IStopApplicationError.NotStarted:
                                 // if the pointing magnifier was already stopped, proceed
                                 Debug.WriteLine("DEBUG: could not stop Pointing Magnifier: PROCESS WAS NOT RUNNING");
+System.Windows.MessageBox.Show("DEBUG: could not stop Pointing Magnifier: PROCESS WAS NOT RUNNING");
                                 return MorphicResult.ErrorResult();
                             case ApplicationProcessUtils.IStopApplicationError.Win32Exception(var exception):
                                 Debug.WriteLine("Could not close pointing magnifier.\n\nWin32 error code: " + exception.NativeErrorCode.ToString());
+System.Windows.MessageBox.Show("Could not close pointing magnifier.\n\nWin32 error code: " + exception.NativeErrorCode.ToString());
                                 return MorphicResult.ErrorResult();
                             default:
                                 throw new MorphicUnhandledErrorException();
@@ -1325,6 +1336,8 @@ namespace Morphic.Client.Bar.Data.Actions
                 System.Diagnostics.Debug.Assert(false, "Function 'voiceAccess' did not receive a new state");
                 newState = false;
             }
+
+System.Windows.MessageBox.Show(String.Format("VoiceAccessAsync state: {0}", (object)newState));
 
             var setVoiceAccessStateResult = await Functions.SetVoiceAccessStateAsync(newState);
             if (setVoiceAccessStateResult.IsError == true)
