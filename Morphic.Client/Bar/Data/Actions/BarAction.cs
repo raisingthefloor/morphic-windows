@@ -93,6 +93,17 @@ namespace Morphic.Client.Bar.Data.Actions
                 case "log-off":
                     await App.Current.Telemetry_RecordEventAsync("signOut");
                     break;
+                case "voice-control":
+                    switch (source)
+                    {
+                        case "on":
+                            await App.Current.Telemetry_RecordEventAsync("voiceControlOn");
+                            break;
+                        case "off":
+                            await App.Current.Telemetry_RecordEventAsync("voiceControlOff");
+                            break;
+                    }
+                    break;
                 case "volume":
                     {
                         if (source == "up")

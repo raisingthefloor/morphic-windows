@@ -1215,28 +1215,139 @@ namespace Morphic.Client.Bar.Data.Actions
         public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> DarkModeAsync(FunctionArgs args)
         {
             // if we have a "value" property, this is a multi-segmented button and we should use "value" instead of "state"
-            bool on;
+            bool newState;
             if (args.Arguments.Keys.Contains("value"))
             {
-                on = (args["value"] == "on");
+                newState = (args["value"] == "on");
             }
             else if (args.Arguments.Keys.Contains("state"))
             {
-                on = (args["state"] == "on");
+                newState = (args["state"] == "on");
             }
             else
             {
                 System.Diagnostics.Debug.Assert(false, "Function 'darkMode' did not receive a new state");
-                on = false;
+                newState = false;
             }
 
-            var setDarkModeStateResult = await Functions.SetDarkModeStateAsync(on);
+            var setDarkModeStateResult = await Functions.SetDarkModeStateAsync(newState);
             if (setDarkModeStateResult.IsError == true)
             {
                 return MorphicResult.ErrorResult();
             }
 
             return MorphicResult.OkResult();
+        }
+
+        //
+
+        private const string VOICE_ACCESS_PROCESS_NAME = "VoiceAccess";
+
+        internal async static Task<MorphicResult<MorphicUnit, MorphicUnit>> SetVoiceAccessStateAsync(bool state)
+        {
+            var osVersion = Morphic.WindowsNative.OsVersion.OsVersion.GetWindowsVersion();
+            if (osVersion is null)
+            {
+                // error
+                return MorphicResult.ErrorResult();
+            }
+            else
+            {
+                // Windows 10 v1903+
+
+                var pathToVoiceAccess = Functions.GetPathToVoiceAccess();
+                if (pathToVoiceAccess is null)
+                {
+                    Debug.WriteLine("ERROR: could not find VoiceAccess.exe");
+                    return MorphicResult.ErrorResult();
+                }
+
+                if (state == true)
+                {
+                    var startResult = ApplicationProcessUtils.StartApplication(pathToVoiceAccess);
+                    if (startResult.IsError == true)
+                    {
+                        switch (startResult.Error!)
+                        {
+                            case ApplicationProcessUtils.IStartApplicationError.CannotFindExecutable:
+                                Debug.WriteLine("Could not start Pointing Magnifier.\n\nCannot find application's executable file.");
+                                return MorphicResult.ErrorResult();
+                            case ApplicationProcessUtils.IStartApplicationError.NotStarted:
+                                Debug.WriteLine("Could not start Pointing Magnifier.\n\nApplication was not started.");
+                                return MorphicResult.ErrorResult();
+                            case ApplicationProcessUtils.IStartApplicationError.Win32Exception(var exception):
+                                Debug.WriteLine("Could not start Pointing Magnifier.\n\nWin32 error code: " + exception.NativeErrorCode.ToString());
+                                return MorphicResult.ErrorResult();
+                            default:
+                                throw new MorphicUnhandledErrorException();
+                        }
+                    }
+                }
+                else
+                {
+                    var stopResult = await ApplicationProcessUtils.StopApplicationAsync(VOICE_ACCESS_PROCESS_NAME, new TimeSpan(0, 0, 0, 1));
+                    if (stopResult.IsError == true)
+                    {
+                        switch (stopResult.Error!)
+                        {
+                            case ApplicationProcessUtils.IStopApplicationError.NotStarted:
+                                // if the pointing magnifier was already stopped, proceed
+                                Debug.WriteLine("DEBUG: could not stop Pointing Magnifier: PROCESS WAS NOT RUNNING");
+                                return MorphicResult.ErrorResult();
+                            case ApplicationProcessUtils.IStopApplicationError.Win32Exception(var exception):
+                                Debug.WriteLine("Could not close pointing magnifier.\n\nWin32 error code: " + exception.NativeErrorCode.ToString());
+                                return MorphicResult.ErrorResult();
+                            default:
+                                throw new MorphicUnhandledErrorException();
+                        }
+                    }
+                }
+            }
+
+            return MorphicResult.OkResult();
+        }
+
+        [InternalFunction("voiceAccess")]
+        public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> VoiceAccessAsync(FunctionArgs args)
+        {
+            // if we have a "value" property, this is a multi-segmented button and we should use "value" instead of "state"
+            bool newState;
+            if (args.Arguments.Keys.Contains("value"))
+            {
+                newState = (args["value"] == "on");
+            }
+            else if (args.Arguments.Keys.Contains("state"))
+            {
+                newState = (args["state"] == "on");
+            }
+            else
+            {
+                System.Diagnostics.Debug.Assert(false, "Function 'voiceAccess' did not receive a new state");
+                newState = false;
+            }
+
+            var setVoiceAccessStateResult = await Functions.SetVoiceAccessStateAsync(newState);
+            if (setVoiceAccessStateResult.IsError == true)
+            {
+                return MorphicResult.ErrorResult();
+            }
+
+            return MorphicResult.OkResult();
+        }
+
+        private static string? GetPathToVoiceAccess()
+        {
+            var windowsSystemFolder = Environment.GetFolderPath(Environment.SpecialFolder.System);
+            var pathToVoiceAccess = System.IO.Path.Combine(windowsSystemFolder, "VoiceAccess.exe");
+
+            if (System.IO.File.Exists(pathToVoiceAccess) == true)
+            {
+                return pathToVoiceAccess;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         //

@@ -121,6 +121,9 @@ public class MorphicMenuItem : MenuItem
                         case "ms-settings:speech":
                             settingCategoryName = "readAloud";
                             break;
+                        case "ms-settings:easeofaccess-speechrecognition":
+                            settingCategoryName = "voice";
+                            break;
                         case null:
                             // unknown (i.e. no data)
                             break;
