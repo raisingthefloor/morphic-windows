@@ -108,7 +108,7 @@ stages:
           inputs:       
             solution: '$(Build.SourcesDirectory)\Morphic.Client\Morphic.Client.csproj'
             configuration: '$(buildConfiguration)'
-            msbuildArguments: '/t:restore,build /p:RuntimeIdentifier=win-x86 /p:BuildType=$(BUILD_TYPE)'
+            msbuildArguments: '/t:restore,build /p:RuntimeIdentifier=win-x86 /p:BuildType=$(BUILD_TYPE) /p:DefineConstants="PLATFORM_X86"'
 
         - task: MSBuild@1
           displayName: "Publish Morphic Client (x86)"
@@ -117,7 +117,7 @@ stages:
           inputs:       
             solution: '$(Build.SourcesDirectory)\Morphic.Client\Morphic.Client.csproj'
             configuration: '$(buildConfiguration)'
-            msbuildArguments: '/t:publish /p:RuntimeIdentifier=win-x86 /p:BuildType=$(BUILD_TYPE)'
+            msbuildArguments: '/t:publish /p:RuntimeIdentifier=win-x86 /p:BuildType=$(BUILD_TYPE) /p:DefineConstants="PLATFORM_X86"'
 
 #        - task: CmdLine@2
 #          inputs:
