@@ -46,28 +46,32 @@ public class Process
     {
         var pathToExecutableLength = Windows.Win32.PInvoke.MAX_PATH + 1;
 
-        string pathToExecutable;
+        Span<char> pathToExecutableAsChars = new char[(int)pathToExecutableLength];
         nint findExecutableResultAsNint;
-        unsafe
+        //
+        // see: https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-findexecutablew
+        var findExecutableResult = Windows.Win32.PInvoke.FindExecutable(path, null, pathToExecutableAsChars);
+        if (findExecutableResult is not null && findExecutableResult!.DangerousGetHandle() > 32)
         {
-            fixed (char* pathToExecutableAsUnsafeChars = new char[(int)pathToExecutableLength])
+            // success
+            // NOTE: we are relying on FindExecutable to return a valid null-terminated string
+            var indexOfNullTerminator = pathToExecutableAsChars.IndexOf("\0");
+            string pathToExecutable;
+            if (indexOfNullTerminator == -1)
             {
-                // see: https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-findexecutablew
-                var findExecutableResult = Windows.Win32.PInvoke.FindExecutable(path, null, pathToExecutableAsUnsafeChars);
-                if (findExecutableResult is not null && findExecutableResult!.DangerousGetHandle() > 32)
-                {
-                    // success
-                    // NOTE: we are relying on FindExecutable to return a valid null-terminated string
-                    pathToExecutable = new string(pathToExecutableAsUnsafeChars);
-                    return MorphicResult.OkResult(pathToExecutable);
-                }
-                else
-                {
-                    // failure
-                    // capture failure (result) code
-                    findExecutableResultAsNint = findExecutableResult!.DangerousGetHandle();
-                }
+                pathToExecutable = new string(pathToExecutableAsChars);
             }
+            else
+            {
+                pathToExecutable = new string(pathToExecutableAsChars.ToArray(), 0, indexOfNullTerminator);
+            }
+            return MorphicResult.OkResult(pathToExecutable);
+        }
+        else
+        {
+            // failure
+            // capture failure (result) code
+            findExecutableResultAsNint = findExecutableResult!.DangerousGetHandle();
         }
         //
         // if we reach here, we have a failure result

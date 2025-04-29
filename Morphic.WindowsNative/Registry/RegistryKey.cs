@@ -133,9 +133,17 @@ public partial class Registry
         {
             _handle = handle;
         }
-
-        internal RegistryKey(Windows.Win32.System.Registry.HKEY hkey) : this(new SafeRegistryHandle(hkey.Value, ownsHandle: false)) 
+        //
+        internal RegistryKey(Windows.Win32.System.Registry.HKEY hkey)
         {
+            IntPtr hkeyValueAsIntPtr;
+            unsafe 
+            {
+                hkeyValueAsIntPtr = new IntPtr(hkey.Value);
+            }
+            var handle = new SafeRegistryHandle(hkeyValueAsIntPtr, ownsHandle: false);
+
+            _handle = handle;
         }
 
         // NOTE: we override the finalizer because 'Dispose(bool disposing)' has code to free unmanaged resources
