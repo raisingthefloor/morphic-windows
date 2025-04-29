@@ -10,6 +10,8 @@ GetCursorPos
 GetDesktopWindow
 GetDisplayConfigBufferSizes
 GetMonitorInfo
+GetWindowLong
+GetWindowLongPtr
 MonitorFromPoint
 MonitorFromWindow
 QueryDisplayConfig
