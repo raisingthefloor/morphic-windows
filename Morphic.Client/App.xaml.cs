@@ -966,6 +966,7 @@ public partial class App : Application
             resetSettingsIsEnabled: commonConfiguration.ResetSettingsIsEnabled,
             signInIsEnabled: commonConfiguration.SignInIsEnabled,
             telemetryIsEnabled: telemetryIsEnabled,
+            morphicBarDefaultLocation: commonConfiguration.MorphicBarDefaultLocation,
             morphicBarvisibilityAfterLogin: commonConfiguration.MorphicBarVisibilityAfterLogin,
             morphicBarExtraItems: commonConfiguration.ExtraMorphicBarItems,
             telemetrySiteId: commonConfiguration.TelemetrySiteId

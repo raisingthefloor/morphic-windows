@@ -832,7 +832,7 @@ namespace Morphic.Client.Bar.Data.Actions
 
             // copy the current selection to the clipboard
             App.Current.Logger.LogDebug("CopySelectedTextFromLastActiveWindow: Sending Ctrl+C to copy the current selection to the clipboard.");
-            await SelectionReader.Default.CopySelectedTextToClipboardAsync(System.Windows.Forms.SendKeys.SendWait);
+            await Morphic.WindowsNative.Speech.SelectionReader.Default.CopySelectedTextToClipboardAsync(System.Windows.Forms.SendKeys.SendWait);
 
             // wait 100ms (an arbitrary amount of time, but in our testing some wait is necessary...even with the WM-triggered copy logic above)
             // NOTE: perhaps, in the future, we should only do this if our first call to Clipboard.GetText() returns (null? or) an empty string;
@@ -900,7 +900,7 @@ namespace Morphic.Client.Bar.Data.Actions
         [InternalFunction("sendKeys", "keys")]
         public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> SendKeysAsync(FunctionArgs args)
         {
-            await SelectionReader.Default.ActivateLastActiveWindow();
+            await Morphic.WindowsNative.Speech.SelectionReader.Default.ActivateLastActiveWindowAsync();
             System.Windows.Forms.SendKeys.SendWait(args["keys"]);
             return MorphicResult.OkResult();
         }
