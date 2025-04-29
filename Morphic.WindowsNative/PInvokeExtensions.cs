@@ -76,6 +76,9 @@ internal class PInvokeExtensions
     // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowlongptrw
     internal static IntPtr GetWindowLongPtr_IntPtr(Windows.Win32.Foundation.HWND hWnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX nIndex)
     {
+#if PLATFORM_X86
+        return (nint)Windows.Win32.PInvoke.GetWindowLong(hWnd, nIndex);
+#else
         if (IntPtr.Size == 4)
         {
             return (nint)Windows.Win32.PInvoke.GetWindowLong(hWnd, nIndex);
@@ -84,6 +87,7 @@ internal class PInvokeExtensions
         {
             return Windows.Win32.PInvoke.GetWindowLongPtr(hWnd, nIndex);
         }
+#endif
     }
 
     #endregion winuser
