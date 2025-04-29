@@ -358,7 +358,7 @@ namespace Morphic.Client.Bar.Data.Actions
                 {
                     await App.Current.Telemetry_RecordEventAsync(this.TelemetryEventName!);
                 }
-            }
+             }
         }
     }
 

@@ -4,6 +4,7 @@ EnumDisplayMonitors
 EnumDisplaySettings
 EnumThreadWindows
 FindExecutable
+GetAsyncKeyState 
 GetCurrentPackageFullName
 GetCursorPos
 GetDesktopWindow
@@ -19,6 +20,7 @@ RegNotifyChangeKeyValue
 RegOpenKeyEx
 RegQueryValueEx
 RegSetValueEx
+SendInput
 SendNotifyMessage
 SystemParametersInfo
 

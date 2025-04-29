@@ -200,6 +200,7 @@ public partial class App : Application
         }
         public class MorphicBarConfigSection
         {
+            public string? defaultLocation { get; set; }
             public string? visibilityAfterLogin { get; set; }
             public List<MorphicBarExtraItem>? extraItems { get; set; }
         }
@@ -222,6 +223,7 @@ public partial class App : Application
         public bool CustomMorphicBarsIsEnabled;
         public bool ResetSettingsIsEnabled;
         public bool SignInIsEnabled;
+        public ConfigurableFeatures.MorphicBarDefaultLocationOption MorphicBarDefaultLocation;
         public ConfigurableFeatures.MorphicBarVisibilityAfterLoginOption? MorphicBarVisibilityAfterLogin;
         public List<MorphicBarExtraItem> ExtraMorphicBarItems;
         public string? TelemetrySiteId;
@@ -258,7 +260,8 @@ public partial class App : Application
         // allow users to sign in to Morphic accounts
         result.SignInIsEnabled = true;
         //
-        // morphic bar (visibility and extra items)
+        // morphic bar (default location, visibility and extra items)
+        result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.BottomTrailing;
         result.MorphicBarVisibilityAfterLogin = null;
         result.ExtraMorphicBarItems = new List<MorphicBarExtraItem>();
 
@@ -423,6 +426,41 @@ public partial class App : Application
         if (deserializedJson.features?.signIn?.enabled is not null)
         {
             result.SignInIsEnabled = deserializedJson.features.signIn.enabled.Value;
+        }
+
+        // capture the desired default location of the MorphicBar
+        switch (deserializedJson.morphicBar?.defaultLocation)
+        {
+            case "topLeft":
+                result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.TopLeft;
+                break;
+            case "topRight":
+                result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.TopRight;
+                break;
+            case "bottomLeft":
+                result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.BottomLeft;
+                break;
+            case "bottomRight":
+                result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.BottomRight;
+                break;
+            //
+            case "topLeading":
+                result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.TopLeading;
+                break;
+            case "topTrailing":
+                result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.TopTrailing;
+                break;
+            case "bottomLeading":
+                result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.BottomLeading;
+                break;
+            case "bottomTrailing":
+                result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.BottomTrailing;
+                break;
+            default:
+                // sorry, we don't understand this visibility setting
+                // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
+                Logger?.LogError("Unknown morphicBar.defaultLocation setting: " + deserializedJson.morphicBar?.visibilityAfterLogin);
+                return result;
         }
 
         // capture the desired after-login (autorun) visibility of the MorphicBar

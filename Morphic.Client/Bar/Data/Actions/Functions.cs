@@ -2,9 +2,6 @@ namespace Morphic.Client.Bar.Data.Actions
 {
     using Microsoft.Extensions.Logging;
     using Morphic.Core;
-    using Morphic.WindowsNative.Speech;
-    using Settings.SettingsHandlers;
-    using Settings.SolutionsRegistry;
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
@@ -13,7 +10,6 @@ namespace Morphic.Client.Bar.Data.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using System.Windows;
-    using System.Windows.Automation.Text;
     using UI;
 
     [HasInternalFunctions]
@@ -276,7 +272,7 @@ namespace Morphic.Client.Bar.Data.Actions
                         // activate the target window (i.e. topmost/last-active window, rather than the MorphicBar); we will then capture the current selection in that window
                         // NOTE: ideally we would activate the last window as part of our atomic operation, but we really have no control over whether or not another application
                         //       or the user changes the activated window (and our internal code is also not set up to block us from moving activation/focus temporarily).
-                        await SelectionReader.Default.ActivateLastActiveWindow();
+                        await Morphic.WindowsNative.Speech.SelectionReader.Default.ActivateLastActiveWindowAsync();
 
                         // as a primary strategy, try using the built-in Windows functionality for capturing the current selection via UI automation
                         // NOTE: this does not work with some apps (such as Internet Explorer...but also others)
@@ -286,7 +282,7 @@ namespace Morphic.Client.Bar.Data.Actions
                         await s_captureTextSemaphore.WaitAsync();
                         try
                         {
-                            var getSelectedTextResult = Morphic.WindowsNative.UIAutomation.UIAutomationClient.GetSelectedText();
+                            var getSelectedTextResult = Morphic.WindowsNative.UIAutomation.UIAutomationSelectedTextScripts.GetSelectedText();
                             if (getSelectedTextResult.IsSuccess == true)
                             {
                                 selectedText = getSelectedTextResult.Value;
@@ -313,16 +309,16 @@ namespace Morphic.Client.Bar.Data.Actions
                             else
                             {
                                 // NOTE: we only log errors here, rather than returning an error condition to our caller; we don't return immediately here because we have a backup strategy (i.e. ctrl+c) which we employ if this strategy fails
-                                switch (getSelectedTextResult.Error!.Value)
+                                switch (getSelectedTextResult.Error!)
                                 {
-                                    case WindowsNative.UIAutomation.UIAutomationClient.CaptureSelectedTextError.Values.ComInterfaceInstantiationFailed:
+                                    case WindowsNative.UIAutomation.UIAutomationSelectedTextScripts.ICaptureSelectedTextError.ComInterfaceInstantiationFailed:
                                         App.Current.Logger.LogDebug("ReadAloud: Capture selected text via UI automation failed (com interface could not be instantiated)");
                                         break;
-                                    case WindowsNative.UIAutomation.UIAutomationClient.CaptureSelectedTextError.Values.TextRangeIsNull:
+                                    case WindowsNative.UIAutomation.UIAutomationSelectedTextScripts.ICaptureSelectedTextError.TextRangeIsNull:
                                         App.Current.Logger.LogDebug("ReadAloud: Capture selected text via UI automation returned a null text range; this is an unexpected error condition");
                                         break;
-                                    case WindowsNative.UIAutomation.UIAutomationClient.CaptureSelectedTextError.Values.Win32Error:
-                                        App.Current.Logger.LogDebug("ReadAloud: Capture selected text via UI automation resulted in win32 error code: " + getSelectedTextResult.Error!.Win32ErrorCode.ToString());
+                                    case WindowsNative.UIAutomation.UIAutomationSelectedTextScripts.ICaptureSelectedTextError.Win32Error(var win32ErrorCode):
+                                        App.Current.Logger.LogDebug("ReadAloud: Capture selected text via UI automation resulted in win32 error code: " + win32ErrorCode.ToString());
                                         break;
                                     default:
                                         throw new MorphicUnhandledErrorException();

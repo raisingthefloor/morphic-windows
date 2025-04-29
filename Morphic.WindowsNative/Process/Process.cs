@@ -279,18 +279,34 @@ public class Process
 
     public static int? GetProcessIdOrNullByProcessName(string processName)
     {
+        var allProcessIds = Process.GetProcessIdsByProcessName(processName);
+
+        if (allProcessIds.Count > 0)
+        {
+            return allProcessIds[0];
+        }
+        else
+        {
+            // could not get process id
+            return null;
+        }
+    }
+
+    public static List<int> GetProcessIdsByProcessName(string processName)
+    {
+        List<int> result = [];
+
         var processes = System.Diagnostics.Process.GetProcesses();
         foreach (var process in processes)
         {
             // NOTE: we do not check process.HasExited here, as we should never get any exited processes in a fresh process list (i.e. checking the property would consume unnecessary processor cycles)
             if (process.ProcessName == processName)
             {
-                return process.Id;
+                result.Add(process.Id);
             }
         }
 
-        // could not get process id
-        return null;
+        return result;
     }
 
     public static List<string> GetCurrentProcessNames()

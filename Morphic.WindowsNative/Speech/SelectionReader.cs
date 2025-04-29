@@ -92,9 +92,9 @@ public class SelectionReader
    /// Activates the window that was active before this application.
    /// </summary>
    /// <returns></returns>
-   public Task ActivateLastActiveWindow()
+   public async Task ActivateLastActiveWindowAsync()
    {
-       return Task.Run(() =>
+       await Task.Run(() =>
        {
            this.ActivateWindow(this.lastWindow);
        });

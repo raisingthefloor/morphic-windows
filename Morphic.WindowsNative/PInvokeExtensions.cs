@@ -73,5 +73,18 @@ internal class PInvokeExtensions
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     internal static extern Windows.Win32.Foundation.BOOL GetMonitorInfo(Windows.Win32.Graphics.Gdi.HMONITOR hMonitor, ref MONITORINFOEX lpmi);
 
+    // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowlongptrw
+    internal static IntPtr GetWindowLongPtr_IntPtr(Windows.Win32.Foundation.HWND hWnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX nIndex)
+    {
+        if (IntPtr.Size == 4)
+        {
+            return (nint)Windows.Win32.PInvoke.GetWindowLong(hWnd, nIndex);
+        }
+        else
+        {
+            return Windows.Win32.PInvoke.GetWindowLongPtr(hWnd, nIndex);
+        }
+    }
+
     #endregion winuser
 }
