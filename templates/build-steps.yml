@@ -4,25 +4,17 @@ parameters:
   runtimeIdentifier: ''  # win-x86, win-x64, or win-arm64
   defineConstants: ''  # Optional platform-specific constants
 
-steps:
-  variables:
-    # Base paths
-    - name: sourceDirectory
-      value: $(Build.SourcesDirectory)
-    - name: outputDirectory
-      value: $(System.DefaultWorkingDirectory)
-    
-    # Project paths (source locations)
-    - name: clientProjectPath
-      value: $(sourceDirectory)\Morphic.Client\Morphic.Client.csproj
-    - name: setupProjectPath
-      value: $(sourceDirectory)\Morphic.Setup\Morphic.Setup.wixproj
-    - name: setupEnterpriseProjectPath
-      value: $(sourceDirectory)\Morphic.Setup.Enterprise\Morphic.Setup.Enterprise.wixproj 
-  parameters:
-    platform: $(platform)
-    runtimeIdentifier: $(runtimeIdentifier)
+variables:
+  # Base paths
+  sourceDirectory: $(Build.SourcesDirectory)
+  outputDirectory: $(System.DefaultWorkingDirectory)
+  
+  # Project paths (source locations)
+  clientProjectPath: $(sourceDirectory)\Morphic.Client\Morphic.Client.csproj
+  setupProjectPath: $(sourceDirectory)\Morphic.Setup\Morphic.Setup.wixproj
+  setupEnterpriseProjectPath: $(sourceDirectory)\Morphic.Setup.Enterprise\Morphic.Setup.Enterprise.wixproj 
 
+steps:
   - task: UseDotNet@2
     displayName: 'Use .NET Runtime 6.0.25 (install for AuzreSignTool 4.0.1)'
     inputs:
