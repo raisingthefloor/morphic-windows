@@ -129,9 +129,9 @@ steps:
         -kvs "$(SigningClientSecret)"
         -kvc "$(SigningCertName)"
         -tr "$(TimestampUrl2)"
-        -v $(Build.ArtifactStagingDirectory)\${{ parameters.platform }}\$(buildConfiguration)\en-US\MorphicSetup.msi
+        -v $(Build.ArtifactStagingDirectory)\Morphic.Setup\bin\$(buildConfiguration)\${{ parameters.platform }}\en-US\MorphicSetup.msi
 
-  - publish: $(Build.ArtifactStagingDirectory)\${{ parameters.platform }}\$(buildConfiguration)\en-US\MorphicSetup.msi
+  - publish: $(Build.ArtifactStagingDirectory)\Morphic.Setup\bin\$(buildConfiguration)\${{ parameters.platform }}\en-US\MorphicSetup.msi
     displayName: "Cache MSI for upload (${{ parameters.platform }})"
     artifact: msi-${{ parameters.platform }}
 
@@ -159,9 +159,9 @@ steps:
         -kvs "$(SigningClientSecret)"
         -kvc "$(SigningCertName)"
         -tr "$(TimestampUrl2)"
-        -v $(Build.ArtifactStagingDirectory)\${{ parameters.platform }}\$(buildConfiguration)\en-US\MorphicEnterpriseSetup.msi
+        -v $(Build.ArtifactStagingDirectory)\Morphic.Setup\bin\$(buildConfiguration)\${{ parameters.platform }}\en-US\MorphicEnterpriseSetup.msi
 
-  - publish: $(Build.ArtifactStagingDirectory)\${{ parameters.platform }}\$(buildConfiguration)\en-US\MorphicEnterpriseSetup.msi
+  - publish: $(Build.ArtifactStagingDirectory)\Morphic.Setup\bin\$(buildConfiguration)\${{ parameters.platform }}\en-US\MorphicEnterpriseSetup.msi
     displayName: "Cache MSI for upload (${{ parameters.platform }} enterprise)"
     artifact: msi-${{ parameters.platform }}-enterprise
 
