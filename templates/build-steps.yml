@@ -129,9 +129,9 @@ steps:
         -kvs "$(SigningClientSecret)"
         -kvc "$(SigningCertName)"
         -tr "$(TimestampUrl2)"
-        -v $(Build.ArtifactStagingDirectory)\Morphic.Setup\bin\$(buildConfiguration)\${{ parameters.platform }}\en-US\MorphicSetup.msi
+        -v $(Build.SourcesDirectory)\Morphic.Setup\bin\$(buildConfiguration)\${{ parameters.platform }}\en-US\MorphicSetup.msi
 
-  - publish: $(Build.ArtifactStagingDirectory)\Morphic.Setup\bin\$(buildConfiguration)\${{ parameters.platform }}\en-US\MorphicSetup.msi
+  - publish: $(Build.SourcesDirectory)\Morphic.Setup\bin\$(buildConfiguration)\${{ parameters.platform }}\en-US\MorphicSetup.msi
     displayName: "Cache MSI for upload (${{ parameters.platform }})"
     artifact: msi-${{ parameters.platform }}
 
