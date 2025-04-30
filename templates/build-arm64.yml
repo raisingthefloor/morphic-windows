@@ -1,0 +1,9 @@
+# Build job for arm64 architecture
+jobs:
+  - job: build_arm64
+    steps:
+      - template: build-steps.yml
+        parameters:
+          platform: arm64
+          runtimeIdentifier: win-arm64
+          defineConstants: '' 

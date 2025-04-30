@@ -1,0 +1,9 @@
+# Build job for x64 architecture
+jobs:
+  - job: build_x64
+    steps:
+      - template: build-steps.yml
+        parameters:
+          platform: x64
+          runtimeIdentifier: win-x64
+          defineConstants: '' 

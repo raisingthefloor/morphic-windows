@@ -1,0 +1,175 @@
+# Common build steps used across different architectures
+parameters:
+  platform: ''  # x86, x64, or arm64
+  runtimeIdentifier: ''  # win-x86, win-x64, or win-arm64
+  defineConstants: ''  # Optional platform-specific constants
+
+steps:
+  - template: paths.yml
+    parameters:
+      platform: $(platform)
+      runtimeIdentifier: $(runtimeIdentifier)
+
+  - task: UseDotNet@2
+    displayName: 'Use .NET Runtime 6.0.25 (install for AuzreSignTool 4.0.1)'
+    inputs:
+      packageType: runtime
+      version: 6.0.25
+      installationPath: $(Agent.ToolsDirectory)/dotnet
+
+  - task: UseDotNet@2
+    displayName: 'Use .NET SDK 8.0.408'
+    inputs:
+      packageType: sdk
+      version: 8.0.408
+      installationPath: $(Agent.ToolsDirectory)/dotnet
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Install AzureSignTool 4.0.1'
+    inputs:
+      command: 'custom'
+      custom: 'tool'
+      arguments: 'install --global AzureSignTool --version 4.0.1'
+  
+  # Set a $(BUILD_TYPE) variable
+  - bash: |
+      BUILD_TYPE="Development"
+      if [[ "${BRANCH}" == *"staging/"* ]]; then
+        BUILD_TYPE="Staging"
+      elif [[ "${BRANCH}" == *"release/"* ]]; then
+        BUILD_TYPE="Production"
+      fi
+      echo "##vso[task.setvariable variable=BUILD_TYPE]${BUILD_TYPE}"
+    env:
+      BRANCH: $(Build.SourceBranch)
+      BRANCH_NAME: $(Build.SourceBranchName)
+          
+  - task: Bash@3
+    displayName: "write build info"
+    env:
+      BRANCH: $(Build.SourceBranch)
+      BRANCH_NAME: $(Build.SourceBranchName)
+      COMMIT: $(Build.SourceVersion)
+      BUILD_NUM: $(Build.BuildNumber)
+    inputs:
+      targetType: 'filePath'
+      filePath: set-build-info.sh
+
+  - task: MSBuild@1
+    displayName: "Build Morphic Client ($(platform))"
+    env:
+      VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
+    inputs:       
+      solution: $(clientProjectPath)
+      platform: '$(platform)'
+      configuration: '$(buildConfiguration)'
+      msbuildArguments: '/t:restore,build /p:RuntimeIdentifier=$(runtimeIdentifier) /p:BuildType=$(BUILD_TYPE) $(defineConstants)'
+
+  - task: MSBuild@1
+    displayName: "Publish Morphic Client ($(platform))"
+    env:
+      VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
+    inputs:       
+      solution: $(clientProjectPath)
+      platform: '$(platform)'
+      configuration: '$(buildConfiguration)'
+      msbuildArguments: '/t:publish /p:RuntimeIdentifier=$(runtimeIdentifier) /p:BuildType=$(BUILD_TYPE) $(defineConstants) /p:PublishDir=$(Build.ArtifactStagingDirectory)\publish\'
+
+  - task: CmdLine@2
+    displayName: 'sign morphic client exe ($(platform))'
+    inputs:
+      targetType: 'inline'
+      script: >
+        AzureSignTool sign
+        -d Morphic
+        -du "$(SigningURL)"
+        -kvu "$(SigningVaultURL)"
+        -kvi "$(SigningClientId)"
+        -kvs "$(SigningClientSecret)"
+        -kvt "$(AzureTenantId)"
+        -kvc "$(SigningCertName)"
+        -tr "$(TimestampUrl2)"
+        -v
+        $(Build.ArtifactStagingDirectory)\publish\Morphic.exe
+
+  - task: VSBuild@1
+    displayName: "restore installer dependencies"
+    env:
+      VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
+    inputs:
+      solution: $(setupProjectPath)
+      configuration: '$(buildConfiguration)'
+      msbuildArgs: '/t:restore'
+  
+  - task: VSBuild@1
+    displayName: "restore installer dependencies (enterprise)"
+    env:
+      VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
+    inputs:
+      solution: $(setupEnterpriseProjectPath)
+      configuration: '$(buildConfiguration)'
+      msbuildArgs: '/t:restore'
+          
+  - task: VSBuild@1
+    displayName: "build installer ($(platform))"
+    env:
+      VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
+    inputs:
+      solution: $(setupProjectPath)
+      platform: '$(platform)'
+      configuration: '$(buildConfiguration)'
+      msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false /p:ClientOutputDirectory=$(Build.ArtifactStagingDirectory)\publish /p:HeatDirectoryPath=$(Build.ArtifactStagingDirectory)\publish'
+
+  - task: CmdLine@2
+    displayName: 'sign installer ($(platform))'
+    inputs:
+      targetType: 'inline'
+      script: >
+        AzureSignTool sign
+        -d Morphic
+        -du "$(SigningURL)"
+        -kvu "$(SigningVaultURL)"
+        -kvi "$(SigningClientId)"
+        -kvt "$(AzureTenantId)"
+        -kvs "$(SigningClientSecret)"
+        -kvc "$(SigningCertName)"
+        -tr "$(TimestampUrl2)"
+        -v $(Build.ArtifactStagingDirectory)\$(platform)\$(buildConfiguration)\en-US\MorphicSetup.msi
+
+  - publish: $(Build.ArtifactStagingDirectory)\$(platform)\$(buildConfiguration)\en-US\MorphicSetup.msi
+    displayName: "Cache MSI for upload ($(platform))"
+    artifact: msi-$(platform)
+
+  - task: VSBuild@1
+    displayName: "build installer ($(platform) enterprise)"
+    env:
+      VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
+    inputs:
+      solution: $(setupEnterpriseProjectPath)
+      platform: '$(platform)'
+      configuration: '$(buildConfiguration)'
+      msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false /p:ClientOutputDirectory=$(Build.ArtifactStagingDirectory)\publish /p:HeatDirectoryPath=$(Build.ArtifactStagingDirectory)\publish'
+
+  - task: CmdLine@2
+    displayName: 'sign installer ($(platform) enterprise)'
+    inputs:
+      targetType: 'inline'
+      script: >
+        AzureSignTool sign
+        -d Morphic
+        -du "$(SigningURL)"
+        -kvu "$(SigningVaultURL)"
+        -kvi "$(SigningClientId)"
+        -kvt "$(AzureTenantId)"
+        -kvs "$(SigningClientSecret)"
+        -kvc "$(SigningCertName)"
+        -tr "$(TimestampUrl2)"
+        -v $(Build.ArtifactStagingDirectory)\$(platform)\$(buildConfiguration)\en-US\MorphicEnterpriseSetup.msi
+
+  - publish: $(Build.ArtifactStagingDirectory)\$(platform)\$(buildConfiguration)\en-US\MorphicEnterpriseSetup.msi
+    displayName: "Cache MSI for upload ($(platform) enterprise)"
+    artifact: msi-$(platform)-enterprise
+
+  - publish: $(Build.ArtifactStagingDirectory)\publish\BuildVersion.txt
+    displayName: "save build version numbers"
+    artifact: build-version 

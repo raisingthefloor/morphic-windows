@@ -1,0 +1,9 @@
+# Build job for x86 architecture
+jobs:
+  - job: build_x86
+    steps:
+      - template: build-steps.yml
+        parameters:
+          platform: x86
+          runtimeIdentifier: win-x86
+          defineConstants: '/p:DefineConstants="PLATFORM_X86"' 

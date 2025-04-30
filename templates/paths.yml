@@ -1,0 +1,19 @@
+# Common path variables used across the pipeline
+parameters:
+  platform: ''  # x86, x64, or arm64
+  runtimeIdentifier: ''  # win-x86, win-x64, or win-arm64
+
+variables:
+  # Base paths
+  - name: sourceDirectory
+    value: $(Build.SourcesDirectory)
+  - name: outputDirectory
+    value: $(System.DefaultWorkingDirectory)
+  
+  # Project paths (source locations)
+  - name: clientProjectPath
+    value: $(sourceDirectory)\Morphic.Client\Morphic.Client.csproj
+  - name: setupProjectPath
+    value: $(sourceDirectory)\Morphic.Setup\Morphic.Setup.wixproj
+  - name: setupEnterpriseProjectPath
+    value: $(sourceDirectory)\Morphic.Setup.Enterprise\Morphic.Setup.Enterprise.wixproj 

@@ -1,0 +1,16 @@
+# Common variables used across the pipeline
+variables:
+  # must be created in the azure UI under Pipelines > Library and specify accessKey, secretKey, region, and bucket
+  - group: 's3-public-bucket-upload'
+  # Holds all signing-related variables. Provide them the same was as the var group above.
+  - group: 'windows-code-sign'
+  - name: solution
+    value: '**/*.sln'
+  - name: projects
+    value: '**/*proj'
+  - name: buildPlatform
+    value: 'Any CPU'
+  - name: buildConfiguration
+    value: 'Release'
+  - name: versionBuildComponents
+    value: '.$(Build.BuildNumber)' 
