@@ -27,7 +27,7 @@ pool:
   vmImage: 'windows-2022'
 
 variables:
-  - template: templates/variables.yml
+- template: templates/variables.yml
 
 #resources:
 #  repositories:
