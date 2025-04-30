@@ -165,6 +165,6 @@ steps:
     displayName: "Cache MSI for upload (${{ parameters.platform }} enterprise)"
     artifact: msi-${{ parameters.platform }}-enterprise
 
-  - publish: $(Build.ArtifactStagingDirectory)\publish\BuildVersion.txt
+  - publish: $(Build.SourcesDirectory)\Morphic.Client\BuildVersion.txt
     displayName: "save build version numbers"
     artifact: build-version 
