@@ -3,11 +3,6 @@ parameters:
   platform: ''  # x86, x64, or arm64
   runtimeIdentifier: ''  # win-x86, win-x64, or win-arm64
   defineConstants: ''  # Optional platform-specific constants
-  sourceDirectory: $(Build.SourcesDirectory)
-  outputDirectory: $(System.DefaultWorkingDirectory)
-  clientProjectPath: $(Build.SourcesDirectory)\Morphic.Client\Morphic.Client.csproj
-  setupProjectPath: $(Build.SourcesDirectory)\Morphic.Setup\Morphic.Setup.wixproj
-  setupEnterpriseProjectPath: $(Build.SourcesDirectory)\Morphic.Setup.Enterprise\Morphic.Setup.Enterprise.wixproj
 
 steps:
   - task: UseDotNet@2
@@ -60,7 +55,7 @@ steps:
     env:
       VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
     inputs:       
-      solution: $(clientProjectPath)
+      solution: '$(Build.SourcesDirectory)\Morphic.Client\Morphic.Client.csproj'
       platform: '$(platform)'
       configuration: '$(buildConfiguration)'
       msbuildArguments: '/t:restore,build /p:RuntimeIdentifier=$(runtimeIdentifier) /p:BuildType=$(BUILD_TYPE) $(defineConstants)'
@@ -70,7 +65,7 @@ steps:
     env:
       VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
     inputs:       
-      solution: $(clientProjectPath)
+      solution: '$(Build.SourcesDirectory)\Morphic.Client\Morphic.Client.csproj'
       platform: '$(platform)'
       configuration: '$(buildConfiguration)'
       msbuildArguments: '/t:publish /p:RuntimeIdentifier=$(runtimeIdentifier) /p:BuildType=$(BUILD_TYPE) $(defineConstants) /p:PublishDir=$(Build.ArtifactStagingDirectory)\publish\'
@@ -97,7 +92,7 @@ steps:
     env:
       VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
     inputs:
-      solution: $(setupProjectPath)
+      solution: '$(Build.SourcesDirectory)\Morphic.Setup\Morphic.Setup.wixproj'
       configuration: '$(buildConfiguration)'
       msbuildArgs: '/t:restore'
   
@@ -106,7 +101,7 @@ steps:
     env:
       VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
     inputs:
-      solution: $(setupEnterpriseProjectPath)
+      solution: '$(Build.SourcesDirectory)\Morphic.Setup.Enterprise\Morphic.Setup.Enterprise.wixproj'
       configuration: '$(buildConfiguration)'
       msbuildArgs: '/t:restore'
           
@@ -115,7 +110,7 @@ steps:
     env:
       VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
     inputs:
-      solution: $(setupProjectPath)
+      solution: '$(Build.SourcesDirectory)\Morphic.Setup\Morphic.Setup.wixproj'
       platform: '$(platform)'
       configuration: '$(buildConfiguration)'
       msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false /p:ClientOutputDirectory=$(Build.ArtifactStagingDirectory)\publish /p:HeatDirectoryPath=$(Build.ArtifactStagingDirectory)\publish'
@@ -145,7 +140,7 @@ steps:
     env:
       VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
     inputs:
-      solution: $(setupEnterpriseProjectPath)
+      solution: '$(Build.SourcesDirectory)\Morphic.Setup.Enterprise\Morphic.Setup.Enterprise.wixproj'
       platform: '$(platform)'
       configuration: '$(buildConfiguration)'
       msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false /p:ClientOutputDirectory=$(Build.ArtifactStagingDirectory)\publish /p:HeatDirectoryPath=$(Build.ArtifactStagingDirectory)\publish'
