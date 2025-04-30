@@ -148,8 +148,7 @@ stages:
               -kvt "$(AzureTenantId)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
-              -v
-                $(Build.ArtifactStagingDirectory)\publish\Morphic.exe
+              -v $(Build.ArtifactStagingDirectory)\publish\Morphic.exe
 
         - task: VSBuild@1
           displayName: "restore installer dependencies"
@@ -321,8 +320,7 @@ stages:
               -kvt "$(AzureTenantId)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
-              -v
-              $(Build.ArtifactStagingDirectory)\publish\Morphic.exe
+              -v $(Build.ArtifactStagingDirectory)\publish\Morphic.exe
 
         - task: VSBuild@1
           displayName: "restore installer dependencies"
@@ -463,8 +461,7 @@ stages:
               -kvt "$(AzureTenantId)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
-              -v
-              $(Build.ArtifactStagingDirectory)\publish\Morphic.exe
+              -v $(Build.ArtifactStagingDirectory)\publish\Morphic.exe
 
         - task: VSBuild@1
           displayName: "restore installer dependencies"
