@@ -1,0 +1,175 @@
+# Job for uploading artifacts to S3
+jobs:
+  - job: publish_installer
+    pool:
+      vmImage: "ubuntu-22.04"
+    steps:
+#          # We actually want to operate in the web project so we can update URLs (when necessary)
+#          - checkout: deploy-morphicweb
+#            persistCredentials: true
+#            path: deploy-morphicweb
+
+      - download: current
+        artifact: msi-x86
+
+      - download: current
+        artifact: msi-x86-enterprise
+
+      - download: current
+        artifact: msi-x64
+
+      - download: current
+        artifact: msi-x64-enterprise
+
+      - download: current
+        artifact: msi-arm64
+
+      - download: current
+        artifact: msi-arm64-enterprise
+
+      - download: current
+        artifact: build-version
+
+#          - task: DownloadPipelineArtifact@2
+#            displayName: "Capture MSI for upload (x86)"
+#            inputs:
+#              source: 'current'
+#              artifact: msi-x86
+#              path: msi-x86
+
+#          - task: DownloadPipelineArtifact@2
+#            displayName: "Capture MSI for upload (x64)"
+#            inputs:
+#              source: 'current'
+#              artifact: msi-x64
+#              path: msi-x64
+
+#          - task: DownloadPipelineArtifact@2
+#            displayName: "Capture MSI for upload (arm64)"
+#            inputs:
+#              source: 'current'
+#              artifact: msi-arm64
+#              path: msi-arm64
+
+      - task: Bash@3
+        displayName: "upload MSIs to s3"
+        env:
+          AWS_ACCESS_KEY_ID: $(accessKey)
+          AWS_SECRET_ACCESS_KEY: $(secretKey)
+          AWS_DEFAULT_REGION: $(region)
+          BUCKET: $(bucket)
+          BRANCH: $(Build.SourceBranch)
+          BRANCH_NAME: $(Build.SourceBranchName)
+        inputs:
+          targetType: 'inline'
+          script: |
+            # automatically exit if any command returns an error exit code
+            set -e
+            # print all commands to the terminal output
+            set -x
+
+            EXTRA_ARGS=""
+            S3_BUILD_OPERATING_SYSTEM="win"
+            S3_BUILD_ARCHITECTURE=""
+            S3_BUILD_TYPE=""
+
+            if [[ "${BRANCH_NAME}" == "master" ]]; then
+              echo "detected master build"
+              S3_BUILD_TYPE="edge"
+              EXTRA_ARGS="--expires $(date -d '+42 days' --iso-8601=seconds)"
+            elif [[ "${BRANCH}" == *"staging/"* ]]; then
+              echo "detected staging build"
+              S3_BUILD_TYPE="staging"
+              EXTRA_ARGS="--expires $(date -d '+14 days' --iso-8601=seconds)"
+            elif [[ "${BRANCH}" == *"release/"* ]]; then
+              echo "detected release build"
+              S3_BUILD_TYPE="stable"
+            else
+              echo "detected PR build"
+              S3_BUILD_TYPE="internal"
+              EXTRA_ARGS="--expires $(date -d '+2 days' --iso-8601=seconds)"
+            fi
+
+            S3_PUBLISHED_HTTP_URL="https://d23vryjv7k8eyb.cloudfront.net"
+
+            publishInstaller() {
+              VERSION=$(sed -n 1p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
+              ASSEMBLY_VERSION=$(sed -n 2p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
+              LOCAL_MSI_SOURCE="${AGENT_BUILDDIRECTORY}/${LOCAL_MSI_DIR}/${MSI_NAME_BASE}.msi"
+              LOCAL_APPCAST_SOURCE="${AGENT_BUILDDIRECTORY}/${MSI_NAME_BASE}-v${VERSION}.appcast.xml"
+              S3_MSI_OBJECT_NAME="${S3_BUILD_OPERATING_SYSTEM}/${S3_BUILD_ARCHITECTURE}/${S3_BUILD_TYPE}/${MSI_NAME_BASE}-v${VERSION}-${S3_BUILD_ARCHITECTURE}.msi"
+              S3_APPCAST_OBJECT_NAME="${S3_BUILD_OPERATING_SYSTEM}/${S3_BUILD_ARCHITECTURE}/${S3_BUILD_TYPE}/${MSI_NAME_BASE}-v${VERSION}.appcast.xml"
+
+              cat > "${LOCAL_APPCAST_SOURCE}" <<EOF
+            <?xml version="1.0" encoding="utf-8"?>
+            <item>
+                <version>${ASSEMBLY_VERSION}</version>
+                <url>${S3_PUBLISHED_HTTP_URL}/${S3_MSI_OBJECT_NAME}</url>
+            </item>
+            EOF
+
+              echo ${S3_PUBLISHED_HTTP_URL}/${S3_APPCAST_OBJECT_NAME}
+              cat "${LOCAL_APPCAST_SOURCE}"
+
+              # debug: output the contents of the build directory
+              ls -al ${AGENT_BUILDDIRECTORY}
+              aws s3 cp $EXTRA_ARGS "${LOCAL_MSI_SOURCE}" "s3://${BUCKET}/${S3_MSI_OBJECT_NAME}"
+              aws s3 cp $EXTRA_ARGS "${LOCAL_APPCAST_SOURCE}" "s3://${BUCKET}/${S3_APPCAST_OBJECT_NAME}"
+            }
+
+            echo "Upload MSI to S3 (x86)"
+            MSI_NAME_BASE="MorphicSetup"
+            LOCAL_MSI_DIR="msi-x86"
+            S3_BUILD_ARCHITECTURE="x86"
+            publishInstaller
+
+            echo "Upload MSI to S3 (x86 enterprise)"
+            MSI_NAME_BASE="MorphicEnterpriseSetup"
+            LOCAL_MSI_DIR="msi-x86-enterprise"
+            S3_BUILD_ARCHITECTURE="x86"
+            publishInstaller
+
+            echo "Upload MSI to S3 (x64)"
+            MSI_NAME_BASE="MorphicSetup"
+            LOCAL_MSI_DIR="msi-x64"
+            S3_BUILD_ARCHITECTURE="x64"
+            publishInstaller
+
+            echo "Upload MSI to S3 (x64 enterprise)"
+            MSI_NAME_BASE="MorphicEnterpriseSetup"
+            LOCAL_MSI_DIR="msi-x64-enterprise"
+            S3_BUILD_ARCHITECTURE="x64"
+            publishInstaller
+
+            echo "Upload MSI to S3 (arm64)"
+            MSI_NAME_BASE="MorphicSetup"
+            LOCAL_MSI_DIR="msi-arm64"
+            S3_BUILD_ARCHITECTURE="arm64"
+            publishInstaller
+
+            echo "Upload MSI to S3 (arm64 enterprise)"
+            MSI_NAME_BASE="MorphicEnterpriseSetup"
+            LOCAL_MSI_DIR="msi-arm64-enterprise"
+            S3_BUILD_ARCHITECTURE="arm64"
+            publishInstaller
+
+            MORPHIC_S3_MSI_OBJECT_NAME=$S3_MSI_OBJECT_NAME
+            MORPHIC_S3_APPCAST_OBJECT_NAME=$S3_APPCAST_OBJECT_NAME
+
+#                # TODO: do we want this to update staging and prod automatically, depending on branch?
+#                if [[ "${BRANCH_NAME}" == "master" ]]; then
+#                  echo "updating dev environment urls"
+#                  # azure checks out headlessly, so we need to swap to the branch
+#                  git checkout ${BRANCH_NAME}
+#
+#                  TO_EDIT=environments/dev/patches/set-env.yaml
+#
+#                  # client
+#                  go run update-env-var.go ${TO_EDIT} "MORPHIC_WINDOWS_DOWNLOAD_URL" "${S3_PUBLISHED_HTTP_URL}/${MORPHIC_S3_MSI_OBJECT_NAME}"
+#                  go run update-env-var.go ${TO_EDIT} "MORPHIC_WINDOWS_APPCAST_URL" "${S3_PUBLISHED_HTTP_URL}/${MORPHIC_S3_APPCAST_OBJECT_NAME}"
+#
+#                  git config --global user.email "buildmaster@raisingthefloor.org"
+#                  git config --global user.name "buildmaster"
+#                  git commit ${TO_EDIT} -m "buildmaster: updating windows client urls"
+#                  git push
+#                fi 

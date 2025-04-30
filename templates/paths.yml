@@ -1,0 +1,14 @@
+variables:
+  # Base paths
+  - name: sourceDirectory
+    value: $(Build.SourcesDirectory)
+  - name: outputDirectory
+    value: $(System.DefaultWorkingDirectory)
+  
+  # Project paths (source locations)
+  - name: clientProjectPath
+    value: $(sourceDirectory)\Morphic.Client\Morphic.Client.csproj
+  - name: setupProjectPath
+    value: $(sourceDirectory)\Morphic.Setup\Morphic.Setup.wixproj
+  - name: setupEnterpriseProjectPath
+    value: $(sourceDirectory)\Morphic.Setup.Enterprise\Morphic.Setup.Enterprise.wixproj 
