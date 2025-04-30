@@ -3,16 +3,11 @@ parameters:
   platform: ''  # x86, x64, or arm64
   runtimeIdentifier: ''  # win-x86, win-x64, or win-arm64
   defineConstants: ''  # Optional platform-specific constants
-
-variables:
-  # Base paths
   sourceDirectory: $(Build.SourcesDirectory)
   outputDirectory: $(System.DefaultWorkingDirectory)
-  
-  # Project paths (source locations)
-  clientProjectPath: $(sourceDirectory)\Morphic.Client\Morphic.Client.csproj
-  setupProjectPath: $(sourceDirectory)\Morphic.Setup\Morphic.Setup.wixproj
-  setupEnterpriseProjectPath: $(sourceDirectory)\Morphic.Setup.Enterprise\Morphic.Setup.Enterprise.wixproj 
+  clientProjectPath: $(Build.SourcesDirectory)\Morphic.Client\Morphic.Client.csproj
+  setupProjectPath: $(Build.SourcesDirectory)\Morphic.Setup\Morphic.Setup.wixproj
+  setupEnterpriseProjectPath: $(Build.SourcesDirectory)\Morphic.Setup.Enterprise\Morphic.Setup.Enterprise.wixproj
 
 steps:
   - task: UseDotNet@2
