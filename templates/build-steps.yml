@@ -51,27 +51,27 @@ steps:
       filePath: set-build-info.sh
 
   - task: MSBuild@1
-    displayName: "Build Morphic Client ($(platform))"
+    displayName: "Build Morphic Client (${{ parameters.platform }})"
     env:
       VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
     inputs:       
       solution: '$(Build.SourcesDirectory)\Morphic.Client\Morphic.Client.csproj'
-      platform: '$(platform)'
+      platform: '${{ parameters.platform }}'
       configuration: '$(buildConfiguration)'
-      msbuildArguments: '/t:restore,build /p:RuntimeIdentifier=$(runtimeIdentifier) /p:BuildType=$(BUILD_TYPE) $(defineConstants)'
+      msbuildArguments: '/t:restore,build /p:RuntimeIdentifier=${{ parameters.runtimeIdentifier }} /p:BuildType=$(BUILD_TYPE) ${{ parameters.defineConstants }}'
 
   - task: MSBuild@1
-    displayName: "Publish Morphic Client ($(platform))"
+    displayName: "Publish Morphic Client (${{ parameters.platform }})"
     env:
       VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
     inputs:       
       solution: '$(Build.SourcesDirectory)\Morphic.Client\Morphic.Client.csproj'
-      platform: '$(platform)'
+      platform: '${{ parameters.platform }}'
       configuration: '$(buildConfiguration)'
-      msbuildArguments: '/t:publish /p:RuntimeIdentifier=$(runtimeIdentifier) /p:BuildType=$(BUILD_TYPE) $(defineConstants) /p:PublishDir=$(Build.ArtifactStagingDirectory)\publish\'
+      msbuildArguments: '/t:publish /p:RuntimeIdentifier=${{ parameters.runtimeIdentifier }} /p:BuildType=$(BUILD_TYPE) ${{ parameters.defineConstants }} /p:PublishDir=$(Build.ArtifactStagingDirectory)\publish\'
 
   - task: CmdLine@2
-    displayName: 'sign morphic client exe ($(platform))'
+    displayName: 'sign morphic client exe (${{ parameters.platform }})'
     inputs:
       targetType: 'inline'
       script: >
@@ -106,17 +106,17 @@ steps:
       msbuildArgs: '/t:restore'
           
   - task: VSBuild@1
-    displayName: "build installer ($(platform))"
+    displayName: "build installer (${{ parameters.platform }})"
     env:
       VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
     inputs:
       solution: '$(Build.SourcesDirectory)\Morphic.Setup\Morphic.Setup.wixproj'
-      platform: '$(platform)'
+      platform: '${{ parameters.platform }}'
       configuration: '$(buildConfiguration)'
       msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false /p:ClientOutputDirectory=$(Build.ArtifactStagingDirectory)\publish /p:HeatDirectoryPath=$(Build.ArtifactStagingDirectory)\publish'
 
   - task: CmdLine@2
-    displayName: 'sign installer ($(platform))'
+    displayName: 'sign installer (${{ parameters.platform }})'
     inputs:
       targetType: 'inline'
       script: >
@@ -129,24 +129,24 @@ steps:
         -kvs "$(SigningClientSecret)"
         -kvc "$(SigningCertName)"
         -tr "$(TimestampUrl2)"
-        -v $(Build.ArtifactStagingDirectory)\$(platform)\$(buildConfiguration)\en-US\MorphicSetup.msi
+        -v $(Build.ArtifactStagingDirectory)\${{ parameters.platform }}\$(buildConfiguration)\en-US\MorphicSetup.msi
 
-  - publish: $(Build.ArtifactStagingDirectory)\$(platform)\$(buildConfiguration)\en-US\MorphicSetup.msi
-    displayName: "Cache MSI for upload ($(platform))"
-    artifact: msi-$(platform)
+  - publish: $(Build.ArtifactStagingDirectory)\${{ parameters.platform }}\$(buildConfiguration)\en-US\MorphicSetup.msi
+    displayName: "Cache MSI for upload (${{ parameters.platform }})"
+    artifact: msi-${{ parameters.platform }}
 
   - task: VSBuild@1
-    displayName: "build installer ($(platform) enterprise)"
+    displayName: "build installer (${{ parameters.platform }} enterprise)"
     env:
       VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
     inputs:
       solution: '$(Build.SourcesDirectory)\Morphic.Setup.Enterprise\Morphic.Setup.Enterprise.wixproj'
-      platform: '$(platform)'
+      platform: '${{ parameters.platform }}'
       configuration: '$(buildConfiguration)'
       msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false /p:ClientOutputDirectory=$(Build.ArtifactStagingDirectory)\publish /p:HeatDirectoryPath=$(Build.ArtifactStagingDirectory)\publish'
 
   - task: CmdLine@2
-    displayName: 'sign installer ($(platform) enterprise)'
+    displayName: 'sign installer (${{ parameters.platform }} enterprise)'
     inputs:
       targetType: 'inline'
       script: >
@@ -159,11 +159,11 @@ steps:
         -kvs "$(SigningClientSecret)"
         -kvc "$(SigningCertName)"
         -tr "$(TimestampUrl2)"
-        -v $(Build.ArtifactStagingDirectory)\$(platform)\$(buildConfiguration)\en-US\MorphicEnterpriseSetup.msi
+        -v $(Build.ArtifactStagingDirectory)\${{ parameters.platform }}\$(buildConfiguration)\en-US\MorphicEnterpriseSetup.msi
 
-  - publish: $(Build.ArtifactStagingDirectory)\$(platform)\$(buildConfiguration)\en-US\MorphicEnterpriseSetup.msi
-    displayName: "Cache MSI for upload ($(platform) enterprise)"
-    artifact: msi-$(platform)-enterprise
+  - publish: $(Build.ArtifactStagingDirectory)\${{ parameters.platform }}\$(buildConfiguration)\en-US\MorphicEnterpriseSetup.msi
+    displayName: "Cache MSI for upload (${{ parameters.platform }} enterprise)"
+    artifact: msi-${{ parameters.platform }}-enterprise
 
   - publish: $(Build.ArtifactStagingDirectory)\publish\BuildVersion.txt
     displayName: "save build version numbers"
