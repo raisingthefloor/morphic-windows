@@ -143,7 +143,7 @@ steps:
       solution: '$(Build.SourcesDirectory)\Morphic.Setup.Enterprise\Morphic.Setup.Enterprise.wixproj'
       platform: '${{ parameters.platform }}'
       configuration: '$(buildConfiguration)'
-      msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false /p:ClientOutputDirectory=$(Build.ArtifactStagingDirectory)\publish /p:HeatDirectoryPath=$(Build.ArtifactStagingDirectory)\publish'
+      msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false /p:ClientOutputPath=$(Build.ArtifactStagingDirectory)\publish /p:HeatDirectoryPath=$(Build.ArtifactStagingDirectory)\publish'
 
   - task: CmdLine@2
     displayName: 'sign installer (${{ parameters.platform }} enterprise)'

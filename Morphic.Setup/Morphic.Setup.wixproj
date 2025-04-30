@@ -41,16 +41,18 @@
     <PackageReference Include="WixToolset.UI.wixext" Version="4.0.4" />
   </ItemGroup>
   <PropertyGroup>
-    <DefineConstants>ClientOutputDirectory=$(SolutionDir)Morphic.Client\bin\$(Platform)\$(Configuration)\net8.0-windows10.0.22621.0\win-$(Platform)\publish\</DefineConstants>
+    <ClientOutputPath Condition="'$(ClientOutputPath)' == ''">$(SolutionDir)Morphic.Client\bin\$(Platform)\$(Configuration)\net8.0-windows10.0.22621.0\win-$(Platform)\publish\</ClientOutputPath>
     <HeatDirectoryPath Condition="'$(HeatDirectoryPath)' == ''">$(SolutionDir)Morphic.Client\bin\$(Platform)\$(Configuration)\net8.0-windows10.0.22621.0\win-$(Platform)\publish</HeatDirectoryPath>
+    <DefineConstants>ClientOutputDirectory=$(ClientOutputPath)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <DefineConstants>ClientOutputDirectory=..\Morphic.Client\bin\$(Platform)\$(Configuration)\net8.0-windows10.0.22621.0\win-$(Platform)\publish\</DefineConstants>
-    <HeatDirectoryPath Condition="'$(HeatDirectoryPath)' == ''">..\Morphic.Client\bin\$(Platform)\$(Configuration)\net8.0-windows10.0.22621.0\win-$(Platform)\publish</HeatDirectoryPath>
+    <ClientOutputPath Condition="'$(ClientOutputPath)' == ''">$(SolutionDir)Morphic.Client\bin\$(Platform)\$(Configuration)\net8.0-windows10.0.22621.0\win-$(Platform)\publish\</ClientOutputPath>
+    <HeatDirectoryPath Condition="'$(HeatDirectoryPath)' == ''">$(SolutionDir)Morphic.Client\bin\$(Platform)\$(Configuration)\net8.0-windows10.0.22621.0\win-$(Platform)\publish</HeatDirectoryPath>
+    <DefineConstants>ClientOutputDirectory=$(ClientOutputPath)</DefineConstants>
   </PropertyGroup>
   <Target Name="AfterPreBuild" AfterTargets="PreBuildEvent">
     <HeatDirectory Directory="$(HeatDirectoryPath)" PreprocessorVariable="var.ClientOutputDirectory" OutputFile="Generated.wxs" ComponentGroupName="GeneratedComponents" DirectoryRefId="INSTALLFOLDER" AutogenerateGuids="true" ToolPath="$(WixToolPath)" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" />
