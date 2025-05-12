@@ -287,7 +287,6 @@ stages:
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
           inputs:       
             solution: '$(Build.SourcesDirectory)\Morphic.Client\Morphic.Client.csproj'
-            platform: 'x64'
             configuration: '$(buildConfiguration)'
             msbuildArguments: '/t:publish /p:RuntimeIdentifier=win-x64 /p:BuildType=$(BUILD_TYPE)'
 
