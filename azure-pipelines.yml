@@ -200,9 +200,9 @@ stages:
               -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
-              -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x86\en-US\MorphicSetup.msi
+              -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\$(buildConfiguration)\x86\en-US\MorphicSetup.msi
 
-        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x86\en-US\MorphicSetup.msi
+        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\$(buildConfiguration)\x86\en-US\MorphicSetup.msi
           displayName: "Cache MSI for upload (x86)"
           artifact: msi-x86
 
@@ -237,9 +237,9 @@ stages:
               -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
-              -v $(System.DefaultWorkingDirectory)\Morphic.Setup.Enterprise\bin\Release\x86\en-US\MorphicEnterpriseSetup.msi
+              -v $(System.DefaultWorkingDirectory)\Morphic.Setup.Enterprise\bin\$(buildConfiguration)\x86\en-US\MorphicEnterpriseSetup.msi
 
-        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup.Enterprise\bin\Release\x86\en-US\MorphicEnterpriseSetup.msi
+        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup.Enterprise\bin\$(buildConfiguration)\x86\en-US\MorphicEnterpriseSetup.msi
           displayName: "Cache MSI for upload (x86 enterprise)"
           artifact: msi-x86-enterprise
 
@@ -373,9 +373,9 @@ stages:
               -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
-              -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\en-US\MorphicSetup.msi
+              -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\$(buildConfiguration)\x64\en-US\MorphicSetup.msi
 
-        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\en-US\MorphicSetup.msi
+        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\$(buildConfiguration)\x64\en-US\MorphicSetup.msi
           displayName: "Cache MSI for upload (x64)"
           artifact: msi-x64
 
@@ -410,9 +410,9 @@ stages:
               -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
-              -v $(System.DefaultWorkingDirectory)\Morphic.Setup.Enterprise\bin\Release\x64\en-US\MorphicEnterpriseSetup.msi
+              -v $(System.DefaultWorkingDirectory)\Morphic.Setup.Enterprise\bin\$(buildConfiguration)\x64\en-US\MorphicEnterpriseSetup.msi
 
-        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup.Enterprise\bin\Release\x64\en-US\MorphicEnterpriseSetup.msi
+        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup.Enterprise\bin\$(buildConfiguration)\x64\en-US\MorphicEnterpriseSetup.msi
           displayName: "Cache MSI for upload (x64 enterprise)"
           artifact: msi-x64-enterprise
 
@@ -515,9 +515,9 @@ stages:
               -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
-              -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\arm64\en-US\MorphicSetup.msi
+              -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\$(buildConfiguration)\arm64\en-US\MorphicSetup.msi
 
-        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\arm64\en-US\MorphicSetup.msi
+        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\$(buildConfiguration)\arm64\en-US\MorphicSetup.msi
           displayName: "Cache MSI for upload (arm64)"
           artifact: msi-arm64
 
@@ -552,9 +552,9 @@ stages:
               -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
-              -v $(System.DefaultWorkingDirectory)\Morphic.Setup.Enterprise\bin\Release\arm64\en-US\MorphicEnterpriseSetup.msi
+              -v $(System.DefaultWorkingDirectory)\Morphic.Setup.Enterprise\bin\$(buildConfiguration)\arm64\en-US\MorphicEnterpriseSetup.msi
 
-        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup.Enterprise\bin\Release\arm64\en-US\MorphicEnterpriseSetup.msi
+        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup.Enterprise\bin\$(buildConfiguration)\arm64\en-US\MorphicEnterpriseSetup.msi
           displayName: "Cache MSI for upload (arm64 enterprise)"
           artifact: msi-arm64-enterprise
 
