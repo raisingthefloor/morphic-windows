@@ -1,54 +1,54 @@
-﻿<Project Sdk="WixToolset.Sdk/4.0.1">
-    <PropertyGroup>
-        <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-    </PropertyGroup>
-    <PropertyGroup>
-        <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
-        <OutputName>MorphicEnterpriseSetup</OutputName>
-        <OutputPath>bin\$(Configuration)\$(Platform)\</OutputPath>
-        <IntermediateOutputPath>obj\$(Configuration)\$(Platform)\</IntermediateOutputPath>
-        <Name>Morphic.Setup.Enterprise</Name>
-        <BuildType Condition="'$(BuildType)' == '' ">Development</BuildType>
-    </PropertyGroup>
-    <!-- WiX tools are 32bit EXEs, so run them out-of-proc when MSBuild is not 32bit. -->
-    <PropertyGroup>
-        <RunWixToolsOutOfProc Condition=" '$(PROCESSOR_ARCHITECTURE)'!='x86' ">true</RunWixToolsOutOfProc>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-        <DefineConstants>Debug</DefineConstants>
-    </PropertyGroup>
-    <ItemGroup>
-        <Compile Include="Product.wxs" />
-        <Compile Include="Generated.wxs" />
-    </ItemGroup>
-    <ItemGroup>
-        <ProjectReference Include="..\Morphic.Client\Morphic.Client.csproj">
-            <Name>Morphic.Client</Name>
-            <Project>{2485b22b-5c46-46f1-a466-f8a5b7e28c64}</Project>
-            <Private>True</Private>
-            <DoNotHarvest>True</DoNotHarvest>
-            <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
-            <RefTargetDir>INSTALLFOLDER</RefTargetDir>
-        </ProjectReference>
-    </ItemGroup>
-    <ItemGroup>
-        <Content Include="License.rtf" />
-    </ItemGroup>
-    <ItemGroup>
-        <PackageReference Include="WixToolset.Heat" Version="4.0.1" />
-        <PackageReference Include="WixToolset.Util.wixext" Version="4.0.1" />
-        <PackageReference Include="WixToolset.UI.wixext" Version="4.0.1" />
-    </ItemGroup>
-    <PropertyGroup>
-        <ClientOutputPath Condition="'$(ClientOutputPath)' == ''">$(SolutionDir)Morphic.Client\bin\$(Platform)\$(Configuration)\net8.0-windows10.0.22621.0\win-$(Platform)\publish\</ClientOutputPath>
-        <HeatDirectoryPath Condition="'$(HeatDirectoryPath)' == ''">$(SolutionDir)Morphic.Client\bin\$(Platform)\$(Configuration)\net8.0-windows10.0.22621.0\win-$(Platform)\publish</HeatDirectoryPath>
-        <DefineConstants>ClientOutputDirectory=$(ClientOutputPath)</DefineConstants>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-        <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
-        <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
-    </PropertyGroup>
-    <Target Name="AfterPreBuild" AfterTargets="PreBuildEvent">
-        <HeatDirectory Directory="$(HeatDirectoryPath)" PreprocessorVariable="var.ClientOutputDirectory" OutputFile="Generated.wxs" ComponentGroupName="GeneratedComponents" DirectoryRefId="INSTALLFOLDER" AutogenerateGuids="true" ToolPath="$(WixToolPath)" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" />
-    </Target>
+﻿<Project Sdk="WixToolset.Sdk/4.0.4">
+  <PropertyGroup>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <PropertyGroup>
+    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
+    <OutputName>MorphicEnterpriseSetup</OutputName>
+    <OutputPath>bin\$(Configuration)\$(Platform)\</OutputPath>
+    <IntermediateOutputPath>obj\$(Configuration)\$(Platform)\</IntermediateOutputPath>
+    <Name>Morphic.Setup.Enterprise</Name>
+    <BuildType Condition="'$(BuildType)' == '' ">Development</BuildType>
+  </PropertyGroup>
+  <!-- WiX tools are 32bit EXEs, so run them out-of-proc when MSBuild is not 32bit. -->
+  <PropertyGroup>
+    <RunWixToolsOutOfProc Condition=" '$(PROCESSOR_ARCHITECTURE)'!='x86' ">true</RunWixToolsOutOfProc>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DefineConstants>Debug</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Product.wxs" />
+    <Compile Include="Generated.wxs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Morphic.Client\Morphic.Client.csproj">
+      <Name>Morphic.Client</Name>
+      <Project>{2485b22b-5c46-46f1-a466-f8a5b7e28c64}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="License.rtf" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="WixToolset.Heat" Version="4.0.4" />
+    <PackageReference Include="WixToolset.Util.wixext" Version="4.0.4" />
+    <PackageReference Include="WixToolset.UI.wixext" Version="4.0.4" />
+  </ItemGroup>
+  <PropertyGroup>
+    <ClientOutputPath Condition="'$(ClientOutputPath)' == ''">$(SolutionDir)Morphic.Client\bin\$(Platform)\$(Configuration)\net8.0-windows10.0.22621.0\win-$(Platform)\publish</ClientOutputPath>
+    <HeatDirectoryPath Condition="'$(HeatDirectoryPath)' == ''">$(SolutionDir)Morphic.Client\bin\$(Platform)\$(Configuration)\net8.0-windows10.0.22621.0\win-$(Platform)\publish</HeatDirectoryPath>
+    <DefineConstants>ClientOutputDirectory=$(ClientOutputPath)</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
+  </PropertyGroup>
+  <Target Name="AfterPreBuild" AfterTargets="PreBuildEvent">
+    <HeatDirectory Directory="$(HeatDirectoryPath)" PreprocessorVariable="var.ClientOutputDirectory" OutputFile="Generated.wxs" ComponentGroupName="GeneratedComponents" DirectoryRefId="INSTALLFOLDER" AutogenerateGuids="true" ToolPath="$(WixToolPath)" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" />
+  </Target>
 </Project>
