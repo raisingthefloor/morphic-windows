@@ -292,7 +292,7 @@ namespace Morphic.Client.Bar.Data
                                                     //
                                                     var turnOnVoiceAccessAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
                                                     turnOnVoiceAccessAction.TelemetryEventName = "morphicBarExtraItem";
-                                                    turnOnVoiceAccessAction.FunctionName = "voiceAccess";
+                                                    turnOnVoiceAccessAction.FunctionName = "voiceAccessOn";
                                                     var onButton = new BarMultiButton.ButtonInfo
                                                     {
                                                         Text = "{{QuickStrip_VoiceControl_On_Title}}",
@@ -304,7 +304,7 @@ namespace Morphic.Client.Bar.Data
                                                     //
                                                     var turnOffVoiceAccessAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
                                                     turnOffVoiceAccessAction.TelemetryEventName = "morphicBarExtraItem";
-                                                    turnOffVoiceAccessAction.FunctionName = "voiceAccess";
+                                                    turnOffVoiceAccessAction.FunctionName = "voiceAccessOff";
                                                     var offButton = new BarMultiButton.ButtonInfo
                                                     {
                                                         Text = "{{QuickStrip_VoiceControl_Off_Title}}",

@@ -1331,6 +1331,20 @@ namespace Morphic.Client.Bar.Data.Actions
             return MorphicResult.OkResult();
         }
 
+        [InternalFunction("voiceAccessOn")]
+        public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> VoiceAccessOnAsync(FunctionArgs args)
+        {
+            args.Arguments.Add("value", "on");
+            return await VoiceAccessAsync(args);
+        }
+
+        [InternalFunction("voiceAccessOff")]
+        public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> VoiceAccessOffAsync(FunctionArgs args)
+        {
+            args.Arguments.Add("value", "off");
+            return await VoiceAccessAsync(args);
+        }
+
         private static string? GetPathToVoiceAccess()
         {
             var windowsSystemFolder = Environment.GetFolderPath(Environment.SpecialFolder.System);
