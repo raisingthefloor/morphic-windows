@@ -22,7 +22,6 @@
 // * Consumer Electronics Association Foundation
 
 using Morphic.Core;
-using Morphic.WindowsNative;
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -381,7 +380,7 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
             {
                 switch (getCurrentSizeResult.Error!)
                 {
-                    case IWin32ApiError.Win32Error(var win32ErrorCode):
+                    case Morphic.WindowsNative.IWin32ApiError.Win32Error(var win32ErrorCode):
                         return MorphicResult.ErrorResult<IRecreateSizedBitmapError>(new IRecreateSizedBitmapError.CannotGetCurrentWindowSize(win32ErrorCode));
                     default:
                         throw new MorphicUnhandledErrorException();
@@ -401,7 +400,7 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
         _sizedBitmap = null;
     }
 
-    private MorphicResult<System.Drawing.Size, IWin32ApiError> GetCurrentSize()
+    private MorphicResult<System.Drawing.Size, Morphic.WindowsNative.IWin32ApiError> GetCurrentSize()
     {
         var getWindowRectResult = Windows.Win32.PInvoke.GetWindowRect((Windows.Win32.Foundation.HWND)this.Handle, out var rect);
         if (getWindowRectResult == 0)
@@ -441,7 +440,7 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
         {
             switch (getCurrentSizeResult.Error!)
             {
-                case IWin32ApiError.Win32Error(var win32ErrorCode):
+                case Morphic.WindowsNative.IWin32ApiError.Win32Error(var win32ErrorCode):
                     Debug.Assert(false, "Could not get current size of native window; win32 error: " + win32ErrorCode.ToString());
                     return MorphicResult.ErrorResult();
                 default:
