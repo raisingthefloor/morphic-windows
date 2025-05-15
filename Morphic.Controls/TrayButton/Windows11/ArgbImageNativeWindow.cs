@@ -22,6 +22,7 @@
 // * Consumer Electronics Association Foundation
 
 using Morphic.Core;
+using Morphic.WindowsNative;
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
