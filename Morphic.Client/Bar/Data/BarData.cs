@@ -285,6 +285,44 @@ namespace Morphic.Client.Bar.Data
                                                     extraBarItemShouldBeAdded = true;
                                                 }
                                                 break;
+                                            case "voice":
+                                                {
+                                                    // NOTE: in the future, this control may become a 2-button 'voice' section; if not, we may want to alias this as both "voice" and "voicecontrol"s
+                                                    extraBarItem.Text = extraItemData.label ?? "{{QuickStrip_VoiceControl_Title}}";
+                                                    //
+                                                    var turnOnVoiceAccessAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
+                                                    turnOnVoiceAccessAction.TelemetryEventName = "morphicBarExtraItem";
+                                                    turnOnVoiceAccessAction.FunctionName = "voiceAccess";
+                                                    var onButton = new BarMultiButton.ButtonInfo
+                                                    {
+                                                        Text = "{{QuickStrip_VoiceControl_On_Title}}",
+                                                        Action = turnOnVoiceAccessAction,
+                                                        TelemetryCategory = "morphicBarExtraItem",
+                                                        Tooltip = "{{QuickStrip_VoiceControl_On_HelpTitle}}",
+                                                        Value = "voicecontrolon"
+                                                    };
+                                                    //
+                                                    var turnOffVoiceAccessAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
+                                                    turnOffVoiceAccessAction.TelemetryEventName = "morphicBarExtraItem";
+                                                    turnOffVoiceAccessAction.FunctionName = "voiceAccess";
+                                                    var offButton = new BarMultiButton.ButtonInfo
+                                                    {
+                                                        Text = "{{QuickStrip_VoiceControl_Off_Title}}",
+                                                        Action = turnOffVoiceAccessAction,
+                                                        TelemetryCategory = "morphicBarExtraItem",
+                                                        Tooltip = "{{QuickStrip_VoiceControl_Off_HelpTitle}}",
+                                                        Value = "voicecontroloff"
+                                                    };
+                                                    //
+                                                    ((BarMultiButton)extraBarItem).Buttons = new Dictionary<string, BarMultiButton.ButtonInfo>
+                                                    {
+                                                        { "on", onButton },
+                                                        { "off", offButton }
+                                                    };
+                                                    //
+                                                    extraBarItemShouldBeAdded = true;
+                                                }
+                                                break;
                                             case "volume":
                                                 {
                                                     extraBarItem.Text = extraItemData.label ?? "{{QuickStrip_Volume_Title}}";

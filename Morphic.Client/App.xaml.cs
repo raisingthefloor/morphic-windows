@@ -429,38 +429,41 @@ public partial class App : Application
         }
 
         // capture the desired default location of the MorphicBar
-        switch (deserializedJson.morphicBar?.defaultLocation)
+        if (deserializedJson.morphicBar?.defaultLocation is not null)
         {
-            case "topLeft":
-                result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.TopLeft;
-                break;
-            case "topRight":
-                result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.TopRight;
-                break;
-            case "bottomLeft":
-                result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.BottomLeft;
-                break;
-            case "bottomRight":
-                result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.BottomRight;
-                break;
-            //
-            case "topLeading":
-                result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.TopLeading;
-                break;
-            case "topTrailing":
-                result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.TopTrailing;
-                break;
-            case "bottomLeading":
-                result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.BottomLeading;
-                break;
-            case "bottomTrailing":
-                result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.BottomTrailing;
-                break;
-            default:
-                // sorry, we don't understand this visibility setting
-                // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
-                Logger?.LogError("Unknown morphicBar.defaultLocation setting: " + deserializedJson.morphicBar?.visibilityAfterLogin);
-                return result;
+            switch (deserializedJson.morphicBar?.defaultLocation)
+            {
+                case "topLeft":
+                    result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.TopLeft;
+                    break;
+                case "topRight":
+                    result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.TopRight;
+                    break;
+                case "bottomLeft":
+                    result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.BottomLeft;
+                    break;
+                case "bottomRight":
+                    result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.BottomRight;
+                    break;
+                //
+                case "topLeading":
+                    result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.TopLeading;
+                    break;
+                case "topTrailing":
+                    result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.TopTrailing;
+                    break;
+                case "bottomLeading":
+                    result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.BottomLeading;
+                    break;
+                case "bottomTrailing":
+                    result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.BottomTrailing;
+                    break;
+                default:
+                    // sorry, we don't understand this visibility setting
+                    // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
+                    Logger?.LogError("Unknown morphicBar.defaultLocation setting: " + deserializedJson.morphicBar?.visibilityAfterLogin);
+                    return result;
+            }
         }
 
         // capture the desired after-login (autorun) visibility of the MorphicBar
@@ -1007,7 +1010,13 @@ public partial class App : Application
         // if Morphic (including the taskbar icon button) should be visible, show them now
         if (morphicShouldBeHidden == false)
         {
-            this.HybridTrayIcon.Visible = true;
+            var setVisibleResult = this.HybridTrayIcon.SetVisible(true);
+            if (setVisibleResult.IsError == true)
+            {
+                // NOTE: ideally, we would retry showing the taskbar icon later if we cannot show it now; note that this could fail if, for instance, the Windows taskbar was not yet initialized properly (or had an invalid size, etc.)
+                this.Logger.LogError("Could not show Morphic button in task bar (App.OnStartup).");
+                Debug.Assert(false, "Could not show Morphic button in task bar (App.OnStartup).");
+            }
         }
 
         // initialize our theme manager; this will also set the initial theme for our application
@@ -1118,8 +1127,8 @@ public partial class App : Application
             Icon = morphicIcon,
             Text = "Morphic",
             TrayIconLocation = Controls.HybridTrayIcon.TrayIconLocationOption.NextToNotificationTray,
-            Visible = false,
         };
+        hybridTrayIcon.SetVisible(false); // NOTE: default state; should not be necessary
         this.HybridTrayIcon = hybridTrayIcon;
 
         // wire up click and right-click events for our hybrid tray icon
@@ -1685,7 +1694,13 @@ public partial class App : Application
         // show the Morphic taskbar button (if not already shown)
         if (this.HybridTrayIcon is not null)
         {
-            this.HybridTrayIcon!.Visible = true;
+            var setVisibleResult = this.HybridTrayIcon!.SetVisible(true);
+            if (setVisibleResult.IsError == true)
+            {
+                // NOTE: if we cannot show the icon, we gracefully degrade (but log the error); if we find that SetVisible errors should be handled, we can do so here.
+                this.Logger.LogError("Could not show Morphic button in task bar (App.ShowMorphicBarAndEnsureMorphicIsNotHiddenAsync).");
+                Debug.Assert(false, "Could not show Morphic button in task bar (App.ShowMorphicBarAndEnsureMorphicIsNotHiddenAsync).");
+            }
         }
 
         // show the MorphicBar (if not already shown)
@@ -1708,7 +1723,7 @@ public partial class App : Application
     protected override async void OnExit(ExitEventArgs e)
     {
         // immediately hide our tray icon (and dispose of it for good measure, to help ensure that unmanaged resources are cleaned up)
-        this.HybridTrayIcon.Visible = false;
+        _ = this.HybridTrayIcon.SetVisible(false);
         this.HybridTrayIcon.Dispose();
 
         // NOTE: the CLR may shut down our application quicker than we can send the "session end" event; as we move to the Morphic 2.0 architecture (with cached telemetry messages), the "@session end" message should be more guaranteed to be transmitted

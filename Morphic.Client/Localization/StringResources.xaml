@@ -220,6 +220,7 @@
     <system:String x:Key="QuickStrip_VoiceControl_On_HelpMessage"></system:String>
     <system:String x:Key="QuickStrip_VoiceControl_On_HelpTitle">Turns Voice Control on</system:String>
     <system:String x:Key="QuickStrip_VoiceControl_On_Title">On</system:String>
+    <system:String x:Key="QuickStrip_VoiceControl_Title">Voice Control</system:String>
     <system:String x:Key="QuickStrip_WordSimplify_Basic_HelpMessage">Gives you a new simpler ribbon with just the basic items on it.</system:String>
     <system:String x:Key="QuickStrip_WordSimplify_Basic_HelpTitle">Adds a new 'Basic Items' ribbon to Word</system:String>
     <system:String x:Key="QuickStrip_WordSimplify_Basic_Title">Basic</system:String>

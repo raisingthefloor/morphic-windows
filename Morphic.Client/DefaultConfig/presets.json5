@@ -351,6 +351,7 @@
         args: {
           value: "{button}"
         },
+        label: "{{QuickStrip_VoiceControl_Title}}",
         menu: {
           setting: "easeofaccess-speechrecognition"
         },

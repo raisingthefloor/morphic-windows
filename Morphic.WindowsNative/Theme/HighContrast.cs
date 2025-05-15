@@ -200,6 +200,18 @@ public class HighContrast
         return MorphicResult.OkResult(highContrastIsOn);
     }
 
+    public static MorphicResult<String?, IWin32ApiError> GetHighContrastModeDefaultColorScheme()
+    {
+        var getHighContrastInfoResult = HighContrast.GetHighContrastInfo();
+        if (getHighContrastInfoResult.IsError == true)
+        {
+            return MorphicResult.ErrorResult(getHighContrastInfoResult.Error!);
+        }
+        var highContrastInfo = getHighContrastInfoResult.Value!;
+
+        return MorphicResult.OkResult(highContrastInfo.DefaultColorScheme);
+    }
+
     //
 
     private struct HighContrastInfo

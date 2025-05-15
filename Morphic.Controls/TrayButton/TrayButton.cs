@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2024 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2025 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -21,6 +21,7 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
+using Morphic.Core;
 using System;
 
 namespace Morphic.Controls.TrayButton;
@@ -227,29 +228,33 @@ public class TrayButton : IDisposable
         }
     }
 
-    public bool Visible
+    public MorphicResult<MorphicUnit, MorphicUnit> SetVisible(bool value)
     {
-        get
+        if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
         {
-            if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
+            var setVisibleResult = _trayButton!.SetVisible(value);
+            if (setVisibleResult.IsError == true)
             {
-                return _trayButton!.Visible;
-            }
-            else //if (.IsWindows10() == true)
-            {
-                return _legacyTrayButton!.Visible;
+                return MorphicResult.ErrorResult();
             }
         }
-        set
+        else //if (.IsWindows10() == true)
         {
-            if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
-            {
-                _trayButton!.Visible = value;
-            }
-            else //if (.IsWindows10() == true)
-            {
-                _legacyTrayButton!.Visible = value;
-            }
+            _legacyTrayButton!.Visible = value;
+        }
+
+        return MorphicResult.OkResult();
+    }
+    //
+    public bool GetVisible()
+    {
+        if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
+        {
+            return _trayButton!.GetVisible();
+        }
+        else //if (.IsWindows10() == true)
+        {
+            return _legacyTrayButton!.Visible;
         }
     }
 

@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2024 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2025 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -280,21 +280,64 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
         return _sourceBitmap;
     }
 
-    public void SetBitmap(System.Drawing.Bitmap? bitmap)
+    public interface ISetBitmapResult
+    {
+        public record CannotGetCurrentWindowSize(uint Win32ErrorCode) : ISetBitmapResult;
+        public record CannotRequestWindowRedraw() : ISetBitmapResult;
+    }
+    public MorphicResult<MorphicUnit, ISetBitmapResult> SetBitmap(System.Drawing.Bitmap? bitmap)
     {
         _sourceBitmap = bitmap;
-        this.RecreateSizedBitmap(bitmap);
+        var recreateSizedBitmapResult = this.RecreateSizedBitmap(bitmap);
+        if (recreateSizedBitmapResult.IsError == true)
+        {
+            switch (recreateSizedBitmapResult.Error!)
+            {
+                case IRecreateSizedBitmapError.CannotGetCurrentWindowSize(var win32ErrorCode):
+                    return MorphicResult.ErrorResult<ISetBitmapResult>(new ISetBitmapResult.CannotGetCurrentWindowSize(win32ErrorCode));
+                default:
+                    throw new MorphicUnhandledErrorException();
+            }
+        }
 
-        this.RequestRedraw();
+        var requestRedrawResult = this.RequestRedraw();
+        if (requestRedrawResult.IsError == true) 
+        { 
+            return MorphicResult.ErrorResult<ISetBitmapResult>(new ISetBitmapResult.CannotRequestWindowRedraw());
+        }
+
+        return MorphicResult.OkResult();
     }
 
-    public void SetPositionAndSize(Windows.Win32.Foundation.RECT rect)
+    public interface ISetPositionAndSizeResult
+    {
+        public record CannotGetCurrentWindowSize(uint Win32ErrorCode) : ISetPositionAndSizeResult;
+        public record CannotRequestWindowRedraw() : ISetPositionAndSizeResult;
+    }
+    public MorphicResult<MorphicUnit, ISetPositionAndSizeResult> SetPositionAndSize(Windows.Win32.Foundation.RECT rect)
     {
         // set the new window position (including size); we must resize the window before recreating the sized bitmap (which will be sized to the updated size)
         Windows.Win32.PInvoke.SetWindowPos((Windows.Win32.Foundation.HWND)this.Handle, (Windows.Win32.Foundation.HWND)IntPtr.Zero, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOZORDER | Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
 
-        this.RecreateSizedBitmap(_sourceBitmap);
-        this.RequestRedraw();
+        var recreateSizedBitmapResult = this.RecreateSizedBitmap(_sourceBitmap);
+        if (recreateSizedBitmapResult.IsError == true)
+        {
+            switch (recreateSizedBitmapResult.Error!)
+            {
+                case IRecreateSizedBitmapError.CannotGetCurrentWindowSize(var win32ErrorCode):
+                    return MorphicResult.ErrorResult<ISetPositionAndSizeResult>(new ISetPositionAndSizeResult.CannotGetCurrentWindowSize(win32ErrorCode));
+                default:
+                    throw new MorphicUnhandledErrorException();
+            }
+        }
+
+        var requestRedrawResult = this.RequestRedraw();
+        if (requestRedrawResult.IsError == true)
+        {
+            return MorphicResult.ErrorResult<ISetPositionAndSizeResult>(new ISetPositionAndSizeResult.CannotRequestWindowRedraw());
+        }
+
+        return MorphicResult.OkResult();
     }
 
     public void SetVisible(bool value)
@@ -317,40 +360,94 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
         }
     }
 
-    private void RecreateSizedBitmap(System.Drawing.Bitmap? bitmap)
+    public interface IRecreateSizedBitmapError
     {
-        if (bitmap != null)
+        public record CannotGetCurrentWindowSize(uint Win32ErrorCode) : IRecreateSizedBitmapError;
+    }
+    private MorphicResult<MorphicUnit, IRecreateSizedBitmapError> RecreateSizedBitmap(System.Drawing.Bitmap? bitmap)
+    {
+        if (bitmap is not null)
         {
-            _sizedBitmap = new System.Drawing.Bitmap(bitmap, this.GetCurrentSize());
+            var getCurrentSizeResult = this.GetCurrentSize();
+            if (getCurrentSizeResult.IsSuccess == true)
+            {
+                var currentSize = getCurrentSizeResult.Value!;
+                _sizedBitmap = new System.Drawing.Bitmap(bitmap, currentSize);
+
+                return MorphicResult.OkResult();
+            }
+            else
+            {
+                switch (getCurrentSizeResult.Error!)
+                {
+                    case IWin32ApiError.Win32Error(var win32ErrorCode):
+                        return MorphicResult.ErrorResult<IRecreateSizedBitmapError>(new IRecreateSizedBitmapError.CannotGetCurrentWindowSize(win32ErrorCode));
+                    default:
+                        throw new MorphicUnhandledErrorException();
+                }
+            }
         }
         else
         {
             _sizedBitmap = null;
+            return MorphicResult.OkResult();
         }
     }
 
-    private System.Drawing.Size GetCurrentSize()
+    // OBSERVATION: this function is unused
+    private void ClearSizedBitmap()
     {
-        Windows.Win32.PInvoke.GetWindowRect((Windows.Win32.Foundation.HWND)this.Handle, out var rect);
-        return new System.Drawing.Size(rect.right - rect.left, rect.bottom - rect.top);
+        _sizedBitmap = null;
+    }
+
+    private MorphicResult<System.Drawing.Size, IWin32ApiError> GetCurrentSize()
+    {
+        var getWindowRectResult = Windows.Win32.PInvoke.GetWindowRect((Windows.Win32.Foundation.HWND)this.Handle, out var rect);
+        if (getWindowRectResult == 0)
+        {
+            var win32Error = (uint)System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+            return MorphicResult.ErrorResult<Morphic.WindowsNative.IWin32ApiError>(new Morphic.WindowsNative.IWin32ApiError.Win32Error(win32Error));
+        }
+
+        var result = new System.Drawing.Size(rect.right - rect.left, rect.bottom - rect.top);
+        return MorphicResult.OkResult(result);
     }
 
     //
 
-    private void RequestRedraw()
+    private MorphicResult<MorphicUnit, MorphicUnit> RequestRedraw()
     {
         // update our layered bitmap
-        this.UpdateLayeredPainting();
+        var updateLayeredPaintingResult = this.UpdateLayeredPainting();
+        if (updateLayeredPaintingResult.IsError == true)
+        {
+            return MorphicResult.ErrorResult();
+        }
 
         // invalidate the window
-        PInvokeExtensions.RedrawWindow(this.Handle, IntPtr.Zero, IntPtr.Zero, /*Windows.Win32.Graphics.Gdi.REDRAW_WINDOW_FLAGS.RDW_ERASE | */Windows.Win32.Graphics.Gdi.REDRAW_WINDOW_FLAGS.RDW_INVALIDATE/* | Windows.Win32.Graphics.Gdi.REDRAW_WINDOW_FLAGS.RDW_ALLCHILDREN*/);
+        // OBSERVATION: we are not capturing the result of RedrawWindow; this may be intentional (i.e. the API call may be delayed and may not return any valid results); flagged for further research		
+        _ = PInvokeExtensions.RedrawWindow(this.Handle, IntPtr.Zero, IntPtr.Zero, /*Windows.Win32.Graphics.Gdi.REDRAW_WINDOW_FLAGS.RDW_ERASE | */Windows.Win32.Graphics.Gdi.REDRAW_WINDOW_FLAGS.RDW_INVALIDATE/* | Windows.Win32.Graphics.Gdi.REDRAW_WINDOW_FLAGS.RDW_ALLCHILDREN*/);
+
+        return MorphicResult.OkResult();
     }
 
     private MorphicResult<MorphicUnit, MorphicUnit> UpdateLayeredPainting()
     {
         var ownerHWnd = Windows.Win32.PInvoke.GetWindow((Windows.Win32.Foundation.HWND)this.Handle, Windows.Win32.UI.WindowsAndMessaging.GET_WINDOW_CMD.GW_OWNER);
         //
-        var size = this.GetCurrentSize();
+        var getCurrentSizeResult = this.GetCurrentSize();
+        if (getCurrentSizeResult.IsError == true)
+        {
+            switch (getCurrentSizeResult.Error!)
+            {
+                case IWin32ApiError.Win32Error(var win32ErrorCode):
+                    Debug.Assert(false, "Could not get current size of native window; win32 error: " + win32ErrorCode.ToString());
+                    return MorphicResult.ErrorResult();
+                default:
+                    throw new MorphicUnhandledErrorException();
+            }
+        }
+        var size = getCurrentSizeResult.Value!;
         //
         var sizedBitmap = _sizedBitmap;
 

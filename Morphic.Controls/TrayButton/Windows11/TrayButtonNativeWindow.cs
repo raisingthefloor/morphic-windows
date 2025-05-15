@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2024 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2025 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -863,7 +863,12 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
         var bitmap = _argbImageNativeWindow?.GetBitmap();
         if (bitmap is not null)
         {
-            this.PositionAndResizeBitmap(bitmap);
+            var positionAndResizeBitmapResult = this.PositionAndResizeBitmap(bitmap);
+            if (positionAndResizeBitmapResult.IsError == true)
+            {
+                Debug.Assert(false, "Could not position and resize bitmap.");
+                return MorphicResult.ErrorResult();
+            }
         }
 
         // also reposition the tooltip's tracking rectangle
@@ -893,25 +898,58 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
 
     //
 
-    public void SetBitmap(System.Drawing.Bitmap? bitmap)
+    public MorphicResult<MorphicUnit, MorphicUnit> SetBitmap(System.Drawing.Bitmap? bitmap)
     {
         if (bitmap is not null)
         {
-            this.PositionAndResizeBitmap(bitmap);
+            var positionAndResizeBitmapResult = this.PositionAndResizeBitmap(bitmap);
+            if (positionAndResizeBitmapResult.IsError == true)
+            {
+                Debug.Assert(false, "Could not position and resize bitmap.");
+                return MorphicResult.ErrorResult();
+            }
         }
-        _argbImageNativeWindow?.SetBitmap(bitmap);
+
+        if (_argbImageNativeWindow is not null)
+        {
+            var setBitmapResult = _argbImageNativeWindow!.SetBitmap(bitmap);
+            if (setBitmapResult.IsError == true)
+            {
+                // OBSERVATION: ArgbImageNativeWindow.SetBitmap returns several error options; we ignore them here.
+                return MorphicResult.ErrorResult();
+            }
+        }
+
+        return MorphicResult.OkResult();
     }
 
-    private void PositionAndResizeBitmap(System.Drawing.Bitmap bitmap)
+    private MorphicResult<MorphicUnit, MorphicUnit> PositionAndResizeBitmap(System.Drawing.Bitmap bitmap)
     {
         // then, reposition the bitmap
-        Windows.Win32.PInvoke.GetWindowRect((Windows.Win32.Foundation.HWND)this.Handle, out var positionAndSize);
+        Windows.Win32.Foundation.RECT positionAndSize;
+        var getWindowRectResult = Windows.Win32.PInvoke.GetWindowRect((Windows.Win32.Foundation.HWND)this.Handle, out positionAndSize);
+        if (getWindowRectResult == 0)
+        {
+            // NOTE: we could capture the last error here; see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowrect
+            return MorphicResult.ErrorResult();
+        }
+        //
         var bitmapSize = bitmap.Size;
 
         var argbImageNativeWindowSize = TrayButtonNativeWindow.CalculateWidthAndHeightForBitmap(positionAndSize, bitmapSize);
         var bitmapRect = TrayButtonNativeWindow.CalculateCenterRectInsideRect(positionAndSize, argbImageNativeWindowSize);
 
-        _argbImageNativeWindow?.SetPositionAndSize(bitmapRect);
+        if (_argbImageNativeWindow is not null)
+        {
+            var setPositionAndSizeResult = _argbImageNativeWindow!.SetPositionAndSize(bitmapRect);
+            if (setPositionAndSizeResult.IsError == true)
+            {
+                // OBSERVATION: ArgbImageNativeWindow.SetPositionAndSize returns several error options; we ignore them here.
+                return MorphicResult.ErrorResult();
+            }
+        }
+
+        return MorphicResult.OkResult();
     }
 
     public void SetText(string? text)

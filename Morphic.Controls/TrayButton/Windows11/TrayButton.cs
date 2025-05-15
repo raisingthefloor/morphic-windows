@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2024 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2025 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -99,7 +99,8 @@ internal class TrayButton : IDisposable
         {
             _bitmap = value;
 
-            _nativeWindow?.SetBitmap(_bitmap);
+            //OBSERVATION: we do not return an error if the bitmap cannot be set
+            _ = _nativeWindow?.SetBitmap(_bitmap);
         }
     }
 
@@ -117,28 +118,32 @@ internal class TrayButton : IDisposable
         }
     }
 
-    public bool Visible
+    public MorphicResult<MorphicUnit, MorphicUnit> SetVisible(bool value)
     {
-        set
+        if (_visible != value)
         {
-            if (_visible != value)
+            switch (value)
             {
-                switch (value)
-                {
-                    case true:
-                        var showResult = this.Show();
-                        Debug.Assert(showResult.IsSuccess == true, "Could not show Morphic icon (taskbar button) on taskbar.");
-                        break;
-                    case false:
-                        this.Hide();
-                        break;
-                }
+                case true:
+                    var showResult = this.Show();
+                    if (showResult.IsError == true)
+                    {
+                        Debug.Assert(false, "Could not show Morphic icon (taskbar button) on taskbar.");
+                        return MorphicResult.ErrorResult();
+                    }
+                    break;
+                case false:
+                    this.Hide();
+                    break;
             }
         }
-        get
-        {
-            return _visible;
-        }
+
+        return MorphicResult.OkResult();
+    }
+    //
+    public bool GetVisible()
+    {
+        return _visible;
     }
 
     //
@@ -201,7 +206,12 @@ internal class TrayButton : IDisposable
         };
 
         // set the bitmap ("icon") for the native window
-        nativeWindow.SetBitmap(_bitmap);
+        var setBitmapResult = nativeWindow.SetBitmap(_bitmap);
+        if (setBitmapResult.IsError == true)
+        {
+            nativeWindow.Dispose();
+            return MorphicResult.ErrorResult();
+        }
         //
         // set the (tooltip) text for the native window
         nativeWindow.SetText(_text);
