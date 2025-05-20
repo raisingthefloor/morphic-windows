@@ -839,6 +839,16 @@ public partial class App : Application
 
         try
         {
+            Version? applicationVersion = Assembly.GetExecutingAssembly().GetName().Version;
+            if (applicationVersion is not null)
+            {
+                this.Logger.LogError("version: " + applicationVersion.Major.ToString() + "." + applicationVersion.Minor.ToString() + applicationVersion.Build.ToString());
+            }
+            else
+            {
+                this.Logger.LogError("version: null");
+            }
+            //
             this.Logger.LogError("handled uncaught exception: {msg}", ex.Message);
             this.Logger.LogError(ex.StackTrace);
         }

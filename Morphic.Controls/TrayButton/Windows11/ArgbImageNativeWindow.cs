@@ -372,7 +372,15 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
             if (getCurrentSizeResult.IsSuccess == true)
             {
                 var currentSize = getCurrentSizeResult.Value!;
-                _sizedBitmap = new System.Drawing.Bitmap(bitmap, currentSize);
+                try
+                {
+                    _sizedBitmap = new System.Drawing.Bitmap(bitmap, currentSize.Item1);
+                }
+                catch(Exception ex)
+                {
+                    throw new Exception("size: " + currentSize.Item1.ToString() + "; rect: " + currentSize.Item2.ToString() + "; GetWindowRect.Result: " + currentSize.Item3.ToString() + "; bitmap: " + bitmap + "; ex: " + ex.ToString());
+                    throw;
+                }
 
                 return MorphicResult.OkResult();
             }
@@ -400,7 +408,7 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
         _sizedBitmap = null;
     }
 
-    private MorphicResult<System.Drawing.Size, Morphic.WindowsNative.IWin32ApiError> GetCurrentSize()
+    private MorphicResult<(System.Drawing.Size, System.Drawing.Rectangle, int), Morphic.WindowsNative.IWin32ApiError> GetCurrentSize()
     {
         var getWindowRectResult = Windows.Win32.PInvoke.GetWindowRect((Windows.Win32.Foundation.HWND)this.Handle, out var rect);
         if (getWindowRectResult == 0)
@@ -410,7 +418,7 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
         }
 
         var result = new System.Drawing.Size(rect.right - rect.left, rect.bottom - rect.top);
-        return MorphicResult.OkResult(result);
+        return MorphicResult.OkResult((result, new System.Drawing.Rectangle(rect.X, rect.Y, rect.Width, rect.Height), getWindowRectResult.Value));
     }
 
     //
@@ -447,7 +455,7 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
                     throw new MorphicUnhandledErrorException();
             }
         }
-        var size = getCurrentSizeResult.Value!;
+        var size = getCurrentSizeResult.Value!.Item1;
         //
         var sizedBitmap = _sizedBitmap;
 
