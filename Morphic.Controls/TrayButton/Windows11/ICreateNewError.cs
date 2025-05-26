@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2024 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2025 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -27,6 +27,7 @@ namespace Morphic.Controls.TrayButton.Windows11;
 
 public interface ICreateNewError
 {
+    public record CouldNotCalculateNonZeroWindowSize() : ICreateNewError;
     public record CouldNotCalculateWindowPosition() : ICreateNewError;
     public record OtherException(Exception exception) : ICreateNewError;
     public record Win32Error(uint win32ErrorCode) : ICreateNewError;

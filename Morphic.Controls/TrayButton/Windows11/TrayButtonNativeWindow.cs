@@ -169,6 +169,11 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
             return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.CouldNotCalculateWindowPosition());
         }
         var trayButtonPositionAndSize = calculatePositionResult.Value!;
+        if (trayButtonPositionAndSize.Width == 0 || trayButtonPositionAndSize.Height == 0)
+        {
+            Debug.Assert(false, "Tray button position calculated, but it's zero pixels in size");
+            return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.CouldNotCalculateNonZeroWindowSize());
+        }
         //
         // capture our initial position and size
         result._trayButtonPositionAndSize = trayButtonPositionAndSize;
@@ -231,7 +236,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
         // since we are making the control visible by default, set its _visibility state
         result._visibility = System.Windows.Visibility.Visible;
 
-        // create an instance of the ArgbImageNativeWindow to hold our icon; we cannot draw the bitmap directly on this window as the bitmap would then be alphablended the same % as our background (instead of being independently blended over our window)
+        // create an instance of the ArgbImageNativeWindow to hold our icon; we cannot draw the bitmap directly on this window as the bitmap would then be alpha-blended the same % as our background (instead of being independently blended over our window)
         var argbImageNativeWindowResult = ArgbImageNativeWindow.CreateNew(result.Handle, windowParams.X, windowParams.Y, windowParams.Width, windowParams.Height);
         if (argbImageNativeWindowResult.IsError == true)
         {

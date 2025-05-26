@@ -284,6 +284,8 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
     {
         public record CannotGetCurrentWindowSize(uint Win32ErrorCode) : ISetBitmapResult;
         public record CannotRequestWindowRedraw() : ISetBitmapResult;
+        public record OtherException(Exception Exception) : ISetBitmapResult;
+        public record WindowSizeIsZero : ISetBitmapResult;
     }
     public MorphicResult<MorphicUnit, ISetBitmapResult> SetBitmap(System.Drawing.Bitmap? bitmap)
     {
@@ -295,6 +297,10 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
             {
                 case IRecreateSizedBitmapError.CannotGetCurrentWindowSize(var win32ErrorCode):
                     return MorphicResult.ErrorResult<ISetBitmapResult>(new ISetBitmapResult.CannotGetCurrentWindowSize(win32ErrorCode));
+                case IRecreateSizedBitmapError.OtherException(var ex):
+                    return MorphicResult.ErrorResult<ISetBitmapResult>(new ISetBitmapResult.OtherException(ex));
+                case IRecreateSizedBitmapError.WindowSizeIsZero:
+                    return MorphicResult.ErrorResult<ISetBitmapResult>(new ISetBitmapResult.WindowSizeIsZero());
                 default:
                     throw new MorphicUnhandledErrorException();
             }
@@ -313,6 +319,8 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
     {
         public record CannotGetCurrentWindowSize(uint Win32ErrorCode) : ISetPositionAndSizeResult;
         public record CannotRequestWindowRedraw() : ISetPositionAndSizeResult;
+        public record OtherException(Exception Exception) : ISetPositionAndSizeResult;
+        public record WindowSizeIsZero : ISetPositionAndSizeResult;
     }
     public MorphicResult<MorphicUnit, ISetPositionAndSizeResult> SetPositionAndSize(Windows.Win32.Foundation.RECT rect)
     {
@@ -326,6 +334,10 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
             {
                 case IRecreateSizedBitmapError.CannotGetCurrentWindowSize(var win32ErrorCode):
                     return MorphicResult.ErrorResult<ISetPositionAndSizeResult>(new ISetPositionAndSizeResult.CannotGetCurrentWindowSize(win32ErrorCode));
+                case IRecreateSizedBitmapError.OtherException(var ex):
+                    return MorphicResult.ErrorResult<ISetPositionAndSizeResult>(new ISetPositionAndSizeResult.OtherException(ex));
+                case IRecreateSizedBitmapError.WindowSizeIsZero:
+                    return MorphicResult.ErrorResult<ISetPositionAndSizeResult>(new ISetPositionAndSizeResult.WindowSizeIsZero());
                 default:
                     throw new MorphicUnhandledErrorException();
             }
@@ -363,6 +375,8 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
     public interface IRecreateSizedBitmapError
     {
         public record CannotGetCurrentWindowSize(uint Win32ErrorCode) : IRecreateSizedBitmapError;
+        public record OtherException(Exception Ex) : IRecreateSizedBitmapError;
+        public record WindowSizeIsZero : IRecreateSizedBitmapError;
     }
     private MorphicResult<MorphicUnit, IRecreateSizedBitmapError> RecreateSizedBitmap(System.Drawing.Bitmap? bitmap)
     {
@@ -372,14 +386,18 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
             if (getCurrentSizeResult.IsSuccess == true)
             {
                 var currentSize = getCurrentSizeResult.Value!;
+                if (currentSize.Width == 0 || currentSize.Height == 0)
+                {
+                    return MorphicResult.ErrorResult<IRecreateSizedBitmapError>(new IRecreateSizedBitmapError.WindowSizeIsZero());
+                }
+                //
                 try
                 {
-                    _sizedBitmap = new System.Drawing.Bitmap(bitmap, currentSize.Item1);
+                    _sizedBitmap = new System.Drawing.Bitmap(bitmap, currentSize);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
-                    throw new Exception("size: " + currentSize.Item1.ToString() + "; rect: " + currentSize.Item2.ToString() + "; GetWindowRect.Result: " + currentSize.Item3.ToString() + "; bitmap: " + bitmap + "; ex: " + ex.ToString());
-                    throw;
+                    return MorphicResult.ErrorResult<IRecreateSizedBitmapError>(new IRecreateSizedBitmapError.OtherException(ex));
                 }
 
                 return MorphicResult.OkResult();
@@ -408,7 +426,7 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
         _sizedBitmap = null;
     }
 
-    private MorphicResult<(System.Drawing.Size, System.Drawing.Rectangle, int), Morphic.WindowsNative.IWin32ApiError> GetCurrentSize()
+    private MorphicResult<System.Drawing.Size, Morphic.WindowsNative.IWin32ApiError> GetCurrentSize()
     {
         var getWindowRectResult = Windows.Win32.PInvoke.GetWindowRect((Windows.Win32.Foundation.HWND)this.Handle, out var rect);
         if (getWindowRectResult == 0)
@@ -418,7 +436,7 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
         }
 
         var result = new System.Drawing.Size(rect.right - rect.left, rect.bottom - rect.top);
-        return MorphicResult.OkResult((result, new System.Drawing.Rectangle(rect.X, rect.Y, rect.Width, rect.Height), getWindowRectResult.Value));
+        return MorphicResult.OkResult(result);
     }
 
     //
@@ -455,7 +473,7 @@ internal class ArgbImageNativeWindow : System.Windows.Forms.NativeWindow, IDispo
                     throw new MorphicUnhandledErrorException();
             }
         }
-        var size = getCurrentSizeResult.Value!.Item1;
+        var size = getCurrentSizeResult.Value!;
         //
         var sizedBitmap = _sizedBitmap;
 
