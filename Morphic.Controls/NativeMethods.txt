@@ -6,6 +6,7 @@ BufferedPaintInit
 BufferedPaintUnInit
 CreateCompatibleDC
 CreateSolidBrush
+CreateWindowEx
 DeleteDC
 DeleteObject
 DestroyIcon
@@ -15,26 +16,37 @@ EndPaint
 FillRect
 FindWindow
 FindWindowEx
+GetClientRect
 GetDC
 GetDesktopWindow
 GetWindow
 GetWindowLong
 GetWindowRect
+LoadCursor
 ReleaseDC
 SelectObject
+SendMessage
 SetLayeredWindowAttributes
 SetWindowLong
+SetWindowLongPtr
 SetWindowPos
 UpdateLayeredWindow
 
 BLENDFUNCTION
 PAINTSTRUCT
+RECT
 
 REDRAW_WINDOW_FLAGS
+WIN32_ERROR
 WINDOW_EX_STYLE
 WINDOW_STYLE
+WPARAM
 
 AC_SRC_ALPHA
 AC_SRC_OVER
 HWND_TOPMOST
+IDC_ARROW
 S_OK
+TTM_ADDTOOL
+TTM_DELTOOL
+TTS_ALWAYSTIP

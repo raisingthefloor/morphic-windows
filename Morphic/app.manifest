@@ -45,8 +45,14 @@
       <!-- NOTE: per Microsoft's documentation, we can list multiple major Windows versions against which we have tested our application, starting with the oldest that both we and the Windows App SDK support; 
             see: https://learn.microsoft.com/en-us/windows/apps/windows-app-sdk/use-windows-app-sdk-run-time -->
       <maxversiontested Id="10.0.19041.0" /> <!-- Windows 10 v2004 -->
+      <maxversiontested Id="10.0.19042.0" /> <!-- Windows 10 v20H2 -->
+      <maxversiontested Id="10.0.19043.0" /> <!-- Windows 10 v21H1 -->
+      <maxversiontested Id="10.0.19044.0" /> <!-- Windows 10 v21H2 -->
+      <maxversiontested Id="10.0.19045.0" /> <!-- Windows 10 v22H2 -->
       <maxversiontested Id="10.0.22000.0" /> <!-- Windows 11 v21H2 -->
       <maxversiontested Id="10.0.22621.0" /> <!-- Windows 11 v22H2 -->
+      <maxversiontested Id="10.0.22631.0" /> <!-- Windows 11 v23H2 -->
+      <maxversiontested Id="10.0.26100.0" /> <!-- Windows 11 v24H2 -->
 
     </application>
   </compatibility>

@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2024 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2025 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -132,9 +132,17 @@ public partial class Registry
         {
             _handle = handle;
         }
-
-        internal RegistryKey(Windows.Win32.System.Registry.HKEY hkey) : this(new SafeRegistryHandle(hkey.Value, ownsHandle: false)) 
+        //
+        internal RegistryKey(Windows.Win32.System.Registry.HKEY hkey)
         {
+            IntPtr hkeyValueAsIntPtr;
+            unsafe 
+            {
+                hkeyValueAsIntPtr = new IntPtr(hkey.Value);
+            }
+            var handle = new SafeRegistryHandle(hkeyValueAsIntPtr, ownsHandle: false);
+
+            _handle = handle;
         }
 
         // NOTE: we override the finalizer because 'Dispose(bool disposing)' has code to free unmanaged resources
@@ -693,7 +701,7 @@ public partial class Registry
             }
         }
 
-        public record IRegisterWaitHandleForValueChangeNotificationError
+        public interface IRegisterWaitHandleForValueChangeNotificationError
         {
             public record ObjectDisposed : IRegisterWaitHandleForValueChangeNotificationError;
             public record Win32Error(int Win32ErrorCode) : IRegisterWaitHandleForValueChangeNotificationError;

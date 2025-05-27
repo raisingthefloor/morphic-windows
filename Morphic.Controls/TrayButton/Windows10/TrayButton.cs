@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2024 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2025 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -225,8 +225,15 @@ internal class TrayButton : IDisposable
         private string? _tooltipText = null;
         private bool _tooltipInfoAdded = false;
 
+        // NOTE: this timer is used to reposition the tray button when the screen resolution changes (and it keeps watch at an accelerated pace, to make sure the taskbar has stopped moving around)
         private System.Threading.Timer? _trayButtonPositionCheckupTimer;
         private int _trayButtonPositionCheckupTimerCounter = 0;
+
+        // NOTE: this timer is used to reposition the tray button when adjacent taskbar widgets (e.g. Windows 10 weather) change in size
+        private System.Threading.Timer? _trayButtonWidgetPositionCheckupTimer;
+        //
+        private TimeSpan _widgetPositionCheckupInterval = new TimeSpan(0, 0, 0, 1, 0); // NOTE: this is a failsafe mechanism; if our position changes more than this many times per minute, we will back off the widget reposition timer (to avoid a potential super-glitchy user experience, with a taskbar button that won't stop moving; this may also help avoid the unnecessary movement of adjacent widgets)
+        private Queue<DateTimeOffset> _widgetPositionChangeHistory = new();
 
         [Flags]
         private enum TrayButtonVisualStateFlags
@@ -311,6 +318,9 @@ internal class TrayButton : IDisposable
             //{
             this.PositionTrayButton();
             //}
+
+            // NOTE: due to the weather, news and other taskbar widgets introduced in late versions of Windows 10, we need to re-validate and re-position the taskbar icon when adjacent widgets overlay its position
+            _trayButtonWidgetPositionCheckupTimer = new System.Threading.Timer(TrayButtonWidgetPositionCheckup, null, _widgetPositionCheckupInterval, _widgetPositionCheckupInterval);
         }
 
         // NOTE: this function is somewhat redundant and is provided to support Windows 11; we should refactor all of this code to handle window messages centrally
@@ -428,8 +438,8 @@ internal class TrayButton : IDisposable
                 return;
             }
 
-            PInvoke.RECT trayButtonClientRect;
-            var getClientRectSuccess = PInvoke.User32.GetClientRect(this.Handle, out trayButtonClientRect);
+            Windows.Win32.Foundation.RECT trayButtonClientRect;
+            var getClientRectSuccess = Windows.Win32.PInvoke.GetClientRect((Windows.Win32.Foundation.HWND)this.Handle, out trayButtonClientRect);
             if (getClientRectSuccess == false)
             {
                 // failed; abort
@@ -559,6 +569,9 @@ internal class TrayButton : IDisposable
             {
                 _mouseHook.Dispose();
             }
+
+            _trayButtonWidgetPositionCheckupTimer?.Dispose();
+            _trayButtonWidgetPositionCheckupTimer = null;
 
             Microsoft.Win32.SystemEvents.DisplaySettingsChanged -= SystemEvents_DisplaySettingsChanged;
 
@@ -785,6 +798,45 @@ internal class TrayButton : IDisposable
                 if (calculateResult.Value.changeToRect is not null)
                 {
                     this.PositionTrayButton();
+                }
+            }
+        }
+        //
+        private void TrayButtonWidgetPositionCheckup(object? state)
+        {
+            const int NUM_CHANGE_HISTORY_ENTRIES_TO_AVERAGE = 10;
+            const int WIDGET_POSITION_INTERVAL_BACKOFF_MULTIPLIER = 2;
+
+            // check the current and desired positions of the notify tray icon
+            var calculateResult = this.CalculateCurrentAndTargetRectOfTrayButton();
+            if (calculateResult is not null)
+            {
+                if (calculateResult.Value.changeToRect is not null)
+                {
+                    // record the repositioning event's timestamp
+                    var currentRepositioningEventTimestamp = DateTimeOffset.UtcNow;
+                    _widgetPositionChangeHistory.Enqueue(currentRepositioningEventTimestamp);
+                    while (_widgetPositionChangeHistory.Count > NUM_CHANGE_HISTORY_ENTRIES_TO_AVERAGE)
+                    {
+                        _ = _widgetPositionChangeHistory.Dequeue();
+                    }
+
+                    // reposition the tray button
+                    this.PositionTrayButton();
+
+                    // determine if our repositioning is happening too frequently; if so, then increase its check interval (multiplied by WIDGET_POSITION_INTERVAL_BACKOFF_MULTIPLIER)
+                    var oldestChange = _widgetPositionChangeHistory.Peek();
+                    var numberOfHistoryEvents = _widgetPositionChangeHistory.Count;
+                    var totalDuration = currentRepositioningEventTimestamp.Subtract(oldestChange);
+                    if (numberOfHistoryEvents == NUM_CHANGE_HISTORY_ENTRIES_TO_AVERAGE)
+                    {
+                        TimeSpan averageIntervalPerChange = totalDuration / numberOfHistoryEvents;
+                        if (averageIntervalPerChange < _widgetPositionCheckupInterval * WIDGET_POSITION_INTERVAL_BACKOFF_MULTIPLIER)
+                        {
+                            _widgetPositionCheckupInterval *= WIDGET_POSITION_INTERVAL_BACKOFF_MULTIPLIER;
+                            _trayButtonWidgetPositionCheckupTimer?.Change(_widgetPositionCheckupInterval, _widgetPositionCheckupInterval);
+                        }
+                    }
                 }
             }
         }

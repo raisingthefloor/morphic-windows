@@ -364,7 +364,7 @@ public class Display
         unsafe
         {
             enumDisplayMonitorsResult = Windows.Win32.PInvoke.EnumDisplayMonitors(
-                (Windows.Win32.Graphics.Gdi.HDC)0,
+                Windows.Win32.Graphics.Gdi.HDC.Null,
                 (Windows.Win32.Foundation.RECT?)null,
                 (Windows.Win32.Graphics.Gdi.HMONITOR hMonitor, Windows.Win32.Graphics.Gdi.HDC hdcMonitor, Windows.Win32.Foundation.RECT* lpRect, Windows.Win32.Foundation.LPARAM lParam) =>
                 {

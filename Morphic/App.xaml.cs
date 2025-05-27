@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2024 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2025 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -53,15 +53,16 @@ public partial class App : Application
         // before initializing any user interface, initialize our localization culture
         var currentUICulture = System.Threading.Thread.CurrentThread.CurrentUICulture;
         var iso639LanguageCode = Morphic.Localization.LocalizationManager.GetIso639LanguageCode(currentUICulture);
+        var cultureName = Morphic.Localization.LocalizationManager.GetCultureName(currentUICulture);
         //
         // NOTE: if the current culture is not supported (or if it's the same as the base culture), fail silently and use the base settings
-        _ = Morphic.Localization.LocalizationManager.SetUICulture(App.Current.Resources, iso639LanguageCode);
+        _ = Morphic.Localization.LocalizationManager.SetUICulture(App.Current.Resources, iso639LanguageCode, cultureName);
 
         // create a single instance of our main menu
         this.MorphicMainMenu = new();
         //
         // NOTE: if the current culture is not supported (or if it's the same as the base culture), fail silently and use the base settings
-        _ = Morphic.Localization.LocalizationManager.SetUICulture(this.MorphicMainMenu.Resources, iso639LanguageCode);
+        _ = Morphic.Localization.LocalizationManager.SetUICulture(this.MorphicMainMenu.Resources, iso639LanguageCode, cultureName);
 
         // initialize our taskbar icon (button); this will not show the button
         this.InitTaskbarIconWithoutShowing();
@@ -116,7 +117,7 @@ public partial class App : Application
             Icon = morphicIcon,
             Text = "Morphic",
             TrayIconLocation = Controls.HybridTrayIcon.TrayIconLocationOption.NextToNotificationTray,
-            Visible = false,
+            Visible = false, // NOTE: default state; should not be necessary
         };
         this.HybridTrayIcon = hybridTrayIcon;
 

@@ -39,7 +39,7 @@ variables:
   value: |
          Morphic.Windows.Native/Morphic.Windows.Native.csproj
          Morphic/Morphic.csproj
-         MorphicSetup/MorphicSetup.csproj
+         MorphicSetup/MorphicSetup.wixproj
 - name: versionBuildComponents
   value: '.$(Build.BuildNumber)'
   

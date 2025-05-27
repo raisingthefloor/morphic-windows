@@ -1,4 +1,4 @@
-// Copyright 2020-2024 Raising the Floor - US, Inc.
+// Copyright 2020-2025 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -51,7 +51,7 @@ internal class PInvokeExtensions
         public uint uFlags;
         public IntPtr hwnd;
         public UIntPtr uId;
-        public PInvoke.RECT rect;
+        public Windows.Win32.Foundation.RECT rect;
         public IntPtr hinst;
         [MarshalAs(UnmanagedType.LPTStr)]
         public string? lpszText;
@@ -296,19 +296,19 @@ internal class PInvokeExtensions
     // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowlongptrw
     internal static IntPtr SetWindowLongPtr_IntPtr(Windows.Win32.Foundation.HWND hWnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX nIndex, IntPtr dwNewLong)
     {
+#if PLATFORM_X86
+        return (nint)Windows.Win32.PInvoke.SetWindowLong(hWnd, nIndex, (int)dwNewLong);
+#else
         if (IntPtr.Size == 4)
         {
             return (nint)Windows.Win32.PInvoke.SetWindowLong(hWnd, nIndex, (int)dwNewLong);
         }
         else
         {
-            return PInvokeExtensions.SetWindowLongPtr(hWnd, nIndex, dwNewLong);
+            return Windows.Win32.PInvoke.SetWindowLongPtr(hWnd, nIndex, dwNewLong);
         }
+#endif
     }
-    //
-    // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowlongptrw
-    [DllImport("user32.dll", SetLastError = true)]
-    private static extern IntPtr SetWindowLongPtr(IntPtr hWnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX nIndex, IntPtr dwNewLong);
 
     // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwineventhook
     [DllImport("user32.dll")]

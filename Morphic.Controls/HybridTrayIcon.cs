@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2024 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2025 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -161,7 +161,8 @@ public class HybridTrayIcon : IDisposable
             }
             if (_trayButton is not null)
             {
-                _trayButton.Visible = _visible;
+                // NOTE: we set the visibility tag; if the tray button cannot currently be made visible, it will become ".PendingVisible" instead
+                _trayButton.Visibility = _visible ? TrayButton.TrayButtonVisibility.Visible : TrayButton.TrayButtonVisibility.Hidden;
             }
         }
     }
@@ -190,16 +191,6 @@ public class HybridTrayIcon : IDisposable
 
         return MorphicResult.OkResult(result);
     }
-
-    //
-
-    // NOTE: this may be uncommented if the functionality is required
-#if FALSE
-    public void SuppressTaskbarButtonResurfaceChecks(bool suppress)
-    {
-        _trayButton?.SuppressTaskbarButtonResurfaceChecks(suppress);
-    }
-#endif
 
     //
 
@@ -232,6 +223,7 @@ public class HybridTrayIcon : IDisposable
     {
         if (_trayButton is not null)
         {
+            // if we are being initialized a second time, simply return success
             return;
         }
 
@@ -250,7 +242,9 @@ public class HybridTrayIcon : IDisposable
                 this.Click?.Invoke(this, args);
             }
         };
-        _trayButton.Visible = _visible;
+        //
+        // NOTE: we set the visibility tag; if the tray button cannot currently be made visible, it will become ".PendingVisible" instead
+        _trayButton.Visibility = _visible ? TrayButton.TrayButtonVisibility.Visible : TrayButton.TrayButtonVisibility.Hidden;
     }
 
     //

@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2024 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2025 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -99,6 +99,8 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
                 }
 
                 _argbImageNativeWindow?.Dispose();
+
+                _resurfaceTaskbarButtonTimer?.Dispose();
             }
 
             // free unmanaged resources (unmanaged objects) and override finalizer
@@ -138,25 +140,42 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
         if (s_morphicTrayButtonClassInfoExAtom is null)
         {
             // register our control's custom native window class
-            var pointerToWndProcCallback = Marshal.GetFunctionPointerForDelegate(new PInvokeExtensions.WndProc(result.WndProcCallback));
+            nint pointerToWndProcCallback;
+            try
+            {
+                pointerToWndProcCallback = Marshal.GetFunctionPointerForDelegate(new PInvokeExtensions.WndProc(result.WndProcCallback));
+            }
+            catch (Exception ex)
+            {
+                return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.OtherException(ex));
+            }
+            //
+            var hCursor = Windows.Win32.PInvoke.LoadCursor(Windows.Win32.Foundation.HINSTANCE.Null, Windows.Win32.PInvoke.IDC_ARROW);
+            if (hCursor.IsNull == true)
+            {
+                Debug.Assert(false, "Could not load arrow cursor");
+                var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+                return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.Win32Error((uint)win32ErrorCode));
+            }
+            //
             var lpWndClassEx = new PInvokeExtensions.WNDCLASSEX
             {
                 cbSize = (uint)Marshal.SizeOf(typeof(PInvokeExtensions.WNDCLASSEX)),
                 lpfnWndProc = pointerToWndProcCallback,
                 lpszClassName = nativeWindowClassName,
-                hCursor = PInvoke.User32.LoadCursor(IntPtr.Zero, (IntPtr)PInvoke.User32.Cursors.IDC_ARROW).DangerousGetHandle()
+                hCursor = hCursor,
             };
 
             // NOTE: RegisterClassEx returns an ATOM (or 0 if the call failed)
             var registerClassResult = PInvokeExtensions.RegisterClassEx(ref lpWndClassEx);
             if (registerClassResult == 0) // failure
             {
-                var win32Exception = new PInvoke.Win32Exception(Marshal.GetLastWin32Error());
-                if (win32Exception.NativeErrorCode == PInvoke.Win32ErrorCode.ERROR_CLASS_ALREADY_EXISTS)
+                var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+                if (win32ErrorCode == (int)Windows.Win32.Foundation.WIN32_ERROR.ERROR_CLASS_ALREADY_EXISTS)
                 {
                     Debug.Assert(false, "Class was already registered; we should have recorded this ATOM, and we cannot proceed");
                 }
-                return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.Win32Error((uint)win32Exception.ErrorCode));
+                return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.Win32Error((uint)win32ErrorCode));
             }
             s_morphicTrayButtonClassInfoExAtom = registerClassResult;
         }
@@ -165,10 +184,24 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
         var calculatePositionResult = TrayButtonNativeWindow.CalculatePositionAndSizeForTrayButton(null);
         if (calculatePositionResult.IsError)
         {
-            Debug.Assert(false, "Cannot calculate position for tray button");
-            return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.CouldNotCalculateWindowPosition());
+            switch (calculatePositionResult.Error!)
+            {
+                case ICalculatePositionAndSizeForTrayButtonError.CouldNotFindTaskbarRelatedHandle:
+                    return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.CouldNotFindTaskbarRelatedHandle());
+                case ICalculatePositionAndSizeForTrayButtonError.CannotFitOnTaskbar:
+                    return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.CannotFitOnTaskbar());
+                case ICalculatePositionAndSizeForTrayButtonError.Win32Error(var win32ErrorCode):
+                    return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.Win32Error(win32ErrorCode));
+                default:
+                    throw new MorphicUnhandledErrorException();
+            }
         }
         var trayButtonPositionAndSize = calculatePositionResult.Value!;
+        if (trayButtonPositionAndSize.Width == 0 || trayButtonPositionAndSize.Height == 0)
+        {
+            Debug.Assert(false, "Tray button position calculated, but it's zero pixels in size");
+            return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.CannotFitOnTaskbar());
+        }
         //
         // capture our initial position and size
         result._trayButtonPositionAndSize = trayButtonPositionAndSize;
@@ -176,10 +209,38 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
         /* get the handle for the taskbar; it will be the owner of our native window (so that our window sits above it in the zorder) */
         // NOTE: we will still need to push our window to the front of its owner's zorder stack in some circumstances, as certain actions (such as popping up the task list balloons above the task bar) will reorder the taskbar's zorder and push us behind the taskbar
         // NOTE: making the taskbar our owner has the side-effect of putting our window above full-screen applications (even though our window is not itself "always on top"); we will need to hide our window whenever a window goes full-screen on the same monitor (and re-show our window whenever the window exits full-screen mode)
-        var taskbarHandle = TrayButtonNativeWindow.GetWindowsTaskbarHandle();
+        var getTaskbarHandleResult = TrayButtonNativeWindow.GetWindowsTaskbarHandle();
+        if (getTaskbarHandleResult.IsError == true)
+        {
+            switch (getTaskbarHandleResult.Error!)
+            {
+                case Morphic.WindowsNative.IWin32ApiError.Win32Error(var win32ErrorCode):
+                    return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.Win32Error(win32ErrorCode));
+                default:
+                    throw new MorphicUnhandledErrorException();
+            }
+        }
+        var taskbarHandle = getTaskbarHandleResult.Value!;
+        if (taskbarHandle == Windows.Win32.Foundation.HWND.Null)
+        {
+            return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.CouldNotFindTaskbarRelatedHandle());
+        }
 
         // capture the current state of the taskbar; this is combined with the visibility value to determine whether or not the window is actually visible to the user
-        result._taskbarIsTopmost = TrayButtonNativeWindow.IsTaskbarTopmost();
+        var getTaskbarIsTopmostResult = TrayButtonNativeWindow.GetTaskbarIsTopmost();
+        if (getTaskbarIsTopmostResult.IsError == true)
+        {
+            switch (getTaskbarIsTopmostResult.Error!)
+            {
+                case IGetTaskbarIsTopmostError.CouldNotFindTaskbarRelatedHandle:
+                    return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.CouldNotFindTaskbarRelatedHandle());
+                case IGetTaskbarIsTopmostError.Win32Error(var win32ErrorCode):
+                    return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.Win32Error(win32ErrorCode));
+                default:
+                    throw new MorphicUnhandledErrorException();
+            }
+        }
+        result._taskbarIsTopmost = getTaskbarIsTopmostResult.Value!;
 
 
         /* create an instance of our native window */
@@ -228,15 +289,19 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
             }
         }
 
-        // since we are making the control visible by default, set its _visibility state
+        // since we are making the native window visible by default, set its visibility state
+        // NOTE: this native window's visibility state is separate from the TrayButton's visibility state; the TrayButton's state is the desired visible state from the user's perspective (and can report when the button cannot currently be drawn), whereas
+        //       this native window's visibility state indicates whether or not the native control should be visible IF the taskbar is on top (i.e. not in a full-screen video scenario, etc.)
         result._visibility = System.Windows.Visibility.Visible;
 
-        // create an instance of the ArgbImageNativeWindow to hold our icon; we cannot draw the bitmap directly on this window as the bitmap would then be alphablended the same % as our background (instead of being independently blended over our window)
+        // create an instance of the ArgbImageNativeWindow to hold our icon; we cannot draw the bitmap directly on this window as the bitmap would then be alpha-blended the same % as our background (instead of being independently blended over our window)
         var argbImageNativeWindowResult = ArgbImageNativeWindow.CreateNew(result.Handle, windowParams.X, windowParams.Y, windowParams.Width, windowParams.Height);
         if (argbImageNativeWindowResult.IsError == true)
         {
             result.Dispose();
-            return MorphicResult.ErrorResult(argbImageNativeWindowResult.Error!);
+            //
+            // NOTE: ArgbImageNativeWindow returns the same ICreateNewError errors, so we can just pass them along...
+            return MorphicResult.ErrorResult<ICreateNewError>(argbImageNativeWindowResult.Error!);
         }
         result._argbImageNativeWindow = argbImageNativeWindowResult.Value!;
 
@@ -254,6 +319,10 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
              PInvokeExtensions.WinEventHookFlags.WINEVENT_OUTOFCONTEXT | PInvokeExtensions.WinEventHookFlags.WINEVENT_SKIPOWNPROCESS
         );
         Debug.Assert(locationChangeWindowEventHook != IntPtr.Zero, "Could not wire up location change window event listener for tray button");
+        if (locationChangeWindowEventHook == IntPtr.Zero)
+        {
+            return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.CouldNotWireUpWatchEvents());
+        }
         //
         result._locationChangeWindowEventHook = locationChangeWindowEventHook;
         // NOTE: we must capture the delegate so that it is not garbage collected; otherwise the native callbacks can crash the .NET execution engine
@@ -272,6 +341,10 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
              PInvokeExtensions.WinEventHookFlags.WINEVENT_OUTOFCONTEXT | PInvokeExtensions.WinEventHookFlags.WINEVENT_SKIPOWNPROCESS
         );
         Debug.Assert(objectReorderWindowEventHook != IntPtr.Zero, "Could not wire up object reorder window event listener for tray button");
+        if (objectReorderWindowEventHook == IntPtr.Zero)
+        {
+            return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.CouldNotWireUpWatchEvents());            
+        }
         //
         result._objectReorderWindowEventHook = objectReorderWindowEventHook;
         // NOTE: we must capture the delegate so that it is not garbage collected; otherwise the native callbacks can crash the .NET execution engine
@@ -330,8 +403,8 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
             );
             if (handle == IntPtr.Zero)
             {
-                var lastError = Marshal.GetLastWin32Error();
-                throw new PInvoke.Win32Exception(lastError);
+                var win32ErrorCode = Marshal.GetLastWin32Error();
+                throw new System.ComponentModel.Win32Exception(win32ErrorCode);
             }
 
             this.AssignHandle(handle);
@@ -345,6 +418,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
         }
     }
 
+    //
 
     // Listen to when the handle changes to keep the argb image native window synced
     protected override void OnHandleChange()
@@ -388,7 +462,9 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
             case PInvoke.User32.WindowMessage.WM_LBUTTONDOWN:
                 {
                     _visualState |= TrayButtonVisualStateFlags.LeftButtonPressed;
-                    this.UpdateVisualStateAlpha();
+                    //
+                    var updateVisualStateAlphaResult = this.UpdateVisualStateAlpha();
+                    Debug.Assert(updateVisualStateAlphaResult.IsSuccess, "Could not update visual state.");
 
                     result = IntPtr.Zero;
                 }
@@ -396,10 +472,12 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
             case PInvoke.User32.WindowMessage.WM_LBUTTONUP:
                 {
                     _visualState &= ~TrayButtonVisualStateFlags.LeftButtonPressed;
-                    this.UpdateVisualStateAlpha();
+                    //
+                    var updateVisualStateAlphaResult = this.UpdateVisualStateAlpha();
+                    Debug.Assert(updateVisualStateAlphaResult.IsSuccess, "Could not update visual state.");
 
                     var convertLParamResult = this.ConvertMouseMessageLParamToScreenPoint(m.LParam);
-                    if (convertLParamResult.IsSuccess)
+                    if (convertLParamResult.IsSuccess == true)
                     {
                         var hitPoint = convertLParamResult.Value!;
 
@@ -408,7 +486,14 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
                     }
                     else
                     {
-                        Debug.Assert(false, "Could not map tray button hit point to screen coordinates");
+                        switch (convertLParamResult.Error!)
+                        {
+                            case Morphic.WindowsNative.IWin32ApiError.Win32Error(var win32ErrorCode):
+                                Debug.Assert(false, "Could not map tray button hit point to screen coordinates; win32 errcode: " + win32ErrorCode.ToString());
+                                break;
+                            default:
+                                throw new MorphicUnhandledErrorException();
+                        }
                     }
 
                     result = IntPtr.Zero;
@@ -423,7 +508,9 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
                     //       (and then we check them again when the mouse moves back over the button)
                     _visualState &= ~TrayButtonVisualStateFlags.LeftButtonPressed;
                     _visualState &= ~TrayButtonVisualStateFlags.RightButtonPressed;
-                    this.UpdateVisualStateAlpha();
+                    //
+                    var updateVisualStateAlphaResult = this.UpdateVisualStateAlpha();
+                    Debug.Assert(updateVisualStateAlphaResult.IsSuccess, "Could not update visual state.");
 
                     result = IntPtr.Zero;
                 }
@@ -438,12 +525,16 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
                     if (((_visualState & TrayButtonVisualStateFlags.LeftButtonPressed) == 0) && ((m.WParam.ToInt64() & PInvokeExtensions.MK_LBUTTON) != 0))
                     {
                         _visualState |= TrayButtonVisualStateFlags.LeftButtonPressed;
-                        this.UpdateVisualStateAlpha();
+                        //
+                        var updateVisualStateAlphaResult = this.UpdateVisualStateAlpha();
+                        Debug.Assert(updateVisualStateAlphaResult.IsSuccess, "Could not update visual state.");
                     }
                     if (((_visualState & TrayButtonVisualStateFlags.RightButtonPressed) == 0) && ((m.WParam.ToInt64() & PInvokeExtensions.MK_RBUTTON) != 0))
                     {
                         _visualState |= TrayButtonVisualStateFlags.RightButtonPressed;
-                        this.UpdateVisualStateAlpha();
+                        //
+                        var updateVisualStateAlphaResult = this.UpdateVisualStateAlpha();
+                        Debug.Assert(updateVisualStateAlphaResult.IsSuccess, "Could not update visual state.");
                     }
 
                     result = IntPtr.Zero;
@@ -453,7 +544,11 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
                 {
                     // NOTE: we are calling this in response to WM_NCDESTROY (instead of WM_DESTROY)
                     //       see: https://learn.microsoft.com/en-us/windows/win32/api/uxtheme/nf-uxtheme-bufferedpaintinit
-                    _ = Windows.Win32.PInvoke.BufferedPaintUnInit();
+                    var bufferedPaintUnInitResult = Windows.Win32.PInvoke.BufferedPaintUnInit();
+                    if (bufferedPaintUnInitResult != 0)
+                    {
+                        Debug.Assert(false, "Could not uninitialize buffered painting (in response to WM_NCDESTROY)");
+                    }
 
                     // NOTE: we pass along this message (i.e. we don't return a "handled" result)
                 }
@@ -477,7 +572,9 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
             case PInvoke.User32.WindowMessage.WM_RBUTTONDOWN:
                 {
                     _visualState |= TrayButtonVisualStateFlags.RightButtonPressed;
-                    this.UpdateVisualStateAlpha();
+                    //
+                    var updateVisualStateAlphaResult = this.UpdateVisualStateAlpha();
+                    Debug.Assert(updateVisualStateAlphaResult.IsSuccess, "Could not update visual state.");
 
                     result = IntPtr.Zero;
                 }
@@ -485,7 +582,9 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
             case PInvoke.User32.WindowMessage.WM_RBUTTONUP:
                 {
                     _visualState &= ~TrayButtonVisualStateFlags.RightButtonPressed;
-                    this.UpdateVisualStateAlpha();
+                    //
+                    var updateVisualStateAlphaResult = this.UpdateVisualStateAlpha();
+                    Debug.Assert(updateVisualStateAlphaResult.IsSuccess, "Could not update visual state.");
 
                     var convertLParamResult = this.ConvertMouseMessageLParamToScreenPoint(m.LParam);
                     if (convertLParamResult.IsSuccess)
@@ -497,7 +596,14 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
                     }
                     else
                     {
-                        Debug.Assert(false, "Could not map tray button hit point to screen coordinates");
+                        switch (convertLParamResult.Error!)
+                        {
+                            case Morphic.WindowsNative.IWin32ApiError.Win32Error(var win32ErrorCode):
+                                Debug.Assert(false, "Could not map tray button hit point to screen coordinates; win32 errcode: " + win32ErrorCode.ToString());
+                                break;
+                            default:
+                                throw new MorphicUnhandledErrorException();
+                        }
                     }
 
                     result = IntPtr.Zero;
@@ -518,7 +624,9 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
                         case PInvoke.User32.WindowMessage.WM_LBUTTONDOWN:
                             {
                                 _visualState |= TrayButtonVisualStateFlags.LeftButtonPressed;
-                                this.UpdateVisualStateAlpha();
+                                //
+                                var updateVisualStateAlphaResult = this.UpdateVisualStateAlpha();
+                                Debug.Assert(updateVisualStateAlphaResult.IsSuccess, "Could not update visual state.");
 
                                 result = new IntPtr(1);
                             }
@@ -526,7 +634,9 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
                         case PInvoke.User32.WindowMessage.WM_LBUTTONUP:
                             {
                                 _visualState &= ~TrayButtonVisualStateFlags.LeftButtonPressed;
-                                this.UpdateVisualStateAlpha();
+                                //
+                                var updateVisualStateAlphaResult = this.UpdateVisualStateAlpha();
+                                Debug.Assert(updateVisualStateAlphaResult.IsSuccess, "Could not update visual state.");
 
                                 result = new IntPtr(1);
                             }
@@ -538,16 +648,20 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
                                 if ((_visualState & TrayButtonVisualStateFlags.Hover) == 0)
                                 {
                                     // track mousehover (for tooltips) and mouseleave (to remove hover effect)
+                                    // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-trackmouseevent
                                     var eventTrack = PInvokeExtensions.TRACKMOUSEEVENT.CreateNew(PInvokeExtensions.TRACKMOUSEEVENTFlags.TME_LEAVE, this.Handle, PInvokeExtensions.HOVER_DEFAULT);
                                     var trackMouseEventSuccess = PInvokeExtensions.TrackMouseEvent(ref eventTrack);
                                     if (trackMouseEventSuccess == false)
                                     {
-                                        // failed; we could capture the win32 error code via GetLastWin32Error
-                                        Debug.Assert(false, "Could not set up tracking of tray button window area");
+                                        // failed
+                                        var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+                                        Debug.Assert(false, "Could not set up tracking of tray button window area; win32 errcode: " + win32ErrorCode.ToString());
                                     }
 
                                     _visualState |= TrayButtonVisualStateFlags.Hover;
-                                    this.UpdateVisualStateAlpha();
+                                    //
+                                    var updateVisualStateAlphaResult = this.UpdateVisualStateAlpha();
+                                    Debug.Assert(updateVisualStateAlphaResult.IsSuccess, "Could not update visual state.");
                                 }
                                 result = new IntPtr(1);
                             }
@@ -555,7 +669,9 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
                         case PInvoke.User32.WindowMessage.WM_RBUTTONDOWN:
                             {
                                 _visualState |= TrayButtonVisualStateFlags.RightButtonPressed;
-                                this.UpdateVisualStateAlpha();
+                                //
+                                var updateVisualStateAlphaResult = this.UpdateVisualStateAlpha();
+                                Debug.Assert(updateVisualStateAlphaResult.IsSuccess, "Could not update visual state.");
 
                                 result = new IntPtr(1);
                             }
@@ -563,7 +679,9 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
                         case PInvoke.User32.WindowMessage.WM_RBUTTONUP:
                             {
                                 _visualState &= ~TrayButtonVisualStateFlags.RightButtonPressed;
-                                this.UpdateVisualStateAlpha();
+                                //
+                                var updateVisualStateAlphaResult = this.UpdateVisualStateAlpha();
+                                Debug.Assert(updateVisualStateAlphaResult.IsSuccess, "Could not update visual state.");
 
                                 result = new IntPtr(1);
                             }
@@ -588,32 +706,36 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
             // NOTE: per the Microsoft .NET documentation, we should call base.WndProc to process any events which we have not handled; however,
             //       in our testing, this led to frequent crashes.  So instead, we follow the traditional pattern and call DefWindowProc to handle any events which we have not handled
             //       see: https://learn.microsoft.com/en-us/dotnet/api/system.windows.forms.nativewindow.wndproc?view=windowsdesktop-6.0
-            m.Result = PInvoke.User32.DefWindowProc(m.HWnd, (PInvoke.User32.WindowMessage)m.Msg, m.WParam, m.LParam);
-            //base.WndProc(ref m); // causes crashes (when other native windows are capturing/processing/passing along messages)
+            m.Result = PInvoke.User32.DefWindowProc(m.HWnd, (PInvoke.User32.WindowMessage) m.Msg, m.WParam, m.LParam);
+            //base.WndProc(ref m); // DO NOT USE: this causes crashes (when other native windows are capturing/processing/passing along messages)
         }
     }
 
     // NOTE: this function may ONLY be called when responding to a WM_PAINT message
+    // NOTE: we do not return any error result from this function; instead, we log or assert errors and then just abort the paint attempt
     private void OnPaintWindowsMessage(Windows.Win32.Foundation.HWND hWnd)
     {
         // create a device context for drawing; we must destroy this automatically in a finally block.  We are effectively replicating the functionality of C++'s CPaintDC.
         Windows.Win32.Graphics.Gdi.PAINTSTRUCT paintStruct;
         // NOTE: we experienced significant issues using PInvoke.User32.BeginPaint (possibly due to its IntPtr result wrapper), so we have redeclared the BeginPaint function ourselves
+        // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-beginpaint
         var deviceContext = Windows.Win32.PInvoke.BeginPaint(hWnd, out paintStruct)!;
         if (deviceContext == IntPtr.Zero)
         {
             // no display context is available
-            Debug.Assert(false, "Cannot paint TrayButton in response to WM_PAINT message; no display context is available.");
+            Debug.Assert(false, "Cannot paint TrayButton in response to WM_PAINT message; no display device context is available.");
             return;
         }
         try
         {
             // NOTE: to avoid flickering, we use buffered painting to erase the background, fill the background with a single (white) brush, and then apply the painted area to the window in a single paint operation
+            // see: https://learn.microsoft.com/en-us/windows/win32/api/uxtheme/nf-uxtheme-beginbufferedpaint
             Windows.Win32.Graphics.Gdi.HDC bufferedPaintDc;
             var paintBufferHandle = Windows.Win32.PInvoke.BeginBufferedPaint(paintStruct.hdc, in paintStruct.rcPaint, Windows.Win32.UI.Controls.BP_BUFFERFORMAT.BPBF_TOPDOWNDIB, null, out bufferedPaintDc);
             if (paintBufferHandle == IntPtr.Zero)
             {
-                Debug.Assert(false, "Cannot begin a buffered paint operation for TrayButton (when responding to a WM_PAINT message).");
+                var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+                Debug.Assert(false, "Cannot begin a buffered paint operation for TrayButton (when responding to a WM_PAINT message); win32 errcode: " + win32ErrorCode.ToString());
                 return;
             }
             try
@@ -621,14 +743,16 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
                 // NOTE: this is the section where we call all of our actual (buffered) paint operations
 
                 // clear our window's background (i.e. the buffer background)
+                // see: https://learn.microsoft.com/en-us/windows/win32/api/uxtheme/nf-uxtheme-bufferedpaintclear
                 var bufferedPaintClearHresult = Windows.Win32.PInvoke.BufferedPaintClear(paintBufferHandle, paintStruct.rcPaint);
                 if (bufferedPaintClearHresult != Windows.Win32.Foundation.HRESULT.S_OK)
                 {
-                    Debug.Assert(false, "Could not clear background of TrayButton window--using buffered clearing (when responding to a WM_Paint message).");
+                    Debug.Assert(false, "Could not clear background of TrayButton window--using buffered clearing (when responding to a WM_Paint message); result: " + bufferedPaintClearHresult.ToString());
                     return;
                 }
 
                 // create a solid white brush
+                // see: https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-createsolidbrush
                 var createSolidBrushResult = Windows.Win32.PInvoke.CreateSolidBrush((Windows.Win32.Foundation.COLORREF)0x00FFFFFF);
                 if (createSolidBrushResult == IntPtr.Zero)
                 {
@@ -636,11 +760,13 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
                     return;
                 }
                 var whiteBrush = createSolidBrushResult;
+                //
                 try
                 {
                     int fillRectResult;
                     unsafe
                     {
+                        // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-fillrect
                         fillRectResult = Windows.Win32.PInvoke.FillRect(bufferedPaintDc, &paintStruct.rcPaint, whiteBrush);
                     }
                     Debug.Assert(fillRectResult != 0, "Could not fill highlight background of Tray icon with white brush");
@@ -648,6 +774,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
                 finally
                 {
                     // clean up the white solid brush we created for the fill operation
+                    // see: https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-deleteobject
                     var deleteObjectSuccess = Windows.Win32.PInvoke.DeleteObject(whiteBrush);
                     Debug.Assert(deleteObjectSuccess == true, "Could not delete white brush object used to highlight Tray icon");
                 }
@@ -655,13 +782,16 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
             finally
             {
                 // complete the buffered paint operation and free the buffered paint handle
+                // see: https://learn.microsoft.com/en-us/windows/win32/api/uxtheme/nf-uxtheme-endbufferedpaint
                 var endBufferedPaintHresult = Windows.Win32.PInvoke.EndBufferedPaint(paintBufferHandle, true /* copy buffer to DC, completing the paint operation */);
-                Debug.Assert(endBufferedPaintHresult == Windows.Win32.Foundation.HRESULT.S_OK, "Error while attempting to end buffered paint operation for TrayButton; hresult: " + endBufferedPaintHresult);
+                Debug.Assert(endBufferedPaintHresult == Windows.Win32.Foundation.HRESULT.S_OK, "Error while attempting to end buffered paint operation for TrayButton; hresult: " + endBufferedPaintHresult.ToString());
             }
         }
         finally
         {
             // mark the end of painting; this function must always be called when BeginPaint was called (and succeeded), and only after drawing is complete
+            //
+            // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-endpaint
             // NOTE: per the MSDN docs, this function never returns zero (so there is no result to check)
             _ = Windows.Win32.PInvoke.EndPaint(hWnd, in paintStruct);
         }
@@ -675,18 +805,49 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
         }
         set
         {
+            switch (value)
+            {
+                case System.Windows.Visibility.Visible:
+                case System.Windows.Visibility.Hidden:
+                    // allowed
+                    break;
+                case System.Windows.Visibility.Collapsed:
+                    // not allowed
+                    throw new ArgumentException("Visibility may not be set to Collapsed");
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
             if (_visibility != value)
             {
                 _visibility = value;
-                this.UpdateVisibility();
+                var updateVisibilityResult = this.UpdateVisibility();
+                if (updateVisibilityResult.IsError == true)
+                {
+                    // NOTE: we may want to consider parsing out errors here
+                    Debug.Assert(false, "Could not update .Visibility");
+                }
             }
         }
     }
 
-    private void UpdateVisibility()
+    private MorphicResult<MorphicUnit, Morphic.WindowsNative.IWin32ApiError> UpdateVisibility()
     {
         _argbImageNativeWindow?.SetVisible(this.ShouldWindowBeVisible());
-        this.UpdateVisualStateAlpha();
+        //
+        var updateVisualStateAlphaResult = this.UpdateVisualStateAlpha();
+        if (updateVisualStateAlphaResult.IsError == true)
+        {
+            switch (updateVisualStateAlphaResult.Error!)
+            {
+                case Morphic.WindowsNative.IWin32ApiError.Win32Error(var win32ErrorCode):
+                    return MorphicResult.ErrorResult<Morphic.WindowsNative.IWin32ApiError>(new Morphic.WindowsNative.IWin32ApiError.Win32Error(win32ErrorCode));
+                default:
+                    throw new MorphicUnhandledErrorException();
+            }
+        }
+
+        return MorphicResult.OkResult();
     }
 
     private bool ShouldWindowBeVisible()
@@ -694,7 +855,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
         return (_visibility == System.Windows.Visibility.Visible) && (_taskbarIsTopmost == true);
     }
 
-    private void UpdateVisualStateAlpha()
+    private MorphicResult<MorphicUnit, Morphic.WindowsNative.IWin32ApiError> UpdateVisualStateAlpha()
     {
         // default to "Normal" visual state
         Double highlightOpacity = 0.0;
@@ -712,13 +873,35 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
             }
 
             var alpha = (byte)((double)255 * highlightOpacity);
-            TrayButtonNativeWindow.SetBackgroundAlpha((Windows.Win32.Foundation.HWND)this.Handle, Math.Max(alpha, ALPHA_VALUE_FOR_TRANSPARENT_BUT_HIT_TESTABLE));
+            var setBackgroundAlphaResult = TrayButtonNativeWindow.SetBackgroundAlpha((Windows.Win32.Foundation.HWND)this.Handle, Math.Max(alpha, ALPHA_VALUE_FOR_TRANSPARENT_BUT_HIT_TESTABLE));
+            if (setBackgroundAlphaResult.IsError == true)
+            {
+                switch (setBackgroundAlphaResult.Error!)
+                {
+                    case Morphic.WindowsNative.IWin32ApiError.Win32Error(var win32ErrorCode):
+                        return MorphicResult.ErrorResult<Morphic.WindowsNative.IWin32ApiError>(new Morphic.WindowsNative.IWin32ApiError.Win32Error(win32ErrorCode));
+                    default:
+                        throw new MorphicUnhandledErrorException();
+                }
+            }
         }
         else
         {
             // collapsed or hidden controls should be invisible
-            TrayButtonNativeWindow.SetBackgroundAlpha((Windows.Win32.Foundation.HWND)this.Handle, 0);
+            var setBackgroundAlphaResult = TrayButtonNativeWindow.SetBackgroundAlpha((Windows.Win32.Foundation.HWND)this.Handle, 0);
+            if (setBackgroundAlphaResult.IsError == true)
+            {
+                switch (setBackgroundAlphaResult.Error!)
+                {
+                    case Morphic.WindowsNative.IWin32ApiError.Win32Error(var win32ErrorCode):
+                        return MorphicResult.ErrorResult<Morphic.WindowsNative.IWin32ApiError>(new Morphic.WindowsNative.IWin32ApiError.Win32Error(win32ErrorCode));
+                    default:
+                        throw new MorphicUnhandledErrorException();
+                }
+            }
         }
+
+        return MorphicResult.OkResult();
     }
 
     private static MorphicResult<MorphicUnit, Morphic.WindowsNative.IWin32ApiError> SetBackgroundAlpha(Windows.Win32.Foundation.HWND handle, byte alpha)
@@ -747,10 +930,12 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
         // attempt to capture the class name for the window; if the window has already been destroyed, this will fail
         string? className = null;
         var getWindowClassNameResult = TrayButtonNativeWindow.GetWindowClassName(hwnd);
-        if (getWindowClassNameResult.IsSuccess)
+        if (getWindowClassNameResult.IsError == true)
         {
-            className = getWindowClassNameResult.Value!;
+            Debug.Assert(false, "Could not get window class name; has the window already been destroyed?");
+            return;
         }
+        className = getWindowClassNameResult.Value!;
 
         if (className == "TaskListThumbnailWnd" || className == "TaskListOverlayWnd")
         {
@@ -763,26 +948,10 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
             // if the window being moved was the taskbar or the taskbar's notification tray, recalculate and update our position
             // NOTE: we might also consider watching for location changes of the task button container, but as we don't use it for position/size calculations at the present time we do not watch accordingly
             var repositionResult = this.RecalculatePositionAndRepositionWindow();
+            // NOTE: if we want to handle error cases of RecalculatePositionAndRepositionWindow, we can do so here.
             Debug.Assert(repositionResult.IsSuccess, "Could not reposition Tray Button window");
         }
     }
-
-// NOTE: this may be uncommented if the functionality is required
-#if FALSE
-    // NOTE: this function is used to temporary suppress taskbar button resurface checks (which are done when the app needs to place other content above the taskbar and above our control...such as a right-click context menu)
-    public void SuppressTaskbarButtonResurfaceChecks(bool suppress)
-    {
-        if (suppress == true)
-        {
-            _resurfaceTaskbarButtonTimer?.Dispose();
-            _resurfaceTaskbarButtonTimer = null;
-        }
-        else
-        {
-            _resurfaceTaskbarButtonTimer = new(this.ResurfaceTaskButtonTimerCallback, null, TrayButtonNativeWindow.RESURFACE_TASKBAR_BUTTON_INTERVAL_TIMESPAN, TrayButtonNativeWindow.RESURFACE_TASKBAR_BUTTON_INTERVAL_TIMESPAN);
-        }
-    }
-#endif
 
     // NOTE: just in case we miss any edge cases to resurface our button, we resurface it from time to time on a timer
     private void ResurfaceTaskButtonTimerCallback(object? state)
@@ -792,7 +961,12 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
 
     private void BringTaskButtonTopmostWithoutActivating()
     {
-        Windows.Win32.PInvoke.SetWindowPos((Windows.Win32.Foundation.HWND)this.Handle, Windows.Win32.Foundation.HWND.HWND_TOPMOST, 0, 0, 0, 0, Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOMOVE | Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOSIZE | Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
+        var setWindowPosSuccess = Windows.Win32.PInvoke.SetWindowPos((Windows.Win32.Foundation.HWND)this.Handle, Windows.Win32.Foundation.HWND.HWND_TOPMOST, 0, 0, 0, 0, Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOMOVE | Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOSIZE | Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
+        if (setWindowPosSuccess == false)
+        {
+            var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+            Debug.Assert(false, "Could not bring task button topmost; win32 error: " + win32ErrorCode.ToString());
+        }
     }
 
     private void ObjectReorderWindowEventProc(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint idEventThread, uint dwmsEventTime)
@@ -806,12 +980,15 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
         // attempt to capture the class name for the window; if the window has already been destroyed, this will fail
         string? className = null;
         var getWindowClassNameResult = TrayButtonNativeWindow.GetWindowClassName(hwnd);
-        if (getWindowClassNameResult.IsSuccess)
+        if (getWindowClassNameResult.IsError == true)
         {
-            className = getWindowClassNameResult.Value!;
+            Debug.Assert(false, "Could not get window class name; has the window already been destroyed?");
+            return;
         }
+        className = getWindowClassNameResult.Value!;
 
         // capture the desktop handle
+        // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getdesktopwindow
         var desktopHandle = Windows.Win32.PInvoke.GetDesktopWindow();
 
         // if the reordered window was either the taskbar or the desktop, update the _taskbarIsTopmost state; this will generally be triggered when an app goes full-screen (or full-screen mode is exited)
@@ -821,42 +998,109 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
             this.BringTaskButtonTopmostWithoutActivating();
 
             // determine if the taskbar is topmost; the taskbar's topmost flag is removed when an app goes full-screen and should cover the taskbar (e.g. a full-screen video)
-            _taskbarIsTopmost = TrayButtonNativeWindow.IsTaskbarTopmost(/*hwnd -- not passed in, since the handle could be the desktop */);
+            var getTaskbarIsTopmostResult = TrayButtonNativeWindow.GetTaskbarIsTopmost(/*hwnd -- not passed in, since the handle could be the desktop */);
+            if (getTaskbarIsTopmostResult.IsError == true)
+            {
+                switch (getTaskbarIsTopmostResult.Error!)
+                {
+                    case IGetTaskbarIsTopmostError.CouldNotFindTaskbarRelatedHandle:
+                        Debug.Assert(false, "Could not determine if taskbar is topmost; taskbar-related handle could not be found.");
+                        return;
+                    case IGetTaskbarIsTopmostError.Win32Error(var win32ErrorCode):
+                        Debug.Assert(false, "Could not determine if taskbar is topmost; win32 errcode: " + win32ErrorCode.ToString());
+                        return;
+                    default:
+                        throw new MorphicUnhandledErrorException();
+                }
+            }
+            _taskbarIsTopmost = getTaskbarIsTopmostResult.Value!;
             //
             // NOTE: UpdateVisibility takes both the .Visibility property and the topmost state of the taskbar into consideration to determine whether or not to show the control
-            this.UpdateVisibility();
+            var updateVisibilityResult = this.UpdateVisibility();
+            if (updateVisibilityResult.IsError == true)
+            {
+                // NOTE: we may want to consider parsing out errors here
+                Debug.Assert(false, "Could not update .Visibility");
+            }
         }
     }
 
-    private static bool IsTaskbarTopmost(Windows.Win32.Foundation.HWND? taskbarHWnd = null)
+    private interface IGetTaskbarIsTopmostError
     {
-        var taskbarHandle = taskbarHWnd ?? TrayButtonNativeWindow.GetWindowsTaskbarHandle();
+        public record CouldNotFindTaskbarRelatedHandle : IGetTaskbarIsTopmostError;
+        public record Win32Error(uint Win32ErrorCode) : IGetTaskbarIsTopmostError;
+    }
+    //
+    private static MorphicResult<bool, IGetTaskbarIsTopmostError> GetTaskbarIsTopmost(Windows.Win32.Foundation.HWND? taskbarHWnd = null)
+    {
+        Windows.Win32.Foundation.HWND taskbarHandle;
+        if (taskbarHWnd is not null)
+        {
+            taskbarHandle = taskbarHWnd!.Value;
+        }
+        else
+        {
+            var getTaskbarHandleResult = TrayButtonNativeWindow.GetWindowsTaskbarHandle();
+            if (getTaskbarHandleResult.IsError == true)
+            {
+                switch (getTaskbarHandleResult.Error!)
+                {
+                    case Morphic.WindowsNative.IWin32ApiError.Win32Error(var win32ErrorCode):
+                        return MorphicResult.ErrorResult<IGetTaskbarIsTopmostError>(new IGetTaskbarIsTopmostError.Win32Error(win32ErrorCode));
+                    default:
+                        throw new MorphicUnhandledErrorException();
+                }
+            }
+            //
+            taskbarHandle = getTaskbarHandleResult.Value!;
+            if (taskbarHandle == Windows.Win32.Foundation.HWND.Null)
+            {
+                return MorphicResult.ErrorResult<IGetTaskbarIsTopmostError>(new IGetTaskbarIsTopmostError.CouldNotFindTaskbarRelatedHandle());
+            }
+        }
 
         var taskbarWindowExStyle = PInvokeExtensions.GetWindowLongPtr_IntPtr(taskbarHandle, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE);
+        if (taskbarWindowExStyle == IntPtr.Zero)
+        {
+            var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+            return MorphicResult.ErrorResult<IGetTaskbarIsTopmostError>(new IGetTaskbarIsTopmostError.Win32Error((uint)win32ErrorCode));
+        }
         var taskbarIsTopmost = ((nint)taskbarWindowExStyle & (nint)Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE.WS_EX_TOPMOST) != 0;
 
-        return taskbarIsTopmost;
+        return MorphicResult.OkResult(taskbarIsTopmost);
     }
 
-    private MorphicResult<MorphicUnit, MorphicUnit> RecalculatePositionAndRepositionWindow()
+    private interface IRecalculatePositionAndRepositionWindowError 
+    {
+        public record CouldNotBringToTop(uint Win32ErrorCode) : IRecalculatePositionAndRepositionWindowError;
+        public record CouldNotCalculatePositionAndSizeForTrayButton(ICalculatePositionAndSizeForTrayButtonError InnerError) : IRecalculatePositionAndRepositionWindowError;
+        public record CouldNotPositionAndResizeBitmap(IPositionAndResizeBitmapError InnerError) : IRecalculatePositionAndRepositionWindowError;
+        public record CouldNotSetTooltip(IUpdateTooltipTextAndTrackingError InnerError) : IRecalculatePositionAndRepositionWindowError;
+        public record CouldNotSetWindowPosition(uint Win32ErrorCode) : IRecalculatePositionAndRepositionWindowError;
+    }
+    //
+    private MorphicResult<MorphicUnit, IRecalculatePositionAndRepositionWindowError> RecalculatePositionAndRepositionWindow()
     {
         // first, reposition our control (NOTE: this will be required to subsequently determine the position of our bitmap)
         var calculatePositionResult = TrayButtonNativeWindow.CalculatePositionAndSizeForTrayButton(this.Handle);
         if (calculatePositionResult.IsError)
         {
             Debug.Assert(false, "Cannot calculate position for tray button");
-            return MorphicResult.ErrorResult();
+            //
+            var innerError = calculatePositionResult.Error!;
+            return MorphicResult.ErrorResult<IRecalculatePositionAndRepositionWindowError>(new IRecalculatePositionAndRepositionWindowError.CouldNotCalculatePositionAndSizeForTrayButton(innerError));
         }
         var trayButtonPositionAndSize = calculatePositionResult.Value!;
         //
         var size = new System.Drawing.Size(trayButtonPositionAndSize.right - trayButtonPositionAndSize.left, trayButtonPositionAndSize.bottom - trayButtonPositionAndSize.top);
+        //
+        // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowpos
         var setWindowPosResult = Windows.Win32.PInvoke.SetWindowPos((Windows.Win32.Foundation.HWND)this.Handle, (Windows.Win32.Foundation.HWND)IntPtr.Zero, trayButtonPositionAndSize.left, trayButtonPositionAndSize.top, size.Width, size.Height, Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOZORDER | Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
         if (setWindowPosResult == 0)
         {
-            var win32Error = (uint)System.Runtime.InteropServices.Marshal.GetLastWin32Error();
-            Debug.Assert(false, "SetWindowPos failed while trying to reposition TrayButton native window; win32 error: " + win32Error.ToString() + ".");
-            return MorphicResult.ErrorResult();
-            //return MorphicResult.ErrorResult<Morphic.WindowsNative.IWin32ApiError>(new Morphic.WindowsNative.IWin32ApiError.Win32Error(win32Error));
+            var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+            Debug.Assert(false, "SetWindowPos failed while trying to reposition TrayButton native window; win32 errcode: " + win32ErrorCode.ToString());
+            return MorphicResult.ErrorResult< IRecalculatePositionAndRepositionWindowError>(new IRecalculatePositionAndRepositionWindowError.CouldNotSetWindowPosition((uint)win32ErrorCode));
         }
         //
         // capture our updated position and size
@@ -866,16 +1110,35 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
         var bitmap = _argbImageNativeWindow?.GetBitmap();
         if (bitmap is not null)
         {
-            this.PositionAndResizeBitmap(bitmap);
+            var positionAndResizeBitmapResult = this.PositionAndResizeBitmap(bitmap);
+            if (positionAndResizeBitmapResult.IsError == true)
+            {
+                Debug.Assert(false, "Could not position and resize bitmap.");
+                var innerError = positionAndResizeBitmapResult.Error!;
+                return MorphicResult.ErrorResult<IRecalculatePositionAndRepositionWindowError>(new IRecalculatePositionAndRepositionWindowError.CouldNotPositionAndResizeBitmap(innerError));
+            }
         }
 
         // also reposition the tooltip's tracking rectangle
         if (_tooltipText is not null)
         {
-            this.UpdateTooltipTextAndTracking();
+            var updateTooltipTextAndTrackingResult = this.UpdateTooltipTextAndTracking();
+            if (updateTooltipTextAndTrackingResult.IsError == true)
+            {
+                Debug.Assert(false, "Could not update tooltip text");
+                var innerError = updateTooltipTextAndTrackingResult.Error!;
+                return MorphicResult.ErrorResult<IRecalculatePositionAndRepositionWindowError>(new IRecalculatePositionAndRepositionWindowError.CouldNotSetTooltip(innerError));
+            }
         }
 
-        _ = Windows.Win32.PInvoke.BringWindowToTop((Windows.Win32.Foundation.HWND)this.Handle);
+        // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-bringwindowtotop
+        var bringWindowToTopSuccess = Windows.Win32.PInvoke.BringWindowToTop((Windows.Win32.Foundation.HWND)this.Handle);
+        if (bringWindowToTopSuccess == false)
+        {
+            var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+            Debug.Assert(false, "Could not bring tray button window to top; win32 errcode: " + win32ErrorCode.ToString());
+            return MorphicResult.ErrorResult<IRecalculatePositionAndRepositionWindowError>(new IRecalculatePositionAndRepositionWindowError.CouldNotBringToTop((uint)win32ErrorCode));
+        }
 
         return MorphicResult.OkResult();
     }
@@ -896,32 +1159,87 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
 
     //
 
-    public void SetBitmap(System.Drawing.Bitmap? bitmap)
+    public interface ISetBitmapError
+    {
+        public record CouldNotPositionAndResizeBitmap(IPositionAndResizeBitmapError InnerError) : ISetBitmapError;
+        public record CouldNotSetBitmapInArgbImageNativeWindow(ArgbImageNativeWindow.ISetBitmapError InnerError) : ISetBitmapError;
+    }
+    public MorphicResult<MorphicUnit, ISetBitmapError> SetBitmap(System.Drawing.Bitmap? bitmap)
     {
         if (bitmap is not null)
         {
-            this.PositionAndResizeBitmap(bitmap);
+            var positionAndResizeBitmapResult = this.PositionAndResizeBitmap(bitmap);
+            if (positionAndResizeBitmapResult.IsError == true)
+            {
+                Debug.Assert(false, "Could not position and resize bitmap.");
+                var innerError = positionAndResizeBitmapResult.Error!;
+                return MorphicResult.ErrorResult<ISetBitmapError>(new ISetBitmapError.CouldNotPositionAndResizeBitmap(innerError));
+            }
         }
-        _argbImageNativeWindow?.SetBitmap(bitmap);
+
+        if (_argbImageNativeWindow is not null)
+        {
+            var setBitmapOnArgbImageNativeWindowResult = _argbImageNativeWindow!.SetBitmap(bitmap);
+            if (setBitmapOnArgbImageNativeWindowResult.IsError == true)
+            {
+                Debug.Assert(false, "Could not set bitmap on ARGB image native window.");
+                var innerError = setBitmapOnArgbImageNativeWindowResult.Error!;
+                return MorphicResult.ErrorResult<ISetBitmapError>(new ISetBitmapError.CouldNotSetBitmapInArgbImageNativeWindow(innerError));
+            }
+        }
+
+        return MorphicResult.OkResult();
     }
 
-    private void PositionAndResizeBitmap(System.Drawing.Bitmap bitmap)
+    internal interface IPositionAndResizeBitmapError
+    {
+        public record CouldNotGetCurrentPositionAndSize(uint Win32ErrorCode) : IPositionAndResizeBitmapError;
+        public record CouldNotSetNewPositionAndSize(ArgbImageNativeWindow.ISetPositionAndSizeError InnerError) : IPositionAndResizeBitmapError;
+    }
+    //
+    private MorphicResult<MorphicUnit, IPositionAndResizeBitmapError> PositionAndResizeBitmap(System.Drawing.Bitmap bitmap)
     {
         // then, reposition the bitmap
-        Windows.Win32.PInvoke.GetWindowRect((Windows.Win32.Foundation.HWND)this.Handle, out var positionAndSize);
+        // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowrect
+        Windows.Win32.Foundation.RECT positionAndSize;
+        var getWindowRectResult = Windows.Win32.PInvoke.GetWindowRect((Windows.Win32.Foundation.HWND)this.Handle, out positionAndSize);
+        if (getWindowRectResult == 0)
+        {
+            var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+            return MorphicResult.ErrorResult<IPositionAndResizeBitmapError>(new IPositionAndResizeBitmapError.CouldNotGetCurrentPositionAndSize((uint)win32ErrorCode));
+        }
+        //
         var bitmapSize = bitmap.Size;
 
         var argbImageNativeWindowSize = TrayButtonNativeWindow.CalculateWidthAndHeightForBitmap(positionAndSize, bitmapSize);
         var bitmapRect = TrayButtonNativeWindow.CalculateCenterRectInsideRect(positionAndSize, argbImageNativeWindowSize);
 
-        _argbImageNativeWindow?.SetPositionAndSize(bitmapRect);
+        if (_argbImageNativeWindow is not null)
+        {
+            var setPositionAndSizeResult = _argbImageNativeWindow!.SetPositionAndSize(bitmapRect);
+            if (setPositionAndSizeResult.IsError == true)
+            {
+                var innerError = setPositionAndSizeResult.Error!;
+                return MorphicResult.ErrorResult<IPositionAndResizeBitmapError>(new IPositionAndResizeBitmapError.CouldNotSetNewPositionAndSize(innerError));
+            }
+        }
+
+        return MorphicResult.OkResult();
     }
 
-    public void SetText(string? text)
+    public MorphicResult<MorphicUnit, IUpdateTooltipTextAndTrackingError> SetText(string? text)
     {
         _tooltipText = text;
 
-        this.UpdateTooltipTextAndTracking();
+        var updateTooltipTextAndTrackingResult = this.UpdateTooltipTextAndTracking();
+        if (updateTooltipTextAndTrackingResult.IsError == true)
+        {
+            // NOTE: we simply pass through this error
+            Debug.Assert(false, "Could not update tooltip text");
+            return MorphicResult.ErrorResult(updateTooltipTextAndTrackingResult.Error!);
+        }
+
+        return MorphicResult.OkResult();
     }
 
     //
@@ -930,72 +1248,93 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
     {
         if (_tooltipWindowHandle != IntPtr.Zero)
         {
-            // tooltip window already exists
+            // tooltip window already exists; gracefully degrate by returning the existing window handle
             return _tooltipWindowHandle;
         }
 
-        var tooltipWindowHandle = PInvoke.User32.CreateWindowEx(
+        Windows.Win32.Foundation.HWND tooltipWindowHandle;
+        unsafe
+        {
+            tooltipWindowHandle = Windows.Win32.PInvoke.CreateWindowEx(
              0 /* no styles */,
              PInvokeExtensions.TOOLTIPS_CLASS,
              null,
-             PInvoke.User32.WindowStyles.WS_POPUP | (PInvoke.User32.WindowStyles)PInvokeExtensions.TTS_ALWAYSTIP,
+             Windows.Win32.UI.WindowsAndMessaging.WINDOW_STYLE.WS_POPUP | (Windows.Win32.UI.WindowsAndMessaging.WINDOW_STYLE)Windows.Win32.PInvoke.TTS_ALWAYSTIP,
              PInvokeExtensions.CW_USEDEFAULT,
              PInvokeExtensions.CW_USEDEFAULT,
              PInvokeExtensions.CW_USEDEFAULT,
              PInvokeExtensions.CW_USEDEFAULT,
-             this.Handle,
-             IntPtr.Zero,
-             IntPtr.Zero,
-             IntPtr.Zero);
+             (Windows.Win32.Foundation.HWND)this.Handle,
+             null,
+             null,
+             null);
+        }
 
         // NOTE: Microsoft's documentation seems to indicate that we should set the tooltip as topmost, but in our testing this was unnecessary.  It's possible that using SendMessage to add/remove tooltip text automatically handles this when the system handles showing the tooltip
         //       see: https://learn.microsoft.com/en-us/windows/win32/controls/tooltip-controls
         //PInvoke.User32.SetWindowPos(tooltipWindowHandle, PInvokeExtensions.HWND_TOPMOST, 0, 0, 0, 0, PInvoke.User32.SetWindowPosFlags.SWP_NOMOVE | PInvoke.User32.SetWindowPosFlags.SWP_NOSIZE | PInvoke.User32.SetWindowPosFlags.SWP_NOACTIVATE);
 
-        Debug.Assert(tooltipWindowHandle != IntPtr.Zero, "Could not create tooltip window.");
+        Debug.Assert(tooltipWindowHandle.IsNull == false, "Could not create tooltip window.");
 
         return tooltipWindowHandle;
     }
 
-    private bool DestroyTooltipWindow()
+    private MorphicResult<MorphicUnit, MorphicUnit> DestroyTooltipWindow()
     {
         if (_tooltipWindowHandle == IntPtr.Zero)
         {
-            return true;
+            return MorphicResult.OkResult();
         }
 
         // set the tooltip text to empty (so that UpdateTooltipText will clear out the tooltip), then update the tooltip text.
         _tooltipText = null;
-        this.UpdateTooltipTextAndTracking();
+        _ = this.UpdateTooltipTextAndTracking();
 
-        var result = Windows.Win32.PInvoke.DestroyWindow((Windows.Win32.Foundation.HWND)_tooltipWindowHandle);
+        // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-destroywindow
+        var destroyWindowResult = Windows.Win32.PInvoke.DestroyWindow((Windows.Win32.Foundation.HWND)_tooltipWindowHandle);
         _tooltipWindowHandle = (Windows.Win32.Foundation.HWND)IntPtr.Zero;
 
-        return result;
+        if (destroyWindowResult == true)
+        {
+            return MorphicResult.OkResult();
+        }
+        else
+        {
+            return MorphicResult.ErrorResult();
+        }
     }
 
-    private void UpdateTooltipTextAndTracking()
+    internal interface IUpdateTooltipTextAndTrackingError
+    {
+        public record CouldNotGetTrayButtonClientRect(uint Win32ErrorCode) : IUpdateTooltipTextAndTrackingError;
+        public record CouldNotUpdateTooltipViaSendMessage : IUpdateTooltipTextAndTrackingError;
+        public record TooltipWindowDoesNotExist : IUpdateTooltipTextAndTrackingError;
+        public record TrayButtonWindowDoesNotExist : IUpdateTooltipTextAndTrackingError;
+    }
+    private MorphicResult<MorphicUnit, IUpdateTooltipTextAndTrackingError> UpdateTooltipTextAndTracking()
     {
         if (_tooltipWindowHandle == IntPtr.Zero)
         {
             // tooltip window does not exist; failed; abort
             Debug.Assert(false, "Tooptip window does not exist; if this is an expected failure, remove this assert.");
-            return;
+            return MorphicResult.ErrorResult<IUpdateTooltipTextAndTrackingError>(new IUpdateTooltipTextAndTrackingError.TooltipWindowDoesNotExist());
         }
 
         var trayButtonNativeWindowHandle = this.Handle;
         if (trayButtonNativeWindowHandle == IntPtr.Zero)
         {
             // tray button window does not exist; there is no tool window to update
-            return;
+            return MorphicResult.ErrorResult<IUpdateTooltipTextAndTrackingError>(new IUpdateTooltipTextAndTrackingError.TrayButtonWindowDoesNotExist());
         }
 
-        var getClientRectSuccess = PInvoke.User32.GetClientRect(this.Handle, out var trayButtonClientRect);
+        // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getclientrect
+        var getClientRectSuccess = Windows.Win32.PInvoke.GetClientRect((Windows.Win32.Foundation.HWND)this.Handle, out var trayButtonClientRect);
         if (getClientRectSuccess == false)
         {
             // failed; abort
-            Debug.Assert(false, "Could not get client rect for tray button; could not set up tooltip");
-            return;
+            var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+            Debug.Assert(false, "Could not get client rect for tray button; could not set up tooltip; win32 errcode: " + win32ErrorCode.ToString());
+            return MorphicResult.ErrorResult<IUpdateTooltipTextAndTrackingError>(new IUpdateTooltipTextAndTrackingError.CouldNotGetTrayButtonClientRect((uint)win32ErrorCode));
         }
 
         var toolinfo = new PInvokeExtensions.TOOLINFO();
@@ -1014,20 +1353,44 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
             {
                 if (_tooltipInfoAdded == false)
                 {
-                    _ = PInvoke.User32.SendMessage(_tooltipWindowHandle, (PInvoke.User32.WindowMessage)PInvokeExtensions.TTM_ADDTOOL, IntPtr.Zero, pointerToToolinfo);
+                    // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-sendmessagew
+                    //
+                    // see: https://learn.microsoft.com/en-us/windows/win32/controls/ttm-addtool
+                    var addToolSuccess = Windows.Win32.PInvoke.SendMessage((Windows.Win32.Foundation.HWND)_tooltipWindowHandle, Windows.Win32.PInvoke.TTM_ADDTOOL, (Windows.Win32.Foundation.WPARAM)0, pointerToToolinfo);
+                    if (addToolSuccess == 0)
+                    {
+                        Debug.Assert(false, "Could not add tooltip info");
+                        return MorphicResult.ErrorResult<IUpdateTooltipTextAndTrackingError>(new IUpdateTooltipTextAndTrackingError.CouldNotUpdateTooltipViaSendMessage());
+                    }
                     _tooltipInfoAdded = true;
                 }
                 else
                 {
                     // delete and re-add the tooltipinfo; this will update all the info (including the text and tracking rect)
-                    _ = PInvoke.User32.SendMessage(_tooltipWindowHandle, (PInvoke.User32.WindowMessage)PInvokeExtensions.TTM_DELTOOL, IntPtr.Zero, pointerToToolinfo);
-                    _ = PInvoke.User32.SendMessage(_tooltipWindowHandle, (PInvoke.User32.WindowMessage)PInvokeExtensions.TTM_ADDTOOL, IntPtr.Zero, pointerToToolinfo);
+                    //
+                    // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-sendmessagew
+                    //
+                    // see: https://learn.microsoft.com/en-us/windows/win32/controls/ttm-deltool
+                    // NOTE: TTM_DELTOOL does not return a result
+                    _ = Windows.Win32.PInvoke.SendMessage((Windows.Win32.Foundation.HWND)_tooltipWindowHandle, Windows.Win32.PInvoke.TTM_DELTOOL, (Windows.Win32.Foundation.WPARAM)0, pointerToToolinfo);
+                    //
+                    // see: https://learn.microsoft.com/en-us/windows/win32/controls/ttm-addtool
+                    var addToolSuccess = Windows.Win32.PInvoke.SendMessage((Windows.Win32.Foundation.HWND)_tooltipWindowHandle, Windows.Win32.PInvoke.TTM_ADDTOOL, (Windows.Win32.Foundation.WPARAM)0, pointerToToolinfo);
+                    if (addToolSuccess == 0)
+                    {
+                        Debug.Assert(false, "Could not update tooltip info");
+                        return MorphicResult.ErrorResult<IUpdateTooltipTextAndTrackingError>(new IUpdateTooltipTextAndTrackingError.CouldNotUpdateTooltipViaSendMessage());
+                    }
                 }
             }
-            else
+            else /* if (_tooltipInfoAdded == true) */
             {
                 // NOTE: we might technically call "deltool" even when a tooltipinfo was already removed
-                _ = PInvoke.User32.SendMessage(_tooltipWindowHandle, (PInvoke.User32.WindowMessage)PInvokeExtensions.TTM_DELTOOL, IntPtr.Zero, pointerToToolinfo);
+                //
+                // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-sendmessagew
+                //
+                // see: https://learn.microsoft.com/en-us/windows/win32/controls/ttm-deltool
+                _ = Windows.Win32.PInvoke.SendMessage((Windows.Win32.Foundation.HWND)_tooltipWindowHandle, Windows.Win32.PInvoke.TTM_DELTOOL, (Windows.Win32.Foundation.WPARAM)0, pointerToToolinfo);
                 _tooltipInfoAdded = false;
             }
         }
@@ -1035,6 +1398,8 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
         {
             Marshal.FreeHGlobal(pointerToToolinfo);
         }
+
+        return MorphicResult.OkResult();
     }
 
     //
@@ -1046,14 +1411,13 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
         var outerWidth = outerRect.right - outerRect.left;
         var outerHeight = outerRect.bottom - outerRect.top;
 
-        var innerWidth = innerSize.Width;
-        var innerHeight = innerSize.Height;
+        var innerWidth = Math.Min(innerSize.Width, outerWidth);
+        var innerHeight = Math.Min(innerSize.Height, outerHeight);
 
         var left = outerRect.left + ((outerWidth - innerWidth) / 2);
         var top = outerRect.top + ((outerHeight - innerHeight) / 2);
         var right = left + innerWidth;
         var bottom = top + innerHeight;
-
 
         return new Windows.Win32.Foundation.RECT()
         {
@@ -1064,32 +1428,92 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
         };
     }
 
-    internal static MorphicResult<Windows.Win32.Foundation.RECT, MorphicUnit> CalculatePositionAndSizeForTrayButton(IntPtr? trayButtonHandle)
+    internal interface ICalculatePositionAndSizeForTrayButtonError
+    {
+        public record CouldNotFindTaskbarRelatedHandle : ICalculatePositionAndSizeForTrayButtonError;
+        public record CannotFitOnTaskbar : ICalculatePositionAndSizeForTrayButtonError;
+        public record Win32Error(uint Win32ErrorCode) : ICalculatePositionAndSizeForTrayButtonError;
+    }
+    internal static MorphicResult<Windows.Win32.Foundation.RECT, ICalculatePositionAndSizeForTrayButtonError> CalculatePositionAndSizeForTrayButton(IntPtr? trayButtonHandle)
     {
         // NOTE: in this implementation, we simply place the tray button over the taskbar, directly to the left of the system tray
         //       in the future, we may want to consider searching for any children which might occupy the area--and any system windows which are owned by the taskbar or any of its children--and then try to find a place to the "left" of those
 
         // get the handles for the taskbar, task button container, and the notify tray
         //
-        var taskbarHandle = TrayButtonNativeWindow.GetWindowsTaskbarHandle();
-        if (taskbarHandle == IntPtr.Zero) { return MorphicResult.ErrorResult(); }
+        var getTaskbarHandleResult = TrayButtonNativeWindow.GetWindowsTaskbarHandle();
+        if (getTaskbarHandleResult.IsError == true)
+        {
+            switch (getTaskbarHandleResult.Error!)
+            {
+                case Morphic.WindowsNative.IWin32ApiError.Win32Error(var win32ErrorCode):
+                    return MorphicResult.ErrorResult<ICalculatePositionAndSizeForTrayButtonError>(new ICalculatePositionAndSizeForTrayButtonError.Win32Error(win32ErrorCode));
+                default:
+                    throw new MorphicUnhandledErrorException();
+            }
+        }
+        var taskbarHandle = getTaskbarHandleResult.Value!;
+        if (taskbarHandle == Windows.Win32.Foundation.HWND.Null)
+        {
+            return MorphicResult.ErrorResult<ICalculatePositionAndSizeForTrayButtonError>(new ICalculatePositionAndSizeForTrayButtonError.CouldNotFindTaskbarRelatedHandle());
+        }
         //
-        var taskButtonContainerHandle = TrayButtonNativeWindow.GetWindowsTaskbarTaskButtonContainerHandle(taskbarHandle);
-        if (taskButtonContainerHandle == IntPtr.Zero) { return MorphicResult.ErrorResult(); }
+        var getTaskButtonContainerHandleResult = TrayButtonNativeWindow.GetWindowsTaskbarTaskButtonContainerHandle(taskbarHandle);
+        if (getTaskButtonContainerHandleResult.IsError == true)
+        {
+            switch (getTaskButtonContainerHandleResult.Error!)
+            {
+                case Morphic.WindowsNative.IWin32ApiError.Win32Error(var win32ErrorCode):
+                    return MorphicResult.ErrorResult<ICalculatePositionAndSizeForTrayButtonError>(new ICalculatePositionAndSizeForTrayButtonError.Win32Error(win32ErrorCode));
+                default:
+                    throw new MorphicUnhandledErrorException();
+            }
+        }
+        var taskButtonContainerHandle = getTaskButtonContainerHandleResult.Value!;
+        if (taskButtonContainerHandle == Windows.Win32.Foundation.HWND.Null) 
+        {
+            return MorphicResult.ErrorResult<ICalculatePositionAndSizeForTrayButtonError>(new ICalculatePositionAndSizeForTrayButtonError.CouldNotFindTaskbarRelatedHandle());
+        }
         //
-        var notifyTrayHandle = TrayButtonNativeWindow.GetWindowsTaskbarNotificationTrayHandle(taskbarHandle);
-        if (notifyTrayHandle == IntPtr.Zero) { return MorphicResult.ErrorResult(); }
+        var getNotifyTrayHandle = TrayButtonNativeWindow.GetWindowsTaskbarNotificationTrayHandle(taskbarHandle);
+        if (getNotifyTrayHandle.IsError == true)
+        {
+            switch (getNotifyTrayHandle.Error!)
+            {
+                case Morphic.WindowsNative.IWin32ApiError.Win32Error(var win32ErrorCode):
+                    return MorphicResult.ErrorResult<ICalculatePositionAndSizeForTrayButtonError>(new ICalculatePositionAndSizeForTrayButtonError.Win32Error(win32ErrorCode));
+                default:
+                    throw new MorphicUnhandledErrorException();
+            }
+        }
+        var notifyTrayHandle = getNotifyTrayHandle.Value!;
+        if (notifyTrayHandle == Windows.Win32.Foundation.HWND.Null) 
+        { 
+            return MorphicResult.ErrorResult<ICalculatePositionAndSizeForTrayButtonError>(new ICalculatePositionAndSizeForTrayButtonError.CouldNotFindTaskbarRelatedHandle());
+        }
 
         // get the RECTs for the taskbar, task button container and the notify tray
         //
         var getTaskbarRectSuccess = Windows.Win32.PInvoke.GetWindowRect(taskbarHandle, out var taskbarRect);
-        if (getTaskbarRectSuccess == false) { return MorphicResult.ErrorResult(); }
+        if (getTaskbarRectSuccess == false)
+        {
+            var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+            return MorphicResult.ErrorResult<ICalculatePositionAndSizeForTrayButtonError>(new ICalculatePositionAndSizeForTrayButtonError.Win32Error((uint)win32ErrorCode));
+        }
         //
         var getTaskButtonContainerRectSuccess = Windows.Win32.PInvoke.GetWindowRect(taskButtonContainerHandle, out var taskButtonContainerRect);
-        if (getTaskButtonContainerRectSuccess == false) { return MorphicResult.ErrorResult(); }
+        if (getTaskButtonContainerRectSuccess == false) 
+        {
+            var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+            return MorphicResult.ErrorResult<ICalculatePositionAndSizeForTrayButtonError>(new ICalculatePositionAndSizeForTrayButtonError.Win32Error((uint)win32ErrorCode));
+        }
         //
         var getNotifyTrayRectSuccess = Windows.Win32.PInvoke.GetWindowRect(notifyTrayHandle, out var notifyTrayRect);
-        if (getNotifyTrayRectSuccess == false) { return MorphicResult.ErrorResult(); }
+        if (getNotifyTrayRectSuccess == false) 
+        {
+            var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+            return MorphicResult.ErrorResult<ICalculatePositionAndSizeForTrayButtonError>(new ICalculatePositionAndSizeForTrayButtonError.Win32Error((uint)win32ErrorCode));
+        }
 
         // determine the taskbar's orientation
         //
@@ -1152,19 +1576,33 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
             if (isRightToLeft == false)
             {
                 trayButtonX = notifyTrayRect.left - trayButtonWidth;
+                if (trayButtonX - trayButtonWidth < taskbarRect.left)
+                {
+                    return MorphicResult.ErrorResult<ICalculatePositionAndSizeForTrayButtonError>(new ICalculatePositionAndSizeForTrayButtonError.CannotFitOnTaskbar());
+                }
             }
             else
             {
                 trayButtonX = notifyTrayRect.right;
+                if (trayButtonX + trayButtonWidth > taskbarRect.right)
+                {
+                    return MorphicResult.ErrorResult<ICalculatePositionAndSizeForTrayButtonError>(new ICalculatePositionAndSizeForTrayButtonError.CannotFitOnTaskbar());
+                }
             }
+            //
             // NOTE: if we have any issues with positioning, try to replace taskbarRect.bottom with taskButtoncontainerRect.bottom (if we chose option #1 for our size calculations above)
             trayButtonY = taskbarRect.bottom - trayButtonHeight;
         }
-        else
+        else /* if (taskbarOrientation == System.Windows.Forms.Orientation.Vertical) */
         {
             // NOTE: if we have any issues with positioning, try to replace taskbarRect.bottom with taskButtoncontainerRect.right (if we chose option #1 for our size calculations above)
             trayButtonX = taskbarRect.right - trayButtonWidth;
+            //
             trayButtonY = notifyTrayRect.top - trayButtonHeight;
+            if (trayButtonY - trayButtonHeight < taskbarRect.top)
+            {
+                return MorphicResult.ErrorResult<ICalculatePositionAndSizeForTrayButtonError>(new ICalculatePositionAndSizeForTrayButtonError.CannotFitOnTaskbar());
+            }
         }
 
         var result = new Windows.Win32.Foundation.RECT() { left = trayButtonX, top = trayButtonY, right = trayButtonX + trayButtonWidth, bottom = trayButtonY + trayButtonHeight };
@@ -1173,7 +1611,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
 
     //
 
-    private MorphicResult<System.Drawing.Point, MorphicUnit> ConvertMouseMessageLParamToScreenPoint(IntPtr lParam)
+    private MorphicResult<System.Drawing.Point, Morphic.WindowsNative.IWin32ApiError> ConvertMouseMessageLParamToScreenPoint(IntPtr lParam)
     {
         var x = (ushort)((lParam.ToInt64() >> 0) & 0xFFFF);
         var y = (ushort)((lParam.ToInt64() >> 16) & 0xFFFF);
@@ -1181,15 +1619,20 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
         var hitPoint = new PInvoke.POINT { x = x, y = y };
 
         // NOTE: the instructions for MapWindowPoints instruct us to call SetLastError before calling MapWindowPoints to ensure that we can distinguish a result of 0 from an error if the last win32 error wasn't set (because it wasn't an error)
-        Marshal.SetLastPInvokeError(0);
+        // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-mapwindowpoints
+        System.Runtime.InteropServices.Marshal.SetLastPInvokeError(0);
         //
         // NOTE: the PInvoke implementation of MapWindowPoints did not support passing in a POINT struct, so we manually declared the function
         var mapWindowPointsResult = PInvokeExtensions.MapWindowPoints(this.Handle, IntPtr.Zero, ref hitPoint, 1);
-        if (mapWindowPointsResult == 0 && Marshal.GetLastWin32Error() != 0)
+        if (mapWindowPointsResult == 0)
         {
-            // failed; abort
-            Debug.Assert(false, "Could not map tray button hit point to screen coordinates");
-            return MorphicResult.ErrorResult();
+            // failed (if the last error != 0)
+            var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+            if (win32ErrorCode != 0)
+            {
+                Debug.Assert(false, "Could not map tray button hit point to screen coordinates; win32 errcode: " + win32ErrorCode.ToString());
+                return MorphicResult.ErrorResult<Morphic.WindowsNative.IWin32ApiError>(new Morphic.WindowsNative.IWin32ApiError.Win32Error((uint)win32ErrorCode));
+            }
         }
 
         var result = new System.Drawing.Point(hitPoint.x, hitPoint.y);
@@ -1277,26 +1720,49 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
 
     //
 
-    private static Windows.Win32.Foundation.HWND GetWindowsTaskbarHandle()
+    private static MorphicResult<Windows.Win32.Foundation.HWND, Morphic.WindowsNative.IWin32ApiError> GetWindowsTaskbarHandle()
     {
-        return Windows.Win32.PInvoke.FindWindow("Shell_TrayWnd", null);
+        var result = Windows.Win32.PInvoke.FindWindow("Shell_TrayWnd", null);
+        if (result == Windows.Win32.Foundation.HWND.Null)
+        {
+            var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+            return MorphicResult.ErrorResult<Morphic.WindowsNative.IWin32ApiError>(new Morphic.WindowsNative.IWin32ApiError.Win32Error((uint)win32ErrorCode));
+        }
+
+        return MorphicResult.OkResult(result);
     }
     //
-    private static Windows.Win32.Foundation.HWND GetWindowsTaskbarTaskButtonContainerHandle(Windows.Win32.Foundation.HWND taskbarHandle)
+    private static MorphicResult<Windows.Win32.Foundation.HWND, Morphic.WindowsNative.IWin32ApiError> GetWindowsTaskbarTaskButtonContainerHandle(Windows.Win32.Foundation.HWND taskbarHandle)
     {
-        if (taskbarHandle.Value == IntPtr.Zero)
+        if (taskbarHandle == Windows.Win32.Foundation.HWND.Null)
         {
-            return (Windows.Win32.Foundation.HWND)IntPtr.Zero;
+            return MorphicResult.OkResult(Windows.Win32.Foundation.HWND.Null);
         }
-        return Windows.Win32.PInvoke.FindWindowEx(taskbarHandle, (Windows.Win32.Foundation.HWND)IntPtr.Zero, "ReBarWindow32", null);
+
+        var result = Windows.Win32.PInvoke.FindWindowEx(taskbarHandle, Windows.Win32.Foundation.HWND.Null, "ReBarWindow32", null);
+        if (result == Windows.Win32.Foundation.HWND.Null)
+        {
+            var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+            return MorphicResult.ErrorResult<Morphic.WindowsNative.IWin32ApiError>(new Morphic.WindowsNative.IWin32ApiError.Win32Error((uint)win32ErrorCode));
+        }
+
+        return MorphicResult.OkResult(result);
     }
     //
-    private static Windows.Win32.Foundation.HWND GetWindowsTaskbarNotificationTrayHandle(Windows.Win32.Foundation.HWND taskbarHandle)
+    private static MorphicResult<Windows.Win32.Foundation.HWND, Morphic.WindowsNative.IWin32ApiError> GetWindowsTaskbarNotificationTrayHandle(Windows.Win32.Foundation.HWND taskbarHandle)
     {
-        if (taskbarHandle.Value == IntPtr.Zero)
+        if (taskbarHandle == Windows.Win32.Foundation.HWND.Null)
         {
-            return (Windows.Win32.Foundation.HWND)IntPtr.Zero;
+            return MorphicResult.OkResult(Windows.Win32.Foundation.HWND.Null);
         }
-        return Windows.Win32.PInvoke.FindWindowEx(taskbarHandle, (Windows.Win32.Foundation.HWND)IntPtr.Zero, "TrayNotifyWnd", null);
+
+        var result = Windows.Win32.PInvoke.FindWindowEx(taskbarHandle, Windows.Win32.Foundation.HWND.Null, "TrayNotifyWnd", null);
+        if (result == Windows.Win32.Foundation.HWND.Null)
+        {
+            var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+            return MorphicResult.ErrorResult<Morphic.WindowsNative.IWin32ApiError>(new Morphic.WindowsNative.IWin32ApiError.Win32Error((uint)win32ErrorCode));
+        }
+
+        return MorphicResult.OkResult(result);
     }
 }

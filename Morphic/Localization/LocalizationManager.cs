@@ -1,4 +1,4 @@
-﻿// Copyright 2024 Raising the Floor - US, Inc.
+﻿// Copyright 2024-2025 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -23,6 +23,7 @@
 
 using Morphic.Core;
 using System;
+using System.Diagnostics;
 using System.Windows;
 
 namespace Morphic.Localization;
@@ -30,8 +31,95 @@ namespace Morphic.Localization;
 internal class LocalizationManager
 {
     private static readonly string[] ISO_639_LANGUAGE_CODES = [
+        "ar", // Arabic
         "es", // Spanish
+        "fa", // Persian
+        "gu", // Gujarati
+        "hi", // Hindi
+        "ko", // Korean
+        "mr", // Marathi
+        "ur", // Urdu
+        "vi", // Vietnamese
+        "zh", // Chinese
     ];
+
+    private static readonly string[] CULTURE_NAMES = [
+        "ar-SA", // Arabic
+        "es-ES", // Spanish
+        "fa-IR", // Persian
+        "gu-IN", // Gujarati
+        "hi-IN", // Hindi
+        "ko-KR", // Korean
+        "mr-IN", // Marathi
+        "ur-IN", // Urdu (India)
+        "ur-PK", // Urdu (Pakistan)
+        "vi-VN", // Vietnamese
+        "zh-CN", // Simplfiied Chinese
+        "zh-TW", // Traditional Chinese
+    ];
+
+    private static string? GetDefaultCultureNameForIso639LanguageCode(string iso639LanguageCode)
+    {
+        switch (iso639LanguageCode)
+        {
+            case "ar":
+                return "ar-SA";
+            case "es":
+                return "es-ES";
+            case "fa":
+                return "fa-IR";
+            case "gu":
+                return "gu-IN";
+            case "hi":
+                return "hi-IN";
+            case "ko":
+                return "ko-KR";
+            case "mr":
+                return "mr-IN";
+            case "ur":
+                //return "ur-IN";
+                return "ur-PK";
+            case "vi":
+                return "vi-VN";
+            case "zh":
+                return "zh-CN";
+                //return "zh-TW";
+            default:
+                return null;
+        }
+    }
+
+    private static string? GetClosestAvailableCultureName(string cultureName)
+    {
+        switch (cultureName)
+        {
+            /* translated cultures */
+            case "ar-SA":
+            case "es-ES":
+            case "fa-IR":
+            case "gu-IN":
+            case "hi-IN":
+            case "ko-KR":
+            case "mr-IN":
+            case "ur-IN":
+            case "ur-PK":
+            case "vi-VN":
+            case "zh-CN":
+            case "zh-TW":
+                return cultureName;
+            //
+            /* mapped cultures (not perfect, but trying to get to the closest option) */
+            case "zh-HK": // Hong Kong -> Traditional Chinese
+            case "zh-MO": // Macau -> Traditional Chinese
+                return "zh-TW";
+            case "zh-SG": // Singapore -> Simplified Chinese
+                return "zh-CN";
+            //
+            /* unknown culture */
+            default:
+                return null;
+        }
+    }
 
     private static readonly string STRING_RESOURCES_BASE_URI_STRING = "pack://application:,,,/Morphic;component/Localization/StringResources.xaml";
     //
@@ -51,7 +139,15 @@ internal class LocalizationManager
         return iso639LanguageCode;
     }
 
-    public static MorphicResult<MorphicUnit, MorphicUnit> SetUICulture(ResourceDictionary resourcesToModify, string iso639LanguageCode)
+    // NOTE: This will return the culture name in the format ll-CC where ll is the language code and cc is the country code (e.g. es-ES, en-US)
+    public static string GetCultureName(System.Globalization.CultureInfo uiCultureInfo)
+    {
+        var cultureName = uiCultureInfo.Name;
+
+        return cultureName;
+    }
+
+    public static MorphicResult<MorphicUnit, MorphicUnit> SetUICulture(ResourceDictionary resourcesToModify, string iso639LanguageCode, string cultureName)
     {
         var lowercaseLanguageCode = iso639LanguageCode.ToLowerInvariant();
 
@@ -67,11 +163,56 @@ internal class LocalizationManager
         //
         if (foundLanguageCode == false)
         {
+            // NOTE: this does not necessarily indicate an error; in the case of English, this also just means that we don't have a "translation" (as English is the "base" i.e. "not tranlsation" set of string/UI resources)
+            return MorphicResult.ErrorResult();
+        }
+
+        string validatedCultureName = null!;
+        //
+        var foundCultureName = false;
+        foreach(var currentCultureName in LocalizationManager.CULTURE_NAMES)
+        {
+            if (currentCultureName == cultureName)
+            {
+                foundCultureName = true;
+                validatedCultureName = currentCultureName;
+                break;
+            }
+        }
+        //
+        // if we did not find the culture name, try to find the closest culture name
+        if (foundCultureName == false)
+        {
+            var closestAvailableCutlureName = LocalizationManager.GetClosestAvailableCultureName(cultureName);
+            if (closestAvailableCutlureName is not null)
+            {
+                foundCultureName = true;
+                validatedCultureName = closestAvailableCutlureName;
+            }
+        }
+        //
+        // if we still did not find an exact match or a closest-available culture name, get the default culture name for the language code
+        if (foundCultureName == false)
+        {
+            var defaultCultureName = LocalizationManager.GetDefaultCultureNameForIso639LanguageCode(iso639LanguageCode);
+            if (defaultCultureName is not null)
+            {
+                foundCultureName = true;
+                validatedCultureName = defaultCultureName;
+            }
+            else
+            {
+                Debug.Assert(false, "Invalid code path: validated language codes should always return a closest or default culture name");
+            }
+        }
+        //
+        if (foundCultureName == false)
+        {
             return MorphicResult.ErrorResult();
         }
 
         // load the UI resources dictionary for the supported UI culture
-        var stringResourcesUri = new Uri(STRING_RESOURCES_URI_STRING_PREFIX + lowercaseLanguageCode + STRING_RESOURCES_URI_STRING_SUFFIX, UriKind.Absolute);
+        var stringResourcesUri = new Uri(STRING_RESOURCES_URI_STRING_PREFIX + validatedCultureName + STRING_RESOURCES_URI_STRING_SUFFIX, UriKind.Absolute);
         ResourceDictionary stringResourceDictionary;
         try
         {
