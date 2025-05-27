@@ -3,6 +3,9 @@
 
     <SolidColorBrush x:Key="ThemeAwareBackground" Color="#FF000000"/>
     <SolidColorBrush x:Key="ThemeAwareForeground" Color="#FFFFFFFF"/>
+    
+    <!-- theme-specific colors -->
+    <SolidColorBrush x:Key="ThemeAwareMorphicBarMorphieTextForeground" Color="#FFFFFFFF"/>
 
     <!-- theme-specific images -->
     <ImageSource x:Key="Images_Square50x50Logo">/Morphic;component/Assets/Images/theme_dark/Square50x50Logo.scale-400.png</ImageSource>

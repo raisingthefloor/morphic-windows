@@ -932,7 +932,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
         var getWindowClassNameResult = TrayButtonNativeWindow.GetWindowClassName(hwnd);
         if (getWindowClassNameResult.IsError == true)
         {
-            Debug.Assert(false, "Could not get window class name; has the window already been destroyed?");
+            // this window has no class name (or has already been destroyed); there is nothing for us to do
             return;
         }
         className = getWindowClassNameResult.Value!;
