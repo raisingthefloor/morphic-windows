@@ -842,7 +842,7 @@ public partial class App : Application
             Version? applicationVersion = Assembly.GetExecutingAssembly().GetName().Version;
             if (applicationVersion is not null)
             {
-                this.Logger.LogError("version: " + applicationVersion.Major.ToString() + "." + applicationVersion.Minor.ToString() + applicationVersion.Build.ToString());
+                this.Logger.LogError("version: " + applicationVersion.Major.ToString() + "." + applicationVersion.Minor.ToString() + "." + applicationVersion.Build.ToString() + "." + applicationVersion.Revision.ToString());
             }
             else
             {
@@ -1020,13 +1020,7 @@ public partial class App : Application
         // if Morphic (including the taskbar icon button) should be visible, show them now
         if (morphicShouldBeHidden == false)
         {
-            var setVisibleResult = this.HybridTrayIcon.SetVisible(true);
-            if (setVisibleResult.IsError == true)
-            {
-                // NOTE: ideally, we would retry showing the taskbar icon later if we cannot show it now; note that this could fail if, for instance, the Windows taskbar was not yet initialized properly (or had an invalid size, etc.)
-                this.Logger.LogError("Could not show Morphic button in task bar (App.OnStartup).");
-                Debug.Assert(false, "Could not show Morphic button in task bar (App.OnStartup).");
-            }
+            this.HybridTrayIcon.Visible = true;
         }
 
         // initialize our theme manager; this will also set the initial theme for our application
@@ -1137,8 +1131,8 @@ public partial class App : Application
             Icon = morphicIcon,
             Text = "Morphic",
             TrayIconLocation = Controls.HybridTrayIcon.TrayIconLocationOption.NextToNotificationTray,
+            Visible = false, // NOTE: default state; should not be necessary
         };
-        hybridTrayIcon.SetVisible(false); // NOTE: default state; should not be necessary
         this.HybridTrayIcon = hybridTrayIcon;
 
         // wire up click and right-click events for our hybrid tray icon
@@ -1704,13 +1698,7 @@ public partial class App : Application
         // show the Morphic taskbar button (if not already shown)
         if (this.HybridTrayIcon is not null)
         {
-            var setVisibleResult = this.HybridTrayIcon!.SetVisible(true);
-            if (setVisibleResult.IsError == true)
-            {
-                // NOTE: if we cannot show the icon, we gracefully degrade (but log the error); if we find that SetVisible errors should be handled, we can do so here.
-                this.Logger.LogError("Could not show Morphic button in task bar (App.ShowMorphicBarAndEnsureMorphicIsNotHiddenAsync).");
-                Debug.Assert(false, "Could not show Morphic button in task bar (App.ShowMorphicBarAndEnsureMorphicIsNotHiddenAsync).");
-            }
+            this.HybridTrayIcon!.Visible = true;
         }
 
         // show the MorphicBar (if not already shown)
@@ -1733,7 +1721,7 @@ public partial class App : Application
     protected override async void OnExit(ExitEventArgs e)
     {
         // immediately hide our tray icon (and dispose of it for good measure, to help ensure that unmanaged resources are cleaned up)
-        _ = this.HybridTrayIcon.SetVisible(false);
+        this.HybridTrayIcon.Visible = false;
         this.HybridTrayIcon.Dispose();
 
         // NOTE: the CLR may shut down our application quicker than we can send the "session end" event; as we move to the Morphic 2.0 architecture (with cached telemetry messages), the "@session end" message should be more guaranteed to be transmitted

@@ -21,7 +21,6 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using Morphic.Core;
 using System;
 
 namespace Morphic.Controls.TrayButton;
@@ -83,12 +82,15 @@ public class TrayButton : IDisposable
             if (disposing)
             {
                 // dispose managed state (managed objects)
+                //
                 if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
                 {
+                    // Windows 11 and newer (i.e. modern tray button)
                     _trayButton?.Dispose();
-                }
+                } 
                 else
                 {
+                    // Windows 10 (i.e. legacy tray button)
                     _legacyTrayButton?.Dispose();
                 }
             }
@@ -103,12 +105,12 @@ public class TrayButton : IDisposable
         }
     }
 
-    // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-    // ~TrayButton()
-    // {
-    //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-    //     Dispose(disposing: false);
-    // }
+    // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
+    ~TrayButton()
+    {
+        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        Dispose(disposing: false);
+    }
 
     public void Dispose()
     {
@@ -228,39 +230,48 @@ public class TrayButton : IDisposable
         }
     }
 
-    public MorphicResult<MorphicUnit, MorphicUnit> SetVisible(bool value)
+    public TrayButtonVisibility Visibility
     {
-        if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
+        get
         {
-            var setVisibleResult = _trayButton!.SetVisible(value);
-            if (setVisibleResult.IsError == true)
+            if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
             {
-                return MorphicResult.ErrorResult();
+                return _trayButton!.Visibility;
+            }
+            else //if (.IsWindows10() == true)
+            {
+                return _legacyTrayButton!.Visible switch
+                {
+                    true => TrayButtonVisibility.Visible,
+                    false => TrayButtonVisibility.Hidden,
+                };
             }
         }
-        else //if (.IsWindows10() == true)
+        set
         {
-            _legacyTrayButton!.Visible = value;
-        }
+            var newVisibleState = value switch
+            {
+                TrayButtonVisibility.Hidden => false,
+                TrayButtonVisibility.PendingVisible => throw new ArgumentException("State 'PendingVisible' is invalid for the Visibility Set operation"),
+                TrayButtonVisibility.Visible => true,
+                _ => throw new Exception("invalid code path"),
+            };
 
-        return MorphicResult.OkResult();
+            if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
+            {
+                _trayButton!.Visibility = value;
+            }
+            else //if (.IsWindows10() == true)
+            {
+                _legacyTrayButton!.Visible = newVisibleState;
+            }
+        }
     }
+
     //
-    public bool GetVisible()
-    {
-        if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
-        {
-            return _trayButton!.GetVisible();
-        }
-        else //if (.IsWindows10() == true)
-        {
-            return _legacyTrayButton!.Visible;
-        }
-    }
 
     public void SuppressTaskbarButtonResurfaceChecks(bool suppress)
     {
         _trayButton?.SuppressTaskbarButtonResurfaceChecks(suppress);
     }
-
 }

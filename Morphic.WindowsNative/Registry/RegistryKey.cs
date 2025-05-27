@@ -350,10 +350,9 @@ public partial class Registry
 
         public interface IRegistryGetValueError
         {
-            // functions to create member instances
-            public record TypeMismatch() : IRegistryGetValueError;
-            public record UnsupportedType() : IRegistryGetValueError;
-            public record ValueDoesNotExist() : IRegistryGetValueError;
+            public record TypeMismatch : IRegistryGetValueError;
+            public record UnsupportedType : IRegistryGetValueError;
+            public record ValueDoesNotExist : IRegistryGetValueError;
             public record Win32Error(int Win32ErrorCode) : IRegistryGetValueError;
         }
 
