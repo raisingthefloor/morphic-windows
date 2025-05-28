@@ -21,15 +21,11 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System;
+namespace Morphic.Controls.TrayButton;
 
-namespace Morphic.Controls.TrayButton.Windows11;
-
-public interface ICreateNewError
+public enum TrayButtonVisibility
 {
-    public record CannotFitOnTaskbar : ICreateNewError;
-    public record CouldNotFindTaskbarRelatedHandle: ICreateNewError;
-    public record CouldNotWireUpWatchEvents: ICreateNewError;
-    public record OtherException(Exception exception) : ICreateNewError;
-    public record Win32Error(uint win32ErrorCode) : ICreateNewError;
+    Hidden,         // currently hidden
+    PendingVisible, // is not yet visible; NOTE: this usually occurs if the visible state has been set to true but the tray button does not currently have a taskbar location (or taskbar) in/over which to position itself
+    Visible,        // currently visible
 }

@@ -33,7 +33,7 @@ internal class TrayButton : IDisposable
 
     private System.Drawing.Bitmap? _bitmap = null;
     private string? _text = null;
-    private bool _visible = false;
+    private TrayButtonVisibility _visibility = TrayButtonVisibility.Hidden;
 
     public event System.Windows.Forms.MouseEventHandler? MouseUp;
 
@@ -46,6 +46,9 @@ internal class TrayButton : IDisposable
             return _nativeWindow?.PositionAndSize;
         }
     }
+
+    private System.Windows.Forms.Timer _reattemptShowTaskbarButtonTimer;
+    private static readonly TimeSpan REATTEMPT_SHOW_TASKBAR_BUTTON_INTERVAL_TIMESPAN = new TimeSpan(0, 0, 10);
 
     internal TrayButton()
     {
@@ -60,7 +63,9 @@ internal class TrayButton : IDisposable
             if (disposing)
             {
                 // dispose managed state (managed objects)
-                this.DestroyManagedNativeWindow();
+                _nativeWindow?.Dispose();
+
+                _reattemptShowTaskbarButtonTimer?.Dispose();
             }
 
             // free unmanaged resources (unmanaged objects) and override finalizer
@@ -73,12 +78,12 @@ internal class TrayButton : IDisposable
         }
     }
 
-    // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-    // ~TrayButton()
-    // {
-    //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-    //     Dispose(disposing: false);
-    // }
+    // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
+    ~TrayButton()
+    {
+        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        Dispose(disposing: false);
+    }
 
     public void Dispose()
     {
@@ -100,7 +105,15 @@ internal class TrayButton : IDisposable
             _bitmap = value;
 
             //OBSERVATION: we do not return an error if the bitmap cannot be set
-            _ = _nativeWindow?.SetBitmap(_bitmap);
+            if (_nativeWindow is not null)
+            {
+                var setBitmapResult = _nativeWindow!.SetBitmap(_bitmap);
+                if (setBitmapResult.IsError == true)
+                {
+                    // NOTE: in the future, we may want to consider capturing the error
+                    Debug.Assert(false, "Could not set bitmap.");
+                }
+            }
         }
     }
 
@@ -114,51 +127,104 @@ internal class TrayButton : IDisposable
         {
             _text = value;
 
-            _nativeWindow?.SetText(_text);
+            if (_nativeWindow is not null)
+            {
+                var setTextResult = _nativeWindow!.SetText(_text);
+                if (setTextResult.IsError == true)
+                {
+                    // NOTE: in the future, we may want to consider capturing the error
+                    Debug.Assert(false, "Could not set text.");
+                }
+            }
         }
     }
 
-    public MorphicResult<MorphicUnit, MorphicUnit> SetVisible(bool value)
+    public TrayButtonVisibility Visibility
     {
-        if (_visible != value)
+        get
+        {
+            return _visibility;
+        }
+        set
         {
             switch (value)
             {
-                case true:
-                    var showResult = this.Show();
-                    if (showResult.IsError == true)
+                case TrayButtonVisibility.Visible:
+                    if (_visibility == TrayButtonVisibility.Hidden)
                     {
-                        Debug.Assert(false, "Could not show Morphic icon (taskbar button) on taskbar.");
-                        return MorphicResult.ErrorResult();
+                        var showResult = this.Show();
+                        if (showResult.IsError == true)
+                        {
+                            // NOTE: we could try to handle various IShowError error codes here
+                            //
+                            // NOTE: as a fallback, when "show" fails we set a timer to try to show the button
+                            Debug.Assert(false, "Could not show Morphic icon (taskbar button) on taskbar; setting Visibility to .PendingVisible");
+                            _visibility = TrayButtonVisibility.PendingVisible;
+
+                            // start a timer on the new instance, to resurface the Morphic tray button icon from time to time (just in case it gets hidden under the taskbar)
+                            // NOTE: we use a Windows Forms timers here (instead of a system timer) so that the function gets called on the UI thread (or at least the same thread which called this function)
+                            _reattemptShowTaskbarButtonTimer = new()
+                            {
+                                Interval = (int)REATTEMPT_SHOW_TASKBAR_BUTTON_INTERVAL_TIMESPAN.TotalMilliseconds,
+                            };
+                            _reattemptShowTaskbarButtonTimer.Tick += this.ReattemptShowTaskButtonTimer_Tick;
+                            _reattemptShowTaskbarButtonTimer.Start();
+                        }
                     }
                     break;
-                case false:
-                    this.Hide();
+                case TrayButtonVisibility.PendingVisible:
+                    throw new ArgumentException("State 'PendingVisible' is invalid for the Visibility Set operation");
+                case TrayButtonVisibility.Hidden:
+                    if (_visibility != TrayButtonVisibility.Hidden)
+                    {
+                        this.Hide();
+                    }
                     break;
             }
         }
-
-        return MorphicResult.OkResult();
-    }
-    //
-    public bool GetVisible()
-    {
-        return _visible;
     }
 
     //
 
-    public MorphicResult<MorphicUnit, MorphicUnit> Show()
+    // NOTE: the Show() method is only concerned with immediately showing the window (by creating the native window); the Visibility property is separate, a state which indicates if the control SHOULD be shown (and whether or not it's currently shown or _trying_ to be shown (i.e. pending))
+    public interface IShowError
     {
-        _visible = true;
-
+        public record CouldNotCreateWindow(ICreateNewError InnerError) : IShowError;
+        public record CouldNotSetBitmap(TrayButtonNativeWindow.ISetBitmapError InnerError) : IShowError;
+        public record CouldNotSetText(TrayButtonNativeWindow.IUpdateTooltipTextAndTrackingError InnerError) : IShowError;
+        public record OtherError : IShowError;
+    }
+    //
+    public MorphicResult<MorphicUnit, IShowError> Show()
+    {
         if (_nativeWindow is null)
         {
             var createNativeWindowResult = this.CreateNativeWindow();
             if (createNativeWindowResult.IsError == true)
             {
-                return MorphicResult.ErrorResult();
+                switch (createNativeWindowResult.Error!)
+                {
+                    case ICreateNativeWindowError.AlreadyExists:
+                        Debug.Assert(false, "Race condition: native window already exists");
+                        return MorphicResult.ErrorResult<IShowError>(new IShowError.OtherError());
+                    case ICreateNativeWindowError.CreateFailed(ICreateNewError innerError):
+                        return MorphicResult.ErrorResult<IShowError>(new IShowError.CouldNotCreateWindow(innerError));
+                    case ICreateNativeWindowError.CouldNotSetBitmap(var innerError):
+                        return MorphicResult.ErrorResult<IShowError>(new IShowError.CouldNotSetBitmap(innerError));
+                    case ICreateNativeWindowError.CouldNotSetText(var innerError):
+                        return MorphicResult.ErrorResult<IShowError>(new IShowError.CouldNotSetText(innerError));
+                    default:
+                        throw new MorphicUnhandledErrorException();
+                }
             }
+            var nativeWindow = createNativeWindowResult.Value!;
+
+            // store the reference to our new native window
+            _nativeWindow = nativeWindow;
+
+            // if we created the window, it is now "visible" from the perspective of the TrayButton
+            // NOTE: the native window itself will show/hide depending on the topmost state of the taskbar; our control's "visibility" is strictly concerned with whether or not the control is set to be visible right now (and if it is, if it's actually visible or just trying to becoming (pending) visible)
+            _visibility = TrayButtonVisibility.Visible;
         }
 
         return MorphicResult.OkResult();
@@ -166,12 +232,21 @@ internal class TrayButton : IDisposable
 
     public void Hide()
     {
-        _visible = false;
+        // NOTE: if we are currently "pending visible" (i.e. our timer is live), then cancel that now
+        // NOTE: there is a possibility that the timer is currently executing when we dispose of it
+        if (_reattemptShowTaskbarButtonTimer is not null)
+        {
+            _reattemptShowTaskbarButtonTimer?.Dispose();
+            _reattemptShowTaskbarButtonTimer = null;
+        }
 
         if (_nativeWindow is not null)
         {
-            this.DestroyManagedNativeWindow();
+            _nativeWindow?.Dispose();
+            _nativeWindow = null;
         }
+
+        _visibility = TrayButtonVisibility.Hidden;
     }
 
     //
@@ -183,19 +258,28 @@ internal class TrayButton : IDisposable
 
     //
 
-    private MorphicResult<MorphicUnit, MorphicUnit> CreateNativeWindow()
+    private interface ICreateNativeWindowError
+    {
+        public record AlreadyExists : ICreateNativeWindowError;
+        public record CouldNotSetBitmap(TrayButtonNativeWindow.ISetBitmapError InnerError) : ICreateNativeWindowError;
+        public record CouldNotSetText(TrayButtonNativeWindow.IUpdateTooltipTextAndTrackingError InnerError) : ICreateNativeWindowError;
+        public record CreateFailed(ICreateNewError InnerError) : ICreateNativeWindowError;
+    }
+    //
+    private MorphicResult<TrayButtonNativeWindow, ICreateNativeWindowError> CreateNativeWindow()
     {
         // if our native window already exists, return an error
         if (_nativeWindow is not null)
         {
-            return MorphicResult.ErrorResult();
+            return MorphicResult.ErrorResult<ICreateNativeWindowError>(new ICreateNativeWindowError.AlreadyExists());
         }
 
         // create the native window
         var createNewResult = TrayButtonNativeWindow.CreateNew();
         if (createNewResult.IsError)
         {
-            return MorphicResult.ErrorResult();
+            var innerError = createNewResult.Error!;
+            return MorphicResult.ErrorResult<ICreateNativeWindowError>(new ICreateNativeWindowError.CreateFailed(innerError));
         }
         var nativeWindow = createNewResult.Value!;
 
@@ -210,21 +294,43 @@ internal class TrayButton : IDisposable
         if (setBitmapResult.IsError == true)
         {
             nativeWindow.Dispose();
-            return MorphicResult.ErrorResult();
+            //
+            var innerError = setBitmapResult.Error!;
+            return MorphicResult.ErrorResult<ICreateNativeWindowError>(new ICreateNativeWindowError.CouldNotSetBitmap(innerError));
         }
         //
         // set the (tooltip) text for the native window
-        nativeWindow.SetText(_text);
+        var setTextResult = nativeWindow.SetText(_text);
+        if (setTextResult.IsError == true)
+        {
+            nativeWindow.Dispose();
+            //
+            var innerError = setTextResult.Error!;
+            return MorphicResult.ErrorResult<ICreateNativeWindowError>(new ICreateNativeWindowError.CouldNotSetText(innerError));
+        }
 
-        // store the reference to our new native window
-        _nativeWindow = nativeWindow;
-
-        return MorphicResult.OkResult();
+        return MorphicResult.OkResult(nativeWindow);
     }
 
-    private void DestroyManagedNativeWindow()
+    // NOTE: if we tried to show the taskbar button but the operation failed, keep retrying
+    // NOTE: we use a Windows Forms timer here instead of a system timer (in an effort to keep the .Show() function call on the main/UI thread)
+    private void ReattemptShowTaskButtonTimer_Tick(object? sender, EventArgs e)
     {
-        _nativeWindow?.Dispose();
-        _nativeWindow = null;
+        if (_visibility == TrayButtonVisibility.PendingVisible)
+        {
+            var showResult = this.Show();
+            if (showResult.IsSuccess == true)
+            {
+                // we were successfully able to show the taskbar button; the reattempt timer is not longer necessary
+                _reattemptShowTaskbarButtonTimer?.Dispose();
+                _reattemptShowTaskbarButtonTimer = null;
+            }
+        }
+        else
+        {
+            Debug.Assert(false, "ReattemptShowTaskButtonTimerCallback was called, but Visibility is not currently set to .PendingVisible; value: " + _visibility.ToString());
+            _reattemptShowTaskbarButtonTimer?.Dispose();
+            _reattemptShowTaskbarButtonTimer = null;
+        }
     }
 }

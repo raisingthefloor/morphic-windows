@@ -145,29 +145,26 @@ public class HybridTrayIcon : IDisposable
     }
 
     /// <summary>Show or hide the tray icon.</summary>
-    public MorphicResult<MorphicUnit, MorphicUnit> SetVisible(bool value)
+    public bool Visible
     {
-        _visible = value;
-
-        if (_notifyIcon is not null)
+        get
         {
-            _notifyIcon.Visible = _visible;
+            return _visible;
         }
-        if (_trayButton is not null)
+        set
         {
-            var setVisibleResult = _trayButton.SetVisible(_visible);
-            if (setVisibleResult.IsError == true)
+            _visible = value;
+
+            if (_notifyIcon is not null)
             {
-                return MorphicResult.ErrorResult();
+                _notifyIcon.Visible = _visible;
+            }
+            if (_trayButton is not null)
+            {
+                // NOTE: we set the visibility tag; if the tray button cannot currently be made visible, it will become ".PendingVisible" instead
+                _trayButton.Visibility = _visible ? TrayButton.TrayButtonVisibility.Visible : TrayButton.TrayButtonVisibility.Hidden;
             }
         }
-
-        return MorphicResult.OkResult();
-    }
-    //
-    public bool GetVisible()
-    {
-        return _visible;
     }
 
     //
@@ -229,12 +226,12 @@ public class HybridTrayIcon : IDisposable
         _notifyIcon.Visible = _visible;
     }
 
-    private MorphicResult<MorphicUnit, MorphicUnit> InitializeTrayButton()
+    private void InitializeTrayButton()
     {
         if (_trayButton is not null)
         {
             // if we are being initialized a second time, simply return success
-            return MorphicResult.OkResult();
+            return;
         }
 
         _trayButton = new Morphic.Controls.TrayButton.TrayButton();
@@ -253,16 +250,8 @@ public class HybridTrayIcon : IDisposable
             }
         };
         //
-        var setVisibleResult = _trayButton.SetVisible(_visible);
-        if (setVisibleResult.IsError == true)
-        {
-            _trayButton.Dispose();
-            _trayButton = null;
-
-            return MorphicResult.ErrorResult();
-        }
-
-        return MorphicResult.OkResult();
+        // NOTE: we set the visibility tag; if the tray button cannot currently be made visible, it will become ".PendingVisible" instead
+        _trayButton.Visibility = _visible ? TrayButton.TrayButtonVisibility.Visible : TrayButton.TrayButtonVisibility.Hidden;
     }
 
     //
@@ -296,8 +285,7 @@ public class HybridTrayIcon : IDisposable
                 case TrayIconLocationOption.NotificationTrayAndNextToNotificationTray:
                     if (_trayButton is null)
                     {
-                        // OBSERVATION: we are not checking for or returning any kind of error if the tray button cannot be initialized
-                        _ = this.InitializeTrayButton();
+                        this.InitializeTrayButton();
                     }
                     break;
             }

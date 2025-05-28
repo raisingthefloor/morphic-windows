@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2024 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2025 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -438,8 +438,8 @@ internal class TrayButton : IDisposable
                 return;
             }
 
-            PInvoke.RECT trayButtonClientRect;
-            var getClientRectSuccess = PInvoke.User32.GetClientRect(this.Handle, out trayButtonClientRect);
+            Windows.Win32.Foundation.RECT trayButtonClientRect;
+            var getClientRectSuccess = Windows.Win32.PInvoke.GetClientRect((Windows.Win32.Foundation.HWND)this.Handle, out trayButtonClientRect);
             if (getClientRectSuccess == false)
             {
                 // failed; abort
