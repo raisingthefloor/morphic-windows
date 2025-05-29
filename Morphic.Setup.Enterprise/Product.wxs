@@ -15,10 +15,11 @@
 	        </Feature>
 	
 	        <Property Id="WixShellExecTarget" Value="[#filFa4krMwL6ueyj_tX_uB0JUHWusc]" />
-	        <CustomAction Id="LaunchApplication" DllEntry="WixShellExec" Impersonate="yes" BinaryRef="Wix4UtilCA_X86" />
+	        <CustomAction Id="LaunchApplication" DllEntry="WixShellExec" Impersonate="yes" BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)" />
 	
+	        <!-- NOTE: INSTALLUILEVEL_FULL == 5 (i.e. non-silent, normal installation); see: https://learn.microsoft.com/en-us/windows/win32/msi/uilevel -->
 	        <InstallExecuteSequence>
-			<Custom Action="LaunchApplication" After="InstallFinalize" Condition="NOT Installed" />
+			<Custom Action="LaunchApplication" After="InstallFinalize" Condition="NOT Installed AND UILevel == 5" />
 	        </InstallExecuteSequence>
 	
 	        <ui:WixUI Id="WixUI_Minimal" />
