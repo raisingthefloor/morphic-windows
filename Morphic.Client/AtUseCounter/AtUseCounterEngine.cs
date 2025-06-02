@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2023 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2025 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -66,6 +66,8 @@ internal class AtUseCounterEngine
 
      private static Morphic.Core.MorphicSequentialTaskScheduler _sequentialTaskScheduler;
      private static TaskFactory _sequentialTaskFactory;
+
+     private static Morphic.WindowsNative.Process.ProcessWatcher _processWatcher;
 
      static public async Task ConfigureAndStartAtUseCounterAsync(string mqttServerHostname, string appName, string appKey, Utils.TelemetryUtils.TelemetryIdComponents telemetryIds)
      {
@@ -173,11 +175,13 @@ internal class AtUseCounterEngine
           }
 
           // triggered when watched processes are started/stopped
-          var processWatcher = new Morphic.WindowsNative.Process.ProcessWatcher();
-          processWatcher.ProcessNamesWatchFilter = new(new string[] { "Magnify.exe", "Magnify", "ScreenClippingHost.exe", "ScreenClippingHost", "SystemSettings.exe", "SystemSettings" });
+          var processWatcher = Morphic.WindowsNative.Process.ProcessWatcher.CreateNew();
+          processWatcher.ProcessNamesWatchFilter = new(new string[] { "Magnify.exe", "Magnify", "ScreenClippingHost.exe", "ScreenClippingHost", "SystemSettings.exe", "SystemSettings", "VoiceAccess.exe", "VoiceAccess" });
           processWatcher.ProcessStarted += AtUseCounterEngine.ProcessWatcher_ProcessStarted;
           processWatcher.ProcessStopped += AtUseCounterEngine.ProcessWatcher_ProcessStopped;
-          processWatcher.Start(new TimeSpan(0, 0, 1));
+          _processWatcher = processWatcher;
+          //
+          Morphic.WindowsNative.Process.ProcessWatcher.Start(new TimeSpan(0, 0, 1));
      }
 
      // NOTE: this function waits up to two seconds for the telemetry client to close
@@ -665,37 +669,44 @@ internal class AtUseCounterEngine
 
      static void ProcessWatcher_ProcessStarted(object? sender, Morphic.WindowsNative.Process.ProcessWatcher.ProcessUpdatedEventArgs e)
      {
-          if (SHOW_EVENT_HANDLER_CALLS == true)
-          {
-               Debug.WriteLine("ProcessWatcher_ProcessStarted");
-          }
+            if (SHOW_EVENT_HANDLER_CALLS == true)
+            {
+                Debug.WriteLine("ProcessWatcher_ProcessStarted");
+            }
 
-          if (e.ProcessName.Contains("Magnify", StringComparison.InvariantCultureIgnoreCase) == true)
-          {
-               Debug.WriteLine("CHANGED | Magnifier shown");
+            if (e.ProcessName.Contains("Magnify", StringComparison.InvariantCultureIgnoreCase) == true)
+            {
+                Debug.WriteLine("CHANGED | Magnifier shown");
 
-               // submit telemetry event
-               _telemetryClient?.EnqueueEvent("magnifierShow", null);
-          }
-          else if (e.ProcessName.Contains("ScreenClippingHost", StringComparison.InvariantCultureIgnoreCase) == true)
-          {
-               Debug.WriteLine("CHANGED | Screen clipping activated");
+                // submit telemetry event
+                _telemetryClient?.EnqueueEvent("magnifierShow", null);
+            }
+            else if (e.ProcessName.Contains("ScreenClippingHost", StringComparison.InvariantCultureIgnoreCase) == true)
+            {
+                Debug.WriteLine("CHANGED | Screen clipping activated");
 
-               // submit telemetry event
-               _telemetryClient?.EnqueueEvent("screenSnip", null);
-          }
-          else if (e.ProcessName.Contains("SystemSettings", StringComparison.InvariantCultureIgnoreCase) == true)
-          {
-               Debug.WriteLine("CHANGED | System Settings app started");
+                // submit telemetry event
+                _telemetryClient?.EnqueueEvent("screenSnip", null);
+            }
+            else if (e.ProcessName.Contains("SystemSettings", StringComparison.InvariantCultureIgnoreCase) == true)
+            {
+                Debug.WriteLine("CHANGED | System Settings app started");
 
-               // submit telemetry event
-               _telemetryClient?.EnqueueEvent("systemSettings", null);
-          }
-          else
-          {
-               Debug.Assert(false, "invalid code path; we are not watching any other process names");
-               Debug.WriteLine("CHANGED | Process started: " + e.ProcessName);
-          }
+                // submit telemetry event
+                _telemetryClient?.EnqueueEvent("systemSettings", null);
+            }
+            else if (e.ProcessName.Contains("VoiceAccess", StringComparison.InvariantCultureIgnoreCase) == true)
+            {
+                Debug.WriteLine("CHANGED | Voice Access started");
+
+                // submit telemetry event
+                _telemetryClient?.EnqueueEvent("voiceControlOn", null);
+            }
+            else
+            {
+                Debug.Assert(false, "invalid code path; we are not watching any other process names");
+                Debug.WriteLine("CHANGED | Process started: " + e.ProcessName);
+            }
      }
 
      static void ProcessWatcher_ProcessStopped(object? sender, Morphic.WindowsNative.Process.ProcessWatcher.ProcessUpdatedEventArgs e)
@@ -719,6 +730,13 @@ internal class AtUseCounterEngine
           else if (e.ProcessName.Contains("SystemSettings", StringComparison.InvariantCultureIgnoreCase) == true)
           {
                Debug.WriteLine("CHANGED | System Settings app closed");
+          }
+          else if (e.ProcessName.Contains("VoiceAccess", StringComparison.InvariantCultureIgnoreCase) == true)
+          {
+              Debug.WriteLine("CHANGED | Voice Access stopped");
+
+              // submit telemetry event
+              _telemetryClient?.EnqueueEvent("voiceControlOff", null);
           }
           else
           {

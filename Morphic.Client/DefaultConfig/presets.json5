@@ -341,7 +341,35 @@
           }
         }
       }
-    }
+    },
+    "voice-control": {
+      // Toggles voice control (aka Windows Voice Access).
+      kind: "internal",
+      widget: "multi",
+      configuration: {
+        function: "voiceAccess",
+        args: {
+          value: "{button}"
+        },
+        label: "{{QuickStrip_VoiceControl_Title}}",
+        menu: {
+          setting: "easeofaccess-speechrecognition"
+        },
+        telemetryCategory: "voiceControl",
+        buttons: {
+          on: {
+            label: "{{QuickStrip_VoiceControl_On_Title}}",
+            value: "on",
+            tooltip: "{{QuickStrip_VoiceControl_On_HelpTitle}}"
+          },
+          off: {
+            label: "{{QuickStrip_VoiceControl_Off_Title}}",
+            value: "off",
+            tooltip: "{{QuickStrip_VoiceControl_Off_HelpTitle}}"
+          }
+        }
+      }
+    },
   },
   defaults: {
     "calendar": {

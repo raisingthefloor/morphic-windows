@@ -2,11 +2,16 @@
 DwmSetWindowAttribute
 EnumDisplayMonitors
 EnumDisplaySettings
+EnumThreadWindows
+FindExecutable
+GetAsyncKeyState 
 GetCurrentPackageFullName
 GetCursorPos
 GetDesktopWindow
 GetDisplayConfigBufferSizes
 GetMonitorInfo
+GetWindowLong
+GetWindowLongPtr
 MonitorFromPoint
 MonitorFromWindow
 QueryDisplayConfig
@@ -17,6 +22,8 @@ RegNotifyChangeKeyValue
 RegOpenKeyEx
 RegQueryValueEx
 RegSetValueEx
+SendInput
+SendNotifyMessage
 SystemParametersInfo
 
 DISPLAYCONFIG_MODE_INFO
@@ -31,4 +38,12 @@ HKEY_CURRENT_CONFIG
 HKEY_CURRENT_USER
 HKEY_LOCAL_MACHINE
 HKEY_USERS
+MAX_PATH
+SE_ERR_ACCESSDENIED
+SE_ERR_FNF
+SE_ERR_NOASSOC
+SE_ERR_OOM
+SE_ERR_PNF
 S_OK
+WM_CLOSE
+

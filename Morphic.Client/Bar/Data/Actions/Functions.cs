@@ -2,9 +2,6 @@ namespace Morphic.Client.Bar.Data.Actions
 {
     using Microsoft.Extensions.Logging;
     using Morphic.Core;
-    using Morphic.WindowsNative.Speech;
-    using Settings.SettingsHandlers;
-    using Settings.SolutionsRegistry;
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
@@ -13,7 +10,6 @@ namespace Morphic.Client.Bar.Data.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using System.Windows;
-    using System.Windows.Automation.Text;
     using UI;
 
     [HasInternalFunctions]
@@ -276,7 +272,7 @@ namespace Morphic.Client.Bar.Data.Actions
                         // activate the target window (i.e. topmost/last-active window, rather than the MorphicBar); we will then capture the current selection in that window
                         // NOTE: ideally we would activate the last window as part of our atomic operation, but we really have no control over whether or not another application
                         //       or the user changes the activated window (and our internal code is also not set up to block us from moving activation/focus temporarily).
-                        await SelectionReader.Default.ActivateLastActiveWindow();
+                        await Morphic.WindowsNative.Speech.SelectionReader.Default.ActivateLastActiveWindowAsync();
 
                         // as a primary strategy, try using the built-in Windows functionality for capturing the current selection via UI automation
                         // NOTE: this does not work with some apps (such as Internet Explorer...but also others)
@@ -286,7 +282,7 @@ namespace Morphic.Client.Bar.Data.Actions
                         await s_captureTextSemaphore.WaitAsync();
                         try
                         {
-                            var getSelectedTextResult = Morphic.WindowsNative.UIAutomation.UIAutomationClient.GetSelectedText();
+                            var getSelectedTextResult = Morphic.WindowsNative.UIAutomation.UIAutomationSelectedTextScripts.GetSelectedText();
                             if (getSelectedTextResult.IsSuccess == true)
                             {
                                 selectedText = getSelectedTextResult.Value;
@@ -313,16 +309,16 @@ namespace Morphic.Client.Bar.Data.Actions
                             else
                             {
                                 // NOTE: we only log errors here, rather than returning an error condition to our caller; we don't return immediately here because we have a backup strategy (i.e. ctrl+c) which we employ if this strategy fails
-                                switch (getSelectedTextResult.Error!.Value)
+                                switch (getSelectedTextResult.Error!)
                                 {
-                                    case WindowsNative.UIAutomation.UIAutomationClient.CaptureSelectedTextError.Values.ComInterfaceInstantiationFailed:
+                                    case WindowsNative.UIAutomation.UIAutomationSelectedTextScripts.ICaptureSelectedTextError.ComInterfaceInstantiationFailed:
                                         App.Current.Logger.LogDebug("ReadAloud: Capture selected text via UI automation failed (com interface could not be instantiated)");
                                         break;
-                                    case WindowsNative.UIAutomation.UIAutomationClient.CaptureSelectedTextError.Values.TextRangeIsNull:
+                                    case WindowsNative.UIAutomation.UIAutomationSelectedTextScripts.ICaptureSelectedTextError.TextRangeIsNull:
                                         App.Current.Logger.LogDebug("ReadAloud: Capture selected text via UI automation returned a null text range; this is an unexpected error condition");
                                         break;
-                                    case WindowsNative.UIAutomation.UIAutomationClient.CaptureSelectedTextError.Values.Win32Error:
-                                        App.Current.Logger.LogDebug("ReadAloud: Capture selected text via UI automation resulted in win32 error code: " + getSelectedTextResult.Error!.Win32ErrorCode.ToString());
+                                    case WindowsNative.UIAutomation.UIAutomationSelectedTextScripts.ICaptureSelectedTextError.Win32Error(var win32ErrorCode):
+                                        App.Current.Logger.LogDebug("ReadAloud: Capture selected text via UI automation resulted in win32 error code: " + win32ErrorCode.ToString());
                                         break;
                                     default:
                                         throw new MorphicUnhandledErrorException();
@@ -836,7 +832,7 @@ namespace Morphic.Client.Bar.Data.Actions
 
             // copy the current selection to the clipboard
             App.Current.Logger.LogDebug("CopySelectedTextFromLastActiveWindow: Sending Ctrl+C to copy the current selection to the clipboard.");
-            await SelectionReader.Default.CopySelectedTextToClipboardAsync(System.Windows.Forms.SendKeys.SendWait);
+            await Morphic.WindowsNative.Speech.SelectionReader.Default.CopySelectedTextToClipboardAsync(System.Windows.Forms.SendKeys.SendWait);
 
             // wait 100ms (an arbitrary amount of time, but in our testing some wait is necessary...even with the WM-triggered copy logic above)
             // NOTE: perhaps, in the future, we should only do this if our first call to Clipboard.GetText() returns (null? or) an empty string;
@@ -904,7 +900,7 @@ namespace Morphic.Client.Bar.Data.Actions
         [InternalFunction("sendKeys", "keys")]
         public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> SendKeysAsync(FunctionArgs args)
         {
-            await SelectionReader.Default.ActivateLastActiveWindow();
+            await Morphic.WindowsNative.Speech.SelectionReader.Default.ActivateLastActiveWindowAsync();
             System.Windows.Forms.SendKeys.SendWait(args["keys"]);
             return MorphicResult.OkResult();
         }
@@ -1215,28 +1211,153 @@ namespace Morphic.Client.Bar.Data.Actions
         public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> DarkModeAsync(FunctionArgs args)
         {
             // if we have a "value" property, this is a multi-segmented button and we should use "value" instead of "state"
-            bool on;
+            bool newState;
             if (args.Arguments.Keys.Contains("value"))
             {
-                on = (args["value"] == "on");
+                newState = (args["value"] == "on");
             }
             else if (args.Arguments.Keys.Contains("state"))
             {
-                on = (args["state"] == "on");
+                newState = (args["state"] == "on");
             }
             else
             {
                 System.Diagnostics.Debug.Assert(false, "Function 'darkMode' did not receive a new state");
-                on = false;
+                newState = false;
             }
 
-            var setDarkModeStateResult = await Functions.SetDarkModeStateAsync(on);
+            var setDarkModeStateResult = await Functions.SetDarkModeStateAsync(newState);
             if (setDarkModeStateResult.IsError == true)
             {
                 return MorphicResult.ErrorResult();
             }
 
             return MorphicResult.OkResult();
+        }
+
+        //
+
+        private const string VOICE_ACCESS_PROCESS_NAME = "VoiceAccess";
+
+        internal async static Task<MorphicResult<MorphicUnit, MorphicUnit>> SetVoiceAccessStateAsync(bool state)
+        {
+            var osVersion = Morphic.WindowsNative.OsVersion.OsVersion.GetWindowsVersion();
+            if (osVersion is null)
+            {
+                // error
+                return MorphicResult.ErrorResult();
+            }
+            else
+            {
+                // Windows 10 v1903+
+
+                var pathToVoiceAccess = Functions.GetPathToVoiceAccess();
+                if (pathToVoiceAccess is null)
+                {
+                    Debug.WriteLine("ERROR: could not find VoiceAccess.exe");
+                    return MorphicResult.ErrorResult();
+                }
+
+                if (state == true)
+                {
+                    var startResult = ApplicationProcessUtils.StartApplication(pathToVoiceAccess);
+                    if (startResult.IsError == true)
+                    {
+                        switch (startResult.Error!)
+                        {
+                            case ApplicationProcessUtils.IStartApplicationError.CannotFindExecutable:
+                                Debug.WriteLine("Could not start Pointing Magnifier.\n\nCannot find application's executable file.");
+                                return MorphicResult.ErrorResult();
+                            case ApplicationProcessUtils.IStartApplicationError.NotStarted:
+                                Debug.WriteLine("Could not start Pointing Magnifier.\n\nApplication was not started.");
+                                return MorphicResult.ErrorResult();
+                            case ApplicationProcessUtils.IStartApplicationError.Win32Exception(var exception):
+                                Debug.WriteLine("Could not start Pointing Magnifier.\n\nWin32 error code: " + exception.NativeErrorCode.ToString());
+                                return MorphicResult.ErrorResult();
+                            default:
+                                throw new MorphicUnhandledErrorException();
+                        }
+                    }
+                }
+                else
+                {
+                    var stopResult = await ApplicationProcessUtils.StopApplicationAsync(VOICE_ACCESS_PROCESS_NAME, new TimeSpan(0, 0, 0, 1));
+                    if (stopResult.IsError == true)
+                    {
+                        switch (stopResult.Error!)
+                        {
+                            case ApplicationProcessUtils.IStopApplicationError.NotStarted:
+                                // if the pointing magnifier was already stopped, proceed
+                                Debug.WriteLine("DEBUG: could not stop Pointing Magnifier: PROCESS WAS NOT RUNNING");
+                                return MorphicResult.ErrorResult();
+                            case ApplicationProcessUtils.IStopApplicationError.Win32Exception(var exception):
+                                Debug.WriteLine("Could not close pointing magnifier.\n\nWin32 error code: " + exception.NativeErrorCode.ToString());
+                                return MorphicResult.ErrorResult();
+                            default:
+                                throw new MorphicUnhandledErrorException();
+                        }
+                    }
+                }
+            }
+
+            return MorphicResult.OkResult();
+        }
+
+        [InternalFunction("voiceAccess")]
+        public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> VoiceAccessAsync(FunctionArgs args)
+        {
+            // if we have a "value" property, this is a multi-segmented button and we should use "value" instead of "state"
+            bool newState;
+            if (args.Arguments.Keys.Contains("value"))
+            {
+                newState = (args["value"] == "on");
+            }
+            else if (args.Arguments.Keys.Contains("state"))
+            {
+                newState = (args["state"] == "on");
+            }
+            else
+            {
+                System.Diagnostics.Debug.Assert(false, "Function 'voiceAccess' did not receive a new state");
+                newState = false;
+            }
+
+            var setVoiceAccessStateResult = await Functions.SetVoiceAccessStateAsync(newState);
+            if (setVoiceAccessStateResult.IsError == true)
+            {
+                return MorphicResult.ErrorResult();
+            }
+
+            return MorphicResult.OkResult();
+        }
+
+        [InternalFunction("voiceAccessOn")]
+        public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> VoiceAccessOnAsync(FunctionArgs args)
+        {
+            args.Arguments.Add("value", "on");
+            return await VoiceAccessAsync(args);
+        }
+
+        [InternalFunction("voiceAccessOff")]
+        public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> VoiceAccessOffAsync(FunctionArgs args)
+        {
+            args.Arguments.Add("value", "off");
+            return await VoiceAccessAsync(args);
+        }
+
+        private static string? GetPathToVoiceAccess()
+        {
+            var windowsSystemFolder = Environment.GetFolderPath(Environment.SpecialFolder.System);
+            var pathToVoiceAccess = System.IO.Path.Combine(windowsSystemFolder, "VoiceAccess.exe");
+
+            if (System.IO.File.Exists(pathToVoiceAccess) == true)
+            {
+                return pathToVoiceAccess;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         //

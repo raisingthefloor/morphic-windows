@@ -89,6 +89,7 @@
     <system:String x:Key="MainMenuItem_Setting_OsReadAloudSettings">_Read Aloud Settings</system:String>
     <system:String x:Key="MainMenuItem_Setting_OsSettingsSection">Windows Settings for MorphicBar Controls</system:String>
     <system:String x:Key="MainMenuItem_Setting_OsStopKeyRepeatAction">_Stop Key-repeat</system:String>
+    <system:String x:Key="MainMenuItem_Setting_OsVoiceSettings">Voice Settings</system:String>
     <system:String x:Key="MainMenuItem_ShowMorphicBar">Show MorphicBar</system:String>
     <system:String x:Key="MainMenuItem_ShowMorphicBarAfterLoginOnOff">_Show Morphic Bar at start</system:String>
     <system:String x:Key="MainMenuItem_SignIn">Sign into Morphic...</system:String>
@@ -213,6 +214,13 @@
     <system:String x:Key="QuickStrip_UsbOpenEject_Open_HelpTitle">Open All USB Drives</system:String>
     <system:String x:Key="QuickStrip_UsbOpenEject_Open_Title">Open</system:String>
     <system:String x:Key="QuickStrip_UsbOpenEject_Title">USB Drives (All)</system:String>
+    <system:String x:Key="QuickStrip_VoiceControl_Off_HelpMessage"></system:String>
+    <system:String x:Key="QuickStrip_VoiceControl_Off_HelpTitle">Turns Voice Control off</system:String>
+    <system:String x:Key="QuickStrip_VoiceControl_Off_Title">Off</system:String>
+    <system:String x:Key="QuickStrip_VoiceControl_On_HelpMessage"></system:String>
+    <system:String x:Key="QuickStrip_VoiceControl_On_HelpTitle">Turns Voice Control on</system:String>
+    <system:String x:Key="QuickStrip_VoiceControl_On_Title">On</system:String>
+    <system:String x:Key="QuickStrip_VoiceControl_Title">Voice Control</system:String>
     <system:String x:Key="QuickStrip_WordSimplify_Basic_HelpMessage">Gives you a new simpler ribbon with just the basic items on it.</system:String>
     <system:String x:Key="QuickStrip_WordSimplify_Basic_HelpTitle">Adds a new 'Basic Items' ribbon to Word</system:String>
     <system:String x:Key="QuickStrip_WordSimplify_Basic_Title">Basic</system:String>
@@ -225,10 +233,6 @@
     <system:String x:Key="MorphicBarButtonContextMenuItem_LearnMore">_Learn more</system:String>
     <system:String x:Key="MorphicBarButtonContextMenuItem_Settings">_Settings</system:String>
     
-    <system:String x:Key="MorphicGroupPickerDialog_ChangePreferenceLaterUsingMorphicMenuNote">You can change this preference later, by using the Morphic Menu.</system:String>
-    <system:String x:Key="MorphicGroupPickerDialog_SelectGroupHeader">Select the group whose bar you would like to see now:</system:String>
-    <system:String x:Key="MorphicGroupPickerDialog_YouAreMemberOfMultipleGroups">You are a member of several Morphic Groups.</system:String>
-        
     <system:String x:Key="RestoreDialog_BackupDate">Backup Date</system:String>
     <system:String x:Key="RestoreDialog_ClickingBelowWillRestoreSettings_Part1">Clicking</system:String>
     <system:String x:Key="RestoreDialog_ClickingBelowWillRestoreSettings_Part2">Restore from backup</system:String>

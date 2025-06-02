@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2022 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2025 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -200,6 +200,7 @@ public partial class App : Application
         }
         public class MorphicBarConfigSection
         {
+            public string? defaultLocation { get; set; }
             public string? visibilityAfterLogin { get; set; }
             public List<MorphicBarExtraItem>? extraItems { get; set; }
         }
@@ -222,6 +223,7 @@ public partial class App : Application
         public bool CustomMorphicBarsIsEnabled;
         public bool ResetSettingsIsEnabled;
         public bool SignInIsEnabled;
+        public ConfigurableFeatures.MorphicBarDefaultLocationOption MorphicBarDefaultLocation;
         public ConfigurableFeatures.MorphicBarVisibilityAfterLoginOption? MorphicBarVisibilityAfterLogin;
         public List<MorphicBarExtraItem> ExtraMorphicBarItems;
         public string? TelemetrySiteId;
@@ -258,7 +260,8 @@ public partial class App : Application
         // allow users to sign in to Morphic accounts
         result.SignInIsEnabled = true;
         //
-        // morphic bar (visibility and extra items)
+        // morphic bar (default location, visibility and extra items)
+        result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.BottomTrailing;
         result.MorphicBarVisibilityAfterLogin = null;
         result.ExtraMorphicBarItems = new List<MorphicBarExtraItem>();
 
@@ -423,6 +426,44 @@ public partial class App : Application
         if (deserializedJson.features?.signIn?.enabled is not null)
         {
             result.SignInIsEnabled = deserializedJson.features.signIn.enabled.Value;
+        }
+
+        // capture the desired default location of the MorphicBar
+        if (deserializedJson.morphicBar?.defaultLocation is not null)
+        {
+            switch (deserializedJson.morphicBar?.defaultLocation)
+            {
+                case "topLeft":
+                    result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.TopLeft;
+                    break;
+                case "topRight":
+                    result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.TopRight;
+                    break;
+                case "bottomLeft":
+                    result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.BottomLeft;
+                    break;
+                case "bottomRight":
+                    result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.BottomRight;
+                    break;
+                //
+                case "topLeading":
+                    result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.TopLeading;
+                    break;
+                case "topTrailing":
+                    result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.TopTrailing;
+                    break;
+                case "bottomLeading":
+                    result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.BottomLeading;
+                    break;
+                case "bottomTrailing":
+                    result.MorphicBarDefaultLocation = ConfigurableFeatures.MorphicBarDefaultLocationOption.BottomTrailing;
+                    break;
+                default:
+                    // sorry, we don't understand this visibility setting
+                    // NOTE: consider refusing to start up (for security reasons) if the configuration file cannot be read
+                    Logger?.LogError("Unknown morphicBar.defaultLocation setting: " + deserializedJson.morphicBar?.visibilityAfterLogin);
+                    return result;
+            }
         }
 
         // capture the desired after-login (autorun) visibility of the MorphicBar
@@ -798,6 +839,16 @@ public partial class App : Application
 
         try
         {
+            Version? applicationVersion = Assembly.GetExecutingAssembly().GetName().Version;
+            if (applicationVersion is not null)
+            {
+                this.Logger.LogError("version: " + applicationVersion.Major.ToString() + "." + applicationVersion.Minor.ToString() + "." + applicationVersion.Build.ToString() + "." + applicationVersion.Revision.ToString());
+            }
+            else
+            {
+                this.Logger.LogError("version: null");
+            }
+            //
             this.Logger.LogError("handled uncaught exception: {msg}", ex.Message);
             this.Logger.LogError(ex.StackTrace);
         }
@@ -928,6 +979,7 @@ public partial class App : Application
             resetSettingsIsEnabled: commonConfiguration.ResetSettingsIsEnabled,
             signInIsEnabled: commonConfiguration.SignInIsEnabled,
             telemetryIsEnabled: telemetryIsEnabled,
+            morphicBarDefaultLocation: commonConfiguration.MorphicBarDefaultLocation,
             morphicBarvisibilityAfterLogin: commonConfiguration.MorphicBarVisibilityAfterLogin,
             morphicBarExtraItems: commonConfiguration.ExtraMorphicBarItems,
             telemetrySiteId: commonConfiguration.TelemetrySiteId
@@ -936,9 +988,10 @@ public partial class App : Application
         // before initializing any user interface, initialize our localization culture
         var currentUICulture = System.Threading.Thread.CurrentThread.CurrentUICulture;
         var iso639LanguageCode = Morphic.Localization.LocalizationManager.GetIso639LanguageCode(currentUICulture);
+        var cultureName = Morphic.Localization.LocalizationManager.GetCultureName(currentUICulture);
         //
         // NOTE: if the current culture is not supported (or if it's the same as the base culture), fail silently and use the base settings
-        _ = Morphic.Localization.LocalizationManager.SetUICulture(App.Current.Resources, iso639LanguageCode);
+        _ = Morphic.Localization.LocalizationManager.SetUICulture(App.Current.Resources, iso639LanguageCode, cultureName);
 
         // determine if Morphic (i.e. the taskbar icon, the MorphicBar, etc.) should be shown
         bool morphicShouldBeHidden = false;
@@ -959,7 +1012,7 @@ public partial class App : Application
         this.MorphicMainMenu = new();
         //
         // NOTE: if the current culture is not supported (or if it's the same as the base culture), fail silently and use the base settings
-        _ = Morphic.Localization.LocalizationManager.SetUICulture(this.MorphicMainMenu.Resources, iso639LanguageCode);
+        _ = Morphic.Localization.LocalizationManager.SetUICulture(this.MorphicMainMenu.Resources, iso639LanguageCode, cultureName);
 
         // initialize our taskbar icon (button); this will not show the button
         this.InitTaskbarIconWithoutShowing();
@@ -1078,7 +1131,7 @@ public partial class App : Application
             Icon = morphicIcon,
             Text = "Morphic",
             TrayIconLocation = Controls.HybridTrayIcon.TrayIconLocationOption.NextToNotificationTray,
-            Visible = false,
+            Visible = false, // NOTE: default state; should not be necessary
         };
         this.HybridTrayIcon = hybridTrayIcon;
 

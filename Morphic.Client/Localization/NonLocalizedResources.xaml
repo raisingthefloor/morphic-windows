@@ -3,6 +3,6 @@
                     xmlns:system="clr-namespace:System;assembly=mscorlib">
 
     <system:String x:Key="App_ProductAndOSName">Morphic for Windows</system:String>
-    <system:String x:Key="App_Copyright">Copyright 2020-2024 Raising the Floor - US, Inc.</system:String>
+    <system:String x:Key="App_Copyright">Copyright 2020-2025 Raising the Floor - US, Inc.</system:String>
 
 </ResourceDictionary>

@@ -64,10 +64,10 @@ stages:
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - task: UseDotNet@2
-          displayName: 'Use .NET SDK 8.0.201'
+          displayName: 'Use .NET SDK 8.0.408'
           inputs:
             packageType: sdk
-            version: 8.0.201
+            version: 8.0.408
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - task: DotNetCoreCLI@2
@@ -107,8 +107,9 @@ stages:
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
           inputs:       
             solution: '$(Build.SourcesDirectory)\Morphic.Client\Morphic.Client.csproj'
+            platform: 'x86'
             configuration: '$(buildConfiguration)'
-            msbuildArguments: '/t:restore,build /p:RuntimeIdentifier=win-x86 /p:BuildType=$(BUILD_TYPE)'
+            msbuildArguments: '/t:restore,build /p:RuntimeIdentifier=win-x86 /p:BuildType=$(BUILD_TYPE) /p:DefineConstants="PLATFORM_X86"'
 
         - task: MSBuild@1
           displayName: "Publish Morphic Client (x86)"
@@ -116,8 +117,9 @@ stages:
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
           inputs:       
             solution: '$(Build.SourcesDirectory)\Morphic.Client\Morphic.Client.csproj'
+            platform: 'x86'
             configuration: '$(buildConfiguration)'
-            msbuildArguments: '/t:publish /p:RuntimeIdentifier=win-x86 /p:BuildType=$(BUILD_TYPE)'
+            msbuildArguments: '/t:publish /p:RuntimeIdentifier=win-x86 /p:BuildType=$(BUILD_TYPE) /p:DefineConstants="PLATFORM_X86"'
 
 #        - task: CmdLine@2
 #          inputs:
@@ -147,7 +149,7 @@ stages:
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
               -v
-              $(Build.SourcesDirectory)\Morphic.Client\bin\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-x86\publish\Morphic.exe
+              $(Build.SourcesDirectory)\Morphic.Client\bin\x86\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-x86\publish\Morphic.exe
 
         - task: VSBuild@1
           displayName: "restore installer dependencies"
@@ -175,7 +177,7 @@ stages:
             solution: 'Morphic.Setup\Morphic.Setup.wixproj'
             platform: 'x86'
             configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false'
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false /p:ClientOutputPath=$(Build.SourcesDirectory)\Morphic.Client\bin\x86\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-x86\publish /p:HeatDirectoryPath=$(Build.SourcesDirectory)\Morphic.Client\bin\x86\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-x86\publish'
 
         - task: CmdLine@2
           displayName: 'sign installer (x86)'
@@ -198,9 +200,9 @@ stages:
               -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
-              -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x86\en-US\MorphicSetup.msi
+              -v $(Build.SourcesDirectory)\Morphic.Setup\bin\$(buildConfiguration)\x86\en-US\MorphicSetup.msi
 
-        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x86\en-US\MorphicSetup.msi
+        - publish: $(Build.SourcesDirectory)\Morphic.Setup\bin\$(buildConfiguration)\x86\en-US\MorphicSetup.msi
           displayName: "Cache MSI for upload (x86)"
           artifact: msi-x86
 
@@ -212,7 +214,7 @@ stages:
             solution: 'Morphic.Setup.Enterprise\Morphic.Setup.Enterprise.wixproj'
             platform: 'x86'
             configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false'
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false /p:ClientOutputPath=$(Build.SourcesDirectory)\Morphic.Client\bin\x86\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-x86\publish /p:HeatDirectoryPath=$(Build.SourcesDirectory)\Morphic.Client\bin\x86\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-x86\publish'
 
         - task: CmdLine@2
           displayName: 'sign installer (x86 enterprise)'
@@ -235,9 +237,9 @@ stages:
               -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
-              -v $(System.DefaultWorkingDirectory)\Morphic.Setup.Enterprise\bin\Release\x86\en-US\MorphicEnterpriseSetup.msi
+              -v $(Build.SourcesDirectory)\Morphic.Setup.Enterprise\bin\$(buildConfiguration)\x86\en-US\MorphicEnterpriseSetup.msi
 
-        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup.Enterprise\bin\Release\x86\en-US\MorphicEnterpriseSetup.msi
+        - publish: $(Build.SourcesDirectory)\Morphic.Setup.Enterprise\bin\$(buildConfiguration)\x86\en-US\MorphicEnterpriseSetup.msi
           displayName: "Cache MSI for upload (x86 enterprise)"
           artifact: msi-x86-enterprise
 
@@ -247,6 +249,7 @@ stages:
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
           inputs:       
             solution: '$(Build.SourcesDirectory)\Morphic.Client\Morphic.Client.csproj'
+            platform: 'x64'
             configuration: '$(buildConfiguration)'
             msbuildArguments: '/t:restore,build /p:RuntimeIdentifier=win-x64 /p:BuildType=$(BUILD_TYPE)'
 
@@ -287,6 +290,7 @@ stages:
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
           inputs:       
             solution: '$(Build.SourcesDirectory)\Morphic.Client\Morphic.Client.csproj'
+            platform: 'x64'
             configuration: '$(buildConfiguration)'
             msbuildArguments: '/t:publish /p:RuntimeIdentifier=win-x64 /p:BuildType=$(BUILD_TYPE)'
 
@@ -318,7 +322,7 @@ stages:
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
               -v
-              $(Build.SourcesDirectory)\Morphic.Client\bin\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-x64\publish\Morphic.exe
+              $(Build.SourcesDirectory)\Morphic.Client\bin\x64\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-x64\publish\Morphic.exe
 
         - task: VSBuild@1
           displayName: "restore installer dependencies"
@@ -346,7 +350,7 @@ stages:
             solution: 'Morphic.Setup\Morphic.Setup.wixproj'
             platform: 'x64'
             configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false'
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false /p:ClientOutputPath=$(Build.SourcesDirectory)\Morphic.Client\bin\x64\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-x64\publish /p:HeatDirectoryPath=$(Build.SourcesDirectory)\Morphic.Client\bin\x64\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-x64\publish'
 
         - task: CmdLine@2
           displayName: 'sign installer (x64)'
@@ -369,9 +373,9 @@ stages:
               -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
-              -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\en-US\MorphicSetup.msi
+              -v $(Build.SourcesDirectory)\Morphic.Setup\bin\$(buildConfiguration)\x64\en-US\MorphicSetup.msi
 
-        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\x64\en-US\MorphicSetup.msi
+        - publish: $(Build.SourcesDirectory)\Morphic.Setup\bin\$(buildConfiguration)\x64\en-US\MorphicSetup.msi
           displayName: "Cache MSI for upload (x64)"
           artifact: msi-x64
 
@@ -383,7 +387,7 @@ stages:
             solution: 'Morphic.Setup.Enterprise\Morphic.Setup.Enterprise.wixproj'
             platform: 'x64'
             configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false'
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false /p:ClientOutputPath=$(Build.SourcesDirectory)\Morphic.Client\bin\x64\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-x64\publish /p:HeatDirectoryPath=$(Build.SourcesDirectory)\Morphic.Client\bin\x64\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-x64\publish'
 
         - task: CmdLine@2
           displayName: 'sign installer (x64 enterprise)'
@@ -406,9 +410,9 @@ stages:
               -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
-              -v $(System.DefaultWorkingDirectory)\Morphic.Setup.Enterprise\bin\Release\x64\en-US\MorphicEnterpriseSetup.msi
+              -v $(Build.SourcesDirectory)\Morphic.Setup.Enterprise\bin\$(buildConfiguration)\x64\en-US\MorphicEnterpriseSetup.msi
 
-        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup.Enterprise\bin\Release\x64\en-US\MorphicEnterpriseSetup.msi
+        - publish: $(Build.SourcesDirectory)\Morphic.Setup.Enterprise\bin\$(buildConfiguration)\x64\en-US\MorphicEnterpriseSetup.msi
           displayName: "Cache MSI for upload (x64 enterprise)"
           artifact: msi-x64-enterprise
 
@@ -418,6 +422,7 @@ stages:
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
           inputs:       
             solution: '$(Build.SourcesDirectory)\Morphic.Client\Morphic.Client.csproj'
+            platform: 'arm64'
             configuration: '$(buildConfiguration)'
             msbuildArguments: '/t:restore,build /p:RuntimeIdentifier=win-arm64 /p:BuildType=$(BUILD_TYPE)'
 
@@ -427,6 +432,7 @@ stages:
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
           inputs:       
             solution: '$(Build.SourcesDirectory)\Morphic.Client\Morphic.Client.csproj'
+            platform: 'arm64'
             configuration: '$(buildConfiguration)'
             msbuildArguments: '/t:publish /p:RuntimeIdentifier=win-arm64 /p:BuildType=$(BUILD_TYPE)'
 
@@ -458,7 +464,7 @@ stages:
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
               -v
-              $(Build.SourcesDirectory)\Morphic.Client\bin\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-arm64\publish\Morphic.exe
+              $(Build.SourcesDirectory)\Morphic.Client\bin\arm64\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-arm64\publish\Morphic.exe
 
         - task: VSBuild@1
           displayName: "restore installer dependencies"
@@ -486,7 +492,7 @@ stages:
             solution: 'Morphic.Setup\Morphic.Setup.wixproj'
             platform: 'arm64'
             configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false'
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false /p:ClientOutputPath=$(Build.SourcesDirectory)\Morphic.Client\bin\arm64\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-arm64\publish /p:HeatDirectoryPath=$(Build.SourcesDirectory)\Morphic.Client\bin\arm64\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-arm64\publish'
 
         - task: CmdLine@2
           displayName: 'sign installer (arm64)'
@@ -509,9 +515,9 @@ stages:
               -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
-              -v $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\arm64\en-US\MorphicSetup.msi
+              -v $(Build.SourcesDirectory)\Morphic.Setup\bin\$(buildConfiguration)\arm64\en-US\MorphicSetup.msi
 
-        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup\bin\Release\arm64\en-US\MorphicSetup.msi
+        - publish: $(Build.SourcesDirectory)\Morphic.Setup\bin\$(buildConfiguration)\arm64\en-US\MorphicSetup.msi
           displayName: "Cache MSI for upload (arm64)"
           artifact: msi-arm64
 
@@ -523,7 +529,7 @@ stages:
             solution: 'Morphic.Setup.Enterprise\Morphic.Setup.Enterprise.wixproj'
             platform: 'arm64'
             configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false'
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false /p:ClientOutputPath=$(Build.SourcesDirectory)\Morphic.Client\bin\arm64\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-arm64\publish /p:HeatDirectoryPath=$(Build.SourcesDirectory)\Morphic.Client\bin\arm64\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-arm64\publish'
 
         - task: CmdLine@2
           displayName: 'sign installer (arm64 enterprise)'
@@ -546,13 +552,13 @@ stages:
               -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
-              -v $(System.DefaultWorkingDirectory)\Morphic.Setup.Enterprise\bin\Release\arm64\en-US\MorphicEnterpriseSetup.msi
+              -v $(Build.SourcesDirectory)\Morphic.Setup.Enterprise\bin\$(buildConfiguration)\arm64\en-US\MorphicEnterpriseSetup.msi
 
-        - publish: $(System.DefaultWorkingDirectory)\Morphic.Setup.Enterprise\bin\Release\arm64\en-US\MorphicEnterpriseSetup.msi
+        - publish: $(Build.SourcesDirectory)\Morphic.Setup.Enterprise\bin\$(buildConfiguration)\arm64\en-US\MorphicEnterpriseSetup.msi
           displayName: "Cache MSI for upload (arm64 enterprise)"
           artifact: msi-arm64-enterprise
 
-        - publish: $(System.DefaultWorkingDirectory)\Morphic.Client\BuildVersion.txt
+        - publish: $(Build.SourcesDirectory)\Morphic.Client\BuildVersion.txt
           displayName: "save build version numbers"
           artifact: build-version
            

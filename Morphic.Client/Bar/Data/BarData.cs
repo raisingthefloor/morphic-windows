@@ -285,6 +285,44 @@ namespace Morphic.Client.Bar.Data
                                                     extraBarItemShouldBeAdded = true;
                                                 }
                                                 break;
+                                            case "voice":
+                                                {
+                                                    // NOTE: in the future, this control may become a 2-button 'voice' section; if not, we may want to alias this as both "voice" and "voicecontrol"s
+                                                    extraBarItem.Text = extraItemData.label ?? "{{QuickStrip_VoiceControl_Title}}";
+                                                    //
+                                                    var turnOnVoiceAccessAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
+                                                    turnOnVoiceAccessAction.TelemetryEventName = "morphicBarExtraItem";
+                                                    turnOnVoiceAccessAction.FunctionName = "voiceAccessOn";
+                                                    var onButton = new BarMultiButton.ButtonInfo
+                                                    {
+                                                        Text = "{{QuickStrip_VoiceControl_On_Title}}",
+                                                        Action = turnOnVoiceAccessAction,
+                                                        TelemetryCategory = "morphicBarExtraItem",
+                                                        Tooltip = "{{QuickStrip_VoiceControl_On_HelpTitle}}",
+                                                        Value = "voicecontrolon"
+                                                    };
+                                                    //
+                                                    var turnOffVoiceAccessAction = new Morphic.Client.Bar.Data.Actions.InternalAction();
+                                                    turnOffVoiceAccessAction.TelemetryEventName = "morphicBarExtraItem";
+                                                    turnOffVoiceAccessAction.FunctionName = "voiceAccessOff";
+                                                    var offButton = new BarMultiButton.ButtonInfo
+                                                    {
+                                                        Text = "{{QuickStrip_VoiceControl_Off_Title}}",
+                                                        Action = turnOffVoiceAccessAction,
+                                                        TelemetryCategory = "morphicBarExtraItem",
+                                                        Tooltip = "{{QuickStrip_VoiceControl_Off_HelpTitle}}",
+                                                        Value = "voicecontroloff"
+                                                    };
+                                                    //
+                                                    ((BarMultiButton)extraBarItem).Buttons = new Dictionary<string, BarMultiButton.ButtonInfo>
+                                                    {
+                                                        { "on", onButton },
+                                                        { "off", offButton }
+                                                    };
+                                                    //
+                                                    extraBarItemShouldBeAdded = true;
+                                                }
+                                                break;
                                             case "volume":
                                                 {
                                                     extraBarItem.Text = extraItemData.label ?? "{{QuickStrip_Volume_Title}}";
@@ -419,11 +457,12 @@ namespace Morphic.Client.Bar.Data
                         }
 
                         // add a spacer entry
+                        // TODO: we need to make this button invisible to mouse input (so that dragging in this position will still drag the MorphicBar)
                         BarButton spacerBarItem = new BarButton(defaultBar);
                         spacerBarItem.ToolTipHeader = "";
                         spacerBarItem.ToolTip = "";
                         spacerBarItem.Text = "";
-                        spacerBarItem.ColorValue = "#FFFFFF";
+                        spacerBarItem.ColorValue = "#00FFFFFF";
                         //
                         defaultBar?.AllItems.Add(spacerBarItem);
                     }

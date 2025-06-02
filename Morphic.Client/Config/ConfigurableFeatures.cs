@@ -20,6 +20,19 @@
             Hide // always hide the MorphicBar after login
         }
 
+        public enum MorphicBarDefaultLocationOption
+        {
+            TopLeft,
+            TopRight,
+            BottomLeft,
+            BottomRight,
+            //
+            TopLeading,
+            TopTrailing,
+            BottomLeading,
+            BottomTrailing,
+        }
+
         public static bool AtOnDemandIsEnabled = true;
         //
         public static bool AtUseCounterIsEnabled = false;
@@ -42,6 +55,7 @@
         public static bool TelemetryIsEnabled = true;
         //
         // NOTE: this setting has no effect if Autorun is disabled
+        public static MorphicBarDefaultLocationOption MorphicBarDefaultLocation = MorphicBarDefaultLocationOption.BottomTrailing;
         public static MorphicBarVisibilityAfterLoginOption? MorphicBarVisibilityAfterLogin = MorphicBarVisibilityAfterLoginOption.Restore;
         public static List<Morphic.Client.App.MorphicBarExtraItem> MorphicBarExtraItems = new List<Morphic.Client.App.MorphicBarExtraItem>();
         //
@@ -58,6 +72,7 @@
             bool resetSettingsIsEnabled,
             bool signInIsEnabled,
             bool telemetryIsEnabled,
+            MorphicBarDefaultLocationOption morphicBarDefaultLocation,
             MorphicBarVisibilityAfterLoginOption? morphicBarvisibilityAfterLogin,
             List<Morphic.Client.App.MorphicBarExtraItem> morphicBarExtraItems,
             string? telemetrySiteId
@@ -80,6 +95,7 @@
             ConfigurableFeatures.ResetSettingsIsEnabled = resetSettingsIsEnabled;
             ConfigurableFeatures.SignInIsEnabled = signInIsEnabled;
             ConfigurableFeatures.TelemetryIsEnabled = telemetryIsEnabled;
+            ConfigurableFeatures.MorphicBarDefaultLocation = morphicBarDefaultLocation;
             ConfigurableFeatures.MorphicBarVisibilityAfterLogin = morphicBarvisibilityAfterLogin;
             ConfigurableFeatures.MorphicBarExtraItems = morphicBarExtraItems;
             ConfigurableFeatures.TelemetrySiteId = telemetrySiteId;

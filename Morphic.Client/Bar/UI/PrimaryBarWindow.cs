@@ -2,9 +2,11 @@ namespace Morphic.Client.Bar.UI
 {
     using AppBarWindow;
     using Data;
+    using Morphic.Client.Config;
     using Morphic.WindowsNative;
     using Morphic.WindowsNative.Speech;
     using System;
+    using System.Diagnostics;
     using System.Linq;
     using System.Windows;
     using System.Windows.Interop;
@@ -136,9 +138,51 @@ namespace Morphic.Client.Bar.UI
                 Point pos = this.Bar.Position.Primary.GetPosition(workArea, size);
                 this.Left = pos.X;
                 this.Top = pos.Y;
+
+                // OBSERVATION: the default corner position needs "edge docking" options and we should make sure none of those are selected _before_ we enter this outer 'if' block
+                // OBSERVATION: we should only set the "default" location if the user doesn't already have a last manually-moved corner/edge set for location
+                if (_cornerPosition is null)
+                {
+                    switch (ConfigurableFeatures.MorphicBarDefaultLocation)
+                    {
+                        case ConfigurableFeatures.MorphicBarDefaultLocationOption.TopLeft:
+                            _cornerPosition = CornerPosition.TopLeft;
+                            break;
+                        case ConfigurableFeatures.MorphicBarDefaultLocationOption.TopRight:
+                            _cornerPosition = CornerPosition.TopRight;
+                            break;
+                        case ConfigurableFeatures.MorphicBarDefaultLocationOption.BottomLeft:
+                            _cornerPosition = CornerPosition.BottomLeft;
+                            break;
+                        case ConfigurableFeatures.MorphicBarDefaultLocationOption.BottomRight:
+                            _cornerPosition = CornerPosition.BottomRight;
+                            break;
+                        case ConfigurableFeatures.MorphicBarDefaultLocationOption.TopLeading:
+                            // NOTE: RTL awareness is not yet implemented in Morphic (i.e. planned for v2.0)
+                            _cornerPosition = CornerPosition.TopLeft;
+                            break;
+                        case ConfigurableFeatures.MorphicBarDefaultLocationOption.TopTrailing:
+                            // NOTE: RTL awareness is not yet implemented in Morphic (i.e. planned for v2.0)
+                            _cornerPosition = CornerPosition.TopRight;
+                            break;
+                        case ConfigurableFeatures.MorphicBarDefaultLocationOption.BottomLeading:
+                            // NOTE: RTL awareness is not yet implemented in Morphic (i.e. planned for v2.0)
+                            _cornerPosition = CornerPosition.BottomLeft;
+                            break;
+                        case ConfigurableFeatures.MorphicBarDefaultLocationOption.BottomTrailing:
+                            // NOTE: RTL awareness is not yet implemented in Morphic (i.e. planned for v2.0)
+                            _cornerPosition = CornerPosition.BottomRight;
+                            break;
+                        default:
+                            Debug.Assert(false, "ERROR: ConfigurableFeatures.MorphicBarDefaultLocationOption is invalid for non-docked MorphicBars");
+                            break;
+                    }
+                }
             }
             else
             {
+                // TODO: add options: dockTrailing, dockLeading, dockLeft, dockRight, dockTop, and dockBottom
+
                 this.AppBar.ApplyAppBar(this.Bar.Position.DockEdge);
             }
 

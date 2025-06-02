@@ -93,8 +93,21 @@ namespace Morphic.Client.Bar.Data.Actions
                 case "log-off":
                     await App.Current.Telemetry_RecordEventAsync("signOut");
                     break;
+                case "voice-control":
+                    // NOTE: These are also repeated below in the "+3" section
+                    switch (source)
+                    {
+                        case "on":
+                            await App.Current.Telemetry_RecordEventAsync("voiceControlOn");
+                            break;
+                        case "off":
+                            await App.Current.Telemetry_RecordEventAsync("voiceControlOff");
+                            break;
+                    }
+                    break;
                 case "volume":
                     {
+                        // NOTE: These are also repeated below in the "+3" section
                         if (source == "up")
                         {
                             await App.Current.Telemetry_RecordEventAsync("volumeUp");
@@ -236,6 +249,14 @@ namespace Morphic.Client.Bar.Data.Actions
                         case "ejectallusb":
                             await App.Current.Telemetry_RecordEventAsync("ejectUsbDrives");
                             break;
+                        case "voicecontrolon":
+                            // NOTE: this is captured here because telemetry for voiceControlOff on the +3 bar is not captured otherwise
+                            await App.Current.Telemetry_RecordEventAsync("voiceControlOn");
+                            break;
+                        case "voicecontroloff":
+                            // NOTE: this is captured here because telemetry for voiceControlOff on the +3 bar is not captured otherwise
+                            await App.Current.Telemetry_RecordEventAsync("voiceControlOff");
+                            break;
                         case "volumeDown":
                             // NOTE: this is captured here because telemetry for volumeDown on the +3 bar is not captured by SendTelemetryForBarAction
                             await App.Current.Telemetry_RecordEventAsync("volumeDown");
@@ -347,7 +368,7 @@ namespace Morphic.Client.Bar.Data.Actions
                 {
                     await App.Current.Telemetry_RecordEventAsync(this.TelemetryEventName!);
                 }
-            }
+             }
         }
     }
 
