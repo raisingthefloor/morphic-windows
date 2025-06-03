@@ -30,7 +30,7 @@
 	        <Property Id="WINDOWSBUILDNUMBER" Secure="yes">
 	        	<RegistrySearch Id="BuildNumberSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="CurrentBuildNumber" Type="raw" />
 	        </Property>
-        	<Launch Condition="(WINDOWSBUILDNUMBER &gt;= 19041)" Message="!(loc.MinimumOsError)" />
+        	<Launch Condition="(WINDOWSBUILDNUMBER &gt;= 19044)" Message="!(loc.MinimumOsError)" />
 	</Package>
 
 	<Fragment>

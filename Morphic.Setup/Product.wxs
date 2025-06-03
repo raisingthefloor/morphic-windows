@@ -16,7 +16,7 @@
 	        </Feature>
 	
 	        <Property Id="WixShellExecTarget" Value="[#filFa4krMwL6ueyj_tX_uB0JUHWusc]" />
-	        <CustomAction Id="LaunchApplication" DllEntry="WixShellExec" Impersonate="yes" BinaryRef="Wix4UtilCA_X86" />
+	        <CustomAction Id="LaunchApplication" DllEntry="WixShellExec" Impersonate="yes" BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)" />
 	
 	        <InstallExecuteSequence>
 			<Custom Action="LaunchApplication" After="InstallFinalize" Condition="NOT Installed" />
@@ -30,7 +30,7 @@
 	        <Property Id="WINDOWSBUILDNUMBER" Secure="yes">
 	        	<RegistrySearch Id="BuildNumberSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="CurrentBuildNumber" Type="raw" />
 	        </Property>
-        	<Launch Condition="(WINDOWSBUILDNUMBER &gt;= 19041)" Message="!(loc.MinimumOsError)" />
+        	<Launch Condition="(WINDOWSBUILDNUMBER &gt;= 19044)" Message="!(loc.MinimumOsError)" />
 	</Package>
 
 	<Fragment>
