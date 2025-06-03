@@ -29,9 +29,6 @@ namespace Morphic.WindowsNative.OsVersion;
 
 public enum WindowsVersion
 {
-    Win10_v2004,
-    Win10_v20H2,
-    Win10_v21H1,
     Win10_v21H2,
     Win10_v22H2,
     Win10_vFuture, // any future release of Windows 10 we're not yet aware of
@@ -45,13 +42,10 @@ public enum WindowsVersion
 
 public struct OsVersion
 {
-    private const int WIN10_2004_BUILD = 19041;
-    private const int WIN10_20H2_BUILD = 19042;
-    private const int WIN10_21H1_BUILD = 19043;
     private const int WIN10_21H2_BUILD = 19044;
     private const int WIN10_22H2_BUILD = 19045;
     private const int EARLIEST_KNOWN_WIN10_BUILD = 10240 /* WIN10_1507_BUILD */;
-    private const int EARLIEST_SUPPORTED_WIN10_BUILD = WIN10_2004_BUILD;
+    private const int EARLIEST_SUPPORTED_WIN10_BUILD = WIN10_21H2_BUILD;
     private const int LATEST_KNOWN_WIN10_BUILD = WIN10_22H2_BUILD;
     //
     private const int WIN11_21H2_BUILD = 22000;
@@ -72,12 +66,6 @@ public struct OsVersion
         {
             switch (version.Build)
             {
-                case WIN10_2004_BUILD:
-                    return WindowsVersion.Win10_v2004;
-                case WIN10_20H2_BUILD:
-                    return WindowsVersion.Win10_v20H2;
-                case WIN10_21H1_BUILD:
-                    return WindowsVersion.Win10_v21H1;
                 case WIN10_21H2_BUILD:
                     return WindowsVersion.Win10_v21H2;
                 case WIN10_22H2_BUILD:
@@ -168,10 +156,6 @@ public struct OsVersion
     {
         switch (version)
         {
-            case WindowsVersion.Win10_v2004:
-                return WIN10_2004_BUILD;
-            case WindowsVersion.Win10_v20H2:
-                return WIN10_20H2_BUILD;
             case WindowsVersion.Win10_v21H2:
                 return WIN10_21H2_BUILD;
             case WindowsVersion.Win10_v22H2:

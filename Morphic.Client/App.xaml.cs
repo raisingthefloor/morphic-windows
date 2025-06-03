@@ -905,9 +905,6 @@ public partial class App : Application
     private static List<WindowsVersion> CompatibleWindowsVersions = new List<WindowsVersion>()
        {
            // NOTE: the first entry in this list represents the "minimum" version of Windows which we support
-           WindowsVersion.Win10_v2004,
-           WindowsVersion.Win10_v20H2,
-           WindowsVersion.Win10_v21H1,
            WindowsVersion.Win10_v21H2,
            WindowsVersion.Win10_v22H2,
            WindowsVersion.Win10_vFuture,
