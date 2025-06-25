@@ -965,6 +965,13 @@ public partial class App : Application
         // load (optional) common configuration file
         // NOTE: we currently load this AFTER setting up the logger because the GetCommonConfigurationAsync function logs config file errors to the logger
         var commonConfiguration = await this.GetCommonConfigurationAsync();
+        //
+        // if telemetry is turned off, then the AT Use Counter should also be disabled
+        if (telemetryIsEnabled == false)
+        {
+            commonConfiguration.AtUseCounterIsEnabled = false;
+        }
+        //
         ConfigurableFeatures.SetFeatures(
             atOnDemandIsEnabled: commonConfiguration.AtOnDemandIsEnabled,
             atUseCounterIsEnabled: commonConfiguration.AtUseCounterIsEnabled,
