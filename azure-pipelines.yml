@@ -40,6 +40,8 @@ variables:
          Morphic.Windows.Native/Morphic.Windows.Native.csproj
          Morphic/Morphic.csproj
          MorphicSetup/MorphicSetup.wixproj
+- name: buildConfiguration
+  value: 'Release'
 - name: versionBuildComponents
   value: '.$(Build.BuildNumber)'
   
