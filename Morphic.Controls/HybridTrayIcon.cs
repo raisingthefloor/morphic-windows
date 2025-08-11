@@ -24,6 +24,7 @@
 using Morphic.Core;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Morphic.Controls;
 
@@ -190,6 +191,27 @@ public class HybridTrayIcon : IDisposable
         }
 
         return MorphicResult.OkResult(result);
+    }
+
+    // NOTE: this function returns just the first position and size (i.e. rect) of our tray icon; if it cannot find at least one position+size, it returns null
+    public System.Windows.Rect? GetPositionAndSizeOrNull()
+    {
+        var getPositionsAndSizesResult = this.GetPositionsAndSizes();
+        if (getPositionsAndSizesResult.IsSuccess)
+        {
+            var positionsAndSizes = getPositionsAndSizesResult.Value!;
+            if (positionsAndSizes.Count == 1)
+            {
+                var positionAndSize = positionsAndSizes[0];
+                return new System.Windows.Rect(positionAndSize.X, positionAndSize.Y, positionAndSize.Width, positionAndSize.Height);
+            }
+            else
+            {
+                Debug.Assert(false, "Could not get positions and sizes of tray icon(s); this is to be expected if we cannot capture the rectangle (which may be the case if we're putting the icon in the system tray itself)");
+            }
+        }
+
+        return null;
     }
 
     //

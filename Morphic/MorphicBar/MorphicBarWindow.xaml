@@ -12,6 +12,9 @@
         ShowInTaskbar="False"
         Topmost="True">
 
+    <Window.Resources>
+    </Window.Resources>
+
     <Border CornerRadius="5" Background="{DynamicResource ThemeAwareBackground}">
         <Grid>
 

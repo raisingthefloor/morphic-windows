@@ -117,7 +117,7 @@ public partial class App : Application
             Icon = morphicIcon,
             Text = "Morphic",
             TrayIconLocation = Controls.HybridTrayIcon.TrayIconLocationOption.NextToNotificationTray,
-            Visible = false, // NOTE: default state; should not be necessary
+            Visible = false, // NOTE: default state; setting this is not necessary, but is done for clarity
         };
         this.HybridTrayIcon = hybridTrayIcon;
 
@@ -143,7 +143,7 @@ public partial class App : Application
                     break;
                 case Visibility.Collapsed:
                     this.MorphicBarWindow!.Visibility = Visibility.Visible;
-                    Debug.Assert(false, "MorphicBar should never be in the collapsed state.");
+                    Debug.Assert(false, "MorphicBar should never have been in the collapsed state.");
                     break;
                 default:
                     throw new Exception("Invalid code path");
@@ -154,47 +154,11 @@ public partial class App : Application
     // NOTE: this event is called on a non-UI thread
     private void HybridTrayIcon_SecondaryClick(object? sender, System.EventArgs e)
     {
-        // capture the position and size of the tray icon, if possible (so that we can align the menu to its corner)
-        System.Windows.Rect? physicalBoundingRectangle = null;
-        //
-        var getPositionsAndSizesResult = this.HybridTrayIcon.GetPositionsAndSizes();
-        if (getPositionsAndSizesResult.IsSuccess)
-        {
-            var positionsAndSizes = getPositionsAndSizesResult.Value!;
-            if (positionsAndSizes.Count == 1)
-            {
-                var positionAndSize = positionsAndSizes[0];
-                physicalBoundingRectangle = new System.Windows.Rect(positionAndSize.X, positionAndSize.Y, positionAndSize.Width, positionAndSize.Height);
-            }
-            else
-            {
-                Debug.Assert(false, "Could not get positions and sizes of tray icon(s); this is to be expected if we cannot capture the rectangle (which may be the case if we're putting the icon in the system tray itself)");
-            }
-        }
+        // capture the position and size of the tray icon, if possible (so that we can align the menu to the tray icon's corner)
+        System.Windows.Rect? physicalBoundingRectangle = this.HybridTrayIcon.GetPositionAndSizeOrNull();
 
         // NOTE: if we cannot calculate the scaled bounding rectangle for the Morphic tray button, scaledBoundingRectangle will remain null.
-        Rect? scaledBoundingRectangle = null;
-        if (physicalBoundingRectangle is not null)
-        {
-            var getDisplayForPointResult = Morphic.WindowsNative.Display.Display.GetDisplayForPoint(new System.Drawing.Point((int)physicalBoundingRectangle.Value!.X, (int)physicalBoundingRectangle.Value!.Y));
-            if (getDisplayForPointResult.IsSuccess == true)
-            {
-                var displayForPoint = getDisplayForPointResult.Value!;
-
-                var getScalePercentageResult = displayForPoint.GetScalePercentage();
-                if (getScalePercentageResult.IsSuccess == true)
-                {
-                    var scalePercentage = getScalePercentageResult.Value!;
-
-                    scaledBoundingRectangle = new Rect(
-                        physicalBoundingRectangle.Value!.X / scalePercentage,
-                        physicalBoundingRectangle.Value!.Y / scalePercentage,
-                        physicalBoundingRectangle.Value!.Width / scalePercentage,
-                        physicalBoundingRectangle.Value!.Height / scalePercentage
-                    );
-                }
-            }
-        }
+        System.Windows.Rect? scaledBoundingRectangle = App.ConvertRectToDisplayScaledRectOrNull(physicalBoundingRectangle);
 
         Application.Current.Dispatcher.Invoke(() =>
         {
@@ -211,6 +175,35 @@ public partial class App : Application
                 this.MorphicMainMenu!.Show(new Morphic.MainMenu.MorphicMainMenu.IShowPlacement.MouseCursor());
             }
         });
+    }
+
+    // OBSERVATION: this function could reasonably be moved to a shared helper class
+    private static System.Windows.Rect? ConvertRectToDisplayScaledRectOrNull(System.Windows.Rect? rect)
+    {
+        System.Windows.Rect? scaledBoundingRectangle = null;
+        if (rect is not null)
+        {
+            var getDisplayForPointResult = Morphic.WindowsNative.Display.Display.GetDisplayForPoint(new System.Drawing.Point((int)rect.Value!.X, (int)rect.Value!.Y));
+            if (getDisplayForPointResult.IsSuccess == true)
+            {
+                var displayForPoint = getDisplayForPointResult.Value!;
+
+                var getScalePercentageResult = displayForPoint.GetScalePercentage();
+                if (getScalePercentageResult.IsSuccess == true)
+                {
+                    var scalePercentage = getScalePercentageResult.Value!;
+
+                    scaledBoundingRectangle = new Rect(
+                        rect.Value!.X / scalePercentage,
+                        rect.Value!.Y / scalePercentage,
+                        rect.Value!.Width / scalePercentage,
+                        rect.Value!.Height / scalePercentage
+                    );
+                }
+            }
+        }
+
+        return scaledBoundingRectangle;
     }
 
     #endregion Taskbar Icon (Button)
