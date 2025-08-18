@@ -423,7 +423,7 @@ stages:
             $manifest.save("Morphic (Package)/Package.appxmanifest")
           displayName: 'Assign version to package manifest'
 
-# NOTE: as of 2021-12-03, Azure Pipelines is choking if we set PublishReadyToRun to True for non-debug builds; update PublishReadyToRun (in the publish profiles) back to True before RTM
+# NOTE: as of 2021-12-03, Azure Pipelines is checking if we set PublishReadyToRun to True for non-debug builds; update PublishReadyToRun (in the publish profiles) back to True before RTM
         - task: MSBuild@1
           displayName: 'Build packaged app (x86)'
           inputs:

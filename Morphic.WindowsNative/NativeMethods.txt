@@ -24,6 +24,7 @@ RegOpenKeyEx
 RegQueryValueEx
 RegSetValueEx
 SendNotifyMessage
+SHAppBarMessage
 SRSetRestorePointW
 SystemParametersInfo
 
