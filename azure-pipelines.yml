@@ -24,7 +24,7 @@ trigger:
       - "staging/*"
 
 pool:
-  vmImage: 'windows-2022'
+  vmImage: 'windows-2025'
 
 variables:
 # must be created in the azure UI under Pipelines > Library and specify accessKey, secretKey, region, and bucket
@@ -57,25 +57,25 @@ stages:
         steps:
 
         - task: UseDotNet@2
-          displayName: 'Use .NET Runtime 6.0.25 (install for AuzreSignTool 4.0.1)'
+          displayName: 'Use .NET Runtime 8.0.22 (install for AuzreSignTool 6.0.1)'
           inputs:
             packageType: runtime
-            version: 6.0.25
+            version: 8.0.22
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - task: UseDotNet@2
-          displayName: 'Use .NET SDK 8.0.408'
+          displayName: 'Use .NET SDK 10.0.100'
           inputs:
             packageType: sdk
-            version: 8.0.408
+            version: 10.0.100
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - task: DotNetCoreCLI@2
-          displayName: 'Install AzureSignTool 4.0.1'
+          displayName: 'Install AzureSignTool 6.0.1'
           inputs:
             command: 'custom'
             custom: 'tool'
-            arguments: 'install --global AzureSignTool --version 4.0.1'
+            arguments: 'install --global AzureSignTool --version 6.0.1'
         
         # Set a $(BUILD_TYPE) variable
         - bash: |
