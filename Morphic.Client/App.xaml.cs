@@ -210,6 +210,7 @@ public partial class App : Application
         public MorphicBarConfigSection? morphicBar { get; set; }
         public TelemetryConfigSection? telemetry { get; set; }
         public string? hideMorphicAfterLoginUntil { get; set; }
+        public string? organizationName { get; set; } // RESERVED: this is not currently used by Morphic (i.e. it's info help distinguish tool-generated config files)
     }
     //
     private struct CommonConfigurationContents

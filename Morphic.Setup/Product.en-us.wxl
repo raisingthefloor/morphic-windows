@@ -4,6 +4,6 @@ This file contains the declaration of all the localizable strings.
 <WixLocalization xmlns="http://wixtoolset.org/schemas/v4/wxl" Culture="en-US">
 
   <String Id="DowngradeError" Value="A newer version of [ProductName] is already installed." />
-  <String Id="MinimumOsError" Value="This application is only supported on Windows 10 version 21H2 (build 19044) or newer." />
+  <String Id="MinimumOsError" Value="This application is only supported on Windows 10 version 22H2 (build 19045) or newer." />
 
 </WixLocalization>
