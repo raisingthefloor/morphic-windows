@@ -29,32 +29,30 @@ namespace Morphic.WindowsNative.OsVersion;
 
 public enum WindowsVersion
 {
-    Win10_v21H2,
     Win10_v22H2,
     Win10_vFuture, // any future release of Windows 10 we're not yet aware of
-                   //
-    Win11_v21H2,
+    //
     Win11_v22H2,
     Win11_v23H2,
     Win11_v24H2,
+    Win11_v25H2,
     Win11_vFuture // any future release of Windows 11 we're not yet aware of
 }
 
 public struct OsVersion
 {
-    private const int WIN10_21H2_BUILD = 19044;
     private const int WIN10_22H2_BUILD = 19045;
     private const int EARLIEST_KNOWN_WIN10_BUILD = 10240 /* WIN10_1507_BUILD */;
-    private const int EARLIEST_SUPPORTED_WIN10_BUILD = WIN10_21H2_BUILD;
+    private const int EARLIEST_SUPPORTED_WIN10_BUILD = WIN10_22H2_BUILD;
     private const int LATEST_KNOWN_WIN10_BUILD = WIN10_22H2_BUILD;
     //
-    private const int WIN11_21H2_BUILD = 22000;
     private const int WIN11_22H2_BUILD = 22621;
     private const int WIN11_23H2_BUILD = 22631;
     private const int WIN11_24H2_BUILD = 26100;
+    private const int WIN11_25H2_BUILD = 26200;
     private const int EARLIEST_KNOWN_WIN11_BUILD = 22000 /* WIN11_21H2_BUILD */;
-    private const int EARLIEST_SUPPORTED_WIN11_BUILD = WIN11_21H2_BUILD;
-    private const int LATEST_KNOWN_WIN11_BUILD = WIN11_24H2_BUILD;
+    private const int EARLIEST_SUPPORTED_WIN11_BUILD = WIN11_22H2_BUILD;
+    private const int LATEST_KNOWN_WIN11_BUILD = WIN11_25H2_BUILD;
 
     // NOTE: this function will return null for versions of Windows which are not recognized (generally either old beta builds or versions which are old and which we do not support)
     public static WindowsVersion? GetWindowsVersion()
@@ -66,18 +64,16 @@ public struct OsVersion
         {
             switch (version.Build)
             {
-                case WIN10_21H2_BUILD:
-                    return WindowsVersion.Win10_v21H2;
                 case WIN10_22H2_BUILD:
                     return WindowsVersion.Win10_v22H2;
-                case WIN11_21H2_BUILD:
-                    return WindowsVersion.Win11_v21H2;
                 case WIN11_22H2_BUILD:
                     return WindowsVersion.Win11_v22H2;
                 case WIN11_23H2_BUILD:
                     return WindowsVersion.Win11_v23H2;
                 case WIN11_24H2_BUILD:
                     return WindowsVersion.Win11_v24H2;
+                case WIN11_25H2_BUILD:
+                    return WindowsVersion.Win11_v25H2;
                 default:
                     // NOTE: as Microsoft is shipping both Windows 10 and Windows 11 as "10.0.###.###" releases, we may need to add some nuance to this code in the future (for 10 vs 11)
                     if (version.Build > LATEST_KNOWN_WIN10_BUILD && version.Build < EARLIEST_KNOWN_WIN11_BUILD)
@@ -156,20 +152,18 @@ public struct OsVersion
     {
         switch (version)
         {
-            case WindowsVersion.Win10_v21H2:
-                return WIN10_21H2_BUILD;
             case WindowsVersion.Win10_v22H2:
                 return WIN10_22H2_BUILD;
             case WindowsVersion.Win10_vFuture:
                 return null;
-            case WindowsVersion.Win11_v21H2:
-                return WIN11_21H2_BUILD;
             case WindowsVersion.Win11_v22H2:
                 return WIN11_22H2_BUILD;
             case WindowsVersion.Win11_v23H2:
                 return WIN11_23H2_BUILD;
             case WindowsVersion.Win11_v24H2:
                 return WIN11_24H2_BUILD;
+            case WindowsVersion.Win11_v25H2:
+                return WIN11_25H2_BUILD;
             case WindowsVersion.Win11_vFuture:
                 return null;
             default:
