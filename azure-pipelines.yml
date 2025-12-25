@@ -63,12 +63,6 @@ stages:
             version: 6.0.25
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
-        # Download link available at: https://github.com/microsoft/microsoft-ui-xaml/releases/tag/v2.8.6
-        - powershell: |
-            Invoke-WebRequest -Uri https://github.com/microsoft/microsoft-ui-xaml/releases/download/v2.8.6/Microsoft.UI.Xaml.2.8.x64.appx -Method Get -OutFile Microsoft.UI.Xaml.2.8.x64.appx
-            Add-AppxPackage -Path .\Microsoft.UI.Xaml.2.8.x64.appx
-          displayName: "Install Microsoft.UI.Xaml (winget prerequisite)"
-
         - task: UseDotNet@2
           displayName: 'Use .NET SDK 10.0.101'
           inputs:
@@ -82,6 +76,15 @@ stages:
             command: 'custom'
             custom: 'tool'
             arguments: 'install --global AzureSignTool --version 4.0.1'
+
+        # Download link available at: https://learn.microsoft.com/en-us/troubleshoot/developer/visualstudio/cpp/libraries/c-runtime-packages-desktop-bridge#how-to-install-and-update-desktop-framework-packages
+        # WARNING: Microsoft has stopped updating the aka.ms link to download the latest version of Microsoft.VCLibs.x64.14.00.Desktop.appx (and it may discontinue the link entirely at some point); Microsoft
+        #          recommends that Microsoft.VCLibs.x64.14.00.Desktop.appx be installed via Visual Studio Installer instead
+        #          see: https://learn.microsoft.com/en-us/troubleshoot/developer/visualstudio/cpp/libraries/c-runtime-packages-desktop-bridge#how-to-install-and-update-desktop-framework-packages
+        - powershell: |
+            Invoke-WebRequest -Uri https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx -Method Get -OutFile Microsoft.VCLibs.x64.14.00.Desktop.appx
+            Add-AppxPackage -Path .\Microsoft.VCLibs.x64.14.00.Desktop.appx
+          displayName: "Install VC++ libs 14.00 (x64) (winget prerequisite)"
 
         # Set a $(BUILD_TYPE) variable
         - bash: |
