@@ -94,6 +94,10 @@ stages:
             winget --version
           displayName: "Install Winget (v1.12.440)"
 
+        - powershell: |
+            winget install --source winget --exact --id Microsoft.WindowsSDK.10.0.22621 --log $env:USERPROFILE/Desktop/sdk-install.log
+          displayName: "Install Windows SDK v10.0.22621.0"
+
         # Set a $(BUILD_TYPE) variable
         - bash: |
             BUILD_TYPE="Development"
