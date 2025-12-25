@@ -32,6 +32,13 @@ namespace Morphic.WindowsNative;
 
 internal struct ExtendedPInvoke
 {
+    #region Legacy appmodel.h
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+    internal static extern int GetCurrentPackageFullName(ref uint packageFullNameLength, [MarshalAs(UnmanagedType.LPWStr)] string packageFullName);
+
+    #endregion Legacy appmodel.h
+
     #region cfgmgr32.h
 
     [Flags]
@@ -274,6 +281,104 @@ internal struct ExtendedPInvoke
     internal static extern IntPtr FindExecutable(string lpFile, string? lpDirectory, [Out] StringBuilder lpResult);
 
     #endregion shellapi.h
+
+
+    #region Legacy user32.dll (reverse engineered, not WinUser.h)
+
+    // see: https://stackoverflow.com/questions/32724187/how-do-you-set-the-glass-blend-colour-on-windows-10
+    // see also: https://gist.github.com/ysc3839/b08d2bff1c7dacde529bed1d37e85ccf (this GIST corroborated the values we pulled form kernel32legacylib.etc, fileextd.lib, etc. -- and also appears to have a few newer attributes which weren't present in the 1809 SDK).
+
+    // NOTE: these attributes were painstakingly observed and captured by hand from "C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\um\x64\kernel32legacylib.lib" (Windows 10 1809 SDK) using direct hex view; they appear to be undocumented
+    // NOTE: the enum name, ACCENT_STATE, was observed in "C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\um\x64\kernel32legacylib.lib"; it appears to be undocumented
+    internal enum ACCENT_STATE: uint
+    {
+        ACCENT_DISABLED = 0x00,
+        ACCENT_ENABLE_GRADIENT = 0x01,
+        ACCENT_ENABLE_TRANSPARENTGRADIENT = 0x02,
+        ACCENT_ENABLE_BLURBEHIND = 0x03,
+        ACCENT_ENABLE_ACRYLICBLURBEHIND = 0x04,
+        ACCENT_ENABLE_HOSTBACKDROP = 0x05,
+        ACCENT_INVALID_STATE = 0x06,
+    }
+
+    // NOTE: the struct name, ACCENT_POLICY, was observed in "C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\um\x64\kernel32legacylib.lib"; it appears to be undocumented
+    // NOTE: this structure is used with WCA_ACCENT_POLICY; other structures would need to be used with other WINDOWCOMPOSITIONATTRIB attribute values
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct ACCENT_POLICY
+    {
+        public ACCENT_STATE AccentState;
+        public uint AccentFlags;
+        public uint GradientColor;
+        public uint AnimationId;
+    }
+
+    // https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-msllhookstruct
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct MSLLHOOKSTRUCT
+    {
+        public PInvoke.POINT pt;
+        // NOTE: the mouseData DWORD is apparently used as a signed integer (rather than as a uint)
+        public int mouseData;
+        public uint flags;
+        public uint time;
+        public UIntPtr dwExtraInfo;
+    }
+
+    // NOTE: these attributes were painstakingly observed and captured by hand from "C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\um\x64\fileextd.lib" (Windows 10 1809 SDK) using Ghidra; they appear to be undocumented
+    // NOTE: these attributes were corroborated at: http://www.brandonfa.lk/win8/win8_devrel_head_x86/webcamui.h
+    // NOTE: the enum name, WINDOWCOMPOSITIONATTRIB, is assumed (based on the string immediately following the WCA_ values in fileextd.lib); these are grouped together for convenience (and may technically just be a list of consts)
+    internal enum WINDOWCOMPOSITIONATTRIB : uint
+    {
+        WCA_UNDEFINED = 0x00,
+        WCA_NCRENDERING_ENABLED = 0x01,
+        WCA_NCRENDERING_POLICY = 0x02,
+        WCA_TRANSITIONS_FORCEDISABLED = 0x03,
+        WCA_ALLOW_NCPAINT = 0x04,
+        WCA_CAPTION_BUTTON_BOUNDS = 0x05,
+        WCA_NONCLIENT_RTL_LAYOUT = 0x06,
+        WCA_FORCE_ICONIC_REPRESENTATION = 0x07,
+        WCA_EXTENDED_FRAME_BOUNDS = 0x08,
+        WCA_HAS_ICONIC_BITMAP = 0x09,
+        WCA_THEME_ATTRIBUTES = 0x0A,
+        WCA_NCRENDERING_EXILED = 0x0B,
+        WCA_NCADORNMENTINFO = 0x0C,
+        WCA_EXCLUDED_FROM_LIVEPREVIEW = 0x0D,
+        WCA_VIDEO_OVERLAY_ACTIVE = 0x0E,
+        WCA_FORCE_ACTIVEWINDOW_APPEARANCE = 0x0F,
+        WCA_DISALLOW_PEEK = 0x10,
+        WCA_CLOAK = 0x11,
+        WCA_CLOAKED = 0x12,
+        WCA_ACCENT_POLICY = 0x13,
+        WCA_FREEZE_REPRESENTATION = 0x14,
+        WCA_EVER_UNCLOAKED = 0x15,
+        WCA_VISUAL_OWNER = 0x16,
+        WCA_HOLOGRAPHIC = 0x17,
+        WCA_EXCLUDED_FROM_DDA = 0x18,
+        WCA_PASSIVEUPDATEMODE = 0x19,
+        WCA_LAST = 0x1A,
+    }
+
+    // NOTE; the struct name, WINDOWCOMPOSITIONATTRIBDATA, was observed in "C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\um\x64\kernel32legacylib.lib"; it appears to be undocumented
+    // NOTE: this undocumented struct was documented at http://undoc.airesoft.co.uk/user32.dll/GetWindowCompositionAttribute.php
+    // NOTE: the field names noted at https://gist.github.com/ysc3839/b08d2bff1c7dacde529bed1d37e85ccf are used here; cbData might be alternatively renamed to DataSize for clarity
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct WINDOWCOMPOSITIONATTRIBDATA
+    {
+        public WINDOWCOMPOSITIONATTRIB attribute;  // specify the attribute to set
+        public IntPtr pvData;                      // specify the data/value of the requested attribute
+        public uint cbData;                        // set to the size of pvData
+    };
+
+    // NOTE: this function is located in user32.dll (as exported by dumpbin and observed in Ghidra); it appears to be undocumented
+    // NOTE: this undocumented function was documented at http://undoc.airesoft.co.uk/user32.dll/SetWindowCompositionAttribute.php
+    [DllImport("user32.dll", SetLastError = true)]
+    internal static extern bool SetWindowCompositionAttribute(IntPtr hwnd, ref WINDOWCOMPOSITIONATTRIBDATA pAttrData);
+
+    // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-unhookwindowshookex
+    [DllImport("user32.dll")]
+    internal static extern bool UnhookWindowsHookEx(IntPtr hhk);
+
+    #endregion Legacy user32.dll (reverse engineered, not WinUser.h)
 
 
     #region winerror.h
@@ -910,15 +1015,27 @@ internal struct ExtendedPInvoke
     [DllImport("advapi32.dll", CharSet = CharSet.Unicode)]
     internal static extern PInvoke.Win32ErrorCode RegSetValueEx(UIntPtr hKey, [MarshalAs(UnmanagedType.LPWStr)] string? lpValueName, uint reserved, RegistryValueType dwType, IntPtr lpData, uint cbData);
 
-	    #endregion winreg.h
+    #endregion winreg.h
 
 
     #region WinUser.h
 
     private const int CCHDEVICENAME = 32;
 
-	internal const ushort FAPPCOMMAND_KEY = 0;
-	
+    internal const uint CDS_UPDATEREGISTRY = 0x00000001;
+
+    internal const ushort FAPPCOMMAND_KEY = 0;
+
+    // return values for ChangeDisplaySettings/ChangeDisplaySettingsEx
+    internal const int DISP_CHANGE_SUCCESSFUL = 0;
+    //internal const int DISP_CHANGE_RESTART = 1;
+    //internal const int DISP_CHANGE_FAILED = -1;
+    //internal const int DISP_CHANGE_BADMODE = -2;
+    //internal const int DISP_CHANGE_NOTUPDATED = -3;
+    //internal const int DISP_CHANGE_BADFLAGS = -4;
+    //internal const int DISP_CHANGE_BADPARAM = -5;
+    //internal const int DISP_CHANGE_BADDUALVIEW = -6;
+
     // WinUser.h (Windows 10 SDK v10.0.18632)
     internal static readonly uint ENUM_CURRENT_SETTINGS = BitConverter.ToUInt32(BitConverter.GetBytes((int)(-1)));
     //internal static readonly uint ENUM_REGISTRY_SETTINGS = BitConverter.ToUInt32(BitConverter.GetBytes((int)(-2)));
@@ -945,6 +1062,10 @@ internal struct ExtendedPInvoke
             return result;
         }
     }
+
+    // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-changedisplaysettingsexw
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    internal static extern int ChangeDisplaySettingsEx(string? lpszDeviceName, ref DEVMODEW lpDevMode, IntPtr hwnd, uint dwFlags, IntPtr lParam);
 
     // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getdisplayconfigbuffersizes
     [DllImport("user32.dll")]
@@ -1017,6 +1138,186 @@ internal struct ExtendedPInvoke
         // NOTE: HCF_OPTION_NOTHEMECHANGE is new (or newly documented), as of Windows 10 2004 (build 19041)
         HCF_OPTION_NOTHEMECHANGE = 0x00001000,
     }
+
+    // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-createwindowexw
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    internal static extern IntPtr CreateWindowEx(
+        WindowStylesEx dwExStyle,
+        IntPtr lpClassName,
+        string? lpWindowName,
+        WindowStyles dwStyle,
+        int X,
+        int Y,
+        int nWidth,
+        int nHeight,
+        IntPtr hWndParent,
+        IntPtr hMenu,
+        IntPtr hInstance,
+        IntPtr lpParam);
+
+    // helper declaration (for passing the class name as a ushort)
+    internal static IntPtr CreateWindowEx(ExtendedPInvoke.WindowStylesEx dwExStyle, ushort lpClassName, string? lpWindowName, ExtendedPInvoke.WindowStyles dwStyle, int X, int Y, int nWidth, int nHeight, IntPtr hWndParent, IntPtr hMenu, IntPtr hInstance, IntPtr lpParam)
+    {
+        return ExtendedPInvoke.CreateWindowEx(dwExStyle, new IntPtr(lpClassName), lpWindowName, dwStyle, X, Y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
+    }
+
+    // helper declaration (for passing the class name as a string)
+    internal static IntPtr CreateWindowEx(ExtendedPInvoke.WindowStylesEx dwExStyle, string lpClassName, string? lpWindowName, ExtendedPInvoke.WindowStyles dwStyle, int X, int Y, int nWidth, int nHeight, IntPtr hWndParent, IntPtr hMenu, IntPtr hInstance, IntPtr lpParam)
+    {
+        var pointerToClassName = Marshal.StringToHGlobalUni(lpClassName);
+        try
+        {
+            return ExtendedPInvoke.CreateWindowEx(dwExStyle, pointerToClassName, lpWindowName, dwStyle, X, Y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(pointerToClassName);
+        }
+    }
+
+    //
+
+    // https://docs.microsoft.com/en-us/windows/win32/winmsg/window-styles
+    [Flags]
+    internal enum WindowStyles : uint
+    {
+        WS_BORDER = 0x00800000,
+        WS_CAPTION = 0x00C00000,
+        WS_CHILD = 0x40000000,
+        WS_CHILDWINDOW = 0x40000000,
+        WS_CLIPCHILDREN = 0x02000000,
+        WS_CLIPSIBLINGS = 0x04000000,
+        WS_DISABLED = 0x08000000,
+        WS_DLGFRAME = 0x00400000,
+        WS_GROUP = 0x00020000,
+        WS_HSCROLL = 0x00100000,
+        WS_ICONIC = 0x20000000,
+        WS_MAXIMIZE = 0x01000000,
+        WS_MAXIMIZEBOX = 0x00010000,
+        WS_MINIMIZE = 0x20000000,
+        WS_MINIMIZEBOX = 0x00020000,
+        WS_OVERLAPPED = 0x00000000,
+        WS_OVERLAPPEDWINDOW = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX,
+        WS_POPUP = 0x80000000,
+        WS_POPUPWINDOW = WS_POPUP | WS_BORDER | WS_SYSMENU,
+        WS_SIZEBOX = 0x00040000,
+        WS_SYSMENU = 0x00080000,
+        WS_TABSTOP = 0x00010000,
+        WS_THICKFRAME = 0x00040000,
+        WS_TILED = 0x00000000,
+        WS_TILEDWINDOW = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX,
+        WS_VISIBLE = 0x10000000,
+        WS_VSCROLL = 0x00200000
+    }
+
+    // https://docs.microsoft.com/en-us/windows/win32/winmsg/extended-window-styles
+    [Flags]
+    internal enum WindowStylesEx : uint
+    {
+        WS_EX_ACCEPTFILES = 0x00000010,
+        WS_EX_APPWINDOW = 0x00040000,
+        WS_EX_CLIENTEDGE = 0x00000200,
+        WS_EX_COMPOSITED = 0x02000000,
+        WS_EX_CONTEXTHELP = 0x00000400,
+        WS_EX_CONTROLPARENT = 0x00010000,
+        WS_EX_DLGMODALFRAME = 0x00000001,
+        WS_EX_LAYERED = 0x00080000,
+        WS_EX_LAYOUTRTL = 0x00400000,
+        WS_EX_LEFT = 0x00000000,
+        WS_EX_LEFTSCROLLBAR = 0x00004000,
+        WS_EX_LTRREADING = 0x00000000,
+        WS_EX_MDICHILD = 0x00000040,
+        WS_EX_NOACTIVATE = 0x08000000,
+        WS_EX_NOINHERITLAYOUT = 0x00100000,
+        WS_EX_NOPARENTNOTIFY = 0x00000004,
+        WS_EX_NOREDIRECTIONBITMAP = 0x00200000,
+        WS_EX_OVERLAPPEDWINDOW = WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE,
+        WS_EX_PALETTEWINDOW = WS_EX_WINDOWEDGE | WS_EX_TOOLWINDOW | WS_EX_TOPMOST,
+        WS_EX_RIGHT = 0x00001000,
+        WS_EX_RIGHTSCROLLBAR = 0x00000000,
+        WS_EX_RTLREADING = 0x00002000,
+        WS_EX_STATICEDGE = 0x00020000,
+        WS_EX_TOOLWINDOW = 0x00000080,
+        WS_EX_TOPMOST = 0x00000008,
+        WS_EX_TRANSPARENT = 0x00000020,
+        WS_EX_WINDOWEDGE = 0x00000100
+    }
+
+    //
+
+    // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-defwindowprocw
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    internal static extern IntPtr DefWindowProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+
+    // docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowlongw
+    [DllImport("user32.dll", EntryPoint = "GetWindowLong")]
+    private static extern int GetWindowLongPtr_32bit(IntPtr hWnd, int nIndex);
+    //
+    // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowlongptrw
+    [DllImport("user32.dll", EntryPoint = "GetWindowLongPtr")]
+    private static extern IntPtr GetWindowLongPtr_64bit(IntPtr hWnd, int nIndex);
+    //
+    internal static IntPtr GetWindowLongPtr(IntPtr hWnd, int nIndex)
+    {
+        // NOTE: 32-bit windows does not have a DLL entrypoint labeled GetWindowLongPtr, so we alias the functions here (just like the C header files do)
+        if (Marshal.SizeOf<IntPtr>() == 4) {
+            return (IntPtr)ExtendedPInvoke.GetWindowLongPtr_32bit(hWnd, nIndex);
+        }
+        else
+        {
+            return ExtendedPInvoke.GetWindowLongPtr_64bit(hWnd, nIndex);
+        }
+    }
+
+    // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-loadcursorw
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    internal static extern IntPtr LoadCursor(IntPtr hInstance, int lpCursorName);
+    //
+    internal enum Cursors
+    {
+        IDC_APPSTARTING = 32650,
+        IDC_ARROW = 32512,
+        IDC_CROSS = 32515,
+        IDC_HAND = 32649,
+        IDC_HELP = 32651,
+        IDC_IBEAM = 32513,
+        IDC_ICON = 32641,
+        IDC_NO = 32648,
+        IDC_SIZE = 32640,
+        IDC_SIZEALL = 32646,
+        IDC_SIZENESW = 32643,
+        IDC_SIZENS = 32645,
+        IDC_SIZENWSE = 32642,
+        IDC_SIZEWE = 32644,
+        IDC_UPARROW = 32516,
+        IDC_WAIT = 32514,
+    }
+
+    // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-registerclassexw
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    internal static extern ushort RegisterClassEx([In] ref WNDCLASSEX lpWndClass);
+
+    // https://docs.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-wndclassexw
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    internal struct WNDCLASSEX
+    {
+        public uint cbSize;
+        public uint style;
+        [MarshalAs(UnmanagedType.FunctionPtr)]
+        public WNDPROC lpfnWndProc;
+        public int cbClsExtra;
+        public int cbWndExtra;
+        public IntPtr hInstance;
+        public IntPtr hIcon;
+        public IntPtr hCursor;
+        public IntPtr hbrBackground;
+        public string lpszMenuName;
+        public string lpszClassName;
+        public IntPtr hIconSm;
+    }
+    // see: https://docs.microsoft.com/en-us/previous-versions/windows/desktop/legacy/ms633573(v=vs.85)
+    [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+    internal delegate IntPtr WNDPROC(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
     #endregion WinUser.h
 

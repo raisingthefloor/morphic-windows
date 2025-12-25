@@ -364,45 +364,45 @@ public class Display
         var sourceId = this.SourceId;
 
         return await Task.Run((Func<MorphicResult<MorphicUnit, MorphicUnit>>)(() =>
-    {
-        // retrieve the DPI values (min, current and max) for the monitor
-        var setDpiInfo = ExtendedPInvoke.DISPLAYCONFIG_SET_DPI.InitializeNew();
-        setDpiInfo.header.type = ExtendedPInvoke.DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_SET_DPI;
-        setDpiInfo.header.adapterId = adapterId;
-        setDpiInfo.header.id = sourceId;
-        setDpiInfo.dpiOffset = dpiOffset;
-        //
-        var displayConfigGetDeviceInfoSuccess = ExtendedPInvoke.DisplayConfigSetDeviceInfo(ref setDpiInfo);
-        switch (displayConfigGetDeviceInfoSuccess)
         {
-            case PInvoke.Win32ErrorCode.ERROR_SUCCESS:
-                break;
-            case PInvoke.Win32ErrorCode.ERROR_INVALID_PARAMETER:
-                System.Diagnostics.Debug.Assert(false, "Error setting dpi info; this is probably a programming error.");
-                return MorphicResult.ErrorResult();
-            default:
-                // unknown error
-                System.Diagnostics.Debug.Assert(false, "Error setting dpi info");
-                return MorphicResult.ErrorResult();
-        }
+            // retrieve the DPI values (min, current and max) for the monitor
+            var setDpiInfo = ExtendedPInvoke.DISPLAYCONFIG_SET_DPI.InitializeNew();
+            setDpiInfo.header.type = ExtendedPInvoke.DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_SET_DPI;
+            setDpiInfo.header.adapterId = adapterId;
+            setDpiInfo.header.id = sourceId;
+            setDpiInfo.dpiOffset = dpiOffset;
+            //
+            var displayConfigGetDeviceInfoSuccess = ExtendedPInvoke.DisplayConfigSetDeviceInfo(ref setDpiInfo);
+            switch (displayConfigGetDeviceInfoSuccess)
+            {
+                case PInvoke.Win32ErrorCode.ERROR_SUCCESS:
+                    break;
+                case PInvoke.Win32ErrorCode.ERROR_INVALID_PARAMETER:
+                    System.Diagnostics.Debug.Assert(false, "Error setting dpi info; this is probably a programming error.");
+                    return MorphicResult.ErrorResult();
+                default:
+                    // unknown error
+                    System.Diagnostics.Debug.Assert(false, "Error setting dpi info");
+                    return MorphicResult.ErrorResult();
+            }
 
-        // verify that the DPI was set successfully
-        // NOTE: this is not technically necessary since we already have a success/failure result, but it's a good sanity check; if it's too early to check this then it's reasonable for us to skip this verification step
-        var getCurrentDpiOffsetAndRangeResult = thisDisplay.GetCurrentDpiOffsetAndRange();
-        if (getCurrentDpiOffsetAndRangeResult.IsError == true)
-        {
-            return MorphicResult.ErrorResult();
-        }
-        var currentDpiOffsetAndRange = getCurrentDpiOffsetAndRangeResult.Value!;
-        if (currentDpiOffsetAndRange.CurrentDpiOffset != dpiOffset)
-        {
-            System.Diagnostics.Debug.Assert(false, "Could not set DPI offset (or the system has not updated the current SPI offset value)");
-            return MorphicResult.ErrorResult();
-        }
+            // verify that the DPI was set successfully
+            // NOTE: this is not technically necessary since we already have a success/failure result, but it's a good sanity check; if it's too early to check this then it's reasonable for us to skip this verification step
+            var getCurrentDpiOffsetAndRangeResult = thisDisplay.GetCurrentDpiOffsetAndRange();
+            if (getCurrentDpiOffsetAndRangeResult.IsError == true)
+            {
+                return MorphicResult.ErrorResult();
+            }
+            var currentDpiOffsetAndRange = getCurrentDpiOffsetAndRangeResult.Value!;
+            if (currentDpiOffsetAndRange.CurrentDpiOffset != dpiOffset)
+            {
+                System.Diagnostics.Debug.Assert(false, "Could not set DPI offset (or the system has not updated the current SPI offset value)");
+                return MorphicResult.ErrorResult();
+            }
 
-        // otherwise, we succeeded
-        return MorphicResult.OkResult();
-    }));
+            // otherwise, we succeeded
+            return MorphicResult.OkResult();
+        }));
     }
 
     //
@@ -506,7 +506,9 @@ public class Display
         return scalePercentages;
     }
 
-    // NOTE: if dpiOffset is out of the min<->max range or the range is too broad, this function will return null
+    //
+
+    // NOTE: if dpiOffset is out of the min<->max range or the range is too broad, this function will return an ErrorResult
     public static MorphicResult<double, MorphicUnit> TranslateDpiOffsetToScalePercentage(int dpiOffset, int minimumDpiOffset, int maximumDpiOffset)
     {
         // special-case: if the DPI mode is using a "custom DPI" (which may be a backwards-compatible Windows 8.1 behavior), capture that value now
@@ -1144,4 +1146,37 @@ public class Display
     //}
 
     #endregion Legacy Morphic display code
+
+	
+    #region Untested Legacy code
+	
+    //// TODO: the following code is neither complete nor tested; additionally, it may actually set the display resolution in virtual pixels instead of physical pixels (in which case it must be renamed); it is included here only for completeness in migrating Morphic 1.x code to 2.x
+    //public MorphicResult<MorphicUnit, MorphicUnit> SetDisplayResolutionInPhysicalPixels(Size newSize)
+    //{
+    //    ExtendedPInvoke.DEVMODEW deviceMode = ExtendedPInvoke.DEVMODEW.InitializeNew();
+    //    // capture the display's current (mode) settings
+    //    var enumDisplaySettingsResult = ExtendedPInvoke.EnumDisplaySettingsEx(this.DisplayName, ExtendedPInvoke.ENUM_CURRENT_SETTINGS, ref deviceMode, 0);
+    //    if (enumDisplaySettingsResult == false)
+    //    {
+    //        return MorphicResult.ErrorResult();
+    //    }
+
+    //    // update the mode's width/height
+    //    // TODO: is this sufficient?  Do we need to scale or set other properties as well?
+    //    deviceMode.dmPelsWidth = (uint)newSize.Width;
+    //    deviceMode.dmPelsHeight = (uint)newSize.Height;
+
+    //    // see: https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-changedisplaysettingsexw
+    //    var changeDisplaySettingsResult = ExtendedPInvoke.ChangeDisplaySettingsEx(this.DisplayName, ref deviceMode, IntPtr.Zero, ExtendedPInvoke.CDS_UPDATEREGISTRY, IntPtr.Zero);
+    //    if (changeDisplaySettingsResult != ExtendedPInvoke.DISP_CHANGE_SUCCESSFUL)
+    //    {
+    //        // TODO: in the future, we may want to return the actual result; here are the expected error codes...
+    //        //       DISP_CHANGE_BADDUALVIEW; DISP_CHANGE_BADFLAGS; DISP_CHANGE_BADMODE; DISP_CHANGE_BADPARAM; DISP_CHANGE_FAILED; DISP_CHANGE_NOTUPDATED; DISP_CHANGE_RESTART
+    //        return MorphicResult.ErrorResult();
+    //    }
+
+    //    return MorphicResult.OkResult();
+    //}
+			
+    #endregion Untested Legacy code
 }

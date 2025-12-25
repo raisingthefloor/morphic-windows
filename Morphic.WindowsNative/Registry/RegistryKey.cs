@@ -466,10 +466,7 @@ public partial class Registry
             uint valueDataSize = 0;
             Windows.Win32.System.Registry.REG_VALUE_TYPE valueType;
             Windows.Win32.Foundation.WIN32_ERROR queryValueErrorCode;
-            unsafe
-            {
-                queryValueErrorCode = Windows.Win32.PInvoke.RegQueryValueEx(_handle, valueName, &valueType, null, &valueDataSize);
-            }
+            queryValueErrorCode = Windows.Win32.PInvoke.RegQueryValueEx(_handle, valueName, out valueType, null, ref valueDataSize);
             switch (queryValueErrorCode)
             {
                 case Windows.Win32.Foundation.WIN32_ERROR.ERROR_SUCCESS:
@@ -486,13 +483,7 @@ public partial class Registry
             object valueData;
 
             var mutableDataSize = valueDataSize;
-            unsafe
-            {
-                fixed (byte* pointerToData = data)
-                {
-                    queryValueErrorCode = Windows.Win32.PInvoke.RegQueryValueEx(_handle, valueName, &valueType, pointerToData, &mutableDataSize);
-                }
-            }
+            queryValueErrorCode = Windows.Win32.PInvoke.RegQueryValueEx(_handle, valueName, out valueType, data, ref mutableDataSize);
             switch (queryValueErrorCode)
             {
                 case Windows.Win32.Foundation.WIN32_ERROR.ERROR_SUCCESS:

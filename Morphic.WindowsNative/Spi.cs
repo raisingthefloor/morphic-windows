@@ -27,6 +27,8 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
+#region Legacy Spi
+
 /// <summary>
 /// Interface for SystemParametersInfo.
 /// </summary>
@@ -373,3 +375,5 @@ public class Spi
        SETCARETTIMEOUT = 0x2023
    }
 }
+
+#endregion Legacy Spi

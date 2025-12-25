@@ -24,7 +24,7 @@ trigger:
       - "staging/*"
 
 pool:
-  vmImage: 'windows-2022'
+  vmImage: 'windows-2025'
 
 variables:
 # must be created in the azure UI under Pipelines > Library and specify accessKey, secretKey, region, and bucket
@@ -64,10 +64,10 @@ stages:
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - task: UseDotNet@2
-          displayName: 'Use .NET SDK 8.0.408'
+          displayName: 'Use .NET SDK 10.0.101'
           inputs:
             packageType: sdk
-            version: 8.0.408
+            version: 10.0.101
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - task: DotNetCoreCLI@2
@@ -76,7 +76,28 @@ stages:
             command: 'custom'
             custom: 'tool'
             arguments: 'install --global AzureSignTool --version 4.0.1'
-        
+
+        # Download link available at: https://learn.microsoft.com/en-us/windows/apps/windows-app-sdk/downloads
+        - powershell: |
+            Invoke-WebRequest -Uri https://aka.ms/windowsappsdk/1.8/1.8.251106002/windowsappruntimeinstall-x64.exe -Method Get -OutFile windowsappruntimeinstall-x64.exe
+            .\windowsappruntimeinstall-x64.exe --msix --quiet
+          displayName: "Install Windows App SDK (v1.8.3) (winget prerequisite)"
+
+        # Download link available at: https://github.com/microsoft/winget-cli/releases/tag/v1.12.440
+        # NOTE: in theory, Windows Server 2025 will ship with winget pre-installed--so installation of both prerequisites and winget itself should be able to be removed from this script
+        # see: https://learn.microsoft.com/en-us/windows/iot/iot-enterprise/deployment/install-winget-windows-iot
+        - powershell: |
+            Invoke-WebRequest -Uri https://github.com/microsoft/winget-cli/releases/download/v1.12.440/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle -Method Get -OutFile Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle
+            Invoke-WebRequest -Uri https://github.com/microsoft/winget-cli/releases/download/v1.12.440/e53e159d00e04f729cc2180cffd1c02e_License1.xml -Method Get -OutFile e53e159d00e04f729cc2180cffd1c02e_License1.xml
+            Add-AppxPackage -Path .\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle
+            Add-AppxProvisionedPackage -Online -PackagePath .\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle -LicensePath .\e53e159d00e04f729cc2180cffd1c02e_License1.xml
+            winget --version
+          displayName: "Install Winget (v1.12.440)"
+
+        - powershell: |
+            winget install --source winget --exact --id Microsoft.WindowsSDK.10.0.22621 --log $env:USERPROFILE/Desktop/sdk-install.log
+          displayName: "Install Windows SDK v10.0.22621.0"
+
         # Set a $(BUILD_TYPE) variable
         - bash: |
             BUILD_TYPE="Development"
@@ -149,7 +170,7 @@ stages:
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
               -v
-              $(Build.SourcesDirectory)\Morphic.Client\bin\x86\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-x86\publish\Morphic.exe
+              $(Build.SourcesDirectory)\Morphic.Client\bin\x86\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-x86\publish\Morphic.exe
 
         - task: VSBuild@1
           displayName: "restore installer dependencies"
@@ -177,7 +198,7 @@ stages:
             solution: 'Morphic.Setup\Morphic.Setup.wixproj'
             platform: 'x86'
             configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false /p:ClientOutputPath=$(Build.SourcesDirectory)\Morphic.Client\bin\x86\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-x86\publish /p:HeatDirectoryPath=$(Build.SourcesDirectory)\Morphic.Client\bin\x86\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-x86\publish'
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false /p:ClientOutputPath=$(Build.SourcesDirectory)\Morphic.Client\bin\x86\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-x86\publish /p:HeatDirectoryPath=$(Build.SourcesDirectory)\Morphic.Client\bin\x86\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-x86\publish'
 
         - task: CmdLine@2
           displayName: 'sign installer (x86)'
@@ -214,7 +235,7 @@ stages:
             solution: 'Morphic.Setup.Enterprise\Morphic.Setup.Enterprise.wixproj'
             platform: 'x86'
             configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false /p:ClientOutputPath=$(Build.SourcesDirectory)\Morphic.Client\bin\x86\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-x86\publish /p:HeatDirectoryPath=$(Build.SourcesDirectory)\Morphic.Client\bin\x86\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-x86\publish'
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false /p:ClientOutputPath=$(Build.SourcesDirectory)\Morphic.Client\bin\x86\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-x86\publish /p:HeatDirectoryPath=$(Build.SourcesDirectory)\Morphic.Client\bin\x86\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-x86\publish'
 
         - task: CmdLine@2
           displayName: 'sign installer (x86 enterprise)'
@@ -322,7 +343,7 @@ stages:
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
               -v
-              $(Build.SourcesDirectory)\Morphic.Client\bin\x64\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-x64\publish\Morphic.exe
+              $(Build.SourcesDirectory)\Morphic.Client\bin\x64\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-x64\publish\Morphic.exe
 
         - task: VSBuild@1
           displayName: "restore installer dependencies"
@@ -350,7 +371,7 @@ stages:
             solution: 'Morphic.Setup\Morphic.Setup.wixproj'
             platform: 'x64'
             configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false /p:ClientOutputPath=$(Build.SourcesDirectory)\Morphic.Client\bin\x64\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-x64\publish /p:HeatDirectoryPath=$(Build.SourcesDirectory)\Morphic.Client\bin\x64\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-x64\publish'
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false /p:ClientOutputPath=$(Build.SourcesDirectory)\Morphic.Client\bin\x64\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-x64\publish /p:HeatDirectoryPath=$(Build.SourcesDirectory)\Morphic.Client\bin\x64\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-x64\publish'
 
         - task: CmdLine@2
           displayName: 'sign installer (x64)'
@@ -387,7 +408,7 @@ stages:
             solution: 'Morphic.Setup.Enterprise\Morphic.Setup.Enterprise.wixproj'
             platform: 'x64'
             configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false /p:ClientOutputPath=$(Build.SourcesDirectory)\Morphic.Client\bin\x64\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-x64\publish /p:HeatDirectoryPath=$(Build.SourcesDirectory)\Morphic.Client\bin\x64\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-x64\publish'
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false /p:ClientOutputPath=$(Build.SourcesDirectory)\Morphic.Client\bin\x64\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-x64\publish /p:HeatDirectoryPath=$(Build.SourcesDirectory)\Morphic.Client\bin\x64\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-x64\publish'
 
         - task: CmdLine@2
           displayName: 'sign installer (x64 enterprise)'
@@ -464,7 +485,7 @@ stages:
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
               -v
-              $(Build.SourcesDirectory)\Morphic.Client\bin\arm64\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-arm64\publish\Morphic.exe
+              $(Build.SourcesDirectory)\Morphic.Client\bin\arm64\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-arm64\publish\Morphic.exe
 
         - task: VSBuild@1
           displayName: "restore installer dependencies"
@@ -492,7 +513,7 @@ stages:
             solution: 'Morphic.Setup\Morphic.Setup.wixproj'
             platform: 'arm64'
             configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false /p:ClientOutputPath=$(Build.SourcesDirectory)\Morphic.Client\bin\arm64\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-arm64\publish /p:HeatDirectoryPath=$(Build.SourcesDirectory)\Morphic.Client\bin\arm64\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-arm64\publish'
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false /p:ClientOutputPath=$(Build.SourcesDirectory)\Morphic.Client\bin\arm64\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-arm64\publish /p:HeatDirectoryPath=$(Build.SourcesDirectory)\Morphic.Client\bin\arm64\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-arm64\publish'
 
         - task: CmdLine@2
           displayName: 'sign installer (arm64)'
@@ -529,7 +550,7 @@ stages:
             solution: 'Morphic.Setup.Enterprise\Morphic.Setup.Enterprise.wixproj'
             platform: 'arm64'
             configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false /p:ClientOutputPath=$(Build.SourcesDirectory)\Morphic.Client\bin\arm64\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-arm64\publish /p:HeatDirectoryPath=$(Build.SourcesDirectory)\Morphic.Client\bin\arm64\$(buildConfiguration)\net8.0-windows10.0.22621.0\win-arm64\publish'
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false /p:ClientOutputPath=$(Build.SourcesDirectory)\Morphic.Client\bin\arm64\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-arm64\publish /p:HeatDirectoryPath=$(Build.SourcesDirectory)\Morphic.Client\bin\arm64\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-arm64\publish'
 
         - task: CmdLine@2
           displayName: 'sign installer (arm64 enterprise)'

@@ -33,123 +33,123 @@ namespace Morphic.WindowsNative.Display;
 
 public class HighContrastUtils
 {
-   private static Object s_modifyHighContrastLock = new Object();
+    private static Object s_modifyHighContrastLock = new Object();
 
-   public static MorphicResult<MorphicUnit, MorphicUnit> SetHighContrastModeIsOn(bool isOn, bool updateUserProfile = false)
-   {
-       // NOTE: we lock on s_modifyHighContrastLock here to ensure that our application doesn't modify the system's HIGHCONTRAST settings while we're reading, updating and rewriting them
-       lock (s_modifyHighContrastLock)
-       {
-           // set up a HIGHCONTRAST structure; we'll use this to get and then update the high contrast settings
-           var highContrastInfo = ExtendedPInvoke.HIGHCONTRAST.InitializeNew();
-           IntPtr pointerToHighContrastInfo = Marshal.AllocHGlobal((int)highContrastInfo.cbSize);
-           Marshal.StructureToPtr(highContrastInfo, pointerToHighContrastInfo, false);
-           try
-           {
-               // get the current high contrast settings (which we will update in a moment)
-               var spiSuccess = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_GETHIGHCONTRAST, highContrastInfo.cbSize, pointerToHighContrastInfo, PInvoke.User32.SystemParametersInfoFlags.None);
-               if (spiSuccess == false)
-               {
-                   return MorphicResult.ErrorResult();
-               }
+    public static MorphicResult<MorphicUnit, MorphicUnit> SetHighContrastModeIsOn(bool isOn, bool updateUserProfile = false)
+    {
+        // NOTE: we lock on s_modifyHighContrastLock here to ensure that our application doesn't modify the system's HIGHCONTRAST settings while we're reading, updating and rewriting them
+        lock (s_modifyHighContrastLock)
+        {
+            // set up a HIGHCONTRAST structure; we'll use this to get and then update the high contrast settings
+            var highContrastInfo = ExtendedPInvoke.HIGHCONTRAST.InitializeNew();
+            IntPtr pointerToHighContrastInfo = Marshal.AllocHGlobal((int)highContrastInfo.cbSize);
+            Marshal.StructureToPtr(highContrastInfo, pointerToHighContrastInfo, false);
+            try
+            {
+                // get the current high contrast settings (which we will update in a moment)
+                var spiSuccess = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_GETHIGHCONTRAST, highContrastInfo.cbSize, pointerToHighContrastInfo, PInvoke.User32.SystemParametersInfoFlags.None);
+                if (spiSuccess == false)
+                {
+                    return MorphicResult.ErrorResult();
+                }
 
-               highContrastInfo = Marshal.PtrToStructure<ExtendedPInvoke.HIGHCONTRAST>(pointerToHighContrastInfo);
+                highContrastInfo = Marshal.PtrToStructure<ExtendedPInvoke.HIGHCONTRAST>(pointerToHighContrastInfo);
 
-               // set/clear the "high contrast on" flag
-               if (isOn == true)
-               {
-                   highContrastInfo.dwFlags |= ExtendedPInvoke.HighContrastFlags.HCF_HIGHCONTRASTON;
-               }
-               else
-               {
-                   highContrastInfo.dwFlags &= ~ExtendedPInvoke.HighContrastFlags.HCF_HIGHCONTRASTON;
-               }
+                // set/clear the "high contrast on" flag
+                if (isOn == true)
+                {
+                    highContrastInfo.dwFlags |= ExtendedPInvoke.HighContrastFlags.HCF_HIGHCONTRASTON;
+                }
+                else
+                {
+                    highContrastInfo.dwFlags &= ~ExtendedPInvoke.HighContrastFlags.HCF_HIGHCONTRASTON;
+                }
 
-               // NOTE: per Microsoft's documentation, we are _not_ setting the HCF_OPTION_NOTHEMECHANGE flag when toggling the high contrast mode; note that the HCF_OPTION_NOTHEMECHANGE
-               //       setting also only appeared in the Windows SDK as of Windows 10 2004 (build 19041) and newer
-               // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-highcontrastw
+                // NOTE: per Microsoft's documentation, we are _not_ setting the HCF_OPTION_NOTHEMECHANGE flag when toggling the high contrast mode; note that the HCF_OPTION_NOTHEMECHANGE
+                //       setting also only appeared in the Windows SDK as of Windows 10 2004 (build 19041) and newer
+                // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-highcontrastw
 
-               Marshal.StructureToPtr(highContrastInfo, pointerToHighContrastInfo, false);
+                Marshal.StructureToPtr(highContrastInfo, pointerToHighContrastInfo, false);
 
-               // write the new settings
-               // NOTE: we ask the system to broadcast the contrast change to all top-level windows.  Often/usually we won't 't want to save the (system-wide) setting to the user's profile;
-               //       if our caller wants to also save the setting to the user profile, then set the 'updateUserProfile' argument to true.
-               var fWinIni = PInvoke.User32.SystemParametersInfoFlags.SPIF_SENDWININICHANGE;
-               if (updateUserProfile == true)
-               {
-                   fWinIni |= PInvoke.User32.SystemParametersInfoFlags.SPIF_UPDATEINIFILE;
-               }
-               spiSuccess = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_SETHIGHCONTRAST, highContrastInfo.cbSize, pointerToHighContrastInfo, fWinIni);
-               if (spiSuccess == false)
-               {
-                   return MorphicResult.ErrorResult();
-               }
+                // write the new settings
+                // NOTE: we ask the system to broadcast the contrast change to all top-level windows.  Often/usually we won't 't want to save the (system-wide) setting to the user's profile;
+                //       if our caller wants to also save the setting to the user profile, then set the 'updateUserProfile' argument to true.
+                var fWinIni = PInvoke.User32.SystemParametersInfoFlags.SPIF_SENDWININICHANGE;
+                if (updateUserProfile == true)
+                {
+                    fWinIni |= PInvoke.User32.SystemParametersInfoFlags.SPIF_UPDATEINIFILE;
+                }
+                spiSuccess = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_SETHIGHCONTRAST, highContrastInfo.cbSize, pointerToHighContrastInfo, fWinIni);
+                if (spiSuccess == false)
+                {
+                    return MorphicResult.ErrorResult();
+                }
 
-               return MorphicResult.OkResult();
-           }
-           finally
-           {
-               Marshal.FreeHGlobal(pointerToHighContrastInfo);
-           }
-       }
-   }
+                return MorphicResult.OkResult();
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(pointerToHighContrastInfo);
+            }
+        }
+    }
 
-   //
+    //
 
-   public static MorphicResult<MorphicUnit, MorphicUnit> SetHighContrastModeDefaultColorScheme(String defaultColorScheme, bool updateUserProfile = false)
-   {
-       if (defaultColorScheme is null)
-       {
-           throw new ArgumentNullException(nameof(defaultColorScheme));
-       }
+    public static MorphicResult<MorphicUnit, MorphicUnit> SetHighContrastModeDefaultColorScheme(String defaultColorScheme, bool updateUserProfile = false)
+    {
+        if (defaultColorScheme is null)
+        {
+            throw new ArgumentNullException(nameof(defaultColorScheme));
+        }
 
-       // NOTE: we lock on s_modifyHighContrastLock here to ensure that our application doesn't modify the system's HIGHCONTRAST settings while we're reading, updating and rewriting them
-       lock (s_modifyHighContrastLock)
-       {
-           // set up a HIGHCONTRAST structure; we'll use this to get and then update the high contrast settings
-           var highContrastInfo = ExtendedPInvoke.HIGHCONTRAST.InitializeNew();
-           IntPtr pointerToHighContrastInfo = Marshal.AllocHGlobal((int)highContrastInfo.cbSize);
-           Marshal.StructureToPtr(highContrastInfo, pointerToHighContrastInfo, false);
-           try
-           {
-               // get the current high contrast settings (which we will update in a moment)
-               var spiSuccess = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_GETHIGHCONTRAST, highContrastInfo.cbSize, pointerToHighContrastInfo, PInvoke.User32.SystemParametersInfoFlags.None);
-               if (spiSuccess == false)
-               {
-                   return MorphicResult.ErrorResult();
-               }
+        // NOTE: we lock on s_modifyHighContrastLock here to ensure that our application doesn't modify the system's HIGHCONTRAST settings while we're reading, updating and rewriting them
+        lock (s_modifyHighContrastLock)
+        {
+            // set up a HIGHCONTRAST structure; we'll use this to get and then update the high contrast settings
+            var highContrastInfo = ExtendedPInvoke.HIGHCONTRAST.InitializeNew();
+            IntPtr pointerToHighContrastInfo = Marshal.AllocHGlobal((int)highContrastInfo.cbSize);
+            Marshal.StructureToPtr(highContrastInfo, pointerToHighContrastInfo, false);
+            try
+            {
+                // get the current high contrast settings (which we will update in a moment)
+                var spiSuccess = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_GETHIGHCONTRAST, highContrastInfo.cbSize, pointerToHighContrastInfo, PInvoke.User32.SystemParametersInfoFlags.None);
+                if (spiSuccess == false)
+                {
+                    return MorphicResult.ErrorResult();
+                }
 
-               highContrastInfo = Marshal.PtrToStructure<ExtendedPInvoke.HIGHCONTRAST>(pointerToHighContrastInfo);
+                highContrastInfo = Marshal.PtrToStructure<ExtendedPInvoke.HIGHCONTRAST>(pointerToHighContrastInfo);
 
-               // update the default color scheme
-               highContrastInfo.lpszDefaultScheme = defaultColorScheme;
+                // update the default color scheme
+                highContrastInfo.lpszDefaultScheme = defaultColorScheme;
 
-               // NOTE: as we are changing the theme, we do not set the HCF_OPTION_NOTHEMECHANGE flag; also note that the HCF_OPTION_NOTHEMECHANGE setting also only appears in the
-               //       Windows SDK as of Windows 10 2004 (build 19041) and newer
-               // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-highcontrastw
+                // NOTE: as we are changing the theme, we do not set the HCF_OPTION_NOTHEMECHANGE flag; also note that the HCF_OPTION_NOTHEMECHANGE setting also only appears in the
+                //       Windows SDK as of Windows 10 2004 (build 19041) and newer
+                // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-highcontrastw
 
-               Marshal.StructureToPtr(highContrastInfo, pointerToHighContrastInfo, false);
+                Marshal.StructureToPtr(highContrastInfo, pointerToHighContrastInfo, false);
 
-               // write the new settings
-               // NOTE: we ask the system to broadcast the contrast change to all top-level windows.  Often/usually we won't 't want to save the (system-wide) setting to the user's profile;
-               //       if our caller wants to also save the setting to the user profile, then set the 'updateUserProfile' argument to true.
-               var fWinIni = PInvoke.User32.SystemParametersInfoFlags.SPIF_SENDWININICHANGE;
-               if (updateUserProfile == true)
-               {
-                   fWinIni |= PInvoke.User32.SystemParametersInfoFlags.SPIF_UPDATEINIFILE;
-               }
-               spiSuccess = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_SETHIGHCONTRAST, highContrastInfo.cbSize, pointerToHighContrastInfo, fWinIni);
-               if (spiSuccess == false)
-               {
-                   return MorphicResult.ErrorResult();
-               }
+                // write the new settings
+                // NOTE: we ask the system to broadcast the contrast change to all top-level windows.  Often/usually we won't 't want to save the (system-wide) setting to the user's profile;
+                //       if our caller wants to also save the setting to the user profile, then set the 'updateUserProfile' argument to true.
+                var fWinIni = PInvoke.User32.SystemParametersInfoFlags.SPIF_SENDWININICHANGE;
+                if (updateUserProfile == true)
+                {
+                    fWinIni |= PInvoke.User32.SystemParametersInfoFlags.SPIF_UPDATEINIFILE;
+                }
+                spiSuccess = PInvoke.User32.SystemParametersInfo(PInvoke.User32.SystemParametersInfoAction.SPI_SETHIGHCONTRAST, highContrastInfo.cbSize, pointerToHighContrastInfo, fWinIni);
+                if (spiSuccess == false)
+                {
+                    return MorphicResult.ErrorResult();
+                }
 
-               return MorphicResult.OkResult();
-           }
-           finally
-           {
-               Marshal.FreeHGlobal(pointerToHighContrastInfo);
-           }
-       }
-   }
+                return MorphicResult.OkResult();
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(pointerToHighContrastInfo);
+            }
+        }
+    }
 }

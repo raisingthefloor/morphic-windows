@@ -30,116 +30,116 @@ namespace Morphic.WindowsNative.Display;
 
 public class DisplaySettingsListener : IDisposable
 {
-   public static DisplaySettingsListener Shared { get; private set; }
+    public static DisplaySettingsListener Shared { get; private set; }
 
-   private bool _isListening = false;
+    private bool _isListening = false;
 
-   private bool disposedValue;
+    private bool disposedValue;
 
-   static DisplaySettingsListener()
-   {
-       DisplaySettingsListener.Shared = new DisplaySettingsListener();
-   }
+    static DisplaySettingsListener()
+    {
+        DisplaySettingsListener.Shared = new DisplaySettingsListener();
+    }
 
-   private DisplaySettingsListener()
-   {
-   }
+    private DisplaySettingsListener()
+    {
+    }
 
-   protected virtual void Dispose(bool disposing)
-   {
-       if (!disposedValue)
-       {
-           if (disposing)
-           {
-               // NOTE: dispose managed state (managed objects)
-           }
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                // NOTE: dispose managed state (managed objects)
+            }
 
-           // free unmanaged resources (unmanaged objects)
-           //
-           // NOTE: per Microsoft, we must unsubscribe from DisplaySettingsChanged upon application exit (or earlier, if the events are no longer needed)
-           // see: https://learn.microsoft.com/en-us/dotnet/api/microsoft.win32.systemevents.displaysettingschanged?view=dotnet-plat-ext-6.0
-           try
-           {
-               Microsoft.Win32.SystemEvents.DisplaySettingsChanged -= this.DisplaySettingsChangedTrampoline;
-           }
-           catch { }
+            // free unmanaged resources (unmanaged objects)
+            //
+            // NOTE: per Microsoft, we must unsubscribe from DisplaySettingsChanged upon application exit (or earlier, if the events are no longer needed)
+            // see: https://learn.microsoft.com/en-us/dotnet/api/microsoft.win32.systemevents.displaysettingschanged?view=dotnet-plat-ext-6.0
+            try
+            {
+                Microsoft.Win32.SystemEvents.DisplaySettingsChanged -= this.DisplaySettingsChangedTrampoline;
+            }
+            catch { }
 
-           // NOTE: set large fields to null
+            // NOTE: set large fields to null
 
-           disposedValue = true;
-       }
-   }
+            disposedValue = true;
+        }
+    }
 
-   ~DisplaySettingsListener()
-   {
-       // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-       Dispose(disposing: false);
-   }
+    ~DisplaySettingsListener()
+    {
+        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        Dispose(disposing: false);
+    }
 
-   public void Dispose()
-   {
-       // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-       Dispose(disposing: true);
-       GC.SuppressFinalize(this);
-   }
+    public void Dispose()
+    {
+        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
 
-   private void DisplaySettingsChangedTrampoline(object? sender, EventArgs e)
-   {
-       _displaySettingsChanged?.Invoke(sender, e);
-   }
+    private void DisplaySettingsChangedTrampoline(object? sender, EventArgs e)
+    {
+        _displaySettingsChanged?.Invoke(sender, e);
+    }
 
-   private event EventHandler? _displaySettingsChanged;
-   public event EventHandler? DisplaySettingsChanged
-   {
-       add
-       {
-           if (_isListening == false)
-           {
-               var startListeningResult = this.StartListening();
-               if (startListeningResult.IsError == true)
-               {
-                   throw startListeningResult.Error!;
-               }
-           }
-           //
-           _displaySettingsChanged += value;
-       }
-       remove
-       {
-           _displaySettingsChanged -= value;
-       }
-   }
+    private event EventHandler? _displaySettingsChanged;
+    public event EventHandler? DisplaySettingsChanged
+    {
+        add
+        {
+            if (_isListening == false)
+            {
+                var startListeningResult = this.StartListening();
+                if (startListeningResult.IsError == true)
+                {
+                    throw startListeningResult.Error!;
+                }
+            }
+            //
+            _displaySettingsChanged += value;
+        }
+        remove
+        {
+            _displaySettingsChanged -= value;
+        }
+    }
 
-   // NOTE: callers who want to avoid getting exceptions when wiring up the display settings listener (i.e. if we're running in a process which doesn't allow such listening)
-   //       can call this function to learn if they were or were not able to start up the display settings listener; it is not, however, a required call.
-   // see: https://learn.microsoft.com/en-us/dotnet/api/microsoft.win32.systemevents.displaysettingschanged?view=dotnet-plat-ext-6.0
-   public MorphicResult<MorphicUnit, Exception> StartListening()
-   {
-       if (_isListening == false)
-       {
-           try
-           {
-               // see: https://learn.microsoft.com/en-us/dotnet/api/microsoft.win32.systemevents.displaysettingschanged?view=dotnet-plat-ext-6.0
-               Microsoft.Win32.SystemEvents.DisplaySettingsChanged += this.DisplaySettingsChangedTrampoline;
-           }
-           catch (Exception ex)
-           {
-               return MorphicResult.ErrorResult(ex);
-           }
-           _isListening = true;
-       }
+    // NOTE: callers who want to avoid getting exceptions when wiring up the display settings listener (i.e. if we're running in a process which doesn't allow such listening)
+    //       can call this function to learn if they were or were not able to start up the display settings listener; it is not, however, a required call.
+    // see: https://learn.microsoft.com/en-us/dotnet/api/microsoft.win32.systemevents.displaysettingschanged?view=dotnet-plat-ext-6.0
+    public MorphicResult<MorphicUnit, Exception> StartListening()
+    {
+        if (_isListening == false)
+        {
+            try
+            {
+                // see: https://learn.microsoft.com/en-us/dotnet/api/microsoft.win32.systemevents.displaysettingschanged?view=dotnet-plat-ext-6.0
+                Microsoft.Win32.SystemEvents.DisplaySettingsChanged += this.DisplaySettingsChangedTrampoline;
+            }
+            catch (Exception ex)
+            {
+                return MorphicResult.ErrorResult(ex);
+            }
+            _isListening = true;
+        }
 
-       return MorphicResult.OkResult();
-   }
+        return MorphicResult.OkResult();
+    }
 
-   // NOTE: callers who want to shut down the display settings listener early (out of an abundance of caution, during application exit or otherwise) can call this method
-   // see: https://learn.microsoft.com/en-us/dotnet/api/microsoft.win32.systemevents.displaysettingschanged?view=dotnet-plat-ext-6.0
-   public void StopListening()
-   {
-       if (_isListening == true)
-       {
-           Microsoft.Win32.SystemEvents.DisplaySettingsChanged -= this.DisplaySettingsChangedTrampoline;
-           _isListening = false;
-       }
-   }
+    // NOTE: callers who want to shut down the display settings listener early (out of an abundance of caution, during application exit or otherwise) can call this method
+    // see: https://learn.microsoft.com/en-us/dotnet/api/microsoft.win32.systemevents.displaysettingschanged?view=dotnet-plat-ext-6.0
+    public void StopListening()
+    {
+        if (_isListening == true)
+        {
+            Microsoft.Win32.SystemEvents.DisplaySettingsChanged -= this.DisplaySettingsChangedTrampoline;
+            _isListening = false;
+        }
+    }
 }

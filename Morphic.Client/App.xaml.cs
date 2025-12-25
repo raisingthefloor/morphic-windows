@@ -210,6 +210,7 @@ public partial class App : Application
         public MorphicBarConfigSection? morphicBar { get; set; }
         public TelemetryConfigSection? telemetry { get; set; }
         public string? hideMorphicAfterLoginUntil { get; set; }
+        public string? organizationName { get; set; } // RESERVED: this is not currently used by Morphic (i.e. it's info help distinguish tool-generated config files)
     }
     //
     private struct CommonConfigurationContents
@@ -905,14 +906,13 @@ public partial class App : Application
     private static List<WindowsVersion> CompatibleWindowsVersions = new List<WindowsVersion>()
        {
            // NOTE: the first entry in this list represents the "minimum" version of Windows which we support
-           WindowsVersion.Win10_v21H2,
            WindowsVersion.Win10_v22H2,
            WindowsVersion.Win10_vFuture,
            //
-           WindowsVersion.Win11_v21H2,
            WindowsVersion.Win11_v22H2,
            WindowsVersion.Win11_v23H2,
            WindowsVersion.Win11_v24H2,
+           WindowsVersion.Win11_v25H2,
            WindowsVersion.Win11_vFuture
        };
     private static bool IsOsCompatibleWithMorphic()

@@ -40,8 +40,8 @@
     <PackageReference Include="WixToolset.UI.wixext" Version="4.0.4" />
   </ItemGroup>
   <PropertyGroup>
-    <ClientOutputPath Condition="'$(ClientOutputPath)' == ''">$(SolutionDir)Morphic.Client\bin\$(Platform)\$(Configuration)\net8.0-windows10.0.22621.0\win-$(Platform)\publish</ClientOutputPath>
-    <HeatDirectoryPath Condition="'$(HeatDirectoryPath)' == ''">$(SolutionDir)Morphic.Client\bin\$(Platform)\$(Configuration)\net8.0-windows10.0.22621.0\win-$(Platform)\publish</HeatDirectoryPath>
+    <ClientOutputPath Condition="'$(ClientOutputPath)' == ''">$(SolutionDir)Morphic.Client\bin\$(Platform)\$(Configuration)\net10.0-windows10.0.22621.0\win-$(Platform)\publish</ClientOutputPath>
+    <HeatDirectoryPath Condition="'$(HeatDirectoryPath)' == ''">$(SolutionDir)Morphic.Client\bin\$(Platform)\$(Configuration)\net10.0-windows10.0.22621.0\win-$(Platform)\publish</HeatDirectoryPath>
     <DefineConstants>ClientOutputDirectory=$(ClientOutputPath)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">

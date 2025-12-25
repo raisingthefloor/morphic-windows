@@ -181,9 +181,7 @@ public partial class MorphicMainMenu : ContextMenu
         {
             switch (windowsVersion)
             {
-                case WindowsVersion.Win10_v21H2:
                 case WindowsVersion.Win10_v22H2:
-                    // Windows 10 21H2, 22H2
                     // NOTE: we should re-evaluate this path in all versions of Windows (to verify that it shouldn't be simply "ms-settings:easeofaccess" instead)
                     settingsUrlAsPath = "ms-settings:easeofaccess-display";
                     break;
@@ -191,10 +189,10 @@ public partial class MorphicMainMenu : ContextMenu
                     // OBSERVATION: this may be the wrong path for future verisons of Windows (especially since Win10 and Win11 _may_ treat this differently post-21H1); re-evaluate this logic
                     settingsUrlAsPath = "ms-settings:easeofaccess-display";
                     break;
-                case WindowsVersion.Win11_v21H2:
                 case WindowsVersion.Win11_v22H2:
                 case WindowsVersion.Win11_v23H2:
                 case WindowsVersion.Win11_v24H2:
+                case WindowsVersion.Win11_v25H2:
                 case WindowsVersion.Win11_vFuture:
                     // Windows 11 21H2 (and assumed for the future)
                     settingsUrlAsPath = "ms-settings:easeofaccess";
@@ -225,16 +223,15 @@ public partial class MorphicMainMenu : ContextMenu
         {
             switch (windowsVersion)
             {
-                case WindowsVersion.Win10_v21H2:
                 case WindowsVersion.Win10_v22H2:
                 case WindowsVersion.Win10_vFuture:
                     // Windows 10 21H1, Windows 10 21H2 (and assumed for the future)
                     settingsUrlAsPath = "ms-settings:easeofaccess-mousepointer";
                     break;
-                case WindowsVersion.Win11_v21H2:
                 case WindowsVersion.Win11_v22H2:
                 case WindowsVersion.Win11_v23H2:
                 case WindowsVersion.Win11_v24H2:
+                case WindowsVersion.Win11_v25H2:
                 case WindowsVersion.Win11_vFuture:
                     // Windows 11 21H2 (and assumed for the future)
                     settingsUrlAsPath = "ms-settings:easeofaccess-mousepointer";
