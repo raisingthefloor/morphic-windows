@@ -108,7 +108,7 @@ stages:
 
         # NOTE: if winget is ever integrated into Azure Pipelines' `windows-*` vmImage, we can remove the winget installation (above)
         - powershell: |
-	    winget install --source winget --exact --id Microsoft.WindowsSDK.10.0.22621 --log $env:USERPROFILE/Desktop/sdk-install.log
+            winget install --source winget --exact --id Microsoft.WindowsSDK.10.0.22621 --log $env:USERPROFILE/Desktop/sdk-install.log
           displayName: "Install Windows SDK v10.0.22621.0"
         
         # Set a $(BUILD_TYPE) variable
