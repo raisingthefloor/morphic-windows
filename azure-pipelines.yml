@@ -80,8 +80,8 @@ stages:
         # Download link available at: https://learn.microsoft.com/en-us/windows/apps/windows-app-sdk/downloads
         - powershell: |
             Invoke-WebRequest -Uri https://aka.ms/windowsappsdk/1.8/1.8.251106002/windowsappruntimeinstall-x64.exe -Method Get -OutFile windowsappruntimeinstall-x64.exe
-            .\windowsappruntimeinstall-x64.exe /silent
-          displayName: "Install Windows App SDK (v1.8.3 x64) (winget prerequisite)"
+            .\windowsappruntimeinstall-x64.exe --msix --quiet
+          displayName: "Install Windows App SDK (v1.8.3) (winget prerequisite)"
 
         # Download link available at: https://github.com/microsoft/winget-cli/releases/tag/v1.12.440
         # NOTE: in theory, Windows Server 2025 will ship with winget pre-installed--so installation of both prerequisites and winget itself should be able to be removed from this script
