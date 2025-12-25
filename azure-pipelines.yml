@@ -77,19 +77,16 @@ stages:
             custom: 'tool'
             arguments: 'install --global AzureSignTool --version 4.0.1'
 
-        # Download link available at: https://github.com/microsoft/winget-cli/releases/tag/v1.8.1911
-        # NOTE: this build script is currently using an older version of Winget because VS2022 comes with an older version of the Microsoft.VCLibs.x64.14.00.Desktop.appx redistributable and
-        #       Microsoft has deprecated and stopped updating the aka.ms link to download the latest version of Microsoft.VCLibs.x64.14.00.Desktop.appx -- so the downloaded version is out of date
-        #       see: https://learn.microsoft.com/en-us/troubleshoot/developer/visualstudio/cpp/libraries/c-runtime-packages-desktop-bridge#how-to-install-and-update-desktop-framework-packages
+        # Download link available at: https://github.com/microsoft/winget-cli/releases/tag/v1.12.440
         # NOTE: in theory, Windows Server 2025 will ship with winget pre-installed--so installation of both prerequisites and winget itself should be able to be removed from this script
         # see: https://learn.microsoft.com/en-us/windows/iot/iot-enterprise/deployment/install-winget-windows-iot
         - powershell: |
-            Invoke-WebRequest -Uri https://github.com/microsoft/winget-cli/releases/download/v1.8.1911/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle -Method Get -OutFile Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle
-            Invoke-WebRequest -Uri https://github.com/microsoft/winget-cli/releases/download/v1.8.1911/76fba573f02545629706ab99170237bc_License1.xml -Method Get -OutFile 76fba573f02545629706ab99170237bc_License1.xml
+            Invoke-WebRequest -Uri https://github.com/microsoft/winget-cli/releases/download/v1.12.440/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle -Method Get -OutFile Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle
+            Invoke-WebRequest -Uri https://github.com/microsoft/winget-cli/releases/download/v1.12.440/e53e159d00e04f729cc2180cffd1c02e_License1.xml -Method Get -OutFile e53e159d00e04f729cc2180cffd1c02e_License1.xml
             Add-AppxPackage -Path .\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle
-            Add-AppxProvisionedPackage -Online -PackagePath .\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle -LicensePath .\76fba573f02545629706ab99170237bc_License1.xml
+            Add-AppxProvisionedPackage -Online -PackagePath .\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle -LicensePath .\e53e159d00e04f729cc2180cffd1c02e_License1.xml
             winget --version
-          displayName: "Install Winget (v1.8.1911)"
+          displayName: "Install Winget (v1.12.440)"
 
         # Set a $(BUILD_TYPE) variable
         - bash: |
