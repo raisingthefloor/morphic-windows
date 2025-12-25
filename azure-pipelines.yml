@@ -64,10 +64,10 @@ stages:
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - task: UseDotNet@2
-          displayName: 'Use .NET SDK 10.0.100'
+          displayName: 'Use .NET SDK 10.0.101'
           inputs:
             packageType: sdk
-            version: 10.0.100
+            version: 10.0.101
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - task: DotNetCoreCLI@2
@@ -76,6 +76,40 @@ stages:
             command: 'custom'
             custom: 'tool'
             arguments: 'install --global AzureSignTool --version 4.0.1'
+
+        # Download link available at: https://github.com/microsoft/microsoft-ui-xaml/releases/tag/v2.8.6
+        - powershell: |
+            Invoke-WebRequest -Uri https://github.com/microsoft/microsoft-ui-xaml/releases/download/v2.8.6/Microsoft.UI.Xaml.2.8.x64.appx -Method Get -OutFile Microsoft.UI.Xaml.2.8.x64.appx
+            Add-AppxPackage -Path .\Microsoft.UI.Xaml.2.8.x64.appx
+          displayName: "Install Microsoft.UI.Xaml (winget prerequisite)"
+
+        # Download link available at: https://learn.microsoft.com/en-us/troubleshoot/developer/visualstudio/cpp/libraries/c-runtime-packages-desktop-bridge#how-to-install-and-update-desktop-framework-packages
+        # WARNING: Microsoft has stopped updating the aka.ms link to download the latest version of Microsoft.VCLibs.x64.14.00.Desktop.appx (and it may discontinue the link entirely at some point); Microsoft
+        #          recommends that Microsoft.VCLibs.x64.14.00.Desktop.appx be installed via Visual Studio Installer instead
+        #          see: https://learn.microsoft.com/en-us/troubleshoot/developer/visualstudio/cpp/libraries/c-runtime-packages-desktop-bridge#how-to-install-and-update-desktop-framework-packages
+        - powershell: |
+            Invoke-WebRequest -Uri https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx -Method Get -OutFile Microsoft.VCLibs.x64.14.00.Desktop.appx
+            Add-AppxPackage -Path .\Microsoft.VCLibs.x64.14.00.Desktop.appx
+          displayName: "Install VC++ libs 14.00 (x64) (winget prerequisite)"
+
+        # Download link available at: https://github.com/microsoft/winget-cli/releases/tag/v1.8.1911
+        # NOTE: this build script is currently using an older version of Winget because VS2022 comes with an older version of the Microsoft.VCLibs.x64.14.00.Desktop.appx redistributable and
+        #       Microsoft has deprecated and stopped updating the aka.ms link to download the latest version of Microsoft.VCLibs.x64.14.00.Desktop.appx -- so the downloaded version is out of date
+        #       see: https://learn.microsoft.com/en-us/troubleshoot/developer/visualstudio/cpp/libraries/c-runtime-packages-desktop-bridge#how-to-install-and-update-desktop-framework-packages
+        # NOTE: in theory, Windows Server 2025 will ship with winget pre-installed--so installation of both prerequisites and winget itself should be able to be removed from this script
+        # see: https://learn.microsoft.com/en-us/windows/iot/iot-enterprise/deployment/install-winget-windows-iot
+        - powershell: |
+            Invoke-WebRequest -Uri https://github.com/microsoft/winget-cli/releases/download/v1.8.1911/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle -Method Get -OutFile Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle
+            Invoke-WebRequest -Uri https://github.com/microsoft/winget-cli/releases/download/v1.8.1911/76fba573f02545629706ab99170237bc_License1.xml -Method Get -OutFile 76fba573f02545629706ab99170237bc_License1.xml
+            Add-AppxPackage -Path .\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle
+            Add-AppxProvisionedPackage -Online -PackagePath .\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle -LicensePath .\76fba573f02545629706ab99170237bc_License1.xml
+            winget --version
+          displayName: "Install Winget (v1.8.1911)"
+
+        # NOTE: if winget is ever integrated into Azure Pipelines' `windows-*` vmImage, we can remove the winget installation (above)
+        - powershell: |
+	    winget install --source winget --exact --id Microsoft.WindowsSDK.10.0.22621 --log $env:USERPROFILE/Desktop/sdk-install.log
+          displayName: "Install Windows SDK v10.0.22621.0"
         
         # Set a $(BUILD_TYPE) variable
         - bash: |

@@ -26,6 +26,8 @@ using System.Runtime.InteropServices;
 
 namespace Morphic.WindowsNative;
 
+#region Legacy WindowsApi
+
 public static class WindowsApi
 {
    // NOTE: SYSTEM_INFO Is used by GetSystemInfo and GetNativeSystemInfo
@@ -854,3 +856,5 @@ public static class WindowsApi
    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
    internal static extern bool SendNotifyMessage(IntPtr hWnd, WindowMessages msg, UIntPtr wParam, IntPtr lParam);
 }
+
+#endregion Legacy WindowsApi

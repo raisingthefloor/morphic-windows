@@ -31,8 +31,8 @@ namespace Morphic.WindowsNative.Ini.Lexer;
 
 internal enum IniExplicitLineTerminatorOption
 {
-   None,
-   Cr,
-   CrLf,
-   Lf,
+    None,
+    Cr,
+    CrLf,
+    Lf,
 }

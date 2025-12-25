@@ -9,6 +9,8 @@ GetCurrentPackageFullName
 GetCursorPos
 GetDesktopWindow
 GetDisplayConfigBufferSizes
+GetLayeredWindowAttributes
+GetMessageExtraInfo
 GetMonitorInfo
 GetWindowLong
 GetWindowLongPtr
@@ -31,6 +33,9 @@ DISPLAYCONFIG_PATH_INFO
 DISPLAYCONFIG_SOURCE_DEVICE_NAME
 HIGHCONTRASTW
 LUID
+
+WINDOW_EX_STYLE
+WINDOW_STYLE
 
 CCHDEVICENAME
 HKEY_CLASSES_ROOT

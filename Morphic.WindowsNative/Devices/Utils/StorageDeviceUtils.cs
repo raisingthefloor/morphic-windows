@@ -47,6 +47,7 @@ internal record StorageDeviceNumberError : MorphicAssociatedValueEnum<StorageDev
    // verbatim required constructor implementation for MorphicAssociatedValueEnums
    private StorageDeviceNumberError(Values value) : base(value) { }
 }
+//
 internal struct StorageDeviceUtils {
    internal static async Task<MorphicResult<ExtendedPInvoke.STORAGE_DEVICE_NUMBER, StorageDeviceNumberError>> GetStorageDeviceNumberAsync(string devicePath)
    {
