@@ -60,7 +60,7 @@ stages:
     jobs:
       - job: build
         pool:
-          vmImage: 'windows-2022'
+          vmImage: 'windows-2025'
         steps:
 
         - task: UseDotNet@2
