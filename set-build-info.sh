@@ -8,7 +8,7 @@ BRANCH="${BRANCH}"
 BRANCH_NAME="${BRANCH_NAME}"
 COMMIT="${COMMIT}"
 
-INFO_FILE="Morphic.Client/build-info.json"
+INFO_FILE="Morphic/build-info.json"
 FINAL_VERSION="v0.0.0-${BUILD_NUM}"
 
 if [[ "${BRANCH}" == *"tags"* ]]; then
