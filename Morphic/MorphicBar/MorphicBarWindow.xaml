@@ -1,23 +1,19 @@
-﻿<Window x:Class="Morphic.MorphicBar.MorphicBarWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Morphic.MorphicBar"
-        mc:Ignorable="d"
-        SizeToContent="WidthAndHeight"
-        FlowDirection="{DynamicResource CultureFlowDirection}"
-        WindowStyle="None" ResizeMode="NoResize" 
-        AllowsTransparency="True" Background="Transparent"
-        ShowInTaskbar="False"
-        Topmost="True">
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="Morphic.MorphicBar.MorphicBarWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Morphic.MorphicBar"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="MorphicBar">
 
-    <Window.Resources>
-    </Window.Resources>
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
 
-    <Border CornerRadius="5" Background="{DynamicResource ThemeAwareBackground}">
-        <Grid>
-
-        </Grid>
-    </Border>
+    <Grid>
+        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="ExtraBold">MorphicBar</TextBlock>
+    </Grid>
 </Window>

@@ -283,6 +283,63 @@ public class Process
         }
     }
 
+// TODO: TEST CODE!!!
+    //public static List<ProcessInfo> GetCurrentProcesses()
+    //{
+    //    List<ProcessInfo> result = [];
+
+    //    var processes = System.Diagnostics.Process.GetProcesses();
+    //    foreach (var process in processes)
+    //    {
+    //        // NOTE: we do not check process.HasExited here, as we should never get any exited processes in a fresh process list (i.e. checking the property would consume unnecessary processor cycles)
+    //        var processName = process.ProcessName;
+    //        //
+    //        // if the MainModule is not populated, this process might still be in the process of being loaded
+    //        string? fileName = process.MainModule?.FileName;
+    //        //
+    //        var id = process.Id;
+
+    //        var processInfo = new ProcessInfo()
+    //        {
+    //            ProcessName = processName,
+    //            FullPath = fileName,
+    //            Id = id,
+    //        };
+
+    //        result.Add(processInfo);
+    //    }
+
+    //    return result;
+    //}
+
+    // TODO: TEST CODE!!!
+    //public static List<string?> GetPathsForProcessName(string processName)
+    //{
+    //    var result = new List<string?>();
+
+    //    var processes = System.Diagnostics.Process.GetProcessesByName(processName);
+    //    foreach (var process in processes)
+    //    {
+    //        var path = Process.GetPathForProcess(process);
+    //        result.Add(path);
+    //    }
+    //    return result;
+    //}
+
+    // TODO: TEST CODE!!!
+    //private static string? GetPathForProcess(System.Diagnostics.Process process)
+    //{
+    //    try
+    //    {
+    //        return process.MainModule?.FileName;
+    //    }
+    //    catch (System.ComponentModel.Win32Exception) 
+    //    {
+    //        // NOTE: if we could not reference the main module (such as with the "Idle" process, return null
+    //        return null;
+    //    }
+    //}
+
     public static bool GetProcessIsRunningByProcessName(string processName)
     {
         var runningProcessNames = Process.GetCurrentProcessNames();

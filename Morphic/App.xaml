@@ -1,26 +1,16 @@
-﻿<Application x:Class="Morphic.App"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:Morphic"
-             Startup="Application_Startup"
-             Exit="Application_Exit"
-             ShutdownMode="OnExplicitShutdown">
+<?xml version="1.0" encoding="utf-8"?>
+<Application
+    x:Class="Morphic.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Morphic">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <!-- simple declaration -->
-                <!--<ResourceDictionary Source="StringResources.xaml" />-->
-                <!-- -->
-                <!-- pack declaration -->
-                <!--<ResourceDictionary Source="pack://application:,,,/StringResources.xaml" />-->
-                <!-- -->
-                <!-- more explicit pack declaration with assembly -->
-                <ResourceDictionary Source="pack://application:,,,/Morphic;component/Localization/NonLocalizedResources.xaml" /> 
-                <ResourceDictionary Source="pack://application:,,,/Morphic;component/Localization/StringResources.xaml" /> 
-                <ResourceDictionary Source="pack://application:,,,/Morphic;component/Localization/UIResources.xaml" /> 
-
-                <ResourceDictionary Source="Themes/Light.xaml"/>
+                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+                <!-- Other merged dictionaries here -->
             </ResourceDictionary.MergedDictionaries>
+            <!-- Other app resources here -->
         </ResourceDictionary>
     </Application.Resources>
 </Application>

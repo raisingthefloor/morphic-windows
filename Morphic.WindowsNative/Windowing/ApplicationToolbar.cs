@@ -54,6 +54,7 @@ public class ApplicationToolbar : IDisposable
 
         // create an instance of this object (now registered) and return it to the caller
         ApplicationToolbar applicationToolbar = new ApplicationToolbar(hWndAsHwnd);
+// TODO: do we need to capture the callbackMsg here (i.e. to pass in during unregistration?)
         applicationToolbar.isRegistered = true;
 
         return applicationToolbar;
@@ -70,6 +71,7 @@ public class ApplicationToolbar : IDisposable
         Windows.Win32.UI.Shell.APPBARDATA appbardata = new()
         {
             hWnd = this.hWnd,
+// TODO: do we need to pass in the original callbackMsg here (as shown in the samples; I'm not sure if there are follow-up "unregistered" messages etc. which our client would receive/use)
             cbSize = (uint)Marshal.SizeOf(typeof(Windows.Win32.UI.Shell.APPBARDATA))
         };
         //

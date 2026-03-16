@@ -202,6 +202,79 @@ public partial class Registry
 
         //
 
+        //    public MorphicResult<bool, IWin32ApiError> SubKeyExists(string name)
+        //    {
+        //        var getSubKeyNamesResult = this.GetSubKeyNames();
+        //        if (getSubKeyNamesResult.IsError == true)
+        //        {
+        //            switch (getSubKeyNamesResult.Error!)
+        //            {
+        //                case IWin32ApiError.Win32Error(Win32ErrorCode: var win32ErrorCode):
+        //                    return MorphicResult.ErrorResult<IWin32ApiError>(new IWin32ApiError.Win32Error(win32ErrorCode));
+        //                default:
+        //                    throw new MorphicUnhandledErrorException();
+        //            }
+        //        }
+        //        var keyNames = getSubKeyNamesResult.Value!;
+
+        //        var subKeyExists = false;
+        //        foreach (var keyName in keyNames)
+        //        {
+        //            if (String.Equals(keyName, name, StringComparison.InvariantCultureIgnoreCase) == true)
+        //            {
+        //                subKeyExists = true;
+        //                break;
+        //            }
+        //        }
+
+        //        return MorphicResult.OkResult(subKeyExists);
+        //    }
+
+        //    public MorphicResult<List<string>, IWin32ApiError> GetSubKeyNames()
+        //    {
+        //        // see: https://learn.microsoft.com/en-us/windows/win32/sysinfo/registry-element-size-limits
+        //        const int MAX_KEY_NAME_LENGTH = 256; // 255 characters (plus null terminator to be safe)
+
+        //        List<string> result = new();
+
+        //        uint index = 0;
+        //        while (true)
+        //        {
+        //            Span<char> keyNameAsChars = new char[MAX_KEY_NAME_LENGTH];
+        //            var keyNameLength = (uint)MAX_KEY_NAME_LENGTH;
+
+        //            Windows.Win32.Foundation.WIN32_ERROR enumKeyErrorCode;
+        //            unsafe
+        //            {
+        //                fixed (char* pointerToKeyNameAsChars = keyNameAsChars)
+        //                {
+        //                    enumKeyErrorCode = Windows.Win32.PInvoke.RegEnumKeyEx(_handle, index, pointerToKeyNameAsChars, ref keyNameLength, null, null, null);
+        //                }
+        //            }
+        //            if (enumKeyErrorCode == Windows.Win32.Foundation.WIN32_ERROR.ERROR_SUCCESS)
+        //            {
+        //                // expected condition; nothing to do
+        //            }
+        //            else if (enumKeyErrorCode == Windows.Win32.Foundation.WIN32_ERROR.ERROR_NO_MORE_ITEMS)
+        //            {
+        //                // no more items
+        //                break;
+        //            }
+        //            else
+        //            {
+        //                return MorphicResult.ErrorResult<IWin32ApiError>(new IWin32ApiError.Win32Error((uint)enumKeyErrorCode));
+        //            }
+
+        //            // NOTE: the RegEnumKeyEx function returns the string length in characters, without including the null terminator in the count
+        //            var element = keyNameAsChars.Slice(0, (int)keyNameLength).ToString();
+        //            result.Add(element);
+
+        //            index += 1;
+        //        }
+
+        //        return MorphicResult.OkResult(result);
+        //    }
+
         public MorphicResult<RegistryKey, IWin32ApiError> OpenSubKey(string name, bool writable = false)
         {
             // configure key access requirements
@@ -235,6 +308,53 @@ public partial class Registry
 
         //
 
+        //    public MorphicResult<List<string?>, IWin32ApiError> GetValueNames()
+        //    {
+        //        // see: https://learn.microsoft.com/en-us/windows/win32/sysinfo/registry-element-size-limits
+        //        const int MAX_VALUE_NAME_LENGTH = 16_384; // 16383 characters (plus null terminator to be safe)
+
+        //        List<string?> result = new();
+
+        //        uint index = 0;
+        //        while (true)
+        //        {
+        //            Span<char> valueNameAsChars = new char[MAX_VALUE_NAME_LENGTH];
+        //            var valueNameLength = (uint)MAX_VALUE_NAME_LENGTH;
+
+        //            Windows.Win32.Foundation.WIN32_ERROR enumValueErrorCode;
+        //            unsafe
+        //            {
+        //                fixed (char* pointerToValueNameAsChars = valueNameAsChars)
+        //                {
+        //                    enumValueErrorCode = Windows.Win32.PInvoke.RegEnumValue(_handle, index, pointerToValueNameAsChars, ref valueNameLength, null, null, null);
+        //                }
+        //            }
+        //            if (enumValueErrorCode == Windows.Win32.Foundation.WIN32_ERROR.ERROR_SUCCESS)
+        //            {
+        //                // expected condition; nothing to do
+        //            }
+        //            else if (enumValueErrorCode == Windows.Win32.Foundation.WIN32_ERROR.ERROR_NO_MORE_ITEMS)
+        //            {
+        //                // no more items
+        //                break;
+        //            }
+        //            else
+        //            {
+        //                return MorphicResult.ErrorResult<IWin32ApiError>(new IWin32ApiError.Win32Error((uint)enumValueErrorCode));
+        //            }
+
+        //            // NOTE: the RegEnumValue function returns the string length in characters, without including the null terminator in the count
+        //            var element = valueNameAsChars.Slice(0, (int)valueNameLength).ToString();
+        //            result.Add(element);
+
+        //            index += 1;
+        //        }
+
+        //        return MorphicResult.OkResult(result);
+        //    }
+
+        //
+
         public interface IRegistryGetValueError
         {
             public record TypeMismatch : IRegistryGetValueError;
@@ -242,6 +362,20 @@ public partial class Registry
             public record ValueDoesNotExist : IRegistryGetValueError;
             public record Win32Error(int Win32ErrorCode) : IRegistryGetValueError;
         }
+
+        //// NOTE: this function is provided for legacy code compatibility (i.e. for non-generic-aware code designed around Microsoft.Win32 registry functions)
+        //public MorphicResult<object, IRegistryGetValueError> GetValueData(string? valueName)
+        //{
+        //    var getValueAndTypeAsObjectResult = this.GetValueDataAndTypeAsObject(valueName);
+        //    if (getValueAndTypeAsObjectResult.IsError == true)
+        //    {
+        //        return MorphicResult.ErrorResult(getValueAndTypeAsObjectResult.Error!);
+        //    }
+        //    //var valueType = getValueAndTypeAsObjectResult.Value.ValueType;
+        //    var data = getValueAndTypeAsObjectResult.Value.ValueData;
+
+        //    return MorphicResult.OkResult(data);
+        //}
 
         // NOTE: see both implementations of GetValueDataOrNull; they (both struct- and class-specific) must be kept in sync
         // NOTE: this first implementation of GetValueDataOrNull is used for struct types

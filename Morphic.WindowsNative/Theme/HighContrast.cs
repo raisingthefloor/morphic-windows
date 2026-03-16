@@ -205,6 +205,14 @@ public class HighContrast
     private struct HighContrastInfo
     {
         public bool IsOn;
+        //public bool FeatureCanBeTurnedOnAndOff;
+        //public bool HotKeyIsEnabled;
+        //public bool HotKeyPresentsConfirmationDialog;
+        //public bool HotKeyPlaysSound;
+        ////public bool ShowsVisualIndicatorWhenOn;
+        //public bool HotKeyCanBeEnabled { get; init; }
+        ////
+        //public String? DefaultColorScheme;
     }
     private static MorphicResult<HighContrastInfo, IWin32ApiError> GetHighContrastInfo()
     {
@@ -233,6 +241,14 @@ public class HighContrast
         var result = new HighContrastInfo()
         {
             IsOn = ((highContrastInfo.dwFlags & Windows.Win32.UI.Accessibility.HIGHCONTRASTW_FLAGS.HCF_HIGHCONTRASTON) == Windows.Win32.UI.Accessibility.HIGHCONTRASTW_FLAGS.HCF_HIGHCONTRASTON),
+            //FeatureCanBeTurnedOnAndOff = ((highContrastInfo.dwFlags & Windows.Win32.UI.Accessibility.HIGHCONTRASTW_FLAGS.HCF_AVAILABLE) == Windows.Win32.UI.Accessibility.HIGHCONTRASTW_FLAGS.HCF_AVAILABLE),
+            //HotKeyIsEnabled = ((highContrastInfo.dwFlags & Windows.Win32.UI.Accessibility.HIGHCONTRASTW_FLAGS.HCF_HOTKEYACTIVE) == Windows.Win32.UI.Accessibility.HIGHCONTRASTW_FLAGS.HCF_HOTKEYACTIVE),
+            //HotKeyPresentsConfirmationDialog = ((highContrastInfo.dwFlags & Windows.Win32.UI.Accessibility.HIGHCONTRASTW_FLAGS.HCF_CONFIRMHOTKEY) == Windows.Win32.UI.Accessibility.HIGHCONTRASTW_FLAGS.HCF_CONFIRMHOTKEY),
+            //HotKeyPlaysSound = ((highContrastInfo.dwFlags & Windows.Win32.UI.Accessibility.HIGHCONTRASTW_FLAGS.HCF_HOTKEYSOUND) == Windows.Win32.UI.Accessibility.HIGHCONTRASTW_FLAGS.HCF_HOTKEYSOUND),
+            ////ShowsVisualIndicatorWhenOn = ((highContrastInfo.dwFlags & Windows.Win32.UI.Accessibility.HIGHCONTRASTW_FLAGS.HCF_INDICATOR) == Windows.Win32.UI.Accessibility.HIGHCONTRASTW_FLAGS.HCF_INDICATOR),
+            //HotKeyCanBeEnabled = ((highContrastInfo.dwFlags & Windows.Win32.UI.Accessibility.HIGHCONTRASTW_FLAGS.HCF_HOTKEYAVAILABLE) == Windows.Win32.UI.Accessibility.HIGHCONTRASTW_FLAGS.HCF_HOTKEYAVAILABLE),
+            ////
+            //DefaultColorScheme = defaultScheme
         };
         return MorphicResult.OkResult(result);
     }
