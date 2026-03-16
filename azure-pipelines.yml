@@ -117,6 +117,14 @@ stages:
 #           solution: '$(mainProject)'
 #           configuration: release
 
+        # Set a $(BUILD_TYPE) variable
+        - bash: |
+            BUILD_TYPE="Production"
+            echo "##vso[task.setvariable variable=BUILD_TYPE]${BUILD_TYPE}"
+          env:
+            BRANCH: $(Build.SourceBranch)
+            BRANCH_NAME: $(Build.SourceBranchName)
+
         - task: Bash@3
           displayName: "write build info"
           env:
@@ -136,7 +144,7 @@ stages:
             solution: '$(Build.SourcesDirectory)\Morphic\Morphic.csproj'
             platform: 'x86'
             configuration: '$(buildConfiguration)'
-            msbuildArguments: '/t:restore,build /p:RuntimeIdentifier=win-x86 /p:DefineConstants="PLATFORM_X86"'
+            msbuildArguments: '/t:restore,build /p:RuntimeIdentifier=win-x86 /p:BuildType=$(BUILD_TYPE) /p:DefineConstants="PLATFORM_X86"'
 
         - task: MSBuild@1
           displayName: "Publish Morphic Client (x86)"
@@ -146,7 +154,7 @@ stages:
             solution: '$(Build.SourcesDirectory)\Morphic\Morphic.csproj'
             platform: 'x86'
             configuration: '$(buildConfiguration)'
-            msbuildArguments: '/t:publish /p:RuntimeIdentifier=win-x86 /p:DefineConstants="PLATFORM_X86"'
+            msbuildArguments: '/t:publish /p:RuntimeIdentifier=win-x86 /p:BuildType=$(BUILD_TYPE) /p:DefineConstants="PLATFORM_X86"'
 
 #        - task: CmdLine@2
 #          inputs:
@@ -203,7 +211,7 @@ stages:
             solution: 'MorphicSetup\MorphicSetup.wixproj'
             platform: 'x86'
             configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:BuildProjectReferences=false'
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false'
 
         - task: CmdLine@2
           displayName: 'sign installer (x86)'
@@ -240,7 +248,7 @@ stages:
             solution: '$(Build.SourcesDirectory)\Morphic\Morphic.csproj'
             platform: 'x64'
             configuration: '$(buildConfiguration)'
-            msbuildArguments: '/t:restore,build /p:RuntimeIdentifier=win-x64'
+            msbuildArguments: '/t:restore,build /p:BuildType=$(BUILD_TYPE) /p:RuntimeIdentifier=win-x64'
 
         - task: MSBuild@1
           displayName: "Publish Morphic Client (x64)"
@@ -250,7 +258,7 @@ stages:
             solution: '$(Build.SourcesDirectory)\Morphic\Morphic.csproj'
             platform: 'x64'
             configuration: '$(buildConfiguration)'
-            msbuildArguments: '/t:publish /p:RuntimeIdentifier=win-x64'
+            msbuildArguments: '/t:publish /p:BuildType=$(BUILD_TYPE) /p:RuntimeIdentifier=win-x64'
 
 #        - task: CmdLine@2
 #          inputs:
@@ -307,7 +315,7 @@ stages:
             solution: 'MorphicSetup\MorphicSetup.wixproj'
             platform: 'x64'
             configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:BuildProjectReferences=false'
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false'
 
         - task: CmdLine@2
           displayName: 'sign installer (x64)'
@@ -344,7 +352,7 @@ stages:
             solution: '$(Build.SourcesDirectory)\Morphic\Morphic.csproj'
             platform: 'arm64'
             configuration: '$(buildConfiguration)'
-            msbuildArguments: '/t:restore,build /p:RuntimeIdentifier=win-arm64'
+            msbuildArguments: '/t:restore,build /p:BuildType=$(BUILD_TYPE) /p:RuntimeIdentifier=win-arm64'
 
         - task: MSBuild@1
           displayName: "Publish Morphic Client (arm64)"
@@ -354,7 +362,7 @@ stages:
             solution: '$(Build.SourcesDirectory)\Morphic\Morphic.csproj'
             platform: 'arm64'
             configuration: '$(buildConfiguration)'
-            msbuildArguments: '/t:publish /p:RuntimeIdentifier=win-arm64'
+            msbuildArguments: '/t:publish /p:BuildType=$(BUILD_TYPE) /p:RuntimeIdentifier=win-arm64'
 
 #        - task: CmdLine@2
 #          inputs:
@@ -411,7 +419,7 @@ stages:
             solution: 'MorphicSetup\MorphicSetup.wixproj'
             platform: 'arm64'
             configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:BuildProjectReferences=false'
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false'
 
         - task: CmdLine@2
           displayName: 'sign installer (arm64)'

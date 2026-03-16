@@ -59,12 +59,8 @@
     <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
   </PropertyGroup>
 
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="copy &quot;appsettings.$(BuildType).json&quot; appsettings.json&#xD;&#xA;IF &quot;$(ConfigurationName)&quot; == &quot;Debug&quot; (&#xD;&#xA;    copy &quot;app.Debug.manifest&quot; app.manifest) ELSE (&#xD;&#xA;    copy &quot;app.$(BuildType).manifest&quot; app.manifest)" />
-  </Target>
-
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="IF &quot;$(ConfigurationName)&quot; == &quot;Debug&quot; (&#xD;&#xA;    copy &quot;appsettings.Debug.json&quot; $(OutDir)appsettings.Debug.json&#xD;&#xA;    IF EXIST &quot;appsettings.Local.json&quot; (&#xD;&#xA;        copy appsettings.Local.json $(OutDir)appsettings.Local.json&#xD;&#xA;    )&#xD;&#xA;)&#xD;&#xA;&#xD;&#xA;IF &quot;$(ConfigurationName)&quot; == &quot;Release&quot; (&#xD;&#xA;    echo $(Version) &gt; BuildVersion.txt&#xD;&#xA;    echo $(AssemblyVersion) &gt;&gt; BuildVersion.txt&#xD;&#xA;)" />
+    <Exec Command="IF &quot;$(ConfigurationName)&quot; == &quot;Release&quot; (&#xD;&#xA;    echo $(Version) &gt; BuildVersion.txt&#xD;&#xA;    echo $(AssemblyVersion) &gt;&gt; BuildVersion.txt&#xD;&#xA;)" />
   </Target>
 
 </Project>
