@@ -13,9 +13,12 @@
     <WinUISDKReferences>false</WinUISDKReferences>
 	<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
 	<Nullable>enable</Nullable>
-
+	  
 	<!-- necessary to create manual launch-time debugging -->
 	<DefineConstants>DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+
+        <!-- this may be necessary -->
+	<PublishAot>false</PublishAot>  
 	  
 	<!-- ONLY IF BUILT AS UNPACKAGED APP -->
 	<WindowsPackageType>None</WindowsPackageType>
@@ -24,7 +27,25 @@
     <!-- https://learn.microsoft.com/en-us/windows/apps/windows-app-sdk/tutorial-unpackaged-deployment -->
     <!-- and see: https://learn.microsoft.com/en-us/windows/apps/windows-app-sdk/deployment-architecture#bootstrapper -->
   </PropertyGroup>
-  <ItemGroup>
+	<!-- Publish Properties (NOTE: removed trimming, at least for now) -->
+	<PropertyGroup>
+		<PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
+		<PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">False</PublishReadyToRun> <!-- to work around winui bug -->
+	</PropertyGroup>
+
+	<!-- Workaround to solve the 'dotnet publish misses WinUI files' issue -->
+	<Target Name="CopyMissingWinUIResourcesToPublish" AfterTargets="Publish">
+		<ItemGroup>
+			<_MissingXbfFiles Include="$(OutputPath)\**\*.xbf" />
+			<_MissingPriFiles Include="$(OutputPath)\*.pri" Exclude="$(OutputPath)\Microsoft.*.pri" />
+		</ItemGroup>
+		<Copy SourceFiles="@(_MissingXbfFiles)"
+	  DestinationFiles="@(_MissingXbfFiles->'$(PublishDir)\%(RecursiveDir)%(Filename)%(Extension)')"
+	  SkipUnchangedFiles="true" />
+		<Copy SourceFiles="@(_MissingPriFiles)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
+	</Target>
+
+	<ItemGroup>
     <Content Remove="Assets\Icons\morphic.ico" />
   </ItemGroup>
   <ItemGroup>
@@ -53,14 +74,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
-
-    <!-- Publish Properties -->
-  <PropertyGroup>
-    <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
-    <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
-    <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
-    <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
-  </PropertyGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="IF &quot;$(ConfigurationName)&quot; == &quot;Release&quot; (&#xD;&#xA;    echo $(Version) &gt; BuildVersion.txt&#xD;&#xA;    echo $(AssemblyVersion) &gt;&gt; BuildVersion.txt&#xD;&#xA;)" />
