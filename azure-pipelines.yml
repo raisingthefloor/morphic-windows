@@ -121,6 +121,17 @@ stages:
 #           solution: '$(mainProject)'
 #           configuration: release
 
+        - task: Bash@3
+          displayName: "write build info"
+          env:
+            BRANCH: $(Build.SourceBranch)
+            BRANCH_NAME: $(Build.SourceBranchName)
+            COMMIT: $(Build.SourceVersion)
+            BUILD_NUM: $(Build.BuildNumber)
+          inputs:
+            targetType: 'filePath'
+            filePath: set-build-info.sh
+
         - task: MSBuild@1
           displayName: "Build Morphic Client (x86)"
           env:
