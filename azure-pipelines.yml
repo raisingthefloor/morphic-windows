@@ -9,25 +9,24 @@
 # .NET Core release versions: https://github.com/dotnet/core/blob/main/release-notes/releases-index.json
 # .NET Core RIDs (including x86/x64/ARM64): https://docs.microsoft.com/en-us/dotnet/core/rid-catalog
 
-# NOTE: we name the builds using a semver-compatible scheme; with the exception of publicly-released builds, this includes the current date in the build #
-# release: major.minor.patch.0
-#  canary: major.minor.patch.0-canary+YYDDD.BBB (where DDD is the day of year; where BBB is the build run # within the day, starting at one)
-#     dev: major.minor.patch.0-dev+YYDDD.BBB (where DDD is the day of year; where BBB is the build run # within the day, starting at one)
+# NOTE: we version the builds using the current date in the build # (and the current same-day build number as the revision/patch #)
+# major.minor.YYDDD.RRR (where YY is the year; DDD is the day of year; where RRR is the build run # within the day, starting at one)
 name: $(Year:yy)$(DayOfYear).$(Rev:r)
 
+# build all release and dev builds (as well as check-ins to the master branch)
 trigger:
   branches:
     include:
-    # TODO: before Morphic 2.0 RTM, limit the branches that are automatically built (e.g. "canary" [develop*] and release [release*], etc.)
-#      - master
-      - '*'
+      - master
+      - dev/*
+      - release/*
+#      - '*'
 
-# TODO: before Morphic 2.0 RTM, determine when we want builds to happen (i.e. in PRs, we'd build the "dev*" releases)
+# build all check-ins to pull requests
 pr:
   branches:
     include:
     - '*'
-    
 variables:
 # Import all Amazon S3 upload credentials and settings
 - group: 's3-public-bucket-upload'
@@ -37,19 +36,11 @@ variables:
   value: Morphic/Morphic.csproj
 - name: projects
   value: |
-         Morphic.Windows.Native/Morphic.Windows.Native.csproj
          Morphic/Morphic.csproj
-         MorphicSetup/MorphicSetup.wixproj
 - name: buildConfiguration
   value: 'Release'
 - name: versionBuildComponents
   value: '.$(Build.BuildNumber)'
-  
-# TODO: these are temporary values; replace them with actual (semver-compatible) values for production
-- name: versionMajor
-  value: 2
-- name: versionMinor
-  value: 0
 
 stages:
   - stage: build
@@ -59,12 +50,12 @@ stages:
           vmImage: 'windows-2025'
         steps:
 
-        - task: UseDotNet@2
-          displayName: 'Use .NET Runtime 6.0.25 (install for AuzreSignTool 4.0.1)'
-          inputs:
-            packageType: runtime
-            version: 6.0.25
-            installationPath: $(Agent.ToolsDirectory)/dotnet
+#        - task: UseDotNet@2
+#          displayName: 'Use .NET Runtime 6.0.25 (install for AuzreSignTool 4.0.1)'
+#          inputs:
+#            packageType: runtime
+#            version: 6.0.25
+#            installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - task: UseDotNet@2
           displayName: 'Use .NET SDK 10.0.101'
@@ -74,33 +65,17 @@ stages:
             installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - task: DotNetCoreCLI@2
-          displayName: 'Install AzureSignTool 4.0.1'
+          displayName: 'Install AzureSignTool 7.0.1'
           inputs:
             command: 'custom'
             custom: 'tool'
-            arguments: 'install --global AzureSignTool --version 4.0.1'
+            arguments: 'install --global AzureSignTool --version 7.0.1'
 
-        # Download link available at: https://learn.microsoft.com/en-us/windows/apps/windows-app-sdk/downloads
-        - powershell: |
-            Invoke-WebRequest -Uri https://aka.ms/windowsappsdk/1.8/1.8.260209005/windowsappruntimeinstall-x64.exe -Method Get -OutFile windowsappruntimeinstall-x64.exe
-            .\windowsappruntimeinstall-x64.exe --msix --quiet
-          displayName: "Install Windows App SDK (v1.8.5) (winget prerequisite)"
-
-#        # Download link available at: https://github.com/microsoft/winget-cli/releases/tag/v1.28.190
-#        # NOTE: in theory, Windows Server 2025 will ship with winget pre-installed--so installation of both prerequisites and winget itself should be able to be removed from this script
-#        # see: https://learn.microsoft.com/en-us/windows/iot/iot-enterprise/deployment/install-winget-windows-iot
-#        - powershell: |
-#            Invoke-WebRequest -Uri https://github.com/microsoft/winget-cli/releases/download/v1.28.190/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle -Method Get -OutFile Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle
-#            Invoke-WebRequest -Uri https://github.com/microsoft/winget-cli/releases/download/v1.28.190/e53e159d00e04f729cc2180cffd1c02e_License1.xml -Method Get -OutFile e53e159d00e04f729cc2180cffd1c02e_License1.xml
-#            Add-AppxPackage -Path .\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle
-#            Add-AppxProvisionedPackage -Online -PackagePath .\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle -LicensePath .\e53e159d00e04f729cc2180cffd1c02e_License1.xml
-#            winget --version
-#          displayName: "Install Winget (v1.28.190)"
 
         - powershell: |
             winget install --source winget --exact --id Microsoft.WindowsSDK.10.0.22621 --log $env:USERPROFILE/Desktop/sdk-install.log
           displayName: "Install Windows SDK v10.0.22621.0"
-        
+
         # NOTE: although NuGet restore is traditional for msbuild-based builds (and 'dotnet restore' for 'dotnet build'-based builds), 'dotnet restore' works with both
         - task: DotNetCoreCLI@2
           displayName: 'dotnet restore'
@@ -108,16 +83,8 @@ stages:
             command: restore
             projects: '$(projects)'
         
-        # NOTE: this step is not necessary for packaged apps; we'll probably need to bring it back (plus maybe build the MSI installer) if we add an unpackaged app option
-        # TODO: switch to "dotnet build" (DotNetCoreCLI@2) once Microsoft supports it for Windows App SDK applications; in the meantime, we use msbuild
-        # NOTE: msbuild generally just builds the x86 or ANYCPU variant (whatever the default is)--rather than building all three sets of artifacts--so this would probably need to be executed three times (once we each architecture specified)
-#        - task: MSBuild@1
-#          displayName: 'Build unpackaged app (default arch)'
-#          inputs:
-#           solution: '$(mainProject)'
-#           configuration: release
-
         # Set a $(BUILD_TYPE) variable
+        # NOTE: we could change the build type depending on the branch type/name, but we currently do "production builds" for all branches
         - bash: |
             BUILD_TYPE="Production"
             echo "##vso[task.setvariable variable=BUILD_TYPE]${BUILD_TYPE}"
@@ -125,16 +92,16 @@ stages:
             BRANCH: $(Build.SourceBranch)
             BRANCH_NAME: $(Build.SourceBranchName)
 
-        - task: Bash@3
-          displayName: "write build info"
-          env:
-            BRANCH: $(Build.SourceBranch)
-            BRANCH_NAME: $(Build.SourceBranchName)
-            COMMIT: $(Build.SourceVersion)
-            BUILD_NUM: $(Build.BuildNumber)
-          inputs:
-            targetType: 'filePath'
-            filePath: set-build-info.sh
+#        - task: Bash@3
+#          displayName: "write build info"
+#          env:
+#            BRANCH: $(Build.SourceBranch)
+#            BRANCH_NAME: $(Build.SourceBranchName)
+#            BUILD_NUM: $(Build.BuildNumber)
+#            COMMIT: $(Build.SourceVersion)
+#          inputs:
+#            targetType: 'filePath'
+#            filePath: set-build-info.sh
 
         - task: MSBuild@1
           displayName: "Build Morphic Client (x64)"
@@ -186,44 +153,29 @@ stages:
               -v
               $(Build.SourcesDirectory)\Morphic\bin\x64\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-x64\publish\Morphic.exe
 
-        - task: VSBuild@1
-          displayName: "restore installer dependencies"
-          env:
-            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
-          inputs:
-            solution: 'MorphicSetup\MorphicSetup.wixproj'
-            configuration: '$(buildConfiguration)'
-            msbuildArgs: '/t:restore'
+        - publish: $(System.DefaultWorkingDirectory)\Morphic\BuildVersion.txt
+          displayName: "Cache build version number"
+          artifact: build-version
 
-        - task: CopyFiles@2
-          displayName: "copy published/signed files (x64)"
-          inputs:
-            Contents: '**'
-            SourceFolder: 'Morphic\bin\x64\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-x64\publish\'
-            TargetFolder: 'MorphicSetup\obj\x64\$(buildConfiguration)\publish\Morphic'
-            CleanTargetFolder: true
+        - powershell: |
+            # Update MorphicPackage's appmanifest with a version number before building it
+            [xml]$manifest= get-content ".\Morphic (Package)\Package.appxmanifest"
+            $manifest.Package.Identity.Version = "$(versionMajor).$(versionMinor)$(versionBuildComponents)"
+            $manifest.save("Morphic (Package)/Package.appxmanifest")
+          displayName: 'Assign version to package manifest'
 
-        - task: VSBuild@1
-          displayName: "build installer (x64)"
-          env:
-            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
+        - task: MSBuild@1
+          displayName: 'Build packaged app (x64)'
           inputs:
-            solution: 'MorphicSetup\MorphicSetup.wixproj'
+            solution: 'Morphic (Package)/Morphic (Package).wapproj'
             platform: 'x64'
-            configuration: '$(buildConfiguration)'
-            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false'
+            configuration: $(buildConfiguration)
+            msbuildArguments: '/p:OutputPath=NonPackagedApp /p:UapAppxPackageBuildMode=SideLoadOnly /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-x64.msix /p:AppxPackageSigningEnabled=false'
+
 
         - task: CmdLine@2
-          displayName: 'sign installer (x64)'
+          displayName: 'Sign MSIX (x64)'
           inputs:
-            targetType: 'inline'
-# NOTE: if we experience downtime with our cert provider's timestamp servers (which causes signing to fail), 
-#       we can use the test server (production timestamps, but from a 2nd provider); note that we should NOT do
-#       this for any public preview or release builds...only for internal testing or emergency scenarios.
-#              -tr "$(TimestampUrl)"
-#              -tr "$(TimestampUrl2)"
-#              vs.
-#              -tr "$(TestOnlyTimestampUrl)"
             script: >
               AzureSignTool sign
               -d Morphic
@@ -234,32 +186,36 @@ stages:
               -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
-              -v $(System.DefaultWorkingDirectory)\MorphicSetup\bin\x64\$(buildConfiguration)\en-US\MorphicSetup.msi
+              -v $(Build.ArtifactStagingDirectory)\MorphicSetup-x64.msix
 
-        - publish: $(System.DefaultWorkingDirectory)\MorphicSetup\bin\x64\$(buildConfiguration)\en-US\MorphicSetup.msi
-          displayName: "Cache MSI for upload (x64)"
-          artifact: msi-x64
-
-        - publish: $(System.DefaultWorkingDirectory)\Morphic\BuildVersion.txt
-          displayName: "Cache build version number"
-          artifact: build-version
-
+        - task: PublishPipelineArtifact@1
+          displayName: "Cache MSIX (x64) for upload"
+          inputs:
+            targetPath: $(Build.ArtifactStagingDirectory)\MorphicSetup-x64.msix
+            artifactName: msix-x64
+            artifactType: pipeline
 
   - stage: publish
     jobs:
       - job: publish
         pool:
-          vmImage: "ubuntu-22.04"
+          vmImage: "ubuntu-24.04"
         steps:
-# TODO: determine how to capture (download) the artifacts into the root folder (i.e. not "./s/")
         - download: current
           artifact: build-version
 
-        - download: current
-          artifact: msi-x64
+#        - download: current
+#          artifact: msi-x64
+
+        - task: DownloadPipelineArtifact@2
+          displayName: "Capture MSIX (x64) for upload"
+          inputs:
+            source: 'current'
+            artifact: msix-x64
+            path: msix-x64
 
         - task: Bash@3
-          displayName: "Upload MSIs to S3"
+          displayName: "Upload MSIs/MSIXs to S3"
           env:
               AWS_ACCESS_KEY_ID: $(accessKey)
               AWS_SECRET_ACCESS_KEY: $(secretKey)
@@ -280,6 +236,16 @@ stages:
                     EXTRA_ARGS="--expires $(date -d '+7 days' --iso-8601=seconds)"
 
                     S3_PUBLISHED_HTTP_URL="https://d23vryjv7k8eyb.cloudfront.net"
+
+                    publishMsixInstaller() {
+                      VERSION=$(sed -n 1p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
+                      LOCAL_MSIX_SOURCE="${AGENT_BUILDDIRECTORY}/${LOCAL_MSIX_DIR}/${MSIX_NAME_BASE}.msix"
+                      S3_MSIX_OBJECT_NAME="${S3_BUILD_OPERATING_SYSTEM}/${S3_BUILD_ARCHITECTURE}/${S3_BUILD_TYPE}/MorphicSetup-v${VERSION}-${S3_BUILD_TYPE}-${S3_BUILD_ARCHITECTURE}.msix"
+
+                      # debug: output the contents of the build directory
+                      ls -al ${AGENT_BUILDDIRECTORY}/${LOCAL_MSIX_DIR}
+                      aws s3 cp $EXTRA_ARGS "${LOCAL_MSIX_SOURCE}" "s3://${BUCKET}/${S3_MSIX_OBJECT_NAME}"
+                    }
 
                     publishMsiInstaller() {
                       VERSION=$(sed -n 1p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
@@ -306,9 +272,10 @@ stages:
                       aws s3 cp $EXTRA_ARGS "${LOCAL_APPCAST_SOURCE}" "s3://${BUCKET}/${S3_APPCAST_OBJECT_NAME}"
                     }
 
-                    echo "Upload MSI (x64) to S3"
-                    MSI_NAME_BASE="MorphicSetup"
-                    LOCAL_MSI_DIR="msi-x64"
+                    echo "Uploading MSIX (x64) to S3"
+                    MSIX_NAME_BASE="MorphicSetup-x64"
+                    # NOTE: "s/" is a temporary path requirement; we may also consider calling these folders just "x64" etc.
+                    LOCAL_MSIX_DIR="s/msix-x64"
                     S3_BUILD_ARCHITECTURE="x64"
-                    publishMsiInstaller
+                    publishMsixInstaller
 
