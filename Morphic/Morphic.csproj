@@ -43,7 +43,7 @@
   </PropertyGroup>
 
   <!-- Include XAML-compiled resources (.xbf, .pri) in publish output; the publish pipeline omits them by default -->
-  <Target Name="IncludeXamlResourcesInPublish" BeforeTargets="ComputeFilesToPublish">
+  <Target Name="IncludeXamlResourcesInPublish" BeforeTargets="ComputeFilesToPublish" Condition="'$(PublishTrimmed)' != 'true'">
     <ItemGroup>
       <ResolvedFileToPublish Include="$(OutputPath)*.xbf">
         <RelativePath>%(Filename)%(Extension)</RelativePath>
