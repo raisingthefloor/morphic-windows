@@ -64,7 +64,7 @@ public class Program
                 System.Threading.SynchronizationContext.SetSynchronizationContext(context);
                 new App();
             });
-        }
+//        }
 //        finally
 //        {
 //            if (bootstrapInitialized)
@@ -73,6 +73,6 @@ public class Program
 //                Microsoft.Windows.ApplicationModel.DynamicDependency.Bootstrap.Shutdown();
 //            }
 //        }
-//    }
+    }
 }
 #endif

@@ -50,12 +50,6 @@ stages:
           vmImage: 'windows-2025'
         steps:
 
-#        - task: UseDotNet@2
-#          displayName: 'Use .NET Runtime 6.0.25 (install for AuzreSignTool 4.0.1)'
-#          inputs:
-#            packageType: runtime
-#            version: 6.0.25
-#            installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - task: UseDotNet@2
           displayName: 'Use .NET SDK 10.0.101'
@@ -75,7 +69,7 @@ stages:
         - powershell: |
             winget install --source winget --exact --id Microsoft.WindowsSDK.10.0.22621 --log $env:USERPROFILE/Desktop/sdk-install.log
           displayName: "Install Windows SDK v10.0.22621.0"
-
+        
         # NOTE: although NuGet restore is traditional for msbuild-based builds (and 'dotnet restore' for 'dotnet build'-based builds), 'dotnet restore' works with both
         - task: DotNetCoreCLI@2
           displayName: 'dotnet restore'

@@ -42,14 +42,18 @@
     <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
   </PropertyGroup>
 
-  <!-- Copy XAML-compiled resources (.xbf, .pri) to publish output; dotnet publish omits them -->
-  <Target Name="CopyXamlResourcesToPublish" AfterTargets="Publish">
+  <!-- Include XAML-compiled resources (.xbf, .pri) in publish output; the publish pipeline omits them by default -->
+  <Target Name="IncludeXamlResourcesInPublish" BeforeTargets="ComputeFilesToPublish">
     <ItemGroup>
-      <_XbfFiles Include="$(OutputPath)*.xbf" />
-      <_AppPriFiles Include="$(OutputPath)*.pri" />
+      <ResolvedFileToPublish Include="$(OutputPath)*.xbf">
+        <RelativePath>%(Filename)%(Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+      <ResolvedFileToPublish Include="$(OutputPath)*.pri">
+        <RelativePath>%(Filename)%(Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
     </ItemGroup>
-    <Copy SourceFiles="@(_XbfFiles)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
-    <Copy SourceFiles="@(_AppPriFiles)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
   </Target>
   
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
