@@ -42,9 +42,13 @@
     <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
   </PropertyGroup>
 
-  <!-- Include XAML-compiled resources (.xbf, .pri) in publish output; the publish pipeline omits them by default -->
-  <Target Name="IncludeXamlResourcesInPublish" BeforeTargets="ComputeFilesToPublish" Condition="'$(PublishTrimmed)' != 'true'">
+  <!-- Include XAML-compiled resources (.xbf, .pri) in publish output; the publish pipeline may omit them -->
+  <Target Name="IncludeXamlResourcesInPublish" AfterTargets="ComputeFilesToPublish">
     <ItemGroup>
+      <!-- Remove any existing .xbf/.pri entries to avoid NETSDK1152 duplicate errors -->
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="'%(Extension)' == '.xbf'" />
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="'%(Extension)' == '.pri'" />
+      <!-- Re-add from build output to ensure they are always included -->
       <ResolvedFileToPublish Include="$(OutputPath)*.xbf">
         <RelativePath>%(Filename)%(Extension)</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
