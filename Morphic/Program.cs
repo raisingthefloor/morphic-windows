@@ -30,32 +30,32 @@ namespace Morphic;
 
 public class Program
 {
-    const uint WINUI_MAJOR_VERSION = 1;
-    const uint WINUI_MINOR_VERSION = 8;
-    const uint WINUI_MAJOR_MINOR_VERSION = (WINUI_MAJOR_VERSION << 16) | WINUI_MINOR_VERSION;
+//    const uint WINUI_MAJOR_VERSION = 1;
+//    const uint WINUI_MINOR_VERSION = 8;
+//    const uint WINUI_MAJOR_MINOR_VERSION = (WINUI_MAJOR_VERSION << 16) | WINUI_MINOR_VERSION;
 
     [STAThread]
     static void Main(string[] args)
     {
-        bool bootstrapInitialized = false;
+//        bool bootstrapInitialized = false;
 
-        var isRunningAsPackagedAppResult = Morphic.WindowsNative.Packaging.Package.IsRunningAsPackagedApp();
-        if (isRunningAsPackagedAppResult.IsSuccess == false)
-        {
-            throw new InvalidOperationException("Morphic could not detect package identity (or if it is running as a packaged or unpackaged app); the application cannot start up.");
-        }
-        var isRunningAsPackagedApp = isRunningAsPackagedAppResult.Value!;
-        if (isRunningAsPackagedApp == false)
-        {
-            // for unpackaged apps: initialize the Windows App SDK via bootstrap (so that WinRT activation factories can locate the native DLLs, etc.)
-            Microsoft.Windows.ApplicationModel.DynamicDependency.Bootstrap.Initialize(WINUI_MAJOR_MINOR_VERSION);
-            bootstrapInitialized = true;
-        }
-
+//        var isRunningAsPackagedAppResult = Morphic.WindowsNative.Packaging.Package.IsRunningAsPackagedApp();
+//        if (isRunningAsPackagedAppResult.IsSuccess == false)
+//        {
+//            throw new InvalidOperationException("Morphic could not detect package identity (or if it is running as a packaged or unpackaged app); the application cannot start up.");
+//        }
+//        var isRunningAsPackagedApp = isRunningAsPackagedAppResult.Value!;
+//        if (isRunningAsPackagedApp == false)
+//        {
+//            // for unpackaged apps: initialize the Windows App SDK via bootstrap (so that WinRT activation factories can locate the native DLLs, etc.)
+//            Microsoft.Windows.ApplicationModel.DynamicDependency.Bootstrap.Initialize(WINUI_MAJOR_MINOR_VERSION);
+//            bootstrapInitialized = true;
+//        }
+//
         // execute application
         // see: https://learn.microsoft.com/en-us/windows/apps/windows-app-sdk/applifecycle/applifecycle-single-instance
-        try
-        {
+//        try
+//        {
             WinRT.ComWrappersSupport.InitializeComWrappers();
 
             Microsoft.UI.Xaml.Application.Start((p) =>
@@ -65,14 +65,14 @@ public class Program
                 new App();
             });
         }
-        finally
-        {
-            if (bootstrapInitialized)
-            {
-                // Release the DDLM and clean up.
-                Microsoft.Windows.ApplicationModel.DynamicDependency.Bootstrap.Shutdown();
-            }
-        }
-    }
+//        finally
+//        {
+//            if (bootstrapInitialized)
+//            {
+//                // Release the DDLM and clean up.
+//                Microsoft.Windows.ApplicationModel.DynamicDependency.Bootstrap.Shutdown();
+//            }
+//        }
+//    }
 }
 #endif
