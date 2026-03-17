@@ -1,10 +1,10 @@
-// Copyright 2020-2026 Raising the Floor - US, Inc.
+﻿// Copyright 2026 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
 //
 // You may obtain a copy of the License at
-// https://github.com/raisingthefloor/morphic-windows/blob/master/LICENSE.txt
+// https://github.com/raisingthefloor/morphic-windowsnative-lib-cs/blob/main/LICENSE
 //
 // The R&D leading to these results received funding from the:
 // * Rehabilitation Services Administration, US Dept. of Education under
@@ -21,33 +21,24 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
+using System.Diagnostics;
 
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
+namespace Morphic.WindowsNative;
 
-namespace Morphic;
-
-/// <summary>
-/// An empty window that can be used on its own or navigated to within a Frame.
-/// </summary>
-public sealed partial class MainWindow : Window
+internal class TypeValidationUtils
 {
-    public MainWindow()
+    public const string ASSERT_MESSAGE_API_RESULT_TYPE_MISMATCH = "API result type does not match";
+
+    public static void AssertIfNotEnumOfType<T>(T value, Type underlyingType, string? message = null) where T : Enum
     {
-        InitializeComponent();
+        Debug.Assert(TypeValidationUtils.IsEnumOfUnderlyingType(value, underlyingType), message);
+    }
+
+    public static bool IsEnumOfUnderlyingType<T>(T value, Type underlyingType) where T: Enum
+    {
+        // NOTE: if we needed to check the type dynamically (to make sure it's an enum), <Type>.IsEnum can do that.
+        // return (value.GetType().IsEnum) && (Enum.GetUnderlyingType(value.GetType()) == underlyingType);
+        return Enum.GetUnderlyingType(value.GetType()) == underlyingType;
     }
 }

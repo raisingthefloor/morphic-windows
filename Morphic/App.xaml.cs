@@ -1,4 +1,27 @@
-﻿using Microsoft.UI.Xaml;
+﻿// Copyright 2020-2026 Raising the Floor - US, Inc.
+//
+// Licensed under the New BSD license. You may not use this file except in
+// compliance with this License.
+//
+// You may obtain a copy of the License at
+// https://github.com/raisingthefloor/morphic-windows/blob/master/LICENSE.txt
+//
+// The R&D leading to these results received funding from the:
+// * Rehabilitation Services Administration, US Dept. of Education under
+//   grant H421A150006 (APCP)
+// * National Institute on Disability, Independent Living, and
+//   Rehabilitation Research (NIDILRR)
+// * Administration for Independent Living & Dept. of Education under grants
+//   H133E080022 (RERC-IT) and H133E130028/90RE5003-01-00 (UIITA-RERC)
+// * European Union's Seventh Framework Programme (FP7/2007-2013) grant
+//   agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
+// * William and Flora Hewlett Foundation
+// * Ontario Ministry of Research and Innovation
+// * Canadian Foundation for Innovation
+// * Adobe Foundation
+// * Consumer Electronics Association Foundation
+
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Data;
@@ -19,32 +42,31 @@ using Windows.Foundation.Collections;
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
-namespace Morphic
+namespace Morphic;
+
+/// <summary>
+/// Provides application-specific behavior to supplement the default Application class.
+/// </summary>
+public partial class App : Application
 {
+    private Window? _window;
+
     /// <summary>
-    /// Provides application-specific behavior to supplement the default Application class.
+    /// Initializes the singleton application object.  This is the first line of authored code
+    /// executed, and as such is the logical equivalent of main() or WinMain().
     /// </summary>
-    public partial class App : Application
+    public App()
     {
-        private Window? _window;
+        InitializeComponent();
+    }
 
-        /// <summary>
-        /// Initializes the singleton application object.  This is the first line of authored code
-        /// executed, and as such is the logical equivalent of main() or WinMain().
-        /// </summary>
-        public App()
-        {
-            InitializeComponent();
-        }
-
-        /// <summary>
-        /// Invoked when the application is launched.
-        /// </summary>
-        /// <param name="args">Details about the launch request and process.</param>
-        protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
-        {
-            _window = new MainWindow();
-            _window.Activate();
-        }
+    /// <summary>
+    /// Invoked when the application is launched.
+    /// </summary>
+    /// <param name="args">Details about the launch request and process.</param>
+    protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
+    {
+        _window = new MainWindow();
+        _window.Activate();
     }
 }

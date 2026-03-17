@@ -7,6 +7,16 @@
   <Project Path="Morphic (Package)/Morphic (Package).wapproj" Type="c7167f0d-bc9f-4e6e-afe1-012c56b48db5">
     <Deploy />
   </Project>
+  <Project Path="Morphic.Core/Morphic.Core.csproj" Id="8f7fe745-1eaa-4c54-9644-c8bb0a8eb1ed">
+    <Platform Solution="*|ARM64" Project="AnyCPU" />
+    <Platform Solution="*|x64" Project="AnyCPU" />
+    <Platform Solution="*|x86" Project="AnyCPU" />
+  </Project>
+  <Project Path="Morphic.WindowsNative/Morphic.WindowsNative.csproj" Id="70c9b628-abe5-4bc6-983b-84acbaaf454d">
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+    <Platform Solution="*|x86" Project="x86" />
+  </Project>
   <Project Path="Morphic/Morphic.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
