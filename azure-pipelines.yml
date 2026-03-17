@@ -158,10 +158,13 @@ stages:
           artifact: build-version
 
         - powershell: |
-            # Update MorphicPackage's appmanifest with a version number before building it
-            [xml]$manifest= get-content ".\Morphic (Package)\Package.appxmanifest"
-            $manifest.Package.Identity.Version = "$(versionMajor).$(versionMinor)$(versionBuildComponents)"
-            $manifest.save("Morphic (Package)/Package.appxmanifest")
+            # Read the full version string from line 2 of BuildVersion.txt
+            $version = (Get-Content "$(System.DefaultWorkingDirectory)\Morphic\BuildVersion.txt")[1].Trim()
+            Write-Host "Using version: $version"
+            # Update MorphicPackage's appmanifest with the version number before building it
+            [xml]$manifest = Get-Content "$(System.DefaultWorkingDirectory)\Morphic (Package)\Package.appxmanifest"
+            $manifest.Package.Identity.Version = $version
+            $manifest.Save("$(System.DefaultWorkingDirectory)\Morphic (Package)\Package.appxmanifest")
           displayName: 'Assign version to package manifest'
 
         - task: MSBuild@1
