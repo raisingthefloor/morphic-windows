@@ -1,9 +1,9 @@
-# copy-build-extras.ps1 — Copies build-output-only files (compiled XAML) to the publish directory
-# The publish step does not include .xbf files; they must be copied from the build output.
+# copy-extras-to-installer-staging.ps1 — Copies build-output-only files to the installer staging directory
+# The publish step does not include .xbf or Morphic.pri files; they must be copied from the build output.
 # Used by both Azure Pipelines and local builds.
 #
 # Usage:
-#   .\copy-build-extras.ps1 -Platform x64 -Configuration Release -SourceDir . -TargetDir MorphicSetup\obj\x64\Release\publish\Morphic
+#   .\copy-extras-to-installer-staging.ps1 -Platform x64 -Configuration Release -SourceDir . -TargetDir MorphicSetup\obj\x64\Release\publish\Morphic
 
 param(
     [Parameter(Mandatory)][ValidateSet("x64","x86","ARM64")][string]$Platform,
@@ -33,4 +33,12 @@ foreach ($file in $xbfFiles) {
     Copy-Item -Path $file.FullName -Destination "$TargetDir\$($file.Name)" -Force
 }
 
-Write-Host "Copied $($xbfFiles.Count) .xbf file(s) to $TargetDir"
+# Copy Morphic.pri (app resource index — maps .xbf files for the XAML resource loader)
+$priFile = "$buildDir\Morphic.pri"
+if (-not (Test-Path $priFile)) {
+    throw "Morphic.pri not found at $buildDir. Ensure the build step completed successfully."
+}
+Write-Host "Copying Morphic.pri..."
+Copy-Item -Path $priFile -Destination "$TargetDir\Morphic.pri" -Force
+
+Write-Host "Copied $($xbfFiles.Count) .xbf file(s) and Morphic.pri to $TargetDir"
