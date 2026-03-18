@@ -39,6 +39,9 @@ internal class TrayButton : IDisposable
 
     private TrayButtonNativeWindow? _nativeWindow = null;
 
+    private System.Windows.Forms.Timer? _reattemptShowTaskbarButtonTimer = null;
+    private static readonly TimeSpan REATTEMPT_SHOW_TASKBAR_BUTTON_INTERVAL_TIMESPAN = new TimeSpan(0, 0, 10);
+
     public System.Drawing.Rectangle? PositionAndSize
     {
         get
@@ -46,9 +49,6 @@ internal class TrayButton : IDisposable
             return _nativeWindow?.PositionAndSize;
         }
     }
-
-    private System.Windows.Forms.Timer _reattemptShowTaskbarButtonTimer;
-    private static readonly TimeSpan REATTEMPT_SHOW_TASKBAR_BUTTON_INTERVAL_TIMESPAN = new TimeSpan(0, 0, 10);
 
     internal TrayButton()
     {
@@ -96,47 +96,45 @@ internal class TrayButton : IDisposable
 
     public System.Drawing.Bitmap? Bitmap
     {
-        get
-        {
-            return _bitmap;
-        }
-        set
-        {
-            _bitmap = value;
+        get =>  _bitmap;
+    }
+    //
+    public MorphicResult<MorphicUnit, MorphicUnit> SetBitmap(System.Drawing.Bitmap? value)
+    {
+        _bitmap = value;
 
-            //OBSERVATION: we do not return an error if the bitmap cannot be set
-            if (_nativeWindow is not null)
+        if (_nativeWindow is not null)
+        {
+	        var setBitmapResult = _nativeWindow!.SetBitmap(_bitmap);
+            if (setBitmapResult.IsError == true)
             {
-                var setBitmapResult = _nativeWindow!.SetBitmap(_bitmap);
-                if (setBitmapResult.IsError == true)
-                {
-                    // NOTE: in the future, we may want to consider capturing the error
-                    Debug.Assert(false, "Could not set bitmap.");
-                }
+                Debug.Assert(false, "Could not set bitmap.");
+                return MorphicResult.ErrorResult();
             }
         }
+
+        return MorphicResult.OkResult();
     }
 
     public string? Text
     {
-        get
-        {
-            return _text;
-        }
-        set
-        {
-            _text = value;
+        get => _text;
+    }
+    //
+    public MorphicResult<MorphicUnit, MorphicUnit> SetText(string? value) 
+    {
+        _text = value;
 
-            if (_nativeWindow is not null)
+        if (_nativeWindow is not null)
+        {
+            var setTextResult = _nativeWindow!.SetText(_text);
+            if (setTextResult.IsError == true)
             {
-                var setTextResult = _nativeWindow!.SetText(_text);
-                if (setTextResult.IsError == true)
-                {
-                    // NOTE: in the future, we may want to consider capturing the error
-                    Debug.Assert(false, "Could not set text.");
-                }
+                Debug.Assert(false, "Could not set text.");
+                return MorphicResult.ErrorResult();
             }
         }
+        return MorphicResult.OkResult();
     }
 
     public TrayButtonVisibility Visibility

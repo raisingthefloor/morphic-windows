@@ -1125,10 +1125,10 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
         _trayButtonPositionAndSize = trayButtonPositionAndSize;
 
         // once the control is repositioned, reposition the bitmap
-        var bitmap = _argbImageNativeWindow?.GetBitmap();
-        if (bitmap is not null)
+        var bitmapSize = _argbImageNativeWindow?.GetBitmapSize();
+        if (bitmapSize is not null)
         {
-            var positionAndResizeBitmapResult = this.PositionAndResizeBitmap(bitmap);
+            var positionAndResizeBitmapResult = this.PositionAndResizeBitmap(bitmapSize.Value);
             if (positionAndResizeBitmapResult.IsError == true)
             {
                 Debug.Assert(false, "Could not position and resize bitmap.");
@@ -1179,6 +1179,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
 
     public interface ISetBitmapError
     {
+        public record CouldNotConvertBitmapToGdiBitmap(Exception InnerException) : ISetBitmapError;
         public record CouldNotPositionAndResizeBitmap(IPositionAndResizeBitmapError InnerError) : ISetBitmapError;
         public record CouldNotSetBitmapInArgbImageNativeWindow(ArgbImageNativeWindow.ISetBitmapError InnerError) : ISetBitmapError;
     }
@@ -1186,7 +1187,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
     {
         if (bitmap is not null)
         {
-            var positionAndResizeBitmapResult = this.PositionAndResizeBitmap(bitmap);
+            var positionAndResizeBitmapResult = this.PositionAndResizeBitmap(bitmap.Size);
             if (positionAndResizeBitmapResult.IsError == true)
             {
                 Debug.Assert(false, "Could not position and resize bitmap.");
@@ -1197,7 +1198,27 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
 
         if (_argbImageNativeWindow is not null)
         {
-            var setBitmapOnArgbImageNativeWindowResult = _argbImageNativeWindow!.SetBitmap(bitmap);
+            // convert the managed System.Drawing.Bitmap to a GDI bitmap (handle); ArgbImageNativeWindow takes ownership of the handle (and will clean up during disposal)
+            IntPtr bitmapHandle = IntPtr.Zero;
+            int bitmapWidth = 0;
+            int bitmapHeight = 0;
+            if (bitmap is not null)
+            {
+                try
+                {
+                    // convert the managed System.Drawing.Bitmap to a GDI bitmap (and use a transparent background color
+                    // NOTE: this creates a new GDI bitmap from the source; the caller can free the original Bitmap after calling this function
+                    bitmapHandle = bitmap.GetHbitmap(System.Drawing.Color.FromArgb(0));
+                }
+                catch (Exception ex)
+                {
+                    return MorphicResult.ErrorResult<ISetBitmapError>(new ISetBitmapError.CouldNotConvertBitmapToGdiBitmap(ex));
+                }
+                bitmapWidth = bitmap.Width;
+                bitmapHeight = bitmap.Height;
+            }
+
+            var setBitmapOnArgbImageNativeWindowResult = _argbImageNativeWindow!.SetBitmap(bitmapHandle, bitmapWidth, bitmapHeight);
             if (setBitmapOnArgbImageNativeWindowResult.IsError == true)
             {
                 Debug.Assert(false, "Could not set bitmap on ARGB image native window.");
@@ -1215,7 +1236,7 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
         public record CouldNotSetNewPositionAndSize(ArgbImageNativeWindow.ISetPositionAndSizeError InnerError) : IPositionAndResizeBitmapError;
     }
     //
-    private MorphicResult<MorphicUnit, IPositionAndResizeBitmapError> PositionAndResizeBitmap(System.Drawing.Bitmap bitmap)
+    private MorphicResult<MorphicUnit, IPositionAndResizeBitmapError> PositionAndResizeBitmap(System.Drawing.Size bitmapSize)
     {
         // then, reposition the bitmap
         // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowrect
@@ -1226,8 +1247,6 @@ internal class TrayButtonNativeWindow : System.Windows.Forms.NativeWindow, IDisp
             var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
             return MorphicResult.ErrorResult<IPositionAndResizeBitmapError>(new IPositionAndResizeBitmapError.CouldNotGetCurrentPositionAndSize((uint)win32ErrorCode));
         }
-        //
-        var bitmapSize = bitmap.Size;
 
         var argbImageNativeWindowSize = TrayButtonNativeWindow.CalculateWidthAndHeightForBitmap(positionAndSize, bitmapSize);
         var bitmapRect = TrayButtonNativeWindow.CalculateCenterRectInsideRect(positionAndSize, argbImageNativeWindowSize);

@@ -139,7 +139,7 @@ public class TrayButton : IDisposable
         {
             if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
             {
-                _trayButton!.Bitmap = value;
+                _ = _trayButton!.SetBitmap(value);
             }
             else //if (.IsWindows10() == true)
             {
@@ -195,7 +195,7 @@ public class TrayButton : IDisposable
         {
             if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
             {
-                _trayButton!.Bitmap = (value is not null) ? value!.ToBitmap() : null;
+                _ = _trayButton!.SetBitmap((value is not null) ? value!.ToBitmap() : null);
             }
             else //if (.IsWindows10() == true)
             {
@@ -221,7 +221,7 @@ public class TrayButton : IDisposable
         {
             if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
             {
-                _trayButton!.Text = value;
+                _ = _trayButton!.SetText(value);
             }
             else //if (.IsWindows10() == true)
             {

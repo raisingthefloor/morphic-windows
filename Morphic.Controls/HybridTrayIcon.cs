@@ -102,6 +102,8 @@ public class HybridTrayIcon : IDisposable
         GC.SuppressFinalize(this);
     }
 
+    //
+
     /// <summary>The icon for the tray icon</summary>
     public System.Drawing.Icon? Icon
     {
