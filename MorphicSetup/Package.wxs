@@ -10,6 +10,7 @@
 
     <Feature Id="Main">
       <ComponentGroupRef Id="MorphicComponents" />
+      <ComponentRef Id="ApplicationComponent" />
     </Feature>
 
     <ui:WixUI Id="WixUI_Minimal" />
