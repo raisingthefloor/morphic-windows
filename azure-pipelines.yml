@@ -161,14 +161,22 @@ stages:
             $manifest.Save("$(System.DefaultWorkingDirectory)\Morphic (Package)\Package.appxmanifest")
           displayName: 'Assign version to package manifest'
 
-        - task: MSBuild@1
-          displayName: 'Build packaged app (x64)'
-          inputs:
-            solution: 'Morphic (Package)/Morphic (Package).wapproj'
-            platform: 'x64'
-            configuration: $(buildConfiguration)
-            msbuildArguments: '/p:UapAppxPackageBuildMode=SideLoadOnly /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-x64.msix /p:AppxPackageSigningEnabled=false'
+#        - task: MSBuild@1
+#          displayName: 'Build packaged app (x64)'
+#          inputs:
+#            solution: 'Morphic (Package)/Morphic (Package).wapproj'
+#            platform: 'x64'
+#            configuration: $(buildConfiguration)
+#            msbuildArguments: '/p:UapAppxPackageBuildMode=SideLoadOnly /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-x64.msix /p:AppxPackageSigningEnabled=false'
 
+        - powershell: |
+            .\package-msix.ps1 `
+              -Platform x64 `
+              -Configuration $(buildConfiguration) `
+              -SourceDir "$(Build.SourcesDirectory)" `
+              -OutputMsix "$(Build.ArtifactStagingDirectory)\MorphicSetup-x64.msix" `
+              -StagingDir "$(Build.BinariesDirectory)\MsixStaging"
+          displayName: 'Build packaged app (x64)'
 
         - task: CmdLine@2
           displayName: 'Sign MSIX (x64)'
