@@ -7,6 +7,8 @@
 #
 # Usage:
 #   .\package-msix.ps1 -Platform x64 -Configuration Release -SourceDir . -OutputMsix build\MorphicSetup-x64.msix
+#
+# see: https://learn.microsoft.com/en-us/windows/msix/package/manual-packaging-root
 
 param(
     [Parameter(Mandatory)][ValidateSet("x64","x86","ARM64")][string]$Platform,
