@@ -1541,6 +1541,14 @@ internal class TrayButton : IDisposable
             if (taskbarOrientation == Morphic.Controls.Orientation.Horizontal)
             {
                 trayButtonHeight = taskbarRect.bottom - taskbarRect.top;
+                //
+                // NOTE: in high contrast mode, the taskbar has a 1px border at the top; reduce the tray button height by 1px to avoid overlapping the border
+                //       (and because the new rect is bottom-aligned, reducing the height also shifts it down by 1px)
+                if (System.Windows.SystemParameters.HighContrast == true)
+                {
+                    trayButtonHeight -= 1;
+                }
+                //
                 trayButtonWidth = (int)((Double)trayButtonHeight * 0.8);
             }
             else
