@@ -32,8 +32,8 @@ RedrawWindow
 RegisterClassEx
 ReleaseDC
 SelectObject
-SendMessage
 SetLayeredWindowAttributes
+SendMessage
 SetStretchBltMode
 SetWindowLong
 SetWindowLongPtr

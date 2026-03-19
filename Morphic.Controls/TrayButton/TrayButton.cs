@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2025 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2026 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -34,7 +34,8 @@ public class TrayButton : IDisposable
     Morphic.Controls.TrayButton.Windows10.TrayButton? _legacyTrayButton;
     Morphic.Controls.TrayButton.Windows11.TrayButton? _trayButton;
 
-    public event System.Windows.Forms.MouseEventHandler? MouseUp;
+    // NOTE: MouseUp is not a thread-safe event
+    public event EventHandler<Morphic.Controls.MouseEventArgs>? MouseUp;
 
     public System.Drawing.Rectangle? PositionAndSize
     {

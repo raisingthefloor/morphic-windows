@@ -43,7 +43,7 @@ internal class TrayButtonNativeWindow : IDisposable
     // NOTE: a GC handle to the class instance is stored as userdata for each native window's hwnd (so that we can trampoline from the static wndproc to the instance-specific WndProc callback)
     private GCHandle _gcHandle;
 
-    private System.Windows.Visibility _visibility;
+    private bool _visible;
     private bool _taskbarIsTopmost;
 
     private System.Threading.Timer? _resurfaceTaskbarButtonTimer;
@@ -82,7 +82,7 @@ internal class TrayButtonNativeWindow : IDisposable
 
     private const byte ALPHA_VALUE_FOR_TRANSPARENT_BUT_HIT_TESTABLE = 1;
 
-    public event System.Windows.Forms.MouseEventHandler? MouseUp;
+    public event EventHandler<Morphic.Controls.MouseEventArgs>? MouseUp;
 
     private TrayButtonNativeWindow()
     {
@@ -331,7 +331,7 @@ internal class TrayButtonNativeWindow : IDisposable
         // since we are making the native window visible by default, set its visibility state
         // NOTE: this native window's visibility state is separate from the TrayButton's visibility state; the TrayButton's state is the desired visible state from the user's perspective (and can report when the button cannot currently be drawn), whereas
         //       this native window's visibility state indicates whether or not the native control should be visible IF the taskbar is on top (i.e. not in a full-screen video scenario, etc.)
-        result._visibility = System.Windows.Visibility.Visible;
+        result._visible = true;
 
         // create an instance of the ArgbImageNativeWindow to hold our icon; we cannot draw the bitmap directly on this window as the bitmap would then be alpha-blended the same % as our background (instead of being independently blended over our window)
         var argbImageNativeWindowResult = ArgbImageNativeWindow.CreateNew(result._hwnd, windowX, windowY, windowWidth, windowHeight);
@@ -476,7 +476,7 @@ internal class TrayButtonNativeWindow : IDisposable
                     {
                         var hitPoint = convertLParamResult.Value!;
 
-                        var mouseArgs = new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.Left, 1, hitPoint.X, hitPoint.Y, 0);
+                        var mouseArgs = new Morphic.Controls.MouseEventArgs(Morphic.Controls.MouseButtons.Left, 1, hitPoint.X, hitPoint.Y);
                         Task.Run(() => this.MouseUp?.Invoke(this, mouseArgs));
                     }
                     else
@@ -592,7 +592,7 @@ internal class TrayButtonNativeWindow : IDisposable
                     {
                         var hitPoint = convertLParamResult.Value!;
 
-                        var mouseArgs = new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.Right, 1, hitPoint.X, hitPoint.Y, 0);
+                        var mouseArgs = new Morphic.Controls.MouseEventArgs(Morphic.Controls.MouseButtons.Right, 1, hitPoint.X, hitPoint.Y);
                         Task.Run(() => this.MouseUp?.Invoke(this, mouseArgs));
                     }
                     else
@@ -797,35 +797,19 @@ internal class TrayButtonNativeWindow : IDisposable
         }
     }
 
-    public System.Windows.Visibility Visibility
+    public bool Visibility
     {
-        get
-        {
-            return _visibility;
-        }
+        get => _visible;
         set
         {
-            switch (value)
+            if (_visible != value)
             {
-                case System.Windows.Visibility.Visible:
-                case System.Windows.Visibility.Hidden:
-                    // allowed
-                    break;
-                case System.Windows.Visibility.Collapsed:
-                    // not allowed
-                    throw new ArgumentException("Visibility may not be set to Collapsed");
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-
-            if (_visibility != value)
-            {
-                _visibility = value;
+                _visible = value;
                 var updateVisibilityResult = this.UpdateVisibility();
                 if (updateVisibilityResult.IsError == true)
                 {
                     // NOTE: we may want to consider parsing out errors here
-                    Debug.Assert(false, "Could not update .Visibility");
+                    Debug.Assert(false, "Could not update .Visible");
                 }
             }
         }
@@ -852,7 +836,7 @@ internal class TrayButtonNativeWindow : IDisposable
 
     private bool ShouldWindowBeVisible()
     {
-        return (_visibility == System.Windows.Visibility.Visible) && (_taskbarIsTopmost == true);
+        return (_visible == true) && (_taskbarIsTopmost == true);
     }
 
     private MorphicResult<MorphicUnit, Morphic.WindowsNative.IWin32ApiError> UpdateVisualStateAlpha()
@@ -1010,7 +994,7 @@ internal class TrayButtonNativeWindow : IDisposable
         var desktopHandle = Windows.Win32.PInvoke.GetDesktopWindow();
 
         // if the reordered window was either the taskbar or the desktop, update the _taskbarIsTopmost state; this will generally be triggered when an app goes full-screen (or full-screen mode is exited)
-        if (className == "Shell_TrayWnd" || hwnd == desktopHandle.Value)
+        if (className == "Shell_TrayWnd" || hwnd == desktopHandle)
         {
             // whenever the window ordering changes, resurface our control
             this.BringTaskButtonTopmostWithoutActivating();
@@ -1551,19 +1535,19 @@ internal class TrayButtonNativeWindow : IDisposable
 
         // determine the taskbar's orientation
         //
-        System.Windows.Forms.Orientation taskbarOrientation;
+        Morphic.Controls.Orientation taskbarOrientation;
         if ((taskbarRect.right - taskbarRect.left) > (taskbarRect.bottom - taskbarRect.top))
         {
-            taskbarOrientation = System.Windows.Forms.Orientation.Horizontal;
+            taskbarOrientation = Morphic.Controls.Orientation.Horizontal;
         }
         else
         {
-            taskbarOrientation = System.Windows.Forms.Orientation.Vertical;
+            taskbarOrientation = Morphic.Controls.Orientation.Vertical;
         }
 
         // if the taskbar is horizontal, determine if it's LeftToRight (standard) or RightToLeft (for Arabic, Hebrew, etc.)
         bool isRightToLeft = false;
-        if (taskbarOrientation == System.Windows.Forms.Orientation.Horizontal)
+        if (taskbarOrientation == Morphic.Controls.Orientation.Horizontal)
         {
             var centerXOfTaskbar = taskbarRect.X + (taskbarRect.Width / 2);
             if (notifyTrayRect.right < centerXOfTaskbar)
@@ -1579,7 +1563,7 @@ internal class TrayButtonNativeWindow : IDisposable
         // NOTE: the inaccurate size returned by GetWindowRect may be due to our moving this class from the main application to a helper library (i.e. perhaps the pixel scaling isn't applying correctly), or it could just be a weird quirk on some computers.
         //       [The GetWindowRect issue happens with both our own homebuilt PINVOKE methods as well as with PInvoke.User32.GetWindowRect; the function is returning the correct left, bottom and right positions of the taskbar and notify tray--but is
         //       sometimes misrepresenting the top (i.e. height) value of both the taskbar and notify tray rects]
-        if (taskbarOrientation == System.Windows.Forms.Orientation.Horizontal)
+        if (taskbarOrientation == Morphic.Controls.Orientation.Horizontal)
         {
             // option 1: base our primary dimension off of the taskbutton container's same dimension
             trayButtonHeight = taskButtonContainerRect.bottom - taskButtonContainerRect.top;
@@ -1605,7 +1589,7 @@ internal class TrayButtonNativeWindow : IDisposable
         // choose a space in the rightmost/bottommost position of the taskbar; note that "rightmost" is actually leftmost when the system is using an RTL orientation (e.g. Arabic, Hebrew)
         int trayButtonX;
         int trayButtonY;
-        if (taskbarOrientation == System.Windows.Forms.Orientation.Horizontal)
+        if (taskbarOrientation == Morphic.Controls.Orientation.Horizontal)
         {
             if (isRightToLeft == false)
             {
@@ -1627,7 +1611,7 @@ internal class TrayButtonNativeWindow : IDisposable
             // NOTE: if we have any issues with positioning, try to replace taskbarRect.bottom with taskButtoncontainerRect.bottom (if we chose option #1 for our size calculations above)
             trayButtonY = taskbarRect.bottom - trayButtonHeight;
         }
-        else /* if (taskbarOrientation == System.Windows.Forms.Orientation.Vertical) */
+        else /* if (taskbarOrientation == Morphic.Controls.Orientation.Vertical) */
         {
             // NOTE: if we have any issues with positioning, try to replace taskbarRect.bottom with taskButtoncontainerRect.right (if we chose option #1 for our size calculations above)
             trayButtonX = taskbarRect.right - trayButtonWidth;

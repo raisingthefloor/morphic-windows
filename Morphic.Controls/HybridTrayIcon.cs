@@ -242,11 +242,11 @@ public class HybridTrayIcon : IDisposable
         //
         _trayButton.MouseUp += (sender, args) =>
         {
-            if (args.Button == System.Windows.Forms.MouseButtons.Right)
+            if (args.Button == Morphic.Controls.MouseButtons.Right)
             {
                 this.SecondaryClick?.Invoke(this, args);
             }
-            else if (args.Button == System.Windows.Forms.MouseButtons.Left)
+            else if (args.Button == Morphic.Controls.MouseButtons.Left)
             {
                 this.Click?.Invoke(this, args);
             }

@@ -35,7 +35,8 @@ internal class TrayButton : IDisposable
     private string? _text = null;
     private TrayButtonVisibility _visibility = TrayButtonVisibility.Hidden;
 
-    public event System.Windows.Forms.MouseEventHandler? MouseUp;
+    // NOTE: MouseUp is not a thread-safe event
+    public event EventHandler<Morphic.Controls.MouseEventArgs>? MouseUp;
 
     private TrayButtonNativeWindow? _nativeWindow = null;
 

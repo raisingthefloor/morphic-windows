@@ -145,7 +145,7 @@ internal class ArgbImageNativeWindow : IDisposable
                 {
                     lpWndClassEx = new Windows.Win32.UI.WindowsAndMessaging.WNDCLASSEXW
                     {
-                        cbSize = (uint)Marshal.SizeOf< Windows.Win32.UI.WindowsAndMessaging.WNDCLASSEXW>(),
+                        cbSize = (uint)Marshal.SizeOf<Windows.Win32.UI.WindowsAndMessaging.WNDCLASSEXW>(),
                         lpfnWndProc = ArgbImageNativeWindow.StaticWndProc,
                         lpszClassName = pointerToNativeWindowClassName,
                         hCursor = hCursor,
@@ -692,9 +692,10 @@ internal class ArgbImageNativeWindow : IDisposable
                     // create destination 32bpp top-down DIB section
                     IntPtr destHBitmapFromDIB;
                     uint sizeOfBitmapInfoHeader;
-                    unsafe {
+                    unsafe
+                    {
                         sizeOfBitmapInfoHeader = (uint)sizeof(Windows.Win32.Graphics.Gdi.BITMAPINFOHEADER);
-                    };
+                    }
                     var bmi = new Windows.Win32.Graphics.Gdi.BITMAPINFO()
                     {
                         bmiHeader = new()

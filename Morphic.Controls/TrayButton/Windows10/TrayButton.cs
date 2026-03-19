@@ -45,7 +45,7 @@ internal class TrayButton : IDisposable
 
     //private bool _highContrastModeIsOn_Cached = false;
 
-    public event System.Windows.Forms.MouseEventHandler? MouseUp;
+    public event EventHandler<Morphic.Controls.MouseEventArgs>? MouseUp;
 
     public System.Drawing.Rectangle? PositionAndSize
     {
@@ -337,7 +337,7 @@ internal class TrayButton : IDisposable
                     _visualState &= ~TrayButtonVisualStateFlags.LeftButtonPressed;
                     this.RequestRedraw();
                     {
-                        var mouseArgs = new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.Left, 1, e.X, e.Y, 0);
+                        var mouseArgs = new Morphic.Controls.MouseEventArgs(MouseButtons.Left, 1, e.X, e.Y);
                         _owner.MouseUp?.Invoke(_owner, mouseArgs);
                     }
                     break;
@@ -376,7 +376,7 @@ internal class TrayButton : IDisposable
                     _visualState &= ~TrayButtonVisualStateFlags.RightButtonPressed;
                     this.RequestRedraw();
                     {
-                        var mouseArgs = new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.Right, 1, e.X, e.Y, 0);
+                        var mouseArgs = new Morphic.Controls.MouseEventArgs(MouseButtons.Right, 1, e.X, e.Y);
                         _owner.MouseUp?.Invoke(_owner, mouseArgs);
                     }
                     break;
@@ -620,7 +620,7 @@ internal class TrayButton : IDisposable
                             Debug.Assert(false, "Could not map tray button hit point to screen coordinates");
                             break;
                         }
-                        var mouseArgs = new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.Left, 1, hitPoint.Value.X, hitPoint.Value.Y, 0);
+                        var mouseArgs = new Morphic.Controls.MouseEventArgs(MouseButtons.Left, 1, hitPoint.Value.X, hitPoint.Value.Y);
                         _owner.MouseUp?.Invoke(_owner, mouseArgs);
                     }
                     result = new IntPtr(0);
@@ -702,7 +702,7 @@ internal class TrayButton : IDisposable
                             Debug.Assert(false, "Could not map tray button hit point to screen coordinates");
                             break;
                         }
-                        var mouseArgs = new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.Right, 1, hitPoint.Value.X, hitPoint.Value.Y, 0);
+                        var mouseArgs = new Morphic.Controls.MouseEventArgs(MouseButtons.Right, 1, hitPoint.Value.X, hitPoint.Value.Y);
                         _owner.MouseUp?.Invoke(_owner, mouseArgs);
                     }
                     result = new IntPtr(0);
