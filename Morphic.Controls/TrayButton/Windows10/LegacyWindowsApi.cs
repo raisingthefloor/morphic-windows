@@ -51,6 +51,11 @@ internal class LegacyWindowsApi
             return new PInvoke.RECT() { left = this.Left, top = this.Top, right = this.Right, bottom = this.Bottom };
         }
 
+        public Windows.Win32.Foundation.RECT ToWindowsWin32FoundationRect()
+        {
+            return new Windows.Win32.Foundation.RECT() { left = this.Left, top = this.Top, right = this.Right, bottom = this.Bottom };
+        }
+
         /// <summary>
         /// Creates a win32 RECT from a .NET Rect.
         /// </summary>

@@ -5,6 +5,7 @@ BringWindowToTop
 BufferedPaintClear
 BufferedPaintInit
 BufferedPaintUnInit
+CallNextHookEx
 CreateCompatibleDC
 CreateDIBSection
 CreateSolidBrush
@@ -38,13 +39,16 @@ SetStretchBltMode
 SetWindowLong
 SetWindowLongPtr
 SetWindowPos
+SetWindowsHookEx
 SetWinEventHook
 StretchBlt
 TrackMouseEvent
+UnhookWindowsHookEx
 UnhookWinEvent
 UpdateLayeredWindow
 
 BITMAPINFO
+MSLLHOOKSTRUCT
 BLENDFUNCTION
 PAINTSTRUCT
 RECT

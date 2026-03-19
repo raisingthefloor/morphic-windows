@@ -1134,11 +1134,11 @@ internal class TrayButton : IDisposable
                 // update our tracking region to track the new position (unless we haven't moved, in which case continue to track our current position)
                 if (changeToRect is not null)
                 {
-                    _mouseHook.UpdateTrackingRegion(changeToRect.Value.ToPInvokeRect());
+                    _mouseHook.UpdateTrackingRegion(changeToRect.Value.ToWindowsWin32FoundationRect());
                 }
-                else if (currentRect is not null)
+                else if (currentRect is not null)   
                 {
-                    _mouseHook.UpdateTrackingRegion(currentRect.Value.ToPInvokeRect());
+                    _mouseHook.UpdateTrackingRegion(currentRect.Value.ToWindowsWin32FoundationRect());
                 }
                 else
                 {
