@@ -1,4 +1,5 @@
-﻿// Copyright 2020-2026 Raising the Floor - US, Inc.
+﻿#if INCLUDE_WINDOWS_10_SUPPORT
+// Copyright 2020-2026 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -172,3 +173,4 @@ public class MouseWindowMessageHook : IDisposable
 
     #endregion IDisposable
 }
+#endif
