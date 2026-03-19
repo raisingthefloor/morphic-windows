@@ -577,7 +577,7 @@ internal class ArgbImageNativeWindow : IDisposable
         {
             // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getdc
             var ownerDC = Windows.Win32.PInvoke.GetDC(ownerHWnd);
-            if (ownerDC.Value == IntPtr.Zero)
+            if (ownerDC == IntPtr.Zero)
             {
                 Debug.Assert(false, "Could not get owner DC so that we can draw the icon bitmap.");
                 return MorphicResult.ErrorResult<IUpdateLayeredPaintingError>(new IUpdateLayeredPaintingError.CouldNotGetDeviceContextOfOwner());
@@ -586,7 +586,7 @@ internal class ArgbImageNativeWindow : IDisposable
             {
                 // see: https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-createcompatibledc
                 var sourceDC = Windows.Win32.PInvoke.CreateCompatibleDC(ownerDC);
-                if (sourceDC.Value == IntPtr.Zero)
+                if (sourceDC == IntPtr.Zero)
                 {
                     Debug.Assert(false, "Could not get create compatible DC for screen DC so that we can draw the icon bitmap.");
                     return MorphicResult.ErrorResult<IUpdateLayeredPaintingError>(new IUpdateLayeredPaintingError.CouldNotCreateCompatibleDeviceContext());
@@ -596,7 +596,7 @@ internal class ArgbImageNativeWindow : IDisposable
                     // select our sized bitmap in the source DC
                     // see: https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-selectobject
                     var oldSourceDCObject = Windows.Win32.PInvoke.SelectObject(sourceDC, (Windows.Win32.Graphics.Gdi.HGDIOBJ)_bitmapInfo.hSizedBitmap);
-                    if (oldSourceDCObject.Value == PInvokeExtensions.HGDI_ERROR)
+                    if (oldSourceDCObject == PInvokeExtensions.HGDI_ERROR)
                     {
                         Debug.Assert(false, "Could not select the icon bitmap GDI object to update the layered window with the alpha-blended bitmap.");
                         return MorphicResult.ErrorResult<IUpdateLayeredPaintingError>(new IUpdateLayeredPaintingError.CouldNotSelectSizedBitmapInSourceDeviceContext());
@@ -663,21 +663,21 @@ internal class ArgbImageNativeWindow : IDisposable
     {
         // get handle to the device context for the whole screen
         var screenDC = Windows.Win32.PInvoke.GetDC(Windows.Win32.Foundation.HWND.Null /* entire screen */);
-        if (screenDC.Value == IntPtr.Zero)
+        if (screenDC == IntPtr.Zero)
         {
             return MorphicResult.ErrorResult();
         }
         try
         {
             var srcDC = Windows.Win32.PInvoke.CreateCompatibleDC(screenDC);
-            if (srcDC.Value == IntPtr.Zero)
+            if (srcDC == IntPtr.Zero)
             {
                 return MorphicResult.ErrorResult();
             }
             try
             {
                 var dstDC = Windows.Win32.PInvoke.CreateCompatibleDC(screenDC);
-                if (dstDC.Value == IntPtr.Zero)
+                if (dstDC == IntPtr.Zero)
                 {
                     return MorphicResult.ErrorResult();
                 }
@@ -737,9 +737,9 @@ internal class ArgbImageNativeWindow : IDisposable
                         // restore the old src and dest object in the current device context
                         Windows.Win32.Graphics.Gdi.HGDIOBJ selectObjectResult;
                         selectObjectResult = Windows.Win32.PInvoke.SelectObject(dstDC, oldDst);
-                        Debug.Assert(selectObjectResult.IsNull == false && selectObjectResult.Value != PInvokeExtensions.HGDI_ERROR);
+                        Debug.Assert(selectObjectResult.IsNull == false && selectObjectResult != PInvokeExtensions.HGDI_ERROR);
                         selectObjectResult = Windows.Win32.PInvoke.SelectObject(srcDC, oldSrc);
-                        Debug.Assert(selectObjectResult.IsNull == false && selectObjectResult.Value != PInvokeExtensions.HGDI_ERROR);
+                        Debug.Assert(selectObjectResult.IsNull == false && selectObjectResult != PInvokeExtensions.HGDI_ERROR);
                     }
 
                     return MorphicResult.OkResult(destHBitmapFromDIB);

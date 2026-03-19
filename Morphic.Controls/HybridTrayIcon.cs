@@ -39,8 +39,10 @@ public class HybridTrayIcon : IDisposable
     private string? _text = null;
     private bool _visible = false;
 
+#if INCLUDE_WINDOWS_10_SUPPORT
     // <summary>Used if a tray icon is desired instead of a next-to-tray taskbar button</summary>
     private System.Windows.Forms.NotifyIcon? _notifyIcon = null;
+#endif
 
     // <summary>Used if a next-to-tray button is desired instead of a tray icon</summary>
     private Morphic.Controls.TrayButton.TrayButton? _trayButton = null;
@@ -48,9 +50,13 @@ public class HybridTrayIcon : IDisposable
     public enum TrayIconLocationOption
     {
         None,
+#if INCLUDE_WINDOWS_10_SUPPORT
         NotificationTray,
+#endif
         NextToNotificationTray,
-        NotificationTrayAndNextToNotificationTray
+#if INCLUDE_WINDOWS_10_SUPPORT
+        NotificationTrayAndNextToNotificationTray,
+#endif
     }
     //
     private TrayIconLocationOption _trayIconLocation = TrayIconLocationOption.None;
@@ -71,8 +77,10 @@ public class HybridTrayIcon : IDisposable
             if (disposing)
             {
                 // dispose managed state (managed objects)
+#if INCLUDE_WINDOWS_10_SUPPORT
                 _notifyIcon?.Dispose();
                 _notifyIcon = null;
+#endif
 
                 _trayButton?.Dispose();
                 _trayButton = null;
@@ -89,7 +97,7 @@ public class HybridTrayIcon : IDisposable
     }
 
     // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-    // ~TrayButton()
+    // ~HybridTrayIcon()
     // {
     //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
     //     Dispose(disposing: false);
@@ -135,10 +143,12 @@ public class HybridTrayIcon : IDisposable
         set
         {
             _text = value;
+#if INCLUDE_WINDOWS_10_SUPPORT
             if (_notifyIcon is not null)
             {
                 _notifyIcon.Text = _text;
             }
+#endif
             if (_trayButton is not null)
             {
                 _trayButton.Text = _text;
@@ -157,10 +167,12 @@ public class HybridTrayIcon : IDisposable
         {
             _visible = value;
 
+#if INCLUDE_WINDOWS_10_SUPPORT
             if (_notifyIcon is not null)
             {
                 _notifyIcon.Visible = _visible;
             }
+#endif
             if (_trayButton is not null)
             {
                 // NOTE: we set the visibility tag; if the tray button cannot currently be made visible, it will become ".PendingVisible" instead
@@ -175,12 +187,14 @@ public class HybridTrayIcon : IDisposable
     {
         var result = new List<System.Drawing.Rectangle>();
 
+#if INCLUDE_WINDOWS_10_SUPPORT
         if (_notifyIcon is not null)
         {
             // NOTE: if we can find the exact position and size of the icon in the system notification tray, we should return that value instead
             // NOTE: since we cannot currently and reliably return a list of actual positions+sizes in this circumstance, we return an error
             return MorphicResult.ErrorResult();
         } 
+#endif
 
         if (_trayButton is not null)
         {
@@ -194,6 +208,27 @@ public class HybridTrayIcon : IDisposable
         return MorphicResult.OkResult(result);
     }
 
+    // NOTE: this function returns just the first position and size (i.e. rect) of our tray icon; if it cannot find at least one position+size, it returns null
+    public System.Windows.Rect? GetPositionAndSizeOrNull()
+    {
+        var getPositionsAndSizesResult = this.GetPositionsAndSizes();
+        if (getPositionsAndSizesResult.IsSuccess)
+        {
+            var positionsAndSizes = getPositionsAndSizesResult.Value!;
+            if (positionsAndSizes.Count == 1)
+            {
+                var positionAndSize = positionsAndSizes[0];
+                return new System.Windows.Rect(positionAndSize.X, positionAndSize.Y, positionAndSize.Width, positionAndSize.Height);
+            }
+            else
+            {
+                System.Diagnostics.Debug.Assert(false, "Could not get positions and sizes of tray icon(s); this is to be expected if we cannot capture the rectangle (which may be the case if we're putting the icon in the system tray itself)");
+            }
+        }
+
+        return null;
+    }
+
     //
 
     public void SuppressTaskbarButtonResurfaceChecks(bool suppress)
@@ -203,6 +238,7 @@ public class HybridTrayIcon : IDisposable
 
     //
 
+#if INCLUDE_WINDOWS_10_SUPPORT
     private void InitializeTrayIcon()
     {
         if (_notifyIcon is not null)
@@ -227,6 +263,7 @@ public class HybridTrayIcon : IDisposable
         };
         _notifyIcon.Visible = _visible;
     }
+#endif
 
     private void InitializeTrayButton()
     {
@@ -268,6 +305,7 @@ public class HybridTrayIcon : IDisposable
         {
             _trayIconLocation = value;
 
+#if INCLUDE_WINDOWS_10_SUPPORT
             // create notify icon if requested
             switch (value)
             {
@@ -279,6 +317,7 @@ public class HybridTrayIcon : IDisposable
                     }
                     break;
             }
+#endif
 
             // create tray button if requested
             switch (value)
@@ -292,6 +331,7 @@ public class HybridTrayIcon : IDisposable
                     break;
             }
 
+#if INCLUDE_WINDOWS_10_SUPPORT
             // destroy notify icon if no longer wanted
             switch (value)
             {
@@ -304,6 +344,7 @@ public class HybridTrayIcon : IDisposable
                     }
                     break;
             }
+#endif
 
             // destroy tray button if no longer wanted
             switch (value)

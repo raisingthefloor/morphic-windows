@@ -134,7 +134,7 @@ internal class PInvokeExtensions
         }
         else
         {
-            return PInvokeExtensions.GetWindowLongPtr(hWnd.Value, nIndex);
+            return PInvokeExtensions.GetWindowLongPtr(hWnd, nIndex);
         }
     }
     //
