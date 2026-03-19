@@ -171,6 +171,7 @@ internal class TrayButtonNativeWindow : IDisposable
             }
             //
             Windows.Win32.UI.WindowsAndMessaging.WNDCLASSEXW lpWndClassEx;
+            ushort registerClassResult;
             unsafe
             {
                 fixed (char* pointerToNativeWindowClassName = nativeWindowClassName)
@@ -183,10 +184,11 @@ internal class TrayButtonNativeWindow : IDisposable
                         hCursor = hCursor,
                     };
                 }
-            }
 
-            // NOTE: RegisterClassEx returns an ATOM (or 0 if the call failed)
-            var registerClassResult = Windows.Win32.PInvoke.RegisterClassEx(lpWndClassEx);
+	            // NOTE: RegisterClassEx returns an ATOM (or 0 if the call failed)
+	            registerClassResult = Windows.Win32.PInvoke.RegisterClassEx(lpWndClassEx);
+            }
+			//
             if (registerClassResult == 0) // failure
             {
                 var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();

@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2025 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2026 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Runtime.InteropServices;
 
 namespace Morphic.Controls.TrayButton.Windows10;
@@ -219,7 +220,7 @@ internal class TrayButton : IDisposable
     {
         private TrayButton _owner;
 
-        private IntPtr _tooltipWindowHandle = IntPtr.Zero;
+        private Windows.Win32.Foundation.HWND _tooltipWindowHandle = Windows.Win32.Foundation.HWND.Null;
         private IntPtr _iconHandle = IntPtr.Zero;
 
         private string? _tooltipText = null;
@@ -266,16 +267,32 @@ internal class TrayButton : IDisposable
             const string nativeWindowClassName = "Morphic-TrayButton";
 
             // register our custom native window class
-            var pointerToWndProcCallback = Marshal.GetFunctionPointerForDelegate(new PInvokeExtensions.WndProc(this.WndProcCallback));
-            var lpWndClass = new PInvokeExtensions.WNDCLASSEX
+            var hCursor = Windows.Win32.PInvoke.LoadCursor(Windows.Win32.Foundation.HINSTANCE.Null, Windows.Win32.PInvoke.IDC_ARROW);
+            if (hCursor.IsNull == true)
             {
-                cbSize = (uint)Marshal.SizeOf(typeof(PInvokeExtensions.WNDCLASSEX)),
-                lpfnWndProc = pointerToWndProcCallback,
-                lpszClassName = nativeWindowClassName,
-                hCursor = LegacyWindowsApi.LoadCursor(IntPtr.Zero, (int)LegacyWindowsApi.Cursors.IDC_ARROW)
-            };
-
-            var registerClassResult = PInvokeExtensions.RegisterClassEx(ref lpWndClass);
+                Debug.Assert(false, "Could not load arrow cursor");
+                //var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+                return; // MorphicResult.ErrorResult<IInitializeError>(new IInitializeError.Win32Error((uint)win32ErrorCode));
+            }
+            //
+            Windows.Win32.UI.WindowsAndMessaging.WNDCLASSEXW lpWndClassEx;
+            ushort registerClassResult;
+            unsafe
+            {
+                fixed (char* pointerToNativeWindowClassName = nativeWindowClassName)
+                {
+                    lpWndClassEx = new Windows.Win32.UI.WindowsAndMessaging.WNDCLASSEXW()
+                    {
+                        cbSize = (uint)Marshal.SizeOf<Windows.Win32.UI.WindowsAndMessaging.WNDCLASSEXW>(),
+                        lpfnWndProc = this.WndProcCallback,
+                        lpszClassName = pointerToNativeWindowClassName,
+                        hCursor = hCursor,
+                    };
+                }
+                // NOTE: RegisterClassEx returns an ATOM (or 0 if the call failed)
+                registerClassResult = Windows.Win32.PInvoke.RegisterClassEx(lpWndClassEx);
+            }
+            //
             if (registerClassResult == 0)
             {
                 throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
@@ -397,19 +414,22 @@ internal class TrayButton : IDisposable
                 return;
             }
 
-            _tooltipWindowHandle = LegacyWindowsApi.CreateWindowEx(
-                 0 /* no styles */,
-                 PInvokeExtensions.TOOLTIPS_CLASS,
-                 null,
-                 LegacyWindowsApi.WindowStyles.WS_POPUP | (LegacyWindowsApi.WindowStyles)PInvokeExtensions.TTS_ALWAYSTIP,
-                 PInvokeExtensions.CW_USEDEFAULT,
-                 PInvokeExtensions.CW_USEDEFAULT,
-                 PInvokeExtensions.CW_USEDEFAULT,
-                 PInvokeExtensions.CW_USEDEFAULT,
-                 this.Handle,
-                 IntPtr.Zero,
-                 IntPtr.Zero,
-                 IntPtr.Zero);
+            unsafe
+            {
+                _tooltipWindowHandle = Windows.Win32.PInvoke.CreateWindowEx(
+                    0 /* no styles */,
+                    Windows.Win32.PInvoke.TOOLTIPS_CLASS,
+                    null,
+                    Windows.Win32.UI.WindowsAndMessaging.WINDOW_STYLE.WS_POPUP | (Windows.Win32.UI.WindowsAndMessaging.WINDOW_STYLE)Windows.Win32.PInvoke.TTS_ALWAYSTIP,
+                    Windows.Win32.PInvoke.CW_USEDEFAULT,
+                    Windows.Win32.PInvoke.CW_USEDEFAULT,
+                    Windows.Win32.PInvoke.CW_USEDEFAULT,
+                    Windows.Win32.PInvoke.CW_USEDEFAULT,
+                    (Windows.Win32.Foundation.HWND)this.Handle,
+                    null,
+                    null,
+                    null);
+            }
 
             if (_tooltipWindowHandle == IntPtr.Zero)
             {
@@ -426,7 +446,7 @@ internal class TrayButton : IDisposable
             this.UpdateTooltipTextAndTracking();
 
             LegacyWindowsApi.DestroyWindow(_tooltipWindowHandle);
-            _tooltipWindowHandle = IntPtr.Zero;
+            _tooltipWindowHandle = Windows.Win32.Foundation.HWND.Null;
         }
 
         private void UpdateTooltipTextAndTracking()
@@ -470,20 +490,20 @@ internal class TrayButton : IDisposable
                 {
                     if (_tooltipInfoAdded == false)
                     {
-                        _ = LegacyWindowsApi.SendMessage(_tooltipWindowHandle, (int)PInvokeExtensions.TTM_ADDTOOL, 0, pointerToToolinfo);
+                        _ = Windows.Win32.PInvoke.SendMessage(_tooltipWindowHandle, Windows.Win32.PInvoke.TTM_ADDTOOL, 0, pointerToToolinfo);
                         _tooltipInfoAdded = true;
                     }
                     else
                     {
                         // delete and re-add the tooltipinfo; this will update all the info (including the text and tracking rect)
-                        _ = LegacyWindowsApi.SendMessage(_tooltipWindowHandle, (int)PInvokeExtensions.TTM_DELTOOL, 0, pointerToToolinfo);
-                        _ = LegacyWindowsApi.SendMessage(_tooltipWindowHandle, (int)PInvokeExtensions.TTM_ADDTOOL, 0, pointerToToolinfo);
+                        _ = Windows.Win32.PInvoke.SendMessage(_tooltipWindowHandle, Windows.Win32.PInvoke.TTM_DELTOOL, 0, pointerToToolinfo);
+                        _ = Windows.Win32.PInvoke.SendMessage(_tooltipWindowHandle, Windows.Win32.PInvoke.TTM_ADDTOOL, 0, pointerToToolinfo);
                     }
                 }
                 else
                 {
                     // NOTE: we might technically call "deltool" even when a tooltipinfo was already removed
-                    _ = LegacyWindowsApi.SendMessage(_tooltipWindowHandle, (int)PInvokeExtensions.TTM_DELTOOL, 0, pointerToToolinfo);
+                    _ = Windows.Win32.PInvoke.SendMessage(_tooltipWindowHandle, Windows.Win32.PInvoke.TTM_DELTOOL, 0, pointerToToolinfo);
                     _tooltipInfoAdded = false;
                 }
             }
@@ -494,7 +514,7 @@ internal class TrayButton : IDisposable
         }
 
         // NOTE: intial creation events are captured by this callback, but afterwards window messages are captured by WndProc instead
-        private IntPtr WndProcCallback(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
+        private Windows.Win32.Foundation.LRESULT WndProcCallback(Windows.Win32.Foundation.HWND hWnd, uint msg, Windows.Win32.Foundation.WPARAM wParam, Windows.Win32.Foundation.LPARAM lParam)
         {
             switch ((LegacyWindowsApi.WindowMessage)msg)
             {
@@ -503,7 +523,7 @@ internal class TrayButton : IDisposable
                     {
                         // failed; abort
                         Debug.Assert(false, "Could not initialize buffered paint");
-                        return new IntPtr(-1); // abort window creation process
+                        return (Windows.Win32.Foundation.LRESULT)(-1); // abort window creation process
                     }
                     break;
                 default:
@@ -511,59 +531,62 @@ internal class TrayButton : IDisposable
             }
 
             // pass all non-handled messages through to DefWindowProc
-            return LegacyWindowsApi.DefWindowProc(hWnd, msg, wParam, lParam);
+            return Windows.Win32.PInvoke.DefWindowProc(hWnd, msg, wParam, lParam);
         }
 
         // NOTE: the built-in CreateHandle function couldn't handle our custom class, so we have overridden CreateHandle and are calling CreateWindowEx ourselves
         public override void CreateHandle(System.Windows.Forms.CreateParams cp)
         {
-            // NOTE: if cp.ClassName is a string parseable as a (UInt16) number, convert that value to an IntPtr; otherwise capture a pointer to the string
-            IntPtr classNameAsIntPtr;
-            bool mustReleaseClassNameAsIntPtr = false;
-            //
-            ushort classNameAsUInt16 = 0;
-            if (ushort.TryParse(cp.ClassName, out classNameAsUInt16) == true)
-            {
-                classNameAsIntPtr = (IntPtr)classNameAsUInt16;
-                mustReleaseClassNameAsIntPtr = false;
-            }
-            else
-            {
-                classNameAsIntPtr = Marshal.StringToHGlobalUni(cp.ClassName);
-                mustReleaseClassNameAsIntPtr = true;
-            }
-
             // TODO: in some circumstances, it is possible that we are unable to create our window; consider creating a retry mechanism (dealing with async) or notify our caller
-            try
+            unsafe
             {
-                var handle = PInvokeExtensions.CreateWindowEx(
-                     (PInvoke.User32.WindowStylesEx)cp.ExStyle,
-                     classNameAsIntPtr,
-                     cp.Caption,
-                     (PInvoke.User32.WindowStyles)cp.Style,
-                     cp.X,
-                     cp.Y,
-                     cp.Width,
-                     cp.Height,
-                     cp.Parent,
-                     IntPtr.Zero,
-                     IntPtr.Zero,
-                     IntPtr.Zero
-                     );
-
-                // NOTE: in our testing, handle was sometimes IntPtr.Zero here (in which case the tray icon button's window will not exist)
-                if (handle == IntPtr.Zero)
+                Windows.Win32.Foundation.PCWSTR classNameAsPCWSTR;
+                //
+                // NOTE: if cp.ClassName is a string parseable as a (UInt16) number, convert that value to a PCWSTR containing the atom; otherwise pin the string
+                if (ushort.TryParse(cp.ClassName, out var classNameAsUInt16))
                 {
-                    Debug.Assert(false, "Could not create tray button window handle");
+                    classNameAsPCWSTR = new Windows.Win32.Foundation.PCWSTR((char*)(nint)classNameAsUInt16);
+                }
+                else
+                {
+                    classNameAsPCWSTR = new Windows.Win32.Foundation.PCWSTR((char*)Marshal.StringToHGlobalUni(cp.ClassName));
                 }
 
-                this.AssignHandle(handle);
-            }
-            finally
-            {
-                if (mustReleaseClassNameAsIntPtr == true)
+                try
                 {
-                    Marshal.FreeHGlobal(classNameAsIntPtr);
+                    fixed (char* pCaption = cp.Caption)
+                    {
+                        var handle = Windows.Win32.PInvoke.CreateWindowEx(
+                             (Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE)cp.ExStyle,
+                             classNameAsPCWSTR,
+                             pCaption,
+                             (Windows.Win32.UI.WindowsAndMessaging.WINDOW_STYLE)cp.Style,
+                             cp.X,
+                             cp.Y,
+                             cp.Width,
+                             cp.Height,
+                             (Windows.Win32.Foundation.HWND)cp.Parent,
+                             Windows.Win32.UI.WindowsAndMessaging.HMENU.Null,
+                             Windows.Win32.Foundation.HINSTANCE.Null,
+                             null
+                             );
+
+                        // NOTE: in our testing, handle was sometimes null/zero here (in which case the tray icon button's window will not exist)
+                        if (handle.IsNull)
+                        {
+                            Debug.Assert(false, "Could not create tray button window handle");
+                        }
+
+                        this.AssignHandle((IntPtr)handle.Value);
+                    }
+                }
+                finally
+                {
+                    // if classNameAsPCWSTR was allocated via Marshal, free it
+                    if (!ushort.TryParse(cp.ClassName, out _))
+                    {
+                        Marshal.FreeHGlobal((IntPtr)classNameAsPCWSTR.Value);
+                    }
                 }
             }
         }
@@ -848,26 +871,33 @@ internal class TrayButton : IDisposable
             }
         }
 
-        private LegacyWindowsApi.POINT? ConvertMouseMessageLParamToScreenPoint(IntPtr lParam)
+        private System.Drawing.Point? ConvertMouseMessageLParamToScreenPoint(IntPtr lParam)
         {
             var x = (ushort)((lParam.ToInt64() >> 0) & 0xFFFF);
             var y = (ushort)((lParam.ToInt64() >> 16) & 0xFFFF);
             // convert x and y to screen coordinates
-            var hitPoint = new PInvoke.POINT { x = x, y = y };
+            Span<System.Drawing.Point> hitPoints = stackalloc System.Drawing.Point[1];
+            hitPoints[0] = new System.Drawing.Point(x, y);
 
             // NOTE: the instructions for MapWindowPoints instruct us to call SetLastError before calling MapWindowPoints to ensure that we can distinguish a result of 0 from an error if the last win32 error wasn't set (because it wasn't an error)
+            // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-mapwindowpoints
             Marshal.SetLastPInvokeError(0);
             //
             // NOTE: the PInvoke implementation of MapWindowPoints did not support passing in a POINT struct, so we manually declared the function
-            var mapWindowPointsResult = PInvokeExtensions.MapWindowPoints(this.Handle, IntPtr.Zero, ref hitPoint, 1);
-            if (mapWindowPointsResult == 0 && Marshal.GetLastWin32Error() != 0)
+            var mapWindowPointsResult = Windows.Win32.PInvoke.MapWindowPoints((Windows.Win32.Foundation.HWND)this.Handle, Windows.Win32.Foundation.HWND.Null, hitPoints);
+            if (mapWindowPointsResult == 0)
             {
-                // failed; abort
-                Debug.Assert(false, "Could not map tray button hit point to screen coordinates");
-                return null;
+                // failed (if the last error != 0)
+                var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+                if (win32ErrorCode != 0)
+                {
+                    // failed; abort
+                    Debug.Assert(false, "Could not map tray button hit point to screen coordinates");
+                    return null;
+                }
             }
 
-            var result = new LegacyWindowsApi.POINT(hitPoint.x, hitPoint.y);
+            var result = hitPoints[0];
             return result;
         }
         private void Paint(IntPtr hWnd)
@@ -1189,23 +1219,32 @@ internal class TrayButton : IDisposable
                     var taskbarHandle = TrayButtonNativeWindow.FindWindowsTaskbarHandle();
 
                     // convert our tray button's position from desktop coordinates to "child" coordinates within the taskbar
-                    PInvoke.RECT childRect = new() { left = changeToRect.Value.Left, top = changeToRect.Value.Top, right = changeToRect.Value.Right, bottom = changeToRect.Value.Bottom };
-                    var mapWindowPointsResult = PInvokeExtensions.MapWindowPoints(IntPtr.Zero /* use screen coordinates */, taskbarHandle, ref childRect, 2 /* 2 indicates that lpPoints is a RECT */);
+                    Span<System.Drawing.Point> childRectAsPoints = stackalloc System.Drawing.Point[2]; // 2 indicates that lpPoints is a RECT
+                    childRectAsPoints[0] = new() { X/*left*/ = changeToRect.Value.Left, Y/*top*/ = changeToRect.Value.Top };
+                    childRectAsPoints[1] = new() { X/*right*/ = changeToRect.Value.Right, Y/*bottom*/ = changeToRect.Value.Bottom };
+                    //
+                    // NOTE: the instructions for MapWindowPoints instruct us to call SetLastError before calling MapWindowPoints to ensure that we can distinguish a result of 0 from an error if the last win32 error wasn't set (because it wasn't an error)
+                    // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-mapwindowpoints
+                    Marshal.SetLastPInvokeError(0);
+                    //
+                    var mapWindowPointsResult = Windows.Win32.PInvoke.MapWindowPoints(Windows.Win32.Foundation.HWND.Null /* use screen coordinates */, (Windows.Win32.Foundation.HWND)taskbarHandle, childRectAsPoints);
                     if (mapWindowPointsResult == 0 && Marshal.GetLastWin32Error() != LegacyWindowsApi.ERROR_SUCCESS)
                     {
                         // failed; abort
                         Debug.Assert(false, "Could not map tray button RECT points to taskbar window handle");
                         return;
                     }
+                    // assemble the mapped points into a System.Drawing.Rectangle
+                    Rectangle childRect = new System.Drawing.Rectangle() { X = childRectAsPoints[0].X, Y = childRectAsPoints[0].Y, Width = childRectAsPoints[1].X - childRectAsPoints[0].X, Height = childRectAsPoints[1].Y - childRectAsPoints[0].Y };
 
                     var repositionTrayButtonSuccess = LegacyWindowsApi.SetWindowPos(
                          this.Handle,
                          LegacyWindowsApi.HWND_TOP,
-                         childRect.left,
-                         childRect.top,
-                         childRect.right - childRect.left,
-                         childRect.bottom - childRect.top,
-                         LegacyWindowsApi.SetWindowPosFlags.SWP_NOACTIVATE /* do not activate the window */ |
+                         childRect.X,
+                         childRect.Y,
+                         childRect.Width,
+                         childRect.Height,
+                         LegacyWindowsApi.SetWindowPosFlags.SWP_NOACTIVATE /* do not activate the window */ |   
                          LegacyWindowsApi.SetWindowPosFlags.SWP_SHOWWINDOW /* display the tray button */
                          );
 
@@ -1217,7 +1256,7 @@ internal class TrayButton : IDisposable
                     }
 
                     // capture our control's native window's new position and size
-                    _trayButtonPositionAndSize = new(childRect.left, childRect.top, childRect.right - childRect.left, childRect.bottom - childRect.top);
+                    _trayButtonPositionAndSize = new(childRect.X, childRect.Y, childRect.Width, childRect.Height);
                 }
 
                 // as we have moved/resized, request a repaint

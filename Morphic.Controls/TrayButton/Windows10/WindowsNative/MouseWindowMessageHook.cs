@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2024 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2026 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -29,11 +29,11 @@ namespace Morphic.Controls.TrayButton.Windows10.WindowsNative;
 
 public class MouseWindowMessageHook : IDisposable
 {
-    PInvoke.User32.WindowsHookDelegate _filterFunction;
-    PInvoke.User32.SafeHookHandle _hookHandle;
+    Windows.Win32.UI.WindowsAndMessaging.HOOKPROC _filterFunction;
+    Windows.Win32.UI.WindowsAndMessaging.HHOOK _hookHandle;
     private bool _isDisposed;
 
-    PInvoke.RECT? _trackingRect = null;
+    Windows.Win32.Foundation.RECT? _trackingRect = null;
 
     public struct WndProcEventArgs
     {
@@ -46,26 +46,26 @@ public class MouseWindowMessageHook : IDisposable
     public MouseWindowMessageHook()
     {
         // NOTE: we are using a low-level hook in this implementation, and we are monitoring mouse events globally (and then filtering by RECT below)
-        _filterFunction = new PInvoke.User32.WindowsHookDelegate(this.MessageFilterProc);
-        _hookHandle = PInvoke.User32.SetWindowsHookEx(PInvoke.User32.WindowsHookType.WH_MOUSE_LL, _filterFunction, IntPtr.Zero, 0 /* global hook */);
+        _filterFunction = new Windows.Win32.UI.WindowsAndMessaging.HOOKPROC(this.MessageFilterProc);
+        _hookHandle = Windows.Win32.PInvoke.SetWindowsHookEx(Windows.Win32.UI.WindowsAndMessaging.WINDOWS_HOOK_ID.WH_MOUSE_LL, _filterFunction, Windows.Win32.Foundation.HINSTANCE.Null, 0 /* global hook */);
     }
 
-    public void UpdateTrackingRegion(PInvoke.RECT rect)
+    public void UpdateTrackingRegion(Windows.Win32.Foundation.RECT rect)
     {
         _trackingRect = rect;
     }
 
     bool _lastMessageWasInTrackingRect = false;
     // NOTE: ideally, we would create a queue of messages and then use Task.Run to run code which dequeued the latest messages sequentially
-    private int MessageFilterProc(int nCode, IntPtr wParam, IntPtr lParam)
+    private Windows.Win32.Foundation.LRESULT MessageFilterProc(int nCode, Windows.Win32.Foundation.WPARAM wParam, Windows.Win32.Foundation.LPARAM lParam)
     {
         if (nCode < 0)
         {
-            // per Microsoft's docs: if the code is less than zero, we must pass the message along with _no_ intermediate processing 
+            // per Microsoft's docs: if the code is less than zero, we must pass the message along with _no_ intermediate processing
             // see: https://docs.microsoft.com/en-us/previous-versions/windows/desktop/legacy/ms644986(v=vs.85)
 
             // call the next hook in the chain and return its result
-            return PInvoke.User32.CallNextHookEx(IntPtr.Zero, nCode, wParam, lParam);
+            return Windows.Win32.PInvoke.CallNextHookEx(Windows.Win32.UI.WindowsAndMessaging.HHOOK.Null, nCode, wParam, lParam);
         }
 
         // NOTE: as this is a low-level hook, we must process the message in less than the LowLevelHooksTimeout value (in ms) specified at:
@@ -80,21 +80,21 @@ public class MouseWindowMessageHook : IDisposable
                     // NOTE: wParam is one of: { WM_LBUTTONDOWN, WM_LBUTTONUP, WM_MOUSEMOVE, WM_MOUSEWHEEL, WM_MOUSEHWHEEL, WM_RBUTTONDOWN, WM_RBUTTONUP }
                     // NOTE: lParam is a MSLLHOOKSTRUCT structure instance; see: https://docs.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-msllhookstruct
 
-                    var mouseEventInfo = Marshal.PtrToStructure<LegacyWindowsApi.MSLLHOOKSTRUCT>(lParam);
+                    var mouseEventInfo = Marshal.PtrToStructure<Windows.Win32.UI.WindowsAndMessaging.MSLLHOOKSTRUCT>((IntPtr)(nint)lParam);
 
                     var eventArgs = new WndProcEventArgs()
                     {
-                        Message = (uint)wParam.ToInt64(),
-                        X = mouseEventInfo.pt.x,
-                        Y = mouseEventInfo.pt.y
+                        Message = (uint)(nuint)wParam,
+                        X = mouseEventInfo.pt.X,
+                        Y = mouseEventInfo.pt.Y
                     };
 
                     if (_trackingRect is not null)
                     {
-                        if ((mouseEventInfo.pt.x >= _trackingRect.Value.left) &&
-                            (mouseEventInfo.pt.x <= _trackingRect.Value.right) &&
-                            (mouseEventInfo.pt.y >= _trackingRect.Value.top) &&
-                            (mouseEventInfo.pt.y <= _trackingRect.Value.bottom))
+                        if ((mouseEventInfo.pt.X >= _trackingRect.Value.left) &&
+                            (mouseEventInfo.pt.X <= _trackingRect.Value.right) &&
+                            (mouseEventInfo.pt.Y >= _trackingRect.Value.top) &&
+                            (mouseEventInfo.pt.Y <= _trackingRect.Value.bottom))
                         {
                             // NOTE: this may not be guaranteed to execute in sequence
                             Task.Run(() => { WndProcEvent?.Invoke(this, eventArgs); });
@@ -131,7 +131,7 @@ public class MouseWindowMessageHook : IDisposable
         }
 
         // call the next hook in the chain and return its result
-        return PInvoke.User32.CallNextHookEx(IntPtr.Zero, nCode, wParam, lParam);
+        return Windows.Win32.PInvoke.CallNextHookEx(Windows.Win32.UI.WindowsAndMessaging.HHOOK.Null, nCode, wParam, lParam);
     }
 
     #region IDisposable
@@ -147,9 +147,9 @@ public class MouseWindowMessageHook : IDisposable
             // free unmanaged resources
 
             // NOTE: this function will return false if it fails
-            // NOTE: in theory the system should clean up after this hook handle automatically (so we could probably comment out the following two lines of code)
-            _ = LegacyWindowsApi.UnhookWindowsHookEx(_hookHandle.DangerousGetHandle());
-            _hookHandle.SetHandleAsInvalid();
+            // NOTE: in theory the system should clean up after this hook handle automatically (so we could probably comment out the following line of code)
+            _ = Windows.Win32.PInvoke.UnhookWindowsHookEx(_hookHandle);
+            _hookHandle = Windows.Win32.UI.WindowsAndMessaging.HHOOK.Null;
 
             // set any large fields to null
 
