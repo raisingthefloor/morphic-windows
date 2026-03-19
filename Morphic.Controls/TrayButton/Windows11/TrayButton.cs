@@ -96,7 +96,7 @@ internal class TrayButton : IDisposable
 
     public System.Drawing.Bitmap? Bitmap
     {
-        get =>  _bitmap;
+        get => _bitmap;
     }
     //
     public MorphicResult<MorphicUnit, MorphicUnit> SetBitmap(System.Drawing.Bitmap? value)
@@ -105,7 +105,7 @@ internal class TrayButton : IDisposable
 
         if (_nativeWindow is not null)
         {
-	        // convert the managed System.Drawing.Bitmap to a GDI bitmap (handle); ArgbImageNativeWindow ultimately takes ownership of the handle (and will clean up during disposal)
+            // convert the managed System.Drawing.Bitmap to a GDI bitmap (handle); ArgbImageNativeWindow ultimately takes ownership of the handle (and will clean up during disposal)
             IntPtr hBitmap = IntPtr.Zero;
             int bitmapWidth = 0;
             int bitmapHeight = 0;
@@ -126,7 +126,7 @@ internal class TrayButton : IDisposable
                 bitmapHeight = _bitmap.Height;
             }
 
-	        var setBitmapResult = _nativeWindow!.SetBitmap(hBitmap, bitmapWidth, bitmapHeight);
+            var setBitmapResult = _nativeWindow!.SetBitmap(hBitmap, bitmapWidth, bitmapHeight);
             if (setBitmapResult.IsError == true)
             {
                 Debug.Assert(false, "Could not set bitmap.");
@@ -142,7 +142,7 @@ internal class TrayButton : IDisposable
         get => _text;
     }
     //
-    public MorphicResult<MorphicUnit, MorphicUnit> SetText(string? value) 
+    public MorphicResult<MorphicUnit, MorphicUnit> SetText(string? value)
     {
         _text = value;
 
@@ -312,7 +312,7 @@ internal class TrayButton : IDisposable
         };
 
         // set the bitmap ("icon") for the native window
-		// convert the managed System.Drawing.Bitmap to a GDI bitmap (handle); ArgbImageNativeWindow ultimately takes ownership of the handle (and will clean up during disposal)
+        // convert the managed System.Drawing.Bitmap to a GDI bitmap (handle); ArgbImageNativeWindow ultimately takes ownership of the handle (and will clean up during disposal)
         IntPtr hBitmapForNativeWindow = IntPtr.Zero;
         int bitmapWidthForNativeWindow = 0;
         int bitmapHeightForNativeWindow = 0;

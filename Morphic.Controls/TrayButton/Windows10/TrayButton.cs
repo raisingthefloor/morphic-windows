@@ -447,19 +447,26 @@ internal class TrayButton : IDisposable
                 return;
             }
 
-            var toolinfo = new PInvokeExtensions.TOOLINFO();
-            toolinfo.cbSize = (uint)Marshal.SizeOf(toolinfo);
-            toolinfo.hwnd = this.Handle;
-            toolinfo.uFlags = PInvokeExtensions.TTF_SUBCLASS;
-            toolinfo.lpszText = _tooltipText;
-            toolinfo.uId = unchecked((nuint)(nint)this.Handle); // unique identifier (for adding/deleting the tooltip)
-            toolinfo.rect = trayButtonClientRect;
-            //
-            var pointerToToolinfo = Marshal.AllocHGlobal(Marshal.SizeOf(toolinfo));
+            IntPtr pointerToToolinfo;
+            unsafe
+            {
+                fixed (char* pointerToTooltipText = _tooltipText)
+                {
+                    var toolinfo = new Windows.Win32.UI.Controls.TTTOOLINFOW();
+                    toolinfo.cbSize = (uint)(Marshal.SizeOf<Windows.Win32.UI.Controls.TTTOOLINFOW>() - IntPtr.Size); // TTTOOLINFOW_V1_SIZE (required for TTM_ADDTOOL)
+                    toolinfo.hwnd = (Windows.Win32.Foundation.HWND)this.Handle;
+                    toolinfo.uFlags = Windows.Win32.UI.Controls.TOOLTIP_FLAGS.TTF_SUBCLASS;
+                    toolinfo.lpszText = pointerToTooltipText;
+                    toolinfo.uId = unchecked((nuint)(nint)this.Handle); // unique identifier (for adding/deleting the tooltip)
+                    toolinfo.rect = trayButtonClientRect;
+                    //
+                    pointerToToolinfo = Marshal.AllocHGlobal(Marshal.SizeOf(toolinfo));
+                    Marshal.StructureToPtr(toolinfo, pointerToToolinfo, false);
+                }
+            }
             try
             {
-                Marshal.StructureToPtr(toolinfo, pointerToToolinfo, false);
-                if (toolinfo.lpszText is not null)
+                if (_tooltipText is not null)
                 {
                     if (_tooltipInfoAdded == false)
                     {

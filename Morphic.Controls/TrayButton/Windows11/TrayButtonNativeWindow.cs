@@ -37,9 +37,9 @@ internal class TrayButtonNativeWindow : IDisposable
     private static ushort? s_morphicTrayButtonClassInfoExAtom = null;
     // create a static wndproc delegate (which will work as a trampoline to a window's wndproc function, using the hwnd-specific userdata which stores a reference to each instance)
     // [this is done to prevent the delegate from being GC'd while the window class is registered]
-    private static PInvokeExtensions.WndProc? s_wndProcDelegate;
+    private static Windows.Win32.UI.WindowsAndMessaging.WNDPROC? s_wndProcDelegate;
 
-    private IntPtr _hwnd = IntPtr.Zero;
+    private Windows.Win32.Foundation.HWND _hwnd = Windows.Win32.Foundation.HWND.Null;
     // NOTE: a GC handle to the class instance is stored as userdata for each native window's hwnd (so that we can trampoline from the static wndproc to the instance-specific WndProc callback)
     private GCHandle _gcHandle;
 
@@ -51,7 +51,7 @@ internal class TrayButtonNativeWindow : IDisposable
 
     private ArgbImageNativeWindow? _argbImageNativeWindow = null;
 
-    private IntPtr _tooltipWindowHandle;
+    private Windows.Win32.Foundation.HWND _tooltipWindowHandle;
     private bool _tooltipInfoAdded = false;
     private string? _tooltipText;
 
@@ -64,11 +64,11 @@ internal class TrayButtonNativeWindow : IDisposable
         }
     }
 
-    private IntPtr _locationChangeWindowEventHook = IntPtr.Zero;
-    private PInvokeExtensions.WinEventProc? _locationChangeWindowEventProc = null;
+    private Windows.Win32.UI.Accessibility.HWINEVENTHOOK _locationChangeWindowEventHook = Windows.Win32.UI.Accessibility.HWINEVENTHOOK.Null;
+    private Windows.Win32.UI.Accessibility.WINEVENTPROC? _locationChangeWindowEventProc = null;
 
-    private IntPtr _objectReorderWindowEventHook = IntPtr.Zero;
-    private PInvokeExtensions.WinEventProc? _objectReorderWindowEventProc = null;
+    private Windows.Win32.UI.Accessibility.HWINEVENTHOOK _objectReorderWindowEventHook = Windows.Win32.UI.Accessibility.HWINEVENTHOOK.Null;
+    private Windows.Win32.UI.Accessibility.WINEVENTPROC? _objectReorderWindowEventProc = null;
 
     [Flags]
     private enum TrayButtonVisualStateFlags
@@ -99,11 +99,11 @@ internal class TrayButtonNativeWindow : IDisposable
                 // dispose managed state (managed objects)
                 if (_objectReorderWindowEventHook != IntPtr.Zero)
                 {
-                    PInvokeExtensions.UnhookWinEvent(_objectReorderWindowEventHook);
+                    Windows.Win32.PInvoke.UnhookWinEvent(_objectReorderWindowEventHook);
                 }
                 if (_locationChangeWindowEventHook != IntPtr.Zero)
                 {
-                    PInvokeExtensions.UnhookWinEvent(_locationChangeWindowEventHook);
+                    Windows.Win32.PInvoke.UnhookWinEvent(_locationChangeWindowEventHook);
                 }
 
                 _argbImageNativeWindow?.Dispose();
@@ -112,12 +112,12 @@ internal class TrayButtonNativeWindow : IDisposable
             }
 
             // free unmanaged resources (unmanaged objects) and override finalizer
-			//
+            //
             // free window handle
             if (_hwnd != IntPtr.Zero)
             {
-                _ = Windows.Win32.PInvoke.DestroyWindow((Windows.Win32.Foundation.HWND)_hwnd);
-                _hwnd = IntPtr.Zero;
+                _ = Windows.Win32.PInvoke.DestroyWindow(_hwnd);
+                _hwnd = Windows.Win32.Foundation.HWND.Null;
             }
 
             // clean up the _gcHandle if it's already allocated; we allocate the GC Handle to make our event handler trampoline possible
@@ -161,15 +161,6 @@ internal class TrayButtonNativeWindow : IDisposable
         {
             // register our control's custom native window class using a static wndproc (which will act as a trampoline to an instance-specific WndProc callback)
             s_wndProcDelegate = TrayButtonNativeWindow.StaticWndProc;
-            nint pointerToWndProcCallback;
-            try
-            {
-                pointerToWndProcCallback = Marshal.GetFunctionPointerForDelegate(s_wndProcDelegate);
-            }
-            catch (Exception ex)
-            {
-                return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.OtherException(ex));
-            }
             //
             var hCursor = Windows.Win32.PInvoke.LoadCursor(Windows.Win32.Foundation.HINSTANCE.Null, Windows.Win32.PInvoke.IDC_ARROW);
             if (hCursor.IsNull == true)
@@ -179,16 +170,23 @@ internal class TrayButtonNativeWindow : IDisposable
                 return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.Win32Error((uint)win32ErrorCode));
             }
             //
-            var lpWndClassEx = new PInvokeExtensions.WNDCLASSEX
+            Windows.Win32.UI.WindowsAndMessaging.WNDCLASSEXW lpWndClassEx;
+            unsafe
             {
-                cbSize = (uint)Marshal.SizeOf(typeof(PInvokeExtensions.WNDCLASSEX)),
-                lpfnWndProc = pointerToWndProcCallback,
-                lpszClassName = nativeWindowClassName,
-                hCursor = hCursor,
-            };
+                fixed (char* pointerToNativeWindowClassName = nativeWindowClassName)
+                {
+                    lpWndClassEx = new Windows.Win32.UI.WindowsAndMessaging.WNDCLASSEXW()
+                    {
+                        cbSize = (uint)Marshal.SizeOf<Windows.Win32.UI.WindowsAndMessaging.WNDCLASSEXW>(),
+                        lpfnWndProc = s_wndProcDelegate,
+                        lpszClassName = pointerToNativeWindowClassName,
+                        hCursor = hCursor,
+                    };
+                }
+            }
 
             // NOTE: RegisterClassEx returns an ATOM (or 0 if the call failed)
-            var registerClassResult = PInvokeExtensions.RegisterClassEx(ref lpWndClassEx);
+            var registerClassResult = Windows.Win32.PInvoke.RegisterClassEx(lpWndClassEx);
             if (registerClassResult == 0) // failure
             {
                 var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
@@ -271,20 +269,28 @@ internal class TrayButtonNativeWindow : IDisposable
         var windowWidth = trayButtonPositionAndSize.right - trayButtonPositionAndSize.left;
         var windowHeight = trayButtonPositionAndSize.bottom - trayButtonPositionAndSize.top;
 
-        var handle = PInvokeExtensions.CreateWindowEx(
-             dwExStyle: PInvoke.User32.WindowStylesEx.WS_EX_LAYERED/* | PInvoke.User32.WindowStylesEx.WS_EX_TOOLWINDOW*//* | PInvoke.User32.WindowStylesEx.WS_EX_TOPMOST*/,
-             lpClassName: (IntPtr)s_morphicTrayButtonClassInfoExAtom!.Value,
-             lpWindowName: nativeWindowClassName,
-             dwStyle: /*PInvoke.User32.WindowStyles.WS_CLIPSIBLINGS | */PInvoke.User32.WindowStyles.WS_POPUP /*| PInvoke.User32.WindowStyles.WS_TABSTOP*/ | PInvoke.User32.WindowStyles.WS_VISIBLE,
-             x: windowX,
-             y: windowY,
-             nWidth: windowWidth,
-             nHeight: windowHeight,
-             hWndParent: taskbarHandle.Value,
-             hMenu: IntPtr.Zero,
-             hInstance: IntPtr.Zero,
-             lpParam: IntPtr.Zero
-        );
+        Windows.Win32.Foundation.HWND handle;
+        unsafe
+        {
+            var atomAsString = new Windows.Win32.Foundation.PCWSTR((char*)(nint)s_morphicTrayButtonClassInfoExAtom!.Value);
+            fixed (char* pointerToNativeWindowClassName = nativeWindowClassName)
+            {
+                handle = Windows.Win32.PInvoke.CreateWindowEx(
+                    dwExStyle: Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE.WS_EX_LAYERED/* | Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE..WS_EX_TOOLWINDOW*//* | Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE..WS_EX_TOPMOST*/,
+                    lpClassName: atomAsString,
+                    lpWindowName: pointerToNativeWindowClassName,
+                    dwStyle: /*Windows.Win32.UI.WindowsAndMessaging.WINDOW_STYLE.WS_CLIPSIBLINGS | */Windows.Win32.UI.WindowsAndMessaging.WINDOW_STYLE.WS_POPUP /*| Windows.Win32.UI.WindowsAndMessaging.WINDOW_STYLE.WS_TABSTOP*/ | Windows.Win32.UI.WindowsAndMessaging.WINDOW_STYLE.WS_VISIBLE,
+                    X: windowX,
+                    Y: windowY,
+                    nWidth: windowWidth,
+                    nHeight: windowHeight,
+                    hWndParent: taskbarHandle,
+                    hMenu: Windows.Win32.UI.WindowsAndMessaging.HMENU.Null,
+                    hInstance: Windows.Win32.Foundation.HINSTANCE.Null,
+                    lpParam: null
+                );
+            }
+        }
         if (handle == IntPtr.Zero)
         {
             var win32ErrorCode = Marshal.GetLastWin32Error();
@@ -297,7 +303,7 @@ internal class TrayButtonNativeWindow : IDisposable
         //
         // NOTE: SetWindowLongPtr can return 0 even if there is no error; see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowlongptrw
         System.Runtime.InteropServices.Marshal.SetLastPInvokeError(0);
-        var setWindowLongPtrResult = PInvokeExtensions.SetWindowLongPtr_IntPtr((Windows.Win32.Foundation.HWND)handle, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWL_USERDATA, (nint)(IntPtr)result._gcHandle);
+        var setWindowLongPtrResult = PInvokeExtensions.SetWindowLongPtr_IntPtr(handle, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWL_USERDATA, (nint)(IntPtr)result._gcHandle);
         if (setWindowLongPtrResult == 0)
         {
             var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
@@ -310,7 +316,7 @@ internal class TrayButtonNativeWindow : IDisposable
         // set the window's background transparency to 0% (in the range of a 0 to 255 alpha channel, with 255 being 100%)
         // NOTE: an alpha value of 0 (0%) makes our window complete see-through but it has the side-effect of not capturing any mouse events; to counteract this,
         //       we set our "tranparent" alpha value to 1 instead.  We will only use an alpha value of 0 when we want our window to be invisible and also not capture mouse events
-        var setBackgroundAlphaResult = TrayButtonNativeWindow.SetBackgroundAlpha((Windows.Win32.Foundation.HWND)result._hwnd, ALPHA_VALUE_FOR_TRANSPARENT_BUT_HIT_TESTABLE);
+        var setBackgroundAlphaResult = TrayButtonNativeWindow.SetBackgroundAlpha(result._hwnd, ALPHA_VALUE_FOR_TRANSPARENT_BUT_HIT_TESTABLE);
         if (setBackgroundAlphaResult.IsError)
         {
             switch (setBackgroundAlphaResult.Error!)
@@ -341,15 +347,15 @@ internal class TrayButtonNativeWindow : IDisposable
         /* wire up windows event hook listeners, to watch for events which require adjusting the zorder of our window */
 
         // NOTE: we could provide the process handle and thread of processes/threads which we were interested in specifically, but for now we're interested in more than one window so we filter broadly
-        var locationChangeWindowEventProc = new PInvokeExtensions.WinEventProc(result.LocationChangeWindowEventProc);
-        var locationChangeWindowEventHook = PInvokeExtensions.SetWinEventHook(
-             PInvokeExtensions.WinEventHookType.EVENT_OBJECT_LOCATIONCHANGE, // start index
-             PInvokeExtensions.WinEventHookType.EVENT_OBJECT_LOCATIONCHANGE, // end index
-             IntPtr.Zero,
-             locationChangeWindowEventProc,
-             0, // process handle (0 = all processes on current desktop)
-             0, // thread (0 = all existing threads on current desktop)
-             PInvokeExtensions.WinEventHookFlags.WINEVENT_OUTOFCONTEXT | PInvokeExtensions.WinEventHookFlags.WINEVENT_SKIPOWNPROCESS
+        var locationChangeWindowEventProc = new Windows.Win32.UI.Accessibility.WINEVENTPROC(result.LocationChangeWindowEventProc);
+        var locationChangeWindowEventHook = Windows.Win32.PInvoke.SetWinEventHook(
+            Windows.Win32.PInvoke.EVENT_OBJECT_LOCATIONCHANGE, // start index
+            Windows.Win32.PInvoke.EVENT_OBJECT_LOCATIONCHANGE, // end index
+            Windows.Win32.Foundation.HMODULE.Null,
+            locationChangeWindowEventProc,
+            0, // process handle (0 = all processes on current desktop)
+            0, // thread (0 = all existing threads on current desktop)
+            Windows.Win32.PInvoke.WINEVENT_OUTOFCONTEXT | Windows.Win32.PInvoke.WINEVENT_SKIPOWNPROCESS
         );
         Debug.Assert(locationChangeWindowEventHook != IntPtr.Zero, "Could not wire up location change window event listener for tray button");
         if (locationChangeWindowEventHook == IntPtr.Zero)
@@ -363,20 +369,20 @@ internal class TrayButtonNativeWindow : IDisposable
         //
         //
         //
-        var objectReorderWindowEventProc = new PInvokeExtensions.WinEventProc(result.ObjectReorderWindowEventProc);
-        var objectReorderWindowEventHook = PInvokeExtensions.SetWinEventHook(
-             PInvokeExtensions.WinEventHookType.EVENT_OBJECT_REORDER, // start index
-             PInvokeExtensions.WinEventHookType.EVENT_OBJECT_REORDER, // end index
-             IntPtr.Zero,
+        var objectReorderWindowEventProc = new Windows.Win32.UI.Accessibility.WINEVENTPROC(result.ObjectReorderWindowEventProc);
+        var objectReorderWindowEventHook = Windows.Win32.PInvoke.SetWinEventHook(
+             Windows.Win32.PInvoke.EVENT_OBJECT_REORDER, // start index
+             Windows.Win32.PInvoke.EVENT_OBJECT_REORDER, // end index
+             Windows.Win32.Foundation.HMODULE.Null,
              objectReorderWindowEventProc,
              0, // process handle (0 = all processes on current desktop)
              0, // thread (0 = all existing threads on current desktop)
-             PInvokeExtensions.WinEventHookFlags.WINEVENT_OUTOFCONTEXT | PInvokeExtensions.WinEventHookFlags.WINEVENT_SKIPOWNPROCESS
+            Windows.Win32.PInvoke.WINEVENT_OUTOFCONTEXT | Windows.Win32.PInvoke.WINEVENT_SKIPOWNPROCESS
         );
         Debug.Assert(objectReorderWindowEventHook != IntPtr.Zero, "Could not wire up object reorder window event listener for tray button");
         if (objectReorderWindowEventHook == IntPtr.Zero)
         {
-            return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.CouldNotWireUpWatchEvents());            
+            return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.CouldNotWireUpWatchEvents());
         }
         //
         result._objectReorderWindowEventHook = objectReorderWindowEventHook;
@@ -396,10 +402,10 @@ internal class TrayButtonNativeWindow : IDisposable
     //
 
     // static wndproc (registered with the window class); this static wndproc callback routes messages to instance-specific callbacks (using the instance reference stored in GWL_USERDATA); also handles creation-time (pre-window-fully-init'd) messages
-    private static IntPtr StaticWndProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
+    private static Windows.Win32.Foundation.LRESULT StaticWndProc(Windows.Win32.Foundation.HWND hWnd, uint msg, Windows.Win32.Foundation.WPARAM wParam, Windows.Win32.Foundation.LPARAM lParam)
     {
         // try to retrieve the instance from GWL_USERDATA
-        var userData = PInvokeExtensions.GetWindowLongPtr_IntPtr((Windows.Win32.Foundation.HWND)hWnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWL_USERDATA);
+        var userData = PInvokeExtensions.GetWindowLongPtr_IntPtr(hWnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWL_USERDATA);
         TrayButtonNativeWindow? instance = null;
         if (userData != IntPtr.Zero)
         {
@@ -422,14 +428,14 @@ internal class TrayButtonNativeWindow : IDisposable
         else
         {
             // if no instance is associated with the hwnd (i.e. during initial creation of the window), handle callbacks here instead
-            switch ((PInvoke.User32.WindowMessage)msg)
+            switch (msg)
             {
-                case PInvoke.User32.WindowMessage.WM_CREATE:
+                case Windows.Win32.PInvoke.WM_CREATE:
                     // see: https://learn.microsoft.com/en-us/windows/win32/api/uxtheme/nf-uxtheme-bufferedpaintinit
                     if (Windows.Win32.PInvoke.BufferedPaintInit() != Windows.Win32.Foundation.HRESULT.S_OK)
                     {
                         Debug.Assert(false, "Could not initialize buffered paint");
-                        return new IntPtr(-1); // abort window creation process
+                        return (Windows.Win32.Foundation.LRESULT)(-1); // abort window creation process
                     }
                     break;
                 default:
@@ -438,17 +444,17 @@ internal class TrayButtonNativeWindow : IDisposable
         }
 
         // pass all non-handled messages through to DefWindowProc
-        return PInvoke.User32.DefWindowProc(hWnd, (PInvoke.User32.WindowMessage)msg, wParam, lParam);
+        return Windows.Win32.PInvoke.DefWindowProc(hWnd, msg, wParam, lParam);
     }
 
     // instance wndproc — handles messages after GWL_USERDATA is set up
-    private IntPtr WndProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
+    private Windows.Win32.Foundation.LRESULT WndProc(Windows.Win32.Foundation.HWND hWnd, uint msg, Windows.Win32.Foundation.WPARAM wParam, Windows.Win32.Foundation.LPARAM lParam)
     {
         IntPtr? result = null;
 
-        switch ((PInvoke.User32.WindowMessage)msg)
+        switch (msg)
         {
-            case PInvoke.User32.WindowMessage.WM_LBUTTONDOWN:
+            case Windows.Win32.PInvoke.WM_LBUTTONDOWN:
                 {
                     _visualState |= TrayButtonVisualStateFlags.LeftButtonPressed;
                     //
@@ -458,7 +464,7 @@ internal class TrayButtonNativeWindow : IDisposable
                     result = IntPtr.Zero;
                 }
                 break;
-            case PInvoke.User32.WindowMessage.WM_LBUTTONUP:
+            case Windows.Win32.PInvoke.WM_LBUTTONUP:
                 {
                     _visualState &= ~TrayButtonVisualStateFlags.LeftButtonPressed;
                     //
@@ -488,7 +494,7 @@ internal class TrayButtonNativeWindow : IDisposable
                     result = IntPtr.Zero;
                 }
                 break;
-            case PInvoke.User32.WindowMessage.WM_MOUSELEAVE:
+            case Windows.Win32.PInvoke.WM_MOUSELEAVE:
                 {
                     // the cursor has left our tray button's window area; remove the hover state from our visual state
                     _visualState &= ~TrayButtonVisualStateFlags.Hover;
@@ -504,21 +510,21 @@ internal class TrayButtonNativeWindow : IDisposable
                     result = IntPtr.Zero;
                 }
                 break;
-            case PInvoke.User32.WindowMessage.WM_MOUSEMOVE:
+            case Windows.Win32.PInvoke.WM_MOUSEMOVE:
                 {
                     // NOTE: this message is raised while we are tracking (whereas the SETCURSOR WM_MOUSEMOVE is captured when the mouse cursor first enters the window)
                     //
                     // NOTE: if the cursor moves off of the tray button while the button is pressed, we would have removed the "pressed" focus as well as the "hover" focus
                     //       because we can't track mouseup when the cursor is outside of the button; consequently we also need to check the mouse pressed state during
                     //       mousemove so that we can re-visualize (re-set flags for) the pressed state as appropriate.
-                    if (((_visualState & TrayButtonVisualStateFlags.LeftButtonPressed) == 0) && ((wParam.ToInt64() & PInvokeExtensions.MK_LBUTTON) != 0))
+                    if (((_visualState & TrayButtonVisualStateFlags.LeftButtonPressed) == 0) && ((wParam.Value.ToUInt64() & PInvokeExtensions.MK_LBUTTON) != 0))
                     {
                         _visualState |= TrayButtonVisualStateFlags.LeftButtonPressed;
                         //
                         var updateVisualStateAlphaResult = this.UpdateVisualStateAlpha();
                         Debug.Assert(updateVisualStateAlphaResult.IsSuccess, "Could not update visual state.");
                     }
-                    if (((_visualState & TrayButtonVisualStateFlags.RightButtonPressed) == 0) && ((wParam.ToInt64() & PInvokeExtensions.MK_RBUTTON) != 0))
+                    if (((_visualState & TrayButtonVisualStateFlags.RightButtonPressed) == 0) && ((wParam.Value.ToUInt64() & PInvokeExtensions.MK_RBUTTON) != 0))
                     {
                         _visualState |= TrayButtonVisualStateFlags.RightButtonPressed;
                         //
@@ -529,7 +535,7 @@ internal class TrayButtonNativeWindow : IDisposable
                     result = IntPtr.Zero;
                 }
                 break;
-            case PInvoke.User32.WindowMessage.WM_NCDESTROY:
+            case Windows.Win32.PInvoke.WM_NCDESTROY:
                 {
                     // NOTE: we are calling this in response to WM_NCDESTROY (instead of WM_DESTROY)
                     //       see: https://learn.microsoft.com/en-us/windows/win32/api/uxtheme/nf-uxtheme-bufferedpaintinit
@@ -544,27 +550,27 @@ internal class TrayButtonNativeWindow : IDisposable
                     // clear GWL_USERDATA so no more messages are routed to this instance
                     // NOTE: SetWindowLongPtr can return 0 even if there is no error; see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowlongptrw
                     System.Runtime.InteropServices.Marshal.SetLastPInvokeError(0);
-                    var setWindowLongPtrResult = PInvokeExtensions.SetWindowLongPtr_IntPtr((Windows.Win32.Foundation.HWND)hWnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWL_USERDATA, 0);
+                    var setWindowLongPtrResult = PInvokeExtensions.SetWindowLongPtr_IntPtr(hWnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWL_USERDATA, 0);
                     Debug.Assert(setWindowLongPtrResult != 0 || System.Runtime.InteropServices.Marshal.GetLastWin32Error() == 0);
                 }
                 break;
-            case PInvoke.User32.WindowMessage.WM_NCPAINT:
+            case Windows.Win32.PInvoke.WM_NCPAINT:
                 {
                     // we suppress all painting of the non-client areas (so that we can have a transparent window)
                     // return zero, indicating that we processed the message
                     result = IntPtr.Zero;
                 }
                 break;
-            case PInvoke.User32.WindowMessage.WM_PAINT:
+            case Windows.Win32.PInvoke.WM_PAINT:
                 {
                     // NOTE: we override the built-in paint functionality with our own Paint function
-                    this.OnPaintWindowsMessage((Windows.Win32.Foundation.HWND)hWnd);
+                    this.OnPaintWindowsMessage(hWnd);
                     //
                     // return zero, indicating that we processed the message
                     result = IntPtr.Zero;
                 }
                 break;
-            case PInvoke.User32.WindowMessage.WM_RBUTTONDOWN:
+            case Windows.Win32.PInvoke.WM_RBUTTONDOWN:
                 {
                     _visualState |= TrayButtonVisualStateFlags.RightButtonPressed;
                     //
@@ -574,7 +580,7 @@ internal class TrayButtonNativeWindow : IDisposable
                     result = IntPtr.Zero;
                 }
                 break;
-            case PInvoke.User32.WindowMessage.WM_RBUTTONUP:
+            case Windows.Win32.PInvoke.WM_RBUTTONUP:
                 {
                     _visualState &= ~TrayButtonVisualStateFlags.RightButtonPressed;
                     //
@@ -604,19 +610,19 @@ internal class TrayButtonNativeWindow : IDisposable
                     result = IntPtr.Zero;
                 }
                 break;
-            case PInvoke.User32.WindowMessage.WM_SETCURSOR:
+            case Windows.Win32.PInvoke.WM_SETCURSOR:
                 {
                     // wParam: window handle
                     // lParam: low-order word is the high-test result for the cursor position; high-order word specifies the mouse message that triggered this event
 
-                    var hitTestResult = (uint)((lParam.ToInt64() >> 0) & 0xFFFF);
-                    var mouseMsg = (uint)((lParam.ToInt64() >> 16) & 0xFFFF);
+                    var hitTestResult = (uint)((lParam.Value.ToInt64() >> 0) & 0xFFFF);
+                    var mouseMsg = (uint)((lParam.Value.ToInt64() >> 16) & 0xFFFF);
 
                     // NOTE: for messages which we handle, we return "TRUE" (1) to halt further message processing; this may not technically be necessary
                     //       see: https://learn.microsoft.com/en-us/windows/win32/menurc/wm-setcursor
-                    switch ((PInvoke.User32.WindowMessage)mouseMsg)
+                    switch (mouseMsg)
                     {
-                        case PInvoke.User32.WindowMessage.WM_LBUTTONDOWN:
+                        case Windows.Win32.PInvoke.WM_LBUTTONDOWN:
                             {
                                 _visualState |= TrayButtonVisualStateFlags.LeftButtonPressed;
                                 //
@@ -626,7 +632,7 @@ internal class TrayButtonNativeWindow : IDisposable
                                 result = new IntPtr(1);
                             }
                             break;
-                        case PInvoke.User32.WindowMessage.WM_LBUTTONUP:
+                        case Windows.Win32.PInvoke.WM_LBUTTONUP:
                             {
                                 _visualState &= ~TrayButtonVisualStateFlags.LeftButtonPressed;
                                 //
@@ -636,7 +642,7 @@ internal class TrayButtonNativeWindow : IDisposable
                                 result = new IntPtr(1);
                             }
                             break;
-                        case PInvoke.User32.WindowMessage.WM_MOUSEMOVE:
+                        case Windows.Win32.PInvoke.WM_MOUSEMOVE:
                             {
                                 // if we are not yet tracking the mouse position (i.e. this is effectively "mouse enter"), then start tracking it now (so that we can capture its move out of our box)
                                 // NOTE: we track whether or not we are tracking the mouse by analyzing the hover state of our visual state flags
@@ -644,8 +650,14 @@ internal class TrayButtonNativeWindow : IDisposable
                                 {
                                     // track mousehover (for tooltips) and mouseleave (to remove hover effect)
                                     // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-trackmouseevent
-                                    var eventTrack = PInvokeExtensions.TRACKMOUSEEVENT.CreateNew(PInvokeExtensions.TRACKMOUSEEVENTFlags.TME_LEAVE, _hwnd, PInvokeExtensions.HOVER_DEFAULT);
-                                    var trackMouseEventSuccess = PInvokeExtensions.TrackMouseEvent(ref eventTrack);
+                                    var eventTrack = new Windows.Win32.UI.Input.KeyboardAndMouse.TRACKMOUSEEVENT()
+                                    {
+                                        cbSize = (uint)Marshal.SizeOf(typeof(Windows.Win32.UI.Input.KeyboardAndMouse.TRACKMOUSEEVENT)),
+                                        dwFlags = Windows.Win32.UI.Input.KeyboardAndMouse.TRACKMOUSEEVENT_FLAGS.TME_LEAVE,
+                                        hwndTrack = _hwnd,
+                                        dwHoverTime = PInvokeExtensions.HOVER_DEFAULT,
+                                    };
+                                    var trackMouseEventSuccess = Windows.Win32.PInvoke.TrackMouseEvent(ref eventTrack);
                                     if (trackMouseEventSuccess == false)
                                     {
                                         // failed
@@ -661,7 +673,7 @@ internal class TrayButtonNativeWindow : IDisposable
                                 result = new IntPtr(1);
                             }
                             break;
-                        case PInvoke.User32.WindowMessage.WM_RBUTTONDOWN:
+                        case Windows.Win32.PInvoke.WM_RBUTTONDOWN:
                             {
                                 _visualState |= TrayButtonVisualStateFlags.RightButtonPressed;
                                 //
@@ -671,7 +683,7 @@ internal class TrayButtonNativeWindow : IDisposable
                                 result = new IntPtr(1);
                             }
                             break;
-                        case PInvoke.User32.WindowMessage.WM_RBUTTONUP:
+                        case Windows.Win32.PInvoke.WM_RBUTTONUP:
                             {
                                 _visualState &= ~TrayButtonVisualStateFlags.RightButtonPressed;
                                 //
@@ -694,10 +706,10 @@ internal class TrayButtonNativeWindow : IDisposable
         // if we handled the message, return 'result'; otherwise, call through to DefWindowProc to handle the message
         if (result is not null)
         {
-            return result.Value!;
+            return (Windows.Win32.Foundation.LRESULT)result.Value!;
         }
 
-        return PInvoke.User32.DefWindowProc(hWnd, (PInvoke.User32.WindowMessage)msg, wParam, lParam);
+        return Windows.Win32.PInvoke.DefWindowProc(hWnd, msg, wParam, lParam);
     }
 
     // NOTE: this function may ONLY be called when responding to a WM_PAINT message
@@ -706,7 +718,6 @@ internal class TrayButtonNativeWindow : IDisposable
     {
         // create a device context for drawing; we must destroy this automatically in a finally block.  We are effectively replicating the functionality of C++'s CPaintDC.
         Windows.Win32.Graphics.Gdi.PAINTSTRUCT paintStruct;
-        // NOTE: we experienced significant issues using PInvoke.User32.BeginPaint (possibly due to its IntPtr result wrapper), so we have redeclared the BeginPaint function ourselves
         // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-beginpaint
         var deviceContext = Windows.Win32.PInvoke.BeginPaint(hWnd, out paintStruct)!;
         if (deviceContext == IntPtr.Zero)
@@ -862,7 +873,7 @@ internal class TrayButtonNativeWindow : IDisposable
             }
 
             var alpha = (byte)((double)255 * highlightOpacity);
-            var setBackgroundAlphaResult = TrayButtonNativeWindow.SetBackgroundAlpha((Windows.Win32.Foundation.HWND)_hwnd, Math.Max(alpha, ALPHA_VALUE_FOR_TRANSPARENT_BUT_HIT_TESTABLE));
+            var setBackgroundAlphaResult = TrayButtonNativeWindow.SetBackgroundAlpha(_hwnd, Math.Max(alpha, ALPHA_VALUE_FOR_TRANSPARENT_BUT_HIT_TESTABLE));
             if (setBackgroundAlphaResult.IsError == true)
             {
                 switch (setBackgroundAlphaResult.Error!)
@@ -877,7 +888,7 @@ internal class TrayButtonNativeWindow : IDisposable
         else
         {
             // collapsed or hidden controls should be invisible
-            var setBackgroundAlphaResult = TrayButtonNativeWindow.SetBackgroundAlpha((Windows.Win32.Foundation.HWND)_hwnd, 0);
+            var setBackgroundAlphaResult = TrayButtonNativeWindow.SetBackgroundAlpha(_hwnd, 0);
             if (setBackgroundAlphaResult.IsError == true)
             {
                 switch (setBackgroundAlphaResult.Error!)
@@ -908,7 +919,7 @@ internal class TrayButtonNativeWindow : IDisposable
 
     //
 
-    private void LocationChangeWindowEventProc(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint idEventThread, uint dwmsEventTime)
+    private void LocationChangeWindowEventProc(Windows.Win32.UI.Accessibility.HWINEVENTHOOK hWinEventHook, uint eventType, Windows.Win32.Foundation.HWND hwnd, int idObject, int idChild, uint idEventThread, uint dwmsEventTime)
     {
         // we cannot process a location change message if the hwnd is zero
         if (hwnd == IntPtr.Zero)
@@ -968,7 +979,7 @@ internal class TrayButtonNativeWindow : IDisposable
 
     private void BringTaskButtonTopmostWithoutActivating()
     {
-        var setWindowPosSuccess = Windows.Win32.PInvoke.SetWindowPos((Windows.Win32.Foundation.HWND)_hwnd, Windows.Win32.Foundation.HWND.HWND_TOPMOST, 0, 0, 0, 0, Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOMOVE | Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOSIZE | Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
+        var setWindowPosSuccess = Windows.Win32.PInvoke.SetWindowPos(_hwnd, Windows.Win32.Foundation.HWND.HWND_TOPMOST, 0, 0, 0, 0, Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOMOVE | Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOSIZE | Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
         if (setWindowPosSuccess == false)
         {
             var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
@@ -976,7 +987,7 @@ internal class TrayButtonNativeWindow : IDisposable
         }
     }
 
-    private void ObjectReorderWindowEventProc(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint idEventThread, uint dwmsEventTime)
+    private void ObjectReorderWindowEventProc(Windows.Win32.UI.Accessibility.HWINEVENTHOOK hWinEventHook, uint eventType, Windows.Win32.Foundation.HWND hwnd, int idObject, int idChild, uint idEventThread, uint dwmsEventTime)
     {
         // we cannot process an object reorder message if the hwnd is zero
         if (hwnd == IntPtr.Zero)
@@ -1077,7 +1088,7 @@ internal class TrayButtonNativeWindow : IDisposable
         return MorphicResult.OkResult(taskbarIsTopmost);
     }
 
-    private interface IRecalculatePositionAndRepositionWindowError 
+    private interface IRecalculatePositionAndRepositionWindowError
     {
         public record CouldNotBringToTop(uint Win32ErrorCode) : IRecalculatePositionAndRepositionWindowError;
         public record CouldNotCalculatePositionAndSizeForTrayButton(ICalculatePositionAndSizeForTrayButtonError InnerError) : IRecalculatePositionAndRepositionWindowError;
@@ -1102,12 +1113,12 @@ internal class TrayButtonNativeWindow : IDisposable
         var size = new System.Drawing.Size(trayButtonPositionAndSize.right - trayButtonPositionAndSize.left, trayButtonPositionAndSize.bottom - trayButtonPositionAndSize.top);
         //
         // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowpos
-        var setWindowPosResult = Windows.Win32.PInvoke.SetWindowPos((Windows.Win32.Foundation.HWND)_hwnd, (Windows.Win32.Foundation.HWND)IntPtr.Zero, trayButtonPositionAndSize.left, trayButtonPositionAndSize.top, size.Width, size.Height, Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOZORDER | Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
+        var setWindowPosResult = Windows.Win32.PInvoke.SetWindowPos(_hwnd, Windows.Win32.Foundation.HWND.Null, trayButtonPositionAndSize.left, trayButtonPositionAndSize.top, size.Width, size.Height, Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOZORDER | Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
         if (setWindowPosResult == 0)
         {
             var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
             Debug.Assert(false, "SetWindowPos failed while trying to reposition TrayButton native window; win32 errcode: " + win32ErrorCode.ToString());
-            return MorphicResult.ErrorResult< IRecalculatePositionAndRepositionWindowError>(new IRecalculatePositionAndRepositionWindowError.CouldNotSetWindowPosition((uint)win32ErrorCode));
+            return MorphicResult.ErrorResult<IRecalculatePositionAndRepositionWindowError>(new IRecalculatePositionAndRepositionWindowError.CouldNotSetWindowPosition((uint)win32ErrorCode));
         }
         //
         // capture our updated position and size
@@ -1139,7 +1150,7 @@ internal class TrayButtonNativeWindow : IDisposable
         }
 
         // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-bringwindowtotop
-        var bringWindowToTopSuccess = Windows.Win32.PInvoke.BringWindowToTop((Windows.Win32.Foundation.HWND)_hwnd);
+        var bringWindowToTopSuccess = Windows.Win32.PInvoke.BringWindowToTop(_hwnd);
         if (bringWindowToTopSuccess == false)
         {
             var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
@@ -1150,17 +1161,24 @@ internal class TrayButtonNativeWindow : IDisposable
         return MorphicResult.OkResult();
     }
 
-    private static MorphicResult<string, Morphic.WindowsNative.IWin32ApiError> GetWindowClassName(IntPtr hWnd)
+    private static MorphicResult<string, Morphic.WindowsNative.IWin32ApiError> GetWindowClassName(Windows.Win32.Foundation.HWND hWnd)
     {
-        System.Text.StringBuilder classNameBuilder = new(256);
-        var getClassNameResult = PInvokeExtensions.GetClassName(hWnd, classNameBuilder, classNameBuilder.Capacity);
+        Span<char> classNameSpan = stackalloc char[256];
+        int getClassNameResult;
+        unsafe
+        {
+            fixed (char* classNameSpanAsChars = classNameSpan)
+            {
+                getClassNameResult = Windows.Win32.PInvoke.GetClassName(hWnd, classNameSpanAsChars, classNameSpan.Length);
+            }
+        }
         if (getClassNameResult == 0)
         {
             var win32Error = Marshal.GetLastWin32Error();
             return MorphicResult.ErrorResult<Morphic.WindowsNative.IWin32ApiError>(new Morphic.WindowsNative.IWin32ApiError.Win32Error((uint)win32Error));
         }
 
-        var classNameAsString = classNameBuilder.ToString();
+        var classNameAsString = classNameSpan[..getClassNameResult].ToString();
         return MorphicResult.OkResult(classNameAsString);
     }
 
@@ -1213,7 +1231,7 @@ internal class TrayButtonNativeWindow : IDisposable
         // then, reposition the bitmap
         // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowrect
         Windows.Win32.Foundation.RECT positionAndSize;
-        var getWindowRectResult = Windows.Win32.PInvoke.GetWindowRect((Windows.Win32.Foundation.HWND)_hwnd, out positionAndSize);
+        var getWindowRectResult = Windows.Win32.PInvoke.GetWindowRect(_hwnd, out positionAndSize);
         if (getWindowRectResult == 0)
         {
             var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
@@ -1253,7 +1271,7 @@ internal class TrayButtonNativeWindow : IDisposable
 
     //
 
-    private IntPtr CreateTooltipWindow()
+    private Windows.Win32.Foundation.HWND CreateTooltipWindow()
     {
         if (_tooltipWindowHandle != IntPtr.Zero)
         {
@@ -1266,14 +1284,14 @@ internal class TrayButtonNativeWindow : IDisposable
         {
             tooltipWindowHandle = Windows.Win32.PInvoke.CreateWindowEx(
              0 /* no styles */,
-             PInvokeExtensions.TOOLTIPS_CLASS,
+             Windows.Win32.PInvoke.TOOLTIPS_CLASS,
              null,
              Windows.Win32.UI.WindowsAndMessaging.WINDOW_STYLE.WS_POPUP | (Windows.Win32.UI.WindowsAndMessaging.WINDOW_STYLE)Windows.Win32.PInvoke.TTS_ALWAYSTIP,
-             PInvokeExtensions.CW_USEDEFAULT,
-             PInvokeExtensions.CW_USEDEFAULT,
-             PInvokeExtensions.CW_USEDEFAULT,
-             PInvokeExtensions.CW_USEDEFAULT,
-             (Windows.Win32.Foundation.HWND)_hwnd,
+             Windows.Win32.PInvoke.CW_USEDEFAULT,
+             Windows.Win32.PInvoke.CW_USEDEFAULT,
+             Windows.Win32.PInvoke.CW_USEDEFAULT,
+             Windows.Win32.PInvoke.CW_USEDEFAULT,
+             _hwnd,
              null,
              null,
              null);
@@ -1281,7 +1299,7 @@ internal class TrayButtonNativeWindow : IDisposable
 
         // NOTE: Microsoft's documentation seems to indicate that we should set the tooltip as topmost, but in our testing this was unnecessary.  It's possible that using SendMessage to add/remove tooltip text automatically handles this when the system handles showing the tooltip
         //       see: https://learn.microsoft.com/en-us/windows/win32/controls/tooltip-controls
-        //PInvoke.User32.SetWindowPos(tooltipWindowHandle, PInvokeExtensions.HWND_TOPMOST, 0, 0, 0, 0, PInvoke.User32.SetWindowPosFlags.SWP_NOMOVE | PInvoke.User32.SetWindowPosFlags.SWP_NOSIZE | PInvoke.User32.SetWindowPosFlags.SWP_NOACTIVATE);
+        //Windows.Win32.PInvoke.SetWindowPos(tooltipWindowHandle, Windows.Win32.Foundation.HWND.HWND_TOPMOST, 0, 0, 0, 0, Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOMOVE | Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOSIZE | Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
 
         Debug.Assert(tooltipWindowHandle.IsNull == false, "Could not create tooltip window.");
 
@@ -1300,8 +1318,8 @@ internal class TrayButtonNativeWindow : IDisposable
         _ = this.UpdateTooltipTextAndTracking();
 
         // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-destroywindow
-        var destroyWindowResult = Windows.Win32.PInvoke.DestroyWindow((Windows.Win32.Foundation.HWND)_tooltipWindowHandle);
-        _tooltipWindowHandle = (Windows.Win32.Foundation.HWND)IntPtr.Zero;
+        var destroyWindowResult = Windows.Win32.PInvoke.DestroyWindow(_tooltipWindowHandle);
+        _tooltipWindowHandle = Windows.Win32.Foundation.HWND.Null;
 
         if (destroyWindowResult == true)
         {
@@ -1337,7 +1355,7 @@ internal class TrayButtonNativeWindow : IDisposable
         }
 
         // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getclientrect
-        var getClientRectSuccess = Windows.Win32.PInvoke.GetClientRect((Windows.Win32.Foundation.HWND)_hwnd, out var trayButtonClientRect);
+        var getClientRectSuccess = Windows.Win32.PInvoke.GetClientRect(_hwnd, out var trayButtonClientRect);
         if (getClientRectSuccess == false)
         {
             // failed; abort
@@ -1346,26 +1364,33 @@ internal class TrayButtonNativeWindow : IDisposable
             return MorphicResult.ErrorResult<IUpdateTooltipTextAndTrackingError>(new IUpdateTooltipTextAndTrackingError.CouldNotGetTrayButtonClientRect((uint)win32ErrorCode));
         }
 
-        var toolinfo = new PInvokeExtensions.TOOLINFO();
-        toolinfo.cbSize = (uint)Marshal.SizeOf(toolinfo);
-        toolinfo.hwnd = _hwnd;
-        toolinfo.uFlags = PInvokeExtensions.TTF_SUBCLASS;
-        toolinfo.lpszText = _tooltipText;
-        toolinfo.uId = unchecked((nuint)(nint)_hwnd); // unique identifier (for adding/deleting the tooltip)
-        toolinfo.rect = trayButtonClientRect;
-        //
-        var pointerToToolinfo = Marshal.AllocHGlobal(Marshal.SizeOf(toolinfo));
+        IntPtr pointerToToolinfo;
+        unsafe
+        {
+            fixed (char* pointerToTooltipText = _tooltipText)
+            {
+                var toolinfo = new Windows.Win32.UI.Controls.TTTOOLINFOW();
+                toolinfo.cbSize = (uint)(Marshal.SizeOf<Windows.Win32.UI.Controls.TTTOOLINFOW>() - IntPtr.Size); // TTTOOLINFOW_V1_SIZE (required for TTM_ADDTOOL)
+                toolinfo.hwnd = _hwnd;
+                toolinfo.uFlags = Windows.Win32.UI.Controls.TOOLTIP_FLAGS.TTF_SUBCLASS;
+                toolinfo.lpszText = pointerToTooltipText;
+                toolinfo.uId = unchecked((nuint)(nint)_hwnd); // unique identifier (for adding/deleting the tooltip)
+                toolinfo.rect = trayButtonClientRect;
+                //
+                pointerToToolinfo = Marshal.AllocHGlobal(Marshal.SizeOf(toolinfo));
+                Marshal.StructureToPtr(toolinfo, pointerToToolinfo, false);
+            }
+        }
         try
         {
-            Marshal.StructureToPtr(toolinfo, pointerToToolinfo, false);
-            if (toolinfo.lpszText is not null)
+            if (_tooltipText is not null)
             {
                 if (_tooltipInfoAdded == false)
                 {
                     // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-sendmessagew
                     //
                     // see: https://learn.microsoft.com/en-us/windows/win32/controls/ttm-addtool
-                    var addToolSuccess = Windows.Win32.PInvoke.SendMessage((Windows.Win32.Foundation.HWND)_tooltipWindowHandle, Windows.Win32.PInvoke.TTM_ADDTOOL, (Windows.Win32.Foundation.WPARAM)0, pointerToToolinfo);
+                    var addToolSuccess = Windows.Win32.PInvoke.SendMessage(_tooltipWindowHandle, Windows.Win32.PInvoke.TTM_ADDTOOL, (Windows.Win32.Foundation.WPARAM)0, pointerToToolinfo);
                     if (addToolSuccess == 0)
                     {
                         Debug.Assert(false, "Could not add tooltip info");
@@ -1381,10 +1406,10 @@ internal class TrayButtonNativeWindow : IDisposable
                     //
                     // see: https://learn.microsoft.com/en-us/windows/win32/controls/ttm-deltool
                     // NOTE: TTM_DELTOOL does not return a result
-                    _ = Windows.Win32.PInvoke.SendMessage((Windows.Win32.Foundation.HWND)_tooltipWindowHandle, Windows.Win32.PInvoke.TTM_DELTOOL, (Windows.Win32.Foundation.WPARAM)0, pointerToToolinfo);
+                    _ = Windows.Win32.PInvoke.SendMessage(_tooltipWindowHandle, Windows.Win32.PInvoke.TTM_DELTOOL, (Windows.Win32.Foundation.WPARAM)0, pointerToToolinfo);
                     //
                     // see: https://learn.microsoft.com/en-us/windows/win32/controls/ttm-addtool
-                    var addToolSuccess = Windows.Win32.PInvoke.SendMessage((Windows.Win32.Foundation.HWND)_tooltipWindowHandle, Windows.Win32.PInvoke.TTM_ADDTOOL, (Windows.Win32.Foundation.WPARAM)0, pointerToToolinfo);
+                    var addToolSuccess = Windows.Win32.PInvoke.SendMessage(_tooltipWindowHandle, Windows.Win32.PInvoke.TTM_ADDTOOL, (Windows.Win32.Foundation.WPARAM)0, pointerToToolinfo);
                     if (addToolSuccess == 0)
                     {
                         Debug.Assert(false, "Could not update tooltip info");
@@ -1399,7 +1424,7 @@ internal class TrayButtonNativeWindow : IDisposable
                 // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-sendmessagew
                 //
                 // see: https://learn.microsoft.com/en-us/windows/win32/controls/ttm-deltool
-                _ = Windows.Win32.PInvoke.SendMessage((Windows.Win32.Foundation.HWND)_tooltipWindowHandle, Windows.Win32.PInvoke.TTM_DELTOOL, (Windows.Win32.Foundation.WPARAM)0, pointerToToolinfo);
+                _ = Windows.Win32.PInvoke.SendMessage(_tooltipWindowHandle, Windows.Win32.PInvoke.TTM_DELTOOL, (Windows.Win32.Foundation.WPARAM)0, pointerToToolinfo);
                 _tooltipInfoAdded = false;
             }
         }
@@ -1479,7 +1504,7 @@ internal class TrayButtonNativeWindow : IDisposable
             }
         }
         var taskButtonContainerHandle = getTaskButtonContainerHandleResult.Value!;
-        if (taskButtonContainerHandle == Windows.Win32.Foundation.HWND.Null) 
+        if (taskButtonContainerHandle == Windows.Win32.Foundation.HWND.Null)
         {
             return MorphicResult.ErrorResult<ICalculatePositionAndSizeForTrayButtonError>(new ICalculatePositionAndSizeForTrayButtonError.CouldNotFindTaskbarRelatedHandle());
         }
@@ -1496,8 +1521,8 @@ internal class TrayButtonNativeWindow : IDisposable
             }
         }
         var notifyTrayHandle = getNotifyTrayHandle.Value!;
-        if (notifyTrayHandle == Windows.Win32.Foundation.HWND.Null) 
-        { 
+        if (notifyTrayHandle == Windows.Win32.Foundation.HWND.Null)
+        {
             return MorphicResult.ErrorResult<ICalculatePositionAndSizeForTrayButtonError>(new ICalculatePositionAndSizeForTrayButtonError.CouldNotFindTaskbarRelatedHandle());
         }
 
@@ -1511,14 +1536,14 @@ internal class TrayButtonNativeWindow : IDisposable
         }
         //
         var getTaskButtonContainerRectSuccess = Windows.Win32.PInvoke.GetWindowRect(taskButtonContainerHandle, out var taskButtonContainerRect);
-        if (getTaskButtonContainerRectSuccess == false) 
+        if (getTaskButtonContainerRectSuccess == false)
         {
             var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
             return MorphicResult.ErrorResult<ICalculatePositionAndSizeForTrayButtonError>(new ICalculatePositionAndSizeForTrayButtonError.Win32Error((uint)win32ErrorCode));
         }
         //
         var getNotifyTrayRectSuccess = Windows.Win32.PInvoke.GetWindowRect(notifyTrayHandle, out var notifyTrayRect);
-        if (getNotifyTrayRectSuccess == false) 
+        if (getNotifyTrayRectSuccess == false)
         {
             var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
             return MorphicResult.ErrorResult<ICalculatePositionAndSizeForTrayButtonError>(new ICalculatePositionAndSizeForTrayButtonError.Win32Error((uint)win32ErrorCode));
@@ -1625,14 +1650,15 @@ internal class TrayButtonNativeWindow : IDisposable
         var x = (ushort)((lParam.ToInt64() >> 0) & 0xFFFF);
         var y = (ushort)((lParam.ToInt64() >> 16) & 0xFFFF);
         // convert x and y to screen coordinates
-        var hitPoint = new PInvoke.POINT { x = x, y = y };
+        Span<System.Drawing.Point> hitPoints = stackalloc System.Drawing.Point[1];
+        hitPoints[0] = new System.Drawing.Point(x, y);
 
         // NOTE: the instructions for MapWindowPoints instruct us to call SetLastError before calling MapWindowPoints to ensure that we can distinguish a result of 0 from an error if the last win32 error wasn't set (because it wasn't an error)
         // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-mapwindowpoints
-        System.Runtime.InteropServices.Marshal.SetLastPInvokeError(0);
+        Marshal.SetLastPInvokeError(0);
         //
         // NOTE: the PInvoke implementation of MapWindowPoints did not support passing in a POINT struct, so we manually declared the function
-        var mapWindowPointsResult = PInvokeExtensions.MapWindowPoints(_hwnd, IntPtr.Zero, ref hitPoint, 1);
+        var mapWindowPointsResult = Windows.Win32.PInvoke.MapWindowPoints(_hwnd, Windows.Win32.Foundation.HWND.Null, hitPoints);
         if (mapWindowPointsResult == 0)
         {
             // failed (if the last error != 0)
@@ -1644,7 +1670,7 @@ internal class TrayButtonNativeWindow : IDisposable
             }
         }
 
-        var result = new System.Drawing.Point(hitPoint.x, hitPoint.y);
+        var result = hitPoints[0];
         return MorphicResult.OkResult(result);
     }
 

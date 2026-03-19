@@ -43,7 +43,7 @@ internal class ArgbImageNativeWindow : IDisposable
     }
     private BitmapInfo? _bitmapInfo = null;
 
-    private IntPtr _hwnd = IntPtr.Zero;
+    private Windows.Win32.Foundation.HWND _hwnd = Windows.Win32.Foundation.HWND.Null;
     // NOTE: a GC handle to the class instance is stored as userdata for each native window's hwnd (so that we can trampoline from the static wndproc to the instance-specific WndProc callback)
     private GCHandle _gcHandle;
 
@@ -53,7 +53,7 @@ internal class ArgbImageNativeWindow : IDisposable
     private static ushort? s_morphicArgbImageClassInfoExAtom = null;
     // create a static wndproc delegate (which will work as a trampoline to a window's wndproc function, using the hwnd-specific userdata which stores a reference to each instance)
     // [this is done to prevent the delegate from being GC'd while the window class is registered]
-    private static PInvokeExtensions.WndProc? s_wndProcDelegate;
+    private static Windows.Win32.UI.WindowsAndMessaging.WNDPROC? s_wndProcDelegate;
 
     private ArgbImageNativeWindow()
     {
@@ -88,7 +88,7 @@ internal class ArgbImageNativeWindow : IDisposable
             if (_hwnd != IntPtr.Zero)
             {
                 _ = Windows.Win32.PInvoke.DestroyWindow((Windows.Win32.Foundation.HWND)_hwnd);
-                _hwnd = IntPtr.Zero;
+                _hwnd = Windows.Win32.Foundation.HWND.Null;
             }
 
             // clean up the _gcHandle if it's already allocated; we allocate the GC Handle to make our event handler trampoline possible
@@ -118,7 +118,7 @@ internal class ArgbImageNativeWindow : IDisposable
     //
 
     // create a new ArgbImageNativeWindow (a child of the parent window); this control will draw the supplied image (which will be supplied later) on its surface using alpha blending
-    public static MorphicResult<ArgbImageNativeWindow, Morphic.Controls.TrayButton.Windows11.ICreateNewError> CreateNew(IntPtr parentHWnd, int x, int y, int width, int height)
+    public static MorphicResult<ArgbImageNativeWindow, Morphic.Controls.TrayButton.Windows11.ICreateNewError> CreateNew(Windows.Win32.Foundation.HWND parentHWnd, int x, int y, int width, int height)
     {
         var result = new ArgbImageNativeWindow();
 
@@ -129,15 +129,6 @@ internal class ArgbImageNativeWindow : IDisposable
         {
             // register our control's custom native window class using a static wndproc (which will act as a trampoline to an instance-specific WndProc callback)
             s_wndProcDelegate = ArgbImageNativeWindow.StaticWndProc;
-            nint pointerToWndProcCallback;
-            try
-            {
-                pointerToWndProcCallback = Marshal.GetFunctionPointerForDelegate(s_wndProcDelegate);
-            }
-            catch (Exception ex)
-            {
-                return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.OtherException(ex));
-            }
             //
             var hCursor = Windows.Win32.PInvoke.LoadCursor(Windows.Win32.Foundation.HINSTANCE.Null, Windows.Win32.PInvoke.IDC_ARROW);
             if (hCursor.IsNull == true)
@@ -147,16 +138,23 @@ internal class ArgbImageNativeWindow : IDisposable
                 return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.Win32Error((uint)win32ErrorCode));
             }
             //
-            var lpWndClassEx = new PInvokeExtensions.WNDCLASSEX
+            Windows.Win32.UI.WindowsAndMessaging.WNDCLASSEXW lpWndClassEx;
+            unsafe
             {
-                cbSize = (uint)Marshal.SizeOf(typeof(PInvokeExtensions.WNDCLASSEX)),
-                lpfnWndProc = pointerToWndProcCallback,
-                lpszClassName = nativeWindowClassName,
-                hCursor = hCursor,
-            };
+                fixed (char* pointerToNativeWindowClassName = nativeWindowClassName)
+                {
+                    lpWndClassEx = new Windows.Win32.UI.WindowsAndMessaging.WNDCLASSEXW
+                    {
+                        cbSize = (uint)Marshal.SizeOf< Windows.Win32.UI.WindowsAndMessaging.WNDCLASSEXW>(),
+                        lpfnWndProc = ArgbImageNativeWindow.StaticWndProc,
+                        lpszClassName = pointerToNativeWindowClassName,
+                        hCursor = hCursor,
+                    };
+                }
+            }
 
             // NOTE: RegisterClassEx returns an ATOM (or 0 if the call failed)
-            var registerClassResult = PInvokeExtensions.RegisterClassEx(ref lpWndClassEx);
+            var registerClassResult = Windows.Win32.PInvoke.RegisterClassEx(lpWndClassEx);
             if (registerClassResult == 0) // failure
             {
                 var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
@@ -171,20 +169,28 @@ internal class ArgbImageNativeWindow : IDisposable
 
         /* create an instance of our native window */
 
-        var handle = PInvokeExtensions.CreateWindowEx(
-             dwExStyle: PInvoke.User32.WindowStylesEx.WS_EX_LAYERED/* | PInvoke.User32.WindowStylesEx.WS_EX_TOOLWINDOW*/ | PInvoke.User32.WindowStylesEx.WS_EX_TRANSPARENT,
-             lpClassName: (IntPtr)s_morphicArgbImageClassInfoExAtom!.Value,
-             lpWindowName: nativeWindowClassName,
-             dwStyle:/*PInvoke.User32.WindowStyles.WS_CLIPSIBLINGS | */PInvoke.User32.WindowStyles.WS_POPUP | PInvoke.User32.WindowStyles.WS_VISIBLE,
-             x: x,
-             y: y,
-             nWidth: width,
-             nHeight: height,
-             hWndParent: parentHWnd,
-             hMenu: IntPtr.Zero,
-             hInstance: IntPtr.Zero,
-             lpParam: IntPtr.Zero
-        );
+        Windows.Win32.Foundation.HWND handle;
+        unsafe
+        {
+            var atomAsString = new Windows.Win32.Foundation.PCWSTR((char*)(nint)s_morphicArgbImageClassInfoExAtom!.Value);
+            fixed (char* pointerToNativeWindowClassName = nativeWindowClassName)
+            {
+                handle = Windows.Win32.PInvoke.CreateWindowEx(
+                    dwExStyle: Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE.WS_EX_LAYERED/* | Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE.WS_EX_TOOLWINDOW*/ | Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE.WS_EX_TRANSPARENT,
+                    lpClassName: atomAsString,
+                    lpWindowName: pointerToNativeWindowClassName,
+                    dwStyle:/*Windows.Win32.UI.WindowsAndMessaging.WINDOW_STYLE.WS_CLIPSIBLINGS | */Windows.Win32.UI.WindowsAndMessaging.WINDOW_STYLE.WS_POPUP | Windows.Win32.UI.WindowsAndMessaging.WINDOW_STYLE.WS_VISIBLE,
+                    X: x,
+                    Y: y,
+                    nWidth: width,
+                    nHeight: height,
+                    hWndParent: parentHWnd,
+                    hMenu: Windows.Win32.UI.WindowsAndMessaging.HMENU.Null,
+                    hInstance: Windows.Win32.Foundation.HINSTANCE.Null,
+                    lpParam: null
+                );
+            }
+        }
         if (handle == IntPtr.Zero)
         {
             var win32ErrorCode = Marshal.GetLastWin32Error();
@@ -216,7 +222,7 @@ internal class ArgbImageNativeWindow : IDisposable
     //
 
     // static wndproc (registered with the window class); this static wndproc callback routes messages to instance-specific callbacks (using the instance reference stored in GWL_USERDATA); also handles creation-time (pre-window-fully-init'd) messages
-    private static IntPtr StaticWndProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
+    private static Windows.Win32.Foundation.LRESULT StaticWndProc(Windows.Win32.Foundation.HWND hWnd, uint msg, Windows.Win32.Foundation.WPARAM wParam, Windows.Win32.Foundation.LPARAM lParam)
     {
         // try to retrieve the instance from GWL_USERDATA
         var userData = PInvokeExtensions.GetWindowLongPtr_IntPtr((Windows.Win32.Foundation.HWND)hWnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWL_USERDATA);
@@ -242,14 +248,14 @@ internal class ArgbImageNativeWindow : IDisposable
 		else
 		{
 	        // if no instance is associated with the hwnd (i.e. during initial creation of the window), handle callbacks here instead
-	        switch ((PInvoke.User32.WindowMessage)msg)
+	        switch (msg)
 	        {
-	            case PInvoke.User32.WindowMessage.WM_CREATE:
+	            case Windows.Win32.PInvoke.WM_CREATE:
 	                // see: https://learn.microsoft.com/en-us/windows/win32/api/uxtheme/nf-uxtheme-bufferedpaintinit
 	                if (Windows.Win32.PInvoke.BufferedPaintInit() != Windows.Win32.Foundation.HRESULT.S_OK)
 	                {
 	                    Debug.Assert(false, "Could not initialize buffered paint");
-	                    return new IntPtr(-1); // abort window creation process
+	                    return (Windows.Win32.Foundation.LRESULT)(-1); // abort window creation process
 	                }
 	                break;
 	            default:
@@ -258,15 +264,15 @@ internal class ArgbImageNativeWindow : IDisposable
 		}
 		
         // pass all non-handled messages through to DefWindowProc
-        return PInvoke.User32.DefWindowProc(hWnd, (PInvoke.User32.WindowMessage)msg, wParam, lParam);
+        return Windows.Win32.PInvoke.DefWindowProc(hWnd, msg, wParam, lParam);
     }
 
     // instance wndproc — handles messages after GWL_USERDATA is set up
-    private IntPtr WndProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
+    private Windows.Win32.Foundation.LRESULT WndProc(Windows.Win32.Foundation.HWND hWnd, uint msg, Windows.Win32.Foundation.WPARAM wParam, Windows.Win32.Foundation.LPARAM lParam)
     {
-        switch ((PInvoke.User32.WindowMessage)msg)
+        switch (msg)
         {
-            case PInvoke.User32.WindowMessage.WM_NCDESTROY:
+            case Windows.Win32.PInvoke.WM_NCDESTROY:
                 {
                     // NOTE: we are calling this in response to WM_NCDESTROY (instead of WM_DESTROY)
                     //       see: https://learn.microsoft.com/en-us/windows/win32/api/uxtheme/nf-uxtheme-bufferedpaintinit
@@ -281,16 +287,16 @@ internal class ArgbImageNativeWindow : IDisposable
                     Debug.Assert(setWindowLongPtrResult != 0 || System.Runtime.InteropServices.Marshal.GetLastWin32Error() == 0);
                 }
                 break;
-            case PInvoke.User32.WindowMessage.WM_NCPAINT:
+            case Windows.Win32.PInvoke.WM_NCPAINT:
                 // we suppress all painting of the non-client areas (so that we can have a transparent window)
                 // return zero, indicating that we processed the message
-                return IntPtr.Zero;
+                return (Windows.Win32.Foundation.LRESULT)0;
             default:
                 break;
         }
 
         // if we did not handle the message, call through to DefWindowProc to handle the message
-        return PInvoke.User32.DefWindowProc(hWnd, (PInvoke.User32.WindowMessage)msg, wParam, lParam);
+        return Windows.Win32.PInvoke.DefWindowProc(hWnd, msg, wParam, lParam);
     }
 
     //
@@ -532,7 +538,8 @@ internal class ArgbImageNativeWindow : IDisposable
         }
 
         // invalidate the window
-        var redrawWindowSuccess = PInvokeExtensions.RedrawWindow(_hwnd, IntPtr.Zero, IntPtr.Zero, /*Windows.Win32.Graphics.Gdi.REDRAW_WINDOW_FLAGS.RDW_ERASE | */Windows.Win32.Graphics.Gdi.REDRAW_WINDOW_FLAGS.RDW_INVALIDATE/* | Windows.Win32.Graphics.Gdi.REDRAW_WINDOW_FLAGS.RDW_ALLCHILDREN*/);
+        Windows.Win32.Foundation.BOOL redrawWindowSuccess;
+        unsafe { redrawWindowSuccess = Windows.Win32.PInvoke.RedrawWindow(_hwnd, null, Windows.Win32.Graphics.Gdi.HRGN.Null, /*Windows.Win32.Graphics.Gdi.REDRAW_WINDOW_FLAGS.RDW_ERASE | */Windows.Win32.Graphics.Gdi.REDRAW_WINDOW_FLAGS.RDW_INVALIDATE/* | Windows.Win32.Graphics.Gdi.REDRAW_WINDOW_FLAGS.RDW_ALLCHILDREN*/); }
         if (redrawWindowSuccess == false)
         {
             return MorphicResult.ErrorResult<IRequestRedrawError>(new IRequestRedrawError.CouldNotInvalidateWindow());
