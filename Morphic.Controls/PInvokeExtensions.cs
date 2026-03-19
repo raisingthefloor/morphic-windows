@@ -62,6 +62,11 @@ internal class PInvokeExtensions
 
     #endregion commctrl
 
+    #region wingdi 
+
+    public static readonly IntPtr HGDI_ERROR = new IntPtr(-1);
+    #endregion wingdi
+
     #region winuser
 
     internal const int CW_USEDEFAULT = unchecked((int)0x80000000);

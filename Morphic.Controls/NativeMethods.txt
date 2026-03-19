@@ -1,10 +1,12 @@
-﻿BeginBufferedPaint
+﻿AlphaBlend
+BeginBufferedPaint
 BeginPaint
 BringWindowToTop
 BufferedPaintClear
 BufferedPaintInit
 BufferedPaintUnInit
 CreateCompatibleDC
+CreateDIBSection
 CreateSolidBrush
 CreateWindowEx
 DeleteDC
@@ -27,15 +29,19 @@ ReleaseDC
 SelectObject
 SendMessage
 SetLayeredWindowAttributes
+SetStretchBltMode
+StretchBlt
 SetWindowLong
 SetWindowLongPtr
 SetWindowPos
 UpdateLayeredWindow
 
+BITMAPINFO
 BLENDFUNCTION
 PAINTSTRUCT
 RECT
 
+BI_COMPRESSION
 REDRAW_WINDOW_FLAGS
 WIN32_ERROR
 WINDOW_EX_STYLE

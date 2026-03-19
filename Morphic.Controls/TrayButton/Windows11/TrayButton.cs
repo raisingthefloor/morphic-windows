@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2025 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2026 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -105,7 +105,28 @@ internal class TrayButton : IDisposable
 
         if (_nativeWindow is not null)
         {
-	        var setBitmapResult = _nativeWindow!.SetBitmap(_bitmap);
+	        // convert the managed System.Drawing.Bitmap to a GDI bitmap (handle); ArgbImageNativeWindow ultimately takes ownership of the handle (and will clean up during disposal)
+            IntPtr hBitmap = IntPtr.Zero;
+            int bitmapWidth = 0;
+            int bitmapHeight = 0;
+            if (_bitmap is not null)
+            {
+                try
+                {
+                    // convert the managed System.Drawing.Bitmap to a GDI bitmap (and use a transparent background color
+                    // NOTE: this creates a new GDI bitmap from the source; the caller can free the original Bitmap after calling this function
+                    hBitmap = _bitmap.GetHbitmap(System.Drawing.Color.FromArgb(0));
+                }
+                catch
+                {
+                    return MorphicResult.ErrorResult();
+                    // return MorphicResult.ErrorResult<ISetBitmapError>(new ISetBitmapError.CouldNotConvertBitmapToGdiBitmap(ex));
+                }
+                bitmapWidth = _bitmap.Width;
+                bitmapHeight = _bitmap.Height;
+            }
+
+	        var setBitmapResult = _nativeWindow!.SetBitmap(hBitmap, bitmapWidth, bitmapHeight);
             if (setBitmapResult.IsError == true)
             {
                 Debug.Assert(false, "Could not set bitmap.");
@@ -205,6 +226,8 @@ internal class TrayButton : IDisposable
                     case ICreateNativeWindowError.AlreadyExists:
                         Debug.Assert(false, "Race condition: native window already exists");
                         return MorphicResult.ErrorResult<IShowError>(new IShowError.OtherError());
+                    case ICreateNativeWindowError.CouldNotConvertBitmapToGdiBitmap:
+                        return MorphicResult.ErrorResult<IShowError>(new IShowError.OtherError());
                     case ICreateNativeWindowError.CreateFailed(ICreateNewError innerError):
                         return MorphicResult.ErrorResult<IShowError>(new IShowError.CouldNotCreateWindow(innerError));
                     case ICreateNativeWindowError.CouldNotSetBitmap(var innerError):
@@ -259,6 +282,7 @@ internal class TrayButton : IDisposable
     private interface ICreateNativeWindowError
     {
         public record AlreadyExists : ICreateNativeWindowError;
+        public record CouldNotConvertBitmapToGdiBitmap : ICreateNativeWindowError;
         public record CouldNotSetBitmap(TrayButtonNativeWindow.ISetBitmapError InnerError) : ICreateNativeWindowError;
         public record CouldNotSetText(TrayButtonNativeWindow.IUpdateTooltipTextAndTrackingError InnerError) : ICreateNativeWindowError;
         public record CreateFailed(ICreateNewError InnerError) : ICreateNativeWindowError;
@@ -288,7 +312,27 @@ internal class TrayButton : IDisposable
         };
 
         // set the bitmap ("icon") for the native window
-        var setBitmapResult = nativeWindow.SetBitmap(_bitmap);
+		// convert the managed System.Drawing.Bitmap to a GDI bitmap (handle); ArgbImageNativeWindow ultimately takes ownership of the handle (and will clean up during disposal)
+        IntPtr hBitmapForNativeWindow = IntPtr.Zero;
+        int bitmapWidthForNativeWindow = 0;
+        int bitmapHeightForNativeWindow = 0;
+        if (_bitmap is not null)
+        {
+            try
+            {
+                // convert the managed System.Drawing.Bitmap to a GDI bitmap (and use a transparent background color
+                // NOTE: this creates a new GDI bitmap from the source; the caller can free the original Bitmap after calling this function
+                hBitmapForNativeWindow = _bitmap.GetHbitmap(System.Drawing.Color.FromArgb(0));
+            }
+            catch
+            {
+                nativeWindow.Dispose();
+                return MorphicResult.ErrorResult<ICreateNativeWindowError>(new ICreateNativeWindowError.CouldNotConvertBitmapToGdiBitmap());
+            }
+            bitmapWidthForNativeWindow = _bitmap.Width;
+            bitmapHeightForNativeWindow = _bitmap.Height;
+        }
+        var setBitmapResult = nativeWindow.SetBitmap(hBitmapForNativeWindow, bitmapWidthForNativeWindow, bitmapHeightForNativeWindow);
         if (setBitmapResult.IsError == true)
         {
             nativeWindow.Dispose();
