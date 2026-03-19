@@ -1174,8 +1174,9 @@ internal class TrayButtonNativeWindow : IDisposable
         public record CouldNotSetBitmapInArgbImageNativeWindow(ArgbImageNativeWindow.ISetBitmapError InnerError) : ISetBitmapError;
     }
     /// <summary>
-    /// Sets the source bitmap from a GDI HBITMAP handle. This class takes ownership of the handle;
-    /// the caller must not free it after this call. Pass IntPtr.Zero to clear.
+    /// Sets the source bitmap from a GDI HBITMAP handle. This class does NOT take ownership;
+    /// the caller must keep the HBITMAP valid until SetBitmap is called again or the window is disposed.
+    /// Pass IntPtr.Zero to clear.
     /// </summary>
     public MorphicResult<MorphicUnit, ISetBitmapError> SetBitmap(IntPtr hBitmap, int width, int height)
     {

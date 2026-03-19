@@ -70,13 +70,10 @@ internal class ArgbImageNativeWindow : IDisposable
             }
 
             // free unmanaged resources (unmanaged objects) and override finalizer
-            // free source and sized HDI bitmaps
+            // NOTE: the source bitmap is owned by the caller, so we do not free it here
             if (_bitmapInfo is not null)
             {
-                if (_bitmapInfo.hSourceBitmap != IntPtr.Zero)
-                {
-                    Windows.Win32.PInvoke.DeleteObject((Windows.Win32.Graphics.Gdi.HGDIOBJ)_bitmapInfo.hSourceBitmap);
-                }
+                // free sized GDI bitmap
                 if (_bitmapInfo.hSizedBitmap != IntPtr.Zero)
                 {
                     Windows.Win32.PInvoke.DeleteObject((Windows.Win32.Graphics.Gdi.HGDIOBJ)_bitmapInfo.hSizedBitmap);
@@ -317,18 +314,15 @@ internal class ArgbImageNativeWindow : IDisposable
         public record WindowSizeIsZero : ISetBitmapError;
     }
     /// <summary>
-    /// Sets the source bitmap from a GDI HBITMAP handle. This class takes ownership of the handle;
-    /// the caller must not free it after this call. Pass IntPtr.Zero to clear.
+    /// Sets the source bitmap from a GDI HBITMAP handle. This class does NOT take ownership of the handle;
+    /// the caller is responsible for keeping the HBITMAP valid for the lifetime of this object (or until
+    /// SetBitmap is called again). Pass IntPtr.Zero to clear.
     /// </summary>
     public MorphicResult<MorphicUnit, ISetBitmapError> SetBitmap(IntPtr hBitmap, int width, int height)
     {
-        // free previous source bitmap
+        // free previous sized bitmap (which we own); the source bitmap is owned by the caller so we cannot and should not free it here
         if (_bitmapInfo is not null)
         {
-            if (_bitmapInfo.hSourceBitmap != IntPtr.Zero)
-            {
-                Windows.Win32.PInvoke.DeleteObject((Windows.Win32.Graphics.Gdi.HGDIOBJ)_bitmapInfo.hSourceBitmap);
-            }
             if (_bitmapInfo.hSizedBitmap != IntPtr.Zero)
             {
                 Windows.Win32.PInvoke.DeleteObject((Windows.Win32.Graphics.Gdi.HGDIOBJ)_bitmapInfo.hSizedBitmap);

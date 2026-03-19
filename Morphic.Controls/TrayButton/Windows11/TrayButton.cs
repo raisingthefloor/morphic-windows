@@ -31,7 +31,15 @@ internal class TrayButton : IDisposable
 {
     private bool disposedValue;
 
-    private System.Drawing.Bitmap? _bitmap = null;
+    // NOTE: this class owns the HBITMAP handle and frees it on disposal or when replaced
+    private record BitmapInfo
+    {
+        public IntPtr hBitmap { get; set; }
+        public int Width { get; set; }
+        public int Height { get; set; }
+    }
+    private BitmapInfo? _bitmapInfo = null;
+    //
     private string? _text = null;
     private TrayButtonVisibility _visibility = TrayButtonVisibility.Hidden;
 
@@ -70,7 +78,15 @@ internal class TrayButton : IDisposable
             }
 
             // free unmanaged resources (unmanaged objects) and override finalizer
-            // [none]
+            if (_bitmapInfo is not null)
+            {
+			    // free the GDI bitmap
+                if (_bitmapInfo.hBitmap != IntPtr.Zero)
+                {
+                    _ = Windows.Win32.PInvoke.DeleteObject((Windows.Win32.Graphics.Gdi.HGDIOBJ)_bitmapInfo.hBitmap);
+                }
+                _bitmapInfo = null;
+            }
 
             // set large fields to null
             // [none]
@@ -95,44 +111,40 @@ internal class TrayButton : IDisposable
 
     //
 
-    public System.Drawing.Bitmap? Bitmap
+    /// <summary>
+    /// Sets the bitmap from a GDI HBITMAP handle. This class takes ownership of the handle;
+    /// the caller must not free it after this call. Pass IntPtr.Zero to clear.
+    /// </summary>
+    public MorphicResult<MorphicUnit, MorphicUnit> SetBitmap(IntPtr hBitmap, int width, int height)
     {
-        get => _bitmap;
-    }
-    //
-    public MorphicResult<MorphicUnit, MorphicUnit> SetBitmap(System.Drawing.Bitmap? value)
-    {
-        _bitmap = value;
+        // capture the old handle so we can free it AFTER the native window has been updated (since ArgbImageNativeWindow
+        // holds a reference to the 'current' source bitmap and may use it during the SetBitmap call)
+        var oldHBitmap = (_bitmapInfo is not null) ? _bitmapInfo.hBitmap : IntPtr.Zero;
+        try
+		{
+	        // store the new bitmap info
+	        _bitmapInfo = (hBitmap != IntPtr.Zero)
+	            ? new() { hBitmap = hBitmap, Width = width, Height = height }
+	            : null;
 
-        if (_nativeWindow is not null)
-        {
-            // convert the managed System.Drawing.Bitmap to a GDI bitmap (handle); ArgbImageNativeWindow ultimately takes ownership of the handle (and will clean up during disposal)
-            IntPtr hBitmap = IntPtr.Zero;
-            int bitmapWidth = 0;
-            int bitmapHeight = 0;
-            if (_bitmap is not null)
-            {
-                try
-                {
-                    // convert the managed System.Drawing.Bitmap to a GDI bitmap (and use a transparent background color
-                    // NOTE: this creates a new GDI bitmap from the source; the caller can free the original Bitmap after calling this function
-                    hBitmap = _bitmap.GetHbitmap(System.Drawing.Color.FromArgb(0));
-                }
-                catch
-                {
-                    return MorphicResult.ErrorResult();
-                    // return MorphicResult.ErrorResult<ISetBitmapError>(new ISetBitmapError.CouldNotConvertBitmapToGdiBitmap(ex));
-                }
-                bitmapWidth = _bitmap.Width;
-                bitmapHeight = _bitmap.Height;
-            }
-
-            var setBitmapResult = _nativeWindow!.SetBitmap(hBitmap, bitmapWidth, bitmapHeight);
-            if (setBitmapResult.IsError == true)
-            {
-                Debug.Assert(false, "Could not set bitmap.");
-                return MorphicResult.ErrorResult();
-            }
+	        // pass a reference to the bitmap to the native window (it does not take ownership)
+	        if (_nativeWindow is not null)
+	        {
+	            var setBitmapResult = _nativeWindow!.SetBitmap(hBitmap, width, height);
+	            if (setBitmapResult.IsError == true)
+	            {
+	                Debug.Assert(false, "Could not set bitmap.");
+	                return MorphicResult.ErrorResult();
+	            }
+	        }
+        }
+		finally
+		{
+	        // free the old bitmap now that the native window has been updated with the new one
+	        if (oldHBitmap != IntPtr.Zero)
+	        {
+	            _ = Windows.Win32.PInvoke.DeleteObject((Windows.Win32.Graphics.Gdi.HGDIOBJ)oldHBitmap);
+	        }
         }
 
         return MorphicResult.OkResult();
@@ -227,8 +239,6 @@ internal class TrayButton : IDisposable
                     case ICreateNativeWindowError.AlreadyExists:
                         Debug.Assert(false, "Race condition: native window already exists");
                         return MorphicResult.ErrorResult<IShowError>(new IShowError.OtherError());
-                    case ICreateNativeWindowError.CouldNotConvertBitmapToGdiBitmap:
-                        return MorphicResult.ErrorResult<IShowError>(new IShowError.OtherError());
                     case ICreateNativeWindowError.CreateFailed(ICreateNewError innerError):
                         return MorphicResult.ErrorResult<IShowError>(new IShowError.CouldNotCreateWindow(innerError));
                     case ICreateNativeWindowError.CouldNotSetBitmap(var innerError):
@@ -283,7 +293,6 @@ internal class TrayButton : IDisposable
     private interface ICreateNativeWindowError
     {
         public record AlreadyExists : ICreateNativeWindowError;
-        public record CouldNotConvertBitmapToGdiBitmap : ICreateNativeWindowError;
         public record CouldNotSetBitmap(TrayButtonNativeWindow.ISetBitmapError InnerError) : ICreateNativeWindowError;
         public record CouldNotSetText(TrayButtonNativeWindow.IUpdateTooltipTextAndTrackingError InnerError) : ICreateNativeWindowError;
         public record CreateFailed(ICreateNewError InnerError) : ICreateNativeWindowError;
@@ -312,27 +321,10 @@ internal class TrayButton : IDisposable
             this.MouseUp?.Invoke(s, e);
         };
 
-        // set the bitmap ("icon") for the native window
-        // convert the managed System.Drawing.Bitmap to a GDI bitmap (handle); ArgbImageNativeWindow ultimately takes ownership of the handle (and will clean up during disposal)
-        IntPtr hBitmapForNativeWindow = IntPtr.Zero;
-        int bitmapWidthForNativeWindow = 0;
-        int bitmapHeightForNativeWindow = 0;
-        if (_bitmap is not null)
-        {
-            try
-            {
-                // convert the managed System.Drawing.Bitmap to a GDI bitmap (and use a transparent background color
-                // NOTE: this creates a new GDI bitmap from the source; the caller can free the original Bitmap after calling this function
-                hBitmapForNativeWindow = _bitmap.GetHbitmap(System.Drawing.Color.FromArgb(0));
-            }
-            catch
-            {
-                nativeWindow.Dispose();
-                return MorphicResult.ErrorResult<ICreateNativeWindowError>(new ICreateNativeWindowError.CouldNotConvertBitmapToGdiBitmap());
-            }
-            bitmapWidthForNativeWindow = _bitmap.Width;
-            bitmapHeightForNativeWindow = _bitmap.Height;
-        }
+        // set the bitmap ("icon") for the native window; we passing a reference, but we retain ownership (since the window may be created/destroyed repeatedly over time)
+        IntPtr hBitmapForNativeWindow = (_bitmapInfo is not null) ? _bitmapInfo.hBitmap : IntPtr.Zero;
+        int bitmapWidthForNativeWindow = (_bitmapInfo is not null) ? _bitmapInfo.Width : 0;
+        int bitmapHeightForNativeWindow = (_bitmapInfo is not null) ? _bitmapInfo.Height : 0;
         var setBitmapResult = nativeWindow.SetBitmap(hBitmapForNativeWindow, bitmapWidthForNativeWindow, bitmapHeightForNativeWindow);
         if (setBitmapResult.IsError == true)
         {

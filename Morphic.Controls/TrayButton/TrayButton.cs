@@ -31,8 +31,12 @@ public class TrayButton : IDisposable
 
     // NOTE: only one of the two tray button variants will be populated (i.e. based on the OS version)
     //       [we have chosen not to create a common interface between them, as the plan is to deprecate the Windows 10 variant once Windows 10 is no longer supported...and the Windows 11+ variant should be allowed to get a new API surface if/as needed]
+#if INCLUDE_WINDOWS_10_SUPPORT
     Morphic.Controls.TrayButton.Windows10.TrayButton? _legacyTrayButton;
+#endif
     Morphic.Controls.TrayButton.Windows11.TrayButton? _trayButton;
+	
+    private System.Drawing.Bitmap? _bitmap = null;
 
     // NOTE: MouseUp is not a thread-safe event
     public event EventHandler<Morphic.Controls.MouseEventArgs>? MouseUp;
@@ -41,29 +45,36 @@ public class TrayButton : IDisposable
     {
         get
         {
+#if INCLUDE_WINDOWS_10_SUPPORT
             if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
             {
+#endif
                 // Windows 11 and newer (i.e. modern tray button)
                 return _trayButton?.PositionAndSize;
+#if INCLUDE_WINDOWS_10_SUPPORT
             }
             else
             {
                 // Windows 10 (i.e. legacy tray button)
                 return _legacyTrayButton?.PositionAndSize;
             }
+#endif
         }
     }
 
     public TrayButton()
     {
+#if INCLUDE_WINDOWS_10_SUPPORT
         if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
         {
+#endif
             // Windows 11 and newer (i.e. modern tray button)
             _trayButton = new();
             _trayButton.MouseUp += (s, e) =>
             {
                 this.MouseUp?.Invoke(s, e);
             };
+#if INCLUDE_WINDOWS_10_SUPPORT
         }
         else
         {
@@ -74,6 +85,7 @@ public class TrayButton : IDisposable
                 this.MouseUp?.Invoke(s, e);
             };
         }
+#endif
     }
 
     protected virtual void Dispose(bool disposing)
@@ -84,16 +96,20 @@ public class TrayButton : IDisposable
             {
                 // dispose managed state (managed objects)
                 //
+#if INCLUDE_WINDOWS_10_SUPPORT
                 if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
                 {
+#endif
                     // Windows 11 and newer (i.e. modern tray button)
                     _trayButton?.Dispose();
+#if INCLUDE_WINDOWS_10_SUPPORT
                 } 
                 else
                 {
                     // Windows 10 (i.e. legacy tray button)
                     _legacyTrayButton?.Dispose();
                 }
+#endif
             }
 
             // free unmanaged resources (unmanaged objects) and override finalizer
@@ -126,21 +142,52 @@ public class TrayButton : IDisposable
     {
         get
         {
+#if INCLUDE_WINDOWS_10_SUPPORT
             if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
             {
-                return _trayButton!.Bitmap;
+#endif
+                return _bitmap;
+#if INCLUDE_WINDOWS_10_SUPPORT
             }
             else //if (.IsWindows10() == true)
             {
                 var icon = _legacyTrayButton!.Icon;
                 return (icon is not null) ? icon!.ToBitmap() : null;
             }
+#endif
         }
         set
         {
+#if INCLUDE_WINDOWS_10_SUPPORT
             if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
             {
-                _ = _trayButton!.SetBitmap(value);
+#endif
+                _bitmap = value;
+				
+                // convert the managed System.Drawing.Bitmap to a GDI bitmap (handle); the Windows11.TrayButton class ultimately takes ownership of the handle (and will clean up during disposal)
+                IntPtr hBitmap = IntPtr.Zero;
+                int bitmapWidth = 0;
+                int bitmapHeight = 0;
+                if (value is not null)
+                {
+                    try
+                    {
+		                // convert the managed System.Drawing.Bitmap to a GDI bitmap (and use a transparent background color
+		                // NOTE: this creates a new GDI bitmap from the source; the caller can free the original Bitmap after calling this function
+                        hBitmap = value.GetHbitmap(System.Drawing.Color.FromArgb(0));
+                    }
+                    catch
+                    {
+						System.Diagnostics.Debug.Assert(false, "Could not create GDI bitmap from provided bitmap");
+                        return;
+                    }
+                    bitmapWidth = value.Width;
+                    bitmapHeight = value.Height;
+                }
+				
+				// pass the new GDI bitmap to the trayButton; the trayButton is now its owner and will clean it up during its disposal
+                _ = _trayButton!.SetBitmap(hBitmap, bitmapWidth, bitmapHeight);
+#if INCLUDE_WINDOWS_10_SUPPORT
             }
             else //if (.IsWindows10() == true)
             {
@@ -161,6 +208,7 @@ public class TrayButton : IDisposable
                     _legacyTrayButton!.Icon = null;
                 }
             }
+#endif
         }
     }
 
@@ -168,11 +216,13 @@ public class TrayButton : IDisposable
     {
         get
         {
+#if INCLUDE_WINDOWS_10_SUPPORT
             if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
             {
-                if (_trayButton!.Bitmap is not null)
+#endif
+                if (_bitmap is not null)
                 {
-                    var bitmapAsIconHandlePointer = _trayButton!.Bitmap!.GetHicon();
+                    var bitmapAsIconHandlePointer = _bitmap!.GetHicon();
                     try
                     {
                         return (System.Drawing.Icon)(System.Drawing.Icon.FromHandle(bitmapAsIconHandlePointer).Clone());
@@ -186,22 +236,29 @@ public class TrayButton : IDisposable
                 {
                     return null;
                 }
+#if INCLUDE_WINDOWS_10_SUPPORT
             }
             else //if (.IsWindows10() == true)
             {
                 return _legacyTrayButton!.Icon;
             }
+#endif
         }
         set
         {
+#if INCLUDE_WINDOWS_10_SUPPORT
             if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
             {
-                _ = _trayButton!.SetBitmap((value is not null) ? value!.ToBitmap() : null);
+#endif
+                // convert Icon to Bitmap, then set via the Bitmap property
+                this.Bitmap = (value is not null) ? value!.ToBitmap() : null;
+#if INCLUDE_WINDOWS_10_SUPPORT
             }
             else //if (.IsWindows10() == true)
             {
                 _legacyTrayButton!.Icon = value;
             }
+#endif
         }
     }
 
@@ -209,25 +266,33 @@ public class TrayButton : IDisposable
     {
         get
         {
+#if INCLUDE_WINDOWS_10_SUPPORT
             if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
             {
+#endif
                 return _trayButton!.Text;
+#if INCLUDE_WINDOWS_10_SUPPORT
             }
             else //if (.IsWindows10() == true)
             {
                 return _legacyTrayButton!.Text;
             }
+#endif
         }
         set
         {
+#if INCLUDE_WINDOWS_10_SUPPORT
             if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
             {
+#endif
                 _ = _trayButton!.SetText(value);
+#if INCLUDE_WINDOWS_10_SUPPORT
             }
             else //if (.IsWindows10() == true)
             {
                 _legacyTrayButton!.Text = value;
             }
+#endif
         }
     }
 
@@ -235,9 +300,12 @@ public class TrayButton : IDisposable
     {
         get
         {
+#if INCLUDE_WINDOWS_10_SUPPORT
             if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
             {
+#endif
                 return _trayButton!.Visibility;
+#if INCLUDE_WINDOWS_10_SUPPORT
             }
             else //if (.IsWindows10() == true)
             {
@@ -247,6 +315,7 @@ public class TrayButton : IDisposable
                     false => TrayButtonVisibility.Hidden,
                 };
             }
+#endif
         }
         set
         {
@@ -258,14 +327,18 @@ public class TrayButton : IDisposable
                 _ => throw new Exception("invalid code path"),
             };
 
+#if INCLUDE_WINDOWS_10_SUPPORT
             if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
             {
+#endif
                 _trayButton!.Visibility = value;
+#if INCLUDE_WINDOWS_10_SUPPORT
             }
             else //if (.IsWindows10() == true)
             {
                 _legacyTrayButton!.Visible = newVisibleState;
             }
+#endif
         }
     }
 
