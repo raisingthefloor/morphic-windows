@@ -209,7 +209,7 @@ public class HybridTrayIcon : IDisposable
     }
 
     // NOTE: this function returns just the first position and size (i.e. rect) of our tray icon; if it cannot find at least one position+size, it returns null
-    public System.Windows.Rect? GetPositionAndSizeOrNull()
+    public Windows.Foundation.Rect? GetPositionAndSizeOrNull()
     {
         var getPositionsAndSizesResult = this.GetPositionsAndSizes();
         if (getPositionsAndSizesResult.IsSuccess)
@@ -218,7 +218,7 @@ public class HybridTrayIcon : IDisposable
             if (positionsAndSizes.Count == 1)
             {
                 var positionAndSize = positionsAndSizes[0];
-                return new System.Windows.Rect(positionAndSize.X, positionAndSize.Y, positionAndSize.Width, positionAndSize.Height);
+                return new Windows.Foundation.Rect(positionAndSize.X, positionAndSize.Y, positionAndSize.Width, positionAndSize.Height);
             }
             else
             {

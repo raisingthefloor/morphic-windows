@@ -744,7 +744,7 @@ internal class TrayButton : IDisposable
                     result = (Windows.Win32.Foundation.LRESULT)0;
                     break;
                 case Windows.Win32.PInvoke.WM_PAINT:
-                    this.Paint((IntPtr)hWnd.Value);
+                    this.Paint(hWnd);
                     result = (Windows.Win32.Foundation.LRESULT)0;
                     break;
                 case Windows.Win32.PInvoke.WM_RBUTTONUP:
@@ -933,11 +933,11 @@ internal class TrayButton : IDisposable
             var result = hitPoints[0];
             return result;
         }
-        private void Paint(IntPtr hWnd)
+        private void Paint(Windows.Win32.Foundation.HWND hWnd)
         {
             Windows.Win32.Graphics.Gdi.PAINTSTRUCT paintStruct;
             // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-beginpaint
-            var paintDc = Windows.Win32.PInvoke.BeginPaint((Windows.Win32.Foundation.HWND)hWnd, out paintStruct);
+            var paintDc = Windows.Win32.PInvoke.BeginPaint(hWnd, out paintStruct);
             try
             {
                 Windows.Win32.Graphics.Gdi.HDC bufferedPaintDc;
@@ -1010,7 +1010,7 @@ internal class TrayButton : IDisposable
                 //
                 // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-endpaint
                 // NOTE: per the MSDN docs, this function never returns zero (so there is no result to check)
-                _ = Windows.Win32.PInvoke.EndPaint((Windows.Win32.Foundation.HWND)hWnd, in paintStruct);
+                _ = Windows.Win32.PInvoke.EndPaint(hWnd, in paintStruct);
             }
         }
 
@@ -1411,7 +1411,7 @@ internal class TrayButton : IDisposable
             var taskbarChildHandles = TrayButtonNativeWindow.EnumerateChildWindows(taskbarHandle);
             //
             // find the rects of all windows within the taskbar; we need this information so that we do not overlap any other accessory windows which are trying to sit in the same area as us
-            var taskbarChildHandlesWithRects = new Dictionary<IntPtr, Windows.Win32.Foundation.RECT>();
+            var taskbarChildHandlesWithRects = new Dictionary<Windows.Win32.Foundation.HWND, Windows.Win32.Foundation.RECT>();
             foreach (var taskbarChildHandle in taskbarChildHandles)
             {
                 Windows.Win32.Foundation.RECT taskbarChildRect = new Windows.Win32.Foundation.RECT();
@@ -1439,7 +1439,7 @@ internal class TrayButton : IDisposable
             }
 
             // remove our own (tray button) window handle from the list (so that we don't see our current screen rect as "taken" in the list of occupied RECTs)
-            taskbarChildHandlesWithRects.Remove((IntPtr)_hwnd.Value);
+            taskbarChildHandlesWithRects.Remove(_hwnd);
 
             // create a list of children which are located between the task button container and the notify tray (i.e. windows which are occupying the same region we want to
             // occupy...so we can try to avoid overlapping)
@@ -1691,9 +1691,9 @@ internal class TrayButton : IDisposable
                  );
         }
 
-        internal static List<IntPtr> EnumerateChildWindows(IntPtr parentHwnd)
+        internal static List<Windows.Win32.Foundation.HWND> EnumerateChildWindows(IntPtr parentHwnd)
         {
-            var result = new List<IntPtr>();
+            var result = new List<Windows.Win32.Foundation.HWND>();
 
             // create an unmanaged pointer to our list (using a GC-managed handle)
             GCHandle resultGCHandle = GCHandle.Alloc(result, GCHandleType.Normal);
@@ -1703,7 +1703,7 @@ internal class TrayButton : IDisposable
             try
             {
                 var enumFunction = new Windows.Win32.UI.WindowsAndMessaging.WNDENUMPROC(TrayButtonNativeWindow.EnumerateChildWindowsCallback);
-                Windows.Win32.PInvoke.EnumChildWindows((Windows.Win32.Foundation.HWND)parentHwnd, enumFunction, (nint)resultGCHandleAsIntPtr);
+                Windows.Win32.PInvoke.EnumChildWindows((Windows.Win32.Foundation.HWND)parentHwnd, enumFunction, resultGCHandleAsIntPtr);
 
             }
             finally
@@ -1720,11 +1720,11 @@ internal class TrayButton : IDisposable
         {
             // convert lParam back into the result list object
             var resultGCHandle = GCHandle.FromIntPtr((IntPtr)(nint)lParam);
-            List<IntPtr>? result = resultGCHandle.Target as List<IntPtr>;
+            List<Windows.Win32.Foundation.HWND>? result = resultGCHandle.Target as List<Windows.Win32.Foundation.HWND>;
 
             if (result is not null)
             {
-                result.Add((IntPtr)hwnd.Value);
+                result.Add(hwnd);
             }
             else
             {
