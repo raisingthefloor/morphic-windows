@@ -225,26 +225,23 @@ internal class ThemeManager : IDisposable
 
     public void UpdateTaskbarButtonIcon(Morphic.Client.Theme.ThemeOption theme)
     {
-        System.Drawing.Icon morphicIcon;
+        string morphicIconPath;
         switch (theme)
         {
             case ThemeOption.HighContrastBlack:
                 {
-                    var morphicIconStreamResourceInfo = Application.GetResourceStream(new Uri("pack://application:,,,/Morphic;component/Assets/Icons/morphic-highcontrastblack.ico"));
-                    morphicIcon = new(morphicIconStreamResourceInfo.Stream);
+                    morphicIconPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "Icons", "morphic-highcontrastblack.ico");
                 }
                 break;
             case ThemeOption.HighContrastWhite:
                 {
-                    var morphicIconStreamResourceInfo = Application.GetResourceStream(new Uri("pack://application:,,,/Morphic;component/Assets/Icons/morphic-highcontrastwhite.ico"));
-                    morphicIcon = new(morphicIconStreamResourceInfo.Stream);
+                    morphicIconPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "Icons", "morphic-highcontrastwhite.ico");
                 }
                 break;
             case ThemeOption.Dark:
             case ThemeOption.Light:
                 {
-                    var morphicIconStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Morphic.Client.Assets.Icons.morphic.ico")!;
-                    morphicIcon = new(morphicIconStream);
+                    morphicIconPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "Icons", "morphic-standardcontrast.ico");
                 }
                 break;
             default:
@@ -254,7 +251,7 @@ internal class ThemeManager : IDisposable
         // NOTE: Application.Current.HybridTrayIcon should always be non-null, but we use the nullable operator out of an abundance of caution (mostly to deal with the potential for out-of-order initialization at startup)
         if (((App)Application.Current).HybridTrayIcon is not null)
         {
-            ((App)Application.Current).HybridTrayIcon.Icon = morphicIcon;
+            ((App)Application.Current).HybridTrayIcon.SetIconFromFile(morphicIconPath, 256, 256);
         }
     }
 

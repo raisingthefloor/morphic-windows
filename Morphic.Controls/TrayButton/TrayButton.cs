@@ -21,7 +21,10 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
+using Morphic.Core;
 using System;
+using System.Diagnostics;
+using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace Morphic.Controls.TrayButton;
 
@@ -36,8 +39,6 @@ public class TrayButton : IDisposable
 #endif
     Morphic.Controls.TrayButton.Windows11.TrayButton? _trayButton;
 	
-    private System.Drawing.Bitmap? _bitmap = null;
-
     // NOTE: MouseUp is not a thread-safe event
     public event EventHandler<Morphic.Controls.MouseEventArgs>? MouseUp;
 
@@ -138,128 +139,97 @@ public class TrayButton : IDisposable
 
     //
 
-    public System.Drawing.Bitmap? Bitmap
+    public MorphicResult<MorphicUnit, MorphicUnit> SetIconFromFile(string filePath, int width, int height)
     {
-        get
+        // load the .ico file as an HICON using LoadImage
+        var hIcon = Windows.Win32.PInvoke.LoadImage(
+            null,
+            filePath,
+            Windows.Win32.UI.WindowsAndMessaging.GDI_IMAGE_TYPE.IMAGE_ICON,
+            width,
+            height,
+            Windows.Win32.UI.WindowsAndMessaging.IMAGE_FLAGS.LR_LOADFROMFILE
+        );
+        if (hIcon.IsInvalid)
         {
-#if INCLUDE_WINDOWS_10_SUPPORT
-            if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
-            {
-#endif
-                return _bitmap;
-#if INCLUDE_WINDOWS_10_SUPPORT
-            }
-            else //if (.IsWindows10() == true)
-            {
-                var icon = _legacyTrayButton!.Icon;
-                return (icon is not null) ? icon!.ToBitmap() : null;
-            }
-#endif
+            Debug.Assert(false, "Could not load icon from file: " + filePath);
+            return MorphicResult.ErrorResult();
         }
-        set
-        {
-#if INCLUDE_WINDOWS_10_SUPPORT
-            if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
-            {
-#endif
-                _bitmap = value;
-				
-                // convert the managed System.Drawing.Bitmap to a GDI bitmap (handle); the Windows11.TrayButton class ultimately takes ownership of the handle (and will clean up during disposal)
-                IntPtr hBitmap = IntPtr.Zero;
-                int bitmapWidth = 0;
-                int bitmapHeight = 0;
-                if (value is not null)
-                {
-                    try
-                    {
-		                // convert the managed System.Drawing.Bitmap to a GDI bitmap (and use a transparent background color
-		                // NOTE: this creates a new GDI bitmap from the source; the caller can free the original Bitmap after calling this function
-                        hBitmap = value.GetHbitmap(System.Drawing.Color.FromArgb(0));
-                    }
-                    catch
-                    {
-						System.Diagnostics.Debug.Assert(false, "Could not create GDI bitmap from provided bitmap");
-                        return;
-                    }
-                    bitmapWidth = value.Width;
-                    bitmapHeight = value.Height;
-                }
-				
-				// pass the new GDI bitmap to the trayButton; the trayButton is now its owner and will clean it up during its disposal
-                _ = _trayButton!.SetBitmap(hBitmap, bitmapWidth, bitmapHeight);
-#if INCLUDE_WINDOWS_10_SUPPORT
-            }
-            else //if (.IsWindows10() == true)
-            {
-                if (value is not null)
-                {
-                    var bitmapAsIconHandlePointer = value.GetHicon();
-                    try
-                    {
-                        _legacyTrayButton!.Icon = (System.Drawing.Icon)(System.Drawing.Icon.FromHandle(bitmapAsIconHandlePointer).Clone());
-                    }
-                    finally
-                    {
-                        _ = Windows.Win32.PInvoke.DestroyIcon((Windows.Win32.UI.WindowsAndMessaging.HICON)bitmapAsIconHandlePointer);
-                    }
-                }
-                else
-                {
-                    _legacyTrayButton!.Icon = null;
-                }
-            }
-#endif
-        }
-    }
+        var hIconRawHandle = hIcon.DangerousGetHandle();
 
-    public System.Drawing.Icon? Icon
-    {
-        get
+        // extract the color bitmap (HBITMAP) from the HICON
+        Windows.Win32.UI.WindowsAndMessaging.ICONINFO iconInfo;
+        try
         {
-#if INCLUDE_WINDOWS_10_SUPPORT
-            if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
+            if (Windows.Win32.PInvoke.GetIconInfo(hIcon, out iconInfo) == false)
             {
-#endif
-                if (_bitmap is not null)
-                {
-                    var bitmapAsIconHandlePointer = _bitmap!.GetHicon();
-                    try
-                    {
-                        return (System.Drawing.Icon)(System.Drawing.Icon.FromHandle(bitmapAsIconHandlePointer).Clone());
-                    }
-                    finally
-                    {
-                        Windows.Win32.PInvoke.DestroyIcon((Windows.Win32.UI.WindowsAndMessaging.HICON)bitmapAsIconHandlePointer);
-                    }
-                }
-                else
-                {
-                    return null;
-                }
-#if INCLUDE_WINDOWS_10_SUPPORT
+                Debug.Assert(false, "Could not get icon info");
+                _ = Windows.Win32.PInvoke.DestroyIcon((HICON)hIconRawHandle);
+                return MorphicResult.ErrorResult();
             }
-            else //if (.IsWindows10() == true)
-            {
-                return _legacyTrayButton!.Icon;
-            }
-#endif
         }
-        set
+        finally
         {
-#if INCLUDE_WINDOWS_10_SUPPORT
-            if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
-            {
-#endif
-                // convert Icon to Bitmap, then set via the Bitmap property
-                this.Bitmap = (value is not null) ? value!.ToBitmap() : null;
-#if INCLUDE_WINDOWS_10_SUPPORT
-            }
-            else //if (.IsWindows10() == true)
-            {
-                _legacyTrayButton!.Icon = value;
-            }
-#endif
+            // NOTE: there's a bug in SafeFileHandle which tries to clean up icons incorrectly, so prevent the safe handle from trying to free it
+            hIcon.SetHandleAsInvalid();
         }
+
+        // clean up the mask bitmap; we only need the color bitmap
+        if (!iconInfo.hbmMask.IsNull)
+        {
+            _ = Windows.Win32.PInvoke.DeleteObject((Windows.Win32.Graphics.Gdi.HGDIOBJ)iconInfo.hbmMask);
+        }
+
+        // NOTE: iconInfo.hbmColor must be cleaned up manually later (via DeleteObject)
+        var hBitmap = iconInfo.hbmColor;
+        if (hBitmap.IsNull)
+        {
+            Debug.Assert(false, "Icon has no color bitmap");
+            _ = Windows.Win32.PInvoke.DestroyIcon((HICON)hIconRawHandle);
+            return MorphicResult.ErrorResult();
+        }
+
+        // get the bitmap dimensions
+        int bitmapWidth;
+        int bitmapHeight;
+        unsafe
+        {
+            Windows.Win32.Graphics.Gdi.BITMAP bitmapStruct;
+            var getObjectResult = Windows.Win32.PInvoke.GetObject(
+                (Windows.Win32.Graphics.Gdi.HGDIOBJ)hBitmap.Value,
+                sizeof(Windows.Win32.Graphics.Gdi.BITMAP),
+                &bitmapStruct
+            );
+            if (getObjectResult == 0)
+            {
+                Debug.Assert(false, "Could not get bitmap dimensions");
+                _ = Windows.Win32.PInvoke.DeleteObject((Windows.Win32.Graphics.Gdi.HGDIOBJ)hBitmap.Value);
+                _ = Windows.Win32.PInvoke.DestroyIcon((HICON)hIconRawHandle);
+                return MorphicResult.ErrorResult();
+            }
+            bitmapWidth = bitmapStruct.bmWidth;
+            bitmapHeight = bitmapStruct.bmHeight;
+        }
+
+        // pass the HBITMAP/HICON to the underlying tray button
+#if INCLUDE_WINDOWS_10_SUPPORT
+        if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
+        {
+#endif
+            // Windows 11: pass the HBITMAP (takes ownership); destroy the HICON since it's no longer needed
+            _ = _trayButton!.SetGdiBitmap(hBitmap, bitmapWidth, bitmapHeight);
+            Windows.Win32.PInvoke.DestroyIcon((Windows.Win32.UI.WindowsAndMessaging.HICON)hIconRawHandle);
+#if INCLUDE_WINDOWS_10_SUPPORT
+        }
+        else
+        {
+            // Windows 10: pass the HICON directly (takes ownership); clean up the HBITMAP since the legacy path doesn't use it
+            _legacyTrayButton!.SetGdiIcon((Windows.Win32.UI.WindowsAndMessaging.HICON)hIconRawHandle);
+            _ = Windows.Win32.PInvoke.DeleteObject((Windows.Win32.Graphics.Gdi.HGDIOBJ)hBitmap);
+        }
+#endif
+
+        return MorphicResult.OkResult();
     }
 
     public string? Text
@@ -317,29 +287,27 @@ public class TrayButton : IDisposable
             }
 #endif
         }
-        set
-        {
-            var newVisibleState = value switch
-            {
-                TrayButtonVisibility.Hidden => false,
-                TrayButtonVisibility.PendingVisible => throw new ArgumentException("State 'PendingVisible' is invalid for the Visibility Set operation"),
-                TrayButtonVisibility.Visible => true,
-                _ => throw new Exception("invalid code path"),
-            };
+    }
 
+    public bool Visible
+    {
+        get => this.Visibility == TrayButtonVisibility.Visible;
+    }
+    //
+    public void SetVisible(bool value) 
+    {
 #if INCLUDE_WINDOWS_10_SUPPORT
-            if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
-            {
+        if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
+        {
 #endif
-                _trayButton!.Visibility = value;
+            _trayButton!.Visibility = value ? TrayButtonVisibility.Visible : TrayButtonVisibility.Hidden;
 #if INCLUDE_WINDOWS_10_SUPPORT
-            }
-            else //if (.IsWindows10() == true)
-            {
-                _legacyTrayButton!.Visible = newVisibleState;
-            }
-#endif
         }
+        else //if (.IsWindows10() == true)
+        {
+            _legacyTrayButton!.Visible = value;
+        }
+#endif
     }
 
     //

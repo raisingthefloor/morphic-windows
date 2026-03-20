@@ -113,6 +113,10 @@ internal class TrayButtonNativeWindow : IDisposable
 
             // free unmanaged resources (unmanaged objects) and override finalizer
             //
+            // destroy the tooltip window BEFORE the main window (since the tooltip is owned by the main window
+            // and would be automatically destroyed with it, leaving us with an invalid handle)
+            _ = this.DestroyTooltipWindow();
+            //
             // free window handle
             if (_hwnd != IntPtr.Zero)
             {
@@ -125,7 +129,6 @@ internal class TrayButtonNativeWindow : IDisposable
             {
                 _gcHandle.Free();
             }
-            _ = this.DestroyTooltipWindow();
 
             // set large fields to null
             // [none]
@@ -183,10 +186,10 @@ internal class TrayButtonNativeWindow : IDisposable
                         lpszClassName = pointerToNativeWindowClassName,
                         hCursor = hCursor,
                     };
-                }
 
-	            // NOTE: RegisterClassEx returns an ATOM (or 0 if the call failed)
-	            registerClassResult = Windows.Win32.PInvoke.RegisterClassEx(lpWndClassEx);
+                    // NOTE: RegisterClassEx returns an ATOM (or 0 if the call failed)
+                    registerClassResult = Windows.Win32.PInvoke.RegisterClassEx(lpWndClassEx);
+                }
             }
 			//
             if (registerClassResult == 0) // failure
@@ -986,7 +989,7 @@ internal class TrayButtonNativeWindow : IDisposable
         var getWindowClassNameResult = TrayButtonNativeWindow.GetWindowClassName(hwnd);
         if (getWindowClassNameResult.IsError == true)
         {
-            Debug.Assert(false, "Could not get window class name; has the window already been destroyed?");
+            Debug.WriteLine("ObjectReorderWindowEventProc: Could not get window class name; has the window already been destroyed?");
             return;
         }
         className = getWindowClassNameResult.Value!;

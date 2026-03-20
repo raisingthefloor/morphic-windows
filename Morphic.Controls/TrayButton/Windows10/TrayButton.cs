@@ -39,7 +39,8 @@ internal class TrayButton : IDisposable
 {
     private bool disposedValue;
 
-    private System.Drawing.Icon? _icon = null;
+    // NOTE: this class owns the HICON handle and frees it on disposal or when replaced
+    private Windows.Win32.UI.WindowsAndMessaging.HICON _hIcon = Windows.Win32.UI.WindowsAndMessaging.HICON.Null;
     private string? _text = null;
     private bool _visible = false;
 
@@ -72,7 +73,11 @@ internal class TrayButton : IDisposable
             }
 
             // free unmanaged resources (unmanaged objects) and override finalizer
-            // [none]
+            if (_hIcon.IsNull == false)
+            {
+                Windows.Win32.PInvoke.DestroyIcon(_hIcon);
+                _hIcon = Windows.Win32.UI.WindowsAndMessaging.HICON.Null;
+            }
 
             // set large fields to null
             // [none]
@@ -81,12 +86,12 @@ internal class TrayButton : IDisposable
         }
     }
 
-    // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-    // ~TrayButton()
-    // {
-    //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-    //     Dispose(disposing: false);
-    // }
+    // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
+    ~TrayButton()
+    {
+        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        Dispose(disposing: false);
+    }
 
     public void Dispose()
     {
@@ -95,18 +100,25 @@ internal class TrayButton : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    /// <summary>The icon for the tray button</summary>
-    public System.Drawing.Icon? Icon
+    /// <summary>
+    /// Sets the icon from an HICON handle. This class takes ownership of the handle;
+    /// the caller must not free it after this call. Pass HICON.Null to clear.
+    /// </summary>
+    public void SetGdiIcon(Windows.Win32.UI.WindowsAndMessaging.HICON hIcon)
     {
-        get
+        // free the old HICON
+        var oldHIcon = _hIcon;
+        try
         {
-            return _icon;
+            _hIcon = hIcon;
+            _nativeWindow?.SetIcon(_hIcon);
         }
-        set
+        finally
         {
-            _icon = value;
-
-            _nativeWindow?.SetIcon(_icon);
+            if (!oldHIcon.IsNull)
+            {
+                Windows.Win32.PInvoke.DestroyIcon(oldHIcon);
+            }
         }
     }
 
@@ -195,7 +207,7 @@ internal class TrayButton : IDisposable
         }
 
         // set the icon for the native window
-        nativeWindow.SetIcon(_icon);
+        nativeWindow.SetIcon(_hIcon);
         // set the (tooltip) text for the native window
         nativeWindow.SetText(_text);
 
@@ -232,7 +244,7 @@ internal class TrayButton : IDisposable
         private GCHandle _gcHandle;
 
         private Windows.Win32.Foundation.HWND _tooltipWindowHandle = Windows.Win32.Foundation.HWND.Null;
-        private IntPtr _iconHandle = IntPtr.Zero;
+        private Windows.Win32.UI.WindowsAndMessaging.HICON _iconHandle = Windows.Win32.UI.WindowsAndMessaging.HICON.Null;
 
         private string? _tooltipText = null;
         private bool _tooltipInfoAdded = false;
@@ -304,9 +316,10 @@ internal class TrayButton : IDisposable
                             lpszClassName = pointerToNativeWindowClassName,
                             hCursor = hCursor,
                         };
+
+                        // NOTE: RegisterClassEx returns an ATOM (or 0 if the call failed)
+                        registerClassResult = Windows.Win32.PInvoke.RegisterClassEx(lpWndClassEx);
                     }
-                    // NOTE: RegisterClassEx returns an ATOM (or 0 if the call failed)
-                    registerClassResult = Windows.Win32.PInvoke.RegisterClassEx(lpWndClassEx);
                 }
                 //
                 if (registerClassResult == 0)
@@ -985,9 +998,9 @@ internal class TrayButton : IDisposable
                     var xLeft = ((paintStruct.rcPaint.right - paintStruct.rcPaint.left) - iconWidthAndHeight) / 2;
                     var yTop = ((paintStruct.rcPaint.bottom - paintStruct.rcPaint.top) - iconWidthAndHeight) / 2;
 
-                    if (_iconHandle != IntPtr.Zero && iconWidthAndHeight > 0)
+                    if (_iconHandle.IsNull == false && iconWidthAndHeight > 0)
                     {
-                        var drawIconSuccess = Windows.Win32.PInvoke.DrawIconEx(bufferedPaintDc, xLeft, yTop, (Windows.Win32.UI.WindowsAndMessaging.HICON)_iconHandle, iconWidthAndHeight, iconWidthAndHeight, 0 /* not animated */, Windows.Win32.Graphics.Gdi.HBRUSH.Null /* no triple-buffering */, Windows.Win32.UI.WindowsAndMessaging.DI_FLAGS.DI_NORMAL | Windows.Win32.UI.WindowsAndMessaging.DI_FLAGS.DI_NOMIRROR);
+                        var drawIconSuccess = Windows.Win32.PInvoke.DrawIconEx(bufferedPaintDc, xLeft, yTop, _iconHandle, iconWidthAndHeight, iconWidthAndHeight, 0 /* not animated */, Windows.Win32.Graphics.Gdi.HBRUSH.Null /* no triple-buffering */, Windows.Win32.UI.WindowsAndMessaging.DI_FLAGS.DI_NORMAL | Windows.Win32.UI.WindowsAndMessaging.DI_FLAGS.DI_NOMIRROR);
                         if (drawIconSuccess == false)
                         {
                             // failed; abort
@@ -1149,16 +1162,9 @@ internal class TrayButton : IDisposable
             }
         }
 
-        public void SetIcon(System.Drawing.Icon? icon)
+        public void SetIcon(Windows.Win32.UI.WindowsAndMessaging.HICON hIcon)
         {
-            if (icon is not null)
-            {
-                _iconHandle = icon.Handle;
-            }
-            else
-            {
-                _iconHandle = IntPtr.Zero;
-            }
+            _iconHandle = hIcon;
 
             // TODO: if we support non-square icons, then reposition the tray button based on the new dimensions of the icon (in case it's wider/narrower)
             //this.PositionTrayButton();

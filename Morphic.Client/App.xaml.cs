@@ -1024,7 +1024,7 @@ public partial class App : Application
         // if Morphic (including the taskbar icon button) should be visible, show them now
         if (morphicShouldBeHidden == false)
         {
-            this.HybridTrayIcon.Visible = true;
+            this.HybridTrayIcon?.Visible = true;
         }
 
         // initialize our theme manager; this will also set the initial theme for our application
@@ -1126,17 +1126,16 @@ public partial class App : Application
         // var allNotificationIconsShown = (await filterType.GetValue() as bool? == true) ? TrayIcon.TrayIconLocationOption.NotificationTray : TrayIcon.TrayIconLocationOption.NextToNotificationTry;
 
         // get the default Morphic icon
-        var morphicIconStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Morphic.Client.Assets.Icons.morphic.ico")!;
-        System.Drawing.Icon morphicIcon = new(morphicIconStream);
+        var morphicIconPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "Icons", "morphic-standardcontrast.ico");
 
         // create an instance of our tray icon (button)
         var hybridTrayIcon = new Morphic.Controls.HybridTrayIcon()
         {
-            Icon = morphicIcon,
             Text = "Morphic",
             TrayIconLocation = Controls.HybridTrayIcon.TrayIconLocationOption.NextToNotificationTray,
             Visible = false, // NOTE: default state; should not be necessary
         };
+        _ = hybridTrayIcon.SetIconFromFile(morphicIconPath, 256, 256);
         this.HybridTrayIcon = hybridTrayIcon;
 
         // wire up click and right-click events for our hybrid tray icon

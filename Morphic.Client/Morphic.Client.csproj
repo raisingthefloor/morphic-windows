@@ -72,9 +72,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Remove="Assets\Icons\morphic-highcontrastblack.ico" />
-    <Content Remove="Assets\Icons\morphic-highcontrastwhite.ico" />
-    <Content Remove="Assets\Icons\morphic-standardcontrast.ico" />
     <Content Remove="Assets\Icons\morphic.ico" />
   </ItemGroup>
 
@@ -137,12 +134,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <EmbeddedResource Include="Assets\Icons\morphic.ico" />
-    <Resource Include="Assets\Icons\morphic-highcontrastblack.ico">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Assets\Icons\morphic-highcontrastwhite.ico">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
     <Resource Include="Assets\Icons\morphic-standardcontrast.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>

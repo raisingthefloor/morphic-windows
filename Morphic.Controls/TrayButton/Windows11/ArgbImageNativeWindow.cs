@@ -136,6 +136,7 @@ internal class ArgbImageNativeWindow : IDisposable
             }
             //
             Windows.Win32.UI.WindowsAndMessaging.WNDCLASSEXW lpWndClassEx;
+            ushort registerClassResult;
             unsafe
             {
                 fixed (char* pointerToNativeWindowClassName = nativeWindowClassName)
@@ -143,15 +144,16 @@ internal class ArgbImageNativeWindow : IDisposable
                     lpWndClassEx = new Windows.Win32.UI.WindowsAndMessaging.WNDCLASSEXW
                     {
                         cbSize = (uint)Marshal.SizeOf<Windows.Win32.UI.WindowsAndMessaging.WNDCLASSEXW>(),
-                        lpfnWndProc = ArgbImageNativeWindow.StaticWndProc,
+                        lpfnWndProc = s_wndProcDelegate,
                         lpszClassName = pointerToNativeWindowClassName,
                         hCursor = hCursor,
                     };
+
+                    // NOTE: RegisterClassEx returns an ATOM (or 0 if the call failed)
+                    registerClassResult = Windows.Win32.PInvoke.RegisterClassEx(lpWndClassEx);
                 }
             }
-
-            // NOTE: RegisterClassEx returns an ATOM (or 0 if the call failed)
-            var registerClassResult = Windows.Win32.PInvoke.RegisterClassEx(lpWndClassEx);
+            //
             if (registerClassResult == 0) // failure
             {
                 var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();

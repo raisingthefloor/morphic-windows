@@ -24,6 +24,7 @@
 using Morphic.Core;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Morphic.Controls;
 
@@ -35,7 +36,7 @@ public class HybridTrayIcon : IDisposable
 {
     private bool disposedValue;
 
-    private System.Drawing.Icon? _icon = null;
+    private (string FilePath, int Width, int Height)? _iconInfo;
     private string? _text = null;
     private bool _visible = false;
 
@@ -104,25 +105,28 @@ public class HybridTrayIcon : IDisposable
 
     //
 
-    /// <summary>The icon for the tray icon</summary>
-    public System.Drawing.Icon? Icon
+    public MorphicResult<MorphicUnit, MorphicUnit> SetIconFromFile(string filePath, int width, int height)
     {
-        get
+        if (_notifyIcon is not null)
         {
-            return _icon;
+            System.Drawing.Icon icon;
+            try
+            {
+                icon = new System.Drawing.Icon(filePath, width, height);
+            }
+            catch
+            {
+                return MorphicResult.ErrorResult();
+            }
+
+            _notifyIcon.Icon = icon;
         }
-        set
+        if (_trayButton is not null)
         {
-            _icon = value;
-            if (_notifyIcon is not null)
-            {
-                _notifyIcon.Icon = _icon;
-            }
-            if (_trayButton is not null)
-            {
-                _trayButton.Icon = _icon;
-            }
+            _trayButton.SetIconFromFile(filePath, width, height);
         }
+
+        return MorphicResult.OkResult();
     }
 
     /// <summary>Tooltip for the tray icon.</summary>
@@ -164,7 +168,7 @@ public class HybridTrayIcon : IDisposable
             if (_trayButton is not null)
             {
                 // NOTE: we set the visibility tag; if the tray button cannot currently be made visible, it will become ".PendingVisible" instead
-                _trayButton.Visibility = _visible ? TrayButton.TrayButtonVisibility.Visible : TrayButton.TrayButtonVisibility.Hidden;
+                _trayButton.SetVisible(_visible);
             }
         }
     }
@@ -233,7 +237,25 @@ public class HybridTrayIcon : IDisposable
 
         _notifyIcon = new System.Windows.Forms.NotifyIcon();
         _notifyIcon.Text = _text;
-        _notifyIcon.Icon = _icon;
+        {
+            if (_iconInfo is not null)
+            {
+                System.Drawing.Icon icon;
+                try
+                {
+                    icon = new System.Drawing.Icon(_iconInfo!.Value.FilePath, _iconInfo!.Value.Width, _iconInfo!.Value.Height);
+                    _notifyIcon.Icon = icon;
+                }
+                catch
+                {
+                    Debug.Assert(false, "Could not load icon");
+                }
+            }
+            else
+            {
+                _notifyIcon.Icon = null;
+            }
+        }
         //
         _notifyIcon.MouseUp += (sender, args) =>
         {
@@ -259,7 +281,10 @@ public class HybridTrayIcon : IDisposable
 
         _trayButton = new Morphic.Controls.TrayButton.TrayButton();
         _trayButton.Text = _text;
-        _trayButton.Icon = _icon;
+        if (_iconInfo is not null)
+        {
+            _trayButton.SetIconFromFile(_iconInfo!.Value.FilePath, _iconInfo!.Value.Width, _iconInfo!.Value.Height);
+        }
         //
         _trayButton.MouseUp += (sender, args) =>
         {
@@ -274,7 +299,7 @@ public class HybridTrayIcon : IDisposable
         };
         //
         // NOTE: we set the visibility tag; if the tray button cannot currently be made visible, it will become ".PendingVisible" instead
-        _trayButton.Visibility = _visible ? TrayButton.TrayButtonVisibility.Visible : TrayButton.TrayButtonVisibility.Hidden;
+        _trayButton.SetVisible(_visible);
     }
 
     //

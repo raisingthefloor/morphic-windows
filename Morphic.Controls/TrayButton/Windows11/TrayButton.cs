@@ -115,7 +115,7 @@ internal class TrayButton : IDisposable
     /// Sets the bitmap from a GDI HBITMAP handle. This class takes ownership of the handle;
     /// the caller must not free it after this call. Pass IntPtr.Zero to clear.
     /// </summary>
-    public MorphicResult<MorphicUnit, MorphicUnit> SetBitmap(IntPtr hBitmap, int width, int height)
+    public MorphicResult<MorphicUnit, MorphicUnit> SetGdiBitmap(Windows.Win32.Graphics.Gdi.HBITMAP hBitmap, int width, int height)
     {
         // capture the old handle so we can free it AFTER the native window has been updated (since ArgbImageNativeWindow
         // holds a reference to the 'current' source bitmap and may use it during the SetBitmap call)

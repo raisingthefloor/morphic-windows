@@ -16,6 +16,9 @@ DeleteObject
 DestroyIcon
 DrawIconEx
 DestroyWindow
+GetIconInfo
+GetObject
+LoadImage
 EndBufferedPaint
 EndPaint
 EnumChildWindows
@@ -67,6 +70,7 @@ WPARAM
 
 AC_SRC_ALPHA
 AC_SRC_OVER
+BITMAP
 CW_USEDEFAULT
 EVENT_OBJECT_LOCATIONCHANGE
 EVENT_OBJECT_REORDER
