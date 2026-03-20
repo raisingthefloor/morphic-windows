@@ -25,6 +25,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Data;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
@@ -49,6 +50,9 @@ namespace Morphic;
 /// </summary>
 public partial class App : Application
 {
+    // NOTE: we initialize this when the application starts up
+    internal Morphic.Controls.TrayButton.TrayButton TaskbarButton = null!;
+
     private Window? _window;
 
     /// <summary>
@@ -57,8 +61,13 @@ public partial class App : Application
     /// </summary>
     public App()
     {
-        InitializeComponent();
+        this.InitializeComponent();
+
+		// capture shutdown events (to clean up the tray icon, etc.)
+        DispatcherQueue.GetForCurrentThread().ShutdownStarting += App_ShutdownStarting;
     }
+
+    #region Lifecycle
 
     /// <summary>
     /// Invoked when the application is launched.
@@ -66,7 +75,71 @@ public partial class App : Application
     /// <param name="args">Details about the launch request and process.</param>
     protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
     {
+        // initialize our taskbar icon (button); it will start out in a hidden state
+        this.InitTaskbarIconWithoutShowing();
+
         _window = new MainWindow();
+
+        // show our taskbar icon (button)
+        this.TaskbarButton.SetVisible(true);
+
         _window.Activate();
     }
+
+    private void App_ShutdownStarting(DispatcherQueue sender, DispatcherQueueShutdownStartingEventArgs args)
+    {
+        // immediately hide our tray icon (and dispose of it for good measure, to help ensure that unmanaged resources are cleaned up)
+        this.TaskbarButton.SetVisible(false);
+        this.TaskbarButton.Dispose();
+    }
+
+    #endregion Lifecycle
+
+
+    #region Taskbar Icon (Button)
+
+    private void InitTaskbarIconWithoutShowing()
+    {
+        // create an instance of our tray icon (button)
+        var taskbarButton = new Morphic.Controls.TrayButton.TrayButton()
+        {
+            Text = "Morphic",
+        };
+
+        // load the icon from the app's assets (copied content)
+        var iconPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "Icons", "morphic-standardcontrast.ico");
+        _ = taskbarButton.SetIconFromFile(iconPath, 256, 256);
+
+        this.TaskbarButton = taskbarButton;
+        this.TaskbarButton.MouseUp += TaskbarButton_MouseUp;
+    }
+
+    private void TaskbarButton_MouseUp(object? sender, Controls.MouseEventArgs e)
+    {
+        _window!.DispatcherQueue.TryEnqueue(() =>
+        {
+            switch (e.Button) 
+            {
+                case Controls.MouseButtons.Left:
+                    switch (_window!.Visible)
+                    {
+                        case true:
+                            _window!.AppWindow.Hide();
+                            break;
+                        case false:
+                            _window!.AppWindow.Show();
+                            break;
+                    }
+                    break;
+                case Controls.MouseButtons.Right:
+                    break;
+            }
+        });
+    }
+
+    //
+
+
+    #endregion Taskbar Icon (Button)
+
 }

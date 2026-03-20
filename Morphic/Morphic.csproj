@@ -19,10 +19,9 @@
 	<DefineConstants>DISABLE_XAML_GENERATED_MAIN</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <Content Remove="Assets\Icons\morphic-highcontrastblack.ico" />
-    <Content Remove="Assets\Icons\morphic-highcontrastwhite.ico" />
-    <Content Remove="Assets\Icons\morphic-standardcontrast.ico" />
-    <Content Remove="Assets\Icons\morphic.ico" />
+    <Content Include="Assets\Icons\morphic-highcontrastblack.ico" />
+    <Content Include="Assets\Icons\morphic-highcontrastwhite.ico" />
+    <Content Include="Assets\Icons\morphic-standardcontrast.ico" />
   </ItemGroup>
 
   <ItemGroup>
@@ -35,18 +34,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Morphic.Controls\Morphic.Controls.csproj" />
     <ProjectReference Include="..\Morphic.Core\Morphic.Core.csproj" />
     <ProjectReference Include="..\Morphic.WindowsNative\Morphic.WindowsNative.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Resource Include="Assets\Icons\morphic-highcontrastblack.ico" />
-    <Resource Include="Assets\Icons\morphic-highcontrastwhite.ico" />
-    <Resource Include="Assets\Icons\morphic-standardcontrast.ico" />
-    <Resource Include="Assets\Icons\morphic.ico" />
-  </ItemGroup>
-
-    <!-- Publish Properties -->
+  <!-- Publish Properties -->
   <PropertyGroup>
     <SelfContained>true</SelfContained>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
