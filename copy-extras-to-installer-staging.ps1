@@ -22,15 +22,21 @@ $rid = switch ($Platform) {
 
 $buildDir = "$SourceDir\Morphic\bin\$Platform\$Configuration\net10.0-windows10.0.22621.0\$rid"
 
-# Copy compiled XAML files (.xbf) that the publish step does not include
-$xbfFiles = Get-ChildItem -Path $buildDir -Filter "*.xbf" -File
+# Copy compiled XAML files (.xbf) that the publish step does not include (recursing into subdirectories)
+$xbfFiles = Get-ChildItem -Path $buildDir -Filter "*.xbf" -File -Recurse
 if ($xbfFiles.Count -eq 0) {
     throw "No .xbf files found in $buildDir. Ensure the build step completed successfully."
 }
 
 foreach ($file in $xbfFiles) {
-    Write-Host "Copying $($file.Name)..."
-    Copy-Item -Path $file.FullName -Destination "$TargetDir\$($file.Name)" -Force
+    $relativePath = $file.FullName.Substring($buildDir.Length).TrimStart('\')
+    $destPath = Join-Path $TargetDir $relativePath
+    $destDir = Split-Path $destPath -Parent
+    if (-not (Test-Path $destDir)) {
+        New-Item -ItemType Directory -Force -Path $destDir | Out-Null
+    }
+    Write-Host "Copying $relativePath..."
+    Copy-Item -Path $file.FullName -Destination $destPath -Force
 }
 
 # Copy Morphic.pri (app resource index — maps .xbf files for the XAML resource loader)

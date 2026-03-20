@@ -61,6 +61,19 @@ Copy-Item -Path "$pkgSrc\Images\*" -Destination "$StagingDir\Images\" -Recurse -
 
 Copy-Item -Path "$buildDir\Morphic.pri" -Destination "$StagingDir\Morphic.pri" -Force
 
+# Copy compiled XAML files (.xbf) from the build output (they are not included in the publish output)
+$xbfFiles = Get-ChildItem -Path $buildDir -Filter "*.xbf" -File -Recurse
+foreach ($file in $xbfFiles) {
+    $relativePath = $file.FullName.Substring($buildDir.Length).TrimStart('\')
+    $destPath = Join-Path $StagingDir $relativePath
+    $destDir = Split-Path $destPath -Parent
+    if (-not (Test-Path $destDir)) {
+        New-Item -ItemType Directory -Force -Path $destDir | Out-Null
+    }
+    Write-Host "Copying $relativePath..."
+    Copy-Item -Path $file.FullName -Destination $destPath -Force
+}
+
 # ---- Generate AppxManifest.xml ----
 Write-Host "Generating AppxManifest.xml..." -ForegroundColor Cyan
 
