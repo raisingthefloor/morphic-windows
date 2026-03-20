@@ -54,7 +54,6 @@ public partial class App : Application
     internal Morphic.Controls.TrayButton.TrayButton TaskbarButton = null!;
 
     private Morphic.MorphicBar.MorphicBarWindow? _morphicBarWindow;
-    private Morphic.MorphicBar.LayoutPreviewWindow? _layoutPreviewWindow;
 
     /// <summary>
     /// Initializes the singleton application object.  This is the first line of authored code
@@ -80,7 +79,7 @@ public partial class App : Application
         this.InitTaskbarIconWithoutShowing();
 
         _morphicBarWindow = new();
-_morphicBarWindow.AppWindow.Resize(new Windows.Graphics.SizeInt32() { Width = 960, Height = 120 });
+_morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size of the legacy Morphic 1.0 MorphicBar
         //
         var iconPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "Icons", "morphic-standardcontrast.ico");
         _morphicBarWindow.SetIconFromFile(iconPath, 256, 256);
@@ -89,9 +88,6 @@ _morphicBarWindow.AppWindow.Resize(new Windows.Graphics.SizeInt32() { Width = 96
         this.TaskbarButton.SetVisible(true);
 
         _morphicBarWindow.Activate();
-
-        // create an instance of the layout preview window (to show when the user drags the MorphicBar into docking/orientation zones)
-        _layoutPreviewWindow = new();
     }
 
     private void App_ShutdownStarting(DispatcherQueue sender, DispatcherQueueShutdownStartingEventArgs args)

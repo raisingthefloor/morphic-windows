@@ -59,10 +59,20 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
 
     private const int WINDOW_CORNER_RADIUS_IN_DEVICE_UNITS = 15;
 
+    // logical (96 DPI) window size — scaled by the current monitor's DPI
+    private int _logicalWidth = 67; // 100 pixels at 150% zoom
+    private int _logicalHeight = 67; // 100 pixels at 150% zoom
+
     // variables to enable full-window click-and-drag
     private Windows.Graphics.PointInt32 _dragStartWindowPosition;
     private Windows.Foundation.Point _dragStartPointerPosition;
     private bool _isDraggingWindow = false;
+
+    // the layout preview window lets us show the user where the window will move to if they release the mouse cursor
+    private Morphic.MorphicBar.LayoutPreviewWindow? _layoutPreviewWindow;
+
+    // NOTE: as we are handling sizing ourselves, we need to manage size scaling ourselves; this tracks the latest screen scale (so that we know if we need to resize our window)
+    private double? _lastRasterizationScale = null;
 
     public MorphicBarWindow()
     {
@@ -77,13 +87,35 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
 
 (this.Content as Grid)!.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.DarkGreen);
 
-        this.InitializeBorderlessRoundWindowProperties(hwnd);
+        this.InitializeBorderlessWindowProperties(hwnd);
 
-        // when the window changes, we need to apply our rounded corners etc.
-        this.SizeChanged += this.MorphicBarWindow_SizeChanged;
+        // create an instance of the layout preview window (to show when the user drags the MorphicBar into docking/orientation zones)
+        _layoutPreviewWindow = new();
+        //_layoutPreviewWindow.Activate();
 
         // if the user clicks on the window, let them drag it (i.e. release the pointer capture and forward the left-click as if it's a "caption bar" left-click instead)
         this.InitializePointerPressAndDrag(this.Content);
+
+        this.Activated += MorphicBarWindow_Activated;
+        (this.Content as Grid)!.Loaded += RootGrid_Loaded;
+    }
+
+    private void MorphicBarWindow_Activated(object sender, WindowActivatedEventArgs args)
+    {
+        // handle any post-load code here
+    }
+
+    private void RootGrid_Loaded(object sender, RoutedEventArgs e)
+    {
+        // set the initial size based on current DPI, and resize whenever DPI changes (e.g. moving to another monitor)
+        var lastRasterizationScale = this.Content.XamlRoot.RasterizationScale;
+        _lastRasterizationScale = lastRasterizationScale;
+        this.Content.XamlRoot.Changed += (s, e) =>
+        {
+            this.RasterizationScaleChanged();
+        };
+        // and update the window size
+        this.UpdateAppWindowSizeUsingRasterizationScale(lastRasterizationScale);
     }
 
     private void Dispose(bool disposing)
@@ -166,12 +198,33 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
         return MorphicResult.OkResult();
     }
 
+    public void Resize(int logicalWidth, int logicalHeight)
+    {
+        _logicalWidth = logicalWidth;
+        _logicalHeight = logicalHeight;
+
+        if (_lastRasterizationScale is not null)
+        {
+            this.UpdateAppWindowSizeUsingRasterizationScale(_lastRasterizationScale!.Value);
+        }
+    }
+
     /* events */
 
-    private void MorphicBarWindow_SizeChanged(object sender, WindowSizeChangedEventArgs args)
+    private void RasterizationScaleChanged()
     {
-        // whenever the window size changes, re-apply the custom corner radius
-        _ = this.ApplyCornerRadius(WINDOW_CORNER_RADIUS_IN_DEVICE_UNITS);
+        var rasterizationScale = this.Content.XamlRoot.RasterizationScale;
+        if (rasterizationScale == _lastRasterizationScale)
+        {
+            return;
+        }
+        _lastRasterizationScale = rasterizationScale;
+
+        // dispatch the resize asynchronously so it runs after WinUI finishes its own DPI handling
+        this.DispatcherQueue.TryEnqueue(() =>
+        {
+            this.UpdateAppWindowSizeUsingRasterizationScale(rasterizationScale);
+        });
     }
 
     /* callbacks */
@@ -180,7 +233,17 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
 
     /* helper methods */
 
-    private void InitializeBorderlessRoundWindowProperties(Windows.Win32.Foundation.HWND hwnd)
+    private void UpdateAppWindowSizeUsingRasterizationScale(double rasterizationScale)
+    {
+        var physicalWidth = (int)(_logicalWidth * rasterizationScale);
+        var physicalHeight = (int)(_logicalHeight * rasterizationScale);
+        this.AppWindow.Resize(new Windows.Graphics.SizeInt32(physicalWidth, physicalHeight));
+
+        // every time we update the window size, reapply the corner radius (which will also resize the visible area)
+        _ = this.ApplyCornerRadius(WINDOW_CORNER_RADIUS_IN_DEVICE_UNITS);
+    }
+
+    private void InitializeBorderlessWindowProperties(Windows.Win32.Foundation.HWND hwnd)
     {
         // remove window chrome (minimize/maximize/close buttons); set the window to be 'always on top'; turn off the border and titlebar
         var presenter = this.AppWindow.Presenter as Microsoft.UI.Windowing.OverlappedPresenter;
@@ -220,9 +283,6 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
         Span<byte> cornerPreferenceAsSpan = MemoryMarshal.AsBytes(new Span<int>(ref cornerPreference));
         var setAttributeResult = Windows.Win32.PInvoke.DwmSetWindowAttribute(hwnd, Windows.Win32.Graphics.Dwm.DWMWINDOWATTRIBUTE.DWMWA_WINDOW_CORNER_PREFERENCE, cornerPreferenceAsSpan);
         System.Diagnostics.Debug.Assert(setAttributeResult == HRESULT.S_OK);
-
-        // apply our rounded corners; these will be reapplied whenever the window gets resized as well
-        _ = this.ApplyCornerRadius(WINDOW_CORNER_RADIUS_IN_DEVICE_UNITS);
     }
 
     private void InitializePointerPressAndDrag(UIElement rootDragElement)
@@ -259,6 +319,9 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
                     (int)(_dragStartWindowPosition.X + deltaX),
                     (int)(_dragStartWindowPosition.Y + deltaY)
                 ));
+
+                // determine if we should show the layout preview window
+                this.UpdateLayoutPreviewState(currentPointerPosition);
             }
         };
         rootDragElement.PointerReleased += (s, e) =>
@@ -266,6 +329,36 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
             _isDraggingWindow = false;
             rootDragElement.ReleasePointerCapture(e.Pointer);
         };
+    }
+
+    private void UpdateLayoutPreviewState(System.Drawing.Point currentPointerPosition)
+    {
+        // get the current monitor, based on the current mouse cursor relative position
+        var hMonitor = Windows.Win32.PInvoke.MonitorFromPoint(currentPointerPosition, Windows.Win32.Graphics.Gdi.MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
+        if (hMonitor.IsNull)
+        {
+            Debug.Assert(false, "No monitor handle; this might be a headless system; aborting.");
+            return;
+        }
+
+        // get the monitor's info (including dimensions)
+        var monitorInfo = new Windows.Win32.Graphics.Gdi.MONITORINFO();
+        monitorInfo.cbSize = (uint)Marshal.SizeOf<Windows.Win32.Graphics.Gdi.MONITORINFO>();
+        var getMonitorInfoResult = Windows.Win32.PInvoke.GetMonitorInfo(hMonitor, ref monitorInfo);
+        if (getMonitorInfoResult == 0)
+        {
+            Debug.Assert(false);
+            return;
+        }
+
+        // get the absolute monitor size (including taskbar, etc.)
+        var monitorFullRect = monitorInfo.rcMonitor;
+        // and get the working area (excluding taskbar, etc.)
+        var monitorWorkingArea = monitorInfo.rcWork;
+
+        Debug.WriteLine("mouse: " + currentPointerPosition.ToString() + "; workArea: [" + monitorWorkingArea.left + ", " + monitorWorkingArea.top + "-" + monitorWorkingArea.right + "," + monitorWorkingArea.bottom + "]; fullArea: [" + monitorFullRect.left + ", " + monitorFullRect.top + "-" + monitorFullRect.right + "," + monitorFullRect.bottom + "]");
+
+        //_layoutPreviewWindow
     }
 
     private MorphicResult<MorphicUnit, MorphicUnit> ApplyCornerRadius(int radiusInDeviceUnits)
@@ -285,17 +378,25 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
         {
             return MorphicResult.ErrorResult();
         }
+        bool mustCleanupRoundRectRegion = true;
         try
         {
+            // NOTE: the system owns the roundRectRegion (and will dispose of it) once we call this function; we should only delete it if the SetWindowRgn call fails
             var setWindowRgnSuccess = Windows.Win32.PInvoke.SetWindowRgn(hwnd, roundRectRegion, true);
             if (setWindowRgnSuccess == 0)
             {
                 return MorphicResult.ErrorResult();
             }
+
+            // since SetWindowRgn succeeded, it now owns the RoundRectRegion
+            mustCleanupRoundRectRegion = false;
         }
         finally
         {
-            _ = Windows.Win32.PInvoke.DeleteObject((Windows.Win32.Graphics.Gdi.HGDIOBJ)roundRectRegion);
+            if (mustCleanupRoundRectRegion == true)
+            {
+                _ = Windows.Win32.PInvoke.DeleteObject((Windows.Win32.Graphics.Gdi.HGDIOBJ)roundRectRegion);
+            }
         }
 
         return MorphicResult.OkResult();
