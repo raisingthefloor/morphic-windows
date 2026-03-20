@@ -60,6 +60,8 @@
     <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
     <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
     <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
+    <!-- prevent the trimmer from removing types only referenced in XAML; this could be narrowed to specific types if necessary (to minimize installer size) -->
+    <TrimmerRootAssembly Include="Microsoft.WinUI" />
   </PropertyGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
