@@ -43,6 +43,15 @@
     <ProjectReference Include="..\Morphic.WindowsNative\Morphic.WindowsNative.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Page Update="LayoutPreviewWindow\LayoutPreviewWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="MorphicBar\MorphicBarWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+
   <!-- Publish Properties -->
   <PropertyGroup>
     <SelfContained>true</SelfContained>
