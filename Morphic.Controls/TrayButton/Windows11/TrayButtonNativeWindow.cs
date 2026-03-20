@@ -23,6 +23,7 @@
 
 using Morphic.Core;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -69,6 +70,14 @@ internal class TrayButtonNativeWindow : IDisposable
 
     private Windows.Win32.UI.Accessibility.HWINEVENTHOOK _objectReorderWindowEventHook = Windows.Win32.UI.Accessibility.HWINEVENTHOOK.Null;
     private Windows.Win32.UI.Accessibility.WINEVENTPROC? _objectReorderWindowEventProc = null;
+
+    private Microsoft.UI.Dispatching.DispatcherQueue _dispatcherQueue;
+
+    // state variables to ensure that we don't call ObjectReorderWindowEventProc more than once every 20ms
+    private Microsoft.UI.Dispatching.DispatcherQueueTimer? _objectReorderThrottleTimer;
+    private bool _objectReorderPending = false; // a reorder proc call is in process
+    private LinkedList<Windows.Win32.Foundation.HWND> _objectReorderedQueue = new(); // a trailing reorder proc call has been requested (with these paramaters)
+    private object _objectReorderLockObject = new(); // for synchronization
 
     [Flags]
     private enum TrayButtonVisualStateFlags
@@ -156,6 +165,8 @@ internal class TrayButtonNativeWindow : IDisposable
     public static MorphicResult<TrayButtonNativeWindow, ICreateNewError> CreateNew()
     {
         var result = new TrayButtonNativeWindow();
+
+        result._dispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
 
         /* register a custom native window class for our Morphic Tray Button (or refer to the already-registered class, if we captured it earlier in the application's execution) */
         const string nativeWindowClassName = "Morphic-TrayButton";
@@ -978,6 +989,73 @@ internal class TrayButtonNativeWindow : IDisposable
 
     private void ObjectReorderWindowEventProc(Windows.Win32.UI.Accessibility.HWINEVENTHOOK hWinEventHook, uint eventType, Windows.Win32.Foundation.HWND hwnd, int idObject, int idChild, uint idEventThread, uint dwmsEventTime)
     {
+        // make sure that HandleObjectReorder isn't called in an infinite RAPID loop (if two windows are fighting for "topmost")
+        const int THROTTLE_WAIT_TIME_IN_MS = 20;
+        lock (_objectReorderLockObject)
+        {
+            // if an object reorder is pending, then set the _objectReorderQueued flag so that the timer handling the pending event knows to retrigger itself
+            if (_objectReorderPending == true)
+            {
+                _objectReorderedQueue.AddLast(hwnd);
+            }
+            else
+            {
+                // mark that we've started a reorder and also the wait timer (which will check to see if another call needs to execute)
+                _objectReorderPending = true;
+                //
+                Debug.Assert(_objectReorderedQueue.Count == 0);
+
+                // immediately start one call using the provided hwnd
+                _ = _dispatcherQueue.TryEnqueue(() => { this.HandleObjectReorder(hwnd); });
+
+                // create a timer to check if the reorder needs to happen again after WAIT_TIME_IN_MS
+                _objectReorderThrottleTimer = _dispatcherQueue.CreateTimer();
+                _objectReorderThrottleTimer!.Interval = TimeSpan.FromMilliseconds(THROTTLE_WAIT_TIME_IN_MS);
+                _objectReorderThrottleTimer!.IsRepeating = false;
+                _objectReorderThrottleTimer!.Tick += (s, e) =>
+                {
+                    _objectReorderThrottleTimer?.Stop();
+
+                    lock (_objectReorderLockObject)
+                    {
+                        if (_objectReorderedQueue.Count > 0)
+                        {
+                            // a reorder proc call request came in while we were waiting; queue up that call now
+                            var queuedHwnd = _objectReorderedQueue.First!.Value;
+                            _objectReorderedQueue.RemoveFirst();
+                            // now remove any other instances of this hwnd; if this is too aggressive, we could just remove the first element (in a loop, for as long as it equaled this hwnd)
+                            var queueNode = _objectReorderedQueue.First;
+                            while (queueNode is not null)
+                            {
+                                var nextQueueNode = queueNode.Next;
+                                if (queueNode.Value == queuedHwnd)
+                                {
+                                    _objectReorderedQueue.Remove(queueNode);
+                                }
+                                queueNode = nextQueueNode;
+                            }
+
+                            _ = _dispatcherQueue.TryEnqueue(() => { this.HandleObjectReorder(queuedHwnd); });
+
+                            // also restart this timer
+                            _objectReorderThrottleTimer?.Start();
+                        }
+                        else
+                        {
+                            // nothing left to do
+                            _objectReorderPending = false;
+
+                            // the timer should now be discarded
+                            _objectReorderThrottleTimer = null;
+                        }
+                    }
+                };
+                _objectReorderThrottleTimer.Start();
+            }
+        }
+    }
+
+    private void HandleObjectReorder(Windows.Win32.Foundation.HWND hwnd) { 
         // we cannot process an object reorder message if the hwnd is zero
         if (hwnd == IntPtr.Zero)
         {
