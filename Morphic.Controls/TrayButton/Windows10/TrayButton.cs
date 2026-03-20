@@ -364,8 +364,7 @@ internal class TrayButton : IDisposable
             // create the tooltip window (although we won't provide it with any actual text until/unless the text is set
             this.CreateTooltipWindow();
 
-            // subscribe to display settings changes (so that we know when the screen resolution changes, so that we can reposition our button)
-            Microsoft.Win32.SystemEvents.DisplaySettingsChanged += SystemEvents_DisplaySettingsChanged;
+            // NOTE: display setting changes (screen resolution) are handled via WM_DISPLAYCHANGE in the WndProc
 
             // if the user is using Windows 11, create a mouse message hook (so we can capture the mousemove and click events over our taskbar icon)
             if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
@@ -619,7 +618,8 @@ internal class TrayButton : IDisposable
             _trayButtonWidgetPositionCheckupTimer?.Dispose();
             _trayButtonWidgetPositionCheckupTimer = null;
 
-            Microsoft.Win32.SystemEvents.DisplaySettingsChanged -= SystemEvents_DisplaySettingsChanged;
+			_trayButtonPositionCheckupTimer?.Dispose();
+			_trayButtonPositionCheckupTimer = null;
 
             this.DestroyTooltipWindow();
 
@@ -651,10 +651,15 @@ internal class TrayButton : IDisposable
                     _ = Windows.Win32.PInvoke.BufferedPaintUnInit();
                     break;
                 case Windows.Win32.PInvoke.WM_DISPLAYCHANGE:
-                    // screen resolution has changed: reposition the tray button
+                    // screen resolution has changed: reposition the tray button immediately, then start a timer to verify positioning over the next 10 seconds
                     // NOTE: wParam contains bit depth
                     // NOTE: lParam contains the resolutions of the screen (horizontal resolution in low-order word; vertical resolution in high-order word)
                     this.PositionTrayButton();
+                    //
+		            // start a timer which will verify that the button is positioned properly (and will give up after a certain number of attempts)
+		            var checkupInterval = new TimeSpan(0, 0, 0, 0, 250);
+		            _trayButtonPositionCheckupTimerCounter = 40; // count down for 10 seconds (0.250 x 40)
+		            _trayButtonPositionCheckupTimer = new System.Threading.Timer(TrayButtonPositionCheckup, null, checkupInterval, checkupInterval);
                     break;
                 case Windows.Win32.PInvoke.WM_ERASEBKGND:
                     // we will handle erasing the background, so return a non-zero value here
@@ -838,13 +843,6 @@ internal class TrayButton : IDisposable
             }
         }
 
-        private void SystemEvents_DisplaySettingsChanged(object? sender, EventArgs e)
-        {
-            // start a timer which will verify that the button is positioned properly (and will give up after a certain number of attempts)
-            var checkupInterval = new TimeSpan(0, 0, 0, 0, 250);
-            _trayButtonPositionCheckupTimerCounter = 40; // count down for 10 seconds (0.250 x 40)
-            _trayButtonPositionCheckupTimer = new System.Threading.Timer(TrayButtonPositionCheckup, null, checkupInterval, checkupInterval);
-        }
         private void TrayButtonPositionCheckup(object? state)
         {
             if (_trayButtonPositionCheckupTimerCounter <= 0)

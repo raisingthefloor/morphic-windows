@@ -14,12 +14,12 @@ DefWindowProc
 DeleteDC
 DeleteObject
 DestroyIcon
-EqualRect
 DrawIconEx
 DestroyWindow
 EndBufferedPaint
 EndPaint
 EnumChildWindows
+EqualRect
 FillRect
 FindWindow
 FindWindowEx

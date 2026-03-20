@@ -323,7 +323,9 @@ public class HybridTrayIcon : IDisposable
             switch (value)
             {
                 case TrayIconLocationOption.NextToNotificationTray:
+#if INCLUDE_WINDOWS_10_SUPPORT
                 case TrayIconLocationOption.NotificationTrayAndNextToNotificationTray:
+#endif
                     if (_trayButton is null)
                     {
                         this.InitializeTrayButton();
@@ -350,7 +352,9 @@ public class HybridTrayIcon : IDisposable
             switch (value)
             {
                 case TrayIconLocationOption.None:
+#if INCLUDE_WINDOWS_10_SUPPORT
                 case TrayIconLocationOption.NotificationTray:
+#endif
                     if (_trayButton is not null)
                     {
                         _trayButton.Dispose();
