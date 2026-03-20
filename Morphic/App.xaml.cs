@@ -53,7 +53,8 @@ public partial class App : Application
     // NOTE: we initialize this when the application starts up
     internal Morphic.Controls.TrayButton.TrayButton TaskbarButton = null!;
 
-    private Window? _window;
+    private Morphic.MorphicBar.MorphicBarWindow? _morphicBarWindow;
+    private Morphic.MorphicBar.LayoutPreviewWindow? _layoutPreviewWindow;
 
     /// <summary>
     /// Initializes the singleton application object.  This is the first line of authored code
@@ -78,12 +79,19 @@ public partial class App : Application
         // initialize our taskbar icon (button); it will start out in a hidden state
         this.InitTaskbarIconWithoutShowing();
 
-        _window = new MainWindow();
+        _morphicBarWindow = new();
+_morphicBarWindow.AppWindow.Resize(new Windows.Graphics.SizeInt32() { Width = 960, Height = 120 });
+        //
+        var iconPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "Icons", "morphic-standardcontrast.ico");
+        _morphicBarWindow.SetIconFromFile(iconPath, 256, 256);
 
         // show our taskbar icon (button)
         this.TaskbarButton.SetVisible(true);
 
-        _window.Activate();
+        _morphicBarWindow.Activate();
+
+        // create an instance of the layout preview window (to show when the user drags the MorphicBar into docking/orientation zones)
+        _layoutPreviewWindow = new();
     }
 
     private void App_ShutdownStarting(DispatcherQueue sender, DispatcherQueueShutdownStartingEventArgs args)
@@ -116,18 +124,18 @@ public partial class App : Application
 
     private void TaskbarButton_MouseUp(object? sender, Controls.MouseEventArgs e)
     {
-        _window!.DispatcherQueue.TryEnqueue(() =>
+        _morphicBarWindow!.DispatcherQueue.TryEnqueue(() =>
         {
             switch (e.Button) 
             {
                 case Controls.MouseButtons.Left:
-                    switch (_window!.Visible)
+                    switch (_morphicBarWindow!.Visible)
                     {
                         case true:
-                            _window!.AppWindow.Hide();
+                            _morphicBarWindow!.AppWindow.Hide();
                             break;
                         case false:
-                            _window!.AppWindow.Show();
+                            _morphicBarWindow!.AppWindow.Show();
                             break;
                     }
                     break;

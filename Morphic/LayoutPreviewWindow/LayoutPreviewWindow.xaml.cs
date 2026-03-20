@@ -56,6 +56,13 @@ public sealed partial class LayoutPreviewWindow : Window
     {
         InitializeComponent();
 
+        var hwnd = (Windows.Win32.Foundation.HWND)WinRT.Interop.WindowNative.GetWindowHandle(this);
+
+        // create a dummy "parent window" for the layout preview window (so that this window doesn't show up in the taskbar)
+        _dummyParentWindow = new Window();
+        IntPtr dummyParentHwndAsIntPtr = WindowNative.GetWindowHandle(_dummyParentWindow);
+        Windows.Win32.PInvoke.SetWindowLongPtr(hwnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWLP_HWNDPARENT, dummyParentHwndAsIntPtr);
+
         // remove title bar and extend content to fill the entire window
         this.ExtendsContentIntoTitleBar = true;
 
@@ -68,8 +75,6 @@ public sealed partial class LayoutPreviewWindow : Window
             presenter.IsMaximizable = false;
             presenter.SetBorderAndTitleBar(true, false);
         }
-
-        var hwnd = (Windows.Win32.Foundation.HWND)WinRT.Interop.WindowNative.GetWindowHandle(this);
 
         // remove the window from the Alt+Tab task switcher (by making it a 'tool window') and also make it unactivate-able (so that it can't steal focus)
         var exStyle = (Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE)Windows.Win32.PInvoke.GetWindowLongPtr(hwnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE);
@@ -96,11 +101,6 @@ public sealed partial class LayoutPreviewWindow : Window
 
         // use a custom translucent acrylic backdrop for the stained glass effect
         this.SystemBackdrop = new Morphic.LayoutPreviewWindow.AcrylicGrayBackdrop();
-
-        // create a dummy "parent window" for the layout preview window (so that this window doesn't show up in the taskbar)
-        _dummyParentWindow = new Window();
-        IntPtr dummyParentHwndAsIntPtr = WindowNative.GetWindowHandle(_dummyParentWindow);
-        Windows.Win32.PInvoke.SetWindowLongPtr(hwnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWLP_HWNDPARENT, dummyParentHwndAsIntPtr);
 
         this.Activated += LayoutPreviewWindow_Activated;
     }

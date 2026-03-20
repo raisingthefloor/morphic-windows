@@ -25,7 +25,7 @@ using System;
 
 namespace Morphic.Controls.TrayButton.Windows11;
 
-public interface ICreateNewError
+internal interface ICreateNewError
 {
     public record CannotFitOnTaskbar : ICreateNewError;
     public record CouldNotFindTaskbarRelatedHandle: ICreateNewError;

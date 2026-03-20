@@ -28,7 +28,7 @@ using System.Threading.Tasks;
 
 namespace Morphic.Controls.TrayButton.Windows10.WindowsNative;
 
-public class MouseWindowMessageHook : IDisposable
+internal class MouseWindowMessageHook : IDisposable
 {
     Windows.Win32.UI.WindowsAndMessaging.HOOKPROC _filterFunction;
     Windows.Win32.UI.WindowsAndMessaging.HHOOK _hookHandle;
