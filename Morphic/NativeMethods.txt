@@ -2,7 +2,9 @@
 DefWindowProc
 DestroyIcon
 DwmSetWindowAttribute
+EqualRect
 GetCursorPos
+GetDpiForMonitor
 GetMonitorInfo
 GetWindowLongPtr
 GetWindowRect

@@ -37,6 +37,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Win32.Foundation;
@@ -57,11 +58,12 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
     private IntPtr _hIconRawHandle = IntPtr.Zero;
     Window _dummyParentWindow;
 
-    private const int WINDOW_CORNER_RADIUS_IN_DEVICE_UNITS = 15;
+    private const int WINDOW_CORNER_RADIUS_IN_DEVICE_UNITS = 10;
+    private const int WINDOW_CORNER_DOCKING_DISTANCE_FROM_SCREEN_EDGE_IN_DEVICE_UNITS = 5;
 
     // logical (96 DPI) window size — scaled by the current monitor's DPI
-    private int _logicalWidth = 67; // 100 pixels at 150% zoom
-    private int _logicalHeight = 67; // 100 pixels at 150% zoom
+    private int _logicalLength = 67; // 100 pixels at 150% zoom
+    private int _logicalThickness = 67; // 100 pixels at 150% zoom
 
     // variables to enable full-window click-and-drag
     private Windows.Graphics.PointInt32 _dragStartWindowPosition;
@@ -69,7 +71,13 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
     private bool _isDraggingWindow = false;
 
     // the layout preview window lets us show the user where the window will move to if they release the mouse cursor
-    private Morphic.MorphicBar.LayoutPreviewWindow? _layoutPreviewWindow;
+    private Morphic.MorphicBar.LayoutPreviewWindow _layoutPreviewWindow = null!;
+    private Orientation? _layoutPreviewWindowOrientation = null;
+    private Windows.Win32.Foundation.RECT? _lastLayoutPreviewTargetPosition = null;
+
+    // orientation of the MorphicBar
+    private Microsoft.UI.Xaml.Controls.Orientation _orientation = Microsoft.UI.Xaml.Controls.Orientation.Horizontal;
+    public event EventHandler<Microsoft.UI.Xaml.Controls.Orientation>? OrientationChanged;
 
     // NOTE: as we are handling sizing ourselves, we need to manage size scaling ourselves; this tracks the latest screen scale (so that we know if we need to resize our window)
     private double? _lastRasterizationScale = null;
@@ -91,7 +99,6 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
 
         // create an instance of the layout preview window (to show when the user drags the MorphicBar into docking/orientation zones)
         _layoutPreviewWindow = new();
-        //_layoutPreviewWindow.Activate();
 
         // if the user clicks on the window, let them drag it (i.e. release the pointer capture and forward the left-click as if it's a "caption bar" left-click instead)
         this.InitializePointerPressAndDrag(this.Content);
@@ -198,14 +205,35 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
         return MorphicResult.OkResult();
     }
 
-    public void Resize(int logicalWidth, int logicalHeight)
+    public void Resize(int logicalLength, int logicalThickness)
     {
-        _logicalWidth = logicalWidth;
-        _logicalHeight = logicalHeight;
+        _logicalLength = logicalLength;
+        _logicalThickness = logicalThickness;
 
         if (_lastRasterizationScale is not null)
         {
             this.UpdateAppWindowSizeUsingRasterizationScale(_lastRasterizationScale!.Value);
+        }
+    }
+
+    /* properties */
+
+    public Microsoft.UI.Xaml.Controls.Orientation Orientation
+    {
+        get => _orientation;
+        set
+        {
+            if (_orientation != value)
+            {
+                _orientation = value;
+
+                if (_lastRasterizationScale is not null)
+                {
+                    this.UpdateAppWindowSizeUsingRasterizationScale(_lastRasterizationScale!.Value);
+                }
+
+                OrientationChanged?.Invoke(this, value);
+            }
         }
     }
 
@@ -235,12 +263,27 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
 
     private void UpdateAppWindowSizeUsingRasterizationScale(double rasterizationScale)
     {
-        var physicalWidth = (int)(_logicalWidth * rasterizationScale);
-        var physicalHeight = (int)(_logicalHeight * rasterizationScale);
+        int physicalWidth;
+        int physicalHeight;
+        switch (_orientation)
+        {
+            case Orientation.Horizontal:
+                physicalWidth = (int)(_logicalLength * rasterizationScale);
+                physicalHeight = (int)(_logicalThickness * rasterizationScale);
+                break;
+            case Orientation.Vertical:
+                physicalWidth = (int)(_logicalThickness * rasterizationScale);
+                physicalHeight = (int)(_logicalLength * rasterizationScale);
+                break;
+            default:
+                throw new Exception("invalid code path");
+        }
+
         this.AppWindow.Resize(new Windows.Graphics.SizeInt32(physicalWidth, physicalHeight));
 
         // every time we update the window size, reapply the corner radius (which will also resize the visible area)
-        _ = this.ApplyCornerRadius(WINDOW_CORNER_RADIUS_IN_DEVICE_UNITS);
+        var cornerRadiusInDeviceUnits = (int)(WINDOW_CORNER_RADIUS_IN_DEVICE_UNITS * rasterizationScale);
+        _ = this.ApplyCornerRadius(cornerRadiusInDeviceUnits);
     }
 
     private void InitializeBorderlessWindowProperties(Windows.Win32.Foundation.HWND hwnd)
@@ -315,23 +358,32 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
 
                 var deltaX = currentPointerPosition.X - _dragStartPointerPosition.X;
                 var deltaY = currentPointerPosition.Y - _dragStartPointerPosition.Y;
+                var newLeft = (int)(_dragStartWindowPosition.X + deltaX);
+                var newTop = (int)(_dragStartWindowPosition.Y + deltaY);
                 this.AppWindow.Move(new Windows.Graphics.PointInt32(
-                    (int)(_dragStartWindowPosition.X + deltaX),
-                    (int)(_dragStartWindowPosition.Y + deltaY)
+                    newLeft,
+                    newTop
                 ));
 
-                // determine if we should show the layout preview window
-                this.UpdateLayoutPreviewState(currentPointerPosition);
+                // determine if/where we should show the layout preview window
+                var newCenterX = newLeft + (this.AppWindow.Size.Width / 2);
+                var newCenterY = newTop + (this.AppWindow.Size.Height / 2);
+                this.UpdateLayoutPreviewState(currentPointerPosition, new System.Drawing.Point(newCenterX, newCenterY), _orientation);
             }
         };
         rootDragElement.PointerReleased += (s, e) =>
         {
             _isDraggingWindow = false;
             rootDragElement.ReleasePointerCapture(e.Pointer);
+
+            if (_layoutPreviewWindow.Visible == true)
+            {
+                _layoutPreviewWindow.AppWindow.Hide();
+            }
         };
     }
 
-    private void UpdateLayoutPreviewState(System.Drawing.Point currentPointerPosition)
+    private void UpdateLayoutPreviewState(System.Drawing.Point currentPointerPosition, System.Drawing.Point windowCenterPoint, Microsoft.UI.Xaml.Controls.Orientation orientation)
     {
         // get the current monitor, based on the current mouse cursor relative position
         var hMonitor = Windows.Win32.PInvoke.MonitorFromPoint(currentPointerPosition, Windows.Win32.Graphics.Gdi.MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
@@ -356,9 +408,219 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
         // and get the working area (excluding taskbar, etc.)
         var monitorWorkingArea = monitorInfo.rcWork;
 
-        Debug.WriteLine("mouse: " + currentPointerPosition.ToString() + "; workArea: [" + monitorWorkingArea.left + ", " + monitorWorkingArea.top + "-" + monitorWorkingArea.right + "," + monitorWorkingArea.bottom + "]; fullArea: [" + monitorFullRect.left + ", " + monitorFullRect.top + "-" + monitorFullRect.right + "," + monitorFullRect.bottom + "]");
+        // get the RasterizationScale for this monitor
+        var getRasterizationScaleResult = this.GetRasterizationScaleForMonitor(hMonitor);
+        if (getRasterizationScaleResult.IsError)
+        {
+            return;
+        }
+        double rasterizationScale = getRasterizationScaleResult!.Value;
 
-        //_layoutPreviewWindow
+        /* determine target area on monitor (in coords) where the bar will go when released */
+        
+        // select which 'center' point will be used to determine whether a MorphicBar will be docked left/right or top/bottom depends on the current MorphicBar orientation
+        System.Drawing.Point horizontalDockingCenterPoint;
+        System.Drawing.Point verticalDockingCenterPoint;
+        if (orientation == Orientation.Horizontal)
+        {
+            // if the orientation is horiontal:
+            // - windowCenterPoint determines HORIZONTAL DOCKING
+            // - currentPointerPos determines VERTICAL DOCKING
+            horizontalDockingCenterPoint = windowCenterPoint;
+            verticalDockingCenterPoint = currentPointerPosition;
+        }
+        else
+        {
+            // if the orientation is vertical:
+            // - windowCenterPoint determines VERTICAL DOCKING
+            // - currentPointerPos determines HORIZONTAL DOCKING
+            horizontalDockingCenterPoint = currentPointerPosition;
+            verticalDockingCenterPoint = windowCenterPoint;
+        }
+
+        // calculate the preview window rect using the already-gathered data points
+        var calculatePreviewWindowRectResult = CalculatePreviewWindowRect(monitorFullRect, monitorWorkingArea, currentPointerPosition, horizontalDockingCenterPoint, verticalDockingCenterPoint, rasterizationScale);
+        if (calculatePreviewWindowRectResult.IsError)
+        {
+            return;
+        }
+        var newPreviewRect = calculatePreviewWindowRectResult.Value!.PositionAndSize;
+        var newPreviewOrientation = calculatePreviewWindowRectResult.Value!.Orientation;
+
+        // if the layout preview is not already visible, create a small preview window (which will "expand out") and set its initial orientation
+        if (_layoutPreviewWindow.Visible == false)
+        {
+            // calculate a preview "10%-sized" window that can grow into the animated full-size preview window
+            var initialSizePercent = 0.10;
+            var smallPreviewWidth = (int)(newPreviewRect.Width * initialSizePercent);
+            var smallPreviewHeight = (int)(newPreviewRect.Height * initialSizePercent);
+            var smallPreviewLeft = newPreviewRect.left + (newPreviewRect.Width / 2) - (smallPreviewWidth / 2);
+            var smallPreviewTop = newPreviewRect.top + (newPreviewRect.Height / 2) - (smallPreviewHeight / 2);
+
+            _layoutPreviewWindowOrientation = newPreviewOrientation;
+
+            _layoutPreviewWindow.AppWindow.MoveAndResize(new Windows.Graphics.RectInt32(smallPreviewLeft, smallPreviewTop, smallPreviewWidth, smallPreviewHeight));
+            _layoutPreviewWindow.AppWindow.Show();
+        }
+
+        // move/animate the window
+        if (_lastLayoutPreviewTargetPosition is null || Windows.Win32.PInvoke.EqualRect(newPreviewRect, _lastLayoutPreviewTargetPosition!.Value) == false)
+        {
+            if (_layoutPreviewWindowOrientation == newPreviewOrientation)
+            {
+                // if the orientation matches, simply animate to the new position
+                TimeSpan duration = new TimeSpan(0, 0, 0, 0, 500);
+                _layoutPreviewWindow.AnimateMoveTo(newPreviewRect.left, newPreviewRect.top, new Windows.Graphics.SizeInt32(newPreviewRect.Width, newPreviewRect.Height), duration);
+            }
+            else
+            {
+                if ((_layoutPreviewWindow.AppWindow.Position.X == newPreviewRect.left && _layoutPreviewWindow.AppWindow.Position.Y == newPreviewRect.top) /* top-left corner matches */ ||
+                    (_layoutPreviewWindow.AppWindow.Position.X + newPreviewRect.Width == newPreviewRect.right && _layoutPreviewWindow.AppWindow.Position.Y == newPreviewRect.top) /* top-right corner matches */ ||
+                    (_layoutPreviewWindow.AppWindow.Position.X == newPreviewRect.left && _layoutPreviewWindow.AppWindow.Position.Y + newPreviewRect.Height == newPreviewRect.bottom) /* bottom-left corner matches */ ||
+                    (_layoutPreviewWindow.AppWindow.Position.X + newPreviewRect.Width == newPreviewRect.right && _layoutPreviewWindow.AppWindow.Position.Y + newPreviewRect.Height == newPreviewRect.bottom) /* bottom-right corner matches */)
+                {
+                    // if the orientation does match, simply change the size if the new location is the current location
+                    _layoutPreviewWindow.AppWindow.MoveAndResize(new Windows.Graphics.RectInt32(newPreviewRect.left, newPreviewRect.top, newPreviewRect.Width, newPreviewRect.Height));
+                }
+                else
+                {
+                    // if the orientation does not match, resize the bar in place and then animate it to its new position
+                    _layoutPreviewWindow.AppWindow.MoveAndResize(new Windows.Graphics.RectInt32(_layoutPreviewWindow.AppWindow.Position.X, _layoutPreviewWindow.AppWindow.Position.Y, newPreviewRect.Width, newPreviewRect.Height));
+                    //
+                    TimeSpan duration = new TimeSpan(0, 0, 0, 0, 500);
+                    _layoutPreviewWindow.AnimateMoveTo(newPreviewRect.left, newPreviewRect.top, new Windows.Graphics.SizeInt32(newPreviewRect.Width, newPreviewRect.Height), duration);
+                }
+            }
+
+            // update the layout position
+            _lastLayoutPreviewTargetPosition = newPreviewRect;
+        }
+    }
+
+    private MorphicResult<(Windows.Win32.Foundation.RECT PositionAndSize, Orientation Orientation), MorphicUnit> CalculatePreviewWindowRect(Windows.Win32.Foundation.RECT monitorFullRect, Windows.Win32.Foundation.RECT monitorWorkingRect, System.Drawing.Point currentPointerPosition, System.Drawing.Point horizontalDockingCenterPoint, System.Drawing.Point verticalDockingCenterPoint, double rasterizationScale)
+    {
+        int SCALED_LENGTH = (int)(_logicalLength * rasterizationScale);
+        int SCALED_THICKNESS = (int)(_logicalThickness * rasterizationScale);
+        int SCALED_DOCK_HIT_AREA = SCALED_THICKNESS;
+        int SCALED_CORNER_KEEPAWAY_PADDING = (int)(WINDOW_CORNER_DOCKING_DISTANCE_FROM_SCREEN_EDGE_IN_DEVICE_UNITS * rasterizationScale);
+
+        int newPreviewLeft;
+        int newPreviewRight;
+        int newPreviewTop;
+        int newPreviewBottom;
+        Orientation newPreviewOrientation;
+        if (currentPointerPosition.X >= monitorFullRect.left && currentPointerPosition.X < monitorWorkingRect.left + SCALED_DOCK_HIT_AREA)
+        {
+            // left 'vertical' working area
+            newPreviewLeft = monitorWorkingRect.left + SCALED_CORNER_KEEPAWAY_PADDING;
+            newPreviewRight = newPreviewLeft + SCALED_THICKNESS;
+            //
+            if (verticalDockingCenterPoint.Y >= monitorFullRect.Y && verticalDockingCenterPoint.Y < monitorWorkingRect.top + (monitorWorkingRect.Height / 2))
+            {
+                // top half of 'vertical' working area (top-left vertical bar)
+                newPreviewTop = monitorWorkingRect.top + SCALED_CORNER_KEEPAWAY_PADDING;
+                newPreviewBottom = newPreviewTop + SCALED_LENGTH;
+            }
+            else
+            {
+                // bottom half of 'vertical' working area (bottom-left vertical bar)
+                newPreviewBottom = monitorWorkingRect.bottom - SCALED_CORNER_KEEPAWAY_PADDING;
+                newPreviewTop = newPreviewBottom - SCALED_LENGTH;
+            }
+            newPreviewOrientation = Orientation.Vertical;
+        }
+        else if (currentPointerPosition.X >= monitorWorkingRect.right - SCALED_DOCK_HIT_AREA && currentPointerPosition.X < monitorFullRect.right)
+        {
+            // right 'vertical' working area
+            newPreviewRight = monitorWorkingRect.right - SCALED_CORNER_KEEPAWAY_PADDING;
+            newPreviewLeft = newPreviewRight - SCALED_THICKNESS;
+            //
+            if (verticalDockingCenterPoint.Y >= monitorFullRect.Y && verticalDockingCenterPoint.Y < monitorWorkingRect.Y + (monitorWorkingRect.Height / 2))
+            {
+                // top half of 'vertical' area (top-right vertical bar)
+                newPreviewTop = monitorWorkingRect.top + SCALED_CORNER_KEEPAWAY_PADDING;
+                newPreviewBottom = newPreviewTop + SCALED_LENGTH;
+            }
+            else
+            {
+                // bottom half of 'vertical' area (bottom-right vertical bar)
+                newPreviewBottom = monitorWorkingRect.bottom - SCALED_CORNER_KEEPAWAY_PADDING;
+                newPreviewTop = newPreviewBottom - SCALED_LENGTH;
+            }
+            newPreviewOrientation = Orientation.Vertical;
+        }
+        else if (horizontalDockingCenterPoint.X >= monitorFullRect.left && horizontalDockingCenterPoint.X < monitorWorkingRect.left + (monitorWorkingRect.Width / 2))
+        {
+            // left half of working area
+            newPreviewLeft = monitorWorkingRect.left + SCALED_CORNER_KEEPAWAY_PADDING;
+            newPreviewRight = newPreviewLeft + SCALED_LENGTH;
+            //
+            if (currentPointerPosition.Y <= monitorWorkingRect.top + (monitorWorkingRect.Height / 2))
+            {
+                // top-left quarter of working area (top-left horizontal bar)
+                newPreviewTop = monitorWorkingRect.top + SCALED_CORNER_KEEPAWAY_PADDING;
+                newPreviewBottom = newPreviewTop + SCALED_THICKNESS;
+            }
+            else
+            {
+                // bottom-left quarter of working area (bottom-left horizontal bar)
+                newPreviewBottom = monitorWorkingRect.bottom - SCALED_CORNER_KEEPAWAY_PADDING;
+                newPreviewTop = newPreviewBottom - SCALED_THICKNESS;
+            }
+            newPreviewOrientation = Orientation.Horizontal;
+        }
+        else if (horizontalDockingCenterPoint.X < monitorFullRect.right && horizontalDockingCenterPoint.X >= monitorWorkingRect.left + (monitorWorkingRect.Width / 2))
+        {
+            // right half of working area
+            newPreviewRight = monitorWorkingRect.right - SCALED_CORNER_KEEPAWAY_PADDING;
+            newPreviewLeft = newPreviewRight - SCALED_LENGTH;
+            //
+            if (currentPointerPosition.Y <= monitorWorkingRect.top + (monitorWorkingRect.Height / 2))
+            {
+                // top-right quarter of working area (top-right horizontal bar)
+                newPreviewTop = monitorWorkingRect.top + SCALED_CORNER_KEEPAWAY_PADDING;
+                newPreviewBottom = newPreviewTop + SCALED_THICKNESS;
+            }
+            else
+            {
+                // bottom-right quarter of working area (bottom-right horizontal bar)
+                newPreviewBottom = monitorWorkingRect.bottom - SCALED_CORNER_KEEPAWAY_PADDING;
+                newPreviewTop = newPreviewBottom - SCALED_THICKNESS;
+            }
+            newPreviewOrientation = Orientation.Horizontal;
+        }
+        else
+        {
+            // center point is off-screen, somehow
+            if (_layoutPreviewWindow.Visible == false)
+            {
+                _layoutPreviewWindow.AnimateStop();
+                _layoutPreviewWindow.AppWindow.Hide();
+            }
+            return MorphicResult.ErrorResult();
+        }
+
+        // clamp preview layout dimensions (i.e. prevent overflow from the working area)
+        newPreviewLeft = Math.Max(newPreviewLeft, monitorWorkingRect.left + SCALED_CORNER_KEEPAWAY_PADDING);
+        newPreviewRight = Math.Min(newPreviewRight, monitorWorkingRect.right - SCALED_CORNER_KEEPAWAY_PADDING);
+        newPreviewTop = Math.Max(newPreviewTop, monitorWorkingRect.top + SCALED_CORNER_KEEPAWAY_PADDING);
+        newPreviewBottom = Math.Min(newPreviewBottom, monitorWorkingRect.bottom - SCALED_CORNER_KEEPAWAY_PADDING);
+
+        Windows.Win32.Foundation.RECT newPreviewRect = new(newPreviewLeft, newPreviewTop, newPreviewRight, newPreviewBottom);
+        return MorphicResult.OkResult((newPreviewRect, newPreviewOrientation));
+    }
+
+    private MorphicResult<double, MorphicUnit> GetRasterizationScaleForMonitor(Windows.Win32.Graphics.Gdi.HMONITOR hMonitor)
+    {
+        var getDpiForMonitorResult = Windows.Win32.PInvoke.GetDpiForMonitor(hMonitor, Windows.Win32.UI.HiDpi.MONITOR_DPI_TYPE.MDT_EFFECTIVE_DPI, out uint dpiX, out uint dpiY);
+        if (getDpiForMonitorResult != Windows.Win32.Foundation.HRESULT.S_OK)
+        {
+            Debug.Assert(false);
+            return MorphicResult.ErrorResult();
+        }
+
+        double rasterizationScale = dpiX / 96.0; // 96 DPI = 1.0x scale
+        return MorphicResult.OkResult(rasterizationScale);
     }
 
     private MorphicResult<MorphicUnit, MorphicUnit> ApplyCornerRadius(int radiusInDeviceUnits)

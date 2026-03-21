@@ -52,9 +52,16 @@ public sealed partial class LayoutPreviewWindow : Window
 {
     Window _dummyParentWindow;
 
+    private Microsoft.UI.Dispatching.DispatcherQueue _dispatcherQueue;
+
+    // animation timer for moving the window (between left and right or between top and bottom)
+    private Microsoft.UI.Dispatching.DispatcherQueueTimer? _moveAnimationTimer;
+
     public LayoutPreviewWindow()
     {
         InitializeComponent();
+
+        _dispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
 
         var hwnd = (Windows.Win32.Foundation.HWND)WinRT.Interop.WindowNative.GetWindowHandle(this);
 
@@ -120,5 +127,68 @@ public sealed partial class LayoutPreviewWindow : Window
             Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOMOVE |
             Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOSIZE |
             Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
+    }
+
+    /* public methods */
+
+    /// <summary>
+    /// Smoothly animates the window to the target position and optionally to a target size,
+    /// using ease-out cubic interpolation. If called while a previous animation is in progress,
+    /// the current animation is cancelled and a new one starts from the window's current state.
+    /// </summary>
+    public void AnimateMoveTo(int targetX, int targetY, Windows.Graphics.SizeInt32? targetSize = null, TimeSpan? duration = null)
+    {
+        // stop any existing timer
+        _moveAnimationTimer?.Stop();
+        _moveAnimationTimer = null;
+
+        var startPos = this.AppWindow.Position;
+        var startSize = this.AppWindow.Size;
+        var startTime = DateTimeOffset.UtcNow;
+        duration ??= TimeSpan.FromMilliseconds(200);
+
+        var targetWidth = targetSize?.Width ?? startSize.Width;
+        var targetHeight = targetSize?.Height ?? startSize.Height;
+        var sizeChanging = (targetWidth != startSize.Width || targetHeight != startSize.Height);
+
+        var moveAnimationTimer = _dispatcherQueue.CreateTimer();
+        moveAnimationTimer.Interval = TimeSpan.FromMilliseconds(16); // ~60fps
+        moveAnimationTimer.IsRepeating = true;
+        moveAnimationTimer.Tick += (s, e) =>
+        {
+            var elapsed = DateTimeOffset.UtcNow - startTime;
+            var t = Math.Min(elapsed / duration.Value, 1.0);
+
+            // ease-out cubic for smooth deceleration
+            t = 1.0 - Math.Pow(1.0 - t, 3);
+
+            var x = (int)(startPos.X + (targetX - startPos.X) * t);
+            var y = (int)(startPos.Y + (targetY - startPos.Y) * t);
+
+            if (sizeChanging)
+            {
+                var w = (int)(startSize.Width + (targetWidth - startSize.Width) * t);
+                var h = (int)(startSize.Height + (targetHeight - startSize.Height) * t);
+                this.AppWindow.MoveAndResize(new Windows.Graphics.RectInt32(x, y, w, h));
+            }
+            else
+            {
+                this.AppWindow.Move(new Windows.Graphics.PointInt32(x, y));
+            }
+
+            if (t >= 1.0)
+            {
+                _moveAnimationTimer?.Stop();
+                _moveAnimationTimer = null;
+            }
+        };
+        moveAnimationTimer.Start();
+        _moveAnimationTimer = moveAnimationTimer;
+    }
+
+    public void AnimateStop()
+    {
+        _moveAnimationTimer?.Stop();
+        _moveAnimationTimer = null;
     }
 }

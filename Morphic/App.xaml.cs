@@ -80,6 +80,7 @@ public partial class App : Application
 
         _morphicBarWindow = new();
 _morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size of the legacy Morphic 1.0 MorphicBar
+        _morphicBarWindow.Orientation = Orientation.Horizontal;
         //
         var iconPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "Icons", "morphic-standardcontrast.ico");
         _morphicBarWindow.SetIconFromFile(iconPath, 256, 256);
