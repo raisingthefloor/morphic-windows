@@ -60,7 +60,7 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
 
     private Microsoft.UI.Dispatching.DispatcherQueue _dispatcherQueue;
 
-    // animation timer for moving (and rotating-via-resizing) the window
+    // animation timer for moving the window
     private Microsoft.UI.Dispatching.DispatcherQueueTimer? _moveAnimationTimer;
 
     private const int WINDOW_CORNER_RADIUS_IN_DEVICE_UNITS = 10;
@@ -436,6 +436,10 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
             //
             if (_layoutPreviewWindowOrientation is not null)
             {
+                if (_orientation != _layoutPreviewWindowOrientation)
+                {
+                    this.Rotate90DegreesAroundPoint(currentPointerPosition);
+                }
                 _orientation = _layoutPreviewWindowOrientation!.Value;
             }
             if (_layoutPreviewDockingLocation is not null)
@@ -447,6 +451,45 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
             _layoutPreviewWindowOrientation = null;
             _layoutPreviewDockingLocation = null;
         };
+    }
+
+    private void Rotate90DegreesAroundPoint(System.Drawing.Point centerPoint)
+    {
+        var windowPosition = this.AppWindow.Position;
+        var windowSize = this.AppWindow.Size;
+
+        bool cursorIsOverWindow = centerPoint.X >= windowPosition.X && centerPoint.X < windowPosition.X + windowSize.Width && 
+                                  centerPoint.Y >= windowPosition.Y && centerPoint.Y < windowPosition.Y + windowSize.Height;
+
+        // swap dimensions
+        var newWidth = windowSize.Height;
+        var newHeight = windowSize.Width;
+
+        if (cursorIsOverWindow == false)
+        {
+            // fallback position: if the center point isn't within the window, just rotate the MorphicBar 90 degrees in place (i.e. rotate around window center)
+            var centerX = windowPosition.X + windowSize.Width / 2;
+            var centerY = windowPosition.Y + windowSize.Height / 2;
+            var newX = centerX - newWidth / 2;
+            var newY = centerY - newHeight / 2;
+            this.AppWindow.MoveAndResize(new Windows.Graphics.RectInt32(newX, newY, newWidth, newHeight));
+        }
+        else
+        {
+            // cursor is over window; rotate around the cursor
+
+            // calculate center point's proportional position within the window (0.0 to 1.0)
+            var proportionX = (double)(centerPoint.X - windowPosition.X) / windowSize.Width;
+            var proportionY = (double)(centerPoint.Y - windowPosition.Y) / windowSize.Height;
+
+            // reposition so the cursor stays at the same proportional point in the new dimensions
+            var newX = centerPoint.X - (int)(proportionX * newWidth);
+            var newY = centerPoint.Y - (int)(proportionY * newHeight);
+
+            this.AppWindow.MoveAndResize(new Windows.Graphics.RectInt32(newX, newY, newWidth, newHeight));
+        }
+
+        this.ApplyCornerRadius(WINDOW_CORNER_RADIUS_IN_DEVICE_UNITS);
     }
 
     private void UpdateLayoutPreviewState(System.Drawing.Point currentPointerPosition, System.Drawing.Point windowCenterPoint, Microsoft.UI.Xaml.Controls.Orientation orientation)
@@ -522,7 +565,9 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
         }
         var newPreviewRect = getRectForDockingLocationResult!.Value;
 
-        if (_layoutPreviewWindow.Visible == false && _layoutPreviewDockingLocation == null && newPreviewDockingLocation == _dockingLocation)
+		// NOTE: we should only show the preview window once the MorphicBarWindow window has moved far enough to dock in a different location; therefore, don't
+		//       show the layout preview window until the MorphicBar has been moved far enough to warrant it (i.e. docking location or orientation changes)
+        if (_layoutPreviewWindow.Visible == false && _layoutPreviewDockingLocation == null && (newPreviewDockingLocation == _dockingLocation && newPreviewOrientation == _orientation))
         {
             // if the window hasn't moved far enough to have a new docking location, don't show the layout window yet
             return;
