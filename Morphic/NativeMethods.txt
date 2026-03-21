@@ -1,6 +1,8 @@
 ﻿CreateRoundRectRgn
+CreateWindowEx
 DefWindowProc
 DestroyIcon
+DestroyWindow
 DwmSetWindowAttribute
 EqualRect
 GetCursorPos
@@ -31,6 +33,3 @@ WM_NCLBUTTONDOWN
 WM_SETICON
 WNDPROC
 
-
-
-WM_SYSCOMMAND

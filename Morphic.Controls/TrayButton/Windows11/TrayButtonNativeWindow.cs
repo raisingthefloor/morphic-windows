@@ -71,7 +71,7 @@ internal class TrayButtonNativeWindow : IDisposable
     private Windows.Win32.UI.Accessibility.HWINEVENTHOOK _objectReorderWindowEventHook = Windows.Win32.UI.Accessibility.HWINEVENTHOOK.Null;
     private Windows.Win32.UI.Accessibility.WINEVENTPROC? _objectReorderWindowEventProc = null;
 
-    private Microsoft.UI.Dispatching.DispatcherQueue _dispatcherQueue;
+    private Microsoft.UI.Dispatching.DispatcherQueue _dispatcherQueue = null!; // initialized in CreateNew factory method
 
     // state variables to ensure that we don't call ObjectReorderWindowEventProc more than once every 20ms
     private Microsoft.UI.Dispatching.DispatcherQueueTimer? _objectReorderThrottleTimer;
