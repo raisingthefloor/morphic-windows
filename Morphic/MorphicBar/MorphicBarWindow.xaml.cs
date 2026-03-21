@@ -58,6 +58,11 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
     private IntPtr _hIconRawHandle = IntPtr.Zero;
     DummyWindow _dummyParentWindow;
 
+    private Microsoft.UI.Dispatching.DispatcherQueue _dispatcherQueue;
+
+    // animation timer for moving (and rotating-via-resizing) the window
+    private Microsoft.UI.Dispatching.DispatcherQueueTimer? _moveAnimationTimer;
+
     private const int WINDOW_CORNER_RADIUS_IN_DEVICE_UNITS = 10;
 
     // logical (96 DPI) window size — scaled by the current monitor's DPI
@@ -72,11 +77,15 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
     // the layout preview window lets us show the user where the window will move to if they release the mouse cursor
     private Morphic.MorphicBar.LayoutPreviewWindow _layoutPreviewWindow = null!;
     private Orientation? _layoutPreviewWindowOrientation = null;
+    private DockingLocation? _layoutPreviewDockingLocation = null;
     private Windows.Win32.Foundation.RECT? _lastLayoutPreviewTargetPosition = null;
 
     // orientation of the MorphicBar
     private Microsoft.UI.Xaml.Controls.Orientation _orientation = Microsoft.UI.Xaml.Controls.Orientation.Horizontal;
     public event EventHandler<Microsoft.UI.Xaml.Controls.Orientation>? OrientationChanged;
+
+    private Morphic.MorphicBar.DockingLocation _dockingLocation = DockingLocation.FloatingBottomRight; // default location
+    public event EventHandler<Morphic.MorphicBar.DockingLocation>? DockingLocationChanged;
 
     // NOTE: as we are handling sizing ourselves, we need to manage size scaling ourselves; this tracks the latest screen scale (so that we know if we need to resize our window)
     private double? _lastRasterizationScale = null;
@@ -84,6 +93,8 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
     public MorphicBarWindow()
     {
         InitializeComponent();
+
+        _dispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
 
         var hwnd = (Windows.Win32.Foundation.HWND)WinRT.Interop.WindowNative.GetWindowHandle(this);
 
@@ -213,6 +224,38 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
         {
             this.UpdateAppWindowSizeUsingRasterizationScale(_lastRasterizationScale!.Value);
         }
+    }
+
+    /// <summary>
+    /// Smoothly animates the window to the target position and optionally to a target size,
+    /// using ease-out cubic interpolation. If called while a previous animation is in progress,
+    /// the current animation is cancelled and a new one starts from the window's current state.
+    /// </summary>
+    internal void AnimateMoveTo(Windows.Win32.Graphics.Gdi.HMONITOR hMonitor, Microsoft.UI.Xaml.Controls.Orientation targetOrientation, DockingLocation targetDockingLocation, TimeSpan duration, Action? afterEachStepAction = null)
+    {
+        // stop any existing timer
+        _moveAnimationTimer?.Stop();
+        _moveAnimationTimer = null;
+
+        // calculate the target location
+        var getRectForDockingLocationResult = LayoutUtils.GetRectForDockingLocation(targetDockingLocation, targetOrientation, _logicalLength, _logicalThickness, hMonitor);
+        if (getRectForDockingLocationResult.IsError)
+        {
+            Debug.Assert(false);
+            return;
+        }
+        var targetRect = getRectForDockingLocationResult.Value!;
+        var targetPosition = new Windows.Graphics.PointInt32(targetRect.X, targetRect.Y);
+        var targetSize = new Windows.Graphics.SizeInt32(targetRect.Width, targetRect.Height);
+
+        // start the new animation
+        _moveAnimationTimer = AnimationUtils.AnimateMoveTo(_dispatcherQueue, this.AppWindow, targetPosition, targetSize, duration, afterEachStepAction);
+    }
+
+    internal void AnimateStop()
+    {
+        _moveAnimationTimer?.Stop();
+        _moveAnimationTimer = null;
     }
 
     /* properties */
@@ -379,6 +422,30 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
             {
                 _layoutPreviewWindow.AppWindow.Hide();
             }
+
+            // capture the mouse cursor's position in virtual screen coordinate space
+            _ = Windows.Win32.PInvoke.GetCursorPos(out var currentPointerPosition);
+            var hMonitor = Windows.Win32.PInvoke.MonitorFromPoint(currentPointerPosition, Windows.Win32.Graphics.Gdi.MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
+            if (hMonitor.IsNull)
+            {
+                Debug.Assert(false, "No monitor handle; this might be a headless system; aborting.");
+                return;
+            }
+            var verticalBarDockingHitAreaWidth = _logicalThickness;
+            Action applyCornerRadiusAction = () => { this.ApplyCornerRadius(WINDOW_CORNER_RADIUS_IN_DEVICE_UNITS); };
+            //
+            if (_layoutPreviewWindowOrientation is not null)
+            {
+                _orientation = _layoutPreviewWindowOrientation!.Value;
+            }
+            if (_layoutPreviewDockingLocation is not null)
+            {
+                _dockingLocation = _layoutPreviewDockingLocation!.Value;
+            }
+            this.AnimateMoveTo(hMonitor, _orientation, _dockingLocation, new TimeSpan(0, 0, 1), applyCornerRadiusAction);
+
+            _layoutPreviewWindowOrientation = null;
+            _layoutPreviewDockingLocation = null;
         };
     }
 
@@ -455,6 +522,15 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
         }
         var newPreviewRect = getRectForDockingLocationResult!.Value;
 
+        if (_layoutPreviewWindow.Visible == false && _layoutPreviewDockingLocation == null && newPreviewDockingLocation == _dockingLocation)
+        {
+            // if the window hasn't moved far enough to have a new docking location, don't show the layout window yet
+            return;
+        }
+
+        _layoutPreviewDockingLocation = newPreviewDockingLocation;
+        _layoutPreviewWindowOrientation = newPreviewOrientation;
+
         // if the layout preview is not already visible, create a small preview window (which will "expand out") and set its initial orientation
         if (_layoutPreviewWindow.Visible == false)
         {
@@ -462,13 +538,14 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
             var initialSizePercent = 0.10;
             var smallPreviewWidth = (int)(newPreviewRect.Width * initialSizePercent);
             var smallPreviewHeight = (int)(newPreviewRect.Height * initialSizePercent);
-            var smallPreviewLeft = newPreviewRect.left + (newPreviewRect.Width / 2) - (smallPreviewWidth / 2);
-            var smallPreviewTop = newPreviewRect.top + (newPreviewRect.Height / 2) - (smallPreviewHeight / 2);
+            var smallPreviewLeft = newPreviewRect.left + ((newPreviewRect.Width  - smallPreviewWidth) / 2);
+            var smallPreviewTop = newPreviewRect.top + ((newPreviewRect.Height - smallPreviewHeight) / 2);
 
-            _layoutPreviewWindowOrientation = newPreviewOrientation;
+            _lastLayoutPreviewTargetPosition = null;
 
             _layoutPreviewWindow.AppWindow.MoveAndResize(new Windows.Graphics.RectInt32(smallPreviewLeft, smallPreviewTop, smallPreviewWidth, smallPreviewHeight));
             _layoutPreviewWindow.AppWindow.Show();
+            Debug.Assert(_layoutPreviewWindow.AppWindow.Position.Y == smallPreviewTop);
         }
 
         // resize/move the window to its new position (with animation)

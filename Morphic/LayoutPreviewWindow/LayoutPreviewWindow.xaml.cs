@@ -54,7 +54,7 @@ public sealed partial class LayoutPreviewWindow : Window
 
     private Microsoft.UI.Dispatching.DispatcherQueue _dispatcherQueue;
 
-    // animation timer for moving the window (between left and right or between top and bottom)
+    // animation timer for moving (and rotating-via-resizing) the window
     private Microsoft.UI.Dispatching.DispatcherQueueTimer? _moveAnimationTimer;
 
     public LayoutPreviewWindow()

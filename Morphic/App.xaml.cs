@@ -32,6 +32,7 @@ using Microsoft.UI.Xaml.Navigation;
 using Microsoft.UI.Xaml.Shapes;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -88,6 +89,19 @@ _morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size o
         // show our taskbar icon (button)
         this.TaskbarButton.SetVisible(true);
 
+        // position MorphicBar at the correct dock location
+        //
+        // get the current monitor, based on the current mouse cursor relative position
+        _ = Windows.Win32.PInvoke.GetCursorPos(out var currentPointerPosition);
+        var hMonitor = Windows.Win32.PInvoke.MonitorFromPoint(currentPointerPosition, Windows.Win32.Graphics.Gdi.MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
+        if (hMonitor.IsNull)
+        {
+            Debug.Assert(false, "No monitor handle; this might be a headless system; aborting.");
+            return;
+        }
+        // NOTE: if this does not "snap" to the correct location immediately (due to enqueueing the UI code), consider creating a special path that sets the window position without the animation code
+        _morphicBarWindow.AnimateMoveTo(hMonitor, _morphicBarWindow.Orientation, MorphicBar.DockingLocation.FloatingBottomRight, TimeSpan.Zero);
+
         _morphicBarWindow.Activate();
     }
 
@@ -137,6 +151,7 @@ _morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size o
                     }
                     break;
                 case Controls.MouseButtons.Right:
+                    this.Exit();
                     break;
             }
         });

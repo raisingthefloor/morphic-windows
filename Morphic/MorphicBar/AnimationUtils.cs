@@ -34,7 +34,7 @@ internal class AnimationUtils
     /// using ease-out cubic interpolation. If called while a previous animation is in progress,
     /// the current animation is cancelled and a new one starts from the window's current state.
     /// </summary>
-    public static Microsoft.UI.Dispatching.DispatcherQueueTimer AnimateMoveTo(Microsoft.UI.Dispatching.DispatcherQueue dispatcherQueue, Microsoft.UI.Windowing.AppWindow appWindow, Windows.Graphics.PointInt32 targetPosition, Windows.Graphics.SizeInt32 targetSize, TimeSpan duration)
+    public static Microsoft.UI.Dispatching.DispatcherQueueTimer AnimateMoveTo(Microsoft.UI.Dispatching.DispatcherQueue dispatcherQueue, Microsoft.UI.Windowing.AppWindow appWindow, Windows.Graphics.PointInt32 targetPosition, Windows.Graphics.SizeInt32 targetSize, TimeSpan duration, Action? afterEachStepAction = null)
     {
         var startPosition = appWindow.Position;
         var startSize = appWindow.Size;
@@ -44,17 +44,8 @@ internal class AnimationUtils
 
         var sizeChanging = (targetSize.Width != startSize.Width || targetSize.Height != startSize.Height);
 
-        var moveAnimationTimer = dispatcherQueue.CreateTimer();
-        moveAnimationTimer.Interval = TimeSpan.FromMilliseconds(16); // ~60fps
-        moveAnimationTimer.IsRepeating = true;
-        moveAnimationTimer.Tick += (s, e) =>
+        Action<double> animationStepAction = (double t) =>
         {
-            var elapsedMilliseconds = stopwatch.ElapsedMilliseconds;
-            var t = Math.Min(elapsedMilliseconds / duration.TotalMilliseconds, 1.0);
-
-            // ease-out cubic for smooth deceleration
-            t = 1.0 - Math.Pow(1.0 - t, 3);
-
             var x = (int)(startPosition.X + (targetPosition.X - startPosition.X) * t);
             var y = (int)(startPosition.Y + (targetPosition.Y - startPosition.Y) * t);
 
@@ -68,6 +59,39 @@ internal class AnimationUtils
             {
                 appWindow.Move(new Windows.Graphics.PointInt32(x, y));
             }
+
+            if (afterEachStepAction is not null)
+            {
+                afterEachStepAction();
+            }
+        };
+
+        var moveAnimationTimer = dispatcherQueue.CreateTimer();
+
+        // special case: if the animation should takes 0ms, execute it immediately
+        if (duration == TimeSpan.Zero)
+        {
+            dispatcherQueue.TryEnqueue(() =>
+            {
+                // skip to the end of the animation
+                animationStepAction(1.0);
+                moveAnimationTimer.Stop(); // probably unncessary (i.e. just to make sure the timer is in a known state)
+            });
+
+            return moveAnimationTimer;
+        }
+
+        moveAnimationTimer.Interval = TimeSpan.FromMilliseconds(Math.Min(16, duration.TotalMilliseconds)); // ~60fps (unless the requested duration is even shorter)
+        moveAnimationTimer.IsRepeating = true;
+        moveAnimationTimer.Tick += (s, e) =>
+        {
+            var elapsedMilliseconds = stopwatch.ElapsedMilliseconds;
+            var t = Math.Min(elapsedMilliseconds / duration.TotalMilliseconds, 1.0);
+
+            // ease-out cubic for smooth deceleration
+            t = 1.0 - Math.Pow(1.0 - t, 3);
+
+            animationStepAction(t);
 
             if (t >= 1.0)
             {
