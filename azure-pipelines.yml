@@ -332,24 +332,24 @@ stages:
 ### BUILD AND PUBLISH, CREATE MSI: ARM64
 
         - task: MSBuild@1
-          displayName: "Build Morphic Client (ARM64)"
+          displayName: "Build Morphic Client (arm64)"
           env:
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
           inputs:       
             solution: '$(Build.SourcesDirectory)\Morphic\Morphic.csproj'
-            platform: 'ARM64'
+            platform: 'arm64'
             configuration: '$(buildConfiguration)'
-            msbuildArguments: '/t:restore,build /p:BuildType=$(BUILD_TYPE) /p:RuntimeIdentifier=win-ARM64'
+            msbuildArguments: '/t:restore,build /p:BuildType=$(BUILD_TYPE) /p:RuntimeIdentifier=win-arm64'
 
         - task: MSBuild@1
-          displayName: "Publish Morphic Client (ARM64)"
+          displayName: "Publish Morphic Client (arm64)"
           env:
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
           inputs:       
             solution: '$(Build.SourcesDirectory)\Morphic\Morphic.csproj'
-            platform: 'ARM64'
+            platform: 'arm64'
             configuration: '$(buildConfiguration)'
-            msbuildArguments: '/t:publish /p:BuildType=$(BUILD_TYPE) /p:RuntimeIdentifier=win-ARM64'
+            msbuildArguments: '/t:publish /p:BuildType=$(BUILD_TYPE) /p:RuntimeIdentifier=win-arm64'
 
 #        - task: CmdLine@2
 #          inputs:
@@ -358,7 +358,7 @@ stages:
 #              tree $(Build.SourcesDirectory)\Morphic.Client\bin /f
               
         - task: CmdLine@2
-          displayName: 'sign morphic client exe (ARM64)'
+          displayName: 'sign morphic client exe (arm64)'
           inputs:
             targetType: 'inline'
 # NOTE: if we experience downtime with our cert provider's timestamp servers (which causes signing to fail), 
@@ -379,7 +379,7 @@ stages:
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
               -v
-              $(Build.SourcesDirectory)\Morphic\bin\ARM64\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-ARM64\publish\Morphic.exe
+              $(Build.SourcesDirectory)\Morphic\bin\arm64\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-arm64\publish\Morphic.exe
 
         - task: VSBuild@1
           displayName: "restore installer dependencies"
@@ -391,11 +391,11 @@ stages:
             msbuildArgs: '/t:restore'
 
         - task: CopyFiles@2
-          displayName: "copy published/signed files (ARM64)"
+          displayName: "copy published/signed files (arm64)"
           inputs:
             Contents: '**'
-            SourceFolder: 'Morphic\bin\ARM64\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-ARM64\publish\'
-            TargetFolder: 'MorphicSetup\obj\ARM64\$(buildConfiguration)\publish\Morphic'
+            SourceFolder: 'Morphic\bin\arm64\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-arm64\publish\'
+            TargetFolder: 'MorphicSetup\obj\arm64\$(buildConfiguration)\publish\Morphic'
             CleanTargetFolder: true
 
         - powershell: |
@@ -407,17 +407,17 @@ stages:
           displayName: 'copy compiled XAML (ARM64)'
 
         - task: VSBuild@1
-          displayName: "build installer (ARM64)"
+          displayName: "build installer (arm64)"
           env:
             VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
           inputs:
             solution: 'MorphicSetup\MorphicSetup.wixproj'
-            platform: 'ARM64'
+            platform: 'arm64'
             configuration: '$(buildConfiguration)'
             msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false'
 
         - task: CmdLine@2
-          displayName: 'sign installer (ARM64)'
+          displayName: 'sign installer (arm64)'
           inputs:
             targetType: 'inline'
 # NOTE: if we experience downtime with our cert provider's timestamp servers (which causes signing to fail), 
@@ -437,11 +437,11 @@ stages:
               -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
-              -v $(System.DefaultWorkingDirectory)\MorphicSetup\bin\ARM64\$(buildConfiguration)\en-US\MorphicSetup.msi
+              -v $(System.DefaultWorkingDirectory)\MorphicSetup\bin\arm64\$(buildConfiguration)\en-US\MorphicSetup.msi
 
-        - publish: $(System.DefaultWorkingDirectory)\MorphicSetup\bin\ARM64\$(buildConfiguration)\en-US\MorphicSetup.msi
-          displayName: "Cache MSI for upload (ARM64)"
-          artifact: msi-x64
+        - publish: $(System.DefaultWorkingDirectory)\MorphicSetup\bin\arm64\$(buildConfiguration)\en-US\MorphicSetup.msi
+          displayName: "Cache MSI for upload (arm64)"
+          artifact: msi-arm64
 
 
 ### PREPARE TO BUILD MSIx
@@ -568,7 +568,7 @@ stages:
           displayName: 'Build packaged app (ARM64)'
 
         - task: CmdLine@2
-          displayName: 'Sign MSIX (ARM64)'
+          displayName: 'Sign MSIX (arm64)'
           inputs:
             script: >
               AzureSignTool sign
@@ -580,12 +580,12 @@ stages:
               -kvs "$(SigningClientSecret)"
               -kvc "$(SigningCertName)"
               -tr "$(TimestampUrl2)"
-              -v $(Build.ArtifactStagingDirectory)\MorphicSetup-ARM64.msix
+              -v $(Build.ArtifactStagingDirectory)\MorphicSetup-arm64.msix
 
         - task: PublishPipelineArtifact@1
-          displayName: "Cache MSIX (ARM64) for upload"
+          displayName: "Cache MSIX (arm64) for upload"
           inputs:
-            targetPath: $(Build.ArtifactStagingDirectory)\MorphicSetup-ARM64.msix
+            targetPath: $(Build.ArtifactStagingDirectory)\MorphicSetup-arm64.msix
             artifactName: msix-arm64
             artifactType: pipeline
 
@@ -622,7 +622,7 @@ stages:
             path: msix-x64
 
         - task: DownloadPipelineArtifact@2
-          displayName: "Capture MSIX (ARM64) for upload"
+          displayName: "Capture MSIX (arm64) for upload"
           inputs:
             source: 'current'
             artifact: msix-arm64
@@ -698,10 +698,10 @@ stages:
                     S3_BUILD_ARCHITECTURE="x64"
                     publishMsiInstaller
 
-                    echo "Upload MSI (ARM64) to S3"
+                    echo "Upload MSI (arm64) to S3"
                     MSI_NAME_BASE="MorphicSetup"
                     LOCAL_MSI_DIR="msi-arm64"
-                    S3_BUILD_ARCHITECTURE="ARM64"
+                    S3_BUILD_ARCHITECTURE="arm64"
                     publishMsiInstaller
 
                     echo "Uploading MSIX (x86) to S3"
@@ -718,10 +718,10 @@ stages:
                     S3_BUILD_ARCHITECTURE="x64"
                     publishMsixInstaller
 
-                    echo "Uploading MSIX (ARM64) to S3"
-                    MSIX_NAME_BASE="MorphicSetup-ARM64"
+                    echo "Uploading MSIX (arm64) to S3"
+                    MSIX_NAME_BASE="MorphicSetup-arm64"
                     # NOTE: "s/" is a temporary path requirement; we may also consider calling these folders just "arm64" etc.
                     LOCAL_MSIX_DIR="s/msix-arm64"
-                    S3_BUILD_ARCHITECTURE="ARM64"
+                    S3_BUILD_ARCHITECTURE="arm64"
                     publishMsixInstaller
 
