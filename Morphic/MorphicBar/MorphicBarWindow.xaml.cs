@@ -75,7 +75,7 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
     private bool _isDraggingWindow = false;
 
     // the layout preview window lets us show the user where the window will move to if they release the mouse cursor
-    private Morphic.MorphicBar.LayoutPreviewWindow _layoutPreviewWindow = null!;
+    private Morphic.MorphicBar.LayoutPreviewWindow.LayoutPreviewWindow _layoutPreviewWindow = null!;
     private Orientation? _layoutPreviewWindowOrientation = null;
     private DockingLocation? _layoutPreviewDockingLocation = null;
     private Windows.Win32.Foundation.RECT? _lastLayoutPreviewTargetPosition = null;

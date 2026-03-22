@@ -26,7 +26,7 @@ using Microsoft.UI.Composition.SystemBackdrops;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
 
-namespace Morphic.LayoutPreviewWindow;
+namespace Morphic.MorphicBar.LayoutPreviewWindow;
 
 internal class AcrylicGrayBackdrop : SystemBackdrop
 {

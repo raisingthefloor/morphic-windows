@@ -43,7 +43,7 @@ using WinRT.Interop;
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
-namespace Morphic.MorphicBar;
+namespace Morphic.MorphicBar.LayoutPreviewWindow;
 
 /// <summary>
 /// An empty window that can be used on its own or navigated to within a Frame.
@@ -106,7 +106,7 @@ public sealed partial class LayoutPreviewWindow : Window
         System.Diagnostics.Debug.Assert(setAttributeResult == HRESULT.S_OK);
 
         // use a custom translucent acrylic backdrop for the stained glass effect
-        this.SystemBackdrop = new Morphic.LayoutPreviewWindow.AcrylicGrayBackdrop();
+        this.SystemBackdrop = new Morphic.MorphicBar.LayoutPreviewWindow.AcrylicGrayBackdrop();
 
         this.Activated += LayoutPreviewWindow_Activated;
     }
