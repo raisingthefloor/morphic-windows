@@ -258,7 +258,7 @@ _morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size o
             return MorphicResult.ErrorResult();
         }
 
-        const int TASKBAR_PADDING_GAP = 12;
+        const int TASKBAR_PADDING_GAP = 2;
         int scaledTaskbarPaddingGap = (int)(TASKBAR_PADDING_GAP * rasterizationScale);
 
         // get the monitor handle associated with the taskbar (to determine its docking edge)

@@ -85,18 +85,16 @@ public class TransparentBaseWindow : Window
         _ = Windows.Win32.PInvoke.SetWindowPos(hwnd, new HWND(new IntPtr(-1)), 0, 0, 0, 0, SET_WINDOW_POS_FLAGS.SWP_FRAMECHANGED | SET_WINDOW_POS_FLAGS.SWP_NOMOVE | SET_WINDOW_POS_FLAGS.SWP_NOSIZE | SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
 
         // do not draw the standard rounded corners; this will make the border square, but we'll remove that border in a moment
-        unsafe
-        {
-            var cornerPref = (uint)Windows.Win32.Graphics.Dwm.DWM_WINDOW_CORNER_PREFERENCE.DWMWCP_DONOTROUND;
-            _ = Windows.Win32.PInvoke.DwmSetWindowAttribute(hwnd, DWMWINDOWATTRIBUTE.DWMWA_WINDOW_CORNER_PREFERENCE, &cornerPref, (uint)sizeof(uint));
-        }
+        int cornerPreference = (int)Windows.Win32.Graphics.Dwm.DWM_WINDOW_CORNER_PREFERENCE.DWMWCP_DONOTROUND;
+        Span<byte> cornerPreferenceAsSpan = System.Runtime.InteropServices.MemoryMarshal.AsBytes(new Span<int>(ref cornerPreference));
+        var setAttributeResult = Windows.Win32.PInvoke.DwmSetWindowAttribute(hwnd, Windows.Win32.Graphics.Dwm.DWMWINDOWATTRIBUTE.DWMWA_WINDOW_CORNER_PREFERENCE, cornerPreferenceAsSpan);
+        System.Diagnostics.Debug.Assert(setAttributeResult == HRESULT.S_OK);
 
         // set the DWM border color to "none"
-        unsafe
-        {
-            uint colorNone = 0xFFFFFFFE;
-            _ = Windows.Win32.PInvoke.DwmSetWindowAttribute(hwnd, DWMWINDOWATTRIBUTE.DWMWA_BORDER_COLOR, &colorNone, (uint)sizeof(uint));
-        }
+        uint colorNone = 0xFFFFFFFE; // DWMWA_COLOR_NONE
+        Span<byte> colorNoneAsSpan = System.Runtime.InteropServices.MemoryMarshal.AsBytes(new Span<uint>(ref colorNone));
+        setAttributeResult = Windows.Win32.PInvoke.DwmSetWindowAttribute(hwnd, DWMWINDOWATTRIBUTE.DWMWA_BORDER_COLOR, colorNoneAsSpan);
+        System.Diagnostics.Debug.Assert(setAttributeResult == HRESULT.S_OK);
 
         // NOTE: even though we've set a fully-transparent system backdrop via WinUI, DWM will still fill the composition
         //       background with an opaque brush
