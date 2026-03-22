@@ -47,6 +47,9 @@
     <Page Update="MorphicBar\LayoutPreviewWindow\LayoutPreviewWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Update="MorphicBar\TransparentWindow\TransparentWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Update="MorphicBar\MorphicBarWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>

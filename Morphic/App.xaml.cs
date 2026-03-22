@@ -21,21 +21,23 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using Microsoft.UI.Xaml.Shapes;
+using Morphic.Core;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
@@ -54,7 +56,11 @@ public partial class App : Application
     // NOTE: we initialize this when the application starts up
     internal Morphic.Controls.TrayButton.TrayButton TaskbarButton = null!;
 
-    private Morphic.MorphicBar.MorphicBarWindow? _morphicBarWindow;
+    private Morphic.MorphicBar.MorphicBarWindow _morphicBarWindow = null!;
+    internal static Morphic.MorphicBar.MorphicMainMenu MainMenu { get; private set; } = null!;
+
+    // we also create a single transparent window which can be used (to show popups and messageboxes, etc.) when no other window UI is visible
+    private Morphic.MorphicBar.TransparentWindow.TransparentWindow _transparentWindow = null!;
 
     /// <summary>
     /// Initializes the singleton application object.  This is the first line of authored code
@@ -78,6 +84,19 @@ public partial class App : Application
     {
         // initialize our taskbar icon (button); it will start out in a hidden state
         this.InitTaskbarIconWithoutShowing();
+
+        // create a single instance of the main menu
+        this.InitMainMenu();
+
+        // create a single instance of a transparent window (with pointer-click passthrough and _no_ ability to receive keyboard focus)
+        _transparentWindow = new();
+        _transparentWindow.DisableAcceptsFocus();
+        _transparentWindow.EnablePointerEventsPassthrough();
+        //
+        // remove window chrome (minimize/maximize/close buttons); set the window to be 'always on top'; turn off the border and titlebar
+        (_transparentWindow.AppWindow.Presenter as Microsoft.UI.Windowing.OverlappedPresenter)?.IsAlwaysOnTop = true;
+        _transparentWindow.AppWindow.MoveAndResize(new Windows.Graphics.RectInt32(-10000, -10000, 0, 0)); // move off the main screen (unnecessary, but good for VS debugging so we don't get GUI debug overlays), make it zero pixels in size (also unnecessary, but a safeguard)
+        _transparentWindow.AppWindow.Show();
 
         _morphicBarWindow = new();
 _morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size of the legacy Morphic 1.0 MorphicBar
@@ -115,6 +134,46 @@ _morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size o
     #endregion Lifecycle
 
 
+    #region Main Menu
+
+    private void InitMainMenu()
+    {
+        var mainMenu = new Morphic.MorphicBar.MorphicMainMenu();
+
+        mainMenu.ShowMorphicBarMenuItemClicked += MainMenu_ShowMorphicBarMenuItemClicked;
+        mainMenu.HideMorphicBarMenuItemClicked += MainMenu_HideMorphicBarMenuItemClicked;
+        //
+        mainMenu.QuitMorphicMenuItemClicked += MainMenu_QuitMorphicMenuItemClicked;
+
+        App.MainMenu = mainMenu;
+    }
+
+    private void MainMenu_HideMorphicBarMenuItemClicked(object? sender, EventArgs e)
+    {
+        _morphicBarWindow.AppWindow.Hide();
+    }
+
+    private void MainMenu_ShowMorphicBarMenuItemClicked(object? sender, EventArgs e)
+    {
+        _morphicBarWindow.AppWindow.Show();
+    }
+
+    private void MainMenu_QuitMorphicMenuItemClicked(object? sender, EventArgs e)
+    {
+        this.Shutdown();
+    }
+
+    internal void Shutdown()
+    {
+        _transparentWindow.Close();
+        _morphicBarWindow.Close();
+
+        this.Exit();
+    }
+
+    #endregion Main Menu
+
+
     #region Taskbar Icon (Button)
 
     private void InitTaskbarIconWithoutShowing()
@@ -135,30 +194,139 @@ _morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size o
 
     private void TaskbarButton_MouseUp(object? sender, Controls.MouseEventArgs e)
     {
-        _morphicBarWindow!.DispatcherQueue.TryEnqueue(() =>
+        _morphicBarWindow.DispatcherQueue.TryEnqueue(() =>
         {
             switch (e.Button) 
             {
                 case Controls.MouseButtons.Left:
-                    switch (_morphicBarWindow!.Visible)
+                    switch (_morphicBarWindow.Visible)
                     {
                         case true:
-                            _morphicBarWindow!.AppWindow.Hide();
+                            _morphicBarWindow.AppWindow.Hide();
                             break;
                         case false:
-                            _morphicBarWindow!.AppWindow.Show();
+                            _morphicBarWindow.AppWindow.Show();
                             break;
                     }
                     break;
                 case Controls.MouseButtons.Right:
-                    this.Exit();
+                    {
+                        System.Drawing.Point popupPosition;
+
+                        // choose an owner window; this will be the visible window which is used for rasterization scaling (and is required to be visible to show the menu)
+                        Window ownerWindow;
+                        ownerWindow = _transparentWindow;
+                        var rasterizationScale = ownerWindow.Content.XamlRoot.RasterizationScale;
+
+                        var getPopupPositionResult = App.GetTaskbarAdjacentPopupPosition(rasterizationScale);
+                        if (getPopupPositionResult.IsSuccess)
+                        {
+                            popupPosition = getPopupPositionResult!.Value;
+                        }
+                        else
+                        {
+                            var getCursorPosResult = Windows.Win32.PInvoke.GetCursorPos(out var cursorPosition);
+                            if (getCursorPosResult == false)
+                            {
+                                Debug.Assert(false);
+                                return;
+                            }
+                            popupPosition = cursorPosition;
+                        }
+
+                        // now pop up the main menu
+                        App.MainMenu.Show(ownerWindow, _morphicBarWindow.Visible, popupPosition.X, popupPosition.Y);
+                    }
                     break;
             }
         });
     }
 
-    //
+    private static MorphicResult<System.Drawing.Point, MorphicUnit> GetTaskbarAdjacentPopupPosition(double rasterizationScale)
+    {
+        // get the RECT of the Windows taskbar
+        var taskbar = Windows.Win32.PInvoke.FindWindow("Shell_TrayWnd", null);
+        if (taskbar.IsNull)
+        {
+            Debug.Assert(false);
+            return MorphicResult.ErrorResult();
+        }
+        var getWindowRectResult = Windows.Win32.PInvoke.GetWindowRect(taskbar, out var taskbarRect);
+        if (getWindowRectResult == false)
+        {
+            Debug.Assert(false);
+            return MorphicResult.ErrorResult();
+        }
 
+        const int TASKBAR_PADDING_GAP = 12;
+        int scaledTaskbarPaddingGap = (int)(TASKBAR_PADDING_GAP * rasterizationScale);
+
+        // get the monitor handle associated with the taskbar (to determine its docking edge)
+        var hMonitor = Windows.Win32.PInvoke.MonitorFromWindow(taskbar, Windows.Win32.Graphics.Gdi.MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONULL);
+        if (hMonitor.IsNull)
+        {
+            Debug.Assert(false);
+            return MorphicResult.ErrorResult();
+        }
+        var monitorInfo = new Windows.Win32.Graphics.Gdi.MONITORINFO { cbSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf<Windows.Win32.Graphics.Gdi.MONITORINFO>() };
+        //
+        // get the full rectangle fo the monitor associated with the taskbar
+        var getMonitorInfoResult = Windows.Win32.PInvoke.GetMonitorInfo(hMonitor, ref monitorInfo);
+        if (getMonitorInfoResult == false)
+        {
+            Debug.Assert(false);
+            return MorphicResult.ErrorResult();
+        }
+        var monitorFullRect = monitorInfo.rcMonitor;
+
+        // capture the current mouse position (as we'll want to use the current X or Y position)
+        var getCursorPosResult = Windows.Win32.PInvoke.GetCursorPos(out var cursorPosition);
+        if (getCursorPosResult == false)
+        {
+            Debug.Assert(false);
+            return MorphicResult.ErrorResult();
+        }
+
+        // now pick a pop-up position which combines the X or Y of the cursor position with a padded offset from the taskbar
+        int universalAbsoluteX;
+        int universalAbsoluteY;
+        //
+        if (taskbarRect.Width > taskbarRect.Height)
+        {
+            // Horizontal taskbar (top or bottom) — X follows the pointer position
+            universalAbsoluteX = cursorPosition.X;
+
+            if (taskbarRect.top == monitorFullRect.top)
+            {
+                // Docked at top — show below the taskbar
+                universalAbsoluteY = taskbarRect.bottom + scaledTaskbarPaddingGap;
+            }
+            else
+            {
+                // Docked at bottom — show above the taskbar
+                universalAbsoluteY = taskbarRect.top - scaledTaskbarPaddingGap;
+            }
+        }
+        else
+        {
+            // Vertical taskbar (left or right) — Y follows the pointer position
+            universalAbsoluteY = cursorPosition.Y;
+
+            if (taskbarRect.left == monitorFullRect.left)
+            {
+                // Docked at left — show to the right of the taskbar
+                universalAbsoluteX = taskbarRect.right + scaledTaskbarPaddingGap;
+            }
+            else
+            {
+                // Docked at right — show to the left of the taskbar
+                universalAbsoluteX = taskbarRect.left - scaledTaskbarPaddingGap;
+            }
+        }
+
+        System.Drawing.Point result = new(universalAbsoluteX, universalAbsoluteY);
+        return MorphicResult.OkResult(result);
+    }
 
     #endregion Taskbar Icon (Button)
 

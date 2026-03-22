@@ -21,7 +21,6 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using ABI.Windows.Foundation;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -35,13 +34,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
-using System.Threading;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
-using Windows.Win32.Foundation;
-using WinRT.Interop;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -51,7 +46,7 @@ namespace Morphic.MorphicBar;
 /// <summary>
 /// An empty window that can be used on its own or navigated to within a Frame.
 /// </summary>
-public sealed partial class MorphicBarWindow : Window, IDisposable
+public sealed partial class MorphicBarWindow : Morphic.MorphicBar.TransparentWindow.TransparentBaseWindow, IDisposable
 {
     private bool disposedValue;
 
@@ -62,8 +57,6 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
 
     // animation timer for moving the window
     private Microsoft.UI.Dispatching.DispatcherQueueTimer? _moveAnimationTimer;
-
-    private const int WINDOW_CORNER_RADIUS_IN_DEVICE_UNITS = 10;
 
     // logical (96 DPI) window size — scaled by the current monitor's DPI
     private uint _logicalLength = 67; // 100 pixels at 150% zoom
@@ -101,8 +94,6 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
         // create a dummy "parent window" for the layout preview window (so that this window doesn't show up in the taskbar)
         _dummyParentWindow = new DummyWindow();
         _ = _dummyParentWindow.SetAsParentHwnd(hwnd);
-
-(this.Content as Grid)!.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.DarkGreen);
 
         // create a layout preview window; we'll need this whenever the MorphicBar is moved; this is created up front, as it can take a little time to create the window
         _layoutPreviewWindow = new();
@@ -231,7 +222,7 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
     /// using ease-out cubic interpolation. If called while a previous animation is in progress,
     /// the current animation is cancelled and a new one starts from the window's current state.
     /// </summary>
-    internal void AnimateMoveTo(Windows.Win32.Graphics.Gdi.HMONITOR hMonitor, Microsoft.UI.Xaml.Controls.Orientation targetOrientation, DockingLocation targetDockingLocation, TimeSpan duration, Action? afterEachStepAction = null)
+    internal void AnimateMoveTo(Windows.Win32.Graphics.Gdi.HMONITOR hMonitor, Microsoft.UI.Xaml.Controls.Orientation targetOrientation, DockingLocation targetDockingLocation, TimeSpan duration)
     {
         // stop any existing timer
         _moveAnimationTimer?.Stop();
@@ -249,7 +240,7 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
         var targetSize = new Windows.Graphics.SizeInt32(targetRect.Width, targetRect.Height);
 
         // start the new animation
-        _moveAnimationTimer = AnimationUtils.AnimateMoveTo(_dispatcherQueue, this.AppWindow, targetPosition, targetSize, duration, afterEachStepAction);
+        _moveAnimationTimer = AnimationUtils.AnimateMoveTo(_dispatcherQueue, this.AppWindow, targetPosition, targetSize, duration);
     }
 
     internal void AnimateStop()
@@ -322,26 +313,21 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
         }
 
         this.AppWindow.Resize(new Windows.Graphics.SizeInt32(physicalWidth, physicalHeight));
-
-        // every time we update the window size, reapply the corner radius (which will also resize the visible area)
-        var cornerRadiusInDeviceUnits = (int)(WINDOW_CORNER_RADIUS_IN_DEVICE_UNITS * rasterizationScale);
-        _ = this.ApplyCornerRadius(cornerRadiusInDeviceUnits);
     }
 
     private void InitializeBorderlessWindowProperties(Windows.Win32.Foundation.HWND hwnd)
     {
-        // remove window chrome (minimize/maximize/close buttons); set the window to be 'always on top'; turn off the border and titlebar
+        // remove window chrome (minimize/maximize/close buttons); set the window to be 'always on top'
         var presenter = this.AppWindow.Presenter as Microsoft.UI.Windowing.OverlappedPresenter;
         if (presenter is not null)
         {
-            presenter.IsResizable = false;
             presenter.IsMinimizable = false;
             presenter.IsMaximizable = false;
+            presenter.IsResizable = false;
             presenter.IsAlwaysOnTop = true;
-            presenter.SetBorderAndTitleBar(false, false);
         }
 
-        // update window style (i.e. remove the dialog frame)
+        // update window style (i.e. remove the dialog frame); with our styling, this is required to prevent the window from growing beyond our target size
         var style = (Windows.Win32.UI.WindowsAndMessaging.WINDOW_STYLE)Windows.Win32.PInvoke.GetWindowLongPtr(hwnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWL_STYLE);
         style &= ~Windows.Win32.UI.WindowsAndMessaging.WINDOW_STYLE.WS_DLGFRAME;
         //
@@ -362,12 +348,6 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
             Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_FRAMECHANGED | Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOMOVE |
             Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOSIZE | Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOZORDER);
         System.Diagnostics.Debug.Assert(setWindowPosResult != 0);
-
-        // turn off DWM corner rounding (since we'll round the corner ourselves, for compatibility with Windows 10 etc.)
-        int cornerPreference = 1; // DWMWCP_DONOTROUND
-        Span<byte> cornerPreferenceAsSpan = MemoryMarshal.AsBytes(new Span<int>(ref cornerPreference));
-        var setAttributeResult = Windows.Win32.PInvoke.DwmSetWindowAttribute(hwnd, Windows.Win32.Graphics.Dwm.DWMWINDOWATTRIBUTE.DWMWA_WINDOW_CORNER_PREFERENCE, cornerPreferenceAsSpan);
-        System.Diagnostics.Debug.Assert(setAttributeResult == HRESULT.S_OK);
     }
 
     private void InitializePointerPressAndDrag(UIElement rootDragElement)
@@ -432,7 +412,6 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
                 return;
             }
             var verticalBarDockingHitAreaWidth = _logicalThickness;
-            Action applyCornerRadiusAction = () => { this.ApplyCornerRadius(WINDOW_CORNER_RADIUS_IN_DEVICE_UNITS); };
             //
             if (_layoutPreviewWindowOrientation is not null)
             {
@@ -446,7 +425,7 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
             {
                 _dockingLocation = _layoutPreviewDockingLocation!.Value;
             }
-            this.AnimateMoveTo(hMonitor, _orientation, _dockingLocation, new TimeSpan(0, 0, 1), applyCornerRadiusAction);
+            this.AnimateMoveTo(hMonitor, _orientation, _dockingLocation, new TimeSpan(0, 0, 1));
 
             _layoutPreviewWindowOrientation = null;
             _layoutPreviewDockingLocation = null;
@@ -488,8 +467,6 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
 
             this.AppWindow.MoveAndResize(new Windows.Graphics.RectInt32(newX, newY, newWidth, newHeight));
         }
-
-        this.ApplyCornerRadius(WINDOW_CORNER_RADIUS_IN_DEVICE_UNITS);
     }
 
     private void UpdateLayoutPreviewState(System.Drawing.Point currentPointerPosition, System.Drawing.Point windowCenterPoint, Microsoft.UI.Xaml.Controls.Orientation orientation)
@@ -506,7 +483,7 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
 
         // get the monitor's info (including dimensions)
         var monitorInfo = new Windows.Win32.Graphics.Gdi.MONITORINFO();
-        monitorInfo.cbSize = (uint)Marshal.SizeOf<Windows.Win32.Graphics.Gdi.MONITORINFO>();
+        monitorInfo.cbSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf<Windows.Win32.Graphics.Gdi.MONITORINFO>();
         var getMonitorInfoResult = Windows.Win32.PInvoke.GetMonitorInfo(hMonitor, ref monitorInfo);
         if (getMonitorInfoResult == 0)
         {
@@ -601,52 +578,4 @@ public sealed partial class MorphicBarWindow : Window, IDisposable
             _lastLayoutPreviewTargetPosition = newPreviewRect;
         }
     }
-
-    //
-
-    private MorphicResult<MorphicUnit, MorphicUnit> ApplyCornerRadius(int radiusInDeviceUnits)
-    {
-        var hwnd = (Windows.Win32.Foundation.HWND)WindowNative.GetWindowHandle(this);
-
-        bool getWindowRectSuccess = Windows.Win32.PInvoke.GetWindowRect(hwnd, out Windows.Win32.Foundation.RECT rect);
-        if (getWindowRectSuccess == false)
-        {
-            return MorphicResult.ErrorResult();
-        }
-
-        int width = rect.right - rect.left;
-        int height = rect.bottom - rect.top;
-        var roundRectRegion = Windows.Win32.PInvoke.CreateRoundRectRgn(0, 0, width + 1 /*x2=left+width+1*/, height + 1/*y2=top+height+1*/, radiusInDeviceUnits, radiusInDeviceUnits);
-        if (roundRectRegion == Windows.Win32.Graphics.Gdi.HRGN.Null)
-        {
-            return MorphicResult.ErrorResult();
-        }
-        bool mustCleanupRoundRectRegion = true;
-        try
-        {
-            // NOTE: the system owns the roundRectRegion (and will dispose of it) once we call this function; we should only delete it if the SetWindowRgn call fails
-            var setWindowRgnSuccess = Windows.Win32.PInvoke.SetWindowRgn(hwnd, roundRectRegion, true);
-            if (setWindowRgnSuccess == 0)
-            {
-                return MorphicResult.ErrorResult();
-            }
-
-            // since SetWindowRgn succeeded, it now owns the RoundRectRegion
-            mustCleanupRoundRectRegion = false;
-        }
-        finally
-        {
-            if (mustCleanupRoundRectRegion == true)
-            {
-                _ = Windows.Win32.PInvoke.DeleteObject((Windows.Win32.Graphics.Gdi.HGDIOBJ)roundRectRegion);
-            }
-        }
-
-        return MorphicResult.OkResult();
-    }
-
-    //
-
-
-
 }

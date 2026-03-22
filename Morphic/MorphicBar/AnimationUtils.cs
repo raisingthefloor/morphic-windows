@@ -34,7 +34,7 @@ internal class AnimationUtils
     /// using ease-out cubic interpolation. If called while a previous animation is in progress,
     /// the current animation is cancelled and a new one starts from the window's current state.
     /// </summary>
-    public static Microsoft.UI.Dispatching.DispatcherQueueTimer AnimateMoveTo(Microsoft.UI.Dispatching.DispatcherQueue dispatcherQueue, Microsoft.UI.Windowing.AppWindow appWindow, Windows.Graphics.PointInt32 targetPosition, Windows.Graphics.SizeInt32 targetSize, TimeSpan duration, Action? afterEachStepAction = null)
+    public static Microsoft.UI.Dispatching.DispatcherQueueTimer AnimateMoveTo(Microsoft.UI.Dispatching.DispatcherQueue dispatcherQueue, Microsoft.UI.Windowing.AppWindow appWindow, Windows.Graphics.PointInt32 targetPosition, Windows.Graphics.SizeInt32 targetSize, TimeSpan duration)
     {
         var startPosition = appWindow.Position;
         var startSize = appWindow.Size;
@@ -58,11 +58,6 @@ internal class AnimationUtils
             else
             {
                 appWindow.Move(new Windows.Graphics.PointInt32(x, y));
-            }
-
-            if (afterEachStepAction is not null)
-            {
-                afterEachStepAction();
             }
         };
 
