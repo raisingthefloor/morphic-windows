@@ -1,3 +1,7 @@
-﻿GetCurrentPackageFullName
+﻿DwmSetWindowAttribute
+GetCurrentPackageFullName
 
+HWND
+HRESULT
 LUID
+S_OK
