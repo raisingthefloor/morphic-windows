@@ -19,6 +19,7 @@
 	<DefineConstants>DISABLE_XAML_GENERATED_MAIN</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="Assets\Icons\morphic.ico" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Assets\Icons\morphic-highcontrastblack.ico" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Assets\Icons\morphic-highcontrastwhite.ico" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Assets\Icons\morphic-standardcontrast.ico" CopyToOutputDirectory="PreserveNewest" />
