@@ -66,4 +66,11 @@ internal class TransparentBackdrop : Microsoft.UI.Xaml.Media.SystemBackdrop
         _compositor?.Dispose();
         _compositor = null;
     }
+
+    // NOTE: to prevent WinUI from trying to modify our system backdrop when the theme changes, stub out this override
+    protected override void OnDefaultSystemBackdropConfigurationChanged(ICompositionSupportsSystemBackdrop target, XamlRoot xamlRoot)
+    {
+        //base.OnDefaultSystemBackdropConfigurationChanged(target, xamlRoot);
+        // No-op: transparent backdrop doesn't change with theme
+    }
 }

@@ -44,6 +44,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Page Update="AboutWindow\AboutWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Update="MorphicBar\LayoutPreviewWindow\LayoutPreviewWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -68,6 +71,11 @@
   <!-- prevent the trimmer from removing types only referenced in XAML; this could be narrowed to specific types if necessary (to minimize installer size) -->
   <ItemGroup>
     <TrimmerRootAssembly Include="Microsoft.WinUI" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\Images\theme_dark\Square50x50Logo.scale-400.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\Images\theme_light\Square50x50Logo.scale-400.png" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

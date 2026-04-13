@@ -40,6 +40,7 @@ internal class MorphicMainMenu
     MenuFlyoutItem _hideMorphicBarMenuItem;
     
 
+    public event EventHandler<EventArgs>? AboutMorphicMenuItemClicked;
     public event EventHandler<EventArgs>? HideMorphicBarMenuItemClicked;
     public event EventHandler<EventArgs>? ShowMorphicBarMenuItemClicked;
     public event EventHandler<EventArgs>? QuitMorphicMenuItemClicked;
@@ -62,6 +63,15 @@ internal class MorphicMainMenu
         menuFlyout.Items.Add(_hideMorphicBarMenuItem);
 
         menuFlyout.Items.Add(new MenuFlyoutSeparator());
+
+        var aboutMorphicMenuItem = new MenuFlyoutItem { Text = "About Morphic...", Padding = padding, MinHeight = 0 };
+        aboutMorphicMenuItem.KeyboardAccelerators.Add(new Microsoft.UI.Xaml.Input.KeyboardAccelerator
+        {
+            Key = Windows.System.VirtualKey.A,
+            Modifiers = Windows.System.VirtualKeyModifiers.None
+        });
+        aboutMorphicMenuItem.Click += (s, _) => { this.AboutMorphicMenuItemClicked?.Invoke(s, EventArgs.Empty); };
+        menuFlyout.Items.Add(aboutMorphicMenuItem);
 
         var quitMorphicMenuItem = new MenuFlyoutItem { Text = "Quit Morphic", /*Icon = new SymbolIcon(Symbol.Paste), */Padding = padding, MinHeight = 0 };
         quitMorphicMenuItem.KeyboardAccelerators.Add(new Microsoft.UI.Xaml.Input.KeyboardAccelerator

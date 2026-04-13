@@ -62,7 +62,7 @@ public class TransparentBaseWindow : Window
     // GC-protected reference to our static window subclass (required to prevent the delegate from being GC'd while the subclass is still active)
     private static Windows.Win32.UI.Shell.SUBCLASSPROC? _subclassProc;
 
-    public TransparentBaseWindow()
+    public TransparentBaseWindow() : base()
     {
         // TransparentBackdrop requires that a dispatch queue is initialized on this thread before being created/connected
         // since TransparentBackdrop requires a Microsoft.UI.Composition.Compositor--but the window needs a Windows.UI.Composition.Compositor--we need to create a Windows.System.DispatchQueue manually (one is fine)

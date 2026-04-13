@@ -56,6 +56,8 @@ public partial class App : Application
     // NOTE: we initialize this when the application starts up
     internal Morphic.Controls.TrayButton.TrayButton TaskbarButton = null!;
 
+    private Morphic.AboutWindow.AboutWindow? _aboutWindow;
+
     private Morphic.MorphicBar.MorphicBarWindow _morphicBarWindow = null!;
     internal static Morphic.MorphicBar.MorphicMainMenu MainMenu { get; private set; } = null!;
 
@@ -143,6 +145,7 @@ _morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size o
         mainMenu.ShowMorphicBarMenuItemClicked += MainMenu_ShowMorphicBarMenuItemClicked;
         mainMenu.HideMorphicBarMenuItemClicked += MainMenu_HideMorphicBarMenuItemClicked;
         //
+        mainMenu.AboutMorphicMenuItemClicked += MainMenu_AboutMorphicMenuItemClicked;
         mainMenu.QuitMorphicMenuItemClicked += MainMenu_QuitMorphicMenuItemClicked;
 
         App.MainMenu = mainMenu;
@@ -156,6 +159,16 @@ _morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size o
     private void MainMenu_ShowMorphicBarMenuItemClicked(object? sender, EventArgs e)
     {
         _morphicBarWindow.AppWindow.Show();
+    }
+
+    private void MainMenu_AboutMorphicMenuItemClicked(object? sender, EventArgs e)
+    {
+        if (_aboutWindow is null)
+        {
+            _aboutWindow = new();
+            _aboutWindow.Closed += (s, args) => { _aboutWindow = null; };
+        }
+        _aboutWindow!.Activate();
     }
 
     private void MainMenu_QuitMorphicMenuItemClicked(object? sender, EventArgs e)
