@@ -24,24 +24,9 @@
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using Microsoft.UI.Xaml.Shapes;
 using Morphic.Core;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Threading;
-using Windows.ApplicationModel;
-using Windows.ApplicationModel.Activation;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -61,8 +46,9 @@ public partial class App : Application
     private Morphic.MorphicBar.MorphicBarWindow _morphicBarWindow = null!;
     internal static Morphic.MorphicBar.MorphicMainMenu MainMenu { get; private set; } = null!;
 
-    // we also create a single transparent window which can be used (to show popups and messageboxes, etc.) when no other window UI is visible
-    private Morphic.MorphicBar.TransparentWindow.TransparentWindow _transparentWindow = null!;
+    // we also create a single transparent window which can be used (to show popups and messageboxes, etc.); this is necessary for when no other window UI is visible, but for simplicity it'll be shared project-wide
+    private Morphic.MorphicBar.TransparentWindow.TransparentWindow _menuOwnerWindow = null!;
+    internal static Window MenuOwnerWindow => ((App)Application.Current)._menuOwnerWindow;
 
     /// <summary>
     /// Initializes the singleton application object.  This is the first line of authored code
@@ -91,14 +77,14 @@ public partial class App : Application
         this.InitMainMenu();
 
         // create a single instance of a transparent window (with pointer-click passthrough and _no_ ability to receive keyboard focus)
-        _transparentWindow = new();
-        _transparentWindow.DisableAcceptsFocus();
-        _transparentWindow.EnablePointerEventsPassthrough();
+        _menuOwnerWindow = new();
+        _menuOwnerWindow.DisableAcceptsFocus();
+        _menuOwnerWindow.EnablePointerEventsPassthrough();
         //
         // remove window chrome (minimize/maximize/close buttons); set the window to be 'always on top'; turn off the border and titlebar
-        (_transparentWindow.AppWindow.Presenter as Microsoft.UI.Windowing.OverlappedPresenter)?.IsAlwaysOnTop = true;
-        _transparentWindow.AppWindow.MoveAndResize(new Windows.Graphics.RectInt32(-10000, -10000, 0, 0)); // move off the main screen (unnecessary, but good for VS debugging so we don't get GUI debug overlays), make it zero pixels in size (also unnecessary, but a safeguard)
-        _transparentWindow.AppWindow.Show();
+        (_menuOwnerWindow.AppWindow.Presenter as Microsoft.UI.Windowing.OverlappedPresenter)?.IsAlwaysOnTop = true;
+        _menuOwnerWindow.AppWindow.MoveAndResize(new Windows.Graphics.RectInt32(-10000, -10000, 0, 0)); // move off the main screen (unnecessary, but good for VS debugging so we don't get GUI debug overlays), make it zero pixels in size (also unnecessary, but a safeguard)
+        _menuOwnerWindow.AppWindow.Show();
 
         _morphicBarWindow = new();
 _morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size of the legacy Morphic 1.0 MorphicBar
@@ -178,7 +164,7 @@ _morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size o
 
     internal void Shutdown()
     {
-        _transparentWindow.Close();
+        _menuOwnerWindow.Close();
         _morphicBarWindow.Close();
 
         this.Exit();
@@ -227,8 +213,7 @@ _morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size o
                         System.Drawing.Point popupPosition;
 
                         // choose an owner window; this will be the visible window which is used for rasterization scaling (and is required to be visible to show the menu)
-                        Window ownerWindow;
-                        ownerWindow = _transparentWindow;
+                        Window ownerWindow = _menuOwnerWindow;
                         var rasterizationScale = ownerWindow.Content.XamlRoot.RasterizationScale;
 
                         var getPopupPositionResult = App.GetTaskbarAdjacentPopupPosition(rasterizationScale);

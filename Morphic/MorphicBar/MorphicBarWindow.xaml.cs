@@ -260,6 +260,9 @@ public sealed partial class MorphicBarWindow : Morphic.MorphicBar.TransparentWin
             {
                 _orientation = value;
 
+                // reposition elements to match the new MorphicBar orientation
+                this.UpdateMorphicMenuButtonLayout(value);
+
                 if (_lastRasterizationScale is not null)
                 {
                     this.UpdateAppWindowSizeUsingRasterizationScale(_lastRasterizationScale!.Value);
@@ -294,7 +297,115 @@ public sealed partial class MorphicBarWindow : Morphic.MorphicBar.TransparentWin
     {
         this.AppWindow.Hide();
     }
+	
+	/* Morphic logo menu handling */
 
+    // handle both click (left-click) and right tapping (right-click) of the Morphic logo button
+    private void MorphicMenuButton_Click(object sender, RoutedEventArgs e)
+    {
+        this.ShowMorphicMenu();
+    }
+
+    private void MorphicMenuButton_RightTapped(object sender, Microsoft.UI.Xaml.Input.RightTappedRoutedEventArgs e)
+    {
+        e.Handled = true;
+        this.ShowMorphicMenu();
+    }
+
+    private void ShowMorphicMenu()
+    {
+        var hwnd = new Windows.Win32.Foundation.HWND(WinRT.Interop.WindowNative.GetWindowHandle(this));
+        var buttonPosition = this.MorphicMenuButton.TransformToVisual(this.Content).TransformPoint(new Windows.Foundation.Point(0, 0));
+        var rasterizationScale = this.Content.XamlRoot.RasterizationScale;
+        var isRtl = this.MorphicMenuButton.FlowDirection == FlowDirection.RightToLeft;
+
+        // determine which half of the monitor the bar is on, so we can open the menu _away_ from the bar
+        var windowPos = this.AppWindow.Position;
+        var windowSize = this.AppWindow.Size;
+        var windowCenterX = windowPos.X + (windowSize.Width / 2);
+        var windowCenterY = windowPos.Y + (windowSize.Height / 2);
+        //
+        var hMonitor = Windows.Win32.PInvoke.MonitorFromWindow(hwnd, Windows.Win32.Graphics.Gdi.MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
+        var monitorInfo = new Windows.Win32.Graphics.Gdi.MONITORINFO { cbSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf<Windows.Win32.Graphics.Gdi.MONITORINFO>() };
+        Windows.Win32.PInvoke.GetMonitorInfo(hMonitor, ref monitorInfo);
+        var monitorCenterX = monitorInfo.rcWork.left + (monitorInfo.rcWork.Width / 2);
+        var monitorCenterY = monitorInfo.rcWork.top + (monitorInfo.rcWork.Height / 2);
+
+        // anchor the menu to the corner of the button that opens the menu away from the bar
+        double anchorX;
+        double anchorY;
+        switch (this._orientation)
+        {
+            case Orientation.Horizontal:
+                {
+                    // open above if bar is in the bottom half, below if in the top half
+                    bool openAbove = windowCenterY > monitorCenterY;
+                    anchorX = isRtl
+                        ? buttonPosition.X + this.MorphicMenuButton.ActualWidth
+                        : buttonPosition.X;
+                    anchorY = openAbove
+                        ? buttonPosition.Y
+                        : buttonPosition.Y + this.MorphicMenuButton.ActualHeight;
+                }
+                break;
+            case Orientation.Vertical:
+                {
+                    // open to the left if bar is on the right half, to the right if on the left half
+                    bool openLeft = windowCenterX > monitorCenterX;
+                    anchorX = openLeft
+                        ? buttonPosition.X
+                        : buttonPosition.X + this.MorphicMenuButton.ActualWidth;
+                    anchorY = buttonPosition.Y;
+                }
+                break;
+            default:
+                anchorX = buttonPosition.X;
+                anchorY = buttonPosition.Y;
+                break;
+        }
+
+        // convert from DIPs to physical pixels, then to screen coordinates
+        var clientPoint = new System.Drawing.Point(
+            (int)(anchorX * rasterizationScale),
+            (int)(anchorY * rasterizationScale));
+        _ = Windows.Win32.PInvoke.ClientToScreen(hwnd, ref clientPoint);
+
+        // NOTE: always show the menu via the transparent window to avoid XamlRoot conflicts
+        // (a MenuFlyout can only be associated with one XamlRoot at a time)
+        App.MainMenu.Show(App.MenuOwnerWindow, this.Visible, clientPoint.X, clientPoint.Y);
+    }
+
+    /* layout methods */
+
+    // NOTE: this was attempted using pure XAML and an 'orientation' trigger, but ultimately this layout worked better when set manually from code
+    private void UpdateMorphicMenuButtonLayout(Orientation orientation)
+    {
+        switch (orientation)
+        {
+            case Orientation.Horizontal:
+                // Morphic logo (menu) button in column 1, to the left of the close button (right if rtl)
+                Grid.SetColumn(this.MorphicMenuButton, 1);
+                Grid.SetColumnSpan(this.MorphicMenuButton, 1);
+                Grid.SetRow(this.MorphicMenuButton, 0);
+                this.LogoColumn.Width = GridLength.Auto;
+                this.LogoRow.Height = new GridLength(0);
+                this.MorphicMenuButton.HorizontalAlignment = HorizontalAlignment.Center;
+                this.MorphicMenuButton.VerticalAlignment = VerticalAlignment.Center;
+                this.MorphicMenuButton.Margin = new Thickness(0, 0, 5, 0);
+                break;
+            case Orientation.Vertical:
+                // Morphic logo (menu) button in row 1 at the bottom, spanning all columns
+                Grid.SetColumn(this.MorphicMenuButton, 0);
+                Grid.SetColumnSpan(this.MorphicMenuButton, 3);
+                Grid.SetRow(this.MorphicMenuButton, 1);
+                this.LogoColumn.Width = new GridLength(0);
+                this.LogoRow.Height = GridLength.Auto;
+                this.MorphicMenuButton.HorizontalAlignment = HorizontalAlignment.Center;
+                this.MorphicMenuButton.VerticalAlignment = VerticalAlignment.Center;
+                this.MorphicMenuButton.Margin = new Thickness(0, 0, 0, 10);
+                break;
+        }
+    }
 
     /* helper methods */
 
@@ -429,7 +540,7 @@ public sealed partial class MorphicBarWindow : Morphic.MorphicBar.TransparentWin
                 {
                     this.Rotate90DegreesAroundPoint(currentPointerPosition);
                 }
-                _orientation = _layoutPreviewWindowOrientation!.Value;
+                this.Orientation = _layoutPreviewWindowOrientation!.Value;
             }
             if (_layoutPreviewDockingLocation is not null)
             {

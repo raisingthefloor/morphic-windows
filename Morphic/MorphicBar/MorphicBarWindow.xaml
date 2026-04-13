@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:tw="using:Morphic.MorphicBar.TransparentWindow"
     xmlns:local="using:Morphic.MorphicBar"
+    xmlns:controls="using:Morphic.MorphicBar.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
@@ -15,11 +16,36 @@
                 BorderBrush="Black"
                 BorderThickness="1"
                 CornerRadius="5">
-            <Grid>
-                <!-- content goes here -->
+            <Grid x:Name="LayoutGrid">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition x:Name="LogoColumn" Width="Auto"/>
+                    <ColumnDefinition x:Name="CloseButtonColumn" Width="25"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition x:Name="LogoRow" Height="0"/>
+                </Grid.RowDefinitions>
+
+                <!-- content goes here (column 0, spanning all rows in horizontal orientation) -->
+
+                <!-- Morphic menu logo button (column 1 when horizontal; row 1 when vertical) -->
+                <Button x:Name="MorphicMenuButton"
+                        Grid.Column="1" Grid.Row="0"
+                        Background="Transparent" BorderThickness="0"
+                        Padding="0" MinWidth="0" MinHeight="0"
+                        HorizontalAlignment="Center" VerticalAlignment="Center"
+                        Margin="0,0,5,0"
+                        Click="MorphicMenuButton_Click"
+                        RightTapped="MorphicMenuButton_RightTapped"
+                        AutomationProperties.Name="Morphic Menu">
+                    <controls:MorphicMenuLogoViewbox Width="35" Height="46"/>
+                </Button>
 
                 <!-- Close button (top-right corner by default (LTR flow direction); top-left corner when RTL flow direction) -->
+		<!-- NOTE: the grid column/row changes when the orientation changes; default orientation is horizontal -->
                 <Button x:Name="CloseButton"
+                        Grid.Column="2" Grid.Row="0"
                         Width="25" Height="20"
                         HorizontalAlignment="Right" VerticalAlignment="Top"
                         Click="CloseButton_Click"
