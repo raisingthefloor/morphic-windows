@@ -289,7 +289,11 @@ public sealed partial class MorphicBarWindow : Morphic.MorphicBar.TransparentWin
     }
 
     /* callbacks */
-    // [none]
+
+    private void CloseButton_Click(object sender, RoutedEventArgs e)
+    {
+        this.AppWindow.Hide();
+    }
 
 
     /* helper methods */

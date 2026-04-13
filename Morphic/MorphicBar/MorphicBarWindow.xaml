@@ -11,8 +11,64 @@
     Title="MorphicBar">
 
     <Grid>
-        <Border Background="Black" CornerRadius="5">
-            <!-- content goes here -->
+        <Border Background="{ThemeResource ThemeAwareBackground}"
+                BorderBrush="Black"
+                BorderThickness="1"
+                CornerRadius="5">
+            <Grid>
+                <!-- content goes here -->
+
+                <!-- Close button (top-right corner by default (LTR flow direction); top-left corner when RTL flow direction) -->
+                <Button x:Name="CloseButton"
+                        Width="25" Height="20"
+                        HorizontalAlignment="Right" VerticalAlignment="Top"
+                        Click="CloseButton_Click"
+                        AutomationProperties.Name="Close">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="CloseButtonBorder"
+                                    Background="{ThemeResource ThemeAwareBackground}"
+                                    CornerRadius="0,5,0,0">
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup x:Name="CommonStates">
+                                        <VisualState x:Name="Normal"/>
+                                        <VisualState x:Name="PointerOver">
+                                            <VisualState.Setters>
+                                                <Setter Target="CloseButtonBorder.Background" Value="#E4142C"/>
+                                                <Setter Target="CloseButtonPath.Stroke" Value="White"/>
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="Pressed">
+                                            <VisualState.Setters>
+                                                <Setter Target="CloseButtonBorder.Background" Value="#F1707A"/>
+                                                <Setter Target="CloseButtonPath.Stroke" Value="White"/>
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                    <VisualStateGroup x:Name="DirectionStates">
+                                        <!-- default is LTR flow direction; when in RTL flow direction, round the top-left corner instead -->
+                                        <VisualState x:Name="LeftToRight"/>
+                                        <VisualState x:Name="RightToLeft">
+                                            <VisualState.StateTriggers>
+                                                <local:FlowDirectionTrigger
+                                                    Target="{Binding RelativeSource={RelativeSource TemplatedParent}}"
+                                                    Direction="RightToLeft"/>
+                                            </VisualState.StateTriggers>
+                                            <VisualState.Setters>
+                                                <Setter Target="CloseButtonBorder.CornerRadius" Value="5,0,0,0"/>
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+                                <Path x:Name="CloseButtonPath"
+                                      Data="M0,0 L10,11 M0,11 L10,0"
+                                      Stroke="Gray" StrokeThickness="1"
+                                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </Grid>
         </Border>
     </Grid>
 </tw:TransparentBaseWindow>
