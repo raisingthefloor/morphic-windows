@@ -11,6 +11,18 @@
                 <!-- Other merged dictionaries here -->
             </ResourceDictionary.MergedDictionaries>
 	    
+            <!-- Morphic brand palette for MorphicBar item controls.
+                 These are NOT placed inside ThemeDictionaries because they
+                 should not follow the system Light/Dark setting. -->
+            <SolidColorBrush x:Key="MorphicBarControlBackground"              Color="#008145"/>
+            <SolidColorBrush x:Key="MorphicBarControlHoverBackground"         Color="#269562"/>
+            <SolidColorBrush x:Key="MorphicBarControlPressedBackground"       Color="#4DA880"/>
+            <SolidColorBrush x:Key="MorphicBarControlCheckedBackground"       Color="White"/>
+            <SolidColorBrush x:Key="MorphicBarControlCheckedHoverBackground"  Color="#E8E8E8"/>
+            <SolidColorBrush x:Key="MorphicBarControlCheckedPressedBackground" Color="#D0D0D0"/>
+            <SolidColorBrush x:Key="MorphicBarControlCheckedForeground"       Color="#008145"/>
+            <SolidColorBrush x:Key="MorphicBarControlForeground"              Color="White"/>
+
             <!-- Other app resources here -->
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Light">
