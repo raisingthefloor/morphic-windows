@@ -60,6 +60,12 @@
     <Page Update="MorphicBar\Controls\MorphicMenuLogoViewbox.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Update="MorphicBar\BarControls\BarButtonControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="MorphicBar\BarControls\BarMultiButtonControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
 
   <!-- Publish Properties -->

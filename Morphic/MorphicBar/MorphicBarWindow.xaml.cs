@@ -29,6 +29,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using Morphic.Core;
+using Morphic.MorphicBar.BarControls;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -105,6 +106,13 @@ public sealed partial class MorphicBarWindow : Morphic.MorphicBar.TransparentWin
 
         this.Activated += MorphicBarWindow_Activated;
         (this.Content as Grid)!.Loaded += RootGrid_Loaded;
+
+        this.InitializeBarItems();
+    }
+
+    // Populate the buttons on the MorphicBar
+    private void InitializeBarItems()
+    {
     }
 
     private void MorphicBarWindow_Activated(object sender, WindowActivatedEventArgs args)
@@ -262,6 +270,7 @@ public sealed partial class MorphicBarWindow : Morphic.MorphicBar.TransparentWin
 
                 // reposition elements to match the new MorphicBar orientation
                 this.UpdateMorphicMenuButtonLayout(value);
+                this.UpdateBarItemsPanelLayout(value);
 
                 if (_lastRasterizationScale is not null)
                 {
@@ -376,6 +385,43 @@ public sealed partial class MorphicBarWindow : Morphic.MorphicBar.TransparentWin
     }
 
     /* layout methods */
+
+    // Flows the bar items vertically or horizontally to follow the bar's orientation, and propagates
+    // the orientation down to each IBarItemControl child so the items can adapt their own layout.
+    private void UpdateBarItemsPanelLayout(Orientation orientation)
+    {
+        switch (orientation)
+        {
+            case Orientation.Horizontal:
+                this.BarItemsPanel.Orientation = Orientation.Horizontal;
+                // column 0 only (leave column 1 for the logo button, column 2 for the close button)
+                Grid.SetColumn(this.BarItemsPanel, 0);
+                Grid.SetColumnSpan(this.BarItemsPanel, 1);
+                Grid.SetRow(this.BarItemsPanel, 0);
+                Grid.SetRowSpan(this.BarItemsPanel, 1);
+                this.BarItemsPanel.Margin = new Thickness(10, 5, 5, 5);
+                break;
+            case Orientation.Vertical:
+                this.BarItemsPanel.Orientation = Orientation.Vertical;
+                // span all three columns on row 0; logo button sits below in row 1
+                Grid.SetColumn(this.BarItemsPanel, 0);
+                Grid.SetColumnSpan(this.BarItemsPanel, 3);
+                Grid.SetRow(this.BarItemsPanel, 0);
+                Grid.SetRowSpan(this.BarItemsPanel, 1);
+                this.BarItemsPanel.Margin = new Thickness(5, 25, 5, 5);
+                break;
+            default:
+                throw new Morphic.Core.MorphicUnhandledCaseException(orientation);
+        }
+
+        foreach (var child in this.BarItemsPanel.Children)
+        {
+            if (child is IBarItemControl barItem)
+            {
+                barItem.Orientation = orientation;
+            }
+        }
+    }
 
     // NOTE: this was attempted using pure XAML and an 'orientation' trigger, but ultimately this layout worked better when set manually from code
     private void UpdateMorphicMenuButtonLayout(Orientation orientation)

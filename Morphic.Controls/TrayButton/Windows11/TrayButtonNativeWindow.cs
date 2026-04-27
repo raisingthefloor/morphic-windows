@@ -983,7 +983,11 @@ internal class TrayButtonNativeWindow : IDisposable
         if (setWindowPosSuccess == false)
         {
             var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
-            Debug.Assert(false, "Could not bring task button topmost; win32 error: " + win32ErrorCode.ToString());
+			// NOTE: to ignore debug-time assertions when the task bar handle has already been disposed, we ignore ERROR_INVALID_WINDOW_HANDLE here
+            if ((Windows.Win32.Foundation.WIN32_ERROR)win32ErrorCode != Windows.Win32.Foundation.WIN32_ERROR.ERROR_INVALID_WINDOW_HANDLE)
+            {
+                Debug.Assert(false, "Could not bring task button topmost; win32 error: " + win32ErrorCode.ToString());
+            }
         }
     }
 

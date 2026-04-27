@@ -27,7 +27,15 @@
                     <RowDefinition x:Name="LogoRow" Height="0"/>
                 </Grid.RowDefinitions>
 
-                <!-- content goes here (column 0, spanning all rows in horizontal orientation) -->
+                <!-- Bar items container (column 0, spanning all rows in horizontal orientation) -->
+                <!-- Weightless host: not focusable, no background, children (bar item controls) handle their own pointer/keyboard events -->
+                <StackPanel x:Name="BarItemsPanel"
+                            Grid.Column="0" Grid.Row="0"
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                            Margin="10,5,5,5"
+                            Spacing="10"
+                            IsTabStop="False"/>
 
                 <!-- Morphic menu logo button (column 1 when horizontal; row 1 when vertical) -->
                 <Button x:Name="MorphicMenuButton"

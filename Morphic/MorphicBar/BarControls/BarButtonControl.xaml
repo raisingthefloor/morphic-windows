@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="Morphic.MorphicBar.BarControls.BarButtonControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:primitives="using:Microsoft.UI.Xaml.Controls.Primitives"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    IsTabStop="False">
+
+    <UserControl.Resources>
+        <!-- Control palette brushes live in App.xaml (MorphicBarControl*) -->
+
+        <!-- Non-toggle button style -->
+        <Style x:Key="BarButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Foreground" Value="{StaticResource MorphicBarControlForeground}"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="UseSystemFocusVisuals" Value="True"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+            <Setter Property="MinHeight" Value="27"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="BgBorder"
+                                Background="{StaticResource MorphicBarControlBackground}"
+                                CornerRadius="{TemplateBinding CornerRadius}">
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal"/>
+                                    <VisualState x:Name="PointerOver">
+                                        <VisualState.Setters>
+                                            <Setter Target="BgBorder.Background" Value="{StaticResource MorphicBarControlHoverBackground}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="Pressed">
+                                        <VisualState.Setters>
+                                            <Setter Target="BgBorder.Background" Value="{StaticResource MorphicBarControlPressedBackground}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="Disabled"/>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+
+                            <TextBlock x:Name="ButtonText"
+                                Text="{TemplateBinding Content}"
+                                Foreground="{TemplateBinding Foreground}"
+                                FontFamily="Segoe UI"
+                                FontWeight="Bold"
+                                FontSize="14"
+                                IsColorFontEnabled="False"
+                                HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                                TextAlignment="Center"
+                                TextWrapping="Wrap"
+                                MaxLines="2"
+                                Padding="10,3,10,3"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Toggle style. Uses a single VisualStateGroup with COMPOUND state names to avoid the
+             cross-group BgBorder.Background clash that would otherwise leave the toggle in a wrong
+             visual state after a click/unclick cycle. See WireToggleButtonCompoundStates in the
+             code-behind for the accompanying state-tracking helper. -->
+        <Style x:Key="BarToggleButtonStyle" TargetType="primitives:ToggleButton">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Foreground" Value="{StaticResource MorphicBarControlForeground}"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="UseSystemFocusVisuals" Value="True"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+            <Setter Property="MinHeight" Value="27"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="primitives:ToggleButton">
+                        <!-- BorderThickness is fixed at 2 (with BorderBrush matching the default green
+                             background) so the button's natural size does not change when toggled on;
+                             the VSM only swaps the fill color. See the matching template in
+                             BarMultiButtonControl.xaml for the full rationale. -->
+                        <Border x:Name="BgBorder"
+                                Background="{StaticResource MorphicBarControlBackground}"
+                                BorderBrush="{StaticResource MorphicBarControlBackground}"
+                                BorderThickness="2"
+                                CornerRadius="{TemplateBinding CornerRadius}">
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal"/>
+                                    <VisualState x:Name="PointerOver">
+                                        <VisualState.Setters>
+                                            <Setter Target="BgBorder.Background" Value="{StaticResource MorphicBarControlHoverBackground}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="Pressed">
+                                        <VisualState.Setters>
+                                            <Setter Target="BgBorder.Background" Value="{StaticResource MorphicBarControlPressedBackground}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="Checked">
+                                        <VisualState.Setters>
+                                            <Setter Target="BgBorder.Background" Value="{StaticResource MorphicBarControlCheckedBackground}"/>
+                                            <Setter Target="ButtonText.Foreground" Value="{StaticResource MorphicBarControlCheckedForeground}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="CheckedPointerOver">
+                                        <VisualState.Setters>
+                                            <Setter Target="BgBorder.Background" Value="{StaticResource MorphicBarControlCheckedHoverBackground}"/>
+                                            <Setter Target="ButtonText.Foreground" Value="{StaticResource MorphicBarControlCheckedForeground}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="CheckedPressed">
+                                        <VisualState.Setters>
+                                            <Setter Target="BgBorder.Background" Value="{StaticResource MorphicBarControlCheckedPressedBackground}"/>
+                                            <Setter Target="ButtonText.Foreground" Value="{StaticResource MorphicBarControlCheckedForeground}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="Indeterminate"/>
+                                    <VisualState x:Name="Disabled"/>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+
+                            <TextBlock x:Name="ButtonText"
+                                Text="{TemplateBinding Content}"
+                                Foreground="{TemplateBinding Foreground}"
+                                FontFamily="Segoe UI"
+                                FontWeight="Bold"
+                                FontSize="14"
+                                IsColorFontEnabled="False"
+                                HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                                TextAlignment="Center"
+                                TextWrapping="Wrap"
+                                MaxLines="2"
+                                Padding="10,3,10,3"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel Orientation="Vertical">
+        <TextBlock x:Name="HeaderTextBlock"
+                   Foreground="{StaticResource MorphicBarControlForeground}"
+                   HorizontalAlignment="Center"
+                   TextAlignment="Center"
+                   TextWrapping="Wrap"
+                   FontFamily="Segoe UI"
+                   FontWeight="Bold"
+                   FontSize="14"
+                   MaxLines="2"
+                   Margin="0,3,0,3"
+                   Visibility="Collapsed"/>
+        <Grid x:Name="RootContainer"/>
+    </StackPanel>
+</UserControl>

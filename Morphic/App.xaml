@@ -11,7 +11,7 @@
                 <!-- Other merged dictionaries here -->
             </ResourceDictionary.MergedDictionaries>
 	    
-            <!-- Morphic brand palette for MorphicBar item controls.
+            <!-- Color palette for MorphicBar item controls.
                  These are NOT placed inside ThemeDictionaries because they
                  should not follow the system Light/Dark setting. -->
             <SolidColorBrush x:Key="MorphicBarControlBackground"              Color="#008145"/>
