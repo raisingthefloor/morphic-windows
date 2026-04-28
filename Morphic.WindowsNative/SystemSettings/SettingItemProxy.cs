@@ -60,6 +60,17 @@ internal class SettingItemProxy
 
     //
 
+    // variables for handling events
+    private bool _settingsChangedEventHandlerIsSubscribed = false;
+    //
+    private EventHandler? _isApplicableChanged = null;
+    private EventHandler? _isEnabledChanged = null;
+    private EventHandler? _valueChanged = null;
+    //
+    private object _eventsLock = new object();
+
+    //
+
     #region Get SettingType
 
     public interface IGetSettingTypeError
@@ -123,6 +134,106 @@ internal class SettingItemProxy
     }
 
     #endregion Get SettingType
+
+    //
+
+    #region Get Value
+
+    public interface IGetValueError
+    {
+        public record ExceptionError(Exception Ex) : IGetValueError;
+        public record Timeout : IGetValueError;
+        public record TypeMismatch : IGetValueError;
+    }
+    //
+    public async Task<MorphicResult<T?, IGetValueError>> GetValueAsync<T>(TimeSpan? timeout = null) where T : struct
+    {
+        var result = await this.GetValueAsync<T>("Value", timeout);
+        return result;
+    }
+    //
+    public async Task<MorphicResult<T?, IGetValueError>> GetValueAsync<T>(string name, TimeSpan? timeout = null) where T : struct
+    {
+        if (timeout is null)
+        {
+            timeout = TimeSpan.Zero;
+        }
+        if (timeout!.Value.TotalMilliseconds > int.MaxValue)
+        {
+            throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout may not exceed Int32.MaxValue milliseconds.");
+        }
+        var timeoutInMilliseconds = (int)timeout!.Value.TotalMilliseconds;
+
+        Stopwatch timeoutStopwatch = Stopwatch.StartNew();
+
+        object? valueAsObject;
+
+        // NOTE: we check the value in an infinite loop in case the IsApplicable/IsEnabled settings are in flux; this allows us to handle edge case scenarios (which may never
+        //       happen) where the setting is available and enabled, then we get the value, but then the setting is not available/enabled--so we're not totally confident in the
+        //       value itself (i.e. we could be getting a null/false/default value instead); this is not a foolproof scenario, but it's our best attempt
+        while (true)
+        {
+            // step 1: make sure that the setting is both applicable and enabled
+            // NOTE: in our analysis of ISettingItem, IsApplicable was usually set to true whenever IsEnabled was--but with some settings (like the apps/system dark theme settings),
+            //       IsApplicable was always false; if we feel like we need to be extra-cautious (i.e. we think that IsApplicable is a critical thing to check), we can pass an extra
+            //       argument into "WaitForIsEnabledEventAsync" to also watch for IsApplicable to be true
+            var remainingTimeout = (int)Math.Max(timeoutInMilliseconds - timeoutStopwatch.ElapsedMilliseconds, 0);
+            var waitResult = await this.WaitForIsEnabledEventAsync(remainingTimeout);
+            if (waitResult.IsError == true)
+            {
+                switch (waitResult.Error!)
+                {
+                    case IMorphicTimeoutError.Timeout:
+                        return MorphicResult.ErrorResult<IGetValueError>(new IGetValueError.Timeout());
+                    default:
+                        throw new MorphicUnhandledErrorException();
+                }
+            }
+
+            // STEP 2: once the value state is (hopefully) valid, capture the value of the setting
+            // NOTE: theoretically, IsEnabled could be set to false at any moment so we are not 100% guaranteed to get the correct value; the caller should ideally use an event
+            //       handler strategy to also capture updates to the value (since the "Value" SettingsChanged handler seems to be executed every time IsApplicable/IsEnabled or Value
+            //       is updated...and they seem to be updated together, in that order)
+            // NOTE: we're unsure if ISettingItem.GetValue(string) can throw an exception; we're catching exceptions anyway, out of an abundance of caution
+            try
+            {
+                valueAsObject = _settingItem.GetValue(name);
+                if (valueAsObject == null)
+                {
+                    return MorphicResult.OkResult<T?>(null);
+                }
+            }
+            catch (Exception ex)
+            {
+                return MorphicResult.ErrorResult<IGetValueError>(new IGetValueError.ExceptionError(ex));
+            }
+
+            // STEP 3: make sure that the setting is still applicable/enabled (see notes on STEP 1), as a sanity check that our value is still good; note that this is not a failproof strategy
+            bool isApplicable = _settingItem.IsApplicable;
+            bool isEnabled = _settingItem.IsEnabled;
+            if (isApplicable == true && isEnabled == true)
+            {
+                break;
+            }
+            else
+            {
+                // continue to the next iteration of the loop; try, try again
+            }
+        }
+
+        // STEP 4: if the value is deemed as almost-certainly valid, go ahead and attempt to cast it to type T now
+        var valueAsT = valueAsObject as T?;
+        if (valueAsT is null)
+        {
+            // the type provided by the caller is not cast-compatible with the type returned by WinRT
+            return MorphicResult.ErrorResult<IGetValueError>(new IGetValueError.TypeMismatch());
+        }
+
+        // STEP 5: return the value to the caller
+        return MorphicResult.OkResult<T?>(valueAsT!.Value);
+    }
+
+    #endregion Get Value
 
     //
 
@@ -232,7 +343,146 @@ internal class SettingItemProxy
         return MorphicResult.OkResult();
     }
 
+    #endregion Set Value
+
+    #region Event handlers
+
+    public event EventHandler IsEnabledChanged
+    {
+        add
+        {
+            lock (_eventsLock)
+            {
+                if (_settingsChangedEventHandlerIsSubscribed == false)
+                {
+                    _settingItem.SettingChanged += _settingItem_SettingChanged;
+                    _settingsChangedEventHandlerIsSubscribed = true;
+                }
+                _isEnabledChanged += value;
+            }
+        }
+        remove
+        {
+            lock (_eventsLock)
+            {
+                _isEnabledChanged -= value;
+            }
+
+            this.UnsubscribeSettingChangedEventHandlerIfEventsAreEmpty();
+        }
+    }
     //
+    public event EventHandler ValueChanged
+    {
+        add
+        {
+            lock (_eventsLock)
+            {
+                if (_settingsChangedEventHandlerIsSubscribed == false)
+                {
+                    _settingItem.SettingChanged += _settingItem_SettingChanged;
+                    _settingsChangedEventHandlerIsSubscribed = true;
+                }
+                _valueChanged += value;
+            }
+        }
+        remove
+        {
+            lock (_eventsLock)
+            {
+                _valueChanged -= value;
+            }
+
+            this.UnsubscribeSettingChangedEventHandlerIfEventsAreEmpty();
+        }
+    }
+
+    private void UnsubscribeSettingChangedEventHandlerIfEventsAreEmpty()
+    {
+        lock (_eventsLock)
+        {
+            var isApplicableChangedIsEmpty = (_isApplicableChanged is null || _isApplicableChanged!.GetInvocationList().Length == 0);
+            var isEnabledChangedIsEmpty = (_isEnabledChanged is null || _isEnabledChanged!.GetInvocationList().Length == 0);
+            var valueChangedIsEmpty = (_valueChanged is null || _valueChanged!.GetInvocationList().Length == 0);
+
+            if (isApplicableChangedIsEmpty == true && isEnabledChangedIsEmpty == true && valueChangedIsEmpty == true)
+            {
+                _settingItem.SettingChanged -= _settingItem_SettingChanged;
+                _settingsChangedEventHandlerIsSubscribed = false;
+            }
+        }
+    }
+
+    private void _settingItem_SettingChanged(object sender, string args)
+    {
+        // NOTE: we raise each event subscription individually in case any of them throw exceptions; we do so asynchronously, so users should queue their events when raised
+        //        or dispatch to the main thread
+        switch (args)
+        {
+            case "IsApplicable":
+                {
+                    var invocationList = _isApplicableChanged?.GetInvocationList();
+                    if (invocationList is not null)
+                    {
+                        foreach (EventHandler element in invocationList!)
+                        {
+                            _ = Task.Run(() =>
+                            {
+                                element.Invoke(sender, EventArgs.Empty);
+                            });
+                        }
+                    }
+                    //_ = Task.Run(() => {
+                    //    _isApplicableChanged?.Invoke(sender, EventArgs.Empty);
+                    //});
+                }
+                break;
+            case "IsEnabled":
+                {
+                    var invocationList = _isEnabledChanged?.GetInvocationList();
+                    if (invocationList is not null)
+                    {
+                        foreach (EventHandler element in invocationList!)
+                        {
+                            _ = Task.Run(() =>
+                            {
+                                element.Invoke(sender, EventArgs.Empty);
+                            });
+                        }
+                    }
+                    //_ = Task.Run(() => {
+                    //    _isApplicableChanged?.Invoke(sender, EventArgs.Empty);
+                    //});
+                }
+                break;
+            case "Value":
+                {
+                    var invocationList = _valueChanged?.GetInvocationList();
+                    if (invocationList is not null)
+                    {
+                        foreach (EventHandler element in invocationList!)
+                        {
+                            _ = Task.Run(() =>
+                            {
+                                element.Invoke(sender, EventArgs.Empty);
+                            });
+                        }
+                    }
+                    //_ = Task.Run(() => {
+                    //    _isApplicableChanged?.Invoke(sender, EventArgs.Empty);
+                    //});
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    #endregion Event handlers
+
+    //
+
+    #region Get/Set helper functions
 
     private async Task<MorphicResult<MorphicUnit, IMorphicTimeoutError>> WaitForIsEnabledEventAsync(int timeoutInMilliseconds, bool alsoWaitForApplicable = false)
     {
@@ -346,11 +596,57 @@ internal class SettingItemProxy
         }
     }
 
-    #endregion Set Value
+    #endregion Get/Set helper functions
 
     //
 
     #region Static helpers
+
+    public interface IGetSettingItemValueError
+    {
+        public record ExceptionError(Exception Ex) : IGetSettingItemValueError;
+        public record SettingItemIsNull : IGetSettingItemValueError;
+        public record Timeout : IGetSettingItemValueError;
+        public record TypeMismatch : IGetSettingItemValueError;
+    }
+    //
+    public async static Task<MorphicResult<T?, IGetSettingItemValueError>> GetSettingItemValueAsync<T>(SettingItemProxy? settingItem, TimeSpan? timeout = null) where T : struct
+    {
+        return await SettingItemProxy.GetSettingItemValueAsync<T>(settingItem, "Value", timeout);
+    }
+    //
+    public async static Task<MorphicResult<T?, IGetSettingItemValueError>> GetSettingItemValueAsync<T>(SettingItemProxy? settingItem, string name, TimeSpan? timeout = null) where T : struct
+    {
+        // NOTE: for convenience, we let the caller pass in a nullable SettingItem
+        if (settingItem is null)
+        {
+            return MorphicResult.ErrorResult<IGetSettingItemValueError>(new IGetSettingItemValueError.SettingItemIsNull());
+        }
+
+        MorphicResult<T?, Morphic.WindowsNative.SystemSettings.SettingItemProxy.IGetValueError> getSettingResult;
+        getSettingResult = await settingItem.GetValueAsync<T>(name, timeout);
+        if (getSettingResult.IsError == true)
+        {
+            switch (getSettingResult.Error!)
+            {
+                case IGetValueError.ExceptionError(var ex):
+                    {
+                        return MorphicResult.ErrorResult<IGetSettingItemValueError>(new IGetSettingItemValueError.ExceptionError(ex));
+                    }
+                case IGetValueError.Timeout:
+                    return MorphicResult.ErrorResult<IGetSettingItemValueError>(new IGetSettingItemValueError.Timeout());
+                case IGetValueError.TypeMismatch:
+                    return MorphicResult.ErrorResult<IGetSettingItemValueError>(new IGetSettingItemValueError.TypeMismatch());
+                default:
+                    throw new MorphicUnhandledErrorException();
+            }
+        }
+        var result = getSettingResult.Value;
+
+        return MorphicResult.OkResult(result);
+    }
+
+    //
 
     public interface ISetSettingItemValueError
     {
