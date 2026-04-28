@@ -147,5 +147,103 @@ public class OsVersion
         return false;
     }
 
+    // NOTE: this function will return null if the build version is not known for the specified WindowsVersion
+    private static uint? GetBuildVersionForOsVersion(WindowsVersion version)
+    {
+        switch (version)
+        {
+            case WindowsVersion.Win10_v22H2:
+                return WIN10_22H2_BUILD;
+            case WindowsVersion.Win10_vFuture:
+                return null;
+            case WindowsVersion.Win11_v22H2:
+                return WIN11_22H2_BUILD;
+            case WindowsVersion.Win11_v23H2:
+                return WIN11_23H2_BUILD;
+            case WindowsVersion.Win11_v24H2:
+                return WIN11_24H2_BUILD;
+            case WindowsVersion.Win11_v25H2:
+                return WIN11_25H2_BUILD;
+            case WindowsVersion.Win11_vFuture:
+                return null;
+            default:
+                Debug.Assert(false, "Unknown Windows version; please add the corresponding case to correct this error");
+                return null;
+        }
+    }
+
+    //
+
+    public static MorphicResult<bool, MorphicUnit> IsEqualOrNewerThanVersion(WindowsVersion version, int? revision = null)
+    {
+        var versionBuild = OsVersion.GetBuildVersionForOsVersion(version);
+        if (versionBuild is null)
+        {
+            return MorphicResult.ErrorResult();
+        }
+        var currentVersionBuild = System.Environment.OSVersion.Version.Build;
+
+        // for both windows 10 and windows 11, we can do straightforward build number matching
+        if (currentVersionBuild >= versionBuild)
+        {
+            if (currentVersionBuild == versionBuild && revision is not null)
+            {
+                var getUpdateBuildRevisionResult = OsVersion.GetUpdateBuildRevision();
+                if (getUpdateBuildRevisionResult.IsError == true)
+                {
+                    Debug.Assert(false, "Could not retrieve current OS revision");
+                    return MorphicResult.ErrorResult();
+                }
+                var currentVersionRevision = getUpdateBuildRevisionResult.Value!;
+
+                return MorphicResult.OkResult(currentVersionRevision >= revision!.Value);
+            }
+            else
+            {
+                // no revision specified; current build is >= build of `version`
+                return MorphicResult.OkResult(true);
+            }
+        }
+        else /* if (currentVersionBuild <= versionBuild) */
+        {
+            return MorphicResult.OkResult(false);
+        }
+    }
+
+    //
+
+    public static MorphicResult<uint, MorphicUnit> GetUpdateBuildRevision()
+    {
+        Microsoft.Win32.RegistryKey? registryKey;
+        try
+        {
+            registryKey = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion", writable: false);
+        }
+        catch
+        {
+            return MorphicResult.ErrorResult();
+        }
+        if (registryKey is null)
+        {
+            return MorphicResult.ErrorResult();
+        }
+
+        var ubrAsNullableObject = registryKey.GetValue("UBR");
+        uint updateBuildRevision;
+        if (ubrAsNullableObject is null)
+        {
+            return MorphicResult.ErrorResult();
+        }
+        else if (ubrAsNullableObject is uint ubrAsUint)
+        {
+            updateBuildRevision = ubrAsUint;
+        }
+        else
+        {
+            return MorphicResult.ErrorResult();
+        }
+
+        return MorphicResult.OkResult(updateBuildRevision);
+    }
 
 }
