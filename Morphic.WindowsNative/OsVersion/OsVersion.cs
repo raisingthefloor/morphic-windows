@@ -24,6 +24,7 @@
 using Morphic.Core;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Morphic.WindowsNative.OsVersion;
 
