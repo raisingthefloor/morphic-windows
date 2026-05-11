@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2023 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2026 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -35,7 +35,7 @@ namespace Morphic.WindowsNative.Display;
 public class Display
 {
     // NOTE: when this class is used in legacy (Morphic 1.x) mode, these values will all be zero- or null-initialized; the caller should _not_ manually create an instance of this class directly outside of legacy code use
-    private readonly IntPtr MonitorHandle;
+    internal readonly Windows.Win32.Graphics.Gdi.HMONITOR MonitorHandle;
     public readonly string DeviceName;
     public readonly PInvoke.User32.LUID AdapterId;
     public readonly uint SourceId;
@@ -49,7 +49,7 @@ public class Display
 
     private Display(IntPtr monitorHandle, string deviceName, PInvoke.User32.LUID adapterId, uint sourceId)
     {
-        this.MonitorHandle = monitorHandle;
+        this.MonitorHandle = (Windows.Win32.Graphics.Gdi.HMONITOR)monitorHandle;
         this.DeviceName = deviceName;
         this.AdapterId = adapterId;
         this.SourceId = sourceId;
@@ -726,20 +726,27 @@ public class Display
 
     // for PerMonitorV2 DPI-aware clients, this function will return the display rectangle in PHYSICAL pixels
     // for non-DPI-aware clients, this function will return the display rectangle in VIRTUAL pixels
-    public MorphicResult<Rectangle, Win32ApiError> GetDisplayRectangleInPixels()
+    public MorphicResult<System.Drawing.Rectangle, IWin32ApiError> GetDisplayRectangleInPixels()
     {
-        var monitorInfo = ExtendedPInvoke.MONITORINFOEXW.InitializeNew();
-        bool getMonitorInfoSuccess = ExtendedPInvoke.GetMonitorInfo(this.MonitorHandle, ref monitorInfo);
+        Windows.Win32.Graphics.Gdi.MONITORINFO monitorInfo = new();
+        monitorInfo.cbSize = (uint)Marshal.SizeOf<Windows.Win32.Graphics.Gdi.MONITORINFO>();
+        //
+        bool getMonitorInfoSuccess = Windows.Win32.PInvoke.GetMonitorInfo(this.MonitorHandle, ref monitorInfo);
         if (getMonitorInfoSuccess == false)
         {
-            var win32ErrorCode = PInvoke.Kernel32.GetLastError();
-            if (win32ErrorCode != PInvoke.Win32ErrorCode.ERROR_SUCCESS)
+            var win32ErrorCode = (Windows.Win32.Foundation.WIN32_ERROR)System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+            // GetMonitorInfoW does not document SetLastError; if no code was set, fall back to a generic failure code.
+            if (win32ErrorCode == Windows.Win32.Foundation.WIN32_ERROR.ERROR_SUCCESS)
             {
-                return MorphicResult.ErrorResult(Win32ApiError.Win32Error((uint)win32ErrorCode));
+                win32ErrorCode = Windows.Win32.Foundation.WIN32_ERROR.ERROR_INVALID_DATA;
             }
+            return MorphicResult.ErrorResult<IWin32ApiError>(new IWin32ApiError.Win32Error((uint)win32ErrorCode));
         }
 
-        var displayRect = new Rectangle(monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.top, monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top);
+        var displayRect = new System.Drawing.Rectangle(monitorInfo.rcMonitor.left,
+            monitorInfo.rcMonitor.top,
+            monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left,
+            monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top);
         return MorphicResult.OkResult(displayRect);
     }
 

@@ -1,4 +1,4 @@
-﻿// Copyright 2022-2024 Raising the Floor - US, Inc.
+﻿// Copyright 2022-2026 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -398,8 +398,8 @@ public class SettingItemProxy
             //       worst-case scenario
             while (true)
             {
-                var isApplicable = _settingItem!.IsApplicable;
-                var isEnabled = _settingItem!.IsEnabled;
+                var isApplicable = _settingItem.IsApplicable;
+                var isEnabled = _settingItem.IsEnabled;
 
                 var conditionSatisfied = false;
                 //
@@ -700,7 +700,7 @@ public class SettingItemProxy
         private SetSettingItemValueError(Values value) : base(value) { }
     }
 
-    // NOTE: both the struct and class implementations of SetSettingItemValueAsync MUST be kept in sync!
+    // NOTE: both the struct- and class-specific implementations of SetSettingItemValueAsync MUST be kept in sync!
     //
     public async static Task<MorphicResult<MorphicUnit, SetSettingItemValueError>> SetSettingItemValueAsync<T>(SettingItemProxy? settingItem, T value, TimeSpan? timeout = null) where T : struct
     {
@@ -712,7 +712,7 @@ public class SettingItemProxy
         return await SettingItemProxy.SetSettingItemValueAsObjectAsync(settingItem, name, value, timeout);
     }
 
-    // NOTE: both the struct and class implementations of SetSettingItemValueAsync MUST be kept in sync!
+    // NOTE: both the struct and class-specific implementations of SetSettingItemValueAsync MUST be kept in sync!
     //
     // NOTE: this second implementation of SetSettingItemValueAsync (with the _ param allowing it to act as an overload) is a kludge so that C# will work with both Nullable value types and (already-traditionally-nullable) reference types
     public async static Task<MorphicResult<MorphicUnit, SetSettingItemValueError>> SetSettingItemValueAsync<T>(SettingItemProxy? settingItem, T value, TimeSpan? timeout = null, object? _ = null) where T : class

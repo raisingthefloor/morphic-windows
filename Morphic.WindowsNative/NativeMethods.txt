@@ -26,6 +26,7 @@ RegQueryValueEx
 RegSetValueEx
 SendInput
 SendNotifyMessage
+SetCursorPos
 SystemParametersInfo
 
 DISPLAYCONFIG_MODE_INFO
