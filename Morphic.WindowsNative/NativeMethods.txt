@@ -1,7 +1,16 @@
 ﻿DwmSetWindowAttribute
 GetCurrentPackageFullName
+GetCursorPos
+GetMonitorInfo
+MonitorFromPoint
+SendMessageTimeout
+SetCursorPos
+
+MONITORINFOEXW
 
 HWND
+HWND_BROADCAST
 HRESULT
 LUID
 S_OK
+WM_WININICHANGE

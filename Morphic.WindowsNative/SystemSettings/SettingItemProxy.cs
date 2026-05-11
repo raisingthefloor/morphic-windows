@@ -345,6 +345,126 @@ internal class SettingItemProxy
 
     #endregion Set Value
 
+    //
+
+    #region Get/Set helper functions
+
+    private async Task<MorphicResult<MorphicUnit, IMorphicTimeoutError>> WaitForIsEnabledEventAsync(int timeoutInMilliseconds, bool alsoWaitForApplicable = false)
+    {
+        var propertyChangedWaitHandle = new AutoResetEvent(false);
+        var propertyChangedHandler = new Windows.Foundation.TypedEventHandler<object, string>((object sender, string args) =>
+        {
+            switch (args)
+            {
+                case "IsApplicable":
+                    if (alsoWaitForApplicable == true)
+                    {
+                        propertyChangedWaitHandle.Set();
+                    }
+                    break;
+                case "IsEnabled":
+                    propertyChangedWaitHandle.Set();
+                    break;
+                default:
+                    break;
+            }
+        });
+        var isWatchingForPropertyChangedEvent = false;
+
+        var isConditionSatisfied = () => {
+            var isApplicable = _settingItem.IsApplicable;
+            var isEnabled = _settingItem.IsEnabled;
+
+            var conditionSatisfied = false;
+            //
+            // check our base condition
+            if (isEnabled == true)
+            {
+                conditionSatisfied = true;
+            }
+            //
+            // check our additional (optional) conditions
+            if (alsoWaitForApplicable == true)
+            {
+                if (isApplicable == false)
+                {
+                    conditionSatisfied = false;
+                }
+            }
+
+            return conditionSatisfied;
+        };
+
+        try
+        {
+            Stopwatch timeoutStopwatch = Stopwatch.StartNew();
+            // NOTE: we use an infinite loop so that we can wait multiple times (if, for instance, we get events for only one of multiple states); it will terminate upon timeout in the 
+            //       worst-case scenario
+            while (true)
+            {
+                // for every iteration of the loop, we check to see if the condition is satisfied
+                if (isConditionSatisfied() == true)
+                {
+                    break;
+                }
+
+                // if we're not already watching for the propert(ies) to change, wire up an event handler now
+                if (isWatchingForPropertyChangedEvent == false)
+                {
+                    _settingItem.SettingChanged += propertyChangedHandler;
+                    isWatchingForPropertyChangedEvent = true;
+
+                    // check to see if the condition is satisfied one more time, just in case the condition became satisfied at the same time we were setting up the event
+                    if (isConditionSatisfied() == true)
+                    {
+                        break;
+                    }
+                }
+
+                // NOTE: if we reach this point, we are not ready yet; we need to wait for the corresponding event(s) to change
+                var remainingTimeout = (int)Math.Max(timeoutInMilliseconds - timeoutStopwatch.ElapsedMilliseconds, 0);
+                if (remainingTimeout == 0)
+                {
+                    return MorphicResult.ErrorResult<IMorphicTimeoutError>(new IMorphicTimeoutError.Timeout());
+                }
+                
+                // wait for the IsApplicable/IsEnabled event handler to fire (or for our timeout to expire, whichever comes first)
+                TaskCompletionSource<bool>? taskCompletionSource = new TaskCompletionSource<bool>();
+                //
+                // NOTE: we treat taskCompletionSource as nullable here just in case it the delegate gets called after the function completes (which should not happen, but we saw a null taskCompletionSource once in testing)
+                var waitHandleRegistration = ThreadPool.RegisterWaitForSingleObject(propertyChangedWaitHandle, delegate { taskCompletionSource?.SetResult(true); }, null, remainingTimeout, true);
+                try
+                {
+                    _ = await taskCompletionSource!.Task.WaitAsync(new TimeSpan(0, 0, 0, 0, remainingTimeout));
+                }
+                catch (TimeoutException)
+                {
+                    // swallow the TimeoutException; we'll capture this timeout in the next loop iteration
+                    //return MorphicResult.ErrorResult(MorphicTimeoutError.Timeout);
+                }
+                finally
+                {
+                    // NOTE: we do not need to signal any wait handle when we unregister the wait handle registration (i.e. the waitObject param is null)
+                    waitHandleRegistration.Unregister(null);
+                }
+            }
+
+            return MorphicResult.OkResult();
+        }
+        finally
+        {
+            if (isWatchingForPropertyChangedEvent == true)
+            {
+                _settingItem.SettingChanged -= propertyChangedHandler;
+                isWatchingForPropertyChangedEvent = false;
+            }
+        }
+    }
+
+    #endregion Get/Set helper functions
+
+    //
+
     #region Event handlers
 
     public event EventHandler IsEnabledChanged
@@ -479,124 +599,6 @@ internal class SettingItemProxy
     }
 
     #endregion Event handlers
-
-    //
-
-    #region Get/Set helper functions
-
-    private async Task<MorphicResult<MorphicUnit, IMorphicTimeoutError>> WaitForIsEnabledEventAsync(int timeoutInMilliseconds, bool alsoWaitForApplicable = false)
-    {
-        var propertyChangedWaitHandle = new AutoResetEvent(false);
-        var propertyChangedHandler = new Windows.Foundation.TypedEventHandler<object, string>((object sender, string args) =>
-        {
-            switch (args)
-            {
-                case "IsApplicable":
-                    if (alsoWaitForApplicable == true)
-                    {
-                        propertyChangedWaitHandle.Set();
-                    }
-                    break;
-                case "IsEnabled":
-                    propertyChangedWaitHandle.Set();
-                    break;
-                default:
-                    break;
-            }
-        });
-        var isWatchingForPropertyChangedEvent = false;
-
-        var isConditionSatisfied = () => {
-            var isApplicable = _settingItem.IsApplicable;
-            var isEnabled = _settingItem.IsEnabled;
-
-            var conditionSatisfied = false;
-            //
-            // check our base condition
-            if (isEnabled == true)
-            {
-                conditionSatisfied = true;
-            }
-            //
-            // check our additional (optional) conditions
-            if (alsoWaitForApplicable == true)
-            {
-                if (isApplicable == false)
-                {
-                    conditionSatisfied = false;
-                }
-            }
-
-            return conditionSatisfied;
-        };
-
-        try
-        {
-            Stopwatch timeoutStopwatch = Stopwatch.StartNew();
-            // NOTE: we use an infinite loop so that we can wait multiple times (if, for instance, we get events for only one of multiple states); it will terminate upon timeout in the 
-            //       worst-case scenario
-            while (true)
-            {
-                // for every iteration of the loop, we check to see if the condition is satisfied
-                if (isConditionSatisfied() == true)
-                {
-                    break;
-                }
-
-                // if we're not already watching for the propert(ies) to change, wire up an event handler now
-                if (isWatchingForPropertyChangedEvent == false)
-                {
-                    _settingItem.SettingChanged += propertyChangedHandler;
-                    isWatchingForPropertyChangedEvent = true;
-
-                    // check to see if the condition is satisfied one more time, just in case the condition became satisfied at the same time we were setting up the event
-                    if (isConditionSatisfied() == true)
-                    {
-                        break;
-                    }
-                }
-
-                // NOTE: if we reach this point, we are not ready yet; we need to wait for the corresponding event(s) to change
-                var remainingTimeout = (int)Math.Max(timeoutInMilliseconds - timeoutStopwatch.ElapsedMilliseconds, 0);
-                if (remainingTimeout == 0)
-                {
-                    return MorphicResult.ErrorResult<IMorphicTimeoutError>(new IMorphicTimeoutError.Timeout());
-                }
-                
-                // wait for the IsApplicable/IsEnabled event handler to fire (or for our timeout to expire, whichever comes first)
-                TaskCompletionSource<bool>? taskCompletionSource = new TaskCompletionSource<bool>();
-                //
-                // NOTE: we treat taskCompletionSource as nullable here just in case it the delegate gets called after the function completes (which should not happen, but we saw a null taskCompletionSource once in testing)
-                var waitHandleRegistration = ThreadPool.RegisterWaitForSingleObject(propertyChangedWaitHandle, delegate { taskCompletionSource?.SetResult(true); }, null, remainingTimeout, true);
-                try
-                {
-                    _ = await taskCompletionSource!.Task.WaitAsync(new TimeSpan(0, 0, 0, 0, remainingTimeout));
-                }
-                catch (TimeoutException)
-                {
-                    // swallow the TimeoutException; we'll capture this timeout in the next loop iteration
-                    //return MorphicResult.ErrorResult(MorphicTimeoutError.Timeout);
-                }
-                finally
-                {
-                    // NOTE: we do not need to signal any wait handle when we unregister the wait handle registration (i.e. the waitObject param is null)
-                    waitHandleRegistration.Unregister(null);
-                }
-            }
-
-            return MorphicResult.OkResult();
-        }
-        finally
-        {
-            if (isWatchingForPropertyChangedEvent == true)
-            {
-                _settingItem.SettingChanged -= propertyChangedHandler;
-                isWatchingForPropertyChangedEvent = false;
-            }
-        }
-    }
-
-    #endregion Get/Set helper functions
 
     //
 
