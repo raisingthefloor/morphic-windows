@@ -1,4 +1,5 @@
 ﻿DisplayConfigGetDeviceInfo
+DisplayConfigSetDeviceInfo
 DwmSetWindowAttribute
 EnumDisplayMonitors
 EnumDisplaySettings

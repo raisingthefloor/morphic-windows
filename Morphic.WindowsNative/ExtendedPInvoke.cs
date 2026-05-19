@@ -42,7 +42,7 @@ internal struct ExtendedPInvoke
     #region cfgmgr32.h
 
     [Flags]
-    internal enum CmDeviceCapabilitiesFlags: uint
+    internal enum CmDeviceCapabilitiesFlags : uint
     {
         LockSupported = 0x00000001,
         EjectSupported = 0x00000002,
@@ -58,7 +58,7 @@ internal struct ExtendedPInvoke
     }
 
     // config manager success/error codes
-    internal enum CR_RESULT: uint
+    internal enum CR_RESULT : uint
     {
         CR_SUCCESS = 0x00000000,
         //CR_DEFAULT = 0x00000001,
@@ -126,7 +126,7 @@ internal struct ExtendedPInvoke
         //CR_INVALID_STRUCTURE_SIZE = 0x0000003B
     }
 
-    internal enum PNP_VETO_TYPE: int
+    internal enum PNP_VETO_TYPE : int
     {
         PNP_VetoTypeUnknown = 1,
         PNP_VetoLegacyDevice,
@@ -165,11 +165,11 @@ internal struct ExtendedPInvoke
     #endregion cfgmgr32.h
 
 
-	    #region devicetopology.h
+    #region devicetopology.h
 
-	internal static uint E_NOTFOUND = HRESULT_FROM_WIN32((uint)PInvoke.Win32ErrorCode.ERROR_NOT_FOUND);
+    internal static uint E_NOTFOUND = HRESULT_FROM_WIN32((uint)PInvoke.Win32ErrorCode.ERROR_NOT_FOUND);
 
-	    #endregion devicetopology.h
+    #endregion devicetopology.h
 
 
     #region fileapi.h
@@ -265,7 +265,7 @@ internal struct ExtendedPInvoke
         SE_ERR_FNF = 2, // file not found
         SE_ERR_PNF = 3, // path not found
         SE_ERR_ACCESSDENIED = 5, // access denied
-        SE_ERR_OOM =  8, // out of memory
+        SE_ERR_OOM = 8, // out of memory
         SE_ERR_DLLNOTFOUND = 32,
         //
         /* extended ShellExecute error codes */
@@ -383,24 +383,24 @@ internal struct ExtendedPInvoke
 
     #region winerror.h
 
-    internal enum Win32ErrorCode: uint
+    internal enum Win32ErrorCode : uint
     {
-//            S_OK = 0x00000000,
+//        S_OK = 0x00000000,
         CO_E_CLASSSTRING = 0x800401F3,
         REGDB_E_WRITEREGDB = 0x80040151
     }
 
-	    public const nint S_OK = 0;
-	    public const nint S_FALSE = 1;
+    public const nint S_OK = 0;
+    public const nint S_FALSE = 1;
 
-	    // facility codes
-	    private const uint FACILITY_WIN32 = 7;
+    // facility codes
+    private const uint FACILITY_WIN32 = 7;
 
-	    // https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-erref/0c0bcf55-277e-4120-b5dc-f6115fc8dc38
-	    private static uint HRESULT_FROM_WIN32(uint x)
-	    {
-	    return unchecked((uint)(x) <= 0 ? ((uint)(x)) : ((uint)(((x) & 0x0000FFFF) | (FACILITY_WIN32 << 16) | 0x80000000)));
-	    }
+    // https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-erref/0c0bcf55-277e-4120-b5dc-f6115fc8dc38
+    private static uint HRESULT_FROM_WIN32(uint x)
+    {
+        return unchecked((uint)(x) <= 0 ? ((uint)(x)) : ((uint)(((x) & 0x0000FFFF) | (FACILITY_WIN32 << 16) | 0x80000000)));
+    }
 
     #endregion winerror.h
 
@@ -447,55 +447,6 @@ internal struct ExtendedPInvoke
         DISPLAYCONFIG_DEVICE_INFO_SET_ADVANCED_COLOR_STATE = 10,
         DISPLAYCONFIG_DEVICE_INFO_GET_SDR_WHITE_LEVEL = 11,
         DISPLAYCONFIG_DEVICE_INFO_FORCE_UINT32 = 0xFFFFFFFF
-    }
-
-    // Reverse-engineered DPI scaling code, utilizing the CCD APIs
-    // https://docs.microsoft.com/en-us/windows-hardware/drivers/display/ccd-apis
-    //
-    // NOTE: this structure is undocumented and was reverse engineered as part of the Morphic Classic project
-    // NOTE: all offsets are indices (relative to the OS's recommended DPI scaling value; the recommended DPI scaling value is always zero)
-    [StructLayout(LayoutKind.Sequential)]
-    public struct DISPLAYCONFIG_GET_DPI
-    {
-        public DISPLAYCONFIG_DEVICE_INFO_HEADER header;
-
-        public int minimumDpiOffset;
-        public int currentDpiOffset;
-        public int maximumDpiOffset;
-
-        public static DISPLAYCONFIG_GET_DPI InitializeNew()
-        {
-            var result = new DISPLAYCONFIG_GET_DPI()
-            {
-                header = new DISPLAYCONFIG_DEVICE_INFO_HEADER()
-                {
-                    size = (uint)Marshal.SizeOf<DISPLAYCONFIG_GET_DPI>()
-                }
-            };
-            return result;
-        }
-    }
-    //
-	// NOTE: this structure is undocumented and was reverse engineered as part of the Morphic Classic project
-	    // NOTE: all offsets are indices (relative to the OS's recommended DPI scaling value; the recommended DPI scaling value is always zero)
-    [StructLayout(LayoutKind.Sequential)]
-    public struct DISPLAYCONFIG_SET_DPI
-    {
-        public DISPLAYCONFIG_DEVICE_INFO_HEADER header;
-
-        public int dpiOffset;
-
-        public static DISPLAYCONFIG_SET_DPI InitializeNew()
-        {
-            var result = new DISPLAYCONFIG_SET_DPI()
-            {
-                header = new DISPLAYCONFIG_DEVICE_INFO_HEADER()
-                {
-                    size = (uint)Marshal.SizeOf<DISPLAYCONFIG_SET_DPI>()
-                }
-            };
-            return result;
-        }
     }
 
     // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_mode_info
@@ -572,7 +523,7 @@ internal struct ExtendedPInvoke
             var result = new DISPLAYCONFIG_SOURCE_DEVICE_NAME()
             {
                 viewGdiDeviceName = new char[CCHDEVICENAME],
-                header = new DISPLAYCONFIG_DEVICE_INFO_HEADER() 
+                header = new DISPLAYCONFIG_DEVICE_INFO_HEADER()
                 {
                     size = (uint)Marshal.SizeOf<DISPLAYCONFIG_SOURCE_DEVICE_NAME>()
                 }
@@ -831,7 +782,7 @@ internal struct ExtendedPInvoke
     internal static uint IOCTL_STORAGE_GET_DEVICE_NUMBER => ExtendedPInvoke.CTL_CODE(IOCTL_STORAGE_BASE, 0x0420, METHOD_BUFFERED, FILE_ANY_ACCESS);
     internal static uint IOCTL_STORAGE_EJECT_MEDIA => ExtendedPInvoke.CTL_CODE(IOCTL_STORAGE_BASE, 0x0202, METHOD_BUFFERED, FILE_READ_ACCESS);
 
-    internal enum FILE_DEVICE_TYPE: uint
+    internal enum FILE_DEVICE_TYPE : uint
     {
         //FILE_DEVICE_BEEP = 0x00000001,
         FILE_DEVICE_CD_ROM = 0x00000002,
@@ -933,43 +884,43 @@ internal struct ExtendedPInvoke
 
     #region winnt.h
 
-	    internal const uint SYNCHRONIZE = 0x00100000;
+    internal const uint SYNCHRONIZE = 0x00100000;
 
-	    // registry-specific access rights
+    // registry-specific access rights
 
-	    internal const uint KEY_QUERY_VALUE         = 0x0001;
-	    internal const uint KEY_SET_VALUE           = 0x0002;
-	    internal const uint KEY_CREATE_SUB_KEY      = 0x0004;
-	    internal const uint KEY_ENUMERATE_SUB_KEYS  = 0x0008;
-	    internal const uint KEY_NOTIFY              = 0x0010;
-	    internal const uint KEY_CREATE_LINK         = 0x0020;
-	    internal const uint KEY_WOW64_32KEY         = 0x0200;
-	    internal const uint KEY_WOW64_64KEY         = 0x0100;
-	    internal const uint KEY_WOW64_RES           = 0x0300;
+    internal const uint KEY_QUERY_VALUE = 0x0001;
+    internal const uint KEY_SET_VALUE = 0x0002;
+    internal const uint KEY_CREATE_SUB_KEY = 0x0004;
+    internal const uint KEY_ENUMERATE_SUB_KEYS = 0x0008;
+    internal const uint KEY_NOTIFY = 0x0010;
+    internal const uint KEY_CREATE_LINK = 0x0020;
+    internal const uint KEY_WOW64_32KEY = 0x0200;
+    internal const uint KEY_WOW64_64KEY = 0x0100;
+    internal const uint KEY_WOW64_RES = 0x0300;
 
-	    internal const uint KEY_READ = ((uint)PInvoke.Kernel32.ACCESS_MASK.StandardRight.STANDARD_RIGHTS_READ |
-	                                    KEY_QUERY_VALUE |
-	                                    KEY_ENUMERATE_SUB_KEYS |
-	                                    KEY_NOTIFY) 
-	                                    & ~SYNCHRONIZE;
-	    internal const uint KEY_WRITE = ((uint)PInvoke.Kernel32.ACCESS_MASK.StandardRight.STANDARD_RIGHTS_WRITE | 
-	                                    KEY_SET_VALUE | 
-	                                    KEY_CREATE_SUB_KEY)
-	                                    & ~SYNCHRONIZE;
+    internal const uint KEY_READ = ((uint)PInvoke.Kernel32.ACCESS_MASK.StandardRight.STANDARD_RIGHTS_READ |
+                                    KEY_QUERY_VALUE |
+                                    KEY_ENUMERATE_SUB_KEYS |
+                                    KEY_NOTIFY)
+                                    & ~SYNCHRONIZE;
+    internal const uint KEY_WRITE = ((uint)PInvoke.Kernel32.ACCESS_MASK.StandardRight.STANDARD_RIGHTS_WRITE |
+                                    KEY_SET_VALUE |
+                                    KEY_CREATE_SUB_KEY)
+                                    & ~SYNCHRONIZE;
 
-	    internal const uint KEY_EXECUTE = KEY_READ
-	                                      & ~SYNCHRONIZE;
+    internal const uint KEY_EXECUTE = KEY_READ
+                                      & ~SYNCHRONIZE;
 
-	internal const uint KEY_ALL_ACCESS = ((uint)PInvoke.Kernel32.ACCESS_MASK.StandardRight.STANDARD_RIGHTS_ALL |
-	                                         KEY_QUERY_VALUE |
-	                                         KEY_SET_VALUE |
-	                                         KEY_CREATE_SUB_KEY |
-	                                         KEY_ENUMERATE_SUB_KEYS |
-	                                         KEY_NOTIFY |
-	                                         KEY_CREATE_LINK)
-	                                      & ~SYNCHRONIZE;
+    internal const uint KEY_ALL_ACCESS = ((uint)PInvoke.Kernel32.ACCESS_MASK.StandardRight.STANDARD_RIGHTS_ALL |
+                                             KEY_QUERY_VALUE |
+                                             KEY_SET_VALUE |
+                                             KEY_CREATE_SUB_KEY |
+                                             KEY_ENUMERATE_SUB_KEYS |
+                                             KEY_NOTIFY |
+                                             KEY_CREATE_LINK)
+                                          & ~SYNCHRONIZE;
 
-	//
+    //
 
     internal enum RegistryValueType : uint
     {
@@ -994,24 +945,24 @@ internal struct ExtendedPInvoke
 
     #region winreg.h
 
-	// https://learn.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regdeletevaluew
-	    [DllImport("advapi32.dll", CharSet = CharSet.Unicode)]
-	    internal static extern PInvoke.Win32ErrorCode RegDeleteValue(UIntPtr hKey, [MarshalAs(UnmanagedType.LPWStr)] string? lpValueName);
+    // https://learn.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regdeletevaluew
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode)]
+    internal static extern PInvoke.Win32ErrorCode RegDeleteValue(UIntPtr hKey, [MarshalAs(UnmanagedType.LPWStr)] string? lpValueName);
 
-	    // https://learn.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regenumkeyw
-	    [DllImport("advapi32.dll", CharSet = CharSet.Unicode)]
-	    internal static extern PInvoke.Win32ErrorCode RegEnumKeyEx(UIntPtr hKey, uint dwIndex, StringBuilder lpName, ref uint lpcchName, IntPtr lpReserved, IntPtr lpClass, IntPtr lpcchClass, IntPtr lpftLastWriteTime);
+    // https://learn.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regenumkeyw
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode)]
+    internal static extern PInvoke.Win32ErrorCode RegEnumKeyEx(UIntPtr hKey, uint dwIndex, StringBuilder lpName, ref uint lpcchName, IntPtr lpReserved, IntPtr lpClass, IntPtr lpcchClass, IntPtr lpftLastWriteTime);
 
-	    // https://learn.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regenumvaluew
-	    [DllImport("advapi32.dll", CharSet = CharSet.Unicode)]
-	    //internal static extern PInvoke.Win32ErrorCode RegEnumValue(UIntPtr hKey, uint dwIndex, StringBuilder lpValueName, ref uint lpcchValueName, IntPtr lpReserved, out RegistryValueType lpType, IntPtr lpData, ref uint lpcbData);
-	    internal static extern PInvoke.Win32ErrorCode RegEnumValue(UIntPtr hKey, uint dwIndex, StringBuilder lpValueName, ref uint lpcchValueName, IntPtr lpReserved, IntPtr lpType, IntPtr lpData, IntPtr lpcbData);
+    // https://learn.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regenumvaluew
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode)]
+    //internal static extern PInvoke.Win32ErrorCode RegEnumValue(UIntPtr hKey, uint dwIndex, StringBuilder lpValueName, ref uint lpcchValueName, IntPtr lpReserved, out RegistryValueType lpType, IntPtr lpData, ref uint lpcbData);
+    internal static extern PInvoke.Win32ErrorCode RegEnumValue(UIntPtr hKey, uint dwIndex, StringBuilder lpValueName, ref uint lpcchValueName, IntPtr lpReserved, IntPtr lpType, IntPtr lpData, IntPtr lpcbData);
 
-	    // https://learn.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regqueryvalueexw
+    // https://learn.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regqueryvalueexw
     [DllImport("advapi32.dll", CharSet = CharSet.Unicode)]
     internal static extern PInvoke.Win32ErrorCode RegQueryValueEx(UIntPtr hKey, [MarshalAs(UnmanagedType.LPWStr)] string? lpValueName, IntPtr lpReserved, out RegistryValueType lpType, IntPtr lpData, ref uint lpcbData);
 
-	    // https://learn.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regsetvalueexw
+    // https://learn.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regsetvalueexw
     [DllImport("advapi32.dll", CharSet = CharSet.Unicode)]
     internal static extern PInvoke.Win32ErrorCode RegSetValueEx(UIntPtr hKey, [MarshalAs(UnmanagedType.LPWStr)] string? lpValueName, uint reserved, RegistryValueType dwType, IntPtr lpData, uint cbData);
 
@@ -1052,7 +1003,7 @@ internal struct ExtendedPInvoke
         // NOTE: szDevice must be marshalled as a ByValArray instead of a ByValTString so that Marshal.SizeOf can calculate a value
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = CCHDEVICENAME)]
         public char[] szDevice;
-			
+
         public static MONITORINFOEXW InitializeNew()
         {
             var result = new MONITORINFOEXW()
@@ -1074,12 +1025,6 @@ internal struct ExtendedPInvoke
     // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-displayconfiggetdeviceinfo
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     public static extern PInvoke.Win32ErrorCode DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_SOURCE_DEVICE_NAME requestPacket);
-    //
-    [DllImport("user32.dll")]
-    public static extern PInvoke.Win32ErrorCode DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_GET_DPI requestPacket);
-
-    [DllImport("user32.dll")]
-    public static extern PInvoke.Win32ErrorCode DisplayConfigSetDeviceInfo(ref DISPLAYCONFIG_SET_DPI requestPacket);
 
     // NOTE: this delegate is used as a callback by EnumDisplayMonitors
     // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nc-winuser-monitorenumproc

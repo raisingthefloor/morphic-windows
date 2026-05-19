@@ -206,9 +206,9 @@ public class Display
         return Display.GetDisplayByMonitorHandle(monitorHandle);
     }
 
-    public static MorphicResult<Display, MorphicUnit> GetDisplayAtPointerLocation(System.Drawing.Point point)
+    public static MorphicResult<Display, MorphicUnit> GetDisplayAtPoint(System.Drawing.Point point)
     {
-        var monitorHandle = Display.GetMonitorHandleAtPointerLocation(point);
+        var monitorHandle = Display.GetMonitorHandleAtPoint(point);
         if (monitorHandle.IsNull)
         {
             return MorphicResult.ErrorResult();
@@ -258,7 +258,7 @@ public class Display
         return monitorHandle;
     }
 
-    private static Windows.Win32.Graphics.Gdi.HMONITOR GetMonitorHandleAtPointerLocation(System.Drawing.Point point)
+    private static Windows.Win32.Graphics.Gdi.HMONITOR GetMonitorHandleAtPoint(System.Drawing.Point point)
     {
         // get the handle of the monitor which contains the point; this is useful, for instance, for finding the monitor where the mouse cursor is currently positioned
         var monitorHandle = Windows.Win32.PInvoke.MonitorFromPoint(point, Windows.Win32.Graphics.Gdi.MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONULL);
@@ -337,21 +337,28 @@ public class Display
         public int CurrentDpiOffset;
         public int MaximumDpiOffset;
     }
-
+    //
     public MorphicResult<GetDpiOffsetResult, MorphicUnit> GetCurrentDpiOffsetAndRange()
     {
         // retrieve the DPI values (min, current and max) for the monitor
-        var getDpiInfo = ExtendedPInvoke.DISPLAYCONFIG_GET_DPI.InitializeNew();
-        getDpiInfo.header.type = ExtendedPInvoke.DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_DPI;
-        getDpiInfo.header.adapterId = new PInvoke.User32.LUID() { HighPart = this.AdapterId.HighPart, LowPart = this.AdapterId.LowPart };
-        getDpiInfo.header.id = this.SourceId;
+        var displayconfigGetDpi = new NativeHelpers.DISPLAYCONFIG_GET_DPI() { 
+            header = new() { 
+                type = NativeHelpers.DISPLAYCONFIG_DEVICE_INFO_GET_DPI, 
+                adapterId = this.AdapterId, 
+                id = this.SourceId, 
+                size = (uint)Marshal.SizeOf<NativeHelpers.DISPLAYCONFIG_GET_DPI>() 
+            } 
+        };
         //
-        var displayConfigGetDeviceInfoSuccess = ExtendedPInvoke.DisplayConfigGetDeviceInfo(ref getDpiInfo);
-        switch (displayConfigGetDeviceInfoSuccess)
+        var displayConfigGetDeviceInfoResult = Windows.Win32.PInvoke.DisplayConfigGetDeviceInfo(
+            ref System.Runtime.CompilerServices.Unsafe.As<
+                NativeHelpers.DISPLAYCONFIG_GET_DPI,
+                Windows.Win32.Devices.Display.DISPLAYCONFIG_DEVICE_INFO_HEADER>(ref displayconfigGetDpi));
+        switch ((Windows.Win32.Foundation.WIN32_ERROR)displayConfigGetDeviceInfoResult)
         {
-            case PInvoke.Win32ErrorCode.ERROR_SUCCESS:
+            case Windows.Win32.Foundation.WIN32_ERROR.ERROR_SUCCESS:
                 break;
-            case PInvoke.Win32ErrorCode.ERROR_INVALID_PARAMETER:
+            case Windows.Win32.Foundation.WIN32_ERROR.ERROR_INVALID_PARAMETER:
                 System.Diagnostics.Debug.Assert(false, "Error getting dpi info; this is probably a programming error.");
                 return MorphicResult.ErrorResult();
             default:
@@ -360,36 +367,44 @@ public class Display
                 return MorphicResult.ErrorResult();
         }
 
-        var result = new GetDpiOffsetResult();
-        result.MinimumDpiOffset = getDpiInfo.minimumDpiOffset;
-        result.MaximumDpiOffset = getDpiInfo.maximumDpiOffset;
-        // NOTE: the current offset can be GREATER than the maximum offset (if the user has specified a custom zoom level, for instance)
-        result.CurrentDpiOffset = getDpiInfo.currentDpiOffset;
-
+        var result = new GetDpiOffsetResult()
+        {
+            MinimumDpiOffset = displayconfigGetDpi.minimumDpiOffset,
+            // NOTE: the current offset can be GREATER than the maximum offset (if the user has specified a custom zoom level, for instance)
+            CurrentDpiOffset = displayconfigGetDpi.currentDpiOffset,
+            MaximumDpiOffset = displayconfigGetDpi.maximumDpiOffset,
+        };
         return MorphicResult.OkResult(result);
     }
 
     public async Task<MorphicResult<MorphicUnit, MorphicUnit>> SetDpiOffsetAsync(int dpiOffset)
     {
         var thisDisplay = this;
-        var adapterId = this.AdapterId;
-        var sourceId = this.SourceId;
 
         return await Task.Run((Func<MorphicResult<MorphicUnit, MorphicUnit>>)(() =>
         {
-            // retrieve the DPI values (min, current and max) for the monitor
-            var setDpiInfo = ExtendedPInvoke.DISPLAYCONFIG_SET_DPI.InitializeNew();
-            setDpiInfo.header.type = ExtendedPInvoke.DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_SET_DPI;
-            setDpiInfo.header.adapterId = new PInvoke.User32.LUID() { HighPart = adapterId.HighPart, LowPart = adapterId.LowPart };
-            setDpiInfo.header.id = sourceId;
-            setDpiInfo.dpiOffset = dpiOffset;
-            //
-            var displayConfigGetDeviceInfoSuccess = ExtendedPInvoke.DisplayConfigSetDeviceInfo(ref setDpiInfo);
-            switch (displayConfigGetDeviceInfoSuccess)
+            // set the DPI offset (current) for the monitor
+            var displayconfigSetDpi = new NativeHelpers.DISPLAYCONFIG_SET_DPI()
             {
-                case PInvoke.Win32ErrorCode.ERROR_SUCCESS:
+                header = new()
+                {
+                    type = NativeHelpers.DISPLAYCONFIG_DEVICE_INFO_SET_DPI,
+                    adapterId = thisDisplay.AdapterId,
+                    id = thisDisplay.SourceId,
+                    size = (uint)Marshal.SizeOf<NativeHelpers.DISPLAYCONFIG_SET_DPI>()
+                },
+                dpiOffset = dpiOffset,
+            };
+            //
+            var displayConfigGetDeviceInfoResult = Windows.Win32.PInvoke.DisplayConfigSetDeviceInfo(
+            System.Runtime.CompilerServices.Unsafe.As<
+                NativeHelpers.DISPLAYCONFIG_SET_DPI,
+                Windows.Win32.Devices.Display.DISPLAYCONFIG_DEVICE_INFO_HEADER>(ref displayconfigSetDpi));
+            switch ((Windows.Win32.Foundation.WIN32_ERROR)displayConfigGetDeviceInfoResult)
+            {
+                case Windows.Win32.Foundation.WIN32_ERROR.ERROR_SUCCESS:
                     break;
-                case PInvoke.Win32ErrorCode.ERROR_INVALID_PARAMETER:
+                case Windows.Win32.Foundation.WIN32_ERROR.ERROR_INVALID_PARAMETER:
                     System.Diagnostics.Debug.Assert(false, "Error setting dpi info; this is probably a programming error.");
                     return MorphicResult.ErrorResult();
                 default:
@@ -398,21 +413,21 @@ public class Display
                     return MorphicResult.ErrorResult();
             }
 
-            // verify that the DPI was set successfully
+            // verify that the DPI offset was set successfully
             // NOTE: this is not technically necessary since we already have a success/failure result, but it's a good sanity check; if it's too early to check this then it's reasonable for us to skip this verification step
             var getCurrentDpiOffsetAndRangeResult = thisDisplay.GetCurrentDpiOffsetAndRange();
             if (getCurrentDpiOffsetAndRangeResult.IsError == true)
             {
                 return MorphicResult.ErrorResult();
             }
-            var currentDpiOffsetAndRange = getCurrentDpiOffsetAndRangeResult.Value!;
+            var currentDpiOffsetAndRange = getCurrentDpiOffsetAndRangeResult.Value;
             if (currentDpiOffsetAndRange.CurrentDpiOffset != dpiOffset)
             {
                 System.Diagnostics.Debug.Assert(false, "Could not set DPI offset (or the system has not updated the current SPI offset value)");
                 return MorphicResult.ErrorResult();
             }
 
-            // otherwise, we succeeded
+            // otherwise, return success
             return MorphicResult.OkResult();
         }));
     }
