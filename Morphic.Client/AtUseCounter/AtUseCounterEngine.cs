@@ -380,7 +380,7 @@ internal class AtUseCounterEngine
                Debug.WriteLine("INITIAL | Display scale percentage(s):");
                foreach (var displayState in initialDisplayStates)
                {
-                    Debug.WriteLine("          0x" + displayState.Display.AdapterId.HighPart.ToString("X") + displayState.Display.AdapterId.LowPart.ToString("X") + ": " + (displayState.ScalePercentage * 100).ToString() + "%");
+                    Debug.WriteLine("          0x" + displayState.Display.ReadOnlyAdapterId.HighPart.ToString("X") + displayState.Display.ReadOnlyAdapterId.LowPart.ToString("X") + ": " + (displayState.ScalePercentage * 100).ToString() + "%");
                }
           }
 
@@ -787,12 +787,12 @@ internal class AtUseCounterEngine
                Debug.WriteLine("CHANGED | Display scale percentage(s):");
                foreach (var displayState in changedDisplayStates)
                {
-                    Debug.WriteLine("          0x" + displayState.Display.AdapterId.HighPart.ToString("X") + displayState.Display.AdapterId.LowPart.ToString("X") + ": " + (displayState.ScalePercentage * 100).ToString() + "%");
+                    Debug.WriteLine("          0x" + displayState.Display.ReadOnlyAdapterId.HighPart.ToString("X") + displayState.Display.ReadOnlyAdapterId.LowPart.ToString("X") + ": " + (displayState.ScalePercentage * 100).ToString() + "%");
 
                     // submit telemetry event
                     foreach (var previousDisplayState in previousDisplayStates)
                     {
-                         if ((previousDisplayState.Display.AdapterId.HighPart == displayState.Display.AdapterId.HighPart) && (previousDisplayState.Display.AdapterId.LowPart == displayState.Display.AdapterId.LowPart))
+                         if ((previousDisplayState.Display.ReadOnlyAdapterId.HighPart == displayState.Display.ReadOnlyAdapterId.HighPart) && (previousDisplayState.Display.ReadOnlyAdapterId.LowPart == displayState.Display.ReadOnlyAdapterId.LowPart))
                          {
                               var previousScalePercentage = previousDisplayState.ScalePercentage;
                               var newScalePercentage = displayState.ScalePercentage;
@@ -1119,8 +1119,8 @@ internal class AtUseCounterEngine
                     {
                          var knownDisplayState = _displayStates[index];
 
-                         if (knownDisplayState.Display.AdapterId.Equals(displayState.Display.AdapterId) &&
-                             knownDisplayState.Display.SourceId == displayState.Display.SourceId)
+                         if (knownDisplayState.Display.ReadOnlyAdapterId.Equals(displayState.Display.ReadOnlyAdapterId) &&
+                             knownDisplayState.Display.ReadOnlySourceId == displayState.Display.ReadOnlySourceId)
                          {
                               // known display state; see if it has changed
                               if (knownDisplayState.ScalePercentage != displayState.ScalePercentage)

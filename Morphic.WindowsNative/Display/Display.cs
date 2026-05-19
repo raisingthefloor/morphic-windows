@@ -36,9 +36,13 @@ public class Display
 {
     // NOTE: when this class is used in legacy (Morphic 1.x) mode, these values will all be zero- or null-initialized; the caller should _not_ manually create an instance of this class directly outside of legacy code use
     internal readonly Windows.Win32.Graphics.Gdi.HMONITOR MonitorHandle;
-    public readonly string DeviceName;
-    public readonly PInvoke.User32.LUID AdapterId;
-    public readonly uint SourceId;
+    internal readonly string DeviceName;
+    internal readonly Windows.Win32.Foundation.LUID AdapterId;
+    internal readonly uint SourceId;
+    //
+    // for atusecounter use, add "read only" properties
+    public (uint LowPart, int HighPart) ReadOnlyAdapterId => new(this.AdapterId.LowPart, this.AdapterId.HighPart);
+    public uint ReadOnlySourceId => this.SourceId;
 
     // NOTE: when this class is used in legacy (Morphic 1.x) mode, display class instance values will all be zero- or null-initialized; the caller should _not_ manually create an instance of this class directly outside of legacy code use
     public Display()
@@ -47,7 +51,7 @@ public class Display
         // DO NOT INSTANTIATE AN INSTANCE OF DISPLAY DIRECTLY USING THIS PARAMETERLESS CONSTRUCTOR
     }
 
-    private Display(IntPtr monitorHandle, string deviceName, PInvoke.User32.LUID adapterId, uint sourceId)
+    private Display(IntPtr monitorHandle, string deviceName, Windows.Win32.Foundation.LUID adapterId, uint sourceId)
     {
         this.MonitorHandle = (Windows.Win32.Graphics.Gdi.HMONITOR)monitorHandle;
         this.DeviceName = deviceName;
@@ -60,26 +64,28 @@ public class Display
     public static MorphicResult<Display, MorphicUnit> GetDisplayByMonitorHandle(IntPtr monitorHandle)
     {
         // get the monitor's display name
-        var getDisplayDeviceNameResult = Display.GetDisplayDeviceNameForMonitorHandle(monitorHandle);
+        var getDisplayDeviceNameResult = Display.GetDisplayDeviceNameForMonitorHandle((Windows.Win32.Graphics.Gdi.HMONITOR)monitorHandle);
         if (getDisplayDeviceNameResult.IsError == true)
         {
             return MorphicResult.ErrorResult();
         }
         var deviceName = getDisplayDeviceNameResult.Value!;
 
-        // retrieve the buffer sizes needed to call QueryDisplayConfig (i.e. to get our displays' configs)
-        // OBSERVATION: while testing in a virtual machine, this function returned zero for both OUT parameters; that may not be related to VMs and it may have been temporary--but it's an issue we need to be aware of and which will cause QueryDisplayConfig to return an INVALID PARAMETERS error in the next call.
+        // retrieve the buffer sizes needed to call QueryDisplayConfig (i.e. to get all of our displays' configs)
         uint numPathArrayElements;
         uint numModeInfoArrayElements;
-        var getDisplayConfigBufferSizesSuccess = ExtendedPInvoke.GetDisplayConfigBufferSizes(ExtendedPInvoke.QueryDisplayConfigFlags.QDC_ONLY_ACTIVE_PATHS, out numPathArrayElements, out numModeInfoArrayElements);
-        switch (getDisplayConfigBufferSizesSuccess)
+        var getDisplayConfigBufferSizesResult = Windows.Win32.PInvoke.GetDisplayConfigBufferSizes(
+            Windows.Win32.Devices.Display.QUERY_DISPLAY_CONFIG_FLAGS.QDC_ONLY_ACTIVE_PATHS | Windows.Win32.Devices.Display.QUERY_DISPLAY_CONFIG_FLAGS.QDC_VIRTUAL_MODE_AWARE, 
+            out numPathArrayElements, 
+            out numModeInfoArrayElements);
+        switch (getDisplayConfigBufferSizesResult)
         {
-            case PInvoke.Win32ErrorCode.ERROR_SUCCESS:
+            case Windows.Win32.Foundation.WIN32_ERROR.ERROR_SUCCESS:
                 break;
-            case PInvoke.Win32ErrorCode.ERROR_INVALID_PARAMETER:
-            case PInvoke.Win32ErrorCode.ERROR_NOT_SUPPORTED:
-            case PInvoke.Win32ErrorCode.ERROR_ACCESS_DENIED:
-            case PInvoke.Win32ErrorCode.ERROR_GEN_FAILURE:
+            case Windows.Win32.Foundation.WIN32_ERROR.ERROR_INVALID_PARAMETER:
+            case Windows.Win32.Foundation.WIN32_ERROR.ERROR_NOT_SUPPORTED: // no WDDM display driver available
+            case Windows.Win32.Foundation.WIN32_ERROR.ERROR_ACCESS_DENIED:
+            case Windows.Win32.Foundation.WIN32_ERROR.ERROR_GEN_FAILURE:
                 // failure
                 return MorphicResult.ErrorResult();
             default:
@@ -87,49 +93,61 @@ public class Display
                 return MorphicResult.ErrorResult();
         }
 
-        var pathInfoElements = new ExtendedPInvoke.DISPLAYCONFIG_PATH_INFO[numPathArrayElements];
-        var modeInfoElements = new ExtendedPInvoke.DISPLAYCONFIG_MODE_INFO[numModeInfoArrayElements];
+        Span<Windows.Win32.Devices.Display.DISPLAYCONFIG_PATH_INFO> pathInfoElements = new Windows.Win32.Devices.Display.DISPLAYCONFIG_PATH_INFO[numPathArrayElements];
+        Span<Windows.Win32.Devices.Display.DISPLAYCONFIG_MODE_INFO> modeInfoElements = new Windows.Win32.Devices.Display.DISPLAYCONFIG_MODE_INFO[numModeInfoArrayElements];
 
-        var queryDisplayConfigSuccess = ExtendedPInvoke.QueryDisplayConfig(ExtendedPInvoke.QueryDisplayConfigFlags.QDC_ONLY_ACTIVE_PATHS, ref numPathArrayElements, pathInfoElements, ref numModeInfoArrayElements, modeInfoElements, IntPtr.Zero);
-        switch ((PInvoke.Win32ErrorCode)queryDisplayConfigSuccess)
+        var queryDisplayConfigResult = Windows.Win32.PInvoke.QueryDisplayConfig(
+            Windows.Win32.Devices.Display.QUERY_DISPLAY_CONFIG_FLAGS.QDC_ONLY_ACTIVE_PATHS | Windows.Win32.Devices.Display.QUERY_DISPLAY_CONFIG_FLAGS.QDC_VIRTUAL_MODE_AWARE,
+            ref numPathArrayElements, pathInfoElements, 
+            ref numModeInfoArrayElements, modeInfoElements, 
+            ref System.Runtime.CompilerServices.Unsafe.NullRef<Windows.Win32.Devices.Display.DISPLAYCONFIG_TOPOLOGY_ID>());
+        switch (queryDisplayConfigResult)
         {
-            case PInvoke.Win32ErrorCode.ERROR_SUCCESS:
+            case Windows.Win32.Foundation.WIN32_ERROR.ERROR_SUCCESS:
                 break;
-            case PInvoke.Win32ErrorCode.ERROR_INVALID_PARAMETER:
-            case PInvoke.Win32ErrorCode.ERROR_NOT_SUPPORTED:
-            case PInvoke.Win32ErrorCode.ERROR_ACCESS_DENIED:
-            case PInvoke.Win32ErrorCode.ERROR_GEN_FAILURE:
-            case PInvoke.Win32ErrorCode.ERROR_INSUFFICIENT_BUFFER:
+            case Windows.Win32.Foundation.WIN32_ERROR.ERROR_INVALID_PARAMETER:
+            case Windows.Win32.Foundation.WIN32_ERROR.ERROR_NOT_SUPPORTED: // no WDDM display driver available
+            case Windows.Win32.Foundation.WIN32_ERROR.ERROR_ACCESS_DENIED:
+            case Windows.Win32.Foundation.WIN32_ERROR.ERROR_GEN_FAILURE:
+            case Windows.Win32.Foundation.WIN32_ERROR.ERROR_INSUFFICIENT_BUFFER:
                 // failure
                 return MorphicResult.ErrorResult();
             default:
                 // unknown error
                 return MorphicResult.ErrorResult();
         }
+        //
+        // since QueryDisplayConfig can return a smaller number of path/modeinfo elements than requested, resize the array
+        pathInfoElements = pathInfoElements[..(int)numPathArrayElements];
+        modeInfoElements = modeInfoElements [..(int)numModeInfoArrayElements];
 
         Display? result = null;
 
-        // find the matching display
-        var sourceName = ExtendedPInvoke.DISPLAYCONFIG_SOURCE_DEVICE_NAME.InitializeNew();
+        // find the matching display (looping through all attached displays, in case there are two instances of the same display...i.e. a clone)
+        var sourceDeviceName = new Windows.Win32.Devices.Display.DISPLAYCONFIG_SOURCE_DEVICE_NAME();
         foreach (var pathInfoElement in pathInfoElements)
         {
             // get the device name
-            sourceName.header.adapterId = pathInfoElement.sourceInfo.adapterId;
-            sourceName.header.id = pathInfoElement.sourceInfo.id;
-            sourceName.header.type = ExtendedPInvoke.DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME;
+            sourceDeviceName.header.adapterId = pathInfoElement.sourceInfo.adapterId;
+            sourceDeviceName.header.id = pathInfoElement.sourceInfo.id;
+            sourceDeviceName.header.type = Windows.Win32.Devices.Display.DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME;
+            sourceDeviceName.header.size = (uint)Marshal.SizeOf<Windows.Win32.Devices.Display.DISPLAYCONFIG_SOURCE_DEVICE_NAME>();
             //
-            var displayConfigGetDeviceInfoResult = ExtendedPInvoke.DisplayConfigGetDeviceInfo(ref sourceName);
-            switch (displayConfigGetDeviceInfoResult)
+            var displayConfigGetDeviceInfoResult = Windows.Win32.PInvoke.DisplayConfigGetDeviceInfo(
+                ref System.Runtime.CompilerServices.Unsafe.As<
+                    Windows.Win32.Devices.Display.DISPLAYCONFIG_SOURCE_DEVICE_NAME,
+                    Windows.Win32.Devices.Display.DISPLAYCONFIG_DEVICE_INFO_HEADER>(ref sourceDeviceName));
+            switch ((Windows.Win32.Foundation.WIN32_ERROR)displayConfigGetDeviceInfoResult)
             {
-                case PInvoke.Win32ErrorCode.ERROR_SUCCESS:
+                case Windows.Win32.Foundation.WIN32_ERROR.ERROR_SUCCESS:
                     break;
-                case PInvoke.Win32ErrorCode.ERROR_INVALID_PARAMETER:
+                case Windows.Win32.Foundation.WIN32_ERROR.ERROR_INVALID_PARAMETER:
                     System.Diagnostics.Debug.Assert(false, "Error getting device info; this is probably a programming error.");
                     return MorphicResult.ErrorResult();
-                case PInvoke.Win32ErrorCode.ERROR_NOT_SUPPORTED:
-                case PInvoke.Win32ErrorCode.ERROR_ACCESS_DENIED:
-                case PInvoke.Win32ErrorCode.ERROR_INSUFFICIENT_BUFFER:
-                case PInvoke.Win32ErrorCode.ERROR_GEN_FAILURE:
+                case Windows.Win32.Foundation.WIN32_ERROR.ERROR_NOT_SUPPORTED: // no WDDM display driver available
+                case Windows.Win32.Foundation.WIN32_ERROR.ERROR_ACCESS_DENIED:
+                case Windows.Win32.Foundation.WIN32_ERROR.ERROR_INSUFFICIENT_BUFFER:
+                case Windows.Win32.Foundation.WIN32_ERROR.ERROR_GEN_FAILURE:
                     // failure; out of an abundance of caution, try to read the next display (so that we don't fail due to a single "bad" display entry)
                     System.Diagnostics.Debug.Assert(false, "Error getting device info; this may not be an error.");
                     continue;
@@ -142,12 +160,11 @@ public class Display
                     //return IMorphicResult<DisplayAdapterIdAndSourceId>.ErrorResult();
             }
 
-            var lengthOfViewGdiDeviceName = Array.IndexOf<char>(sourceName.viewGdiDeviceName, '\0');
-            if (lengthOfViewGdiDeviceName < 0)
-            {
-                lengthOfViewGdiDeviceName = sourceName.viewGdiDeviceName.Length;
-            }
-            var viewGdiDeviceName = new string(sourceName.viewGdiDeviceName, 0, lengthOfViewGdiDeviceName);
+            ReadOnlySpan<char> viewGdiChars = sourceDeviceName.viewGdiDeviceName.AsSpan();
+            var nulIndex = viewGdiChars.IndexOf('\0');
+            var viewGdiDeviceName = nulIndex >= 0
+                ? new string(viewGdiChars[..nulIndex])
+                : new string(viewGdiChars);
 
             if (viewGdiDeviceName == deviceName)
             {
@@ -157,9 +174,9 @@ public class Display
                 bool isInternal;
                 switch (pathInfoElement.targetInfo.outputTechnology)
                 {
-                    case PInvoke.User32.DISPLAYCONFIG_VIDEO_OUTPUT_TECHNOLOGY.DISPLAYCONFIG_OUTPUT_TECHNOLOGY_DISPLAYPORT_EMBEDDED:
-                    case PInvoke.User32.DISPLAYCONFIG_VIDEO_OUTPUT_TECHNOLOGY.DISPLAYCONFIG_OUTPUT_TECHNOLOGY_UDI_EMBEDDED:
-                    case PInvoke.User32.DISPLAYCONFIG_VIDEO_OUTPUT_TECHNOLOGY.DISPLAYCONFIG_OUTPUT_TECHNOLOGY_INTERNAL:
+                    case Windows.Win32.Devices.Display.DISPLAYCONFIG_VIDEO_OUTPUT_TECHNOLOGY.DISPLAYCONFIG_OUTPUT_TECHNOLOGY_DISPLAYPORT_EMBEDDED:
+                    case Windows.Win32.Devices.Display.DISPLAYCONFIG_VIDEO_OUTPUT_TECHNOLOGY.DISPLAYCONFIG_OUTPUT_TECHNOLOGY_UDI_EMBEDDED:
+                    case Windows.Win32.Devices.Display.DISPLAYCONFIG_VIDEO_OUTPUT_TECHNOLOGY.DISPLAYCONFIG_OUTPUT_TECHNOLOGY_INTERNAL:
                         isInternal = true;
                         break;
                     default:
@@ -167,10 +184,10 @@ public class Display
                         break;
                 }
 
-                // if this entry matches out monitorName and we either (a) don't have a result yet or (b) have a result but this one is _internal_, then update our result
+                // if this entry matches out monitorName and we either (a) don't have a result yet or (b) have a result but this one is _internal_ (the preference), then update our result
                 if ((result is null) || (isInternal == true))
                 {
-                    result = new Display(monitorHandle, deviceName, sourceName.header.adapterId, sourceName.header.id);
+                    result = new Display(monitorHandle, deviceName, sourceDeviceName.header.adapterId, sourceDeviceName.header.id);
                 }
             }
         }
@@ -331,7 +348,7 @@ public class Display
         // retrieve the DPI values (min, current and max) for the monitor
         var getDpiInfo = ExtendedPInvoke.DISPLAYCONFIG_GET_DPI.InitializeNew();
         getDpiInfo.header.type = ExtendedPInvoke.DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_DPI;
-        getDpiInfo.header.adapterId = this.AdapterId;
+        getDpiInfo.header.adapterId = new PInvoke.User32.LUID() { HighPart = this.AdapterId.HighPart, LowPart = this.AdapterId.LowPart };
         getDpiInfo.header.id = this.SourceId;
         //
         var displayConfigGetDeviceInfoSuccess = ExtendedPInvoke.DisplayConfigGetDeviceInfo(ref getDpiInfo);
@@ -368,7 +385,7 @@ public class Display
             // retrieve the DPI values (min, current and max) for the monitor
             var setDpiInfo = ExtendedPInvoke.DISPLAYCONFIG_SET_DPI.InitializeNew();
             setDpiInfo.header.type = ExtendedPInvoke.DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_SET_DPI;
-            setDpiInfo.header.adapterId = adapterId;
+            setDpiInfo.header.adapterId = new PInvoke.User32.LUID() { HighPart = adapterId.HighPart, LowPart = adapterId.LowPart };
             setDpiInfo.header.id = sourceId;
             setDpiInfo.dpiOffset = dpiOffset;
             //
