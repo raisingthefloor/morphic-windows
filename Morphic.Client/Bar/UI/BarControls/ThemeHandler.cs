@@ -17,8 +17,8 @@
         /// Current theme to use, depending on the state (normal/hover/focus).
         /// </summary>
         public Theme ActiveTheme { get; private set;}
-        public bool IsMouseDown { get;set;}
-        public bool FocusedByKeyboard { get;set;}
+        public bool IsMouseDown { get; set;}
+        public bool FocusedByKeyboard { get; set;}
         public bool IsChecked { get; set; }
 
         public event EventHandler<ThemeEventArgs>? ThemeStateChanged;

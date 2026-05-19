@@ -68,12 +68,12 @@
                 }
                 var currentMousePosition = getCurrentPositionResult.Value!;
                 //
-                var getDisplayForPointResult = Morphic.WindowsNative.Display.Display.GetDisplayForPoint(currentMousePosition);
-                if (getDisplayForPointResult.IsError == true)
+                var getDisplayAtPointerLocationResult = Morphic.WindowsNative.Display.Display.GetDisplayAtPointerLocation(currentMousePosition);
+                if (getDisplayAtPointerLocationResult.IsError == true)
                 {
                     return false;
                 }
-                var targetDisplay = getDisplayForPointResult.Value!;
+                var targetDisplay = getDisplayAtPointerLocationResult.Value!;
                 //
                 if (newDpiScale is not null)
                 {
@@ -128,12 +128,12 @@
             }
             var currentMousePosition = getCurrentPositionResult.Value!;
             //
-            var getDisplayForPointResult = Morphic.WindowsNative.Display.Display.GetDisplayForPoint(currentMousePosition);
-            if (getDisplayForPointResult.IsError == true)
+            var getDisplayAtPointerLocationResult = Morphic.WindowsNative.Display.Display.GetDisplayAtPointerLocation(currentMousePosition);
+            if (getDisplayAtPointerLocationResult.IsError == true)
             {
                 return Task.FromResult<object?>(null);
             }
-            var targetDisplay = getDisplayForPointResult.Value!;
+            var targetDisplay = getDisplayAtPointerLocationResult.Value!;
             //
             var scale = targetDisplay.GetMonitorScalePercentage();
             if (scale is null)
