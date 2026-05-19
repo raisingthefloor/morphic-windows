@@ -170,12 +170,12 @@
                             }
                             var currentMousePosition = getCurrentPositionResult.Value!;
 
-                            var getDisplayAtPointerLocationResult = Morphic.WindowsNative.Display.Display.GetDisplayAtPointerLocation(currentMousePosition);
-                            if (getDisplayAtPointerLocationResult.IsError == true)
+                            var getDisplayAtPointResult = Morphic.WindowsNative.Display.Display.GetDisplayAtPoint(currentMousePosition);
+                            if (getDisplayAtPointResult.IsError == true)
                             {
                                 return MorphicResult.ErrorResult();
                             }
-                            var targetDisplay = getDisplayAtPointerLocationResult.Value!;
+                            var targetDisplay = getDisplayAtPointResult.Value!;
 
                             var moveCursorToCenterOfDisplayResult = Morphic.WindowsNative.Mouse.Mouse.MoveCursorToCenterOfDisplay(targetDisplay);
                             if (moveCursorToCenterOfDisplayResult.IsError == true)
