@@ -1266,13 +1266,13 @@ namespace Morphic.Client.Bar.Data.Actions
                         switch (startResult.Error!)
                         {
                             case ApplicationProcessUtils.IStartApplicationError.CannotFindExecutable:
-                                Debug.WriteLine("Could not start Pointing Magnifier.\n\nCannot find application's executable file.");
+                                Debug.WriteLine("Could not start Voice Access.\n\nCannot find application's executable file.");
                                 return MorphicResult.ErrorResult();
                             case ApplicationProcessUtils.IStartApplicationError.NotStarted:
-                                Debug.WriteLine("Could not start Pointing Magnifier.\n\nApplication was not started.");
+                                Debug.WriteLine("Could not start Voice Access.\n\nApplication was not started.");
                                 return MorphicResult.ErrorResult();
                             case ApplicationProcessUtils.IStartApplicationError.Win32Exception(var exception):
-                                Debug.WriteLine("Could not start Pointing Magnifier.\n\nWin32 error code: " + exception.NativeErrorCode.ToString());
+                                Debug.WriteLine("Could not start Voice Access.\n\nWin32 error code: " + exception.NativeErrorCode.ToString());
                                 return MorphicResult.ErrorResult();
                             default:
                                 throw new MorphicUnhandledErrorException();
@@ -1287,11 +1287,11 @@ namespace Morphic.Client.Bar.Data.Actions
                         switch (stopResult.Error!)
                         {
                             case ApplicationProcessUtils.IStopApplicationError.NotStarted:
-                                // if the pointing magnifier was already stopped, proceed
-                                Debug.WriteLine("DEBUG: could not stop Pointing Magnifier: PROCESS WAS NOT RUNNING");
+                                // if Voice Access was already stopped, proceed
+                                Debug.WriteLine("DEBUG: could not stop Voice Access: PROCESS WAS NOT RUNNING");
                                 return MorphicResult.ErrorResult();
                             case ApplicationProcessUtils.IStopApplicationError.Win32Exception(var exception):
-                                Debug.WriteLine("Could not close pointing magnifier.\n\nWin32 error code: " + exception.NativeErrorCode.ToString());
+                                Debug.WriteLine("Could not close Voice Access.\n\nWin32 error code: " + exception.NativeErrorCode.ToString());
                                 return MorphicResult.ErrorResult();
                             default:
                                 throw new MorphicUnhandledErrorException();
