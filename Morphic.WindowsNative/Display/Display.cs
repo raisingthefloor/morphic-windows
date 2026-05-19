@@ -160,11 +160,7 @@ public class Display
                     //return IMorphicResult<DisplayAdapterIdAndSourceId>.ErrorResult();
             }
 
-            ReadOnlySpan<char> viewGdiChars = sourceDeviceName.viewGdiDeviceName.AsSpan();
-            var nulIndex = viewGdiChars.IndexOf('\0');
-            var viewGdiDeviceName = nulIndex >= 0
-                ? new string(viewGdiChars[..nulIndex])
-                : new string(viewGdiChars);
+            var viewGdiDeviceName = sourceDeviceName.viewGdiDeviceName.ToString(); // capture null-terminated string (or full buffer as string, if not null-terminated)
 
             if (viewGdiDeviceName == deviceName)
             {
@@ -198,8 +194,10 @@ public class Display
             return MorphicResult.ErrorResult();
         }
 
-        return MorphicResult.OkResult(result!);
+        return MorphicResult.OkResult(result);
     }
+
+    //
 
     public static MorphicResult<Display, MorphicUnit> GetDisplayForWindow(IntPtr windowHandle)
     {
@@ -208,9 +206,13 @@ public class Display
         return Display.GetDisplayByMonitorHandle(monitorHandle);
     }
 
-    public static MorphicResult<Display, MorphicUnit> GetDisplayForPoint(Point point)
+    public static MorphicResult<Display, MorphicUnit> GetDisplayAtPointerLocation(System.Drawing.Point point)
     {
-        var monitorHandle = Display.GetMonitorHandleForPoint(point);
+        var monitorHandle = Display.GetMonitorHandleAtPointerLocation(point);
+        if (monitorHandle.IsNull)
+        {
+            return MorphicResult.ErrorResult();
+        }
 
         return Display.GetDisplayByMonitorHandle(monitorHandle);
     }
@@ -256,12 +258,10 @@ public class Display
         return monitorHandle;
     }
 
-    private static IntPtr GetMonitorHandleForPoint(Point point)
+    private static Windows.Win32.Graphics.Gdi.HMONITOR GetMonitorHandleAtPointerLocation(System.Drawing.Point point)
     {
-        // get the handle of the monitor which contains the point; this is useful, for instance, for finding the monitor where the mouse cursor currently rests
-        var nativePoint = new PInvoke.POINT() { x = point.X, y = point.Y };
-        var monitorHandle = PInvoke.User32.MonitorFromPoint(nativePoint, PInvoke.User32.MonitorOptions.MONITOR_DEFAULTTONEAREST);
-
+        // get the handle of the monitor which contains the point; this is useful, for instance, for finding the monitor where the mouse cursor is currently positioned
+        var monitorHandle = Windows.Win32.PInvoke.MonitorFromPoint(point, Windows.Win32.Graphics.Gdi.MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONULL);
         return monitorHandle;
     }
 
@@ -314,23 +314,18 @@ public class Display
     }
 
     // NOTE: if the caller does not provide a windowHandle, we use the primary monitor instead
-    private static MorphicResult<string, MorphicUnit> GetDisplayDeviceNameForMonitorHandle(IntPtr monitorHandle)
+    private static MorphicResult<string, MorphicUnit> GetDisplayDeviceNameForMonitorHandle(Windows.Win32.Graphics.Gdi.HMONITOR monitorHandle)
     {
-        var monitorInfo = ExtendedPInvoke.MONITORINFOEXW.InitializeNew();
-        bool getMonitorInfoSuccess = ExtendedPInvoke.GetMonitorInfo(monitorHandle, ref monitorInfo);
+        Windows.Win32.Graphics.Gdi.MONITORINFOEXW monitorInfoEx = new();
+        monitorInfoEx.monitorInfo.cbSize = (uint)Marshal.SizeOf<Windows.Win32.Graphics.Gdi.MONITORINFOEXW>();
+
+        bool getMonitorInfoSuccess = Windows.Win32.PInvoke.GetMonitorInfo(monitorHandle, ref monitorInfoEx.monitorInfo);
         if (getMonitorInfoSuccess == false)
         {
             return MorphicResult.ErrorResult();
         }
 
-        int lengthOfDeviceName = Array.IndexOf(monitorInfo.szDevice, '\0');
-        if (lengthOfDeviceName < 0)
-        {
-            // if the string is not null-terminated, select the whole string; because P/Invoke knows the maximum length from the struct's marshalling definition, this is a safe operation
-            lengthOfDeviceName = monitorInfo.szDevice.Length;
-        }
-        var deviceName = new string(monitorInfo.szDevice, 0, lengthOfDeviceName);
-
+        var deviceName = monitorInfoEx.szDevice.ToString(); // capture null-terminated string (or full buffer as string, if not null-terminated)
         return MorphicResult.OkResult(deviceName);
     }
 
