@@ -71,6 +71,15 @@ public sealed partial class BarButtonControl : UserControl, IBarItemControl
         }
     }
 
+    // BarButtonControl's layout does not vary by orientation; a single TextOnly button fills
+    // whatever width/height its parent allocates regardless of the bar's orientation. Just measure
+    // self with the supplied available size and return DesiredSize.
+    public Windows.Foundation.Size MeasureForOrientation(Windows.Foundation.Size availableSize, Orientation orientation)
+    {
+        this.Measure(availableSize);
+        return this.DesiredSize;
+    }
+
     private void ApplyData()
     {
         // tear down any previously-built button

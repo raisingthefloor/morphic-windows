@@ -499,7 +499,7 @@ public sealed partial class MorphicBarWindow : Morphic.MorphicBar.TransparentWin
     private Windows.Win32.Graphics.Gdi.HMONITOR GetVerifiedCurrentMonitorHandle()
     {
         var monitorInfo = new Windows.Win32.Graphics.Gdi.MONITORINFO();
-        monitorInfo.cbSize = (uint)Marshal.SizeOf<Windows.Win32.Graphics.Gdi.MONITORINFO>();
+        monitorInfo.cbSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf<Windows.Win32.Graphics.Gdi.MONITORINFO>();
         if (Windows.Win32.PInvoke.GetMonitorInfo(_currentMonitorHandle, ref monitorInfo) != 0)
         {
             return _currentMonitorHandle;

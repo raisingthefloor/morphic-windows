@@ -34,4 +34,14 @@ public interface IBarItemControl
     // when the bar docks horizontally, items use Horizontal; when the bar docks vertically, items use Vertical.
     // Items may use this to adjust their layout, text wrapping, or size behavior accordingly.
     Orientation Orientation { get; set; }
+
+    // Returns the desired size this item would have if rendered with the specified orientation,
+    // within the given available size. Does NOT mutate the item's current Orientation, so it is
+    // safe to call regardless of whether the item is visible.
+    //
+    // For items whose layout does not vary by orientation (e.g. a single button), the orientation
+    // parameter may be ignored. For items whose layout does vary (e.g. a multi-button group whose
+    // sub-buttons run horizontally vs vertically), the implementation must compose the size as
+    // the requested orientation would arrange children, not as the current Orientation does.
+    Windows.Foundation.Size MeasureForOrientation(Windows.Foundation.Size availableSize, Orientation orientation);
 }

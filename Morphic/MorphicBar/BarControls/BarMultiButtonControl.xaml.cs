@@ -80,6 +80,92 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
         }
     }
 
+    // Returns the desired size this multi-button group would have if rendered with the specified
+    // orientation. The live ButtonsContainer Grid is configured for the CURRENT orientation by
+    // ApplyData (column vs row layout, per-button margins, corner radii), so a plain Measure on
+    // 'this' only answers for the current orientation. Instead, we compose the size analytically
+    // from per-child measurements which don't depend on the panel's orientation.
+    //
+    // Rule (matches v1.x):
+    //   - Horizontal, AutoSize:         each sub-button at its own natural width
+    //   - Horizontal, StretchToLargest: every sub-button equal to the widest's natural width
+    //   - Vertical, any SizingMode:     every sub-button equal to the widest's natural width
+    //                                   (the vertical rule overrides SizingMode)
+    // The header always sits above the sub-buttons in both orientations.
+    public Windows.Foundation.Size MeasureForOrientation(Windows.Foundation.Size availableSize, Orientation orientation)
+    {
+        if (_data is null || _subButtons.Count == 0)
+        {
+            this.Measure(availableSize);
+            return this.DesiredSize;
+        }
+
+        // measure the header (HeaderTextBlock.Visibility was set by ApplyData based on whether
+        // _data.Header is non-empty); DesiredSize already includes the TextBlock's own Margin
+        double headerWidth = 0;
+        double headerHeight = 0;
+        if (this.HeaderTextBlock.Visibility == Microsoft.UI.Xaml.Visibility.Visible)
+        {
+            this.HeaderTextBlock.Measure(availableSize);
+            headerWidth = this.HeaderTextBlock.DesiredSize.Width;
+            headerHeight = this.HeaderTextBlock.DesiredSize.Height;
+        }
+
+        // measure each sub-button and back out the in-effect Margin so we work in natural
+        // (margin-free) sizes; the live Margin that would be set by ApplyData for the _current_
+		// orientation would otherwise pollute the composition for the _requested_ orientation
+        double maxNaturalWidth = 0;
+        double maxNaturalHeight = 0;
+        double sumNaturalWidth = 0;
+        double sumNaturalHeight = 0;
+        foreach (var subButton in _subButtons)
+        {
+            subButton.Measure(availableSize);
+            var marginH = subButton.Margin.Left + subButton.Margin.Right;
+            var marginV = subButton.Margin.Top + subButton.Margin.Bottom;
+            var naturalW = System.Math.Max(0, subButton.DesiredSize.Width - marginH);
+            var naturalH = System.Math.Max(0, subButton.DesiredSize.Height - marginV);
+            if (naturalW > maxNaturalWidth) { maxNaturalWidth = naturalW; }
+            if (naturalH > maxNaturalHeight) { maxNaturalHeight = naturalH; }
+            sumNaturalWidth += naturalW;
+            sumNaturalHeight += naturalH;
+        }
+
+        // gap contribution along the layout axis: ApplyData sets each end button to contribute
+        // one ControlButtonInnerMargin on its inner side, and each middle button to contribute
+        // one on each side, so across n buttons the total margin extent is 2*(n-1)*ControlButtonInnerMargin
+        int n = _subButtons.Count;
+        double gapContribution = 2 * (n - 1) * ControlButtonInnerMargin;
+
+        double subButtonsWidth;
+        double subButtonsHeight;
+        if (orientation == Orientation.Horizontal)
+        {
+            subButtonsHeight = maxNaturalHeight;
+            switch (_data.SizingMode)
+            {
+                case MultiButtonSizingMode.AutoSize:
+                    subButtonsWidth = sumNaturalWidth + gapContribution;
+                    break;
+                case MultiButtonSizingMode.StretchToLargest:
+                    subButtonsWidth = (n * maxNaturalWidth) + gapContribution;
+                    break;
+                default:
+                    throw new MorphicUnhandledCaseException(_data.SizingMode);
+            }
+        }
+        else
+        {
+            // vertical: SizingMode is overridden -- all sub-buttons get equal (max) width
+            subButtonsWidth = maxNaturalWidth;
+            subButtonsHeight = sumNaturalHeight + gapContribution;
+        }
+
+        return new Windows.Foundation.Size(
+            System.Math.Max(headerWidth, subButtonsWidth),
+            headerHeight + subButtonsHeight);
+    }
+
     private void ApplyData()
     {
         // tear down any previously-built sub-buttons
