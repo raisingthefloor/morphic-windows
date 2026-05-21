@@ -1,11 +1,16 @@
-﻿DwmSetWindowAttribute
+﻿DisplayConfigGetDeviceInfo
+DisplayConfigSetDeviceInfo
+DwmSetWindowAttribute
 GetCurrentPackageFullName
 GetCursorPos
+GetDisplayConfigBufferSizes
 GetMonitorInfo
 MonitorFromPoint
+QueryDisplayConfig
 SendMessageTimeout
 SetCursorPos
 
+DISPLAYCONFIG_SOURCE_DEVICE_NAME
 MONITORINFOEXW
 
 HWND
