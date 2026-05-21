@@ -32,7 +32,7 @@ namespace Morphic.MorphicBar;
 
 internal class LayoutUtils
 {
-    private const int WINDOW_CORNER_DOCKING_DISTANCE_FROM_SCREEN_EDGE_IN_DEVICE_UNITS = 5;
+    internal const int WINDOW_CORNER_DOCKING_DISTANCE_FROM_SCREEN_EDGE_IN_DEVICE_UNITS = 5;
 
     internal static MorphicResult<double, MorphicUnit> GetRasterizationScaleForMonitor(Windows.Win32.Graphics.Gdi.HMONITOR hMonitor)
     {

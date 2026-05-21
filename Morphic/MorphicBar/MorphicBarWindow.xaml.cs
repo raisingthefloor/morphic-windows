@@ -118,12 +118,10 @@ public sealed partial class MorphicBarWindow : Morphic.MorphicBar.TransparentWin
 
         this.Activated += MorphicBarWindow_Activated;
         (this.Content as Grid)!.Loaded += RootGrid_Loaded;
-
-        this.InitializeBarItems();
     }
 
     // Populate the buttons on the MorphicBar
-    private void InitializeBarItems()
+    public void InitializeBarItems()
     {
     }
 
@@ -402,6 +400,37 @@ public sealed partial class MorphicBarWindow : Morphic.MorphicBar.TransparentWin
 
     /* layout methods */
 
+    // Single-source margin values for the bar items panel per orientation. Consumed by
+    // UpdateBarItemsPanelLayout (to apply the live Margin) and by MeasureDesiredBarLogicalSize
+    // (to compose the bar's desired size for an arbitrary orientation without mutating the live
+    // panel). If we ever expose these to XAML too, route XAML through the same source.
+    //
+    // Vertical mode's 25px top reserves space for the CloseButton, which overlaps the items
+    // panel area at the top-right corner.
+    private static Thickness GetBarItemsPanelMargin(Orientation orientation)
+    {
+        return orientation switch
+        {
+            Orientation.Horizontal => new Thickness(10, 5, 5, 5),
+            Orientation.Vertical => new Thickness(5, 25, 5, 5),
+            _ => throw new Morphic.Core.MorphicUnhandledCaseException(orientation),
+        };
+    }
+
+    // Single-source margin values for the Morphic logo (menu) button per orientation. Same
+    // consumer story as GetBarItemsPanelMargin above.
+    private static Thickness GetMorphicMenuButtonMargin(Orientation orientation)
+    {
+        return orientation switch
+        {
+            Orientation.Horizontal => new Thickness(0, 0, 5, 0),
+            Orientation.Vertical => new Thickness(0, 0, 0, 10),
+            _ => throw new Morphic.Core.MorphicUnhandledCaseException(orientation),
+        };
+    }
+	
+	//
+
     // Flows the bar items vertically or horizontally to follow the bar's orientation, and propagates
     // the orientation down to each IBarItemControl child so the items can adapt their own layout.
     private void UpdateBarItemsPanelLayout(Orientation orientation)
@@ -415,7 +444,6 @@ public sealed partial class MorphicBarWindow : Morphic.MorphicBar.TransparentWin
                 Grid.SetColumnSpan(this.BarItemsPanel, 1);
                 Grid.SetRow(this.BarItemsPanel, 0);
                 Grid.SetRowSpan(this.BarItemsPanel, 1);
-                this.BarItemsPanel.Margin = new Thickness(10, 5, 5, 5);
                 break;
             case Orientation.Vertical:
                 this.BarItemsPanel.Orientation = Orientation.Vertical;
@@ -424,11 +452,11 @@ public sealed partial class MorphicBarWindow : Morphic.MorphicBar.TransparentWin
                 Grid.SetColumnSpan(this.BarItemsPanel, 3);
                 Grid.SetRow(this.BarItemsPanel, 0);
                 Grid.SetRowSpan(this.BarItemsPanel, 1);
-                this.BarItemsPanel.Margin = new Thickness(5, 25, 5, 5);
                 break;
             default:
                 throw new Morphic.Core.MorphicUnhandledCaseException(orientation);
         }
+        this.BarItemsPanel.Margin = GetBarItemsPanelMargin(orientation);
 
         foreach (var child in this.BarItemsPanel.Children)
         {
@@ -453,7 +481,6 @@ public sealed partial class MorphicBarWindow : Morphic.MorphicBar.TransparentWin
                 this.LogoRow.Height = new GridLength(0);
                 this.MorphicMenuButton.HorizontalAlignment = HorizontalAlignment.Center;
                 this.MorphicMenuButton.VerticalAlignment = VerticalAlignment.Center;
-                this.MorphicMenuButton.Margin = new Thickness(0, 0, 5, 0);
                 break;
             case Orientation.Vertical:
                 // Morphic logo (menu) button in row 1 at the bottom, spanning all columns
@@ -464,9 +491,9 @@ public sealed partial class MorphicBarWindow : Morphic.MorphicBar.TransparentWin
                 this.LogoRow.Height = GridLength.Auto;
                 this.MorphicMenuButton.HorizontalAlignment = HorizontalAlignment.Center;
                 this.MorphicMenuButton.VerticalAlignment = VerticalAlignment.Center;
-                this.MorphicMenuButton.Margin = new Thickness(0, 0, 0, 10);
                 break;
         }
+        this.MorphicMenuButton.Margin = GetMorphicMenuButtonMargin(orientation);
     }
 
     /* helper methods */
@@ -490,6 +517,134 @@ public sealed partial class MorphicBarWindow : Morphic.MorphicBar.TransparentWin
         }
 
         this.AppWindow.Resize(new Windows.Graphics.SizeInt32(physicalWidth, physicalHeight));
+    }
+
+    // Measures the bar's desired size in logical pixels for the given orientation, capped to the
+    // target monitor's working area (minus the keepaway padding LayoutUtils already applies for
+    // docking). Returned as (length, thickness) following the same convention as _logicalLength /
+    // _logicalThickness elsewhere in this file: in horizontal mode length is the width and
+    // thickness is the height; in vertical mode length is the height and thickness is the width.
+    //
+    // The orientation argument may differ from this.Orientation (e.g. during drag-preview), in
+    // which case the bar items are measured via IBarItemControl.MeasureForOrientation, which
+    // composes for the requested orientation without mutating the live items.
+    internal (uint logicalLength, uint logicalThickness) MeasureDesiredBarLogicalSize(
+        Windows.Win32.Graphics.Gdi.HMONITOR hMonitor,
+        Microsoft.UI.Xaml.Controls.Orientation orientation)
+    {
+        // get the monitor's working area and rasterization scale to compute the logical-pixel cap
+        var monitorInfo = new Windows.Win32.Graphics.Gdi.MONITORINFO();
+        monitorInfo.cbSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf<Windows.Win32.Graphics.Gdi.MONITORINFO>();
+        var getMonitorInfoResult = Windows.Win32.PInvoke.GetMonitorInfo(hMonitor, ref monitorInfo);
+        double rasterizationScale = 1.0;
+        double logicalAvailWidth = double.PositiveInfinity;
+        double logicalAvailHeight = double.PositiveInfinity;
+        if (getMonitorInfoResult != 0)
+        {
+            var getRasterizationScaleResult = LayoutUtils.GetRasterizationScaleForMonitor(hMonitor);
+            if (getRasterizationScaleResult.IsSuccess) { rasterizationScale = getRasterizationScaleResult.Value; }
+
+            var workingArea = monitorInfo.rcWork;
+            int keepaway = LayoutUtils.WINDOW_CORNER_DOCKING_DISTANCE_FROM_SCREEN_EDGE_IN_DEVICE_UNITS;
+            logicalAvailWidth = System.Math.Max(0, (workingArea.Width / rasterizationScale) - (2 * keepaway));
+            logicalAvailHeight = System.Math.Max(0, (workingArea.Height / rasterizationScale) - (2 * keepaway));
+        }
+        else
+        {
+            Debug.Assert(false, "Could not get current monitor (to measure working area); fell back to 'infinite' screen size and 100% rasterization scale");
+        }
+
+        // available size passed down to each item's measurement; conservatively use the full
+        // working area minus keepaway (children will not be larger than this even with chrome)
+        var measureAvailableSize = new Windows.Foundation.Size(logicalAvailWidth, logicalAvailHeight);
+
+        // compose the items panel desired size from per-item measurements (the panel itself is a
+        // StackPanel so we sum along the layout axis and take max on the cross axis, plus the
+        // StackPanel's Spacing between adjacent items)
+        double itemsPanelLength = 0;
+        double itemsPanelThickness = 0;
+        int itemCount = 0;
+        foreach (var child in this.BarItemsPanel.Children)
+        {
+            if (child is IBarItemControl item)
+            {
+                var desired = item.MeasureForOrientation(measureAvailableSize, orientation);
+                if (orientation == Orientation.Horizontal)
+                {
+                    itemsPanelLength += desired.Width;
+                    if (desired.Height > itemsPanelThickness) { itemsPanelThickness = desired.Height; }
+                }
+                else
+                {
+                    itemsPanelLength += desired.Height;
+                    if (desired.Width > itemsPanelThickness) { itemsPanelThickness = desired.Width; }
+                }
+                itemCount++;
+            }
+        }
+        if (itemCount > 1)
+        {
+            itemsPanelLength += (itemCount - 1) * this.BarItemsPanel.Spacing;
+        }
+
+        // add the items panel's own Margin for the requested orientation
+        var itemsPanelMargin = GetBarItemsPanelMargin(orientation);
+        if (orientation == Orientation.Horizontal)
+        {
+            itemsPanelLength += itemsPanelMargin.Left + itemsPanelMargin.Right;
+            itemsPanelThickness += itemsPanelMargin.Top + itemsPanelMargin.Bottom;
+        }
+        else
+        {
+            itemsPanelLength += itemsPanelMargin.Top + itemsPanelMargin.Bottom;
+            itemsPanelThickness += itemsPanelMargin.Left + itemsPanelMargin.Right;
+        }
+
+        // measure the Morphic logo button and back out the live Margin so we can apply the margin
+        // for the REQUESTED orientation (which may differ from the live one)
+        this.MorphicMenuButton.Measure(measureAvailableSize);
+        var liveLogoMargin = this.MorphicMenuButton.Margin;
+        double logoNaturalWidth = System.Math.Max(0, this.MorphicMenuButton.DesiredSize.Width - (liveLogoMargin.Left + liveLogoMargin.Right));
+        double logoNaturalHeight = System.Math.Max(0, this.MorphicMenuButton.DesiredSize.Height - (liveLogoMargin.Top + liveLogoMargin.Bottom));
+        var requestedLogoMargin = GetMorphicMenuButtonMargin(orientation);
+        double logoWidthWithMargin = logoNaturalWidth + requestedLogoMargin.Left + requestedLogoMargin.Right;
+        double logoHeightWithMargin = logoNaturalHeight + requestedLogoMargin.Top + requestedLogoMargin.Bottom;
+
+        // measure the close button (it has explicit Width/Height in XAML and no Margin; its
+        // DesiredSize reflects those directly and doesn't vary with orientation)
+        this.CloseButton.Measure(measureAvailableSize);
+        double closeWidth = this.CloseButton.DesiredSize.Width;
+        double closeHeight = this.CloseButton.DesiredSize.Height;
+
+        // compose the final bar size based on the requested orientation
+        double barLength;
+        double barThickness;
+        if (orientation == Orientation.Horizontal)
+        {
+            // layout: [items col 0] [logo col 1] [close col 2 fixed-width, top-aligned]
+            // width  = items + logo (with their margins) + close width
+            // height = max of items / logo / close (close at top, doesn't push if smaller)
+            barLength = itemsPanelLength + logoWidthWithMargin + closeWidth;
+            barThickness = System.Math.Max(itemsPanelThickness, System.Math.Max(logoHeightWithMargin, closeHeight));
+        }
+        else // orientation == Orientation.Vertical
+        {
+            // layout: [items spans cols 0..2 row 0] [logo spans cols 0..2 row 1]
+            //         [close col 2 row 0, top-right; overlaps items area via the 25px top margin]
+            // height = items + logo (with their margins); close doesn't add since it sits inside
+            //   the items panel area thanks to that top margin reserved in GetBarItemsPanelMargin
+            // width  = max of items / logo / close
+            barLength = itemsPanelLength + logoHeightWithMargin;
+            barThickness = System.Math.Max(itemsPanelThickness, System.Math.Max(logoWidthWithMargin, closeWidth));
+        }
+
+        // cap to working area logical pixels (per-axis, swapped per orientation)
+        double maxLength = (orientation == Orientation.Horizontal) ? logicalAvailWidth : logicalAvailHeight;
+        double maxThickness = (orientation == Orientation.Horizontal) ? logicalAvailHeight : logicalAvailWidth;
+        if (barLength > maxLength) { barLength = maxLength; }
+        if (barThickness > maxThickness) { barThickness = maxThickness; }
+
+        return ((uint)System.Math.Ceiling(barLength), (uint)System.Math.Ceiling(barThickness));
     }
 
     // Returns the cached current-monitor handle if it still points at a live monitor (probed via

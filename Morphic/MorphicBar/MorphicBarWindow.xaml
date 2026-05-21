@@ -38,12 +38,12 @@
                             IsTabStop="False"/>
 
                 <!-- Morphic menu logo button (column 1 when horizontal; row 1 when vertical) -->
+                <!-- NOTE: Margin is set per orientation by UpdateMorphicMenuButtonLayout via GetMorphicMenuButtonMargin -->
                 <Button x:Name="MorphicMenuButton"
                         Grid.Column="1" Grid.Row="0"
                         Background="Transparent" BorderThickness="0"
                         Padding="0" MinWidth="0" MinHeight="0"
                         HorizontalAlignment="Center" VerticalAlignment="Center"
-                        Margin="0,0,5,0"
                         Click="MorphicMenuButton_Click"
                         RightTapped="MorphicMenuButton_RightTapped"
                         AutomationProperties.Name="Morphic Menu">
