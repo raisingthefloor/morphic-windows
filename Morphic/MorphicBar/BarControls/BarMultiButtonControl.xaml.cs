@@ -50,6 +50,15 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
     public BarMultiButtonControl()
     {
         this.InitializeComponent();
+        this.Loaded += BarMultiButtonControl_Loaded;
+    }
+
+    private void BarMultiButtonControl_Loaded(object sender, RoutedEventArgs e)
+    {
+        // re-run uniform-horizontal sizing now that we are in the visual tree and Measure will give
+        // accurate per-button widths; ApplyData may have run while the control was still detached
+        // from its parent, in which case its initial measurement pass returned zero/incomplete values
+        this.RefreshUniformHorizontalSizing();
     }
 
     public BarMultiButtonData? Data
@@ -203,20 +212,25 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
             this.HeaderTextBlock.Visibility = Visibility.Visible;
         }
 
-        // pick the primary-axis length used for every sub-button (column width when horizontal, row height when vertical)
-        GridLength primaryAxisLength;
+        // validate SizingMode up front (defends against unknown values added in the future).
+        // All sub-button column/row definitions are Auto-sized at this stage. Uniform-width
+        // rendering is achieved via two different mechanisms:
+        //   - horizontal + StretchToLargest: a separate measurement pass in
+        //     RefreshUniformHorizontalSizing sets each Grid column to a fixed pixel width
+        //     equal to the widest sub-button's natural width
+        //   - any vertical: a single Auto-width column combined with the buttons'
+        //     HorizontalAlignment=Stretch causes the Grid to size that column to the widest
+        //     sub-button's natural width and all buttons to render at that uniform width
+        //     (no measurement pass required)
         switch (_data.SizingMode)
         {
             case MultiButtonSizingMode.AutoSize:
-                primaryAxisLength = GridLength.Auto;
-                break;
             case MultiButtonSizingMode.StretchToLargest:
-                primaryAxisLength = new GridLength(1, GridUnitType.Star);
                 break;
             default:
                 throw new MorphicUnhandledCaseException(_data.SizingMode);
         }
-
+        //
         // validate the orientation up front (defends against unknown values added in the future)
         switch (_orientation)
         {
@@ -225,6 +239,14 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
                 break;
             default:
                 throw new MorphicUnhandledCaseException(_orientation);
+        }
+
+        // vertical mode: add a single Auto-width column so the Grid sizes it to the widest
+        // sub-button's natural width; buttons' HorizontalAlignment=Stretch (set in their Style)
+        // then makes every button render at that uniform width
+        if (_orientation == Orientation.Vertical)
+        {
+            this.ButtonsContainer.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         }
 
         var plainStyle = (Style)this.Resources["SubButtonStyle"];
@@ -297,12 +319,12 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
 
             if (_orientation == Orientation.Horizontal)
             {
-                this.ButtonsContainer.ColumnDefinitions.Add(new ColumnDefinition { Width = primaryAxisLength });
+                this.ButtonsContainer.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
                 Grid.SetColumn(button, i);
             }
-            else
+            else // _orientation == Orientation.Vertical
             {
-                this.ButtonsContainer.RowDefinitions.Add(new RowDefinition { Height = primaryAxisLength });
+                this.ButtonsContainer.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
                 Grid.SetRow(button, i);
             }
             this.ButtonsContainer.Children.Add(button);
@@ -311,6 +333,7 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
         }
 
         this.ApplyCornerRadii();
+        this.RefreshUniformHorizontalSizing();
 
         // wire up inc/dec keyboard shortcuts if the data declared them
         if (_data.IncDecShortcuts is not null)
@@ -369,6 +392,47 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
             // last sub-button rounds its bottom corners
             _subButtons[^1].CornerRadius = new CornerRadius(
                 0, 0, ControlButtonCornerRadius, ControlButtonCornerRadius);
+        }
+    }
+
+    // For horizontal + StretchToLargest only: measures each sub-button to find the widest natural
+    // width, then sets each Grid column to that fixed pixel width so all sub-buttons render at
+    // uniform width. For horizontal + AutoSize or any vertical orientation, this is a no-op.
+    // (Vertical's uniform-width behavior is provided by the single Auto-width column + buttons'
+    // HorizontalAlignment=Stretch combination configured in ApplyData, with no measurement needed.)
+    //
+    // Idempotent; can be called multiple times. Called from ApplyData after all sub-buttons have
+    // been added, and again from BarMultiButtonControl_Loaded once the control is in the visual
+    // tree (in case the ApplyData-time measurements were inaccurate while the control was detached).
+    private void RefreshUniformHorizontalSizing()
+    {
+        if (_data is null || _subButtons.Count == 0)
+        {
+            return;
+        }
+        if (_orientation != Orientation.Horizontal)
+        {
+            return;
+        }
+        if (_data.SizingMode != MultiButtonSizingMode.StretchToLargest)
+        {
+            return;
+        }
+
+        // measure each sub-button at its natural width and find the widest
+        double maxNaturalWidth = 0;
+        foreach (var subButton in _subButtons)
+        {
+            subButton.Measure(new Windows.Foundation.Size(double.PositiveInfinity, double.PositiveInfinity));
+            var marginH = subButton.Margin.Left + subButton.Margin.Right;
+            var naturalW = System.Math.Max(0, subButton.DesiredSize.Width - marginH);
+            if (naturalW > maxNaturalWidth) { maxNaturalWidth = naturalW; }
+        }
+
+        // set each column to that fixed pixel width so the Grid distributes them uniformly
+        foreach (var columnDef in this.ButtonsContainer.ColumnDefinitions)
+        {
+            columnDef.Width = new GridLength(maxNaturalWidth);
         }
     }
 
