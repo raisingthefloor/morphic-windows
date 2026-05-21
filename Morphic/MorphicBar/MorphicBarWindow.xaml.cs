@@ -59,7 +59,7 @@ public sealed partial class MorphicBarWindow : Morphic.MorphicBar.TransparentWin
     // animation timer for moving the window
     private Microsoft.UI.Dispatching.DispatcherQueueTimer? _moveAnimationTimer;
 
-    // logical (96 DPI) window size — scaled by the current monitor's DPI
+    // logical (96 DPI) window size -- scaled by the current monitor's DPI
     private uint _logicalLength = 67; // 100 pixels at 150% zoom
     private uint _logicalThickness = 67; // 100 pixels at 150% zoom
 
@@ -84,6 +84,12 @@ public sealed partial class MorphicBarWindow : Morphic.MorphicBar.TransparentWin
     // NOTE: as we are handling sizing ourselves, we need to manage size scaling ourselves; this tracks the latest screen scale (so that we know if we need to resize our window)
     private double? _lastRasterizationScale = null;
 
+    // Tracks which monitor the bar belongs to. Kept in sync at the entry of AnimateMoveTo and
+    // re-verified on demand via GetVerifiedCurrentMonitorHandle. Holding our own handle (instead
+    // of re-querying the window's current position each time) means a DPI/rasterization-scale
+    // change does not silently relocate us to a different display.
+    private Windows.Win32.Graphics.Gdi.HMONITOR _currentMonitorHandle;
+
     public MorphicBarWindow()
     {
         InitializeComponent();
@@ -91,6 +97,12 @@ public sealed partial class MorphicBarWindow : Morphic.MorphicBar.TransparentWin
         _dispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
 
         var hwnd = (Windows.Win32.Foundation.HWND)WinRT.Interop.WindowNative.GetWindowHandle(this);
+
+        // record the initial monitor (wherever the window-manager placed us at creation time);
+        // this is a placeholder that gets overwritten by the first AnimateMoveTo call from App.xaml.cs
+        _currentMonitorHandle = Windows.Win32.PInvoke.MonitorFromWindow(
+            hwnd,
+            Windows.Win32.Graphics.Gdi.MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
 
         // create a dummy "parent window" for the layout preview window (so that this window doesn't show up in the taskbar)
         _dummyParentWindow = new DummyWindow();
@@ -246,6 +258,10 @@ public sealed partial class MorphicBarWindow : Morphic.MorphicBar.TransparentWin
         var targetRect = getRectForDockingLocationResult.Value!;
         var targetPosition = new Windows.Graphics.PointInt32(targetRect.X, targetRect.Y);
         var targetSize = new Windows.Graphics.SizeInt32(targetRect.Width, targetRect.Height);
+
+        // record the destination monitor; this is the single normal path that legitimately changes
+        // which monitor we are on (both intentional moves and drag-release end up here)
+        _currentMonitorHandle = hMonitor;
 
         // start the new animation
         _moveAnimationTimer = AnimationUtils.AnimateMoveTo(_dispatcherQueue, this.AppWindow, targetPosition, targetSize, duration);
@@ -474,6 +490,26 @@ public sealed partial class MorphicBarWindow : Morphic.MorphicBar.TransparentWin
         }
 
         this.AppWindow.Resize(new Windows.Graphics.SizeInt32(physicalWidth, physicalHeight));
+    }
+
+    // Returns the cached current-monitor handle if it still points at a live monitor (probed via
+    // GetMonitorInfo, which returns zero when the monitor is no longer attached). If the cache is
+    // stale (e.g. the display was disconnected), falls back to whatever monitor the window is
+    // currently on, refreshes the cache, and returns the new handle.
+    private Windows.Win32.Graphics.Gdi.HMONITOR GetVerifiedCurrentMonitorHandle()
+    {
+        var monitorInfo = new Windows.Win32.Graphics.Gdi.MONITORINFO();
+        monitorInfo.cbSize = (uint)Marshal.SizeOf<Windows.Win32.Graphics.Gdi.MONITORINFO>();
+        if (Windows.Win32.PInvoke.GetMonitorInfo(_currentMonitorHandle, ref monitorInfo) != 0)
+        {
+            return _currentMonitorHandle;
+        }
+
+        var hwnd = (Windows.Win32.Foundation.HWND)WinRT.Interop.WindowNative.GetWindowHandle(this);
+        _currentMonitorHandle = Windows.Win32.PInvoke.MonitorFromWindow(
+            hwnd,
+            Windows.Win32.Graphics.Gdi.MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
+        return _currentMonitorHandle;
     }
 
     private void InitializeBorderlessWindowProperties(Windows.Win32.Foundation.HWND hwnd)
