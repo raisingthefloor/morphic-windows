@@ -26,7 +26,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
-using Windows.Win32;
 
 namespace Morphic.WindowsNative.Mouse;
 

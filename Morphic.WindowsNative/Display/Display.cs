@@ -25,7 +25,7 @@ using Morphic.Core;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace Morphic.WindowsNative.Display;
 
@@ -44,11 +44,157 @@ public class Display
         this.SourceId = sourceId;
     }
 
+    public static MorphicResult<Display, MorphicUnit> GetDisplayByMonitorHandle(IntPtr monitorHandle)
+    {
+        // get the monitor's display name
+        var getDisplayDeviceNameResult = Display.GetDisplayDeviceNameForMonitorHandle((Windows.Win32.Graphics.Gdi.HMONITOR)monitorHandle);
+        if (getDisplayDeviceNameResult.IsError == true)
+        {
+            return MorphicResult.ErrorResult();
+        }
+        var deviceName = getDisplayDeviceNameResult.Value!;
+
+        // retrieve the buffer sizes needed to call QueryDisplayConfig (i.e. to get all of our displays' configs)
+        uint numPathArrayElements;
+        uint numModeInfoArrayElements;
+        var getDisplayConfigBufferSizesResult = Windows.Win32.PInvoke.GetDisplayConfigBufferSizes(
+            Windows.Win32.Devices.Display.QUERY_DISPLAY_CONFIG_FLAGS.QDC_ONLY_ACTIVE_PATHS | Windows.Win32.Devices.Display.QUERY_DISPLAY_CONFIG_FLAGS.QDC_VIRTUAL_MODE_AWARE, 
+            out numPathArrayElements, 
+            out numModeInfoArrayElements);
+        switch (getDisplayConfigBufferSizesResult)
+        {
+            case Windows.Win32.Foundation.WIN32_ERROR.ERROR_SUCCESS:
+                break;
+            case Windows.Win32.Foundation.WIN32_ERROR.ERROR_INVALID_PARAMETER:
+            case Windows.Win32.Foundation.WIN32_ERROR.ERROR_NOT_SUPPORTED: // no WDDM display driver available
+            case Windows.Win32.Foundation.WIN32_ERROR.ERROR_ACCESS_DENIED:
+            case Windows.Win32.Foundation.WIN32_ERROR.ERROR_GEN_FAILURE:
+                // failure
+                return MorphicResult.ErrorResult();
+            default:
+                // unknown error
+                return MorphicResult.ErrorResult();
+        }
+
+        Span<Windows.Win32.Devices.Display.DISPLAYCONFIG_PATH_INFO> pathInfoElements = new Windows.Win32.Devices.Display.DISPLAYCONFIG_PATH_INFO[numPathArrayElements];
+        Span<Windows.Win32.Devices.Display.DISPLAYCONFIG_MODE_INFO> modeInfoElements = new Windows.Win32.Devices.Display.DISPLAYCONFIG_MODE_INFO[numModeInfoArrayElements];
+
+        var queryDisplayConfigResult = Windows.Win32.PInvoke.QueryDisplayConfig(
+            Windows.Win32.Devices.Display.QUERY_DISPLAY_CONFIG_FLAGS.QDC_ONLY_ACTIVE_PATHS | Windows.Win32.Devices.Display.QUERY_DISPLAY_CONFIG_FLAGS.QDC_VIRTUAL_MODE_AWARE,
+            ref numPathArrayElements, pathInfoElements, 
+            ref numModeInfoArrayElements, modeInfoElements, 
+            ref System.Runtime.CompilerServices.Unsafe.NullRef<Windows.Win32.Devices.Display.DISPLAYCONFIG_TOPOLOGY_ID>());
+        switch (queryDisplayConfigResult)
+        {
+            case Windows.Win32.Foundation.WIN32_ERROR.ERROR_SUCCESS:
+                break;
+            case Windows.Win32.Foundation.WIN32_ERROR.ERROR_INVALID_PARAMETER:
+            case Windows.Win32.Foundation.WIN32_ERROR.ERROR_NOT_SUPPORTED: // no WDDM display driver available
+            case Windows.Win32.Foundation.WIN32_ERROR.ERROR_ACCESS_DENIED:
+            case Windows.Win32.Foundation.WIN32_ERROR.ERROR_GEN_FAILURE:
+            case Windows.Win32.Foundation.WIN32_ERROR.ERROR_INSUFFICIENT_BUFFER:
+                // failure
+                return MorphicResult.ErrorResult();
+            default:
+                // unknown error
+                return MorphicResult.ErrorResult();
+        }
+        //
+        // since QueryDisplayConfig can return a smaller number of path/modeinfo elements than requested, resize the array
+        pathInfoElements = pathInfoElements[..(int)numPathArrayElements];
+        modeInfoElements = modeInfoElements [..(int)numModeInfoArrayElements];
+
+        Display? result = null;
+
+        // find the matching display (looping through all attached displays, in case there are two instances of the same display...i.e. a clone)
+        var sourceDeviceName = new Windows.Win32.Devices.Display.DISPLAYCONFIG_SOURCE_DEVICE_NAME();
+        foreach (var pathInfoElement in pathInfoElements)
+        {
+            // get the device name
+            sourceDeviceName.header.adapterId = pathInfoElement.sourceInfo.adapterId;
+            sourceDeviceName.header.id = pathInfoElement.sourceInfo.id;
+            sourceDeviceName.header.type = Windows.Win32.Devices.Display.DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME;
+            sourceDeviceName.header.size = (uint)Marshal.SizeOf<Windows.Win32.Devices.Display.DISPLAYCONFIG_SOURCE_DEVICE_NAME>();
+            //
+            var displayConfigGetDeviceInfoResult = Windows.Win32.PInvoke.DisplayConfigGetDeviceInfo(
+                ref System.Runtime.CompilerServices.Unsafe.As<
+                    Windows.Win32.Devices.Display.DISPLAYCONFIG_SOURCE_DEVICE_NAME,
+                    Windows.Win32.Devices.Display.DISPLAYCONFIG_DEVICE_INFO_HEADER>(ref sourceDeviceName));
+            switch ((Windows.Win32.Foundation.WIN32_ERROR)displayConfigGetDeviceInfoResult)
+            {
+                case Windows.Win32.Foundation.WIN32_ERROR.ERROR_SUCCESS:
+                    break;
+                case Windows.Win32.Foundation.WIN32_ERROR.ERROR_INVALID_PARAMETER:
+                    System.Diagnostics.Debug.Assert(false, "Error getting device info; this is probably a programming error.");
+                    return MorphicResult.ErrorResult();
+                case Windows.Win32.Foundation.WIN32_ERROR.ERROR_NOT_SUPPORTED: // no WDDM display driver available
+                case Windows.Win32.Foundation.WIN32_ERROR.ERROR_ACCESS_DENIED:
+                case Windows.Win32.Foundation.WIN32_ERROR.ERROR_INSUFFICIENT_BUFFER:
+                case Windows.Win32.Foundation.WIN32_ERROR.ERROR_GEN_FAILURE:
+                    // failure; out of an abundance of caution, try to read the next display (so that we don't fail due to a single "bad" display entry)
+                    System.Diagnostics.Debug.Assert(false, "Error getting device info; this may not be an error.");
+                    continue;
+                //return IMorphicResult<DisplayAdapterIdAndSourceId>.ErrorResult();
+                default:
+                    // unknown error
+                    // failure; out of an abundance of caution, try to read the next display
+                    System.Diagnostics.Debug.Assert(false, "Error getting device info; this may not be an error.");
+                    continue;
+                    //return IMorphicResult<DisplayAdapterIdAndSourceId>.ErrorResult();
+            }
+
+            var viewGdiDeviceName = sourceDeviceName.viewGdiDeviceName.ToString(); // capture null-terminated string (or full buffer as string, if not null-terminated)
+
+            if (viewGdiDeviceName == deviceName)
+            {
+                // in some circumstances, there could be more than one matching monitor (e.g. a clone).  We should prefer the first one, but 
+                // even more than that we should prefer an internal/built-in display.  Find the best match now.
+
+                bool isInternal;
+                switch (pathInfoElement.targetInfo.outputTechnology)
+                {
+                    case Windows.Win32.Devices.Display.DISPLAYCONFIG_VIDEO_OUTPUT_TECHNOLOGY.DISPLAYCONFIG_OUTPUT_TECHNOLOGY_DISPLAYPORT_EMBEDDED:
+                    case Windows.Win32.Devices.Display.DISPLAYCONFIG_VIDEO_OUTPUT_TECHNOLOGY.DISPLAYCONFIG_OUTPUT_TECHNOLOGY_UDI_EMBEDDED:
+                    case Windows.Win32.Devices.Display.DISPLAYCONFIG_VIDEO_OUTPUT_TECHNOLOGY.DISPLAYCONFIG_OUTPUT_TECHNOLOGY_INTERNAL:
+                        isInternal = true;
+                        break;
+                    default:
+                        isInternal = false;
+                        break;
+                }
+
+                // if this entry matches out monitorName and we either (a) don't have a result yet or (b) have a result but this one is _internal_ (the preference), then update our result
+                if ((result is null) || (isInternal == true))
+                {
+                    result = new Display(monitorHandle, deviceName, sourceDeviceName.header.adapterId, sourceDeviceName.header.id);
+                }
+            }
+        }
+
+        // if we could not find a matching display, return an error result
+        if (result is null)
+        {
+            return MorphicResult.ErrorResult();
+        }
+
+        return MorphicResult.OkResult(result);
+    }
 
     //
 
+    public static MorphicResult<Display, MorphicUnit> GetDisplayAtPoint(System.Drawing.Point point)
+    {
+        var monitorHandle = Display.GetMonitorHandleAtPoint(point);
+        if (monitorHandle.IsNull)
+        {
+            return MorphicResult.ErrorResult();
+        }
+
+        return Display.GetDisplayByMonitorHandle(monitorHandle);
+    }
+
     // NOTE: this function returns a null pointer is the point didn't map to a monitor
-    private static Windows.Win32.Graphics.Gdi.HMONITOR GetMonitorHandleForPoint(System.Drawing.Point point)
+    private static Windows.Win32.Graphics.Gdi.HMONITOR GetMonitorHandleAtPoint(System.Drawing.Point point)
     {
         // get the handle of the monitor which contains the point; this is useful, for instance, for finding the monitor where the mouse cursor is currently positioned
         var monitorHandle = Windows.Win32.PInvoke.MonitorFromPoint(point, Windows.Win32.Graphics.Gdi.MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONULL);
@@ -69,8 +215,113 @@ public class Display
             return MorphicResult.ErrorResult();
         }
 
-        var deviceName = monitorInfoEx.szDevice.ToString();
+        var deviceName = monitorInfoEx.szDevice.ToString(); // capture null-terminated string (or full buffer as string, if not null-terminated)
         return MorphicResult.OkResult(deviceName);
+    }
+
+    //
+
+    /* get/set DPI */
+
+    public struct GetDpiOffsetResult
+    {
+        public int MinimumDpiOffset;
+        public int CurrentDpiOffset;
+        public int MaximumDpiOffset;
+    }
+    //
+    public MorphicResult<GetDpiOffsetResult, MorphicUnit> GetCurrentDpiOffsetAndRange()
+    {
+        // retrieve the DPI offset values (min, current and max) for the monitor
+        var displayconfigGetDpi = new NativeHelpers.DISPLAYCONFIG_GET_DPI() { 
+            header = new() { 
+                type = NativeHelpers.DISPLAYCONFIG_DEVICE_INFO_GET_DPI, 
+                adapterId = this.AdapterId, 
+                id = this.SourceId, 
+                size = (uint)Marshal.SizeOf<NativeHelpers.DISPLAYCONFIG_GET_DPI>() 
+            } 
+        };
+        //
+        var displayConfigGetDeviceInfoResult = Windows.Win32.PInvoke.DisplayConfigGetDeviceInfo(
+            ref System.Runtime.CompilerServices.Unsafe.As<
+                NativeHelpers.DISPLAYCONFIG_GET_DPI,
+                Windows.Win32.Devices.Display.DISPLAYCONFIG_DEVICE_INFO_HEADER>(ref displayconfigGetDpi));
+        switch ((Windows.Win32.Foundation.WIN32_ERROR)displayConfigGetDeviceInfoResult)
+        {
+            case Windows.Win32.Foundation.WIN32_ERROR.ERROR_SUCCESS:
+                break;
+            case Windows.Win32.Foundation.WIN32_ERROR.ERROR_INVALID_PARAMETER:
+                System.Diagnostics.Debug.Assert(false, "Error getting dpi info; this is probably a programming error.");
+                return MorphicResult.ErrorResult();
+            default:
+                // unknown error
+                System.Diagnostics.Debug.Assert(false, "Error getting dpi info");
+                return MorphicResult.ErrorResult();
+        }
+
+        var result = new GetDpiOffsetResult()
+        {
+            MinimumDpiOffset = displayconfigGetDpi.minimumDpiOffset,
+            // NOTE: the current offset can be GREATER than the maximum offset (if the user has specified a custom zoom level, for instance)
+            CurrentDpiOffset = displayconfigGetDpi.currentDpiOffset,
+            MaximumDpiOffset = displayconfigGetDpi.maximumDpiOffset,
+        };
+        return MorphicResult.OkResult(result);
+    }
+
+    public async Task<MorphicResult<MorphicUnit, MorphicUnit>> SetDpiOffsetAsync(int dpiOffset)
+    {
+        var thisDisplay = this;
+
+        return await Task.Run((Func<MorphicResult<MorphicUnit, MorphicUnit>>)(() =>
+        {
+            // set the DPI offset (current) for the monitor
+            var displayconfigSetDpi = new NativeHelpers.DISPLAYCONFIG_SET_DPI()
+            {
+                header = new()
+                {
+                    type = NativeHelpers.DISPLAYCONFIG_DEVICE_INFO_SET_DPI,
+                    adapterId = thisDisplay.AdapterId,
+                    id = thisDisplay.SourceId,
+                    size = (uint)Marshal.SizeOf<NativeHelpers.DISPLAYCONFIG_SET_DPI>()
+                },
+                dpiOffset = dpiOffset,
+            };
+            //
+            var displayConfigGetDeviceInfoResult = Windows.Win32.PInvoke.DisplayConfigSetDeviceInfo(
+            System.Runtime.CompilerServices.Unsafe.As<
+                NativeHelpers.DISPLAYCONFIG_SET_DPI,
+                Windows.Win32.Devices.Display.DISPLAYCONFIG_DEVICE_INFO_HEADER>(ref displayconfigSetDpi));
+            switch ((Windows.Win32.Foundation.WIN32_ERROR)displayConfigGetDeviceInfoResult)
+            {
+                case Windows.Win32.Foundation.WIN32_ERROR.ERROR_SUCCESS:
+                    break;
+                case Windows.Win32.Foundation.WIN32_ERROR.ERROR_INVALID_PARAMETER:
+                    System.Diagnostics.Debug.Assert(false, "Error setting dpi info; this is probably a programming error.");
+                    return MorphicResult.ErrorResult();
+                default:
+                    // unknown error
+                    System.Diagnostics.Debug.Assert(false, "Error setting dpi info");
+                    return MorphicResult.ErrorResult();
+            }
+
+            // verify that the DPI offset was set successfully
+            // NOTE: this is not technically necessary since we already have a success/failure result, but it's a good sanity check; if it's too early to check this then it's reasonable for us to skip this verification step
+            var getCurrentDpiOffsetAndRangeResult = thisDisplay.GetCurrentDpiOffsetAndRange();
+            if (getCurrentDpiOffsetAndRangeResult.IsError == true)
+            {
+                return MorphicResult.ErrorResult();
+            }
+            var currentDpiOffsetAndRange = getCurrentDpiOffsetAndRangeResult.Value;
+            if (currentDpiOffsetAndRange.CurrentDpiOffset != dpiOffset)
+            {
+                System.Diagnostics.Debug.Assert(false, "Could not set DPI offset (or the system has not updated the current SPI offset value)");
+                return MorphicResult.ErrorResult();
+            }
+
+            // otherwise, return success
+            return MorphicResult.OkResult();
+        }));
     }
 
     //
