@@ -30,7 +30,7 @@ namespace Morphic.MorphicBar.BarControls;
 // - param `isChecked` is the new checked state for toggle buttons (null for non-toggle buttons).
 public delegate Task BarButtonAction(string? actionTag, bool? isChecked);
 
-public class BarButtonData
+public class BarButtonData : IBarItemData
 {
     // Optional label displayed above the button. When null or empty, no header is rendered.
     public string? Header { get; set; }

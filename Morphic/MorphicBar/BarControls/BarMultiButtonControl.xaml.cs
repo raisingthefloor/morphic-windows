@@ -41,6 +41,7 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
 
     private BarMultiButtonData? _data;
     private readonly List<ButtonBase> _subButtons = new();
+    private readonly HashSet<ButtonBase> _subButtonsWithActionInProgress = new();
     private bool _incDecShortcutsEnabled = false;
     private int _decrementButtonIndex = -1;
     private int _incrementButtonIndex = -1;
@@ -177,6 +178,7 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
                     Content = buttonData.Text,
                 };
                 plainButton.Click += SubButton_Click;
+                ButtonCompoundState.Wire(plainButton);
                 button = plainButton;
             }
 
@@ -223,6 +225,14 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
         }
 
         this.ApplyCornerRadii();
+
+        // wire up inc/dec keyboard shortcuts if the data declared them
+        if (_data.IncDecShortcuts is not null)
+        {
+            this.EnableIncDecKeyboardShortcuts(
+                decrementButtonIndex: _data.IncDecShortcuts.DecrementButtonIndex,
+                incrementButtonIndex: _data.IncDecShortcuts.IncrementButtonIndex);
+        }
     }
 
     private void ApplyCornerRadii()
@@ -286,12 +296,28 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
         {
             return;
         }
+        if (_subButtonsWithActionInProgress.Contains(button))
+        {
+            return;
+        }
 
         bool? isChecked = (sender as ToggleButton)?.IsChecked;
 
-        if (subData.Action is not null)
+        var action = subData.Action;
+        if (action is not null)
         {
-            await subData.Action.Invoke(subData.ActionTag, isChecked);
+            _subButtonsWithActionInProgress.Add(button);
+            button.IsHitTestVisible = false;
+
+            try
+            {
+                await DelayedInProgressVisual.RunAsync(button, () => action.Invoke(subData.ActionTag, isChecked));
+            }
+            finally
+            {
+                _subButtonsWithActionInProgress.Remove(button);
+                button.IsHitTestVisible = true;
+            }
         }
     }
 

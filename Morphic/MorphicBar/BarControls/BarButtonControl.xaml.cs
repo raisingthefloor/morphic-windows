@@ -34,6 +34,7 @@ public sealed partial class BarButtonControl : UserControl, IBarItemControl
     private const double ControlButtonCornerRadius = 5.0;
     private BarButtonData? _data;
     private ButtonBase? _button;
+    private bool _isActionInProgress;
     private Orientation _orientation = Orientation.Horizontal;
 
     public BarButtonControl()
@@ -138,6 +139,7 @@ public sealed partial class BarButtonControl : UserControl, IBarItemControl
                 Content = _data.Text,
             };
             plainButton.Click += Button_Click;
+            ButtonCompoundState.Wire(plainButton);
             button = plainButton;
         }
 
@@ -151,12 +153,35 @@ public sealed partial class BarButtonControl : UserControl, IBarItemControl
 
     private async void Button_Click(object sender, RoutedEventArgs e)
     {
-        if (_data?.Action is null)
+        if (sender is not ButtonBase button)
+        {
+            return;
+        }
+		//
+        var action = _data?.Action;
+        if (action is null)
+        {
+            return;
+        }
+		//
+        if (_isActionInProgress)
         {
             return;
         }
 
         bool? isChecked = (sender as ToggleButton)?.IsChecked;
-        await _data.Action.Invoke(_data.ActionTag, isChecked);
+        var actionTag = _data!.ActionTag;
+        _isActionInProgress = true;
+        button.IsHitTestVisible = false;
+		//
+        try
+        {
+            await DelayedInProgressVisual.RunAsync(button, () => action.Invoke(actionTag, isChecked));
+        }
+        finally
+        {
+            _isActionInProgress = false;
+            button.IsHitTestVisible = true;
+        }
     }
 }

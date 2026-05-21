@@ -25,7 +25,7 @@ using System.Collections.Generic;
 
 namespace Morphic.MorphicBar.BarControls;
 
-public class BarMultiButtonData
+public class BarMultiButtonData : IBarItemData
 {
     // Label displayed above the sub-button group.
     public string Header { get; set; } = "";
@@ -36,4 +36,17 @@ public class BarMultiButtonData
     // NOTE: Sub-buttons in a group must use BarButtonLayoutStyle.TextOnly; MultiButtonBarControl
     // enforces this and throws if any sub-button specifies a different layout style.
     public List<BarButtonData> Buttons { get; set; } = new();
+
+    // When non-null, the control wires the minus/plus keys to invoke the sub-buttons at the
+    // specified indices. Requires exactly two sub-buttons (BarMultiButtonControl validates).
+    public BarMultiButtonIncDecShortcuts? IncDecShortcuts { get; set; }
+}
+
+public class BarMultiButtonIncDecShortcuts
+{
+    // Index of the sub-button the minus key (Subtract / OemMinus) should invoke.
+    public int DecrementButtonIndex { get; set; }
+
+    // Index of the sub-button the plus key (Add / OemPlus) should invoke.
+    public int IncrementButtonIndex { get; set; }
 }

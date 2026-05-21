@@ -32,80 +32,62 @@ namespace Morphic.MorphicBar.BarControls;
 //
 // WinUI's built-in ToggleButton emits only simple state names (Normal/PointerOver/Pressed in
 // CommonStates + Checked/Unchecked/Indeterminate in CheckStates), which causes cross-group
-// clashes on properties both groups touch (e.g. BgBorder.Background) — the classic symptom
+// clashes on properties both groups touch (e.g. BgBorder.Background) -- the classic symptom
 // being the toggle visual getting stuck in a wrong state after a click/unclick cycle.
 //
-// This helper hooks a ToggleButton's pointer, checked, and enabled events and calls
-// VisualStateManager.GoToState with the compound name so that transitions are deterministic.
+// This helper takes over the state machine for ToggleButtons via CompoundStatePointerWiring
+// (plus the toggle-specific Checked/Unchecked/Indeterminate events) and routes every
+// transition through ComputeStateName so transitions are deterministic.
 internal static class ToggleButtonCompoundState
 {
     public static void Wire(ToggleButton button)
     {
-        var tracker = new StateTracker();
+        var tracker = new StateTracker(button);
 
         void Update()
         {
-            var stateName = tracker.ComputeStateName(button);
-            VisualStateManager.GoToState(button, stateName, useTransitions: true);
+            VisualStateManager.GoToState(button, tracker.ComputeStateName(), useTransitions: true);
         }
 
-        button.PointerEntered += (_, _) =>
-        {
-            tracker.IsPointerOver = true;
-            Update();
-        };
-        button.PointerExited += (_, _) =>
-        {
-            // also clear IsPressed -- WinUI typically "cancels" the pressed visual when the pointer
-            // leaves the control, even if capture is still held
-            tracker.IsPointerOver = false;
-            tracker.IsPressed = false;
-            Update();
-        };
-        button.PointerPressed += (_, e) =>
-        {
-            if (e.GetCurrentPoint(button).Properties.IsLeftButtonPressed)
-            {
-                tracker.IsPressed = true;
-                Update();
-            }
-        };
-        button.PointerReleased += (_, _) =>
-        {
-            tracker.IsPressed = false;
-            Update();
-        };
-        button.PointerCaptureLost += (_, _) =>
-        {
-            tracker.IsPressed = false;
-            Update();
-        };
+        CompoundStatePointerWiring.Wire(button, tracker, Update);
+
+        // toggle-specific events -- not on plain Button
         button.Checked += (_, _) => Update();
         button.Unchecked += (_, _) => Update();
         button.Indeterminate += (_, _) => Update();
-        button.IsEnabledChanged += (_, _) => Update();
 
         // leave the initial state to the built-in ToggleButton; our handlers take over on the
         // first user interaction
     }
 
-    private sealed class StateTracker
+    private sealed class StateTracker : CompoundStateTrackerBase
     {
-        public bool IsPointerOver;
-        public bool IsPressed;
+        private readonly ToggleButton _button;
 
-        public string ComputeStateName(ToggleButton button)
+        public StateTracker(ToggleButton button)
         {
-            if (!button.IsEnabled)
+            _button = button;
+        }
+
+        public override string ComputeStateName()
+        {
+            // CommonStates enters "InProgress" only when the progress bar is fully visible;
+            // during the show-delay (Preparing) the button keeps its normal pointer/checked
+            // appearance, since the bar is animating invisibly at Opacity=0.
+            if (this.InProgressVisual == InProgressVisual.Visible)
+            {
+                return "InProgress";
+            }
+            if (!_button.IsEnabled)
             {
                 return "Disabled";
             }
-            if (button.IsChecked is null)
+            if (_button.IsChecked is null)
             {
                 return "Indeterminate";
             }
 
-            bool isChecked = button.IsChecked == true;
+            bool isChecked = _button.IsChecked == true;
             if (isChecked)
             {
                 if (this.IsPressed)

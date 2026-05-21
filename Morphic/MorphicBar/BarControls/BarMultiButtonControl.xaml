@@ -34,6 +34,12 @@
                                 Background="{StaticResource MorphicBarControlBackground}"
                                 CornerRadius="{TemplateBinding CornerRadius}">
                             <VisualStateManager.VisualStateGroups>
+                                <!-- CommonStates owns BgBorder.Background and ButtonText.Foreground. The
+                                     "InProgress" state is entered only while ProgressStates is "Visible",
+                                     so the pressed-color flip on BgBorder is part of the in-progress feedback
+                                     (alongside the actual ProgressBar). ProgressBar properties are NOT set
+                                     here; they live in ProgressStates below to keep the two groups from
+                                     fighting over any property. -->
                                 <VisualStateGroup x:Name="CommonStates">
                                     <VisualState x:Name="Normal"/>
                                     <VisualState x:Name="PointerOver">
@@ -46,22 +52,57 @@
                                             <Setter Target="BgBorder.Background" Value="{StaticResource MorphicBarControlPressedBackground}"/>
                                         </VisualState.Setters>
                                     </VisualState>
+                                    <VisualState x:Name="InProgress">
+                                        <VisualState.Setters>
+                                            <Setter Target="BgBorder.Background" Value="{StaticResource MorphicBarControlPressedBackground}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
                                     <VisualState x:Name="Disabled"/>
+                                </VisualStateGroup>
+                                <!-- ProgressStates owns ProgressBar.Visibility/IsIndeterminate/Opacity only.
+                                     "Preparing" runs the indeterminate animation invisibly (Opacity=0) so
+                                     that, when "Visible" reveals the bar, its animation is already mid-cycle
+                                     instead of starting fresh. See DelayedInProgressVisual.cs for the rationale. -->
+                                <VisualStateGroup x:Name="ProgressStates">
+                                    <VisualState x:Name="None"/>
+                                    <VisualState x:Name="Preparing">
+                                        <VisualState.Setters>
+                                            <Setter Target="SubButtonProgressBar.Visibility" Value="Visible"/>
+                                            <Setter Target="SubButtonProgressBar.IsIndeterminate" Value="True"/>
+                                            <Setter Target="SubButtonProgressBar.Opacity" Value="0"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="Visible">
+                                        <VisualState.Setters>
+                                            <Setter Target="SubButtonProgressBar.Visibility" Value="Visible"/>
+                                            <Setter Target="SubButtonProgressBar.IsIndeterminate" Value="True"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
                                 </VisualStateGroup>
                             </VisualStateManager.VisualStateGroups>
 
-                            <TextBlock x:Name="SubButtonText"
-                                Text="{TemplateBinding Content}"
-                                Foreground="{TemplateBinding Foreground}"
-                                FontFamily="Segoe UI"
-                                FontWeight="Bold"
-                                FontSize="14"
-                                IsColorFontEnabled="False"
-                                HorizontalAlignment="Stretch" VerticalAlignment="Center"
-                                TextAlignment="Center"
-                                TextWrapping="Wrap"
-                                MaxLines="2"
-                                Padding="10,3,10,3"/>
+                            <Grid>
+                                <TextBlock x:Name="SubButtonText"
+                                    Text="{TemplateBinding Content}"
+                                    Foreground="{TemplateBinding Foreground}"
+                                    FontFamily="Segoe UI"
+                                    FontWeight="Bold"
+                                    FontSize="14"
+                                    IsColorFontEnabled="False"
+                                    HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                                    TextAlignment="Center"
+                                    TextWrapping="Wrap"
+                                    MaxLines="2"
+                                    Padding="10,3,10,3"/>
+                                <ProgressBar x:Name="SubButtonProgressBar"
+                                    Height="2"
+                                    IsIndeterminate="False"
+                                    Visibility="Collapsed"
+                                    Foreground="{StaticResource MorphicBarControlForeground}"
+                                    Background="Transparent"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Bottom"/>
+                            </Grid>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
@@ -131,23 +172,58 @@
                                             <Setter Target="SubButtonText.Foreground" Value="{StaticResource MorphicBarControlCheckedForeground}"/>
                                         </VisualState.Setters>
                                     </VisualState>
+                                    <VisualState x:Name="InProgress">
+                                        <VisualState.Setters>
+                                            <Setter Target="BgBorder.Background" Value="{StaticResource MorphicBarControlPressedBackground}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
                                     <VisualState x:Name="Indeterminate"/>
                                     <VisualState x:Name="Disabled"/>
                                 </VisualStateGroup>
+                                <!-- ProgressStates owns ProgressBar.Visibility/IsIndeterminate/Opacity only.
+                                     "Preparing" runs the indeterminate animation invisibly (Opacity=0) so
+                                     that, when "Visible" reveals the bar, its animation is already mid-cycle
+                                     instead of starting fresh. See DelayedInProgressVisual.cs for the rationale. -->
+                                <VisualStateGroup x:Name="ProgressStates">
+                                    <VisualState x:Name="None"/>
+                                    <VisualState x:Name="Preparing">
+                                        <VisualState.Setters>
+                                            <Setter Target="SubButtonProgressBar.Visibility" Value="Visible"/>
+                                            <Setter Target="SubButtonProgressBar.IsIndeterminate" Value="True"/>
+                                            <Setter Target="SubButtonProgressBar.Opacity" Value="0"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="Visible">
+                                        <VisualState.Setters>
+                                            <Setter Target="SubButtonProgressBar.Visibility" Value="Visible"/>
+                                            <Setter Target="SubButtonProgressBar.IsIndeterminate" Value="True"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                </VisualStateGroup>
                             </VisualStateManager.VisualStateGroups>
 
-                            <TextBlock x:Name="SubButtonText"
-                                Text="{TemplateBinding Content}"
-                                Foreground="{TemplateBinding Foreground}"
-                                FontFamily="Segoe UI"
-                                FontWeight="Bold"
-                                FontSize="14"
-                                IsColorFontEnabled="False"
-                                HorizontalAlignment="Stretch" VerticalAlignment="Center"
-                                TextAlignment="Center"
-                                TextWrapping="Wrap"
-                                MaxLines="2"
-                                Padding="10,3,10,3"/>
+                            <Grid>
+                                <TextBlock x:Name="SubButtonText"
+                                    Text="{TemplateBinding Content}"
+                                    Foreground="{TemplateBinding Foreground}"
+                                    FontFamily="Segoe UI"
+                                    FontWeight="Bold"
+                                    FontSize="14"
+                                    IsColorFontEnabled="False"
+                                    HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                                    TextAlignment="Center"
+                                    TextWrapping="Wrap"
+                                    MaxLines="2"
+                                    Padding="10,3,10,3"/>
+                                <ProgressBar x:Name="SubButtonProgressBar"
+                                    Height="2"
+                                    IsIndeterminate="False"
+                                    Visibility="Collapsed"
+                                    Foreground="{StaticResource MorphicBarControlForeground}"
+                                    Background="Transparent"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Bottom"/>
+                            </Grid>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
@@ -157,7 +233,7 @@
 
     <StackPanel Orientation="Vertical">
         <TextBlock x:Name="HeaderTextBlock"
-                   Foreground="{StaticResource MorphicBarControlForeground}"
+                   Foreground="{ThemeResource ThemeAwareForeground}"
                    HorizontalAlignment="Center"
                    TextAlignment="Center"
                    TextWrapping="Wrap"
