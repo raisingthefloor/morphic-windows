@@ -7,6 +7,10 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
+    HorizontalAlignment="Center"
+    VerticalAlignment="Center"
+    HorizontalContentAlignment="Center"
+    VerticalContentAlignment="Center"
     IsTabStop="False">
 
     <UserControl.Resources>
@@ -54,7 +58,16 @@
                                      here; they live in ProgressStates below to keep the two groups from
                                      fighting over any property. -->
                                 <VisualStateGroup x:Name="CommonStates">
-                                    <VisualState x:Name="Normal"/>
+                                    <!-- Explicit setter (rather than relying on the implicit unset of the previously
+                                         active state's setter) so transitions out of "InProgress" or other states
+                                         that flipped BgBorder.Background reliably restore the base color. Without
+                                         this, the post-action visual could get stuck at the InProgress pressed
+                                         color until a pointer event re-triggered the VSM. -->
+                                    <VisualState x:Name="Normal">
+                                        <VisualState.Setters>
+                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlBackground}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
                                     <VisualState x:Name="PointerOver">
                                         <VisualState.Setters>
                                             <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlHoverBackground}"/>
@@ -103,6 +116,14 @@
                             </VisualStateManager.VisualStateGroups>
 
                             <Grid>
+                                <!-- TextWrapping="NoWrap" prevents auto-wrap entirely so a
+                                     column that's even 1 logical px tight under per-scale font
+                                     metric drift can't silently cause the button to measure
+                                     two lines tall. Explicit '\n' in the Content is still
+                                     honored as a line break (NoWrap only disables AUTOMATIC
+                                     wrap at the right edge), and MaxLines caps the visible
+                                     line count (overridden from 1 to 2 in code for groups with
+                                     no header; see BarMultiButtonControl.ApplyData). -->
                                 <TextBlock x:Name="SubButtonText"
                                     Text="{TemplateBinding Content}"
                                     Foreground="{TemplateBinding Foreground}"
@@ -110,11 +131,12 @@
                                     FontWeight="Bold"
                                     FontSize="14"
                                     IsColorFontEnabled="False"
+                                    HighContrastAdjustment="None"
                                     HorizontalAlignment="Stretch" VerticalAlignment="Center"
                                     TextAlignment="Center"
-                                    TextWrapping="Wrap"
-                                    MaxLines="2"
-                                    Padding="10,3,10,3"/>
+                                    TextWrapping="NoWrap"
+                                    MaxLines="1"
+                                    Padding="9,3,9,3"/>
                                 <ProgressBar x:Name="SubButtonProgressBar"
                                     Height="2"
                                     IsIndeterminate="False"
@@ -169,7 +191,16 @@
                                 CornerRadius="{TemplateBinding CornerRadius}">
                             <VisualStateManager.VisualStateGroups>
                                 <VisualStateGroup x:Name="CommonStates">
-                                    <VisualState x:Name="Normal"/>
+                                    <!-- Explicit setter (rather than relying on the implicit unset of the previously
+                                         active state's setter) so transitions out of "InProgress" or other states
+                                         that flipped BgBorder.Background reliably restore the base color. Without
+                                         this, the post-action visual could get stuck at the InProgress pressed
+                                         color until a pointer event re-triggered the VSM. -->
+                                    <VisualState x:Name="Normal">
+                                        <VisualState.Setters>
+                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlBackground}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
                                     <VisualState x:Name="PointerOver">
                                         <VisualState.Setters>
                                             <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlHoverBackground}"/>
@@ -245,6 +276,14 @@
                             </VisualStateManager.VisualStateGroups>
 
                             <Grid>
+                                <!-- TextWrapping="NoWrap" prevents auto-wrap entirely so a
+                                     column that's even 1 logical px tight under per-scale font
+                                     metric drift can't silently cause the button to measure
+                                     two lines tall. Explicit '\n' in the Content is still
+                                     honored as a line break (NoWrap only disables AUTOMATIC
+                                     wrap at the right edge), and MaxLines caps the visible
+                                     line count (overridden from 1 to 2 in code for groups with
+                                     no header; see BarMultiButtonControl.ApplyData). -->
                                 <TextBlock x:Name="SubButtonText"
                                     Text="{TemplateBinding Content}"
                                     Foreground="{TemplateBinding Foreground}"
@@ -252,11 +291,12 @@
                                     FontWeight="Bold"
                                     FontSize="14"
                                     IsColorFontEnabled="False"
+                                    HighContrastAdjustment="None"
                                     HorizontalAlignment="Stretch" VerticalAlignment="Center"
                                     TextAlignment="Center"
-                                    TextWrapping="Wrap"
-                                    MaxLines="2"
-                                    Padding="10,3,10,3"/>
+                                    TextWrapping="NoWrap"
+                                    MaxLines="1"
+                                    Padding="9,3,9,3"/>
                                 <ProgressBar x:Name="SubButtonProgressBar"
                                     Height="2"
                                     IsIndeterminate="False"
@@ -273,7 +313,10 @@
         </Style>
     </UserControl.Resources>
 
-    <StackPanel Orientation="Vertical">
+    <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+        <!-- Header: top margin is 0. The visible empty space above the cap is the font's
+             reserved ascender area for accent marks (é, ü, ô, etc.); it is intentional and
+             must not be clipped. -->
         <TextBlock x:Name="HeaderTextBlock"
                    Foreground="{ThemeResource ThemeAwareForeground}"
                    HorizontalAlignment="Center"
@@ -283,7 +326,14 @@
                    FontWeight="Bold"
                    FontSize="14"
                    MaxLines="2"
-                   Margin="0,3,0,3"/>
-        <Grid x:Name="ButtonsContainer"/>
+                   Margin="0,0,0,3"/>
+        <!-- HorizontalAlignment=Center keeps the button-group centered when the header (which uses
+             HorizontalAlignment=Center itself) is wider than the buttons (so buttons don't sit
+             flush-left in a header-sized container).
+             NOTE: ButtonsContainer.Margin is set from code (ApplyData / ReorientButtonsContainer)
+             based on bar orientation. In horizontal mode the bottom margin is 0,0,0,3 for
+             visual centering, but it is 0 in vertical mode (where any per-item bottom margin
+             would multiply across stacked items and push later items off the bar). -->
+        <Grid x:Name="ButtonsContainer" HorizontalAlignment="Center"/>
     </StackPanel>
 </UserControl>

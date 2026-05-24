@@ -7,6 +7,10 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
+    HorizontalAlignment="Center"
+    VerticalAlignment="Center"
+    HorizontalContentAlignment="Center"
+    VerticalContentAlignment="Center"
     IsTabStop="False">
 
     <UserControl.Resources>
@@ -47,7 +51,16 @@
                                      BgBorder is part of the in-progress feedback (alongside the actual
                                      ProgressBar). ProgressBar properties live in ProgressStates below. -->
                                 <VisualStateGroup x:Name="CommonStates">
-                                    <VisualState x:Name="Normal"/>
+                                    <!-- Explicit setter (rather than relying on the implicit unset of the previously
+                                         active state's setter) so transitions out of "InProgress" or other states
+                                         that flipped BgBorder.Background reliably restore the base color. Without
+                                         this, the post-action visual could get stuck at the InProgress pressed
+                                         color until a pointer event re-triggered the VSM. -->
+                                    <VisualState x:Name="Normal">
+                                        <VisualState.Setters>
+                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlBackground}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
                                     <VisualState x:Name="PointerOver">
                                         <VisualState.Setters>
                                             <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlHoverBackground}"/>
@@ -103,11 +116,12 @@
                                     FontWeight="Bold"
                                     FontSize="14"
                                     IsColorFontEnabled="False"
+                                    HighContrastAdjustment="None"
                                     HorizontalAlignment="Stretch" VerticalAlignment="Center"
                                     TextAlignment="Center"
                                     TextWrapping="Wrap"
                                     MaxLines="2"
-                                    Padding="10,3,10,3"/>
+                                    Padding="9,3,9,3"/>
                                 <ProgressBar x:Name="ButtonProgressBar"
                                     Height="2"
                                     IsIndeterminate="False"
@@ -145,11 +159,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="primitives:ToggleButton">
                         <!-- BorderThickness is fixed at 2 so the button's natural size does not change
-                             when toggled on; BorderBrush uses MorphicBarControlBorder (green in
-                             non-HC and currently green under HC too -- the dedicated key is kept
-                             as a placeholder for a future HC-specific binding; see the comment on
-                             MorphicBarControlBorder in App.xaml). See the matching template in
-                             BarMultiButtonControl.xaml for the full rationale. -->
+                             when toggled on. -->
                         <Border x:Name="BgBorder"
                                 Background="{ThemeResource MorphicBarControlBackground}"
                                 BackgroundSizing="OuterBorderEdge"
@@ -158,7 +168,16 @@
                                 CornerRadius="{TemplateBinding CornerRadius}">
                             <VisualStateManager.VisualStateGroups>
                                 <VisualStateGroup x:Name="CommonStates">
-                                    <VisualState x:Name="Normal"/>
+                                    <!-- Explicit setter (rather than relying on the implicit unset of the previously
+                                         active state's setter) so transitions out of "InProgress" or other states
+                                         that flipped BgBorder.Background reliably restore the base color. Without
+                                         this, the post-action visual could get stuck at the InProgress pressed
+                                         color until a pointer event re-triggered the VSM. -->
+                                    <VisualState x:Name="Normal">
+                                        <VisualState.Setters>
+                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlBackground}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
                                     <VisualState x:Name="PointerOver">
                                         <VisualState.Setters>
                                             <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlHoverBackground}"/>
@@ -241,11 +260,12 @@
                                     FontWeight="Bold"
                                     FontSize="14"
                                     IsColorFontEnabled="False"
+                                    HighContrastAdjustment="None"
                                     HorizontalAlignment="Stretch" VerticalAlignment="Center"
                                     TextAlignment="Center"
                                     TextWrapping="Wrap"
                                     MaxLines="2"
-                                    Padding="10,3,10,3"/>
+                                    Padding="9,3,9,3"/>
                                 <ProgressBar x:Name="ButtonProgressBar"
                                     Height="2"
                                     IsIndeterminate="False"
@@ -262,7 +282,10 @@
         </Style>
     </UserControl.Resources>
 
-    <StackPanel Orientation="Vertical">
+    <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+        <!-- See BarMultiButtonControl.xaml for header-margin rationale. Default Visibility
+             is Collapsed because BarButtonControl is the single-button case and only shows
+             a header when one is explicitly provided. -->
         <TextBlock x:Name="HeaderTextBlock"
                    Foreground="{ThemeResource ThemeAwareForeground}"
                    HorizontalAlignment="Center"
@@ -272,8 +295,13 @@
                    FontWeight="Bold"
                    FontSize="14"
                    MaxLines="2"
-                   Margin="0,3,0,3"
+                   Margin="0,0,0,3"
                    Visibility="Collapsed"/>
-        <Grid x:Name="RootContainer"/>
+        <!-- Bottom margin matches BarMultiButtonControl's ButtonsContainer 0,0,0,3 in horizontal
+             mode so a single-button item gets the same 1.5-logical-px upward visual shift from 
+	     VerticalAlignment=Center centering as the multi-button items, and ends up vertically 
+	     aligned with them across the bar. (Unlike BarMultiButtonControl we do NOT make this 
+	     orientation-conditional here) -->
+        <Grid x:Name="RootContainer" Margin="0,0,0,3"/>
     </StackPanel>
 </UserControl>
