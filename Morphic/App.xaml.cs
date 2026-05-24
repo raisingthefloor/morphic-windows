@@ -146,6 +146,9 @@ _morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size o
     {
         var items = new List<Morphic.MorphicBar.BarControls.IBarItemData>
         {
+            // "Magnifier" -- two pushbuttons (Show on the left, Hide on the right), equal width
+            Morphic.MorphicBar.BarItemDataFactory.CreateMagnifierButtonGroup(showAction: Morphic.MorphicBar.BarItemHandlers.ShowMagnifierButtonAction, hideAction: Morphic.MorphicBar.BarItemHandlers.HideMagnifierButtonAction),
+
             // "Contrast & Color" -- 4 toggle buttons, per-content sized
             Morphic.MorphicBar.BarItemDataFactory.CreateContrastColorButtonGroup(
                 contrastAction: Morphic.MorphicBar.BarItemHandlers.ContrastButtonAction,
