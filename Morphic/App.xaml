@@ -27,8 +27,8 @@
                  invisible when unchecked and shows as a 2px green ring around the white fill when
                  checked). Currently NOT overridden in the HighContrast ThemeDictionary or bound
                  by code, so under HC the same green resolves through. Kept as a dedicated key
-                 (rather than reusing MorphicBarControlBackground) as a PLACEHOLDER -- similar
-                 in spirit to MorphicBarControlDisabledForeground below -- so a future HC variant
+                 (rather than reusing MorphicBarControlBackground) as a PLACEHOLDER, similar
+                 in spirit to MorphicBarControlDisabledForeground below, so a future HC variant
                  can wire it up via MorphicSysColorBrushBinder in App.xaml.cs (e.g. to
                  MorphicSysColor.WindowText) without having to retrofit the templates. -->
             <SolidColorBrush x:Key="MorphicBarControlBorder"                  Color="#008145"/>
