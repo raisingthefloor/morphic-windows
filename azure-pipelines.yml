@@ -160,6 +160,13 @@ stages:
             configuration: '$(buildConfiguration)'
             msbuildArgs: '/t:restore'
 
+        - powershell: |
+            .\finalize-winui-publish.ps1 `
+              -Platform x64 `
+              -Configuration $(buildConfiguration) `
+              -SourceDir "$(Build.SourcesDirectory)"
+          displayName: 'finalize WinUI publishing (x64)'
+
         - task: CopyFiles@2
           displayName: "copy published/signed files (x64)"
           inputs:
@@ -168,13 +175,13 @@ stages:
             TargetFolder: 'MorphicSetup\obj\x64\$(buildConfiguration)\publish\Morphic'
             CleanTargetFolder: true
 
-        - powershell: |
-            .\copy-extras-to-installer-staging.ps1 `
-              -Platform x64 `
-              -Configuration $(buildConfiguration) `
-              -SourceDir "$(Build.SourcesDirectory)" `
-              -TargetDir "MorphicSetup\obj\x64\$(buildConfiguration)\publish\Morphic"
-          displayName: 'copy compiled XAML (x64)'
+#        - powershell: |
+#            .\copy-extras-to-installer-staging.ps1 `
+#              -Platform x64 `
+#              -Configuration $(buildConfiguration) `
+#              -SourceDir "$(Build.SourcesDirectory)" `
+#              -TargetDir "MorphicSetup\obj\x64\$(buildConfiguration)\publish\Morphic"
+#          displayName: 'copy compiled XAML (x64)'
 
         - task: VSBuild@1
           displayName: "build installer (x64)"
@@ -275,6 +282,13 @@ stages:
             configuration: '$(buildConfiguration)'
             msbuildArgs: '/t:restore'
 
+        - powershell: |
+            .\finalize-winui-publish.ps1 `
+              -Platform arm64 `
+              -Configuration $(buildConfiguration) `
+              -SourceDir "$(Build.SourcesDirectory)"
+          displayName: 'finalize WinUI publishing (arm64)'
+	  
         - task: CopyFiles@2
           displayName: "copy published/signed files (arm64)"
           inputs:
@@ -283,13 +297,13 @@ stages:
             TargetFolder: 'MorphicSetup\obj\arm64\$(buildConfiguration)\publish\Morphic'
             CleanTargetFolder: true
 
-        - powershell: |
-            .\copy-extras-to-installer-staging.ps1 `
-              -Platform ARM64 `
-              -Configuration $(buildConfiguration) `
-              -SourceDir "$(Build.SourcesDirectory)" `
-              -TargetDir "MorphicSetup\obj\ARM64\$(buildConfiguration)\publish\Morphic"
-          displayName: 'copy compiled XAML (ARM64)'
+#        - powershell: |
+#            .\copy-extras-to-installer-staging.ps1 `
+#              -Platform ARM64 `
+#              -Configuration $(buildConfiguration) `
+#              -SourceDir "$(Build.SourcesDirectory)" `
+#              -TargetDir "MorphicSetup\obj\ARM64\$(buildConfiguration)\publish\Morphic"
+#          displayName: 'copy compiled XAML (ARM64)'
 
         - task: VSBuild@1
           displayName: "build installer (arm64)"

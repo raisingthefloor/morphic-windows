@@ -1,6 +1,13 @@
 # package-msix.ps1 — Assembles an MSIX package from build/publish output
 # Used by both Azure Pipelines and local builds.
 #
+# SISTER SCRIPT: finalize-winui-publish.ps1 performs the same .xbf-copy + per-assembly PRI
+# merge (the resources.pri generation steps below) standalone, for the unpackaged MSI
+# installer flow. If you change the WinUI-resource handling here, consider whether the
+# equivalent change is needed there too -- the two scripts intentionally mirror each
+# other's resource-staging behavior so the packaged (MSIX) and unpackaged (MSI) install
+# paths produce equivalent runtime resource layouts.
+#
 # Prerequisites:
 #   - Windows SDK 10.0.22621.0 (for makepri.exe and makeappx.exe)
 #   - Morphic app already built and published via msbuild
