@@ -27,11 +27,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Morphic.MorphicBar.TransparentWindow;
+namespace Morphic.Controls.Windowing;
 
 // NOTE: TransparentBackdrop is a custom SystemBackdrop that makes the window background fully transparent
 //
-// WARNING: WinUI 3's SystemBackdrop infrastructure expects the backdrop brush 
+// WARNING: WinUI 3's SystemBackdrop infrastructure expects the backdrop brush
 // to be a Windows.UI.Composition.CompositionBrush (the system/DWM-level type),
 // NOT a Microsoft.UI.Composition.CompositionBrush (the WinUI 3 "lifted" type).
 //
@@ -40,11 +40,11 @@ namespace Morphic.MorphicBar.TransparentWindow;
 //
 // To produce the correct type we create our own Windows.UI.Composition.Compositor.
 // This requires a Windows.System.DispatcherQueue on the current thread, which
-// TransparentWindow.EnsureSystemDispatcherQueue() provides.
+// TransparentBaseWindow.EnsureSystemDispatcherQueue() provides.
 //
 // The compositor and brush are kept alive as long as the backdrop is connected;
 // disposing the compositor would invalidate the brush.
-internal class TransparentBackdrop : Microsoft.UI.Xaml.Media.SystemBackdrop
+public class TransparentBackdrop : Microsoft.UI.Xaml.Media.SystemBackdrop
 {
     private Windows.UI.Composition.Compositor? _compositor;
 

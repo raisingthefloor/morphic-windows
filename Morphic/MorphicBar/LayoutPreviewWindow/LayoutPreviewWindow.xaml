@@ -1,17 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Window
+<tw:ChromelessBaseWindow
     x:Class="Morphic.MorphicBar.LayoutPreviewWindow.LayoutPreviewWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Morphic.MorphicBar"
+    xmlns:tw="using:Morphic.Controls.Windowing"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     Title="Morphic Layout Preview Window">
 
-    <!-- NOTE: SystemBackdrop is set programatically to a custom backdrop -->
-    <!--<Window.SystemBackdrop>
-    </Window.SystemBackdrop>-->
+    <!-- NOTE: SystemBackdrop AND the Border's Background/BorderBrush/BorderThickness are all
+         set programmatically in code-behind based on the current high-contrast state:
+           * non-HC: AcrylicGrayBackdrop + semi-transparent dark overlay + no border ring
+                    (gives the frosted-glass preview look that matches the non-HC system style)
+           * HC:     no backdrop + opaque COLOR_WINDOW fill + COLOR_WINDOWTEXT border ring
+                    (matches Windows' native snap-zone preview under high contrast, where the
+                    rounded outline is visible on all four sides instead of the DWM-only
+                    border that only renders 3 sides under HC)
+         CornerRadius is constant (rounded shape applies in both modes). -->
 
-    <Grid Background="#40000000" RequestedTheme="Dark" />
-</Window>
+    <Border x:Name="RootBorder" />
+
+</tw:ChromelessBaseWindow>

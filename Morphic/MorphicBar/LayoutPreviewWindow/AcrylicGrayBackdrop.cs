@@ -65,4 +65,15 @@ internal class AcrylicGrayBackdrop : SystemBackdrop
 
         _configOverride = null;
     }
+
+    // We feed our DesktopAcrylicController with our own _configOverride (IsInputActive=true so the
+    // acrylic stays "active" regardless of window focus), so WinUI's default SystemBackdropConfiguration
+    // is intentionally bypassed. The base class's OnDefaultSystemBackdropConfigurationChanged tries
+    // to apply the default config to the target on theme/high-contrast transitions and throws
+    // E_INVALIDARG when acrylic becomes invalid (e.g. high contrast enabled). Override to a no-op
+    // so those transitions don't crash the app -- our _configOverride keeps driving the controller.
+    protected override void OnDefaultSystemBackdropConfigurationChanged(ICompositionSupportsSystemBackdrop target, XamlRoot xamlRoot)
+    {
+        // No-op: this backdrop ignores the system default config in favor of _configOverride.
+    }
 }

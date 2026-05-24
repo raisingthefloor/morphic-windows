@@ -47,7 +47,7 @@ namespace Morphic.MorphicBar;
 /// <summary>
 /// An empty window that can be used on its own or navigated to within a Frame.
 /// </summary>
-public sealed partial class MorphicBarWindow : Morphic.MorphicBar.TransparentWindow.TransparentBaseWindow, IDisposable
+public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.TransparentBaseWindow, IDisposable
 {
     private bool disposedValue;
 

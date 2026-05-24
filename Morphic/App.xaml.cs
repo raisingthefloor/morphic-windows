@@ -64,6 +64,24 @@ public partial class App : Application
         DispatcherQueue.GetForCurrentThread().ShutdownStarting += App_ShutdownStarting;
     }
 
+    private void BindHighContrastSysColorBrushes()
+    {
+        var highContrastResources = (Microsoft.UI.Xaml.ResourceDictionary)this.Resources.ThemeDictionaries["HighContrast"];
+        Morphic.Theme.MorphicSysColorBrushBinder.Bind((Microsoft.UI.Xaml.Media.SolidColorBrush)highContrastResources["ThemeAwareBackground"], Morphic.Theme.MorphicSysColor.Window);
+        Morphic.Theme.MorphicSysColorBrushBinder.Bind((Microsoft.UI.Xaml.Media.SolidColorBrush)highContrastResources["ThemeAwareBorder"], Morphic.Theme.MorphicSysColor.WindowText);
+        Morphic.Theme.MorphicSysColorBrushBinder.Bind((Microsoft.UI.Xaml.Media.SolidColorBrush)highContrastResources["ThemeAwareMorphicBarMorphieTextForeground"], Morphic.Theme.MorphicSysColor.WindowText);
+
+        // MorphicBarControlDisabledForeground is defined at the root (not in ThemeDictionaries) because
+        // it's used in BOTH HC and non-HC modes (every disabled button shows gray text regardless
+        // of theme). The binder makes it track GetSysColor(COLOR_GRAYTEXT), which gives the active
+        // HC theme's GRAYTEXT under HC and Windows' standard disabled-text gray otherwise.
+        Morphic.Theme.MorphicSysColorBrushBinder.Bind(
+            (Microsoft.UI.Xaml.Media.SolidColorBrush)this.Resources["MorphicBarControlDisabledForeground"],
+            Morphic.Theme.MorphicSysColor.GrayText);
+    }
+
+    //
+
     #region Lifecycle
 
     /// <summary>
@@ -72,6 +90,13 @@ public partial class App : Application
     /// <param name="args">Details about the launch request and process.</param>
     protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
     {
+        // Wire up the HC ThemeAwareBackground brush placeholder declared in App.xaml. Done here
+        // (rather than in the App constructor) because Resources.ThemeDictionaries is a WinRT
+        // projection that isn't safely accessible until the framework finishes booting --
+        // accessing it from the constructor throws COMException. OnLaunched runs after framework
+        // init and before any windows are constructed, so this seeds the brush before first paint.
+        this.BindHighContrastSysColorBrushes();
+
         // initialize our taskbar icon (button); it will start out in a hidden state
         this.InitTaskbarIconWithoutShowing();
 

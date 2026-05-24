@@ -38,7 +38,6 @@ internal class MorphicMainMenu
 
     MenuFlyoutItem _showMorphicBarMenuItem;
     MenuFlyoutItem _hideMorphicBarMenuItem;
-    
 
     public event EventHandler<EventArgs>? AboutMorphicMenuItemClicked;
     public event EventHandler<EventArgs>? HideMorphicBarMenuItemClicked;

@@ -48,7 +48,7 @@ namespace Morphic.MorphicBar.LayoutPreviewWindow;
 /// <summary>
 /// An empty window that can be used on its own or navigated to within a Frame.
 /// </summary>
-public sealed partial class LayoutPreviewWindow : Window
+public sealed partial class LayoutPreviewWindow : Morphic.Controls.Windowing.ChromelessBaseWindow
 {
     DummyWindow _dummyParentWindow;
 
@@ -59,6 +59,11 @@ public sealed partial class LayoutPreviewWindow : Window
 
     public LayoutPreviewWindow()
     {
+        // NOTE: ChromelessBaseWindow's constructor strips all WinUI / DWM chrome and 
+        // enables per-pixel alpha, so this constructor only has to do LayoutPreviewWindow's
+        // specific setup: dummy parent (keep out of the taskbar), tool window + no-activate
+        // styles (keep out of ALT-TAB and don't steal focus), and HC-tracking that drives
+        // the visible appearance via UpdateAppearanceForCurrentHighContrastState.
         InitializeComponent();
 
         _dispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
@@ -79,7 +84,6 @@ public sealed partial class LayoutPreviewWindow : Window
             presenter.IsResizable = false;
             presenter.IsMinimizable = false;
             presenter.IsMaximizable = false;
-            presenter.SetBorderAndTitleBar(true, false);
         }
 
         // remove the window from the Alt+Tab task switcher (by making it a 'tool window') and also make it unactivate-able (so that it can't steal focus)
@@ -99,6 +103,13 @@ public sealed partial class LayoutPreviewWindow : Window
             }
         }
 
+        this.UpdateAppearanceForCurrentHighContrastState();
+
+        this.Activated += LayoutPreviewWindow_Activated;
+    }
+
+    private void UpdateAppearanceForCurrentHighContrastState()
+    {
         // set the DWM border color
         uint borderColor = 0x00707070;
         Span<byte> borderColorAsSpan = MemoryMarshal.AsBytes(new Span<uint>(ref borderColor));
@@ -107,8 +118,6 @@ public sealed partial class LayoutPreviewWindow : Window
 
         // use a custom translucent acrylic backdrop for the stained glass effect
         this.SystemBackdrop = new Morphic.MorphicBar.LayoutPreviewWindow.AcrylicGrayBackdrop();
-
-        this.Activated += LayoutPreviewWindow_Activated;
     }
 
     private void LayoutPreviewWindow_Activated(object sender, WindowActivatedEventArgs args)

@@ -17,7 +17,7 @@
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="0"/>
-            <Setter Property="Foreground" Value="{StaticResource MorphicBarControlForeground}"/>
+            <Setter Property="Foreground" Value="{ThemeResource MorphicBarControlForeground}"/>
             <Setter Property="FontFamily" Value="Segoe UI"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="FontSize" Value="14"/>
@@ -30,8 +30,21 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
+                        <!-- BorderThickness=2 with BorderBrush=MorphicBarControlBorder mirrors the
+                             toggle template exactly. Two reasons:
+                             1. Structural height parity: the border contributes 4 logical px to the
+                                outer height, matching the toggle, so both button styles size to the
+                                same outer height at any DPI or rasterization scale.
+                             2. Visual parity: in non-HC, MorphicBarControlBorder resolves to the same
+                                green as the background, so the border is invisible (button reads as
+                                solid green, like an unchecked toggle). In HC, the same brush resolves
+                                to SystemColorButtonTextBrush, so the non-toggle button gets the same
+                                visible HC outline that the toggle does. -->
                         <Border x:Name="BgBorder"
-                                Background="{StaticResource MorphicBarControlBackground}"
+                                Background="{ThemeResource MorphicBarControlBackground}"
+                                BackgroundSizing="OuterBorderEdge"
+                                BorderBrush="{ThemeResource MorphicBarControlBorder}"
+                                BorderThickness="2"
                                 CornerRadius="{TemplateBinding CornerRadius}">
                             <VisualStateManager.VisualStateGroups>
                                 <!-- CommonStates owns BgBorder.Background and ButtonText.Foreground. The
@@ -44,20 +57,28 @@
                                     <VisualState x:Name="Normal"/>
                                     <VisualState x:Name="PointerOver">
                                         <VisualState.Setters>
-                                            <Setter Target="BgBorder.Background" Value="{StaticResource MorphicBarControlHoverBackground}"/>
+                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlHoverBackground}"/>
                                         </VisualState.Setters>
                                     </VisualState>
                                     <VisualState x:Name="Pressed">
                                         <VisualState.Setters>
-                                            <Setter Target="BgBorder.Background" Value="{StaticResource MorphicBarControlPressedBackground}"/>
+                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlPressedBackground}"/>
                                         </VisualState.Setters>
                                     </VisualState>
                                     <VisualState x:Name="InProgress">
                                         <VisualState.Setters>
-                                            <Setter Target="BgBorder.Background" Value="{StaticResource MorphicBarControlPressedBackground}"/>
+                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlPressedBackground}"/>
                                         </VisualState.Setters>
                                     </VisualState>
-                                    <VisualState x:Name="Disabled"/>
+                                    <!-- Disabled: keep the normal bg and swap the text Foreground to the
+                                         system disabled-text gray, matching the Windows convention for
+                                         disabled controls. -->
+                                    <VisualState x:Name="Disabled">
+                                        <VisualState.Setters>
+                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlBackground}"/>
+                                            <Setter Target="SubButtonText.Foreground" Value="{ThemeResource MorphicBarControlDisabledForeground}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
                                 </VisualStateGroup>
                                 <!-- ProgressStates owns ProgressBar.Visibility/IsIndeterminate/Opacity only.
                                      "Preparing" runs the indeterminate animation invisibly (Opacity=0) so
@@ -98,7 +119,7 @@
                                     Height="2"
                                     IsIndeterminate="False"
                                     Visibility="Collapsed"
-                                    Foreground="{StaticResource MorphicBarControlForeground}"
+                                    Foreground="{ThemeResource MorphicBarControlForeground}"
                                     Background="Transparent"
                                     HorizontalAlignment="Stretch"
                                     VerticalAlignment="Bottom"/>
@@ -110,7 +131,7 @@
         </Style>
 
         <!-- Toggle sub-button style. Uses a single VisualStateGroup with COMPOUND state names
-             (Normal/PointerOver/Pressed/Checked/CheckedPointerOver/CheckedPressed/Indeterminate/Disabled)
+             (Normal/PointerOver/Pressed/Checked/CheckedPointerOver/CheckedPressed/Indeterminate/Disabled/CheckedDisabled)
              so there is no cross-group clash on the BgBorder.Background property. The code-behind's
              WireToggleButtonCompoundStates helper intercepts pointer/checked events and calls
              VisualStateManager.GoToState with the compound name. -->
@@ -118,7 +139,7 @@
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="0"/>
-            <Setter Property="Foreground" Value="{StaticResource MorphicBarControlForeground}"/>
+            <Setter Property="Foreground" Value="{ThemeResource MorphicBarControlForeground}"/>
             <Setter Property="FontFamily" Value="Segoe UI"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="FontSize" Value="14"/>
@@ -131,14 +152,19 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="primitives:ToggleButton">
-                        <!-- BorderThickness is fixed at 2 (with BorderBrush matching the default green
-                             background) so the button's natural size does not change when toggled on;
-                             the VSM only swaps the fill color. When unchecked, the border is the same
-                             color as the background (invisibly uniform); when checked, the background
-                             flips to white and the 2px green ring becomes visible. -->
+                        <!-- BorderThickness is fixed at 2 so the button's natural size does not change
+                             when toggled on; the VSM only swaps the fill color. BorderBrush uses the
+                             dedicated MorphicBarControlBorder key, which in non-HC resolves to the
+                             same green as the unchecked bg (so the border is invisibly uniform when
+                             unchecked, and shows as a 2px green ring when checked flips the bg to
+                             white). The dedicated key is also a PLACEHOLDER for a future HC variant
+                             (see the comment on MorphicBarControlBorder in App.xaml): under HC today
+                             the same green resolves through, but the key exists so a contrast-text
+                             binding can be added later without touching this template. -->
                         <Border x:Name="BgBorder"
-                                Background="{StaticResource MorphicBarControlBackground}"
-                                BorderBrush="{StaticResource MorphicBarControlBackground}"
+                                Background="{ThemeResource MorphicBarControlBackground}"
+                                BackgroundSizing="OuterBorderEdge"
+                                BorderBrush="{ThemeResource MorphicBarControlBorder}"
                                 BorderThickness="2"
                                 CornerRadius="{TemplateBinding CornerRadius}">
                             <VisualStateManager.VisualStateGroups>
@@ -146,39 +172,55 @@
                                     <VisualState x:Name="Normal"/>
                                     <VisualState x:Name="PointerOver">
                                         <VisualState.Setters>
-                                            <Setter Target="BgBorder.Background" Value="{StaticResource MorphicBarControlHoverBackground}"/>
+                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlHoverBackground}"/>
                                         </VisualState.Setters>
                                     </VisualState>
                                     <VisualState x:Name="Pressed">
                                         <VisualState.Setters>
-                                            <Setter Target="BgBorder.Background" Value="{StaticResource MorphicBarControlPressedBackground}"/>
+                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlPressedBackground}"/>
                                         </VisualState.Setters>
                                     </VisualState>
                                     <VisualState x:Name="Checked">
                                         <VisualState.Setters>
-                                            <Setter Target="BgBorder.Background" Value="{StaticResource MorphicBarControlCheckedBackground}"/>
-                                            <Setter Target="SubButtonText.Foreground" Value="{StaticResource MorphicBarControlCheckedForeground}"/>
+                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlCheckedBackground}"/>
+                                            <Setter Target="SubButtonText.Foreground" Value="{ThemeResource MorphicBarControlCheckedForeground}"/>
                                         </VisualState.Setters>
                                     </VisualState>
                                     <VisualState x:Name="CheckedPointerOver">
                                         <VisualState.Setters>
-                                            <Setter Target="BgBorder.Background" Value="{StaticResource MorphicBarControlCheckedHoverBackground}"/>
-                                            <Setter Target="SubButtonText.Foreground" Value="{StaticResource MorphicBarControlCheckedForeground}"/>
+                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlCheckedHoverBackground}"/>
+                                            <Setter Target="SubButtonText.Foreground" Value="{ThemeResource MorphicBarControlCheckedForeground}"/>
                                         </VisualState.Setters>
                                     </VisualState>
                                     <VisualState x:Name="CheckedPressed">
                                         <VisualState.Setters>
-                                            <Setter Target="BgBorder.Background" Value="{StaticResource MorphicBarControlCheckedPressedBackground}"/>
-                                            <Setter Target="SubButtonText.Foreground" Value="{StaticResource MorphicBarControlCheckedForeground}"/>
+                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlCheckedPressedBackground}"/>
+                                            <Setter Target="SubButtonText.Foreground" Value="{ThemeResource MorphicBarControlCheckedForeground}"/>
                                         </VisualState.Setters>
                                     </VisualState>
                                     <VisualState x:Name="InProgress">
                                         <VisualState.Setters>
-                                            <Setter Target="BgBorder.Background" Value="{StaticResource MorphicBarControlPressedBackground}"/>
+                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlPressedBackground}"/>
                                         </VisualState.Setters>
                                     </VisualState>
                                     <VisualState x:Name="Indeterminate"/>
-                                    <VisualState x:Name="Disabled"/>
+                                    <!-- Disabled / CheckedDisabled: keep the toggle-state bg color (so the
+                                         green-vs-white background still reads as unchecked vs checked) and
+                                         swap the text Foreground to the system disabled-text gray. Matches
+                                         the Windows convention for disabled toggle controls: bg shows the
+                                         toggle state, gray text signals "you can't interact with this". -->
+                                    <VisualState x:Name="Disabled">
+                                        <VisualState.Setters>
+                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlBackground}"/>
+                                            <Setter Target="SubButtonText.Foreground" Value="{ThemeResource MorphicBarControlDisabledForeground}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="CheckedDisabled">
+                                        <VisualState.Setters>
+                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlCheckedBackground}"/>
+                                            <Setter Target="SubButtonText.Foreground" Value="{ThemeResource MorphicBarControlDisabledForeground}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
                                 </VisualStateGroup>
                                 <!-- ProgressStates owns ProgressBar.Visibility/IsIndeterminate/Opacity only.
                                      "Preparing" runs the indeterminate animation invisibly (Opacity=0) so
@@ -219,7 +261,7 @@
                                     Height="2"
                                     IsIndeterminate="False"
                                     Visibility="Collapsed"
-                                    Foreground="{StaticResource MorphicBarControlForeground}"
+                                    Foreground="{ThemeResource MorphicBarControlForeground}"
                                     Background="Transparent"
                                     HorizontalAlignment="Stretch"
                                     VerticalAlignment="Bottom"/>
