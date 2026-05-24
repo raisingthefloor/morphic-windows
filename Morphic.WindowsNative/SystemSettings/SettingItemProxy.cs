@@ -32,6 +32,13 @@ namespace Morphic.WindowsNative.SystemSettings;
 
 internal class SettingItemProxy
 {
+    // Default timeout applied when callers pass `timeout = null` (which is the parameter's own
+    // default). Five seconds covers the cold-start case where a SettingItem's IsEnabled flag is
+    // still propagating from false to true at the moment of the first Get/Set call.
+    //
+    // Callers who want "fail-fast" behavior instead can pass TimeSpan.Zero explicitly.
+    private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(5);
+
     // NOTE: this enum should match SystemSettings.DataModel.SettingType; it may seem redundant, but we are providing it so that we can use the raw SystemSettings classes internally
     //       (WinRT interop) and expose a stable value externally
     public enum SettingType
@@ -156,7 +163,7 @@ internal class SettingItemProxy
     {
         if (timeout is null)
         {
-            timeout = TimeSpan.Zero;
+            timeout = SettingItemProxy.DefaultTimeout;
         }
         if (timeout!.Value.TotalMilliseconds > int.MaxValue)
         {
@@ -284,7 +291,7 @@ internal class SettingItemProxy
     {
         if (timeout is null)
         {
-            timeout = TimeSpan.Zero;
+            timeout = SettingItemProxy.DefaultTimeout;
         }
         if (timeout!.Value.TotalMilliseconds > int.MaxValue)
         {
