@@ -29,7 +29,7 @@ using System.Reflection;
 
 namespace Morphic.AboutWindow;
 
-public sealed partial class AboutWindow : Morphic.Theme.ThemeAwareBaseWindow
+public sealed partial class AboutWindow : Morphic.Controls.Theme.ThemeAwareBaseWindow
 {
     private readonly Lazy<Version> _applicationVersion = new(() => Assembly.GetExecutingAssembly().GetName().Version! );
 

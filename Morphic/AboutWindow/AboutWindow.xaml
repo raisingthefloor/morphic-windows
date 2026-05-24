@@ -6,7 +6,7 @@
     xmlns:local="using:Morphic.AboutWindow"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:theme="using:Morphic.Theme"
+    xmlns:theme="using:Morphic.Controls.Theme"
     mc:Ignorable="d"
     Title="About Morphic">
 
