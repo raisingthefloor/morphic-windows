@@ -23,7 +23,6 @@
 
 using Morphic.Core;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace Morphic.WindowsNative.OsVersion;
@@ -180,7 +179,7 @@ public class OsVersion
         var versionBuild = OsVersion.GetBuildVersionForOsVersion(version);
         if (versionBuild is null)
         {
-            return MorphicResult.ErrorResult();
+            throw new ArgumentOutOfRangeException(nameof(version));
         }
         var currentVersionBuild = System.Environment.OSVersion.Version.Build;
 
@@ -246,5 +245,4 @@ public class OsVersion
 
         return MorphicResult.OkResult(updateBuildRevision);
     }
-
 }

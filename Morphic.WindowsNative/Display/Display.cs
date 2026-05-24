@@ -182,6 +182,29 @@ public class Display
 
     //
 
+    // NOTE: this function returns an Error if the window is not associated with any monitor
+	//       which is very unlikely as it uses DEFAULTONNEAREST resolution.
+    public static MorphicResult<Display, MorphicUnit> GetDisplayNearestWindowHandle(IntPtr windowHandle)
+    {
+        var monitorHandle = Display.GetMonitorHandleNearestWindowHandle((Windows.Win32.Foundation.HWND)windowHandle);
+        if (monitorHandle.IsNull)
+        {
+            return MorphicResult.ErrorResult();
+        }
+
+        return Display.GetDisplayByMonitorHandle(monitorHandle);
+    }
+
+    // NOTE: this function returns a null pointer is the window handle couldn't be associated to a monitor
+    private static Windows.Win32.Graphics.Gdi.HMONITOR GetMonitorHandleNearestWindowHandle(IntPtr windowHandle)
+    {
+        // get the handle of the monitor which is nearest to the specified window (via that window's handle); the "nearest" argument handles windows which are partially on two windows or are completely offscreen
+        var monitorHandle = Windows.Win32.PInvoke.MonitorFromWindow((Windows.Win32.Foundation.HWND)windowHandle, Windows.Win32.Graphics.Gdi.MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
+        return monitorHandle;
+    }
+
+    //
+
     public static MorphicResult<Display, MorphicUnit> GetDisplayAtPoint(System.Drawing.Point point)
     {
         var monitorHandle = Display.GetMonitorHandleAtPoint(point);
