@@ -30,6 +30,78 @@ namespace Morphic.MorphicBar;
 
 internal class BarItemHandlers
 {
+    // magnifier
+
+    public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> ShowMagnifierButtonAction(string? actionTag, bool? isChecked)
+    {
+        // if the magnifier is already visible, do nothing (treat as success -- requested end-state is satisfied)
+        var isMagnifierActiveResult = await Morphic.WindowsNative.Magnifier.Magnifier.IsMagnifierActiveAsync();
+        if (isMagnifierActiveResult.IsError)
+        {
+            return MorphicResult.ErrorResult();
+        }
+        var isMagnifierActive = isMagnifierActiveResult.Value!;
+        if (isMagnifierActive == true)
+        {
+            return MorphicResult.OkResult();
+        }
+
+
+        // step 1: re-center the mouse cursor
+
+        // before showing the magnifier, move the cursor to the center of the screen where the mouse pointer currently resides
+
+        var getCurrentPositionResult = Morphic.WindowsNative.Mouse.Mouse.GetCurrentPosition();
+        if (getCurrentPositionResult.IsError == true)
+        {
+            return MorphicResult.ErrorResult();
+        }
+        var currentMousePosition = getCurrentPositionResult.Value!;
+
+        var getDisplayAtPointResult = Morphic.WindowsNative.Display.Display.GetDisplayAtPoint(currentMousePosition);
+        if (getDisplayAtPointResult.IsError == true)
+        {
+            return MorphicResult.ErrorResult();
+        }
+        var targetDisplay = getDisplayAtPointResult.Value!;
+
+        var moveCursorToCenterOfDisplayResult = Morphic.WindowsNative.Mouse.Mouse.MoveCursorToCenterOfDisplay(targetDisplay);
+        if (moveCursorToCenterOfDisplayResult.IsError == true)
+        {
+            return MorphicResult.ErrorResult();
+        }
+
+
+        // step 2: show the magnifier
+
+        // The SystemSettings calls can block before their first async yield, so keep them off the UI thread; .ConfigureAwait(false) also tells C# not to try to resume execution on the original thread
+        var showMagnifierSucceeded = await Task.Run(async () =>
+        {
+            var showResult = await Morphic.WindowsNative.Magnifier.Magnifier.ShowMagnifierAsync().ConfigureAwait(false);
+            return showResult.IsSuccess;
+        });
+
+        Debug.WriteLine($"[BarItem] {actionTag}: show -> {(showMagnifierSucceeded ? "ok" : "error")}");
+
+        return showMagnifierSucceeded ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
+    }
+
+    public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> HideMagnifierButtonAction(string? actionTag, bool? isChecked)
+    {
+        // The SystemSettings calls can block before their first async yield, so keep them off the UI thread; .ConfigureAwait(false) also tells C# not to try to resume execution on the original thread
+        var hideMagnifierSucceeded = await Task.Run(async () =>
+        {
+            var hideResult = await Morphic.WindowsNative.Magnifier.Magnifier.HideMagnifierAsync().ConfigureAwait(false);
+            return hideResult.IsSuccess;
+        });
+
+        Debug.WriteLine($"[BarItem] {actionTag}: hide -> {(hideMagnifierSucceeded ? "ok" : "error")}");
+
+        return hideMagnifierSucceeded ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
+    }
+
+    //
+
     // contrast and color buttons
 
     public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> ContrastButtonAction(string? actionTag, bool? isChecked)
@@ -126,5 +198,4 @@ internal class BarItemHandlers
 
         return nightLightSucceeded ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
     }
-
 }

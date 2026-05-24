@@ -31,6 +31,35 @@ namespace Morphic.MorphicBar;
 
 internal static class BarItemDataFactory
 {
+    public static IBarItemData CreateMagnifierButtonGroup(BarButtonAction? showAction, BarButtonAction? hideAction)
+    {
+        // "Magnifier" -- two pushbuttons (Show on the left, Hide on the right), equal width.
+        return new BarMultiButtonData
+        {
+            Header = "Magnifier",
+            SizingMode = MultiButtonSizingMode.StretchToLargest,
+            Buttons = new List<BarButtonData>
+                {
+                    new BarButtonData
+                    {
+                        Text = "Show",
+                        AccessibleName = "Show magnifier",
+                        ActionTag = "magnifier-show",
+                        Action = showAction,
+                    },
+                    new BarButtonData
+                    {
+                        Text = "Hide",
+                        AccessibleName = "Hide magnifier",
+                        ActionTag = "magnifier-hide",
+                        Action = hideAction,
+                    },
+                },
+        };
+    }
+
+    //
+
     public static IBarItemData CreateContrastColorButtonGroup(BarButtonAction? contrastAction, BarButtonAction? colorAction, BarButtonAction? darkAction, BarButtonAction? nightAction)
     {
         // "Contrast & Color" -- 4 toggle buttons, per-content sized
