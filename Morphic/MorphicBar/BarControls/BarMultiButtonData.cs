@@ -21,12 +21,16 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Morphic.MorphicBar.BarControls;
 
-public class BarMultiButtonData : IBarItemData
+public class BarMultiButtonData : IBarItemData, IDisposable
 {
+    private bool disposedValue;
+
     // Label displayed above the sub-button group.
     public string Header { get; set; } = "";
 
@@ -40,6 +44,62 @@ public class BarMultiButtonData : IBarItemData
     // When non-null, the control wires the minus/plus keys to invoke the sub-buttons at the
     // specified indices. Requires exactly two sub-buttons (BarMultiButtonControl validates).
     public BarMultiButtonIncDecShortcuts? IncDecShortcuts { get; set; }
+
+    // When true, sub-buttons are arranged side-by-side regardless of the bar's orientation. Used
+    // for groups (e.g. Text Size +/-) where the buttons logically belong next to each other and
+    // splitting them onto separate rows in a vertical bar would harm usability. Defaults to false.
+    // If false, sub-buttons follow the bar's orientation (side-by-side in horizontal bars, stacked 
+	// in vertical).
+    public bool AlwaysHorizontalSubButtons { get; set; } = false;
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                // Dispose each sub-button. Each sub-button's Dispose runs its own registered
+                // dispose actions, so any external event subscriptions held on behalf of a 
+				// sub-button get torn down here. Each .Dispose() is wrapped in try/catch so one 
+				// failing sub-button doesn't block the rest -- matches BarButtonData.Dispose's 
+				// own per-action isolation.
+                foreach (var button in this.Buttons)
+                {
+                    try
+                    {
+                        button.Dispose();
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"BarMultiButtonData sub-button dispose threw: {ex}");
+                    }
+                }
+                this.Buttons.Clear();
+            }
+
+            // NOTE: free unmanaged resources (unmanaged objects) and override finalizer
+            // [nothing to do]
+
+            // NOTE: set large fields to null
+            // [nothing to do]
+
+            disposedValue = true;
+        }
+    }
+
+    // // NOTE: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
+    // ~BarMultiButtonData()
+    // {
+    //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+    //     Dispose(disposing: false);
+    // }
+
+    public void Dispose()
+    {
+        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
 }
 
 public class BarMultiButtonIncDecShortcuts
