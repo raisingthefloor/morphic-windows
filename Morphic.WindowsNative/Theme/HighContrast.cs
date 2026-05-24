@@ -31,6 +31,11 @@ namespace Morphic.WindowsNative.Theme;
 
 public class HighContrast
 {
+    // Lock used only by SetIsOn to ensure two concurrent setters don't interleave their
+    // read-modify-write SPI sequences and clobber each other's flag updates. GetIsOn is a
+    // single SPI call and needs no locking (SPI reads are thread-safe).
+    private static readonly object _setIsOnLock = new();
+
     // Reads the current "high contrast is on" state by inspecting the HCF_HIGHCONTRASTON bit
     // of the HIGHCONTRASTW struct returned by SystemParametersInfo(SPI_GETHIGHCONTRAST).
     public static MorphicResult<bool, MorphicUnit> GetIsOn()
