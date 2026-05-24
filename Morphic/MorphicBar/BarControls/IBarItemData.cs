@@ -21,12 +21,20 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
+using System;
+
 namespace Morphic.MorphicBar.BarControls;
 
 // Marker interface implemented by every data class that describes a MorphicBar item
 // (BarButtonData, BarMultiButtonData, future types). Lets callers hand the bar a single
 // heterogeneous list and lets MorphicBarWindow.InitializeBarItems switch-create the right
 // IBarItemControl per item.
-public interface IBarItemData
+//
+// Inherits IDisposable so bar-agnostic teardown code (e.g. MorphicBarWindow tearing down the
+// item collection) can call Dispose() on every item without type-checking. Item types that
+// have nothing to dispose just implement an empty Dispose(); item types that hold subscriptions
+// to external state sources (e.g. BarButtonData with a CachedStateValue bridge) use Dispose to
+// unsubscribe and release closures.
+public interface IBarItemData : IDisposable
 {
 }
