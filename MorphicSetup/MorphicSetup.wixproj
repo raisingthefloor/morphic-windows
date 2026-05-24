@@ -1,6 +1,16 @@
 ﻿<Project Sdk="WixToolset.Sdk/4.0.6">
 	
-  <!-- necesssary to resolve incorrect ICE03 validation errors -->
+  <!-- Suppressed ICE checks:
+       * ICE03 - incorrect-validation false positives from the WiX validation framework.
+       * ICE69 - intentionally triggered by the Start Menu shortcut in ApplicationComponent
+                (Package.wxs): the shortcut's Target=[#morphic_exe] references a file in a
+                different component. This is Microsoft's documented best practice for
+                non-advertised shortcuts (per-user shortcut in a HKCU-keyed component,
+                pointing at a per-machine file in its own component); ICE69 fires anyway as
+                a generic cross-component-reference warning, but in this exact pattern it's
+                benign because both components are in the same Feature and install/uninstall
+                atomically. See the comment on ApplicationComponent in Package.wxs for the
+                rationale on why the alternative layouts trigger worse problems. -->
   <PropertyGroup>
     <RunWixToolsOutOfProc Condition=" '$(PROCESSOR_ARCHITECTURE)'!='x86' ">true</RunWixToolsOutOfProc>
     <SuppressValidation>false</SuppressValidation>
