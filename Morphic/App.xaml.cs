@@ -26,7 +26,9 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Morphic.Core;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -89,7 +91,7 @@ public partial class App : Application
         _morphicBarWindow = new();
 _morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size of the legacy Morphic 1.0 MorphicBar
         _morphicBarWindow.Orientation = Orientation.Horizontal;
-        _morphicBarWindow.InitializeBarItems();
+        _morphicBarWindow.InitializeBarItems(App.CreateBasicBarItemsData());
         //
         var iconPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "Icons", "morphic-standardcontrast.ico");
         _morphicBarWindow.SetIconFromFile(iconPath, 256, 256);
@@ -111,6 +113,17 @@ _morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size o
         _morphicBarWindow.AnimateMoveTo(hMonitor, _morphicBarWindow.Orientation, MorphicBar.DockingLocation.FloatingBottomRight, TimeSpan.Zero);
 
         _morphicBarWindow.Activate();
+    }
+
+    // builds the basic set of MorphicBar items (as data, not controls); 
+	// MorphicBarWindow.InitializeBarItems(...) is responsible for the actual controls.
+    private static List<Morphic.MorphicBar.BarControls.IBarItemData> CreateBasicBarItemsData()
+    {
+        var items = new List<Morphic.MorphicBar.BarControls.IBarItemData>
+        {
+        };
+
+        return items;
     }
 
     private void App_ShutdownStarting(DispatcherQueue sender, DispatcherQueueShutdownStartingEventArgs args)
@@ -165,8 +178,17 @@ _morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size o
 
     internal void Shutdown()
     {
+        // NOTE: we should close all explicit windows in this function (required to allow the actual application Exit)
+		//       [in contrast, accessory windows like the taskbar button are torn down automatically when the app exits]
+
+        _aboutWindow?.Close();
+
         _menuOwnerWindow.Close();
-        _morphicBarWindow.Close();
+
+        if (_morphicBarWindow is not null)
+        {
+            _morphicBarWindow.Close();
+        }
 
         this.Exit();
     }
@@ -257,7 +279,11 @@ _morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size o
             return MorphicResult.ErrorResult();
         }
 
-        const int TASKBAR_PADDING_GAP = 2;
+        // TASKBAR_PADDING_GAP is the amount of breathing room between the taskbar edge and the popup 
+		// menu. This has been sized to closely match the taskbar-button tooltip's gap (see 
+		// TrayButtonNativeWindow.ShowTooltipForCurrentHover), so that the menu and tooltip read as 
+		// floating roughly the same distance from the taskbar.
+        const int TASKBAR_PADDING_GAP = 6;
         int scaledTaskbarPaddingGap = (int)(TASKBAR_PADDING_GAP * rasterizationScale);
 
         // get the monitor handle associated with the taskbar (to determine its docking edge)
@@ -292,33 +318,33 @@ _morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size o
         //
         if (taskbarRect.Width > taskbarRect.Height)
         {
-            // Horizontal taskbar (top or bottom) — X follows the pointer position
+            // Horizontal taskbar (top or bottom) -- X follows the pointer position
             universalAbsoluteX = cursorPosition.X;
 
             if (taskbarRect.top == monitorFullRect.top)
             {
-                // Docked at top — show below the taskbar
+                // Docked at top -- show below the taskbar
                 universalAbsoluteY = taskbarRect.bottom + scaledTaskbarPaddingGap;
             }
             else
             {
-                // Docked at bottom — show above the taskbar
+                // Docked at bottom -- show above the taskbar
                 universalAbsoluteY = taskbarRect.top - scaledTaskbarPaddingGap;
             }
         }
         else
         {
-            // Vertical taskbar (left or right) — Y follows the pointer position
+            // Vertical taskbar (left or right) -- Y follows the pointer position
             universalAbsoluteY = cursorPosition.Y;
 
             if (taskbarRect.left == monitorFullRect.left)
             {
-                // Docked at left — show to the right of the taskbar
+                // Docked at left -- show to the right of the taskbar
                 universalAbsoluteX = taskbarRect.right + scaledTaskbarPaddingGap;
             }
             else
             {
-                // Docked at right — show to the left of the taskbar
+                // Docked at right -- show to the left of the taskbar
                 universalAbsoluteX = taskbarRect.left - scaledTaskbarPaddingGap;
             }
         }

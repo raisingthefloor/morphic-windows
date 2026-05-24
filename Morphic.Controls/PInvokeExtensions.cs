@@ -22,8 +22,6 @@
 // * Consumer Electronics Association Foundation
 
 using System;
-using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Morphic.Controls;
 
@@ -51,20 +49,13 @@ internal class PInvokeExtensions
         }
         else
         {
-            return PInvokeExtensions.GetWindowLongPtr(hWnd, nIndex);
+            return Windows.Win32.PInvoke.GetWindowLongPtr(hWnd, nIndex);
         }
     }
-    //
-    // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowlongptrw
-    [DllImport("user32.dll", SetLastError = true)]
-    private static extern IntPtr GetWindowLongPtr(IntPtr hWnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX nIndex);
 
     // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowlongptrw
     internal static IntPtr SetWindowLongPtr_IntPtr(Windows.Win32.Foundation.HWND hWnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX nIndex, IntPtr dwNewLong)
     {
-#if PLATFORM_X86
-        return (nint)Windows.Win32.PInvoke.SetWindowLong(hWnd, nIndex, (int)dwNewLong);
-#else
         if (IntPtr.Size == 4)
         {
             return (nint)Windows.Win32.PInvoke.SetWindowLong(hWnd, nIndex, (int)dwNewLong);
@@ -73,7 +64,6 @@ internal class PInvokeExtensions
         {
             return Windows.Win32.PInvoke.SetWindowLongPtr(hWnd, nIndex, dwNewLong);
         }
-#endif
     }
 
     #endregion winuser
