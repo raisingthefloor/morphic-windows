@@ -34,7 +34,7 @@
          remains here purely to install the "installed=1" registry value (which other code
          uses to detect a Morphic install); the Start Menu shortcut is located in the
          morphic_exe File element so that the shortcut and its target file live in the SAME
-         component -- avoiding WiX ICE69 ("Mismatched component reference"). -->
+         component, avoiding WiX ICE69 ("Mismatched component reference"). -->
     <StandardDirectory Id="ProgramMenuFolder">
       <Component Id="ApplicationComponent" Guid="8BDA9AF8-9BCC-4B25-8BCF-EE06A3412358">
         <RegistryValue Root="HKCU" Key="Software\Raising the Floor\Morphic" Name="installed" Type="integer" Value="1" KeyPath="yes" />
