@@ -90,6 +90,16 @@ public sealed partial class MorphicBarWindow : Morphic.MorphicBar.TransparentWin
     // change does not silently relocate us to a different display.
     private Windows.Win32.Graphics.Gdi.HMONITOR _currentMonitorHandle;
 
+    // Maximum number of bar items the MorphicBar can hold. If a caller supplies more, excess items
+    // are silently dropped during InitializeBarItems.
+    public const int MaxBarItemCount = 128;
+
+    // Master registry of all bar item controls created from the last InitializeBarItems call. Items
+    // here are NOT necessarily currently present in BarItemsPanel.Children -- we trim (move)
+    // controls between "displayed" (those that fit within the current screen's working area, in a single 
+	// bar) and controls that need to be hidden (or overflowed onto an overflow panel)
+    private readonly System.Collections.Generic.List<Microsoft.UI.Xaml.FrameworkElement> _allBarItemControls = new();
+
     public MorphicBarWindow()
     {
         InitializeComponent();
@@ -120,9 +130,53 @@ public sealed partial class MorphicBarWindow : Morphic.MorphicBar.TransparentWin
         (this.Content as Grid)!.Loaded += RootGrid_Loaded;
     }
 
-    // Populate the buttons on the MorphicBar
-    public void InitializeBarItems()
+    /// <summary>
+    /// Replaces the bar's items with controls built from the supplied data list. The bar window
+    /// owns control creation and orientation propagation; the caller (typically App) only supplies
+    /// data classes, keeping bar contents authoring outside the window class.
+    /// </summary>
+    /// <param name="items">Heterogeneous list of bar item data (BarButtonData, BarMultiButtonData, ...).</param>
+    public void InitializeBarItems(IEnumerable<IBarItemData> items)
     {
+        // tear down: clear the live bar AND the master cache; the previous controls (if any) are
+        // dropped and will be GC'd once their event subscriptions release
+        this.BarItemsPanel.Children.Clear();
+        _allBarItemControls.Clear();
+
+        // materialize the input so we can length-check it; enforce MaxBarItemCount by silently
+        // truncating excess.
+        var itemsList = items.ToList();
+        if (itemsList.Count > MaxBarItemCount)
+        {
+            itemsList = itemsList.GetRange(0, MaxBarItemCount);
+        }
+
+        // build all the controls up front; each one's Orientation is synced with the bar's current
+        // orientation (and lays out correctly for that orientation when it loads)
+        foreach (var data in itemsList)
+        {
+            IBarItemControl control;
+            switch (data)
+            {
+                case BarButtonData buttonData:
+                    control = new BarButtonControl { Data = buttonData };
+                    break;
+                case BarMultiButtonData multiButtonData:
+                    control = new BarMultiButtonControl { Data = multiButtonData };
+                    break;
+                default:
+                    throw new MorphicUnhandledCaseException(data);
+            }
+            control.Orientation = _orientation;
+            _allBarItemControls.Add((FrameworkElement)control);
+        }
+
+        foreach (var control in _allBarItemControls)
+        {
+            // add to BarItemsPanel so the control loads and we can measure it. The trim step (above)
+            // moves anything that doesn't fit out of BarItemsPanel into the cache.
+            this.BarItemsPanel.Children.Add(control);
+        }
     }
 
     private void MorphicBarWindow_Activated(object sender, WindowActivatedEventArgs args)
