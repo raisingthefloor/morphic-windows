@@ -11,7 +11,7 @@
 # see: https://learn.microsoft.com/en-us/windows/msix/package/manual-packaging-root
 
 param(
-    [Parameter(Mandatory)][ValidateSet("x64","x86","ARM64")][string]$Platform,
+    [Parameter(Mandatory)][ValidateSet("x64","ARM64")][string]$Platform,
     [Parameter(Mandatory)][string]$Configuration,
     [Parameter(Mandatory)][string]$SourceDir,
     [Parameter(Mandatory)][string]$OutputMsix,
@@ -23,14 +23,12 @@ $ErrorActionPreference = "Stop"
 # Derive RuntimeIdentifier from Platform
 $rid = switch ($Platform) {
     "x64"   { "win-x64" }
-    "x86"   { "win-x86" }
     "ARM64" { "win-arm64" }
 }
 
 # Derive ProcessorArchitecture for manifest
 $procArch = switch ($Platform) {
     "x64"   { "x64" }
-    "x86"   { "x86" }
     "ARM64" { "arm64" }
 }
 
