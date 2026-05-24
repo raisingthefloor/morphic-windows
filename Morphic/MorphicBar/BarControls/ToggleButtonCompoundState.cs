@@ -28,7 +28,7 @@ namespace Morphic.MorphicBar.BarControls;
 
 // Toggle-button templates in this project use a single VisualStateGroup named "CommonStates"
 // that contains COMPOUND state names: Normal, PointerOver, Pressed, Checked, CheckedPointerOver,
-// CheckedPressed, Indeterminate, Disabled.
+// CheckedPressed, Indeterminate, Disabled, CheckedDisabled.
 //
 // WinUI's built-in ToggleButton emits only simple state names (Normal/PointerOver/Pressed in
 // CommonStates + Checked/Unchecked/Indeterminate in CheckStates), which causes cross-group
@@ -80,6 +80,14 @@ internal static class ToggleButtonCompoundState
             }
             if (!_button.IsEnabled)
             {
+                // CheckedDisabled is its own state so the toggle's checked appearance remains
+                // visible (faded) when disabled. Without this split, "Disabled" with empty
+                // setters would fall back to the base (unchecked) appearance regardless of
+                // IsChecked.
+                if (_button.IsChecked == true)
+                {
+                    return "CheckedDisabled";
+                }
                 return "Disabled";
             }
             if (_button.IsChecked is null)

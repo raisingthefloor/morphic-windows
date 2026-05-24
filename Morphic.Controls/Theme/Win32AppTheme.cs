@@ -27,7 +27,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Morphic.Theme;
+namespace Morphic.Controls.Theme;
 
 internal class Win32AppTheme
 {
@@ -128,12 +128,6 @@ internal class Win32AppTheme
                 });
             }
         }
-
-        // alternate invocation strategy (if exceptions from theme change handler is not a concern)
-        //Task.Run(() =>
-        //{
-        //    s_themeChanged?.Invoke(null /* static class, no so type instance */, appTheme);
-        //});
     }
 
     #endregion ThemeChanged event support

@@ -29,7 +29,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.UI.ViewManagement;
 
-namespace Morphic.Theme;
+namespace Morphic.Controls.Theme;
 
 public class ThemeAwareBaseWindow : Window
 {
