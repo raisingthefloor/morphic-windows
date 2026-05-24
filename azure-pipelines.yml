@@ -288,7 +288,7 @@ stages:
               -Configuration $(buildConfiguration) `
               -SourceDir "$(Build.SourcesDirectory)"
           displayName: 'finalize WinUI publishing (arm64)'
-	  
+
         - task: CopyFiles@2
           displayName: "copy published/signed files (arm64)"
           inputs:
