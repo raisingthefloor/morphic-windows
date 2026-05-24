@@ -110,6 +110,8 @@ public sealed partial class LayoutPreviewWindow : Morphic.Controls.Windowing.Chr
 
     private void UpdateAppearanceForCurrentHighContrastState()
     {
+        var hwnd = (Windows.Win32.Foundation.HWND)WinRT.Interop.WindowNative.GetWindowHandle(this);
+
         // set the DWM border color
         uint borderColor = 0x00707070;
         Span<byte> borderColorAsSpan = MemoryMarshal.AsBytes(new Span<uint>(ref borderColor));
