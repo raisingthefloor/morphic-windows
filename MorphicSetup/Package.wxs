@@ -29,14 +29,14 @@
       <Directory Id="INSTALLFOLDER" Name="!(bind.Property.ProductName)" />
     </StandardDirectory>
     
-    <!-- ProgramMenuFolder must be declared so the nested Shortcut in MorphicComponents
-         (below) can target it via Directory="ProgramMenuFolder". ApplicationComponent
-         remains here purely to install the "installed=1" registry value (which other code
-         uses to detect a Morphic install); the Start Menu shortcut is located in the
-         morphic_exe File element so that the shortcut and its target file live in the SAME
-         component, avoiding WiX ICE69 ("Mismatched component reference"). -->
     <StandardDirectory Id="ProgramMenuFolder">
       <Component Id="ApplicationComponent" Guid="8BDA9AF8-9BCC-4B25-8BCF-EE06A3412358">
+        <Shortcut
+          Id="MorphicStartMenuShortcut"
+          Name="!(bind.Property.ProductName)"
+          Icon="MorphicIcon"
+          Target="[#morphic_exe]"
+          WorkingDirectory="INSTALLFOLDER" />
         <RegistryValue Root="HKCU" Key="Software\Raising the Floor\Morphic" Name="installed" Type="integer" Value="1" KeyPath="yes" />
       </Component>
     </StandardDirectory>
@@ -46,15 +46,7 @@
     <ComponentGroup Id="MorphicComponents" Directory="INSTALLFOLDER">
       <Component>
 <!--        <File Id="morphic_exe" Source="$(IntermediateOutputPath)\publish\Morphic\Morphic.exe" /> -->
-        <File Id="morphic_exe" Source="Morphic.exe">
-          <Shortcut
-            Id="MorphicStartMenuShortcut"
-            Directory="ProgramMenuFolder"
-            Name="!(bind.Property.ProductName)"
-            Icon="MorphicIcon"
-            WorkingDirectory="INSTALLFOLDER"
-            Advertise="no" />
-        </File>
+        <File Id="morphic_exe" Source="Morphic.exe" />
       </Component>
       <ComponentGroupRef Id="MorphicSupportComponents" />
     </ComponentGroup>
