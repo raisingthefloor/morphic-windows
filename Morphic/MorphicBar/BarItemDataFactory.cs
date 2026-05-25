@@ -115,8 +115,29 @@ internal static class BarItemDataFactory
         //      since WaitForIsEnabledEventAsync can block briefly before its first async yield.
         EventHandler<Morphic.WindowsNative.Display.NightLightIsOnChangedEventArgs> nightLightIsOnChangedHandler =
             (_, e) => nightButton.IsChecked = e.NewValue;
-        Morphic.WindowsNative.Display.NightLight.IsOnChanged += nightLightIsOnChangedHandler;
-        nightButton.AddDisposeAction(() => Morphic.WindowsNative.Display.NightLight.IsOnChanged -= nightLightIsOnChangedHandler);
+        // NightLight.IsOnChanged += / -= can throw if the underlying WinRT SettingItem subscribe
+        // fails (typically COMException -- see the event's <exception> doc). Wrap so a failed
+        // subscribe doesn't tear down the whole CreateContrastColorButtonGroup call; the night
+        // button still gets created but won't reflect OS-side state changes.
+        try
+        {
+            Morphic.WindowsNative.Display.NightLight.IsOnChanged += nightLightIsOnChangedHandler;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[BarItemDataFactory] NightLight.IsOnChanged subscribe failed: {ex.Message}");
+        }
+        nightButton.AddDisposeAction(() =>
+        {
+            try
+            {
+                Morphic.WindowsNative.Display.NightLight.IsOnChanged -= nightLightIsOnChangedHandler;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[BarItemDataFactory] NightLight.IsOnChanged unsubscribe failed: {ex.Message}");
+            }
+        });
         //
         _ = Task.Run(async () =>
         {

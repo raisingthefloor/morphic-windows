@@ -75,9 +75,9 @@ public sealed partial class LayoutPreviewWindow : Morphic.Controls.Windowing.Chr
         _ = _dummyParentWindow.SetAsParentHwnd(hwnd);
 
         // remove title bar and extend content to fill the entire window
-        this.ExtendsContentIntoTitleBar = true;
+//        this.ExtendsContentIntoTitleBar = true;
 
-        // remove window chrome (minimize/maximize/close buttons, borders)
+        // make the WinUI presenter non-resizable/min/max (chrome is already stripped by the base class)
         var presenter = this.AppWindow.Presenter as Microsoft.UI.Windowing.OverlappedPresenter;
         if (presenter is not null)
         {
@@ -103,23 +103,101 @@ public sealed partial class LayoutPreviewWindow : Morphic.Controls.Windowing.Chr
             }
         }
 
+        // Pick the right backdrop + border appearance for the current HC state, and keep
+        // it in sync as the user toggles HC or swaps HC variants. SystemSettingsListener's
+        // HighContrastChanged fires for every HC setting change (on/off AND variant swap),
+        // which is what we want here.
         this.UpdateAppearanceForCurrentHighContrastState();
+        Morphic.WindowsNative.SystemSettings.SystemSettingsListener.Shared.HighContrastChanged += this.OnHighContrastSettingChanged;
+        this.Closed += this.LayoutPreviewWindow_Closed;
 
         this.Activated += LayoutPreviewWindow_Activated;
     }
 
+    private void LayoutPreviewWindow_Closed(object sender, WindowEventArgs args)
+    {
+        Morphic.WindowsNative.SystemSettings.SystemSettingsListener.Shared.HighContrastChanged -= this.OnHighContrastSettingChanged;
+        this.Closed -= this.LayoutPreviewWindow_Closed;
+    }
+
+    //
+
+    private void OnHighContrastSettingChanged(object? sender, EventArgs e)
+    {
+        _dispatcherQueue.TryEnqueue(this.UpdateAppearanceForCurrentHighContrastState);
+    }
+
+    // Re-reads the HC state and applies the matching appearance. ChromelessBaseWindow
+    // strips chrome + DWM border + DWM rounding by default; in non-HC we re-enable DWM
+    // rounding so the window's outer shape is rounded (clipping the AcrylicGrayBackdrop to
+    // a rounded silhouette without us having to clip the acrylic ourselves). In HC we
+    // leave the DWM rounding off and let the XAML Border draw the rounded shape + outline.
     private void UpdateAppearanceForCurrentHighContrastState()
     {
+        bool isHighContrast = false;
+        var getResult = Morphic.WindowsNative.Theme.HighContrast.GetIsOn();
+        if (getResult.IsSuccess)
+        {
+            isHighContrast = getResult.Value!;
+        }
+
         var hwnd = (Windows.Win32.Foundation.HWND)WinRT.Interop.WindowNative.GetWindowHandle(this);
 
-        // set the DWM border color
-        uint borderColor = 0x00707070;
-        Span<byte> borderColorAsSpan = MemoryMarshal.AsBytes(new Span<uint>(ref borderColor));
-        var setAttributeResult = Windows.Win32.PInvoke.DwmSetWindowAttribute(hwnd, Windows.Win32.Graphics.Dwm.DWMWINDOWATTRIBUTE.DWMWA_BORDER_COLOR, borderColorAsSpan);
-        System.Diagnostics.Debug.Assert(setAttributeResult == HRESULT.S_OK);
+        if (isHighContrast)
+        {
+            // HC: transparent backdrop + opaque rounded XAML Border with visible HC outline.
+            // DWM rounding stays OFF (ChromelessBaseWindow's default) so the only rounded
+            // shape is the XAML Border; corners outside it are truly invisible.
+            int cornerPreferenceHC = (int)Windows.Win32.Graphics.Dwm.DWM_WINDOW_CORNER_PREFERENCE.DWMWCP_DONOTROUND;
+            Span<byte> cornerPreferenceHCSpan = MemoryMarshal.AsBytes(new Span<int>(ref cornerPreferenceHC));
+            _ = Windows.Win32.PInvoke.DwmSetWindowAttribute(hwnd, Windows.Win32.Graphics.Dwm.DWMWINDOWATTRIBUTE.DWMWA_WINDOW_CORNER_PREFERENCE, cornerPreferenceHCSpan);
 
-        // use a custom translucent acrylic backdrop for the stained glass effect
-        this.SystemBackdrop = new Morphic.MorphicBar.LayoutPreviewWindow.AcrylicGrayBackdrop();
+            this.SystemBackdrop = new Morphic.Controls.Windowing.TransparentBackdrop();
+
+            var bg = GetSysColorAsWinUIColor(Windows.Win32.Graphics.Gdi.SYS_COLOR_INDEX.COLOR_WINDOW);
+            var border = GetSysColorAsWinUIColor(Windows.Win32.Graphics.Gdi.SYS_COLOR_INDEX.COLOR_WINDOWTEXT);
+            this.RootBorder.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(bg);
+            this.RootBorder.BorderBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush(border);
+            this.RootBorder.BorderThickness = new Microsoft.UI.Xaml.Thickness(1.5);
+            this.RootBorder.CornerRadius = new Microsoft.UI.Xaml.CornerRadius(8);
+        }
+        else
+        {
+            // non-HC: original frosted-glass look via AcrylicGrayBackdrop. Re-enable DWM
+            // rounding so the window's outer shape is rounded (DWM clips the rectangular
+            // acrylic fill to a rounded outer silhouette). The XAML Border is rectangular
+            // here and just overlays the dark-overlay tint that gives the acrylic the
+            // dark-frosted appearance.
+            int cornerPreferenceNonHC = (int)Windows.Win32.Graphics.Dwm.DWM_WINDOW_CORNER_PREFERENCE.DWMWCP_ROUND;
+            Span<byte> cornerPreferenceNonHCSpan = MemoryMarshal.AsBytes(new Span<int>(ref cornerPreferenceNonHC));
+            _ = Windows.Win32.PInvoke.DwmSetWindowAttribute(hwnd, Windows.Win32.Graphics.Dwm.DWMWINDOWATTRIBUTE.DWMWA_WINDOW_CORNER_PREFERENCE, cornerPreferenceNonHCSpan);
+
+            this.SystemBackdrop = new Morphic.MorphicBar.LayoutPreviewWindow.AcrylicGrayBackdrop();
+
+            this.RootBorder.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(0x40, 0x00, 0x00, 0x00));
+            this.RootBorder.BorderBrush = null;
+            this.RootBorder.BorderThickness = new Microsoft.UI.Xaml.Thickness(0);
+            this.RootBorder.CornerRadius = new Microsoft.UI.Xaml.CornerRadius(0);
+        }
+
+        // SWP_FRAMECHANGED nudges DWM to re-apply the corner-preference change to the
+        // already-shown window (without it, DWM keeps the previous rounding decision).
+        _ = Windows.Win32.PInvoke.SetWindowPos(hwnd, Windows.Win32.Foundation.HWND.Null, 0, 0, 0, 0,
+            Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_FRAMECHANGED |
+            Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOMOVE |
+            Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOSIZE |
+            Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOZORDER |
+            Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
+    }
+
+    // GetSysColor returns COLORREF (0x00BBGGRR). Convert to a WinUI ARGB color with full alpha.
+    private static Windows.UI.Color GetSysColorAsWinUIColor(Windows.Win32.Graphics.Gdi.SYS_COLOR_INDEX index)
+    {
+        uint colorRef = Windows.Win32.PInvoke.GetSysColor(index);
+        byte r = (byte)(colorRef & 0xFF);
+        byte g = (byte)((colorRef >> 8) & 0xFF);
+        byte b = (byte)((colorRef >> 16) & 0xFF);
+        return Windows.UI.Color.FromArgb(0xFF, r, g, b);
     }
 
     private void LayoutPreviewWindow_Activated(object sender, WindowActivatedEventArgs args)

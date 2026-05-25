@@ -72,6 +72,8 @@ internal static class MorphicSysColorBrushBinder
 
     private static readonly object _bindingsLock = new();
     private static readonly List<Binding> _bindings = new();
+    private static bool _isSubscribedToSystemSettings = false;
+
     public static void Bind(Microsoft.UI.Xaml.Media.SolidColorBrush brush, MorphicSysColor color)
     {
         var sysColorIndex = MorphicSysColorBrushBinder.MapToWin32SysColorIndex(color);
@@ -85,12 +87,41 @@ internal static class MorphicSysColorBrushBinder
         lock (_bindingsLock)
         {
             _bindings.Add(binding);
+            if (_isSubscribedToSystemSettings == false)
+            {
+                Morphic.WindowsNative.SystemSettings.SystemSettingsListener.Shared.HighContrastChanged += MorphicSysColorBrushBinder.OnSystemSettingsChanged;
+                _isSubscribedToSystemSettings = true;
+            }
         }
 
         // Seed the initial Color synchronously so the brush is correct before its first paint.
         MorphicSysColorBrushBinder.RefreshBinding(binding);
     }
 
+    private static void OnSystemSettingsChanged(object? sender, EventArgs e)
+    {
+        // Snapshot under the lock and iterate outside it so that a Refresh that somehow
+        // triggers re-entry into the lock can't deadlock, and a concurrent Bind doesn't
+        // invalidate the enumerator.
+        Binding[] bindingsSnapshot;
+        lock (_bindingsLock)
+        {
+            bindingsSnapshot = _bindings.ToArray();
+        }
+
+        foreach (var binding in bindingsSnapshot)
+        {
+            if (binding.DispatcherQueue is not null)
+            {
+                binding.DispatcherQueue.TryEnqueue(() => MorphicSysColorBrushBinder.RefreshBinding(binding));
+            }
+            else
+            {
+                MorphicSysColorBrushBinder.RefreshBinding(binding);
+            }
+        }
+    }
+	
     private static void RefreshBinding(MorphicSysColorBrushBinder.Binding binding)
     {
         var colorref = Windows.Win32.PInvoke.GetSysColor(binding.SysColorIndex);

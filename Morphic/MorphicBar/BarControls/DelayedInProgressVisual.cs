@@ -55,10 +55,11 @@ internal static class DelayedInProgressVisual
 
     /// <summary>
     /// Runs <paramref name="action"/> with delayed in-progress feedback on
-    /// <paramref name="button"/>. The in-progress visual is always cleared on completion
-    /// (success or failure). Safe to call only on the UI thread.
+    /// <paramref name="button"/>, returning the action's result. The in-progress visual is
+    /// always cleared on completion (success, returned error, or thrown exception). Safe to
+    /// call only on the UI thread.
     /// </summary>
-    public static async Task RunAsync(ButtonBase button, Func<Task> action)
+    public static async Task<TResult> RunAsync<TResult>(ButtonBase button, Func<Task<TResult>> action)
     {
         // start the indeterminate animation invisibly so that, once revealed, it appears
         // mid-cycle rather than freshly starting (see file-level comment for the why)
@@ -86,8 +87,8 @@ internal static class DelayedInProgressVisual
                 CompoundStatePointerWiring.SetInProgressVisual(button, InProgressVisual.Visible);
             }
 
-            // observe any exception thrown by the action
-            await actionTask;
+            // observe and return the action's result (propagates any thrown exception)
+            return await actionTask;
         }
         finally
         {

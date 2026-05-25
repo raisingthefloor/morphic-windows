@@ -23,6 +23,7 @@
 
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using System;
 
 namespace Morphic.MorphicBar.BarControls;
@@ -86,12 +87,25 @@ internal static class CompoundStatePointerWiring
             typeof(CompoundStatePointerWiring),
             new PropertyMetadata(null));
 
-    // Attaches the tracker to the control and wires the standard pointer + enabled events.
-    // The caller-supplied `update` closure is invoked whenever a wired event fires; the
-    // closure is expected to recompute the CommonStates name from the tracker and call
-    // VisualStateManager.GoToState. ProgressStates transitions go through SetInProgressVisual,
-    // not through `update`, because they are driven by action lifecycle rather than pointer
-    // events and don't need to refire on every mouse move.
+    // Attaches the tracker to the control and wires the standard pointer + enabled events
+    // PLUS dependency-property change callbacks for IsPressed and IsPointerOver. The callbacks
+    // are the LOAD-BEARING piece for the in-progress visual surviving a parent-panel layout
+    // change (e.g. bar rotation): when the layout pass moves a button out from under the
+    // pointer, the framework writes IsPointerOver=false directly via SetValue, which fires
+    // the built-in ButtonBase property-changed callback that calls UpdateVisualState ->
+    // GoToState("Normal") on CommonStates. The routed PointerExited event may not fire at all
+    // for synthetic transitions of this kind, so our event subscription below wouldn't catch
+    // it. Registering our OWN DP change callback ensures `update` runs AFTER the built-in
+    // callback (callbacks fire in registration order; built-in's is registered when the
+    // ToggleButton class is initialized, ours is registered here, so ours runs second and wins).
+    // Same logic for IsPressed (the framework can clear it directly during pointer capture loss
+    // or layout-driven re-hit-testing).
+    //
+    // The caller-supplied `update` closure is invoked whenever any wired event or DP callback
+    // fires; the closure is expected to recompute the CommonStates name from the tracker and
+    // call VisualStateManager.GoToState. ProgressStates transitions go through
+    // SetInProgressVisual, not through `update`, because they are driven by action lifecycle
+    // rather than pointer events and don't need to refire on every mouse move.
     public static void Wire(Control button, CompoundStateTrackerBase tracker, Action update)
     {
         button.SetValue(StateTrackerProperty, tracker);
@@ -128,6 +142,51 @@ internal static class CompoundStatePointerWiring
             update();
         };
         button.IsEnabledChanged += (_, _) => update();
+
+        // DP change callback: catch framework-direct writes to IsPressed that bypass the routed
+        // PointerPressed/Released/CaptureLost events (e.g. the framework clearing IsPressed during
+        // pointer-capture loss). The callback runs AFTER the built-in ButtonBase callback that
+        // calls UpdateVisualState (registration order: built-in registers when the class is
+        // initialized, ours registers here), so our `update` re-asserts state from the tracker
+        // after any built-in stomp. We re-sync the tracker from the live DP value first, in case
+        // our routed-event wiring missed the transition.
+        //
+        // NOTE: WinUI 3 does not expose a public IsPointerOverProperty (the framework tracks it
+        // internally but doesn't register a public DP), so we cannot do the same for IsPointerOver.
+        button.RegisterPropertyChangedCallback(ButtonBase.IsPressedProperty, (sender, _) =>
+        {
+            if (sender is ButtonBase buttonBase)
+            {
+                tracker.IsPressed = buttonBase.IsPressed;
+            }
+            update();
+        });
+
+        // LayoutUpdated re-assertion guard: fires after every layout pass on the XamlRoot. While
+        // an action is in flight (InProgressVisual == Visible), re-assert "InProgress" on
+        // CommonStates so any built-in UpdateVisualState that ran between the previous layout pass
+        // and this one gets immediately overwritten. This is the load-bearing defense against
+        // parent-panel layout changes (e.g. bar rotation) silently stomping our CommonStates --
+        // the trigger can be anything from a synthetic pointer transition to an internal property
+        // recompute, and there is no single event to subscribe to that covers all paths.
+        //
+        // The early-return when not Visible keeps the handler near-free for non-action use: the
+        // body runs at most a couple of GoToState calls per layout pass, only during the few
+        // seconds of an active in-progress action. GoToState is a no-op when the target state is
+        // already the current state, so even repeated firings cost only the equality check.
+        //
+        // useTransitions: false because we are re-asserting an already-active state, not
+        // performing a user-visible transition; transitions would risk visible flicker during
+        // rapid layout passes (e.g. while a rotation animation is in flight).
+        button.LayoutUpdated += (_, _) =>
+        {
+            if (tracker.InProgressVisual != InProgressVisual.Visible)
+            {
+                return;
+            }
+            VisualStateManager.GoToState(button, tracker.ComputeStateName(), useTransitions: false);
+            VisualStateManager.GoToState(button, tracker.ComputeProgressStateName(), useTransitions: false);
+        };
     }
 
     // Updates the in-progress visual. Drives BOTH state groups:
@@ -144,5 +203,28 @@ internal static class CompoundStatePointerWiring
         tracker.InProgressVisual = state;
         VisualStateManager.GoToState(button, tracker.ComputeStateName(), useTransitions: true);
         VisualStateManager.GoToState(button, tracker.ComputeProgressStateName(), useTransitions: true);
+    }
+
+    // Re-asserts the current compound state from the tracker onto BOTH VSM groups, without
+    // changing any tracker fields. Use this after a layout-altering operation that may have
+    // caused WinUI's built-in ButtonBase visual-state machine to step on our CommonStates --
+    // notably, a parent-panel layout change can produce synthetic PointerExited events that
+    // make the built-in handler call GoToState("Normal"), wiping our "InProgress" override on
+    // BgBorder.Background while leaving our custom ProgressStates group untouched (since the
+    // built-in code knows nothing about it). The asymmetry is the diagnostic fingerprint:
+    // ProgressBar animation survives, BgBorder shading does not.
+    //
+    // Callers should schedule this via DispatcherQueue.TryEnqueue so it runs AFTER the layout
+    // pass and the synthetic pointer events it triggers; calling it inline would re-assert
+    // before the built-in reset happened and leave the bug intact.
+    public static void RefreshVisualState(Control button)
+    {
+        if (button.GetValue(StateTrackerProperty) is not CompoundStateTrackerBase tracker)
+        {
+            return;
+        }
+
+        VisualStateManager.GoToState(button, tracker.ComputeStateName(), useTransitions: false);
+        VisualStateManager.GoToState(button, tracker.ComputeProgressStateName(), useTransitions: false);
     }
 }

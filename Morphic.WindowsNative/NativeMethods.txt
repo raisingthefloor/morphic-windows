@@ -12,6 +12,7 @@ MonitorFromPoint
 MonitorFromWindow
 QueryDisplayConfig
 RegisterClassEx
+RegNotifyChangeKeyValue
 SendMessageTimeout
 SetCursorPos
 SystemParametersInfo
@@ -28,5 +29,6 @@ HRESULT
 IDC_ARROW
 LUID
 S_OK
+WM_DISPLAYCHANGE
 WM_SETTINGCHANGE
 WM_WININICHANGE

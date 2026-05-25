@@ -26,6 +26,9 @@ using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Morphic.Core;
+using System;
+using System.ComponentModel;
+using System.Diagnostics;
 
 namespace Morphic.MorphicBar.BarControls;
 
@@ -53,10 +56,13 @@ public sealed partial class BarButtonControl : UserControl, IBarItemControl
     }
 
     // Layout orientation propagated by the MorphicBar.
-    // The control stores the value; Horizontal and Vertical are both valid but currently render identically,
-    // because a single TextOnly button fills whatever width/height its parent allocates.
-    // When width-/height-dependent behaviors are added (e.g. different max-width handling for a vertical bar),
-    // they should branch on this property via the validating switch in ApplyData.
+    // The control stores the value; Horizontal and Vertical render identically because a single
+    // TextOnly button fills whatever width/height its parent allocates. So orientation change does
+    // NOT rebuild the button -- rebuilding would tear down the live ToggleButton instance and lose
+    // its IsChecked state and any in-progress action visual. When width-/height-dependent behaviors
+    // are added (e.g. different max-width handling for a vertical bar), they should branch on this
+    // property via the validating switch in ApplyData AND, if rebuild is unavoidable, the orientation
+    // setter should preserve the live ToggleButton's IsChecked + tracker state across the rebuild.
     public Orientation Orientation
     {
         get => _orientation;
@@ -67,7 +73,6 @@ public sealed partial class BarButtonControl : UserControl, IBarItemControl
                 return;
             }
             _orientation = value;
-            this.ApplyData();
         }
     }
 
@@ -134,8 +139,45 @@ public sealed partial class BarButtonControl : UserControl, IBarItemControl
             {
                 Style = toggleStyle,
                 IsChecked = _data.IsChecked,
+                IsEnabled = _data.IsEnabled,
                 Content = _data.Text,
             };
+            // Intentionally NOT mirroring Checked/Unchecked back into _data.IsChecked. Data updates
+            // happen only in Button_Click on action SUCCESS so that an in-flight real-time event
+            // listener can update _data.IsChecked during the action without our immediate-toggle
+            // handler clobbering the listener's value.
+            //
+            // The data is the source of truth: when _data.IsChecked or IsEnabled changes (via the
+            // action's post-completion write, OR via an external listener writing directly to the
+            // data), the PropertyChanged subscription below pulls the new value into the live
+            // ToggleButton. The subscriber is unsubscribed on Unloaded so the data doesn't hold a
+            // reference to a discarded UI (matters when the BarButtonControl's Data is reassigned,
+            // since ApplyData clears RootContainer.Children and the old ToggleButton unloads).
+            //
+            // Marshal through DispatcherQueue because the writer may be off the UI thread (system
+            // event listeners typically fire on background threads). The setter's equality short-
+            // circuit prevents a feedback loop if the data write originated from the UI.
+            var capturedData = _data;
+            var capturedToggleButton = toggleButton;
+            PropertyChangedEventHandler propertyChangedHandler = (_, args) =>
+            {
+                if (args.PropertyName == nameof(BarButtonData.IsChecked))
+                {
+                    this.DispatcherQueue.TryEnqueue(() =>
+                    {
+                        capturedToggleButton.IsChecked = capturedData.IsChecked;
+                    });
+                }
+                else if (args.PropertyName == nameof(BarButtonData.IsEnabled))
+                {
+                    this.DispatcherQueue.TryEnqueue(() =>
+                    {
+                        capturedToggleButton.IsEnabled = capturedData.IsEnabled;
+                    });
+                }
+            };
+            capturedData.PropertyChanged += propertyChangedHandler;
+            toggleButton.Unloaded += (_, _) => capturedData.PropertyChanged -= propertyChangedHandler;
             toggleButton.Click += Button_Click;
             ToggleButtonCompoundState.Wire(toggleButton);
             button = toggleButton;
@@ -155,6 +197,10 @@ public sealed partial class BarButtonControl : UserControl, IBarItemControl
         // set the accessible (screen reader) name for the button; fall back to the text if no accessible name was specified
         AutomationProperties.SetName(button, _data.AccessibleName ?? _data.Text);
         ToolTipService.SetToolTip(button, _data.Tooltip);
+
+        // a standalone bar button is the lone "sub-button" of its group, so all 4 corners are
+        // rounded -- matches BarMultiButtonControl.ApplyCornerRadii's single-button case
+        button.CornerRadius = new CornerRadius(ControlButtonCornerRadius);
 
         this.RootContainer.Children.Add(button);
         _button = button;
@@ -178,19 +224,57 @@ public sealed partial class BarButtonControl : UserControl, IBarItemControl
             return;
         }
 
-        bool? isChecked = (sender as ToggleButton)?.IsChecked;
+        var toggleButton = sender as ToggleButton;
+        bool? postClickIsChecked = toggleButton?.IsChecked;
         var actionTag = _data!.ActionTag;
+        //
+        // re-entry during the action is prevented by _isActionInProgress (checked above), so we
+        // don't gate clicks via IsHitTestVisible. Doing so would suppress PointerEntered/Exited on
+        // the button for the duration of the action; if the user moved the pointer off the button
+        // while it was running, tracker.IsPointerOver would stay stale (true) and
+        // SetInProgressVisual(None) would compute "PointerOver" instead of "Normal" -- leaving the
+        // button stuck in the hover background, visually indistinguishable from the InProgress
+        // pressed background. While InProgressVisual == Visible, ComputeStateName always returns
+        // "InProgress" regardless of pointer state, so letting pointer events flow during the
+        // action causes no visual flicker.
         _isActionInProgress = true;
-        button.IsHitTestVisible = false;
 		//
+        bool actionSucceeded;
         try
         {
-            await DelayedInProgressVisual.RunAsync(button, () => action.Invoke(actionTag, isChecked));
+            var result = await DelayedInProgressVisual.RunAsync(button, () => action.Invoke(actionTag, postClickIsChecked));
+            actionSucceeded = result.IsSuccess;
+        }
+        catch (Exception ex)
+        {
+            // an action throwing an exception is treated as failure -- the system state didn't change
+            // in any well-defined way, so the toggle (if any) should revert
+            Debug.WriteLine($"[BarItem] {actionTag} threw: {ex}");
+            actionSucceeded = false;
         }
         finally
         {
             _isActionInProgress = false;
-            button.IsHitTestVisible = true;
+        }
+
+        // mirror the outcome onto the toggle and the backing data. Data updates happen only on
+        // action completion (not on the immediate Checked/Unchecked event from the framework's
+        // toggle) so that an in-flight real-time event listener -- e.g. one observing an external
+        // dark-mode change -- can update BarButtonData.IsChecked during the action without us
+        // blindly overwriting it. On success we write postClickIsChecked (our action committed
+        // that state); on failure we revert the visual toggle and leave data alone (data was never
+        // changed by this click, so it still reflects the unchanged system state). No-op for
+        // non-toggle buttons (toggleButton == null).
+        if (toggleButton is not null && postClickIsChecked.HasValue)
+        {
+            if (actionSucceeded)
+            {
+                _data.IsChecked = postClickIsChecked.Value;
+            }
+            else
+            {
+                toggleButton.IsChecked = !postClickIsChecked.Value;
+            }
         }
     }
 }

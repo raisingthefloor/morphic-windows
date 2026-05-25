@@ -24,6 +24,7 @@
 using Morphic.Core;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
@@ -345,6 +346,113 @@ public class Display
             // otherwise, return success
             return MorphicResult.OkResult();
         }));
+    }
+
+    // True if the supplied dpiOffset represents a "Custom scaling" override (the Windows 8.1
+    // legacy compatibility feature surfaced in Settings > System > Display > Advanced scaling
+    // settings > Custom scaling). When custom scaling is in effect, Windows reports a sentinel
+    // dpiOffset value (1234568 in all our testing) rather than a real offset within
+    // [minimumDpiOffset, maximumDpiOffset], because the user has chosen an arbitrary percentage
+    // outside the system's normal preset ladder.
+    public static bool IsCustomScalingPercentage(int dpiOffset)
+    {
+        // 1234568 is the documented-by-observation sentinel used by Windows when custom scaling
+        // is active. If a future Windows build switches sentinels, update this constant.
+        return dpiOffset == 1234568;
+    }
+
+    //
+
+    // System-wide display configuration change notification (WM_DISPLAYCHANGE broadcast).
+    // Fires when Windows reconfigures any monitor: scale (DPI) change, resolution change, monitor
+    // attach/detach, refresh rate change. Subscribers should re-query whatever they care about --
+    // the event carries no payload because a single WM_DISPLAYCHANGE can mean any combination of
+    // those reasons.
+    //
+    // Sits on top of HiddenMessageWindow (the process-owned top-level invisible window that
+    // receives HWND_BROADCAST messages). HiddenMessageWindow.Initialize must run on a thread with
+    // a Win32 message pump -- in WinAppSDK that's the UI thread; the singleton handles being
+    // called repeatedly so the lazy-on-first-subscribe pattern below is safe.
+    //
+    // Threading: handlers fire on the UI thread (HiddenMessageWindow's WndProc thread). Each
+    // handler runs on its own Task so a slow/throwing handler doesn't block the others or stall
+    // the message pump.
+    //
+    // Lifecycle: the underlying HiddenMessageWindow.MessageReceived subscription is wired lazily
+    // on the first DisplayChanged subscription and torn down when the last subscriber detaches.
+    // HiddenMessageWindow itself stays alive for the process lifetime (Windows reclaims it on
+    // process exit) -- that's its design.
+
+    private static readonly object _displayChangedLock = new();
+    private static EventHandler? _displayChanged;
+    private static bool _hiddenMessageWindowSubscribed = false;
+
+    public static event EventHandler DisplayChanged
+    {
+        add
+        {
+            lock (_displayChangedLock)
+            {
+                if (_hiddenMessageWindowSubscribed == false)
+                {
+                    var initializeResult = Morphic.WindowsNative.Windowing.HiddenMessageWindow.Initialize();
+                    if (initializeResult.IsError)
+                    {
+                        Debug.Assert(false, "HiddenMessageWindow.Initialize() failed; Display.DisplayChanged will not fire");
+                    }
+                    else
+                    {
+                        Morphic.WindowsNative.Windowing.HiddenMessageWindow.MessageReceived += Display.OnHiddenMessageReceived;
+                        _hiddenMessageWindowSubscribed = true;
+                    }
+                }
+                _displayChanged += value;
+            }
+        }
+        remove
+        {
+            lock (_displayChangedLock)
+            {
+                _displayChanged -= value;
+
+                if (_displayChanged is null || _displayChanged!.GetInvocationList().Length == 0)
+                {
+                    _displayChanged = null;
+
+                    if (_hiddenMessageWindowSubscribed == true)
+                    {
+                        Morphic.WindowsNative.Windowing.HiddenMessageWindow.MessageReceived -= Display.OnHiddenMessageReceived;
+                        _hiddenMessageWindowSubscribed = false;
+                    }
+                }
+            }
+        }
+    }
+
+    private static void OnHiddenMessageReceived(object? sender, Morphic.WindowsNative.Windowing.WindowMessageEventArgs e)
+    {
+        if (e.Msg != Windows.Win32.PInvoke.WM_DISPLAYCHANGE)
+        {
+            return;
+        }
+
+        EventHandler? handlersToFire;
+        lock (_displayChangedLock)
+        {
+            handlersToFire = _displayChanged;
+        }
+        if (handlersToFire is null)
+        {
+            return;
+        }
+
+        // Dispatch each handler on its own Task so a slow/throwing handler doesn't block the
+        // others or stall the message pump. Sender is null -- DisplayChanged is a static event
+        // with no instance.
+        foreach (EventHandler handler in handlersToFire.GetInvocationList())
+        {
+            _ = Task.Run(() => handler.Invoke(null, EventArgs.Empty));
+        }
     }
 
     //
