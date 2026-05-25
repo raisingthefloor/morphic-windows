@@ -30,6 +30,8 @@ namespace Morphic.WindowsNative.Registry;
 internal sealed class RegistryKeyChangeWatcher : IDisposable
 {
 
+    private readonly object _lock = new();
+
     private bool _disposed;
 
     public void Dispose()
