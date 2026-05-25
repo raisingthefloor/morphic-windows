@@ -1428,10 +1428,15 @@ internal class TrayButtonNativeWindow : IDisposable
 
     //
 
-    // Sizes the modern tooltip to the current _tooltipText, positions it above the tray
-    // button (centered horizontally), and shows it. Called from WM_MOUSEHOVER and from
-    // SetText when the caller updates the text while the cursor is already over the button.
-    // No-ops when there is no text or no tooltip instance.
+    // Sizes the modern tooltip to the current _tooltipText, positions it on the OPPOSITE side
+    // of the tray button from the taskbar edge (so the tooltip never overlaps the taskbar),
+    // and shows it. Called from WM_MOUSEHOVER and from SetText when the caller updates the
+    // text while the cursor is already over the button. No-ops when there is no text or no
+    // tooltip instance.
+    //
+    // Win11 versions will eventually support taskbars on all four edges (left/top/right/bottom).
+    // Detection is per-show via SHAppBarMessage(ABM_GETTASKBARPOS) -- cheap, sub-millisecond,
+    // and the show path isn't hot enough to warrant caching + listening for ABN_POSCHANGED.
     private void ShowTooltipForCurrentHover()
     {
         if (_tooltip is null || string.IsNullOrEmpty(_tooltipText)) { return; }
@@ -1458,31 +1463,109 @@ internal class TrayButtonNativeWindow : IDisposable
 
         var size = _tooltip.SetText(_tooltipText, dpiX);
 
-        // Position the tooltip directly above the tray button, centered horizontally on the
-        // button. The gap (logical px, scaled to physical) between the tray button's top
-        // edge and the tooltip's bottom edge is large enough to clear the taskbar's outer
-        // bevel/shadow so the tooltip reads as floating above the bar instead of touching it.
-        int gapPhysical = (int)System.Math.Round(10.0 * dpiY / 96.0);
-        int tooltipX = _trayButtonPositionAndSize.X + (_trayButtonPositionAndSize.Width - size.Width) / 2;
-        int tooltipY = _trayButtonPositionAndSize.Y - size.Height - gapPhysical;
+        // Position the tooltip on the side opposite the taskbar so it reads as floating above
+        // the bar rather than overlapping it. The 10 logical-px gap (scaled per-axis to physical
+        // px) keeps the tooltip clear of the taskbar's outer bevel/shadow.
+        var taskbarEdge = this.GetTaskbarEdge();
+        int gapPhysicalX = (int)System.Math.Round(10.0 * dpiX / 96.0);
+        int gapPhysicalY = (int)System.Math.Round(10.0 * dpiY / 96.0);
 
-        // Clamp X to the monitor work area so the tooltip stays on screen when the tray
-        // button is right at the screen edge. We do not flip vertically for top-docked
-        // taskbars yet (Win11 default is bottom); if that becomes a real config, add a
-        // below-the-button branch here.
+        int tooltipX;
+        int tooltipY;
+        switch (taskbarEdge)
+        {
+            case TaskbarEdge.Top:
+                // Taskbar at top -- tooltip below the button, centered horizontally.
+                tooltipX = _trayButtonPositionAndSize.X + (_trayButtonPositionAndSize.Width - size.Width) / 2;
+                tooltipY = _trayButtonPositionAndSize.Y + _trayButtonPositionAndSize.Height + gapPhysicalY;
+                break;
+            case TaskbarEdge.Left:
+                // Taskbar at left -- tooltip to the right of the button, centered vertically.
+                tooltipX = _trayButtonPositionAndSize.X + _trayButtonPositionAndSize.Width + gapPhysicalX;
+                tooltipY = _trayButtonPositionAndSize.Y + (_trayButtonPositionAndSize.Height - size.Height) / 2;
+                break;
+            case TaskbarEdge.Right:
+                // Taskbar at right -- tooltip to the left of the button, centered vertically.
+                tooltipX = _trayButtonPositionAndSize.X - size.Width - gapPhysicalX;
+                tooltipY = _trayButtonPositionAndSize.Y + (_trayButtonPositionAndSize.Height - size.Height) / 2;
+                break;
+            case TaskbarEdge.Bottom:
+            default:
+                // Taskbar at bottom (Win11 default) -- tooltip above the button, centered horizontally.
+                tooltipX = _trayButtonPositionAndSize.X + (_trayButtonPositionAndSize.Width - size.Width) / 2;
+                tooltipY = _trayButtonPositionAndSize.Y - size.Height - gapPhysicalY;
+                break;
+        }
+
+        // Clamp the perpendicular axis to the monitor work area so the tooltip stays on screen
+        // when the tray button sits near a corner. Horizontal taskbars (top/bottom) clamp X;
+        // vertical taskbars (left/right) clamp Y.
         if (monitor != IntPtr.Zero)
         {
             var monitorInfo = new Windows.Win32.Graphics.Gdi.MONITORINFO { cbSize = (uint)Marshal.SizeOf<Windows.Win32.Graphics.Gdi.MONITORINFO>() };
             if (Windows.Win32.PInvoke.GetMonitorInfo(monitor, ref monitorInfo))
             {
-                int minX = monitorInfo.rcWork.left + 4;
-                int maxX = monitorInfo.rcWork.right - size.Width - 4;
-                if (tooltipX < minX) { tooltipX = minX; }
-                if (tooltipX > maxX) { tooltipX = maxX; }
+                switch (taskbarEdge)
+                {
+                    case TaskbarEdge.Left:
+                    case TaskbarEdge.Right:
+                        {
+                            int minY = monitorInfo.rcWork.top + 4;
+                            int maxY = monitorInfo.rcWork.bottom - size.Height - 4;
+                            if (tooltipY < minY) { tooltipY = minY; }
+                            if (tooltipY > maxY) { tooltipY = maxY; }
+                        }
+                        break;
+                    case TaskbarEdge.Bottom:
+                    case TaskbarEdge.Top:
+                    default:
+                        {
+                            int minX = monitorInfo.rcWork.left + 4;
+                            int maxX = monitorInfo.rcWork.right - size.Width - 4;
+                            if (tooltipX < minX) { tooltipX = minX; }
+                            if (tooltipX > maxX) { tooltipX = maxX; }
+                        }
+                        break;
+                }
             }
         }
 
         _tooltip.ShowAt(new Windows.Graphics.PointInt32(tooltipX, tooltipY), size);
+    }
+
+    // Which edge of the monitor work area is the taskbar attached to. Win11 historically only
+    // supports Bottom; left/top/right are valid in future Win11 versions and have always been
+    // supported on the Win32 side via SHAppBarMessage.
+    private enum TaskbarEdge
+    {
+        Bottom,
+        Top,
+        Left,
+        Right,
+    }
+
+    // Queries the shell for the current taskbar edge via SHAppBarMessage(ABM_GETTASKBARPOS) --
+    // the canonical Win32 way. Defaults to Bottom on any failure (matches Win11 default and is
+    // the least-surprising fallback for tooltip placement).
+    private TaskbarEdge GetTaskbarEdge()
+    {
+        var data = new Windows.Win32.UI.Shell.APPBARDATA
+        {
+            cbSize = (uint)Marshal.SizeOf<Windows.Win32.UI.Shell.APPBARDATA>(),
+        };
+        var result = Windows.Win32.PInvoke.SHAppBarMessage(Windows.Win32.PInvoke.ABM_GETTASKBARPOS, ref data);
+        if (result == 0)
+        {
+            // ABM_GETTASKBARPOS returned FALSE -- shell didn't populate the struct.
+            return TaskbarEdge.Bottom;
+        }
+        return data.uEdge switch
+        {
+            Windows.Win32.PInvoke.ABE_TOP => TaskbarEdge.Top,
+            Windows.Win32.PInvoke.ABE_LEFT => TaskbarEdge.Left,
+            Windows.Win32.PInvoke.ABE_RIGHT => TaskbarEdge.Right,
+            _ => TaskbarEdge.Bottom,
+        };
     }
 
     private void HideTooltip()

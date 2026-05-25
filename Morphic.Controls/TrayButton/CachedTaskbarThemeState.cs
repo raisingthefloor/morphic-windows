@@ -204,11 +204,10 @@ internal static class CachedTaskbarThemeState
         }
     }
 
-    // Decodes a Win32 COLORREF (0x00BBGGRR packing) and returns true if its perceived luminance
-    // is light. Matches the formula Microsoft documents (and that Win32AppTheme.IsColorLight uses)
-    // for "is this color the foreground of a light theme or a dark theme":
-    //   perceived = 5*G + 2*R + B
-    //   threshold = 8*128 = 1024
+    // courtesy of Microsoft documentation: https://learn.microsoft.com/en-us/windows/apps/desktop/modernize/apply-windows-themes#know-when-dark-mode-is-enabled
+    //
+    // NOTE: we invert the result (caller takes !IsColorrefLight) when checking the *background* color,
+    // since a light background = light theme = NOT dark.
     private static bool IsColorrefLight(uint colorref)
     {
         byte r = (byte)(colorref & 0xFF);
