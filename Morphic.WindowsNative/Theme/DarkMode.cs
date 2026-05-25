@@ -35,8 +35,19 @@ public class DarkModeChangedEventArgs(bool newValue) : EventArgs
     // The new "uses dark mode" state (true = dark, false = light). "NewValue" follows the BCL convention
     public bool NewValue { get; } = newValue;
 }
+
 public class DarkMode
 {
+    private static readonly object _personalizeKeyWatcherLock = new();
+    private static Morphic.WindowsNative.Registry.RegistryKeyChangeWatcher? _personalizeKeyWatcher;
+
+    private static bool _cachedAppsUseDarkMode;
+    private static bool _cachedSystemUsesDarkMode;
+    private static EventHandler<DarkModeChangedEventArgs>? _appsUseDarkModeChanged;
+    private static EventHandler<DarkModeChangedEventArgs>? _systemUsesDarkModeChanged;
+
+    //
+
     // System Setting Ids (for SettingItem settings)
     public static class SystemSettingIds
     {
@@ -459,5 +470,66 @@ public class DarkMode
         }
 
         return success ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
+    }
+    public static event EventHandler<DarkModeChangedEventArgs> AppsUseDarkModeChanged
+    {
+        add
+        {
+            lock (_personalizeKeyWatcherLock)
+            {
+                DarkMode.EnsureWatcherStartedLocked();
+                _appsUseDarkModeChanged += value;
+            }
+        }
+        remove
+        {
+            lock (_personalizeKeyWatcherLock)
+            {
+                _appsUseDarkModeChanged -= value;
+                DarkMode.StopWatcherIfNoSubscribersLocked();
+            }
+        }
+    }
+
+    public static event EventHandler<DarkModeChangedEventArgs> SystemUsesDarkModeChanged
+    {
+        add
+        {
+            lock (_personalizeKeyWatcherLock)
+            {
+                DarkMode.EnsureWatcherStartedLocked();
+                _systemUsesDarkModeChanged += value;
+            }
+        }
+        remove
+        {
+            lock (_personalizeKeyWatcherLock)
+            {
+                _systemUsesDarkModeChanged -= value;
+                DarkMode.StopWatcherIfNoSubscribersLocked();
+            }
+        }
+    }
+
+    // Pre-requisite: caller MUST hold _watcherLock.
+    private static void EnsureWatcherStartedLocked()
+    {
+        if (_personalizeKeyWatcher is not null)
+        {
+            return;
+        }
+
+    }
+
+    // Pre-requisite: caller MUST hold _watcherLock.
+    private static void StopWatcherIfNoSubscribersLocked()
+    {
+        if (_appsUseDarkModeChanged is not null || _systemUsesDarkModeChanged is not null)
+        {
+            return;
+        }
+
+        _personalizeKeyWatcher?.Dispose();
+        _personalizeKeyWatcher = null;
     }
 }
