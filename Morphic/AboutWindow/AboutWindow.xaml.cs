@@ -75,9 +75,6 @@ public sealed partial class AboutWindow : Morphic.Controls.Theme.ThemeAwareBaseW
         appWindowPresenterAsOverlappedPresenter.IsMinimizable = false;
         appWindowPresenterAsOverlappedPresenter.IsMaximizable = false;
 
-        // set our window icon
-        this.SetIcon();
-
         // initialize our logo image (based on the current theme)
         this.UpdateLogoImage();
     }
@@ -85,30 +82,6 @@ public sealed partial class AboutWindow : Morphic.Controls.Theme.ThemeAwareBaseW
     private void AboutWindow_ThemeChanged(object? sender, ElementTheme e)
     {
         this.UpdateLogoImage();
-    }
-
-    // see: https://learn.microsoft.com/en-us/windows/windows-app-sdk/api/winrt/microsoft.ui.windowing.appwindow.seticon?view=windows-app-sdk-1.0#microsoft-ui-windowing-appwindow-seticon(microsoft-ui-iconid)
-    private void SetIcon()
-    {
-        // implementation option 1 (for packaged app):
-        //var uri = new Uri("ms-appx:///Assets/application.ico");
-        //StorageFile? storageFile = null;
-        //try
-        //{
-        //    storageFile = StorageFile.GetFileFromApplicationUriAsync(uri).GetAwaiter().GetResult();
-        //}
-        //catch/* (Exception ex)*/
-        //{
-        //    // Use default icon.
-        //}
-
-        //if (storageFile is not null)
-        //{
-        //    this.AppWindow.SetIcon(storageFile.Path);
-        //}
-
-        // implementation option 2 (for unpackaged app):
-        this.AppWindow.SetIcon("Assets/Icons/morphic.ico");
     }
 
     private void UpdateLogoImage()

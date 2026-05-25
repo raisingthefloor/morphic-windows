@@ -24,17 +24,27 @@
 using Microsoft.UI.Xaml;
 using Morphic.Core;
 using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-using Windows.UI.ViewManagement;
+using System.Diagnostics;
 
 namespace Morphic.Controls.Theme;
 
+// Base Window class that tracks the current light/dark theme AND high-contrast state, and
+// (optionally) swaps the window's title-bar icon to a contrast-appropriate variant when those
+// states change. Subclasses set zero, one, or all three icon paths via the XAML attributes
+// StandardContrastIconPath / HighContrastBlackIconPath / HighContrastWhiteIconPath; the base
+// picks the right one for the current system state and applies it via AppWindow.SetIcon. If a
+// needed variant is missing the icon is left untouched (graceful degrade).
+//
+// NOTE: specifies icons as string paths + AppWindow.SetIcon (since WinUI 3 Window has no Icon 
+// dependency property).
 public class ThemeAwareBaseWindow : Window
 {
     public ElementTheme CurrentTheme { get; private set; }
     public event EventHandler<ElementTheme>? ThemeChanged;
+
+    private string? _standardContrastIconPath;
+    private string? _highContrastBlackIconPath;
+    private string? _highContrastWhiteIconPath;
 
     public ThemeAwareBaseWindow() : base()
     {
@@ -45,6 +55,27 @@ public class ThemeAwareBaseWindow : Window
 
         // if dark mode is enabled for the app, color it appropriately
         _ = this.SetNonClientUIDarkModeAttribute(this.CurrentTheme == ElementTheme.Dark);
+
+        // Wire up to the broad HC-setting signal so we catch every transition:
+        //   * HC toggling on / off
+        //   * HC swapping between its Black/White/etc. variants (HC stays on)
+        // HighContrast.IsOnChanged only fires on the on/off case; SystemSettingsListener's
+        // HighContrastChanged is driven by the SPI_SETHIGHCONTRAST broadcast which Windows
+        // sends for ALL HC setting changes, so it covers the variant-swap case too.
+        Morphic.WindowsNative.SystemSettings.SystemSettingsListener.Shared.HighContrastChanged += HighContrastSetting_Changed;
+
+        // Unsubscribe both system-level handlers when the window closes; otherwise an HC
+        // or theme change fired after Close would queue UpdateWindowIcon onto the closed
+        // window's DispatcherQueue, and AppWindow.SetIcon would then throw a COMException
+        // ("WinUI Desktop Window object has already been closed").
+        this.Closed += this.ThemeAwareBaseWindow_Closed;
+    }
+
+    private void ThemeAwareBaseWindow_Closed(object sender, WindowEventArgs args)
+    {
+        Win32AppTheme.ThemeChanged -= AppTheme_ThemeChanged;
+        Morphic.WindowsNative.SystemSettings.SystemSettingsListener.Shared.HighContrastChanged -= HighContrastSetting_Changed;
+        this.Closed -= this.ThemeAwareBaseWindow_Closed;
     }
 
     private MorphicResult<MorphicUnit, MorphicUnit> SetNonClientUIDarkModeAttribute(bool value)
@@ -62,9 +93,30 @@ public class ThemeAwareBaseWindow : Window
             DispatcherQueue.TryEnqueue(() =>
             {
                 _ = this.SetNonClientUIDarkModeAttribute(e == ElementTheme.Dark);
+                this.UpdateWindowIcon();
                 this.ThemeChanged?.Invoke(this, CurrentTheme);
             });
         }
+    }
+
+    private void HighContrastSetting_Changed(object? sender, EventArgs e)
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            // Refresh CurrentTheme since HC transitions can flip the effective theme
+            // (HC-Black vs HC-White) without firing ActualThemeChanged: Windows leaves
+            // the registry dark-mode bit alone when toggling HC or swapping HC variants,
+            // so WinUI's ActualTheme signal doesn't notice. Win32AppTheme.GetAppTheme
+            // reads the live foreground color, which DOES flip across HC variants, so
+            // it's the reliable source.
+            var freshTheme = Win32AppTheme.GetAppTheme();
+            if (this.CurrentTheme != freshTheme)
+            {
+                this.CurrentTheme = freshTheme;
+                this.ThemeChanged?.Invoke(this, this.CurrentTheme);
+            }
+            this.UpdateWindowIcon();
+        });
     }
 
     // NOTE: this code should be called in the constructor for the subclass, after InitializeComponent();
@@ -91,6 +143,110 @@ public class ThemeAwareBaseWindow : Window
         else
         {
             return MorphicResult.ErrorResult();
+        }
+    }
+
+    // Picks the appropriate icon for the current HC + light/dark state and applies it. Called
+    // automatically when any icon-path property changes, when the system theme changes, and
+    // when high-contrast is toggled on/off. If the variant for the current state was never
+    // assigned, the existing icon is left alone (i.e. gracefully degrade).
+    private void UpdateWindowIcon()
+    {
+        bool highContrastIsOn = false;
+        var getHighContrastIsOnResult = Morphic.WindowsNative.Theme.HighContrast.GetIsOn();
+        if (getHighContrastIsOnResult.IsSuccess == true)
+        {
+            highContrastIsOn = getHighContrastIsOnResult.Value!;
+        }
+        else
+        {
+            Debug.WriteLine("[ThemeAwareBaseWindow.UpdateWindowIcon] Cannot update window icon because high contrast on/off state capture failed");
+            highContrastIsOn = false; // gracefully degrade
+        }
+
+        string? iconPath;
+        if (highContrastIsOn == true)
+        {
+            // Read the live theme directly here (and don't trust the CurrentTheme cache) so
+            // that HC-Black vs HC-White picks the right icon even if ActualThemeChanged missed
+            // the variant swap (as Windows doesn't toggle the registry dark-mode bit on HC
+            // swaps; only the foreground color flips, which Win32AppTheme.GetAppTheme reads).
+            var liveTheme = Win32AppTheme.GetAppTheme();
+            iconPath = (liveTheme == ElementTheme.Dark)
+                ? _highContrastBlackIconPath
+                : _highContrastWhiteIconPath;
+        }
+        else
+        {
+            iconPath = _standardContrastIconPath;
+        }
+
+        if (iconPath is not null)
+        {
+            try
+            {
+                // see: https://learn.microsoft.com/en-us/windows/windows-app-sdk/api/winrt/microsoft.ui.windowing.appwindow.seticon?view=windows-app-sdk-1.0#microsoft-ui-windowing-appwindow-seticon(microsoft-ui-iconid)
+
+		        // implementation option 1 (for packaged app):
+		        //var uri = new Uri("ms-appx:///Assets/application.ico"); // specify iconPath as ms-appx:/// path
+		        //StorageFile? storageFile = null;
+		        //try
+		        //{
+		        //    storageFile = StorageFile.GetFileFromApplicationUriAsync(uri).GetAwaiter().GetResult();
+		        //}
+		        //catch/* (Exception ex)*/
+		        //{
+		        //    // Use default icon.
+		        //}
+
+		        //if (storageFile is not null)
+		        //{
+		        //    this.AppWindow.SetIcon(storageFile.Path);
+		        //}
+
+		        // implementation option 2 (for unpackaged app):
+                this.AppWindow?.SetIcon(iconPath);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[ThemeAwareBaseWindow.UpdateWindowIcon] AppWindow.SetIcon failed for path '{iconPath}': {ex.Message}");
+            }
+        }
+    }
+
+    // Three icon-path properties; setting any of them triggers an immediate UpdateWindowIcon. 
+	// The XAML attribute form is:
+    //   <theme:ThemeAwareBaseWindow
+    //       StandardContrastIconPath="Assets/Icons/morphic-standardcontrast.ico"
+    //       HighContrastBlackIconPath="Assets/Icons/morphic-highcontrastblack.ico"
+    //       HighContrastWhiteIconPath="Assets/Icons/morphic-highcontrastwhite.ico" ...>
+    public string? StandardContrastIconPath
+    {
+        get => _standardContrastIconPath;
+        set
+        {
+            _standardContrastIconPath = value;
+            this.UpdateWindowIcon();
+        }
+    }
+
+    public string? HighContrastBlackIconPath
+    {
+        get => _highContrastBlackIconPath;
+        set
+        {
+            _highContrastBlackIconPath = value;
+            this.UpdateWindowIcon();
+        }
+    }
+
+    public string? HighContrastWhiteIconPath
+    {
+        get => _highContrastWhiteIconPath;
+        set
+        {
+            _highContrastWhiteIconPath = value;
+            this.UpdateWindowIcon();
         }
     }
 }

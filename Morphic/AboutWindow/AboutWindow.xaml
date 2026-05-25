@@ -8,7 +8,10 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:theme="using:Morphic.Controls.Theme"
     mc:Ignorable="d"
-    Title="About Morphic">
+    Title="About Morphic"
+    StandardContrastIconPath="Assets/Icons/morphic-standardcontrast.ico"
+    HighContrastBlackIconPath="Assets/Icons/morphic-highcontrastblack.ico"
+    HighContrastWhiteIconPath="Assets/Icons/morphic-highcontrastwhite.ico">
 
     <Window.SystemBackdrop>
         <MicaBackdrop />
