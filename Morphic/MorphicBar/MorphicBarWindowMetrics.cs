@@ -49,6 +49,18 @@ public static class MorphicBarWindowMetrics
     // in LTR, top-left in RTL) also uses this radius so it aligns visually with
     // the bar's outer corner (as the close button sits flush against that corner).
     public const double BarCornerRadius = 5.0;
+    //
+    // XAML-facing forms of BarCornerRadius.
+    //   Uniform:        all 4 corners rounded -- the bar's OuterBorder.
+    //   TopRightOnly:   only top-right corner rounded -- the close button border
+    //                   in LTR flow direction (close button sits at the bar's
+    //                   top-right corner; only its top-right is rounded so the
+    //                   button's other 3 corners align with neighbors flush).
+    //   TopLeftOnly:    only top-left corner rounded -- the close button border
+    //                   in RTL flow direction (mirror of TopRightOnly).
+    public static readonly CornerRadius BarCornerRadiusUniform = new(BarCornerRadius);
+    public static readonly CornerRadius BarCornerRadiusTopRightOnly = new(0, BarCornerRadius, 0, 0);
+    public static readonly CornerRadius BarCornerRadiusTopLeftOnly = new(BarCornerRadius, 0, 0, 0);
 
     // Defensive cap on the number of bar items that will be considered and
     // laid out. Items beyond this index are dropped silently. Not a perceptible

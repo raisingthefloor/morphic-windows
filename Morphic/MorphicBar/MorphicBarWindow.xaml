@@ -12,11 +12,17 @@
     Title="MorphicBar">
 
     <Grid>
+        <Grid.Resources>
+            <!-- ViewModel wrapper for MorphicBarWindowMetrics: see comments on that class
+                 for why this exists. Used by VisualState.Setter Value bindings below where
+                 {x:Bind} can't reach static metric values at runtime. -->
+            <local:MorphicBarWindowMetricsViewModel x:Key="MetricsViewModel"/>
+        </Grid.Resources>
         <Border x:Name="OuterBorder"
                 Background="{ThemeResource ThemeAwareBackground}"
                 BorderBrush="{ThemeResource ThemeAwareBorder}"
                 BorderThickness="{x:Bind local:MorphicBarWindowMetrics.BarBorderThickness}"
-                CornerRadius="5">
+                CornerRadius="{x:Bind local:MorphicBarWindowMetrics.BarCornerRadiusUniform}">
             <Grid x:Name="LayoutGrid">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -63,7 +69,7 @@
                         <ControlTemplate TargetType="Button">
                             <Border x:Name="CloseButtonBorder"
                                     Background="{ThemeResource ThemeAwareBackground}"
-                                    CornerRadius="0,5,0,0">
+                                    CornerRadius="{x:Bind local:MorphicBarWindowMetrics.BarCornerRadiusTopRightOnly}">
                                 <VisualStateManager.VisualStateGroups>
                                     <VisualStateGroup x:Name="CommonStates">
                                         <VisualState x:Name="Normal"/>
@@ -90,7 +96,7 @@
                                                     Direction="RightToLeft"/>
                                             </VisualState.StateTriggers>
                                             <VisualState.Setters>
-                                                <Setter Target="CloseButtonBorder.CornerRadius" Value="5,0,0,0"/>
+                                                <Setter Target="CloseButtonBorder.CornerRadius" Value="{Binding BarCornerRadiusTopLeftOnly, Source={StaticResource MetricsViewModel}}"/>
                                             </VisualState.Setters>
                                         </VisualState>
                                     </VisualStateGroup>
