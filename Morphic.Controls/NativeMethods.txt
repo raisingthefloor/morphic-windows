@@ -35,6 +35,7 @@ GetClassName
 GetClientRect
 GetDC
 GetDesktopWindow
+GetSysColor
 GetWindow
 GetWindowLong
 GetWindowLongPtr
@@ -47,6 +48,7 @@ ReleaseDC
 SelectObject
 SetLayeredWindowAttributes
 SendMessage
+SHAppBarMessage
 SetWindowLong
 SetWindowLongPtr
 SetWindowPos
@@ -56,6 +58,7 @@ SetWinEventHook
 TrackMouseEvent
 UpdateLayeredWindow
 
+APPBARDATA
 BITMAPINFO
 MINMAXINFO
 MSLLHOOKSTRUCT
@@ -63,10 +66,16 @@ TTTOOLINFOW
 
 BI_COMPRESSION
 DWM_WINDOW_CORNER_PREFERENCE
+SYS_COLOR_INDEX
 WIN32_ERROR
 WINDOW_EX_STYLE
 WINDOW_STYLE
 
+ABE_BOTTOM
+ABE_LEFT
+ABE_RIGHT
+ABE_TOP
+ABM_GETTASKBARPOS
 AC_SRC_ALPHA
 AC_SRC_OVER
 BITMAP

@@ -30,6 +30,11 @@ using System.Threading.Tasks;
 
 namespace Morphic.WindowsNative.Theme;
 
+public class DarkModeChangedEventArgs(bool newValue) : EventArgs
+{
+    // The new "uses dark mode" state (true = dark, false = light). "NewValue" follows the BCL convention
+    public bool NewValue { get; } = newValue;
+}
 public class DarkMode
 {
     // System Setting Ids (for SettingItem settings)
@@ -196,7 +201,7 @@ public class DarkMode
     {
         // Open the Personalize key. We deliberately do NOT branch on OS version up front to
         // decide which value name to read -- instead, we try both formats below. The newer
-        // SystemTheme (REG_SZ, "Light"/"Dark") was added in a Win11 revision (probably after 23H2),
+        // SystemTheme (REG_SZ, "Light"/"Dark") was added around Win11 23H2 build 22631.4037,
         // but in practice some installations on newer versions only have the traditional value 
 		// SystemUsesLightTheme (REG_DWORD) populated: so we need the fallback regardless of
         // version.
