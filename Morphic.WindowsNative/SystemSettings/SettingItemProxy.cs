@@ -190,8 +190,10 @@ internal class SettingItemProxy
             {
                 switch (waitResult.Error!)
                 {
-                    case IMorphicTimeoutError.Timeout:
+                    case IWaitForSettingEventError.Timeout:
                         return MorphicResult.ErrorResult<IGetValueError>(new IGetValueError.Timeout());
+                    case IWaitForSettingEventError.ExceptionError(var ex):
+                        return MorphicResult.ErrorResult<IGetValueError>(new IGetValueError.ExceptionError(ex));
                     default:
                         throw new MorphicUnhandledErrorException();
                 }
@@ -216,8 +218,17 @@ internal class SettingItemProxy
             }
 
             // STEP 3: make sure that the setting is still applicable/enabled (see notes on STEP 1), as a sanity check that our value is still good; note that this is not a failproof strategy
-            bool isApplicable = _settingItem.IsApplicable;
-            bool isEnabled = _settingItem.IsEnabled;
+            bool isApplicable;
+            bool isEnabled;
+            try
+            {
+                isApplicable = _settingItem.IsApplicable;
+                isEnabled = _settingItem.IsEnabled;
+            }
+            catch (Exception ex)
+            {
+                return MorphicResult.ErrorResult<IGetValueError>(new IGetValueError.ExceptionError(ex));
+            }
             if (isApplicable == true && isEnabled == true)
             {
                 break;
@@ -252,42 +263,43 @@ internal class SettingItemProxy
         //public record SettingNotApplicableOrNotEnabledAfterSet : ISetValueError;
         public record Timeout : ISetValueError;
         //public record TypeMismatch : ISetValueError;
+        public record ValueDidNotApplyAfterSet : ISetValueError;
     }
 
     // NOTE: both the struct- and class-specific implementations of SetValueAsync MUST be kept in sync!
     //
-    public async Task<MorphicResult<MorphicUnit, ISetValueError>> SetValueAsync<T>(T value, TimeSpan? timeout = null) where T : struct
+    public async Task<MorphicResult<MorphicUnit, ISetValueError>> SetValueAsync<T>(T value, TimeSpan? timeout = null, bool verifyAfterSet = true) where T : struct
     {
-        var result = await this.SetValueAsync("Value", value, timeout);
+        var result = await this.SetValueAsync("Value", value, timeout, verifyAfterSet);
         return result;
     }
     //
     // NOTE: callers should "get" the value after setting it, just to be sure that the value was set correctly.  [Note that technically another app could be setting the value
     //       in parallel, so if the value doesn't match then we can't really be sure that our "set" wasn't reversed by another app.]
-    public async Task<MorphicResult<MorphicUnit, ISetValueError>> SetValueAsync<T>(string name, T value, TimeSpan? timeout = null) where T : struct
+    public async Task<MorphicResult<MorphicUnit, ISetValueError>> SetValueAsync<T>(string name, T value, TimeSpan? timeout = null, bool verifyAfterSet = true) where T : struct
     {
-        return await this.SetValueAsObjectAsync(name, value, timeout);
+        return await this.SetValueAsObjectAsync(name, value, timeout, verifyAfterSet);
     }
 
     // NOTE: both the struct- and class-specific implementations of SetValueAsync MUST be kept in sync!
     //
     // NOTE: this second implementation of SetValueAsync (with the _ param allowing it to act as an overload) is a kludge so that C# will work with both Nullable value types and (already-traditionally-nullable) reference types
-    public async Task<MorphicResult<MorphicUnit, ISetValueError>> SetValueAsync<T>(T value, TimeSpan? timeout = null, object? _ = null) where T : class
+    public async Task<MorphicResult<MorphicUnit, ISetValueError>> SetValueAsync<T>(T value, TimeSpan? timeout = null, bool verifyAfterSet = true, object? _ = null) where T : class
     {
-        var result = await this.SetValueAsync("Value", value, timeout);
+        var result = await this.SetValueAsync("Value", value, timeout, verifyAfterSet);
         return result;
     }
     //
     // NOTE: callers should "get" the value after setting it, just to be sure that the value was set correctly.  [Note that technically another app could be setting the value
     //       in parallel, so if the value doesn't match then we can't really be sure that our "set" wasn't reversed by another app.]
     // NOTE: this second implementation of SetValueAsync (with the _ param allowing it to act as an overload) is a kludge so that C# will work with both Nullable value types and (already-traditionally-nullable) reference types
-    public async Task<MorphicResult<MorphicUnit, ISetValueError>> SetValueAsync<T>(string name, T value, TimeSpan? timeout = null, object? _ = null) where T : class
+    public async Task<MorphicResult<MorphicUnit, ISetValueError>> SetValueAsync<T>(string name, T value, TimeSpan? timeout = null, bool verifyAfterSet = true, object? _ = null) where T : class
     {
-        return await this.SetValueAsObjectAsync(name, value, timeout);
+        return await this.SetValueAsObjectAsync(name, value, timeout, verifyAfterSet);
     }
 
     // NOTE: if the setting is disabled while it is being set, this function's 'set' operation could fail even though it returns success
-    private async Task<MorphicResult<MorphicUnit, ISetValueError>> SetValueAsObjectAsync(string name, object value, TimeSpan? timeout = null)
+    private async Task<MorphicResult<MorphicUnit, ISetValueError>> SetValueAsObjectAsync(string name, object value, TimeSpan? timeout = null, bool verifyAfterSet = true)
     {
         if (timeout is null)
         {
@@ -305,22 +317,25 @@ internal class SettingItemProxy
         // NOTE: in our analysis of ISettingItem, IsApplicable was usually set to true whenever IsEnabled was--but with some settings (like the apps/system dark theme settings),
         //       IsApplicable was always false; if we feel like we need to be extra-cautious (i.e. we think that IsApplicable is a critical thing to check), we can pass an extra
         //       argument into "WaitForIsEnabledEventAsync" to also watch for IsApplicable to be true
-        var remainingTimeout = (int)Math.Max(timeoutInMilliseconds - timeoutStopwatch.ElapsedMilliseconds, 0);
-        var waitResult = await this.WaitForIsEnabledEventAsync(remainingTimeout);
+        var remainingTimeoutBeforeSet = (int)Math.Max(timeoutInMilliseconds - timeoutStopwatch.ElapsedMilliseconds, 0);
+        var waitResult = await this.WaitForIsEnabledEventAsync(remainingTimeoutBeforeSet);
         if (waitResult.IsError == true)
         {
             switch (waitResult.Error!)
             {
-                case IMorphicTimeoutError.Timeout:
+                case IWaitForSettingEventError.Timeout:
                     return MorphicResult.ErrorResult<ISetValueError>(new ISetValueError.Timeout());
+                case IWaitForSettingEventError.ExceptionError(var ex):
+                    return MorphicResult.ErrorResult<ISetValueError>(new ISetValueError.ExceptionError(ex));
                 default:
                     throw new MorphicUnhandledErrorException();
             }
         }
 
         // STEP 2: once the value state is (hopefully) valid, set the value of the setting
-        // NOTE: theoretically, IsEnabled could be set to false at any moment so we are not 100% guaranteed that our "set" will actually set the value; the caller may want to
-        //       capture the "ValueChanged" and/or "IsApplicable/IsEnabled" event handlers to react to the actual value change, to ensure that the value changed, etc.
+        // NOTE: theoretically, IsEnabled could be set to false at any moment so we are not 100% guaranteed that our "set" will actually set the value; if the caller wants the
+        //       "did the set actually take effect" question answered, they should leave verifyAfterSet at its default (true); STEP 3 below polls until the read-back value
+        //       matches (within the remaining timeout) and returns ValueDidNotApplyAfterSet if it doesn't settle.
         // NOTE: we're unsure if ISettingItem.SetValue(string, object) can throw an exception; we're catching exceptions anyway, out of an abundance of caution
         try
         {
@@ -332,21 +347,37 @@ internal class SettingItemProxy
             return MorphicResult.ErrorResult<ISetValueError>(new ISetValueError.ExceptionError(ex));
         }
 
-        // NOTE: as we aren't confident that IsApplicable/IsEnabled won't be changed as a result of our SET operation, we have commented out this step (but can bring it back,
-        //       if further analysis shows that it is necessary or useful)
-        //// STEP 3: make sure that the setting is still applicable/enabled (see notes on STEP 1), as a sanity check that our value was set correctly
-        //bool isApplicable = _settingItem.IsApplicable;
-        //bool isEnabled = _settingItem.IsEnabled;
-        //if (isApplicable == true && isEnabled == true)
-        //{
-        //    // continue; all is good
-        //}
-        //else
-        //{
-        //    return MorphicResult.ErrorResult(SetValueError.SettingNotApplicableOrNotEnabledAfterSet);
-        //}
+        // STEP 3 (optional, default ON): verify that the value actually landed by reading it back
+        // and comparing. Uses WaitForValueToEqualAsync, which subscribes to the SettingItem's
+        // ValueChanged signal and re-reads on each change until either the read matches the value
+        // we wrote, or the remaining timeout expires. This catches:
+        //   * silent rejections (set returned without throwing, but the framework dropped the
+        //     write -- e.g. due to policy or the setting going non-applicable mid-write),
+        //   * propagation delays (some settings let SetValue return synchronously but actually
+        //     propagate through an async chain; an immediate read-back would see the old value),
+        //   * other clients writing different values in parallel.
+        // Callers who want fire-and-forget semantics (and accept silent-fail risk) can pass
+        // verifyAfterSet: false.
+        if (verifyAfterSet == false)
+        {
+            return MorphicResult.OkResult();
+        }
+        //
+        var remainingTimeoutForVerification = (int)Math.Max(timeoutInMilliseconds - timeoutStopwatch.ElapsedMilliseconds, 0);
+        var verifyResult = await this.WaitForValueToEqualAsync(name, value, remainingTimeoutForVerification);
+        if (verifyResult.IsError == true)
+        {
+            switch (verifyResult.Error!)
+            {
+                case IWaitForSettingEventError.Timeout:
+                    return MorphicResult.ErrorResult<ISetValueError>(new ISetValueError.ValueDidNotApplyAfterSet());
+                case IWaitForSettingEventError.ExceptionError(var ex):
+                    return MorphicResult.ErrorResult<ISetValueError>(new ISetValueError.ExceptionError(ex));
+                default:
+                    throw new MorphicUnhandledErrorException();
+            }
+        }
 
-        // STEP 4: return success
         return MorphicResult.OkResult();
     }
 
@@ -356,7 +387,16 @@ internal class SettingItemProxy
 
     #region Get/Set helper functions
 
-    private async Task<MorphicResult<MorphicUnit, IMorphicTimeoutError>> WaitForIsEnabledEventAsync(int timeoutInMilliseconds, bool alsoWaitForApplicable = false)
+    // Errors returned by the WaitFor* helpers: Timeout when the budget expires, ExceptionError
+    // when an underlying WinRT call throws. Kept private to SettingItemProxy -- callers translate 
+	// these into theirerror union (e.g. IGetValueError, ISetValueError).
+    private interface IWaitForSettingEventError
+    {
+        public record ExceptionError(Exception Ex) : IWaitForSettingEventError;
+        public record Timeout : IWaitForSettingEventError;
+    }
+
+    private async Task<MorphicResult<MorphicUnit, IWaitForSettingEventError>> WaitForIsEnabledEventAsync(int timeoutInMilliseconds, bool alsoWaitForApplicable = false)
     {
         var propertyChangedWaitHandle = new AutoResetEvent(false);
         var propertyChangedHandler = new Windows.Foundation.TypedEventHandler<object, string>((object sender, string args) =>
@@ -378,9 +418,23 @@ internal class SettingItemProxy
         });
         var isWatchingForPropertyChangedEvent = false;
 
-        var isConditionSatisfied = () => {
-            var isApplicable = _settingItem.IsApplicable;
-            var isEnabled = _settingItem.IsEnabled;
+        // Returns Ok(true) when the condition is satisfied; Ok(false) when not; ExceptionError
+        // when the IsApplicable/IsEnabled property reads throw. We surface the exception (rather
+        // than silently treating it as "not satisfied") so a failing WinRT proxy can't loop us
+        // indefinitely until timeout.
+        MorphicResult<bool, IWaitForSettingEventError> CheckIsConditionSatisfied()
+        {
+            bool isApplicable;
+            bool isEnabled;
+            try
+            {
+                isApplicable = _settingItem.IsApplicable;
+                isEnabled = _settingItem.IsEnabled;
+            }
+            catch (Exception ex)
+            {
+                return MorphicResult.ErrorResult<IWaitForSettingEventError>(new IWaitForSettingEventError.ExceptionError(ex));
+            }
 
             var conditionSatisfied = false;
             //
@@ -399,18 +453,23 @@ internal class SettingItemProxy
                 }
             }
 
-            return conditionSatisfied;
-        };
+            return MorphicResult.OkResult(conditionSatisfied);
+        }
 
         try
         {
             Stopwatch timeoutStopwatch = Stopwatch.StartNew();
-            // NOTE: we use an infinite loop so that we can wait multiple times (if, for instance, we get events for only one of multiple states); it will terminate upon timeout in the 
+            // NOTE: we use an infinite loop so that we can wait multiple times (if, for instance, we get events for only one of multiple states); it will terminate upon timeout in the
             //       worst-case scenario
             while (true)
             {
                 // for every iteration of the loop, we check to see if the condition is satisfied
-                if (isConditionSatisfied() == true)
+                var checkResult = CheckIsConditionSatisfied();
+                if (checkResult.IsError)
+                {
+                    return MorphicResult.ErrorResult(checkResult.Error!);
+                }
+                if (checkResult.Value == true)
                 {
                     break;
                 }
@@ -418,11 +477,23 @@ internal class SettingItemProxy
                 // if we're not already watching for the propert(ies) to change, wire up an event handler now
                 if (isWatchingForPropertyChangedEvent == false)
                 {
-                    _settingItem.SettingChanged += propertyChangedHandler;
+                    try
+                    {
+                        _settingItem.SettingChanged += propertyChangedHandler;
+                    }
+                    catch (Exception ex)
+                    {
+                        return MorphicResult.ErrorResult<IWaitForSettingEventError>(new IWaitForSettingEventError.ExceptionError(ex));
+                    }
                     isWatchingForPropertyChangedEvent = true;
 
                     // check to see if the condition is satisfied one more time, just in case the condition became satisfied at the same time we were setting up the event
-                    if (isConditionSatisfied() == true)
+                    var recheckResult = CheckIsConditionSatisfied();
+                    if (recheckResult.IsError)
+                    {
+                        return MorphicResult.ErrorResult(recheckResult.Error!);
+                    }
+                    if (recheckResult.Value == true)
                     {
                         break;
                     }
@@ -432,9 +503,9 @@ internal class SettingItemProxy
                 var remainingTimeout = (int)Math.Max(timeoutInMilliseconds - timeoutStopwatch.ElapsedMilliseconds, 0);
                 if (remainingTimeout == 0)
                 {
-                    return MorphicResult.ErrorResult<IMorphicTimeoutError>(new IMorphicTimeoutError.Timeout());
+                    return MorphicResult.ErrorResult<IWaitForSettingEventError>(new IWaitForSettingEventError.Timeout());
                 }
-                
+
                 // wait for the IsApplicable/IsEnabled event handler to fire (or for our timeout to expire, whichever comes first)
                 TaskCompletionSource<bool>? taskCompletionSource = new TaskCompletionSource<bool>();
                 //
@@ -462,8 +533,131 @@ internal class SettingItemProxy
         {
             if (isWatchingForPropertyChangedEvent == true)
             {
-                _settingItem.SettingChanged -= propertyChangedHandler;
+                // Unsubscribe inside try/catch so a failure here can't mask the actual result --
+                // we already have a result to return and the wait is finishing one way or another.
+                try
+                {
+                    _settingItem.SettingChanged -= propertyChangedHandler;
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[SettingItemProxy.WaitForIsEnabledEventAsync] SettingChanged unsubscribe failed: {ex.Message}");
+                }
                 isWatchingForPropertyChangedEvent = false;
+            }
+        }
+    }
+
+    // Waits until reading `name` returns a value equal to `expectedValue`, OR until
+    // timeoutInMilliseconds expires. Same shape as WaitForIsEnabledEventAsync: check the
+    // condition first; if not satisfied, subscribe to SettingChanged, recheck (close race),
+    // then loop on event signal until satisfied or timed out.
+    //
+    // The event filter only signals on the "Value" SettingChanged subkey -- other property
+    // changes (IsApplicable, IsEnabled) don't wake the loop. The read itself is guarded against
+    // exceptions (a failing GetValue is treated as "condition not satisfied" rather than
+    // re-thrown -- we'd rather wait through a transient framework hiccup than fail the whole
+    // verification on a single read).
+    //
+    // Equality uses System.Object.Equals (the static one, which handles nulls). Works correctly
+    // for the boxed primitive types SettingItems carry in practice (bool, int, string, double).
+    // If a future setting carries a value type whose Equals override doesn't reflect "value
+    // equality" the way we expect, we'd need a comparer parameter -- not currently needed.
+    private async Task<MorphicResult<MorphicUnit, IWaitForSettingEventError>> WaitForValueToEqualAsync(string name, object expectedValue, int timeoutInMilliseconds)
+    {
+        var propertyChangedWaitHandle = new AutoResetEvent(false);
+        var propertyChangedHandler = new Windows.Foundation.TypedEventHandler<object, string>((object sender, string args) =>
+        {
+            if (args == "Value")
+            {
+                propertyChangedWaitHandle.Set();
+            }
+        });
+        var isWatchingForPropertyChangedEvent = false;
+
+        var isConditionSatisfied = () =>
+        {
+            object? currentValue;
+            try
+            {
+                currentValue = _settingItem.GetValue(name);
+            }
+            catch
+            {
+                return false;
+            }
+            return object.Equals(currentValue, expectedValue);
+        };
+
+        try
+        {
+            Stopwatch timeoutStopwatch = Stopwatch.StartNew();
+            while (true)
+            {
+                if (isConditionSatisfied() == true)
+                {
+                    break;
+                }
+
+                if (isWatchingForPropertyChangedEvent == false)
+                {
+                    try
+                    {
+                        _settingItem.SettingChanged += propertyChangedHandler;
+                    }
+                    catch (Exception ex)
+                    {
+                        return MorphicResult.ErrorResult<IWaitForSettingEventError>(new IWaitForSettingEventError.ExceptionError(ex));
+                    }
+                    isWatchingForPropertyChangedEvent = true;
+
+                    // Recheck once after subscribing in case the value settled between the first
+                    // check and our subscription wiring up (otherwise we could wait forever on a
+                    // signal that already fired).
+                    if (isConditionSatisfied() == true)
+                    {
+                        break;
+                    }
+                }
+
+                var remainingTimeout = (int)Math.Max(timeoutInMilliseconds - timeoutStopwatch.ElapsedMilliseconds, 0);
+                if (remainingTimeout == 0)
+                {
+                    return MorphicResult.ErrorResult<IWaitForSettingEventError>(new IWaitForSettingEventError.Timeout());
+                }
+
+                TaskCompletionSource<bool>? taskCompletionSource = new TaskCompletionSource<bool>();
+                var waitHandleRegistration = ThreadPool.RegisterWaitForSingleObject(propertyChangedWaitHandle, delegate { taskCompletionSource?.SetResult(true); }, null, remainingTimeout, true);
+                try
+                {
+                    _ = await taskCompletionSource!.Task.WaitAsync(new TimeSpan(0, 0, 0, 0, remainingTimeout));
+                }
+                catch (TimeoutException)
+                {
+                    // swallow; the next loop iteration's remainingTimeout=0 check returns Timeout
+                }
+                finally
+                {
+                    waitHandleRegistration.Unregister(null);
+                }
+            }
+
+            return MorphicResult.OkResult();
+        }
+        finally
+        {
+            if (isWatchingForPropertyChangedEvent == true)
+            {
+                // Unsubscribe inside try/catch so a failure here can't mask the actual result --
+                // we already have a result to return and the wait is finishing one way or another.
+                try
+                {
+                    _settingItem.SettingChanged -= propertyChangedHandler;
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[SettingItemProxy.WaitForValueToEqualAsync] SettingChanged unsubscribe failed: {ex.Message}");
+                }
             }
         }
     }
@@ -664,35 +858,36 @@ internal class SettingItemProxy
         //public record SetSettingItemValueError SettingNotApplicableOrNotEnabledAfterSet : ISetSettingItemValueError;
         public record Timeout : ISetSettingItemValueError;
         //public record TypeMismatch : ISetSettingItemValueError;
+        public record ValueDidNotApplyAfterSet : ISetSettingItemValueError;
     }
 
     // NOTE: both the struct- and class-specific implementations of SetSettingItemValueAsync MUST be kept in sync!
     //
-    public async static Task<MorphicResult<MorphicUnit, ISetSettingItemValueError>> SetSettingItemValueAsync<T>(SettingItemProxy? settingItem, T value, TimeSpan? timeout = null) where T : struct
+    public async static Task<MorphicResult<MorphicUnit, ISetSettingItemValueError>> SetSettingItemValueAsync<T>(SettingItemProxy? settingItem, T value, TimeSpan? timeout = null, bool verifyAfterSet = true) where T : struct
     {
-        return await SettingItemProxy.SetSettingItemValueAsync<T>(settingItem, "Value", value, timeout);
+        return await SettingItemProxy.SetSettingItemValueAsync<T>(settingItem, "Value", value, timeout, verifyAfterSet);
     }
     //
-    public async static Task<MorphicResult<MorphicUnit, ISetSettingItemValueError>> SetSettingItemValueAsync<T>(SettingItemProxy? settingItem, string name, T value, TimeSpan? timeout = null) where T : struct
+    public async static Task<MorphicResult<MorphicUnit, ISetSettingItemValueError>> SetSettingItemValueAsync<T>(SettingItemProxy? settingItem, string name, T value, TimeSpan? timeout = null, bool verifyAfterSet = true) where T : struct
     {
-        return await SettingItemProxy.SetSettingItemValueAsObjectAsync(settingItem, name, value, timeout);
+        return await SettingItemProxy.SetSettingItemValueAsObjectAsync(settingItem, name, value, timeout, verifyAfterSet);
     }
 
     // NOTE: both the struct and class-specific implementations of SetSettingItemValueAsync MUST be kept in sync!
     //
     // NOTE: this second implementation of SetSettingItemValueAsync (with the _ param allowing it to act as an overload) is a kludge so that C# will work with both Nullable value types and (already-traditionally-nullable) reference types
-    public async static Task<MorphicResult<MorphicUnit, ISetSettingItemValueError>> SetSettingItemValueAsync<T>(SettingItemProxy? settingItem, T value, TimeSpan? timeout = null, object? _ = null) where T : class
+    public async static Task<MorphicResult<MorphicUnit, ISetSettingItemValueError>> SetSettingItemValueAsync<T>(SettingItemProxy? settingItem, T value, TimeSpan? timeout = null, bool verifyAfterSet = true, object? _ = null) where T : class
     {
-        return await SettingItemProxy.SetSettingItemValueAsync<T>(settingItem, "Value", value, timeout);
+        return await SettingItemProxy.SetSettingItemValueAsync<T>(settingItem, "Value", value, timeout, verifyAfterSet);
     }
     //
     // NOTE: this second implementation of SetSettingItemValueAsync (with the _ param allowing it to act as an overload) is a kludge so that C# will work with both Nullable value types and (already-traditionally-nullable) reference types
-    public async static Task<MorphicResult<MorphicUnit, ISetSettingItemValueError>> SetSettingItemValueAsync<T>(SettingItemProxy? settingItem, string name, T value, TimeSpan? timeout = null, object? _ = null) where T : class
+    public async static Task<MorphicResult<MorphicUnit, ISetSettingItemValueError>> SetSettingItemValueAsync<T>(SettingItemProxy? settingItem, string name, T value, TimeSpan? timeout = null, bool verifyAfterSet = true, object? _ = null) where T : class
     {
-        return await SettingItemProxy.SetSettingItemValueAsObjectAsync(settingItem, name, value, timeout);
+        return await SettingItemProxy.SetSettingItemValueAsObjectAsync(settingItem, name, value, timeout, verifyAfterSet);
     }
 
-    private async static Task<MorphicResult<MorphicUnit, ISetSettingItemValueError>> SetSettingItemValueAsObjectAsync(SettingItemProxy? settingItem, string name, object value, TimeSpan? timeout = null)
+    private async static Task<MorphicResult<MorphicUnit, ISetSettingItemValueError>> SetSettingItemValueAsObjectAsync(SettingItemProxy? settingItem, string name, object value, TimeSpan? timeout = null, bool verifyAfterSet = true)
     {
         // NOTE: for 'binding-style' convenience, we let the caller pass in a nullable SettingItem; they'll just get an error result in return, however
         if (settingItem is null)
@@ -701,7 +896,7 @@ internal class SettingItemProxy
         }
 
         MorphicResult<MorphicUnit, Morphic.WindowsNative.SystemSettings.SettingItemProxy.ISetValueError> setSettingResult;
-        setSettingResult = await settingItem.SetValueAsObjectAsync(name, value, timeout);
+        setSettingResult = await settingItem.SetValueAsObjectAsync(name, value, timeout, verifyAfterSet);
         if (setSettingResult.IsError == true)
         {
             switch (setSettingResult.Error!)
@@ -712,6 +907,8 @@ internal class SettingItemProxy
                     }
                 case ISetValueError.Timeout:
                     return MorphicResult.ErrorResult<ISetSettingItemValueError>(new ISetSettingItemValueError.Timeout());
+                case ISetValueError.ValueDidNotApplyAfterSet:
+                    return MorphicResult.ErrorResult<ISetSettingItemValueError>(new ISetSettingItemValueError.ValueDidNotApplyAfterSet());
                 default:
                     throw new MorphicUnhandledErrorException();
             }

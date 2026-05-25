@@ -1071,7 +1071,6 @@ internal class TrayButtonNativeWindow : IDisposable
         var getWindowClassNameResult = TrayButtonNativeWindow.GetWindowClassName(hwnd);
         if (getWindowClassNameResult.IsError == true)
         {
-            Debug.WriteLine("WARNING: Could not get window class name; has the window already been destroyed?");
             return;
         }
         className = getWindowClassNameResult.Value!;
