@@ -57,6 +57,26 @@ public sealed partial class LayoutPreviewWindow : Morphic.Controls.Windowing.Chr
     // animation timer for moving (and rotating-via-resizing) the window
     private Microsoft.UI.Dispatching.DispatcherQueueTimer? _moveAnimationTimer;
 
+    // Snapshot of the inputs that determined the last appearance we applied. Covers everything
+    // that can change the visible look:
+    //   * IsHighContrast -- HC on/off.
+    //   * HcBackgroundColorRef -- COLOR_WINDOW (HC variant determines this; e.g. HC-Light is
+    //                             white, HC-Dark is black).
+    //   * HcBorderColorRef -- COLOR_WINDOWTEXT (HC variant determines this too).
+    private readonly record struct AppliedAppearanceSnapshot(
+        bool IsHighContrast,
+        uint HcBackgroundColorRef,
+        uint HcBorderColorRef);
+
+    // Last-applied snapshot, or null if we haven't applied yet; the nullable wrapper preserves
+    // the "not applied yet" sentinel without needing a separate flag.
+    private AppliedAppearanceSnapshot? _lastAppliedAppearance;
+
+    // Per-instance window subclass that intercepts WM_SHOWWINDOW so we can refresh the appearance
+    // (e.g., HC vs non-HC) synchronously BEFORE the first paint of each show. Field is required to 
+	// keep the delegate alive while the subclass is installed (GC pinning).
+    private Windows.Win32.UI.Shell.SUBCLASSPROC? _instanceSubclassProc;
+
     public LayoutPreviewWindow()
     {
         // NOTE: ChromelessBaseWindow's constructor strips all WinUI / DWM chrome and 
@@ -103,6 +123,17 @@ public sealed partial class LayoutPreviewWindow : Morphic.Controls.Windowing.Chr
             }
         }
 
+        // Install a per-instance window subclass to intercept WM_SHOWWINDOW (which Windows sends
+        // BEFORE the window actually becomes visible) so we can refresh the appearance synchronously
+        // before the first paint of each show.
+        //
+        // Uses uIdSubclass=1 to coexist with ChromelessBaseWindow's static subclass at uIdSubclass=0;
+        // the two are independent and each chains via DefSubclassProc. Delegate is stored in
+        // _instanceSubclassProc to keep it alive while the subclass is installed.
+        _instanceSubclassProc = this.InstanceSubclassWndProc;
+        var setSubclassResult = Windows.Win32.PInvoke.SetWindowSubclass(hwnd, _instanceSubclassProc, uIdSubclass: 1, dwRefData: 0);
+        System.Diagnostics.Debug.Assert(setSubclassResult);
+
         // Pick the right backdrop + border appearance for the current HC state, and keep
         // it in sync as the user toggles HC or swaps HC variants. SystemSettingsListener's
         // HighContrastChanged fires for every HC setting change (on/off AND variant swap),
@@ -118,6 +149,17 @@ public sealed partial class LayoutPreviewWindow : Morphic.Controls.Windowing.Chr
     {
         Morphic.WindowsNative.SystemSettings.SystemSettingsListener.Shared.HighContrastChanged -= this.OnHighContrastSettingChanged;
         this.Closed -= this.LayoutPreviewWindow_Closed;
+
+        // detach the per-instance WM_SHOWWINDOW subclass; clear the field so the delegate is
+        // eligible for GC. RemoveWindowSubclass needs the same delegate reference we passed to
+        // SetWindowSubclass (it is matched by reference equality), which is why _instanceSubclassProc
+        // is stored on the instance.
+        if (_instanceSubclassProc is not null)
+        {
+            var hwnd = (Windows.Win32.Foundation.HWND)WinRT.Interop.WindowNative.GetWindowHandle(this);
+            _ = Windows.Win32.PInvoke.RemoveWindowSubclass(hwnd, _instanceSubclassProc, uIdSubclass: 1);
+            _instanceSubclassProc = null;
+        }
     }
 
     //
@@ -132,6 +174,13 @@ public sealed partial class LayoutPreviewWindow : Morphic.Controls.Windowing.Chr
     // rounding so the window's outer shape is rounded (clipping the AcrylicGrayBackdrop to
     // a rounded silhouette without us having to clip the acrylic ourselves). In HC we
     // leave the DWM rounding off and let the XAML Border draw the rounded shape + outline.
+    //
+    // Gated by _lastAppliedAppearance: if a fresh AppliedAppearanceSnapshot equals the previously
+    // applied one, returns early without re-instantiating the SystemBackdrop or calling
+    // SetWindowPos(SWP_FRAMECHANGED). Both operations can cause visible flicker even when the
+    // result is the same as before, so making the apply idempotent is load-bearing for the
+    // WM_SHOWWINDOW interception (which calls this on every show). First call (cache=null)
+    // always applies because null never equals a struct value.
     private void UpdateAppearanceForCurrentHighContrastState()
     {
         bool isHighContrast = false;
@@ -139,6 +188,20 @@ public sealed partial class LayoutPreviewWindow : Morphic.Controls.Windowing.Chr
         if (getResult.IsSuccess)
         {
             isHighContrast = getResult.Value!;
+        }
+
+        uint hcBackgroundColorRef = 0;
+        uint hcBorderColorRef = 0;
+        if (isHighContrast)
+        {
+            hcBackgroundColorRef = Windows.Win32.PInvoke.GetSysColor(Windows.Win32.Graphics.Gdi.SYS_COLOR_INDEX.COLOR_WINDOW);
+            hcBorderColorRef = Windows.Win32.PInvoke.GetSysColor(Windows.Win32.Graphics.Gdi.SYS_COLOR_INDEX.COLOR_WINDOWTEXT);
+        }
+
+        var freshAppearance = new AppliedAppearanceSnapshot(isHighContrast, hcBackgroundColorRef, hcBorderColorRef);
+        if (freshAppearance == _lastAppliedAppearance)
+        {
+            return;
         }
 
         var hwnd = (Windows.Win32.Foundation.HWND)WinRT.Interop.WindowNative.GetWindowHandle(this);
@@ -154,10 +217,10 @@ public sealed partial class LayoutPreviewWindow : Morphic.Controls.Windowing.Chr
 
             this.SystemBackdrop = new Morphic.Controls.Windowing.TransparentBackdrop();
 
-            var bg = GetSysColorAsWinUIColor(Windows.Win32.Graphics.Gdi.SYS_COLOR_INDEX.COLOR_WINDOW);
-            var border = GetSysColorAsWinUIColor(Windows.Win32.Graphics.Gdi.SYS_COLOR_INDEX.COLOR_WINDOWTEXT);
-            this.RootBorder.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(bg);
-            this.RootBorder.BorderBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush(border);
+            var backgroundColor = ColorRefToWinUIColor(hcBackgroundColorRef);
+            var borderColor = ColorRefToWinUIColor(hcBorderColorRef);
+            this.RootBorder.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(backgroundColor);
+            this.RootBorder.BorderBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush(borderColor);
             this.RootBorder.BorderThickness = new Microsoft.UI.Xaml.Thickness(1.5);
             this.RootBorder.CornerRadius = new Microsoft.UI.Xaml.CornerRadius(8);
         }
@@ -188,12 +251,29 @@ public sealed partial class LayoutPreviewWindow : Morphic.Controls.Windowing.Chr
             Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOSIZE |
             Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOZORDER |
             Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
+
+        _lastAppliedAppearance = freshAppearance;
     }
 
-    // GetSysColor returns COLORREF (0x00BBGGRR). Convert to a WinUI ARGB color with full alpha.
-    private static Windows.UI.Color GetSysColorAsWinUIColor(Windows.Win32.Graphics.Gdi.SYS_COLOR_INDEX index)
+    // Per-instance window subclass proc. Intercepts WM_SHOWWINDOW (wParam=TRUE means the window
+    // is about to be shown, wParam=FALSE means about to be hidden) and refreshes the appearance
+    // synchronously before the first paint of the new show. WM_SHOWWINDOW fires for any path that
+    // ends in user32!ShowWindow under the hood, which AppWindow.Show() does, so this is
+    // automatically compatible with callers that use [LayoutPreviewWindow].AppWindow.Show()
+    // directly. All other messages are passed through to DefSubclassProc unchanged.
+    private Windows.Win32.Foundation.LRESULT InstanceSubclassWndProc(Windows.Win32.Foundation.HWND hwnd, uint msg, Windows.Win32.Foundation.WPARAM wParam, Windows.Win32.Foundation.LPARAM lParam, nuint uIdSubclass, nuint dwRefData)
     {
-        uint colorRef = Windows.Win32.PInvoke.GetSysColor(index);
+        if (msg == Windows.Win32.PInvoke.WM_SHOWWINDOW && wParam != 0)
+        {
+            this.UpdateAppearanceForCurrentHighContrastState();
+        }
+        return Windows.Win32.PInvoke.DefSubclassProc(hwnd, msg, wParam, lParam);
+    }
+
+    // Converts a Win32 COLORREF (packed 0x00BBGGRR, as returned by GetSysColor) into a WinUI
+    // ARGB color with full alpha.
+    private static Windows.UI.Color ColorRefToWinUIColor(uint colorRef)
+    {
         byte r = (byte)(colorRef & 0xFF);
         byte g = (byte)((colorRef >> 8) & 0xFF);
         byte b = (byte)((colorRef >> 16) & 0xFF);

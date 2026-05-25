@@ -21,6 +21,7 @@ LoadImage
 MonitorFromPoint
 MonitorFromWindow
 ReleaseCapture
+RemoveWindowSubclass
 SendMessage
 SetWindowLongPtr
 SetWindowPos
@@ -45,4 +46,5 @@ WM_NCCALCSIZE
 WM_NCHITTEST
 WM_NCLBUTTONDOWN
 WM_SETICON
+WM_SHOWWINDOW
 WNDPROC
