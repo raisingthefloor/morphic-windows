@@ -134,7 +134,12 @@ public sealed partial class BarButtonControl : UserControl, IBarItemControl
         ButtonBase button;
         if (_data.IsToggle)
         {
-            var toggleButton = new ToggleButton
+            // GuardedToggleButton suppresses the framework's automatic IsChecked toggle on
+            // click. The click handler computes the user's intent (!current), runs the
+            // action, and on success writes the value to data, which propagates back to
+            // IsChecked via the PropertyChanged subscription below. See GuardedToggleButton.cs
+            // for the full rationale.
+            var toggleButton = new GuardedToggleButton
             {
                 Style = toggleStyle,
                 IsChecked = _data.IsChecked,
@@ -223,31 +228,33 @@ public sealed partial class BarButtonControl : UserControl, IBarItemControl
             return;
         }
 
+        // Compute the user's INTENT (the value the user wants the toggle to settle at). Because
+        // GuardedToggleButton suppresses the framework's automatic IsChecked toggle on click,
+        // toggleButton.IsChecked still holds the PRE-click value here, so flipping it gives us
+        // the intended new value. For non-toggle buttons, intent is meaningless (null). Null
+        // IsChecked (three-state) is treated as false for flip purposes; we don't use IsThreeState
+        // in this codebase, so this just keeps the null-safety honest.
         var toggleButton = sender as ToggleButton;
-        bool? postClickIsChecked = toggleButton?.IsChecked;
+        bool? intendedIsChecked = toggleButton is null ? null : !(toggleButton.IsChecked == true);
         var actionTag = _data!.ActionTag;
-        //
-        // re-entry during the action is prevented by _isActionInProgress (checked above), so we
-        // don't gate clicks via IsHitTestVisible. Doing so would suppress PointerEntered/Exited on
-        // the button for the duration of the action; if the user moved the pointer off the button
-        // while it was running, tracker.IsPointerOver would stay stale (true) and
-        // SetInProgressVisual(None) would compute "PointerOver" instead of "Normal" -- leaving the
-        // button stuck in the hover background, visually indistinguishable from the InProgress
-        // pressed background. While InProgressVisual == Visible, ComputeStateName always returns
-        // "InProgress" regardless of pointer state, so letting pointer events flow during the
-        // action causes no visual flicker.
+
+        // Re-entry during the action is prevented by _isActionInProgress (checked above). We do
+        // NOT need to block input (e.g. via IsEnabled=false or IsHitTestVisible=false):
+        // GuardedToggleButton already prevents the framework's auto-toggle from disturbing the
+        // visual, and any re-clicks during the action are no-ops because the re-entry guard
+        // catches them before the action is invoked again.
         _isActionInProgress = true;
 		//
         bool actionSucceeded;
         try
         {
-            var result = await DelayedInProgressVisual.RunAsync(button, () => action.Invoke(actionTag, postClickIsChecked));
+            var result = await DelayedInProgressVisual.RunAsync(button, () => action.Invoke(actionTag, intendedIsChecked));
             actionSucceeded = result.IsSuccess;
         }
         catch (Exception ex)
         {
-            // an action throwing an exception is treated as failure -- the system state didn't change
-            // in any well-defined way, so the toggle (if any) should revert
+            // an action throwing is treated as failure: the system state didn't change in any
+            // well-defined way, so we don't write the intended value to data
             Debug.WriteLine($"[BarItem] {actionTag} threw: {ex}");
             actionSucceeded = false;
         }
@@ -256,24 +263,14 @@ public sealed partial class BarButtonControl : UserControl, IBarItemControl
             _isActionInProgress = false;
         }
 
-        // mirror the outcome onto the toggle and the backing data. Data updates happen only on
-        // action completion (not on the immediate Checked/Unchecked event from the framework's
-        // toggle) so that an in-flight real-time event listener -- e.g. one observing an external
-        // dark-mode change -- can update BarButtonData.IsChecked during the action without us
-        // blindly overwriting it. On success we write postClickIsChecked (our action committed
-        // that state); on failure we revert the visual toggle and leave data alone (data was never
-        // changed by this click, so it still reflects the unchanged system state). No-op for
-        // non-toggle buttons (toggleButton == null).
-        if (toggleButton is not null && postClickIsChecked.HasValue)
+        // Data is the single source of truth: on success we write the intended value, which
+        // propagates back to toggleButton.IsChecked via the PropertyChanged subscription set up
+        // in ApplyData (visible visual flip happens then). On failure: no-op, because
+        // GuardedToggleButton suppressed the framework's auto-toggle on click, toggleButton's
+        // visual never moved, so there is nothing to revert.
+        if (toggleButton is not null && intendedIsChecked.HasValue && actionSucceeded)
         {
-            if (actionSucceeded)
-            {
-                _data.IsChecked = postClickIsChecked.Value;
-            }
-            else
-            {
-                toggleButton.IsChecked = !postClickIsChecked.Value;
-            }
+            _data.IsChecked = intendedIsChecked.Value;
         }
     }
 }

@@ -27,23 +27,28 @@ using System.Threading.Tasks;
 
 namespace Morphic.MorphicBar.BarControls;
 
-// Runs a button's async action with delayed in-progress visual feedback. Quick actions
-// finish before the show-delay elapses and never paint a progress bar; long actions reveal
-// the indeterminate bar after ShowDelay and clear it on completion. Used by both
+// Runs a button's async action with delayed in-progress visual feedback. The CommonStates
+// "InProgress" visual (BgBorder = pressed color) fires IMMEDIATELY at click time, regardless
+// of action length, so the user always sees instant feedback that their click registered.
+// The indeterminate ProgressBar is delayed: quick actions finish before
+// DelayedInProgressVisual.ShowDelay elapses and never paint a bar; long actions reveal the bar
+// after DelayedInProgressVisual.ShowDelay and clear it on completion. Used by both
 // BarButtonControl and BarMultiButtonControl click handlers.
 //
 // Why the "Preparing" Opacity=0 trick:
 //   WinUI's indeterminate ProgressBar runs a continuous animation Storyboard whose phase
 //   resets each time IsIndeterminate flips False -> True (or each time the bar transitions
-//   from collapsed -> visible). If we simply waited 250ms and THEN set the bar visible,
-//   the user would see the animation start fresh -- a small but noticeable "burst of
-//   activity" at the moment of reveal. Instead, we make the bar Visible+IsIndeterminate
-//   immediately at click time but with Opacity=0 so it's invisible. The animation runs
-//   for the full ShowDelay; when we then drop Opacity (Preparing -> Visible) the animation
-//   is already 250ms into its cycle and looks like it's been running quietly all along.
+//   from collapsed -> visible). If we simply waited DelayedInProgressVisual.ShowDelay and 
+//   THEN set the bar visible, the user would see the animation start fresh -- a small but 
+//   noticeable "burst of activity" at the moment of reveal. Instead, we make the bar 
+//   Visible+IsIndeterminate immediately at click time but with Opacity=0 so it's invisible. The 
+//   animation runs for the full DelayedInProgressVisual.ShowDelay; when we then drop Opacity 
+//   (Preparing -> Visible) the animation is already DelayedInProgressVisual.ShowDelay into its
+//   cycle and looks like it's been running quietly all along.
 //
 // See ProgressStates VisualStateGroup in BarButtonControl.xaml / BarMultiButtonControl.xaml
-// for the matching XAML setters.
+// for the matching XAML setters, and ComputeStateName in {Button,ToggleButton}CompoundState
+// for the rule that maps InProgressVisual != None to the CommonStates "InProgress" state.
 internal static class DelayedInProgressVisual
 {
     // How long an action must run before we reveal the indeterminate progress bar.
@@ -66,7 +71,7 @@ internal static class DelayedInProgressVisual
         CompoundStatePointerWiring.SetInProgressVisual(button, InProgressVisual.Preparing);
         try
         {
-            // Race the action against the show-delay. Whichever completes first decides
+            // Race the action against DelayedInProgressVisual.ShowDelay. Whichever completes first decides
             // whether we reveal the bar.
             //   * delayTask wins -> action is still running; reveal the bar.
             //   * actionTask wins -> action completed before the threshold; never reveal.
@@ -79,7 +84,7 @@ internal static class DelayedInProgressVisual
             // past Task.WhenAny but before the IsCompleted check is the only remaining
             // window -- vanishingly small in practice.
             var actionTask = action();
-            var delayTask = Task.Delay(ShowDelay);
+            var delayTask = Task.Delay(DelayedInProgressVisual.ShowDelay);
             var firstCompleted = await Task.WhenAny(actionTask, delayTask);
 
             if (firstCompleted == delayTask && !actionTask.IsCompleted)

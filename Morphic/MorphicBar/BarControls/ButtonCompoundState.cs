@@ -67,10 +67,14 @@ internal static class ButtonCompoundState
 
         public override string ComputeStateName()
         {
-            // CommonStates enters "InProgress" only when the progress bar is fully visible;
-            // during the show-delay (Preparing) the button keeps its normal pointer-state
-            // appearance, since the bar is animating invisibly at Opacity=0.
-            if (this.InProgressVisual == InProgressVisual.Visible)
+            // NOTE: CommonStates enters "InProgress" the moment the action begins (Preparing)
+            // AND while the progress bar is fully visible. Showing the BgBorder pressed-color
+            // immediately at click time gives the user instant feedback that their click
+            // registered, even for actions short enough that the ProgressBar reveal never
+            // happens. The ProgressBar itself still has the anti-flicker show-delay (see
+            // DelayedInProgressVisual.ShowDelay): actions that complete before that delay
+            // animate the bar invisibly during Preparing and never reveal it.
+            if (this.InProgressVisual != InProgressVisual.None)
             {
                 return "InProgress";
             }

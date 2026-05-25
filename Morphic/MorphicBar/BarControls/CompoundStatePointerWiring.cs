@@ -30,13 +30,15 @@ namespace Morphic.MorphicBar.BarControls;
 
 // Three-state model for the in-progress visual. Names match the VisualStates in the
 // "ProgressStates" VisualStateGroup of every button template in this project.
-//   None      -- no progress visual; ProgressBar collapsed.
-//   Preparing -- ProgressBar's indeterminate animation runs invisibly (Visibility=Visible,
-//                IsIndeterminate=True, Opacity=0). Used during the show-delay so that, when
-//                the bar is revealed, its animation appears mid-cycle rather than starting fresh.
-//   Visible   -- ProgressBar visible at full opacity (Opacity reverts to default 1.0). The
-//                CommonStates "InProgress" state is also entered while in this mode, which
-//                flips BgBorder.Background to the pressed color as additional feedback.
+//   None      -- no progress visual; ProgressBar collapsed and CommonStates is back to normal.
+//   Preparing -- The action has just begun. CommonStates enters "InProgress" immediately
+//                (BgBorder = pressed color) so the user sees instant feedback that the click
+//                registered. ProgressBar's indeterminate animation runs invisibly
+//                (Visibility=Visible, IsIndeterminate=True, Opacity=0) so that, IF it gets
+//                revealed (action runs past DelayedInProgressVisual.ShowDelay), its animation appears mid-cycle
+//                rather than starting fresh.
+//   Visible   -- ProgressBar visible at full opacity (Opacity reverts to default 1.0).
+//                CommonStates "InProgress" is still active (BgBorder still pressed-color).
 internal enum InProgressVisual
 {
     None,
@@ -163,24 +165,25 @@ internal static class CompoundStatePointerWiring
         });
 
         // LayoutUpdated re-assertion guard: fires after every layout pass on the XamlRoot. While
-        // an action is in flight (InProgressVisual == Visible), re-assert "InProgress" on
-        // CommonStates so any built-in UpdateVisualState that ran between the previous layout pass
-        // and this one gets immediately overwritten. This is the load-bearing defense against
-        // parent-panel layout changes (e.g. bar rotation) silently stomping our CommonStates --
-        // the trigger can be anything from a synthetic pointer transition to an internal property
-        // recompute, and there is no single event to subscribe to that covers all paths.
+        // an action is in flight (InProgressVisual != None -- covers both Preparing AND Visible),
+        // re-assert "InProgress" on CommonStates so any built-in UpdateVisualState that ran between
+        // the previous layout pass and this one gets immediately overwritten. This is the
+        // load-bearing defense against parent-panel layout changes (e.g. bar rotation) silently
+        // stomping our CommonStates -- the trigger can be anything from a synthetic pointer
+        // transition to an internal property recompute, and there is no single event to subscribe
+        // to that covers all paths.
         //
-        // The early-return when not Visible keeps the handler near-free for non-action use: the
-        // body runs at most a couple of GoToState calls per layout pass, only during the few
-        // seconds of an active in-progress action. GoToState is a no-op when the target state is
-        // already the current state, so even repeated firings cost only the equality check.
+        // The early-return when InProgressVisual == None keeps the handler near-free for non-action
+        // use: the body runs at most a couple of GoToState calls per layout pass, only during the
+        // few seconds of an active in-progress action. GoToState is a no-op when the target state
+        // is already the current state, so even repeated firings cost only the equality check.
         //
         // useTransitions: false because we are re-asserting an already-active state, not
         // performing a user-visible transition; transitions would risk visible flicker during
         // rapid layout passes (e.g. while a rotation animation is in flight).
         button.LayoutUpdated += (_, _) =>
         {
-            if (tracker.InProgressVisual != InProgressVisual.Visible)
+            if (tracker.InProgressVisual == InProgressVisual.None)
             {
                 return;
             }
