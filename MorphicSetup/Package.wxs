@@ -33,7 +33,7 @@
          shortcut and the "installed=1" registry marker (the latter doubles as the KeyPath that
          ICE43 requires for any component containing a non-advertised shortcut). The shortcut's
          Target=[#morphic_exe] references a file in a DIFFERENT component (MorphicComponents,
-         below) -- this is Microsoft's documented pattern for non-advertised shortcuts and
+         below); this is Microsoft's documented pattern for non-advertised shortcuts and
          intentionally triggers ICE69, which is suppressed in MorphicSetup.wixproj. Putting the
          shortcut in the same component as the file instead breaks both ICE43 (file as KeyPath
          when component has a non-advertised shortcut) and ICE57 (per-user shortcut data with

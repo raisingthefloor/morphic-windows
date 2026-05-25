@@ -28,8 +28,21 @@ using System.Threading.Tasks;
 
 namespace Morphic.WindowsNative.Display;
 
+// EventArgs payload for NightLight.IsOnChanged. Carries the new Night Light state 
+// (true = on, false = off). NewValue follows the BCL convention.
+public class NightLightIsOnChangedEventArgs(bool newValue) : EventArgs
+{
+    public bool NewValue { get; } = newValue;
+}
+
 public class NightLight
 {
+    private static readonly object _isOnChangedLock = new();
+    private static EventHandler<NightLightIsOnChangedEventArgs>? _isOnChanged;
+    private static bool _isOnChangedIsSubscribed = false;
+
+    //
+
     public static class SystemSettingIds
     {
         // The SystemSettings "quick action" toggle for Night Light. This is the same setting
@@ -74,4 +87,90 @@ public class NightLight
         return MorphicResult.OkResult();
     }
 
+    //
+
+    // Change-notification event
+    //
+    // Lifecycle: the underlying SettingItemProxy.ValueChanged subscription is wired lazily on the
+    // first IsOnChanged subscription and torn down when the last subscriber detaches. The
+    // SettingItemProxy itself stays cached in NightLightIsOnSettingItem across attach/detach
+    // cycles -- it's stateless other than the change subscription.
+
+    public static event EventHandler<NightLightIsOnChangedEventArgs> IsOnChanged
+    {
+        add
+        {
+            lock (_isOnChangedLock)
+            {
+                if (_isOnChangedIsSubscribed == false)
+                {
+                    var settingItem = NightLight.NightLightIsOnSettingItem;
+                    if (settingItem is null)
+                    {
+                        Debug.Assert(false, "Could not get setting item for Night Light");
+                    }
+                    else
+                    {
+                        settingItem.ValueChanged += NightLight.SettingItem_ValueChanged;
+                        _isOnChangedIsSubscribed = true;
+                    }
+                }
+                _isOnChanged += value;
+            }
+        }
+        remove
+        {
+            lock (_isOnChangedLock)
+            {
+                _isOnChanged -= value;
+
+                if (_isOnChanged is null || _isOnChanged!.GetInvocationList().Length == 0)
+                {
+                    _isOnChanged = null;
+
+                    if (_isOnChangedIsSubscribed == true)
+                    {
+                        var settingItem = NightLight.NightLightIsOnSettingItem;
+                        if (settingItem is not null)
+                        {
+                            settingItem.ValueChanged -= NightLight.SettingItem_ValueChanged;
+                        }
+                        _isOnChangedIsSubscribed = false;
+                    }
+                }
+            }
+        }
+    }
+
+    // SettingItemProxy.ValueChanged callback. ValueChanged carries no payload (the WinRT
+    // SettingChanged event only signals "Value changed") so we re-read the current value via
+    // GetIsOnAsync and dispatch the typed IsOnChanged event with the new bool. A short timeout
+    // is sufficient here -- the first subscription primes IsEnabled to true, so by the time we
+    // see ValueChanged the SettingItem is settled and the read returns immediately.
+    private static async void SettingItem_ValueChanged(object? sender, EventArgs e)
+    {
+        var getResult = await NightLight.GetIsOnAsync(TimeSpan.FromSeconds(2));
+        if (getResult.IsError == true)
+        {
+            return;
+        }
+        var newIsOn = getResult.Value ?? false;
+
+        EventHandler<NightLightIsOnChangedEventArgs>? handlersToFire;
+        lock (_isOnChangedLock)
+        {
+            handlersToFire = _isOnChanged;
+        }
+        if (handlersToFire is null)
+        {
+            return;
+        }
+
+        // Dispatch each handler on its own Task so a slow/throwing handler doesn't block the
+        // others. Sender is null -- NightLight is a static class with no instance.
+        foreach (EventHandler<NightLightIsOnChangedEventArgs> handler in handlersToFire.GetInvocationList())
+        {
+            _ = Task.Run(() => handler.Invoke(null, new NightLightIsOnChangedEventArgs(newIsOn)));
+        }
+    }
 }

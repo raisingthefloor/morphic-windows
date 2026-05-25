@@ -68,6 +68,74 @@ internal static class BarItemDataFactory
         var darkButton     = new BarButtonData { Text = "Dark",     IsToggle = true, ActionTag = "dark",     Action = darkAction };
         var nightButton    = new BarButtonData { Text = "Night",    IsToggle = true, ActionTag = "night",    Action = nightAction };
 
+        darkButton.IsChecked = Morphic.SettingsUtils.CachedDarkModeState.GetCurrentIsDark();
+        darkButton.IsEnabled = !Morphic.SettingsUtils.CachedDarkModeState.GetCurrentIsHighContrast();
+		
+		//
+
+        //
+        // GetIsActive returns nullable bool; null means the registry value doesn't exist yet
+        // because the user has never enabled color filtering, which we treat as "off" for the seed.
+        var initialColorFiltersIsActiveResult = ColorFilters.GetIsActive();
+        if (initialColorFiltersIsActiveResult.IsError)
+        {
+            System.Diagnostics.Debug.WriteLine("[BarItemDataFactory] Initial ColorFilters.GetIsActive read failed; defaulting button to unchecked");
+        }
+        colorButton.IsChecked = initialColorFiltersIsActiveResult.IsSuccess && initialColorFiltersIsActiveResult.Value == true;
+		
+		//
+
+        // NOTE: we use Win32 SystemParametersInfo + UserPreferenceChanged here rather than the
+        // purpose-built WinRT Windows.UI.ViewManagement.AccessibilitySettings because that class
+        // requires a CoreWindow context the WinUI 3 unpackaged Morphic app does not provide --
+        // constructing the instance throws a COMException at runtime.
+        EventHandler<Morphic.WindowsNative.Theme.HighContrastIsOnChangedEventArgs> highContrastIsOnChangedHandler =
+            (_, e) => contrastButton.IsChecked = e.NewValue;
+        Morphic.WindowsNative.Theme.HighContrast.IsOnChanged += highContrastIsOnChangedHandler;
+        contrastButton.AddDisposeAction(() => Morphic.WindowsNative.Theme.HighContrast.IsOnChanged -= highContrastIsOnChangedHandler);
+        //
+        var initialHighContrastIsOnResult = Morphic.WindowsNative.Theme.HighContrast.GetIsOn();
+        if (initialHighContrastIsOnResult.IsError)
+        {
+            System.Diagnostics.Debug.WriteLine("[BarItemDataFactory] Initial HighContrast.GetIsOn read failed; defaulting button to unchecked");
+        }
+        contrastButton.IsChecked = initialHighContrastIsOnResult.IsSuccess && initialHighContrastIsOnResult.Value;
+		
+		//
+
+        // Bridge the Night button to NightLight.IsOnChanged; this delivers external state transitions 
+		// (Action Center tile, 'Settings app > Display > Night light', scheduled on/off, etc.
+        //
+        // The initial GetIsOnAsync read serves two purposes:
+        //   1. Seeds nightButton.IsChecked from the live system state at startup.
+        //   2. Primes the SettingItem so its IsEnabled flag is true before the user's first
+        //      click. The WinRT SettingItem starts with IsEnabled=false and the OS raises it
+        //      asynchronously; the 5-second timeout gives the OS plenty of time to raise
+        //      IsEnabled to true. We deliberately await on the ThreadPool (not the UI thread)
+        //      since WaitForIsEnabledEventAsync can block briefly before its first async yield.
+        EventHandler<Morphic.WindowsNative.Display.NightLightIsOnChangedEventArgs> nightLightIsOnChangedHandler =
+            (_, e) => nightButton.IsChecked = e.NewValue;
+        Morphic.WindowsNative.Display.NightLight.IsOnChanged += nightLightIsOnChangedHandler;
+        nightButton.AddDisposeAction(() => Morphic.WindowsNative.Display.NightLight.IsOnChanged -= nightLightIsOnChangedHandler);
+        //
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var initialNightLightIsOnResult = await Morphic.WindowsNative.Display.NightLight.GetIsOnAsync(TimeSpan.FromSeconds(5));
+                if (initialNightLightIsOnResult.IsError)
+                {
+                    System.Diagnostics.Debug.WriteLine("[BarItemDataFactory] Initial NightLight.GetIsOnAsync read failed; defaulting button to unchecked");
+                }
+                nightButton.IsChecked = initialNightLightIsOnResult.IsSuccess && initialNightLightIsOnResult.Value == true;
+            }
+            catch (Exception ex)
+            {
+                // Without this, the fire-and-forget Task's exception would only surface via
+                // TaskScheduler.UnobservedTaskException, with no attribution to this site.
+                System.Diagnostics.Debug.WriteLine($"NightLight initial prime threw: {ex}");
+            }
+        });
 
         return new BarMultiButtonData
         {
