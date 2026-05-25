@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:primitives="using:Microsoft.UI.Xaml.Controls.Primitives"
+    xmlns:bcm="using:Morphic.MorphicBar.BarControls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
@@ -24,13 +25,13 @@
             <Setter Property="Foreground" Value="{ThemeResource MorphicBarControlForeground}"/>
             <Setter Property="FontFamily" Value="Segoe UI"/>
             <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="{x:Bind bcm:BarControlMetrics.ButtonFontSize}"/>
             <Setter Property="UseSystemFocusVisuals" Value="True"/>
             <Setter Property="HorizontalAlignment" Value="Stretch"/>
             <Setter Property="VerticalAlignment" Value="Stretch"/>
             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
             <Setter Property="VerticalContentAlignment" Value="Stretch"/>
-            <Setter Property="MinHeight" Value="27"/>
+            <Setter Property="MinHeight" Value="{x:Bind bcm:BarControlMetrics.ButtonMinHeight}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -48,7 +49,7 @@
                                 Background="{ThemeResource MorphicBarControlBackground}"
                                 BackgroundSizing="OuterBorderEdge"
                                 BorderBrush="{ThemeResource MorphicBarControlBorder}"
-                                BorderThickness="2"
+                                BorderThickness="{x:Bind bcm:BarControlMetrics.ButtonBorderThickness}"
                                 CornerRadius="{TemplateBinding CornerRadius}">
                             <VisualStateManager.VisualStateGroups>
                                 <!-- CommonStates owns BgBorder.Background and ButtonText.Foreground. The
@@ -129,16 +130,16 @@
                                     Foreground="{TemplateBinding Foreground}"
                                     FontFamily="Segoe UI"
                                     FontWeight="Bold"
-                                    FontSize="14"
+                                    FontSize="{x:Bind bcm:BarControlMetrics.ButtonFontSize}"
                                     IsColorFontEnabled="False"
                                     HighContrastAdjustment="None"
                                     HorizontalAlignment="Stretch" VerticalAlignment="Center"
                                     TextAlignment="Center"
                                     TextWrapping="NoWrap"
                                     MaxLines="1"
-                                    Padding="9,3,9,3"/>
+                                    Padding="{x:Bind bcm:BarControlMetrics.ButtonTextPadding}"/>
                                 <ProgressBar x:Name="SubButtonProgressBar"
-                                    Height="2"
+                                    Height="{x:Bind bcm:BarControlMetrics.ProgressBarHeight}"
                                     IsIndeterminate="False"
                                     Visibility="Collapsed"
                                     Foreground="{ThemeResource MorphicBarControlForeground}"
@@ -164,13 +165,13 @@
             <Setter Property="Foreground" Value="{ThemeResource MorphicBarControlForeground}"/>
             <Setter Property="FontFamily" Value="Segoe UI"/>
             <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="{x:Bind bcm:BarControlMetrics.ButtonFontSize}"/>
             <Setter Property="UseSystemFocusVisuals" Value="True"/>
             <Setter Property="HorizontalAlignment" Value="Stretch"/>
             <Setter Property="VerticalAlignment" Value="Stretch"/>
             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
             <Setter Property="VerticalContentAlignment" Value="Stretch"/>
-            <Setter Property="MinHeight" Value="27"/>
+            <Setter Property="MinHeight" Value="{x:Bind bcm:BarControlMetrics.ButtonMinHeight}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="primitives:ToggleButton">
@@ -187,7 +188,7 @@
                                 Background="{ThemeResource MorphicBarControlBackground}"
                                 BackgroundSizing="OuterBorderEdge"
                                 BorderBrush="{ThemeResource MorphicBarControlBorder}"
-                                BorderThickness="2"
+                                BorderThickness="{x:Bind bcm:BarControlMetrics.ButtonBorderThickness}"
                                 CornerRadius="{TemplateBinding CornerRadius}">
                             <VisualStateManager.VisualStateGroups>
                                 <VisualStateGroup x:Name="CommonStates">
@@ -289,16 +290,16 @@
                                     Foreground="{TemplateBinding Foreground}"
                                     FontFamily="Segoe UI"
                                     FontWeight="Bold"
-                                    FontSize="14"
+                                    FontSize="{x:Bind bcm:BarControlMetrics.ButtonFontSize}"
                                     IsColorFontEnabled="False"
                                     HighContrastAdjustment="None"
                                     HorizontalAlignment="Stretch" VerticalAlignment="Center"
                                     TextAlignment="Center"
                                     TextWrapping="NoWrap"
                                     MaxLines="1"
-                                    Padding="9,3,9,3"/>
+                                    Padding="{x:Bind bcm:BarControlMetrics.ButtonTextPadding}"/>
                                 <ProgressBar x:Name="SubButtonProgressBar"
-                                    Height="2"
+                                    Height="{x:Bind bcm:BarControlMetrics.ProgressBarHeight}"
                                     IsIndeterminate="False"
                                     Visibility="Collapsed"
                                     Foreground="{ThemeResource MorphicBarControlForeground}"
@@ -324,9 +325,9 @@
                    TextWrapping="Wrap"
                    FontFamily="Segoe UI"
                    FontWeight="Bold"
-                   FontSize="14"
+                   FontSize="{x:Bind bcm:BarControlMetrics.ButtonFontSize}"
                    MaxLines="2"
-                   Margin="0,0,0,3"/>
+                   Margin="{x:Bind bcm:BarControlMetrics.HeaderBottomMargin}"/>
         <!-- HorizontalAlignment=Center keeps the button-group centered when the header (which uses
              HorizontalAlignment=Center itself) is wider than the buttons (so buttons don't sit
              flush-left in a header-sized container).

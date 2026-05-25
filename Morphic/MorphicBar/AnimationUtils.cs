@@ -44,24 +44,40 @@ internal class AnimationUtils
 
         var sizeChanging = (targetSize.Width != startSize.Width || targetSize.Height != startSize.Height);
 
+        // Created here (before the lambda below) so the lambda's catch block can stop it
+        // when the AppWindow's native handle goes invalid mid-animation (typically because
+        // the user quit the app while a dock/redock animation was still in flight).
+        var moveAnimationTimer = dispatcherQueue.CreateTimer();
+
         Action<double> animationStepAction = (double t) =>
         {
             var x = (int)(startPosition.X + (targetPosition.X - startPosition.X) * t);
             var y = (int)(startPosition.Y + (targetPosition.Y - startPosition.Y) * t);
 
-            if (sizeChanging)
+            try
             {
-                var w = (int)(startSize.Width + (targetSize.Width - startSize.Width) * t);
-                var h = (int)(startSize.Height + (targetSize.Height - startSize.Height) * t);
-                appWindow.MoveAndResize(new Windows.Graphics.RectInt32(x, y, w, h));
+                if (sizeChanging)
+                {
+                    var w = (int)(startSize.Width + (targetSize.Width - startSize.Width) * t);
+                    var h = (int)(startSize.Height + (targetSize.Height - startSize.Height) * t);
+                    appWindow.MoveAndResize(new Windows.Graphics.RectInt32(x, y, w, h));
+                }
+                else
+                {
+                    appWindow.Move(new Windows.Graphics.PointInt32(x, y));
+                }
             }
-            else
+            catch (System.Runtime.InteropServices.COMException ex) when ((uint)ex.HResult == 0x80070578)
             {
-                appWindow.Move(new Windows.Graphics.PointInt32(x, y));
+                // ERROR_INVALID_WINDOW_HANDLE -- the AppWindow's native handle has been
+                // invalidated, typically because the app started closing or the window was
+				// otherwise closed while this animation was still mid-flight. Stop the timer 
+				// so it doesn't keep ticking against a dead handle and throwing on every tick. 
+				// The `when` filter ensures we ONLY swallow this specific HRESULT; other 
+				// COMExceptions still propagate.
+                moveAnimationTimer.Stop();
             }
         };
-
-        var moveAnimationTimer = dispatcherQueue.CreateTimer();
 
         // special case: if the animation should takes 0ms, execute it immediately
         if (duration == TimeSpan.Zero)
