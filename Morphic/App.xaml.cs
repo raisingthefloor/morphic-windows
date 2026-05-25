@@ -43,10 +43,6 @@ public partial class App : Application
     // NOTE: we initialize this when the application starts up
     internal Morphic.Controls.TrayButton.TrayButton TaskbarButton = null!;
 
-    // Handler reference for the taskbar icon refresh; held so we can unsubscribe at shutdown.
-    // See RefreshTaskbarIcon for why the taskbar icon needs to track HC state.
-    private EventHandler<Morphic.SettingsUtils.CachedDarkModeStateChangedEventArgs>? _taskbarIconRefreshHandler;
-
     private Morphic.AboutWindow.AboutWindow? _aboutWindow;
 
     private Morphic.MorphicBar.MorphicBarWindow _morphicBarWindow = null!;
@@ -177,11 +173,6 @@ _morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size o
 
     private void App_ShutdownStarting(DispatcherQueue sender, DispatcherQueueShutdownStartingEventArgs args)
     {
-        if (_taskbarIconRefreshHandler is not null)
-        {
-            _taskbarIconRefreshHandler = null;
-        }
-
         // immediately hide our tray icon (and dispose of it for good measure, to help ensure that unmanaged resources are cleaned up)
         this.TaskbarButton.SetVisible(false);
         this.TaskbarButton.Dispose();
@@ -271,11 +262,6 @@ _morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size o
         // the icon. Captured DispatcherQueue marshals the refresh onto the UI thread; the event
         // fires from CachedDarkModeState's worker thread.
         this.RefreshTaskbarIcon();
-        var dispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
-        _taskbarIconRefreshHandler = (_, _) =>
-        {
-            dispatcherQueue?.TryEnqueue(this.RefreshTaskbarIcon);
-        };
     }
 
     // Selects the right tray-icon variant for the current HC state and applies it.
