@@ -1,24 +1,31 @@
-﻿DisplayConfigGetDeviceInfo
+﻿CreateWindowEx
+DefWindowProc
+DisplayConfigGetDeviceInfo
 DisplayConfigSetDeviceInfo
 DwmSetWindowAttribute
 GetCurrentPackageFullName
 GetCursorPos
 GetDisplayConfigBufferSizes
 GetMonitorInfo
+LoadCursor
 MonitorFromPoint
 MonitorFromWindow
 QueryDisplayConfig
+RegisterClassEx
 SendMessageTimeout
 SetCursorPos
 SystemParametersInfo
+UnregisterClass
 
 DISPLAYCONFIG_SOURCE_DEVICE_NAME
 HIGHCONTRASTW
 MONITORINFOEXW
+WNDCLASSEXW
 
 HWND
 HWND_BROADCAST
 HRESULT
+IDC_ARROW
 LUID
 S_OK
 WM_WININICHANGE
