@@ -38,23 +38,6 @@ namespace Morphic.MorphicBar.BarControls;
 
 public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
 {
-    private const double ControlButtonCornerRadius = 5.0;
-    private const double ControlButtonInnerMargin = 0.5;
-
-    // Upper bound on a sub-button's column width (logical px). Buttons whose natural text width
-    // exceeds this get clamped so the bar doesn't widen indefinitely for a single long label. If
-    // the button's effective MaxLines > 1 (i.e. the group has no header, so the button needs to
-    // carry more descriptive text), exceeding the cap also flips its TextBlock to TextWrapping=Wrap
-    // so the text wraps within the capped width. Otherwise (MaxLines == 1) the text gets clipped
-    // at the cap with no ellipsis (TextTrimming isn't currently configured).
-    //
-    // Used by:
-    //   * RefreshUniformHorizontalSizing (StretchToLargest column width clamp)
-    //   * MeasureForOrientation (StretchToLargest reported group width clamp)
-    //   * ApplyData per-button Loaded handler (TextWrapping flip when over the cap and MaxLines>1)
-	//
-    private const double MaxSubButtonWidthInLogicalPx = 150.0;
-
     private BarMultiButtonData? _data;
     private readonly List<ButtonBase> _subButtons = new();
     private readonly HashSet<ButtonBase> _subButtonsWithActionInProgress = new();
@@ -242,10 +225,10 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
         }
 
         // gap contribution along the layout axis: ApplyData sets each end button to contribute
-        // one ControlButtonInnerMargin on its inner side, and each middle button to contribute
-        // one on each side, so across n buttons the total margin extent is 2*(n-1)*ControlButtonInnerMargin
+        // one BarControlMetrics.ButtonInnerMargin on its inner side, and each middle button to contribute
+        // one on each side, so across n buttons the total margin extent is 2*(n-1)*BarControlMetrics.ButtonInnerMargin
         int n = _subButtons.Count;
-        double gapContribution = 2 * (n - 1) * ControlButtonInnerMargin;
+        double gapContribution = 2 * (n - 1) * BarControlMetrics.ButtonInnerMargin;
 
         // AlwaysHorizontalSubButtons overrides the bar's requested orientation for the sub-button
         // arrangement (e.g. Text Size +/- stays side-by-side even in a vertical bar)
@@ -265,11 +248,11 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
                     break;
                 case MultiButtonSizingMode.StretchToLargest:
                     // Mirror RefreshUniformHorizontalSizing's column-width formula EXACTLY:
-                    // Math.Min(Math.Ceiling(maxDesiredWidth), MaxSubButtonWidthInLogicalPx). The
+                    // Math.Min(Math.Ceiling(maxDesiredWidth), BarControlMetrics.MaxSubButtonWidth). The
                     // painted ButtonsContainer width is n * that value; if we returned a
                     // different number the bar's outer width budget and the painted width would
                     // disagree (trailing items overflow off the right side of a horizontal bar).
-                    subButtonsWidth = n * System.Math.Min(System.Math.Ceiling(maxDesiredWidth), MaxSubButtonWidthInLogicalPx);
+                    subButtonsWidth = n * System.Math.Min(System.Math.Ceiling(maxDesiredWidth), BarControlMetrics.MaxSubButtonWidth);
                     break;
                 default:
                     throw new MorphicUnhandledCaseException(_data.SizingMode);
@@ -507,7 +490,7 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
             //      MaxLines=1 since the header carries the description and the button label is
             //      short.
             //   2. TextTrimming: set to WordEllipsis ONLY when the button's natural width is over
-            //      MaxSubButtonWidthInLogicalPx. Set unconditionally, WinUI's TextTrimming would
+            //      BarControlMetrics.MaxSubButtonWidth. Set unconditionally, WinUI's TextTrimming would
             //      also paint "..." when the text is barely short (1 logical px of subpixel font
             //      drift between the infinity-Measure pass that sized the column and the actual
             //      constrained-layout pass) -- so a button like "Short" could render as "Shor..."
@@ -536,9 +519,9 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
 
                 // Use the button's DesiredSize.Width (post-Loaded the layout pass has run, so
                 // this is the accurate natural width INCLUDING padding + border, which is what
-                // MaxSubButtonWidthInLogicalPx is measured against -- it's the column-width cap,
+                // BarControlMetrics.MaxSubButtonWidth is measured against -- it's the column-width cap,
                 // not a content-width cap).
-                if (capturedButtonForTextConfig.DesiredSize.Width > MaxSubButtonWidthInLogicalPx)
+                if (capturedButtonForTextConfig.DesiredSize.Width > BarControlMetrics.MaxSubButtonWidth)
                 {
                     subButtonText.TextTrimming = TextTrimming.WordEllipsis;
                     if (effectiveMaxLines > 1)
@@ -556,15 +539,15 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
             bool isLast = (i == _data.Buttons.Count - 1);
             button.Margin = effectiveSubButtonOrientation == Orientation.Horizontal
                 ? new Thickness(
-                    isFirst ? 0 : ControlButtonInnerMargin,
+                    isFirst ? 0 : BarControlMetrics.ButtonInnerMargin,
                     0,
-                    isLast ? 0 : ControlButtonInnerMargin,
+                    isLast ? 0 : BarControlMetrics.ButtonInnerMargin,
                     0)
                 : new Thickness(
                     0,
-                    isFirst ? 0 : ControlButtonInnerMargin,
+                    isFirst ? 0 : BarControlMetrics.ButtonInnerMargin,
                     0,
-                    isLast ? 0 : ControlButtonInnerMargin);
+                    isLast ? 0 : BarControlMetrics.ButtonInnerMargin);
 
             // stash the sub-button data in the button's `Tag` property so the Click handler can retrieve it without a separate dictionary
             button.Tag = buttonData;
@@ -607,7 +590,7 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
     private void ApplyButtonsContainerBottomMargin()
     {
         this.ButtonsContainer.Margin = (_orientation == Orientation.Horizontal)
-            ? new Thickness(0, 0, 0, 3)
+            ? BarControlMetrics.ButtonContainerBottomMargin_Horizontal
             : new Thickness(0);
     }
 
@@ -657,15 +640,15 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
             bool isLast = (i == _subButtons.Count - 1);
             subButton.Margin = effectiveSubButtonOrientation == Orientation.Horizontal
                 ? new Thickness(
-                    isFirst ? 0 : ControlButtonInnerMargin,
+                    isFirst ? 0 : BarControlMetrics.ButtonInnerMargin,
                     0,
-                    isLast ? 0 : ControlButtonInnerMargin,
+                    isLast ? 0 : BarControlMetrics.ButtonInnerMargin,
                     0)
                 : new Thickness(
                     0,
-                    isFirst ? 0 : ControlButtonInnerMargin,
+                    isFirst ? 0 : BarControlMetrics.ButtonInnerMargin,
                     0,
-                    isLast ? 0 : ControlButtonInnerMargin);
+                    isLast ? 0 : BarControlMetrics.ButtonInnerMargin);
 
             if (effectiveSubButtonOrientation == Orientation.Horizontal)
             {
@@ -713,7 +696,7 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
         if (_subButtons.Count == 1)
         {
             // sole sub-button: round all 4 corners
-            _subButtons[0].CornerRadius = new CornerRadius(ControlButtonCornerRadius);
+            _subButtons[0].CornerRadius = new CornerRadius(BarControlMetrics.ButtonCornerRadius);
             return;
         }
 
@@ -724,7 +707,7 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
         {
             // first sub-button rounds its left (leading) corners
             _subButtons[0].CornerRadius = new CornerRadius(
-                ControlButtonCornerRadius, 0, 0, ControlButtonCornerRadius);
+                BarControlMetrics.ButtonCornerRadius, 0, 0, BarControlMetrics.ButtonCornerRadius);
 
             // middle sub-buttons: no rounding
             for (int i = 1; i < _subButtons.Count - 1; i++)
@@ -734,13 +717,13 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
 
             // last sub-button rounds its right (trailing) corners
             _subButtons[^1].CornerRadius = new CornerRadius(
-                0, ControlButtonCornerRadius, ControlButtonCornerRadius, 0);
+                0, BarControlMetrics.ButtonCornerRadius, BarControlMetrics.ButtonCornerRadius, 0);
         }
         else
         {
             // first sub-button rounds its top corners
             _subButtons[0].CornerRadius = new CornerRadius(
-                ControlButtonCornerRadius, ControlButtonCornerRadius, 0, 0);
+                BarControlMetrics.ButtonCornerRadius, BarControlMetrics.ButtonCornerRadius, 0, 0);
 
             // middle sub-buttons: no rounding
             for (int i = 1; i < _subButtons.Count - 1; i++)
@@ -750,7 +733,7 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
 
             // last sub-button rounds its bottom corners
             _subButtons[^1].CornerRadius = new CornerRadius(
-                0, 0, ControlButtonCornerRadius, ControlButtonCornerRadius);
+                0, 0, BarControlMetrics.ButtonCornerRadius, BarControlMetrics.ButtonCornerRadius);
         }
     }
 
@@ -811,11 +794,11 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
         // MUST match or the bar's reported width and painted width disagree (trailing items
         // overflow off the right side of a horizontal bar).
         //
-        // Cap at MaxSubButtonWidthInLogicalPx so an unusually long label doesn't widen the entire
+        // Cap at BarControlMetrics.MaxSubButtonWidth so an unusually long label doesn't widen the entire
         // bar group indefinitely. When the cap kicks in for a button whose effective MaxLines>1
         // (no-header groups), ApplyData's Loaded handler flips that button's TextWrapping to Wrap
         // so the label wraps within the capped width; otherwise the label is clipped at the cap.
-        double columnWidth = System.Math.Min(System.Math.Ceiling(maxButtonDesiredWidth), MaxSubButtonWidthInLogicalPx);
+        double columnWidth = System.Math.Min(System.Math.Ceiling(maxButtonDesiredWidth), BarControlMetrics.MaxSubButtonWidth);
         foreach (var columnDefinition in this.ButtonsContainer.ColumnDefinitions)
         {
             columnDefinition.Width = new GridLength(columnWidth);

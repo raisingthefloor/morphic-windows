@@ -34,7 +34,6 @@ namespace Morphic.MorphicBar.BarControls;
 
 public sealed partial class BarButtonControl : UserControl, IBarItemControl
 {
-    private const double ControlButtonCornerRadius = 5.0;
     private BarButtonData? _data;
     private ButtonBase? _button;
     private bool _isActionInProgress;
@@ -200,7 +199,7 @@ public sealed partial class BarButtonControl : UserControl, IBarItemControl
 
         // a standalone bar button is the lone "sub-button" of its group, so all 4 corners are
         // rounded -- matches BarMultiButtonControl.ApplyCornerRadii's single-button case
-        button.CornerRadius = new CornerRadius(ControlButtonCornerRadius);
+        button.CornerRadius = new CornerRadius(BarControlMetrics.ButtonCornerRadius);
 
         this.RootContainer.Children.Add(button);
         _button = button;
