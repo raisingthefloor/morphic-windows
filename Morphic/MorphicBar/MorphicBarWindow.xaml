@@ -30,11 +30,11 @@
 
                 <!-- Bar items container (column 0, spanning all rows in horizontal orientation) -->
                 <!-- Weightless host: not focusable, no background, children (bar item controls) handle their own pointer/keyboard events -->
+                <!-- NOTE: Margin is set per orientation by UpdateBarItemsPanelLayout via GetBarItemsPanelMargin -->
                 <StackPanel x:Name="BarItemsPanel"
                             Grid.Column="0" Grid.Row="0"
                             Orientation="Horizontal"
                             HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                            Margin="10,5,5,5"
                             Spacing="15"
                             IsTabStop="False"/>
 

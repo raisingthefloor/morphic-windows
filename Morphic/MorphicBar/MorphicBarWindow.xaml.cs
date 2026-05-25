@@ -100,9 +100,21 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
 	// bar) and controls that need to be hidden (or overflowed onto an overflow panel)
     private readonly System.Collections.Generic.List<Microsoft.UI.Xaml.FrameworkElement> _allBarItemControls = new();
 
+
+    //
+    // Item lengths are NOT cached: they depend on the bar's effective thickness (since a narrower
+    // bar can cause text wrapping that makes items taller). MeasureBarForOrientation performs a
+    // fresh two-pass measurement each time it's called.
+
     public MorphicBarWindow()
     {
         InitializeComponent();
+
+        // apply the initial orientation-specific layout via the same helpers used on orientation
+        // change; the Orientation setter only fires when the value changes, so without this call
+        // the bar items panel and logo button would initially render at default Margin
+        this.UpdateBarItemsPanelLayout(_orientation);
+        this.UpdateMorphicMenuButtonLayout(_orientation);
 
         _dispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
 
@@ -171,11 +183,71 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             _allBarItemControls.Add((FrameworkElement)control);
         }
 
+        // schedule the bar-level measure-and-resize for the moment every new item has fired Loaded.
+        // Loaded fires once an element is in a live visual tree and its initial measure pass is
+        // complete, which is the strongest guarantee WinUI gives us that DesiredSize is meaningful.
+        int pendingLoadedCount = _allBarItemControls.Count;
+        if (pendingLoadedCount == 0)
+        {
+            // no items to wait for: still re-fit the bar (collapses chrome around an empty panel)
+            this.MeasureAndResize();
+            return;
+        }
         foreach (var control in _allBarItemControls)
         {
+            RoutedEventHandler? handler = null;
+            handler = (sender, e) =>
+            {
+                // unwire this handler (as it should only be called once)
+                ((FrameworkElement)sender).Loaded -= handler;
+
+                pendingLoadedCount--;
+                if (pendingLoadedCount == 0)
+                {
+                    // every control is now in the live visual tree; MeasureAndResize runs the
+                    // full pipeline (two-pass measure -> trim -> resize) via AnimateMoveTo
+                    this.MeasureAndResize();
+                }
+            };
+            control.Loaded += handler;
+
             // add to BarItemsPanel so the control loads and we can measure it. The trim step (above)
             // moves anything that doesn't fit out of BarItemsPanel into the cache.
             this.BarItemsPanel.Children.Add(control);
+        }
+    }
+
+    // Returns true once every control in _allBarItemControls has fired its Loaded event (and is
+    // therefore safely measurable). Until then, measurements may return zero or template-pending
+    // values, so any code that makes sizing/trimming decisions should bail and let the eventual
+    // post-Loaded MeasureAndResize handle it.
+    private bool AllBarItemsLoaded()
+    {
+        foreach (var control in _allBarItemControls)
+        {
+            if (!control.IsLoaded) { return false; }
+        }
+        return true;
+    }
+
+    //
+	
+    // Sets each item's Visibility so the first `fittingCount` entries of _allBarItemControls are
+    // Visible and the rest are Collapsed. Items remain parented to BarItemsPanel.Children at all
+    // times so they stay loaded and measurable (otherwise BarButtonControl's MeasureForOrientation
+    // would return zero for unparented items, and Pass 2 trim math would silently let everything
+    // through).
+    //
+    // BarItemsPanel uses StackPanel.Spacing, which only adds spacing between consecutive Visible
+    // children, so Collapsed items contribute neither layout space nor spacing.
+    private void SyncDisplayedItemPrefix(int fittingCount)
+    {
+        if (fittingCount < 0) { fittingCount = 0; }
+        if (fittingCount > _allBarItemControls.Count) { fittingCount = _allBarItemControls.Count; }
+
+        for (int i = 0; i < _allBarItemControls.Count; i++)
+        {
+            _allBarItemControls[i].Visibility = (i < fittingCount) ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 
@@ -186,15 +258,17 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
 
     private void RootGrid_Loaded(object sender, RoutedEventArgs e)
     {
-        // set the initial size based on current DPI, and resize whenever DPI changes (e.g. moving to another monitor)
-        var lastRasterizationScale = this.Content.XamlRoot.RasterizationScale;
-        _lastRasterizationScale = lastRasterizationScale;
+        // record the current rasterization scale and subscribe to changes (e.g. monitor switch)
+        _lastRasterizationScale = this.Content.XamlRoot.RasterizationScale;
         this.Content.XamlRoot.Changed += (s, e) =>
         {
             this.RasterizationScaleChanged();
         };
-        // and update the window size
-        this.UpdateAppWindowSizeUsingRasterizationScale(lastRasterizationScale);
+
+        // do a fresh measure-and-resize now that the visual tree is fully loaded; any earlier
+        // measurement during construction or InitializeBarItems may have been against partially-
+        // realized children, so this is the authoritative initial sizing pass
+        this.MeasureAndResize();
     }
 
     private void Dispose(bool disposing)
@@ -290,9 +364,16 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     }
 
     /// <summary>
-    /// Smoothly animates the window to the target position and optionally to a target size,
-    /// using ease-out cubic interpolation. If called while a previous animation is in progress,
-    /// the current animation is cancelled and a new one starts from the window's current state.
+    /// Brings the bar to the target (monitor, orientation, docking location) state. Measures the
+    /// bar for the target orientation on the target monitor, computes the docking rect, and animates
+    /// the AppWindow to it. Size and position animate together via AnimationUtils.AnimateMoveTo.
+    /// A duration of TimeSpan.Zero snaps instantly (no animation). If called while a previous
+    /// animation is in progress, that animation is cancelled and a new one starts from the window's
+    /// current state.
+    ///
+    /// This is the single entry point for any change to monitor / orientation / docking location.
+    /// MeasureAndResize is a convenience wrapper for the common "stay where we are, just re-fit"
+    /// case.
     /// </summary>
     internal void AnimateMoveTo(Windows.Win32.Graphics.Gdi.HMONITOR hMonitor, Microsoft.UI.Xaml.Controls.Orientation targetOrientation, DockingLocation targetDockingLocation, TimeSpan duration)
     {
@@ -300,8 +381,35 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         _moveAnimationTimer?.Stop();
         _moveAnimationTimer = null;
 
-        // calculate the target location
-        var getRectForDockingLocationResult = LayoutUtils.GetRectForDockingLocation(targetDockingLocation, targetOrientation, _logicalLength, _logicalThickness, hMonitor);
+        // record the destination monitor; this is the single normal path that legitimately changes
+        // which monitor we are on (both intentional moves and drag-release end up here)
+        _currentMonitorHandle = hMonitor;
+
+        // apply the target orientation via the property setter so its layout helpers run
+        // (UpdateMorphicMenuButtonLayout / UpdateBarItemsPanelLayout); the setter is a no-op
+        // when the orientation already matches
+        this.Orientation = targetOrientation;
+
+        // record the destination docking location
+        _dockingLocation = targetDockingLocation;
+
+        // single combined two-pass measurement: returns the bar's logical size AND the count of
+        // items that fit. Pass 1 of MeasureBarForOrientation determines bar thickness; Pass 2
+        // re-measures each item with that thickness as the cross-axis constraint, capturing any
+        // text wrapping in headers/buttons that the unconstrained Pass 1 would have missed.
+        var (logicalLength, logicalThickness, fittingCount) = this.MeasureBarForOrientation(hMonitor, targetOrientation);
+        _logicalLength = logicalLength;
+        _logicalThickness = logicalThickness;
+
+        // sync BarItemsPanel.Children to the leading prefix of _allBarItemControls that fits.
+        // Trimmed items remain in the _allBarItemControls cache (unparented for now; will move
+        // into the overflow window once that exists). Items that fit but were previously trimmed
+        // get inserted back into BarItemsPanel.
+        this.SyncDisplayedItemPrefix(fittingCount);
+
+        // compute the target rect (already in physical pixels; GetRectForDockingLocation multiplies
+        // by the monitor's rasterization scale internally)
+        var getRectForDockingLocationResult = LayoutUtils.GetRectForDockingLocation(targetDockingLocation, targetOrientation, logicalLength, logicalThickness, hMonitor);
         if (getRectForDockingLocationResult.IsError)
         {
             Debug.Assert(false);
@@ -311,11 +419,7 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         var targetPosition = new Windows.Graphics.PointInt32(targetRect.X, targetRect.Y);
         var targetSize = new Windows.Graphics.SizeInt32(targetRect.Width, targetRect.Height);
 
-        // record the destination monitor; this is the single normal path that legitimately changes
-        // which monitor we are on (both intentional moves and drag-release end up here)
-        _currentMonitorHandle = hMonitor;
-
-        // start the new animation
+        // start the new animation (size + position interpolate together; TimeSpan.Zero snaps)
         _moveAnimationTimer = AnimationUtils.AnimateMoveTo(_dispatcherQueue, this.AppWindow, targetPosition, targetSize, duration);
     }
 
@@ -336,14 +440,13 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             {
                 _orientation = value;
 
-                // reposition elements to match the new MorphicBar orientation
+                // reposition the inner chrome to match the new orientation; the bar window's
+                // own size and position are NOT touched here. Callers who want the bar to
+                // re-fit and re-dock for the new orientation should go through AnimateMoveTo
+                // (or MeasureAndResize for the in-place case); AnimateMoveTo itself uses this
+                // setter, so internal orientation changes get the full flow automatically.
                 this.UpdateMorphicMenuButtonLayout(value);
                 this.UpdateBarItemsPanelLayout(value);
-
-                if (_lastRasterizationScale is not null)
-                {
-                    this.UpdateAppWindowSizeUsingRasterizationScale(_lastRasterizationScale!.Value);
-                }
 
                 OrientationChanged?.Invoke(this, value);
             }
@@ -361,10 +464,13 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         }
         _lastRasterizationScale = rasterizationScale;
 
-        // dispatch the resize asynchronously so it runs after WinUI finishes its own DPI handling
+        // dispatch the re-fit asynchronously so it runs after WinUI finishes its own DPI handling.
+        // MeasureAndResize uses GetVerifiedCurrentMonitorHandle internally, so a DPI change is
+        // interpreted as "same monitor, new scale" rather than "follow the cursor to a new monitor"
+        // (unless the cached handle has actually gone stale).
         this.DispatcherQueue.TryEnqueue(() =>
         {
-            this.UpdateAppWindowSizeUsingRasterizationScale(rasterizationScale);
+            this.MeasureAndResize();
         });
     }
 
@@ -455,7 +561,7 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     /* layout methods */
 
     // Single-source margin values for the bar items panel per orientation. Consumed by
-    // UpdateBarItemsPanelLayout (to apply the live Margin) and by MeasureDesiredBarLogicalSize
+    // UpdateBarItemsPanelLayout (to apply the live Margin) and by MeasureBarForOrientation
     // (to compose the bar's desired size for an arbitrary orientation without mutating the live
     // panel). If we ever expose these to XAML too, route XAML through the same source.
     //
@@ -465,8 +571,8 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     {
         return orientation switch
         {
-            Orientation.Horizontal => new Thickness(10, 5, 5, 5),
-            Orientation.Vertical => new Thickness(5, 25, 5, 5),
+            Orientation.Horizontal => new Thickness(10, 3.65, 13, 3.65),
+            Orientation.Vertical => new Thickness(7, 25, 7, 5),
             _ => throw new Morphic.Core.MorphicUnhandledCaseException(orientation),
         };
     }
@@ -478,7 +584,7 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         return orientation switch
         {
             Orientation.Horizontal => new Thickness(0, 0, 5, 0),
-            Orientation.Vertical => new Thickness(0, 0, 0, 10),
+            Orientation.Vertical => new Thickness(0, 10, 0, 10),
             _ => throw new Morphic.Core.MorphicUnhandledCaseException(orientation),
         };
     }
@@ -573,90 +679,83 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         this.AppWindow.Resize(new Windows.Graphics.SizeInt32(physicalWidth, physicalHeight));
     }
 
-    // Measures the bar's desired size in logical pixels for the given orientation, capped to the
-    // target monitor's working area (minus the keepaway padding LayoutUtils already applies for
-    // docking). Returned as (length, thickness) following the same convention as _logicalLength /
-    // _logicalThickness elsewhere in this file: in horizontal mode length is the width and
-    // thickness is the height; in vertical mode length is the height and thickness is the width.
+    // Measures the bar (via MeasureBarForOrientation) for the supplied monitor at the bar's
+    // current orientation, then applies the result via Resize. Use this wherever the bar needs to
+    // re-fit its contents: after items change, after orientation change, after a DPI/rasterization
+    // change on the same monitor, or before/after a monitor switch (the caller is responsible for
+    // having already set _orientation to the desired value).
+	//
+    // Convenience wrapper around AnimateMoveTo for the common case of "stay where we are, just
+    // re-fit to whatever size the bar's contents now want." Uses the cached current monitor,
+    // current orientation, and current docking location, so the bar visually stays put except
+    // for the size change and any docking-edge realignment caused by the size change.
+    //
+    // Duration defaults to TimeSpan.Zero (snap, no animation). Pass a non-zero duration for a
+    // smooth transition (e.g. ~150ms for an orientation flip).
+    internal void MeasureAndResize(TimeSpan duration = default)
+    {
+        this.AnimateMoveTo(this.GetVerifiedCurrentMonitorHandle(), _orientation, _dockingLocation, duration);
+    }
+
+    // Two-pass measurement of the bar's items, returning both the bar's logical size and the
+    // count of items that fit on the target monitor at the target orientation.
+    //
+    // Why two passes: a naive single-pass measurement with availableSize = (infinity, infinity)
+    // assumes items don't wrap. But once the bar's actual thickness is determined (from the
+    // widest item), any item whose text exceeds that thickness wraps to multiple lines and
+    // becomes TALLER than the single-pass measurement reported. Trimming based on the underestimate
+    // lets too many items in, and the rendered bar overflows.
+    //
+    // Pass 1: measure every item with availableSize = (infinity, infinity) -> get the natural
+    //         maximum item thickness. Combine with chrome to determine the bar's effective
+    //         thickness, capped to the working area.
+    // Pass 2: re-measure every item with availableSize constrained on the thickness axis (the
+    //         bar's effective thickness minus margins). Items wrap as they would in the live bar.
+    //         Sum the resulting per-item lengths and compute how many fit.
     //
     // The orientation argument may differ from this.Orientation (e.g. during drag-preview), in
-    // which case the bar items are measured via IBarItemControl.MeasureForOrientation, which
-    // composes for the requested orientation without mutating the live items.
-    internal (uint logicalLength, uint logicalThickness) MeasureDesiredBarLogicalSize(
+    // which case items are measured via IBarItemControl.MeasureForOrientation, which composes
+    // for the requested orientation without mutating the live items.
+    //
+    // If items aren't all Loaded yet (their templates may not have applied, so Measure would
+    // return zero/incomplete values), returns the current cached size fields and a "no trim"
+    // fitting count -- the eventual post-Loaded MeasureAndResize will run the real measurement.
+    internal (uint logicalLength, uint logicalThickness, int fittingCount) MeasureBarForOrientation(
         Windows.Win32.Graphics.Gdi.HMONITOR hMonitor,
         Microsoft.UI.Xaml.Controls.Orientation orientation)
     {
-        // get the monitor's working area and rasterization scale to compute the logical-pixel cap
+        if (this.AllBarItemsLoaded() == false)
+        {
+            // measurements would be unreliable; preserve current size and tell caller everything fits
+            return (_logicalLength, _logicalThickness, _allBarItemControls.Count);
+        }
+
+        // ----- monitor working area in logical pixels (the per-axis caps) -----
         var monitorInfo = new Windows.Win32.Graphics.Gdi.MONITORINFO();
         monitorInfo.cbSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf<Windows.Win32.Graphics.Gdi.MONITORINFO>();
         var getMonitorInfoResult = Windows.Win32.PInvoke.GetMonitorInfo(hMonitor, ref monitorInfo);
         double rasterizationScale = 1.0;
-        double logicalAvailWidth = double.PositiveInfinity;
-        double logicalAvailHeight = double.PositiveInfinity;
+        double logicalAvailableWidth = double.PositiveInfinity;
+        double logicalAvailableHeight = double.PositiveInfinity;
         if (getMonitorInfoResult != 0)
         {
             var getRasterizationScaleResult = LayoutUtils.GetRasterizationScaleForMonitor(hMonitor);
             if (getRasterizationScaleResult.IsSuccess) { rasterizationScale = getRasterizationScaleResult.Value; }
-
-            var workingArea = monitorInfo.rcWork;
             int keepaway = LayoutUtils.WINDOW_CORNER_DOCKING_DISTANCE_FROM_SCREEN_EDGE_IN_DEVICE_UNITS;
-            logicalAvailWidth = System.Math.Max(0, (workingArea.Width / rasterizationScale) - (2 * keepaway));
-            logicalAvailHeight = System.Math.Max(0, (workingArea.Height / rasterizationScale) - (2 * keepaway));
+            logicalAvailableWidth = System.Math.Max(0, (monitorInfo.rcWork.Width / rasterizationScale) - (2 * keepaway));
+            logicalAvailableHeight = System.Math.Max(0, (monitorInfo.rcWork.Height / rasterizationScale) - (2 * keepaway));
         }
         else
         {
             Debug.Assert(false, "Could not get current monitor (to measure working area); fell back to 'infinite' screen size and 100% rasterization scale");
         }
+		
+        double logicalAvailableLength = (orientation == Orientation.Horizontal) ? logicalAvailableWidth : logicalAvailableHeight;
+        double logicalAvailableThickness = (orientation == Orientation.Horizontal) ? logicalAvailableHeight : logicalAvailableWidth;
+        var fullAvailableSize = new Windows.Foundation.Size(logicalAvailableWidth, logicalAvailableHeight);
 
-        // available size passed down to each item's measurement; conservatively use the full
-        // working area minus keepaway (children will not be larger than this even with chrome)
-        var measureAvailableSize = new Windows.Foundation.Size(logicalAvailWidth, logicalAvailHeight);
-
-        // compose the items panel desired size from per-item measurements (the panel itself is a
-        // StackPanel so we sum along the layout axis and take max on the cross axis, plus the
-        // StackPanel's Spacing between adjacent items)
-        double itemsPanelLength = 0;
-        double itemsPanelThickness = 0;
-        int itemCount = 0;
-        foreach (var child in this.BarItemsPanel.Children)
-        {
-            if (child is IBarItemControl item)
-            {
-                var desired = item.MeasureForOrientation(measureAvailableSize, orientation);
-                if (orientation == Orientation.Horizontal)
-                {
-                    itemsPanelLength += desired.Width;
-                    if (desired.Height > itemsPanelThickness) { itemsPanelThickness = desired.Height; }
-                }
-                else
-                {
-                    itemsPanelLength += desired.Height;
-                    if (desired.Width > itemsPanelThickness) { itemsPanelThickness = desired.Width; }
-                }
-                itemCount++;
-            }
-        }
-        if (itemCount > 1)
-        {
-            itemsPanelLength += (itemCount - 1) * this.BarItemsPanel.Spacing;
-        }
-
-        // add the items panel's own Margin for the requested orientation
-        var itemsPanelMargin = GetBarItemsPanelMargin(orientation);
-        if (orientation == Orientation.Horizontal)
-        {
-            itemsPanelLength += itemsPanelMargin.Left + itemsPanelMargin.Right;
-            itemsPanelThickness += itemsPanelMargin.Top + itemsPanelMargin.Bottom;
-        }
-        else
-        {
-            itemsPanelLength += itemsPanelMargin.Top + itemsPanelMargin.Bottom;
-            itemsPanelThickness += itemsPanelMargin.Left + itemsPanelMargin.Right;
-        }
-
-        // measure the Morphic logo button and back out the live Margin so we can apply the margin
-        // for the REQUESTED orientation (which may differ from the live one)
-        this.MorphicMenuButton.Measure(measureAvailableSize);
+        // ----- chrome measurement (logo + close button); same approach as before -----
+        this.MorphicMenuButton.Measure(fullAvailableSize);
         var liveLogoMargin = this.MorphicMenuButton.Margin;
         double logoNaturalWidth = System.Math.Max(0, this.MorphicMenuButton.DesiredSize.Width - (liveLogoMargin.Left + liveLogoMargin.Right));
         double logoNaturalHeight = System.Math.Max(0, this.MorphicMenuButton.DesiredSize.Height - (liveLogoMargin.Top + liveLogoMargin.Bottom));
@@ -664,41 +763,122 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         double logoWidthWithMargin = logoNaturalWidth + requestedLogoMargin.Left + requestedLogoMargin.Right;
         double logoHeightWithMargin = logoNaturalHeight + requestedLogoMargin.Top + requestedLogoMargin.Bottom;
 
-        // measure the close button (it has explicit Width/Height in XAML and no Margin; its
-        // DesiredSize reflects those directly and doesn't vary with orientation)
-        this.CloseButton.Measure(measureAvailableSize);
+        this.CloseButton.Measure(fullAvailableSize);
         double closeWidth = this.CloseButton.DesiredSize.Width;
         double closeHeight = this.CloseButton.DesiredSize.Height;
 
-        // compose the final bar size based on the requested orientation
-        double barLength;
-        double barThickness;
-        if (orientation == Orientation.Horizontal)
+        // ----- items panel margin (added once to bar's length and thickness) -----
+        var itemsPanelMargin = GetBarItemsPanelMargin(orientation);
+        double itemsPanelMarginAlongLength = (orientation == Orientation.Horizontal)
+            ? itemsPanelMargin.Left + itemsPanelMargin.Right
+            : itemsPanelMargin.Top + itemsPanelMargin.Bottom;
+        double itemsPanelMarginAlongThickness = (orientation == Orientation.Horizontal)
+            ? itemsPanelMargin.Top + itemsPanelMargin.Bottom
+            : itemsPanelMargin.Left + itemsPanelMargin.Right;
+
+        // ----- Pass 1: measure each item at full available size to find max natural thickness -----
+        // NOTE: Visibility=Collapsed elements return DesiredSize=(0,0) from Measure (the framework
+        // short-circuits MeasureCore for them). To get accurate measurements for currently-Collapsed
+        // (trimmed-out) items, we temporarily flip them to Visible, measure, then restore. The
+        // toggles happen synchronously within this method so no layout pass runs in between,
+        // and the user-visible Visibility state ends up identical to what it was on entry.
+        double maxItemNaturalThickness = 0;
+        foreach (var control in _allBarItemControls)
         {
-            // layout: [items col 0] [logo col 1] [close col 2 fixed-width, top-aligned]
-            // width  = items + logo (with their margins) + close width
-            // height = max of items / logo / close (close at top, doesn't push if smaller)
-            barLength = itemsPanelLength + logoWidthWithMargin + closeWidth;
-            barThickness = System.Math.Max(itemsPanelThickness, System.Math.Max(logoHeightWithMargin, closeHeight));
-        }
-        else // orientation == Orientation.Vertical
-        {
-            // layout: [items spans cols 0..2 row 0] [logo spans cols 0..2 row 1]
-            //         [close col 2 row 0, top-right; overlaps items area via the 25px top margin]
-            // height = items + logo (with their margins); close doesn't add since it sits inside
-            //   the items panel area thanks to that top margin reserved in GetBarItemsPanelMargin
-            // width  = max of items / logo / close
-            barLength = itemsPanelLength + logoHeightWithMargin;
-            barThickness = System.Math.Max(itemsPanelThickness, System.Math.Max(logoWidthWithMargin, closeWidth));
+            if (control is IBarItemControl item)
+            {
+                var savedVisibility = control.Visibility;
+                if (savedVisibility != Visibility.Visible) { control.Visibility = Visibility.Visible; }
+
+                var natural = item.MeasureForOrientation(fullAvailableSize, orientation);
+                double thicknessContribution = (orientation == Orientation.Horizontal) ? natural.Height : natural.Width;
+                if (thicknessContribution > maxItemNaturalThickness) { maxItemNaturalThickness = thicknessContribution; }
+
+                if (control.Visibility != savedVisibility) { control.Visibility = savedVisibility; }
+            }
         }
 
-        // cap to working area logical pixels (per-axis, swapped per orientation)
-        double maxLength = (orientation == Orientation.Horizontal) ? logicalAvailWidth : logicalAvailHeight;
-        double maxThickness = (orientation == Orientation.Horizontal) ? logicalAvailHeight : logicalAvailWidth;
-        if (barLength > maxLength) { barLength = maxLength; }
-        if (barThickness > maxThickness) { barThickness = maxThickness; }
+        // ----- bar's outer Border eats inner space on each axis (BorderThickness=1 logical, so
+        //       2 total per axis). Items, chrome, and margins all live INSIDE that border, so
+        //       both Pass 2's thickness constraint and the trim's length cap have to subtract it.
+        //       The returned outer dimensions (barLength, barThickness) add it back so AppWindow
+        //       is sized to include the border. -----
+        // NOTE: the literal 1.0 mirrors BorderThickness="1" on the Border in MorphicBarWindow.xaml;
+        // if that XAML value ever changes, this constant has to follow.
+        const double barBorderThicknessPerSide = 1.0;
+        const double barBorderThicknessBothSides = barBorderThicknessPerSide * 2;
 
-        return ((uint)System.Math.Ceiling(barLength), (uint)System.Math.Ceiling(barThickness));
+        // ----- compose the bar's effective INNER thickness (capped to working area minus border) -----
+        // thickness axis composition: max(items + items panel margin, logo with margin, close)
+        double logoThickness = (orientation == Orientation.Horizontal) ? logoHeightWithMargin : logoWidthWithMargin;
+        double closeThickness = (orientation == Orientation.Horizontal) ? closeHeight : closeWidth;
+        double itemsPanelNaturalThickness = maxItemNaturalThickness + itemsPanelMarginAlongThickness;
+        double innerBarThickness = System.Math.Max(itemsPanelNaturalThickness, System.Math.Max(logoThickness, closeThickness));
+        double innerThicknessCap = System.Math.Max(0, logicalAvailableThickness - barBorderThicknessBothSides);
+        if (innerBarThickness > innerThicknessCap) { innerBarThickness = innerThicknessCap; }
+
+        // ----- Pass 2: re-measure each item with the bar's effective thickness as cross-axis cap -----
+        // items get availableSize.thickness = bar's INNER thickness minus items-panel margin
+        double itemsAvailableThickness = System.Math.Max(0, innerBarThickness - itemsPanelMarginAlongThickness);
+        var constrainedAvailableSize = (orientation == Orientation.Horizontal)
+            ? new Windows.Foundation.Size(double.PositiveInfinity, itemsAvailableThickness)
+            : new Windows.Foundation.Size(itemsAvailableThickness, double.PositiveInfinity);
+
+        // ----- chrome length (for the bar's length-axis composition + the trim cap) -----
+        double chromeLength = (orientation == Orientation.Horizontal)
+            ? logoWidthWithMargin + closeWidth   // horizontal: logo and close both add to length
+            : logoHeightWithMargin;              // vertical: close overlaps items area via top margin
+        // items get inner length = working-area-cap - border - chrome - margin
+        double availableForItemsContent = System.Math.Max(0, logicalAvailableLength - barBorderThicknessBothSides - chromeLength - itemsPanelMarginAlongLength);
+
+        // walk items in order, accumulating length and counting how many fit.
+        // NOTE: same Visibility-toggle pattern as Pass 1: Collapsed elements return DesiredSize=(0,0)
+        // from Measure, so trim would silently let everything through if we measured them collapsed.
+        // Toggle synchronously so no layout pass runs with the intermediate state visible.
+        double spacing = this.BarItemsPanel.Spacing;
+        double cumulativeItemsLength = 0;
+        int fittingCount = 0;
+        for (int i = 0; i < _allBarItemControls.Count; i++)
+        {
+            var control = _allBarItemControls[i];
+            if (control is not IBarItemControl item) { continue; }
+
+            var savedVisibility = control.Visibility;
+            if (savedVisibility != Visibility.Visible) { control.Visibility = Visibility.Visible; }
+
+            var constrained = item.MeasureForOrientation(constrainedAvailableSize, orientation);
+
+            if (control.Visibility != savedVisibility) { control.Visibility = savedVisibility; }
+
+            // Math.Ceiling per item: WinUI's LayoutRounding rounds each item's painted position to
+            // an integer pixel at the current rasterization scale. With fractional per-item widths
+            // (e.g. an AutoSize multi-button group whose buttons measure to non-integer DesiredSize
+            // values), the cumulative offset of items can drift up to ~0.5 logical px per item.
+            // Across several items that drift accumulates enough to push the rightmost item's
+            // painted right edge past the bar's reserved length, clipping the last item's right-side
+            // rounded corner. Ceiling here absorbs that drift -- each item gets up to 1 logical px
+            // of slack in the bar's overall budget, so the bar reserves a touch more than the raw
+            // DesiredSize sum and the last item paints fully.
+            double rawItemLength = (orientation == Orientation.Horizontal) ? constrained.Width : constrained.Height;
+            double itemLength = System.Math.Ceiling(rawItemLength);
+            double additional = itemLength + (i > 0 ? spacing : 0);
+            if (cumulativeItemsLength + additional <= availableForItemsContent)
+            {
+                cumulativeItemsLength += additional;
+                fittingCount = i + 1;
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        // bar's OUTER logical length (= AppWindow size): inner content + border
+        double innerBarLength = cumulativeItemsLength + chromeLength + itemsPanelMarginAlongLength;
+        double outerBarLength = innerBarLength + barBorderThicknessBothSides;
+        double outerBarThickness = innerBarThickness + barBorderThicknessBothSides;
+
+        return ((uint)System.Math.Ceiling(outerBarLength), (uint)System.Math.Ceiling(outerBarThickness), fittingCount);
     }
 
     // Returns the cached current-monitor handle if it still points at a live monitor (probed via
@@ -823,21 +1003,23 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
                 Debug.Assert(false, "No monitor handle; this might be a headless system; aborting.");
                 return;
             }
-            var verticalBarDockingHitAreaWidth = _logicalThickness;
-            //
-            if (_layoutPreviewWindowOrientation is not null)
+            // pick the target orientation and docking location: prefer whatever the layout preview
+            // had locked in during the drag; fall back to the current values if the user didn't drag
+            // far enough to trigger a preview change
+            var targetOrientation = _layoutPreviewWindowOrientation ?? _orientation;
+            var targetDockingLocation = _layoutPreviewDockingLocation ?? _dockingLocation;
+
+            // if the orientation is flipping, rotate the window dimensions around the cursor first
+            // so the animation that follows starts from a sensible visual state (otherwise the bar
+            // would visibly "swap axes" in mid-flight)
+            if (_orientation != targetOrientation)
             {
-                if (_orientation != _layoutPreviewWindowOrientation)
-                {
-                    this.Rotate90DegreesAroundPoint(currentPointerPosition);
-                }
-                this.Orientation = _layoutPreviewWindowOrientation!.Value;
+                this.Rotate90DegreesAroundPoint(currentPointerPosition);
             }
-            if (_layoutPreviewDockingLocation is not null)
-            {
-                _dockingLocation = _layoutPreviewDockingLocation!.Value;
-            }
-            this.AnimateMoveTo(hMonitor, _orientation, _dockingLocation, new TimeSpan(0, 0, 1));
+
+            // AnimateMoveTo handles the orientation change (via the property setter), updates the
+            // docking location, measures for the new state, and animates size + position together
+            this.AnimateMoveTo(hMonitor, targetOrientation, targetDockingLocation, new TimeSpan(0, 0, 1));
 
             _layoutPreviewWindowOrientation = null;
             _layoutPreviewDockingLocation = null;
@@ -947,7 +1129,15 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         }
         var newPreviewDockingLocation = calculatePreviewWindowRectResult.Value!.DockingLocation;
         var newPreviewOrientation = calculatePreviewWindowRectResult.Value!.Orientation;
-        var getRectForDockingLocationResult = LayoutUtils.GetRectForDockingLocation(newPreviewDockingLocation, newPreviewOrientation, _logicalLength, _logicalThickness, hMonitor);
+
+        // measure the bar's desired size for the TARGET (monitor, orientation), not the bar's
+        // current state -- the preview must show what the bar will look like after release:
+        //   - if orientation differs, IBarItemControl.MeasureForOrientation gives the cross-orientation
+        //     answer without mutating the live items
+        //   - if the target monitor's working area is tighter than the current monitor's, the
+        //     working-area cap inside MeasureBarForOrientation keeps the preview within bounds
+        var (previewLogicalLength, previewLogicalThickness, _) = this.MeasureBarForOrientation(hMonitor, newPreviewOrientation);
+        var getRectForDockingLocationResult = LayoutUtils.GetRectForDockingLocation(newPreviewDockingLocation, newPreviewOrientation, previewLogicalLength, previewLogicalThickness, hMonitor);
         if (getRectForDockingLocationResult.IsError)
         {
             return;

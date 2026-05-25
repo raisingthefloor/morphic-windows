@@ -43,6 +43,10 @@ public partial class App : Application
     // NOTE: we initialize this when the application starts up
     internal Morphic.Controls.TrayButton.TrayButton TaskbarButton = null!;
 
+    // Handler reference for the taskbar icon refresh; held so we can unsubscribe at shutdown.
+    // See RefreshTaskbarIcon for why the taskbar icon needs to track HC state.
+    private EventHandler<Morphic.SettingsUtils.CachedDarkModeStateChangedEventArgs>? _taskbarIconRefreshHandler;
+
     private Morphic.AboutWindow.AboutWindow? _aboutWindow;
 
     private Morphic.MorphicBar.MorphicBarWindow _morphicBarWindow = null!;
@@ -117,6 +121,17 @@ public partial class App : Application
 _morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size of the legacy Morphic 1.0 MorphicBar
         _morphicBarWindow.Orientation = Orientation.Horizontal;
         _morphicBarWindow.InitializeBarItems(App.CreateBasicBarItemsData());
+
+        // Keep the tray-button tooltip in sync with the MorphicBar's visibility ("Show
+        // MorphicBar" when hidden, "Hide MorphicBar" when visible) the same way the
+        // popup menu's item labels do. AppWindow.Changed fires for several reasons
+        // (position, size, visibility, etc.); we filter on DidVisibilityChange so we
+        // only refresh on the relevant transitions, no matter which code path (menu
+        // item, tray click, etc.) triggered the show/hide. RefreshTaskbarButtonTooltip
+        // is called once here so the initial caption matches the bar's current state
+        // before any user interaction.
+        _morphicBarWindow.AppWindow.Changed += this.OnMorphicBarWindowAppWindowChanged;
+        this.RefreshTaskbarButtonTooltip();
         //
         var iconPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "Icons", "morphic-standardcontrast.ico");
         _morphicBarWindow.SetIconFromFile(iconPath, 256, 256);
@@ -162,6 +177,11 @@ _morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size o
 
     private void App_ShutdownStarting(DispatcherQueue sender, DispatcherQueueShutdownStartingEventArgs args)
     {
+        if (_taskbarIconRefreshHandler is not null)
+        {
+            _taskbarIconRefreshHandler = null;
+        }
+
         // immediately hide our tray icon (and dispose of it for good measure, to help ensure that unmanaged resources are cleaned up)
         this.TaskbarButton.SetVisible(false);
         this.TaskbarButton.Dispose();
@@ -219,8 +239,14 @@ _morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size o
 
         _menuOwnerWindow.Close();
 
+        // Unsubscribe the tooltip-refresh handler before closing the MorphicBar window.
+        // Otherwise the bar's Close fires AppWindow.Changed with DidVisibilityChange,
+        // RefreshTaskbarButtonTooltip then tries to write TaskbarButton.Text against a
+        // tray button whose native window is being torn down, and we get a COMException
+        // ("WinUI Desktop Window object has already been closed").
         if (_morphicBarWindow is not null)
         {
+            _morphicBarWindow.AppWindow.Changed -= this.OnMorphicBarWindowAppWindowChanged;
             _morphicBarWindow.Close();
         }
 
@@ -235,17 +261,82 @@ _morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size o
     private void InitTaskbarIconWithoutShowing()
     {
         // create an instance of our tray icon (button)
-        var taskbarButton = new Morphic.Controls.TrayButton.TrayButton()
+        this.TaskbarButton = new Morphic.Controls.TrayButton.TrayButton()
         {
-            Text = "Morphic",
+            Text = "Show or hide MorphicBar", // default tooltip until we know the state of the MorphicBar's visibility
         };
-
-        // load the icon from the app's assets (copied content)
-        var iconPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "Icons", "morphic-standardcontrast.ico");
-        _ = taskbarButton.SetIconFromFile(iconPath, 256, 256);
-
-        this.TaskbarButton = taskbarButton;
         this.TaskbarButton.MouseUp += TaskbarButton_MouseUp;
+
+        // Seed the icon from current HC state, then subscribe so any future HC transition swaps
+        // the icon. Captured DispatcherQueue marshals the refresh onto the UI thread; the event
+        // fires from CachedDarkModeState's worker thread.
+        this.RefreshTaskbarIcon();
+        var dispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
+        _taskbarIconRefreshHandler = (_, _) =>
+        {
+            dispatcherQueue?.TryEnqueue(this.RefreshTaskbarIcon);
+        };
+    }
+
+    // Selects the right tray-icon variant for the current HC state and applies it.
+    //   Non-HC                                          -> morphic-standardcontrast.ico  (full-color)
+    //   HC + dark theme (HC Black, Aquatic, Dusk, etc.) -> morphic-highcontrastblack.ico (for HC Black-family themes; icon's pixels are light so it's visible on a dark taskbar)
+    //   HC + light theme (HC White, Desert)             -> morphic-highcontrastwhite.ico (for HC White-family themes; icon's pixels are dark so it's visible on a light taskbar)
+    // NOTE: the icon file names describe the TARGET HC theme family (the v1.x convention), not the
+    // color of the pixels inside the file -- "highcontrastblack" is the icon FOR the HC Black-style
+    // theme (and thus contains light pixels), and "highcontrastwhite" is the icon FOR the HC
+    // White-style theme (and thus contains dark pixels).
+    private void RefreshTaskbarIcon()
+    {
+        string iconFileName;
+        if (Morphic.SettingsUtils.CachedDarkModeState.GetCurrentIsHighContrast())
+        {
+            iconFileName = Morphic.SettingsUtils.CachedDarkModeState.GetCurrentIsDark()
+                ? "morphic-highcontrastblack.ico"
+                : "morphic-highcontrastwhite.ico";
+        }
+        else
+        {
+            iconFileName = "morphic-standardcontrast.ico";
+        }
+
+        var iconPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "Icons", iconFileName);
+        _ = this.TaskbarButton.SetIconFromFile(iconPath, 256, 256);
+    }
+
+    // Filters AppWindow.Changed for the one signal we care about: visibility transitions.
+    // AppWindow.Changed fires for several reasons (position, size, etc.); only act when
+    // DidVisibilityChange is true so we don't redundantly rewrite the tooltip on every
+    // window move or resize.
+    private void OnMorphicBarWindowAppWindowChanged(Microsoft.UI.Windowing.AppWindow sender, Microsoft.UI.Windowing.AppWindowChangedEventArgs args)
+    {
+        if (args.DidVisibilityChange)
+        {
+            this.RefreshTaskbarButtonTooltip();
+        }
+    }
+
+    // Updates the tray-button tooltip caption based on the MorphicBar's current visibility.
+    // Mirrors the menu's Show/Hide MorphicBar item-label convention so the affordance is
+    // self-describing wherever the user encounters it.
+    private void RefreshTaskbarButtonTooltip()
+    {
+        if (this.TaskbarButton is null || _morphicBarWindow is null)
+        {
+            return;
+        }
+        try
+        {
+            this.TaskbarButton.Text = _morphicBarWindow.Visible ? "Hide MorphicBar" : "Show MorphicBar";
+        }
+        catch (System.Runtime.InteropServices.COMException)
+        {
+            // The bar window is being torn down: AppWindow.Changed fired the visibility
+            // transition mid-close, but accessing _morphicBarWindow.Visible (or writing
+            // TaskbarButton.Text against a tray button whose native window is also closing)
+            // throws "WinUI Desktop Window object has already been closed". The tooltip
+            // doesn't need to update since the app is going away; swallow.
+        }
     }
 
     private void TaskbarButton_MouseUp(object? sender, Controls.MouseEventArgs e)
