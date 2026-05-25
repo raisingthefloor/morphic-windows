@@ -27,9 +27,12 @@ using System.Diagnostics;
 
 namespace Morphic.WindowsNative.Registry;
 
-    private bool _disposed;
 internal sealed class RegistryKeyChangeWatcher : IDisposable
-{    public void Dispose()
+{
+
+    private bool _disposed;
+
+    public void Dispose()
     {
         lock (_lock)
         {
