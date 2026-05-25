@@ -138,25 +138,6 @@ internal static class BarItemDataFactory
                 System.Diagnostics.Debug.WriteLine($"[BarItemDataFactory] NightLight.IsOnChanged unsubscribe failed: {ex.Message}");
             }
         });
-        //
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                var initialNightLightIsOnResult = await Morphic.WindowsNative.Display.NightLight.GetIsOnAsync(TimeSpan.FromSeconds(5));
-                if (initialNightLightIsOnResult.IsError)
-                {
-                    System.Diagnostics.Debug.WriteLine("[BarItemDataFactory] Initial NightLight.GetIsOnAsync read failed; defaulting button to unchecked");
-                }
-                nightButton.IsChecked = initialNightLightIsOnResult.IsSuccess && initialNightLightIsOnResult.Value == true;
-            }
-            catch (Exception ex)
-            {
-                // Without this, the fire-and-forget Task's exception would only surface via
-                // TaskScheduler.UnobservedTaskException, with no attribution to this site.
-                System.Diagnostics.Debug.WriteLine($"NightLight initial prime threw: {ex}");
-            }
-        });
 
         return new BarMultiButtonData
         {
