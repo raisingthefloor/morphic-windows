@@ -103,42 +103,6 @@ internal static class BarItemDataFactory
 		
 		//
 
-        // Bridge the Night button to NightLight.IsOnChanged; this delivers external state transitions 
-		// (Action Center tile, 'Settings app > Display > Night light', scheduled on/off, etc.
-        //
-        // The initial GetIsOnAsync read serves two purposes:
-        //   1. Seeds nightButton.IsChecked from the live system state at startup.
-        //   2. Primes the SettingItem so its IsEnabled flag is true before the user's first
-        //      click. The WinRT SettingItem starts with IsEnabled=false and the OS raises it
-        //      asynchronously; the 5-second timeout gives the OS plenty of time to raise
-        //      IsEnabled to true. We deliberately await on the ThreadPool (not the UI thread)
-        //      since WaitForIsEnabledEventAsync can block briefly before its first async yield.
-        EventHandler<Morphic.WindowsNative.Display.NightLightIsOnChangedEventArgs> nightLightIsOnChangedHandler =
-            (_, e) => nightButton.IsChecked = e.NewValue;
-        // NightLight.IsOnChanged += / -= can throw if the underlying WinRT SettingItem subscribe
-        // fails (typically COMException -- see the event's <exception> doc). Wrap so a failed
-        // subscribe doesn't tear down the whole CreateContrastColorButtonGroup call; the night
-        // button still gets created but won't reflect OS-side state changes.
-        try
-        {
-            Morphic.WindowsNative.Display.NightLight.IsOnChanged += nightLightIsOnChangedHandler;
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"[BarItemDataFactory] NightLight.IsOnChanged subscribe failed: {ex.Message}");
-        }
-        nightButton.AddDisposeAction(() =>
-        {
-            try
-            {
-                Morphic.WindowsNative.Display.NightLight.IsOnChanged -= nightLightIsOnChangedHandler;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[BarItemDataFactory] NightLight.IsOnChanged unsubscribe failed: {ex.Message}");
-            }
-        });
-
         return new BarMultiButtonData
         {
             Header = "Contrast & Color",
