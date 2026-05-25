@@ -33,9 +33,17 @@ namespace Morphic.MorphicBar.BarControls;
 // Invoked when a BarButtonData-backed button is clicked.
 // - param `actionTag` is the button's optional ActionTag (opaque caller-supplied value).
 // - param `isChecked` is the new checked state for toggle buttons (null for non-toggle buttons).
-public delegate Task BarButtonAction(string? actionTag, bool? isChecked);
+// - return value indicates whether the action succeeded; on failure, the click handler reverts any
+//   toggle state-change so the visual reflects actual system state. Errors handled internally by the
+//   action implementation (e.g. logging) need not be re-encoded here; ErrorResult() with no value is
+//   sufficient to signal "did not take effect".
+public delegate Task<MorphicResult<MorphicUnit, MorphicUnit>> BarButtonAction(string? actionTag, bool? isChecked);
 
-public class BarButtonData : IBarItemData, IDisposable
+// BarButtonData is the source of truth for a button's state. It implements INotifyPropertyChanged
+// so that external producers can write to the observable properties and have any attached UI 
+// automatically reflect the change. The UI control subscribes to PropertyChanged in ApplyData 
+// and unsubscribes in Unloaded.
+public class BarButtonData : IBarItemData, INotifyPropertyChanged, IDisposable
 {
     // Optional label displayed above the button. When null or empty, no header is rendered.
     public string? Header { get; set; }
@@ -55,13 +63,52 @@ public class BarButtonData : IBarItemData, IDisposable
 
     private bool disposedValue;
 
-    // Initial checked state; only meaningful when IsToggle is true.
-    public bool IsChecked { get; set; }
+    // Observable checked state. Only meaningful when IsToggle is true. May be written from any
+    // thread (external system-event listeners often fire off the UI thread); UI subscribers are
+    // responsible for marshalling the resulting PropertyChanged callback to their dispatcher.
+    private bool _isChecked;
+    public bool IsChecked
+    {
+        get => _isChecked;
+        set
+        {
+            // short-circuit equal writes so the UI's own post-action data write doesn't cause a
+            // redundant PropertyChanged round-trip, and to break any feedback loop between data
+            // and UI
+            if (_isChecked == value)
+            {
+                return;
+            }
+            _isChecked = value;
+            this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsChecked)));
+        }
+    }
+
+    // Observable enabled state. When false, the rendered button is disabled (does not respond to
+    // clicks) and visually reflects the disabled VisualState. Default true for backwards compatibility
+    // with call sites that don't set it. May be written from any thread; UI subscribers marshal the 
+    // resulting PropertyChanged callback to their dispatcher.
+    private bool _isEnabled = true;
+    public bool IsEnabled
+    {
+        get => _isEnabled;
+        set
+        {
+            if (_isEnabled == value)
+            {
+                return;
+            }
+            _isEnabled = value;
+            this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsEnabled)));
+        }
+    }
 
     // Opaque caller-supplied value passed back to the Action callback.
     public string? ActionTag { get; set; }
 
     public BarButtonAction? Action { get; set; }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     // Disposal-actions list. Code that subscribes external state-source events (e.g. a system
     // dark-mode listener) to this BarButtonData registers an unsubscribe call here, so the

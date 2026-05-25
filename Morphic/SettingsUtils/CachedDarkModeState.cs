@@ -30,6 +30,8 @@ namespace Morphic.SettingsUtils;
 public static class CachedDarkModeState
 {
     private static readonly object _lock = new();
+    private static bool _isSubscribed;
+    //
     private static bool _cachedIsDark;
     private static bool _cachedIsHighContrast;
 
