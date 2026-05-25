@@ -61,9 +61,46 @@ internal class SettingItemProxy
     {
         _settingItem = settingItem;
     }
-    public string Id => _settingItem.Id;
-    public bool IsApplicable => _settingItem.IsApplicable;
-    public bool IsEnabled => _settingItem.IsEnabled;
+	
+    // Read accessors for the WinRT-side properties. Returned as MorphicResults rather than bare
+    // values so the COMException risk of touching the underlying WinRT proxy can be surfaced
+    // through the same error channel the rest of the class uses, rather than escaping as an
+    // uncaught exception.
+    public MorphicResult<string, IMorphicExceptionError> GetId()
+    {
+        try
+        {
+            return MorphicResult.OkResult(_settingItem.Id);
+        }
+        catch (Exception ex)
+        {
+            return MorphicResult.ErrorResult<IMorphicExceptionError>(new IMorphicExceptionError.Exception(ex));
+        }
+    }
+
+    public MorphicResult<bool, IMorphicExceptionError> GetIsApplicable()
+    {
+        try
+        {
+            return MorphicResult.OkResult(_settingItem.IsApplicable);
+        }
+        catch (Exception ex)
+        {
+            return MorphicResult.ErrorResult<IMorphicExceptionError>(new IMorphicExceptionError.Exception(ex));
+        }
+    }
+
+    public MorphicResult<bool, IMorphicExceptionError> GetIsEnabled()
+    {
+        try
+        {
+            return MorphicResult.OkResult(_settingItem.IsEnabled);
+        }
+        catch (Exception ex)
+        {
+            return MorphicResult.ErrorResult<IMorphicExceptionError>(new IMorphicExceptionError.Exception(ex));
+        }
+    }
 
     //
 
@@ -668,6 +705,51 @@ internal class SettingItemProxy
 
     #region Event handlers
 
+    ///// <summary>
+    ///// Raised when the WinRT SettingItem's IsApplicable property changes. Handler callbacks run
+    ///// on a Task.Run-dispatched ThreadPool thread (NOT the UI thread).
+    ///// </summary>
+    ///// <exception cref="System.Exception">
+    ///// Subscribing or unsubscribing may throw (typically COMException) if the underlying WinRT
+    ///// SettingChanged += / -= call fails. On subscribe failure the user's handler is NOT added;
+    ///// on unsubscribe failure the user's handler IS removed but downstream WinRT cleanup may
+    ///// have failed. Callers must catch.
+    ///// </exception>
+    //public event EventHandler IsApplicableChanged
+    //{
+    //    add
+    //    {
+    //        lock (_eventsLock)
+    //        {
+    //            if (_settingsChangedEventHandlerIsSubscribed == false)
+    //            {
+    //                _settingItem.SettingChanged += _settingItem_SettingChanged;
+    //                _settingsChangedEventHandlerIsSubscribed = true;
+    //            }
+    //            _isApplicableChanged += value;
+    //        }
+    //    }
+    //    remove
+    //    {
+    //        lock (_eventsLock)
+    //        {
+    //            _isApplicableChanged -= value;
+    //        }
+    //
+    //        this.UnsubscribeSettingChangedEventHandlerIfEventsAreEmpty();
+    //    }
+    //}
+
+    /// <summary>
+    /// Raised when the WinRT SettingItem's IsEnabled property changes. Handler callbacks run on
+    /// a Task.Run-dispatched ThreadPool thread (NOT the UI thread).
+    /// </summary>
+    /// <exception cref="System.Exception">
+    /// Subscribing or unsubscribing may throw (typically COMException) if the underlying WinRT
+    /// SettingChanged += / -= call fails. On subscribe failure the user's handler is NOT added;
+    /// on unsubscribe failure the user's handler IS removed but downstream WinRT cleanup may
+    /// have failed. Callers must catch.
+    /// </exception>
     public event EventHandler IsEnabledChanged
     {
         add
@@ -693,6 +775,17 @@ internal class SettingItemProxy
         }
     }
     //
+    /// <summary>
+    /// Raised when the WinRT SettingItem's Value changes. Handler callbacks run on a
+    /// Task.Run-dispatched ThreadPool thread (NOT the UI thread). The event carries no payload;
+    /// subscribers should re-read the current value via GetValueAsync if needed.
+    /// </summary>
+    /// <exception cref="System.Exception">
+    /// Subscribing or unsubscribing may throw (typically COMException) if the underlying WinRT
+    /// SettingChanged += / -= call fails. On subscribe failure the user's handler is NOT added;
+    /// on unsubscribe failure the user's handler IS removed but downstream WinRT cleanup may
+    /// have failed. Callers must catch.
+    /// </exception>
     public event EventHandler ValueChanged
     {
         add
@@ -728,8 +821,18 @@ internal class SettingItemProxy
 
             if (isApplicableChangedIsEmpty == true && isEnabledChangedIsEmpty == true && valueChangedIsEmpty == true)
             {
-                _settingItem.SettingChanged -= _settingItem_SettingChanged;
-                _settingsChangedEventHandlerIsSubscribed = false;
+                // Reset the flag in finally so it stays consistent even if the WinRT unsubscribe
+                // throws -- otherwise a future subscriber would skip the WinRT subscribe (thinking
+                // we're still wired up) and silently get no events. The throw still propagates to
+                // the caller per the event's documented contract.
+                try
+                {
+                    _settingItem.SettingChanged -= _settingItem_SettingChanged;
+                }
+                finally
+                {
+                    _settingsChangedEventHandlerIsSubscribed = false;
+                }
             }
         }
     }

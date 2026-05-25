@@ -52,9 +52,16 @@ internal class TrayButtonNativeWindow : IDisposable
 
     private ArgbImageNativeWindow? _argbImageNativeWindow = null;
 
-    private Windows.Win32.Foundation.HWND _tooltipWindowHandle;
-    private bool _tooltipInfoAdded = false;
+    // Modern Win11-styled tooltip (WinUI 3 Window). Replaces the legacy comctl32 TOOLTIPS_CLASS
+    // popup. Created in CreateNew and disposed in Dispose. The text is updated only via SetText;
+    // visibility is driven by WM_MOUSEHOVER (show) and WM_MOUSELEAVE / mouse-button presses (hide).
+    private Morphic.Controls.Tooltip.TooltipWindow? _tooltip;
     private string? _tooltipText;
+    // Set on mouse-button click (LBUTTONUP/RBUTTONUP), cleared on WM_MOUSELEAVE. While true,
+    // ShowTooltipForCurrentHover is a no-op so the tooltip does not (re-)appear over a click
+    // result (menu, dialog) or after the user has already interacted -- they need to move the
+    // cursor off the button and back on to re-arm the tooltip.
+    private bool _suppressTooltipUntilLeave = false;
 
     private Windows.Win32.Foundation.RECT _trayButtonPositionAndSize;
     public System.Drawing.Rectangle PositionAndSize
@@ -106,6 +113,8 @@ internal class TrayButtonNativeWindow : IDisposable
             if (disposing)
             {
                 // dispose managed state (managed objects)
+                CachedTaskbarThemeState.StateChanged -= this.OnTaskbarThemeStateChanged;
+
                 if (_objectReorderWindowEventHook != IntPtr.Zero)
                 {
                     Windows.Win32.PInvoke.UnhookWinEvent(_objectReorderWindowEventHook);
@@ -120,11 +129,12 @@ internal class TrayButtonNativeWindow : IDisposable
                 _resurfaceTaskbarButtonTimer?.Dispose();
             }
 
-            // free unmanaged resources (unmanaged objects) and override finalizer
-            //
-            // destroy the tooltip window BEFORE the main window (since the tooltip is owned by the main window
-            // and would be automatically destroyed with it, leaving us with an invalid handle)
-            _ = this.DestroyTooltipWindow();
+            // dispose the modern tooltip window before tearing down the tray button's hwnd.
+            // The tooltip is a standalone top-level WinUI 3 Window (not owned by _hwnd) so the
+            // order is only important so that the tooltip is not left visible after the tray
+            // button goes away.
+            _tooltip?.Dispose();
+            _tooltip = null;
             //
             // free window handle
             if (_hwnd != IntPtr.Zero)
@@ -405,14 +415,39 @@ internal class TrayButtonNativeWindow : IDisposable
         // NOTE: we must capture the delegate so that it is not garbage collected; otherwise the native callbacks can crash the .NET execution engine
         result._objectReorderWindowEventProc = objectReorderWindowEventProc;
 
-        // create the tooltip window (although we won't provide it with any actual text until/unless the text is set
-        result._tooltipWindowHandle = result.CreateTooltipWindow();
+        // create the modern tooltip window once and keep it alive for the tray button's lifetime.
+        // Text is empty until SetText is called; visibility is controlled by WM_MOUSEHOVER /
+        // WM_MOUSELEAVE handlers below.
+        result._tooltip = new Morphic.Controls.Tooltip.TooltipWindow();
         result._tooltipText = null;
 
         // start a timer on the new instance, to resurface the Morphic tray button icon from time to time (just in case it gets hidden under the taskbar)
         result._resurfaceTaskbarButtonTimer = new(result.ResurfaceTaskButtonTimerCallback, null, TrayButtonNativeWindow.RESURFACE_TASKBAR_BUTTON_INTERVAL_TIMESPAN, TrayButtonNativeWindow.RESURFACE_TASKBAR_BUTTON_INTERVAL_TIMESPAN);
 
+        // Subscribe to taskbar theme changes so the hover/pressed overlay color stays readable
+        // against the current taskbar background (white overlay on dark taskbar, black overlay
+        // on light taskbar). The handler invalidates the window so WM_PAINT recomputes the
+        // brush color from the current CachedTaskbarThemeState.
+        CachedTaskbarThemeState.StateChanged += result.OnTaskbarThemeStateChanged;
+
         return MorphicResult.OkResult(result);
+    }
+
+    // Marshals to the UI thread and refreshes the window so the overlay color + alpha match
+    // the new taskbar theme. Fires from CachedTaskbarThemeState's worker thread (Task.Run).
+    // We call UpdateVisualStateAlpha because the per-theme alpha values are computed there
+    // (and are otherwise only recomputed on a mouse event), then invalidate so WM_PAINT
+    // re-runs and picks the new brush color.
+    private void OnTaskbarThemeStateChanged(object? sender, CachedTaskbarThemeStateChangedEventArgs e)
+    {
+        _dispatcherQueue?.TryEnqueue(() =>
+        {
+            if (_hwnd.IsNull == false)
+            {
+                _ = this.UpdateVisualStateAlpha();
+                _ = Windows.Win32.PInvoke.InvalidateRect(_hwnd, lpRect: null, bErase: true);
+            }
+        });
     }
 
     //
@@ -487,6 +522,13 @@ internal class TrayButtonNativeWindow : IDisposable
                     var updateVisualStateAlphaResult = this.UpdateVisualStateAlpha();
                     Debug.Assert(updateVisualStateAlphaResult.IsSuccess, "Could not update visual state.");
 
+                    // Dismiss the tooltip on click and suppress further hover-shows until
+                    // the user moves the cursor off the button. This keeps the tooltip from
+                    // covering whatever the click opens (menu, bar) and from re-popping if
+                    // the user keeps the cursor still after the click.
+                    this.HideTooltip();
+                    _suppressTooltipUntilLeave = true;
+
                     var convertLParamResult = this.ConvertMouseMessageLParamToScreenPoint(lParam);
                     if (convertLParamResult.IsSuccess == true)
                     {
@@ -510,6 +552,17 @@ internal class TrayButtonNativeWindow : IDisposable
                     result = IntPtr.Zero;
                 }
                 break;
+            case Windows.Win32.PInvoke.WM_MOUSEHOVER:
+                {
+                    // The cursor has been still over the tray button for HOVER_DEFAULT ms (the
+                    // system's tooltip-delay preference). Show the modern tooltip now. TME_HOVER
+                    // is one-shot; re-registration happens automatically on the next mouse-enter
+                    // path (WM_SETCURSOR/WM_MOUSEMOVE) when Hover state has been cleared.
+                    this.ShowTooltipForCurrentHover();
+
+                    result = IntPtr.Zero;
+                }
+                break;
             case Windows.Win32.PInvoke.WM_MOUSELEAVE:
                 {
                     // the cursor has left our tray button's window area; remove the hover state from our visual state
@@ -522,6 +575,29 @@ internal class TrayButtonNativeWindow : IDisposable
                     //
                     var updateVisualStateAlphaResult = this.UpdateVisualStateAlpha();
                     Debug.Assert(updateVisualStateAlphaResult.IsSuccess, "Could not update visual state.");
+
+                    // hide the modern tooltip since the cursor is no longer over the button
+                    this.HideTooltip();
+
+                    // Only re-arm the tooltip (clear the click-suppress flag) if the cursor
+                    // is actually outside the tray button. WM_MOUSELEAVE can fire spuriously
+                    // when a right-click menu opens and takes mouse capture, even though the
+                    // physical cursor is still over our button -- in that case we want to
+                    // keep the tooltip suppressed so it doesn't re-pop while the user is
+                    // looking at the menu we just opened.
+                    bool cursorIsOutsideButton = true;
+                    if (Windows.Win32.PInvoke.GetCursorPos(out var currentCursorPos))
+                    {
+                        cursorIsOutsideButton =
+                            currentCursorPos.X < _trayButtonPositionAndSize.X ||
+                            currentCursorPos.X >= _trayButtonPositionAndSize.X + _trayButtonPositionAndSize.Width ||
+                            currentCursorPos.Y < _trayButtonPositionAndSize.Y ||
+                            currentCursorPos.Y >= _trayButtonPositionAndSize.Y + _trayButtonPositionAndSize.Height;
+                    }
+                    if (cursorIsOutsideButton)
+                    {
+                        _suppressTooltipUntilLeave = false;
+                    }
 
                     result = IntPtr.Zero;
                 }
@@ -603,6 +679,11 @@ internal class TrayButtonNativeWindow : IDisposable
                     var updateVisualStateAlphaResult = this.UpdateVisualStateAlpha();
                     Debug.Assert(updateVisualStateAlphaResult.IsSuccess, "Could not update visual state.");
 
+                    // Same dismiss-and-suppress on right-click as on left-click; see
+                    // WM_LBUTTONUP above for the rationale.
+                    this.HideTooltip();
+                    _suppressTooltipUntilLeave = true;
+
                     var convertLParamResult = this.ConvertMouseMessageLParamToScreenPoint(lParam);
                     if (convertLParamResult.IsSuccess)
                     {
@@ -645,6 +726,10 @@ internal class TrayButtonNativeWindow : IDisposable
                                 var updateVisualStateAlphaResult = this.UpdateVisualStateAlpha();
                                 Debug.Assert(updateVisualStateAlphaResult.IsSuccess, "Could not update visual state.");
 
+                                // hide the tooltip so it does not linger over whatever the click
+                                // is about to open (menu, dialog, etc.)
+                                this.HideTooltip();
+
                                 result = new IntPtr(1);
                             }
                             break;
@@ -664,12 +749,16 @@ internal class TrayButtonNativeWindow : IDisposable
                                 // NOTE: we track whether or not we are tracking the mouse by analyzing the hover state of our visual state flags
                                 if ((_visualState & TrayButtonVisualStateFlags.Hover) == 0)
                                 {
-                                    // track mousehover (for tooltips) and mouseleave (to remove hover effect)
+                                    // track both TME_LEAVE (so we get WM_MOUSELEAVE to drop the
+                                    // hover visual state) and TME_HOVER (so we get WM_MOUSEHOVER
+                                    // after the system's tooltip-delay period and can show the
+                                    // modern tooltip then). dwHoverTime = HOVER_DEFAULT honors
+                                    // the user's system-wide tooltip delay preference.
                                     // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-trackmouseevent
                                     var eventTrack = new Windows.Win32.UI.Input.KeyboardAndMouse.TRACKMOUSEEVENT()
                                     {
                                         cbSize = (uint)Marshal.SizeOf(typeof(Windows.Win32.UI.Input.KeyboardAndMouse.TRACKMOUSEEVENT)),
-                                        dwFlags = Windows.Win32.UI.Input.KeyboardAndMouse.TRACKMOUSEEVENT_FLAGS.TME_LEAVE,
+                                        dwFlags = Windows.Win32.UI.Input.KeyboardAndMouse.TRACKMOUSEEVENT_FLAGS.TME_LEAVE | Windows.Win32.UI.Input.KeyboardAndMouse.TRACKMOUSEEVENT_FLAGS.TME_HOVER,
                                         hwndTrack = _hwnd,
                                         dwHoverTime = PInvokeExtensions.HOVER_DEFAULT,
                                     };
@@ -692,6 +781,8 @@ internal class TrayButtonNativeWindow : IDisposable
                         case Windows.Win32.PInvoke.WM_RBUTTONDOWN:
                             {
                                 _visualState |= TrayButtonVisualStateFlags.RightButtonPressed;
+                                // hide the tooltip on right-click for the same reason as left-click above
+                                this.HideTooltip();
                                 //
                                 var updateVisualStateAlphaResult = this.UpdateVisualStateAlpha();
                                 Debug.Assert(updateVisualStateAlphaResult.IsSuccess, "Could not update visual state.");
@@ -767,15 +858,20 @@ internal class TrayButtonNativeWindow : IDisposable
                     return;
                 }
 
-                // create a solid white brush
+                // Create the highlight brush color based on the taskbar's current lightness:
+                // black overlay on a light taskbar, white overlay on a dark taskbar. Window-level
+                // alpha (SetBackgroundAlpha, 0.10 hover / 0.25 pressed) makes it translucent.
                 // see: https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-createsolidbrush
-                var createSolidBrushResult = Windows.Win32.PInvoke.CreateSolidBrush((Windows.Win32.Foundation.COLORREF)0x00FFFFFF);
+                Windows.Win32.Foundation.COLORREF highlightColorref = CachedTaskbarThemeState.GetCurrentIsTaskbarLight()
+                    ? (Windows.Win32.Foundation.COLORREF)0x00000000   // black overlay on light taskbar
+                    : (Windows.Win32.Foundation.COLORREF)0x00FFFFFF;  // white overlay on dark taskbar
+                var createSolidBrushResult = Windows.Win32.PInvoke.CreateSolidBrush(highlightColorref);
                 if (createSolidBrushResult == IntPtr.Zero)
                 {
-                    Debug.Assert(false, "Could not create white brush to paint the background of the TrayButton window (when responding to a WM_Paint message).");
+                    Debug.Assert(false, "Could not create highlight brush to paint the background of the TrayButton window (when responding to a WM_Paint message).");
                     return;
                 }
-                var whiteBrush = createSolidBrushResult;
+                var highlightBrush = createSolidBrushResult;
                 //
                 try
                 {
@@ -783,16 +879,16 @@ internal class TrayButtonNativeWindow : IDisposable
                     unsafe
                     {
                         // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-fillrect
-                        fillRectResult = Windows.Win32.PInvoke.FillRect(bufferedPaintDc, &paintStruct.rcPaint, whiteBrush);
+                        fillRectResult = Windows.Win32.PInvoke.FillRect(bufferedPaintDc, &paintStruct.rcPaint, highlightBrush);
                     }
-                    Debug.Assert(fillRectResult != 0, "Could not fill highlight background of Tray icon with white brush");
+                    Debug.Assert(fillRectResult != 0, "Could not fill highlight background of Tray icon with highlight brush");
                 }
                 finally
                 {
-                    // clean up the white solid brush we created for the fill operation
+                    // clean up the solid brush we created for the fill operation
                     // see: https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-deleteobject
-                    var deleteObjectSuccess = Windows.Win32.PInvoke.DeleteObject(whiteBrush);
-                    Debug.Assert(deleteObjectSuccess == true, "Could not delete white brush object used to highlight Tray icon");
+                    var deleteObjectSuccess = Windows.Win32.PInvoke.DeleteObject(highlightBrush);
+                    Debug.Assert(deleteObjectSuccess == true, "Could not delete highlight brush object used to highlight Tray icon");
                 }
             }
             finally
@@ -862,6 +958,10 @@ internal class TrayButtonNativeWindow : IDisposable
 
         if (this.ShouldWindowBeVisible())
         {
+            // Same alpha for both light and dark taskbars. The overlay COLOR is theme-aware
+            // (see WM_PAINT -- white on a dark taskbar, black on a light one), and once the
+            // brush color is correct, the original 0.10 / 0.25 alpha values look right in
+            // both directions.
             if (((_visualState & TrayButtonVisualStateFlags.LeftButtonPressed) != 0) ||
                     ((_visualState & TrayButtonVisualStateFlags.RightButtonPressed) != 0))
             {
@@ -869,7 +969,7 @@ internal class TrayButtonNativeWindow : IDisposable
             }
             else if ((_visualState & TrayButtonVisualStateFlags.Hover) != 0)
             {
-                highlightOpacity = 0.1;
+                highlightOpacity = 0.10;
             }
 
             var alpha = (byte)((double)255 * highlightOpacity);
@@ -1108,7 +1208,6 @@ internal class TrayButtonNativeWindow : IDisposable
             if (updateVisibilityResult.IsError == true)
             {
                 // NOTE: we may want to consider parsing out errors here
-                Debug.Assert(false, "Could not update .Visibility");
             }
         }
     }
@@ -1163,7 +1262,6 @@ internal class TrayButtonNativeWindow : IDisposable
         public record CouldNotBringToTop(uint Win32ErrorCode) : IRecalculatePositionAndRepositionWindowError;
         public record CouldNotCalculatePositionAndSizeForTrayButton(ICalculatePositionAndSizeForTrayButtonError InnerError) : IRecalculatePositionAndRepositionWindowError;
         public record CouldNotPositionAndResizeBitmap(IPositionAndResizeBitmapError InnerError) : IRecalculatePositionAndRepositionWindowError;
-        public record CouldNotSetTooltip(IUpdateTooltipTextAndTrackingError InnerError) : IRecalculatePositionAndRepositionWindowError;
         public record CouldNotSetWindowPosition(uint Win32ErrorCode) : IRecalculatePositionAndRepositionWindowError;
     }
     //
@@ -1204,18 +1302,6 @@ internal class TrayButtonNativeWindow : IDisposable
                 Debug.Assert(false, "Could not position and resize bitmap.");
                 var innerError = positionAndResizeBitmapResult.Error!;
                 return MorphicResult.ErrorResult<IRecalculatePositionAndRepositionWindowError>(new IRecalculatePositionAndRepositionWindowError.CouldNotPositionAndResizeBitmap(innerError));
-            }
-        }
-
-        // also reposition the tooltip's tracking rectangle
-        if (_tooltipText is not null)
-        {
-            var updateTooltipTextAndTrackingResult = this.UpdateTooltipTextAndTracking();
-            if (updateTooltipTextAndTrackingResult.IsError == true)
-            {
-                Debug.Assert(false, "Could not update tooltip text");
-                var innerError = updateTooltipTextAndTrackingResult.Error!;
-                return MorphicResult.ErrorResult<IRecalculatePositionAndRepositionWindowError>(new IRecalculatePositionAndRepositionWindowError.CouldNotSetTooltip(innerError));
             }
         }
 
@@ -1325,186 +1411,83 @@ internal class TrayButtonNativeWindow : IDisposable
         return MorphicResult.OkResult();
     }
 
-    public MorphicResult<MorphicUnit, IUpdateTooltipTextAndTrackingError> SetText(string? text)
+    // Stores the tooltip text for later display. The tooltip is shown on WM_MOUSEHOVER (after
+    // the system's hover delay) and hidden on WM_MOUSELEAVE / mouse-button press. Passing null
+    // suppresses the tooltip entirely until SetText is called again with non-null text.
+    public void SetText(string? text)
     {
         _tooltipText = text;
 
-        var updateTooltipTextAndTrackingResult = this.UpdateTooltipTextAndTracking();
-        if (updateTooltipTextAndTrackingResult.IsError == true)
+        // If the tooltip is currently visible (we just rewrote the caption while the user is
+        // already hovering), refresh it in place so the on-screen text matches the new value.
+        if (_tooltip is not null && (_visualState & TrayButtonVisualStateFlags.Hover) != 0)
         {
-            // NOTE: we simply pass through this error
-            Debug.Assert(false, "Could not update tooltip text");
-            return MorphicResult.ErrorResult(updateTooltipTextAndTrackingResult.Error!);
+            this.ShowTooltipForCurrentHover();
         }
-
-        return MorphicResult.OkResult();
     }
 
     //
 
-    private Windows.Win32.Foundation.HWND CreateTooltipWindow()
+    // Sizes the modern tooltip to the current _tooltipText, positions it above the tray
+    // button (centered horizontally), and shows it. Called from WM_MOUSEHOVER and from
+    // SetText when the caller updates the text while the cursor is already over the button.
+    // No-ops when there is no text or no tooltip instance.
+    private void ShowTooltipForCurrentHover()
     {
-        if (_tooltipWindowHandle != IntPtr.Zero)
+        if (_tooltip is null || string.IsNullOrEmpty(_tooltipText)) { return; }
+        // If the user has already clicked (and not yet moved off the button), don't show
+        // the tooltip again until they leave and re-enter the button area.
+        if (_suppressTooltipUntilLeave) { return; }
+
+        // Use the DPI of the monitor the tray button currently sits on so the tooltip's
+        // physical-pixel measurement matches that monitor (the user might be on a multi-monitor
+        // setup where the taskbar's monitor differs from the primary).
+        var monitor = Windows.Win32.PInvoke.MonitorFromWindow(_hwnd, Windows.Win32.Graphics.Gdi.MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
+
+        uint dpiX = 96;
+        uint dpiY = 96;
+        if (monitor != IntPtr.Zero)
         {
-            // tooltip window already exists; gracefully degrate by returning the existing window handle
-            return _tooltipWindowHandle;
-        }
-
-        Windows.Win32.Foundation.HWND tooltipWindowHandle;
-        unsafe
-        {
-            tooltipWindowHandle = Windows.Win32.PInvoke.CreateWindowEx(
-             0 /* no styles */,
-             Windows.Win32.PInvoke.TOOLTIPS_CLASS,
-             null,
-             Windows.Win32.UI.WindowsAndMessaging.WINDOW_STYLE.WS_POPUP | (Windows.Win32.UI.WindowsAndMessaging.WINDOW_STYLE)Windows.Win32.PInvoke.TTS_ALWAYSTIP,
-             Windows.Win32.PInvoke.CW_USEDEFAULT,
-             Windows.Win32.PInvoke.CW_USEDEFAULT,
-             Windows.Win32.PInvoke.CW_USEDEFAULT,
-             Windows.Win32.PInvoke.CW_USEDEFAULT,
-             _hwnd,
-             null,
-             null,
-             null);
-        }
-
-        // NOTE: Microsoft's documentation seems to indicate that we should set the tooltip as topmost, but in our testing this was unnecessary.  It's possible that using SendMessage to add/remove tooltip text automatically handles this when the system handles showing the tooltip
-        //       see: https://learn.microsoft.com/en-us/windows/win32/controls/tooltip-controls
-        //Windows.Win32.PInvoke.SetWindowPos(tooltipWindowHandle, Windows.Win32.Foundation.HWND.HWND_TOPMOST, 0, 0, 0, 0, Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOMOVE | Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOSIZE | Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
-
-        Debug.Assert(tooltipWindowHandle.IsNull == false, "Could not create tooltip window.");
-
-        return tooltipWindowHandle;
-    }
-
-    private MorphicResult<MorphicUnit, MorphicUnit> DestroyTooltipWindow()
-    {
-        if (_tooltipWindowHandle == IntPtr.Zero)
-        {
-            return MorphicResult.OkResult();
-        }
-
-        // set the tooltip text to empty (so that UpdateTooltipText will clear out the tooltip), then update the tooltip text.
-        _tooltipText = null;
-        _ = this.UpdateTooltipTextAndTracking();
-
-        // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-destroywindow
-        var destroyWindowResult = Windows.Win32.PInvoke.DestroyWindow(_tooltipWindowHandle);
-        _tooltipWindowHandle = Windows.Win32.Foundation.HWND.Null;
-
-        if (destroyWindowResult == true)
-        {
-            return MorphicResult.OkResult();
-        }
-        else
-        {
-            return MorphicResult.ErrorResult();
-        }
-    }
-
-    internal interface IUpdateTooltipTextAndTrackingError
-    {
-        public record CouldNotGetTrayButtonClientRect(uint Win32ErrorCode) : IUpdateTooltipTextAndTrackingError;
-        public record CouldNotUpdateTooltipViaSendMessage : IUpdateTooltipTextAndTrackingError;
-        public record TooltipWindowDoesNotExist : IUpdateTooltipTextAndTrackingError;
-        public record TrayButtonWindowDoesNotExist : IUpdateTooltipTextAndTrackingError;
-    }
-    private MorphicResult<MorphicUnit, IUpdateTooltipTextAndTrackingError> UpdateTooltipTextAndTracking()
-    {
-        if (_tooltipWindowHandle == IntPtr.Zero)
-        {
-            // tooltip window does not exist; failed; abort
-            Debug.Assert(false, "Tooptip window does not exist; if this is an expected failure, remove this assert.");
-            return MorphicResult.ErrorResult<IUpdateTooltipTextAndTrackingError>(new IUpdateTooltipTextAndTrackingError.TooltipWindowDoesNotExist());
-        }
-
-        var trayButtonNativeWindowHandle = _hwnd;
-        if (trayButtonNativeWindowHandle == IntPtr.Zero)
-        {
-            // tray button window does not exist; there is no tool window to update
-            return MorphicResult.ErrorResult<IUpdateTooltipTextAndTrackingError>(new IUpdateTooltipTextAndTrackingError.TrayButtonWindowDoesNotExist());
-        }
-
-        // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getclientrect
-        var getClientRectSuccess = Windows.Win32.PInvoke.GetClientRect(_hwnd, out var trayButtonClientRect);
-        if (getClientRectSuccess == false)
-        {
-            // failed; abort
-            var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
-            Debug.Assert(false, "Could not get client rect for tray button; could not set up tooltip; win32 errcode: " + win32ErrorCode.ToString());
-            return MorphicResult.ErrorResult<IUpdateTooltipTextAndTrackingError>(new IUpdateTooltipTextAndTrackingError.CouldNotGetTrayButtonClientRect((uint)win32ErrorCode));
-        }
-
-        IntPtr pointerToToolinfo;
-        unsafe
-        {
-            fixed (char* pointerToTooltipText = _tooltipText)
+            var dpiResult = Windows.Win32.PInvoke.GetDpiForMonitor(monitor, Windows.Win32.UI.HiDpi.MONITOR_DPI_TYPE.MDT_EFFECTIVE_DPI, out dpiX, out dpiY);
+            if (dpiResult != Windows.Win32.Foundation.HRESULT.S_OK)
             {
-                var toolinfo = new Windows.Win32.UI.Controls.TTTOOLINFOW();
-                toolinfo.cbSize = (uint)(Marshal.SizeOf<Windows.Win32.UI.Controls.TTTOOLINFOW>() - IntPtr.Size); // TTTOOLINFOW_V1_SIZE (required for TTM_ADDTOOL)
-                toolinfo.hwnd = _hwnd;
-                toolinfo.uFlags = Windows.Win32.UI.Controls.TOOLTIP_FLAGS.TTF_SUBCLASS;
-                toolinfo.lpszText = pointerToTooltipText;
-                toolinfo.uId = unchecked((nuint)(nint)_hwnd); // unique identifier (for adding/deleting the tooltip)
-                toolinfo.rect = trayButtonClientRect;
-                //
-                pointerToToolinfo = Marshal.AllocHGlobal(Marshal.SizeOf(toolinfo));
-                Marshal.StructureToPtr(toolinfo, pointerToToolinfo, false);
+                dpiX = 96;
+                dpiY = 96;
             }
         }
-        try
+
+        var size = _tooltip.SetText(_tooltipText, dpiX);
+
+        // Position the tooltip directly above the tray button, centered horizontally on the
+        // button. The gap (logical px, scaled to physical) between the tray button's top
+        // edge and the tooltip's bottom edge is large enough to clear the taskbar's outer
+        // bevel/shadow so the tooltip reads as floating above the bar instead of touching it.
+        int gapPhysical = (int)System.Math.Round(10.0 * dpiY / 96.0);
+        int tooltipX = _trayButtonPositionAndSize.X + (_trayButtonPositionAndSize.Width - size.Width) / 2;
+        int tooltipY = _trayButtonPositionAndSize.Y - size.Height - gapPhysical;
+
+        // Clamp X to the monitor work area so the tooltip stays on screen when the tray
+        // button is right at the screen edge. We do not flip vertically for top-docked
+        // taskbars yet (Win11 default is bottom); if that becomes a real config, add a
+        // below-the-button branch here.
+        if (monitor != IntPtr.Zero)
         {
-            if (_tooltipText is not null)
+            var monitorInfo = new Windows.Win32.Graphics.Gdi.MONITORINFO { cbSize = (uint)Marshal.SizeOf<Windows.Win32.Graphics.Gdi.MONITORINFO>() };
+            if (Windows.Win32.PInvoke.GetMonitorInfo(monitor, ref monitorInfo))
             {
-                if (_tooltipInfoAdded == false)
-                {
-                    // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-sendmessagew
-                    //
-                    // see: https://learn.microsoft.com/en-us/windows/win32/controls/ttm-addtool
-                    var addToolSuccess = Windows.Win32.PInvoke.SendMessage(_tooltipWindowHandle, Windows.Win32.PInvoke.TTM_ADDTOOL, (Windows.Win32.Foundation.WPARAM)0, pointerToToolinfo);
-                    if (addToolSuccess == 0)
-                    {
-                        Debug.Assert(false, "Could not add tooltip info");
-                        return MorphicResult.ErrorResult<IUpdateTooltipTextAndTrackingError>(new IUpdateTooltipTextAndTrackingError.CouldNotUpdateTooltipViaSendMessage());
-                    }
-                    _tooltipInfoAdded = true;
-                }
-                else
-                {
-                    // delete and re-add the tooltipinfo; this will update all the info (including the text and tracking rect)
-                    //
-                    // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-sendmessagew
-                    //
-                    // see: https://learn.microsoft.com/en-us/windows/win32/controls/ttm-deltool
-                    // NOTE: TTM_DELTOOL does not return a result
-                    _ = Windows.Win32.PInvoke.SendMessage(_tooltipWindowHandle, Windows.Win32.PInvoke.TTM_DELTOOL, (Windows.Win32.Foundation.WPARAM)0, pointerToToolinfo);
-                    //
-                    // see: https://learn.microsoft.com/en-us/windows/win32/controls/ttm-addtool
-                    var addToolSuccess = Windows.Win32.PInvoke.SendMessage(_tooltipWindowHandle, Windows.Win32.PInvoke.TTM_ADDTOOL, (Windows.Win32.Foundation.WPARAM)0, pointerToToolinfo);
-                    if (addToolSuccess == 0)
-                    {
-                        Debug.Assert(false, "Could not update tooltip info");
-                        return MorphicResult.ErrorResult<IUpdateTooltipTextAndTrackingError>(new IUpdateTooltipTextAndTrackingError.CouldNotUpdateTooltipViaSendMessage());
-                    }
-                }
+                int minX = monitorInfo.rcWork.left + 4;
+                int maxX = monitorInfo.rcWork.right - size.Width - 4;
+                if (tooltipX < minX) { tooltipX = minX; }
+                if (tooltipX > maxX) { tooltipX = maxX; }
             }
-            else /* if (_tooltipInfoAdded == true) */
-            {
-                // NOTE: we might technically call "deltool" even when a tooltipinfo was already removed
-                //
-                // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-sendmessagew
-                //
-                // see: https://learn.microsoft.com/en-us/windows/win32/controls/ttm-deltool
-                _ = Windows.Win32.PInvoke.SendMessage(_tooltipWindowHandle, Windows.Win32.PInvoke.TTM_DELTOOL, (Windows.Win32.Foundation.WPARAM)0, pointerToToolinfo);
-                _tooltipInfoAdded = false;
-            }
-        }
-        finally
-        {
-            Marshal.FreeHGlobal(pointerToToolinfo);
         }
 
-        return MorphicResult.OkResult();
+        _tooltip.ShowAt(new Windows.Graphics.PointInt32(tooltipX, tooltipY), size);
+    }
+
+    private void HideTooltip()
+    {
+        _tooltip?.Hide();
     }
 
     //

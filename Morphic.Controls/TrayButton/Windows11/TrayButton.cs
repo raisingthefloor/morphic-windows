@@ -160,15 +160,8 @@ internal class TrayButton : IDisposable
     {
         _text = value;
 
-        if (_nativeWindow is not null)
-        {
-            var setTextResult = _nativeWindow!.SetText(_text);
-            if (setTextResult.IsError == true)
-            {
-                Debug.Assert(false, "Could not set text.");
-                return MorphicResult.ErrorResult();
-            }
-        }
+        _nativeWindow?.SetText(_text);
+
         return MorphicResult.OkResult();
     }
 
@@ -224,7 +217,6 @@ internal class TrayButton : IDisposable
     {
         public record CouldNotCreateWindow(ICreateNewError InnerError) : IShowError;
         public record CouldNotSetBitmap(TrayButtonNativeWindow.ISetBitmapError InnerError) : IShowError;
-        public record CouldNotSetText(TrayButtonNativeWindow.IUpdateTooltipTextAndTrackingError InnerError) : IShowError;
         public record OtherError : IShowError;
     }
     //
@@ -244,8 +236,6 @@ internal class TrayButton : IDisposable
                         return MorphicResult.ErrorResult<IShowError>(new IShowError.CouldNotCreateWindow(innerError));
                     case ICreateNativeWindowError.CouldNotSetBitmap(var innerError):
                         return MorphicResult.ErrorResult<IShowError>(new IShowError.CouldNotSetBitmap(innerError));
-                    case ICreateNativeWindowError.CouldNotSetText(var innerError):
-                        return MorphicResult.ErrorResult<IShowError>(new IShowError.CouldNotSetText(innerError));
                     default:
                         throw new MorphicUnhandledErrorException();
                 }
@@ -295,7 +285,6 @@ internal class TrayButton : IDisposable
     {
         public record AlreadyExists : ICreateNativeWindowError;
         public record CouldNotSetBitmap(TrayButtonNativeWindow.ISetBitmapError InnerError) : ICreateNativeWindowError;
-        public record CouldNotSetText(TrayButtonNativeWindow.IUpdateTooltipTextAndTrackingError InnerError) : ICreateNativeWindowError;
         public record CreateFailed(ICreateNewError InnerError) : ICreateNativeWindowError;
     }
     //
@@ -336,14 +325,7 @@ internal class TrayButton : IDisposable
         }
         //
         // set the (tooltip) text for the native window
-        var setTextResult = nativeWindow.SetText(_text);
-        if (setTextResult.IsError == true)
-        {
-            nativeWindow.Dispose();
-            //
-            var innerError = setTextResult.Error!;
-            return MorphicResult.ErrorResult<ICreateNativeWindowError>(new ICreateNativeWindowError.CouldNotSetText(innerError));
-        }
+        nativeWindow.SetText(_text);
 
         return MorphicResult.OkResult(nativeWindow);
     }
