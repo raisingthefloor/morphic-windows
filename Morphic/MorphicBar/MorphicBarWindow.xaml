@@ -15,13 +15,13 @@
         <Border x:Name="OuterBorder"
                 Background="{ThemeResource ThemeAwareBackground}"
                 BorderBrush="{ThemeResource ThemeAwareBorder}"
-                BorderThickness="1"
+                BorderThickness="{x:Bind local:MorphicBarWindowMetrics.BarBorderThickness}"
                 CornerRadius="5">
             <Grid x:Name="LayoutGrid">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition x:Name="LogoColumn" Width="Auto"/>
-                    <ColumnDefinition x:Name="CloseButtonColumn" Width="25"/>
+                    <ColumnDefinition x:Name="CloseButtonColumn" Width="{x:Bind local:MorphicBarWindowMetrics.CloseButtonColumnGridLength}"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
@@ -35,7 +35,7 @@
                             Grid.Column="0" Grid.Row="0"
                             Orientation="Horizontal"
                             HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                            Spacing="15"
+                            Spacing="{x:Bind local:MorphicBarWindowMetrics.ItemsPanelSpacing}"
                             IsTabStop="False"/>
 
                 <!-- Morphic menu logo button (column 1 when horizontal; row 1 when vertical) -->
@@ -48,14 +48,14 @@
                         Click="MorphicMenuButton_Click"
                         RightTapped="MorphicMenuButton_RightTapped"
                         AutomationProperties.Name="Morphic Menu">
-                    <controls:MorphicMenuLogoViewbox Width="35" Height="46"/>
+                    <controls:MorphicMenuLogoViewbox Width="{x:Bind local:MorphicBarWindowMetrics.MenuLogoWidth}" Height="{x:Bind local:MorphicBarWindowMetrics.MenuLogoHeight}"/>
                 </Button>
 
                 <!-- Close button (top-right corner by default (LTR flow direction); top-left corner when RTL flow direction) -->
 		<!-- NOTE: the grid column/row changes when the orientation changes; default orientation is horizontal -->
                 <Button x:Name="CloseButton"
                         Grid.Column="2" Grid.Row="0"
-                        Width="25" Height="20"
+                        Width="{x:Bind local:MorphicBarWindowMetrics.CloseButtonWidth}" Height="{x:Bind local:MorphicBarWindowMetrics.CloseButtonHeight}"
                         HorizontalAlignment="Right" VerticalAlignment="Top"
                         Click="CloseButton_Click"
                         AutomationProperties.Name="Close">

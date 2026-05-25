@@ -37,6 +37,18 @@ public static class MorphicBarWindowMetrics
     // logical px on each side; layout math (innerThicknessCap, content-area
     // calculations) subtracts this twice for the inside available area.
     public const double BarBorderThicknessPerSide = 1.0;
+    //
+    // XAML-facing form of BarBorderThicknessPerSide (so the OuterBorder's
+    // BorderThickness can {x:Bind} to it -- BorderThickness is a Thickness,
+    // not a double, and {x:Bind} doesn't apply type converters). Derived from
+    // the scalar above so the two stay in sync.
+    public static readonly Thickness BarBorderThickness = new(BarBorderThicknessPerSide);
+
+    // Bar outer-corner radius (logical px). The MorphicBar's OuterBorder rounds
+    // all four corners to this radius. The close button's outer corner (top-right
+    // in LTR, top-left in RTL) also uses this radius so it aligns visually with
+    // the bar's outer corner (as the close button sits flush against that corner).
+    public const double BarCornerRadius = 5.0;
 
     // Defensive cap on the number of bar items that will be considered and
     // laid out. Items beyond this index are dropped silently. Not a perceptible
@@ -67,9 +79,15 @@ public static class MorphicBarWindowMetrics
     public const double MenuLogoWidth = 35;
     public const double MenuLogoHeight = 46;
 
-    // Close-button column width (currently a hidden close button used for HC
-    // keyboard accelerators)
-    public const double CloseButtonColumnWidth = 25;
+    // Close button (top-right corner of the bar in horizontal orientation, top-left
+    // in RTL flow direction; closes the MorphicBar window). Sized to match the
+    // Windows standard window close-button convention.
     public const double CloseButtonWidth = 25;
     public const double CloseButtonHeight = 20;
+    //
+    // GridLength form of CloseButtonWidth for the close-button column in
+    // MorphicBarWindow.xaml. The column width derives from the button width so
+    // the two stay in sync (the column is sized to exactly hold the button).
+    // Stored as GridLength (not double).
+    public static readonly GridLength CloseButtonColumnGridLength = new(CloseButtonWidth);
 }

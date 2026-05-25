@@ -60,8 +60,8 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     private Microsoft.UI.Dispatching.DispatcherQueueTimer? _moveAnimationTimer;
 
     // logical (96 DPI) window size -- scaled by the current monitor's DPI
-    private uint _logicalLength = 67; // 100 pixels at 150% zoom
-    private uint _logicalThickness = 67; // 100 pixels at 150% zoom
+    private uint _logicalLength = MorphicBarWindowMetrics.DefaultLogicalLength;
+    private uint _logicalThickness = MorphicBarWindowMetrics.DefaultLogicalThickness;
 
     // variables to enable full-window click-and-drag
     private Windows.Graphics.PointInt32 _dragStartWindowPosition;
@@ -89,10 +89,6 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     // of re-querying the window's current position each time) means a DPI/rasterization-scale
     // change does not silently relocate us to a different display.
     private Windows.Win32.Graphics.Gdi.HMONITOR _currentMonitorHandle;
-
-    // Maximum number of bar items the MorphicBar can hold. If a caller supplies more, excess items
-    // are silently dropped during InitializeBarItems.
-    public const int MaxBarItemCount = 128;
 
     // Master registry of all bar item controls created from the last InitializeBarItems call. Items
     // here are NOT necessarily currently present in BarItemsPanel.Children -- we trim (move)
@@ -155,12 +151,12 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         this.BarItemsPanel.Children.Clear();
         _allBarItemControls.Clear();
 
-        // materialize the input so we can length-check it; enforce MaxBarItemCount by silently
+        // materialize the input so we can length-check it; enforce MorphicBarWindowMetrics.MaxBarItemCount by silently
         // truncating excess.
         var itemsList = items.ToList();
-        if (itemsList.Count > MaxBarItemCount)
+        if (itemsList.Count > MorphicBarWindowMetrics.MaxBarItemCount)
         {
-            itemsList = itemsList.GetRange(0, MaxBarItemCount);
+            itemsList = itemsList.GetRange(0, MorphicBarWindowMetrics.MaxBarItemCount);
         }
 
         // build all the controls up front; each one's Orientation is synced with the bar's current
@@ -571,8 +567,8 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     {
         return orientation switch
         {
-            Orientation.Horizontal => new Thickness(10, 3.65, 13, 3.65),
-            Orientation.Vertical => new Thickness(7, 25, 7, 5),
+            Orientation.Horizontal => MorphicBarWindowMetrics.ItemsPanelMarginHorizontal,
+            Orientation.Vertical => MorphicBarWindowMetrics.ItemsPanelMarginVertical,
             _ => throw new Morphic.Core.MorphicUnhandledCaseException(orientation),
         };
     }
@@ -583,8 +579,8 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     {
         return orientation switch
         {
-            Orientation.Horizontal => new Thickness(0, 0, 5, 0),
-            Orientation.Vertical => new Thickness(0, 10, 0, 10),
+            Orientation.Horizontal => MorphicBarWindowMetrics.MenuButtonMarginHorizontal,
+            Orientation.Vertical => MorphicBarWindowMetrics.MenuButtonMarginVertical,
             _ => throw new Morphic.Core.MorphicUnhandledCaseException(orientation),
         };
     }
@@ -803,10 +799,8 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         //       both Pass 2's thickness constraint and the trim's length cap have to subtract it.
         //       The returned outer dimensions (barLength, barThickness) add it back so AppWindow
         //       is sized to include the border. -----
-        // NOTE: the literal 1.0 mirrors BorderThickness="1" on the Border in MorphicBarWindow.xaml;
-        // if that XAML value ever changes, this constant has to follow.
-        const double barBorderThicknessPerSide = 1.0;
-        const double barBorderThicknessBothSides = barBorderThicknessPerSide * 2;
+        double barBorderThicknessPerSide = MorphicBarWindowMetrics.BarBorderThicknessPerSide;
+        double barBorderThicknessBothSides = barBorderThicknessPerSide * 2;
 
         // ----- compose the bar's effective INNER thickness (capped to working area minus border) -----
         // thickness axis composition: max(items + items panel margin, logo with margin, close)
