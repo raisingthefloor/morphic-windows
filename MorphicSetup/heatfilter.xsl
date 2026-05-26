@@ -27,7 +27,7 @@
        of component since the same component with higher versioned keyfile
        exists" rule. That rule normally fires when a new file's baked-in
        version is lower than the installed copy on disk (but some files that we
-       install--including Microsoft DLLs--can sometimes be older versions).
+       install, including Microsoft DLLs, can sometimes be older versions).
 
        morphic.exe's component is excluded from heat by the FilterMorphicExe
        key above and is declared manually in Package.wxs, so this template
