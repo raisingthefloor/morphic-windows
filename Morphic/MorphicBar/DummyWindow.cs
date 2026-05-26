@@ -40,6 +40,7 @@ internal class DummyWindow : IDisposable
     {
         unsafe
         {
+            System.Runtime.InteropServices.Marshal.SetLastPInvokeError(0);
             this._hwnd = Windows.Win32.PInvoke.CreateWindowEx(
                   (Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE)0,
                   "Static",  // built-in window class, no need to register
@@ -51,6 +52,9 @@ internal class DummyWindow : IDisposable
                   null,
                   null
               );
+            int createWindowErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+            Morphic.Controls.Windowing.TaskbarDiag.Log(
+                $"DummyWindow.ctor: CreateWindowEx returned hwnd={Morphic.Controls.Windowing.TaskbarDiag.HwndToHex(this._hwnd)} lastError={createWindowErrorCode}");
         }
     }
 
@@ -98,12 +102,23 @@ internal class DummyWindow : IDisposable
         // NOTE: SetWindowLongPtr can return 0 even if there is no error; see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowlongptrw
         System.Runtime.InteropServices.Marshal.SetLastPInvokeError(0);
         var setWindowLongPtrResult = Windows.Win32.PInvoke.SetWindowLongPtr(childHwnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWLP_HWNDPARENT, this._hwnd);
+        var setWindowLongPtrWin32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+
+        // Verify that the assignment actually stuck. SetWindowLongPtr returns the previous
+        // value, which can be 0 either because the prior owner was null (legitimate success)
+        // or because the call silently failed. GetWindow(GW_OWNER) is the source of truth.
+        var actualOwnerAfter = Windows.Win32.PInvoke.GetWindow(childHwnd, Windows.Win32.UI.WindowsAndMessaging.GET_WINDOW_CMD.GW_OWNER);
+        Morphic.Controls.Windowing.TaskbarDiag.Log(
+            $"DummyWindow.SetAsParentHwnd: childHwnd=0x{childHwnd.Value:X} thisHwnd(dummy)=0x{this._hwnd.Value:X} " +
+            $"setLongPtrPrevious=0x{setWindowLongPtrResult:X} lastError={setWindowLongPtrWin32ErrorCode} " +
+            $"actualOwnerAfter=0x{actualOwnerAfter.Value:X} " +
+            $"match={(actualOwnerAfter.Value == this._hwnd.Value ? "YES" : "NO")}");
+
         if (setWindowLongPtrResult == 0)
         {
-            var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
-            if (win32ErrorCode != 0)
+            if (setWindowLongPtrErrorCode != 0)
             {
-                return MorphicResult.ErrorResult<Morphic.WindowsNative.IWin32ApiError>(new Morphic.WindowsNative.IWin32ApiError.Win32Error((uint)win32ErrorCode));
+                return MorphicResult.ErrorResult<Morphic.WindowsNative.IWin32ApiError>(new Morphic.WindowsNative.IWin32ApiError.Win32Error((uint)setWindowLongPtrWin32ErrorCode));
             }
         }
 

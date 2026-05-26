@@ -180,6 +180,30 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         _dummyParentWindow = new DummyWindow();
         _ = _dummyParentWindow.SetAsParentHwnd(hwnd);
 
+        // Defensive cover for the production scenario (signed + uiaccess=true + Program Files
+        // install location) where the SetAsParentHwnd call above fails silently and the bar
+        // would otherwise appear in the taskbar. ITaskbarList.DeleteTab removes the taskbar
+        // entry without affecting Alt+Tab inclusion (which is what WS_EX_TOOLWINDOW would
+        // break). Called from each non-Deactivated Activated event, not just the first, in
+        // case the Shell re-adds the entry on a subsequent Show. Also logs the bar's owner
+        // state to capture diagnostic data about why the owner relationship fails in prod.
+        this.Activated += (s, e) =>
+        {
+            if (e.WindowActivationState == Microsoft.UI.Xaml.WindowActivationState.Deactivated)
+            {
+                return;
+            }
+            var ownerNow = Windows.Win32.PInvoke.GetWindowLongPtr(hwnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWLP_HWNDPARENT);
+            Morphic.Controls.Windowing.TaskbarDiag.Log(
+                $"MorphicBarWindow.Activated({e.WindowActivationState}): hwnd={Morphic.Controls.Windowing.TaskbarDiag.HwndToHex(hwnd)} ownerNow=0x{ownerNow:X}");
+            IntPtr hwndAsIntPtr;
+            unsafe
+            {
+                hwndAsIntPtr = (IntPtr)hwnd.Value;
+            }
+            Morphic.Controls.Windowing.TaskbarHelper.RemoveFromTaskbar(hwndAsIntPtr);
+        };
+
         // create a layout preview window; we'll need this whenever the MorphicBar is moved; this is created up front, as it can take a little time to create the window
         _layoutPreviewWindow = new();
 
@@ -539,6 +563,36 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         }
     }
 
+    // Brute-force tree walk that returns true if ANY Control in the bar's visual tree currently
+    // has FocusState=Keyboard. Same walking strategy as DowngradeKeyboardFocusedControlsInBar,
+    // chosen for the same reason: FocusManager.GetFocusedElement may return a parent element
+    // (ScrollViewer, etc.) rather than the actual Keyboard-focused button. Used by AnimateMoveTo
+    // to snapshot the pre-reflow Keyboard-focus state so the post-reflow defuse can preserve
+    // legitimate keyboard focus while clearing the spurious focus that the reflow introduces.
+    private bool HasAnyKeyboardFocusedControlInBar()
+    {
+        if (this.Content is not DependencyObject root)
+        {
+            return false;
+        }
+        var queue = new System.Collections.Generic.Queue<DependencyObject>();
+        queue.Enqueue(root);
+        while (queue.Count > 0)
+        {
+            var current = queue.Dequeue();
+            if (current is Control control && control.FocusState == FocusState.Keyboard)
+            {
+                return true;
+            }
+            int childCount = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChildrenCount(current);
+            for (int i = 0; i < childCount; i++)
+            {
+                queue.Enqueue(Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChild(current, i));
+            }
+        }
+        return false;
+    }
+
     // Walks the bar's visual tree and downgrades any Control with FocusState=Keyboard to
     // FocusState=Pointer. Called from RunDeferredFocusUpdate when we detect a mouse-driven
     // activation, and from MorphicBarManager.ShowBar(activateWindow:true) to defuse any
@@ -735,6 +789,16 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         _moveAnimationTimer?.Stop();
         _moveAnimationTimer = null;
 
+        // Snapshot whether any bar control currently has Keyboard FocusState. On the drag-release
+        // orientation-flip path (snapResizeAtPoint != null), changing BarItemsPanel.Orientation
+        // causes WinUI's focus subsystem to place Keyboard focus on the first focusable child of
+        // the re-oriented panel, which lights up the keyboard focus ring on what was a mouse-driven
+        // gesture. We use this snapshot at the end of the method to defuse the spurious ring
+        // without losing legitimate keyboard focus that the user may have had before the drag
+        // (e.g., tabbed in, then mouse-dragged the bar to a new edge).
+        bool hadKeyboardFocusBeforeReflow = (snapResizeAtPoint is not null)
+            && this.HasAnyKeyboardFocusedControlInBar();
+
         // record the destination monitor; this is the single normal path that legitimately changes
         // which monitor we are on (both intentional moves and drag-release end up here)
         _currentMonitorHandle = hMonitor;
@@ -808,6 +872,28 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         // If snapResizeAtPoint was used above, AppWindow.Size already matches targetSize and
         // AnimationUtils.AnimateMoveTo's sizeChanging check will short-circuit the size interpolation.
         _moveAnimationTimer = AnimationUtils.AnimateMoveTo(_dispatcherQueue, this.AppWindow, targetPosition, targetSize, duration);
+
+        // Defuse the spurious Keyboard focus that the orientation-flip path can introduce on
+        // BarItemsPanel's first focusable child. Deferred via the dispatcher so it runs after
+        // WinUI's focus subsystem has settled from the layout changes performed synchronously
+        // above. Only runs when (a) this is the drag-release flip path (snapResizeAtPoint != null)
+        // AND (b) no element had Keyboard focus before the reflow; the latter preserves the
+        // (rare) case of a user who tabbed in and then mouse-dragged the bar.
+        if (snapResizeAtPoint is not null && !hadKeyboardFocusBeforeReflow)
+        {
+            _ = this.DispatcherQueue.TryEnqueue(() =>
+            {
+                try
+                {
+                    this.DowngradeKeyboardFocusedControlsInBar();
+                }
+                catch (System.Runtime.InteropServices.COMException)
+                {
+                    // window may have torn down between schedule and fire; swallow to keep
+                    // shutdown quiet (matches RunDeferredFocusUpdate's handling of the same).
+                }
+            });
+        }
     }
 
     internal void AnimateStop()
