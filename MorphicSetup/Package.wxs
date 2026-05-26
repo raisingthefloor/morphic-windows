@@ -72,7 +72,7 @@
 
   <Fragment>
     <ComponentGroup Id="MorphicComponents" Directory="INSTALLFOLDER">
-      <Component>
+      <Component Id="MorphicExeComponent" Guid="2E5F8A1B-3D7C-4E9A-B6F2-1D4C8E7A9B3F">
         <File Id="morphic_exe" Source="Morphic.exe" KeyPath="yes" />
         <File Id="morphic_core_dll" Source="Morphic.Core.dll" CompanionFile="morphic_exe" />
         <File Id="dia_sym_reader_native_amd64_dll" Source="Microsoft.DiaSymReader.Native.amd64.dll" CompanionFile="morphic_exe" />
