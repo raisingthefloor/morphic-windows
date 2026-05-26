@@ -86,6 +86,19 @@
                                             </VisualState.Setters>
                                         </VisualState>
                                     </VisualStateGroup>
+                                    <!-- FocusStates: mirror the PointerOver visual on Keyboard focus so a Tab-to-Close
+                                         user gets the same red affordance as mouse hover. PointerFocused (mouse-induced
+                                         focus) is left empty; the PointerOver state already handles the mouse case. -->
+                                    <VisualStateGroup x:Name="FocusStates">
+                                        <VisualState x:Name="Unfocused"/>
+                                        <VisualState x:Name="PointerFocused"/>
+                                        <VisualState x:Name="Focused">
+                                            <VisualState.Setters>
+                                                <Setter Target="CloseButtonBorder.Background" Value="#E4142C"/>
+                                                <Setter Target="CloseButtonPath.Stroke" Value="White"/>
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                    </VisualStateGroup>
                                     <VisualStateGroup x:Name="DirectionStates">
                                         <!-- default is LTR flow direction; when in RTL flow direction, round the top-left corner instead -->
                                         <VisualState x:Name="LeftToRight"/>
