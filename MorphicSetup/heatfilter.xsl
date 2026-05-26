@@ -30,6 +30,15 @@
        identify it and it can be added to the same exclude+companion pattern. -->
   <xsl:key name="FilterMorphicCoreDll" match="wix:Component[wix:File/@Source = 'SourceDir\Morphic.Core.dll']" use="@Id" />
 
+  <!-- Architecture-specific DiaSymReader filters. Only one of these matches anything
+       per build: the .amd64 filename exists only in x64 publish output, the .arm64
+       filename only in arm64 publish output. The non-matching filter is a harmless
+       no-op. Both are paired with the $(sys.BUILDARCH)-conditional File declarations
+       in Package.wxs that manually add the architecture-matched variant to
+       MorphicExeComponent as a CompanionFile of morphic_exe. -->
+  <xsl:key name="FilterDiaSymReaderNativeAmd64Dll" match="wix:Component[wix:File/@Source = 'SourceDir\Microsoft.DiaSymReader.Native.amd64.dll']" use="@Id" />
+  <xsl:key name="FilterDiaSymReaderNativeArm64Dll" match="wix:Component[wix:File/@Source = 'SourceDir\Microsoft.DiaSymReader.Native.arm64.dll']" use="@Id" />
+
   <!-- Copy all elements and their attributes. -->
   <xsl:template match="@*|node()">
     <xsl:copy>
@@ -41,5 +50,7 @@
   <xsl:template match="*[ self::wix:Component or self::wix:ComponentRef ][ key( 'FilterPdbs', @Id ) ]" />
   <xsl:template match="*[ self::wix:Component or self::wix:ComponentRef ][ key( 'FilterMorphicExe', @Id ) ]" />
   <xsl:template match="*[ self::wix:Component or self::wix:ComponentRef ][ key( 'FilterMorphicCoreDll', @Id ) ]" />
+  <xsl:template match="*[ self::wix:Component or self::wix:ComponentRef ][ key( 'FilterDiaSymReaderNativeAmd64Dll', @Id ) ]" />
+  <xsl:template match="*[ self::wix:Component or self::wix:ComponentRef ][ key( 'FilterDiaSymReaderNativeArm64Dll', @Id ) ]" />
 </xsl:stylesheet>
 <!-- adapted from WiX toolset sample (github.com/DeploymentDojo/BeltTest) -->
