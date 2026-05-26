@@ -46,10 +46,6 @@ internal sealed class MorphicBarManager : IDisposable
         // from a worker thread; marshal the refresh onto the bar's DispatcherQueue (UI thread)
         // before calling SetIconFromFile.
         this.RefreshBarIcon();
-        _barIconRefreshHandler = (_, _) =>
-        {
-            _uiDispatcherQueue.TryEnqueue(this.RefreshBarIcon);
-        };
     }
 
     // Picks the correct contrast-variant icon for the current system theme and applies it to

@@ -86,6 +86,7 @@ internal static class BarItemDataFactory
                 decreaseButton.IsEnabled = false;
                 return;
             }
+            var range = rangeResult.Value;
             increaseButton.IsEnabled = range.CurrentDpiOffset < range.MaximumDpiOffset;
             decreaseButton.IsEnabled = range.CurrentDpiOffset > range.MinimumDpiOffset;
         };
