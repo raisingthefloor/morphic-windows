@@ -143,6 +143,13 @@ public partial class App : Application
         // Hand the configured bar to the manager. The manager subscribes to the bar's events.
         _morphicBarManager = new Morphic.MorphicBar.MorphicBarManager(morphicBarWindow);
 
+        // Keep the tray-button tooltip in sync with the MorphicBar's visibility ("Show MorphicBar"
+        // when hidden, "Hide MorphicBar" when visible). RefreshTaskbarButtonTooltip is also called
+        // once here so the initial caption matches the bar's current state before any user
+        // interaction.
+        _morphicBarManager.BarVisibilityChanged += (_, _) => this.RefreshTaskbarButtonTooltip();
+        this.RefreshTaskbarButtonTooltip();
+
         // show our taskbar icon (button)
         this.TaskbarButton.SetVisible(true);
 

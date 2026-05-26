@@ -225,6 +225,10 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         {
             // no items to wait for: still re-fit the bar (collapses chrome around an empty panel)
             this.MeasureAndResize();
+			
+            // re-seed focus (for accessiblity); with no items, SetInitialFocus falls back to the logo button
+            this.SetInitialFocus();
+			
             return;
         }
         foreach (var control in _allBarItemControls)
@@ -249,6 +253,13 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             // moves anything that doesn't fit out of BarItemsPanel into the cache.
             this.BarItemsPanel.Children.Add(control);
         }
+
+        // Re-seed focus on the (new) first item. Items are in the visual tree at this point
+        // (added to BarItemsPanel.Children above) even though their Loaded events may not have
+        // fired yet -- the focus subsystem looks at the visual tree, not Loaded state, so this
+        // is fine. If the bar isn't currently active, the Focus call is a harmless no-op;
+        // MorphicBarWindow_Activated will set focus again when the bar next becomes active.
+        this.SetInitialFocus();
     }
 
     // Returns true once every control in _allBarItemControls has fired its Loaded event (and is
@@ -287,7 +298,61 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
 
     private void MorphicBarWindow_Activated(object sender, WindowActivatedEventArgs args)
     {
-        // handle any post-load code here
+        // Ignore deactivations -- we only want to set initial focus when the bar becomes active
+        // (e.g., Alt+Tab to it, initial Activate after construction).
+        if (args.WindowActivationState == WindowActivationState.Deactivated)
+        {
+            return;
+        }
+
+        // Only set initial focus if no element within the bar currently has focus. If the user
+        // had previously Tabbed to a control inside the bar and is just returning to it,
+        // WinUI's focus restoration may already have placed focus correctly -- in which case
+        // we leave it alone. If focus is null or on something outside the bar (e.g., right
+        // after window activation when nothing is focused yet), set focus to a sensible default.
+        var focused = Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(this.Content.XamlRoot) as DependencyObject;
+        if (focused is null || this.IsBarOwnedElement(focused) == false)
+        {
+            this.SetInitialFocus();
+        }
+    }
+
+    // Places keyboard focus on a sensible "first interactable" element inside the bar. Order of
+    // preference:
+    //   1. First focusable descendant of BarItemsPanel (the first inner button of the first bar
+    //      item; FocusManager walks the visual tree, so we don't need per-item knowledge of which
+    //      inner control to focus).
+    //   2. Morphic logo button (always present, used as the fallback when the bar has no items or
+    //      none with focusable content).
+    // FocusState.Keyboard shows the focus ring (Alt+Tab is keyboard-driven and we want the ring).
+    internal void SetInitialFocus()
+    {
+        var firstFocusable = Microsoft.UI.Xaml.Input.FocusManager.FindFirstFocusableElement(this.BarItemsPanel);
+        if (firstFocusable is Control firstControl)
+        {
+            firstControl.Focus(FocusState.Keyboard);
+            return;
+        }
+        // no bar items (or none with focusable content) -> fall back to the Morphic logo button
+        this.MorphicMenuButton.Focus(FocusState.Keyboard);
+    }
+
+    // Walks the visual-parent chain of `element` to determine whether it lives inside this bar
+    // window's content tree. Used by MorphicBarWindow_Activated to decide whether the framework
+    // has already placed focus on a bar control (leave alone) or focus is elsewhere (place
+    // initial focus ourselves).
+    private bool IsBarOwnedElement(DependencyObject element)
+    {
+        var current = element;
+        while (current is not null)
+        {
+            if (current == this.Content)
+            {
+                return true;
+            }
+            current = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetParent(current);
+        }
+        return false;
     }
 
     private void RootGrid_Loaded(object sender, RoutedEventArgs e)
