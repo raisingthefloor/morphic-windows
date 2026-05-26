@@ -129,7 +129,7 @@ public partial class App : Application
         // The local `morphicBarWindow` reference goes out of scope after the manager takes it; App keeps
         // only the manager reference (this.MorphicBarManager): all subsequent bar operations go through
         // manager wrappers (Show/Hide/Activate/IsVisible/etc.).
-        var morphicBarWindow = new Morphic.MorphicBar.MorphicBarWindow();
+        var morphicBarWindow = Morphic.MorphicBar.MorphicBarWindow.CreateWithHiddenTaskbar();
         morphicBarWindow.Orientation = Orientation.Horizontal;
         morphicBarWindow.InitializeBarItems(App.CreateBasicBarItemsData());
 

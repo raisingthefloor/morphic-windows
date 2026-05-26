@@ -41,7 +41,8 @@ internal class DummyWindow : IDisposable
         unsafe
         {
             this._hwnd = Windows.Win32.PInvoke.CreateWindowEx(
-                  (Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE)0,
+                  (Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE)0x00000008, // WS_EX_TOPMOST
+//                  (Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE)0,
                   "Static",  // built-in window class, no need to register
                   "",
                   (Windows.Win32.UI.WindowsAndMessaging.WINDOW_STYLE)0,

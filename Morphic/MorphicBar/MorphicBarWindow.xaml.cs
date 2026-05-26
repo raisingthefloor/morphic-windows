@@ -52,6 +52,7 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     private bool disposedValue;
 
     private IntPtr _hIconRawHandle = IntPtr.Zero;
+    private DummyWindow? _dummyParentWindow;
 
     private Microsoft.UI.Dispatching.DispatcherQueue _dispatcherQueue;
 
@@ -155,6 +156,33 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     // bar can cause text wrapping that makes items taller). MeasureBarForOrientation performs a
     // fresh two-pass measurement each time it's called.
 
+    public static MorphicBarWindow CreateWithHiddenTaskbar()
+    {
+        var dummy = new DummyWindow();
+        IntPtr dummyHwndAsIntPtr = dummy.hwnd;
+        MorphicBarWindow bar;
+        using (Morphic.Controls.Windowing.CbtOwnerInjector.For(dummyHwndAsIntPtr))
+        {
+            bar = new MorphicBarWindow();
+        }
+        bar._dummyParentWindow = dummy;
+
+        // Set owner post-creation as well, in case WinUI presenter reset it
+        var barHwnd = WinRT.Interop.WindowNative.GetWindowHandle(bar);
+        System.Diagnostics.Debug.WriteLine($"[MorphicBarWindow] Setting owner post-creation in factory: Bar HWND={barHwnd:X}, Dummy HWND={dummyHwndAsIntPtr:X}");
+        var result = dummy.SetAsParentHwnd((Windows.Win32.Foundation.HWND)barHwnd);
+        if (result.IsError)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MorphicBarWindow] Post-creation SetAsParentHwnd failed: {result.Error}");
+        }
+        else
+        {
+            System.Diagnostics.Debug.WriteLine($"[MorphicBarWindow] Post-creation SetAsParentHwnd succeeded.");
+        }
+
+        return bar;
+    }
+
     public MorphicBarWindow()
     {
         InitializeComponent();
@@ -175,43 +203,12 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             hwnd,
             Windows.Win32.Graphics.Gdi.MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
 
-        // Force the bar into the Alt+Tab switcher even after TaskbarHelper.RemoveFromTaskbar
-        // removes it from the taskbar. WS_EX_APPWINDOW is the Shell's "treat this as a real
-        // app-view window" hint -- without it, Windows 11 couples taskbar absence to Alt+Tab
-        // absence (treating both as the same "application view" concept), so removing the
-        // taskbar entry transitively removes Alt+Tab inclusion. With WS_EX_APPWINDOW the
-        // Alt+Tab inclusion is forced and DeleteTab still wins the taskbar-removal arbitration.
-        var currentExStyle = (long)Windows.Win32.PInvoke.GetWindowLongPtr(hwnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE);
-        System.Runtime.InteropServices.Marshal.SetLastPInvokeError(0);
-        var setExStyleResult = Windows.Win32.PInvoke.SetWindowLongPtr(hwnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE, (nint)(currentExStyle | (long)Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE.WS_EX_APPWINDOW));
-        if (setExStyleResult == 0)
-        {
-            var setExStyleErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
-            if (setExStyleErrorCode != 0)
-            {
-                System.Diagnostics.Debug.Assert(false, $"SetWindowLongPtr(GWL_EXSTYLE) failed with error {setExStyleErrorCode}");
-            }
-        }
-
-        // TaskbarHelper.RemoveFromTaskbar covers the taskbar half of the "no taskbar, yes
-        // Alt+Tab" shape: ITaskbarList.DeleteTab explicitly removes the bar's taskbar entry
-        // and the Shell honors it regardless of integrity level, signing state, or install
-        // location. Called from each non-Deactivated Activated event, not just the first,
-        // because the Shell can re-add the entry on subsequent Shows. The bar's WS_EX_APPWINDOW
-        // (set above) keeps it in Alt+Tab even after DeleteTab removes the taskbar entry.
-        this.Activated += (s, e) =>
-        {
-            if (e.WindowActivationState == Microsoft.UI.Xaml.WindowActivationState.Deactivated)
-            {
-                return;
-            }
-            IntPtr hwndAsIntPtr;
-            unsafe
-            {
-                hwndAsIntPtr = (IntPtr)hwnd.Value;
-            }
-            Morphic.Controls.Windowing.TaskbarHelper.RemoveFromTaskbar(hwndAsIntPtr);
-        };
+        // Bar's owner relationship: set at HWND-creation time by a CBT hook installed by
+        // MorphicBarWindow.CreateWithHiddenTaskbar before `new MorphicBarWindow()` runs.
+        // See the comment near the _dummyParentWindow field for why CBT hook (and not
+        // SetWindowLongPtr after the fact) is required. By the time this constructor runs,
+        // the OS has already set this window's owner from the CREATESTRUCT.hwndParent the
+        // CBT hook injected; no further wiring needed here.
 
         // create a layout preview window; we'll need this whenever the MorphicBar is moved; this is created up front, as it can take a little time to create the window
         _layoutPreviewWindow = new();
@@ -661,6 +658,26 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
 
     private void RootGrid_Loaded(object sender, RoutedEventArgs e)
     {
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+        var owner = Windows.Win32.PInvoke.GetWindowLongPtr((Windows.Win32.Foundation.HWND)hwnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWLP_HWNDPARENT);
+        System.Diagnostics.Debug.WriteLine($"[MorphicBarWindow] RootGrid_Loaded: HWND={hwnd:X}, Owner={owner:X}");
+
+        if (_dummyParentWindow is not null)
+        {
+            var dummyHwndAsIntPtr = (IntPtr)_dummyParentWindow.hwnd;
+            System.Diagnostics.Debug.WriteLine($"[MorphicBarWindow] RootGrid_Loaded: Re-applying owner to dummy HWND {dummyHwndAsIntPtr:X}");
+            var result = _dummyParentWindow.SetAsParentHwnd((Windows.Win32.Foundation.HWND)hwnd);
+            if (result.IsError)
+            {
+                System.Diagnostics.Debug.WriteLine($"[MorphicBarWindow] RootGrid_Loaded: SetAsParentHwnd failed: {result.Error}");
+            }
+            else
+            {
+                var newOwner = Windows.Win32.PInvoke.GetWindowLongPtr((Windows.Win32.Foundation.HWND)hwnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWLP_HWNDPARENT);
+                System.Diagnostics.Debug.WriteLine($"[MorphicBarWindow] RootGrid_Loaded: SetAsParentHwnd succeeded. New Owner={newOwner:X}");
+            }
+        }
+
         // record the current rasterization scale and subscribe to changes (e.g. monitor switch)
         _lastRasterizationScale = this.Content.XamlRoot.RasterizationScale;
         this.Content.XamlRoot.Changed += (s, e) =>
@@ -692,7 +709,7 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             if (disposing)
             {
                 // dispose managed state (managed objects)
-                // [none]
+                _dummyParentWindow?.Dispose();
             }
 
             // free unmanaged resources (unmanaged objects) and override finalizer
