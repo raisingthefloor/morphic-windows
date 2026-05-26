@@ -1,4 +1,4 @@
-﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui" xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
   <Package Name="Morphic" Manufacturer="Raising the Floor - US, Inc." Version="!(bind.FileVersion.morphic_exe)" UpgradeCode="7d0ee114-79e8-4ff6-b28b-0408551483f5" InstallerVersion="500">
 
     <Icon Id="MorphicIcon" SourceFile="..\Morphic\Assets\Icons\morphic.ico" />
@@ -12,6 +12,21 @@
          install leaves the machine with no Morphic at all (vs. preserving the old version);
          acceptable here because the user can just re-run the installer. -->
     <MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeError)" Schedule="afterInstallInitialize" />
+
+    <!-- Close any running Morphic.exe before install. Without this, in-use DLLs can't be
+         deleted during the old product's uninstall (Windows schedules them for delete-on-reboot),
+         which makes the new install think the files are still present and apply file-version
+         rules to them. We send WM_ENDSESSION (EndSessionMessage, default yes) instead of WM_CLOSE
+         because MorphicBarWindow intercepts WM_CLOSE -> Hide and would not actually close.
+         TerminateProcess="5" force-kills if Morphic doesn't exit within 5 seconds.
+         Docs: https://wixtoolset.org/docs/reference/schema/util/closeapplication/ -->
+    <util:CloseApplication
+        Id="CloseMorphic"
+        Target="Morphic.exe"
+        CloseMessage="no"
+        EndSessionMessage="yes"
+        RebootPrompt="no"
+        TerminateProcess="5" />
 
     <MediaTemplate EmbedCab="yes" />
 
@@ -29,6 +44,18 @@
       <RegistrySearch Id="BuildNumberSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="CurrentBuildNumber" Type="raw" />
     </Property>
     <Launch Condition="(WINDOWSBUILDNUMBER &gt;= 19045)" Message="!(loc.MinimumOsError)" />
+
+    <!-- Explicitly schedule WixCloseApplications BEFORE InstallValidate so the close happens
+         before RemoveExistingProducts (which is itself scheduled after InstallInitialize via the
+         MajorUpgrade element above). Without this explicit scheduling, WixCloseApplications can
+         run AFTER RemoveExistingProducts -- meaning the old uninstall tries to delete files
+         while Morphic.exe is still running, Windows file-locks the in-use DLLs, the uninstall
+         schedules them for delete-on-reboot, and the new install's file-version rules then
+         decide not to replace them. Net: files missing after upgrade.
+         See https://stackoverflow.com/q/710647 and the broader WiX util:CloseApplication pattern. -->
+    <InstallExecuteSequence>
+      <Custom Action="WixCloseApplications" Before="InstallValidate" />
+    </InstallExecuteSequence>
   </Package>
 
   <Fragment>
