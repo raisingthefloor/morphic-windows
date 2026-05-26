@@ -136,7 +136,7 @@ internal static class BarItemDataFactory
         // `-` key invokes the decrement sub-button, `+` key invokes the increment sub-button
         return new BarMultiButtonData
         {
-            Header = "Text Size",
+            Header = "Size of Text",
             SizingMode = MultiButtonSizingMode.StretchToLargest,
             // +/- is an inc/dec pair; keep them side-by-side even when the bar is vertical so the
             // pair reads as one control rather than two stacked rows
