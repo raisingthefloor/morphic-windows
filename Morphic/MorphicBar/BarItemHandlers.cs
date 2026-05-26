@@ -30,6 +30,60 @@ namespace Morphic.MorphicBar;
 
 internal class BarItemHandlers
 {
+    // text size
+
+    private static async Task<MorphicResult<MorphicUnit, MorphicUnit>> StepBarDisplayDpiOffsetAsync(string? actionTag, int step)
+    {
+        var barHwnd = App.GetMorphicBarWindowHandle();
+        if (barHwnd == IntPtr.Zero)
+        {
+            return MorphicResult.ErrorResult();
+        }
+
+        var displayResult = Morphic.WindowsNative.Display.Display.GetDisplayNearestWindowHandle(barHwnd);
+        if (displayResult.IsError)
+        {
+            return MorphicResult.ErrorResult();
+        }
+        var display = displayResult.Value!;
+
+        var rangeResult = display.GetCurrentDpiOffsetAndRange();
+        if (rangeResult.IsError)
+        {
+            return MorphicResult.ErrorResult();
+        }
+        var range = rangeResult.Value;
+
+        var newDpiOffset = range.CurrentDpiOffset + step;
+        if (newDpiOffset < range.MinimumDpiOffset || newDpiOffset > range.MaximumDpiOffset)
+        {
+            return MorphicResult.ErrorResult();
+        }
+
+        // SetDpiOffsetAsync wraps the SPI call in Task.Run internally, so this is already off the
+        // UI thread; no extra .ConfigureAwait dance needed.
+        var setResult = await display.SetDpiOffsetAsync(newDpiOffset);
+        if (setResult.IsError)
+        {
+            return MorphicResult.ErrorResult();
+        }
+
+        await rasterizationChangeWait;
+        return MorphicResult.OkResult();
+    }
+
+    public static Task<MorphicResult<MorphicUnit, MorphicUnit>> IncreaseTextSizeButtonAction(string? actionTag, bool? isChecked)
+    {
+        return BarItemHandlers.StepBarDisplayDpiOffsetAsync(actionTag, +1);
+    }
+
+    public static Task<MorphicResult<MorphicUnit, MorphicUnit>> DecreaseTextSizeButtonAction(string? actionTag, bool? isChecked)
+    {
+        return BarItemHandlers.StepBarDisplayDpiOffsetAsync(actionTag, -1);
+    }
+
+    //
+
     // magnifier
 
     public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> ShowMagnifierButtonAction(string? actionTag, bool? isChecked)
@@ -185,11 +239,11 @@ internal class BarItemHandlers
 
         var enableNightLight = isChecked.Value;
 
-        // The SystemSettings call can block before its first async yield, so keep it off the UI thread; .ConfigureAwait(false) also tells C# not to try to resume execution on the original thread.
+        // The SystemSettings call can block before its first async yield, so keep it off the UI thread; 
+        // .ConfigureAwait(false) also tells C# not to try to resume execution on the original thread.
         // NOTE A 5-second timeout covers the edge case where the user clicks before the factory's
         // startup prime (BarItemDataFactory.CreateContrastColorButtonGroup) has finished settling the
-        // SettingItem's IsEnabled flag. Without the timeout, SetIsOnAsync's default TimeSpan.Zero
-        // could race the OS's IsEnabled=true signal and fail silently on the very first click.
+        // SettingItem's IsEnabled flag.
         var nightLightSucceeded = await Task.Run(async () =>
         {
             var setResult = await Morphic.WindowsNative.Display.NightLight.SetIsOnAsync(enableNightLight, TimeSpan.FromSeconds(5)).ConfigureAwait(false);

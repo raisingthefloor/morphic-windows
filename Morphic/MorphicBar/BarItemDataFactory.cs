@@ -31,6 +31,87 @@ namespace Morphic.MorphicBar;
 
 internal static class BarItemDataFactory
 {
+    public static IBarItemData CreateTextSizeButtonGroup(BarButtonAction? increaseAction, BarButtonAction? decreaseAction)
+    {
+        const int TextSizeIncrementIndex = 0;
+        const int TextSizeDecrementIndex = 1;
+
+        var increaseButton = new BarButtonData
+        {
+            // U+2795 HEAVY PLUS SIGN + U+FE0E VARIATION SELECTOR-15 (text presentation);
+            // the VS forces monochrome text rendering -- without it Windows falls back
+            // to Segoe UI Emoji and renders the glyph in color (e.g. purple).
+            Text = "\u2795\uFE0E",
+            AccessibleName = "Increase text size",
+            ActionTag = "increase",
+            Action = increaseAction,
+        };
+        var decreaseButton = new BarButtonData
+        {
+            // U+2796 HEAVY MINUS SIGN + U+FE0E (see note above)
+            Text = "\u2796\uFE0E",
+            AccessibleName = "Decrease text size",
+            ActionTag = "decrease",
+            Action = decreaseAction,
+        };
+
+        Action recomputeState = () =>
+        {
+            var barHwnd = App.GetMorphicBarWindowHandle();
+            if (barHwnd == IntPtr.Zero)
+            {
+                increaseButton.IsEnabled = false;
+                decreaseButton.IsEnabled = false;
+                return;
+            }
+            var displayResult = Morphic.WindowsNative.Display.Display.GetDisplayNearestWindowHandle(barHwnd);
+            if (displayResult.IsError)
+            {
+                increaseButton.IsEnabled = false;
+                decreaseButton.IsEnabled = false;
+                return;
+            }
+            var display = displayResult.Value!;
+            var rangeResult = display.GetCurrentDpiOffsetAndRange();
+            if (rangeResult.IsError)
+            {
+                increaseButton.IsEnabled = false;
+                decreaseButton.IsEnabled = false;
+                return;
+            }
+            increaseButton.IsEnabled = range.CurrentDpiOffset < range.MaximumDpiOffset;
+            decreaseButton.IsEnabled = range.CurrentDpiOffset > range.MinimumDpiOffset;
+        };
+        //
+        EventHandler displayChangedHandler = (_, _) => recomputeState();
+        Morphic.WindowsNative.Display.Display.DisplayChanged += displayChangedHandler;
+        increaseButton.AddDisposeAction(() =>
+        {
+            Morphic.WindowsNative.Display.Display.DisplayChanged -= displayChangedHandler;
+        });
+        //
+        recomputeState();
+
+        // "Text Size" -- two pushbuttons (+ on the left, - on the right), equal width;
+        // `-` key invokes the decrement sub-button, `+` key invokes the increment sub-button
+        return new BarMultiButtonData
+        {
+            Header = "Text Size",
+            SizingMode = MultiButtonSizingMode.StretchToLargest,
+            // +/- is an inc/dec pair; keep them side-by-side even when the bar is vertical so the
+            // pair reads as one control rather than two stacked rows
+            AlwaysHorizontalSubButtons = true,
+            Buttons = new List<BarButtonData> { increaseButton, decreaseButton },
+            IncDecShortcuts = new BarMultiButtonIncDecShortcuts
+            {
+                DecrementButtonIndex = TextSizeDecrementIndex,
+                IncrementButtonIndex = TextSizeIncrementIndex,
+            },
+        };
+    }
+
+    //
+
     public static IBarItemData CreateMagnifierButtonGroup(BarButtonAction? showAction, BarButtonAction? hideAction)
     {
         // "Magnifier" -- two pushbuttons (Show on the left, Hide on the right), equal width.
