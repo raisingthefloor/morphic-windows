@@ -73,7 +73,37 @@ internal sealed class MorphicBarManager : IDisposable
     // Shows the bar. Pass activateWindow: false for the startup case so we don't interrupt the
     // user's previous foreground app AND don't put the bar into a sticky Win32 "active" state from
     // which the first Alt+Tab to it would fail to fire WM_ACTIVATE (OS sees no state change).
-    public void ShowBar(bool activateWindow = true) => _morphicBarWindow.AppWindow.Show(activateWindow: activateWindow);
+    //
+    // When activateWindow=true (the normal user-driven path -- tray click, "Show MorphicBar" menu
+    // item, etc.), defuse the focus ring BEFORE showing: the bar's XAML FocusState is preserved
+    // across Hide/Show, so without this a button that previously had Keyboard focus would re-
+    // display its keyboard ring as if the user had Tab'd there. Downgrading Keyboard -> Programmatic
+    // + suppressing the post-Show WM_ACTIVATE upgrade ensures the bar reappears with no stale ring.
+    public void ShowBar(bool activateWindow = true)
+    {
+        if (activateWindow == true)
+        {
+            this.DowngradeKeyboardFocusBeforeShow();
+            _morphicBarWindow.SuppressFocusUpgradeFor(TimeSpan.FromMilliseconds(500));
+        }
+        _morphicBarWindow.AppWindow.Show(activateWindow: activateWindow);
+    }
+
+    // If a bar control currently holds Keyboard focus (left over from a prior keyboard session),
+    // downgrade it to Programmatic so the focus ring won't render when the bar is shown. Called
+    // from ShowBar(activateWindow: true); does nothing if no bar control has Keyboard focus.
+    private void DowngradeKeyboardFocusBeforeShow()
+    {
+        if (_morphicBarWindow.Content?.XamlRoot is not Microsoft.UI.Xaml.XamlRoot xamlRoot)
+        {
+            return;
+        }
+        if (Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(xamlRoot) is Microsoft.UI.Xaml.Controls.Control focused
+            && focused.FocusState == Microsoft.UI.Xaml.FocusState.Keyboard)
+        {
+            _ = focused.Focus(Microsoft.UI.Xaml.FocusState.Programmatic);
+        }
+    }
 
     public void HideBar() => _morphicBarWindow.AppWindow.Hide();
 
