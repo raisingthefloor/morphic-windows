@@ -9,6 +9,7 @@ DwmSetWindowAttribute
 EnumWindows
 EqualRect
 FindWindow
+GetAsyncKeyState
 GetCursorPos
 GetDpiForMonitor
 GetForegroundWindow
