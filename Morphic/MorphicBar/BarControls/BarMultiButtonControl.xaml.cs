@@ -255,7 +255,8 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
                     subButtonsWidth = n * System.Math.Min(System.Math.Ceiling(maxDesiredWidth), BarControlMetrics.MaxSubButtonWidth);
                     break;
                 default:
-                    throw new MorphicUnhandledCaseException(_data.SizingMode);
+                    throw new System.ComponentModel.InvalidEnumArgumentException(
+                        nameof(_data.SizingMode), (int)_data.SizingMode, _data.SizingMode.GetType());
             }
         }
         else
@@ -344,7 +345,8 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
             case MultiButtonSizingMode.StretchToLargest:
                 break;
             default:
-                throw new MorphicUnhandledCaseException(_data.SizingMode);
+                throw new System.ComponentModel.InvalidEnumArgumentException(
+                    nameof(_data.SizingMode), (int)_data.SizingMode, _data.SizingMode.GetType());
         }
         //
         // validate the orientation up front (defends against unknown values added in the future)
@@ -354,7 +356,8 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
             case Orientation.Vertical:
                 break;
             default:
-                throw new MorphicUnhandledCaseException(_orientation);
+                throw new System.ComponentModel.InvalidEnumArgumentException(
+                    nameof(_orientation), (int)_orientation, _orientation.GetType());
         }
 
         // AlwaysHorizontalSubButtons overrides the bar's orientation for sub-button arrangement

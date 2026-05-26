@@ -52,11 +52,16 @@ namespace Morphic.MorphicBar.BarControls;
 internal static class DelayedInProgressVisual
 {
     // How long an action must run before we reveal the indeterminate progress bar.
-    // Tunable. 200ms is in the typical band for "delay-before-progress-indicator"
-    // (GTK's spinner-show-delay defaults to 300ms; CSS transition libs hover around
-    // 200-300ms). Below ~100ms feels jumpy (bar flashes for trivially fast actions);
-    // above ~500ms users start wondering if the click registered.
-    public static readonly TimeSpan ShowDelay = TimeSpan.FromMilliseconds(200);
+    // Tunable. 150ms sits just above typical state-toggle operation durations (night
+    // mode, color filter, etc. usually finish in <50ms steady-state, up to ~100ms cold
+    // start), so quick operations don't flash the bar -- but actions that DO take
+    // noticeable time reveal it without making the user wonder if their click registered.
+    // For reference: GTK's spinner-show-delay defaults to 300ms; CSS transition libs
+    // hover around 200-300ms. We sit lower because our actions are typically faster.
+    // NOTE: wall-clock time from click to bar-visible is ShowDelay + ~10-50ms slop
+    // (Task.Delay's "at least X ms" guarantee + VisualStateManager transition time +
+    // ProgressBar's first paint frame).
+    public static readonly TimeSpan ShowDelay = TimeSpan.FromMilliseconds(150);
 
     /// <summary>
     /// Runs <paramref name="action"/> with delayed in-progress feedback on

@@ -67,6 +67,44 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     private Windows.Graphics.PointInt32 _dragStartWindowPosition;
     private Windows.Foundation.Point _dragStartPointerPosition;
     private bool _isDraggingWindow = false;
+	//
+    // MorphicBar's (corner, orientation) at drag start; the accidental-drag gate compares the proposed
+    // target against this to detect accidental (small, same-corner) orientation flips.  Set in 
+	// PointerPressed, cleared back to null (i.e. operation completed, no longer dragging) in PointerReleased.
+    private (Morphic.MorphicBar.DockingLocation DockingLocation, Microsoft.UI.Xaml.Controls.Orientation Orientation)? _dragStartDockedState;
+
+    // Sticky one-way ratchet: false until IsAccidentalDragOperation returns false for the first
+    // time this drag, then stays true for the rest of the drag (reset to false at next
+    // PointerPressed). Once the gate has been passed, the layout preview is allowed to show; we
+    // intentionally do NOT re-engage the gate if the user later drags back to short range.
+    private bool _dragHasPassedAccidentalGate = false;
+
+    // Started at PointerPressed; used by IsAccidentalDragOperation's time-based bypass.
+    private System.Diagnostics.Stopwatch? _dragStopwatch;
+
+    // Single-shot timer that fires once at ACCIDENTAL_DRAG_HOLD_THRESHOLD after PointerPressed.
+    private Microsoft.UI.Dispatching.DispatcherQueueTimer? _accidentalDragBypassTimer;
+
+    // Tunable thresholds for accidental-drag detection. Adjust these to make the gate more
+    // or less aggressive at suppressing small flip-zone drags.
+    //   * ACCIDENTAL_DRAG_THRESHOLD_DIPS: drag distance < this value (in device-independent
+    //     pixels, multiplied by the monitor's rasterization scale to compare against
+    //     physical-pixel drag distance) is treated as accidental. Picks an absolute "small
+    //     gesture" floor that scales naturally with DPI.
+    //   * ACCIDENTAL_DRAG_THRESHOLD_MONITOR_DIAGONAL_FRACTION: drag distance < (fraction *
+    //     monitorDiagonalPhysical) is treated as accidental. Scales with screen size so
+    //     huge displays get a slightly more generous floor and tiny ones don't go too tight.
+    //   * The effective threshold is the LARGER of the two -- belt-and-suspenders against
+    //     unusual DPI/screen-size combinations. The two values above are tuned to be roughly
+    //     equivalent on typical displays (1080p-4K at 100-200% scale), so neither dominates
+    //     absurdly; one acts as a floor for outlier configurations.
+    //   * ACCIDENTAL_DRAG_HOLD_THRESHOLD: after this much time has elapsed since the user
+    //     pressed the pointer, the gate is fully bypassed -- any drag is treated as
+    //     intentional. Lets a user who deliberately holds-and-drags commit a small-range
+    //     flip without having to pull the cursor past the distance threshold.
+    private const double ACCIDENTAL_DRAG_THRESHOLD_DIPS = 50;
+    private const double ACCIDENTAL_DRAG_THRESHOLD_MONITOR_DIAGONAL_FRACTION = 0.02;
+    private static readonly TimeSpan ACCIDENTAL_DRAG_HOLD_THRESHOLD = TimeSpan.FromMilliseconds(650);
 
     // the layout preview window lets us show the user where the window will move to if they release the mouse cursor
     private Morphic.MorphicBar.LayoutPreviewWindow.LayoutPreviewWindow _layoutPreviewWindow = null!;
@@ -371,7 +409,10 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     /// MeasureAndResize is a convenience wrapper for the common "stay where we are, just re-fit"
     /// case.
     /// </summary>
-    internal void AnimateMoveTo(Windows.Win32.Graphics.Gdi.HMONITOR hMonitor, Microsoft.UI.Xaml.Controls.Orientation targetOrientation, DockingLocation targetDockingLocation, TimeSpan duration)
+    // snapResizeAtPoint (optional): if provided, the window is instantly resized to the target
+    // size at this physical-pixel point (keeping the point at the same proportional position
+    // within the window) BEFORE the animation begins.
+    internal void AnimateMoveTo(Windows.Win32.Graphics.Gdi.HMONITOR hMonitor, Microsoft.UI.Xaml.Controls.Orientation targetOrientation, DockingLocation targetDockingLocation, TimeSpan duration, System.Drawing.Point? snapResizeAtPoint = null)
     {
         // stop any existing timer
         _moveAnimationTimer?.Stop();
@@ -415,7 +456,40 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         var targetPosition = new Windows.Graphics.PointInt32(targetRect.X, targetRect.Y);
         var targetSize = new Windows.Graphics.SizeInt32(targetRect.Width, targetRect.Height);
 
-        // start the new animation (size + position interpolate together; TimeSpan.Zero snaps)
+        // Snap-resize step (typically used for orientation-flip on drag release): instantly
+        // resize the window to the target size at the supplied anchor point, keeping that point
+        // at the same proportional position within the window. After this, AppWindow.Size already
+        // matches targetSize, so AnimationUtils.AnimateMoveTo will detect sizeChanging=false and
+        // animate position only -- no visible resize during the animation.
+        if (snapResizeAtPoint is { } anchorPoint)
+        {
+            var currentPosition = this.AppWindow.Position;
+            var currentSize = this.AppWindow.Size;
+            int snapX, snapY;
+            bool anchorIsOverWindow = anchorPoint.X >= currentPosition.X && anchorPoint.X < currentPosition.X + currentSize.Width
+                                   && anchorPoint.Y >= currentPosition.Y && anchorPoint.Y < currentPosition.Y + currentSize.Height;
+            if (anchorIsOverWindow)
+            {
+                // keep the anchor point at the same proportional position within the (new-sized) window
+                double proportionX = (double)(anchorPoint.X - currentPosition.X) / currentSize.Width;
+                double proportionY = (double)(anchorPoint.Y - currentPosition.Y) / currentSize.Height;
+                snapX = anchorPoint.X - (int)(proportionX * targetSize.Width);
+                snapY = anchorPoint.Y - (int)(proportionY * targetSize.Height);
+            }
+            else
+            {
+                // fallback (anchor not over window): center the new size on the window's current center
+                int currentCenterX = currentPosition.X + (currentSize.Width / 2);
+                int currentCenterY = currentPosition.Y + (currentSize.Height / 2);
+                snapX = currentCenterX - (targetSize.Width / 2);
+                snapY = currentCenterY - (targetSize.Height / 2);
+            }
+            this.AppWindow.MoveAndResize(new Windows.Graphics.RectInt32(snapX, snapY, targetSize.Width, targetSize.Height));
+        }
+
+        // start the new animation (size + position interpolate together; TimeSpan.Zero snaps).
+        // If snapResizeAtPoint was used above, AppWindow.Size already matches targetSize and
+        // AnimationUtils.AnimateMoveTo's sizeChanging check will short-circuit the size interpolation.
         _moveAnimationTimer = AnimationUtils.AnimateMoveTo(_dispatcherQueue, this.AppWindow, targetPosition, targetSize, duration);
     }
 
@@ -569,7 +643,8 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         {
             Orientation.Horizontal => MorphicBarWindowMetrics.ItemsPanelMarginHorizontal,
             Orientation.Vertical => MorphicBarWindowMetrics.ItemsPanelMarginVertical,
-            _ => throw new Morphic.Core.MorphicUnhandledCaseException(orientation),
+            _ => throw new System.ComponentModel.InvalidEnumArgumentException(
+                nameof(orientation), (int)orientation, orientation.GetType()),
         };
     }
 
@@ -581,7 +656,8 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         {
             Orientation.Horizontal => MorphicBarWindowMetrics.MenuButtonMarginHorizontal,
             Orientation.Vertical => MorphicBarWindowMetrics.MenuButtonMarginVertical,
-            _ => throw new Morphic.Core.MorphicUnhandledCaseException(orientation),
+            _ => throw new System.ComponentModel.InvalidEnumArgumentException(
+                nameof(orientation), (int)orientation, orientation.GetType()),
         };
     }
 	
@@ -610,7 +686,8 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
                 Grid.SetRowSpan(this.BarItemsPanel, 1);
                 break;
             default:
-                throw new Morphic.Core.MorphicUnhandledCaseException(orientation);
+                throw new System.ComponentModel.InvalidEnumArgumentException(
+                    nameof(orientation), (int)orientation, orientation.GetType());
         }
         this.BarItemsPanel.Margin = GetBarItemsPanelMargin(orientation);
 
@@ -943,6 +1020,11 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             var isLeftButtonPressed = e.GetCurrentPoint(null).Properties.IsLeftButtonPressed;
             if (isLeftButtonPressed)
             {
+                // Cancel any in-flight move animation from a PREVIOUS drag's release. Without this,
+                // starting a new drag while the previous drag's settle-animation would cause a visual
+                // oscillation between the user's drag position and the animation's current position.
+                this.AnimateStop();
+
                 _isDraggingWindow = true;
 
                 // capture the window's current position (i.e. at the time that we start the drag)
@@ -952,6 +1034,25 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
                 var getCursorPosResult = Windows.Win32.PInvoke.GetCursorPos(out var startPointerPosition);
                 System.Diagnostics.Debug.Assert(getCursorPosResult != 0);
                 _dragStartPointerPosition = new Windows.Foundation.Point(startPointerPosition.X, startPointerPosition.Y);
+                //
+                // capture (corner, orientation) at drag start so the accidental-drag gate can
+                // detect small same-corner orientation flips; reset the sticky gate flag so the
+                // first PointerMoved tick of this drag re-evaluates IsAccidentalDragOperation.
+                _dragStartDockedState = (_dockingLocation, _orientation);
+                _dragStopwatch = System.Diagnostics.Stopwatch.StartNew();
+                _dragHasPassedAccidentalGate = false;
+
+                // Stop any prior bypass timer defensively in case a previous PointerReleased was
+                // missed (e.g., capture loss without release).
+                _accidentalDragBypassTimer?.Stop();
+				//
+                // Start (or restart) the bypass timer. Fires once at the hold threshold so the
+                // preview appears at the bypass point even if the mouse stops moving.
+                _accidentalDragBypassTimer = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread().CreateTimer();
+                _accidentalDragBypassTimer.Interval = ACCIDENTAL_DRAG_HOLD_THRESHOLD;
+                _accidentalDragBypassTimer.IsRepeating = false;
+                _accidentalDragBypassTimer.Tick += this.OnAccidentalDragBypassTimerTick;
+                _accidentalDragBypassTimer.Start();
                 //
                 // capture the pointer with WinUI (so that we can capture PointerMoved and PointerReleased events
                 rootDragElement.CapturePointer(e.Pointer);
@@ -1003,58 +1104,146 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             var targetOrientation = _layoutPreviewWindowOrientation ?? _orientation;
             var targetDockingLocation = _layoutPreviewDockingLocation ?? _dockingLocation;
 
-            // if the orientation is flipping, rotate the window dimensions around the cursor first
-            // so the animation that follows starts from a sensible visual state (otherwise the bar
-            // would visibly "swap axes" in mid-flight)
-            if (_orientation != targetOrientation)
-            {
-                this.Rotate90DegreesAroundPoint(currentPointerPosition);
-            }
+            // If orientation is flipping, ask AnimateMoveTo to snap-resize at the cursor BEFORE
+            // animating. AnimateMoveTo's snap uses the actual MEASURED target dimensions (not just
+            // naively swapped width/height), so the subsequent animation only interpolates position
+            // and the bar never appears to "grow" mid-flight to its final size.
+            System.Drawing.Point? snapResizeAtPoint = (_orientation != targetOrientation)
+                ? currentPointerPosition
+                : (System.Drawing.Point?)null;
 
             // AnimateMoveTo handles the orientation change (via the property setter), updates the
-            // docking location, measures for the new state, and animates size + position together
-            this.AnimateMoveTo(hMonitor, targetOrientation, targetDockingLocation, new TimeSpan(0, 0, 1));
+            // docking location, measures for the new state, optionally snap-resizes at the cursor,
+            // and animates position + size to the docking location.
+            this.AnimateMoveTo(hMonitor, targetOrientation, targetDockingLocation, new TimeSpan(0, 0, 1), snapResizeAtPoint);
 
             _layoutPreviewWindowOrientation = null;
             _layoutPreviewDockingLocation = null;
+
+            // clear the drag-only state back to "not in use" so a stray read between drags
+            // surfaces immediately (NRE on .Value) instead of silently picking up stale data
+            _dragStartDockedState = null;
+            _dragStopwatch = null;
+
+            // stop the bypass timer (safe if already fired -- single-shot Stop() is idempotent)
+            _accidentalDragBypassTimer?.Stop();
+            _accidentalDragBypassTimer = null;
         };
     }
 
-    private void Rotate90DegreesAroundPoint(System.Drawing.Point centerPoint)
+
+    // Returns true when the in-progress drag is a likely accident the user did not intend to
+    // commit AND the drag distance is below a small threshold. Two distinct accidental-flip
+    // scenarios are recognized, both characterized by an orientation flip relative to the bar's
+    // start state:
+    //   A) SAME docking location with OPPOSITE orientation -- the geometric-adjacency flip
+    //      within a corner (e.g., a horizontal bar in the bottom-right corner gets nudged into
+    //      the "vertical in bottom-right" drop zone, because those zones are adjacent on the
+    //      screen).
+    //   B) DIFFERENT docking location with OPPOSITE orientation -- the cross-docking flip
+    //      (e.g., a full-width horizontal bar docked along the bottom edge gets nudged into the 
+    //      "vertical docked along the left edge" drop zone, flipping both the docking location 
+    //      and the orientation).
+    // Returns false in any of these cases:
+    //   * no drag is in progress (defensive; caller should not be invoking us then);
+    //   * the proposed orientation matches the start orientation (no flip means not the
+    //     accidental case -- same-orientation drags are intentional gestures, and the existing
+    //     code's same-corner same-orientation path is a no-op anyway);
+    //   * the drag diagonal distance has exceeded the threshold (intentional gesture).
+    private bool IsAccidentalDragOperation(
+        System.Drawing.Point currentPointerPosition,
+        Morphic.MorphicBar.DockingLocation proposedDockingLocation,
+        Microsoft.UI.Xaml.Controls.Orientation proposedOrientation,
+        double rasterizationScale,
+        Windows.Win32.Foundation.RECT monitorFullRect)
     {
+        if (_dragStartDockedState is not { } dragStart)
+        {
+            // defensive: no drag in progress, so nothing to compare against
+            return false;
+        }
+
+        // Time-based bypass: after the hold threshold elapses, the gate is disabled entirely
+        // (any flip is treated as intentional). Lets users who deliberately hold-and-drag
+        // commit a flip even within the small-distance range.
+        if (_dragStopwatch is { } dragStopwatch)
+        {
+            TimeSpan elapsed = dragStopwatch.Elapsed;
+            if (elapsed > ACCIDENTAL_DRAG_HOLD_THRESHOLD)
+            {
+                return false;
+            }
+        }
+
+        // Both scenarios require an orientation flip; keeping the two conditions explicit
+        // documents the user-facing intent even though their union collapses to "orientation
+        // has flipped" mathematically.
+        bool isSameDockingLocationFlip = (proposedDockingLocation == dragStart.DockingLocation)
+                              && (proposedOrientation != dragStart.Orientation);
+        // Cross-docking-location accidental flips only matter between fixed-margin docks --
+        // only those four positions are geometrically adjacent enough that a small drag can
+        // accidentally cross from one to another with an orientation flip. Floating docks
+        // don't share an edge with each other, so a cross-dock change involving them implies
+        // a sizable, intentional drag. This calculation assumes a four-sided rectangle
+        // (i.e. a display).
+        bool isCrossDockingLocationFlip = false;
+        if (dragStart.DockingLocation.IsFixedDockingLocation() && proposedDockingLocation.IsFixedDockingLocation())
+        {
+            isCrossDockingLocationFlip = (proposedDockingLocation != dragStart.DockingLocation)
+                                      && (proposedOrientation != dragStart.Orientation);
+        }
+        if (isSameDockingLocationFlip == false && isCrossDockingLocationFlip == false)
+        {
+            return false;
+        }
+
+        // Threshold: Max(ACCIDENTAL_DRAG_THRESHOLD_DIPS * rasterizationScale,
+        //                ACCIDENTAL_DRAG_THRESHOLD_MONITOR_DIAGONAL_FRACTION * monitorDiagonalPhysical).
+        // The DIPs term gives an absolute "small gesture" floor that scales naturally with DPI; the
+        // monitor-fraction term gives screen-size scaling so tiny screens don't get tighter and huge
+        // screens don't get looser than feels right. Max ensures the threshold is at least the
+        // larger of the two.
+        double monitorWidthPhysical = monitorFullRect.right - monitorFullRect.left;
+        double monitorHeightPhysical = monitorFullRect.bottom - monitorFullRect.top;
+        double monitorDiagonalPhysical = System.Math.Sqrt(
+            (monitorWidthPhysical * monitorWidthPhysical) + (monitorHeightPhysical * monitorHeightPhysical));
+        double dipsBasedThreshold = ACCIDENTAL_DRAG_THRESHOLD_DIPS * rasterizationScale;
+        double monitorBasedThreshold = ACCIDENTAL_DRAG_THRESHOLD_MONITOR_DIAGONAL_FRACTION * monitorDiagonalPhysical;
+        double thresholdPhysical = System.Math.Max(dipsBasedThreshold, monitorBasedThreshold);
+
+        double deltaX = currentPointerPosition.X - _dragStartPointerPosition.X;
+        double deltaY = currentPointerPosition.Y - _dragStartPointerPosition.Y;
+        double dragDiagonal = System.Math.Sqrt((deltaX * deltaX) + (deltaY * deltaY));
+
+        return dragDiagonal < thresholdPhysical;
+    }
+
+    // Fires once when ACCIDENTAL_DRAG_HOLD_THRESHOLD elapses after PointerPressed. Re-evaluates
+    // UpdateLayoutPreviewState with the CURRENT cursor + window position so the layout preview
+    // appears at the bypass mark without requiring a mouse movement to trigger it. See
+    // _accidentalDragBypassTimer field comment for the why.
+    private void OnAccidentalDragBypassTimerTick(Microsoft.UI.Dispatching.DispatcherQueueTimer sender, object args)
+    {
+        if (_isDraggingWindow == false)
+        {
+            // defensive: drag ended between Start() and Tick (e.g., PointerReleased fired before Stop()
+            // could prevent the Tick from queuing); ignore the stale tick
+            return;
+        }
+
+        // re-evaluate the layout preview using fresh cursor + current window position. The
+        // time-bypass inside IsAccidentalDragOperation will short-circuit the gate now that the
+        // threshold has been exceeded, so any flip-zone cursor position will produce a preview.
+        var getCursorPosResult = Windows.Win32.PInvoke.GetCursorPos(out var currentPointerPosition);
+        if (getCursorPosResult == 0)
+        {
+            return;
+        }
         var windowPosition = this.AppWindow.Position;
         var windowSize = this.AppWindow.Size;
-
-        bool cursorIsOverWindow = centerPoint.X >= windowPosition.X && centerPoint.X < windowPosition.X + windowSize.Width && 
-                                  centerPoint.Y >= windowPosition.Y && centerPoint.Y < windowPosition.Y + windowSize.Height;
-
-        // swap dimensions
-        var newWidth = windowSize.Height;
-        var newHeight = windowSize.Width;
-
-        if (cursorIsOverWindow == false)
-        {
-            // fallback position: if the center point isn't within the window, just rotate the MorphicBar 90 degrees in place (i.e. rotate around window center)
-            var centerX = windowPosition.X + windowSize.Width / 2;
-            var centerY = windowPosition.Y + windowSize.Height / 2;
-            var newX = centerX - newWidth / 2;
-            var newY = centerY - newHeight / 2;
-            this.AppWindow.MoveAndResize(new Windows.Graphics.RectInt32(newX, newY, newWidth, newHeight));
-        }
-        else
-        {
-            // cursor is over window; rotate around the cursor
-
-            // calculate center point's proportional position within the window (0.0 to 1.0)
-            var proportionX = (double)(centerPoint.X - windowPosition.X) / windowSize.Width;
-            var proportionY = (double)(centerPoint.Y - windowPosition.Y) / windowSize.Height;
-
-            // reposition so the cursor stays at the same proportional point in the new dimensions
-            var newX = centerPoint.X - (int)(proportionX * newWidth);
-            var newY = centerPoint.Y - (int)(proportionY * newHeight);
-
-            this.AppWindow.MoveAndResize(new Windows.Graphics.RectInt32(newX, newY, newWidth, newHeight));
-        }
+        var windowCenterX = windowPosition.X + (windowSize.Width / 2);
+        var windowCenterY = windowPosition.Y + (windowSize.Height / 2);
+        this.UpdateLayoutPreviewState(currentPointerPosition, new System.Drawing.Point(windowCenterX, windowCenterY), _orientation);
     }
 
     private void UpdateLayoutPreviewState(System.Drawing.Point currentPointerPosition, System.Drawing.Point windowCenterPoint, Microsoft.UI.Xaml.Controls.Orientation orientation)
@@ -1123,6 +1312,44 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         }
         var newPreviewDockingLocation = calculatePreviewWindowRectResult.Value!.DockingLocation;
         var newPreviewOrientation = calculatePreviewWindowRectResult.Value!.Orientation;
+
+        // Accidental-drag suppression: if the drag is a small motion that would land in an
+        // "accidental flip" zone (same-corner-with-opposite-orientation, or cross-edge-fixed-dock
+        // with opposite-orientation), suppress the preview entirely and clear the preview state.
+        // PointerReleased's `?? _dockingLocation` / `?? _orientation` fallbacks then naturally
+        // land on the bar's starting state, so the bar snaps back without rotating.
+        //
+        // Sticky ratchet: once IsAccidentalDragOperation returns false even once during this
+        // drag, set _dragHasPassedAccidentalGate so subsequent ticks skip the check entirely.
+        // Prevents preview flicker if the user drags back into the short-range zone during a
+        // clearly intentional drag. The ratchet resets to false on the next PointerPressed.
+        if (!_dragHasPassedAccidentalGate)
+        {
+            if (this.IsAccidentalDragOperation(currentPointerPosition, newPreviewDockingLocation, newPreviewOrientation, rasterizationScale, monitorFullRect) == true)
+            {
+                // No need to null _layoutPreviewDockingLocation / _layoutPreviewWindowOrientation
+                // here: while the ratchet is unlatched (this branch), they're guaranteed to still
+                // be null from PointerReleased's cleanup, because non-null assignment to them only
+                // happens further down this method AFTER the ratchet latches.
+                return;
+            }
+
+            // IsAccidentalDragOperation returned false. That could mean either:
+            //   (a) proposed (corner, orientation) is IDENTICAL to start -- cursor hasn't moved
+            //       enough to land in any flip zone yet. Don't latch -- a later tick might still
+            //       propose an accidental flip, and we want the gate to evaluate it.
+            //   (b) proposed (corner, orientation) DIFFERS from start AND isn't the small-flip
+            //       case -- drag has genuinely committed to a change. Latch.
+            // The latch signal is "proposed differs from start," NOT "helper returned false,"
+            // because the helper conflates both meanings.
+            var dragStart = _dragStartDockedState!.Value;
+            bool proposedDiffersFromStart = newPreviewDockingLocation != dragStart.DockingLocation
+                                         || newPreviewOrientation != dragStart.Orientation;
+            if (proposedDiffersFromStart)
+            {
+                _dragHasPassedAccidentalGate = true;
+            }
+        }
 
         // measure the bar's desired size for the TARGET (monitor, orientation), not the bar's
         // current state -- the preview must show what the bar will look like after release:

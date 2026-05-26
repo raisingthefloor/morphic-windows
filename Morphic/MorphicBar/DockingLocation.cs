@@ -41,3 +41,46 @@ public enum DockingLocation
     FixedTopMargin,
     FixedBottomMargin,
 }
+
+public static class DockingLocationExtensions
+{
+    // True for the four Floating* corner-anchored docks.
+    public static bool IsFloatingDockingLocation(this DockingLocation location) =>
+        location switch
+        {
+            /* Floating* (corner-anchored) */
+            DockingLocation.FloatingTopLeft
+                or DockingLocation.FloatingTopRight
+                or DockingLocation.FloatingBottomLeft
+                or DockingLocation.FloatingBottomRight => true,
+            //
+            /* Fixed*Margin (taskbar-style) */
+            DockingLocation.FixedLeftMargin
+                or DockingLocation.FixedRightMargin
+                or DockingLocation.FixedTopMargin
+                or DockingLocation.FixedBottomMargin => false,
+            //
+            _ => throw new System.ComponentModel.InvalidEnumArgumentException(
+                nameof(location), (int)location, location.GetType()),
+        };
+
+    // True for the four Fixed*Margin edge-docked positions (taskbar-style).
+    public static bool IsFixedDockingLocation(this DockingLocation location) =>
+        location switch
+        {
+            /* Fixed*Margin (taskbar-style) */
+            DockingLocation.FixedLeftMargin
+                or DockingLocation.FixedRightMargin
+                or DockingLocation.FixedTopMargin
+                or DockingLocation.FixedBottomMargin => true,
+            //
+            /* Floating* (corner-anchored) */
+            DockingLocation.FloatingTopLeft
+                or DockingLocation.FloatingTopRight
+                or DockingLocation.FloatingBottomLeft
+                or DockingLocation.FloatingBottomRight => false,
+            //
+            _ => throw new System.ComponentModel.InvalidEnumArgumentException(
+                nameof(location), (int)location, location.GetType()),
+        };
+}

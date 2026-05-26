@@ -115,7 +115,8 @@ public sealed partial class BarButtonControl : UserControl, IBarItemControl
             case BarButtonLayoutStyle.TextOnly:
                 break;
             default:
-                throw new MorphicUnhandledCaseException(_data.LayoutStyle);
+                throw new System.ComponentModel.InvalidEnumArgumentException(
+                    nameof(_data.LayoutStyle), (int)_data.LayoutStyle, _data.LayoutStyle.GetType());
         }
 
         // validate the orientation up front (defends against unknown values added in the future)
@@ -125,7 +126,8 @@ public sealed partial class BarButtonControl : UserControl, IBarItemControl
             case Orientation.Vertical:
                 break;
             default:
-                throw new MorphicUnhandledCaseException(_orientation);
+                throw new System.ComponentModel.InvalidEnumArgumentException(
+                    nameof(_orientation), (int)_orientation, _orientation.GetType());
         }
 
         var plainStyle = (Style)this.Resources["BarButtonStyle"];

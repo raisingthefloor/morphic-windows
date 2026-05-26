@@ -123,7 +123,8 @@ internal class LayoutUtils
                         case DockingLocation.FixedRightMargin:
                             throw new ArgumentException(ERROR_INVALID_DOCKING_LOCATION_AND_ORIENTATION_COMBINATION);
                         default:
-                            throw new MorphicUnhandledCaseException(dockingLocation);
+                            throw new System.ComponentModel.InvalidEnumArgumentException(
+                                nameof(dockingLocation), (int)dockingLocation, dockingLocation.GetType());
                     }
 
                     // second half of HORIZONTAL MORPHICBAR calculation: calculate the top and bottom (Y) coordinates
@@ -151,7 +152,8 @@ internal class LayoutUtils
                         case DockingLocation.FixedRightMargin:
                             throw new ArgumentException(ERROR_INVALID_DOCKING_LOCATION_AND_ORIENTATION_COMBINATION);
                         default:
-                            throw new MorphicUnhandledCaseException(dockingLocation);
+                            throw new System.ComponentModel.InvalidEnumArgumentException(
+                                nameof(dockingLocation), (int)dockingLocation, dockingLocation.GetType());
                     }
                 }
                 break;
@@ -182,7 +184,8 @@ internal class LayoutUtils
                         case DockingLocation.FixedBottomMargin:
                             throw new ArgumentException(ERROR_INVALID_DOCKING_LOCATION_AND_ORIENTATION_COMBINATION);
                         default:
-                            throw new MorphicUnhandledCaseException(dockingLocation);
+                            throw new System.ComponentModel.InvalidEnumArgumentException(
+                                nameof(dockingLocation), (int)dockingLocation, dockingLocation.GetType());
                     }
 
                     // second half of VERTICAL MORPHICBAR calculation: calculate the top and bottom (Y) coordinates
@@ -207,12 +210,14 @@ internal class LayoutUtils
                         case DockingLocation.FixedBottomMargin:
                             throw new ArgumentException(ERROR_INVALID_DOCKING_LOCATION_AND_ORIENTATION_COMBINATION);
                         default:
-                            throw new MorphicUnhandledCaseException(dockingLocation);
+                            throw new System.ComponentModel.InvalidEnumArgumentException(
+                                nameof(dockingLocation), (int)dockingLocation, dockingLocation.GetType());
                     }
                 }
                 break;
             default:
-                throw new MorphicUnhandledCaseException(dockingLocation);
+                throw new System.ComponentModel.InvalidEnumArgumentException(
+                    nameof(orientation), (int)orientation, orientation.GetType());
         }
 
         /* STEP 2: clamp the RECT if necessary (i.e. prevent overflow from the working area) */
@@ -237,7 +242,8 @@ internal class LayoutUtils
                 targetBottom = Math.Min(targetBottom, workingAreaRect.bottom);
                 break;
             default:
-                throw new MorphicUnhandledCaseException(dockingLocation);
+                throw new System.ComponentModel.InvalidEnumArgumentException(
+                    nameof(dockingLocation), (int)dockingLocation, dockingLocation.GetType());
         }
 
         /* STEP 3: if adding keepaway padding has created a "negative space" area (i.e. fewer than SCALED_CORNER_KEEPAWAY_PADDING * 2 pixels were available), make that size dimension 0 pixels */

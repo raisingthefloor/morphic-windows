@@ -147,7 +147,8 @@ internal static class MorphicSysColorBrushBinder
             MorphicSysColor.Hotlight => Windows.Win32.Graphics.Gdi.SYS_COLOR_INDEX.COLOR_HOTLIGHT,
             MorphicSysColor.ActiveBorder => Windows.Win32.Graphics.Gdi.SYS_COLOR_INDEX.COLOR_ACTIVEBORDER,
             MorphicSysColor.WindowFrame => Windows.Win32.Graphics.Gdi.SYS_COLOR_INDEX.COLOR_WINDOWFRAME,
-            _ => throw new ArgumentOutOfRangeException(nameof(color), color, null),
+            _ => throw new System.ComponentModel.InvalidEnumArgumentException(
+                nameof(color), (int)color, color.GetType()),
         };
     }
 }
