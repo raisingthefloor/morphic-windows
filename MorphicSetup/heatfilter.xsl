@@ -10,6 +10,27 @@
   <xsl:key name="FilterPdbs" match="wix:Component[substring(wix:File/@Source, string-length(wix:File/@Source) - 3) = '.pdb']" use="@Id" />
   <xsl:key name="FilterMorphicExe" match="wix:Component[wix:File/@Source = 'SourceDir\Morphic.exe']" use="@Id" />
 
+  <!-- Exclude Morphic.Core.dll and Microsoft.DiaSymReader.Native.amd64.dll from heat
+       so we can manually author them inside morphic.exe's Component in Package.wxs
+       with CompanionFile="morphic_exe". Both files are app-local private DLLs that
+       always ship with Morphic.exe, so grouping them in the same Component is a
+       reasonable exception to the one-file-per-component guideline.
+
+       Why we need this exception: the OLD installer (v1.x) shipped these two files
+       at higher baked-in versions than v2.x does). MSI's default file-versioning
+       rule fires "Disallowing installation of component since the same component
+       with higher versioned keyfile exists" at CostFinalize, which is before
+       RemoveExistingProducts runs and can't be reordered around it. Moving these
+       files into morphic.exe's Component plus marking them CompanionFile means
+       their install decision is inherited from morphic.exe (whose version always
+       increases each release), bypassing the per-file version comparison entirely.
+
+       If a future build accidentally regresses some other file's version, the
+       "Disallowing installation of component" message in the install log will
+       identify it and it can be added to the same exclude+companion pattern. -->
+  <xsl:key name="FilterMorphicCoreDll" match="wix:Component[wix:File/@Source = 'SourceDir\Morphic.Core.dll']" use="@Id" />
+  <xsl:key name="FilterDiaSymReaderNativeAmd64Dll" match="wix:Component[wix:File/@Source = 'SourceDir\Microsoft.DiaSymReader.Native.amd64.dll']" use="@Id" />
+
   <!-- Copy all elements and their attributes. -->
   <xsl:template match="@*|node()">
     <xsl:copy>
@@ -20,27 +41,7 @@
   <!-- Except for those that match our filters, do nothing. -->
   <xsl:template match="*[ self::wix:Component or self::wix:ComponentRef ][ key( 'FilterPdbs', @Id ) ]" />
   <xsl:template match="*[ self::wix:Component or self::wix:ComponentRef ][ key( 'FilterMorphicExe', @Id ) ]" />
-
-  <!-- Make every heat-harvested File a CompanionFile of morphic_exe. The MSI
-       rule for companion files: a companion's install decision is inherited
-       from its companion, bypassing the per-component "Disallowing installation
-       of component since the same component with higher versioned keyfile
-       exists" rule. That rule normally fires when a new file's baked-in
-       version is lower than the installed copy on disk (but some files that we
-       install, including Microsoft DLLs, can sometimes be older versions).
-
-       morphic.exe's component is excluded from heat by the FilterMorphicExe
-       key above and is declared manually in Package.wxs, so this template
-       never touches the companion target itself. As long as morphic.exe's
-       version monotonically increases each release, the version comparison
-       on morphic.exe always wins and every companion installs alongside it,
-       regardless of any baked-in file version on either side. -->
-  <xsl:template match="wix:File">
-    <xsl:copy>
-      <xsl:apply-templates select="@*" />
-      <xsl:attribute name="CompanionFile">morphic_exe</xsl:attribute>
-      <xsl:apply-templates select="node()" />
-    </xsl:copy>
-  </xsl:template>
+  <xsl:template match="*[ self::wix:Component or self::wix:ComponentRef ][ key( 'FilterMorphicCoreDll', @Id ) ]" />
+  <xsl:template match="*[ self::wix:Component or self::wix:ComponentRef ][ key( 'FilterDiaSymReaderNativeAmd64Dll', @Id ) ]" />
 </xsl:stylesheet>
 <!-- adapted from WiX toolset sample (github.com/DeploymentDojo/BeltTest) -->
