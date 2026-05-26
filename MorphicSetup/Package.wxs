@@ -4,7 +4,14 @@
     <Icon Id="MorphicIcon" SourceFile="..\Morphic\Assets\Icons\morphic.ico" />
     <Property Id="ARPPRODUCTICON" Value="MorphicIcon" />
 
-    <MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeError)" />
+    <!-- Schedule="afterInstallInitialize" removes the previous version BEFORE installing the new
+         one. The default (afterInstallExecute) installs new files first then removes the old
+         product, which can race on file reference counts and leave a corrupted install -- the
+         WinAppSDK DLL set is large and tightly coupled, and even one stale/missing DLL crashes
+         Microsoft.UI.Xaml.dll on startup with 0xc000027b. The trade-off is that a failed new
+         install leaves the machine with no Morphic at all (vs. preserving the old version);
+         acceptable here because the user can just re-run the installer. -->
+    <MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeError)" Schedule="afterInstallInitialize" />
 
     <MediaTemplate EmbedCab="yes" />
 
