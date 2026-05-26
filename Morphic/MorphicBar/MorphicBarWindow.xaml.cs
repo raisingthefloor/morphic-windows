@@ -194,13 +194,15 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
                 return;
             }
             var ownerNow = Windows.Win32.PInvoke.GetWindowLongPtr(hwnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWLP_HWNDPARENT);
-            Morphic.Controls.Windowing.TaskbarDiag.Log(
-                $"MorphicBarWindow.Activated({e.WindowActivationState}): hwnd={Morphic.Controls.Windowing.TaskbarDiag.HwndToHex(hwnd)} ownerNow=0x{ownerNow:X}");
+            long hwndAsLong;
             IntPtr hwndAsIntPtr;
             unsafe
             {
+                hwndAsLong = (long)hwnd.Value;
                 hwndAsIntPtr = (IntPtr)hwnd.Value;
             }
+            Morphic.Controls.Windowing.TaskbarDiag.Log(
+                $"MorphicBarWindow.Activated({e.WindowActivationState}): hwnd=0x{hwndAsLong:X} ownerNow=0x{ownerNow:X}");
             Morphic.Controls.Windowing.TaskbarHelper.RemoveFromTaskbar(hwndAsIntPtr);
         };
 

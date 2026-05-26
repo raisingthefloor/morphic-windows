@@ -55,16 +55,4 @@ public static class TaskbarDiag
             // diagnostic logging must never throw and must never block production code
         }
     }
-
-    // Formats an HWND as a hex string. CsWin32's HWND struct wraps the underlying handle
-    // as a void* pointer, so converting it to a printable integer requires an unsafe block.
-    // Centralizing the cast here lets callers in safe-context code format HWNDs for the
-    // log without needing their own unsafe block. Returns "0x0" for a null handle.
-    public static string HwndToHex(Windows.Win32.Foundation.HWND hwnd)
-    {
-        unsafe
-        {
-            return $"0x{(long)hwnd.Value:X}";
-        }
-    }
 }

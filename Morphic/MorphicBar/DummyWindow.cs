@@ -53,8 +53,10 @@ internal class DummyWindow : IDisposable
                   null
               );
             int createWindowErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+            // already inside the enclosing `unsafe` block, so the void*->long cast is legal here
+            long hwndAsLong = (long)this._hwnd.Value;
             Morphic.Controls.Windowing.TaskbarDiag.Log(
-                $"DummyWindow.ctor: CreateWindowEx returned hwnd={Morphic.Controls.Windowing.TaskbarDiag.HwndToHex(this._hwnd)} lastError={createWindowErrorCode}");
+                $"DummyWindow.ctor: CreateWindowEx returned hwnd=0x{hwndAsLong:X} lastError={createWindowErrorCode}");
         }
     }
 
@@ -106,17 +108,25 @@ internal class DummyWindow : IDisposable
 
         // Verify that the assignment actually stuck. SetWindowLongPtr returns the previous
         // value, which can be 0 either because the prior owner was null (legitimate success)
-        // or because the call silently failed. GetWindow(GW_OWNER) is the source of truth.
-        var actualOwnerAfter = Windows.Win32.PInvoke.GetWindow(childHwnd, Windows.Win32.UI.WindowsAndMessaging.GET_WINDOW_CMD.GW_OWNER);
+        // or because the call silently failed. GetWindowLongPtr(GWLP_HWNDPARENT) is the source
+        // of truth for the current owner.
+        var actualOwnerAfter = Windows.Win32.PInvoke.GetWindowLongPtr(childHwnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWLP_HWNDPARENT);
+        long childHwndAsLong;
+        long thisHwndAsLong;
+        unsafe
+        {
+            childHwndAsLong = (long)childHwnd.Value;
+            thisHwndAsLong = (long)this._hwnd.Value;
+        }
         Morphic.Controls.Windowing.TaskbarDiag.Log(
-            $"DummyWindow.SetAsParentHwnd: childHwnd=0x{childHwnd.Value:X} thisHwnd(dummy)=0x{this._hwnd.Value:X} " +
+            $"DummyWindow.SetAsParentHwnd: childHwnd=0x{childHwndAsLong:X} thisHwnd(dummy)=0x{thisHwndAsLong:X} " +
             $"setLongPtrPrevious=0x{setWindowLongPtrResult:X} lastError={setWindowLongPtrWin32ErrorCode} " +
-            $"actualOwnerAfter=0x{actualOwnerAfter.Value:X} " +
-            $"match={(actualOwnerAfter.Value == this._hwnd.Value ? "YES" : "NO")}");
+            $"actualOwnerAfter=0x{actualOwnerAfter:X} " +
+            $"match={(actualOwnerAfter == thisHwndAsLong ? "YES" : "NO")}");
 
         if (setWindowLongPtrResult == 0)
         {
-            if (setWindowLongPtrErrorCode != 0)
+            if (setWindowLongPtrWin32ErrorCode != 0)
             {
                 return MorphicResult.ErrorResult<Morphic.WindowsNative.IWin32ApiError>(new Morphic.WindowsNative.IWin32ApiError.Win32Error((uint)setWindowLongPtrWin32ErrorCode));
             }
