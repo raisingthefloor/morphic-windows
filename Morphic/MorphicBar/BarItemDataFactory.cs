@@ -31,6 +31,21 @@ namespace Morphic.MorphicBar;
 
 internal static class BarItemDataFactory
 {
+    // The Text Size group's recompute action is stashed here so the App can trigger a refresh at
+    // moments the factory's own subscriptions don't cover -- specifically, right after the bar
+    // has been animated to its initial dock corner (where it may have crossed onto a different
+    // monitor with a different DPI than the one in effect when the factory ran).
+    //
+    // Display.DisplayChanged covers ongoing system-wide changes (user changes scale via Settings,
+    // monitor add/remove, etc.). It does NOT fire when the BAR window moves between monitors --
+    // that's a per-window event, not a display-config event. App.OnLaunched calls
+    // RefreshTextSizeButtonState() after AnimateMoveTo for exactly that case.
+    private static Action? _refreshTextSizeButtonState;
+    internal static void RefreshTextSizeButtonState()
+    {
+        _refreshTextSizeButtonState?.Invoke();
+    }
+
     public static IBarItemData CreateTextSizeButtonGroup(BarButtonAction? increaseAction, BarButtonAction? decreaseAction)
     {
         const int TextSizeIncrementIndex = 0;
@@ -55,6 +70,21 @@ internal static class BarItemDataFactory
             Action = decreaseAction,
         };
 
+        // Bridge the Text Size buttons to the bar's display DPI state. The buttons reflect
+        // whether stepping up (+) or down (-) is currently allowed:
+        //   * At the maximum offset: + disabled, - enabled.
+        //   * At the minimum offset: - disabled, + enabled.
+        //   * In between: both enabled.
+        //   * Bar HWND not resolvable or display lookup failed: both disabled (defensive --
+        //     means we can't talk to the system, so the click handler would also fail).
+        //
+        // Sources of change handled:
+        //   * Display.DisplayChanged (WM_DISPLAYCHANGE): user changes scale via Settings on any
+        //     monitor, monitor attach/detach, resolution change. Catches our own clicks too --
+        //     SetDpiOffsetAsync triggers WM_DISPLAYCHANGE.
+        //   * BarItemDataFactory.RefreshTextSizeButtonState() called from App.OnLaunched after
+        //     AnimateMoveTo, so the buttons reflect the dock-corner monitor (which may differ
+        //     from whatever monitor the bar window was constructed on).
         Action recomputeState = () =>
         {
             var barManager = ((App)Microsoft.UI.Xaml.Application.Current).MorphicBarManager;
@@ -96,7 +126,9 @@ internal static class BarItemDataFactory
         increaseButton.AddDisposeAction(() =>
         {
             Morphic.WindowsNative.Display.Display.DisplayChanged -= displayChangedHandler;
+            _refreshTextSizeButtonState = null;
         });
+        _refreshTextSizeButtonState = recomputeState;
         //
         recomputeState();
 

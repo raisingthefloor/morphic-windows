@@ -100,6 +100,9 @@ internal sealed class MorphicBarManager : IDisposable
         }
         _disposed = true;
         _morphicBarWindow.AppWindow.Changed -= this.OnBarAppWindowChanged;
+        // The bar intercepts WM_CLOSE to turn Alt+F4 into a Hide; re-enable user-close before
+        // Close so this programmatic-shutdown path actually destroys the window.
+        _morphicBarWindow.SetUserCloseEnabled(true);
         _morphicBarWindow.Close();
     }
 }

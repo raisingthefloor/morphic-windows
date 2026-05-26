@@ -159,10 +159,18 @@ public partial class App : Application
         // show our taskbar icon (button)
         this.TaskbarButton.SetVisible(true);
 
-        // Show the bar without activating it. Activating at launch would put the bar into a sticky 
-        // Win32 "active" state from which the user's first Alt+Tab would fire no WM_ACTIVATE (OS 
-        // sees it as "already active"), breaking our initial-focus-ring logic. The bar is topmost 
-        //anyway, so it's still immediately visible.
+        // The Text Size +/- buttons reflect the DPI scale of the bar's current monitor. The
+        // factory computed their initial state during CreateBasicBarItemsData -- which ran before
+        // AnimateMoveTo, when the bar may have been on a different monitor with a different DPI
+        // than the user's preferred dock corner. Refresh now that the bar is on its dock monitor
+        // so the buttons reflect the right display from first frame.
+        Morphic.MorphicBar.BarItemDataFactory.RefreshTextSizeButtonState();
+
+        // Show the bar without activating it. Activating at launch would (a) be user-hostile by
+        // interrupting whatever the user was doing in their previous foreground app, and (b) put
+        // the bar into a sticky Win32 "active" state from which the user's first Alt+Tab would
+        // fire no WM_ACTIVATE (OS sees it as "already active"), breaking our initial-focus-ring
+        // logic. The bar is topmost anyway, so it's still immediately visible.
         _morphicBarManager.ShowBar(activateWindow: false);
     }
 

@@ -136,10 +136,11 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
 
     // Per-instance subclass on the bar's HWND. Handles WM_ACTIVATE (drives initial-focus logic;
     // WinUI's Window.Activated is unreliable for borderless+topmost+owned windows like ours) and
-    // WM_CLOSE (Alt+F4 -> Hide; _allowClose=true bypasses for programmatic shutdown). Field
-    // keeps the delegate alive while the subclass is installed (GC pinning).
+    // WM_CLOSE (when _userCloseEnabled=false, Alt+F4 turns into Hide; set true via
+    // SetUserCloseEnabled(true) right before Close() to allow programmatic shutdown through).
+    // Field keeps the delegate alive while the subclass is installed (GC pinning).
     private Windows.Win32.UI.Shell.SUBCLASSPROC? _subclassProc;
-    private bool _allowClose;
+    private bool _userCloseEnabled;  // default false: Alt+F4 -> Hide
     //
     // Time-based suppression of the Programmatic/Pointer -> Keyboard focus upgrade. Set by
     // RunWithBarHiddenAsync at the START of the flow so it covers the entire span: deferred
@@ -196,10 +197,12 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         this.Closed += MorphicBarWindow_Closed;
     }
 
-    // Lets programmatic shutdown (MorphicBarManager.Dispose) bypass the WM_CLOSE -> Hide intercept.
-    internal void AllowCloseForShutdown()
+    // Toggles whether Alt+F4 / shell close from the user actually destroys the window. Default
+    // is false (WM_CLOSE -> Hide instead). Set to true right before programmatic shutdown's
+    // Close() so the close goes through normally.
+    internal void SetUserCloseEnabled(bool enabled)
     {
-        _allowClose = true;
+        _userCloseEnabled = enabled;
     }
 
     // Suppresses the Programmatic/Pointer -> Keyboard focus upgrade for `duration`. Used by
@@ -246,7 +249,7 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
                 this.ScheduleDeferredFocusUpdate(WindowActivationState.PointerActivated);
             }
         }
-        else if (msg == Windows.Win32.PInvoke.WM_CLOSE && _allowClose == false)
+        else if (msg == Windows.Win32.PInvoke.WM_CLOSE && _userCloseEnabled == false)
         {
             // Alt+F4 -> Hide instead of destroy. Deferred via dispatcher to avoid re-entrant
             // message processing; wrapped in try/catch so a teardown race doesn't throw.
