@@ -11,7 +11,7 @@
          Microsoft.UI.Xaml.dll on startup with 0xc000027b. The trade-off is that a failed new
          install leaves the machine with no Morphic at all (vs. preserving the old version);
          acceptable here because the user can just re-run the installer. -->
-    <MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeError)" Schedule="afterInstallInitialize" />
+    <MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="!(loc.DowngradeError)" Schedule="afterInstallInitialize" />
 
     <!-- Close any running Morphic.exe before install. Without this, in-use DLLs can't be
          deleted during the old product's uninstall (Windows schedules them for delete-on-reboot),
@@ -48,7 +48,7 @@
     <!-- Explicitly schedule WixCloseApplications BEFORE InstallValidate so the close happens
          before RemoveExistingProducts (which is itself scheduled after InstallInitialize via the
          MajorUpgrade element above). Without this explicit scheduling, WixCloseApplications can
-         run AFTER RemoveExistingProducts -- meaning the old uninstall tries to delete files
+         run AFTER RemoveExistingProducts, meaning the old uninstall tries to delete files
          while Morphic.exe is still running, Windows file-locks the in-use DLLs, the uninstall
          schedules them for delete-on-reboot, and the new install's file-version rules then
          decide not to replace them. Net: files missing after upgrade.
