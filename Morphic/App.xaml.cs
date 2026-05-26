@@ -45,9 +45,15 @@ public partial class App : Application
 
     private Morphic.AboutWindow.AboutWindow? _aboutWindow;
 
-    private Morphic.MorphicBar.MorphicBarWindow _morphicBarWindow = null!;
-    internal static Morphic.MorphicBar.MorphicMainMenu MainMenu { get; private set; } = null!;
+    // The MorphicBar's per-bar manager. App holds the manager (not the bar directly) so that
+    // bar-related coordination is owned by MorphicBarManager rather than spread across App.
+    // Exposed publicly so callers (BarItemHandlers, BarItemDataFactory, etc.) can reach the
+    // manager without App-side wrappers.
+    private Morphic.MorphicBar.MorphicBarManager? _morphicBarManager;
+    internal Morphic.MorphicBar.MorphicBarManager? MorphicBarManager => _morphicBarManager;
 
+    internal static Morphic.MorphicBar.MorphicMainMenu MainMenu { get; private set; } = null!;
+    //
     // we also create a single transparent window which can be used (to show popups and messageboxes, etc.); this is necessary for when no other window UI is visible, but for simplicity it'll be shared project-wide
     private Morphic.MorphicBar.TransparentWindow.TransparentWindow _menuOwnerWindow = null!;
     internal static Window MenuOwnerWindow => ((App)Application.Current)._menuOwnerWindow;
@@ -113,27 +119,13 @@ public partial class App : Application
         _menuOwnerWindow.AppWindow.MoveAndResize(new Windows.Graphics.RectInt32(-10000, -10000, 0, 0)); // move off the main screen (unnecessary, but good for VS debugging so we don't get GUI debug overlays), make it zero pixels in size (also unnecessary, but a safeguard)
         _menuOwnerWindow.AppWindow.Show();
 
-        _morphicBarWindow = new();
-_morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size of the legacy Morphic 1.0 MorphicBar
-        _morphicBarWindow.Orientation = Orientation.Horizontal;
-        _morphicBarWindow.InitializeBarItems(App.CreateBasicBarItemsData());
-
-        // Keep the tray-button tooltip in sync with the MorphicBar's visibility ("Show
-        // MorphicBar" when hidden, "Hide MorphicBar" when visible) the same way the
-        // popup menu's item labels do. AppWindow.Changed fires for several reasons
-        // (position, size, visibility, etc.); we filter on DidVisibilityChange so we
-        // only refresh on the relevant transitions, no matter which code path (menu
-        // item, tray click, etc.) triggered the show/hide. RefreshTaskbarButtonTooltip
-        // is called once here so the initial caption matches the bar's current state
-        // before any user interaction.
-        _morphicBarWindow.AppWindow.Changed += this.OnMorphicBarWindowAppWindowChanged;
-        this.RefreshTaskbarButtonTooltip();
-        //
-        var iconPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "Icons", "morphic-standardcontrast.ico");
-        _morphicBarWindow.SetIconFromFile(iconPath, 256, 256);
-
-        // show our taskbar icon (button)
-        this.TaskbarButton.SetVisible(true);
+        // Construct the MorphicBarWindow and do all one-time setup before handing it to MorphicBarManager.
+        // The local `morphicBarWindow` reference goes out of scope after the manager takes it; App keeps
+        // only the manager reference (this.MorphicBarManager): all subsequent bar operations go through
+        // manager wrappers (Show/Hide/Activate/IsVisible/etc.).
+        var morphicBarWindow = new Morphic.MorphicBar.MorphicBarWindow();
+        morphicBarWindow.Orientation = Orientation.Horizontal;
+        morphicBarWindow.InitializeBarItems(App.CreateBasicBarItemsData());
 
         // position MorphicBar at the correct dock location
         //
@@ -146,9 +138,15 @@ _morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size o
             return;
         }
         // NOTE: if this does not "snap" to the correct location immediately (due to enqueueing the UI code), consider creating a special path that sets the window position without the animation code
-        _morphicBarWindow.AnimateMoveTo(hMonitor, _morphicBarWindow.Orientation, MorphicBar.DockingLocation.FloatingBottomRight, TimeSpan.Zero);
+        morphicBarWindow.AnimateMoveTo(hMonitor, morphicBarWindow.Orientation, MorphicBar.DockingLocation.FloatingBottomRight, TimeSpan.Zero);
 
-        _morphicBarWindow.Activate();
+        // Hand the configured bar to the manager. The manager subscribes to the bar's events.
+        _morphicBarManager = new Morphic.MorphicBar.MorphicBarManager(morphicBarWindow);
+
+        // show our taskbar icon (button)
+        this.TaskbarButton.SetVisible(true);
+
+        _morphicBarManager.ActivateBar();
     }
 
     // builds the basic set of MorphicBar items (as data, not controls); 
@@ -157,6 +155,12 @@ _morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size o
     {
         var items = new List<Morphic.MorphicBar.BarControls.IBarItemData>
         {
+            // "Text Size" -- two pushbuttons (+ on the left, - on the right), equal width;
+            //     - key invokes the decrement sub-button, + key invokes the increment sub-button
+            Morphic.MorphicBar.BarItemDataFactory.CreateTextSizeButtonGroup(
+                increaseAction: Morphic.MorphicBar.BarItemHandlers.IncreaseTextSizeButtonAction,
+                decreaseAction: Morphic.MorphicBar.BarItemHandlers.DecreaseTextSizeButtonAction),
+
             // "Magnifier" -- two pushbuttons (Show on the left, Hide on the right), equal width
             Morphic.MorphicBar.BarItemDataFactory.CreateMagnifierButtonGroup(showAction: Morphic.MorphicBar.BarItemHandlers.ShowMagnifierButtonAction, hideAction: Morphic.MorphicBar.BarItemHandlers.HideMagnifierButtonAction),
 
@@ -198,12 +202,12 @@ _morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size o
 
     private void MainMenu_HideMorphicBarMenuItemClicked(object? sender, EventArgs e)
     {
-        _morphicBarWindow.AppWindow.Hide();
+        _morphicBarManager?.HideBar();
     }
 
     private void MainMenu_ShowMorphicBarMenuItemClicked(object? sender, EventArgs e)
     {
-        _morphicBarWindow.AppWindow.Show();
+        _morphicBarManager?.ShowBar();
     }
 
     private void MainMenu_AboutMorphicMenuItemClicked(object? sender, EventArgs e)
@@ -230,16 +234,9 @@ _morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size o
 
         _menuOwnerWindow.Close();
 
-        // Unsubscribe the tooltip-refresh handler before closing the MorphicBar window.
-        // Otherwise the bar's Close fires AppWindow.Changed with DidVisibilityChange,
-        // RefreshTaskbarButtonTooltip then tries to write TaskbarButton.Text against a
-        // tray button whose native window is being torn down, and we get a COMException
-        // ("WinUI Desktop Window object has already been closed").
-        if (_morphicBarWindow is not null)
-        {
-            _morphicBarWindow.AppWindow.Changed -= this.OnMorphicBarWindowAppWindowChanged;
-            _morphicBarWindow.Close();
-        }
+        // MorphicBarManager.Dispose closes out the MorphicBar and all its resources/events in a safe order.
+        _morphicBarManager?.Dispose();
+        _morphicBarManager = null;
 
         this.Exit();
     }
@@ -274,32 +271,26 @@ _morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size o
     // White-style theme (and thus contains dark pixels).
     private void RefreshTaskbarIcon()
     {
-        string iconFileName;
-        if (Morphic.SettingsUtils.CachedDarkModeState.GetCurrentIsHighContrast())
-        {
-            iconFileName = Morphic.SettingsUtils.CachedDarkModeState.GetCurrentIsDark()
-                ? "morphic-highcontrastblack.ico"
-                : "morphic-highcontrastwhite.ico";
-        }
-        else
-        {
-            iconFileName = "morphic-standardcontrast.ico";
-        }
-
-        var iconPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "Icons", iconFileName);
+        var iconPath = System.IO.Path.Combine(AppContext.BaseDirectory, App.GetIconRelativePathForCurrentSystemTheme());
         _ = this.TaskbarButton.SetIconFromFile(iconPath, 256, 256);
     }
 
-    // Filters AppWindow.Changed for the one signal we care about: visibility transitions.
-    // AppWindow.Changed fires for several reasons (position, size, etc.); only act when
-    // DidVisibilityChange is true so we don't redundantly rewrite the tooltip on every
-    // window move or resize.
-    private void OnMorphicBarWindowAppWindowChanged(Microsoft.UI.Windowing.AppWindow sender, Microsoft.UI.Windowing.AppWindowChangedEventArgs args)
+    // Selects the right contrast-variant icon resource for the current HC + dark state and
+    // returns its relative path
+    internal static string GetIconRelativePathForCurrentSystemTheme()
     {
-        if (args.DidVisibilityChange)
+        string resourceKey;
+        if (Morphic.SettingsUtils.CachedDarkModeState.GetCurrentIsHighContrast())
         {
-            this.RefreshTaskbarButtonTooltip();
+            resourceKey = Morphic.SettingsUtils.CachedDarkModeState.GetCurrentIsDark()
+                ? "AppIconHighContrastBlackPath"
+                : "AppIconHighContrastWhitePath";
         }
+        else
+        {
+            resourceKey = "AppIconStandardContrastPath";
+        }
+        return (string)Microsoft.UI.Xaml.Application.Current.Resources[resourceKey];
     }
 
     // Updates the tray-button tooltip caption based on the MorphicBar's current visibility.
@@ -307,38 +298,46 @@ _morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size o
     // self-describing wherever the user encounters it.
     private void RefreshTaskbarButtonTooltip()
     {
-        if (this.TaskbarButton is null || _morphicBarWindow is null)
+        if (this.TaskbarButton is null || _morphicBarManager is null)
         {
             return;
         }
         try
         {
-            this.TaskbarButton.Text = _morphicBarWindow.Visible ? "Hide MorphicBar" : "Show MorphicBar";
+            this.TaskbarButton.Text = _morphicBarManager.IsBarVisible ? "Hide MorphicBar" : "Show MorphicBar";
         }
         catch (System.Runtime.InteropServices.COMException)
         {
-            // The bar window is being torn down: AppWindow.Changed fired the visibility
-            // transition mid-close, but accessing _morphicBarWindow.Visible (or writing
-            // TaskbarButton.Text against a tray button whose native window is also closing)
-            // throws "WinUI Desktop Window object has already been closed". The tooltip
-            // doesn't need to update since the app is going away; swallow.
+            // The bar window is being torn down: VisibilityChanged fired the visibility
+            // transition mid-close, but accessing IsVisible (or writing TaskbarButton.Text
+            // against a tray button whose native window is also closing) throws "WinUI
+            // Desktop Window object has already been closed". The tooltip doesn't need to
+            // update since the app is going away; swallow.
         }
     }
 
     private void TaskbarButton_MouseUp(object? sender, Controls.MouseEventArgs e)
     {
-        _morphicBarWindow.DispatcherQueue.TryEnqueue(() =>
+        // Marshal to the UI thread via _menuOwnerWindow's DispatcherQueue. The tray button event
+        // can fire on a non-UI thread; bar operations (Show/Hide via the manager) must run on
+        // the UI thread. _menuOwnerWindow is a hidden window on the same UI thread that owns
+        // the bar, so its DispatcherQueue is the appropriate marshal target.
+        _menuOwnerWindow.DispatcherQueue.TryEnqueue(() =>
         {
-            switch (e.Button) 
+            if (_morphicBarManager is null)
+            {
+                return;
+            }
+            switch (e.Button)
             {
                 case Controls.MouseButtons.Left:
-                    switch (_morphicBarWindow.Visible)
+                    switch (_morphicBarManager.IsBarVisible)
                     {
                         case true:
-                            _morphicBarWindow.AppWindow.Hide();
+                            _morphicBarManager.HideBar();
                             break;
                         case false:
-                            _morphicBarWindow.AppWindow.Show();
+                            _morphicBarManager.ShowBar();
                             break;
                     }
                     break;
@@ -367,7 +366,7 @@ _morphicBarWindow.Resize(733, 67); // 1100x100 pixels (at 150% zoom), the size o
                         }
 
                         // now pop up the main menu
-                        App.MainMenu.Show(ownerWindow, _morphicBarWindow.Visible, popupPosition.X, popupPosition.Y);
+                        App.MainMenu.Show(ownerWindow, _morphicBarManager?.IsBarVisible == true, popupPosition.X, popupPosition.Y);
                     }
                     break;
             }

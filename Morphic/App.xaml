@@ -10,7 +10,17 @@
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
                 <!-- Other merged dictionaries here -->
             </ResourceDictionary.MergedDictionaries>
-	    
+
+            <!-- App-wide icon paths for the three contrast variants. Single source of truth so
+                 every window and tray-icon swap point uses the same files.
+		 Naming convention: the file name describes the TARGET HC theme family, not the 
+		 color of the pixels. "highcontrastblack" is the icon FOR the HC Black-style theme 
+		 (and thus contains light pixels); "highcontrastwhite" is for HC White-style (contains 
+		 dark pixels). -->
+            <x:String x:Key="AppIconStandardContrastPath">Assets/Icons/morphic-standardcontrast.ico</x:String>
+            <x:String x:Key="AppIconHighContrastBlackPath">Assets/Icons/morphic-highcontrastblack.ico</x:String>
+            <x:String x:Key="AppIconHighContrastWhitePath">Assets/Icons/morphic-highcontrastwhite.ico</x:String>
+
             <!-- Color palette for MorphicBar item controls.
                  These are NOT placed inside ThemeDictionaries because they
                  should not follow the system Light/Dark setting. -->
@@ -53,7 +63,7 @@
                 <ResourceDictionary x:Key="Dark">
                     <SolidColorBrush x:Key="ThemeAwareBackground" Color="#FF000000"/>
                     <SolidColorBrush x:Key="ThemeAwareForeground" Color="#FFFFFFFF"/>
-                    <SolidColorBrush x:Key="ThemeAwareBorder" Color="#FF000000"/>
+                    <SolidColorBrush x:Key="ThemeAwareBorder" Color="#FF333333"/>
                     <SolidColorBrush x:Key="ThemeAwareMorphicBarMorphieTextForeground" Color="#FFFFFFFF"/>
                 </ResourceDictionary>
                 <!-- HighContrast: WinUI 3's SystemColorWindowBrush and SystemColorWindowTextBrush

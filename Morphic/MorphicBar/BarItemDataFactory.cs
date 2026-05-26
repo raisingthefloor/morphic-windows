@@ -57,7 +57,14 @@ internal static class BarItemDataFactory
 
         Action recomputeState = () =>
         {
-            var barHwnd = App.GetMorphicBarWindowHandle();
+            var barManager = ((App)Microsoft.UI.Xaml.Application.Current).MorphicBarManager;
+            if (barManager is null)
+            {
+                increaseButton.IsEnabled = false;
+                decreaseButton.IsEnabled = false;
+                return;
+            }
+            var barHwnd = barManager.GetBarWindowHandle();
             if (barHwnd == IntPtr.Zero)
             {
                 increaseButton.IsEnabled = false;

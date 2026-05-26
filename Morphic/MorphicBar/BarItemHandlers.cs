@@ -34,7 +34,12 @@ internal class BarItemHandlers
 
     private static async Task<MorphicResult<MorphicUnit, MorphicUnit>> StepBarDisplayDpiOffsetAsync(string? actionTag, int step)
     {
-        var barHwnd = App.GetMorphicBarWindowHandle();
+        var barManager = ((App)Microsoft.UI.Xaml.Application.Current).MorphicBarManager;
+        if (barManager is null)
+        {
+            return MorphicResult.ErrorResult();
+        }
+        var barHwnd = barManager.GetBarWindowHandle();
         if (barHwnd == IntPtr.Zero)
         {
             return MorphicResult.ErrorResult();
@@ -68,7 +73,6 @@ internal class BarItemHandlers
             return MorphicResult.ErrorResult();
         }
 
-        await rasterizationChangeWait;
         return MorphicResult.OkResult();
     }
 
