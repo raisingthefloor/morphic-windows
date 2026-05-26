@@ -45,17 +45,20 @@ public static class TaskbarHelper
     // from each Window.Activated handler, not just the first.
     public static void RemoveFromTaskbar(IntPtr hwnd)
     {
+        int hresult = unchecked((int)0x80004005);  // E_FAIL until proven otherwise
+        string failureReason = "(not attempted)";
         try
         {
             ITaskbarList taskbarList = EnsureTaskbarList();
-            taskbarList.DeleteTab(hwnd);
+            hresult = taskbarList.DeleteTab(hwnd);
+            failureReason = hresult == 0 ? "(none)" : $"HRESULT 0x{hresult:X8}";
         }
-        catch (COMException)
+        catch (System.Exception ex)
         {
-            // Shell COM call can fail during process startup / shutdown or in edge
-            // environments; the taskbar bug we're fixing is a cosmetic one, not worth
-            // surfacing a process-level error if the Shell isn't responding.
+            failureReason = $"{ex.GetType().Name}: {ex.Message}";
         }
+        Morphic.Controls.Windowing.TaskbarDiag.Log(
+            $"TaskbarHelper.RemoveFromTaskbar: hwnd=0x{(long)hwnd:X} hresult=0x{hresult:X8} reason={failureReason}");
     }
 
     private static ITaskbarList EnsureTaskbarList()
@@ -76,30 +79,29 @@ public static class TaskbarHelper
         }
     }
 
-    // CoClass for ITaskbarList. CLSID 56FDF342-FD6D-11D0-958A-006097C9A090 is the
-    // Shell's TaskbarList class; the ComImport empty-class pattern lets `new`
-    // construct it via CoCreateInstance.
+    // CoClass for ITaskbarList.
     [ComImport]
-    [Guid("56FDF342-FD6D-11D0-958A-006097C9A090")]
+    [Guid("56FDF344-FD6D-11D0-958A-006097C9A090")]
     [ClassInterface(ClassInterfaceType.None)]
     private class TaskbarListCoClass
     {
     }
 
-    // ITaskbarList interface (Shell, shobjidl.h). We only need DeleteTab and HrInit
-    // (HrInit is the required first call before any other method). The four other
-    // methods are declared for vtable order; we leave them unused. IID
-    // 56FDF344-FD6D-11D0-958A-006097C9A090 (differs from the CoClass CLSID 56FDF342...
-    // by the second-to-last hex digit, which is easy to confuse).
+    // ITaskbarList interface (Shell, shobjidl_core.h, MIDL_INTERFACE).
     [ComImport]
-    [Guid("56FDF344-FD6D-11D0-958A-006097C9A090")]
+    [Guid("56FDF342-FD6D-11D0-958A-006097C9A090")]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     private interface ITaskbarList
     {
-        void HrInit();
-        void AddTab(IntPtr hwnd);
-        void DeleteTab(IntPtr hwnd);
-        void ActivateTab(IntPtr hwnd);
-        void SetActiveAlt(IntPtr hwnd);
+        // PreserveSig=true (the attribute below) returns the raw HRESULT instead of
+        // throwing on non-success; we want to log the HRESULT, not swallow it via
+        // the marshaler's automatic exception. Without PreserveSig the marshaler
+        // throws COMException on any non-S_OK result, which prevents us from seeing
+        // S_FALSE or HRESULTs the Shell may return for "did nothing" outcomes.
+        [PreserveSig] int HrInit();
+        [PreserveSig] int AddTab(IntPtr hwnd);
+        [PreserveSig] int DeleteTab(IntPtr hwnd);
+        [PreserveSig] int ActivateTab(IntPtr hwnd);
+        [PreserveSig] int SetActiveAlt(IntPtr hwnd);
     }
 }
