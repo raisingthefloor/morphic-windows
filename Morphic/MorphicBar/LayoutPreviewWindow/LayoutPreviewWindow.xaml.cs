@@ -35,8 +35,6 @@ namespace Morphic.MorphicBar.LayoutPreviewWindow;
 /// </summary>
 public sealed partial class LayoutPreviewWindow : Morphic.Controls.Windowing.ChromelessBaseWindow
 {
-    DummyWindow _dummyParentWindow;
-
     private Microsoft.UI.Dispatching.DispatcherQueue _dispatcherQueue;
 
     // animation timer for moving (and rotating-via-resizing) the window
@@ -64,20 +62,16 @@ public sealed partial class LayoutPreviewWindow : Morphic.Controls.Windowing.Chr
 
     public LayoutPreviewWindow()
     {
-        // NOTE: ChromelessBaseWindow's constructor strips all WinUI / DWM chrome and 
+        // NOTE: ChromelessBaseWindow's constructor strips all WinUI / DWM chrome and
         // enables per-pixel alpha, so this constructor only has to do LayoutPreviewWindow's
-        // specific setup: dummy parent (keep out of the taskbar), tool window + no-activate
-        // styles (keep out of ALT-TAB and don't steal focus), and HC-tracking that drives
-        // the visible appearance via UpdateAppearanceForCurrentHighContrastState.
+        // specific setup: tool window + no-activate styles (keep out of taskbar/ALT-TAB and
+        // don't steal focus), and HC-tracking that drives the visible appearance via
+        // UpdateAppearanceForCurrentHighContrastState.
         InitializeComponent();
 
         _dispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
 
         var hwnd = (Windows.Win32.Foundation.HWND)WinRT.Interop.WindowNative.GetWindowHandle(this);
-
-        // create a dummy "parent window" for the layout preview window (so that this window doesn't show up in the taskbar)
-        _dummyParentWindow = new DummyWindow();
-        _ = _dummyParentWindow.SetAsParentHwnd(hwnd);
 
         // remove title bar and extend content to fill the entire window
 //        this.ExtendsContentIntoTitleBar = true;

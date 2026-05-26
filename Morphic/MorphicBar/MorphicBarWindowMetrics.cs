@@ -72,10 +72,10 @@ public static class MorphicBarWindowMetrics
     public const uint DefaultLogicalThickness = 67;
 
     // BarItemsPanel outer margin (different per bar orientation). The
-    // fractional vertical components in the horizontal case (default 3.65) center
+    // fractional vertical components in the horizontal case (default 4.65) center
     // the items vertically within the bar's natural height, compensating for the
     // header's reserved-ascender top space.
-    public static readonly Thickness ItemsPanelMarginHorizontal = new(10, 3.65, 13, 3.65);
+    public static readonly Thickness ItemsPanelMarginHorizontal = new(10, 4.65, 13, 4.65);
     public static readonly Thickness ItemsPanelMarginVertical = new(7, 25, 7, 5);
 
     // BarItemsPanel inter-item spacing (along the layout axis). The gap that

@@ -52,7 +52,6 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     private bool disposedValue;
 
     private IntPtr _hIconRawHandle = IntPtr.Zero;
-    DummyWindow _dummyParentWindow;
 
     private Microsoft.UI.Dispatching.DispatcherQueue _dispatcherQueue;
 
@@ -176,17 +175,30 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             hwnd,
             Windows.Win32.Graphics.Gdi.MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
 
-        // create a dummy "parent window" for the layout preview window (so that this window doesn't show up in the taskbar)
-        _dummyParentWindow = new DummyWindow();
-        _ = _dummyParentWindow.SetAsParentHwnd(hwnd);
+        // Force the bar into the Alt+Tab switcher even after TaskbarHelper.RemoveFromTaskbar
+        // removes it from the taskbar. WS_EX_APPWINDOW is the Shell's "treat this as a real
+        // app-view window" hint -- without it, Windows 11 couples taskbar absence to Alt+Tab
+        // absence (treating both as the same "application view" concept), so removing the
+        // taskbar entry transitively removes Alt+Tab inclusion. With WS_EX_APPWINDOW the
+        // Alt+Tab inclusion is forced and DeleteTab still wins the taskbar-removal arbitration.
+        var currentExStyle = (long)Windows.Win32.PInvoke.GetWindowLongPtr(hwnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE);
+        System.Runtime.InteropServices.Marshal.SetLastPInvokeError(0);
+        var setExStyleResult = Windows.Win32.PInvoke.SetWindowLongPtr(hwnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE, (nint)(currentExStyle | (long)Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE.WS_EX_APPWINDOW));
+        if (setExStyleResult == 0)
+        {
+            var setExStyleErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+            if (setExStyleErrorCode != 0)
+            {
+                System.Diagnostics.Debug.Assert(false, $"SetWindowLongPtr(GWL_EXSTYLE) failed with error {setExStyleErrorCode}");
+            }
+        }
 
-        // Defensive cover for the production scenario (signed + uiaccess=true + Program Files
-        // install location) where the SetAsParentHwnd call above fails silently and the bar
-        // would otherwise appear in the taskbar. ITaskbarList.DeleteTab removes the taskbar
-        // entry without affecting Alt+Tab inclusion (which is what WS_EX_TOOLWINDOW would
-        // break). Called from each non-Deactivated Activated event, not just the first, in
-        // case the Shell re-adds the entry on a subsequent Show. Also logs the bar's owner
-        // state to capture diagnostic data about why the owner relationship fails in prod.
+        // TaskbarHelper.RemoveFromTaskbar covers the taskbar half of the "no taskbar, yes
+        // Alt+Tab" shape: ITaskbarList.DeleteTab explicitly removes the bar's taskbar entry
+        // and the Shell honors it regardless of integrity level, signing state, or install
+        // location. Called from each non-Deactivated Activated event, not just the first,
+        // because the Shell can re-add the entry on subsequent Shows. The bar's WS_EX_APPWINDOW
+        // (set above) keeps it in Alt+Tab even after DeleteTab removes the taskbar entry.
         this.Activated += (s, e) =>
         {
             if (e.WindowActivationState == Microsoft.UI.Xaml.WindowActivationState.Deactivated)
@@ -685,7 +697,7 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             if (disposing)
             {
                 // dispose managed state (managed objects)
-                _dummyParentWindow.Dispose();
+                // [none]
             }
 
             // free unmanaged resources (unmanaged objects) and override finalizer
