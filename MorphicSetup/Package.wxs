@@ -45,17 +45,6 @@
     </Property>
     <Launch Condition="(WINDOWSBUILDNUMBER &gt;= 19045)" Message="!(loc.MinimumOsError)" />
 
-    <!-- Explicitly schedule WixCloseApplications BEFORE InstallValidate so the close happens
-         before RemoveExistingProducts (which is itself scheduled after InstallInitialize via the
-         MajorUpgrade element above). Without this explicit scheduling, WixCloseApplications can
-         run AFTER RemoveExistingProducts, meaning the old uninstall tries to delete files
-         while Morphic.exe is still running, Windows file-locks the in-use DLLs, the uninstall
-         schedules them for delete-on-reboot, and the new install's file-version rules then
-         decide not to replace them. Net: files missing after upgrade.
-         See https://stackoverflow.com/q/710647 and the broader WiX util:CloseApplication pattern. -->
-    <InstallExecuteSequence>
-      <Custom Action="WixCloseApplications" Before="InstallValidate" />
-    </InstallExecuteSequence>
   </Package>
 
   <Fragment>
