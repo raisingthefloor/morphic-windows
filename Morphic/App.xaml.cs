@@ -113,6 +113,12 @@ public partial class App : Application
         _menuOwnerWindow = new();
         _menuOwnerWindow.DisableAcceptsFocus();
         _menuOwnerWindow.EnablePointerEventsPassthrough();
+		//
+        // This window hosts MorphicMainMenu's flyout for its lifetime. Alt+F4 (or any other user-
+        // initiated close) with the flyout focused would otherwise destroy this window and break
+        // every subsequent menu invocation. Disable user-close; OnShutdown calls
+        // AllowCloseForShutdown() to bypass when we actually want to close it.
+        _menuOwnerWindow.SetUserCloseEnabled(false);
         //
         // remove window chrome (minimize/maximize/close buttons); set the window to be 'always on top'; turn off the border and titlebar
         (_menuOwnerWindow.AppWindow.Presenter as Microsoft.UI.Windowing.OverlappedPresenter)?.IsAlwaysOnTop = true;
@@ -153,7 +159,11 @@ public partial class App : Application
         // show our taskbar icon (button)
         this.TaskbarButton.SetVisible(true);
 
-        _morphicBarManager.ActivateBar();
+        // Show the bar without activating it. Activating at launch would put the bar into a sticky 
+        // Win32 "active" state from which the user's first Alt+Tab would fire no WM_ACTIVATE (OS 
+        // sees it as "already active"), breaking our initial-focus-ring logic. The bar is topmost 
+        //anyway, so it's still immediately visible.
+        _morphicBarManager.ShowBar(activateWindow: false);
     }
 
     // builds the basic set of MorphicBar items (as data, not controls); 
@@ -239,6 +249,10 @@ public partial class App : Application
 
         _aboutWindow?.Close();
 
+        // Re-enable user close so the programmatic Close() actually destroys the window
+        // (we'd previously disabled it to prevent Alt+F4 with the menu flyout focused from
+        // destroying _menuOwnerWindow).
+        _menuOwnerWindow.SetUserCloseEnabled(true);
         _menuOwnerWindow.Close();
 
         // MorphicBarManager.Dispose closes out the MorphicBar and all its resources/events in a safe order.

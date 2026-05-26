@@ -842,7 +842,7 @@ internal class TrayButtonNativeWindow : IDisposable
             if (paintBufferHandle == IntPtr.Zero)
             {
                 var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
-                Debug.Assert(false, "Cannot begin a buffered paint operation for TrayButton (when responding to a WM_PAINT message); win32 errcode: " + win32ErrorCode.ToString());
+                Debug.WriteLine("[TrayButtonNativeWindow.OnPaintWindowsMessage] Cannot begin a buffered paint operation for TrayButton (when responding to a WM_PAINT message); win32 errcode: " + win32ErrorCode.ToString());
                 return;
             }
             try
@@ -1305,9 +1305,16 @@ internal class TrayButtonNativeWindow : IDisposable
             }
         }
 
-        // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-bringwindowtotop
-        var bringWindowToTopSuccess = Windows.Win32.PInvoke.BringWindowToTop(_hwnd);
-        if (bringWindowToTopSuccess == false)
+        // Re-assert topmost z-order via SetWindowPos(HWND_TOPMOST, SWP_NOACTIVATE). We previously
+        // used BringWindowToTop, but that ACTIVATES top-level windows as a side effect -- after
+        // a display change it would yank foreground (and keyboard focus) from whatever the user
+        // was using and dump it onto the tray button.
+        // PREVIOUSLY: var bringWindowToTopSuccess = Windows.Win32.PInvoke.BringWindowToTop(_hwnd);
+        var bringToTopSuccess = Windows.Win32.PInvoke.SetWindowPos(_hwnd, Windows.Win32.Foundation.HWND.HWND_TOPMOST, 0, 0, 0, 0,
+            Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOMOVE |
+            Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOSIZE |
+            Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
+        if (bringToTopSuccess == 0)
         {
             var win32ErrorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
             Debug.Assert(false, "Could not bring tray button window to top; win32 errcode: " + win32ErrorCode.ToString());

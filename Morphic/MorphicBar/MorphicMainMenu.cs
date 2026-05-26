@@ -84,8 +84,11 @@ internal class MorphicMainMenu
         _menuFlyout = menuFlyout;
     }
 
-    // NOTE: owner will be used both to capture a XAML root (required to show the menu) and also to know which MorphicBar to show/hide
-    public void Show(Microsoft.UI.Xaml.Window ownerWindow, bool morphicBarIsVisible, int x, int y)
+    // NOTE: owner will be used both to capture a XAML root (required to show the menu) and also to know which MorphicBar to show/hide.
+    // If returnFocusTo is supplied, focus is restored to that control (with FocusState.Keyboard)
+    // after the menu closes -- used so keyboard users who opened the menu via Space/Enter get
+    // focus back on the originating button (typically the MorphicBar logo) when they press ESC.
+    public void Show(Microsoft.UI.Xaml.Window ownerWindow, bool morphicBarIsVisible, int x, int y, Microsoft.UI.Xaml.Controls.Control? returnFocusTo = null)
     {
         // Show/Hide MorphicBar menu items
         switch (morphicBarIsVisible)
@@ -112,6 +115,47 @@ internal class MorphicMainMenu
         var rasterizationScale = root.XamlRoot.RasterizationScale;
         double relativeX = (x - ownerPosition.X) / rasterizationScale;
         double relativeY = (y - ownerPosition.Y) / rasterizationScale;
+
+        // Restore focus to returnFocusTo ONLY if the menu was dismissed without the user choosing
+        // an item (ESC, click-outside, etc.). If they clicked a menu item, that item's handler
+        // typically does something focus-relevant (opens About, quits the app, etc.) and we
+        // should not yank focus back to the logo button afterward. Track item-Click subscriptions
+        // for the duration of this Show; the Closed handler checks the flag and unsubscribes.
+        if (returnFocusTo is not null)
+        {
+            bool itemWasClicked = false;
+            var itemHandlers = new System.Collections.Generic.List<(Microsoft.UI.Xaml.Controls.MenuFlyoutItem Item, RoutedEventHandler Handler)>();
+            foreach (var item in _menuFlyout.Items)
+            {
+                if (item is Microsoft.UI.Xaml.Controls.MenuFlyoutItem mfi)
+                {
+                    RoutedEventHandler handler = (_, _) => { itemWasClicked = true; };
+                    mfi.Click += handler;
+                    itemHandlers.Add((mfi, handler));
+                }
+            }
+            EventHandler<object>? closedHandler = null;
+            closedHandler = (s, e) =>
+            {
+                _menuFlyout.Closed -= closedHandler;
+                foreach (var (mfi, handler) in itemHandlers)
+                {
+                    mfi.Click -= handler;
+                }
+                if (itemWasClicked == true)
+                {
+                    return;
+                }
+                // Deferred via TryEnqueue so the Focus call lands after the flyout has fully torn
+                // down its visual tree -- otherwise the Focus can be clobbered by the teardown.
+                _ = returnFocusTo.DispatcherQueue.TryEnqueue(() =>
+                {
+                    try { _ = returnFocusTo.Focus(Microsoft.UI.Xaml.FocusState.Keyboard); }
+                    catch (System.Runtime.InteropServices.COMException) { }
+                });
+            };
+            _menuFlyout.Closed += closedHandler;
+        }
 
         // pop up the menu flyout
         _menuFlyout.ShowAt(root, new FlyoutShowOptions

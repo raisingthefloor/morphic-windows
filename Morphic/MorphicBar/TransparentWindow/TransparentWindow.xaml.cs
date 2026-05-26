@@ -33,9 +33,56 @@ namespace Morphic.MorphicBar.TransparentWindow;
 /// </summary>
 public sealed partial class TransparentWindow : Morphic.Controls.Windowing.TransparentBaseWindow
 {
+    // Optional WM_CLOSE intercept. NOT armed by default
+    // uIdSubclass=1 because the base ChromelessBaseWindow already installs a static subclass
+    // at uIdSubclass=0.
+    private Windows.Win32.UI.Shell.SUBCLASSPROC? _instanceSubclassProc;
+    private bool _userCloseEnabled = true;
+
     public TransparentWindow()
     {
         InitializeComponent();
+
+        var hwnd = (Windows.Win32.Foundation.HWND)WinRT.Interop.WindowNative.GetWindowHandle(this);
+        _instanceSubclassProc = this.InstanceSubclassWndProc;
+        var setSubclassResult = Windows.Win32.PInvoke.SetWindowSubclass(hwnd, _instanceSubclassProc, uIdSubclass: 1, dwRefData: 0);
+        Debug.Assert(setSubclassResult);
+
+        this.Closed += TransparentWindow_Closed;
+    }
+
+    // Toggles whether Alt+F4 / shell close from the user destroys the window. Default is true
+    // (normal close behavior). Pass false to arm the WM_CLOSE intercept; for shutdown, set back
+    // to true before calling Close() so the programmatic close goes through.
+    public void SetUserCloseEnabled(bool enabled)
+    {
+        _userCloseEnabled = enabled;
+    }
+
+    private void TransparentWindow_Closed(object sender, Microsoft.UI.Xaml.WindowEventArgs args)
+    {
+        if (_instanceSubclassProc is not null)
+        {
+            var hwnd = (Windows.Win32.Foundation.HWND)WinRT.Interop.WindowNative.GetWindowHandle(this);
+            _ = Windows.Win32.PInvoke.RemoveWindowSubclass(hwnd, _instanceSubclassProc, uIdSubclass: 1);
+            _instanceSubclassProc = null;
+        }
+    }
+
+    private Windows.Win32.Foundation.LRESULT InstanceSubclassWndProc(
+        Windows.Win32.Foundation.HWND hwnd,
+        uint msg,
+        Windows.Win32.Foundation.WPARAM wParam,
+        Windows.Win32.Foundation.LPARAM lParam,
+        nuint uIdSubclass,
+        nuint dwRefData)
+    {
+        if (msg == Windows.Win32.PInvoke.WM_CLOSE && _userCloseEnabled == false)
+        {
+            // Swallow Alt+F4 / shell close while the user-close intercept is armed.
+            return new Windows.Win32.Foundation.LRESULT(0);
+        }
+        return Windows.Win32.PInvoke.DefSubclassProc(hwnd, msg, wParam, lParam);
     }
 
     public void DisableAcceptsFocus()

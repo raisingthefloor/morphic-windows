@@ -30,16 +30,16 @@ namespace Morphic.MorphicBar;
 // Owns the lifetime, event subscriptions, and operations for ONE MorphicBarWindow.
 internal sealed class MorphicBarManager : IDisposable
 {
-    private readonly MorphicBarWindow _bar;
+    private readonly MorphicBarWindow _morphicBarWindow;
     private bool _disposed;
 
     private readonly Microsoft.UI.Dispatching.DispatcherQueue _uiDispatcherQueue;
 
-    public MorphicBarManager(MorphicBarWindow bar)
+    public MorphicBarManager(MorphicBarWindow morphicBarWindow)
     {
-        _bar = bar;
-        _uiDispatcherQueue = bar.DispatcherQueue;
-        _bar.AppWindow.Changed += this.OnBarAppWindowChanged;
+        _morphicBarWindow = morphicBarWindow;
+        _uiDispatcherQueue = morphicBarWindow.DispatcherQueue;
+        _morphicBarWindow.AppWindow.Changed += this.OnBarAppWindowChanged;
 
         // Seed the bar icon for the current system theme (HC variant or non-HC), then subscribe
         // so any future HC transition swaps the icon. CachedDarkModeState's StateChanged fires
@@ -56,7 +56,7 @@ internal sealed class MorphicBarManager : IDisposable
         {
             var relativePath = App.GetIconRelativePathForCurrentSystemTheme();
             var absolutePath = System.IO.Path.Combine(AppContext.BaseDirectory, relativePath);
-            _ = _bar.SetIconFromFile(absolutePath, 256, 256);
+            _ = _morphicBarWindow.SetIconFromFile(absolutePath, 256, 256);
         }
         catch (System.Runtime.InteropServices.COMException)
         {
@@ -68,15 +68,18 @@ internal sealed class MorphicBarManager : IDisposable
 
     public event EventHandler? BarVisibilityChanged;
 
-    public bool IsBarVisible => _bar.Visible;
+    public bool IsBarVisible => _morphicBarWindow.Visible;
 
-    public void ShowBar() => _bar.AppWindow.Show();
+    // Shows the bar. Pass activateWindow: false for the startup case so we don't interrupt the
+    // user's previous foreground app AND don't put the bar into a sticky Win32 "active" state from
+    // which the first Alt+Tab to it would fail to fire WM_ACTIVATE (OS sees no state change).
+    public void ShowBar(bool activateWindow = true) => _morphicBarWindow.AppWindow.Show(activateWindow: activateWindow);
 
-    public void HideBar() => _bar.AppWindow.Hide();
+    public void HideBar() => _morphicBarWindow.AppWindow.Hide();
 
-    public void ActivateBar() => _bar.Activate();
+    public void ActivateBar() => _morphicBarWindow.Activate();
 
-    public IntPtr GetBarWindowHandle() => WinRT.Interop.WindowNative.GetWindowHandle(_bar);
+    public IntPtr GetBarWindowHandle() => WinRT.Interop.WindowNative.GetWindowHandle(_morphicBarWindow);
 
 
     // AppWindow.Changed fires for several reasons (position, size, visibility, etc.); filter on
@@ -96,7 +99,7 @@ internal sealed class MorphicBarManager : IDisposable
             return;
         }
         _disposed = true;
-        _bar.AppWindow.Changed -= this.OnBarAppWindowChanged;
-        _bar.Close();
+        _morphicBarWindow.AppWindow.Changed -= this.OnBarAppWindowChanged;
+        _morphicBarWindow.Close();
     }
 }

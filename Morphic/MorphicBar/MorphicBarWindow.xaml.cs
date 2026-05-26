@@ -130,10 +130,25 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
 
     // Master registry of all bar item controls created from the last InitializeBarItems call. Items
     // here are NOT necessarily currently present in BarItemsPanel.Children -- we trim (move)
-    // controls between "displayed" (those that fit within the current screen's working area, in a single 
+    // controls between "displayed" (those that fit within the current screen's working area, in a single
 	// bar) and controls that need to be hidden (or overflowed onto an overflow panel)
     private readonly System.Collections.Generic.List<Microsoft.UI.Xaml.FrameworkElement> _allBarItemControls = new();
 
+    // Per-instance subclass on the bar's HWND. Handles WM_ACTIVATE (drives initial-focus logic;
+    // WinUI's Window.Activated is unreliable for borderless+topmost+owned windows like ours) and
+    // WM_CLOSE (Alt+F4 -> Hide; _allowClose=true bypasses for programmatic shutdown). Field
+    // keeps the delegate alive while the subclass is installed (GC pinning).
+    private Windows.Win32.UI.Shell.SUBCLASSPROC? _subclassProc;
+    private bool _allowClose;
+    //
+    // Time-based suppression of the Programmatic/Pointer -> Keyboard focus upgrade. Set by
+    // RunWithBarHiddenAsync at the START of the flow so it covers the entire span: deferred
+    // updates fired by the click activation, by the Show()'s WM_ACTIVATE after the action, and
+    // any in-between transitions are all suppressed. Time-based (not one-shot) because action()
+    // can take seconds (e.g. the snip overlay) and multiple WM_ACTIVATEs may fire in that window.
+    // Stored as Environment.TickCount64 (system-uptime ms, monotonic) to avoid DateTime.Now's
+    // clock-skew / DST issues.
+    private long _suppressUpgradeUntilTickCount64;
 
     //
     // Item lengths are NOT cached: they depend on the bar's effective thickness (since a narrower
@@ -172,8 +187,77 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         // if the user clicks on the window, let them drag it (i.e. release the pointer capture and forward the left-click as if it's a "caption bar" left-click instead)
         this.InitializePointerPressAndDrag(this.Content);
 
-        this.Activated += MorphicBarWindow_Activated;
+        // Install the WM_ACTIVATE + WM_CLOSE subclass. See _subclassProc field comment for why.
+        _subclassProc = this.SubclassWndProc;
+        var setSubclassResult = Windows.Win32.PInvoke.SetWindowSubclass(hwnd, _subclassProc, uIdSubclass: 0, dwRefData: 0);
+        System.Diagnostics.Debug.Assert(setSubclassResult);
+
         (this.Content as Grid)!.Loaded += RootGrid_Loaded;
+        this.Closed += MorphicBarWindow_Closed;
+    }
+
+    // Lets programmatic shutdown (MorphicBarManager.Dispose) bypass the WM_CLOSE -> Hide intercept.
+    internal void AllowCloseForShutdown()
+    {
+        _allowClose = true;
+    }
+
+    // Suppresses the Programmatic/Pointer -> Keyboard focus upgrade for `duration`. Used by
+    // RunWithBarHiddenAsync to cover the full span of a mouse-driven bar action (click activation
+    // + the action itself, which may take seconds + the Show()'s WM_ACTIVATE after the action).
+    internal void SuppressFocusUpgradeFor(TimeSpan duration)
+    {
+        var until = Environment.TickCount64 + (long)duration.TotalMilliseconds;
+        if (until > _suppressUpgradeUntilTickCount64)
+        {
+            _suppressUpgradeUntilTickCount64 = until;
+        }
+    }
+
+    // Unhooks the subclass before the HWND is destroyed.
+    private void MorphicBarWindow_Closed(object sender, Microsoft.UI.Xaml.WindowEventArgs args)
+    {
+        if (_subclassProc is not null)
+        {
+            var hwnd = (Windows.Win32.Foundation.HWND)WinRT.Interop.WindowNative.GetWindowHandle(this);
+            _ = Windows.Win32.PInvoke.RemoveWindowSubclass(hwnd, _subclassProc, uIdSubclass: 0);
+            _subclassProc = null;
+        }
+    }
+
+    private Windows.Win32.Foundation.LRESULT SubclassWndProc(
+        Windows.Win32.Foundation.HWND hwnd,
+        uint msg,
+        Windows.Win32.Foundation.WPARAM wParam,
+        Windows.Win32.Foundation.LPARAM lParam,
+        nuint uIdSubclass,
+        nuint dwRefData)
+    {
+        if (msg == Windows.Win32.PInvoke.WM_ACTIVATE)
+        {
+            // wParam low word: WA_INACTIVE (0), WA_ACTIVE (1), WA_CLICKACTIVE (2).
+            ushort activationLowWord = unchecked((ushort)(uint)(nuint)wParam.Value);
+            if (activationLowWord == Windows.Win32.PInvoke.WA_ACTIVE)
+            {
+                this.ScheduleDeferredFocusUpdate(WindowActivationState.CodeActivated);
+            }
+            else if (activationLowWord == Windows.Win32.PInvoke.WA_CLICKACTIVE)
+            {
+                this.ScheduleDeferredFocusUpdate(WindowActivationState.PointerActivated);
+            }
+        }
+        else if (msg == Windows.Win32.PInvoke.WM_CLOSE && _allowClose == false)
+        {
+            // Alt+F4 -> Hide instead of destroy. Deferred via dispatcher to avoid re-entrant
+            // message processing; wrapped in try/catch so a teardown race doesn't throw.
+            _ = this.DispatcherQueue.TryEnqueue(() =>
+            {
+                try { this.AppWindow.Hide(); }
+                catch (System.Runtime.InteropServices.COMException) { }
+            });
+            return new Windows.Win32.Foundation.LRESULT(0);
+        }
+        return Windows.Win32.PInvoke.DefSubclassProc(hwnd, msg, wParam, lParam);
     }
 
     /// <summary>
@@ -258,7 +342,8 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         // (added to BarItemsPanel.Children above) even though their Loaded events may not have
         // fired yet -- the focus subsystem looks at the visual tree, not Loaded state, so this
         // is fine. If the bar isn't currently active, the Focus call is a harmless no-op;
-        // MorphicBarWindow_Activated will set focus again when the bar next becomes active.
+        // ScheduleDeferredFocusUpdate (from the next WM_ACTIVATE) will set focus again when the
+        // bar next becomes active.
         this.SetInitialFocus();
     }
 
@@ -296,49 +381,135 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         }
     }
 
-    private void MorphicBarWindow_Activated(object sender, WindowActivatedEventArgs args)
+    // Drives the initial-focus decision after a WM_ACTIVATE arrives via SubclassWndProc. Always
+    // DEFERRED via DispatcherQueue.TryEnqueue because at WM_ACTIVATE time:
+    //   * XamlRoot can be null (initial activation arrives before the XAML tree is connected).
+    //   * GetForegroundWindow does NOT yet return our HWND (OS hasn't finalized the transition).
+    // Both settle by the next dispatcher cycle; re-evaluating from a clean slate handles both.
+    // activationState carries the semantic distinction: PointerActivated -> mouse (no ring),
+    // CodeActivated -> keyboard/programmatic (ring if foreground). Caller is responsible for
+    // translating WM_ACTIVATE's wParam (WA_ACTIVE / WA_CLICKACTIVE) into the right value.
+    private void ScheduleDeferredFocusUpdate(WindowActivationState activationState)
     {
-        // Ignore deactivations -- we only want to set initial focus when the bar becomes active
-        // (e.g., Alt+Tab to it, initial Activate after construction).
-        if (args.WindowActivationState == WindowActivationState.Deactivated)
+        _ = this.DispatcherQueue.TryEnqueue(() =>
+        {
+            // Window may have been torn down between schedule and fire. Wrap the whole body --
+            // even `this.Content` getter can throw COMException ("WinUI Desktop Window object has
+            // already been closed") if the bar Close()'d after enqueue. Swallow to keep shutdown
+            // quiet; nothing here is correctness-critical past teardown.
+            try
+            {
+                this.RunDeferredFocusUpdate(activationState);
+            }
+            catch (System.Runtime.InteropServices.COMException)
+            {
+            }
+        });
+    }
+
+    private void RunDeferredFocusUpdate(WindowActivationState activationState)
+    {
+        if (this.Content?.XamlRoot is not XamlRoot xamlRoot)
         {
             return;
         }
-
-        // Only set initial focus if no element within the bar currently has focus. If the user
-        // had previously Tabbed to a control inside the bar and is just returning to it,
-        // WinUI's focus restoration may already have placed focus correctly -- in which case
-        // we leave it alone. If focus is null or on something outside the bar (e.g., right
-        // after window activation when nothing is focused yet), set focus to a sensible default.
-        var focused = Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(this.Content.XamlRoot) as DependencyObject;
-        if (focused is null || this.IsBarOwnedElement(focused) == false)
+        // If a bar control is already focused, don't move focus -- but UPGRADE its FocusState
+        // to Keyboard if appropriate. Common case: a SetInitialFocus call during init
+        // (RootGrid_Loaded) placed focus on the first button silently (Programmatic, no ring).
+        // When the user later Alt+Tab's into the bar, we want the ring to appear on whatever
+        // button is already focused, without jumping focus around.
+        //
+        // Upgrade only when:
+        //   * the activation is keyboard-style (not PointerActivated -- a mouse-click that
+        //     happens to land on a button shouldn't be promoted to a keyboard ring)
+        //   * the current FocusState is NOT already Keyboard (no work to do otherwise)
+        //   * the bar IS the OS-level foreground window (otherwise we'd be lying about
+        //     keyboard focus when we don't actually have it)
+        var focused = Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(xamlRoot) as DependencyObject;
+        if (focused is not null && this.IsBarOwnedElement(focused))
         {
-            this.SetInitialFocus();
+            // Promote to Keyboard unless the current activation is mouse-driven (PointerActivated),
+            // the control is already Keyboard (no work needed), the bar isn't actually foreground
+            // (would be lying), or we're in a suppress window (set by RunWithBarHiddenAsync to
+            // cover its own re-Show, so a mouse-driven action doesn't end with a keyboard ring).
+            if (Environment.TickCount64 > _suppressUpgradeUntilTickCount64
+                && focused is Control focusedControl
+                && activationState != WindowActivationState.PointerActivated
+                && focusedControl.FocusState != FocusState.Keyboard
+                && this.IsBarForegroundWindow())
+            {
+                _ = focusedControl.Focus(FocusState.Keyboard);
+            }
+            return;
         }
+        FocusState focusState;
+        if (activationState == WindowActivationState.PointerActivated)
+        {
+            // Mouse activation: no ring -- WinUI convention is mouse activation doesn't show
+            // the keyboard focus ring.
+            focusState = FocusState.Pointer;
+        }
+        else
+        {
+            // CodeActivated path: show the ring ONLY if this bar window is now the OS-level
+            // foreground window. Distinguishes "user Alt+Tab'd to us" (foreground == ourHwnd,
+            // ring) from spurious activations where focus-stealing was denied (silent).
+            // NOTE: GetForegroundWindow (not GetFocus). GetFocus is per-thread and returns
+            // null on Alt+Tab in WinUI 3 because the actual keyboard focus lives on an
+            // internal DesktopWindowXamlSource HWND not in our managed thread's queue.
+            focusState = this.IsBarForegroundWindow() ? FocusState.Keyboard : FocusState.Programmatic;
+        }
+        this.SetInitialFocus(focusState);
     }
 
-    // Places keyboard focus on a sensible "first interactable" element inside the bar. Order of
-    // preference:
+    // Places keyboard focus on a sensible "first interactable" element inside the bar. Order of preference:
     //   1. First focusable descendant of BarItemsPanel (the first inner button of the first bar
     //      item; FocusManager walks the visual tree, so we don't need per-item knowledge of which
     //      inner control to focus).
     //   2. Morphic logo button (always present, used as the fallback when the bar has no items or
     //      none with focusable content).
-    // FocusState.Keyboard shows the focus ring (Alt+Tab is keyboard-driven and we want the ring).
-    internal void SetInitialFocus()
+    //
+    // focusState determines whether the focus ring shows:
+    //   * FocusState.Keyboard    -> ring shown (only appropriate when the bar genuinely has
+    //                               keyboard focus, e.g., user Alt+Tab'd in)
+    //   * FocusState.Programmatic -> silent focus, no ring (right for startup-time calls where
+    //                               we're seeding focus but the bar isn't necessarily foreground)
+    //   * FocusState.Pointer     -> silent focus, semantically for mouse activation
+    // The default (Programmatic) is the safe choice; ScheduleDeferredFocusUpdate passes Keyboard
+    // when the WM_ACTIVATE handler confirms the bar is the OS-level foreground window.
+    internal void SetInitialFocus(FocusState focusState = FocusState.Programmatic)
     {
-        var firstFocusable = Microsoft.UI.Xaml.Input.FocusManager.FindFirstFocusableElement(this.BarItemsPanel);
-        if (firstFocusable is Control firstControl)
+        // The focus-setting block needs a live visual tree connected to a XamlRoot.
+        // FindFirstFocusableElement and Focus() both throw if called before that connection
+        // (e.g., from InitializeBarItems during initial setup, before RootGrid_Loaded fires).
+        // Gate the work behind XamlRoot availability rather than early-returning so any future
+        // non-focus-setting code added to this method would still run.
+        if (this.Content?.XamlRoot is not null)
         {
-            firstControl.Focus(FocusState.Keyboard);
-            return;
+            var firstFocusable = Microsoft.UI.Xaml.Input.FocusManager.FindFirstFocusableElement(this.BarItemsPanel);
+            if (firstFocusable is Control firstControl)
+            {
+                _ = firstControl.Focus(focusState);
+            }
+            else
+            {
+                // no bar items (or none with focusable content) -> fall back to the Morphic logo button
+                _ = this.MorphicMenuButton.Focus(focusState);
+            }
         }
-        // no bar items (or none with focusable content) -> fall back to the Morphic logo button
-        this.MorphicMenuButton.Focus(FocusState.Keyboard);
+    }
+
+    // True if this bar's HWND is the OS-level foreground window right now. Used to decide whether
+    // to show the keyboard focus ring (only appropriate when WE actually have keyboard focus -- if
+    // some other window is foreground, the ring would be a lie).
+    private bool IsBarForegroundWindow()
+    {
+        var barHwnd = (Windows.Win32.Foundation.HWND)WinRT.Interop.WindowNative.GetWindowHandle(this);
+        return Windows.Win32.PInvoke.GetForegroundWindow() == barHwnd;
     }
 
     // Walks the visual-parent chain of `element` to determine whether it lives inside this bar
-    // window's content tree. Used by MorphicBarWindow_Activated to decide whether the framework
+    // window's content tree. Used by ScheduleDeferredFocusUpdate to decide whether the framework
     // has already placed focus on a bar control (leave alone) or focus is elsewhere (place
     // initial focus ourselves).
     private bool IsBarOwnedElement(DependencyObject element)
@@ -368,6 +539,17 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         // measurement during construction or InitializeBarItems may have been against partially-
         // realized children, so this is the authoritative initial sizing pass
         this.MeasureAndResize();
+
+        // DO NOT pre-seed focus here. Calling Focus() on a bar control during startup pulls the
+        // bar to OS-level foreground as a side effect (we don't activate it explicitly, but the
+        // Focus call does so transitively). That leaves the bar "already foreground" by the time
+        // the user does their first Alt+Tab into it -- which is a no-op transition that fires no
+        // WM_ACTIVATE / EVENT_SYSTEM_FOREGROUND, so our focus-ring logic never gets to upgrade
+        // the FocusState to Keyboard. Leaving the bar un-focused at startup means the user's
+        // first Alt+Tab is a REAL activation transition; the deferred-focus path takes the
+        // "no element focused" branch and calls SetInitialFocus(Keyboard), which places focus on
+        // the first button with the ring visible. (InitializeBarItems still calls SetInitialFocus
+        // to re-seed after item rebuilds; that runs in response to user actions, not at startup.)
     }
 
     private void Dispose(bool disposing)
@@ -689,8 +871,12 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         _ = Windows.Win32.PInvoke.ClientToScreen(hwnd, ref clientPoint);
 
         // NOTE: always show the menu via the transparent window to avoid XamlRoot conflicts
-        // (a MenuFlyout can only be associated with one XamlRoot at a time)
-        App.MainMenu.Show(App.MenuOwnerWindow, this.Visible, clientPoint.X, clientPoint.Y);
+        // (a MenuFlyout can only be associated with one XamlRoot at a time).
+        // returnFocusTo: the logo button is the originating control for keyboard menu invocations
+        // (Space/Enter on the logo). Restoring focus to it on menu close keeps keyboard navigation
+        // coherent: ESC dismisses the menu and the user is back on the logo button, ready to
+        // re-open the menu, tab to the bar items, or press Esc again to send focus elsewhere.
+        App.MainMenu.Show(App.MenuOwnerWindow, this.Visible, clientPoint.X, clientPoint.Y, returnFocusTo: this.MorphicMenuButton);
     }
 
     /* layout methods */

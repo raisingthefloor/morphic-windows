@@ -1,7 +1,6 @@
 AlphaBlend
 BeginBufferedPaint
 BeginPaint
-BringWindowToTop
 BufferedPaintClear
 BufferedPaintInit
 BufferedPaintUnInit
