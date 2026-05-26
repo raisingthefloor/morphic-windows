@@ -4,13 +4,10 @@
     <Icon Id="MorphicIcon" SourceFile="..\Morphic\Assets\Icons\morphic.ico" />
     <Property Id="ARPPRODUCTICON" Value="MorphicIcon" />
 
-    <!-- Schedule="afterInstallInitialize" removes the previous version BEFORE installing the new
-         one. The default (afterInstallExecute) installs new files first then removes the old
-         product, which can race on file reference counts and leave a corrupted install; the
-         WinAppSDK DLL set is large and tightly coupled, and even one stale/missing DLL crashes
-         Microsoft.UI.Xaml.dll on startup with 0xc000027b. The trade-off is that a failed new
-         install leaves the machine with no Morphic at all (vs. preserving the old version);
-         acceptable here because the user can just re-run the installer. -->
+    <!-- AllowSameVersionUpgrades="yes" because Morphic puts its build number in the
+         4th component of the W.X.Y.Z version, and MSI's version comparison ignores
+         the 4th component. Without this attribute, build-over-build upgrades on the
+         same Y are blocked with "already installed." -->
     <MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="!(loc.DowngradeError)" />
 
     <!-- Close any running Morphic.exe before install. Without this, in-use DLLs can't be

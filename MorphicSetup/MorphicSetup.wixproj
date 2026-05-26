@@ -2,6 +2,15 @@
 	
   <!-- Suppressed ICE checks:
        * ICE03 - incorrect-validation false positives from the WiX validation framework.
+       * ICE61 - false positive caused by AllowSameVersionUpgrades="yes" on MajorUpgrade
+                (Package.wxs). That attribute makes WiX author an Upgrade row with
+                Maximum=current Version and IncludeMaximum="yes", which ICE61 flags as
+                "this product should remove only older versions of itself" because under
+                normal MajorUpgrade semantics it would make the new product try to
+                uninstall itself. With AllowSameVersionUpgrades that's the intended
+                behavior (needed because Morphic puts build info in the 4th version
+                component, which MSI's version comparison ignores), so the ICE check is
+                wrong here.
        * ICE69 - intentionally triggered by the Start Menu shortcut in ApplicationComponent
                 (Package.wxs): the shortcut's Target=[#morphic_exe] references a file in a
                 different component. This is Microsoft's documented best practice for
@@ -14,7 +23,7 @@
   <PropertyGroup>
     <RunWixToolsOutOfProc Condition=" '$(PROCESSOR_ARCHITECTURE)'!='x86' ">true</RunWixToolsOutOfProc>
     <SuppressValidation>false</SuppressValidation>
-    <SuppressIces>ICE03;ICE69</SuppressIces>
+    <SuppressIces>ICE03;ICE61;ICE69</SuppressIces>
   </PropertyGroup>
 	
   <ItemGroup>
