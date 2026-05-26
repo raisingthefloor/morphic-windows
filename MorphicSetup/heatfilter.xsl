@@ -29,7 +29,6 @@
        "Disallowing installation of component" message in the install log will
        identify it and it can be added to the same exclude+companion pattern. -->
   <xsl:key name="FilterMorphicCoreDll" match="wix:Component[wix:File/@Source = 'SourceDir\Morphic.Core.dll']" use="@Id" />
-  <xsl:key name="FilterDiaSymReaderNativeAmd64Dll" match="wix:Component[wix:File/@Source = 'SourceDir\Microsoft.DiaSymReader.Native.amd64.dll']" use="@Id" />
 
   <!-- Copy all elements and their attributes. -->
   <xsl:template match="@*|node()">
@@ -42,6 +41,5 @@
   <xsl:template match="*[ self::wix:Component or self::wix:ComponentRef ][ key( 'FilterPdbs', @Id ) ]" />
   <xsl:template match="*[ self::wix:Component or self::wix:ComponentRef ][ key( 'FilterMorphicExe', @Id ) ]" />
   <xsl:template match="*[ self::wix:Component or self::wix:ComponentRef ][ key( 'FilterMorphicCoreDll', @Id ) ]" />
-  <xsl:template match="*[ self::wix:Component or self::wix:ComponentRef ][ key( 'FilterDiaSymReaderNativeAmd64Dll', @Id ) ]" />
 </xsl:stylesheet>
 <!-- adapted from WiX toolset sample (github.com/DeploymentDojo/BeltTest) -->
