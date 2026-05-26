@@ -11,7 +11,7 @@
          Microsoft.UI.Xaml.dll on startup with 0xc000027b. The trade-off is that a failed new
          install leaves the machine with no Morphic at all (vs. preserving the old version);
          acceptable here because the user can just re-run the installer. -->
-    <MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="!(loc.DowngradeError)" Schedule="afterInstallInitialize" />
+    <MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="!(loc.DowngradeError)" />
 
     <!-- Close any running Morphic.exe before install. Without this, in-use DLLs can't be
          deleted during the old product's uninstall (Windows schedules them for delete-on-reboot),
@@ -44,7 +44,6 @@
       <RegistrySearch Id="BuildNumberSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="CurrentBuildNumber" Type="raw" />
     </Property>
     <Launch Condition="(WINDOWSBUILDNUMBER &gt;= 19045)" Message="!(loc.MinimumOsError)" />
-
   </Package>
 
   <Fragment>

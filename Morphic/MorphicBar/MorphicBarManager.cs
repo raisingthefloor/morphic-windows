@@ -83,26 +83,13 @@ internal sealed class MorphicBarManager : IDisposable
     {
         if (activateWindow == true)
         {
-            this.DowngradeKeyboardFocusBeforeShow();
+            // Defuse any Keyboard ring left from a prior keyboard session BEFORE showing.
+            // Brute-force walk because FocusManager.GetFocusedElement can return a parent
+            // (ScrollViewer, etc.) rather than the actual Keyboard-focused Button.
+            _morphicBarWindow.DowngradeKeyboardFocusedControlsInBar();
             _morphicBarWindow.SuppressFocusUpgradeFor(TimeSpan.FromMilliseconds(500));
         }
         _morphicBarWindow.AppWindow.Show(activateWindow: activateWindow);
-    }
-
-    // If a bar control currently holds Keyboard focus (left over from a prior keyboard session),
-    // downgrade it to Programmatic so the focus ring won't render when the bar is shown. Called
-    // from ShowBar(activateWindow: true); does nothing if no bar control has Keyboard focus.
-    private void DowngradeKeyboardFocusBeforeShow()
-    {
-        if (_morphicBarWindow.Content?.XamlRoot is not Microsoft.UI.Xaml.XamlRoot xamlRoot)
-        {
-            return;
-        }
-        if (Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(xamlRoot) is Microsoft.UI.Xaml.Controls.Control focused
-            && focused.FocusState == Microsoft.UI.Xaml.FocusState.Keyboard)
-        {
-            _ = focused.Focus(Microsoft.UI.Xaml.FocusState.Programmatic);
-        }
     }
 
     public void HideBar() => _morphicBarWindow.AppWindow.Hide();

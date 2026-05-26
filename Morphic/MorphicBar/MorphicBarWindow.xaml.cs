@@ -416,6 +416,25 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         {
             return;
         }
+		
+        // Live mouse-button check: if ANY mouse button is currently pressed, the user is mid-
+        // click on the bar -- treat as mouse-driven regardless of what WM_ACTIVATE reported.
+        // The bar's first-click activation fires WA_ACTIVE (not WA_CLICKACTIVE), so we can't
+        // rely on wParam alone. 0x01=LBUTTON, 0x02=RBUTTON, 0x04=MBUTTON; high bit (0x8000) set when down.
+        bool mousePressed = (Windows.Win32.PInvoke.GetAsyncKeyState(0x01) & 0x8000) != 0
+            || (Windows.Win32.PInvoke.GetAsyncKeyState(0x02) & 0x8000) != 0
+            || (Windows.Win32.PInvoke.GetAsyncKeyState(0x04) & 0x8000) != 0;
+        System.Diagnostics.Debug.WriteLine($"[Focus] RunDeferredFocusUpdate({activationState}) mousePressed={mousePressed}");
+        if (mousePressed)
+        {
+            activationState = WindowActivationState.PointerActivated;
+            // Aggressively clear any Keyboard FocusState in the bar tree. WinUI's default-
+            // activation focus may have placed Keyboard focus on a button before our deferred
+            // update runs, and FocusManager.GetFocusedElement may not return that button
+            // (it can return a parent ScrollViewer instead), so we walk the whole tree.
+            this.DowngradeKeyboardFocusedControlsInBar();
+        }
+		
         // If a bar control is already focused, don't move focus -- but UPGRADE its FocusState
         // to Keyboard if appropriate. Common case: a SetInitialFocus call during init
         // (RootGrid_Loaded) placed focus on the first button silently (Programmatic, no ring).
@@ -431,18 +450,39 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         var focused = Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(xamlRoot) as DependencyObject;
         if (focused is not null && this.IsBarOwnedElement(focused))
         {
-            // Promote to Keyboard unless the current activation is mouse-driven (PointerActivated),
-            // the control is already Keyboard (no work needed), the bar isn't actually foreground
-            // (would be lying), or we're in a suppress window (set by RunWithBarHiddenAsync to
-            // cover its own re-Show, so a mouse-driven action doesn't end with a keyboard ring).
-            if (Environment.TickCount64 > _suppressUpgradeUntilTickCount64
-                && focused is Control focusedControl
-                && activationState != WindowActivationState.PointerActivated
-                && focusedControl.FocusState != FocusState.Keyboard
-                && this.IsBarForegroundWindow())
+            if (focused is Control focusedControl)
             {
-                _ = focusedControl.Focus(FocusState.Keyboard);
+                // Promote to Keyboard for keyboard-style activation (CodeActivated) when the bar
+                // is foreground and we're not in a suppress window (set by RunWithBarHiddenAsync
+                // to cover its own re-Show).
+                if (activationState != WindowActivationState.PointerActivated
+                    && focusedControl.FocusState != FocusState.Keyboard
+                    && Environment.TickCount64 > _suppressUpgradeUntilTickCount64
+                    && this.IsBarForegroundWindow())
+                {
+                    _ = focusedControl.Focus(FocusState.Keyboard);
+                }
+                // Mirror: DEMOTE to Pointer for mouse-driven activation when the focused control
+                // currently has Keyboard FocusState. WinUI's default activation focus places
+                // Keyboard focus on the first focusable button as a side effect of WA_CLICKACTIVE,
+                // which lights up the keyboard ring on a mouse-driven activation -- exactly wrong.
+                // Downgrading to Pointer suppresses the ring (Pointer state renders no ring).
+                else if (activationState == WindowActivationState.PointerActivated
+                    && focusedControl.FocusState == FocusState.Keyboard)
+                {
+                    _ = focusedControl.Focus(FocusState.Pointer);
+                }
             }
+            return;
+        }
+        // Initial-focus path also respects the suppress timer. If PointerPressed just set the
+        // suppress (user is mouse-pressing the bar), don't seed a keyboard ring on the first
+        // button just because no element is focused in the bar's main visual tree. This also
+        // covers the case where focus is on a non-IsBarOwnedElement-recognized subtree (e.g.,
+        // an internal ScrollViewer) -- we'd fall through here and put a ring on the first
+        // button otherwise.
+        if (Environment.TickCount64 <= _suppressUpgradeUntilTickCount64)
+        {
             return;
         }
         FocusState focusState;
@@ -457,9 +497,6 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             // CodeActivated path: show the ring ONLY if this bar window is now the OS-level
             // foreground window. Distinguishes "user Alt+Tab'd to us" (foreground == ourHwnd,
             // ring) from spurious activations where focus-stealing was denied (silent).
-            // NOTE: GetForegroundWindow (not GetFocus). GetFocus is per-thread and returns
-            // null on Alt+Tab in WinUI 3 because the actual keyboard focus lives on an
-            // internal DesktopWindowXamlSource HWND not in our managed thread's queue.
             focusState = this.IsBarForegroundWindow() ? FocusState.Keyboard : FocusState.Programmatic;
         }
         this.SetInitialFocus(focusState);
@@ -498,6 +535,36 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             {
                 // no bar items (or none with focusable content) -> fall back to the Morphic logo button
                 _ = this.MorphicMenuButton.Focus(focusState);
+            }
+        }
+    }
+
+    // Walks the bar's visual tree and downgrades any Control with FocusState=Keyboard to
+    // FocusState=Pointer. Called from RunDeferredFocusUpdate when we detect a mouse-driven
+    // activation, and from MorphicBarManager.ShowBar(activateWindow:true) to defuse any
+    // Keyboard ring left from a prior keyboard session before re-showing the bar. WinUI's
+    // FocusManager.GetFocusedElement may return a parent element (ScrollViewer, etc.) instead
+    // of the actual Keyboard-focused button, so a brute-force tree walk is needed.
+    internal void DowngradeKeyboardFocusedControlsInBar()
+    {
+        if (this.Content is not DependencyObject root)
+        {
+            return;
+        }
+        var queue = new System.Collections.Generic.Queue<DependencyObject>();
+        queue.Enqueue(root);
+        while (queue.Count > 0)
+        {
+            var current = queue.Dequeue();
+            if (current is Control control && control.FocusState == FocusState.Keyboard)
+            {
+                System.Diagnostics.Debug.WriteLine($"[Focus] Downgrading {control.GetType().Name} Keyboard -> Pointer");
+                _ = control.Focus(FocusState.Pointer);
+            }
+            int childCount = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChildrenCount(current);
+            for (int i = 0; i < childCount; i++)
+            {
+                queue.Enqueue(Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChild(current, i));
             }
         }
     }
@@ -1274,6 +1341,13 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             var isLeftButtonPressed = e.GetCurrentPoint(null).Properties.IsLeftButtonPressed;
             if (isLeftButtonPressed)
             {
+                // Suppress focus upgrades for 500ms covering the post-WA_ACTIVE deferred update.
+                // First-click-on-bar fires WA_ACTIVE (not WA_CLICKACTIVE), and our deferred update
+                // would otherwise put a keyboard ring on the first button (either by upgrading an
+                // existing Pointer-state focus, or by taking the initial-focus path with Keyboard
+                // when the focused element is in a popup-style subtree IsBarOwnedElement misses).
+                this.SuppressFocusUpgradeFor(TimeSpan.FromMilliseconds(500));
+
                 // Cancel any in-flight move animation from a PREVIOUS drag's release. Without this,
                 // starting a new drag while the previous drag's settle-animation would cause a visual
                 // oscillation between the user's drag position and the animation's current position.
