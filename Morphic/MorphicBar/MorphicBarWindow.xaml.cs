@@ -159,25 +159,24 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     public static MorphicBarWindow CreateWithHiddenTaskbar()
     {
         var dummy = new DummyWindow();
-        IntPtr dummyHwndAsIntPtr = dummy.hwnd;
-        MorphicBarWindow bar;
-        using (Morphic.Controls.Windowing.CbtOwnerInjector.For(dummyHwndAsIntPtr))
-        {
-            bar = new MorphicBarWindow();
-        }
+        var bar = new MorphicBarWindow();
         bar._dummyParentWindow = dummy;
 
-        // Set owner post-creation as well, in case WinUI presenter reset it
         var barHwnd = WinRT.Interop.WindowNative.GetWindowHandle(bar);
-        System.Diagnostics.Debug.WriteLine($"[MorphicBarWindow] Setting owner post-creation in factory: Bar HWND={barHwnd:X}, Dummy HWND={dummyHwndAsIntPtr:X}");
+        IntPtr dummyHwndAsIntPtr = dummy.hwnd;
+        Morphic.Controls.Windowing.TaskbarDiag.Log(
+            $"MorphicBarWindow.CreateWithHiddenTaskbar: setting owner post-construction. " +
+            $"barHwnd=0x{barHwnd:X} dummyHwnd=0x{dummyHwndAsIntPtr:X}");
         var result = dummy.SetAsParentHwnd((Windows.Win32.Foundation.HWND)barHwnd);
         if (result.IsError)
         {
-            System.Diagnostics.Debug.WriteLine($"[MorphicBarWindow] Post-creation SetAsParentHwnd failed: {result.Error}");
+            Morphic.Controls.Windowing.TaskbarDiag.Log(
+                $"MorphicBarWindow.CreateWithHiddenTaskbar: SetAsParentHwnd FAILED: {result.Error}");
         }
         else
         {
-            System.Diagnostics.Debug.WriteLine($"[MorphicBarWindow] Post-creation SetAsParentHwnd succeeded.");
+            Morphic.Controls.Windowing.TaskbarDiag.Log(
+                $"MorphicBarWindow.CreateWithHiddenTaskbar: SetAsParentHwnd succeeded.");
         }
 
         return bar;
@@ -660,21 +659,25 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     {
         var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
         var owner = Windows.Win32.PInvoke.GetWindowLongPtr((Windows.Win32.Foundation.HWND)hwnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWLP_HWNDPARENT);
-        System.Diagnostics.Debug.WriteLine($"[MorphicBarWindow] RootGrid_Loaded: HWND={hwnd:X}, Owner={owner:X}");
+        Morphic.Controls.Windowing.TaskbarDiag.Log(
+            $"MorphicBarWindow.RootGrid_Loaded: barHwnd=0x{hwnd:X} ownerBeforeReapply=0x{owner:X}");
 
         if (_dummyParentWindow is not null)
         {
             var dummyHwndAsIntPtr = (IntPtr)_dummyParentWindow.hwnd;
-            System.Diagnostics.Debug.WriteLine($"[MorphicBarWindow] RootGrid_Loaded: Re-applying owner to dummy HWND {dummyHwndAsIntPtr:X}");
+            Morphic.Controls.Windowing.TaskbarDiag.Log(
+                $"MorphicBarWindow.RootGrid_Loaded: re-applying owner. dummyHwnd=0x{dummyHwndAsIntPtr:X}");
             var result = _dummyParentWindow.SetAsParentHwnd((Windows.Win32.Foundation.HWND)hwnd);
             if (result.IsError)
             {
-                System.Diagnostics.Debug.WriteLine($"[MorphicBarWindow] RootGrid_Loaded: SetAsParentHwnd failed: {result.Error}");
+                Morphic.Controls.Windowing.TaskbarDiag.Log(
+                    $"MorphicBarWindow.RootGrid_Loaded: SetAsParentHwnd FAILED: {result.Error}");
             }
             else
             {
                 var newOwner = Windows.Win32.PInvoke.GetWindowLongPtr((Windows.Win32.Foundation.HWND)hwnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWLP_HWNDPARENT);
-                System.Diagnostics.Debug.WriteLine($"[MorphicBarWindow] RootGrid_Loaded: SetAsParentHwnd succeeded. New Owner={newOwner:X}");
+                Morphic.Controls.Windowing.TaskbarDiag.Log(
+                    $"MorphicBarWindow.RootGrid_Loaded: SetAsParentHwnd succeeded. newOwner=0x{newOwner:X}");
             }
         }
 

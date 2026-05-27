@@ -60,6 +60,7 @@ SetWindowsHookEx
 SetWindowSubclass
 SetWinEventHook
 TrackMouseEvent
+UnhookWindowsHookEx
 UpdateLayeredWindow
 
 APPBARDATA

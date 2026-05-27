@@ -79,7 +79,10 @@ public static class TaskbarHelper
         }
     }
 
-    // CoClass for ITaskbarList.
+    // CoClass for ITaskbarList. CLSID 56FDF344-FD6D-11D0-958A-006097C9A090 is the
+    // Shell's TaskbarList class (registered as "Task Bar Communication" served by
+    // explorerframe.dll); the ComImport empty-class pattern lets `new` construct
+    // it via CoCreateInstance.
     [ComImport]
     [Guid("56FDF344-FD6D-11D0-958A-006097C9A090")]
     [ClassInterface(ClassInterfaceType.None)]
