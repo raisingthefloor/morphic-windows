@@ -12,6 +12,7 @@ FindWindow
 GetAsyncKeyState
 GetCursorPos
 GetDpiForMonitor
+GetDpiForWindow
 GetForegroundWindow
 GetMonitorInfo
 GetSysColor

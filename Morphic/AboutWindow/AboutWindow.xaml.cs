@@ -60,8 +60,14 @@ public sealed partial class AboutWindow : Morphic.Controls.Theme.ThemeAwareBaseW
         base.ThemeChanged += AboutWindow_ThemeChanged;
 
         // resize and recenter window
-        const int newWidth = 450;
-        const int newHeight = 420;
+        const int designWidthDips = 300;
+        const int designHeightDips = 280;
+        //
+        var hwnd = (Windows.Win32.Foundation.HWND)WinRT.Interop.WindowNative.GetWindowHandle(this);
+        var dpi = Windows.Win32.PInvoke.GetDpiForWindow(hwnd);
+        var scale = dpi / 96.0;
+        var newWidth = (int)Math.Round(designWidthDips * scale);
+        var newHeight = (int)Math.Round(designHeightDips * scale);
         //
         var displayArea = Microsoft.UI.Windowing.DisplayArea.GetFromWindowId(this.AppWindow.Id, Microsoft.UI.Windowing.DisplayAreaFallback.Nearest);
         var newX = (displayArea.WorkArea.Width - newWidth) / 2;

@@ -214,11 +214,27 @@ public partial class App : Application
         return items;
     }
 
-    private void App_ShutdownStarting(DispatcherQueue sender, DispatcherQueueShutdownStartingEventArgs args)
+    private bool _shutdownCleanupPerformed;
+    private void PerformShutdownCleanup()
     {
+        if (_shutdownCleanupPerformed)
+        {
+            return;
+        }
+        _shutdownCleanupPerformed = true;
+
+        if (_taskbarIconRefreshHandler is not null)
+        {
+            Morphic.SettingsUtils.CachedDarkModeState.StateChanged -= _taskbarIconRefreshHandler;
+            _taskbarIconRefreshHandler = null;
+        }
+
         // immediately hide our tray icon (and dispose of it for good measure, to help ensure that unmanaged resources are cleaned up)
-        this.TaskbarButton.SetVisible(false);
-        this.TaskbarButton.Dispose();
+        if (this.TaskbarButton is not null)
+        {
+            this.TaskbarButton.SetVisible(false);
+            this.TaskbarButton.Dispose();
+        }
 
         // Unsubscribe NotificationInvoked and Unregister the Shell's COM activator stub for
         // our AUMID. Strictly speaking the OS would clean both up on process exit, but doing
@@ -227,6 +243,14 @@ public partial class App : Application
         // _initialized flag inside ToastNotifications), so harmless if shutdown fires twice
         // or if Initialize was never called.
         Morphic.AppNotifications.ToastNotifications.Shutdown();
+    }
+
+    private void App_ShutdownStarting(DispatcherQueue sender, DispatcherQueueShutdownStartingEventArgs args)
+    {
+        // Backup path: ensures cleanup still runs if something exits the app via a code
+        // path that doesn't go through App.Shutdown() (framework-initiated exit, etc.).
+        // No-op if Shutdown() already ran it.
+        this.PerformShutdownCleanup();
     }
 
     #endregion Lifecycle
@@ -301,6 +325,8 @@ public partial class App : Application
         // MorphicBarManager.Dispose closes out the MorphicBar and all its resources/events in a safe order.
         _morphicBarManager?.Dispose();
         _morphicBarManager = null;
+
+        this.PerformShutdownCleanup();
 
         this.Exit();
     }
