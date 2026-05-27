@@ -195,7 +195,11 @@ internal static class Program
             // (spoofing). The check is bypassed in DEBUG builds so dev F5 with an
             // unsigned Morphic.exe still works; see CallerVerification for details and
             // for the rationale on what is/isn't gated.
-            if (CallerVerification.IsCallerSignedBySameAuthenticodeCertificate() == false)
+            // Deny on either ErrorResult (couldn't determine -- e.g. parent gone, unsigned)
+            // OR OkResult(false) (verified mismatch). The MorphicResult shape preserves the
+            // distinction for diagnostics even though we treat both as "deny" here.
+            var callerCheckResult = CallerVerification.IsCallerSignedBySameAuthenticodeCertificate();
+            if (callerCheckResult.IsError == true || callerCheckResult.Value == false)
             {
                 // Visible message for anyone who runs the helper directly from a console
                 // (testers, curious users, etc.). When the router launches us with

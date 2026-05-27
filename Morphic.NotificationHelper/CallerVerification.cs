@@ -21,6 +21,8 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
+using Morphic.Core;
+
 namespace Morphic.NotificationHelper;
 
 // Verifies that the process that launched THIS helper instance is signed with the SAME
@@ -77,44 +79,53 @@ internal static class CallerVerification
     private static string? s_helperThumbprintCache;
     private static readonly object s_helperThumbprintLock = new();
 
-    // Returns true when the parent process's executable is signed with the same publisher
-    // cert (by thumbprint) as this helper. Returns false on any failure path (parent gone,
-    // either file unsigned, mismatch, etc.) -- caller treats false as "deny the operation."
+    // Returns OkResult(true) when the parent process's executable is signed with the same
+    // publisher cert (by thumbprint) as this helper. Returns OkResult(false) when the parent
+    // is verifiably signed with a DIFFERENT cert (cryptographic certainty that it isn't us).
+    // Returns ErrorResult on any "couldn't determine" path (parent gone or inaccessible,
+    // either file unsigned, cert extraction failed, etc.).
     //
-    // In Debug builds this always returns true so dev F5 iteration works without a signed
-    // Morphic.exe (or a signed helper.exe). Production Release builds enforce the real
-    // check. To exercise the real check during dev testing, sign both EXEs with the
-    // Authenticate digital signing certificate and build as Release.
-    public static bool IsCallerSignedBySameAuthenticodeCertificate()
+    // Caller-side: typically reject on either ErrorResult OR OkResult(false). The
+    // distinction matters for diagnostics (was it tampered, or just transient?) and for
+    // any future caller that might want different handling for the two cases.
+    //
+    // In Debug builds this always returns OkResult(true) so dev F5 iteration works without
+    // a signed Morphic.exe (or a signed helper.exe). Production Release builds enforce the
+    // real check. To exercise the real check during dev testing, sign both EXEs with the
+    // Authenticode digital signing certificate and build as Release.
+    public static MorphicResult<bool, MorphicUnit> IsCallerSignedBySameAuthenticodeCertificate()
     {
 #if DEBUG
         System.Diagnostics.Debug.WriteLine(
             "[CallerVerification] Debug build: bypassing caller-signature check (would have run real check in Release).");
-        return true;
+        return MorphicResult.OkResult(true);
 #else
-        var expectedThumbprint = CallerVerification.GetHelperThumbprint();
-        if (expectedThumbprint is null)
+        var expectedThumbprintResult = CallerVerification.GetHelperThumbprint();
+        if (expectedThumbprintResult.IsError == true)
         {
             System.Diagnostics.Debug.WriteLine(
                 "[CallerVerification] Caller rejected: could not read helper's own cert thumbprint (helper unsigned, or cert read failed).");
-            return false;
+            return MorphicResult.ErrorResult();
         }
+        var expectedThumbprint = expectedThumbprintResult.Value!;
 
-        var callerExePath = CallerVerification.GetParentProcessExecutablePath();
-        if (callerExePath is null)
+        var callerExePathResult = CallerVerification.GetParentProcessExecutablePath();
+        if (callerExePathResult.IsError == true)
         {
             System.Diagnostics.Debug.WriteLine(
                 "[CallerVerification] Caller rejected: could not determine parent process exe path.");
-            return false;
+            return MorphicResult.ErrorResult();
         }
+        var callerExePath = callerExePathResult.Value!;
 
-        var callerThumbprint = CallerVerification.GetFileSignerThumbprint(callerExePath);
-        if (callerThumbprint is null)
+        var callerThumbprintResult = CallerVerification.GetFileSignerThumbprint(callerExePath);
+        if (callerThumbprintResult.IsError == true)
         {
             System.Diagnostics.Debug.WriteLine(
                 $"[CallerVerification] Caller rejected: parent '{callerExePath}' is unsigned or cert could not be extracted.");
-            return false;
+            return MorphicResult.ErrorResult();
         }
+        var callerThumbprint = callerThumbprintResult.Value!;
 
         var match = string.Equals(callerThumbprint, expectedThumbprint, System.StringComparison.OrdinalIgnoreCase);
         if (match == false)
@@ -122,23 +133,25 @@ internal static class CallerVerification
             System.Diagnostics.Debug.WriteLine(
                 $"[CallerVerification] Caller rejected: parent cert thumbprint does not match helper's. Parent: '{callerExePath}'.");
         }
-        return match;
+        return MorphicResult.OkResult(match);
 #endif
     }
 
     // Extracts THIS helper's own Authenticode signer cert thumbprint. Cached after first
-    // successful read. Returns null if the helper is unsigned or the cert can't be read.
-    private static string? GetHelperThumbprint()
+    // successful read. Returns ErrorResult if the helper is unsigned or the cert can't be
+    // read. Failed reads are NOT cached (next call retries) since failure can be transient
+    // (file lock during AV scan, etc.).
+    private static MorphicResult<string, MorphicUnit> GetHelperThumbprint()
     {
         if (CallerVerification.s_helperThumbprintCache is not null)
         {
-            return CallerVerification.s_helperThumbprintCache;
+            return MorphicResult.OkResult(CallerVerification.s_helperThumbprintCache);
         }
         lock (CallerVerification.s_helperThumbprintLock)
         {
             if (CallerVerification.s_helperThumbprintCache is not null)
             {
-                return CallerVerification.s_helperThumbprintCache;
+                return MorphicResult.OkResult(CallerVerification.s_helperThumbprintCache);
             }
             try
             {
@@ -146,21 +159,25 @@ internal static class CallerVerification
                 var helperExePath = helperProcess.MainModule?.FileName;
                 if (helperExePath is null)
                 {
-                    return null;
+                    return MorphicResult.ErrorResult();
                 }
-                var thumbprint = CallerVerification.GetFileSignerThumbprint(helperExePath);
-                CallerVerification.s_helperThumbprintCache = thumbprint;
-                return thumbprint;
+                var thumbprintResult = CallerVerification.GetFileSignerThumbprint(helperExePath);
+                if (thumbprintResult.IsError == true)
+                {
+                    return MorphicResult.ErrorResult();
+                }
+                CallerVerification.s_helperThumbprintCache = thumbprintResult.Value!;
+                return thumbprintResult;
             }
             catch (System.Exception)
             {
-                return null;
+                return MorphicResult.ErrorResult();
             }
         }
     }
 
-    // Returns the absolute path to the parent process's executable, or null if the
-    // parent has exited or is otherwise inaccessible.
+    // Returns the absolute path to the parent process's executable. ErrorResult on any
+    // failure (parent exited, inaccessible, etc.).
     //
     // Uses OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION) + QueryFullProcessImageName
     // rather than System.Diagnostics.Process.GetProcessById(pid).MainModule.FileName.
@@ -170,21 +187,22 @@ internal static class CallerVerification
     // helper is asInvoker / plain Medium IL by design). PROCESS_QUERY_LIMITED_INFORMATION
     // was added in Vista specifically to enable cross-IL inspection of basic process info
     // (exe path, name, start time, etc.) without VM_READ.
-    private static string? GetParentProcessExecutablePath()
+    private static MorphicResult<string, MorphicUnit> GetParentProcessExecutablePath()
     {
-        var parentPid = CallerVerification.GetParentProcessId();
-        if (parentPid is null || parentPid.Value <= 0)
+        var parentPidResult = CallerVerification.GetParentProcessId();
+        if (parentPidResult.IsError == true || parentPidResult.Value <= 0)
         {
-            return null;
+            return MorphicResult.ErrorResult();
         }
+        var parentPid = parentPidResult.Value;
 
         using var processHandle = Windows.Win32.PInvoke.OpenProcess_SafeHandle(
             Windows.Win32.System.Threading.PROCESS_ACCESS_RIGHTS.PROCESS_QUERY_LIMITED_INFORMATION,
             bInheritHandle: false,
-            (uint)parentPid.Value);
+            (uint)parentPid);
         if (processHandle.IsInvalid)
         {
-            return null;
+            return MorphicResult.ErrorResult();
         }
 
         System.Span<char> buffer = stackalloc char[1024];
@@ -195,12 +213,12 @@ internal static class CallerVerification
         // a Win32 path.
         if (Windows.Win32.PInvoke.QueryFullProcessImageName(processHandle, /* PROCESS_NAME_WIN32 */ 0, buffer, ref size) == false)
         {
-            return null;
+            return MorphicResult.ErrorResult();
         }
-        return buffer.Slice(0, (int)size).ToString();
+        return MorphicResult.OkResult(buffer.Slice(0, (int)size).ToString());
     }
 
-    private static int? GetParentProcessId()
+    private static MorphicResult<int, MorphicUnit> GetParentProcessId()
     {
         // NtQueryInformationProcess + PROCESS_BASIC_INFORMATION are NT-subsystem APIs
         // in ntdll.dll. CsWin32 does not generate them (they're not in the win32metadata
@@ -218,18 +236,18 @@ internal static class CallerVerification
                 out _);
             if (status != 0)
             {
-                return null;
+                return MorphicResult.ErrorResult();
             }
             // InheritedFromUniqueProcessId is the PID of the process that called
             // CreateProcess to spawn us. It is NOT updated if our actual parent exits
             // and we get re-parented to System (PID 4) or another orphan-adopter.
             // GetParentProcessExecutablePath handles the orphaned-parent case via
             // IsInvalid on the OpenProcess SafeHandle result.
-            return info.InheritedFromUniqueProcessId.ToInt32();
+            return MorphicResult.OkResult(info.InheritedFromUniqueProcessId.ToInt32());
         }
         catch (System.Exception)
         {
-            return null;
+            return MorphicResult.ErrorResult();
         }
     }
 
@@ -253,7 +271,7 @@ internal static class CallerVerification
         out int ReturnLength);
 
     // Reads the Authenticode signer cert from a signed PE file and returns its thumbprint
-    // (uppercase hex). Returns null if the file is unsigned or the cert can't be parsed.
+    // (uppercase hex). ErrorResult if the file is unsigned or the cert can't be parsed.
     //
     // X509Certificate2.CreateFromSignedFile is the documented API for extracting the
     // Authenticode signer cert from a signed PE. The byte-loading constructors it uses
@@ -261,12 +279,12 @@ internal static class CallerVerification
     // (X509CertificateLoader) has no Authenticode-extraction overload, so migrating would
     // require WinVerifyTrust + CryptQueryObject + SignedCms (~100 lines of P/Invoke).
     // Suppressing the warning pending an upstream replacement for this specific use case,
-	// as the deprecated code is already tested code.
+    // as the deprecated code is already tested code.
     //
     // We extract only the signer cert; we DO NOT verify signature validity (file
     // integrity / cert chain trust / revocation). Thumbprint matching alone is sufficient
     // for the threat model documented in IsCallerSignedBySameAuthenticodeCertificate.
-    private static string? GetFileSignerThumbprint(string filePath)
+    private static MorphicResult<string, MorphicUnit> GetFileSignerThumbprint(string filePath)
     {
         try
         {
@@ -277,18 +295,22 @@ internal static class CallerVerification
             var rawCert = System.Security.Cryptography.X509Certificates.X509Certificate.CreateFromSignedFile(filePath);
             using var cert = new System.Security.Cryptography.X509Certificates.X509Certificate2(rawCert);
 #pragma warning restore SYSLIB0057
-            return cert.Thumbprint;
+            if (string.IsNullOrEmpty(cert.Thumbprint))
+            {
+                return MorphicResult.ErrorResult();
+            }
+            return MorphicResult.OkResult(cert.Thumbprint);
         }
         catch (System.Security.Cryptography.CryptographicException)
         {
             // Unsigned file or signature parse failure.
-            return null;
+            return MorphicResult.ErrorResult();
         }
         catch (System.Exception)
         {
             // Any other failure (file not found, access denied, etc.) -- treat as
             // unsigned rather than throwing.
-            return null;
+            return MorphicResult.ErrorResult();
         }
     }
 }
