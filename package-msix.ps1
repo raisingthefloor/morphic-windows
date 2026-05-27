@@ -48,10 +48,23 @@ if (-not $StagingDir) {
     $StagingDir = "$SourceDir\build\MsixStaging-$Platform"
 }
 
-# Validate inputs
-if (-not (Test-Path "$publishDir\Morphic.exe")) { throw "Publish output not found at $publishDir. Run msbuild /t:publish first." }
-if (-not (Test-Path "$buildDir\Morphic.pri"))    { throw "Morphic.pri not found at $buildDir. Run msbuild /t:build first." }
+# Validate the SDK and source location up front (these we can't fix ourselves).
 if (-not (Test-Path "$sdkBin\makepri.exe"))      { throw "Windows SDK 10.0.22621.0 not found at $sdkBin." }
+if (-not (Test-Path "$SourceDir\Morphic\Morphic.csproj")) { throw "Morphic.csproj not found at $SourceDir\Morphic\Morphic.csproj." }
+
+$skipPublish = (Test-Path "$publishDir\Morphic.exe") -and (Test-Path "$publishDir\Microsoft.WindowsAppRuntime.pri")
+if (-not $skipPublish) {
+    Write-Host "Publishing Morphic.csproj (Configuration=$Configuration Platform=$Platform self-contained) ..." -ForegroundColor Cyan
+    & dotnet publish "$SourceDir\Morphic\Morphic.csproj" -c $Configuration -p:Platform=$Platform -p:WindowsAppSDKSelfContained=true --nologo
+    if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed with exit code $LASTEXITCODE" }
+}
+
+# Post-publish sanity checks: the publish step should have produced the things we'll
+# consume in the staging assembly below. If these still fail, something more unusual
+# has happened than just a stale publish.
+if (-not (Test-Path "$publishDir\Morphic.exe")) { throw "Publish output not found at $publishDir after publish step." }
+if (-not (Test-Path "$buildDir\Morphic.pri"))    { throw "Morphic.pri not found at $buildDir after publish step." }
+if (-not (Test-Path "$publishDir\Microsoft.WindowsAppRuntime.pri")) { throw "Microsoft.WindowsAppRuntime.pri not found in publish output; WindowsAppSDKSelfContained=true should have deployed it." }
 
 # ---- Assemble staging directory ----
 Write-Host "Assembling staging directory..." -ForegroundColor Cyan
