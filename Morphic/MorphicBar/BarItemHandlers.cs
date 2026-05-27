@@ -168,7 +168,7 @@ internal class BarItemHandlers
     {
         Morphic.AppNotifications.ToastNotifications.ShowText(
             title: "Read Selected",
-            body: "Read Selected isn't available yet in this version of Morphic.\n\nWe are updating this feature to utilize the latest functionality from Microsoft.\nThis feature will return in an upcoming preview release.");
+            body: "We are updating this feature to utilize the latest functionality from Microsoft.\n\nIt will be available in an upcoming preview release.");
         return Task.FromResult<MorphicResult<MorphicUnit, MorphicUnit>>(MorphicResult.OkResult());
     }
 

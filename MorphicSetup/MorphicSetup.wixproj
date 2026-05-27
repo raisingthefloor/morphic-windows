@@ -47,4 +47,32 @@
     <PackageReference Include="WixToolset.UI.wixext" Version="4.0.6" />
     <PackageReference Include="WixToolset.Util.wixext" Version="4.0.6" />
   </ItemGroup>
+
+  <PropertyGroup>
+    <WindowsAppRuntimeVersion>2.1.3</WindowsAppRuntimeVersion>
+    <WindowsAppRuntimeInstallerUrlX64>https://aka.ms/windowsappsdk/2.1/$(WindowsAppRuntimeVersion)/windowsappruntimeinstall-x64.exe</WindowsAppRuntimeInstallerUrlX64>
+    <WindowsAppRuntimeInstallerUrlArm64>https://aka.ms/windowsappsdk/2.1/$(WindowsAppRuntimeVersion)/windowsappruntimeinstall-arm64.exe</WindowsAppRuntimeInstallerUrlArm64>
+  </PropertyGroup>
+
+  <Target Name="DownloadWindowsAppRuntimeInstallerX64"
+          BeforeTargets="BeforeBuild;Compile"
+          Condition="'$(Platform)' == 'x64' AND !Exists('prerequisites\WindowsAppRuntimeInstall-x64.exe')">
+    <Message Importance="High" Text="Downloading WindowsAppRuntimeInstall-x64.exe (Windows App Runtime $(WindowsAppRuntimeVersion)) from $(WindowsAppRuntimeInstallerUrlX64)..." />
+    <DownloadFile SourceUrl="$(WindowsAppRuntimeInstallerUrlX64)"
+                  DestinationFolder="prerequisites"
+                  DestinationFileName="WindowsAppRuntimeInstall-x64.exe"
+                  SkipUnchangedFiles="true"
+                  Retries="3" />
+  </Target>
+
+  <Target Name="DownloadWindowsAppRuntimeInstallerArm64"
+          BeforeTargets="BeforeBuild;Compile"
+          Condition="'$(Platform)' == 'ARM64' AND !Exists('prerequisites\WindowsAppRuntimeInstall-arm64.exe')">
+    <Message Importance="High" Text="Downloading WindowsAppRuntimeInstall-arm64.exe (Windows App Runtime $(WindowsAppRuntimeVersion)) from $(WindowsAppRuntimeInstallerUrlArm64)..." />
+    <DownloadFile SourceUrl="$(WindowsAppRuntimeInstallerUrlArm64)"
+                  DestinationFolder="prerequisites"
+                  DestinationFileName="WindowsAppRuntimeInstall-arm64.exe"
+                  SkipUnchangedFiles="true"
+                  Retries="3" />
+  </Target>
 </Project>

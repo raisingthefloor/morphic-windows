@@ -1,4 +1,4 @@
-// Copyright 2020-2026 Raising the Floor - US, Inc.
+// Copyright 2026 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -35,6 +35,12 @@ internal static class ToastNotifications
         {
             return;
         }
+        if (!AppNotificationManager.IsSupported())
+        {
+            System.Diagnostics.Debug.WriteLine(
+                "[ToastNotifications] AppNotificationManager.IsSupported() returned false; toast notifications disabled. Most likely cause: the Windows App Runtime (specifically the Singleton MSIX package) isn't installed for the current user. The Morphic installer chains WindowsAppRuntimeInstall.exe to provision it; if you reached this from F5 Debug, install the Runtime separately from https://learn.microsoft.com/en-us/windows/apps/windows-app-sdk/downloads.");
+            return;
+        }
         AppNotificationManager.Default.NotificationInvoked += OnNotificationInvoked;
         try
         {
@@ -44,7 +50,7 @@ internal static class ToastNotifications
         {
             AppNotificationManager.Default.NotificationInvoked -= OnNotificationInvoked;
             System.Diagnostics.Debug.WriteLine(
-                $"[ToastNotifications] Register() failed (HRESULT 0x{(uint)ex.HResult:X8}); toast notifications disabled. This is expected under VS F5 Debug; the published MSI deploys the missing DLL.");
+                $"[ToastNotifications] Register() failed (HRESULT 0x{(uint)ex.HResult:X8}) despite IsSupported()==true; toast notifications disabled.");
             return;
         }
         _initialized = true;

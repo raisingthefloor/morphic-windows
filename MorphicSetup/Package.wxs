@@ -27,6 +27,18 @@
 
     <MediaTemplate EmbedCab="yes" />
 
+    <CustomAction
+        Id="RunWindowsAppRuntimeInstaller"
+        FileRef="WindowsAppRuntimeInstall_exe"
+        ExeCommand="--quiet"
+        Execute="deferred"
+        Return="ignore"
+        Impersonate="no" />
+
+    <InstallExecuteSequence>
+      <Custom Action="RunWindowsAppRuntimeInstaller" After="InstallFiles" Condition="NOT REMOVE" />
+    </InstallExecuteSequence>
+
     <Feature Id="Main">
       <ComponentGroupRef Id="MorphicComponents" />
       <ComponentRef Id="ApplicationComponent" />
@@ -70,6 +82,27 @@
         <RegistryValue Root="HKCU" Key="Software\Raising the Floor\Morphic" Name="installed" Type="integer" Value="1" KeyPath="yes" />
       </Component>
     </StandardDirectory>
+  </Fragment>
+
+  <Fragment>
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Directory Id="PrerequisitesFolder" Name="prerequisites">
+        <!-- Single component (single key file), so no explicit Guid needed; WiX will
+             auto-generate a stable one from the install path. The component is referenced
+             from the MorphicComponents ComponentGroup below so it ships in the Main feature
+             alongside the rest of Morphic. -->
+        <Component Id="WindowsAppRuntimeInstallerComponent">
+          <!-- Name="WindowsAppRuntimeInstall.exe" gives the installed file a uniform name
+               independent of architecture, so the CustomAction's FileRef resolves the same
+               way regardless of which architecture-specific source EXE was built in. -->
+          <?if $(sys.BUILDARCH) = "x64" ?>
+            <File Id="WindowsAppRuntimeInstall_exe" Source="prerequisites\WindowsAppRuntimeInstall-x64.exe" Name="WindowsAppRuntimeInstall.exe" KeyPath="yes" />
+          <?elseif $(sys.BUILDARCH) = "arm64" ?>
+            <File Id="WindowsAppRuntimeInstall_exe" Source="prerequisites\WindowsAppRuntimeInstall-arm64.exe" Name="WindowsAppRuntimeInstall.exe" KeyPath="yes" />
+          <?endif?>
+        </Component>
+      </Directory>
+    </DirectoryRef>
   </Fragment>
 
   <Fragment>
