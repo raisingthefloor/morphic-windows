@@ -72,6 +72,10 @@
     <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
 
     <UIRef Id="WixUI_ErrorProgressText" />
+    <UI>
+      <ProgressText Action="RunWindowsAppRuntimeInstaller">Installing the Windows App Runtime prerequisite (this may take a moment)...</ProgressText>
+      <ProgressText Action="UnregisterNotificationHelper">Removing Morphic's notification helper registration...</ProgressText>
+    </UI>
 	
     <Property Id="WINDOWSBUILDNUMBER" Secure="yes">
       <RegistrySearch Id="BuildNumberSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="CurrentBuildNumber" Type="raw" />
