@@ -73,8 +73,8 @@
 
     <UIRef Id="WixUI_ErrorProgressText" />
     <UI>
-      <ProgressText Action="RunWindowsAppRuntimeInstaller">Installing the Windows App Runtime prerequisite (this may take a moment)...</ProgressText>
-      <ProgressText Action="UnregisterNotificationHelper">Removing Morphic's notification helper registration...</ProgressText>
+      <ProgressText Action="RunWindowsAppRuntimeInstaller" Message="Installing the Windows App Runtime prerequisite (this may take a moment)..." />
+      <ProgressText Action="UnregisterNotificationHelper" Message="Removing Morphic's notification helper registration..." />
     </UI>
 	
     <Property Id="WINDOWSBUILDNUMBER" Secure="yes">
