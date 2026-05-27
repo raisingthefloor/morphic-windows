@@ -19,6 +19,7 @@
     <WindowsAppSdkBootstrapInitialize Condition="$(Configuration.EndsWith('-Packaged'))">false</WindowsAppSdkBootstrapInitialize>
 
     <WindowsPackageType Condition="!$(Configuration.EndsWith('-Packaged'))">None</WindowsPackageType>
+    <WindowsAppSDKSelfContained Condition="'$(MorphicBuildSelfContained)' == 'true'">true</WindowsAppSDKSelfContained>
 	  
 	<!-- to support both packaged and unpacked scenarios, disable the auto-generated Program.cs and manually bootstrap WinUI instead -->    
 	<DefineConstants>DISABLE_XAML_GENERATED_MAIN</DefineConstants>
