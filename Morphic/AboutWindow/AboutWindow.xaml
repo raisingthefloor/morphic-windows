@@ -9,9 +9,9 @@
     xmlns:theme="using:Morphic.Controls.Theme"
     mc:Ignorable="d"
     Title="About Morphic"
-    StandardContrastIconPath="Assets/Icons/morphic-standardcontrast.ico"
-    HighContrastBlackIconPath="Assets/Icons/morphic-highcontrastblack.ico"
-    HighContrastWhiteIconPath="Assets/Icons/morphic-highcontrastwhite.ico">
+    StandardContrastIconPath="{StaticResource AppIconStandardContrastPath}"
+    HighContrastBlackIconPath="{StaticResource AppIconHighContrastBlackPath}"
+    HighContrastWhiteIconPath="{StaticResource AppIconHighContrastWhitePath}">
 
     <Window.SystemBackdrop>
         <MicaBackdrop />
