@@ -37,6 +37,12 @@ public class Program
     [STAThread]
     static void Main(string[] args)
     {
+        // Set the process AppUserModelID before any framework code runs. Must happen here
+        // (Main, before Microsoft.UI.Xaml.Application.Start) rather than in App.xaml.cs so
+        // that any Shell-side caching during WinUI initialization picks up the correct AUMID.
+        // See Morphic/AppNotifications/AumidHelper.cs for the value and rationale.
+        Morphic.AppNotifications.AumidHelper.Initialize();
+
 //        bool bootstrapInitialized = false;
 
 //        var isRunningAsPackagedAppResult = Morphic.WindowsNative.Packaging.Package.IsRunningAsPackagedApp();

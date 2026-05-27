@@ -96,6 +96,12 @@ public partial class App : Application
     /// <param name="args">Details about the launch request and process.</param>
     protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
     {
+        // Register Morphic with the Shell's app-notification subsystem. Must happen after
+        // AumidHelper.Initialize (called from Program.Main) but before any toast is shown.
+        // See Morphic/AppNotifications/ToastNotifications.cs for the registration details
+        // and notes on the thread-pool threading of the NotificationInvoked event.
+        Morphic.AppNotifications.ToastNotifications.Initialize();
+
         // Wire up the HC ThemeAwareBackground brush placeholder declared in App.xaml. Done here
         // (rather than in the App constructor) because Resources.ThemeDictionaries is a WinRT
         // projection that isn't safely accessible until the framework finishes booting --

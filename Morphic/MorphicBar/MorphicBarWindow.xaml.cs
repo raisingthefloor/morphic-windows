@@ -158,28 +158,21 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
 
     public static MorphicBarWindow CreateWithHiddenTaskbar()
     {
-        var dummy = new DummyWindow();
-        var bar = new MorphicBarWindow();
-        bar._dummyParentWindow = dummy;
+        var morphicBarWindow = new MorphicBarWindow();
+        morphicBarWindow.SetOwner(new DummyWindow());
+        return morphicBarWindow;
+    }
 
-        var barHwnd = WinRT.Interop.WindowNative.GetWindowHandle(bar);
-        IntPtr dummyHwndAsIntPtr = dummy.hwnd;
-        Morphic.Controls.Windowing.TaskbarDiag.Log(
-            $"MorphicBarWindow.CreateWithHiddenTaskbar: setting owner post-construction. " +
-            $"barHwnd=0x{barHwnd:X} dummyHwnd=0x{dummyHwndAsIntPtr:X}");
-        var result = dummy.SetAsParentHwnd((Windows.Win32.Foundation.HWND)barHwnd);
-        if (result.IsError)
+    internal void SetOwner(DummyWindow dummyWindow)
+    {
+        if (_dummyParentWindow is not null)
         {
-            Morphic.Controls.Windowing.TaskbarDiag.Log(
-                $"MorphicBarWindow.CreateWithHiddenTaskbar: SetAsParentHwnd FAILED: {result.Error}");
+            throw new System.InvalidOperationException(
+                $"{nameof(SetOwner)} has already been called on this {nameof(MorphicBarWindow)}.");
         }
-        else
-        {
-            Morphic.Controls.Windowing.TaskbarDiag.Log(
-                $"MorphicBarWindow.CreateWithHiddenTaskbar: SetAsParentHwnd succeeded.");
-        }
-
-        return bar;
+        _dummyParentWindow = dummyWindow;
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+        _ = dummyWindow.SetAsParentHwnd((Windows.Win32.Foundation.HWND)hwnd);
     }
 
     public MorphicBarWindow()
@@ -568,34 +561,17 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         }
     }
 
-    // Brute-force tree walk that returns true if ANY Control in the bar's visual tree currently
-    // has FocusState=Keyboard. Same walking strategy as DowngradeKeyboardFocusedControlsInBar,
-    // chosen for the same reason: FocusManager.GetFocusedElement may return a parent element
-    // (ScrollViewer, etc.) rather than the actual Keyboard-focused button. Used by AnimateMoveTo
-    // to snapshot the pre-reflow Keyboard-focus state so the post-reflow defuse can preserve
-    // legitimate keyboard focus while clearing the spurious focus that the reflow introduces.
-    private bool HasAnyKeyboardFocusedControlInBar()
+    private readonly record struct FocusSnapshot(Control? Control, FocusState State);
+
+    private FocusSnapshot CaptureFocusSnapshot()
     {
-        if (this.Content is not DependencyObject root)
+        if (this.Content?.XamlRoot is XamlRoot xamlRoot
+            && Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(xamlRoot) is Control focused
+            && this.IsBarOwnedElement(focused))
         {
-            return false;
+            return new FocusSnapshot(focused, focused.FocusState);
         }
-        var queue = new System.Collections.Generic.Queue<DependencyObject>();
-        queue.Enqueue(root);
-        while (queue.Count > 0)
-        {
-            var current = queue.Dequeue();
-            if (current is Control control && control.FocusState == FocusState.Keyboard)
-            {
-                return true;
-            }
-            int childCount = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChildrenCount(current);
-            for (int i = 0; i < childCount; i++)
-            {
-                queue.Enqueue(Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChild(current, i));
-            }
-        }
-        return false;
+        return new FocusSnapshot(null, FocusState.Unfocused);
     }
 
     // Walks the bar's visual tree and downgrades any Control with FocusState=Keyboard to
@@ -657,30 +633,6 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
 
     private void RootGrid_Loaded(object sender, RoutedEventArgs e)
     {
-        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
-        var owner = Windows.Win32.PInvoke.GetWindowLongPtr((Windows.Win32.Foundation.HWND)hwnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWLP_HWNDPARENT);
-        Morphic.Controls.Windowing.TaskbarDiag.Log(
-            $"MorphicBarWindow.RootGrid_Loaded: barHwnd=0x{hwnd:X} ownerBeforeReapply=0x{owner:X}");
-
-        if (_dummyParentWindow is not null)
-        {
-            var dummyHwndAsIntPtr = (IntPtr)_dummyParentWindow.hwnd;
-            Morphic.Controls.Windowing.TaskbarDiag.Log(
-                $"MorphicBarWindow.RootGrid_Loaded: re-applying owner. dummyHwnd=0x{dummyHwndAsIntPtr:X}");
-            var result = _dummyParentWindow.SetAsParentHwnd((Windows.Win32.Foundation.HWND)hwnd);
-            if (result.IsError)
-            {
-                Morphic.Controls.Windowing.TaskbarDiag.Log(
-                    $"MorphicBarWindow.RootGrid_Loaded: SetAsParentHwnd FAILED: {result.Error}");
-            }
-            else
-            {
-                var newOwner = Windows.Win32.PInvoke.GetWindowLongPtr((Windows.Win32.Foundation.HWND)hwnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWLP_HWNDPARENT);
-                Morphic.Controls.Windowing.TaskbarDiag.Log(
-                    $"MorphicBarWindow.RootGrid_Loaded: SetAsParentHwnd succeeded. newOwner=0x{newOwner:X}");
-            }
-        }
-
         // record the current rasterization scale and subscribe to changes (e.g. monitor switch)
         _lastRasterizationScale = this.Content.XamlRoot.RasterizationScale;
         this.Content.XamlRoot.Changed += (s, e) =>
@@ -818,15 +770,8 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         _moveAnimationTimer?.Stop();
         _moveAnimationTimer = null;
 
-        // Snapshot whether any bar control currently has Keyboard FocusState. On the drag-release
-        // orientation-flip path (snapResizeAtPoint != null), changing BarItemsPanel.Orientation
-        // causes WinUI's focus subsystem to place Keyboard focus on the first focusable child of
-        // the re-oriented panel, which lights up the keyboard focus ring on what was a mouse-driven
-        // gesture. We use this snapshot at the end of the method to defuse the spurious ring
-        // without losing legitimate keyboard focus that the user may have had before the drag
-        // (e.g., tabbed in, then mouse-dragged the bar to a new edge).
-        bool hadKeyboardFocusBeforeReflow = (snapResizeAtPoint is not null)
-            && this.HasAnyKeyboardFocusedControlInBar();
+        bool orientationChanging = (targetOrientation != _orientation);
+        FocusSnapshot preRotationFocus = orientationChanging ? this.CaptureFocusSnapshot() : default;
 
         // record the destination monitor; this is the single normal path that legitimately changes
         // which monitor we are on (both intentional moves and drag-release end up here)
@@ -908,20 +853,36 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         // above. Only runs when (a) this is the drag-release flip path (snapResizeAtPoint != null)
         // AND (b) no element had Keyboard focus before the reflow; the latter preserves the
         // (rare) case of a user who tabbed in and then mouse-dragged the bar.
-        if (snapResizeAtPoint is not null && !hadKeyboardFocusBeforeReflow)
+        if (orientationChanging)
         {
-            _ = this.DispatcherQueue.TryEnqueue(() =>
+            if (preRotationFocus.Control is not null)
             {
-                try
+                _ = this.DispatcherQueue.TryEnqueue(() =>
                 {
-                    this.DowngradeKeyboardFocusedControlsInBar();
-                }
-                catch (System.Runtime.InteropServices.COMException)
+                    try
+                    {
+                        _ = preRotationFocus.Control.Focus(preRotationFocus.State);
+                    }
+                    catch (System.Runtime.InteropServices.COMException)
+                    {
+                        // window may have torn down between schedule and fire; swallow to keep
+                        // shutdown quiet (matches RunDeferredFocusUpdate's handling of the same).
+                    }
+                });
+            }
+            else
+            {
+                _ = this.DispatcherQueue.TryEnqueue(() =>
                 {
-                    // window may have torn down between schedule and fire; swallow to keep
-                    // shutdown quiet (matches RunDeferredFocusUpdate's handling of the same).
-                }
-            });
+                    try
+                    {
+                        this.DowngradeKeyboardFocusedControlsInBar();
+                    }
+                    catch (System.Runtime.InteropServices.COMException)
+                    {
+                    }
+                });
+            }
         }
     }
 

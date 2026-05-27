@@ -25,6 +25,7 @@ MonitorFromWindow
 ReleaseCapture
 RemoveWindowSubclass
 SendMessage
+SetCurrentProcessExplicitAppUserModelID
 SetWindowLongPtr
 SetWindowPos
 SetWindowSubclass
