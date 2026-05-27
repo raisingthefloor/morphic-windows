@@ -54,8 +54,8 @@ if (-not (Test-Path "$SourceDir\Morphic\Morphic.csproj")) { throw "Morphic.cspro
 
 $skipPublish = (Test-Path "$publishDir\Morphic.exe") -and (Test-Path "$publishDir\Microsoft.WindowsAppRuntime.pri")
 if (-not $skipPublish) {
-    Write-Host "Publishing Morphic.csproj (Configuration=$Configuration Platform=$Platform self-contained) ..." -ForegroundColor Cyan
-    & dotnet publish "$SourceDir\Morphic\Morphic.csproj" -c $Configuration -p:Platform=$Platform -p:MorphicBuildSelfContained=true --nologo
+    Write-Host "Publishing Morphic.csproj (Configuration=$Configuration Platform=$Platform RuntimeIdentifier=$rid self-contained) ..." -ForegroundColor Cyan
+    & dotnet publish "$SourceDir\Morphic\Morphic.csproj" -c $Configuration -p:Platform=$Platform -r $rid -p:MorphicBuildSelfContained=true --nologo
     if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed with exit code $LASTEXITCODE" }
 }
 
@@ -112,6 +112,7 @@ $resourceElem.SetAttribute("Language", "EN-US")
 $resourcesNode.AppendChild($resourceElem) | Out-Null
 
 $depsNode = $manifest.Package.Dependencies
+
 $existingPackageDeps = @($depsNode.ChildNodes | Where-Object { $_.LocalName -eq 'PackageDependency' })
 foreach ($oldDep in $existingPackageDeps) {
     $depsNode.RemoveChild($oldDep) | Out-Null
