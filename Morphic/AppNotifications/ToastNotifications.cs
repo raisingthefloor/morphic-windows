@@ -36,7 +36,17 @@ internal static class ToastNotifications
             return;
         }
         AppNotificationManager.Default.NotificationInvoked += OnNotificationInvoked;
-        AppNotificationManager.Default.Register();
+        try
+        {
+            AppNotificationManager.Default.Register();
+        }
+        catch (System.Runtime.InteropServices.COMException ex)
+        {
+            AppNotificationManager.Default.NotificationInvoked -= OnNotificationInvoked;
+            System.Diagnostics.Debug.WriteLine(
+                $"[ToastNotifications] Register() failed (HRESULT 0x{(uint)ex.HResult:X8}); toast notifications disabled. This is expected under VS F5 Debug; the published MSI deploys the missing DLL.");
+            return;
+        }
         _initialized = true;
     }
 
@@ -55,5 +65,19 @@ internal static class ToastNotifications
     {
         System.Diagnostics.Debug.WriteLine(
             $"[ToastNotifications] Invoked: Argument='{args.Argument}', Arguments.Count={args.Arguments.Count}");
+    }
+    public static void ShowText(string title, string body)
+    {
+        if (!_initialized)
+        {
+            System.Diagnostics.Debug.WriteLine(
+                $"[ToastNotifications] ShowText('{title}') called before Initialize; dropping.");
+            return;
+        }
+        var notification = new Microsoft.Windows.AppNotifications.Builder.AppNotificationBuilder()
+            .AddText(title)
+            .AddText(body)
+            .BuildNotification();
+        AppNotificationManager.Default.Show(notification);
     }
 }

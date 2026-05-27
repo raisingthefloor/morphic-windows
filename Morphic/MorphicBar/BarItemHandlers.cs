@@ -160,6 +160,20 @@ internal class BarItemHandlers
 
     //
 
+    // read selected
+
+    // Placeholder action for Read Selected Play / Stop. The feature isn't implemented yet
+    // in 2.x, so this hands the user a toast explaining that.
+    public static Task<MorphicResult<MorphicUnit, MorphicUnit>> ReadSelectedButtonAction(string? actionTag, bool? isChecked)
+    {
+        Morphic.AppNotifications.ToastNotifications.ShowText(
+            title: "Read Selected",
+            body: "Read Selected isn't available yet in this version of Morphic.\n\nWe are updating this feature to utilize the latest functionality from Microsoft.\nThis feature will return in an upcoming preview release.");
+        return Task.FromResult<MorphicResult<MorphicUnit, MorphicUnit>>(MorphicResult.OkResult());
+    }
+
+    //
+
     // contrast and color buttons
 
     public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> ContrastButtonAction(string? actionTag, bool? isChecked)
@@ -206,7 +220,7 @@ internal class BarItemHandlers
             // broadcast the change to all apps
             var broadcastResult = await Morphic.WindowsNative.Theme.DarkMode.BroadcastChangeMessageAsync().ConfigureAwait(false);
             if (broadcastResult.IsError) { return false; }
-			
+
             return true; // set operation succeeded
         });
 

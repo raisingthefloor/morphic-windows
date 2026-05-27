@@ -181,6 +181,42 @@ internal static class BarItemDataFactory
 
     //
 
+    public static IBarItemData CreateReadSelectedButtonGroup(BarButtonAction? playAction, BarButtonAction? stopAction)
+    {
+        // "Read Selected" -- two pushbuttons (Play on the left, Stop on the right), equal width.
+        return new BarMultiButtonData
+        {
+            Header = "Read Selected",
+            SizingMode = MultiButtonSizingMode.StretchToLargest,
+            // Play/Stop is a transport pair; keep them side-by-side even when the bar is vertical
+            // so the pair reads as one control rather than two stacked rows (matches Text Size).
+            AlwaysHorizontalSubButtons = true,
+            Buttons = new List<BarButtonData>
+                {
+                    new BarButtonData
+                    {
+                        // U+25B6 BLACK RIGHT-POINTING TRIANGLE + U+FE0E VARIATION SELECTOR-15
+                        // (text presentation); the VS forces monochrome rendering -- without it
+                        // Windows can fall back to Segoe UI Emoji and render the glyph in color.
+                        Text = "\u25B6\uFE0E", // ▶
+                        AccessibleName = "Play (read selected text aloud)",
+                        ActionTag = "read-selected-play",
+                        Action = playAction,
+                    },
+                    new BarButtonData
+                    {
+                        // U+25A0 BLACK SQUARE + U+FE0E (see note above)
+                        Text = "\u25A0\uFE0E", // ■
+                        AccessibleName = "Stop (stop reading)",
+                        ActionTag = "read-selected-stop",
+                        Action = stopAction,
+                    },
+                },
+        };
+    }
+
+    //
+
     public static IBarItemData CreateContrastColorButtonGroup(BarButtonAction? contrastAction, BarButtonAction? colorAction, BarButtonAction? darkAction, BarButtonAction? nightAction)
     {
         // "Contrast & Color" -- 4 toggle buttons, per-content sized

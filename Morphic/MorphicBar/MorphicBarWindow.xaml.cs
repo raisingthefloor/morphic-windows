@@ -282,6 +282,18 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             });
             return new Windows.Win32.Foundation.LRESULT(0);
         }
+        else if (msg == Windows.Win32.PInvoke.WM_ENDSESSION && wParam.Value != 0)
+        {
+            _ = this.DispatcherQueue.TryEnqueue(() =>
+            {
+                try { ((App)Microsoft.UI.Xaml.Application.Current).Shutdown(); }
+                catch (System.Runtime.InteropServices.COMException) { }
+            });
+            // Per the WM_ENDSESSION contract, returning 0 acknowledges the message; the
+            // OS / RM then proceeds with its own shutdown bookkeeping while our dispatched
+            // Exit runs in parallel.
+            return new Windows.Win32.Foundation.LRESULT(0);
+        }
         return Windows.Win32.PInvoke.DefSubclassProc(hwnd, msg, wParam, lParam);
     }
 
