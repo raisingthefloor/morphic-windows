@@ -23,7 +23,9 @@
 
 using Morphic.Core;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Morphic.WindowsNative.OsVersion;
 
@@ -36,23 +38,43 @@ public enum WindowsVersion
     Win11_v23H2,
     Win11_v24H2,
     Win11_v25H2,
+    Win11_v26H1,
     Win11_vFuture // any future release of Windows 11 we're not yet aware of
 }
 
-public class OsVersion
+public static class OsVersion
 {
-    private const int WIN10_22H2_BUILD = 19045;
-    private const int EARLIEST_KNOWN_WIN10_BUILD = 10240 /* WIN10_1507_BUILD */;
-    private const int EARLIEST_SUPPORTED_WIN10_BUILD = WIN10_22H2_BUILD;
-    private const int LATEST_KNOWN_WIN10_BUILD = WIN10_22H2_BUILD;
+    private enum WindowsPlatform
+    {
+        Win10,
+        Win11,
+    }
     //
-    private const int WIN11_22H2_BUILD = 22621;
-    private const int WIN11_23H2_BUILD = 22631;
-    private const int WIN11_24H2_BUILD = 26100;
-    private const int WIN11_25H2_BUILD = 26200;
-    private const int EARLIEST_KNOWN_WIN11_BUILD = 22000 /* WIN11_21H2_BUILD */;
-    private const int EARLIEST_SUPPORTED_WIN11_BUILD = WIN11_22H2_BUILD;
-    private const int LATEST_KNOWN_WIN11_BUILD = WIN11_25H2_BUILD;
+    private sealed record KnownBuild(WindowsPlatform Platform, uint BuildNumber);
+    //
+    // Officially supported list of OS versions (for this version of Morphic)
+    private static readonly IReadOnlyDictionary<WindowsVersion, KnownBuild> AllKnownBuilds =
+        new Dictionary<WindowsVersion, KnownBuild>
+        {
+            { WindowsVersion.Win10_v22H2, new KnownBuild(WindowsPlatform.Win10, 19045) },
+            { WindowsVersion.Win11_v22H2, new KnownBuild(WindowsPlatform.Win11, 22621) },
+            { WindowsVersion.Win11_v23H2, new KnownBuild(WindowsPlatform.Win11, 22631) },
+            { WindowsVersion.Win11_v24H2, new KnownBuild(WindowsPlatform.Win11, 26100) },
+            { WindowsVersion.Win11_v25H2, new KnownBuild(WindowsPlatform.Win11, 26200) },
+            { WindowsVersion.Win11_v26H1, new KnownBuild(WindowsPlatform.Win11, 28000) },
+        };
+    //
+    private const uint FIRST_WIN10_BUILD_NUMBER = 10240; // Win10 v1507; not supported, but important as a start of range value
+    //private static readonly KnownBuild EARLIEST_SUPPORTED_WIN10_BUILD = AllKnownBuilds.Values.Where(b => b.Platform == WindowsPlatform.Win10).MinBy(b => b.BuildNumber)!;
+    private static readonly KnownBuild LATEST_KNOWN_WIN10_BUILD = AllKnownBuilds.Values.Where(b => b.Platform == WindowsPlatform.Win10).MaxBy(b => b.BuildNumber)!;
+    //
+    private const uint FIRST_WIN11_BUILD_NUMBER = 22000; // Win11 21H2; not supported, but important as a start range value
+    //private static readonly KnownBuild EARLIEST_SUPPORTED_WIN11_BUILD = AllKnownBuilds.Values.Where(b => b.Platform == WindowsPlatform.Win11).MinBy(b => b.BuildNumber)!;
+    //
+    // NOTE: Windows 11 gained two parallel "cores" (branches) in early 2026: the pre-build-28000 branch and the 28000 (new 2026+ computers) branch
+    private const uint FIRST_BUILD_OF_WIN11_SPLIT_IN_2026 = 28000;
+    private static readonly KnownBuild LATEST_KNOWN_PRESPLIT_WIN11_BUILD = AllKnownBuilds.Values.Where(b => b.Platform == WindowsPlatform.Win11 && b.BuildNumber < FIRST_BUILD_OF_WIN11_SPLIT_IN_2026).MaxBy(b => b.BuildNumber)!;
+    private static readonly KnownBuild LATEST_KNOWN_WIN11_BUILD = AllKnownBuilds.Values.Where(b => b.Platform == WindowsPlatform.Win11).MaxBy(b => b.BuildNumber)!;
 
     // NOTE: this function will return null for versions of Windows which are not recognized (i.e. generally null == older beta builds or old versions which we do not support)
     public static WindowsVersion? GetWindowsVersion()
@@ -62,32 +84,29 @@ public class OsVersion
 
         if ((version.Major == 10) && (version.Minor == 0))
         {
-            switch (version.Build)
+            // if the build is a known Windows 10 build, return the corresponding WindowsVersion enum value
+            foreach (var knownBuild in AllKnownBuilds)
             {
-                case WIN10_22H2_BUILD:
-                    return WindowsVersion.Win10_v22H2;
-                case WIN11_22H2_BUILD:
-                    return WindowsVersion.Win11_v22H2;
-                case WIN11_23H2_BUILD:
-                    return WindowsVersion.Win11_v23H2;
-                case WIN11_24H2_BUILD:
-                    return WindowsVersion.Win11_v24H2;
-                case WIN11_25H2_BUILD:
-                    return WindowsVersion.Win11_v25H2;
-                default:
-                    // NOTE: as Microsoft is shipping both Windows 10 and Windows 11 as "10.0.###.###" releases, we may need to add some nuance to this code in the future (for 10 vs 11)
-                    if (version.Build > LATEST_KNOWN_WIN10_BUILD && version.Build < EARLIEST_KNOWN_WIN11_BUILD)
-                    {
-                        return WindowsVersion.Win10_vFuture;
-                    }
-                    else if (version.Build > LATEST_KNOWN_WIN11_BUILD)
-                    {
-                        return WindowsVersion.Win11_vFuture;
-                    }
-                    else
-                    {
-                        return null;
-                    }
+                if (knownBuild.Value.BuildNumber == version.Build)
+                {
+                    return knownBuild.Key;
+                }
+            }
+            //
+            // otherwise, determine if the build is a Windows 10 or Windows 11 build (or if it's so early we don't know what it is)
+            // NOTE: as Microsoft is shipping both Windows 10 and Windows 11 as "10.0.###.###" releases, we may need to add some nuance to this code in the future (for 10 vs 11)
+            if (version.Build > OsVersion.LATEST_KNOWN_WIN10_BUILD.BuildNumber && version.Build < OsVersion.FIRST_WIN11_BUILD_NUMBER)
+            {
+                return WindowsVersion.Win10_vFuture;
+            }
+            else if ((version.Build > OsVersion.LATEST_KNOWN_PRESPLIT_WIN11_BUILD.BuildNumber && version.Build < FIRST_BUILD_OF_WIN11_SPLIT_IN_2026) || version.Build > OsVersion.LATEST_KNOWN_WIN11_BUILD.BuildNumber)
+            {
+                // NOTE: Windows 11 gained two parallel "cores" (branches) in early 2026: the pre-build-28000 branch and the 28000 (new 2026+ computers) branch
+                return WindowsVersion.Win11_vFuture;
+            }
+            else // unknown version of Windows (presumably pre-Win10, but this will also catch betas of Windows "in between versions")
+            {
+                return null;
             }
         }
         else if ((version.Major == 10) && (version.Minor > 0))
@@ -112,7 +131,7 @@ public class OsVersion
         if ((version.Major == 10) && (version.Minor == 0))
         {
             // NOTE: as Microsoft is shipping both Windows 10 and Windows 11 as "10.0.###.###" releases, we may need to add some nuance to this code in the future (for 10 vs 11)
-            if (version.Build >= EARLIEST_KNOWN_WIN10_BUILD && version.Build < EARLIEST_KNOWN_WIN11_BUILD)
+            if (version.Build >= FIRST_WIN10_BUILD_NUMBER && version.Build < FIRST_WIN11_BUILD_NUMBER)
             {
                 return true;
             }
@@ -129,7 +148,7 @@ public class OsVersion
         if ((version.Major == 10) && (version.Minor == 0))
         {
             // NOTE: as Microsoft is shipping both Windows 10 and Windows 11 as "10.0.###.###" releases, we may need to add some nuance to this code in the future (for 10 vs 11)
-            if (version.Build >= EARLIEST_KNOWN_WIN11_BUILD)
+            if (version.Build >= FIRST_WIN11_BUILD_NUMBER)
             {
                 return true;
             }
@@ -148,29 +167,16 @@ public class OsVersion
     }
 
     // NOTE: this function will return null if the build version is not known for the specified WindowsVersion
-    private static uint? GetBuildVersionForOsVersion(WindowsVersion version)
-    {
-        switch (version)
+    private static uint? GetBuildVersionForOsVersion(WindowsVersion version) =>
+        version switch
         {
-            case WindowsVersion.Win10_v22H2:
-                return WIN10_22H2_BUILD;
-            case WindowsVersion.Win10_vFuture:
-                return null;
-            case WindowsVersion.Win11_v22H2:
-                return WIN11_22H2_BUILD;
-            case WindowsVersion.Win11_v23H2:
-                return WIN11_23H2_BUILD;
-            case WindowsVersion.Win11_v24H2:
-                return WIN11_24H2_BUILD;
-            case WindowsVersion.Win11_v25H2:
-                return WIN11_25H2_BUILD;
-            case WindowsVersion.Win11_vFuture:
-                return null;
-            default:
-                Debug.Assert(false, "Unknown Windows version; please add the corresponding case to correct this error");
-                return null;
-        }
-    }
+            WindowsVersion.Win10_vFuture 
+            or WindowsVersion.Win11_vFuture => null,
+            //
+            _ when AllKnownBuilds.TryGetValue(version, out var knownBuild) => knownBuild.BuildNumber,
+            _ => throw new System.ComponentModel.InvalidEnumArgumentException(
+                nameof(version), (int)version, version.GetType()),
+        };
 
     //
 
@@ -179,7 +185,10 @@ public class OsVersion
         var versionBuild = OsVersion.GetBuildVersionForOsVersion(version);
         if (versionBuild is null)
         {
-            throw new ArgumentOutOfRangeException(nameof(version));
+            throw new ArgumentOutOfRangeException(
+                nameof(version),
+                version,
+                $"{nameof(WindowsVersion)} '{version}' has no associated build number and cannot be compared against the current OS build number.");
         }
         var currentVersionBuild = System.Environment.OSVersion.Version.Build;
 
