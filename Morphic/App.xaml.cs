@@ -299,11 +299,13 @@ public partial class App : Application
 	//
     internal void Shutdown()
     {
+        Morphic.RmTraceLog.Log("App.Shutdown() begin");
+
         // NOTE: we should close all explicit windows in this function (required to allow the actual application Exit)
 		//       [in contrast, accessory windows like the taskbar button are torn down automatically when the app exits]
 
         try {
-		    _aboutWindow?.Close(); 
+		    _aboutWindow?.Close();
 		}
         catch (System.Runtime.InteropServices.COMException ex) when (ex.HResult == E_WinUIDesktopWindowAlreadyClosed) { }
 
@@ -323,7 +325,9 @@ public partial class App : Application
 
         this.PerformShutdownCleanup();
 
+        Morphic.RmTraceLog.Log("App.Shutdown() end -> calling Application.Exit()");
         this.Exit();
+        Morphic.RmTraceLog.Log("App.Shutdown() returned from Application.Exit() (process still alive at this line)");
     }
 
     #endregion Main Menu

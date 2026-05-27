@@ -214,6 +214,7 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         _subclassProc = this.SubclassWndProc;
         var setSubclassResult = Windows.Win32.PInvoke.SetWindowSubclass(hwnd, _subclassProc, uIdSubclass: 0, dwRefData: 0);
         System.Diagnostics.Debug.Assert(setSubclassResult);
+        Morphic.RmTraceLog.Log($"Bar subclass installed: setSubclassResult={setSubclassResult} pid={System.Environment.ProcessId}");
 
         (this.Content as Grid)!.Loaded += RootGrid_Loaded;
         this.Closed += MorphicBarWindow_Closed;
@@ -258,6 +259,12 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         nuint uIdSubclass,
         nuint dwRefData)
     {
+        if (msg == Windows.Win32.PInvoke.WM_QUERYENDSESSION || msg == Windows.Win32.PInvoke.WM_ENDSESSION)
+        {
+            var msgName = (msg == Windows.Win32.PInvoke.WM_QUERYENDSESSION) ? "WM_QUERYENDSESSION" : "WM_ENDSESSION";
+            Morphic.RmTraceLog.Log($"SubclassWndProc {msgName} wParam=0x{wParam.Value:X} lParam=0x{lParam.Value:X}");
+        }
+
         if (msg == Windows.Win32.PInvoke.WM_ACTIVATE)
         {
             // wParam low word: WA_INACTIVE (0), WA_ACTIVE (1), WA_CLICKACTIVE (2).
@@ -284,11 +291,17 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         }
         else if (msg == Windows.Win32.PInvoke.WM_ENDSESSION && wParam.Value != 0)
         {
-            _ = this.DispatcherQueue.TryEnqueue(() =>
+            var enqueued = this.DispatcherQueue.TryEnqueue(() =>
             {
+                Morphic.RmTraceLog.Log("WM_ENDSESSION dispatched lambda running on UI thread; about to call App.Shutdown()");
                 try { ((App)Microsoft.UI.Xaml.Application.Current).Shutdown(); }
-                catch (System.Runtime.InteropServices.COMException) { }
+                catch (System.Runtime.InteropServices.COMException comException)
+                {
+                    Morphic.RmTraceLog.Log($"WM_ENDSESSION dispatched lambda swallowed COMException HRESULT=0x{comException.HResult:X8} message={comException.Message}");
+                }
+                Morphic.RmTraceLog.Log("WM_ENDSESSION dispatched lambda returned from App.Shutdown()");
             });
+            Morphic.RmTraceLog.Log($"WM_ENDSESSION DispatcherQueue.TryEnqueue returned {enqueued}");
             // Per the WM_ENDSESSION contract, returning 0 acknowledges the message; the
             // OS / RM then proceeds with its own shutdown bookkeeping while our dispatched
             // Exit runs in parallel.
