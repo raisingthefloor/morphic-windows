@@ -98,9 +98,10 @@ public partial class App : Application
     {
         // Register Morphic with the Shell's app-notification subsystem. Must happen after
         // AumidHelper.Initialize (called from Program.Main) but before any toast is shown.
-        // See Morphic/AppNotifications/ToastNotifications.cs for the registration details
-        // and notes on the thread-pool threading of the NotificationInvoked event.
-        Morphic.AppNotifications.ToastNotifications.Initialize();
+        // See Morphic.Notifications/ToastNotifications.cs for the registration details, the
+        // env-based routing decision (in-process vs. shell-out to Morphic.NotificationHelper.exe
+        // under uiAccess), and notes on the thread-pool threading of NotificationInvoked.
+        Morphic.Notifications.ToastNotifications.Initialize();
 
         // Wire up the HC ThemeAwareBackground brush placeholder declared in App.xaml. Done here
         // (rather than in the App constructor) because Resources.ThemeDictionaries is a WinRT
@@ -236,7 +237,7 @@ public partial class App : Application
         // Initialize being called explicitly during startup. Idempotent (guarded by an
         // _initialized flag inside ToastNotifications), so harmless if shutdown fires twice
         // or if Initialize was never called.
-        Morphic.AppNotifications.ToastNotifications.Shutdown();
+        Morphic.Notifications.ToastNotifications.Shutdown();
     }
 
     private void App_ShutdownStarting(DispatcherQueue sender, DispatcherQueueShutdownStartingEventArgs args)

@@ -96,6 +96,18 @@ public class NightLight
     // SettingItemProxy itself stays cached in NightLightIsOnSettingItem across attach/detach
     // cycles -- it's stateless other than the change subscription.
 
+    /// <summary>
+    /// Raised when the system Night Light state transitions on or off. Includes external sources
+    /// (Action Center quick action, Settings &gt; Display &gt; Night light, scheduled on/off) AND
+    /// our own SetIsOnAsync calls. Handler callbacks run on a Task.Run-dispatched ThreadPool
+    /// thread (NOT the UI thread).
+    /// </summary>
+    /// <exception cref="System.Exception">
+    /// Subscribing or unsubscribing may throw (typically COMException) if the underlying
+    /// SettingItemProxy.ValueChanged += / -= call fails. On subscribe failure the user's handler
+    /// is NOT added; on unsubscribe failure the user's handler IS removed but downstream WinRT
+    /// cleanup may have failed. Callers must catch.
+    /// </exception>
     public static event EventHandler<NightLightIsOnChangedEventArgs> IsOnChanged
     {
         add
@@ -130,12 +142,23 @@ public class NightLight
 
                     if (_isOnChangedIsSubscribed == true)
                     {
-                        var settingItem = NightLight.NightLightIsOnSettingItem;
-                        if (settingItem is not null)
+                        // Reset the flag in finally so it stays consistent even if the WinRT
+                        // unsubscribe throws -- otherwise a future subscriber would skip the
+                        // WinRT subscribe (thinking we're still wired up) and silently get no
+                        // events. The throw still propagates to the caller per the event's
+                        // documented contract.
+                        try
                         {
-                            settingItem.ValueChanged -= NightLight.SettingItem_ValueChanged;
+                            var settingItem = NightLight.NightLightIsOnSettingItem;
+                            if (settingItem is not null)
+                            {
+                                settingItem.ValueChanged -= NightLight.SettingItem_ValueChanged;
+                            }
                         }
-                        _isOnChangedIsSubscribed = false;
+                        finally
+                        {
+                            _isOnChangedIsSubscribed = false;
+                        }
                     }
                 }
             }

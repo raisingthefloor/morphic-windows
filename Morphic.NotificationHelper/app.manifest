@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
+  <assemblyIdentity version="2.0.0.0" name="Morphic.NotificationHelper.app"/>
+  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v2">
+    <security>
+      <requestedPrivileges xmlns="urn:schemas-microsoft-com:asm.v3">
+        <!-- asInvoker + uiAccess=false is LOAD-BEARING for this helper's existence.
+             The whole reason this process exists is to be a COM activator EXE that
+             Explorer can CreateProcess for toast notifications. Morphic.exe itself
+             ships with uiAccess=true, and Explorer (Medium IL) refuses to launch a
+             uiAccess (Medium+ IL) executable, returning error 740. By keeping this
+             helper at plain Medium IL, Explorer can launch it freely. Do NOT add
+             uiAccess="true" to this manifest under any circumstance. -->
+        <requestedExecutionLevel level="asInvoker" uiAccess="false" />
+      </requestedPrivileges>
+    </security>
+  </trustInfo>
+
+  <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
+    <application>
+      <!-- Windows 10 supportedOS GUID. AppNotificationManager from WindowsAppSDK requires
+           an OS that explicitly opts in via this manifest; without it, the runtime treats
+           the process as "down-level" and several modern-OS features (including notification
+           callbacks) degrade or no-op. -->
+
+      <!-- Windows 10 -->
+      <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}" />
+    </application>
+  </compatibility>
+</assembly>

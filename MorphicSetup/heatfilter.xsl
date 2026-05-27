@@ -39,6 +39,18 @@
   <xsl:key name="FilterDiaSymReaderNativeAmd64Dll" match="wix:Component[wix:File/@Source = 'SourceDir\Microsoft.DiaSymReader.Native.amd64.dll']" use="@Id" />
   <xsl:key name="FilterDiaSymReaderNativeArm64Dll" match="wix:Component[wix:File/@Source = 'SourceDir\Microsoft.DiaSymReader.Native.arm64.dll']" use="@Id" />
 
+  <!-- Exclude Morphic.NotificationHelper.* (exe, dll, deps.json, runtimeconfig.json, pri)
+       from heat so we can declare them manually in Package.wxs's NotificationHelperComponent
+       with stable File IDs. The UnregisterNotificationHelper custom action references
+       notification_helper_exe by File ID; heat-generated IDs are not guaranteed stable
+       across builds, so we need the manual declaration. The .pdb is already covered by
+       the universal FilterPdbs key above. -->
+  <xsl:key name="FilterNotificationHelperExe" match="wix:Component[wix:File/@Source = 'SourceDir\Morphic.NotificationHelper.exe']" use="@Id" />
+  <xsl:key name="FilterNotificationHelperDll" match="wix:Component[wix:File/@Source = 'SourceDir\Morphic.NotificationHelper.dll']" use="@Id" />
+  <xsl:key name="FilterNotificationHelperDepsJson" match="wix:Component[wix:File/@Source = 'SourceDir\Morphic.NotificationHelper.deps.json']" use="@Id" />
+  <xsl:key name="FilterNotificationHelperRuntimeConfigJson" match="wix:Component[wix:File/@Source = 'SourceDir\Morphic.NotificationHelper.runtimeconfig.json']" use="@Id" />
+  <xsl:key name="FilterNotificationHelperPri" match="wix:Component[wix:File/@Source = 'SourceDir\Morphic.NotificationHelper.pri']" use="@Id" />
+
   <!-- Copy all elements and their attributes. -->
   <xsl:template match="@*|node()">
     <xsl:copy>
@@ -49,6 +61,13 @@
   <!-- Except for those that match our filters, do nothing. -->
   <xsl:template match="*[ self::wix:Component or self::wix:ComponentRef ][ key( 'FilterPdbs', @Id ) ]" />
   <xsl:template match="*[ self::wix:Component or self::wix:ComponentRef ][ key( 'FilterMorphicExe', @Id ) ]" />
+  <!-- Filter out notification helpers -->
+  <xsl:template match="*[ self::wix:Component or self::wix:ComponentRef ][ key( 'FilterNotificationHelperExe', @Id ) ]" />
+  <xsl:template match="*[ self::wix:Component or self::wix:ComponentRef ][ key( 'FilterNotificationHelperDll', @Id ) ]" />
+  <xsl:template match="*[ self::wix:Component or self::wix:ComponentRef ][ key( 'FilterNotificationHelperDepsJson', @Id ) ]" />
+  <xsl:template match="*[ self::wix:Component or self::wix:ComponentRef ][ key( 'FilterNotificationHelperRuntimeConfigJson', @Id ) ]" />
+  <xsl:template match="*[ self::wix:Component or self::wix:ComponentRef ][ key( 'FilterNotificationHelperPri', @Id ) ]" />
+  <!-- Additionally, filter out binraies that should always be replaced (even if it's a "downgrade") -->
   <xsl:template match="*[ self::wix:Component or self::wix:ComponentRef ][ key( 'FilterMorphicCoreDll', @Id ) ]" />
   <xsl:template match="*[ self::wix:Component or self::wix:ComponentRef ][ key( 'FilterDiaSymReaderNativeAmd64Dll', @Id ) ]" />
   <xsl:template match="*[ self::wix:Component or self::wix:ComponentRef ][ key( 'FilterDiaSymReaderNativeArm64Dll', @Id ) ]" />

@@ -41,14 +41,31 @@
         Return="ignore"
         Impersonate="no" />
 
+    <CustomAction
+        Id="SetUnregisterNotificationHelper"
+        Property="UnregisterNotificationHelper"
+        Value="&quot;[#notification_helper_exe]&quot; --unregister"
+        Execute="immediate" />
+
+    <CustomAction
+        Id="UnregisterNotificationHelper"
+        BinaryRef="Wix4UtilCA_X64"
+        DllEntry="WixQuietExec64"
+        Execute="deferred"
+        Return="ignore"
+        Impersonate="yes" />
+
     <InstallExecuteSequence>
       <Custom Action="SetRunWindowsAppRuntimeInstaller" Before="RunWindowsAppRuntimeInstaller" Condition="NOT REMOVE" />
       <Custom Action="RunWindowsAppRuntimeInstaller" After="InstallFiles" Condition="NOT REMOVE" />
+      <Custom Action="SetUnregisterNotificationHelper" Before="UnregisterNotificationHelper" Condition="REMOVE=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" />
+      <Custom Action="UnregisterNotificationHelper" Before="RemoveFiles" Condition="REMOVE=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" />
     </InstallExecuteSequence>
 
     <Feature Id="Main">
       <ComponentGroupRef Id="MorphicComponents" />
       <ComponentRef Id="ApplicationComponent" />
+      <ComponentRef Id="NotificationHelperAumidRegistryComponent" />
     </Feature>
 
     <ui:WixUI Id="WixUI_Minimal" />
@@ -88,6 +105,13 @@
         </Shortcut>
         <RegistryValue Root="HKCU" Key="Software\Raising the Floor\Morphic" Name="installed" Type="integer" Value="1" KeyPath="yes" />
       </Component>
+      <Component Id="NotificationHelperAumidRegistryComponent" Guid="9F3C1E5B-7A2D-4F8B-9C6E-5D4A3B2C1F0E">
+        <RegistryKey Root="HKCU"
+                     Key="Software\Classes\AppUserModelId\RaisingTheFloor.Morphic"
+                     ForceDeleteOnUninstall="yes">
+          <RegistryValue Type="string" Name="MsiInstallMarker" Value="1" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
     </StandardDirectory>
   </Fragment>
 
@@ -123,6 +147,13 @@
         <?elseif $(sys.BUILDARCH) = "arm64" ?>
           <File Id="dia_sym_reader_native_arm64_dll" Source="Microsoft.DiaSymReader.Native.arm64.dll" CompanionFile="morphic_exe" />
         <?endif?>
+      </Component>
+      <Component Id="NotificationHelperComponent" Guid="4A5F8E2B-1D3C-4F7E-A8B9-6C7D8E9F0A1B">
+        <File Id="notification_helper_exe" Source="Morphic.NotificationHelper.exe" KeyPath="yes" />
+        <File Id="notification_helper_dll" Source="Morphic.NotificationHelper.dll" />
+        <File Id="notification_helper_deps_json" Source="Morphic.NotificationHelper.deps.json" />
+        <File Id="notification_helper_runtimeconfig_json" Source="Morphic.NotificationHelper.runtimeconfig.json" />
+        <File Id="notification_helper_pri" Source="Morphic.NotificationHelper.pri" />
       </Component>
       <ComponentGroupRef Id="MorphicSupportComponents" />
     </ComponentGroup>

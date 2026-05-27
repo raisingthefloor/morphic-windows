@@ -166,7 +166,7 @@ internal class BarItemHandlers
     // in 2.x, so this hands the user a toast explaining that.
     public static Task<MorphicResult<MorphicUnit, MorphicUnit>> ReadSelectedButtonAction(string? actionTag, bool? isChecked)
     {
-        Morphic.AppNotifications.ToastNotifications.ShowText(
+        Morphic.Notifications.ToastNotifications.ShowText(
             title: "Read Selected",
             body: "We are updating this feature to utilize the latest functionality from Microsoft.\n\nIt will be available in an upcoming preview release.");
         return Task.FromResult<MorphicResult<MorphicUnit, MorphicUnit>>(MorphicResult.OkResult());

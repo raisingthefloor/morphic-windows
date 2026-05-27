@@ -471,6 +471,18 @@ public class DarkMode
 
         return success ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
     }
+
+    //
+
+    // Change-notification events
+    //
+    // Threading: handlers fire from the watcher's ThreadPool callback (NOT the UI thread).
+    // Subscribers that touch UI must marshal back to their dispatcher.
+    //
+    // Lifecycle: the watcher starts lazily on the first subscription (across either event), and
+    // tears down when the last subscriber detaches. No registry handle is held while there are
+    // no subscribers.
+
     public static event EventHandler<DarkModeChangedEventArgs> AppsUseDarkModeChanged
     {
         add

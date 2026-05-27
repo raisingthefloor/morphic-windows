@@ -99,7 +99,7 @@ public static class OsVersion
             {
                 return WindowsVersion.Win10_vFuture;
             }
-            else if ((version.Build > OsVersion.LATEST_KNOWN_PRESPLIT_WIN11_BUILD.BuildNumber && version.Build < FIRST_BUILD_OF_WIN11_SPLIT_IN_2026) || version.Build > OsVersion.LATEST_KNOWN_WIN11_BUILD.BuildNumber)
+            else if ((version.Build > OsVersion.LATEST_KNOWN_PRESPLIT_WIN11_BUILD.BuildNumber && version.Build < OsVersion.FIRST_BUILD_OF_WIN11_SPLIT_IN_2026) || version.Build > OsVersion.LATEST_KNOWN_WIN11_BUILD.BuildNumber)
             {
                 // NOTE: Windows 11 gained two parallel "cores" (branches) in early 2026: the pre-build-28000 branch and the 28000 (new 2026+ computers) branch
                 return WindowsVersion.Win11_vFuture;
@@ -131,7 +131,7 @@ public static class OsVersion
         if ((version.Major == 10) && (version.Minor == 0))
         {
             // NOTE: as Microsoft is shipping both Windows 10 and Windows 11 as "10.0.###.###" releases, we may need to add some nuance to this code in the future (for 10 vs 11)
-            if (version.Build >= FIRST_WIN10_BUILD_NUMBER && version.Build < FIRST_WIN11_BUILD_NUMBER)
+            if (version.Build >= OsVersion.FIRST_WIN10_BUILD_NUMBER && version.Build < OsVersion.FIRST_WIN11_BUILD_NUMBER)
             {
                 return true;
             }
@@ -148,7 +148,7 @@ public static class OsVersion
         if ((version.Major == 10) && (version.Minor == 0))
         {
             // NOTE: as Microsoft is shipping both Windows 10 and Windows 11 as "10.0.###.###" releases, we may need to add some nuance to this code in the future (for 10 vs 11)
-            if (version.Build >= FIRST_WIN11_BUILD_NUMBER)
+            if (version.Build >= OsVersion.FIRST_WIN11_BUILD_NUMBER)
             {
                 return true;
             }
@@ -173,7 +173,7 @@ public static class OsVersion
             WindowsVersion.Win10_vFuture 
             or WindowsVersion.Win11_vFuture => null,
             //
-            _ when AllKnownBuilds.TryGetValue(version, out var knownBuild) => knownBuild.BuildNumber,
+            _ when OsVersion.AllKnownBuilds.TryGetValue(version, out var knownBuild) => knownBuild.BuildNumber,
             _ => throw new System.ComponentModel.InvalidEnumArgumentException(
                 nameof(version), (int)version, version.GetType()),
         };

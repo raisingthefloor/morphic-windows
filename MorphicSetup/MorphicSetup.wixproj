@@ -48,12 +48,23 @@
     <PackageReference Include="WixToolset.Util.wixext" Version="4.0.6" />
   </ItemGroup>
 
+  <!-- Windows App Runtime installer EXE that Package.wxs chains during install. Pinned to
+       the same version as the Microsoft.WindowsAppSDK PackageReference in
+       Morphic\Morphic.csproj (currently 2.1.3); update both in lockstep when bumping the
+       SDK. The aka.ms redirects below are the stable per-version download URLs published
+       by Microsoft. -->
   <PropertyGroup>
     <WindowsAppRuntimeVersion>2.1.3</WindowsAppRuntimeVersion>
     <WindowsAppRuntimeInstallerUrlX64>https://aka.ms/windowsappsdk/2.1/$(WindowsAppRuntimeVersion)/windowsappruntimeinstall-x64.exe</WindowsAppRuntimeInstallerUrlX64>
     <WindowsAppRuntimeInstallerUrlArm64>https://aka.ms/windowsappsdk/2.1/$(WindowsAppRuntimeVersion)/windowsappruntimeinstall-arm64.exe</WindowsAppRuntimeInstallerUrlArm64>
   </PropertyGroup>
 
+  <!-- Downloads the architecture-matched WindowsAppRuntimeInstall*.exe into prerequisites\
+       before the WiX compile starts. Runs only for the platform being built and only when the 
+       destination file is missing (so repeated local builds don't re-download). BeforeTargets 
+       ties this to the earliest part of the WiX build pipeline; using "Build" alone would race 
+       the WXS compile that needs the file. SkipUnchangedFiles also guards against accidental
+       overwrites of a file that's already correct. -->
   <Target Name="DownloadWindowsAppRuntimeInstallerX64"
           BeforeTargets="BeforeBuild;Compile"
           Condition="'$(Platform)' == 'x64' AND !Exists('prerequisites\WindowsAppRuntimeInstall-x64.exe')">

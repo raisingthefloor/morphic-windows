@@ -40,8 +40,8 @@ public class Program
         // Set the process AppUserModelID before any framework code runs. Must happen here
         // (Main, before Microsoft.UI.Xaml.Application.Start) rather than in App.xaml.cs so
         // that any Shell-side caching during WinUI initialization picks up the correct AUMID.
-        // See Morphic/AppNotifications/AumidHelper.cs for the value and rationale.
-        Morphic.AppNotifications.AumidHelper.Initialize();
+        // See Morphic.WindowsNative/AppIdentity/AumidHelper.cs for the value and rationale.
+        Morphic.WindowsNative.AppIdentity.AumidHelper.Initialize();
 
 //        bool bootstrapInitialized = false;
 
