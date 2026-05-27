@@ -6,15 +6,19 @@
     <RootNamespace>Morphic</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Platforms>x64;ARM64</Platforms>
+    <Configurations>Debug;Release;Debug-Packaged;Release-Packaged</Configurations>
     <VersionPrefix>2.0$(VersionBuildComponents)</VersionPrefix>
-    <VersionSuffix Condition="'$(Configuration)' == 'Debug'">localdev</VersionSuffix>
-    <VersionSuffix Condition="'$(Configuration)' == 'Release'">$(VersionSuffix)</VersionSuffix>
+    <VersionSuffix Condition="$(Configuration.Contains('Debug'))">localdev</VersionSuffix>
+    <VersionSuffix Condition="$(Configuration.Contains('Release'))">$(VersionSuffix)</VersionSuffix>
     <Company>Raising the Floor - US, Inc.</Company>
     <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
     <UseWinUI>true</UseWinUI>
     <WinUISDKReferences>false</WinUISDKReferences>
     <Nullable>enable</Nullable>
-    <WindowsPackageType>None</WindowsPackageType>
+
+    <WindowsAppSdkBootstrapInitialize Condition="$(Configuration.EndsWith('-Packaged'))">false</WindowsAppSdkBootstrapInitialize>
+
+    <WindowsPackageType Condition="!$(Configuration.EndsWith('-Packaged'))">None</WindowsPackageType>
 	  
 	<!-- to support both packaged and unpacked scenarios, disable the auto-generated Program.cs and manually bootstrap WinUI instead -->    
 	<DefineConstants>DISABLE_XAML_GENERATED_MAIN</DefineConstants>
@@ -37,6 +41,9 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.1839" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.1.3" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.AI" Version="2.1.10" ExcludeAssets="runtime;native" Condition="'$(WindowsAppSDKSelfContained)' != 'true'" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.ML" Version="2.1.1" ExcludeAssets="runtime;native" Condition="'$(WindowsAppSDKSelfContained)' != 'true'" />
+    <PackageReference Include="Microsoft.Windows.AI.MachineLearning" Version="2.1.1" ExcludeAssets="runtime;native" Condition="'$(WindowsAppSDKSelfContained)' != 'true'" />
   </ItemGroup>
 
   <ItemGroup>
@@ -72,10 +79,10 @@
   <!-- Publish Properties -->
   <PropertyGroup>
     <SelfContained>true</SelfContained>
-    <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
-    <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
-    <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
-    <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">False</PublishTrimmed>
+    <PublishReadyToRun Condition="$(Configuration.Contains('Debug'))">False</PublishReadyToRun>
+    <PublishReadyToRun Condition="$(Configuration.Contains('Release'))">True</PublishReadyToRun>
+    <PublishTrimmed Condition="$(Configuration.Contains('Debug'))">False</PublishTrimmed>
+    <PublishTrimmed Condition="$(Configuration.Contains('Release'))">False</PublishTrimmed>
   </PropertyGroup>
 
   <!-- prevent the trimmer from removing types only referenced in XAML; this could be narrowed to specific types if necessary (to minimize installer size) -->

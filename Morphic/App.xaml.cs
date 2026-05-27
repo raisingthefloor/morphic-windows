@@ -272,18 +272,31 @@ public partial class App : Application
         this.Shutdown();
     }
 
+    // HRESULT 0x800710DD = "The WinUI Desktop Window object has already been closed."
+    // Specifically raised by WinUI 3 when Close() is called on a Desktop Window whose
+    // underlying COM object has already been destroyed by the framework. We swallow ONLY
+    // this exact HRESULT (via `when` filter); any other COMException still propagates.
+    private const int E_WinUIDesktopWindowAlreadyClosed = unchecked((int)0x800710DD);
+	//
     internal void Shutdown()
     {
         // NOTE: we should close all explicit windows in this function (required to allow the actual application Exit)
 		//       [in contrast, accessory windows like the taskbar button are torn down automatically when the app exits]
 
-        _aboutWindow?.Close();
+        try {
+		    _aboutWindow?.Close(); 
+		}
+        catch (System.Runtime.InteropServices.COMException ex) when (ex.HResult == E_WinUIDesktopWindowAlreadyClosed) { }
 
         // Re-enable user close so the programmatic Close() actually destroys the window
         // (we'd previously disabled it to prevent Alt+F4 with the menu flyout focused from
         // destroying _menuOwnerWindow).
-        _menuOwnerWindow.SetUserCloseEnabled(true);
-        _menuOwnerWindow.Close();
+        try
+        {
+            _menuOwnerWindow.SetUserCloseEnabled(true);
+            _menuOwnerWindow.Close();
+        }
+        catch (System.Runtime.InteropServices.COMException ex) when (ex.HResult == E_WinUIDesktopWindowAlreadyClosed) { }
 
         // MorphicBarManager.Dispose closes out the MorphicBar and all its resources/events in a safe order.
         _morphicBarManager?.Dispose();
