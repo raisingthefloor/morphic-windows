@@ -28,14 +28,21 @@
     <MediaTemplate EmbedCab="yes" />
 
     <CustomAction
+        Id="SetRunWindowsAppRuntimeInstaller"
+        Property="RunWindowsAppRuntimeInstaller"
+        Value="&quot;[#WindowsAppRuntimeInstall_exe]&quot; --quiet"
+        Execute="immediate" />
+
+    <CustomAction
         Id="RunWindowsAppRuntimeInstaller"
-        FileRef="WindowsAppRuntimeInstall_exe"
-        ExeCommand="--quiet"
+        BinaryRef="Wix4UtilCA_X64"
+        DllEntry="WixQuietExec64"
         Execute="deferred"
         Return="ignore"
         Impersonate="no" />
 
     <InstallExecuteSequence>
+      <Custom Action="SetRunWindowsAppRuntimeInstaller" Before="RunWindowsAppRuntimeInstaller" Condition="NOT REMOVE" />
       <Custom Action="RunWindowsAppRuntimeInstaller" After="InstallFiles" Condition="NOT REMOVE" />
     </InstallExecuteSequence>
 
