@@ -223,12 +223,6 @@ public partial class App : Application
         }
         _shutdownCleanupPerformed = true;
 
-        if (_taskbarIconRefreshHandler is not null)
-        {
-            Morphic.SettingsUtils.CachedDarkModeState.StateChanged -= _taskbarIconRefreshHandler;
-            _taskbarIconRefreshHandler = null;
-        }
-
         // immediately hide our tray icon (and dispose of it for good measure, to help ensure that unmanaged resources are cleaned up)
         if (this.TaskbarButton is not null)
         {
