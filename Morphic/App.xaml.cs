@@ -195,6 +195,14 @@ public partial class App : Application
             // "Magnifier" -- two pushbuttons (Show on the left, Hide on the right), equal width
             Morphic.MorphicBar.BarItemDataFactory.CreateMagnifierButtonGroup(showAction: Morphic.MorphicBar.BarItemHandlers.ShowMagnifierButtonAction, hideAction: Morphic.MorphicBar.BarItemHandlers.HideMagnifierButtonAction),
 
+            // "Read Selected" -- two pushbuttons (Play / Stop), equal width. The feature isn't
+            // wired to a real TTS engine yet; both buttons currently raise a "not available yet"
+            // toast (see BarItemHandlers.ReadSelectedButtonAction). The button group keeps its
+            // place in the bar layout.
+            Morphic.MorphicBar.BarItemDataFactory.CreateReadSelectedButtonGroup(
+                playAction: Morphic.MorphicBar.BarItemHandlers.ReadSelectedButtonAction,
+                stopAction: Morphic.MorphicBar.BarItemHandlers.ReadSelectedButtonAction),
+
             // "Contrast & Color" -- 4 toggle buttons, per-content sized
             Morphic.MorphicBar.BarItemDataFactory.CreateContrastColorButtonGroup(
                 contrastAction: Morphic.MorphicBar.BarItemHandlers.ContrastButtonAction,
@@ -211,6 +219,14 @@ public partial class App : Application
         // immediately hide our tray icon (and dispose of it for good measure, to help ensure that unmanaged resources are cleaned up)
         this.TaskbarButton.SetVisible(false);
         this.TaskbarButton.Dispose();
+
+        // Unsubscribe NotificationInvoked and Unregister the Shell's COM activator stub for
+        // our AUMID. Strictly speaking the OS would clean both up on process exit, but doing
+        // it explicitly here keeps the Shell's bookkeeping tidy and matches the symmetry of
+        // Initialize being called explicitly during startup. Idempotent (guarded by an
+        // _initialized flag inside ToastNotifications), so harmless if shutdown fires twice
+        // or if Initialize was never called.
+        Morphic.AppNotifications.ToastNotifications.Shutdown();
     }
 
     #endregion Lifecycle
