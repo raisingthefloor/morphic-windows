@@ -1093,6 +1093,23 @@ internal class TrayButtonNativeWindow : IDisposable
 
     private void ObjectReorderWindowEventProc(Windows.Win32.UI.Accessibility.HWINEVENTHOOK hWinEventHook, uint eventType, Windows.Win32.Foundation.HWND hwnd, int idObject, int idChild, uint idEventThread, uint dwmsEventTime)
     {
+        if (this.disposedValue == true)
+        {
+            return;
+        }
+        if (hwnd == Windows.Win32.Foundation.HWND.Null)
+        {
+            return;
+        }
+        if (idObject != 0 || idChild != 0)
+        {
+            return;
+        }
+        if (Windows.Win32.PInvoke.IsWindow(hwnd) == false)
+        {
+            return;
+        }
+
         // make sure that HandleObjectReorder isn't called in an infinite RAPID loop (if two windows are fighting for "topmost")
         const int THROTTLE_WAIT_TIME_IN_MS = 20;
         lock (_objectReorderLockObject)
@@ -1119,6 +1136,14 @@ internal class TrayButtonNativeWindow : IDisposable
                 _objectReorderThrottleTimer!.Tick += (s, e) =>
                 {
                     _objectReorderThrottleTimer?.Stop();
+
+                    // Bail if Dispose ran while the throttle wait was pending. Without
+                    // this check we'd queue another HandleObjectReorder against a
+                    // disposed instance.
+                    if (this.disposedValue == true)
+                    {
+                        return;
+                    }
 
                     lock (_objectReorderLockObject)
                     {
@@ -1160,27 +1185,40 @@ internal class TrayButtonNativeWindow : IDisposable
     }
 
     private void HandleObjectReorder(Windows.Win32.Foundation.HWND hwnd) { 
+        if (this.disposedValue == true)
+        {
+            return;
+        }
+
         // we cannot process an object reorder message if the hwnd is zero
         if (hwnd == IntPtr.Zero)
         {
             return;
         }
 
+        var desktopHandle = Windows.Win32.PInvoke.GetDesktopWindow();
+        bool hwndIsDesktop = (hwnd == desktopHandle);
+
         // attempt to capture the class name for the window; if the window has already been destroyed, this will fail
         string? className = null;
-        var getWindowClassNameResult = TrayButtonNativeWindow.GetWindowClassName(hwnd);
-        if (getWindowClassNameResult.IsError == true)
+        if (hwndIsDesktop == false)
         {
-            return;
+            var getWindowClassNameResult = TrayButtonNativeWindow.GetWindowClassName(hwnd);
+            if (getWindowClassNameResult.IsError == true)
+            {
+                if (getWindowClassNameResult.Error is Morphic.WindowsNative.IWin32ApiError.Win32Error(var classNameWin32ErrorCode)
+                    && classNameWin32ErrorCode == (uint)Windows.Win32.Foundation.WIN32_ERROR.ERROR_INVALID_WINDOW_HANDLE)
+                {
+                    return;
+                }
+                Debug.WriteLine("[TrayButtonNativeWindow.HandleObjectReorder] GetClassName failed; win32 error: " + (getWindowClassNameResult.Error?.ToString() ?? "<null>"));
+                return;
+            }
+            className = getWindowClassNameResult.Value!;
         }
-        className = getWindowClassNameResult.Value!;
-
-        // capture the desktop handle
-        // see: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getdesktopwindow
-        var desktopHandle = Windows.Win32.PInvoke.GetDesktopWindow();
 
         // if the reordered window was either the taskbar or the desktop, update the _taskbarIsTopmost state; this will generally be triggered when an app goes full-screen (or full-screen mode is exited)
-        if (className == "Shell_TrayWnd" || hwnd == desktopHandle)
+        if (className == "Shell_TrayWnd" || hwndIsDesktop == true)
         {
             // whenever the window ordering changes, resurface our control
             this.BringTaskButtonTopmostWithoutActivating();

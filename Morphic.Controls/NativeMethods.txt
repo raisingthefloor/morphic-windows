@@ -43,6 +43,7 @@ GetWindowLongPtr
 GetWindowRect
 MonitorFromWindow
 InvalidateRect
+IsWindow
 LoadCursor
 MapWindowPoints
 RedrawWindow

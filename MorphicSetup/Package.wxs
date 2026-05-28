@@ -79,11 +79,11 @@
                   Return="check" />
 
     <InstallUISequence>
-      <Custom Action="ReadWindowsUbr" After="AppSearch" />
+      <Custom Action="ReadWindowsUbr" After="AppSearch" Condition="NOT Installed" />
     </InstallUISequence>
 
     <InstallExecuteSequence>
-      <Custom Action="ReadWindowsUbr" After="AppSearch" Condition="WINDOWSUBR=&quot;0&quot;" />
+      <Custom Action="ReadWindowsUbr" After="AppSearch" Condition="NOT Installed AND WINDOWSUBR=&quot;0&quot;" />
       <Custom Action="SetRunWindowsAppRuntimeInstallerForAllUsers" Before="RunWindowsAppRuntimeInstallerForAllUsers" Condition="NOT REMOVE" />
       <Custom Action="RunWindowsAppRuntimeInstallerForAllUsers" After="InstallFiles" Condition="NOT REMOVE" />
       <Custom Action="SetRunWindowsAppRuntimeInstallerForCurrentUser" Before="RunWindowsAppRuntimeInstallerForCurrentUser" Condition="NOT REMOVE" />
@@ -120,7 +120,7 @@
 
     <Property Id="WINDOWSUBR" Secure="yes" Value="0" />
 
-    <Launch Condition="(WINDOWSBUILDNUMBER &gt; &quot;19045&quot;) OR (WINDOWSBUILDNUMBER = &quot;19045&quot; AND WINDOWSUBR &gt;= &quot;6456&quot;)" Message="!(loc.MinimumOsError)" />
+    <Launch Condition="Installed OR (WINDOWSBUILDNUMBER &gt; &quot;19045&quot;) OR (WINDOWSBUILDNUMBER = &quot;19045&quot; AND WINDOWSUBR &gt;= &quot;6456&quot;)" Message="!(loc.MinimumOsError)" />
 
     <Property Id="MORPHIC_ACTIVE_SETUP" Value="1" Secure="yes" />
 

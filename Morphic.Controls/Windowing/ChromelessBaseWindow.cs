@@ -44,8 +44,10 @@ namespace Morphic.Controls.Windowing;
 //   * SetWindowPos(SWP_FRAMECHANGED) to apply the WM_NCCALCSIZE stripout immediately
 //   * DWMWA_WINDOW_CORNER_PREFERENCE = DWMWCP_DONOTROUND (no DWM rounding)
 //   * DWMWA_BORDER_COLOR = DWMWA_COLOR_NONE (no DWM-drawn border)
-//   * DwmEnableBlurBehindWindow with a dummy region (enables per-pixel alpha compositing
-//     so anything that the subclass leaves transparent shows through to whatever is behind)
+//   * DwmExtendFrameIntoClientArea with MARGINS{-1,-1,-1,-1} (sheet-of-glass pattern):
+//     tells DWM the entire client area is part of the alpha-blended frame, so anything
+//     the subclass leaves transparent shows through to whatever is behind. This is the
+//     modern documented approach.
 public class ChromelessBaseWindow : Window
 {
     public static Action<string>? OnDiagnostic;
