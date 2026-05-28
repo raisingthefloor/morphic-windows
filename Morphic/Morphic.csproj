@@ -5,6 +5,7 @@
     <TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
     <RootNamespace>Morphic</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\Icons\morphic-standardcontrast.ico</ApplicationIcon>
     <Platforms>x64;ARM64</Platforms>
     <Configurations>Debug;Release;Debug-Packaged;Release-Packaged</Configurations>
     <VersionPrefix>2.0$(VersionBuildComponents)</VersionPrefix>

@@ -98,6 +98,43 @@ internal sealed class MorphicBarManager : IDisposable
 
     public IntPtr GetBarWindowHandle() => WinRT.Interop.WindowNative.GetWindowHandle(_morphicBarWindow);
 
+    public readonly record struct BarFocusSnapshot(
+        Microsoft.UI.Xaml.Controls.Control? Control,
+        Microsoft.UI.Xaml.FocusState State);
+    public BarFocusSnapshot CaptureBarFocus()
+    {
+        if (_morphicBarWindow.Content?.XamlRoot is Microsoft.UI.Xaml.XamlRoot xamlRoot
+            && Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(xamlRoot) is Microsoft.UI.Xaml.Controls.Control focused)
+        {
+            return new BarFocusSnapshot(focused, focused.FocusState);
+        }
+        return new BarFocusSnapshot(null, Microsoft.UI.Xaml.FocusState.Unfocused);
+    }
+    public void RestoreBarFocus(BarFocusSnapshot snapshot)
+    {
+        if (snapshot.Control is null)
+        {
+            return;
+        }
+        var state = (snapshot.State == Microsoft.UI.Xaml.FocusState.Unfocused)
+            ? Microsoft.UI.Xaml.FocusState.Keyboard
+            : snapshot.State;
+        _ = _uiDispatcherQueue.TryEnqueue(() =>
+        {
+            try
+            {
+                var barHwnd = (Windows.Win32.Foundation.HWND)WinRT.Interop.WindowNative.GetWindowHandle(_morphicBarWindow);
+                var fg = Windows.Win32.PInvoke.GetForegroundWindow();
+                var isForeground = fg == barHwnd;
+                var result = snapshot.Control.Focus(state);
+                System.Diagnostics.Debug.WriteLine($"[Restore] Focus({state}) returned {result}, barIsForeground={isForeground}");
+            }
+            catch (System.Runtime.InteropServices.COMException ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[Restore] COMException: {ex.Message}");
+            }
+        });
+    }
 
     // AppWindow.Changed fires for several reasons (position, size, visibility, etc.); filter on
     // DidVisibilityChange so subscribers only get the relevant transitions, no matter which code

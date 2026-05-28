@@ -175,9 +175,12 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         _ = dummyWindow.SetAsParentHwnd((Windows.Win32.Foundation.HWND)hwnd);
     }
 
+    internal MorphicBarFocusController FocusController { get; }
+
     public MorphicBarWindow()
     {
         InitializeComponent();
+        this.FocusController = new MorphicBarFocusController(this);
 
         // apply the initial orientation-specific layout via the same helpers used on orientation
         // change; the Orientation setter only fires when the value changes, so without this call

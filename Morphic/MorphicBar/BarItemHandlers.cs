@@ -65,15 +65,24 @@ internal class BarItemHandlers
             return MorphicResult.ErrorResult();
         }
 
-        // SetDpiOffsetAsync wraps the SPI call in Task.Run internally, so this is already off the
-        // UI thread; no extra .ConfigureAwait dance needed.
-        var setResult = await display.SetDpiOffsetAsync(newDpiOffset);
-        if (setResult.IsError)
+        var focusSnapshot = barManager.CaptureBarFocus();
+        try
         {
-            return MorphicResult.ErrorResult();
-        }
+            // SetDpiOffsetAsync wraps the SPI call in Task.Run internally, so this is already off
+            // the UI thread; no extra .ConfigureAwait dance needed.
+            var setResult = await display.SetDpiOffsetAsync(newDpiOffset);
+            if (setResult.IsError)
+            {
+                return MorphicResult.ErrorResult();
+            }
 
-        return MorphicResult.OkResult();
+            await rasterizationChangeWait;
+            return MorphicResult.OkResult();
+        }
+        finally
+        {
+            barManager.RestoreBarFocus(focusSnapshot);
+        }
     }
 
     public static Task<MorphicResult<MorphicUnit, MorphicUnit>> IncreaseTextSizeButtonAction(string? actionTag, bool? isChecked)
