@@ -93,6 +93,7 @@
     <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
 
     <UIRef Id="WixUI_ErrorProgressText" />
+
     <UI>
       <ProgressText Action="RunWindowsAppRuntimeInstallerForAllUsers" Message="Installing the Windows App Runtime prerequisite (this may take a moment)..." />
       <ProgressText Action="RunWindowsAppRuntimeInstallerForCurrentUser" Message="Registering the Windows App Runtime for your account..." />
@@ -102,7 +103,8 @@
     <Property Id="WINDOWSBUILDNUMBER" Secure="yes">
       <RegistrySearch Id="BuildNumberSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="CurrentBuildNumber" Type="raw" />
     </Property>
-    <Launch Condition="(WINDOWSBUILDNUMBER &gt;= 19045)" Message="!(loc.MinimumOsError)" />
+
+    <Launch Condition="(WINDOWSBUILDNUMBER &gt; 19045) OR (WINDOWSBUILDNUMBER = 19045 AND WINDOWSUBR &gt;= 6456)" Message="!(loc.MinimumOsError)" />
 
     <Property Id="MORPHIC_ACTIVE_SETUP" Value="1" Secure="yes" />
 
