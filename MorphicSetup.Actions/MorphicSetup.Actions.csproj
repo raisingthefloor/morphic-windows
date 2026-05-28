@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- WiX DTF managed custom actions target .NET Framework. The SfxCA bootstrap stub
+         that DTF wraps around the assembly loads it via a .NET Framework runtime that's
+         present on every supported Windows install since Windows 8, so net472 needs no
+         extra prerequisite chained from the installer. -->
+    <TargetFramework>net472</TargetFramework>
+    <Platforms>x64;ARM64</Platforms>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <RootNamespace>MorphicSetup.Actions</RootNamespace>
+    <AssemblyName>MorphicSetup.Actions</AssemblyName>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <DebugType>embedded</DebugType>
+    <!-- Keep output path flat so MorphicSetup.wixproj can reference the .CA.dll via a
+         simple $(var.MorphicSetup.Actions.TargetDir) lookup without TFM subdirectories. -->
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- DTF.CustomAction imports the .targets that runs MakeSfxCA after compile to wrap
+         this assembly into a .CA.dll with the architecture-appropriate native bootstrap.
+         DTF.WindowsInstaller provides the Session/CustomAction managed API surface. -->
+    <PackageReference Include="WixToolset.Dtf.CustomAction" Version="4.0.6" />
+    <PackageReference Include="WixToolset.Dtf.WindowsInstaller" Version="4.0.6" />
+  </ItemGroup>
+
+  <!-- DTF's PackCustomAction target writes the .CA.dll to $(IntermediateOutputPath)
+       (i.e., obj/$(Configuration)/) and never copies it to $(OutputPath) on its own.
+       MorphicSetup.wixproj resolves the CA binary via $(var.MorphicSetup.Actions.TargetDir),
+       which points at $(OutputPath) (i.e., bin/$(Configuration)/). This target bridges
+       the two so the wxs <Binary SourceFile=...> reference resolves cleanly. -->
+  <Target Name="CopyManagedCustomActionToOutputPath"
+          AfterTargets="PackCustomAction"
+          Condition="Exists('$(IntermediateOutputPath)$(TargetName).CA$(TargetExt)')">
+    <Copy SourceFiles="$(IntermediateOutputPath)$(TargetName).CA$(TargetExt)"
+          DestinationFolder="$(OutputPath)"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>
