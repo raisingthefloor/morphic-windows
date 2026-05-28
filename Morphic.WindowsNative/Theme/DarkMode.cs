@@ -531,6 +531,24 @@ public class DarkMode
             return;
         }
 
+        using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(DarkMode.PERSONALIZE_REGISTRY_KEY_PATH))
+        {
+            _cachedAppsUseDarkMode = key is null ? false : DarkMode.ReadAppsUseDarkModeFromKey(key);
+            _cachedSystemUsesDarkMode = key is null ? false : DarkMode.ReadSystemUsesDarkModeFromKey(key);
+        }
+
+        var watcherCreateResult = Morphic.WindowsNative.Registry.RegistryKeyChangeWatcher.CreateForPath(
+            Microsoft.Win32.RegistryHive.CurrentUser,
+            DarkMode.PERSONALIZE_REGISTRY_KEY_PATH);
+        if (watcherCreateResult.IsError)
+        {
+            Debug.Assert(false, $"Could not create DarkMode key watcher: {watcherCreateResult.Error}");
+            return;
+        }
+        _personalizeKeyWatcher = watcherCreateResult.Value!;
+        _personalizeKeyWatcher.Changed += DarkMode.OnPersonalizeKeyChanged;
+
+        _ = Task.Run(() => DarkMode.RecomputeAndUpdateCachedDarkModeAsync(TimeSpan.FromSeconds(2)));
     }
 
     // Pre-requisite: caller MUST hold _watcherLock.
@@ -543,5 +561,157 @@ public class DarkMode
 
         _personalizeKeyWatcher?.Dispose();
         _personalizeKeyWatcher = null;
+    }
+    private static async void OnPersonalizeKeyChanged(object? sender, Morphic.WindowsNative.Registry.RegistryKeyChangedEventArgs e)
+    {
+        try
+        {
+            await DarkMode.RecomputeAndUpdateCachedDarkModeAsync(TimeSpan.FromSeconds(2));
+        }
+        catch (Exception ex)
+        {
+            // async void: exceptions here would otherwise escape to the synchronization context.
+            // Log instead so a bad SettingItem read doesn't kill the dispatcher.
+            Debug.WriteLine($"OnPersonalizeKeyChanged threw: {ex}");
+        }
+    }
+
+    private static async Task RecomputeAndUpdateCachedDarkModeAsync(TimeSpan settingItemFallbackTimeout)
+    {
+        // Step 1: read registry (sync, fast). Track whether each value came from the key.
+        bool? appsUseDarkModeFromRegistry;
+        bool? systemUsesDarkModeFromRegistry;
+        using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(DarkMode.PERSONALIZE_REGISTRY_KEY_PATH))
+        {
+            appsUseDarkModeFromRegistry = key is null ? (bool?)null : DarkMode.ReadAppsUseDarkModeFromKey(key);
+            systemUsesDarkModeFromRegistry = key is null ? (bool?)null : DarkMode.ReadSystemUsesDarkModeFromKey(key);
+        }
+
+        // Step 2: for whichever values the registry didn't provide, fall back to SettingItem.
+        // Both reads run sequentially -- they share the same SettingsDatabase backing and the
+        // second call is essentially free once the first has primed the proxy.
+        bool computedAppsUseDarkMode;
+        if (appsUseDarkModeFromRegistry is not null)
+        {
+            computedAppsUseDarkMode = appsUseDarkModeFromRegistry.Value;
+        }
+        else
+        {
+            computedAppsUseDarkMode = await DarkMode.ReadAppsUseDarkModeViaSettingItemAsync(settingItemFallbackTimeout);
+        }
+        //
+        bool computedSystemUsesDarkMode;
+        if (systemUsesDarkModeFromRegistry is not null)
+        {
+            computedSystemUsesDarkMode = systemUsesDarkModeFromRegistry.Value;
+        }
+        else
+        {
+            computedSystemUsesDarkMode = await DarkMode.ReadSystemUsesDarkModeViaSettingItemAsync(settingItemFallbackTimeout);
+        }
+
+        // Step 3: update caches + snapshot handlers under lock; dispatch outside.
+        EventHandler<DarkModeChangedEventArgs>? appsDarkModeHandlersToFire = null;
+        EventHandler<DarkModeChangedEventArgs>? systemDarkModeHandlersToFire = null;
+        lock (_personalizeKeyWatcherLock)
+        {
+            if (computedAppsUseDarkMode != _cachedAppsUseDarkMode)
+            {
+                _cachedAppsUseDarkMode = computedAppsUseDarkMode;
+                appsDarkModeHandlersToFire = _appsUseDarkModeChanged;
+            }
+            if (computedSystemUsesDarkMode != _cachedSystemUsesDarkMode)
+            {
+                _cachedSystemUsesDarkMode = computedSystemUsesDarkMode;
+                systemDarkModeHandlersToFire = _systemUsesDarkModeChanged;
+            }
+        }
+
+        // Dispatch outside the lock so a handler that subscribes/unsubscribes can't deadlock.
+        // Each handler runs on its own Task so a slow/throwing handler doesn't block the others.
+        bool newAppsUseDarkMode = computedAppsUseDarkMode;
+        bool newSystemUsesDarkMode = computedSystemUsesDarkMode;
+
+        // Dispatch outside the lock so a handler that subscribes/unsubscribes can't deadlock.
+        // Each handler runs on its own Task so a slow/throwing handler doesn't block the others.
+        // Sender is null -- DarkMode is a static class with no instance.
+        if (appsDarkModeHandlersToFire is not null)
+        {
+            foreach (EventHandler<DarkModeChangedEventArgs> handler in appsDarkModeHandlersToFire.GetInvocationList())
+            {
+                _ = Task.Run(() => handler.Invoke(null, new DarkModeChangedEventArgs(newAppsUseDarkMode)));
+            }
+        }
+        if (systemDarkModeHandlersToFire is not null)
+        {
+            foreach (EventHandler<DarkModeChangedEventArgs> handler in systemDarkModeHandlersToFire.GetInvocationList())
+            {
+                _ = Task.Run(() => handler.Invoke(null, new DarkModeChangedEventArgs(newSystemUsesDarkMode)));
+            }
+        }
+    }
+
+    private static bool ReadAppsUseDarkModeFromKey(Microsoft.Win32.RegistryKey key)
+    {
+        var raw = key.GetValue(APPS_USE_LIGHT_THEME_REGISTRY_VALUE_NAME);
+        if (raw is int intValue)
+        {
+            return intValue == 0;
+        }
+        return false;
+    }
+
+    private static bool ReadSystemUsesDarkModeFromKey(Microsoft.Win32.RegistryKey key)
+    {
+        var rawSystemTheme = key.GetValue(SYSTEM_THEME_REGISTRY_VALUE_NAME);
+        if (rawSystemTheme is string systemThemeAsString)
+        {
+            bool? systemThemeIsDarkMode = DarkMode.TryConvertSystemThemeNameToDarkModeState(systemThemeAsString);
+            if (systemThemeIsDarkMode is not null)
+            {
+                return systemThemeIsDarkMode.Value;
+            }
+            // unrecognized theme name -- fall through to the int-format attempt
+        }
+
+        var rawSystemUsesLightTheme = key.GetValue(SYSTEM_USES_LIGHT_THEME_REGISTRY_VALUE_NAME);
+        if (rawSystemUsesLightTheme is int intValue)
+        {
+            return intValue == 0;
+        }
+
+        return false;
+    }
+
+    private static async Task<bool> ReadAppsUseDarkModeViaSettingItemAsync(TimeSpan timeout)
+    {
+        var settingItem = DarkMode.AppsUseLightThemeSettingItem;
+        if (settingItem is null)
+        {
+            return false;
+        }
+        var result = await Morphic.WindowsNative.SystemSettings.SettingItemProxy.GetSettingItemValueAsync<bool>(settingItem, timeout);
+        if (result.IsError || result.Value is null)
+        {
+            return false;
+        }
+        // SettingItem returns the "apps use LIGHT theme" boolean; invert for the dark-mode caller.
+        return !result.Value.Value;
+    }
+
+    private static async Task<bool> ReadSystemUsesDarkModeViaSettingItemAsync(TimeSpan timeout)
+    {
+        var settingItem = DarkMode.SystemUsesLightThemeSettingItem;
+        if (settingItem is null)
+        {
+            return false;
+        }
+        var result = await Morphic.WindowsNative.SystemSettings.SettingItemProxy.GetSettingItemValueAsync<bool>(settingItem, timeout);
+        if (result.IsError || result.Value is null)
+        {
+            return false;
+        }
+        // SettingItem returns the "system uses LIGHT theme" boolean; invert.
+        return !result.Value.Value;
     }
 }

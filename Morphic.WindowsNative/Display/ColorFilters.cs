@@ -28,11 +28,22 @@ using System.Threading.Tasks;
 
 namespace Morphic.WindowsNative.Display;
 
+// EventArgs payload for ColorFilters.IsActiveChanged. Carries the new "color filtering is active"
+// state (true = filter on, false = filter off). NewValue follows the BCL convention.
+public class ColorFiltersIsActiveChangedEventArgs(bool newValue) : EventArgs
+{
+    public bool NewValue { get; } = newValue;
+}
 
 public class ColorFilters
 {
     private const string COLOR_FILTERING_REGISTRY_KEY_PATH = @"SOFTWARE\Microsoft\ColorFiltering";
     private const string ACTIVE_REGISTRY_VALUE_NAME = "Active";
+
+    private static readonly object _colorFilteringKeyWatcherLock = new();
+    private static Morphic.WindowsNative.Registry.RegistryKeyChangeWatcher? _colorFilteringKeyWatcher;
+    private static bool _cachedIsActive;
+    private static EventHandler<ColorFiltersIsActiveChangedEventArgs>? _isActiveChanged;
 
     //
 
@@ -122,5 +133,143 @@ public class ColorFilters
         }
 
         return MorphicResult.OkResult();
+    }
+
+    //
+
+    // Change-notification event
+    //
+    public static event EventHandler<ColorFiltersIsActiveChangedEventArgs> IsActiveChanged
+    {
+        add
+        {
+            lock (_colorFilteringKeyWatcherLock)
+            {
+                ColorFilters.EnsureWatcherStartedLocked();
+                _isActiveChanged += value;
+            }
+        }
+        remove
+        {
+            lock (_colorFilteringKeyWatcherLock)
+            {
+                _isActiveChanged -= value;
+                ColorFilters.StopWatcherIfNoSubscribersLocked();
+            }
+        }
+    }
+
+    // Pre-requisite: caller MUST hold _colorFilteringKeyWatcherLock.
+    private static void EnsureWatcherStartedLocked()
+    {
+        if (_colorFilteringKeyWatcher is not null)
+        {
+            return;
+        }
+
+        using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(ColorFilters.COLOR_FILTERING_REGISTRY_KEY_PATH))
+        {
+            _cachedIsActive = key is null ? false : ColorFilters.ReadIsActiveFromKey(key);
+        }
+
+        var watcherCreateResult = Morphic.WindowsNative.Registry.RegistryKeyChangeWatcher.CreateForPath(
+            Microsoft.Win32.RegistryHive.CurrentUser,
+            ColorFilters.COLOR_FILTERING_REGISTRY_KEY_PATH);
+        if (watcherCreateResult.IsError)
+        {
+            Debug.Assert(false, $"Could not create ColorFilters key watcher: {watcherCreateResult.Error}");
+            return;
+        }
+        _colorFilteringKeyWatcher = watcherCreateResult.Value!;
+        _colorFilteringKeyWatcher.Changed += ColorFilters.OnColorFilteringKeyChanged;
+
+        _ = Task.Run(() => ColorFilters.RecomputeAndUpdateCachedIsActiveAsync(TimeSpan.FromSeconds(2)));
+    }
+
+    private static void StopWatcherIfNoSubscribersLocked()
+    {
+        if (_isActiveChanged is not null)
+        {
+            return;
+        }
+
+        _colorFilteringKeyWatcher?.Dispose();
+        _colorFilteringKeyWatcher = null;
+    }
+
+    private static async void OnColorFilteringKeyChanged(object? sender, Morphic.WindowsNative.Registry.RegistryKeyChangedEventArgs e)
+    {
+        try
+        {
+            await ColorFilters.RecomputeAndUpdateCachedIsActiveAsync(TimeSpan.FromSeconds(2));
+        }
+        catch (Exception ex)
+        {
+            // async void: exceptions here would otherwise escape to the synchronization context
+            // (and propagate to TaskScheduler.UnobservedTaskException via the WhenAny machinery).
+            // Log instead so a bad SettingItem read doesn't kill the dispatcher.
+            Debug.WriteLine($"OnColorFilteringKeyChanged threw: {ex}");
+        }
+    }
+
+    private static async Task RecomputeAndUpdateCachedIsActiveAsync(TimeSpan settingItemFallbackTimeout)
+    {
+        // Step 1: read registry (sync, fast).
+        bool? valueFromRegistry;
+        using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(ColorFilters.COLOR_FILTERING_REGISTRY_KEY_PATH))
+        {
+            valueFromRegistry = key is null ? (bool?)null : ColorFilters.ReadIsActiveFromKey(key);
+        }
+
+        // Step 2: if registry didn't have a value, fall back to SettingItem (async).
+        bool computedValue;
+        if (valueFromRegistry is not null)
+        {
+            computedValue = valueFromRegistry.Value;
+        }
+        else
+        {
+            var settingItem = ColorFilters.ColorFilteringIsEnabledSettingItem;
+            if (settingItem is null)
+            {
+                computedValue = false;
+            }
+            else
+            {
+                var settingItemReadResult = await Morphic.WindowsNative.SystemSettings.SettingItemProxy.GetSettingItemValueAsync<bool>(settingItem, settingItemFallbackTimeout);
+                computedValue = settingItemReadResult.IsSuccess && settingItemReadResult.Value == true;
+            }
+        }
+
+        // Step 3: update cache + snapshot handlers under lock; dispatch outside.
+        EventHandler<ColorFiltersIsActiveChangedEventArgs>? handlersToFire = null;
+        lock (_colorFilteringKeyWatcherLock)
+        {
+            if (computedValue == _cachedIsActive)
+            {
+                return;
+            }
+            _cachedIsActive = computedValue;
+            handlersToFire = _isActiveChanged;
+        }
+
+        if (handlersToFire is not null)
+        {
+            var eventArgs = new ColorFiltersIsActiveChangedEventArgs(computedValue);
+            foreach (EventHandler<ColorFiltersIsActiveChangedEventArgs> handler in handlersToFire.GetInvocationList())
+            {
+                _ = Task.Run(() => handler.Invoke(null, eventArgs));
+            }
+        }
+    }
+
+    private static bool ReadIsActiveFromKey(Microsoft.Win32.RegistryKey key)
+    {
+        var rawActiveValue = key.GetValue(ColorFilters.ACTIVE_REGISTRY_VALUE_NAME);
+        if (rawActiveValue is int activeAsInt)
+        {
+            return activeAsInt != 0;
+        }
+        return false;
     }
 }
