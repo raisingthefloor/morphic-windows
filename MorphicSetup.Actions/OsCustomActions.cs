@@ -29,6 +29,26 @@ namespace MorphicSetup.Actions;
 
 public static class OsCustomActions
 {
+    // Reads the Windows UBR (Update Build Revision) from the registry and writes it
+    // to the WINDOWSUBR MSI property in MSI's integer-tagged "#NNNN" format so the
+    // LaunchCondition in Package.wxs can do a numeric >= comparison against it.
+    //
+    // Why this exists: the built-in MSI <RegistrySearch Type="raw"> is documented to
+    // produce a "#NNNN" string for REG_DWORD values, but verbose install logs from
+    // real machines show the search silently failing to set the property at all on
+    // all builds we tested.  Reading the value here via .NET's Microsoft.Win32.Registry 
+    // sidesteps whatever MSI's RegistrySearch is doing wrong and writes the property 
+    // explicitly.
+    //
+    // Failure modes are all "fail closed": if anything goes wrong (key not present,
+    // value missing, registry access denied, unexpected exception), we set
+    // WINDOWSUBR=#0 so the launch condition fails the "WINDOWSUBR >= 6456" clause
+    // and the user gets the same "please update Windows" message they'd get from a
+    // genuinely under-patched system. Fail-closed is the right policy here because
+    // an under-patched Win10 22H2 (UBR < 6456) crashes .NET 10's CoreCLR before any
+    // managed code runs (see project_win10_22h2_old_baseline_clr_crash memory); a
+    // false-block prompts the user to run Windows Update, a false-allow becomes an
+    // unrecoverable crash on first launch.
     [CustomAction]
     public static ActionResult ReadWindowsUbr(Session session)
     {

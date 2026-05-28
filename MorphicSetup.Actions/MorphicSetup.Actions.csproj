@@ -28,6 +28,15 @@
     <PackageReference Include="WixToolset.Dtf.WindowsInstaller" Version="4.0.6" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- DTF's PackCustomAction target packs every <Content> item into the SFX archive
+         alongside the managed assembly. SfxCA reads CustomAction.config (if present)
+         at runtime to decide which CLR to activate; without this file it defaults to
+         the v2.0 CLR and our net472 assembly fails to load with BadImageFormatException.
+         See the file itself for the rationale on the specific elements/attributes. -->
+    <Content Include="CustomAction.config" />
+  </ItemGroup>
+
   <!-- DTF's PackCustomAction target writes the .CA.dll to $(IntermediateOutputPath)
        (i.e., obj/$(Configuration)/) and never copies it to $(OutputPath) on its own.
        MorphicSetup.wixproj resolves the CA binary via $(var.MorphicSetup.Actions.TargetDir),
