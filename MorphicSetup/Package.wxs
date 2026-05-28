@@ -75,6 +75,7 @@
                   BinaryRef="MorphicSetupActionsCA"
                   DllEntry="ReadWindowsUbr"
                   Execute="immediate"
+                  Impersonate="no"
                   Return="check" />
 
     <InstallUISequence>
@@ -82,7 +83,7 @@
     </InstallUISequence>
 
     <InstallExecuteSequence>
-      <Custom Action="ReadWindowsUbr" After="AppSearch" />
+      <Custom Action="ReadWindowsUbr" After="AppSearch" Condition="WINDOWSUBR=&quot;#0&quot;" />
       <Custom Action="SetRunWindowsAppRuntimeInstallerForAllUsers" Before="RunWindowsAppRuntimeInstallerForAllUsers" Condition="NOT REMOVE" />
       <Custom Action="RunWindowsAppRuntimeInstallerForAllUsers" After="InstallFiles" Condition="NOT REMOVE" />
       <Custom Action="SetRunWindowsAppRuntimeInstallerForCurrentUser" Before="RunWindowsAppRuntimeInstallerForCurrentUser" Condition="NOT REMOVE" />
