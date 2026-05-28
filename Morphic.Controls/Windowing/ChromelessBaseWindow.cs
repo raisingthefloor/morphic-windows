@@ -90,24 +90,33 @@ public class ChromelessBaseWindow : Window
             ChromelessBaseWindow.OnDiagnostic?.Invoke("ChromelessBaseWindow: SetWindowPos(SWP_FRAMECHANGED) returned FALSE");
         }
 
-        // do not draw the standard rounded corners; this will make the border square, but we'll remove that border in a moment
-        int cornerPreference = (int)Windows.Win32.Graphics.Dwm.DWM_WINDOW_CORNER_PREFERENCE.DWMWCP_DONOTROUND;
-        Span<byte> cornerPreferenceAsSpan = System.Runtime.InteropServices.MemoryMarshal.AsBytes(new Span<int>(ref cornerPreference));
-        var setAttributeResult = Windows.Win32.PInvoke.DwmSetWindowAttribute(hwnd, Windows.Win32.Graphics.Dwm.DWMWINDOWATTRIBUTE.DWMWA_WINDOW_CORNER_PREFERENCE, cornerPreferenceAsSpan);
-        System.Diagnostics.Debug.Assert(setAttributeResult == HRESULT.S_OK);
-        if (setAttributeResult != HRESULT.S_OK)
+        // DWMWA_WINDOW_CORNER_PREFERENCE and DWMWA_BORDER_COLOR are Win11-only DWM attributes
+        // (introduced in build 22000). On Win10 the system returns E_INVALIDARG /
+        // ERROR_INVALID_PARAMETER (0x80070057) for either attribute. Skip both calls on Win10:
+        // Win10 doesn't draw rounded top-level window corners or a DWM-managed border in the
+        // first place, so the "don't round" and "no border color" requests are no-ops there
+        // anyway.
+        if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
         {
-            ChromelessBaseWindow.OnDiagnostic?.Invoke($"ChromelessBaseWindow: DwmSetWindowAttribute(DWMWA_WINDOW_CORNER_PREFERENCE) returned HRESULT 0x{(uint)setAttributeResult.Value:X8}");
-        }
+            // do not draw the standard rounded corners; this will make the border square, but we'll remove that border in a moment
+            int cornerPreference = (int)Windows.Win32.Graphics.Dwm.DWM_WINDOW_CORNER_PREFERENCE.DWMWCP_DONOTROUND;
+            Span<byte> cornerPreferenceAsSpan = System.Runtime.InteropServices.MemoryMarshal.AsBytes(new Span<int>(ref cornerPreference));
+            var setCornerAttributeResult = Windows.Win32.PInvoke.DwmSetWindowAttribute(hwnd, Windows.Win32.Graphics.Dwm.DWMWINDOWATTRIBUTE.DWMWA_WINDOW_CORNER_PREFERENCE, cornerPreferenceAsSpan);
+            System.Diagnostics.Debug.Assert(setCornerAttributeResult == HRESULT.S_OK);
+            if (setCornerAttributeResult != HRESULT.S_OK)
+            {
+                ChromelessBaseWindow.OnDiagnostic?.Invoke($"ChromelessBaseWindow: DwmSetWindowAttribute(DWMWA_WINDOW_CORNER_PREFERENCE) returned HRESULT 0x{(uint)setCornerAttributeResult.Value:X8}");
+            }
 
-        // set the DWM border color to "none"
-        uint colorNone = 0xFFFFFFFE; // DWMWA_COLOR_NONE
-        Span<byte> colorNoneAsSpan = System.Runtime.InteropServices.MemoryMarshal.AsBytes(new Span<uint>(ref colorNone));
-        setAttributeResult = Windows.Win32.PInvoke.DwmSetWindowAttribute(hwnd, DWMWINDOWATTRIBUTE.DWMWA_BORDER_COLOR, colorNoneAsSpan);
-        System.Diagnostics.Debug.Assert(setAttributeResult == HRESULT.S_OK);
-        if (setAttributeResult != HRESULT.S_OK)
-        {
-            ChromelessBaseWindow.OnDiagnostic?.Invoke($"ChromelessBaseWindow: DwmSetWindowAttribute(DWMWA_BORDER_COLOR) returned HRESULT 0x{(uint)setAttributeResult.Value:X8}");
+            // set the DWM border color to "none"
+            uint colorNone = 0xFFFFFFFE; // DWMWA_COLOR_NONE
+            Span<byte> colorNoneAsSpan = System.Runtime.InteropServices.MemoryMarshal.AsBytes(new Span<uint>(ref colorNone));
+            var setBorderAttributeResult = Windows.Win32.PInvoke.DwmSetWindowAttribute(hwnd, DWMWINDOWATTRIBUTE.DWMWA_BORDER_COLOR, colorNoneAsSpan);
+            System.Diagnostics.Debug.Assert(setBorderAttributeResult == HRESULT.S_OK);
+            if (setBorderAttributeResult != HRESULT.S_OK)
+            {
+                ChromelessBaseWindow.OnDiagnostic?.Invoke($"ChromelessBaseWindow: DwmSetWindowAttribute(DWMWA_BORDER_COLOR) returned HRESULT 0x{(uint)setBorderAttributeResult.Value:X8}");
+            }
         }
 
         // Extend the DWM frame into the entire client area using the "sheet of glass" pattern
