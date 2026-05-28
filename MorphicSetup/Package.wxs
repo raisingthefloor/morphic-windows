@@ -28,18 +28,32 @@
     <MediaTemplate EmbedCab="yes" />
 
     <CustomAction
-        Id="SetRunWindowsAppRuntimeInstaller"
-        Property="RunWindowsAppRuntimeInstaller"
+        Id="SetRunWindowsAppRuntimeInstallerForAllUsers"
+        Property="RunWindowsAppRuntimeInstallerForAllUsers"
         Value="&quot;[#WindowsAppRuntimeInstall_exe]&quot; --quiet"
         Execute="immediate" />
 
     <CustomAction
-        Id="RunWindowsAppRuntimeInstaller"
+        Id="RunWindowsAppRuntimeInstallerForAllUsers"
         BinaryRef="Wix4UtilCA_X64"
         DllEntry="WixQuietExec64"
         Execute="deferred"
         Return="ignore"
         Impersonate="no" />
+
+    <CustomAction
+        Id="SetRunWindowsAppRuntimeInstallerForCurrentUser"
+        Property="RunWindowsAppRuntimeInstallerForCurrentUser"
+        Value="&quot;[#WindowsAppRuntimeInstall_exe]&quot; --quiet"
+        Execute="immediate" />
+
+    <CustomAction
+        Id="RunWindowsAppRuntimeInstallerForCurrentUser"
+        BinaryRef="Wix4UtilCA_X64"
+        DllEntry="WixQuietExec64"
+        Execute="deferred"
+        Return="ignore"
+        Impersonate="yes" />
 
     <CustomAction
         Id="SetUnregisterNotificationHelper"
@@ -56,8 +70,10 @@
         Impersonate="yes" />
 
     <InstallExecuteSequence>
-      <Custom Action="SetRunWindowsAppRuntimeInstaller" Before="RunWindowsAppRuntimeInstaller" Condition="NOT REMOVE" />
-      <Custom Action="RunWindowsAppRuntimeInstaller" After="InstallFiles" Condition="NOT REMOVE" />
+      <Custom Action="SetRunWindowsAppRuntimeInstallerForAllUsers" Before="RunWindowsAppRuntimeInstallerForAllUsers" Condition="NOT REMOVE" />
+      <Custom Action="RunWindowsAppRuntimeInstallerForAllUsers" After="InstallFiles" Condition="NOT REMOVE" />
+      <Custom Action="SetRunWindowsAppRuntimeInstallerForCurrentUser" Before="RunWindowsAppRuntimeInstallerForCurrentUser" Condition="NOT REMOVE" />
+      <Custom Action="RunWindowsAppRuntimeInstallerForCurrentUser" After="RunWindowsAppRuntimeInstallerForAllUsers" Condition="NOT REMOVE" />
       <Custom Action="SetUnregisterNotificationHelper" Before="UnregisterNotificationHelper" Condition="REMOVE=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" />
       <Custom Action="UnregisterNotificationHelper" Before="RemoveFiles" Condition="REMOVE=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" />
     </InstallExecuteSequence>
@@ -73,7 +89,8 @@
 
     <UIRef Id="WixUI_ErrorProgressText" />
     <UI>
-      <ProgressText Action="RunWindowsAppRuntimeInstaller" Message="Installing the Windows App Runtime prerequisite (this may take a moment)..." />
+      <ProgressText Action="RunWindowsAppRuntimeInstallerForAllUsers" Message="Installing the Windows App Runtime prerequisite for all users (this may take a moment)..." />
+      <ProgressText Action="RunWindowsAppRuntimeInstallerForCurrentUser" Message="Registering the Windows App Runtime for your account..." />
       <ProgressText Action="UnregisterNotificationHelper" Message="Removing Morphic's notification helper registration..." />
     </UI>
 	
