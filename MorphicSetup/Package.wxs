@@ -114,7 +114,7 @@
 
     <Property Id="WixShellExecTarget" Value="[#morphic_exe]" />
     <CustomAction Id="LaunchMorphicAfterInstall"
-                  BinaryRef="Wix4UtilCA_X64"
+                  BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)"
                   DllEntry="WixShellExec"
                   Impersonate="yes" />
   </Package>
