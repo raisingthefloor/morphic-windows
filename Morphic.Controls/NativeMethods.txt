@@ -8,7 +8,6 @@ CallNextHookEx
 CreateCompatibleDC
 CreateDIBSection
 CreateDispatcherQueueController
-CreateRectRgn
 CreateSolidBrush
 CreateWindowEx
 DefSubclassProc
@@ -16,7 +15,7 @@ DefWindowProc
 DeleteDC
 DeleteObject
 DestroyIcon
-DwmEnableBlurBehindWindow
+DwmExtendFrameIntoClientArea
 DwmSetWindowAttribute
 DrawIconEx
 DestroyWindow
@@ -65,6 +64,7 @@ UpdateLayeredWindow
 
 APPBARDATA
 BITMAPINFO
+MARGINS
 MINMAXINFO
 MSLLHOOKSTRUCT
 TTTOOLINFOW
@@ -85,8 +85,6 @@ AC_SRC_ALPHA
 AC_SRC_OVER
 BITMAP
 CW_USEDEFAULT
-DWM_BB_BLURREGION
-DWM_BB_ENABLE
 EVENT_OBJECT_LOCATIONCHANGE
 EVENT_OBJECT_REORDER
 HWND_TOP

@@ -48,6 +48,7 @@ namespace Morphic.Controls.Windowing;
 //     so anything that the subclass leaves transparent shows through to whatever is behind)
 public class ChromelessBaseWindow : Window
 {
+    public static Action<string>? OnDiagnostic;
     // a generated dispatch queue controller (required for any custom SystemBackdrop the
     // subclass might attach later)
     private static Windows.System.DispatcherQueueController? _dispatcherQueueController;
@@ -76,42 +77,60 @@ public class ChromelessBaseWindow : Window
         _subclassProc = ChromelessBaseWindow.SubclassWndProc;
         var setSubclassResult = Windows.Win32.PInvoke.SetWindowSubclass(hwnd, _subclassProc, 0, 0);
         System.Diagnostics.Debug.Assert(setSubclassResult);
+        if (setSubclassResult == false)
+        {
+            ChromelessBaseWindow.OnDiagnostic?.Invoke("ChromelessBaseWindow: SetWindowSubclass returned FALSE");
+        }
 
         // tell Windows to send WM_NCCALCSIZE immediately; our SubclassWndProc will handle that, to make the client area fill the entire window
         var setWindowPosResult = Windows.Win32.PInvoke.SetWindowPos(hwnd, new HWND(new IntPtr(-1)), 0, 0, 0, 0, SET_WINDOW_POS_FLAGS.SWP_FRAMECHANGED | SET_WINDOW_POS_FLAGS.SWP_NOMOVE | SET_WINDOW_POS_FLAGS.SWP_NOSIZE | SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
         System.Diagnostics.Debug.Assert(setWindowPosResult);
+        if (setWindowPosResult == false)
+        {
+            ChromelessBaseWindow.OnDiagnostic?.Invoke("ChromelessBaseWindow: SetWindowPos(SWP_FRAMECHANGED) returned FALSE");
+        }
 
         // do not draw the standard rounded corners; this will make the border square, but we'll remove that border in a moment
         int cornerPreference = (int)Windows.Win32.Graphics.Dwm.DWM_WINDOW_CORNER_PREFERENCE.DWMWCP_DONOTROUND;
         Span<byte> cornerPreferenceAsSpan = System.Runtime.InteropServices.MemoryMarshal.AsBytes(new Span<int>(ref cornerPreference));
         var setAttributeResult = Windows.Win32.PInvoke.DwmSetWindowAttribute(hwnd, Windows.Win32.Graphics.Dwm.DWMWINDOWATTRIBUTE.DWMWA_WINDOW_CORNER_PREFERENCE, cornerPreferenceAsSpan);
         System.Diagnostics.Debug.Assert(setAttributeResult == HRESULT.S_OK);
+        if (setAttributeResult != HRESULT.S_OK)
+        {
+            ChromelessBaseWindow.OnDiagnostic?.Invoke($"ChromelessBaseWindow: DwmSetWindowAttribute(DWMWA_WINDOW_CORNER_PREFERENCE) returned HRESULT 0x{(uint)setAttributeResult.Value:X8}");
+        }
 
         // set the DWM border color to "none"
         uint colorNone = 0xFFFFFFFE; // DWMWA_COLOR_NONE
         Span<byte> colorNoneAsSpan = System.Runtime.InteropServices.MemoryMarshal.AsBytes(new Span<uint>(ref colorNone));
         setAttributeResult = Windows.Win32.PInvoke.DwmSetWindowAttribute(hwnd, DWMWINDOWATTRIBUTE.DWMWA_BORDER_COLOR, colorNoneAsSpan);
         System.Diagnostics.Debug.Assert(setAttributeResult == HRESULT.S_OK);
-
-        // NOTE: even though a subclass may attach a fully-transparent SystemBackdrop, DWM
-        //       will still fill the composition background with an opaque brush unless we
-        //       enable per-pixel alpha via DwmEnableBlurBehindWindow.
-        var dummyRegion = Windows.Win32.PInvoke.CreateRectRgn(-2, -2, -1, -1);
-        try
+        if (setAttributeResult != HRESULT.S_OK)
         {
-            var dwmBlurBehind = new Windows.Win32.Graphics.Dwm.DWM_BLURBEHIND
-            {
-                dwFlags = Windows.Win32.PInvoke.DWM_BB_ENABLE | Windows.Win32.PInvoke.DWM_BB_BLURREGION,
-                fEnable = true,
-                hRgnBlur = dummyRegion
-            };
-            // enable DWM blur-behind (to composite the window with per-pixel alpha)
-            var enableBlurBehindResult = Windows.Win32.PInvoke.DwmEnableBlurBehindWindow(hwnd, in dwmBlurBehind);
-            System.Diagnostics.Debug.Assert(enableBlurBehindResult == HRESULT.S_OK);
+            ChromelessBaseWindow.OnDiagnostic?.Invoke($"ChromelessBaseWindow: DwmSetWindowAttribute(DWMWA_BORDER_COLOR) returned HRESULT 0x{(uint)setAttributeResult.Value:X8}");
         }
-        finally
+
+        // Extend the DWM frame into the entire client area using the "sheet of glass" pattern
+        // (negative margins). This is DWM's modern, documented mechanism for per-pixel-alpha
+        // composition: it tells the compositor that every pixel in the client area is part of
+        // the alpha-blended frame, so wherever a subclass leaves pixels transparent, whatever
+        // is behind the window shows through. Replaces the previous DwmEnableBlurBehindWindow
+        // dummy-region pattern, which worked on most configurations but rendered an opaque
+        // rectangle behind the rounded shape on some VMs and in some legacy screen-capture
+        // tools (those tools read the window's redirection bitmap rather than the DComp
+        // composed output).
+        var sheetOfGlassMargins = new Windows.Win32.UI.Controls.MARGINS
         {
-            _ = Windows.Win32.PInvoke.DeleteObject(dummyRegion);
+            cxLeftWidth = -1,
+            cxRightWidth = -1,
+            cyTopHeight = -1,
+            cyBottomHeight = -1
+        };
+        var extendFrameResult = Windows.Win32.PInvoke.DwmExtendFrameIntoClientArea(hwnd, in sheetOfGlassMargins);
+        System.Diagnostics.Debug.Assert(extendFrameResult == HRESULT.S_OK);
+        if (extendFrameResult != HRESULT.S_OK)
+        {
+            ChromelessBaseWindow.OnDiagnostic?.Invoke($"ChromelessBaseWindow: DwmExtendFrameIntoClientArea returned HRESULT 0x{(uint)extendFrameResult.Value:X8}");
         }
     }
 
@@ -144,6 +163,11 @@ public class ChromelessBaseWindow : Window
         if (msg == Windows.Win32.PInvoke.WM_NCACTIVATE)
         {
             // return a "handled" result; this will suppress the default non-client paint
+            return new LRESULT(1);
+        }
+
+        if (msg == Windows.Win32.PInvoke.WM_ERASEBKGND)
+        {
             return new LRESULT(1);
         }
 
@@ -191,5 +215,9 @@ public class ChromelessBaseWindow : Window
 		// see: https://learn.microsoft.com/en-us/windows/win32/api/commctrl/nf-commctrl-setwindowsubclass
         var updateSubclassResult = Windows.Win32.PInvoke.SetWindowSubclass(hwnd, _subclassProc!, 0, packed);
         System.Diagnostics.Debug.Assert(updateSubclassResult);
+        if (updateSubclassResult == false)
+        {
+            ChromelessBaseWindow.OnDiagnostic?.Invoke("ChromelessBaseWindow.SetMinimumTrackSize: SetWindowSubclass returned FALSE");
+        }
     }
 }

@@ -70,6 +70,8 @@ public partial class App : Application
     {
         this.InitializeComponent();
 
+        Morphic.Controls.Windowing.ChromelessBaseWindow.OnDiagnostic = static message => Morphic.RmTraceLog.Log(message);
+
 		// capture shutdown events (to clean up the tray icon, etc.)
         DispatcherQueue.GetForCurrentThread().ShutdownStarting += App_ShutdownStarting;
     }

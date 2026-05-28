@@ -11,7 +11,7 @@
     mc:Ignorable="d"
     Title="MorphicBar">
 
-    <Grid>
+    <Grid Background="Transparent">
         <Grid.Resources>
             <!-- ViewModel wrapper for MorphicBarWindowMetrics: see comments on that class
                  for why this exists. Used by VisualState.Setter Value bindings below where
