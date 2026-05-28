@@ -104,12 +104,14 @@
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="IF &quot;$(ConfigurationName)&quot; == &quot;Release&quot; (&#xD;&#xA;    echo $(Version) &gt; BuildVersion.txt&#xD;&#xA;    echo $(AssemblyVersion) &gt;&gt; BuildVersion.txt&#xD;&#xA;)" />
   </Target>
+
   <Target Name="CopyNotificationHelperToMorphicBin" AfterTargets="Build">
     <ItemGroup>
       <NotificationHelperOutputs Include="..\Morphic.NotificationHelper\bin\$(Platform)\$(Configuration)\$(TargetFramework)\win-$(Platform.ToLower())\Morphic.NotificationHelper.*" />
     </ItemGroup>
     <Copy SourceFiles="@(NotificationHelperOutputs)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
   </Target>
+
   <Target Name="CopyNotificationHelperToMorphicPublish" AfterTargets="Publish">
     <ItemGroup>
       <NotificationHelperPublishOutputs Include="..\Morphic.NotificationHelper\bin\$(Platform)\$(Configuration)\$(TargetFramework)\win-$(Platform.ToLower())\Morphic.NotificationHelper.*" />

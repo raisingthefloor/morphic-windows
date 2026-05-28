@@ -69,7 +69,20 @@
         Return="ignore"
         Impersonate="yes" />
 
+    <Binary Id="MorphicSetupActionsCA" SourceFile="$(var.MorphicSetup.Actions.TargetDir)MorphicSetup.Actions.CA.dll" />
+
+    <CustomAction Id="ReadWindowsUbr"
+                  BinaryRef="MorphicSetupActionsCA"
+                  DllEntry="ReadWindowsUbr"
+                  Execute="immediate"
+                  Return="check" />
+
+    <InstallUISequence>
+      <Custom Action="ReadWindowsUbr" After="AppSearch" />
+    </InstallUISequence>
+
     <InstallExecuteSequence>
+      <Custom Action="ReadWindowsUbr" After="AppSearch" />
       <Custom Action="SetRunWindowsAppRuntimeInstallerForAllUsers" Before="RunWindowsAppRuntimeInstallerForAllUsers" Condition="NOT REMOVE" />
       <Custom Action="RunWindowsAppRuntimeInstallerForAllUsers" After="InstallFiles" Condition="NOT REMOVE" />
       <Custom Action="SetRunWindowsAppRuntimeInstallerForCurrentUser" Before="RunWindowsAppRuntimeInstallerForCurrentUser" Condition="NOT REMOVE" />
@@ -104,6 +117,7 @@
       <RegistrySearch Id="BuildNumberSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="CurrentBuildNumber" Type="raw" />
     </Property>
 
+    <Property Id="WINDOWSUBR" Secure="yes" Value="#0" />
     <Launch Condition="(WINDOWSBUILDNUMBER &gt; 19045) OR (WINDOWSBUILDNUMBER = 19045 AND WINDOWSUBR &gt;= 6456)" Message="!(loc.MinimumOsError)" />
 
     <Property Id="MORPHIC_ACTIVE_SETUP" Value="1" Secure="yes" />

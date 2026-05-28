@@ -29,6 +29,11 @@
   <ItemGroup>
     <ProjectReference Include="..\Morphic\Morphic.csproj" Publish="true" />
 
+    <!-- Managed custom-action assembly. Built before this wixproj so the .CA.dll
+         referenced from Package.wxs (via $(var.MorphicSetup.Actions.TargetDir))
+         exists at WiX bind time. -->
+    <ProjectReference Include="..\MorphicSetup.Actions\MorphicSetup.Actions.csproj" />
+
     <HarvestDirectory Include="$(IntermediateOutputPath)\publish\Morphic">
       <ComponentGroupName>MorphicSupportComponents</ComponentGroupName>
       <DirectoryRefId>INSTALLFOLDER</DirectoryRefId>
