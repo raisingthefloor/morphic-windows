@@ -118,6 +118,7 @@
     </Property>
 
     <Property Id="WINDOWSUBR" Secure="yes" Value="#0" />
+
     <Launch Condition="(WINDOWSBUILDNUMBER &gt; 19045) OR (WINDOWSBUILDNUMBER = 19045 AND WINDOWSUBR &gt;= 6456)" Message="!(loc.MinimumOsError)" />
 
     <Property Id="MORPHIC_ACTIVE_SETUP" Value="1" Secure="yes" />

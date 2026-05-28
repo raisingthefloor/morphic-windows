@@ -37,6 +37,7 @@ variables:
 - name: projects
   value: |
          Morphic/Morphic.csproj
+         MorphicSetup.Actions/MorphicSetup.Actions.csproj
          MorphicSetup/MorphicSetup.wixproj
 - name: buildConfiguration
   value: 'Release'
@@ -206,6 +207,19 @@ stages:
 #              -TargetDir "MorphicSetup\obj\x64\$(buildConfiguration)\publish\Morphic"
 #          displayName: 'copy compiled XAML (x64)'
 
+        # Build the MorphicSetup.Actions managed-CA assembly before the installer build.
+        # The installer wixproj is built with /p:BuildProjectReferences=false (so the
+        # already-published Morphic.csproj isn't rebuilt), which also skips the implicit
+        # build of MorphicSetup.Actions. This step builds it explicitly so the
+        # SfxCA-wrapped MorphicSetup.Actions.CA.dll exists before WiX tries to bind to it.
+        - task: MSBuild@1
+          displayName: "Build MorphicSetup.Actions (x64)"
+          inputs:
+            solution: '$(Build.SourcesDirectory)\MorphicSetup.Actions\MorphicSetup.Actions.csproj'
+            platform: 'x64'
+            configuration: '$(buildConfiguration)'
+            msbuildArguments: '/t:build'
+
         - task: VSBuild@1
           displayName: "build installer (x64)"
           env:
@@ -345,6 +359,14 @@ stages:
 #              -SourceDir "$(Build.SourcesDirectory)" `
 #              -TargetDir "MorphicSetup\obj\ARM64\$(buildConfiguration)\publish\Morphic"
 #          displayName: 'copy compiled XAML (ARM64)'
+
+        - task: MSBuild@1
+          displayName: "Build MorphicSetup.Actions (arm64)"
+          inputs:
+            solution: '$(Build.SourcesDirectory)\MorphicSetup.Actions\MorphicSetup.Actions.csproj'
+            platform: 'arm64'
+            configuration: '$(buildConfiguration)'
+            msbuildArguments: '/t:build'
 
         - task: VSBuild@1
           displayName: "build installer (arm64)"
