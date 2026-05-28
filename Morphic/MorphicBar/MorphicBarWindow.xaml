@@ -37,7 +37,7 @@
                 <!-- Bar items container (column 0, spanning all rows in horizontal orientation) -->
                 <!-- Weightless host: not focusable, no background, children (bar item controls) handle their own pointer/keyboard events -->
                 <!-- NOTE: Margin is set per orientation by UpdateBarItemsPanelLayout via GetBarItemsPanelMargin -->
-                <StackPanel x:Name="BarItemsPanel"
+                <StackPanel x:Name="BarItemsPanel" x:FieldModifier="internal"
                             Grid.Column="0" Grid.Row="0"
                             Orientation="Horizontal"
                             HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
@@ -46,7 +46,7 @@
 
                 <!-- Morphic menu logo button (column 1 when horizontal; row 1 when vertical) -->
                 <!-- NOTE: Margin is set per orientation by UpdateMorphicMenuButtonLayout via GetMorphicMenuButtonMargin -->
-                <Button x:Name="MorphicMenuButton"
+                <Button x:Name="MorphicMenuButton" x:FieldModifier="internal"
                         Grid.Column="1" Grid.Row="0"
                         Background="Transparent" BorderThickness="0"
                         Padding="0" MinWidth="0" MinHeight="0"

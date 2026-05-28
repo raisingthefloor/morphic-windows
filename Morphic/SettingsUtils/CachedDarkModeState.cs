@@ -27,6 +27,13 @@ using System.Threading.Tasks;
 
 namespace Morphic.SettingsUtils;
 
+public class CachedDarkModeStateChangedEventArgs(bool isDark, bool isHighContrast) : EventArgs
+{
+    public bool IsDark { get; } = isDark;
+
+    public bool IsHighContrast { get; } = isHighContrast;
+}
+
 public static class CachedDarkModeState
 {
     private static readonly object _lock = new();
@@ -34,6 +41,27 @@ public static class CachedDarkModeState
     //
     private static bool _cachedIsDark;
     private static bool _cachedIsHighContrast;
+    private static EventHandler<CachedDarkModeStateChangedEventArgs>? _stateChanged;
+
+    public static event EventHandler<CachedDarkModeStateChangedEventArgs> StateChanged
+    {
+        add
+        {
+            lock (_lock)
+            {
+                CachedDarkModeState.EnsureSubscribedLocked();
+                _stateChanged += value;
+            }
+        }
+        remove
+        {
+            lock (_lock)
+            {
+                _stateChanged -= value;
+                CachedDarkModeState.UnsubscribeIfNoSubscribersLocked();
+            }
+        }
+    }
 
     // Snapshot accessors for callers that want the current value without subscribing (e.g. the
     // factory's initial seed for the Dark button's IsChecked and IsEnabled). Returns the cached
@@ -64,6 +92,83 @@ public static class CachedDarkModeState
         }
     }
 
+    // Pre-requisite: caller MUST hold _lock.
+    private static void EnsureSubscribedLocked()
+    {
+        if (_isSubscribed)
+        {
+            return;
+        }
+
+        var (isDark, isHighContrast) = CachedDarkModeState.ComputeState();
+        _cachedIsDark = isDark;
+        _cachedIsHighContrast = isHighContrast;
+
+        // Subscribe to every change source that can affect either value. Overlapping fires
+        // are deduplicated by the cache-compare in OnAnyChange.
+        Morphic.WindowsNative.Theme.DarkMode.AppsUseDarkModeChanged += CachedDarkModeState.OnAnyChange;
+        Morphic.WindowsNative.Theme.DarkMode.SystemUsesDarkModeChanged += CachedDarkModeState.OnAnyChange;
+        Morphic.WindowsNative.SystemSettings.SystemSettingsListener.Shared.HighContrastChanged += CachedDarkModeState.OnAnyChange;
+
+        _isSubscribed = true;
+    }
+
+    // Pre-requisite: caller MUST hold _lock.
+    private static void UnsubscribeIfNoSubscribersLocked()
+    {
+        if (_stateChanged is not null)
+        {
+            return;
+        }
+        if (_isSubscribed == false)
+        {
+            return;
+        }
+
+        Morphic.WindowsNative.Theme.DarkMode.AppsUseDarkModeChanged -= CachedDarkModeState.OnAnyChange;
+        Morphic.WindowsNative.Theme.DarkMode.SystemUsesDarkModeChanged -= CachedDarkModeState.OnAnyChange;
+        Morphic.WindowsNative.SystemSettings.SystemSettingsListener.Shared.HighContrastChanged -= CachedDarkModeState.OnAnyChange;
+
+        _isSubscribed = false;
+    }
+
+    // Bridge for the various per-source change events. We don't use the args -- the new value
+    // is computed fresh from all sources in ComputeState.
+    private static void OnAnyChange(object? sender, EventArgs e)
+    {
+        CachedDarkModeState.RecomputeAndFireIfChanged();
+    }
+
+    private static void RecomputeAndFireIfChanged()
+    {
+        EventHandler<CachedDarkModeStateChangedEventArgs>? handlersToFire = null;
+        bool newIsDark;
+        bool newIsHighContrast;
+
+        lock (_lock)
+        {
+            var (isDark, isHighContrast) = CachedDarkModeState.ComputeState();
+            if (isDark == _cachedIsDark && isHighContrast == _cachedIsHighContrast)
+            {
+                return;
+            }
+            _cachedIsDark = isDark;
+            _cachedIsHighContrast = isHighContrast;
+            newIsDark = isDark;
+            newIsHighContrast = isHighContrast;
+            handlersToFire = _stateChanged;
+        }
+
+        // Dispatch outside the lock so a handler that subscribes/unsubscribes can't deadlock.
+        // Each handler runs on its own Task so a slow/throwing handler doesn't block the others.
+        if (handlersToFire is not null)
+        {
+            foreach (EventHandler<CachedDarkModeStateChangedEventArgs> handler in handlersToFire.GetInvocationList())
+            {
+                Task.Run(() => handler.Invoke(null, new CachedDarkModeStateChangedEventArgs(newIsDark, newIsHighContrast)));
+            }
+        }
+    }
 
     private static (bool IsDark, bool IsHighContrast) ComputeState()
     {

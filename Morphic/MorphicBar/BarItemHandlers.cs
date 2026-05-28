@@ -65,6 +65,8 @@ internal class BarItemHandlers
             return MorphicResult.ErrorResult();
         }
 
+        var rasterizationChangeWait = barManager.WaitForBarRasterizationScaleChangeAsync(TimeSpan.FromSeconds(5));
+
         var focusSnapshot = barManager.CaptureBarFocus();
         try
         {

@@ -43,6 +43,10 @@ public partial class App : Application
     // NOTE: we initialize this when the application starts up
     internal Morphic.Controls.TrayButton.TrayButton TaskbarButton = null!;
 
+    // Handler reference for the taskbar icon refresh; held so we can unsubscribe at shutdown.
+    // See RefreshTaskbarIcon for why the taskbar icon needs to track HC state.
+    private EventHandler<Morphic.SettingsUtils.CachedDarkModeStateChangedEventArgs>? _taskbarIconRefreshHandler;
+
     private Morphic.AboutWindow.AboutWindow? _aboutWindow;
 
     // The MorphicBar's per-bar manager. App holds the manager (not the bar directly) so that
@@ -224,6 +228,12 @@ public partial class App : Application
         }
         _shutdownCleanupPerformed = true;
 
+        if (_taskbarIconRefreshHandler is not null)
+        {
+            Morphic.SettingsUtils.CachedDarkModeState.StateChanged -= _taskbarIconRefreshHandler;
+            _taskbarIconRefreshHandler = null;
+        }
+
         // immediately hide our tray icon (and dispose of it for good measure, to help ensure that unmanaged resources are cleaned up)
         if (this.TaskbarButton is not null)
         {
@@ -326,8 +336,66 @@ public partial class App : Application
         this.PerformShutdownCleanup();
 
         Morphic.RmTraceLog.Log("App.Shutdown() end -> calling Application.Exit()");
+        App.LogProcessThreadSnapshot("before Application.Exit()");
         this.Exit();
         Morphic.RmTraceLog.Log("App.Shutdown() returned from Application.Exit() (process still alive at this line)");
+        App.LogProcessThreadSnapshot("immediately after Application.Exit() returned");
+
+        try
+        {
+            System.Threading.Timer? delayedTimer = null;
+            delayedTimer = new System.Threading.Timer(
+                callback: _ =>
+                {
+                    try
+                    {
+                        App.LogProcessThreadSnapshot("+500ms after Application.Exit() (zombie checkpoint)");
+                    }
+                    catch (System.Exception ex)
+                    {
+                        try { Morphic.RmTraceLog.Log($"delayed snapshot threw: {ex.GetType().Name}: {ex.Message}"); } catch { }
+                    }
+                    finally
+                    {
+                        try { delayedTimer?.Dispose(); } catch { }
+                    }
+                },
+                state: null,
+                dueTime: System.TimeSpan.FromMilliseconds(500),
+                period: System.Threading.Timeout.InfiniteTimeSpan);
+        }
+        catch (System.Exception ex)
+        {
+            try { Morphic.RmTraceLog.Log($"delayed snapshot scheduling threw: {ex.GetType().Name}: {ex.Message}"); } catch { }
+        }
+    }
+
+    private static void LogProcessThreadSnapshot(string label)
+    {
+        try
+        {
+            var currentProcess = System.Diagnostics.Process.GetCurrentProcess();
+            int totalThreads = currentProcess.Threads.Count;
+            Morphic.RmTraceLog.Log($"Thread snapshot {label}: pid={currentProcess.Id} totalThreads={totalThreads}");
+
+            foreach (System.Diagnostics.ProcessThread thread in currentProcess.Threads)
+            {
+                try
+                {
+                    string startTimeStr;
+                    try { startTimeStr = thread.StartTime.ToString("HH:mm:ss.fff"); } catch { startTimeStr = "?"; }
+                    Morphic.RmTraceLog.Log($"  os-thread id={thread.Id} state={thread.ThreadState} priority={thread.PriorityLevel} startTime={startTimeStr}");
+                }
+                catch (System.Exception threadIterationException)
+                {
+                    Morphic.RmTraceLog.Log($"  os-thread iteration error: {threadIterationException.GetType().Name}: {threadIterationException.Message}");
+                }
+            }
+        }
+        catch (System.Exception ex)
+        {
+            try { Morphic.RmTraceLog.Log($"LogProcessThreadSnapshot({label}) threw: {ex.GetType().Name}: {ex.Message}"); } catch { }
+        }
     }
 
     #endregion Main Menu
@@ -348,6 +416,12 @@ public partial class App : Application
         // the icon. Captured DispatcherQueue marshals the refresh onto the UI thread; the event
         // fires from CachedDarkModeState's worker thread.
         this.RefreshTaskbarIcon();
+        var dispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
+        _taskbarIconRefreshHandler = (_, _) =>
+        {
+            dispatcherQueue?.TryEnqueue(this.RefreshTaskbarIcon);
+        };
+        Morphic.SettingsUtils.CachedDarkModeState.StateChanged += _taskbarIconRefreshHandler;
     }
 
     // Selects the right tray-icon variant for the current HC state and applies it.

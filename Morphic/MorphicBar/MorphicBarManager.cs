@@ -34,18 +34,25 @@ internal sealed class MorphicBarManager : IDisposable
     private bool _disposed;
 
     private readonly Microsoft.UI.Dispatching.DispatcherQueue _uiDispatcherQueue;
+    private EventHandler<Morphic.SettingsUtils.CachedDarkModeStateChangedEventArgs>? _barIconRefreshHandler;
 
     public MorphicBarManager(MorphicBarWindow morphicBarWindow)
     {
         _morphicBarWindow = morphicBarWindow;
         _uiDispatcherQueue = morphicBarWindow.DispatcherQueue;
         _morphicBarWindow.AppWindow.Changed += this.OnBarAppWindowChanged;
+        _morphicBarWindow.RasterizationScaleChangedExternal += this.OnBarRasterizationScaleChanged;
 
         // Seed the bar icon for the current system theme (HC variant or non-HC), then subscribe
         // so any future HC transition swaps the icon. CachedDarkModeState's StateChanged fires
         // from a worker thread; marshal the refresh onto the bar's DispatcherQueue (UI thread)
         // before calling SetIconFromFile.
         this.RefreshBarIcon();
+        _barIconRefreshHandler = (_, _) =>
+        {
+            _uiDispatcherQueue.TryEnqueue(this.RefreshBarIcon);
+        };
+        Morphic.SettingsUtils.CachedDarkModeState.StateChanged += _barIconRefreshHandler;
     }
 
     // Picks the correct contrast-variant icon for the current system theme and applies it to
@@ -83,11 +90,11 @@ internal sealed class MorphicBarManager : IDisposable
     {
         if (activateWindow == true)
         {
-            // Defuse any Keyboard ring left from a prior keyboard session BEFORE showing.
-            // Brute-force walk because FocusManager.GetFocusedElement can return a parent
-            // (ScrollViewer, etc.) rather than the actual Keyboard-focused Button.
-            _morphicBarWindow.DowngradeKeyboardFocusedControlsInBar();
-            _morphicBarWindow.SuppressFocusUpgradeFor(TimeSpan.FromMilliseconds(500));
+            // Bundle: defuse any stale Keyboard ring left from a prior session AND suppress
+            // the upgrade timer that would otherwise re-arm a ring from the post-Show
+            // WM_ACTIVATE. The controller knows the right durations; the manager just says
+            // "I'm about to Show, prepare focus."
+            _morphicBarWindow.FocusController.PrepareForShow();
         }
         _morphicBarWindow.AppWindow.Show(activateWindow: activateWindow);
     }
@@ -98,42 +105,50 @@ internal sealed class MorphicBarManager : IDisposable
 
     public IntPtr GetBarWindowHandle() => WinRT.Interop.WindowNative.GetWindowHandle(_morphicBarWindow);
 
-    public readonly record struct BarFocusSnapshot(
-        Microsoft.UI.Xaml.Controls.Control? Control,
-        Microsoft.UI.Xaml.FocusState State);
-    public BarFocusSnapshot CaptureBarFocus()
+    public async Task<bool> WaitForBarRasterizationScaleChangeAsync(TimeSpan timeout)
     {
-        if (_morphicBarWindow.Content?.XamlRoot is Microsoft.UI.Xaml.XamlRoot xamlRoot
-            && Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(xamlRoot) is Microsoft.UI.Xaml.Controls.Control focused)
+        var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        EventHandler handler = (_, _) => tcs.TrySetResult(true);
+        _morphicBarWindow.RasterizationScaleChangedExternal += handler;
+        try
         {
-            return new BarFocusSnapshot(focused, focused.FocusState);
+            var firstCompleted = await Task.WhenAny(tcs.Task, Task.Delay(timeout));
+            return firstCompleted == tcs.Task;
         }
-        return new BarFocusSnapshot(null, Microsoft.UI.Xaml.FocusState.Unfocused);
+        finally
+        {
+            _morphicBarWindow.RasterizationScaleChangedExternal -= handler;
+        }
     }
-    public void RestoreBarFocus(BarFocusSnapshot snapshot)
+
+    public async Task RunWithBarHiddenAsync(Func<Task> action)
     {
-        if (snapshot.Control is null)
+        bool wasVisible = _morphicBarWindow.Visible;
+        var focusSnapshot = this.CaptureBarFocus();
+        // Suppress focus upgrades for the WHOLE flow: covers click activation's deferred update,
+        // the action duration, and the re-Show's WM_ACTIVATE. 30s is generous enough for any
+        // realistic action (snip overlay etc.) and short enough to expire before any user action.
+        _morphicBarWindow.FocusController.SuppressUpgradeFor(TimeSpan.FromSeconds(30));
+        if (wasVisible) { _morphicBarWindow.AppWindow.Hide(); }
+        try
         {
-            return;
+            await action();
         }
-        var state = (snapshot.State == Microsoft.UI.Xaml.FocusState.Unfocused)
-            ? Microsoft.UI.Xaml.FocusState.Keyboard
-            : snapshot.State;
-        _ = _uiDispatcherQueue.TryEnqueue(() =>
+        finally
         {
-            try
-            {
-                var barHwnd = (Windows.Win32.Foundation.HWND)WinRT.Interop.WindowNative.GetWindowHandle(_morphicBarWindow);
-                var fg = Windows.Win32.PInvoke.GetForegroundWindow();
-                var isForeground = fg == barHwnd;
-                var result = snapshot.Control.Focus(state);
-                System.Diagnostics.Debug.WriteLine($"[Restore] Focus({state}) returned {result}, barIsForeground={isForeground}");
-            }
-            catch (System.Runtime.InteropServices.COMException ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[Restore] COMException: {ex.Message}");
-            }
-        });
+            if (wasVisible) { _morphicBarWindow.AppWindow.Show(); }
+            this.RestoreBarFocus(focusSnapshot);
+        }
+    }
+
+    public MorphicBarFocusController.FocusSnapshot CaptureBarFocus()
+    {
+        return _morphicBarWindow.FocusController.Capture(MorphicBarFocusController.SnapshotScope.AnyInBarXamlRoot);
+    }
+
+    public void RestoreBarFocus(MorphicBarFocusController.FocusSnapshot snapshot)
+    {
+        _morphicBarWindow.FocusController.Restore(snapshot);
     }
 
     // AppWindow.Changed fires for several reasons (position, size, visibility, etc.); filter on
@@ -146,6 +161,11 @@ internal sealed class MorphicBarManager : IDisposable
             this.BarVisibilityChanged?.Invoke(this, EventArgs.Empty);
         }
     }
+    private void OnBarRasterizationScaleChanged(object? sender, EventArgs e)
+    {
+        BarItemDataFactory.RefreshTextSizeButtonState();
+    }
+
     public void Dispose()
     {
         if (_disposed)
@@ -154,6 +174,12 @@ internal sealed class MorphicBarManager : IDisposable
         }
         _disposed = true;
         _morphicBarWindow.AppWindow.Changed -= this.OnBarAppWindowChanged;
+        _morphicBarWindow.RasterizationScaleChangedExternal -= this.OnBarRasterizationScaleChanged;
+        if (_barIconRefreshHandler is not null)
+        {
+            Morphic.SettingsUtils.CachedDarkModeState.StateChanged -= _barIconRefreshHandler;
+            _barIconRefreshHandler = null;
+        }
         // The bar intercepts WM_CLOSE to turn Alt+F4 into a Hide; re-enable user-close before
         // Close so this programmatic-shutdown path actually destroys the window.
         _morphicBarWindow.SetUserCloseEnabled(true);

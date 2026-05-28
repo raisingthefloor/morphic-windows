@@ -225,11 +225,24 @@ internal static class BarItemDataFactory
         var darkButton     = new BarButtonData { Text = "Dark",     IsToggle = true, ActionTag = "dark",     Action = darkAction };
         var nightButton    = new BarButtonData { Text = "Night",    IsToggle = true, ActionTag = "night",    Action = nightAction };
 
+        EventHandler<Morphic.SettingsUtils.CachedDarkModeStateChangedEventArgs> darkModeStateChangedHandler =
+            (_, e) =>
+            {
+                darkButton.IsChecked = e.IsDark;
+                darkButton.IsEnabled = !e.IsHighContrast;
+            };
+        Morphic.SettingsUtils.CachedDarkModeState.StateChanged += darkModeStateChangedHandler;
+        darkButton.AddDisposeAction(() => Morphic.SettingsUtils.CachedDarkModeState.StateChanged -= darkModeStateChangedHandler);
+        //
         darkButton.IsChecked = Morphic.SettingsUtils.CachedDarkModeState.GetCurrentIsDark();
         darkButton.IsEnabled = !Morphic.SettingsUtils.CachedDarkModeState.GetCurrentIsHighContrast();
 		
 		//
 
+        EventHandler<ColorFiltersIsActiveChangedEventArgs> colorFiltersIsActiveChangedHandler =
+            (_, e) => colorButton.IsChecked = e.NewValue;
+        ColorFilters.IsActiveChanged += colorFiltersIsActiveChangedHandler;
+        colorButton.AddDisposeAction(() => ColorFilters.IsActiveChanged -= colorFiltersIsActiveChangedHandler);
         //
         // GetIsActive returns nullable bool; null means the registry value doesn't exist yet
         // because the user has never enabled color filtering, which we treat as "off" for the seed.
