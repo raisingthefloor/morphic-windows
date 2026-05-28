@@ -57,16 +57,16 @@ public static class OsCustomActions
             using RegistryKey? key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion");
             if (key is null)
             {
-                session.Log("ReadWindowsUbr: could not open HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion; setting WINDOWSUBR=#0");
-                session["WINDOWSUBR"] = "#0";
+                session.Log("ReadWindowsUbr: could not open HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion; setting WINDOWSUBR=0");
+                session["WINDOWSUBR"] = "0";
                 return ActionResult.Success;
             }
 
             object? ubrValue = key.GetValue("UBR");
             if (ubrValue is null)
             {
-                session.Log("ReadWindowsUbr: UBR value not present in registry; setting WINDOWSUBR=#0");
-                session["WINDOWSUBR"] = "#0";
+                session.Log("ReadWindowsUbr: UBR value not present in registry; setting WINDOWSUBR=0");
+                session["WINDOWSUBR"] = "0";
                 return ActionResult.Success;
             }
 
@@ -74,7 +74,7 @@ public static class OsCustomActions
             // boxed Int32. Convert.ToInt32 also handles the (unexpected but harmless) case
             // where the value type ever shifts to something string-convertible in the future.
             int ubr = Convert.ToInt32(ubrValue, System.Globalization.CultureInfo.InvariantCulture);
-            string formattedUbr = "#" + ubr.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            string formattedUbr = ubr.ToString(System.Globalization.CultureInfo.InvariantCulture);
             session["WINDOWSUBR"] = formattedUbr;
             session.Log("ReadWindowsUbr: set WINDOWSUBR=" + formattedUbr);
             return ActionResult.Success;
@@ -82,9 +82,9 @@ public static class OsCustomActions
         catch (Exception ex)
         {
             // Don't propagate exceptions out of a CA; doing so triggers MSI rollback. Log
-            // and fail closed via the same "#0" path the explicit error branches use.
-            session.Log("ReadWindowsUbr: exception while reading UBR; setting WINDOWSUBR=#0. Details: " + ex.GetType().FullName + ": " + ex.Message);
-            session["WINDOWSUBR"] = "#0";
+            // and fail closed via the same "0" path the explicit error branches use.
+            session.Log("ReadWindowsUbr: exception while reading UBR; setting WINDOWSUBR=0. Details: " + ex.GetType().FullName + ": " + ex.Message);
+            session["WINDOWSUBR"] = "0";
             return ActionResult.Success;
         }
     }
