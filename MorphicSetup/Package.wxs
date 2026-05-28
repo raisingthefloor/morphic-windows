@@ -76,6 +76,9 @@
       <Custom Action="RunWindowsAppRuntimeInstallerForCurrentUser" After="RunWindowsAppRuntimeInstallerForAllUsers" Condition="NOT REMOVE" />
       <Custom Action="SetUnregisterNotificationHelper" Before="UnregisterNotificationHelper" Condition="REMOVE=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" />
       <Custom Action="UnregisterNotificationHelper" Before="RemoveFiles" Condition="REMOVE=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" />
+      <Custom Action="LaunchMorphicAfterInstall"
+              After="InstallFinalize"
+              Condition="NOT Installed AND MORPHIC_LAUNCH_AFTER_INSTALL=&quot;1&quot; AND LogonUser AND LogonUser &lt;&gt; &quot;SYSTEM&quot;" />
     </InstallExecuteSequence>
 
     <Feature Id="Main">
@@ -83,6 +86,7 @@
       <ComponentRef Id="ApplicationComponent" />
       <ComponentRef Id="NotificationHelperAumidRegistryComponent" />
       <ComponentRef Id="ActiveSetupForRuntimeRegistrationComponent" />
+      <ComponentRef Id="AutoStartRunKeyComponent" />
     </Feature>
 
     <ui:WixUI Id="WixUI_Minimal" />
@@ -99,6 +103,18 @@
       <RegistrySearch Id="BuildNumberSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="CurrentBuildNumber" Type="raw" />
     </Property>
     <Launch Condition="(WINDOWSBUILDNUMBER &gt;= 19045)" Message="!(loc.MinimumOsError)" />
+
+    <Property Id="MORPHIC_ACTIVE_SETUP" Value="1" Secure="yes" />
+
+    <Property Id="MORPHIC_LAUNCH_AFTER_INSTALL" Value="1" Secure="yes" />
+
+    <Property Id="MORPHIC_AUTOSTART" Value="1" Secure="yes" />
+
+    <Property Id="WixShellExecTarget" Value="[#morphic_exe]" />
+    <CustomAction Id="LaunchMorphicAfterInstall"
+                  BinaryRef="Wix4UtilCA_X64"
+                  DllEntry="WixShellExec"
+                  Impersonate="yes" />
   </Package>
 
   <Fragment>
@@ -127,6 +143,7 @@
         </Shortcut>
         <RegistryValue Root="HKCU" Key="Software\Raising the Floor\Morphic" Name="installed" Type="integer" Value="1" KeyPath="yes" />
       </Component>
+
       <Component Id="NotificationHelperAumidRegistryComponent" Guid="9F3C1E5B-7A2D-4F8B-9C6E-5D4A3B2C1F0E">
         <RegistryKey Root="HKCU"
                      Key="Software\Classes\AppUserModelId\RaisingTheFloor.Morphic"
@@ -156,7 +173,8 @@
         </Component>
 
         <Component Id="ActiveSetupForRuntimeRegistrationComponent"
-                   Guid="7C8B9A6F-3D2E-4B1A-9F8E-5C7D6E8A2B3F">
+                   Guid="7C8B9A6F-3D2E-4B1A-9F8E-5C7D6E8A2B3F"
+                   Condition="MORPHIC_ACTIVE_SETUP=&quot;1&quot;">
           <RegistryKey Root="HKLM"
                        Key="SOFTWARE\Microsoft\Active Setup\Installed Components\{7C8B9A6F-3D2E-4B1A-9F8E-5C7D6E8A2B3F}">
             <RegistryValue Type="string"
@@ -165,6 +183,18 @@
             <RegistryValue Name="Version" Type="string" Value="2,1,3,0" />
             <RegistryValue Name="StubPath" Type="string"
                            Value="&quot;[#WindowsAppRuntimeInstall_exe]&quot; --quiet" />
+          </RegistryKey>
+        </Component>
+
+        <Component Id="AutoStartRunKeyComponent"
+                   Guid="D8E5B4A7-2C1F-4F9E-B6D3-7A8C9E1F2B5D"
+                   Condition="MORPHIC_AUTOSTART=&quot;1&quot;">
+          <RegistryKey Root="HKLM"
+                       Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Run">
+            <RegistryValue Name="Morphic"
+                           Type="string"
+                           Value="&quot;[#morphic_exe]&quot; --run-after-login"
+                           KeyPath="yes" />
           </RegistryKey>
         </Component>
       </Directory>
@@ -183,6 +213,7 @@
           <File Id="dia_sym_reader_native_arm64_dll" Source="Microsoft.DiaSymReader.Native.arm64.dll" CompanionFile="morphic_exe" />
         <?endif?>
       </Component>
+
       <Component Id="NotificationHelperComponent" Guid="4A5F8E2B-1D3C-4F7E-A8B9-6C7D8E9F0A1B">
         <File Id="notification_helper_exe" Source="Morphic.NotificationHelper.exe" KeyPath="yes" />
         <File Id="notification_helper_dll" Source="Morphic.NotificationHelper.dll" />
