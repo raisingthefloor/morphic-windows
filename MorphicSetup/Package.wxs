@@ -82,6 +82,7 @@
       <ComponentGroupRef Id="MorphicComponents" />
       <ComponentRef Id="ApplicationComponent" />
       <ComponentRef Id="NotificationHelperAumidRegistryComponent" />
+      <ComponentRef Id="ActiveSetupForRuntimeRegistrationComponent" />
     </Feature>
 
     <ui:WixUI Id="WixUI_Minimal" />
@@ -152,6 +153,19 @@
           <?elseif $(sys.BUILDARCH) = "arm64" ?>
             <File Id="WindowsAppRuntimeInstall_exe" Source="prerequisites\WindowsAppRuntimeInstall-arm64.exe" Name="WindowsAppRuntimeInstall.exe" KeyPath="yes" />
           <?endif?>
+        </Component>
+
+        <Component Id="ActiveSetupForRuntimeRegistrationComponent"
+                   Guid="7C8B9A6F-3D2E-4B1A-9F8E-5C7D6E8A2B3F">
+          <RegistryKey Root="HKLM"
+                       Key="SOFTWARE\Microsoft\Active Setup\Installed Components\{7C8B9A6F-3D2E-4B1A-9F8E-5C7D6E8A2B3F}">
+            <RegistryValue Type="string"
+                           Value="Morphic Windows App Runtime per-user registration"
+                           KeyPath="yes" />
+            <RegistryValue Name="Version" Type="string" Value="2,1,3,0" />
+            <RegistryValue Name="StubPath" Type="string"
+                           Value="&quot;[#WindowsAppRuntimeInstall_exe]&quot; --quiet" />
+          </RegistryKey>
         </Component>
       </Directory>
     </DirectoryRef>
