@@ -181,6 +181,21 @@ internal static class BarItemDataFactory
 
     //
 
+    public static IBarItemData CreateSnipButton(BarButtonAction? action)
+    {
+        // "Snip" -- single label pushbutton
+        return new BarButtonData
+        {
+            Header = "Snip",
+            Text = "Copy",
+            AccessibleName = "Snip: copy selection to clipboard",
+            ActionTag = "snip-copy",
+            Action = action,
+        };
+    }
+
+    //
+
     public static IBarItemData CreateReadSelectedButtonGroup(BarButtonAction? playAction, BarButtonAction? stopAction)
     {
         // "Read Selected" -- two pushbuttons (Play on the left, Stop on the right), equal width.

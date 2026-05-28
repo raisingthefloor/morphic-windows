@@ -171,6 +171,118 @@ internal class BarItemHandlers
 
     //
 
+    private static readonly string[] s_snipOverlayProcessNames = new[] { "ScreenClippingHost", "ScreenSketch", "SnippingTool" };
+
+    private static readonly TimeSpan s_snipLaunchGracePeriod = TimeSpan.FromSeconds(5);
+
+    private static readonly TimeSpan s_foregroundPollInterval = TimeSpan.FromMilliseconds(200);
+
+    private const int s_foregroundLeftSnipConsecutiveSamplesRequired = 3;
+
+    public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> SnipCopyButtonAction(string? actionTag, bool? isChecked)
+    {
+        bool snipLaunched = false;
+
+        var barManager = ((App)Microsoft.UI.Xaml.Application.Current).MorphicBarManager;
+        if (barManager is null)
+        {
+            return MorphicResult.ErrorResult();
+        }
+
+        await barManager.RunWithBarHiddenAsync(async () =>
+        {
+            try
+            {
+                _ = Process.Start(new ProcessStartInfo("ms-screenclip:") { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[BarItem] {actionTag}: Process.Start(ms-screenclip:) failed: {ex.Message}");
+                return;
+            }
+
+            var graceDeadline = DateTime.UtcNow + s_snipLaunchGracePeriod;
+            while (DateTime.UtcNow < graceDeadline)
+            {
+                if (IsAnyVisibleSnipToolWindow())
+                {
+                    snipLaunched = true;
+                    break;
+                }
+                await Task.Delay(100);
+            }
+
+            if (snipLaunched == false)
+            {
+                Debug.WriteLine($"[BarItem] {actionTag}: snip tool did not put a visible window on screen within {s_snipLaunchGracePeriod.TotalSeconds}s.");
+                return;
+            }
+
+            int consecutiveNoVisibleSnipSamples = 0;
+            while (true)
+            {
+                await Task.Delay(s_foregroundPollInterval);
+                if (IsAnyVisibleSnipToolWindow())
+                {
+                    consecutiveNoVisibleSnipSamples = 0;
+                }
+                else
+                {
+                    consecutiveNoVisibleSnipSamples++;
+                    if (consecutiveNoVisibleSnipSamples >= s_foregroundLeftSnipConsecutiveSamplesRequired)
+                    {
+                        break;
+                    }
+                }
+            }
+        });
+
+        return snipLaunched ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
+    }
+
+    private static bool IsAnyVisibleSnipToolWindow()
+    {
+        // Snapshot snip-tool PIDs once; the EnumWindows callback only does a set lookup.
+        var snipPids = new System.Collections.Generic.HashSet<uint>();
+        foreach (var name in s_snipOverlayProcessNames)
+        {
+            var processes = Process.GetProcessesByName(name);
+            foreach (var p in processes)
+            {
+                try { snipPids.Add((uint)p.Id); }
+                catch { /* process exited */ }
+                finally { p.Dispose(); }
+            }
+        }
+        if (snipPids.Count == 0) { return false; }
+
+        bool found = false;
+        Windows.Win32.PInvoke.EnumWindows((hwnd, lParam) =>
+        {
+            if (Windows.Win32.PInvoke.IsWindowVisible(hwnd) == false)
+            {
+                return true; // continue enumeration
+            }
+            var exStyle = (Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE)Windows.Win32.PInvoke.GetWindowLongPtr(hwnd, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE);
+            if ((exStyle & Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE.WS_EX_TOPMOST) == 0)
+            {
+                return true; // not always-on-top -- this isn't an in-progress snip window
+            }
+            uint pid = 0;
+            unsafe { _ = Windows.Win32.PInvoke.GetWindowThreadProcessId(hwnd, &pid); }
+            if (pid != 0 && snipPids.Contains(pid))
+            {
+                found = true;
+                return false; // stop enumeration; we found what we needed
+            }
+            return true;
+        }, IntPtr.Zero);
+
+        return found;
+    }
+
+    //
+
     // read selected
 
     // Placeholder action for Read Selected Play / Stop. The feature isn't implemented yet

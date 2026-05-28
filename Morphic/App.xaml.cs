@@ -200,6 +200,9 @@ public partial class App : Application
             // "Magnifier" -- two pushbuttons (Show on the left, Hide on the right), equal width
             Morphic.MorphicBar.BarItemDataFactory.CreateMagnifierButtonGroup(showAction: Morphic.MorphicBar.BarItemHandlers.ShowMagnifierButtonAction, hideAction: Morphic.MorphicBar.BarItemHandlers.HideMagnifierButtonAction),
 
+            // "Snip" -- single label pushbutton
+            Morphic.MorphicBar.BarItemDataFactory.CreateSnipButton(action: Morphic.MorphicBar.BarItemHandlers.SnipCopyButtonAction),
+
             // "Read Selected" -- two pushbuttons (Play / Stop), equal width. The feature isn't
             // wired to a real TTS engine yet; both buttons currently raise a "not available yet"
             // toast (see BarItemHandlers.ReadSelectedButtonAction). The button group keeps its
