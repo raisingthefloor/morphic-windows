@@ -788,15 +788,19 @@ internal class TrayButton : IDisposable
                     // lParam: low-order word is the hit-test result for the cursor position; high-order word specifies the mouse message that triggered this event
                     var hitTestResult = (uint)(((nint)lParam >> 0) & 0xFFFF);
                     var mouseMsg = (uint)(((nint)lParam >> 16) & 0xFFFF);
+                    // For the mouse messages below we only update our visual-state flags; we deliberately
+                    // do NOT set result, so we fall through to DefWindowProc. DefWindowProc is the only
+                    // thing that applies the window class's arrow cursor (IDC_ARROW) for the HTCLIENT area.
+                    // Returning TRUE here without a matching SetCursor call would tell Windows the cursor
+                    // was already handled, leaving whatever shape it had on entry -- frequently the shell's
+                    // busy/app-starting spinner over the tray area, a false "busy" signal to the user.
                     switch (mouseMsg)
                     {
                         case Windows.Win32.PInvoke.WM_LBUTTONDOWN:
                             _visualState |= TrayButtonVisualStateFlags.LeftButtonPressed;
                             this.RequestRedraw();
-                            result = (Windows.Win32.Foundation.LRESULT)1;
                             break;
                         case Windows.Win32.PInvoke.WM_LBUTTONUP:
-                            result = (Windows.Win32.Foundation.LRESULT)1;
                             break;
                         case Windows.Win32.PInvoke.WM_MOUSEMOVE:
                             // if we are not yet tracking the mouse position (i.e. this is effectively "mouse enter") then do so now
@@ -823,15 +827,12 @@ internal class TrayButton : IDisposable
 
                                 this.RequestRedraw();
                             }
-                            result = (Windows.Win32.Foundation.LRESULT)1;
                             break;
                         case Windows.Win32.PInvoke.WM_RBUTTONDOWN:
                             _visualState |= TrayButtonVisualStateFlags.RightButtonPressed;
                             this.RequestRedraw();
-                            result = (Windows.Win32.Foundation.LRESULT)1;
                             break;
                         case Windows.Win32.PInvoke.WM_RBUTTONUP:
-                            result = (Windows.Win32.Foundation.LRESULT)1;
                             break;
                         default:
                             //Debug.WriteLine("UNHANDLED SETCURSOR Mouse Message: " + mouseMsg.ToString());

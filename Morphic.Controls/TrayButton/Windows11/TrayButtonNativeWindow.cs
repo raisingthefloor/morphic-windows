@@ -715,7 +715,11 @@ internal class TrayButtonNativeWindow : IDisposable
                     var hitTestResult = (uint)((lParam.Value.ToInt64() >> 0) & 0xFFFF);
                     var mouseMsg = (uint)((lParam.Value.ToInt64() >> 16) & 0xFFFF);
 
-                    // NOTE: for messages which we handle, we return "TRUE" (1) to halt further message processing; this may not technically be necessary
+                    // NOTE: we deliberately do NOT set 'result' in these cases -- after the visual-state
+                    //       bookkeeping we fall through to DefWindowProc so it applies our registered class
+                    //       cursor (the arrow). Returning TRUE without a matching SetCursor call would
+                    //       suppress DefWindowProc and leave the cursor as whatever it was on entry (e.g. the
+                    //       shell's "working in background" spinner), producing a false "busy" cursor on hover.
                     //       see: https://learn.microsoft.com/en-us/windows/win32/menurc/wm-setcursor
                     switch (mouseMsg)
                     {
@@ -729,8 +733,6 @@ internal class TrayButtonNativeWindow : IDisposable
                                 // hide the tooltip so it does not linger over whatever the click
                                 // is about to open (menu, dialog, etc.)
                                 this.HideTooltip();
-
-                                result = new IntPtr(1);
                             }
                             break;
                         case Windows.Win32.PInvoke.WM_LBUTTONUP:
@@ -739,8 +741,6 @@ internal class TrayButtonNativeWindow : IDisposable
                                 //
                                 var updateVisualStateAlphaResult = this.UpdateVisualStateAlpha();
                                 Debug.Assert(updateVisualStateAlphaResult.IsSuccess, "Could not update visual state.");
-
-                                result = new IntPtr(1);
                             }
                             break;
                         case Windows.Win32.PInvoke.WM_MOUSEMOVE:
@@ -775,7 +775,6 @@ internal class TrayButtonNativeWindow : IDisposable
                                     var updateVisualStateAlphaResult = this.UpdateVisualStateAlpha();
                                     Debug.Assert(updateVisualStateAlphaResult.IsSuccess, "Could not update visual state.");
                                 }
-                                result = new IntPtr(1);
                             }
                             break;
                         case Windows.Win32.PInvoke.WM_RBUTTONDOWN:
@@ -786,8 +785,6 @@ internal class TrayButtonNativeWindow : IDisposable
                                 //
                                 var updateVisualStateAlphaResult = this.UpdateVisualStateAlpha();
                                 Debug.Assert(updateVisualStateAlphaResult.IsSuccess, "Could not update visual state.");
-
-                                result = new IntPtr(1);
                             }
                             break;
                         case Windows.Win32.PInvoke.WM_RBUTTONUP:
@@ -796,12 +793,10 @@ internal class TrayButtonNativeWindow : IDisposable
                                 //
                                 var updateVisualStateAlphaResult = this.UpdateVisualStateAlpha();
                                 Debug.Assert(updateVisualStateAlphaResult.IsSuccess, "Could not update visual state.");
-
-                                result = new IntPtr(1);
                             }
                             break;
                         default:
-                            // unhandled setcurosr mouse message
+                            // unhandled setcursor mouse message
                             break;
                     }
                 }
