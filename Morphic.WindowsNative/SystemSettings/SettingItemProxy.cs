@@ -376,12 +376,6 @@ internal class SettingItemProxy
         // NOTE: we're unsure if ISettingItem.SetValue(string, object) can throw an exception; we're catching exceptions anyway, out of an abundance of caution
         try
         {
-            // WinRT methods declared to take IInspectable (which projects to C# as `object`) expect
-            // the incoming object to implement IPropertyValue / IReference<T> when carrying a
-            // primitive. Under modern .NET, CsWinRT does NOT automatically synthesize such a wrapper
-            // for a raw boxed primitive; the native side then fails QueryInterface(IID_IPropertyValue)
-            // and crashes the calling thread with an access violation that bubbles up to managed code
-            // as System.ExecutionEngineException. 
             // Wrapping each primitive via the corresponding PropertyValue.CreateXxx factory produces a
             // real WinRT IPropertyValue that the projection hands off to the native side without needing 
             // further marshaling. Note: sbyte (Int8) has no PropertyValue factory because WinRT itself 

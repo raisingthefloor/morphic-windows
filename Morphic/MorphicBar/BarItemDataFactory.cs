@@ -343,6 +343,13 @@ internal static class BarItemDataFactory
             }
         });
 
+        // Prime DarkMode SettingItems on STA so the apartment marker on the v-table is set
+        // correctly before the Dark button's Task.Run-wrapped click handler reaches them.
+        // Without this, the first Set/GetValue from MTA on an MTA-created SettingItem faults
+        // with 0xC0000005. NightLight gets implicit STA priming above via IsOnChanged; DarkMode
+        // has no SettingItem-backed event so we touch the lazy properties explicitly.
+        Morphic.WindowsNative.Theme.DarkMode.PrimeSettingItemsOnCurrentApartment();
+
         return new BarMultiButtonData
         {
             Header = "Contrast & Color",
