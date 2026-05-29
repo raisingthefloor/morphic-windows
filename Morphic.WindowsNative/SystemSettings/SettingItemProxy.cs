@@ -376,7 +376,38 @@ internal class SettingItemProxy
         // NOTE: we're unsure if ISettingItem.SetValue(string, object) can throw an exception; we're catching exceptions anyway, out of an abundance of caution
         try
         {
-            _settingItem.SetValue(name, value);
+            // WinRT methods declared to take IInspectable (which projects to C# as `object`) expect
+            // the incoming object to implement IPropertyValue / IReference<T> when carrying a
+            // primitive. Under modern .NET, CsWinRT does NOT automatically synthesize such a wrapper
+            // for a raw boxed primitive; the native side then fails QueryInterface(IID_IPropertyValue)
+            // and crashes the calling thread with an access violation that bubbles up to managed code
+            // as System.ExecutionEngineException. 
+            // Wrapping each primitive via the corresponding PropertyValue.CreateXxx factory produces a
+            // real WinRT IPropertyValue that the projection hands off to the native side without needing 
+            // further marshaling. Note: sbyte (Int8) has no PropertyValue factory because WinRT itself 
+            // doesn't define an Int8 primitive type; pass it as int (or accept whatever the projection 
+            // does) if a setting ever needs it.
+            object winrtValue = value switch
+            {
+                bool b => Windows.Foundation.PropertyValue.CreateBoolean(b),
+                string s => Windows.Foundation.PropertyValue.CreateString(s),
+                byte u8 => Windows.Foundation.PropertyValue.CreateUInt8(u8),
+                short i16 => Windows.Foundation.PropertyValue.CreateInt16(i16),
+                ushort u16 => Windows.Foundation.PropertyValue.CreateUInt16(u16),
+                int i32 => Windows.Foundation.PropertyValue.CreateInt32(i32),
+                uint u32 => Windows.Foundation.PropertyValue.CreateUInt32(u32),
+                long i64 => Windows.Foundation.PropertyValue.CreateInt64(i64),
+                ulong u64 => Windows.Foundation.PropertyValue.CreateUInt64(u64),
+                float f => Windows.Foundation.PropertyValue.CreateSingle(f),
+                double d => Windows.Foundation.PropertyValue.CreateDouble(d),
+                char c => Windows.Foundation.PropertyValue.CreateChar16(c),
+                System.Guid g => Windows.Foundation.PropertyValue.CreateGuid(g),
+                System.DateTimeOffset dt => Windows.Foundation.PropertyValue.CreateDateTime(dt),
+                System.TimeSpan ts => Windows.Foundation.PropertyValue.CreateTimeSpan(ts),
+                _ => value,
+            };
+
+            _settingItem.SetValue(name, winrtValue);
         }
         catch (Exception ex)
         {
