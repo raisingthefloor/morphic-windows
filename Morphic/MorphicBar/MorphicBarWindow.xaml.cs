@@ -143,18 +143,6 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     private Windows.Win32.UI.Shell.SUBCLASSPROC? _subclassProc;
     private bool _userCloseEnabled;  // default false: Alt+F4 -> Hide
     //
-    // Time-based suppression of the Programmatic/Pointer -> Keyboard focus upgrade. Set by
-    // RunWithBarHiddenAsync at the START of the flow so it covers the entire span: deferred
-    // updates fired by the click activation, by the Show()'s WM_ACTIVATE after the action, and
-    // any in-between transitions are all suppressed. Time-based (not one-shot) because action()
-    // can take seconds (e.g. the snip overlay) and multiple WM_ACTIVATEs may fire in that window.
-    // Stored as Environment.TickCount64 (system-uptime ms, monotonic) to avoid DateTime.Now's
-    // clock-skew / DST issues.
-
-    //
-    // Item lengths are NOT cached: they depend on the bar's effective thickness (since a narrower
-    // bar can cause text wrapping that makes items taller). MeasureBarForOrientation performs a
-    // fresh two-pass measurement each time it's called.
 
     public static MorphicBarWindow CreateWithHiddenTaskbar()
     {
@@ -180,6 +168,7 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     public MorphicBarWindow()
     {
         InitializeComponent();
+
         this.FocusController = new MorphicBarFocusController(this);
 
         // apply the initial orientation-specific layout via the same helpers used on orientation
@@ -1188,11 +1177,14 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOSIZE | Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOZORDER);
         System.Diagnostics.Debug.Assert(setWindowPosResult != 0);
 
-        // turn off DWM corner rounding
-        int cornerPreference = (int)Windows.Win32.Graphics.Dwm.DWM_WINDOW_CORNER_PREFERENCE.DWMWCP_DONOTROUND;
-        Span<byte> cornerPreferenceAsSpan = System.Runtime.InteropServices.MemoryMarshal.AsBytes(new Span<int>(ref cornerPreference));
-        var setAttributeResult = Windows.Win32.PInvoke.DwmSetWindowAttribute(hwnd, Windows.Win32.Graphics.Dwm.DWMWINDOWATTRIBUTE.DWMWA_WINDOW_CORNER_PREFERENCE, cornerPreferenceAsSpan);
-        System.Diagnostics.Debug.Assert(setAttributeResult == Windows.Win32.Foundation.HRESULT.S_OK);
+        // turn off DWM corner rounding.
+        if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
+        {
+            int cornerPreference = (int)Windows.Win32.Graphics.Dwm.DWM_WINDOW_CORNER_PREFERENCE.DWMWCP_DONOTROUND;
+            Span<byte> cornerPreferenceAsSpan = System.Runtime.InteropServices.MemoryMarshal.AsBytes(new Span<int>(ref cornerPreference));
+            var setAttributeResult = Windows.Win32.PInvoke.DwmSetWindowAttribute(hwnd, Windows.Win32.Graphics.Dwm.DWMWINDOWATTRIBUTE.DWMWA_WINDOW_CORNER_PREFERENCE, cornerPreferenceAsSpan);
+            System.Diagnostics.Debug.Assert(setAttributeResult == Windows.Win32.Foundation.HRESULT.S_OK);
+        }
     }
 
     private void InitializePointerPressAndDrag(UIElement rootDragElement)
