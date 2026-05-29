@@ -73,6 +73,15 @@ public static class OsCustomActions
             // UBR is REG_DWORD on all supported Windows versions; .NET surfaces it as a
             // boxed Int32. Convert.ToInt32 also handles the (unexpected but harmless) case
             // where the value type ever shifts to something string-convertible in the future.
+            //
+            // The property is written as a plain decimal string (NOT the "#NNNN" integer-tagged
+            // form documented as MSI's integer-property convention). Empirical evidence from a
+            // Win10 22H2 install showed that engine's condition evaluator does NOT honor the
+            // "#" prefix integer interpretation, so "#6456" >= 6456 evaluates as a string-vs-int
+            // mismatch and returns false even when the UBR meets the floor. Using a plain
+            // string lets the launch condition compare lexicographically against a quoted
+            // literal, which lines up with numeric order for all relevant UBR values (Win10
+            // 22H2's free-channel updates ended at 6456
             int ubr = Convert.ToInt32(ubrValue, System.Globalization.CultureInfo.InvariantCulture);
             string formattedUbr = ubr.ToString(System.Globalization.CultureInfo.InvariantCulture);
             session["WINDOWSUBR"] = formattedUbr;

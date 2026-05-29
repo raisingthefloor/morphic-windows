@@ -97,6 +97,8 @@ internal sealed class MorphicBarManager : IDisposable
             _morphicBarWindow.FocusController.PrepareForShow();
         }
         _morphicBarWindow.AppWindow.Show(activateWindow: activateWindow);
+
+        _morphicBarWindow.RefreshAllButtonCompoundStatesAfterShow();
     }
 
     public void HideBar() => _morphicBarWindow.AppWindow.Hide();
@@ -161,6 +163,7 @@ internal sealed class MorphicBarManager : IDisposable
             this.BarVisibilityChanged?.Invoke(this, EventArgs.Empty);
         }
     }
+
     private void OnBarRasterizationScaleChanged(object? sender, EventArgs e)
     {
         BarItemDataFactory.RefreshTextSizeButtonState();

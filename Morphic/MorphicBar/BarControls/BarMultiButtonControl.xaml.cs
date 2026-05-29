@@ -28,11 +28,8 @@ using Microsoft.UI.Xaml.Automation.Provider;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
-using Morphic.Core;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
 
 namespace Morphic.MorphicBar.BarControls;
 
@@ -40,7 +37,6 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
 {
     private BarMultiButtonData? _data;
     private readonly List<ButtonBase> _subButtons = new();
-    private readonly HashSet<ButtonBase> _subButtonsWithActionInProgress = new();
     private bool _incDecShortcutsEnabled = false;
     private int _decrementButtonIndex = -1;
     private int _incrementButtonIndex = -1;
@@ -391,98 +387,8 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
                     throw new ArgumentException("LayoutStyle must be 'TextOnly' for horizontal multi-button controls");
             }
 
-            ButtonBase button;
-            if (buttonData.IsToggle)
-            {
-                // GuardedToggleButton suppresses the framework's automatic IsChecked toggle on
-                // click. The click handler computes the user's intent (!current), runs the
-                // action, and on success writes the value to data, which propagates back to
-                // IsChecked via the PropertyChanged subscription below. See GuardedToggleButton.cs
-                // for the full rationale.
-                var toggleButton = new GuardedToggleButton
-                {
-                    Style = toggleStyle,
-                    IsChecked = buttonData.IsChecked,
-                    IsEnabled = buttonData.IsEnabled,
-                    Content = buttonData.Text,
-                };
-                // Intentionally NOT mirroring Checked/Unchecked back into buttonData.IsChecked. Data
-                // updates happen only in SubButton_Click on action SUCCESS so that an in-flight
-                // real-time event listener can update buttonData.IsChecked during the action without
-                // our immediate-toggle handler clobbering the listener's value.
-                //
-                // The data is the source of truth: when buttonData.IsChecked or IsEnabled changes
-                // (via the action's post-completion write, OR via an external listener writing
-                // directly to the data), the PropertyChanged subscription below pulls the new
-                // value into the live ToggleButton. Unsubscribed on Unloaded so the data doesn't
-                // hold a reference to a discarded UI (the BarMultiButtonControl's Data setter
-                // clears ButtonsContainer.Children, unloading the old toggles; rotation no longer
-                // rebuilds, see ReorientButtonsContainer).
-                //
-                // Marshal through DispatcherQueue because the writer may be off the UI thread
-                // (system event listeners typically fire on background threads). The setter's
-                // equality short-circuit prevents a feedback loop if the data write originated
-                // from the UI.
-                var capturedToggleButton = toggleButton;
-                var capturedData = buttonData;
-                PropertyChangedEventHandler propertyChangedHandler = (_, args) =>
-                {
-                    if (args.PropertyName == nameof(BarButtonData.IsChecked))
-                    {
-                        this.DispatcherQueue.TryEnqueue(() =>
-                        {
-                            capturedToggleButton.IsChecked = capturedData.IsChecked;
-                        });
-                    }
-                    else if (args.PropertyName == nameof(BarButtonData.IsEnabled))
-                    {
-                        this.DispatcherQueue.TryEnqueue(() =>
-                        {
-                            capturedToggleButton.IsEnabled = capturedData.IsEnabled;
-                        });
-                    }
-                };
-                capturedData.PropertyChanged += propertyChangedHandler;
-                toggleButton.Unloaded += (_, _) => capturedData.PropertyChanged -= propertyChangedHandler;
-                toggleButton.Click += SubButton_Click;
-                ToggleButtonCompoundState.Wire(toggleButton);
-                button = toggleButton;
-            }
-            else
-            {
-                var plainButton = new Button
-                {
-                    Style = plainStyle,
-                    IsEnabled = buttonData.IsEnabled,
-                    Content = buttonData.Text,
-                };
-                // Mirror BarButtonData.IsEnabled writes onto the live Button. Same rationale as
-                // the toggle path's IsEnabled subscription -- the data is the source of truth and
-                // external state-source bridges (e.g. the Text Size +/- factory's
-                // recomputeState, which disables at min/max DPI) write to data, not to the
-                // UI control. Marshal through DispatcherQueue because writers may be off the UI
-                // thread; INPC equality short-circuit in BarButtonData prevents feedback loops.
-                var capturedPlainButton = plainButton;
-                var capturedPlainData = buttonData;
-                PropertyChangedEventHandler plainPropertyChangedHandler = (_, args) =>
-                {
-                    if (args.PropertyName == nameof(BarButtonData.IsEnabled))
-                    {
-                        this.DispatcherQueue.TryEnqueue(() =>
-                        {
-                            capturedPlainButton.IsEnabled = capturedPlainData.IsEnabled;
-                        });
-                    }
-                };
-                capturedPlainData.PropertyChanged += plainPropertyChangedHandler;
-                plainButton.Unloaded += (_, _) => capturedPlainData.PropertyChanged -= plainPropertyChangedHandler;
-                plainButton.Click += SubButton_Click;
-                ButtonCompoundState.Wire(plainButton);
-                button = plainButton;
-            }
+            var button = BarButtonBuilder.CreateButton(buttonData, plainStyle, toggleStyle);
 
-            // set the accessible (screen reader) name for the button; fall back to the text if no accessible name was specified
-            AutomationProperties.SetName(button, buttonData.AccessibleName ?? buttonData.Text);
             if (this.HeaderTextBlock.Visibility == Visibility.Visible)
             {
                 AutomationProperties.SetLabeledBy(button, this.HeaderTextBlock);
@@ -540,8 +446,6 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
             };
             button.Loaded += textConfigLoadedHandler;
 
-            ToolTipService.SetToolTip(button, buttonData.Tooltip);
-
             // leave a tiny gap between adjacent sub-buttons along the layout axis while preserving rounded outer corners
             bool isFirst = (i == 0);
             bool isLast = (i == _data.Buttons.Count - 1);
@@ -556,9 +460,6 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
                     isFirst ? 0 : BarControlMetrics.ButtonInnerMargin,
                     0,
                     isLast ? 0 : BarControlMetrics.ButtonInnerMargin);
-
-            // stash the sub-button data in the button's `Tag` property so the Click handler can retrieve it without a separate dictionary
-            button.Tag = buttonData;
 
             if (effectiveSubButtonOrientation == Orientation.Horizontal)
             {
@@ -813,69 +714,16 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
         }
     }
 
-    private async void SubButton_Click(object sender, RoutedEventArgs e)
+    // Re-asserts every sub-button's compound visual state. See IBarItemControl.RefreshButtonCompoundStates
+    // for why this is needed after the bar's AppWindow.Show. The caller has already deferred past the
+    // post-show layout pass, so we re-assert synchronously over the live list -- we're on the UI thread,
+    // and Data reassignment (which clears/rebuilds _subButtons) is also UI-thread, so the foreach can't
+    // observe a torn list. No-op when no sub-buttons have been built.
+    public void RefreshButtonCompoundStates()
     {
-        if (sender is not ButtonBase button)
+        foreach (var subButton in _subButtons)
         {
-            return;
-        }
-        if (button.Tag is not BarButtonData subData)
-        {
-            return;
-        }
-        if (_subButtonsWithActionInProgress.Contains(button))
-        {
-            return;
-        }
-
-        // Compute the user's INTENT (the value the user wants the toggle to settle at). Because
-        // GuardedToggleButton suppresses the framework's automatic IsChecked toggle on click,
-        // toggleButton.IsChecked still holds the PRE-click value here -- so flipping it gives us
-        // the intended new value. For non-toggle buttons, intent is meaningless (null). Null
-        // IsChecked (three-state) is treated as false for flip purposes; we don't use IsThreeState
-        // in this codebase, so this just keeps the null-safety honest.
-        var toggleButton = sender as ToggleButton;
-        bool? intendedIsChecked = toggleButton is null ? null : !(toggleButton.IsChecked == true);
-
-        var action = subData.Action;
-        if (action is null)
-        {
-            return;
-        }
-
-        // Re-entry during the action is prevented by _subButtonsWithActionInProgress (checked at
-        // the top of this handler). We do NOT need to block input (e.g. via IsEnabled=false or
-        // IsHitTestVisible=false): GuardedToggleButton already prevents the framework's auto-
-        // toggle from disturbing the visual, and any re-clicks during the action are no-ops
-        // because the re-entry guard catches them before the action is invoked again.
-        _subButtonsWithActionInProgress.Add(button);
-
-        bool actionSucceeded;
-        try
-        {
-            var result = await DelayedInProgressVisual.RunAsync(button, () => action.Invoke(subData.ActionTag, intendedIsChecked));
-            actionSucceeded = result.IsSuccess;
-        }
-        catch (Exception ex)
-        {
-            // an action throwing is treated as failure -- the system state didn't change in any
-            // well-defined way, so we don't write the intended value to data
-            Debug.WriteLine($"[BarItem] {subData.ActionTag} threw: {ex}");
-            actionSucceeded = false;
-        }
-        finally
-        {
-            _subButtonsWithActionInProgress.Remove(button);
-        }
-
-        // Data is the single source of truth: on success we write the intended value, which
-        // propagates back to toggleButton.IsChecked via the PropertyChanged subscription set up
-        // in ApplyData (visible visual flip happens then). On failure: no-op -- because
-        // GuardedToggleButton suppressed the framework's auto-toggle on click, toggleButton's
-        // visual never moved, so there is nothing to revert.
-        if (toggleButton is not null && intendedIsChecked.HasValue && actionSucceeded)
-        {
-            subData.IsChecked = intendedIsChecked.Value;
+            CompoundStatePointerWiring.RefreshVisualState(subButton);
         }
     }
 

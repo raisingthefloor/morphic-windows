@@ -73,9 +73,6 @@ public sealed partial class LayoutPreviewWindow : Morphic.Controls.Windowing.Chr
 
         var hwnd = (Windows.Win32.Foundation.HWND)WinRT.Interop.WindowNative.GetWindowHandle(this);
 
-        // remove title bar and extend content to fill the entire window
-//        this.ExtendsContentIntoTitleBar = true;
-
         // make the WinUI presenter non-resizable/min/max (chrome is already stripped by the base class)
         var presenter = this.AppWindow.Presenter as Microsoft.UI.Windowing.OverlappedPresenter;
         if (presenter is not null)

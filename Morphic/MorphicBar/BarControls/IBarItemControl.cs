@@ -44,4 +44,6 @@ public interface IBarItemControl
     // sub-buttons run horizontally vs vertically), the implementation must compose the size as
     // the requested orientation would arrange children, not as the current Orientation does.
     Windows.Foundation.Size MeasureForOrientation(Windows.Foundation.Size availableSize, Orientation orientation);
+
+    void RefreshButtonCompoundStates();
 }

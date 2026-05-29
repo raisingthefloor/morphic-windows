@@ -22,13 +22,8 @@
 // * Consumer Electronics Association Foundation
 
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
-using Morphic.Core;
-using System;
-using System.ComponentModel;
-using System.Diagnostics;
 
 namespace Morphic.MorphicBar.BarControls;
 
@@ -36,12 +31,19 @@ public sealed partial class BarButtonControl : UserControl, IBarItemControl
 {
     private BarButtonData? _data;
     private ButtonBase? _button;
-    private bool _isActionInProgress;
     private Orientation _orientation = Orientation.Horizontal;
 
     public BarButtonControl()
     {
         this.InitializeComponent();
+    }
+
+    public void RefreshButtonCompoundStates()
+    {
+        if (_button is not null)
+        {
+            CompoundStatePointerWiring.RefreshVisualState(_button);
+        }
     }
 
     public BarButtonData? Data
@@ -133,76 +135,7 @@ public sealed partial class BarButtonControl : UserControl, IBarItemControl
         var plainStyle = (Style)this.Resources["BarButtonStyle"];
         var toggleStyle = (Style)this.Resources["BarToggleButtonStyle"];
 
-        ButtonBase button;
-        if (_data.IsToggle)
-        {
-            // GuardedToggleButton suppresses the framework's automatic IsChecked toggle on
-            // click. The click handler computes the user's intent (!current), runs the
-            // action, and on success writes the value to data, which propagates back to
-            // IsChecked via the PropertyChanged subscription below. See GuardedToggleButton.cs
-            // for the full rationale.
-            var toggleButton = new GuardedToggleButton
-            {
-                Style = toggleStyle,
-                IsChecked = _data.IsChecked,
-                IsEnabled = _data.IsEnabled,
-                Content = _data.Text,
-            };
-            // Intentionally NOT mirroring Checked/Unchecked back into _data.IsChecked. Data updates
-            // happen only in Button_Click on action SUCCESS so that an in-flight real-time event
-            // listener can update _data.IsChecked during the action without our immediate-toggle
-            // handler clobbering the listener's value.
-            //
-            // The data is the source of truth: when _data.IsChecked or IsEnabled changes (via the
-            // action's post-completion write, OR via an external listener writing directly to the
-            // data), the PropertyChanged subscription below pulls the new value into the live
-            // ToggleButton. The subscriber is unsubscribed on Unloaded so the data doesn't hold a
-            // reference to a discarded UI (matters when the BarButtonControl's Data is reassigned,
-            // since ApplyData clears RootContainer.Children and the old ToggleButton unloads).
-            //
-            // Marshal through DispatcherQueue because the writer may be off the UI thread (system
-            // event listeners typically fire on background threads). The setter's equality short-
-            // circuit prevents a feedback loop if the data write originated from the UI.
-            var capturedData = _data;
-            var capturedToggleButton = toggleButton;
-            PropertyChangedEventHandler propertyChangedHandler = (_, args) =>
-            {
-                if (args.PropertyName == nameof(BarButtonData.IsChecked))
-                {
-                    this.DispatcherQueue.TryEnqueue(() =>
-                    {
-                        capturedToggleButton.IsChecked = capturedData.IsChecked;
-                    });
-                }
-                else if (args.PropertyName == nameof(BarButtonData.IsEnabled))
-                {
-                    this.DispatcherQueue.TryEnqueue(() =>
-                    {
-                        capturedToggleButton.IsEnabled = capturedData.IsEnabled;
-                    });
-                }
-            };
-            capturedData.PropertyChanged += propertyChangedHandler;
-            toggleButton.Unloaded += (_, _) => capturedData.PropertyChanged -= propertyChangedHandler;
-            toggleButton.Click += Button_Click;
-            ToggleButtonCompoundState.Wire(toggleButton);
-            button = toggleButton;
-        }
-        else
-        {
-            var plainButton = new Button
-            {
-                Style = plainStyle,
-                Content = _data.Text,
-            };
-            plainButton.Click += Button_Click;
-            ButtonCompoundState.Wire(plainButton);
-            button = plainButton;
-        }
-
-        // set the accessible (screen reader) name for the button; fall back to the text if no accessible name was specified
-        AutomationProperties.SetName(button, _data.AccessibleName ?? _data.Text);
-        ToolTipService.SetToolTip(button, _data.Tooltip);
+        var button = BarButtonBuilder.CreateButton(_data, plainStyle, toggleStyle);
 
         // a standalone bar button is the lone "sub-button" of its group, so all 4 corners are
         // rounded -- matches BarMultiButtonControl.ApplyCornerRadii's single-button case
@@ -210,69 +143,5 @@ public sealed partial class BarButtonControl : UserControl, IBarItemControl
 
         this.RootContainer.Children.Add(button);
         _button = button;
-    }
-
-    private async void Button_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is not ButtonBase button)
-        {
-            return;
-        }
-		//
-        var action = _data?.Action;
-        if (action is null)
-        {
-            return;
-        }
-		//
-        if (_isActionInProgress)
-        {
-            return;
-        }
-
-        // Compute the user's INTENT (the value the user wants the toggle to settle at). Because
-        // GuardedToggleButton suppresses the framework's automatic IsChecked toggle on click,
-        // toggleButton.IsChecked still holds the PRE-click value here, so flipping it gives us
-        // the intended new value. For non-toggle buttons, intent is meaningless (null). Null
-        // IsChecked (three-state) is treated as false for flip purposes; we don't use IsThreeState
-        // in this codebase, so this just keeps the null-safety honest.
-        var toggleButton = sender as ToggleButton;
-        bool? intendedIsChecked = toggleButton is null ? null : !(toggleButton.IsChecked == true);
-        var actionTag = _data!.ActionTag;
-
-        // Re-entry during the action is prevented by _isActionInProgress (checked above). We do
-        // NOT need to block input (e.g. via IsEnabled=false or IsHitTestVisible=false):
-        // GuardedToggleButton already prevents the framework's auto-toggle from disturbing the
-        // visual, and any re-clicks during the action are no-ops because the re-entry guard
-        // catches them before the action is invoked again.
-        _isActionInProgress = true;
-		//
-        bool actionSucceeded;
-        try
-        {
-            var result = await DelayedInProgressVisual.RunAsync(button, () => action.Invoke(actionTag, intendedIsChecked));
-            actionSucceeded = result.IsSuccess;
-        }
-        catch (Exception ex)
-        {
-            // an action throwing is treated as failure: the system state didn't change in any
-            // well-defined way, so we don't write the intended value to data
-            Debug.WriteLine($"[BarItem] {actionTag} threw: {ex}");
-            actionSucceeded = false;
-        }
-        finally
-        {
-            _isActionInProgress = false;
-        }
-
-        // Data is the single source of truth: on success we write the intended value, which
-        // propagates back to toggleButton.IsChecked via the PropertyChanged subscription set up
-        // in ApplyData (visible visual flip happens then). On failure: no-op, because
-        // GuardedToggleButton suppressed the framework's auto-toggle on click, toggleButton's
-        // visual never moved, so there is nothing to revert.
-        if (toggleButton is not null && intendedIsChecked.HasValue && actionSucceeded)
-        {
-            _data.IsChecked = intendedIsChecked.Value;
-        }
     }
 }

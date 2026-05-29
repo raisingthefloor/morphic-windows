@@ -190,6 +190,44 @@ internal static class CompoundStatePointerWiring
             VisualStateManager.GoToState(button, tracker.ComputeStateName(), useTransitions: false);
             VisualStateManager.GoToState(button, tracker.ComputeProgressStateName(), useTransitions: false);
         };
+
+        void OnCommonStateChanged(object sender, VisualStateChangedEventArgs e)
+        {
+            if (tracker.InProgressVisual != InProgressVisual.None && e.NewState?.Name != "InProgress")
+            {
+                VisualStateManager.GoToState(button, tracker.ComputeStateName(), useTransitions: false);
+            }
+        }
+        button.Loaded += (_, _) =>
+        {
+            var commonStatesGroup = CompoundStatePointerWiring.FindCommonStatesGroup(button);
+            if (commonStatesGroup is null)
+            {
+                return;
+            }
+            commonStatesGroup.CurrentStateChanged -= OnCommonStateChanged;
+            commonStatesGroup.CurrentStateChanged += OnCommonStateChanged;
+        };
+    }
+
+    private static VisualStateGroup? FindCommonStatesGroup(Control button)
+    {
+        if (Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChildrenCount(button) == 0)
+        {
+            return null;
+        }
+        if (Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChild(button, 0) is not FrameworkElement templateRoot)
+        {
+            return null;
+        }
+        foreach (var group in VisualStateManager.GetVisualStateGroups(templateRoot))
+        {
+            if (group.Name == "CommonStates")
+            {
+                return group;
+            }
+        }
+        return null;
     }
 
     // Updates the in-progress visual. Drives BOTH state groups:

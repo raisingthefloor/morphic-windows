@@ -55,7 +55,7 @@ internal class SettingItemProxy
         String
     }
 
-    private SystemSettings_DataModel.ISettingItem _settingItem;
+    private readonly SystemSettings_DataModel.ISettingItem _settingItem;
 
     internal SettingItemProxy(SystemSettings_DataModel.ISettingItem settingItem)
     {
@@ -111,7 +111,7 @@ internal class SettingItemProxy
     private EventHandler? _isEnabledChanged = null;
     private EventHandler? _valueChanged = null;
     //
-    private object _eventsLock = new object();
+    private readonly object _eventsLock = new object();
 
     //
 
@@ -254,18 +254,18 @@ internal class SettingItemProxy
                 return MorphicResult.ErrorResult<IGetValueError>(new IGetValueError.ExceptionError(ex));
             }
 
-            // STEP 3: make sure that the setting is still applicable/enabled (see notes on STEP 1), as a sanity check that our value is still good; note that this is not a failproof strategy
+            // STEP 3: make sure that the setting is still enabled (see notes on STEP 1), as a sanity check that our value is still good; note that this is not a failproof strategy.
             bool isApplicable;
             bool isEnabled;
             try
             {
-                (isApplicable, isEnabled) = SettingItemDispatcher.Run(() => (_settingItem.IsApplicable, _settingItem.IsEnabled));
+                isEnabled = SettingItemDispatcher.Run(() => _settingItem.IsEnabled);
             }
             catch (Exception ex)
             {
                 return MorphicResult.ErrorResult<IGetValueError>(new IGetValueError.ExceptionError(ex));
             }
-            if (isApplicable == true && isEnabled == true)
+            if (isEnabled == true)
             {
                 break;
             }
@@ -376,31 +376,34 @@ internal class SettingItemProxy
         try
         {
             // Wrapping each primitive via the corresponding PropertyValue.CreateXxx factory produces a
-            // real WinRT IPropertyValue that the projection hands off to the native side without needing 
-            // further marshaling. Note: sbyte (Int8) has no PropertyValue factory because WinRT itself 
-            // doesn't define an Int8 primitive type; pass it as int (or accept whatever the projection 
+            // real WinRT IPropertyValue that the projection hands off to the native side without needing
+            // further marshaling. Note: sbyte (Int8) has no PropertyValue factory because WinRT itself
+            // doesn't define an Int8 primitive type; pass it as int (or accept whatever the projection
             // does) if a setting ever needs it.
-            object winrtValue = value switch
+            SettingItemDispatcher.Run(() =>
             {
-                bool b => Windows.Foundation.PropertyValue.CreateBoolean(b),
-                string s => Windows.Foundation.PropertyValue.CreateString(s),
-                byte u8 => Windows.Foundation.PropertyValue.CreateUInt8(u8),
-                short i16 => Windows.Foundation.PropertyValue.CreateInt16(i16),
-                ushort u16 => Windows.Foundation.PropertyValue.CreateUInt16(u16),
-                int i32 => Windows.Foundation.PropertyValue.CreateInt32(i32),
-                uint u32 => Windows.Foundation.PropertyValue.CreateUInt32(u32),
-                long i64 => Windows.Foundation.PropertyValue.CreateInt64(i64),
-                ulong u64 => Windows.Foundation.PropertyValue.CreateUInt64(u64),
-                float f => Windows.Foundation.PropertyValue.CreateSingle(f),
-                double d => Windows.Foundation.PropertyValue.CreateDouble(d),
-                char c => Windows.Foundation.PropertyValue.CreateChar16(c),
-                System.Guid g => Windows.Foundation.PropertyValue.CreateGuid(g),
-                System.DateTimeOffset dt => Windows.Foundation.PropertyValue.CreateDateTime(dt),
-                System.TimeSpan ts => Windows.Foundation.PropertyValue.CreateTimeSpan(ts),
-                _ => value,
-            };
+                object winrtValue = value switch
+                {
+                    bool b => Windows.Foundation.PropertyValue.CreateBoolean(b),
+                    string s => Windows.Foundation.PropertyValue.CreateString(s),
+                    byte u8 => Windows.Foundation.PropertyValue.CreateUInt8(u8),
+                    short i16 => Windows.Foundation.PropertyValue.CreateInt16(i16),
+                    ushort u16 => Windows.Foundation.PropertyValue.CreateUInt16(u16),
+                    int i32 => Windows.Foundation.PropertyValue.CreateInt32(i32),
+                    uint u32 => Windows.Foundation.PropertyValue.CreateUInt32(u32),
+                    long i64 => Windows.Foundation.PropertyValue.CreateInt64(i64),
+                    ulong u64 => Windows.Foundation.PropertyValue.CreateUInt64(u64),
+                    float f => Windows.Foundation.PropertyValue.CreateSingle(f),
+                    double d => Windows.Foundation.PropertyValue.CreateDouble(d),
+                    char c => Windows.Foundation.PropertyValue.CreateChar16(c),
+                    System.Guid g => Windows.Foundation.PropertyValue.CreateGuid(g),
+                    System.DateTimeOffset dt => Windows.Foundation.PropertyValue.CreateDateTime(dt),
+                    System.TimeSpan ts => Windows.Foundation.PropertyValue.CreateTimeSpan(ts),
+                    _ => value,
+                };
 
-            SettingItemDispatcher.Run(() => _settingItem.SetValue(name, winrtValue));
+                _settingItem.SetValue(name, winrtValue);
+            });
         }
         catch (Exception ex)
         {
@@ -459,7 +462,7 @@ internal class SettingItemProxy
 
     private async Task<MorphicResult<MorphicUnit, IWaitForSettingEventError>> WaitForIsEnabledEventAsync(int timeoutInMilliseconds, bool alsoWaitForApplicable = false)
     {
-        var propertyChangedWaitHandle = new AutoResetEvent(false);
+        using var propertyChangedWaitHandle = new AutoResetEvent(false);
         var propertyChangedHandler = new Windows.Foundation.TypedEventHandler<object, string>((object sender, string args) =>
         {
             switch (args)
@@ -614,10 +617,10 @@ internal class SettingItemProxy
     // then loop on event signal until satisfied or timed out.
     //
     // The event filter only signals on the "Value" SettingChanged subkey -- other property
-    // changes (IsApplicable, IsEnabled) don't wake the loop. The read itself is guarded against
-    // exceptions (a failing GetValue is treated as "condition not satisfied" rather than
-    // re-thrown -- we'd rather wait through a transient framework hiccup than fail the whole
-    // verification on a single read).
+    // changes (IsApplicable, IsEnabled) don't wake the loop. The read itself is guarded by
+    // try/catch and propagates the exception as IWaitForSettingEventError.ExceptionError --
+    // we surface read failures rather than spinning silently until timeout, so a broken proxy
+    // or genuinely failing GetValue can't masquerade as ValueDidNotApplyAfterSet.
     //
     // Equality uses System.Object.Equals (the static one, which handles nulls). Works correctly
     // for the boxed primitive types SettingItems carry in practice (bool, int, string, double).
@@ -625,7 +628,7 @@ internal class SettingItemProxy
     // equality" the way we expect, we'd need a comparer parameter -- not currently needed.
     private async Task<MorphicResult<MorphicUnit, IWaitForSettingEventError>> WaitForValueToEqualAsync(string name, object expectedValue, int timeoutInMilliseconds)
     {
-        var propertyChangedWaitHandle = new AutoResetEvent(false);
+        using var propertyChangedWaitHandle = new AutoResetEvent(false);
         var propertyChangedHandler = new Windows.Foundation.TypedEventHandler<object, string>((object sender, string args) =>
         {
             if (args == "Value")
@@ -635,26 +638,31 @@ internal class SettingItemProxy
         });
         var isWatchingForPropertyChangedEvent = false;
 
-        var isConditionSatisfied = () =>
+        MorphicResult<bool, IWaitForSettingEventError> CheckIsConditionSatisfied()
         {
             object? currentValue;
             try
             {
                 currentValue = SettingItemDispatcher.Run(() => _settingItem.GetValue(name));
             }
-            catch
+            catch (Exception ex)
             {
-                return false;
+                return MorphicResult.ErrorResult<IWaitForSettingEventError>(new IWaitForSettingEventError.ExceptionError(ex));
             }
-            return object.Equals(currentValue, expectedValue);
-        };
+            return MorphicResult.OkResult(object.Equals(currentValue, expectedValue));
+        }
 
         try
         {
             Stopwatch timeoutStopwatch = Stopwatch.StartNew();
             while (true)
             {
-                if (isConditionSatisfied() == true)
+                var checkResult = CheckIsConditionSatisfied();
+                if (checkResult.IsError == true)
+                {
+                    return MorphicResult.ErrorResult(checkResult.Error!);
+                }
+                if (checkResult.Value == true)
                 {
                     break;
                 }
@@ -674,7 +682,12 @@ internal class SettingItemProxy
                     // Recheck once after subscribing in case the value settled between the first
                     // check and our subscription wiring up (otherwise we could wait forever on a
                     // signal that already fired).
-                    if (isConditionSatisfied() == true)
+                    var recheckResult = CheckIsConditionSatisfied();
+                    if (recheckResult.IsError == true)
+                    {
+                        return MorphicResult.ErrorResult(recheckResult.Error!);
+                    }
+                    if (recheckResult.Value == true)
                     {
                         break;
                     }
@@ -738,30 +751,30 @@ internal class SettingItemProxy
     ///// on unsubscribe failure the user's handler IS removed but downstream WinRT cleanup may
     ///// have failed. Callers must catch.
     ///// </exception>
-    //public event EventHandler IsApplicableChanged
-    //{
-    //    add
-    //    {
-    //        lock (_eventsLock)
-    //        {
-    //            if (_settingsChangedEventHandlerIsSubscribed == false)
-    //            {
-    //                _settingItem.SettingChanged += _settingItem_SettingChanged;
-    //                _settingsChangedEventHandlerIsSubscribed = true;
-    //            }
-    //            _isApplicableChanged += value;
-    //        }
-    //    }
-    //    remove
-    //    {
-    //        lock (_eventsLock)
-    //        {
-    //            _isApplicableChanged -= value;
-    //        }
-    //
-    //        this.UnsubscribeSettingChangedEventHandlerIfEventsAreEmpty();
-    //    }
-    //}
+    public event EventHandler IsApplicableChanged
+    {
+        add
+        {
+            lock (_eventsLock)
+            {
+                if (_settingsChangedEventHandlerIsSubscribed == false)
+                {
+                    SettingItemDispatcher.Run(() => { _settingItem.SettingChanged += _settingItem_SettingChanged; });
+                    _settingsChangedEventHandlerIsSubscribed = true;
+                }
+                _isApplicableChanged += value;
+            }
+        }
+        remove
+        {
+            lock (_eventsLock)
+            {
+                _isApplicableChanged -= value;
+            }
+
+            this.UnsubscribeSettingChangedEventHandlerIfEventsAreEmpty();
+        }
+    }
 
     /// <summary>
     /// Raised when the WinRT SettingItem's IsEnabled property changes. Handler callbacks run on
@@ -862,67 +875,38 @@ internal class SettingItemProxy
 
     private void _settingItem_SettingChanged(object sender, string args)
     {
-        // NOTE: we raise each event subscription individually in case any of them throw exceptions; we do so asynchronously, so users should queue their events when raised
-        //        or dispatch to the main thread
-        switch (args)
+        EventHandler? source = args switch
         {
-            case "IsApplicable":
-                {
-                    var invocationList = _isApplicableChanged?.GetInvocationList();
-                    if (invocationList is not null)
-                    {
-                        foreach (EventHandler element in invocationList!)
-                        {
-                            _ = Task.Run(() =>
-                            {
-                                element.Invoke(sender, EventArgs.Empty);
-                            });
-                        }
-                    }
-                    //_ = Task.Run(() => {
-                    //    _isApplicableChanged?.Invoke(sender, EventArgs.Empty);
-                    //});
-                }
-                break;
-            case "IsEnabled":
-                {
-                    var invocationList = _isEnabledChanged?.GetInvocationList();
-                    if (invocationList is not null)
-                    {
-                        foreach (EventHandler element in invocationList!)
-                        {
-                            _ = Task.Run(() =>
-                            {
-                                element.Invoke(sender, EventArgs.Empty);
-                            });
-                        }
-                    }
-                    //_ = Task.Run(() => {
-                    //    _isApplicableChanged?.Invoke(sender, EventArgs.Empty);
-                    //});
-                }
-                break;
-            case "Value":
-                {
-                    var invocationList = _valueChanged?.GetInvocationList();
-                    if (invocationList is not null)
-                    {
-                        foreach (EventHandler element in invocationList!)
-                        {
-                            _ = Task.Run(() =>
-                            {
-                                element.Invoke(sender, EventArgs.Empty);
-                            });
-                        }
-                    }
-                    //_ = Task.Run(() => {
-                    //    _isApplicableChanged?.Invoke(sender, EventArgs.Empty);
-                    //});
-                }
-                break;
-            default:
-                break;
+            "IsApplicable" => _isApplicableChanged,
+            "IsEnabled" => _isEnabledChanged,
+            "Value" => _valueChanged,
+            _ => null,
+        };
+        SettingItemProxy.DispatchEventToSubscribers(source, sender);
+    }
+
+    private static void DispatchEventToSubscribers(EventHandler? source, object sender)
+    {
+        var invocationList = source?.GetInvocationList();
+        if (invocationList is null || invocationList.Length == 0)
+        {
+            return;
         }
+
+        _ = Task.Run(() =>
+        {
+            foreach (EventHandler subscriber in invocationList)
+            {
+                try
+                {
+                    subscriber.Invoke(sender, EventArgs.Empty);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[SettingItemProxy] SettingChanged subscriber threw: {ex.Message}");
+                }
+            }
+        });
     }
 
     #endregion Event handlers

@@ -171,6 +171,8 @@ internal class BarItemHandlers
 
     //
 
+    // snip + copy
+
     private static readonly string[] s_snipOverlayProcessNames = new[] { "ScreenClippingHost", "ScreenSketch", "SnippingTool" };
 
     private static readonly TimeSpan s_snipLaunchGracePeriod = TimeSpan.FromSeconds(5);

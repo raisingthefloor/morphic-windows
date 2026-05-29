@@ -40,6 +40,10 @@ namespace Morphic.Controls.Windowing;
 //   * Subclasses the window with a WndProc that:
 //       - returns 0 for WM_NCCALCSIZE (client area equals full window rect, no non-client)
 //       - returns 1 for WM_NCACTIVATE (suppress default non-client paint)
+//       - returns 1 for WM_ERASEBKGND (suppresses the default class brush painting an
+//         opaque background into the redirection bitmap; without this, legacy capture
+//         APIs and some compositor fallback paths read the bitmap and see opaque pixels
+//         in regions outside the subclass's drawn rounded shape)
 //       - honors per-instance min-track-size set via SetMinimumTrackSize
 //   * SetWindowPos(SWP_FRAMECHANGED) to apply the WM_NCCALCSIZE stripout immediately
 //   * DWMWA_WINDOW_CORNER_PREFERENCE = DWMWCP_DONOTROUND (no DWM rounding)

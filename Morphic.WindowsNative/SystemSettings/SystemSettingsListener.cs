@@ -24,6 +24,7 @@
 using Morphic.Core;
 using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace Morphic.WindowsNative.SystemSettings;
 
@@ -40,12 +41,12 @@ namespace Morphic.WindowsNative.SystemSettings;
 // Windows broadcasts on the toggle path -- so a subscriber for HighContrastChanged gets called
 // only when high-contrast actually changes, not on every General/Locale/Mouse/... fire.
 //
-public class SystemSettingsListener : IDisposable
+public sealed class SystemSettingsListener
 {
     public static SystemSettingsListener Shared { get; } = new();
 
     private bool _isListening = false;
-    private bool disposedValue;
+    private readonly object _listeningLock = new();
 
     private SystemSettingsListener()
     {
@@ -66,12 +67,35 @@ public class SystemSettingsListener : IDisposable
     {
         add
         {
-            this.EnsureListeningIsEnabled_ThrowExceptionOnError();
-            _highContrastChanged += value;
+            lock (_listeningLock)
+            {
+                if (_isListening == false)
+                {
+                    var startResult = this.StartListening();
+                    if (startResult.IsError == true)
+                    {
+                        var message = startResult.Error! switch
+                        {
+                            IStartListeningError.WrongThread(var observed) =>
+                                $"SystemSettingsListener.HighContrastChanged += called from {observed} thread; must be the UI/STA thread with a Win32 message pump. HiddenMessageWindow would be created on the wrong thread and the broadcast trampoline would never fire. Subscribe from the UI thread or marshal to it. Events will not fire until listening starts successfully.",
+                            IStartListeningError.InitializationFailed =>
+                                "SystemSettingsListener.HighContrastChanged += could not initialize HiddenMessageWindow. Events will not fire until listening starts successfully.",
+                            _ =>
+                                "SystemSettingsListener.HighContrastChanged += could not start listening.",
+                        };
+                        Debug.Assert(false, message);
+                        System.Diagnostics.Trace.WriteLine(message);
+                    }
+                }
+                _highContrastChanged += value;
+            }
         }
         remove
         {
-            _highContrastChanged -= value;
+            lock (_listeningLock)
+            {
+                _highContrastChanged -= value;
+            }
         }
     }
 
@@ -79,48 +103,49 @@ public class SystemSettingsListener : IDisposable
     // Listening lifecycle
     //
 
-    // Initializes the underlying broadcast-catching window (HiddenMessageWindow) and subscribes
-    // our trampoline to it. Idempotent. Must be called from a thread with a running Win32
-    // message pump (the UI thread) -- HiddenMessageWindow creates its window on the calling
-    // thread and that thread owns the message dispatch. The first event-property subscription
-    // (typically from the bar factory, on the UI thread) calls this automatically.
-    //
-    // NOTE: this function is exposed externally to enable callers to start listening (with success/failure) before wiring up events
-    public MorphicResult<MorphicUnit, MorphicUnit> StartListening()
+    public interface IStartListeningError
     {
-        if (_isListening == false)
+        public record WrongThread(System.Threading.ApartmentState Observed) : IStartListeningError;
+        public record InitializationFailed : IStartListeningError;
+    }
+    // NOTE: this function is exposed externally to enable callers to start listening (with success/failure) before wiring up events
+    public MorphicResult<MorphicUnit, IStartListeningError> StartListening()
+    {
+        lock (_listeningLock)
         {
+            if (_isListening == true)
+            {
+                return MorphicResult.OkResult();
+            }
+
+            var apartment = System.Threading.Thread.CurrentThread.GetApartmentState();
+            if (apartment != System.Threading.ApartmentState.STA)
+            {
+                return MorphicResult.ErrorResult<IStartListeningError>(new IStartListeningError.WrongThread(apartment));
+            }
+
             var initializeResult = Morphic.WindowsNative.Windowing.HiddenMessageWindow.Initialize();
             if (initializeResult.IsError)
             {
                 Debug.Assert(false, "HiddenMessageWindow.Initialize() failed; system-settings notifications will not fire");
-                return MorphicResult.ErrorResult();
+                return MorphicResult.ErrorResult<IStartListeningError>(new IStartListeningError.InitializationFailed());
             }
             Morphic.WindowsNative.Windowing.HiddenMessageWindow.MessageReceived += this.HiddenMessageWindowMessageReceivedTrampoline;
             _isListening = true;
+            return MorphicResult.OkResult();
         }
-        return MorphicResult.OkResult();
     }
 
     // Stops dispatching events. The underlying HiddenMessageWindow stays alive (process-lifetime);
     // we just stop routing its broadcasts through us. Idempotent.
     public void StopListening()
     {
-        if (_isListening == true)
+        lock (_listeningLock)
         {
-            Morphic.WindowsNative.Windowing.HiddenMessageWindow.MessageReceived -= this.HiddenMessageWindowMessageReceivedTrampoline;
-            _isListening = false;
-        }
-    }
-
-    private void EnsureListeningIsEnabled_ThrowExceptionOnError()
-    {
-        if (_isListening == false)
-        {
-            var startListeningResult = this.StartListening();
-            if (startListeningResult.IsError == true)
+            if (_isListening == true)
             {
-                throw new InvalidOperationException("SystemSettingsListener could not start listening (HiddenMessageWindow initialization failed)");
+                Morphic.WindowsNative.Windowing.HiddenMessageWindow.MessageReceived -= this.HiddenMessageWindowMessageReceivedTrampoline;
+                _isListening = false;
             }
         }
     }
@@ -144,50 +169,37 @@ public class SystemSettingsListener : IDisposable
         switch ((Windows.Win32.UI.WindowsAndMessaging.SYSTEM_PARAMETERS_INFO_ACTION)wParam)
         {
             case Windows.Win32.UI.WindowsAndMessaging.SYSTEM_PARAMETERS_INFO_ACTION.SPI_SETHIGHCONTRAST:
-                _highContrastChanged?.Invoke(this, EventArgs.Empty);
+                SystemSettingsListener.DispatchEventToSubscribers(_highContrastChanged, this);
                 return;
         }
-    }
 
-    //
-    // IDisposable
-    //
+    }
 
     // Defensive only -- the singleton normally lives for the process lifetime. If a caller
     // explicitly disposes us, we unsubscribe from the underlying HiddenMessageWindow event so
     // our handler isn't kept alive by it.
-
-    protected virtual void Dispose(bool disposing)
+    private static void DispatchEventToSubscribers(EventHandler? source, object sender)
     {
-        if (!disposedValue)
+        var invocationList = source?.GetInvocationList();
+        if (invocationList is null || invocationList.Length == 0)
         {
-            if (disposing)
-            {
-                // NOTE: dispose managed state (managed objects)
-            }
-
-            try
-            {
-                Morphic.WindowsNative.Windowing.HiddenMessageWindow.MessageReceived -= this.HiddenMessageWindowMessageReceivedTrampoline;
-            }
-            catch
-            {
-            }
-
-            disposedValue = true;
+            return;
         }
+
+        _ = Task.Run(() =>
+        {
+            foreach (EventHandler subscriber in invocationList)
+            {
+                try
+                {
+                    subscriber.Invoke(sender, EventArgs.Empty);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[SystemSettingsListener] subscriber threw: {ex.Message}");
+                }
+            }
+        });
     }
 
-    ~SystemSettingsListener()
-    {
-        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        Dispose(disposing: false);
-    }
-
-    public void Dispose()
-    {
-        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
-    }
 }

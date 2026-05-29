@@ -17,9 +17,11 @@
     <WinUISDKReferences>false</WinUISDKReferences>
     <Nullable>enable</Nullable>
 
+
     <WindowsAppSdkBootstrapInitialize Condition="$(Configuration.EndsWith('-Packaged'))">false</WindowsAppSdkBootstrapInitialize>
 
     <WindowsPackageType Condition="!$(Configuration.EndsWith('-Packaged'))">None</WindowsPackageType>
+
     <WindowsAppSDKSelfContained Condition="'$(MorphicBuildSelfContained)' == 'true'">true</WindowsAppSDKSelfContained>
 	  
 	<!-- to support both packaged and unpacked scenarios, disable the auto-generated Program.cs and manually bootstrap WinUI instead -->    
@@ -32,6 +34,7 @@
     <Content Include="Assets\Icons\morphic-standardcontrast.ico" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+	
   <ItemGroup>
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>

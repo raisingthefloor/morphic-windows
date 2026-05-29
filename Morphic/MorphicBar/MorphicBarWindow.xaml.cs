@@ -411,6 +411,17 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         }
     }
 
+    public void RefreshAllButtonCompoundStatesAfterShow()
+    {
+        this.DispatcherQueue.TryEnqueue(() =>
+        {
+            foreach (var control in _allBarItemControls)
+            {
+                (control as IBarItemControl)?.RefreshButtonCompoundStates();
+            }
+        });
+    }
+
     private void RootGrid_Loaded(object sender, RoutedEventArgs e)
     {
         // record the current rasterization scale and subscribe to changes (e.g. monitor switch)
@@ -628,13 +639,6 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         // If snapResizeAtPoint was used above, AppWindow.Size already matches targetSize and
         // AnimationUtils.AnimateMoveTo's sizeChanging check will short-circuit the size interpolation.
         _moveAnimationTimer = AnimationUtils.AnimateMoveTo(_dispatcherQueue, this.AppWindow, targetPosition, targetSize, duration);
-
-        // Defuse the spurious Keyboard focus that the orientation-flip path can introduce on
-        // BarItemsPanel's first focusable child. Deferred via the dispatcher so it runs after
-        // WinUI's focus subsystem has settled from the layout changes performed synchronously
-        // above. Only runs when (a) this is the drag-release flip path (snapResizeAtPoint != null)
-        // AND (b) no element had Keyboard focus before the reflow; the latter preserves the
-        // (rare) case of a user who tabbed in and then mouse-dragged the bar.
         if (orientationChanging)
         {
             if (preRotationFocus.Control is not null)
