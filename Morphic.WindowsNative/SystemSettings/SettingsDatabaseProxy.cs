@@ -46,13 +46,18 @@ internal class SettingsDatabaseProxy
     {
         // STEP 1: make sure our shared SettingsDatabase object is populated
         //
+        // The constructor runs on the SettingItemDispatcher's STA worker thread so the
+        // resulting COM object is STA-affined; any ISettingItem we later fetch from it
+        // inherits that affinity. See SettingItemDispatcher for the apartment-affinity
+        // background.
+        //
         // NOTE: we don't know if SettingsDatabase.GetSetting will throw an exception or not, so we "catch" out of an abundance of caution
         try
         {
             if (_settingsDatabase == null)
             {
                 // attempt to create the system settings database
-                _settingsDatabase = new SystemSettings_DataModel.SettingsDatabase();
+                _settingsDatabase = SettingItemDispatcher.Run(() => new SystemSettings_DataModel.SettingsDatabase());
             }
         }
         catch (Exception ex)
@@ -75,7 +80,10 @@ internal class SettingsDatabaseProxy
                 // NOTE: we don't know if SettingsDatabase.GetSetting will throw an exception or not, so we "catch" out of an abundance of caution
                 try
                 {
-                    var settingItem = _settingsDatabase.GetSetting(id);
+                    // GetSetting runs on the STA worker thread so the returned ISettingItem
+                    // is STA-affined; subsequent calls on it from any apartment will cross-
+                    // marshal cleanly via the dispatcher.
+                    var settingItem = SettingItemDispatcher.Run(() => _settingsDatabase.GetSetting(id));
                     if (settingItem == null)
                     {
                         // if SettingsDatabase.GetSetting returns null, this appears to mean that the setting is not found

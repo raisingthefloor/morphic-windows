@@ -70,7 +70,7 @@ internal class SettingItemProxy
     {
         try
         {
-            return MorphicResult.OkResult(_settingItem.Id);
+            return MorphicResult.OkResult(SettingItemDispatcher.Run(() => _settingItem.Id));
         }
         catch (Exception ex)
         {
@@ -82,7 +82,7 @@ internal class SettingItemProxy
     {
         try
         {
-            return MorphicResult.OkResult(_settingItem.IsApplicable);
+            return MorphicResult.OkResult(SettingItemDispatcher.Run(() => _settingItem.IsApplicable));
         }
         catch (Exception ex)
         {
@@ -94,7 +94,7 @@ internal class SettingItemProxy
     {
         try
         {
-            return MorphicResult.OkResult(_settingItem.IsEnabled);
+            return MorphicResult.OkResult(SettingItemDispatcher.Run(() => _settingItem.IsEnabled));
         }
         catch (Exception ex)
         {
@@ -129,7 +129,7 @@ internal class SettingItemProxy
         SystemSettings_DataModel.SettingType settingItemType;
         try
         {
-            settingItemType = _settingItem.Type;
+            settingItemType = SettingItemDispatcher.Run(() => _settingItem.Type);
         }
         catch (Exception ex)
         {
@@ -243,7 +243,7 @@ internal class SettingItemProxy
             // NOTE: we're unsure if ISettingItem.GetValue(string) can throw an exception; we're catching exceptions anyway, out of an abundance of caution
             try
             {
-                valueAsObject = _settingItem.GetValue(name);
+                valueAsObject = SettingItemDispatcher.Run(() => _settingItem.GetValue(name));
                 if (valueAsObject == null)
                 {
                     return MorphicResult.OkResult<T?>(null);
@@ -259,8 +259,7 @@ internal class SettingItemProxy
             bool isEnabled;
             try
             {
-                isApplicable = _settingItem.IsApplicable;
-                isEnabled = _settingItem.IsEnabled;
+                (isApplicable, isEnabled) = SettingItemDispatcher.Run(() => (_settingItem.IsApplicable, _settingItem.IsEnabled));
             }
             catch (Exception ex)
             {
@@ -401,7 +400,7 @@ internal class SettingItemProxy
                 _ => value,
             };
 
-            _settingItem.SetValue(name, winrtValue);
+            SettingItemDispatcher.Run(() => _settingItem.SetValue(name, winrtValue));
         }
         catch (Exception ex)
         {
@@ -450,7 +449,7 @@ internal class SettingItemProxy
     #region Get/Set helper functions
 
     // Errors returned by the WaitFor* helpers: Timeout when the budget expires, ExceptionError
-    // when an underlying WinRT call throws. Kept private to SettingItemProxy -- callers translate 
+    // when an underlying WinRT call throws. Kept private to SettingItemProxy -- callers translate
 	// these into theirerror union (e.g. IGetValueError, ISetValueError).
     private interface IWaitForSettingEventError
     {
@@ -490,8 +489,7 @@ internal class SettingItemProxy
             bool isEnabled;
             try
             {
-                isApplicable = _settingItem.IsApplicable;
-                isEnabled = _settingItem.IsEnabled;
+                (isApplicable, isEnabled) = SettingItemDispatcher.Run(() => (_settingItem.IsApplicable, _settingItem.IsEnabled));
             }
             catch (Exception ex)
             {
@@ -541,7 +539,7 @@ internal class SettingItemProxy
                 {
                     try
                     {
-                        _settingItem.SettingChanged += propertyChangedHandler;
+                        SettingItemDispatcher.Run(() => { _settingItem.SettingChanged += propertyChangedHandler; });
                     }
                     catch (Exception ex)
                     {
@@ -599,7 +597,7 @@ internal class SettingItemProxy
                 // we already have a result to return and the wait is finishing one way or another.
                 try
                 {
-                    _settingItem.SettingChanged -= propertyChangedHandler;
+                    SettingItemDispatcher.Run(() => { _settingItem.SettingChanged -= propertyChangedHandler; });
                 }
                 catch (Exception ex)
                 {
@@ -642,7 +640,7 @@ internal class SettingItemProxy
             object? currentValue;
             try
             {
-                currentValue = _settingItem.GetValue(name);
+                currentValue = SettingItemDispatcher.Run(() => _settingItem.GetValue(name));
             }
             catch
             {
@@ -665,7 +663,7 @@ internal class SettingItemProxy
                 {
                     try
                     {
-                        _settingItem.SettingChanged += propertyChangedHandler;
+                        SettingItemDispatcher.Run(() => { _settingItem.SettingChanged += propertyChangedHandler; });
                     }
                     catch (Exception ex)
                     {
@@ -714,7 +712,7 @@ internal class SettingItemProxy
                 // we already have a result to return and the wait is finishing one way or another.
                 try
                 {
-                    _settingItem.SettingChanged -= propertyChangedHandler;
+                    SettingItemDispatcher.Run(() => { _settingItem.SettingChanged -= propertyChangedHandler; });
                 }
                 catch (Exception ex)
                 {
@@ -783,7 +781,7 @@ internal class SettingItemProxy
             {
                 if (_settingsChangedEventHandlerIsSubscribed == false)
                 {
-                    _settingItem.SettingChanged += _settingItem_SettingChanged;
+                    SettingItemDispatcher.Run(() => { _settingItem.SettingChanged += _settingItem_SettingChanged; });
                     _settingsChangedEventHandlerIsSubscribed = true;
                 }
                 _isEnabledChanged += value;
@@ -819,7 +817,7 @@ internal class SettingItemProxy
             {
                 if (_settingsChangedEventHandlerIsSubscribed == false)
                 {
-                    _settingItem.SettingChanged += _settingItem_SettingChanged;
+                    SettingItemDispatcher.Run(() => { _settingItem.SettingChanged += _settingItem_SettingChanged; });
                     _settingsChangedEventHandlerIsSubscribed = true;
                 }
                 _valueChanged += value;
@@ -852,7 +850,7 @@ internal class SettingItemProxy
                 // the caller per the event's documented contract.
                 try
                 {
-                    _settingItem.SettingChanged -= _settingItem_SettingChanged;
+                    SettingItemDispatcher.Run(() => { _settingItem.SettingChanged -= _settingItem_SettingChanged; });
                 }
                 finally
                 {

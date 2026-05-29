@@ -110,22 +110,6 @@ public class DarkMode
 
     //
 
-    // Force lazy initialization of the underlying SettingItems on the current thread's
-    // apartment. Call this from the STA UI thread at startup so the SettingItems are
-    // STA-affined; subsequent MTA Set/Get calls will then cross-marshal cleanly.
-    //
-    // If a SettingItem is first created on an MTA thread pool thread (the default when
-    // SetSystemUsesDarkModeAsync runs inside Task.Run before this method has run), the
-    // CsWinRT projection lands a corrupted v-table and the very first call faults with
-    // 0xC0000005.
-    public static void PrimeSettingItemsOnCurrentApartment()
-    {
-        _ = DarkMode.AppsUseLightThemeSettingItem;
-        _ = DarkMode.SystemUsesLightThemeSettingItem;
-        _ = DarkMode.SystemThemeSettingItem;
-    }
-
-    //
     public static MorphicResult<bool?, MorphicUnit> GetAppsUseDarkMode()
     {
         Microsoft.Win32.RegistryKey? personalizeKey;
