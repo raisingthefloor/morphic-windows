@@ -51,8 +51,9 @@ public class BarButtonData : IBarItemData, INotifyPropertyChanged, IDisposable
 	// Contents for text component of button
     public string Text { get; set; } = "";
 
-    // Name exposed to screen readers (via AutomationProperties.Name); falls back to `Text` if null.
-    public string? AccessibleName { get; set; }
+    // Name exposed to screen readers (via AutomationProperties.Name). See IAccessibleName for the
+    // available naming strategies (currently a single fixed name). Falls back to `Text` when null.
+    public IAccessibleName? AccessibleName { get; set; }
 
     public string? Tooltip { get; set; }
 

@@ -27,6 +27,7 @@ ReleaseCapture
 RemoveWindowSubclass
 SendMessage
 SetCurrentProcessExplicitAppUserModelID
+SetForegroundWindow
 SetWindowLongPtr
 SetWindowPos
 SetWindowSubclass

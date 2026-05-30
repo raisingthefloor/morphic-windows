@@ -92,6 +92,7 @@
     <PublishReadyToRun Condition="$(Configuration.Contains('Release'))">True</PublishReadyToRun>
     <PublishTrimmed Condition="$(Configuration.Contains('Debug'))">False</PublishTrimmed>
     <PublishTrimmed Condition="$(Configuration.Contains('Release'))">False</PublishTrimmed>
+
   </PropertyGroup>
 
   <!-- prevent the trimmer from removing types only referenced in XAML; this could be narrowed to specific types if necessary (to minimize installer size) -->

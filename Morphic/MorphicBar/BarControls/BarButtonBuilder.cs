@@ -51,6 +51,26 @@ internal static class BarButtonBuilder
         target.SetValue(IsActionInProgressProperty, value);
     }
 
+    // Records whether the gesture about to raise this button's Click was a keyboard / assistive-
+    // technology invocation (true) rather than a mouse / touch / pen one (false). RunClickAsync
+    // reads it to publish the modality for modality-aware actions (see BarButtonInvocationContext).
+    private static readonly DependencyProperty InvokedViaKeyboardProperty =
+        DependencyProperty.RegisterAttached(
+            "InvokedViaKeyboard",
+            typeof(bool),
+            typeof(BarButtonBuilder),
+            new PropertyMetadata(true));
+
+    private static bool GetInvokedViaKeyboard(DependencyObject target)
+    {
+        return (bool)target.GetValue(InvokedViaKeyboardProperty);
+    }
+
+    private static void SetInvokedViaKeyboard(DependencyObject target, bool value)
+    {
+        target.SetValue(InvokedViaKeyboardProperty, value);
+    }
+
     public static ButtonBase CreateButton(BarButtonData data, Style plainStyle, Style toggleStyle)
     {
         ButtonBase button;
@@ -111,7 +131,17 @@ internal static class BarButtonBuilder
 
         button.Click += async (_, _) => await BarButtonBuilder.RunClickAsync(button, data);
 
-        AutomationProperties.SetName(button, data.AccessibleName ?? data.Text);
+        // Record a pointer-driven invocation so the click flow can distinguish it from a keyboard /
+        // assistive-technology one (modality-aware focus policy; see RunClickAsync and
+        // BarButtonInvocationContext).
+        button.AddHandler(
+            Microsoft.UI.Xaml.UIElement.PointerPressedEvent,
+            new Microsoft.UI.Xaml.Input.PointerEventHandler((_, _) => BarButtonBuilder.SetInvokedViaKeyboard(button, false)),
+            handledEventsToo: true);
+
+        // accessible (screen reader) name; resolve against the current checked state (a fixed name
+        // ignores it), falling back to the visible text when no accessible name was specified.
+        AutomationProperties.SetName(button, data.AccessibleName?.ResolveName(data.IsChecked) ?? data.Text);
         ToolTipService.SetToolTip(button, data.Tooltip);
 
         return button;
@@ -135,6 +165,8 @@ internal static class BarButtonBuilder
 
         BarButtonBuilder.SetIsActionInProgress(button, true);
 
+        BarButtonInvocationContext.SetInvokedViaKeyboard(BarButtonBuilder.GetInvokedViaKeyboard(button));
+
         bool actionSucceeded;
         try
         {
@@ -149,6 +181,7 @@ internal static class BarButtonBuilder
         finally
         {
             BarButtonBuilder.SetIsActionInProgress(button, false);
+            BarButtonBuilder.SetInvokedViaKeyboard(button, true);
         }
 
         if (toggleButton is not null && intendedIsChecked.HasValue && actionSucceeded)

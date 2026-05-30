@@ -54,7 +54,6 @@ namespace Morphic.Controls.Windowing;
 //     modern documented approach.
 public class ChromelessBaseWindow : Window
 {
-    public static Action<string>? OnDiagnostic;
     // a generated dispatch queue controller (required for any custom SystemBackdrop the
     // subclass might attach later)
     private static Windows.System.DispatcherQueueController? _dispatcherQueueController;
@@ -83,18 +82,10 @@ public class ChromelessBaseWindow : Window
         _subclassProc = ChromelessBaseWindow.SubclassWndProc;
         var setSubclassResult = Windows.Win32.PInvoke.SetWindowSubclass(hwnd, _subclassProc, 0, 0);
         System.Diagnostics.Debug.Assert(setSubclassResult);
-        if (setSubclassResult == false)
-        {
-            ChromelessBaseWindow.OnDiagnostic?.Invoke("ChromelessBaseWindow: SetWindowSubclass returned FALSE");
-        }
 
         // tell Windows to send WM_NCCALCSIZE immediately; our SubclassWndProc will handle that, to make the client area fill the entire window
         var setWindowPosResult = Windows.Win32.PInvoke.SetWindowPos(hwnd, new HWND(new IntPtr(-1)), 0, 0, 0, 0, SET_WINDOW_POS_FLAGS.SWP_FRAMECHANGED | SET_WINDOW_POS_FLAGS.SWP_NOMOVE | SET_WINDOW_POS_FLAGS.SWP_NOSIZE | SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
         System.Diagnostics.Debug.Assert(setWindowPosResult);
-        if (setWindowPosResult == false)
-        {
-            ChromelessBaseWindow.OnDiagnostic?.Invoke("ChromelessBaseWindow: SetWindowPos(SWP_FRAMECHANGED) returned FALSE");
-        }
 
         // DWMWA_WINDOW_CORNER_PREFERENCE and DWMWA_BORDER_COLOR are Win11-only DWM attributes
         // (introduced in build 22000). On Win10 the system returns E_INVALIDARG /
@@ -109,20 +100,12 @@ public class ChromelessBaseWindow : Window
             Span<byte> cornerPreferenceAsSpan = System.Runtime.InteropServices.MemoryMarshal.AsBytes(new Span<int>(ref cornerPreference));
             var setCornerAttributeResult = Windows.Win32.PInvoke.DwmSetWindowAttribute(hwnd, Windows.Win32.Graphics.Dwm.DWMWINDOWATTRIBUTE.DWMWA_WINDOW_CORNER_PREFERENCE, cornerPreferenceAsSpan);
             System.Diagnostics.Debug.Assert(setCornerAttributeResult == HRESULT.S_OK);
-            if (setCornerAttributeResult != HRESULT.S_OK)
-            {
-                ChromelessBaseWindow.OnDiagnostic?.Invoke($"ChromelessBaseWindow: DwmSetWindowAttribute(DWMWA_WINDOW_CORNER_PREFERENCE) returned HRESULT 0x{(uint)setCornerAttributeResult.Value:X8}");
-            }
 
             // set the DWM border color to "none"
             uint colorNone = 0xFFFFFFFE; // DWMWA_COLOR_NONE
             Span<byte> colorNoneAsSpan = System.Runtime.InteropServices.MemoryMarshal.AsBytes(new Span<uint>(ref colorNone));
             var setBorderAttributeResult = Windows.Win32.PInvoke.DwmSetWindowAttribute(hwnd, DWMWINDOWATTRIBUTE.DWMWA_BORDER_COLOR, colorNoneAsSpan);
             System.Diagnostics.Debug.Assert(setBorderAttributeResult == HRESULT.S_OK);
-            if (setBorderAttributeResult != HRESULT.S_OK)
-            {
-                ChromelessBaseWindow.OnDiagnostic?.Invoke($"ChromelessBaseWindow: DwmSetWindowAttribute(DWMWA_BORDER_COLOR) returned HRESULT 0x{(uint)setBorderAttributeResult.Value:X8}");
-            }
         }
 
         // Extend the DWM frame into the entire client area using the "sheet of glass" pattern
@@ -143,10 +126,6 @@ public class ChromelessBaseWindow : Window
         };
         var extendFrameResult = Windows.Win32.PInvoke.DwmExtendFrameIntoClientArea(hwnd, in sheetOfGlassMargins);
         System.Diagnostics.Debug.Assert(extendFrameResult == HRESULT.S_OK);
-        if (extendFrameResult != HRESULT.S_OK)
-        {
-            ChromelessBaseWindow.OnDiagnostic?.Invoke($"ChromelessBaseWindow: DwmExtendFrameIntoClientArea returned HRESULT 0x{(uint)extendFrameResult.Value:X8}");
-        }
     }
 
     private static void EnsureSystemDispatcherQueue()
@@ -230,9 +209,5 @@ public class ChromelessBaseWindow : Window
 		// see: https://learn.microsoft.com/en-us/windows/win32/api/commctrl/nf-commctrl-setwindowsubclass
         var updateSubclassResult = Windows.Win32.PInvoke.SetWindowSubclass(hwnd, _subclassProc!, 0, packed);
         System.Diagnostics.Debug.Assert(updateSubclassResult);
-        if (updateSubclassResult == false)
-        {
-            ChromelessBaseWindow.OnDiagnostic?.Invoke("ChromelessBaseWindow.SetMinimumTrackSize: SetWindowSubclass returned FALSE");
-        }
     }
 }

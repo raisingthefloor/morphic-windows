@@ -116,10 +116,48 @@ internal class BarItemHandlers
         }
 
 
-        // step 1: re-center the mouse cursor
+        // step 1: ensure the magnifier will come up in lens mode
 
-        // before showing the magnifier, move the cursor to the center of the screen where the mouse pointer currently resides
+        // If the magnifier is in another mode, this switches it to lens and remembers the prior mode so we can restore it after hiding. If lens mode cannot be guaranteed, we must not re-center the cursor (re-centering only makes sense for the cursor-following lens).
+        var ensureLensModeForShowResult = Morphic.WindowsNative.Magnifier.Magnifier.EnsureLensModeForShow();
+        var shouldRecenterCursor = ensureLensModeForShowResult.IsSuccess;
 
+
+        // step 2: re-center the mouse cursor (best-effort)
+
+        // move the cursor to the center of the display it currently sits on, so the lens appears centered when the magnifier comes up
+        if (shouldRecenterCursor == true)
+        {
+            _ = BarItemHandlers.RecenterCursorOnCurrentDisplay();
+        }
+
+
+        // step 3: show the magnifier
+
+        // The SystemSettings calls can block before their first async yield, so keep them off the UI thread; .ConfigureAwait(false) also tells C# not to try to resume execution on the original thread
+        var showMagnifierSucceeded = await Task.Run(async () =>
+        {
+            var showResult = await Morphic.WindowsNative.Magnifier.Magnifier.ShowMagnifierAsync().ConfigureAwait(false);
+            return showResult.IsSuccess;
+        });
+
+        Debug.WriteLine($"[BarItem] {actionTag}: show -> {(showMagnifierSucceeded ? "ok" : "error")}");
+
+        if (showMagnifierSucceeded == false)
+        {
+            // the magnifier never came up, so undo any lens-mode switch we made in preparation for it
+            Morphic.WindowsNative.Magnifier.Magnifier.RestoreModePriorToShowIfNeeded();
+            return MorphicResult.ErrorResult();
+        }
+
+        // The magnifier is up. Arm a watch so that if it is closed by any path other than our Hide button (its own X, Win+Esc, Settings toggle), we still restore the pre-show mode.
+        BarItemHandlers.BeginWatchingForMagnifierExternalClose();
+        return MorphicResult.OkResult();
+    }
+
+    // Best-effort re-centering of the mouse cursor within the display it currently sits on. A failure here must not prevent the magnifier from being shown.
+    private static MorphicResult<MorphicUnit, MorphicUnit> RecenterCursorOnCurrentDisplay()
+    {
         var getCurrentPositionResult = Morphic.WindowsNative.Mouse.Mouse.GetCurrentPosition();
         if (getCurrentPositionResult.IsError == true)
         {
@@ -140,23 +178,14 @@ internal class BarItemHandlers
             return MorphicResult.ErrorResult();
         }
 
-
-        // step 2: show the magnifier
-
-        // The SystemSettings calls can block before their first async yield, so keep them off the UI thread; .ConfigureAwait(false) also tells C# not to try to resume execution on the original thread
-        var showMagnifierSucceeded = await Task.Run(async () =>
-        {
-            var showResult = await Morphic.WindowsNative.Magnifier.Magnifier.ShowMagnifierAsync().ConfigureAwait(false);
-            return showResult.IsSuccess;
-        });
-
-        Debug.WriteLine($"[BarItem] {actionTag}: show -> {(showMagnifierSucceeded ? "ok" : "error")}");
-
-        return showMagnifierSucceeded ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
+        return MorphicResult.OkResult();
     }
 
     public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> HideMagnifierButtonAction(string? actionTag, bool? isChecked)
     {
+        // Stop the external-close watch before we close the magnifier ourselves, so our own close does not trip the watch into a duplicate restore. We perform the restore explicitly below.
+        BarItemHandlers.StopWatchingForMagnifierExternalClose();
+
         // The SystemSettings calls can block before their first async yield, so keep them off the UI thread; .ConfigureAwait(false) also tells C# not to try to resume execution on the original thread
         var hideMagnifierSucceeded = await Task.Run(async () =>
         {
@@ -166,7 +195,118 @@ internal class BarItemHandlers
 
         Debug.WriteLine($"[BarItem] {actionTag}: hide -> {(hideMagnifierSucceeded ? "ok" : "error")}");
 
-        return hideMagnifierSucceeded ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
+        if (hideMagnifierSucceeded == false)
+        {
+            // The magnifier is probably still up; re-arm the external-close watch we stopped above.
+            BarItemHandlers.BeginWatchingForMagnifierExternalClose();
+            return MorphicResult.ErrorResult();
+        }
+
+        // now that the magnifier is hidden, restore the mode the user had before we switched it to lens (unless the user switched it away from lens themselves while it was running)
+        Morphic.WindowsNative.Magnifier.Magnifier.RestoreModePriorToShowIfNeeded();
+
+        return MorphicResult.OkResult();
+    }
+
+    // magnifier external-close watch
+    //
+    // The bar's Hide button is not the only way the magnifier goes away: the user can close it from its own
+    // floating toolbar (the X), press Win+Esc, or toggle it off in Settings. All of those manifest as the
+    // Magnify.exe process exiting. We watch for that exit so we can run the same pre-show mode-restore we would
+    // run on our own Hide. This mirrors the single-process watch the snip handler uses (GetProcessesByName is a
+    // cross-integrity-level-safe system snapshot -- no per-process OpenProcess handle that UIPI could deny).
+
+    // Magnify.exe -> process name "Magnify".
+    private static readonly string s_magnifierProcessName = "Magnify";
+
+    // After we ask Windows to show the magnifier, Magnify.exe takes a moment to appear. Wait up to this long for
+    // it to show before we start treating "no Magnify process" as "it exited"; otherwise the watch would fire on
+    // the launch gap and wrongly restore the mode.
+    private static readonly TimeSpan s_magnifierAppearanceGracePeriod = TimeSpan.FromSeconds(5);
+
+    // How often we poll. The restore is invisible to the user (it only affects the NEXT show), so a relaxed
+    // interval keeps the background cost negligible.
+    private static readonly TimeSpan s_magnifierExitPollInterval = TimeSpan.FromMilliseconds(500);
+
+    // Cancels the in-flight exit watch. Non-null only while a watch is armed.
+    private static System.Threading.CancellationTokenSource? _magnifierExitWatchCancellationSource = null;
+
+    // Arms a background watch that restores the pre-show magnifier mode if the magnifier is closed by any path
+    // other than our own Hide button. Cancels any prior watch first, so at most one is ever armed.
+    private static void BeginWatchingForMagnifierExternalClose()
+    {
+        BarItemHandlers.StopWatchingForMagnifierExternalClose();
+
+        var cancellationSource = new System.Threading.CancellationTokenSource();
+        _magnifierExitWatchCancellationSource = cancellationSource;
+        _ = Task.Run(() => BarItemHandlers.WatchForMagnifierExternalCloseAsync(cancellationSource.Token));
+    }
+
+    // Disarms the exit watch (used by our own Hide path, which performs the restore itself). Safe to call when no
+    // watch is armed.
+    private static void StopWatchingForMagnifierExternalClose()
+    {
+        var cancellationSource = _magnifierExitWatchCancellationSource;
+        _magnifierExitWatchCancellationSource = null;
+        if (cancellationSource is not null)
+        {
+            cancellationSource.Cancel();
+            cancellationSource.Dispose();
+        }
+    }
+
+    private static async Task WatchForMagnifierExternalCloseAsync(System.Threading.CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Phase 1: wait (bounded) for Magnify.exe to actually appear after we asked Windows to show it. If it
+            // never appears within the grace period, the magnifier did not come up; exit quietly, no restore.
+            var appearanceStopwatch = System.Diagnostics.Stopwatch.StartNew();
+            bool magnifierAppeared = false;
+            while (appearanceStopwatch.Elapsed < s_magnifierAppearanceGracePeriod)
+            {
+                if (BarItemHandlers.MagnifierProcessIsRunning() == true)
+                {
+                    magnifierAppeared = true;
+                    break;
+                }
+                await Task.Delay(s_magnifierExitPollInterval, cancellationToken);
+            }
+
+            if (magnifierAppeared == false)
+            {
+                return;
+            }
+
+            // Phase 2: the magnifier is up; wait for Magnify.exe to disappear. When it does, the user closed it by
+            // some path other than our Hide button (which cancels this watch before closing), so we restore here.
+            while (BarItemHandlers.MagnifierProcessIsRunning() == true)
+            {
+                await Task.Delay(s_magnifierExitPollInterval, cancellationToken);
+            }
+
+            Morphic.WindowsNative.Magnifier.Magnifier.RestoreModePriorToShowIfNeeded();
+        }
+        catch (OperationCanceledException)
+        {
+            // Our own Hide path cancelled the watch; it restores the mode itself, so do nothing here.
+        }
+    }
+
+    private static bool MagnifierProcessIsRunning()
+    {
+        var magnifierProcesses = Process.GetProcessesByName(s_magnifierProcessName);
+        try
+        {
+            return magnifierProcesses.Length > 0;
+        }
+        finally
+        {
+            foreach (var magnifierProcess in magnifierProcesses)
+            {
+                magnifierProcess.Dispose();
+            }
+        }
     }
 
     //
@@ -287,13 +427,34 @@ internal class BarItemHandlers
 
     // read selected
 
-    // Placeholder action for Read Selected Play / Stop. The feature isn't implemented yet
-    // in 2.x, so this hands the user a toast explaining that.
-    public static Task<MorphicResult<MorphicUnit, MorphicUnit>> ReadSelectedButtonAction(string? actionTag, bool? isChecked)
+    // Play action for Read Selected. Dispatches into the App-owned ReadAloudController, which
+    // captures the text selected in the user's previous foreground window (the one focused before
+    // they reached the bar) and speaks it. The capture target is ALWAYS that prior window (resolved
+    // by the foreground-window tracker), regardless of how Play was invoked.
+    public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> ReadSelectedPlayButtonActionAsync(string? actionTag, bool? isChecked)
     {
-        Morphic.Notifications.ToastNotifications.ShowText(
-            title: "Read Selected",
-            body: "We are updating this feature to utilize the latest functionality from Microsoft.\n\nIt will be available in an upcoming preview release.");
+        bool invokedViaKeyboard = Morphic.MorphicBar.BarControls.BarButtonInvocationContext.InvokedViaKeyboard;
+        Morphic.RmTraceLog.Log("ReadAloud: Play button handler invoked (invokedViaKeyboard=" + invokedViaKeyboard.ToString() + ").");
+        var readAloudController = ((App)Microsoft.UI.Xaml.Application.Current).ReadAloudController;
+        if (readAloudController is null)
+        {
+            Morphic.RmTraceLog.Log("ReadAloud: Play handler aborting; ReadAloudController is null.");
+            return MorphicResult.ErrorResult();
+        }
+
+        await readAloudController.PlayAsync(invokedViaKeyboard);
+        return MorphicResult.OkResult();
+    }
+
+    // Stop action for Read Selected. Stops any in-progress speech (and cancels an utterance that is
+    // still being prepared). A no-op if nothing is currently being read. Focus-landing mirrors Play:
+    // a keyboard / assistive-technology invocation stays on the bar; a mouse / touch / pen
+    // invocation returns the foreground to the user's prior window.
+    public static Task<MorphicResult<MorphicUnit, MorphicUnit>> ReadSelectedStopButtonAction(string? actionTag, bool? isChecked)
+    {
+        bool invokedViaKeyboard = Morphic.MorphicBar.BarControls.BarButtonInvocationContext.InvokedViaKeyboard;
+        var readAloudController = ((App)Microsoft.UI.Xaml.Application.Current).ReadAloudController;
+        readAloudController?.Stop(invokedViaKeyboard);
         return Task.FromResult<MorphicResult<MorphicUnit, MorphicUnit>>(MorphicResult.OkResult());
     }
 

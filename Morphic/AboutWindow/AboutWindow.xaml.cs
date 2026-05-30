@@ -60,7 +60,7 @@ public sealed partial class AboutWindow : Morphic.Controls.Theme.ThemeAwareBaseW
         base.ThemeChanged += AboutWindow_ThemeChanged;
 
         // resize and recenter window
-        const int designWidthDips = 300;
+        const int designWidthDips = 308;
         const int designHeightDips = 280;
         //
         var hwnd = (Windows.Win32.Foundation.HWND)WinRT.Interop.WindowNative.GetWindowHandle(this);

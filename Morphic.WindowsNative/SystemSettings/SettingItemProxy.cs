@@ -255,7 +255,7 @@ internal class SettingItemProxy
             }
 
             // STEP 3: make sure that the setting is still enabled (see notes on STEP 1), as a sanity check that our value is still good; note that this is not a failproof strategy.
-            bool isApplicable;
+            //
             bool isEnabled;
             try
             {

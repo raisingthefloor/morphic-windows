@@ -57,7 +57,7 @@ internal static class BarItemDataFactory
             // the VS forces monochrome text rendering -- without it Windows falls back
             // to Segoe UI Emoji and renders the glyph in color (e.g. purple).
             Text = "\u2795\uFE0E",
-            AccessibleName = "Increase text size",
+            AccessibleName = new IAccessibleName.AccessibleName("Increase size of text"),
             ActionTag = "increase",
             Action = increaseAction,
         };
@@ -65,7 +65,7 @@ internal static class BarItemDataFactory
         {
             // U+2796 HEAVY MINUS SIGN + U+FE0E (see note above)
             Text = "\u2796\uFE0E",
-            AccessibleName = "Decrease text size",
+            AccessibleName = new IAccessibleName.AccessibleName("Decrease size of text"),
             ActionTag = "decrease",
             Action = decreaseAction,
         };
@@ -164,14 +164,14 @@ internal static class BarItemDataFactory
                     new BarButtonData
                     {
                         Text = "Show",
-                        AccessibleName = "Show magnifier",
+                        AccessibleName = new IAccessibleName.AccessibleName("Show Magnifier"),
                         ActionTag = "magnifier-show",
                         Action = showAction,
                     },
                     new BarButtonData
                     {
                         Text = "Hide",
-                        AccessibleName = "Hide magnifier",
+                        AccessibleName = new IAccessibleName.AccessibleName("Hide Magnifier"),
                         ActionTag = "magnifier-hide",
                         Action = hideAction,
                     },
@@ -188,7 +188,7 @@ internal static class BarItemDataFactory
         {
             Header = "Snip",
             Text = "Copy",
-            AccessibleName = "Snip: copy selection to clipboard",
+            AccessibleName = new IAccessibleName.AccessibleName("Snip and copy part of the screen"),
             ActionTag = "snip-copy",
             Action = action,
         };
@@ -214,7 +214,7 @@ internal static class BarItemDataFactory
                         // (text presentation); the VS forces monochrome rendering -- without it
                         // Windows can fall back to Segoe UI Emoji and render the glyph in color.
                         Text = "\u25B6\uFE0E", // ▶
-                        AccessibleName = "Play (read selected text aloud)",
+                        AccessibleName = new IAccessibleName.AccessibleName("Read selected text"),
                         ActionTag = "read-selected-play",
                         Action = playAction,
                     },
@@ -222,7 +222,7 @@ internal static class BarItemDataFactory
                     {
                         // U+25A0 BLACK SQUARE + U+FE0E (see note above)
                         Text = "\u25A0\uFE0E", // ■
-                        AccessibleName = "Stop (stop reading)",
+                        AccessibleName = new IAccessibleName.AccessibleName("Stop reading selected text"),
                         ActionTag = "read-selected-stop",
                         Action = stopAction,
                     },
@@ -235,10 +235,10 @@ internal static class BarItemDataFactory
     public static IBarItemData CreateContrastColorButtonGroup(BarButtonAction? contrastAction, BarButtonAction? colorAction, BarButtonAction? darkAction, BarButtonAction? nightAction)
     {
         // "Contrast & Color" -- 4 toggle buttons, per-content sized
-        var contrastButton = new BarButtonData { Text = "Contrast", IsToggle = true, ActionTag = "contrast", Action = contrastAction };
-        var colorButton    = new BarButtonData { Text = "Color",    IsToggle = true, ActionTag = "color",    Action = colorAction };
-        var darkButton     = new BarButtonData { Text = "Dark",     IsToggle = true, ActionTag = "dark",     Action = darkAction };
-        var nightButton    = new BarButtonData { Text = "Night",    IsToggle = true, ActionTag = "night",    Action = nightAction };
+        var contrastButton = new BarButtonData { Text = "Contrast", IsToggle = true, ActionTag = "contrast", Action = contrastAction, AccessibleName = new IAccessibleName.AccessibleName("Contrast theme") };
+        var colorButton    = new BarButtonData { Text = "Color",    IsToggle = true, ActionTag = "color",    Action = colorAction,    AccessibleName = new IAccessibleName.AccessibleName("Color filters") };
+        var darkButton     = new BarButtonData { Text = "Dark",     IsToggle = true, ActionTag = "dark",     Action = darkAction,     AccessibleName = new IAccessibleName.AccessibleName("Dark mode") };
+        var nightButton    = new BarButtonData { Text = "Night",    IsToggle = true, ActionTag = "night",    Action = nightAction,    AccessibleName = new IAccessibleName.AccessibleName("Night light") };
 
         EventHandler<Morphic.SettingsUtils.CachedDarkModeStateChangedEventArgs> darkModeStateChangedHandler =
             (_, e) =>

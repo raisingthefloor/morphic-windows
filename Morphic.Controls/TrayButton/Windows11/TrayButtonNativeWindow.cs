@@ -57,6 +57,11 @@ internal class TrayButtonNativeWindow : IDisposable
     // visibility is driven by WM_MOUSEHOVER (show) and WM_MOUSELEAVE / mouse-button presses (hide).
     private Morphic.Controls.Tooltip.TooltipWindow? _tooltip;
     private string? _tooltipText;
+
+    // Lazily-created UI Automation provider that gives this window an accessible name + Button control
+    // type; built on the first WM_GETOBJECT(UiaRootObjectId) request from an assistive-technology client.
+    private TrayButtonUiaProvider? _uiaProvider = null;
+
     // Set on mouse-button click (LBUTTONUP/RBUTTONUP), cleared on WM_MOUSELEAVE. While true,
     // ShowTooltipForCurrentHover is a no-op so the tooltip does not (re-)appear over a click
     // result (menu, dialog) or after the user has already interacted -- they need to move the
@@ -474,7 +479,20 @@ internal class TrayButtonNativeWindow : IDisposable
         // if the instance is already set up (i.e. during window creation), pass the message to its instance-specific WndProc callback
         if (instance is not null)
         {
-            return instance.WndProc(hWnd, msg, wParam, lParam);
+            // A window procedure is called by the OS across a kernel-mode callback boundary. If a
+            // managed exception unwinds out of it, Windows escalates it to a fatal
+            // STATUS_FATAL_USER_CALLBACK_EXCEPTION (0xc000041d) and terminates the process,
+            // bypassing managed unhandled-exception handlers. Catch here so one message handler's
+            // failure degrades to DefWindowProc instead of killing the app.
+            try
+            {
+                return instance.WndProc(hWnd, msg, wParam, lParam);
+            }
+            catch (Exception ex)
+            {
+                Debug.Assert(false, "TrayButton WndProc threw and was suppressed at the native boundary: " + ex.ToString());
+                return Windows.Win32.PInvoke.DefWindowProc(hWnd, msg, wParam, lParam);
+            }
         }
         else
         {
@@ -798,6 +816,21 @@ internal class TrayButtonNativeWindow : IDisposable
                         default:
                             // unhandled setcursor mouse message
                             break;
+                    }
+                }
+                break;
+            case Windows.Win32.PInvoke.WM_GETOBJECT:
+                {
+                    // Respond only to UI Automation's request (lParam == UiaRootObjectId); let MSAA and
+                    // other object ids fall through to DefWindowProc unchanged.
+                    if ((int)(nint)lParam == TrayButtonUiaProvider.UiaRootObjectId)
+                    {
+                        if (_uiaProvider is null)
+                        {
+                            _uiaProvider = new TrayButtonUiaProvider(hWnd, () => _tooltipText);
+                        }
+                        var uiaLResult = TrayButtonUiaProvider.ReturnProviderForWmGetObject(hWnd, wParam, lParam, _uiaProvider);
+                        result = (nint)uiaLResult;
                     }
                 }
                 break;
@@ -1179,7 +1212,7 @@ internal class TrayButtonNativeWindow : IDisposable
         }
     }
 
-    private void HandleObjectReorder(Windows.Win32.Foundation.HWND hwnd) { 
+    private void HandleObjectReorder(Windows.Win32.Foundation.HWND hwnd) {
         if (this.disposedValue == true)
         {
             return;
@@ -1456,7 +1489,14 @@ internal class TrayButtonNativeWindow : IDisposable
     // suppresses the tooltip entirely until SetText is called again with non-null text.
     public void SetText(string? text)
     {
+        var previousText = _tooltipText;
         _tooltipText = text;
+
+        // If a UI Automation client has attached to this window, tell it the accessible name changed.
+        if (_uiaProvider is not null && string.Equals(previousText, text, StringComparison.Ordinal) == false)
+        {
+            TrayButtonUiaProvider.RaiseNameChanged(_uiaProvider, previousText, text);
+        }
 
         // If the tooltip is currently visible (we just rewrote the caption while the user is
         // already hovering), refresh it in place so the on-screen text matches the new value.

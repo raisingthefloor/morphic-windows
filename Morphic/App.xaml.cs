@@ -56,6 +56,13 @@ public partial class App : Application
     private Morphic.MorphicBar.MorphicBarManager? _morphicBarManager;
     internal Morphic.MorphicBar.MorphicBarManager? MorphicBarManager => _morphicBarManager;
 
+    // The Read Selected (read-aloud / TTS) controller. App owns it (mirroring MorphicBarManager)
+    // because its lifetime is the whole app session and its embedded foreground-window tracker
+    // must be constructed and disposed on the UI thread. We expose it via `internal` so that the 
+	// bar's Play/Stop handlers can reach it.
+    private Morphic.ReadAloud.ReadAloudController? _readAloudController;
+    internal Morphic.ReadAloud.ReadAloudController? ReadAloudController => _readAloudController;
+
     internal static Morphic.MorphicBar.MorphicMainMenu MainMenu { get; private set; } = null!;
     //
     // we also create a single transparent window which can be used (to show popups and messageboxes, etc.); this is necessary for when no other window UI is visible, but for simplicity it'll be shared project-wide
@@ -69,8 +76,6 @@ public partial class App : Application
     public App()
     {
         this.InitializeComponent();
-
-        Morphic.Controls.Windowing.ChromelessBaseWindow.OnDiagnostic = static message => Morphic.RmTraceLog.Log(message);
 
 		// capture shutdown events (to clean up the tray icon, etc.)
         DispatcherQueue.GetForCurrentThread().ShutdownStarting += App_ShutdownStarting;
@@ -169,6 +174,11 @@ public partial class App : Application
         _morphicBarManager.BarVisibilityChanged += (_, _) => this.RefreshTaskbarButtonTooltip();
         this.RefreshTaskbarButtonTooltip();
 
+        // Create the App-owned Read Selected controller (read-aloud / TTS). Constructed here on the
+        // UI thread because it installs a system foreground-window hook that must live on the thread
+        // with the running message pump. Disposed in PerformShutdownCleanup.
+        _readAloudController = new Morphic.ReadAloud.ReadAloudController();
+
         // show our taskbar icon (button)
         this.TaskbarButton.SetVisible(true);
 
@@ -205,13 +215,13 @@ public partial class App : Application
             // "Snip" -- single label pushbutton
             Morphic.MorphicBar.BarItemDataFactory.CreateSnipButton(action: Morphic.MorphicBar.BarItemHandlers.SnipCopyButtonAction),
 
-            // "Read Selected" -- two pushbuttons (Play / Stop), equal width. The feature isn't
-            // wired to a real TTS engine yet; both buttons currently raise a "not available yet"
-            // toast (see BarItemHandlers.ReadSelectedButtonAction). The button group keeps its
-            // place in the bar layout.
+            // "Read Selected" -- two pushbuttons (Play / Stop), equal width. Play captures the text
+            // selected in the user's previous foreground window and reads it aloud (WinRT speech
+            // synthesis); Stop halts playback. Both dispatch into the App-owned ReadAloudController
+            // via the handlers below.
             Morphic.MorphicBar.BarItemDataFactory.CreateReadSelectedButtonGroup(
-                playAction: Morphic.MorphicBar.BarItemHandlers.ReadSelectedButtonAction,
-                stopAction: Morphic.MorphicBar.BarItemHandlers.ReadSelectedButtonAction),
+                playAction: Morphic.MorphicBar.BarItemHandlers.ReadSelectedPlayButtonActionAsync,
+                stopAction: Morphic.MorphicBar.BarItemHandlers.ReadSelectedStopButtonAction),
 
             // "Contrast & Color" -- 4 toggle buttons, per-content sized
             Morphic.MorphicBar.BarItemDataFactory.CreateContrastColorButtonGroup(
@@ -232,6 +242,16 @@ public partial class App : Application
             return;
         }
         _shutdownCleanupPerformed = true;
+
+        // Stop any in-progress speech and remove the foreground-window hook. Done here (rather than
+        // only in Shutdown) so it also runs on the dispatcher's backup shutdown path. Disposing on
+        // the UI thread is required by the embedded foreground-window tracker; both callers of
+        // PerformShutdownCleanup run on the UI thread.
+        if (_readAloudController is not null)
+        {
+            _readAloudController.Dispose();
+            _readAloudController = null;
+        }
 
         if (_taskbarIconRefreshHandler is not null)
         {
