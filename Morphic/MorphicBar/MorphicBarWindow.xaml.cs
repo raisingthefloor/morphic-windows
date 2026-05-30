@@ -106,6 +106,10 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     private const double ACCIDENTAL_DRAG_THRESHOLD_MONITOR_DIAGONAL_FRACTION = 0.02;
     private static readonly TimeSpan ACCIDENTAL_DRAG_HOLD_THRESHOLD = TimeSpan.FromMilliseconds(650);
 
+    // Animation duration for a docking-location move (drag-release commit and registry-driven
+    // moves both use this). TimeSpan.Zero elsewhere means "snap, no animation" (e.g. startup).
+    private static readonly TimeSpan DOCKING_MOVE_ANIMATION_DURATION = TimeSpan.FromSeconds(1);
+
     // the layout preview window lets us show the user where the window will move to if they release the mouse cursor
     private Morphic.MorphicBar.LayoutPreviewWindow.LayoutPreviewWindow _layoutPreviewWindow = null!;
     private Orientation? _layoutPreviewWindowOrientation = null;
@@ -116,13 +120,14 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     private Microsoft.UI.Xaml.Controls.Orientation _orientation = Microsoft.UI.Xaml.Controls.Orientation.Horizontal;
     public event EventHandler<Microsoft.UI.Xaml.Controls.Orientation>? OrientationChanged;
 
-    private Morphic.MorphicBar.DockingLocation _dockingLocation = DockingLocation.FloatingBottomRight; // default location
+    private Morphic.MorphicBar.DockingLocation _dockingLocation = DockingLocation.FloatingBottomTrailing; // default location
     public event EventHandler<Morphic.MorphicBar.DockingLocation>? DockingLocationChanged;
 
     // NOTE: as we are handling sizing ourselves, we need to manage size scaling ourselves; this tracks the latest screen scale (so that we know if we need to resize our window)
     private double? _lastRasterizationScale = null;
 
     public event EventHandler? RasterizationScaleChangedExternal;
+
     // Tracks which monitor the bar belongs to. Kept in sync at the entry of AnimateMoveTo and
     // re-verified on demand via GetVerifiedCurrentMonitorHandle. Holding our own handle (instead
     // of re-querying the window's current position each time) means a DPI/rasterization-scale
@@ -576,7 +581,12 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         this.Orientation = targetOrientation;
 
         // record the destination docking location
+        var dockingLocationDidChange = (_dockingLocation != targetDockingLocation);
         _dockingLocation = targetDockingLocation;
+        if (dockingLocationDidChange == true)
+        {
+            this.DockingLocationChanged?.Invoke(this, _dockingLocation);
+        }
 
         // single combined two-pass measurement: returns the bar's logical size AND the count of
         // items that fit. Pass 1 of MeasureBarForOrientation determines bar thickness; Pass 2
@@ -594,7 +604,8 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
 
         // compute the target rect (already in physical pixels; GetRectForDockingLocation multiplies
         // by the monitor's rasterization scale internally)
-        var getRectForDockingLocationResult = LayoutUtils.GetRectForDockingLocation(targetDockingLocation, targetOrientation, logicalLength, logicalThickness, hMonitor);
+        var isRightToLeft = this.MorphicMenuButton.FlowDirection == FlowDirection.RightToLeft;
+        var getRectForDockingLocationResult = LayoutUtils.GetRectForDockingLocation(targetDockingLocation, isRightToLeft, targetOrientation, logicalLength, logicalThickness, hMonitor);
         if (getRectForDockingLocationResult.IsError)
         {
             Debug.Assert(false);
@@ -639,6 +650,7 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         // If snapResizeAtPoint was used above, AppWindow.Size already matches targetSize and
         // AnimationUtils.AnimateMoveTo's sizeChanging check will short-circuit the size interpolation.
         _moveAnimationTimer = AnimationUtils.AnimateMoveTo(_dispatcherQueue, this.AppWindow, targetPosition, targetSize, duration);
+
         if (orientationChanging)
         {
             if (preRotationFocus.Control is not null)
@@ -670,6 +682,30 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     }
 
     /* properties */
+
+    public Morphic.MorphicBar.DockingLocation CurrentDockingLocation => _dockingLocation;
+
+    internal void MoveToCurrentMonitorPlacement(Microsoft.UI.Xaml.Controls.Orientation orientation, Morphic.MorphicBar.DockingLocation dockingLocation)
+    {
+        var hMonitor = this.GetVerifiedCurrentMonitorHandle();
+
+        // If the orientation is flipping, snap-resize the bar to its new shape BEFORE the animation
+        // (the same thing the drag-release path does), so only position animates and the bar never
+        // appears to "grow" mid-flight into its new dimensions. A registry-driven move has no cursor
+        // to anchor the flip to, so we anchor at the bar's current center: it reshapes in place, then
+        // slides to the new docking location.
+        System.Drawing.Point? snapResizeAtPoint = null;
+        if (orientation != _orientation)
+        {
+            var currentPosition = this.AppWindow.Position;
+            var currentSize = this.AppWindow.Size;
+            snapResizeAtPoint = new System.Drawing.Point(
+                currentPosition.X + (currentSize.Width / 2),
+                currentPosition.Y + (currentSize.Height / 2));
+        }
+
+        this.AnimateMoveTo(hMonitor, orientation, dockingLocation, DOCKING_MOVE_ANIMATION_DURATION, snapResizeAtPoint);
+    }
 
     public Microsoft.UI.Xaml.Controls.Orientation Orientation
     {
@@ -1287,7 +1323,12 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             // had locked in during the drag; fall back to the current values if the user didn't drag
             // far enough to trigger a preview change
             var targetOrientation = _layoutPreviewWindowOrientation ?? _orientation;
-            var targetDockingLocation = _layoutPreviewDockingLocation ?? _dockingLocation;
+            var rawTargetDockingLocation = _layoutPreviewDockingLocation ?? _dockingLocation;
+
+            var isRightToLeft = this.MorphicMenuButton.FlowDirection == FlowDirection.RightToLeft;
+            var targetDockingLocation = _dockingLocation.IsLogicalDockingLocation()
+                ? rawTargetDockingLocation.ToLogicalDockingLocation(isRightToLeft)
+                : rawTargetDockingLocation.ToPhysicalDockingLocation(isRightToLeft);
 
             // If orientation is flipping, ask AnimateMoveTo to snap-resize at the cursor BEFORE
             // animating. AnimateMoveTo's snap uses the actual MEASURED target dimensions (not just
@@ -1300,7 +1341,7 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             // AnimateMoveTo handles the orientation change (via the property setter), updates the
             // docking location, measures for the new state, optionally snap-resizes at the cursor,
             // and animates position + size to the docking location.
-            this.AnimateMoveTo(hMonitor, targetOrientation, targetDockingLocation, new TimeSpan(0, 0, 1), snapResizeAtPoint);
+            this.AnimateMoveTo(hMonitor, targetOrientation, targetDockingLocation, DOCKING_MOVE_ANIMATION_DURATION, snapResizeAtPoint);
 
             _layoutPreviewWindowOrientation = null;
             _layoutPreviewDockingLocation = null;
@@ -1543,7 +1584,8 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         //   - if the target monitor's working area is tighter than the current monitor's, the
         //     working-area cap inside MeasureBarForOrientation keeps the preview within bounds
         var (previewLogicalLength, previewLogicalThickness, _) = this.MeasureBarForOrientation(hMonitor, newPreviewOrientation);
-        var getRectForDockingLocationResult = LayoutUtils.GetRectForDockingLocation(newPreviewDockingLocation, newPreviewOrientation, previewLogicalLength, previewLogicalThickness, hMonitor);
+        var isRightToLeft = this.MorphicMenuButton.FlowDirection == FlowDirection.RightToLeft;
+        var getRectForDockingLocationResult = LayoutUtils.GetRectForDockingLocation(newPreviewDockingLocation, isRightToLeft, newPreviewOrientation, previewLogicalLength, previewLogicalThickness, hMonitor);
         if (getRectForDockingLocationResult.IsError)
         {
             return;

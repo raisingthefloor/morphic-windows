@@ -27,19 +27,28 @@ using System.Diagnostics;
 
 namespace Morphic.WindowsNative.Registry;
 
-internal enum RegistryKeyChangeKind
+public enum RegistryKeyChangeKind
 {
     ValueChanged,
     TargetCreated,
     TargetDeleted,
 }
 
-internal class RegistryKeyChangedEventArgs(RegistryKeyChangeKind kind) : EventArgs
+public class RegistryKeyChangedEventArgs(RegistryKeyChangeKind kind) : EventArgs
 {
     public RegistryKeyChangeKind Kind { get; } = kind;
 }
 
-internal sealed class RegistryKeyChangeWatcher : IDisposable
+[Flags]
+public enum RegistryKeyChangeFilters
+{
+    SubkeyNameChanged = (int)Windows.Win32.System.Registry.REG_NOTIFY_FILTER.REG_NOTIFY_CHANGE_NAME,
+    AttributesChanged = (int)Windows.Win32.System.Registry.REG_NOTIFY_FILTER.REG_NOTIFY_CHANGE_ATTRIBUTES,
+    ValueChanged = (int)Windows.Win32.System.Registry.REG_NOTIFY_FILTER.REG_NOTIFY_CHANGE_LAST_SET,
+    SecurityChanged = (int)Windows.Win32.System.Registry.REG_NOTIFY_FILTER.REG_NOTIFY_CHANGE_SECURITY,
+}
+
+public sealed class RegistryKeyChangeWatcher : IDisposable
 {
     public interface ICreateError
     {
@@ -57,7 +66,7 @@ internal sealed class RegistryKeyChangeWatcher : IDisposable
     private readonly Microsoft.Win32.RegistryHive _hive;
     private readonly Microsoft.Win32.RegistryView _view;
     private readonly string _targetSubKeyPath;
-    private readonly Windows.Win32.System.Registry.REG_NOTIFY_FILTER _targetNotifyFilter;
+    private readonly RegistryKeyChangeFilters _targetNotifyFilter;
     private readonly bool _targetWatchSubtree;
     private readonly object _lock = new();
 
@@ -70,7 +79,7 @@ internal sealed class RegistryKeyChangeWatcher : IDisposable
         Microsoft.Win32.RegistryHive hive,
         Microsoft.Win32.RegistryView view,
         string targetSubKeyPath,
-        Windows.Win32.System.Registry.REG_NOTIFY_FILTER targetNotifyFilter,
+        RegistryKeyChangeFilters targetNotifyFilter,
         bool targetWatchSubtree)
     {
         _hive = hive;
@@ -84,7 +93,7 @@ internal sealed class RegistryKeyChangeWatcher : IDisposable
         Microsoft.Win32.RegistryHive hive,
         string targetSubKeyPath,
         Microsoft.Win32.RegistryView view = Microsoft.Win32.RegistryView.Default,
-        Windows.Win32.System.Registry.REG_NOTIFY_FILTER targetNotifyFilter = Windows.Win32.System.Registry.REG_NOTIFY_FILTER.REG_NOTIFY_CHANGE_LAST_SET,
+        RegistryKeyChangeFilters targetNotifyFilter = RegistryKeyChangeFilters.ValueChanged,
         bool targetWatchSubtree = false)
     {
         if (targetSubKeyPath is null)
@@ -106,7 +115,7 @@ internal sealed class RegistryKeyChangeWatcher : IDisposable
 
     public static MorphicResult<RegistryKeyChangeWatcher, ICreateError> CreateForKey(
         Microsoft.Win32.RegistryKey key,
-        Windows.Win32.System.Registry.REG_NOTIFY_FILTER targetNotifyFilter = Windows.Win32.System.Registry.REG_NOTIFY_FILTER.REG_NOTIFY_CHANGE_LAST_SET,
+        RegistryKeyChangeFilters targetNotifyFilter = RegistryKeyChangeFilters.ValueChanged,
         bool targetWatchSubtree = false)
     {
         if (key is null)
@@ -185,7 +194,7 @@ internal sealed class RegistryKeyChangeWatcher : IDisposable
     private void AttachInnerWatcherLocked(Microsoft.Win32.RegistryKey key, bool isTarget, bool allowRetry = true)
     {
         var notifyFilter = isTarget
-            ? _targetNotifyFilter
+            ? RegistryKeyChangeWatcher.ToRegNotifyFilter(_targetNotifyFilter)
             : Windows.Win32.System.Registry.REG_NOTIFY_FILTER.REG_NOTIFY_CHANGE_NAME;
         var watchSubtree = isTarget && _targetWatchSubtree;
 
@@ -431,6 +440,32 @@ internal sealed class RegistryKeyChangeWatcher : IDisposable
         }
 
         return MorphicResult.OkResult((hive.Value, subKeyPath));
+    }
+
+    // Maps the public RegistryKeyChangeFilters flags to the internal CsWin32 REG_NOTIFY_FILTER
+    // bitmask passed to RegNotifyChangeKeyValue. REG_NOTIFY_THREAD_AGNOSTIC is NOT added here: the
+    // inner OpenedRegistryKeyChangeWatcher ORs it in at arm time (load-bearing for ThreadPool
+    // re-arming, not a caller-selectable "kind of change").
+    private static Windows.Win32.System.Registry.REG_NOTIFY_FILTER ToRegNotifyFilter(RegistryKeyChangeFilters filters)
+    {
+        Windows.Win32.System.Registry.REG_NOTIFY_FILTER result = 0;
+        if (filters.HasFlag(RegistryKeyChangeFilters.SubkeyNameChanged))
+        {
+            result |= Windows.Win32.System.Registry.REG_NOTIFY_FILTER.REG_NOTIFY_CHANGE_NAME;
+        }
+        if (filters.HasFlag(RegistryKeyChangeFilters.AttributesChanged))
+        {
+            result |= Windows.Win32.System.Registry.REG_NOTIFY_FILTER.REG_NOTIFY_CHANGE_ATTRIBUTES;
+        }
+        if (filters.HasFlag(RegistryKeyChangeFilters.ValueChanged))
+        {
+            result |= Windows.Win32.System.Registry.REG_NOTIFY_FILTER.REG_NOTIFY_CHANGE_LAST_SET;
+        }
+        if (filters.HasFlag(RegistryKeyChangeFilters.SecurityChanged))
+        {
+            result |= Windows.Win32.System.Registry.REG_NOTIFY_FILTER.REG_NOTIFY_CHANGE_SECURITY;
+        }
+        return result;
     }
 
     private static bool IsSupportedHive(Microsoft.Win32.RegistryHive hive)

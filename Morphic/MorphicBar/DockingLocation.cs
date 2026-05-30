@@ -22,40 +22,54 @@
 // * Consumer Electronics Association Foundation
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Morphic.MorphicBar;
 
 public enum DockingLocation
 {
-    // floating docked corner
-    FloatingTopLeft,
-    FloatingTopRight,
-    FloatingBottomLeft,
-    FloatingBottomRight,
-    //
-    // traditional "docked" locations (like the taskbar, taking up screen real estate)
-    FixedLeftMargin,
-    FixedRightMargin,
-    FixedTopMargin,
-    FixedBottomMargin,
+    // floating corner docks, logical (flow-relative); resolve to Left/Right per FlowDirection
+    FloatingTopLeading = 0,
+    FloatingTopTrailing = 1,
+    FloatingBottomLeading = 2,
+    FloatingBottomTrailing = 3,
+    // floating corner docks, physical (absolute screen corner)
+    FloatingTopLeft = 4,
+    FloatingTopRight = 5,
+    FloatingBottomLeft = 6,
+    FloatingBottomRight = 7,
+
+    // taskbar-style edge docks (reserve screen space), logical (flow-relative)
+    FixedLeadingMargin = 8,
+    FixedTrailingMargin = 9,
+    // taskbar-style edge docks (reserve screen space), physical (absolute screen edge)
+    FixedLeftMargin = 10,
+    FixedRightMargin = 11,
+    FixedTopMargin = 12,
+    FixedBottomMargin = 13,
 }
 
 public static class DockingLocationExtensions
 {
-    // True for the four Floating* corner-anchored docks.
+    // True for the eight Floating* corner-anchored docks (logical and physical).
     public static bool IsFloatingDockingLocation(this DockingLocation location) =>
         location switch
         {
             /* Floating* (corner-anchored) */
-            DockingLocation.FloatingTopLeft
+            DockingLocation.FloatingTopLeading
+                or DockingLocation.FloatingTopTrailing
+                or DockingLocation.FloatingBottomLeading
+                or DockingLocation.FloatingBottomTrailing
+                //
+                or DockingLocation.FloatingTopLeft
                 or DockingLocation.FloatingTopRight
                 or DockingLocation.FloatingBottomLeft
                 or DockingLocation.FloatingBottomRight => true,
             //
             /* Fixed*Margin (taskbar-style) */
-            DockingLocation.FixedLeftMargin
+            DockingLocation.FixedLeadingMargin
+                or DockingLocation.FixedTrailingMargin
+                //
+                or DockingLocation.FixedLeftMargin
                 or DockingLocation.FixedRightMargin
                 or DockingLocation.FixedTopMargin
                 or DockingLocation.FixedBottomMargin => false,
@@ -64,21 +78,85 @@ public static class DockingLocationExtensions
                 nameof(location), (int)location, location.GetType()),
         };
 
-    // True for the four Fixed*Margin edge-docked positions (taskbar-style).
+    // True for the six Fixed*Margin edge-docked positions (taskbar-style); the exact complement of IsFloatingDockingLocation.
     public static bool IsFixedDockingLocation(this DockingLocation location) =>
+        !location.IsFloatingDockingLocation();
+
+    // True for the eight physical (absolute) docks; False for the six logical (flow-relative) docks.
+    public static bool IsPhysicalDockingLocation(this DockingLocation location) =>
         location switch
         {
-            /* Fixed*Margin (taskbar-style) */
-            DockingLocation.FixedLeftMargin
+            DockingLocation.FloatingTopLeading
+                or DockingLocation.FloatingTopTrailing
+                or DockingLocation.FloatingBottomLeading
+                or DockingLocation.FloatingBottomTrailing
+                //
+                or DockingLocation.FixedLeadingMargin
+                or DockingLocation.FixedTrailingMargin => false,
+            //
+            DockingLocation.FloatingTopLeft
+                or DockingLocation.FloatingTopRight
+                or DockingLocation.FloatingBottomLeft
+                or DockingLocation.FloatingBottomRight
+                or DockingLocation.FixedLeftMargin
                 or DockingLocation.FixedRightMargin
                 or DockingLocation.FixedTopMargin
                 or DockingLocation.FixedBottomMargin => true,
             //
-            /* Floating* (corner-anchored) */
+            _ => throw new System.ComponentModel.InvalidEnumArgumentException(
+                nameof(location), (int)location, location.GetType()),
+        };
+
+    // True for the six logical (flow-relative) docks; the exact complement of IsPhysicalDockingLocation.
+    public static bool IsLogicalDockingLocation(this DockingLocation location) =>
+        !location.IsPhysicalDockingLocation();
+
+    // Resolve a (possibly logical) dock to its physical (absolute) equivalent for the given flow direction; physical inputs pass through unchanged.
+    public static DockingLocation ToPhysicalDockingLocation(this DockingLocation location, bool isRightToLeft) =>
+        location switch
+        {
+            DockingLocation.FloatingTopLeading => isRightToLeft ? DockingLocation.FloatingTopRight : DockingLocation.FloatingTopLeft,
+            DockingLocation.FloatingTopTrailing => isRightToLeft ? DockingLocation.FloatingTopLeft : DockingLocation.FloatingTopRight,
+            DockingLocation.FloatingBottomLeading => isRightToLeft ? DockingLocation.FloatingBottomRight : DockingLocation.FloatingBottomLeft,
+            DockingLocation.FloatingBottomTrailing => isRightToLeft ? DockingLocation.FloatingBottomLeft : DockingLocation.FloatingBottomRight,
+            //
             DockingLocation.FloatingTopLeft
                 or DockingLocation.FloatingTopRight
                 or DockingLocation.FloatingBottomLeft
-                or DockingLocation.FloatingBottomRight => false,
+                or DockingLocation.FloatingBottomRight => location,
+            //
+            DockingLocation.FixedLeadingMargin => isRightToLeft ? DockingLocation.FixedRightMargin : DockingLocation.FixedLeftMargin,
+            DockingLocation.FixedTrailingMargin => isRightToLeft ? DockingLocation.FixedLeftMargin : DockingLocation.FixedRightMargin,
+            //
+            DockingLocation.FixedLeftMargin
+                or DockingLocation.FixedRightMargin
+                or DockingLocation.FixedTopMargin
+                or DockingLocation.FixedBottomMargin => location,
+            //
+            _ => throw new System.ComponentModel.InvalidEnumArgumentException(
+                nameof(location), (int)location, location.GetType()),
+        };
+
+    // Convert a physical dock to its logical (flow-relative) equivalent for the given flow direction; logical inputs and the non-mirrorable Top/Bottom fixed margins pass through unchanged.
+    public static DockingLocation ToLogicalDockingLocation(this DockingLocation location, bool isRightToLeft) =>
+        location switch
+        {
+            DockingLocation.FloatingTopLeft => isRightToLeft ? DockingLocation.FloatingTopTrailing : DockingLocation.FloatingTopLeading,
+            DockingLocation.FloatingTopRight => isRightToLeft ? DockingLocation.FloatingTopLeading : DockingLocation.FloatingTopTrailing,
+            DockingLocation.FloatingBottomLeft => isRightToLeft ? DockingLocation.FloatingBottomTrailing : DockingLocation.FloatingBottomLeading,
+            DockingLocation.FloatingBottomRight => isRightToLeft ? DockingLocation.FloatingBottomLeading : DockingLocation.FloatingBottomTrailing,
+            //
+            DockingLocation.FixedLeftMargin => isRightToLeft ? DockingLocation.FixedTrailingMargin : DockingLocation.FixedLeadingMargin,
+            DockingLocation.FixedRightMargin => isRightToLeft ? DockingLocation.FixedLeadingMargin : DockingLocation.FixedTrailingMargin,
+            //
+            DockingLocation.FloatingTopLeading
+                or DockingLocation.FloatingTopTrailing
+                or DockingLocation.FloatingBottomLeading
+                or DockingLocation.FloatingBottomTrailing
+                or DockingLocation.FixedLeadingMargin
+                or DockingLocation.FixedTrailingMargin
+                or DockingLocation.FixedTopMargin
+                or DockingLocation.FixedBottomMargin => location,
             //
             _ => throw new System.ComponentModel.InvalidEnumArgumentException(
                 nameof(location), (int)location, location.GetType()),

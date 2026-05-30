@@ -49,7 +49,7 @@ internal class LayoutUtils
 
     //
 
-    internal static MorphicResult<Windows.Win32.Foundation.RECT, MorphicUnit> GetRectForDockingLocation(Morphic.MorphicBar.DockingLocation dockingLocation, Microsoft.UI.Xaml.Controls.Orientation orientation, uint unscaledRequestedLength, uint unscaledRequestedThickness, Windows.Win32.Graphics.Gdi.HMONITOR hMonitor)
+    internal static MorphicResult<Windows.Win32.Foundation.RECT, MorphicUnit> GetRectForDockingLocation(Morphic.MorphicBar.DockingLocation dockingLocation, bool isRightToLeft, Microsoft.UI.Xaml.Controls.Orientation orientation, uint unscaledRequestedLength, uint unscaledRequestedThickness, Windows.Win32.Graphics.Gdi.HMONITOR hMonitor)
     {
         /* STEP 1: get the monitor resolution, coord space metrics (full screen and working area) and rasterization scale ('zoom' level) */
 
@@ -78,13 +78,13 @@ internal class LayoutUtils
         double rasterizationScale = getRasterizationScaleResult!.Value;
 
         /* STEP 2: calculate target RECT for MorphicBar */
-        var targetRect = LayoutUtils.GetRectForDockingLocation(dockingLocation, orientation, unscaledRequestedLength, unscaledRequestedThickness, monitorFullRect, monitorWorkingAreaRect, rasterizationScale);
+        var targetRect = LayoutUtils.GetRectForDockingLocation(dockingLocation, isRightToLeft, orientation, unscaledRequestedLength, unscaledRequestedThickness, monitorFullRect, monitorWorkingAreaRect, rasterizationScale);
         return MorphicResult.OkResult(targetRect);
     }
 
-    private static Windows.Win32.Foundation.RECT GetRectForDockingLocation(Morphic.MorphicBar.DockingLocation dockingLocation, Microsoft.UI.Xaml.Controls.Orientation orientation, uint unscaledRequestedLength, uint unscaledRequestedThickness, Windows.Win32.Foundation.RECT fullRect, Windows.Win32.Foundation.RECT workingAreaRect, double rasterizationScale)
+    private static Windows.Win32.Foundation.RECT GetRectForDockingLocation(Morphic.MorphicBar.DockingLocation dockingLocation, bool isRightToLeft, Microsoft.UI.Xaml.Controls.Orientation orientation, uint unscaledRequestedLength, uint unscaledRequestedThickness, Windows.Win32.Foundation.RECT fullRect, Windows.Win32.Foundation.RECT workingAreaRect, double rasterizationScale)
     {
-        const string ERROR_INVALID_DOCKING_LOCATION_AND_ORIENTATION_COMBINATION = "The provided 'dockingLocation' argument is invalid in combination with the provided 'orientation' argument.";
+        const string ERROR_INVALID_DOCKING_LOCATION_AND_ORIENTATION_COMBINATION = "The provided '" + nameof(dockingLocation) + "' argument is invalid in combination with the provided '" + nameof(orientation) + "' argument.";
 
         int SCALED_LENGTH = (int)(unscaledRequestedLength * rasterizationScale);
         int SCALED_THICKNESS = (int)(unscaledRequestedThickness * rasterizationScale);
@@ -97,12 +97,13 @@ internal class LayoutUtils
         int targetRight;
         int targetBottom;
         //
+        DockingLocation physicalDockingLocation = dockingLocation.ToPhysicalDockingLocation(isRightToLeft);
         switch (orientation)
         {
             case Microsoft.UI.Xaml.Controls.Orientation.Horizontal:
                 {
                     // first half of HORIZONTAL MORPHICBAR calculation: calculate the left and right (X) coordinates
-                    switch (dockingLocation)
+                    switch (physicalDockingLocation)
                     {
                         case DockingLocation.FloatingTopLeft:
                         case DockingLocation.FloatingBottomLeft:
@@ -124,11 +125,11 @@ internal class LayoutUtils
                             throw new ArgumentException(ERROR_INVALID_DOCKING_LOCATION_AND_ORIENTATION_COMBINATION);
                         default:
                             throw new System.ComponentModel.InvalidEnumArgumentException(
-                                nameof(dockingLocation), (int)dockingLocation, dockingLocation.GetType());
+                                nameof(physicalDockingLocation), (int)physicalDockingLocation, physicalDockingLocation.GetType());
                     }
 
                     // second half of HORIZONTAL MORPHICBAR calculation: calculate the top and bottom (Y) coordinates
-                    switch (dockingLocation)
+                    switch (physicalDockingLocation)
                     {
                         case DockingLocation.FloatingTopLeft:
                         case DockingLocation.FloatingTopRight:
@@ -153,14 +154,14 @@ internal class LayoutUtils
                             throw new ArgumentException(ERROR_INVALID_DOCKING_LOCATION_AND_ORIENTATION_COMBINATION);
                         default:
                             throw new System.ComponentModel.InvalidEnumArgumentException(
-                                nameof(dockingLocation), (int)dockingLocation, dockingLocation.GetType());
+                                nameof(physicalDockingLocation), (int)physicalDockingLocation, physicalDockingLocation.GetType());
                     }
                 }
                 break;
             case Microsoft.UI.Xaml.Controls.Orientation.Vertical:
                 {
                     // first half of VERTICAL MORPHICBAR calculation: calculate the left and right (X) coordinates
-                    switch (dockingLocation)
+                    switch (physicalDockingLocation)
                     {
                         case DockingLocation.FloatingTopLeft:
                         case DockingLocation.FloatingBottomLeft:
@@ -185,11 +186,11 @@ internal class LayoutUtils
                             throw new ArgumentException(ERROR_INVALID_DOCKING_LOCATION_AND_ORIENTATION_COMBINATION);
                         default:
                             throw new System.ComponentModel.InvalidEnumArgumentException(
-                                nameof(dockingLocation), (int)dockingLocation, dockingLocation.GetType());
+                                nameof(physicalDockingLocation), (int)physicalDockingLocation, physicalDockingLocation.GetType());
                     }
 
                     // second half of VERTICAL MORPHICBAR calculation: calculate the top and bottom (Y) coordinates
-                    switch (dockingLocation)
+                    switch (physicalDockingLocation)
                     {
                         case DockingLocation.FloatingTopLeft:
                         case DockingLocation.FloatingTopRight:
@@ -211,7 +212,7 @@ internal class LayoutUtils
                             throw new ArgumentException(ERROR_INVALID_DOCKING_LOCATION_AND_ORIENTATION_COMBINATION);
                         default:
                             throw new System.ComponentModel.InvalidEnumArgumentException(
-                                nameof(dockingLocation), (int)dockingLocation, dockingLocation.GetType());
+                                nameof(physicalDockingLocation), (int)physicalDockingLocation, physicalDockingLocation.GetType());
                     }
                 }
                 break;
@@ -221,7 +222,7 @@ internal class LayoutUtils
         }
 
         /* STEP 2: clamp the RECT if necessary (i.e. prevent overflow from the working area) */
-        switch (dockingLocation)
+        switch (physicalDockingLocation)
         {
             case DockingLocation.FloatingTopLeft:
             case DockingLocation.FloatingTopRight:
@@ -243,7 +244,7 @@ internal class LayoutUtils
                 break;
             default:
                 throw new System.ComponentModel.InvalidEnumArgumentException(
-                    nameof(dockingLocation), (int)dockingLocation, dockingLocation.GetType());
+                    nameof(physicalDockingLocation), (int)physicalDockingLocation, physicalDockingLocation.GetType());
         }
 
         /* STEP 3: if adding keepaway padding has created a "negative space" area (i.e. fewer than SCALED_CORNER_KEEPAWAY_PADDING * 2 pixels were available), make that size dimension 0 pixels */

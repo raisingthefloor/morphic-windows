@@ -56,6 +56,10 @@ public partial class App : Application
     private Morphic.MorphicBar.MorphicBarManager? _morphicBarManager;
     internal Morphic.MorphicBar.MorphicBarManager? MorphicBarManager => _morphicBarManager;
 
+    // Persists + two-way-syncs the MorphicBar's visibility and docking location with the registry
+    // (HKCU\Software\Raising the Floor\Morphic).
+    private Morphic.AppRegistrySettings? _appRegistrySettings;
+
     // The Read Selected (read-aloud / TTS) controller. App owns it (mirroring MorphicBarManager)
     // because its lifetime is the whole app session and its embedded foreground-window tracker
     // must be constructed and disposed on the UI thread. We expose it via `internal` so that the 
@@ -148,7 +152,10 @@ public partial class App : Application
         // only the manager reference (this.MorphicBarManager): all subsequent bar operations go through
         // manager wrappers (Show/Hide/Activate/IsVisible/etc.).
         var morphicBarWindow = Morphic.MorphicBar.MorphicBarWindow.CreateWithHiddenTaskbar();
-        morphicBarWindow.Orientation = Orientation.Horizontal;
+
+        _appRegistrySettings = Morphic.AppRegistrySettings.Load();
+
+        morphicBarWindow.Orientation = _appRegistrySettings.Orientation;
         morphicBarWindow.InitializeBarItems(App.CreateBasicBarItemsData());
 
         // position MorphicBar at the correct dock location
@@ -162,7 +169,7 @@ public partial class App : Application
             return;
         }
         // NOTE: if this does not "snap" to the correct location immediately (due to enqueueing the UI code), consider creating a special path that sets the window position without the animation code
-        morphicBarWindow.AnimateMoveTo(hMonitor, morphicBarWindow.Orientation, MorphicBar.DockingLocation.FloatingBottomRight, TimeSpan.Zero);
+        morphicBarWindow.AnimateMoveTo(hMonitor, _appRegistrySettings.Orientation, _appRegistrySettings.DockingLocation, TimeSpan.Zero);
 
         // Hand the configured bar to the manager. The manager subscribes to the bar's events.
         _morphicBarManager = new Morphic.MorphicBar.MorphicBarManager(morphicBarWindow);
@@ -189,12 +196,12 @@ public partial class App : Application
         // so the buttons reflect the right display from first frame.
         Morphic.MorphicBar.BarItemDataFactory.RefreshTextSizeButtonState();
 
-        // Show the bar without activating it. Activating at launch would (a) be user-hostile by
-        // interrupting whatever the user was doing in their previous foreground app, and (b) put
-        // the bar into a sticky Win32 "active" state from which the user's first Alt+Tab would
-        // fire no WM_ACTIVATE (OS sees it as "already active"), breaking our initial-focus-ring
-        // logic. The bar is topmost anyway, so it's still immediately visible.
-        _morphicBarManager.ShowBar(activateWindow: false);
+        if (_appRegistrySettings.IsBarVisible == true)
+        {
+            _morphicBarManager.ShowBar(activateWindow: false);
+        }
+
+        _appRegistrySettings.StartSync(_morphicBarManager, morphicBarWindow.DispatcherQueue);
     }
 
     // builds the basic set of MorphicBar items (as data, not controls); 
@@ -353,6 +360,10 @@ public partial class App : Application
             _menuOwnerWindow.Close();
         }
         catch (System.Runtime.InteropServices.COMException ex) when (ex.HResult == E_WinUIDesktopWindowAlreadyClosed) { }
+
+        _appRegistrySettings?.PersistFinalState();
+        _appRegistrySettings?.Dispose();
+        _appRegistrySettings = null;
 
         // MorphicBarManager.Dispose closes out the MorphicBar and all its resources/events in a safe order.
         _morphicBarManager?.Dispose();

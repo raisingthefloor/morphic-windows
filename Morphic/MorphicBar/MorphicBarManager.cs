@@ -42,6 +42,9 @@ internal sealed class MorphicBarManager : IDisposable
         _uiDispatcherQueue = morphicBarWindow.DispatcherQueue;
         _morphicBarWindow.AppWindow.Changed += this.OnBarAppWindowChanged;
         _morphicBarWindow.RasterizationScaleChangedExternal += this.OnBarRasterizationScaleChanged;
+        //
+        _morphicBarWindow.DockingLocationChanged += this.OnBarWindowDockingLocationChanged;
+        _morphicBarWindow.OrientationChanged += this.OnBarWindowOrientationChanged;
 
         // Seed the bar icon for the current system theme (HC variant or non-HC), then subscribe
         // so any future HC transition swaps the icon. CachedDarkModeState's StateChanged fires
@@ -75,7 +78,15 @@ internal sealed class MorphicBarManager : IDisposable
 
     public event EventHandler? BarVisibilityChanged;
 
+    public event EventHandler<Morphic.MorphicBar.DockingLocation>? DockingLocationChanged;
+
+    public event EventHandler<Microsoft.UI.Xaml.Controls.Orientation>? OrientationChanged;
+
     public bool IsBarVisible => _morphicBarWindow.Visible;
+
+    public Morphic.MorphicBar.DockingLocation CurrentDockingLocation => _morphicBarWindow.CurrentDockingLocation;
+
+    public Microsoft.UI.Xaml.Controls.Orientation CurrentOrientation => _morphicBarWindow.Orientation;
 
     // Shows the bar. Pass activateWindow: false for the startup case so we don't interrupt the
     // user's previous foreground app AND don't put the bar into a sticky Win32 "active" state from
@@ -104,6 +115,8 @@ internal sealed class MorphicBarManager : IDisposable
     public void HideBar() => _morphicBarWindow.AppWindow.Hide();
 
     public void ActivateBar() => _morphicBarWindow.Activate();
+
+    public void MoveToPlacement(Microsoft.UI.Xaml.Controls.Orientation orientation, Morphic.MorphicBar.DockingLocation dockingLocation) => _morphicBarWindow.MoveToCurrentMonitorPlacement(orientation, dockingLocation);
 
     public IntPtr GetBarWindowHandle() => WinRT.Interop.WindowNative.GetWindowHandle(_morphicBarWindow);
 
@@ -169,6 +182,16 @@ internal sealed class MorphicBarManager : IDisposable
         BarItemDataFactory.RefreshTextSizeButtonState();
     }
 
+    private void OnBarWindowDockingLocationChanged(object? sender, Morphic.MorphicBar.DockingLocation dockingLocation)
+    {
+        this.DockingLocationChanged?.Invoke(this, dockingLocation);
+    }
+
+    private void OnBarWindowOrientationChanged(object? sender, Microsoft.UI.Xaml.Controls.Orientation orientation)
+    {
+        this.OrientationChanged?.Invoke(this, orientation);
+    }
+
     public void Dispose()
     {
         if (_disposed)
@@ -178,6 +201,8 @@ internal sealed class MorphicBarManager : IDisposable
         _disposed = true;
         _morphicBarWindow.AppWindow.Changed -= this.OnBarAppWindowChanged;
         _morphicBarWindow.RasterizationScaleChangedExternal -= this.OnBarRasterizationScaleChanged;
+        _morphicBarWindow.DockingLocationChanged -= this.OnBarWindowDockingLocationChanged;
+        _morphicBarWindow.OrientationChanged -= this.OnBarWindowOrientationChanged;
         if (_barIconRefreshHandler is not null)
         {
             Morphic.SettingsUtils.CachedDarkModeState.StateChanged -= _barIconRefreshHandler;
