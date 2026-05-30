@@ -34,6 +34,14 @@ using Windows.Win32;
 
 namespace Morphic.WindowsNative.Magnifier;
 
+// Values match the Windows Magnifier registry value HKCU\Software\Microsoft\ScreenMagnifier\MagnificationMode.
+public enum MagnifierMode
+{
+    Docked = 1,
+    Fullscreen = 2,
+    Lens = 3,
+}
+
 public class Magnifier
 {
     // System Setting Ids (for SettingItem settings)
@@ -119,5 +127,126 @@ public class Magnifier
         }
 
         return MorphicResult.OkResult();
+    }
+
+    //
+
+    // magnifier mode (lens vs fullscreen vs docked)
+
+    // Windows Magnifier reads its mode from this value at startup. Because our show flow only runs while the magnifier is off, writing it before launch makes the magnifier come up in the mode we want.
+    private const string SCREEN_MAGNIFIER_REGISTRY_KEY_PATH = @"Software\Microsoft\ScreenMagnifier";
+    private const string MAGNIFICATION_MODE_VALUE_NAME = "MagnificationMode";
+
+    // The mode to put the magnifier back into after it is hidden; null means nothing to restore (already lens at show time, or we could not switch to lens).
+    private static MagnifierMode? _modeToRestoreAfterHide = null;
+
+    // Returns .IsSuccess if the caller should re-center the cursor (the magnifier will come up in lens mode); returns .IsError if lens mode could not be guaranteed, in which case the cursor must be left alone.
+    public static MorphicResult<MorphicUnit, MorphicUnit> EnsureLensModeForShow()
+    {
+        _modeToRestoreAfterHide = null;
+
+        var currentModeAsNullable = Magnifier.GetCurrentMode();
+        if (currentModeAsNullable is null)
+        {
+            // mode unknown: we cannot switch to (and later restore from) lens mode safely
+            return MorphicResult.ErrorResult();
+        }
+        var currentMode = currentModeAsNullable.Value;
+
+        if (currentMode == MagnifierMode.Lens)
+        {
+            return MorphicResult.OkResult();
+        }
+
+        var setCurrentModeResult = Magnifier.SetCurrentMode(MagnifierMode.Lens);
+        if (setCurrentModeResult.IsError)
+        {
+            return MorphicResult.ErrorResult();
+        }
+
+        _modeToRestoreAfterHide = currentMode;
+        return MorphicResult.OkResult();
+    }
+
+    // Restores the pre-show magnifier mode, but only if the magnifier is still in lens mode. If the user switched it to another mode while it was running, we honor that and leave it alone.
+    public static void RestoreModePriorToShowIfNeeded()
+    {
+        var modeToRestore = _modeToRestoreAfterHide;
+        if (modeToRestore is null)
+        {
+            return;
+        }
+
+        // Assumes Magnifier writes runtime mode changes to the registry synchronously and does not re-write the mode on exit; a live mode other than lens therefore means the user changed it.
+        var currentModeAsNullable = Magnifier.GetCurrentMode();
+        if (currentModeAsNullable == MagnifierMode.Lens)
+        {
+            _ = Magnifier.SetCurrentMode(modeToRestore.Value);
+        }
+
+        _modeToRestoreAfterHide = null;
+    }
+
+    // Returns Fullscreen (the Windows default) when the key or value is absent; null when the value cannot be read or is not a recognized mode.
+    private static MagnifierMode? GetCurrentMode()
+    {
+        try
+        {
+            using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(Magnifier.SCREEN_MAGNIFIER_REGISTRY_KEY_PATH))
+            {
+                if (key is null)
+                {
+                    return MagnifierMode.Fullscreen;
+                }
+
+                var rawValue = key.GetValue(Magnifier.MAGNIFICATION_MODE_VALUE_NAME);
+                if (rawValue is null)
+                {
+                    return MagnifierMode.Fullscreen;
+                }
+
+                if (rawValue is int valueAsInt)
+                {
+                    switch (valueAsInt)
+                    {
+                        case (int)MagnifierMode.Fullscreen:
+                            return MagnifierMode.Fullscreen;
+                        case (int)MagnifierMode.Lens:
+                            return MagnifierMode.Lens;
+                        case (int)MagnifierMode.Docked:
+                            return MagnifierMode.Docked;
+                        default:
+                            return null;
+                    }
+                }
+
+                return null;
+            }
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static MorphicResult<MorphicUnit, MorphicUnit> SetCurrentMode(MagnifierMode mode)
+    {
+        try
+        {
+            using (var key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(Magnifier.SCREEN_MAGNIFIER_REGISTRY_KEY_PATH))
+            {
+                if (key is null)
+                {
+                    return MorphicResult.ErrorResult();
+                }
+
+                key.SetValue(Magnifier.MAGNIFICATION_MODE_VALUE_NAME, (int)mode, Microsoft.Win32.RegistryValueKind.DWord);
+                return MorphicResult.OkResult();
+            }
+        }
+        catch
+        {
+            return MorphicResult.ErrorResult();
+        }
     }
 }
