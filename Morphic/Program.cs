@@ -47,7 +47,11 @@ public class Program
         // to it (which surfaces its MorphicBar) and exit instead of starting a second copy.
         if (Program.DecideRedirection() == true)
         {
-            return;
+            // Secondary instance: we have handed our activation to the primary (or timed out trying).
+            // Force-terminate rather than `return`, so that a redirect thread-pool task still blocked
+            // inside RedirectActivationToAsync (which can hang indefinitely) can never keep this
+            // window-less process alive as a zombie. A secondary instance has nothing to tear down.
+            System.Environment.Exit(0);
         }
 
 //        bool bootstrapInitialized = false;
@@ -139,13 +143,23 @@ public class Program
             _ = redirectCompletedEvent.Set();
         });
 
+        // Bounded wait, NOT infinite. If RedirectActivationToAsync never completes (observed when the
+        // primary instance isn't servicing the handoff), an infinite wait left this secondary instance
+        // hung forever as a window-less zombie that never exited -- which presents to the user as
+        // "Morphic didn't shut down." On timeout we give up on the redirect and let Main exit anyway
+        // (Environment.Exit), so a stalled handoff costs at most a lost re-launch surface, never a
+        // lingering process. The redirect thread-pool task is a background thread, abandoned on exit.
         const uint CWMO_DEFAULT = 0;
-        const uint INFINITE = 0xFFFFFFFF;
+        const uint REDIRECT_WAIT_TIMEOUT_MILLISECONDS = 5000;
         var waitHandles = new Windows.Win32.Foundation.HANDLE[]
         {
             new Windows.Win32.Foundation.HANDLE(redirectCompletedEvent.SafeWaitHandle.DangerousGetHandle()),
         };
-        _ = Windows.Win32.PInvoke.CoWaitForMultipleObjects(CWMO_DEFAULT, INFINITE, waitHandles, out _);
+        var coWaitResult = Windows.Win32.PInvoke.CoWaitForMultipleObjects(CWMO_DEFAULT, REDIRECT_WAIT_TIMEOUT_MILLISECONDS, waitHandles, out _);
+        if (coWaitResult != Windows.Win32.Foundation.HRESULT.S_OK)
+        {
+            Morphic.RmTraceLog.Log($"RedirectActivationTo: redirect did not complete within {REDIRECT_WAIT_TIMEOUT_MILLISECONDS}ms; exiting anyway. (CoWaitForMultipleObjects hr=0x{coWaitResult.Value:X8})");
+        }
     }
 }
 #endif
