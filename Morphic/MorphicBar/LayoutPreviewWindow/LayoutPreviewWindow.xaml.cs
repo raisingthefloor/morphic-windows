@@ -231,8 +231,9 @@ public sealed partial class LayoutPreviewWindow : Morphic.Controls.Windowing.Chr
             this.SystemBackdrop = new Morphic.MorphicBar.LayoutPreviewWindow.Win10SnapPreviewBackdrop();
 
             this.RootBorder.Background = null;
-            this.RootBorder.BorderBrush = null;
-            this.RootBorder.BorderThickness = new Microsoft.UI.Xaml.Thickness(0);
+            // thin faint border to match the Win10 snap overlay's edge (WIN10-TUNE: color/alpha)
+            this.RootBorder.BorderBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(0x59, 0xFF, 0xFF, 0xFF));
+            this.RootBorder.BorderThickness = new Microsoft.UI.Xaml.Thickness(1);
             this.RootBorder.CornerRadius = new Microsoft.UI.Xaml.CornerRadius(0);
         }
 

@@ -42,8 +42,11 @@ internal class Win10SnapPreviewBackdrop : SystemBackdrop
     // WIN10-TUNE: first-pass tint/luminosity opacities for the accent wash. Verify against the live
     // Win10 snap preview on a real Win10 machine (screenshots) and adjust. Higher TintOpacity = more
     // saturated accent; higher LuminosityOpacity = more opaque / less see-through.
-    private const float SNAP_TINT_OPACITY = 0.4f;
-    private const float SNAP_LUMINOSITY_OPACITY = 0.7f;
+    private const float SNAP_TINT_OPACITY = 0.2f;
+    private const float SNAP_LUMINOSITY_OPACITY = 0.35f;
+    // Alpha of the solid-accent fallback used when acrylic is unavailable (kept semi-transparent so
+    // it degrades to a light tint instead of a solid block).
+    private const byte SNAP_FALLBACK_ALPHA = 0x66;
 
     private DesktopAcrylicController? _controller;
     private SystemBackdropConfiguration? _configOverride;
@@ -60,13 +63,15 @@ internal class Win10SnapPreviewBackdrop : SystemBackdrop
 
         _controller = new DesktopAcrylicController
         {
-            // Default (not Thin) for the standard, more-saturated acrylic that matches the snap overlay.
-            Kind = DesktopAcrylicKind.Default,
+            // Thin = the lightest, most see-through acrylic, to match the Win10 snap overlay -- a faint
+            // glassy tint that lets the desktop (and its gradient) show through, not a saturated fill.
+            Kind = DesktopAcrylicKind.Thin,
             TintColor = accentColor,
             TintOpacity = Win10SnapPreviewBackdrop.SNAP_TINT_OPACITY,
             LuminosityOpacity = Win10SnapPreviewBackdrop.SNAP_LUMINOSITY_OPACITY,
-            // Solid accent shown when acrylic is unavailable (transparency disabled, battery saver, RDP).
-            FallbackColor = accentColor,
+            // Semi-transparent accent shown when acrylic is unavailable (transparency disabled, battery
+            // saver, RDP) -- a light tint rather than a solid block.
+            FallbackColor = Windows.UI.Color.FromArgb(Win10SnapPreviewBackdrop.SNAP_FALLBACK_ALPHA, accentColor.R, accentColor.G, accentColor.B),
         };
 
         // treat the window as 'always active' so the acrylic doesn't fall back to its opaque 'inactive' effect
