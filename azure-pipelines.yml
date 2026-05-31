@@ -552,11 +552,28 @@ stages:
                     # print all commands to the terminal output
                     set -x
 
-                    echo "detected dev build"
                     S3_BUILD_OPERATING_SYSTEM="win"
-#                    S3_BUILD_TYPE="dev" # dev (not for distribution)
-#                    S3_BUILD_TYPE="edge" # canary
-                    S3_BUILD_TYPE="stable" # preview/beta/release (production)
+
+                    # Derive the build type from the git branch name. Branches are named
+                    # "BUILDTYPE/..." (e.g. dev/2.x, canary/2.x, preview/2.x, release/2.x), so the
+                    # build type is the branch-name segment before the first "/".
+                    SOURCE_BRANCH="${BUILD_SOURCEBRANCH#refs/heads/}"
+                    S3_BUILD_TYPE="${SOURCE_BRANCH%%/*}"
+                    echo "detected build type '${S3_BUILD_TYPE}' from branch '${BUILD_SOURCEBRANCH}'"
+
+                    # Map the build type to its S3 folder name and installer filename suffix:
+                    #   dev     -> folder "dev",    suffix "-dev"
+                    #   canary  -> folder "edge",   suffix "-canary"
+                    #   preview -> folder "stable", suffix "-preview"
+                    #   release -> folder "stable", suffix "" (none)
+                    case "${S3_BUILD_TYPE}" in
+                      dev)     S3_BUILD_FOLDER="dev";    S3_BUILD_TYPE_FILENAME_SUFFIX="-dev";;
+                      canary)  S3_BUILD_FOLDER="edge";   S3_BUILD_TYPE_FILENAME_SUFFIX="-canary";;
+                      preview) S3_BUILD_FOLDER="stable"; S3_BUILD_TYPE_FILENAME_SUFFIX="-preview";;
+                      release) S3_BUILD_FOLDER="stable"; S3_BUILD_TYPE_FILENAME_SUFFIX="";;
+                      *)       echo "ERROR: unrecognized build type '${S3_BUILD_TYPE}' (branch '${BUILD_SOURCEBRANCH}')" >&2; exit 1;;
+                    esac
+
                     # expire dev builds after 7 days
                     EXTRA_ARGS="--expires $(date -d '+7 days' --iso-8601=seconds)"
 
@@ -565,7 +582,7 @@ stages:
                     publishMsixInstaller() {
                       VERSION=$(sed -n 1p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
                       LOCAL_MSIX_SOURCE="${AGENT_BUILDDIRECTORY}/${LOCAL_MSIX_DIR}/${MSIX_NAME_BASE}.msix"
-                      S3_MSIX_OBJECT_NAME="${S3_BUILD_OPERATING_SYSTEM}/${S3_BUILD_ARCHITECTURE}/${S3_BUILD_TYPE}/MorphicSetup-v${VERSION}-${S3_BUILD_TYPE}-${S3_BUILD_ARCHITECTURE}.msix"
+                      S3_MSIX_OBJECT_NAME="${S3_BUILD_OPERATING_SYSTEM}/${S3_BUILD_ARCHITECTURE}/${S3_BUILD_FOLDER}/MorphicSetup-v${VERSION}${S3_BUILD_TYPE_FILENAME_SUFFIX}-${S3_BUILD_ARCHITECTURE}.msix"
 
                       # debug: output the contents of the build directory
                       ls -al ${AGENT_BUILDDIRECTORY}/${LOCAL_MSIX_DIR}
@@ -577,8 +594,8 @@ stages:
                       ASSEMBLY_VERSION=$(sed -n 2p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
                       LOCAL_MSI_SOURCE="${AGENT_BUILDDIRECTORY}/${LOCAL_MSI_DIR}/${MSI_NAME_BASE}.msi"
                       LOCAL_APPCAST_SOURCE="${AGENT_BUILDDIRECTORY}/${MSI_NAME_BASE}-v${VERSION}.appcast.xml"
-                      S3_MSI_OBJECT_NAME="${S3_BUILD_OPERATING_SYSTEM}/${S3_BUILD_ARCHITECTURE}/${S3_BUILD_TYPE}/${MSI_NAME_BASE}-v${VERSION}-${S3_BUILD_TYPE}-${S3_BUILD_ARCHITECTURE}.msi"
-                      S3_APPCAST_OBJECT_NAME="${S3_BUILD_OPERATING_SYSTEM}/${S3_BUILD_ARCHITECTURE}/${S3_BUILD_TYPE}/${MSI_NAME_BASE}-v${VERSION}.appcast.xml"
+                      S3_MSI_OBJECT_NAME="${S3_BUILD_OPERATING_SYSTEM}/${S3_BUILD_ARCHITECTURE}/${S3_BUILD_FOLDER}/${MSI_NAME_BASE}-v${VERSION}${S3_BUILD_TYPE_FILENAME_SUFFIX}-${S3_BUILD_ARCHITECTURE}.msi"
+                      S3_APPCAST_OBJECT_NAME="${S3_BUILD_OPERATING_SYSTEM}/${S3_BUILD_ARCHITECTURE}/${S3_BUILD_FOLDER}/${MSI_NAME_BASE}-v${VERSION}.appcast.xml"
 
                       cat > "${LOCAL_APPCAST_SOURCE}" <<EOF
                     <?xml version="1.0" encoding="utf-8"?>
