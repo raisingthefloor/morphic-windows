@@ -157,6 +157,13 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     // continuation that re-measures the bar) so they can touch UI directly.
     public event EventHandler? RasterizationScaleChangedExternal;
 
+    // Fires when the bar moves to a DIFFERENT monitor (raised from AnimateMoveTo). Subscribers that
+    // mirror per-monitor state -- e.g. the Text Size +/- buttons whose IsEnabled depends on the bar
+    // monitor's DPI-offset range -- refresh on this. Needed IN ADDITION to RasterizationScaleChanged
+    // because a same-scale move to another monitor does NOT change the rasterization scale, yet the
+    // new monitor can have a different DPI range / custom-scaling state the buttons must reflect.
+    public event EventHandler? CurrentMonitorChanged;
+
     // Tracks which monitor the bar belongs to. Kept in sync at the entry of AnimateMoveTo and
     // re-verified on demand via GetVerifiedCurrentMonitorHandle. Holding our own handle (instead
     // of re-querying the window's current position each time) means a DPI/rasterization-scale
@@ -692,8 +699,16 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             : default(MorphicBarFocusController.FocusSnapshot);
 
         // record the destination monitor; this is the single normal path that legitimately changes
-        // which monitor we are on (both intentional moves and drag-release end up here)
+        // which monitor we are on (both intentional moves and drag-release end up here). Raise
+        // CurrentMonitorChanged when it actually changes so per-monitor button state (e.g. Text Size +/-)
+        // refreshes. On a drag-release the window is already over the destination monitor by now (the
+        // drag carried it there), so a subscriber reading the live window position sees the right one.
+        var previousMonitorHandle = _currentMonitorHandle;
         _currentMonitorHandle = hMonitor;
+        if (_currentMonitorHandle != previousMonitorHandle)
+        {
+            this.CurrentMonitorChanged?.Invoke(this, EventArgs.Empty);
+        }
 
         // apply the target orientation via the property setter so its layout helpers run
         // (UpdateMorphicMenuButtonLayout / UpdateBarItemsPanelLayout); the setter is a no-op

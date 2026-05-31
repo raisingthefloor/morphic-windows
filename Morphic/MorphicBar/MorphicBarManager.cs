@@ -47,6 +47,7 @@ internal sealed class MorphicBarManager : IDisposable
         _uiDispatcherQueue = morphicBarWindow.DispatcherQueue;
         _morphicBarWindow.AppWindow.Changed += this.OnBarAppWindowChanged;
         _morphicBarWindow.RasterizationScaleChangedExternal += this.OnBarRasterizationScaleChanged;
+        _morphicBarWindow.CurrentMonitorChanged += this.OnBarCurrentMonitorChanged;
         //
         _morphicBarWindow.DockingLocationChanged += this.OnBarWindowDockingLocationChanged;
         _morphicBarWindow.OrientationChanged += this.OnBarWindowOrientationChanged;
@@ -272,6 +273,15 @@ internal sealed class MorphicBarManager : IDisposable
         BarItemDataFactory.RefreshTextSizeButtonState();
     }
 
+    // The bar moved to a different monitor. Refresh Text Size +/- button state so it reflects the new
+    // monitor's DPI-offset range. A same-scale cross-monitor move does NOT fire
+    // RasterizationScaleChangedExternal, and Display.DisplayChanged only fires for system-wide config
+    // changes (not a bar-window move), so without this the buttons keep the prior monitor's state.
+    private void OnBarCurrentMonitorChanged(object? sender, EventArgs e)
+    {
+        BarItemDataFactory.RefreshTextSizeButtonState();
+    }
+
     // Re-raise the bar's docking-location change so App-level persistence can observe re-docks
     // without taking a direct dependency on MorphicBarWindow. The bar raises this from its single
     // _dockingLocation mutation point (AnimateMoveTo), so this fires for drag re-docks AND for the
@@ -307,6 +317,7 @@ internal sealed class MorphicBarManager : IDisposable
         _disposed = true;
         _morphicBarWindow.AppWindow.Changed -= this.OnBarAppWindowChanged;
         _morphicBarWindow.RasterizationScaleChangedExternal -= this.OnBarRasterizationScaleChanged;
+        _morphicBarWindow.CurrentMonitorChanged -= this.OnBarCurrentMonitorChanged;
         _morphicBarWindow.DockingLocationChanged -= this.OnBarWindowDockingLocationChanged;
         _morphicBarWindow.OrientationChanged -= this.OnBarWindowOrientationChanged;
         if (_fullScreenWatcher is not null)

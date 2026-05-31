@@ -444,20 +444,20 @@
          from login later). This keeps a bar the user had hidden from reappearing after an update.
          (A manual Start Menu / .exe launch passes no flag and force-shows.)
 
-         We use a file-based exe CustomAction (FileRef + ExeCommand) rather than the util WixShellExec
-         helper because WixShellExec's target is a path only and cannot carry the run-after-install
-         argument. With FileRef, ExeCommand is the ARGUMENTS ONLY (not the exe
-         path). Return="asyncNoWait" launches Morphic and returns immediately (Morphic does its own
-         init in the background), so the installer doesn't stall, and unlike QtExec it does not
-         wait for the long-running process to exit. Execute="immediate" + Impersonate="yes" run
-         Morphic in the installing user's session with their token, not as SYSTEM. (FileRef also lets
-         us drop the old Wix4UtilCA_$(sys.BUILDARCHSHORT) arch-matching syntax entirely.) -->
+         We launch via the LaunchMorphic managed custom action (in MorphicSetup.Actions), NOT a
+         file-based exe CustomAction. A type-18 EXE custom action starts the target with CreateProcess,
+         and Morphic ships with uiAccess=true: a uiAccess executable CANNOT be launched by CreateProcess
+         from the msiexec context (it fails, typically with ERROR_ELEVATION_REQUIRED / 740). LaunchMorphic
+         uses Process.Start with UseShellExecute=true (ShellExecute), which IS the path that starts a
+         uiAccess app (the same path the old WixShellExec used), and unlike WixShellExec it can also pass
+         the run-after-install argument. Execute="immediate" + Impersonate="yes" run it in the installing
+         user's session with their token (not SYSTEM), so Morphic appears on their desktop; the action is
+         best-effort and never fails the install. -->
     <CustomAction Id="LaunchMorphicAfterInstall"
-                  FileRef="morphic_exe"
-                  ExeCommand="--run-after-install"
+                  BinaryRef="MorphicSetupActionsCA"
+                  DllEntry="LaunchMorphic"
                   Execute="immediate"
-                  Impersonate="yes"
-                  Return="asyncNoWait" />
+                  Impersonate="yes" />
   </Package>
 
   <Fragment>
