@@ -200,23 +200,58 @@ public partial class App : Application
         // so the buttons reflect the right display from first frame.
         Morphic.MorphicBar.BarItemDataFactory.RefreshTextSizeButtonState();
 
-        // Show the bar without activating it -- but only if the persisted state says it was visible.
-        // If the user had hidden it last session, leave it hidden (the tray button's "Show MorphicBar"
-        // tooltip already reflects that, since BarVisibilityChanged won't fire). Activating at launch
-        // would (a) be user-hostile by interrupting whatever the user was doing in their previous
-        // foreground app, and (b) put the bar into a sticky Win32 "active" state from which the user's
-        // first Alt+Tab would fire no WM_ACTIVATE (OS sees it as "already active"), breaking our
-        // initial-focus-ring logic. The bar is topmost anyway, so it's still immediately visible.
-        if (_appRegistrySettings.IsBarVisible == true)
+        // Begin two-way registry sync BEFORE applying the initial visibility, so the show below flows
+        // through the normal bar->registry path. The cache is seeded from Load(), so re-showing the
+        // persisted-visible state is echo-suppressed (writes nothing), while a manual force-show of a
+        // previously-hidden bar is persisted automatically. The bar's DispatcherQueue is the UI thread
+        // the watcher marshals its ThreadPool callbacks onto.
+        _appRegistrySettings.StartSync(_morphicBarManager, morphicBarWindow.DispatcherQueue);
+
+        // Show the bar without activating it (monitor + dock corner were already applied above). WHICH
+        // visibility we apply depends on how we were launched:
+        //   * Autorun (the installer's Run key passes --run-after-login): respect the persisted state --
+        //     show only if the bar was visible last session; if the user had hidden it, leave it hidden
+        //     (the tray button's "Show MorphicBar" tooltip already reflects that).
+        //   * Manual launch (Start Menu shortcut, double-clicked .exe, post-install launch): force-show
+        //     the bar on the current monitor regardless of the persisted state; StartSync's handler then
+        //     persists IsVisible=true so the next autorun restores it shown.
+        // We never ACTIVATE at launch: activating would (a) be user-hostile by interrupting whatever the
+        // user was doing in their previous foreground app, and (b) put the bar into a sticky Win32
+        // "active" state from which the user's first Alt+Tab would fire no WM_ACTIVATE (OS sees it as
+        // "already active"), breaking our initial-focus-ring logic. The bar is topmost anyway, so it's
+        // still immediately visible.
+        if (App.WasLaunchedByAutorun() == true)
+        {
+            if (_appRegistrySettings.IsBarVisible == true)
+            {
+                _morphicBarManager.ShowBar(activateWindow: false);
+            }
+        }
+        else
         {
             _morphicBarManager.ShowBar(activateWindow: false);
         }
+    }
 
-        // The bar is now in its restored state (positioned + shown/hidden per the persisted settings).
-        // Begin two-way registry sync now, so this initial application doesn't round-trip back through
-        // the registry. The bar's DispatcherQueue is the UI thread the watcher marshals its ThreadPool
-        // callbacks onto.
-        _appRegistrySettings.StartSync(_morphicBarManager, morphicBarWindow.DispatcherQueue);
+    // The installer's HKLM Run key launches Morphic at logon with this flag; a manual launch (Start
+    // Menu shortcut, double-clicked .exe, post-install launch) passes no flag. See the startup
+    // visibility logic for how the two are treated differently.
+    private const string RUN_AFTER_LOGIN_COMMAND_LINE_FLAG = "--run-after-login";
+
+    // True when the OS started us at logon (the Run key passed --run-after-login); false for a manual
+    // launch. Reads this process's own command line, so it reflects how THIS instance was started.
+    private static bool WasLaunchedByAutorun()
+    {
+        var commandLineArguments = Environment.GetCommandLineArgs();
+        // skip index 0 (the executable path)
+        for (var index = 1; index < commandLineArguments.Length; index++)
+        {
+            if (string.Equals(commandLineArguments[index], RUN_AFTER_LOGIN_COMMAND_LINE_FLAG, StringComparison.OrdinalIgnoreCase) == true)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     // builds the basic set of MorphicBar items (as data, not controls); 
