@@ -438,17 +438,17 @@
          scenarios who want to suppress the launch anyway can pass
          MORPHIC_LAUNCH_AFTER_INSTALL=0 on the msiexec command line.
 
-         The launch passes --run-after-install so the post-install launch respects the user's
+         The launch passes the run-after-install flag so the post-install launch respects the user's
          persisted MorphicBar visibility instead of force-showing (today the same treatment as the
-         logon autostart's --run-after-login, but a separate flag so install behavior can diverge
+         logon autostart's run-after-login, but a separate flag so install behavior can diverge
          from login later). This keeps a bar the user had hidden from reappearing after an update.
          (A manual Start Menu / .exe launch passes no flag and force-shows.)
 
          We use a file-based exe CustomAction (FileRef + ExeCommand) rather than the util WixShellExec
-         helper because WixShellExec's target is a path only and cannot carry the --run-after-install
+         helper because WixShellExec's target is a path only and cannot carry the run-after-install
          argument. With FileRef, ExeCommand is the ARGUMENTS ONLY (not the exe
          path). Return="asyncNoWait" launches Morphic and returns immediately (Morphic does its own
-         init in the background), so the installer doesn't stall -- and unlike QtExec it does not
+         init in the background), so the installer doesn't stall, and unlike QtExec it does not
          wait for the long-running process to exit. Execute="immediate" + Impersonate="yes" run
          Morphic in the installing user's session with their token, not as SYSTEM. (FileRef also lets
          us drop the old Wix4UtilCA_$(sys.BUILDARCHSHORT) arch-matching syntax entirely.) -->
@@ -633,10 +633,10 @@
 
              Value-name "Morphic" matches the friendly name shown in Task Manager's
              Startup tab; users who want to disable will find it under that label.
-             The value data is the full quoted EXE path followed by the --run-after-login
-             CLI flag (the post-install launch passes a separate --run-after-install flag;
+             The value data is the full quoted EXE path followed by the run-after-login
+             CLI flag (the post-install launch passes a separate run-after-install flag;
              the app reads either at startup via Environment.GetCommandLineArgs and treats
-             its presence as "an automatic start -- respect the persisted bar visibility" vs
+             its presence as "an automatic start, so respect the persisted bar visibility" vs
              absence as "user launched me manually, force-show the bar"). The quoting is
              defensive against future install-path changes (Program Files has a space). -->
         <Component Id="AutoStartRunKeyComponent"
