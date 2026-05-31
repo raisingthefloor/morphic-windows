@@ -88,6 +88,10 @@ internal sealed class MorphicBarManager : IDisposable
 
     public Microsoft.UI.Xaml.Controls.Orientation CurrentOrientation => _morphicBarWindow.Orientation;
 
+    // The bar's flow direction, forwarded so App-level persistence can resolve logical docks to
+    // physical ones (for position-equality comparisons) without referencing MorphicBarWindow directly.
+    public bool IsRightToLeft => _morphicBarWindow.IsRightToLeft;
+
     // Shows the bar. Pass activateWindow: false for the startup case so we don't interrupt the
     // user's previous foreground app AND don't put the bar into a sticky Win32 "active" state from
     // which the first Alt+Tab to it would fail to fire WM_ACTIVATE (OS sees no state change).
@@ -108,6 +112,12 @@ internal sealed class MorphicBarManager : IDisposable
             _morphicBarWindow.FocusController.PrepareForShow();
         }
         _morphicBarWindow.AppWindow.Show(activateWindow: activateWindow);
+        if (activateWindow == true)
+        {
+            // Close the suppression scope opened by PrepareForShow. Deferred (enqueued) so the
+            // post-Show WM_ACTIVATE focus update drains while still suppressed, then clears.
+            _morphicBarWindow.FocusController.EndSuppressUpgradeAfterPendingActivations();
+        }
 
         _morphicBarWindow.RefreshAllButtonCompoundStatesAfterShow();
     }
@@ -140,10 +150,7 @@ internal sealed class MorphicBarManager : IDisposable
     {
         bool wasVisible = _morphicBarWindow.Visible;
         var focusSnapshot = this.CaptureBarFocus();
-        // Suppress focus upgrades for the WHOLE flow: covers click activation's deferred update,
-        // the action duration, and the re-Show's WM_ACTIVATE. 30s is generous enough for any
-        // realistic action (snip overlay etc.) and short enough to expire before any user action.
-        _morphicBarWindow.FocusController.SuppressUpgradeFor(TimeSpan.FromSeconds(30));
+        _morphicBarWindow.FocusController.BeginSuppressUpgrade();
         if (wasVisible) { _morphicBarWindow.AppWindow.Hide(); }
         try
         {
@@ -153,9 +160,11 @@ internal sealed class MorphicBarManager : IDisposable
         {
             if (wasVisible) { _morphicBarWindow.AppWindow.Show(); }
             this.RestoreBarFocus(focusSnapshot);
+            _morphicBarWindow.FocusController.EndSuppressUpgradeAfterPendingActivations();
         }
     }
 
+    /// <summary>
     public MorphicBarFocusController.FocusSnapshot CaptureBarFocus()
     {
         return _morphicBarWindow.FocusController.Capture(MorphicBarFocusController.SnapshotScope.AnyInBarXamlRoot);

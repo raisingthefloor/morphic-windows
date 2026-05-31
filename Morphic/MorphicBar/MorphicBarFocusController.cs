@@ -27,7 +27,15 @@ internal sealed class MorphicBarFocusController
 {
     private readonly MorphicBarWindow _barWindow;
 
-    private long _suppressUpgradeUntilTickCount64;
+    // Suppression depth (>0 == suppressed). While suppressed, the RunDeferredFocusUpdate
+    // decision tree must NOT upgrade the existing focus state (Programmatic/Pointer) to
+    // Keyboard, and must NOT take the "no element focused, place initial focus with Keyboard
+    // ring" path. A depth counter (not a wall-clock window) because the deferred focus update
+    // is enqueued on the DispatcherQueue: callers bracket the focus-disturbing operation with
+    // BeginSuppressUpgrade() ... EndSuppressUpgradeAfterPendingActivations(), and FIFO ordering
+    // guarantees the update runs (sees suppression) before the enqueued decrement clears it.
+    // UI-thread-confined, so no synchronization is needed.
+    private int _suppressUpgradeDepth;
 
     public MorphicBarFocusController(MorphicBarWindow barWindow)
     {
@@ -50,20 +58,27 @@ internal sealed class MorphicBarFocusController
     #endregion Public types
 
 
-    #region Suppression timer
+    #region Upgrade suppression
 
-    public void SuppressUpgradeFor(System.TimeSpan duration)
+    public void BeginSuppressUpgrade()
     {
-        var until = System.Environment.TickCount64 + (long)duration.TotalMilliseconds;
-        if (until > _suppressUpgradeUntilTickCount64)
-        {
-            _suppressUpgradeUntilTickCount64 = until;
-        }
+        _suppressUpgradeDepth++;
     }
 
-    public bool IsUpgradeSuppressed => System.Environment.TickCount64 <= _suppressUpgradeUntilTickCount64;
+    public void EndSuppressUpgradeAfterPendingActivations()
+    {
+        _ = _barWindow.DispatcherQueue.TryEnqueue(() =>
+        {
+            if (_suppressUpgradeDepth > 0)
+            {
+                _suppressUpgradeDepth--;
+            }
+        });
+    }
 
-    #endregion Suppression timer
+    public bool IsUpgradeSuppressed => _suppressUpgradeDepth > 0;
+
+    #endregion Upgrade suppression
 
 
     #region Initial focus placement
@@ -274,7 +289,7 @@ internal sealed class MorphicBarFocusController
     public void PrepareForShow()
     {
         this.DowngradeKeyboardFocusInBar();
-        this.SuppressUpgradeFor(System.TimeSpan.FromMilliseconds(500));
+        this.BeginSuppressUpgrade();
     }
 
     #endregion Show-time bundle

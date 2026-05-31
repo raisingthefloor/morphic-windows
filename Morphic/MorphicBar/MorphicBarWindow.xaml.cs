@@ -73,6 +73,14 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
 	// PointerPressed, cleared back to null (i.e. operation completed, no longer dragging) in PointerReleased.
     private (Morphic.MorphicBar.DockingLocation DockingLocation, Microsoft.UI.Xaml.Controls.Orientation Orientation)? _dragStartDockedState;
 
+    // Focus snapshot captured at drag start (PointerPressed) while focus is still pristine, before
+    // the drag -- and the layout-preview window's show/hide -- can disturb it. PointerReleased
+    // restores this for same-orientation moves so the post-drag WM_ACTIVATE doesn't reseed a
+    // spurious Keyboard ring on the FIRST bar control. Orientation-changing moves are handled
+    // inside AnimateMoveTo instead, so this is only consulted on the same-orientation path. Null
+    // when no drag is in progress.
+    private MorphicBarFocusController.FocusSnapshot? _dragStartFocusSnapshot;
+
     // Sticky one-way ratchet: false until IsAccidentalDragOperation returns false for the first
     // time this drag, then stays true for the rest of the drag (reset to false at next
     // PointerPressed). Once the gate has been passed, the layout preview is allowed to show; we
@@ -566,6 +574,12 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         _moveAnimationTimer?.Stop();
         _moveAnimationTimer = null;
 
+        // Snapshot the currently-focused control + FocusState ONLY when this call will change
+        // the bar's orientation. Orientation changes cause WinUI to re-orient BarItemsPanel,
+        // which disturbs focus: any focused button may lose its focus (or focus may migrate to
+        // a default focusable element with an unwanted spurious Keyboard ring). When the
+        // orientation isn't changing, there's no relayout-driven focus disturbance to
+        // compensate for and we skip the snapshot entirely.
         bool orientationChanging = (targetOrientation != _orientation);
         var preRotationFocus = orientationChanging
             ? this.FocusController.Capture(MorphicBarFocusController.SnapshotScope.BarOwnedOnly)
@@ -580,7 +594,10 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         // when the orientation already matches
         this.Orientation = targetOrientation;
 
-        // record the destination docking location
+        // record the destination docking location. This is the single mutation point for
+        // _dockingLocation, so raising DockingLocationChanged here lets App-level persistence
+        // (AppRegistrySettings) observe every re-dock -- startup snap, drag-release, and
+        // registry-driven moves all funnel through here.
         var dockingLocationDidChange = (_dockingLocation != targetDockingLocation);
         _dockingLocation = targetDockingLocation;
         if (dockingLocationDidChange == true)
@@ -684,6 +701,10 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     /* properties */
 
     public Morphic.MorphicBar.DockingLocation CurrentDockingLocation => _dockingLocation;
+
+    // True when the bar's flow direction is right-to-left. Exposed so App-level code (which has no
+    // XAML element of its own) can resolve logical docks to physical ones the same way the bar does.
+    public bool IsRightToLeft => this.MorphicMenuButton.FlowDirection == FlowDirection.RightToLeft;
 
     internal void MoveToCurrentMonitorPlacement(Microsoft.UI.Xaml.Controls.Orientation orientation, Morphic.MorphicBar.DockingLocation dockingLocation)
     {
@@ -1234,12 +1255,15 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             var isLeftButtonPressed = e.GetCurrentPoint(null).Properties.IsLeftButtonPressed;
             if (isLeftButtonPressed)
             {
-                // Suppress focus upgrades for 500ms covering the post-WA_ACTIVE deferred update.
+                // Open a one-shot suppression scope covering the post-WA_ACTIVE deferred update.
                 // First-click-on-bar fires WA_ACTIVE (not WA_CLICKACTIVE), and our deferred update
                 // would otherwise put a keyboard ring on the first button (either by upgrading an
                 // existing Pointer-state focus, or by taking the initial-focus path with Keyboard
                 // when the focused element is in a popup-style subtree IsBarOwnedElement misses).
-                this.FocusController.SuppressUpgradeFor(TimeSpan.FromMilliseconds(500));
+                // The activating WM_ACTIVATE was enqueued before this handler runs, so enqueuing
+                // the close here (FIFO) drains that update suppressed, then clears.
+                this.FocusController.BeginSuppressUpgrade();
+                this.FocusController.EndSuppressUpgradeAfterPendingActivations();
 
                 // Cancel any in-flight move animation from a PREVIOUS drag's release. Without this,
                 // starting a new drag while the previous drag's settle-animation would cause a visual
@@ -1262,6 +1286,12 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
                 _dragStartDockedState = (_dockingLocation, _orientation);
                 _dragStopwatch = System.Diagnostics.Stopwatch.StartNew();
                 _dragHasPassedAccidentalGate = false;
+                //
+                // Snapshot focus while it is still pristine. The drag, and the layout-preview
+                // window's show/hide, will steal+return activation; PointerReleased restores this
+                // (for same-orientation moves) so focus lands back where it was instead of the
+                // post-drag WM_ACTIVATE seeding a Keyboard ring on the first control.
+                _dragStartFocusSnapshot = this.FocusController.Capture(MorphicBarFocusController.SnapshotScope.BarOwnedOnly);
 
                 // Stop any prior bypass timer defensively in case a previous PointerReleased was
                 // missed (e.g., capture loss without release).
@@ -1334,7 +1364,12 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             // animating. AnimateMoveTo's snap uses the actual MEASURED target dimensions (not just
             // naively swapped width/height), so the subsequent animation only interpolates position
             // and the bar never appears to "grow" mid-flight to its final size.
-            System.Drawing.Point? snapResizeAtPoint = (_orientation != targetOrientation)
+            //
+            // Captured BEFORE AnimateMoveTo because AnimateMoveTo updates _orientation to
+            // targetOrientation as a side effect; reading _orientation afterward would always
+            // compare equal.
+            bool orientationIsChanging = (_orientation != targetOrientation);
+            System.Drawing.Point? snapResizeAtPoint = orientationIsChanging
                 ? currentPointerPosition
                 : (System.Drawing.Point?)null;
 
@@ -1343,12 +1378,25 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             // and animates position + size to the docking location.
             this.AnimateMoveTo(hMonitor, targetOrientation, targetDockingLocation, DOCKING_MOVE_ANIMATION_DURATION, snapResizeAtPoint);
 
+            // Put focus back exactly where it was at drag start, preserving its original FocusState
+            // (e.g. Pointer, which renders no ring) -- deterministic state, no timer. The root-cause
+            // fix is upstream (the preview now shows non-activated, so the drag no longer bounces the
+            // bar's activation and there is no stray WA_ACTIVATE to seed a ring); this restore keeps
+            // focus on the user's prior control across the move rather than leaving it wherever the
+            // drag left it. Same-orientation only: orientation-changing moves are owned by
+            // AnimateMoveTo (it captures + restores, or downgrades a spurious ring, across its relayout).
+            if (orientationIsChanging == false && _dragStartFocusSnapshot is { } dragStartFocus)
+            {
+                this.FocusController.Restore(dragStartFocus);
+            }
+
             _layoutPreviewWindowOrientation = null;
             _layoutPreviewDockingLocation = null;
 
             // clear the drag-only state back to "not in use" so a stray read between drags
             // surfaces immediately (NRE on .Value) instead of silently picking up stale data
             _dragStartDockedState = null;
+            _dragStartFocusSnapshot = null;
             _dragStopwatch = null;
 
             // stop the bypass timer (safe if already fired -- single-shot Stop() is idempotent)
@@ -1401,10 +1449,20 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             }
         }
 
+        // Normalize both docks to physical (absolute) before comparing. The proposed dock from
+        // CalculatePreviewDockingLocation is always physical, but the drag-start dock (captured from
+        // _dockingLocation) can be logical (flow-relative) when seeded from a logical registry value --
+        // e.g. FloatingBottomTrailing(3) and the proposed FloatingBottomRight(7) are the SAME corner in
+        // LTR yet compare unequal as raw enums. Without normalizing, a logically-docked bar never matches
+        // its own flip zone, so the accidental-drag gate silently disengages and a tiny drag rotates it.
+        var isRightToLeft = this.MorphicMenuButton.FlowDirection == FlowDirection.RightToLeft;
+        var dragStartPhysicalDockingLocation = dragStart.DockingLocation.ToPhysicalDockingLocation(isRightToLeft);
+        var proposedPhysicalDockingLocation = proposedDockingLocation.ToPhysicalDockingLocation(isRightToLeft);
+
         // Both scenarios require an orientation flip; keeping the two conditions explicit
         // documents the user-facing intent even though their union collapses to "orientation
         // has flipped" mathematically.
-        bool isSameDockingLocationFlip = (proposedDockingLocation == dragStart.DockingLocation)
+        bool isSameDockingLocationFlip = (proposedPhysicalDockingLocation == dragStartPhysicalDockingLocation)
                               && (proposedOrientation != dragStart.Orientation);
         // Cross-docking-location accidental flips only matter between fixed-margin docks --
         // only those four positions are geometrically adjacent enough that a small drag can
@@ -1413,9 +1471,9 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         // a sizable, intentional drag. This calculation assumes a four-sided rectangle
         // (i.e. a display).
         bool isCrossDockingLocationFlip = false;
-        if (dragStart.DockingLocation.IsFixedDockingLocation() && proposedDockingLocation.IsFixedDockingLocation())
+        if (dragStartPhysicalDockingLocation.IsFixedDockingLocation() && proposedPhysicalDockingLocation.IsFixedDockingLocation())
         {
-            isCrossDockingLocationFlip = (proposedDockingLocation != dragStart.DockingLocation)
+            isCrossDockingLocationFlip = (proposedPhysicalDockingLocation != dragStartPhysicalDockingLocation)
                                       && (proposedOrientation != dragStart.Orientation);
         }
         if (isSameDockingLocationFlip == false && isCrossDockingLocationFlip == false)
@@ -1539,6 +1597,11 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         var newPreviewDockingLocation = calculatePreviewWindowRectResult.Value!.DockingLocation;
         var newPreviewOrientation = calculatePreviewWindowRectResult.Value!.Orientation;
 
+        // FlowDirection-aware normalization: the docking comparisons below must reduce logical
+        // (flow-relative) docks to physical (absolute) ones, because newPreviewDockingLocation is
+        // always physical while _dockingLocation / _dragStartDockedState may be logical.
+        var isRightToLeft = this.MorphicMenuButton.FlowDirection == FlowDirection.RightToLeft;
+
         // Accidental-drag suppression: if the drag is a small motion that would land in an
         // "accidental flip" zone (same-corner-with-opposite-orientation, or cross-edge-fixed-dock
         // with opposite-orientation), suppress the preview entirely and clear the preview state.
@@ -1569,7 +1632,10 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             // The latch signal is "proposed differs from start," NOT "helper returned false,"
             // because the helper conflates both meanings.
             var dragStart = _dragStartDockedState!.Value;
-            bool proposedDiffersFromStart = newPreviewDockingLocation != dragStart.DockingLocation
+            // compare by physical (absolute) dock: newPreviewDockingLocation is always physical while
+            // dragStart.DockingLocation may be logical, so a raw compare would spuriously latch the gate
+            // on the first tick for a logically-docked bar (the same physical corner read as "different").
+            bool proposedDiffersFromStart = newPreviewDockingLocation.ToPhysicalDockingLocation(isRightToLeft) != dragStart.DockingLocation.ToPhysicalDockingLocation(isRightToLeft)
                                          || newPreviewOrientation != dragStart.Orientation;
             if (proposedDiffersFromStart)
             {
@@ -1584,7 +1650,6 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         //   - if the target monitor's working area is tighter than the current monitor's, the
         //     working-area cap inside MeasureBarForOrientation keeps the preview within bounds
         var (previewLogicalLength, previewLogicalThickness, _) = this.MeasureBarForOrientation(hMonitor, newPreviewOrientation);
-        var isRightToLeft = this.MorphicMenuButton.FlowDirection == FlowDirection.RightToLeft;
         var getRectForDockingLocationResult = LayoutUtils.GetRectForDockingLocation(newPreviewDockingLocation, isRightToLeft, newPreviewOrientation, previewLogicalLength, previewLogicalThickness, hMonitor);
         if (getRectForDockingLocationResult.IsError)
         {
@@ -1594,7 +1659,10 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
 
 		// NOTE: we should only show the preview window once the MorphicBarWindow window has moved far enough to dock in a different location; therefore, don't
 		//       show the layout preview window until the MorphicBar has been moved far enough to warrant it (i.e. docking location or orientation changes)
-        if (_layoutPreviewWindow.Visible == false && _layoutPreviewDockingLocation == null && (newPreviewDockingLocation == _dockingLocation && newPreviewOrientation == _orientation))
+        // compare by physical (absolute) dock: newPreviewDockingLocation is always physical while
+        // _dockingLocation may be logical, so a raw compare would fail to recognize "still at the current
+        // corner" for a logically-docked bar and reveal the preview before the bar has actually moved.
+        if (_layoutPreviewWindow.Visible == false && _layoutPreviewDockingLocation == null && (newPreviewDockingLocation.ToPhysicalDockingLocation(isRightToLeft) == _dockingLocation.ToPhysicalDockingLocation(isRightToLeft) && newPreviewOrientation == _orientation))
         {
             // if the window hasn't moved far enough to have a new docking location, don't show the layout window yet
             return;
@@ -1616,7 +1684,13 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             _lastLayoutPreviewTargetPosition = null;
 
             _layoutPreviewWindow.AppWindow.MoveAndResize(new Windows.Graphics.RectInt32(smallPreviewLeft, smallPreviewTop, smallPreviewWidth, smallPreviewHeight));
-            _layoutPreviewWindow.AppWindow.Show();
+            // Show WITHOUT activating. AppWindow.Show()'s parameterless overload defaults to
+            // activateWindow:true; the preview is WS_EX_NOACTIVATE so an activate attempt can't make it
+            // foreground, but the attempt still bounces the BAR's activation (WA_INACTIVE -> WA_ACTIVE),
+            // and that stray WA_ACTIVE is exactly what drives the bar's RunDeferredFocusUpdate to seed a
+            // spurious Keyboard ring on the first control after a drag. Showing non-activated removes the
+            // disturbance at its source -- no timer-based focus suppression needed to paper over it.
+            _layoutPreviewWindow.AppWindow.Show(false);
             Debug.Assert(_layoutPreviewWindow.AppWindow.Position.Y == smallPreviewTop);
         }
 

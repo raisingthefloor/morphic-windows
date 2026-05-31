@@ -33,7 +33,7 @@ namespace Morphic.MorphicBar.TransparentWindow;
 /// </summary>
 public sealed partial class TransparentWindow : Morphic.Controls.Windowing.TransparentBaseWindow
 {
-    // Optional WM_CLOSE intercept. NOT armed by default
+    // Optional WM_CLOSE intercept. NOT armed by default.
     // uIdSubclass=1 because the base ChromelessBaseWindow already installs a static subclass
     // at uIdSubclass=0.
     private Windows.Win32.UI.Shell.SUBCLASSPROC? _instanceSubclassProc;
