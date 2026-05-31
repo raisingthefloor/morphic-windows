@@ -143,9 +143,14 @@ internal sealed class AppRegistrySettings : IDisposable
         {
             return;
         }
-        if (dockingLocation == _cachedDockingLocation)
+        // Compare by physical (absolute) position: the bar may report a dock in a different
+        // representation (logical vs physical) than the cached one yet mean the SAME corner/edge --
+        // e.g. FloatingBottomTrailing(3) and FloatingBottomRight(7) in LTR. A raw enum compare would
+        // treat that as a change and write a redundant value.
+        var isRightToLeft = _barManager?.IsRightToLeft ?? false;
+        if (AppRegistrySettings.AreSamePhysicalDockingLocation(dockingLocation, _cachedDockingLocation, isRightToLeft) == true)
         {
-            return; // echo of a registry-driven change; nothing to write
+            return; // echo of a registry-driven change (or a physically-identical re-dock); nothing to write
         }
         _cachedDockingLocation = dockingLocation;
         AppRegistrySettings.WriteDockingLocation(dockingLocation);
@@ -224,7 +229,8 @@ internal sealed class AppRegistrySettings : IDisposable
         // animated move so an external change to either (or both) results in one smooth animation
         // (the same AnimateMoveTo path the user's own drag/flip travels). Update BOTH caches BEFORE
         // the move so the OrientationChanged + DockingLocationChanged echoes both loop-break here.
-        if (targetOrientation != _cachedOrientation || targetDockingLocation != _cachedDockingLocation)
+        var dockingLocationChanged = AppRegistrySettings.AreSamePhysicalDockingLocation(targetDockingLocation, _cachedDockingLocation, _barManager.IsRightToLeft) == false;
+        if (targetOrientation != _cachedOrientation || dockingLocationChanged == true)
         {
             _cachedOrientation = targetOrientation;
             _cachedDockingLocation = targetDockingLocation;
@@ -235,6 +241,12 @@ internal sealed class AppRegistrySettings : IDisposable
     public void PersistFinalState()
     {
         AppRegistrySettings.WriteValues(_cachedIsVisible, _cachedDockingLocation, _cachedOrientation);
+    }
+
+    private static bool AreSamePhysicalDockingLocation(Morphic.MorphicBar.DockingLocation first, Morphic.MorphicBar.DockingLocation second, bool isRightToLeft)
+    {
+        return Morphic.MorphicBar.DockingLocationExtensions.ToPhysicalDockingLocation(first, isRightToLeft)
+            == Morphic.MorphicBar.DockingLocationExtensions.ToPhysicalDockingLocation(second, isRightToLeft);
     }
 
     // ----- registry read/write boundary (all failures are non-fatal) -----
