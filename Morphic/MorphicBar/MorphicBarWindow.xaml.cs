@@ -170,6 +170,15 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     // change does not silently relocate us to a different display.
     private Windows.Win32.Graphics.Gdi.HMONITOR _currentMonitorHandle;
 
+    // The monitor handle as of the last time we raised CurrentMonitorChanged. This is SEPARATE from
+    // _currentMonitorHandle on purpose: during a drag, the PointerMoved handler updates
+    // _currentMonitorHandle live (so the DPI re-fit tracks the monitor under the bar in real time),
+    // which would otherwise hide the monitor change from AnimateMoveTo's drag-release notification
+    // check (by drag-release _currentMonitorHandle already equals the destination). This field is
+    // mutated ONLY where we fire the event, so it reliably detects a crossing regardless of the
+    // drag's live mutation. See the change-detection block in AnimateMoveTo.
+    private Windows.Win32.Graphics.Gdi.HMONITOR _lastNotifiedMonitorHandle;
+
     // Master registry of all bar item controls created from the last InitializeBarItems call. Items
     // here are NOT necessarily currently present in BarItemsPanel.Children -- we trim (move)
     // controls between "displayed" (those that fit within the current screen's working area, in a single
@@ -266,6 +275,9 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         _currentMonitorHandle = Windows.Win32.PInvoke.MonitorFromWindow(
             hwnd,
             Windows.Win32.Graphics.Gdi.MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
+        // Seed the notification baseline to the creation monitor so the first AnimateMoveTo only
+        // raises CurrentMonitorChanged if the bar's initial dock lands on a different monitor.
+        _lastNotifiedMonitorHandle = _currentMonitorHandle;
 
         // NOTE: this window's owner (the hidden DummyWindow that keeps the bar off the taskbar) is
         // established AFTER construction by CreateWithHiddenTaskbar -> SetOwner -> SetAsParentHwnd
@@ -283,7 +295,6 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         _subclassProc = this.SubclassWndProc;
         var setSubclassResult = Windows.Win32.PInvoke.SetWindowSubclass(hwnd, _subclassProc, uIdSubclass: 0, dwRefData: 0);
         System.Diagnostics.Debug.Assert(setSubclassResult);
-        Morphic.RmTraceLog.Log($"Bar subclass installed: setSubclassResult={setSubclassResult} pid={System.Environment.ProcessId}");
 
         (this.Content as Grid)!.Loaded += RootGrid_Loaded;
         this.Closed += MorphicBarWindow_Closed;
@@ -316,12 +327,6 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         nuint uIdSubclass,
         nuint dwRefData)
     {
-        if (msg == Windows.Win32.PInvoke.WM_QUERYENDSESSION || msg == Windows.Win32.PInvoke.WM_ENDSESSION)
-        {
-            var msgName = (msg == Windows.Win32.PInvoke.WM_QUERYENDSESSION) ? "WM_QUERYENDSESSION" : "WM_ENDSESSION";
-            Morphic.RmTraceLog.Log($"SubclassWndProc {msgName} wParam=0x{wParam.Value:X} lParam=0x{lParam.Value:X}");
-        }
-
         if (msg == Windows.Win32.PInvoke.WM_ACTIVATE)
         {
             // wParam low word: WA_INACTIVE (0), WA_ACTIVE (1), WA_CLICKACTIVE (2).
@@ -378,17 +383,11 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             // terminating, which is more than enough for WinUI 3 to tear down. Wrapped
             // in try/catch because a teardown race during shutdown can throw COMException
             // from the WinRT projection.
-            var enqueued = this.DispatcherQueue.TryEnqueue(() =>
+            _ = this.DispatcherQueue.TryEnqueue(() =>
             {
-                Morphic.RmTraceLog.Log("WM_ENDSESSION dispatched lambda running on UI thread; about to call App.Shutdown()");
                 try { ((App)Microsoft.UI.Xaml.Application.Current).Shutdown(); }
-                catch (System.Runtime.InteropServices.COMException comException)
-                {
-                    Morphic.RmTraceLog.Log($"WM_ENDSESSION dispatched lambda swallowed COMException HRESULT=0x{comException.HResult:X8} message={comException.Message}");
-                }
-                Morphic.RmTraceLog.Log("WM_ENDSESSION dispatched lambda returned from App.Shutdown()");
+                catch (System.Runtime.InteropServices.COMException) { }
             });
-            Morphic.RmTraceLog.Log($"WM_ENDSESSION DispatcherQueue.TryEnqueue returned {enqueued}");
             // Per the WM_ENDSESSION contract, returning 0 acknowledges the message; the
             // OS / RM then proceeds with its own shutdown bookkeeping while our dispatched
             // Exit runs in parallel.
@@ -698,15 +697,21 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             ? this.FocusController.Capture(MorphicBarFocusController.SnapshotScope.BarOwnedOnly)
             : default(MorphicBarFocusController.FocusSnapshot);
 
-        // record the destination monitor; this is the single normal path that legitimately changes
-        // which monitor we are on (both intentional moves and drag-release end up here). Raise
-        // CurrentMonitorChanged when it actually changes so per-monitor button state (e.g. Text Size +/-)
-        // refreshes. On a drag-release the window is already over the destination monitor by now (the
-        // drag carried it there), so a subscriber reading the live window position sees the right one.
-        var previousMonitorHandle = _currentMonitorHandle;
+        // Record the destination monitor. AnimateMoveTo is the single path for intentional moves AND
+        // drag-release, so it is where we raise CurrentMonitorChanged so per-monitor button state (e.g.
+        // Text Size +/-) refreshes.
+        //
+        // The change detection deliberately compares hMonitor against _lastNotifiedMonitorHandle, NOT
+        // against _currentMonitorHandle's prior value. During a drag the PointerMoved handler updates
+        // _currentMonitorHandle live (so the DPI re-fit can track the monitor under the bar in real
+        // time), which means by the time we get here on drag-release _currentMonitorHandle ALREADY
+        // equals hMonitor; a naive previous-vs-current check would see "no change" and never fire on a
+        // drag to a new monitor (the bug this avoids). _lastNotifiedMonitorHandle is mutated only in
+        // this block, so it still holds the monitor we last notified about and detects the crossing.
         _currentMonitorHandle = hMonitor;
-        if (_currentMonitorHandle != previousMonitorHandle)
+        if (hMonitor != _lastNotifiedMonitorHandle)
         {
+            _lastNotifiedMonitorHandle = hMonitor;
             this.CurrentMonitorChanged?.Invoke(this, EventArgs.Empty);
         }
 

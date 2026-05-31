@@ -155,11 +155,7 @@ public class Program
         {
             new Windows.Win32.Foundation.HANDLE(redirectCompletedEvent.SafeWaitHandle.DangerousGetHandle()),
         };
-        var coWaitResult = Windows.Win32.PInvoke.CoWaitForMultipleObjects(CWMO_DEFAULT, REDIRECT_WAIT_TIMEOUT_MILLISECONDS, waitHandles, out _);
-        if (coWaitResult != Windows.Win32.Foundation.HRESULT.S_OK)
-        {
-            Morphic.RmTraceLog.Log($"RedirectActivationTo: redirect did not complete within {REDIRECT_WAIT_TIMEOUT_MILLISECONDS}ms; exiting anyway. (CoWaitForMultipleObjects hr=0x{coWaitResult.Value:X8})");
-        }
+        _ = Windows.Win32.PInvoke.CoWaitForMultipleObjects(CWMO_DEFAULT, REDIRECT_WAIT_TIMEOUT_MILLISECONDS, waitHandles, out _);
     }
 }
 #endif

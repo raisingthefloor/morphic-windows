@@ -456,8 +456,6 @@ public partial class App : Application
 	//
     internal void Shutdown()
     {
-        Morphic.RmTraceLog.Log("App.Shutdown() begin");
-
         // NOTE: we should close all explicit windows in this function (required to allow the actual application Exit)
 		//       [in contrast, accessory windows like the taskbar button are torn down automatically when the app exits]
         //
@@ -506,88 +504,7 @@ public partial class App : Application
         // idempotent (guarded), so App_ShutdownStarting calling it as a backup is safe.
         this.PerformShutdownCleanup();
 
-        Morphic.RmTraceLog.Log("App.Shutdown() end -> calling Application.Exit()");
-        App.LogProcessThreadSnapshot("before Application.Exit()");
         this.Exit();
-        Morphic.RmTraceLog.Log("App.Shutdown() returned from Application.Exit() (process still alive at this line)");
-        App.LogProcessThreadSnapshot("immediately after Application.Exit() returned");
-
-        // Schedule a follow-up snapshot ~500ms later, by which time WinUI 3 should have
-        // unwound its dispatcher / message loop. If the process is STILL alive at that
-        // point and threads remain, those surviving threads are what's keeping
-        // Morphic.exe pinned (the actual installer "couldn't close it" bug). The work
-        // item runs on a ThreadPool thread (background by definition) and explicitly
-        // catches all exceptions so a teardown race can't leak. We use System.Threading
-        // .Timer rather than Task.Delay so the timer survives main-thread teardown
-        // (Task.Delay's continuation is anchored to the SynchronizationContext, which
-        // is mid-teardown right now).
-        try
-        {
-            System.Threading.Timer? delayedTimer = null;
-            delayedTimer = new System.Threading.Timer(
-                callback: _ =>
-                {
-                    try
-                    {
-                        App.LogProcessThreadSnapshot("+500ms after Application.Exit() (zombie checkpoint)");
-                    }
-                    catch (System.Exception ex)
-                    {
-                        try { Morphic.RmTraceLog.Log($"delayed snapshot threw: {ex.GetType().Name}: {ex.Message}"); } catch { }
-                    }
-                    finally
-                    {
-                        try { delayedTimer?.Dispose(); } catch { }
-                    }
-                },
-                state: null,
-                dueTime: System.TimeSpan.FromMilliseconds(500),
-                period: System.Threading.Timeout.InfiniteTimeSpan);
-        }
-        catch (System.Exception ex)
-        {
-            try { Morphic.RmTraceLog.Log($"delayed snapshot scheduling threw: {ex.GetType().Name}: {ex.Message}"); } catch { }
-        }
-    }
-
-    // Writes a one-line summary of the current process's threads to the RM trace log.
-    // For each non-background managed thread (the ones that keep the process alive
-    // after Application.Exit), logs an additional line with thread id + apartment +
-    // state. Native (unmanaged) threads are summarized as a count only because
-    // System.Diagnostics.Process surfaces them without start addresses we can resolve.
-    private static void LogProcessThreadSnapshot(string label)
-    {
-        try
-        {
-            var currentProcess = System.Diagnostics.Process.GetCurrentProcess();
-            int totalThreads = currentProcess.Threads.Count;
-            Morphic.RmTraceLog.Log($"Thread snapshot {label}: pid={currentProcess.Id} totalThreads={totalThreads}");
-
-            // Managed-thread inspection requires walking AppDomain... actually .NET has no
-            // public API to enumerate all managed threads. We can only inspect threads we
-            // explicitly created OR walk Process.Threads (which gives OS thread IDs but
-            // doesn't tell us which are managed vs native, or background vs foreground).
-            // The OS-level view is still useful: thread count + start time deltas tell us
-            // whether new threads spawned between snapshots, and ThreadState lets us see
-            // if any are Running vs Wait.
-            foreach (System.Diagnostics.ProcessThread thread in currentProcess.Threads)
-            {
-                try
-                {
-                    string startTimeStr;
-                    try { startTimeStr = thread.StartTime.ToString("HH:mm:ss.fff"); } catch { startTimeStr = "?"; }
-                    Morphic.RmTraceLog.Log($"  os-thread id={thread.Id} state={thread.ThreadState} priority={thread.PriorityLevel} startTime={startTimeStr}");
-                }
-                catch (System.Exception threadIterationException)
-                {
-                    Morphic.RmTraceLog.Log($"  os-thread iteration error: {threadIterationException.GetType().Name}: {threadIterationException.Message}");
-                }
-            }
-        }
-        catch (System.Exception ex)
-        {
-            try { Morphic.RmTraceLog.Log($"LogProcessThreadSnapshot({label}) threw: {ex.GetType().Name}: {ex.Message}"); } catch { }
-        }
     }
 
     #endregion Main Menu

@@ -66,14 +66,10 @@ internal sealed class MorphicBarManager : IDisposable
         // Install the full-screen watcher on this (UI) thread: its WinEvent hooks deliver on the
         // installing thread and OnFullScreenMonitorChanged touches the bar window, so both must be
         // the UI thread. A start failure is non-fatal (the bar simply won't yield to full-screen
-        // content), so log and continue rather than throw out of the constructor.
+        // content), so we just continue rather than throw out of the constructor.
         _fullScreenWatcher = new FullScreenMonitorWatcher(_uiDispatcherQueue);
         _fullScreenWatcher.FullScreenMonitorChanged += this.OnFullScreenMonitorChanged;
-        var startWatcherResult = _fullScreenWatcher.Start();
-        if (startWatcherResult.IsError == true)
-        {
-            Morphic.RmTraceLog.Log("MorphicBarManager: FullScreenMonitorWatcher.Start() failed; bar will not yield to full-screen windows.");
-        }
+        _ = _fullScreenWatcher.Start();
     }
 
     // Picks the correct contrast-variant icon for the current system theme and applies it to

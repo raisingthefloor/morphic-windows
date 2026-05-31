@@ -28,10 +28,10 @@ namespace Morphic.WindowsNative.UIAutomation;
 
 public class UIAutomationSelectedTextScripts
 {
-    // TEMPORARY diagnostic hook: the app (ReadAloudController) assigns this to RmTraceLog.Log so we
-    // can trace, during a failed capture, exactly which step returned "no selectable text". This
-    // library is the lower layer and cannot reference the app's logger directly, so the sink is
-    // injected. Remove together with the RmTraceLog instrumentation once capture is validated.
+    // Optional diagnostic sink. This library is the lower layer and cannot reference an app-side
+    // logger directly, so a consumer MAY inject an Action<string> here to trace, during a failed
+    // capture, exactly which step returned "no selectable text". Currently UNWIRED, so the 
+    // LogDiagnostic trace points below are inert and write nothing.
     public static System.Action<string>? DiagnosticLog;
 
     private static void LogDiagnostic(string message)

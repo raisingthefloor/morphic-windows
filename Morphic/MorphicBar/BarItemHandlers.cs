@@ -596,11 +596,9 @@ internal class BarItemHandlers
     public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> ReadSelectedPlayButtonActionAsync(string? actionTag, bool? isChecked)
     {
         bool invokedViaKeyboard = Morphic.MorphicBar.BarControls.BarButtonInvocationContext.InvokedViaKeyboard;
-        Morphic.RmTraceLog.Log("ReadAloud: Play button handler invoked (invokedViaKeyboard=" + invokedViaKeyboard.ToString() + ").");
         var readAloudController = ((App)Microsoft.UI.Xaml.Application.Current).ReadAloudController;
         if (readAloudController is null)
         {
-            Morphic.RmTraceLog.Log("ReadAloud: Play handler aborting; ReadAloudController is null.");
             return MorphicResult.ErrorResult();
         }
 

@@ -71,10 +71,9 @@ public class SelectionReader
     // plus the reason, so a caller can react differently to "nothing selected" vs "we protected the clipboard".
     public readonly record struct SelectionReadResult(SelectionReadOutcome Outcome, string? Text);
 
-    // TEMPORARY diagnostic hook: the app (ReadAloudController) assigns this to RmTraceLog.Log so the per-tier
-    // outcome of each capture attempt is written to disk. This library is the lower layer and cannot reference
-    // the app's logger directly, so the sink is injected. Remove together with the RmTraceLog instrumentation
-    // once the capture cascade is validated across machines and apps.
+    // Optional diagnostic sink. This library is the lower layer and cannot reference an app-side logger
+    // directly, so a consumer MAY inject an Action<string> here to receive the per-tier outcome of each
+    // capture attempt. Currently UNWIRED, so the LogDiagnostic trace points below are inert and write nothing.
     public static System.Action<string>? DiagnosticLog;
 
     private static void LogDiagnostic(string message)

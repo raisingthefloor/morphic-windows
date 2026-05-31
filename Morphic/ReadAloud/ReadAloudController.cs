@@ -88,15 +88,6 @@ internal sealed class ReadAloudController : System.IDisposable
 
     public ReadAloudController()
     {
-        // TEMPORARY: route the UI Automation capture's diagnostic trace into our log so that, when a
-        // capture comes back with no selectable text, we can see exactly which step produced the
-        // null. Morphic.WindowsNative cannot reference the app's RmTraceLog directly (it is the lower
-        // layer), so the app injects the sink here. Remove together with the RmTraceLog instrumentation.
-        Morphic.WindowsNative.UIAutomation.UIAutomationSelectedTextScripts.DiagnosticLog = Morphic.RmTraceLog.Log;
-        // TEMPORARY: the SelectionReader orchestrator writes its per-tier outcome summary (and which tier won)
-        // here too, so a cross-machine test run records which capture mechanism succeeded or that all failed.
-        Morphic.WindowsNative.Speech.SelectionReader.DiagnosticLog = Morphic.RmTraceLog.Log;
-
         _lastForegroundWindowTracker = new Morphic.WindowsNative.Windowing.LastForegroundWindowTracker();
 
         _speechSynthesizer = new Windows.Media.SpeechSynthesis.SpeechSynthesizer();
@@ -150,10 +141,8 @@ internal sealed class ReadAloudController : System.IDisposable
     //            window once capture is done so the user's caret/selection are restored.
     public async System.Threading.Tasks.Task PlayAsync(bool invokedViaKeyboard)
     {
-        Morphic.RmTraceLog.Log("ReadAloud: PlayAsync entered.");
         if (_isDisposed == true)
         {
-            Morphic.RmTraceLog.Log("ReadAloud: PlayAsync returning early (controller disposed).");
             return;
         }
 
@@ -175,16 +164,13 @@ internal sealed class ReadAloudController : System.IDisposable
         {
             // Resolve the capture target: the last foreground window that was not one of ours.
             var targetWindowHandle = _lastForegroundWindowTracker.LastForegroundWindowHandle;
-            Morphic.RmTraceLog.Log("ReadAloud: target window handle = 0x" + targetWindowHandle.ToString("X") + ".");
             if (targetWindowHandle == System.IntPtr.Zero)
             {
-                Morphic.RmTraceLog.Log("ReadAloud: PlayAsync returning early (no tracked previous foreground window).");
                 return;
             }
 
             // Capture the selected text off the UI thread (UI Automation prefers an MTA thread, and
             // a hung target app must not freeze the bar). Continuation resumes on the UI thread.
-            Morphic.RmTraceLog.Log("ReadAloud: starting selected-text capture (off UI thread).");
             // Gate Strategy D (synthesized Ctrl+C, which activates the target window) OFF for keyboard
             // invocations: A/B/C never change the foreground, so keeping D off lets the bar stay
             // foreground and Play keep keyboard focus. Pointer invocations allow D (the foreground is
@@ -194,7 +180,6 @@ internal sealed class ReadAloudController : System.IDisposable
                 cancellationToken);
             if (cancellationToken.IsCancellationRequested == true)
             {
-                Morphic.RmTraceLog.Log("ReadAloud: PlayAsync returning early (superseded after capture).");
                 return;
             }
             string? selectedText = selectionReadResult.Text;
@@ -207,15 +192,14 @@ internal sealed class ReadAloudController : System.IDisposable
             if (invokedViaKeyboard == false)
             {
                 _ = Windows.Win32.PInvoke.SetForegroundWindow((Windows.Win32.Foundation.HWND)targetWindowHandle);
-                Morphic.RmTraceLog.Log("ReadAloud: returned foreground to target window after capture (pointer invocation).");
             }
 
             // The multi-tier SelectionReader is best-effort. A null/whitespace result means "nothing to speak",
             // but the Outcome distinguishes WHY: an empty selection vs. a clipboard-protective abort (a
             // clipboard tier was needed but bailed to avoid clobbering existing clipboard content). The latter
             // is where a future near-the-bar notification (e.g. "Couldn't read the selected text without
-            // disturbing your clipboard -- clear it and retry?") will be raised; for now we only log it
-            // distinctly. SelectionReader logs the per-tier outcome (and which tier won) to disk itself.
+            // disturbing your clipboard -- clear it and retry?") will be raised; for now it raises an interim
+            // toast, while a plain empty selection stays a silent no-op.
             if (string.IsNullOrWhiteSpace(selectedText) == true)
             {
                 if (selectionReadResult.Outcome == Morphic.WindowsNative.Speech.SelectionReader.SelectionReadOutcome.ClipboardProtected)
@@ -226,23 +210,16 @@ internal sealed class ReadAloudController : System.IDisposable
                     // FUTURE: replace this toast with the near-the-bar "always on top" notification popup
                     // (design captured in memory), which can also offer a "clear clipboard and retry" action
                     // that App Notifications cannot.
-                    Morphic.RmTraceLog.Log("ReadAloud: capture aborted to protect clipboard contents (ClipboardProtected); showing interim toast.");
                     Morphic.Notifications.ToastNotifications.ShowText("Read Selected", "Morphic wasn't able to capture the selected text.");
-                }
-                else
-                {
-                    Morphic.RmTraceLog.Log("ReadAloud: capture returned no selectable text (null/empty/whitespace); nothing to speak.");
                 }
                 return;
             }
-            Morphic.RmTraceLog.Log("ReadAloud: captured selected text, length = " + selectedText.Length + ".");
 
             // Cap the text handed to synthesis so an enormous selection cannot tie the engine up producing audio
             // the user did not intend to hear. Truncating to a character boundary is fine here: the cap is far
             // larger than any reasonable spoken passage, so a split mid-word at the very end is immaterial.
             if (selectedText.Length > ReadAloudController.MaximumCharactersToSynthesize)
             {
-                Morphic.RmTraceLog.Log("ReadAloud: selected text length " + selectedText.Length + " exceeds the " + ReadAloudController.MaximumCharactersToSynthesize + "-character cap; truncating before synthesis.");
                 selectedText = selectedText.Substring(0, ReadAloudController.MaximumCharactersToSynthesize);
             }
 
@@ -250,12 +227,9 @@ internal sealed class ReadAloudController : System.IDisposable
             // Stop abandon the synthesis itself instead of waiting it out; cancellation surfaces as an
             // OperationCanceledException handled below. We still re-check the token immediately after, to cover the
             // narrow window where cancellation lands just as synthesis completes.
-            Morphic.RmTraceLog.Log("ReadAloud: starting WinRT speech synthesis.");
             var synthesisStream = await _speechSynthesizer.SynthesizeTextToStreamAsync(selectedText).AsTask(cancellationToken);
-            Morphic.RmTraceLog.Log("ReadAloud: synthesis complete; stream content type = " + synthesisStream.ContentType + ".");
             if (cancellationToken.IsCancellationRequested == true)
             {
-                Morphic.RmTraceLog.Log("ReadAloud: PlayAsync returning early (superseded after synthesis).");
                 synthesisStream.Dispose();
                 return;
             }
@@ -267,7 +241,6 @@ internal sealed class ReadAloudController : System.IDisposable
             var previousMediaSource = _currentMediaSource;
             _currentMediaSource = mediaSource;
             _mediaPlayer.Source = mediaSource;
-            Morphic.RmTraceLog.Log("ReadAloud: media source assigned to player (AutoPlay should now start audio).");
             if (previousMediaSource is not null)
             {
                 try { previousMediaSource.Dispose(); } catch (System.Exception) { }
@@ -276,12 +249,10 @@ internal sealed class ReadAloudController : System.IDisposable
         catch (System.OperationCanceledException)
         {
             // Superseded by a newer Play, or stopped before synthesis finished. Nothing to do.
-            Morphic.RmTraceLog.Log("ReadAloud: PlayAsync canceled (OperationCanceledException).");
         }
-        catch (System.Exception ex)
+        catch (System.Exception)
         {
             // v1: keep failures non-fatal and silent to the user. Surfacing them is a later step.
-            Morphic.RmTraceLog.Log("ReadAloud: PlayAsync THREW: " + ex.ToString());
         }
         finally
         {

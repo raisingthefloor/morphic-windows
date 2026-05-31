@@ -141,10 +141,7 @@ internal sealed class AppRegistrySettings : IDisposable
             _watcher = createWatcherResult.Value!;
             _watcher.Changed += this.OnRegistryChanged;
         }
-        else
-        {
-            Morphic.RmTraceLog.Log("AppRegistrySettings: could not create registry watcher; registry->bar sync disabled.");
-        }
+        // A watcher-creation failure is non-fatal: registry->bar sync is simply disabled.
     }
 
     // bar -> registry (UI thread): the user showed or hid the bar.
@@ -335,9 +332,9 @@ internal sealed class AppRegistrySettings : IDisposable
             }
             return (key.GetValue(valueName) is int intValue) ? intValue : null;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Morphic.RmTraceLog.Log($"AppRegistrySettings: failed reading '{valueName}': {ex.Message}");
+            // Registry read is best-effort; a failure is treated as "value absent".
             return null;
         }
     }
@@ -373,9 +370,9 @@ internal sealed class AppRegistrySettings : IDisposable
             using var key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(MORPHIC_SUBKEY_PATH);
             key?.SetValue(valueName, value, Microsoft.Win32.RegistryValueKind.DWord);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Morphic.RmTraceLog.Log($"AppRegistrySettings: failed writing '{valueName}': {ex.Message}");
+            // Registry write is best-effort; a failure is non-fatal.
         }
     }
 
