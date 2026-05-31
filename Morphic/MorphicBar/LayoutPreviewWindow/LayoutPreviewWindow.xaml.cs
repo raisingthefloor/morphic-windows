@@ -250,9 +250,9 @@ public sealed partial class LayoutPreviewWindow : Morphic.Controls.Windowing.Chr
             // then immediately OFF (HWND_NOTOPMOST). The round trip is deliberate: HWND_NOTOPMOST on its
             // own is documented as a no-op when the window is ALREADY non-topmost, so it would not raise
             // the preview at all; forcing topmost first guarantees the following HWND_NOTOPMOST actually
-            // re-seats the window at the very top of the non-topmost band. (Empirically the preview can
-            // land in the topmost band at show time, so a single HWND_TOP can leave it drawing ABOVE the
-            // bar.) SWP_NOACTIVATE keeps the re-seat from stealing activation.
+            // re-seats the window at the very top of the non-topmost band. (Best practice: if this window
+            // ever lands in the topmost band at show time, a single HWND_TOP could leave it drawing ABOVE
+            // the bar.) SWP_NOACTIVATE keeps the re-seat from stealing activation.
             _ = Windows.Win32.PInvoke.SetWindowPos(hwnd, Windows.Win32.Foundation.HWND.HWND_TOPMOST, 0, 0, 0, 0,
                 Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOMOVE |
                 Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOSIZE |

@@ -83,8 +83,14 @@ public class ChromelessBaseWindow : Window
         var setSubclassResult = Windows.Win32.PInvoke.SetWindowSubclass(hwnd, _subclassProc, 0, 0);
         System.Diagnostics.Debug.Assert(setSubclassResult);
 
-        // tell Windows to send WM_NCCALCSIZE immediately; our SubclassWndProc will handle that, to make the client area fill the entire window
-        var setWindowPosResult = Windows.Win32.PInvoke.SetWindowPos(hwnd, new HWND(new IntPtr(-1)), 0, 0, 0, 0, SET_WINDOW_POS_FLAGS.SWP_FRAMECHANGED | SET_WINDOW_POS_FLAGS.SWP_NOMOVE | SET_WINDOW_POS_FLAGS.SWP_NOSIZE | SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
+        // Trigger WM_NCCALCSIZE (handled in SubclassWndProc) so the client area fills the whole
+        // window. This is a frame-change ONLY and must not touch z-order: SWP_NOZORDER keeps the
+        // window in its current band (freshly-created => non-topmost). Without it, hWndInsertAfter
+        // might shove every chromeless window into the topmost band -- a latent bug. Windows that
+        // need topmost set it explicitly (e.g., via OverlappedPresenter.IsAlwaysOnTop). Passing 
+        // HWND.Null makes the "ignored under SWP_NOZORDER" intent obvious, instead of a stray 
+        // -1 or HWND_TOPMOST that would re-introduce the bug if SWP_NOZORDER were dropped.
+        var setWindowPosResult = Windows.Win32.PInvoke.SetWindowPos(hwnd, HWND.Null, 0, 0, 0, 0, SET_WINDOW_POS_FLAGS.SWP_FRAMECHANGED | SET_WINDOW_POS_FLAGS.SWP_NOMOVE | SET_WINDOW_POS_FLAGS.SWP_NOSIZE | SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE | SET_WINDOW_POS_FLAGS.SWP_NOZORDER);
         System.Diagnostics.Debug.Assert(setWindowPosResult);
 
         // DWMWA_WINDOW_CORNER_PREFERENCE and DWMWA_BORDER_COLOR are Win11-only DWM attributes
