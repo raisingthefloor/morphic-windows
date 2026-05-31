@@ -102,6 +102,31 @@ internal class BarItemHandlers
         // monitor's physical pixel rect, so the original physical position stays valid; the clamp in
         // the finally is purely a safety net.
         var cursorPositionSnapshot = Morphic.WindowsNative.Mouse.Mouse.GetCurrentPosition();
+
+        // If the mouse was OVER THE BAR when +/- was pressed (i.e. the user clicked the button with
+        // the mouse), remember WHERE on the bar it was, as a normalized [0,1] proportion, so we can
+        // keep the cursor over the same button after the bar resizes for the new scale (otherwise a
+        // user zooming several steps loses the button out from under the pointer). If the cursor was
+        // NOT over the bar (e.g. keyboard/space activation), these stay null and the finally just
+        // restores the cursor to its display-relative position.
+        double? cursorBarProportionX = null;
+        double? cursorBarProportionY = null;
+        if (cursorPositionSnapshot.IsSuccess == true
+            && Windows.Win32.PInvoke.GetWindowRect((Windows.Win32.Foundation.HWND)barHwnd, out var barRectangleBeforeResize) == true)
+        {
+            var cursorBeforeResize = cursorPositionSnapshot.Value!;
+            var barWidthBeforeResize = barRectangleBeforeResize.right - barRectangleBeforeResize.left;
+            var barHeightBeforeResize = barRectangleBeforeResize.bottom - barRectangleBeforeResize.top;
+            bool cursorWasOverBar = barWidthBeforeResize > 0 && barHeightBeforeResize > 0
+                && cursorBeforeResize.X >= barRectangleBeforeResize.left && cursorBeforeResize.X < barRectangleBeforeResize.right
+                && cursorBeforeResize.Y >= barRectangleBeforeResize.top && cursorBeforeResize.Y < barRectangleBeforeResize.bottom;
+            if (cursorWasOverBar == true)
+            {
+                cursorBarProportionX = (double)(cursorBeforeResize.X - barRectangleBeforeResize.left) / barWidthBeforeResize;
+                cursorBarProportionY = (double)(cursorBeforeResize.Y - barRectangleBeforeResize.top) / barHeightBeforeResize;
+            }
+        }
+
         try
         {
             // SetDpiOffsetAsync wraps the SPI call in Task.Run internally, so this is already off
@@ -119,13 +144,30 @@ internal class BarItemHandlers
         {
             barManager.RestoreBarFocus(focusSnapshot);
 
-            // Put the cursor back where the user clicked (Windows moved it during the scale change).
-            // Restored at the same settle point as focus -- after rasterizationChangeWait -- so it
-            // lands after Windows' recenter rather than being overwritten by it. Clamp to the
-            // display's pixel rect as a safety net (the physical rect itself does not move on a
-            // DPI-scale change, so this is normally a no-op).
-            if (cursorPositionSnapshot.IsSuccess == true)
+            // Put the cursor back (Windows recenters it toward the primary monitor when a display's
+            // scaling changes). Done at the same settle point as focus -- after rasterizationChangeWait,
+            // so the bar has finished resizing and Windows' recenter has already happened.
+            if (cursorBarProportionX is double proportionX && cursorBarProportionY is double proportionY
+                && Windows.Win32.PInvoke.GetWindowRect((Windows.Win32.Foundation.HWND)barHwnd, out var barRectangleAfterResize) == true)
             {
+                // Mouse was over the bar: keep it over the SAME normalized point on the bar's NEW
+                // (resized + re-docked) rect, so it stays on the +/- button across repeated presses.
+                // Clamp inside the bar so rounding cannot nudge the cursor just off its edge.
+                var barWidthAfterResize = barRectangleAfterResize.right - barRectangleAfterResize.left;
+                var barHeightAfterResize = barRectangleAfterResize.bottom - barRectangleAfterResize.top;
+                var targetCursorX = System.Math.Clamp(
+                    barRectangleAfterResize.left + (int)System.Math.Round(proportionX * barWidthAfterResize),
+                    barRectangleAfterResize.left, barRectangleAfterResize.right - 1);
+                var targetCursorY = System.Math.Clamp(
+                    barRectangleAfterResize.top + (int)System.Math.Round(proportionY * barHeightAfterResize),
+                    barRectangleAfterResize.top, barRectangleAfterResize.bottom - 1);
+                _ = Morphic.WindowsNative.Mouse.Mouse.MoveCursorToPosition(new System.Drawing.Point(targetCursorX, targetCursorY));
+            }
+            else if (cursorPositionSnapshot.IsSuccess == true)
+            {
+                // Mouse was NOT over the bar (keyboard/space activation, or the rect read failed):
+                // restore the cursor to where it was on its display. The display's physical rect does
+                // not move on a DPI-scale change, so the clamp is normally a no-op safety net.
                 var restoreCursorPosition = cursorPositionSnapshot.Value!;
                 var displayRectangleResult = display.GetDisplayRectangleInPixels();
                 if (displayRectangleResult.IsSuccess == true)

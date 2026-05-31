@@ -554,7 +554,9 @@ stages:
 
                     echo "detected dev build"
                     S3_BUILD_OPERATING_SYSTEM="win"
-                    S3_BUILD_TYPE="dev"
+#                    S3_BUILD_TYPE="dev" # dev (not for distribution)
+#                    S3_BUILD_TYPE="edge" # canary
+                    S3_BUILD_TYPE="stable" # preview/beta/release (production)
                     # expire dev builds after 7 days
                     EXTRA_ARGS="--expires $(date -d '+7 days' --iso-8601=seconds)"
 
