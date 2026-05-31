@@ -17,7 +17,10 @@
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="Morphic.Core/Morphic.Core.csproj" Id="8f7fe745-1eaa-4c54-9644-c8bb0a8eb1ed" />
+  <Project Path="Morphic.Core/Morphic.Core.csproj" Id="8f7fe745-1eaa-4c54-9644-c8bb0a8eb1ed">
+    <Platform Solution="*|ARM64" Project="AnyCPU" />
+    <Platform Solution="*|x64" Project="AnyCPU" />
+  </Project>
   <Project Path="Morphic.NotificationHelper/Morphic.NotificationHelper.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
@@ -41,6 +44,10 @@
   <Project Path="MorphicSetup.Actions/MorphicSetup.Actions.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
+    <BuildType Solution="Debug-Packaged|*" Project="Debug" />
+    <BuildType Solution="Release-Packaged|*" Project="Release" />
+    <Build Solution="Debug-Packaged|*" Project="false" />
+    <Build Solution="Release-Packaged|*" Project="false" />
   </Project>
   <Project Path="MorphicSetup/MorphicSetup.wixproj" Type="b7dd6f7e-def8-4e67-b5b7-07ef123db6f0">
     <Platform Solution="*|x64" Project="x64" />
