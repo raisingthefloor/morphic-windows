@@ -262,15 +262,20 @@ public sealed partial class LayoutPreviewWindow : Morphic.Controls.Windowing.Chr
         {
             var hwnd = (Windows.Win32.Foundation.HWND)WinRT.Interop.WindowNative.GetWindowHandle(this);
 
-            // Bring the preview to the top of the non-topmost band, so it sits above all normal
-            // windows but still below the topmost MorphicBar. HWND_TOP does this in a single call
-            // without ever touching the topmost bit, so the preview can never momentarily flash
-            // above the bar (which the HWND_TOPMOST -> HWND_NOTOPMOST idiom would risk). That idiom
-            // is only needed to re-seat a window that is ALREADY non-topmost, because HWND_NOTOPMOST
-            // is documented as a no-op in that case; here we don't need it because HWND_TOP repositions
-            // regardless. HWND_TOP preserves the window's current topmost status, which is safe
-            // precisely because this window is never topmost (it sets no WS_EX_TOPMOST / IsAlwaysOnTop).
-            _ = Windows.Win32.PInvoke.SetWindowPos(hwnd, Windows.Win32.Foundation.HWND.HWND_TOP, 0, 0, 0, 0,
+            // Re-seat the preview at the top of the NON-topmost band: above all normal windows, but
+            // still below the always-on-top MorphicBar. We force the topmost bit ON (HWND_TOPMOST) and
+            // then immediately OFF (HWND_NOTOPMOST). The round trip is deliberate: HWND_NOTOPMOST on its
+            // own is documented as a no-op when the window is ALREADY non-topmost, so it would not raise
+            // the preview at all; forcing topmost first guarantees the following HWND_NOTOPMOST actually
+            // re-seats the window at the very top of the non-topmost band. (Empirically the preview can
+            // land in the topmost band at activation time, so a single HWND_TOP can leave it drawing
+            // ABOVE the bar.) SWP_NOACTIVATE keeps the re-seat from stealing activation.
+            _ = Windows.Win32.PInvoke.SetWindowPos(hwnd, Windows.Win32.Foundation.HWND.HWND_TOPMOST, 0, 0, 0, 0,
+                Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOMOVE |
+                Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOSIZE |
+                Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
+
+            _ = Windows.Win32.PInvoke.SetWindowPos(hwnd, Windows.Win32.Foundation.HWND.HWND_NOTOPMOST, 0, 0, 0, 0,
                 Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOMOVE |
                 Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOSIZE |
                 Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
