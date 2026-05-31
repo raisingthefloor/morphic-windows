@@ -438,27 +438,26 @@
          scenarios who want to suppress the launch anyway can pass
          MORPHIC_LAUNCH_AFTER_INSTALL=0 on the msiexec command line.
 
-         Note the launch target has NO CLI flag (no run-after-login): the post-install
-         launch is conceptually "user just installed me and wants to see me," which is
-         the "manual launch, force-show the bar" path. The autostart Run key (above) is
-         the only place run-after-login is set, distinguishing OS-launched from
-         user-launched in the running app.
+         The launch passes --run-after-install so the post-install launch respects the user's
+         persisted MorphicBar visibility instead of force-showing (today the same treatment as the
+         logon autostart's --run-after-login, but a separate flag so install behavior can diverge
+         from login later). This keeps a bar the user had hidden from reappearing after an update.
+         (A manual Start Menu / .exe launch passes no flag and force-shows.)
 
-         Impersonate="yes" because Morphic must launch in the installing user's session
-         with their token, not as SYSTEM. WixShellExec spawns the target via
-         ShellExecute and returns quickly (Morphic does its own init in the background
-         after spawn), so the installer doesn't perceptibly stall waiting on us. -->
-    <Property Id="WixShellExecTarget" Value="[#morphic_exe]" />
-    <!-- BinaryRef uses $(sys.BUILDARCHSHORT) so the same wxs picks the architecture-
-         matching WiX util CA DLL at build time: x64 builds get Wix4UtilCA_X64, ARM64
-         builds get Wix4UtilCA_A64, x86 builds get Wix4UtilCA_X86. Hardcoding the X64
-         variant breaks ARM64 installs with error 1723 / ERROR_DLL_NOT_FOUND (1157)
-         because the MSI server can't load the x64 CA DLL into the native ARM64 server
-         process. -->
+         We use a file-based exe CustomAction (FileRef + ExeCommand) rather than the util WixShellExec
+         helper because WixShellExec's target is a path only and cannot carry the --run-after-install
+         argument. With FileRef, ExeCommand is the ARGUMENTS ONLY (not the exe
+         path). Return="asyncNoWait" launches Morphic and returns immediately (Morphic does its own
+         init in the background), so the installer doesn't stall -- and unlike QtExec it does not
+         wait for the long-running process to exit. Execute="immediate" + Impersonate="yes" run
+         Morphic in the installing user's session with their token, not as SYSTEM. (FileRef also lets
+         us drop the old Wix4UtilCA_$(sys.BUILDARCHSHORT) arch-matching syntax entirely.) -->
     <CustomAction Id="LaunchMorphicAfterInstall"
-                  BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)"
-                  DllEntry="WixShellExec"
-                  Impersonate="yes" />
+                  FileRef="morphic_exe"
+                  ExeCommand="--run-after-install"
+                  Execute="immediate"
+                  Impersonate="yes"
+                  Return="asyncNoWait" />
   </Package>
 
   <Fragment>
@@ -634,12 +633,12 @@
 
              Value-name "Morphic" matches the friendly name shown in Task Manager's
              Startup tab; users who want to disable will find it under that label.
-             The value data is the full quoted EXE path followed by the
-             run-after-login CLI flag (matches Morphic 1.x's convention; the app
-             reads this flag at startup via Environment.GetCommandLineArgs and treats
-             its presence as "the OS started me at logon" vs absence as "user launched
-             me manually, force-show the bar"). The quoting is defensive against future
-             install-path changes (Program Files has a space). -->
+             The value data is the full quoted EXE path followed by the --run-after-login
+             CLI flag (the post-install launch passes a separate --run-after-install flag;
+             the app reads either at startup via Environment.GetCommandLineArgs and treats
+             its presence as "an automatic start -- respect the persisted bar visibility" vs
+             absence as "user launched me manually, force-show the bar"). The quoting is
+             defensive against future install-path changes (Program Files has a space). -->
         <Component Id="AutoStartRunKeyComponent"
                    Guid="D8E5B4A7-2C1F-4F9E-B6D3-7A8C9E1F2B5D"
                    Condition="MORPHIC_AUTOSTART=&quot;1&quot;">

@@ -208,19 +208,24 @@ public partial class App : Application
         _appRegistrySettings.StartSync(_morphicBarManager, morphicBarWindow.DispatcherQueue);
 
         // Show the bar without activating it (monitor + dock corner were already applied above). WHICH
-        // visibility we apply depends on how we were launched:
-        //   * Autorun (the installer's Run key passes --run-after-login): respect the persisted state --
-        //     show only if the bar was visible last session; if the user had hidden it, leave it hidden
-        //     (the tray button's "Show MorphicBar" tooltip already reflects that).
-        //   * Manual launch (Start Menu shortcut, double-clicked .exe, post-install launch): force-show
-        //     the bar on the current monitor regardless of the persisted state; StartSync's handler then
-        //     persists IsVisible=true so the next autorun restores it shown.
+        // visibility we apply depends on how we were launched. The installer marks its two automatic
+        // launches with DISTINCT flags so login vs install behavior can diverge later without
+        // re-plumbing the installer; today both are treated the same:
+        //   * Logon autostart (Run key, --run-after-login) OR post-install launch (--run-after-install):
+        //     respect the persisted state -- show only if the bar was visible last session; if the user
+        //     had hidden it, leave it hidden (the tray button's "Show MorphicBar" tooltip already
+        //     reflects that). This keeps a bar the user had hidden from reappearing after an update.
+        //   * Manual launch (Start Menu shortcut, double-clicked .exe; no flag): force-show the bar on
+        //     the current monitor regardless of the persisted state; StartSync's handler then persists
+        //     IsVisible=true so the next automatic start restores it shown.
         // We never ACTIVATE at launch: activating would (a) be user-hostile by interrupting whatever the
         // user was doing in their previous foreground app, and (b) put the bar into a sticky Win32
         // "active" state from which the user's first Alt+Tab would fire no WM_ACTIVATE (OS sees it as
         // "already active"), breaking our initial-focus-ring logic. The bar is topmost anyway, so it's
         // still immediately visible.
-        if (App.WasLaunchedByAutorun() == true)
+        var launchedAfterLogin = App.CommandLineContainsFlag(RUN_AFTER_LOGIN_COMMAND_LINE_FLAG);
+        var launchedAfterInstall = App.CommandLineContainsFlag(RUN_AFTER_INSTALL_COMMAND_LINE_FLAG);
+        if (launchedAfterLogin == true || launchedAfterInstall == true)
         {
             if (_appRegistrySettings.IsBarVisible == true)
             {
@@ -233,20 +238,22 @@ public partial class App : Application
         }
     }
 
-    // The installer's HKLM Run key launches Morphic at logon with this flag; a manual launch (Start
-    // Menu shortcut, double-clicked .exe, post-install launch) passes no flag. See the startup
-    // visibility logic for how the two are treated differently.
+    // The installer marks its two automatic launches with distinct flags: the HKLM Run key passes
+    // --run-after-login at logon, and the post-install CustomAction passes --run-after-install. Keeping
+    // them separate lets login vs install behavior diverge later without re-plumbing the installer; the
+    // startup visibility logic decides what each means today (currently both respect the persisted
+    // state). A manual launch (Start Menu shortcut, double-clicked .exe) passes neither and force-shows.
     private const string RUN_AFTER_LOGIN_COMMAND_LINE_FLAG = "--run-after-login";
+    private const string RUN_AFTER_INSTALL_COMMAND_LINE_FLAG = "--run-after-install";
 
-    // True when the OS started us at logon (the Run key passed --run-after-login); false for a manual
-    // launch. Reads this process's own command line, so it reflects how THIS instance was started.
-    private static bool WasLaunchedByAutorun()
+    // True when the given flag is present on this process's own command line (so it reflects how THIS
+    // instance was started). Index 0 is the executable path, so we skip it.
+    private static bool CommandLineContainsFlag(string commandLineFlag)
     {
         var commandLineArguments = Environment.GetCommandLineArgs();
-        // skip index 0 (the executable path)
         for (var index = 1; index < commandLineArguments.Length; index++)
         {
-            if (string.Equals(commandLineArguments[index], RUN_AFTER_LOGIN_COMMAND_LINE_FLAG, StringComparison.OrdinalIgnoreCase) == true)
+            if (string.Equals(commandLineArguments[index], commandLineFlag, StringComparison.OrdinalIgnoreCase) == true)
             {
                 return true;
             }
