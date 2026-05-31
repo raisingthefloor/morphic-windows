@@ -399,7 +399,41 @@ public partial class App : Application
             _aboutWindow = new();
             _aboutWindow.Closed += (s, args) => { _aboutWindow = null; };
         }
+
+        // Show the About box centered on the monitor under the cursor -- i.e. the surface the user
+        // launched it from (a MorphicBar's menu or the taskbar icon's menu; the cursor is on
+        // whichever one was clicked). Re-centering on every click also moves an already-open About
+        // box to that monitor. Fallbacks for keyboard activation (cursor not over a menu): the
+        // MorphicBar's current monitor, then the primary monitor.
+        _aboutWindow!.CenterOnMonitor(this.GetAboutWindowLaunchMonitorHandle());
+
         _aboutWindow!.Activate();
+    }
+
+    // Picks the monitor the About box should appear on: the monitor under the cursor (the launching
+    // bar menu / taskbar icon menu), falling back to the MorphicBar's current monitor, then primary.
+    private Windows.Win32.Graphics.Gdi.HMONITOR GetAboutWindowLaunchMonitorHandle()
+    {
+        if (Windows.Win32.PInvoke.GetCursorPos(out var cursorPosition) != 0)
+        {
+            var cursorMonitorHandle = Windows.Win32.PInvoke.MonitorFromPoint(cursorPosition, Windows.Win32.Graphics.Gdi.MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONULL);
+            if (cursorMonitorHandle.IsNull == false)
+            {
+                return cursorMonitorHandle;
+            }
+        }
+
+        var barWindowHandle = _morphicBarManager?.GetBarWindowHandle() ?? IntPtr.Zero;
+        if (barWindowHandle != IntPtr.Zero)
+        {
+            var barMonitorHandle = Windows.Win32.PInvoke.MonitorFromWindow((Windows.Win32.Foundation.HWND)barWindowHandle, Windows.Win32.Graphics.Gdi.MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
+            if (barMonitorHandle.IsNull == false)
+            {
+                return barMonitorHandle;
+            }
+        }
+
+        return Windows.Win32.PInvoke.MonitorFromPoint(new System.Drawing.Point(0, 0), Windows.Win32.Graphics.Gdi.MONITOR_FROM_FLAGS.MONITOR_DEFAULTTOPRIMARY);
     }
 
     private void MainMenu_QuitMorphicMenuItemClicked(object? sender, EventArgs e)

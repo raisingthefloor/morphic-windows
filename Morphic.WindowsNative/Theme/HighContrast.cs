@@ -137,7 +137,7 @@ public class HighContrast
 
             // Write the updated state back.
             // SPIF_SENDWININICHANGE broadcasts WM_SETTINGCHANGE to top-level windows so that
-            // anyone watching (including our own IsOnChanged via UserPreferenceChanged) sees the
+            // anyone watching (including our own IsOnChanged via SystemSettingsListener) sees the
             // update. SPIF_UPDATEINIFILE additionally persists the change to the user profile.
             var fWinIni = Windows.Win32.UI.WindowsAndMessaging.SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS.SPIF_SENDWININICHANGE;
             if (updateUserProfile)

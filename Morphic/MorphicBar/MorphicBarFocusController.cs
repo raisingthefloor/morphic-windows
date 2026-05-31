@@ -268,8 +268,8 @@ internal sealed class MorphicBarFocusController
             }
             return;
         }
-        // Initial-focus path also respects the suppress timer. If PointerPressed just set the
-        // suppress (user is mouse-pressing the bar), don't seed a keyboard ring on the first
+        // Initial-focus path also respects upgrade suppression. If PointerPressed just entered a
+        // suppression scope (user is mouse-pressing the bar), don't seed a keyboard ring on the first
         // button just because no element is focused in the bar's main visual tree. This also
         // covers the case where focus is on a non-IsBarOwnedElement-recognized subtree (e.g.,
         // an internal ScrollViewer) -- we'd fall through here and put a ring on the first

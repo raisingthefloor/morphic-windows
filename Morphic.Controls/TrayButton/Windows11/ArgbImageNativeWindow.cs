@@ -652,7 +652,7 @@ internal class ArgbImageNativeWindow : IDisposable
         }
         else
         {
-            // NOTE: we do not support erasing the bitmap once it's created, so there is nothing to do here; the caller may hide the image by setting its visible state to true
+            // NOTE: we do not support erasing the bitmap once it's created, so there is nothing to do here; the caller may hide the image by setting its visible state to false
         }
 
         // if we reach here, the operation was successful

@@ -230,7 +230,6 @@ public class Display
 
     //
 
-    // NOTE: if the caller does not provide a windowHandle, we use the primary monitor instead
     private static MorphicResult<string, MorphicUnit> GetDisplayDeviceNameForMonitorHandle(Windows.Win32.Graphics.Gdi.HMONITOR monitorHandle)
     {
         Windows.Win32.Graphics.Gdi.MONITORINFOEXW monitorInfoEx = new();

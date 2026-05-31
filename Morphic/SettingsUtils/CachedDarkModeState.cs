@@ -76,7 +76,7 @@ public class CachedDarkModeStateChangedEventArgs(bool isDark, bool isHighContras
 //   * DarkMode.AppsUseDarkModeChanged             -- changes IsDark when HC is off.
 //   * DarkMode.SystemUsesDarkModeChanged          -- changes IsDark when HC is off.
 //
-// Lifecycle: lazy. First subscription wires all four sources and seeds the cache; last
+// Lifecycle: lazy. First subscription wires all three sources and seeds the cache; last
 // unsubscribe tears down. The fire-rate is bounded by the dedupe -- one StateChanged event per
 // genuine transition regardless of how many underlying sources fired.
 //

@@ -67,20 +67,9 @@ public sealed partial class AboutWindow : Morphic.Controls.Theme.ThemeAwareBaseW
         // of 300 x 280 DIPs. Multiplying the DIP-design size by the window's current monitor 
         // DPI here makes the AppWindow's physical size scale in lockstep with the XAML content, 
         // so the window fits the content at any DPI.
-        const int designWidthDips = 308;
-        const int designHeightDips = 280;
-        //
         var hwnd = (Windows.Win32.Foundation.HWND)WinRT.Interop.WindowNative.GetWindowHandle(this);
-        var dpi = Windows.Win32.PInvoke.GetDpiForWindow(hwnd);
-        var scale = dpi / 96.0;
-        var newWidth = (int)Math.Round(designWidthDips * scale);
-        var newHeight = (int)Math.Round(designHeightDips * scale);
-        //
-        var displayArea = Microsoft.UI.Windowing.DisplayArea.GetFromWindowId(this.AppWindow.Id, Microsoft.UI.Windowing.DisplayAreaFallback.Nearest);
-        var newX = (displayArea.WorkArea.Width - newWidth) / 2;
-        var newY = (displayArea.WorkArea.Height - newHeight) / 2;
-        //
-        this.AppWindow.MoveAndResize(new Windows.Graphics.RectInt32(newX, newY, newWidth, newHeight));
+        var initialMonitorHandle = Windows.Win32.PInvoke.MonitorFromWindow(hwnd, Windows.Win32.Graphics.Gdi.MONITOR_FROM_FLAGS.MONITOR_DEFAULTTOPRIMARY);
+        this.CenterOnMonitor(initialMonitorHandle);
 
         // disable resizing and the minimize and maximize buttons
         var appWindowPresenterAsOverlappedPresenter = (this.AppWindow.Presenter as OverlappedPresenter)!;
@@ -90,6 +79,50 @@ public sealed partial class AboutWindow : Morphic.Controls.Theme.ThemeAwareBaseW
 
         // initialize our logo image (based on the current theme)
         this.UpdateLogoImage();
+    }
+
+    // Sizes the About window for the target monitor's DPI and centers it within that monitor's work
+    // area. Used both at construction (initial placement) and by the App's About-menu handler to
+    // (re-)center the single About box on whichever monitor the user launched it from.
+    internal void CenterOnMonitor(Windows.Win32.Graphics.Gdi.HMONITOR monitorHandle)
+    {
+        // Design footprint in DIPs (effective pixels). Multiplying by the TARGET monitor's
+        // rasterization scale yields a physical size that fits the XAML content at that monitor's
+        // DPI, so the window scales in lockstep with its content on any display.
+        const int DESIGN_WIDTH_DIPS = 308;
+        const int DESIGN_HEIGHT_DIPS = 280;
+
+        double scale = 1.0;
+        var getScaleResult = Morphic.MorphicBar.LayoutUtils.GetRasterizationScaleForMonitor(monitorHandle);
+        if (getScaleResult.IsSuccess == true)
+        {
+            scale = getScaleResult.Value!;
+        }
+        var width = (int)System.Math.Round(DESIGN_WIDTH_DIPS * scale);
+        var height = (int)System.Math.Round(DESIGN_HEIGHT_DIPS * scale);
+
+        // Center within the target monitor's WORK area (excludes the taskbar), in physical pixels.
+        // Using the work area's left/top offset is what makes this correct on secondary monitors.
+        bool gotMonitorInfo = false;
+        var monitorInfo = new Windows.Win32.Graphics.Gdi.MONITORINFO { cbSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf<Windows.Win32.Graphics.Gdi.MONITORINFO>() };
+        gotMonitorInfo = Windows.Win32.PInvoke.GetMonitorInfo(monitorHandle, ref monitorInfo);
+
+        int x;
+        int y;
+        if (gotMonitorInfo == true)
+        {
+            var workArea = monitorInfo.rcWork;
+            x = workArea.left + (((workArea.right - workArea.left) - width) / 2);
+            y = workArea.top + (((workArea.bottom - workArea.top) - height) / 2);
+        }
+        else
+        {
+            // couldn't read the monitor; keep the current top-left and just apply the new size
+            x = this.AppWindow.Position.X;
+            y = this.AppWindow.Position.Y;
+        }
+
+        this.AppWindow.MoveAndResize(new Windows.Graphics.RectInt32(x, y, width, height));
     }
 
     private void AboutWindow_ThemeChanged(object? sender, ElementTheme e)

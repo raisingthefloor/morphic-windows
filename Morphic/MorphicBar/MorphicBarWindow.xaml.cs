@@ -76,6 +76,12 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     // variables to enable full-window click-and-drag
     private Windows.Graphics.PointInt32 _dragStartWindowPosition;
     private Windows.Foundation.Point _dragStartPointerPosition;
+    //
+    // Where on the bar the user grabbed at drag start, as a normalized [0,1] proportion of the bar's
+    // width/height; used to re-anchor the bar under the cursor across a cross-monitor scale change.
+    private double _dragGrabProportionX = 0.5;
+    private double _dragGrabProportionY = 0.5;
+    //
     private bool _isDraggingWindow = false;
 	//
     // MorphicBar's (corner, orientation) at drag start; the accidental-drag gate compares the proposed
@@ -221,7 +227,7 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         _ = dummyWindow.SetAsParentHwnd((Windows.Win32.Foundation.HWND)hwnd);
     }
 
-    // Dedicated focus-policy companion for this bar window. Owns the suppression timer,
+    // Dedicated focus-policy companion for this bar window. Owns the upgrade-suppression depth counter,
     // the initial-focus placement, the WM_ACTIVATE-driven deferred-update decision tree,
     // and the stale-keyboard-ring cleanup walk. External callers (e.g., MorphicBarManager)
     // reach focus operations through this property rather than via individual methods on
@@ -254,12 +260,9 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             hwnd,
             Windows.Win32.Graphics.Gdi.MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
 
-        // Bar's owner relationship: set at HWND-creation time by a CBT hook installed by
-        // MorphicBarWindow.CreateWithHiddenTaskbar before `new MorphicBarWindow()` runs.
-        // See the comment near the _dummyParentWindow field for why CBT hook (and not
-        // SetWindowLongPtr after the fact) is required. By the time this constructor runs,
-        // the OS has already set this window's owner from the CREATESTRUCT.hwndParent the
-        // CBT hook injected; no further wiring needed here.
+        // NOTE: this window's owner (the hidden DummyWindow that keeps the bar off the taskbar) is
+        // established AFTER construction by CreateWithHiddenTaskbar -> SetOwner -> SetAsParentHwnd
+        // (SetWindowLongPtr GWLP_HWNDPARENT); there is nothing to wire up here.
 
         // create a layout preview window; we'll need this whenever the MorphicBar is moved; this is created up front, as it can take a little time to create the window
         _layoutPreviewWindow = new();
@@ -885,6 +888,23 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         }
         _lastRasterizationScale = rasterizationScale;
 
+        if (_isDraggingWindow == true)
+        {
+            // The user is carrying the bar across monitors and WinUI just flipped the window's
+            // rasterization scale to the monitor the bar is now mostly on. Re-fit the bar IN PLACE to
+            // that new scale (so its controls match the monitor it is over, and the bar matches the
+            // LayoutPreviewWindow that is showing where it will drop) -- but do NOT re-dock via
+            // MeasureAndResize/AnimateMoveTo. Re-docking mid-drag would snap the bar to a docking edge
+            // AND compute that edge against the stale pre-drag monitor's scale, bouncing the bar back
+            // across the monitor boundary and re-triggering the DPI change in a flashing feedback loop.
+            // Docking is deferred to PointerReleased.
+            this.DispatcherQueue.TryEnqueue(() =>
+            {
+                this.ResizeInPlaceForDragScaleChange(rasterizationScale);
+            });
+            return;
+        }
+
         // dispatch the re-fit asynchronously so it runs after WinUI finishes its own DPI handling.
         // MeasureAndResize uses GetVerifiedCurrentMonitorHandle internally, so a DPI change is
         // interpreted as "same monitor, new scale" rather than "follow the cursor to a new monitor"
@@ -898,6 +918,62 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             this.MeasureAndResize();
             this.RasterizationScaleChangedExternal?.Invoke(this, EventArgs.Empty);
         });
+    }
+
+    // Drag-time response to a rasterization-scale change (the user carried the bar onto a monitor
+    // with a different scale and WinUI just flipped the window's RasterizationScale). Resize the bar
+    // to the new scale AT ITS CURRENT LOCATION -- not to a docking edge -- so it matches the monitor
+    // it is now over (and the LayoutPreviewWindow), then re-anchor the drag so the grab point stays
+    // under the cursor instead of sliding out from under it at the size jump. Dispatched from
+    // RasterizationScaleChanged, so re-check the drag is still in progress.
+    private void ResizeInPlaceForDragScaleChange(double rasterizationScale)
+    {
+        if (_isDraggingWindow == false)
+        {
+            // the drag ended between the scale-change notification and this dispatched callback;
+            // PointerReleased has already re-fit + docked the bar, so there is nothing to do.
+            return;
+        }
+
+        // current cursor position (physical pixels, virtual-screen coords)
+        if (Windows.Win32.PInvoke.GetCursorPos(out var cursorPosition) == 0)
+        {
+            return;
+        }
+
+        // Re-measure the bar for the monitor it is now over so its length fits its items AT THE NEW
+        // scale. The content's logical length is scale-dependent: UseLayoutRounding snaps each
+        // control's size to physical-pixel boundaries, and those boundaries differ per scale, so the
+        // same items measure to a slightly different logical length at, e.g., 100% vs 150%. Reusing
+        // the pre-drag _logicalLength would therefore leave the last item clipped when moving to a
+        // higher scale, or leave dead space when moving to a lower scale. This mirrors what the
+        // post-release AnimateMoveTo does, minus the re-dock.
+        var (logicalLength, logicalThickness, fittingCount) = this.MeasureBarForOrientation(_currentMonitorHandle, _orientation);
+        _logicalLength = logicalLength;
+        _logicalThickness = logicalThickness;
+        this.SyncDisplayedItemPrefix(fittingCount);
+
+        // resize in place to the new (freshly measured) logical size at the new scale; the content is
+        // already laying out at the new scale (WinUI updated XamlRoot.RasterizationScale before firing
+        // the change that brought us here)
+        this.UpdateAppWindowSizeUsingRasterizationScale(rasterizationScale);
+        var sizeAfterResize = this.AppWindow.Size;
+
+        // Re-anchor the window so the cursor stays over the SAME normalized point of the bar the user
+        // grabbed at drag start (_dragGrabProportionX/Y, each in [0,1]). Using the drag-start grab
+        // proportion -- rather than recomputing it from the bar's CURRENT geometry -- keeps the grab
+        // point (e.g. a corner) exactly under the pointer even if WinUI already resized the window for
+        // the DPI change before this dispatched callback runs.
+        int reanchoredLeft = cursorPosition.X - (int)System.Math.Round(_dragGrabProportionX * sizeAfterResize.Width);
+        int reanchoredTop = cursorPosition.Y - (int)System.Math.Round(_dragGrabProportionY * sizeAfterResize.Height);
+        this.AppWindow.Move(new Windows.Graphics.PointInt32(reanchoredLeft, reanchoredTop));
+
+        // Re-baseline the drag offset so the NEXT PointerMoved continues smoothly from the new anchor.
+        // We adjust only _dragStartWindowPosition (not _dragStartPointerPosition) so the accidental-drag
+        // distance gate keeps measuring from the true drag origin.
+        _dragStartWindowPosition = new Windows.Graphics.PointInt32(
+            reanchoredLeft - cursorPosition.X + (int)_dragStartPointerPosition.X,
+            reanchoredTop - cursorPosition.Y + (int)_dragStartPointerPosition.Y);
     }
 
     /* callbacks */
@@ -1483,6 +1559,18 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
                 System.Diagnostics.Debug.Assert(getCursorPosResult != 0);
                 _dragStartPointerPosition = new Windows.Foundation.Point(startPointerPosition.X, startPointerPosition.Y);
                 //
+                // Capture WHERE on the bar the user grabbed, as a normalized [0,1] proportion, so a
+                // cross-monitor rasterization-scale change can re-anchor the bar to keep that exact
+                // grab point under the cursor (see ResizeInPlaceForDragScaleChange). Captured here at
+                // drag start, while the geometry is pristine, rather than recomputed mid-change.
+                var dragStartWindowSize = this.AppWindow.Size;
+                _dragGrabProportionX = dragStartWindowSize.Width > 0
+                    ? System.Math.Clamp((double)(startPointerPosition.X - _dragStartWindowPosition.X) / dragStartWindowSize.Width, 0.0, 1.0)
+                    : 0.5;
+                _dragGrabProportionY = dragStartWindowSize.Height > 0
+                    ? System.Math.Clamp((double)(startPointerPosition.Y - _dragStartWindowPosition.Y) / dragStartWindowSize.Height, 0.0, 1.0)
+                    : 0.5;
+                //
                 // capture (corner, orientation) at drag start so the accidental-drag gate can
                 // detect small same-corner orientation flips; reset the sticky gate flag so the
                 // first PointerMoved tick of this drag re-evaluates IsAccidentalDragOperation.
@@ -1527,6 +1615,20 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
                     newLeft,
                     newTop
                 ));
+
+                // Track the monitor the bar is now physically on (largest-area intersection), so the
+                // rasterization-scale re-fit and any other consumer use the bar's CURRENT monitor rather
+                // than the stale monitor it was docked to before the drag. WinUI flips the window's
+                // rasterization scale on this same majority-area rule, so when that scale changes
+                // RasterizationScaleChanged re-fits the bar in place to match the monitor it is over
+                // (see ResizeInPlaceForDragScaleChange, which also re-anchors the grab point under the
+                // cursor so the bar does not slide out from under the pointer at the size change).
+                var dragHwnd = (Windows.Win32.Foundation.HWND)WinRT.Interop.WindowNative.GetWindowHandle(this);
+                var monitorUnderBar = Windows.Win32.PInvoke.MonitorFromWindow(dragHwnd, Windows.Win32.Graphics.Gdi.MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
+                if (monitorUnderBar.IsNull == false)
+                {
+                    _currentMonitorHandle = monitorUnderBar;
+                }
 
                 // determine if/where we should show the layout preview window
                 var newCenterX = newLeft + (this.AppWindow.Size.Width / 2);

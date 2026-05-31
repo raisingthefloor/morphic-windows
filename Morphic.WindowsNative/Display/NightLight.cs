@@ -167,9 +167,8 @@ public class NightLight
 
     // SettingItemProxy.ValueChanged callback. ValueChanged carries no payload (the WinRT
     // SettingChanged event only signals "Value changed") so we re-read the current value via
-    // GetIsOnAsync and dispatch the typed IsOnChanged event with the new bool. A short timeout
-    // is sufficient here -- the first subscription primes IsEnabled to true, so by the time we
-    // see ValueChanged the SettingItem is settled and the read returns immediately.
+    // GetIsOnAsync and dispatch the typed IsOnChanged event with the new bool. The GetIsOnAsync
+    // timeout is just a safety bound so a wedged read cannot hang the handler indefinitely.
     private static async void SettingItem_ValueChanged(object? sender, EventArgs e)
     {
         var getResult = await NightLight.GetIsOnAsync(TimeSpan.FromSeconds(2));

@@ -107,4 +107,18 @@ public class Mouse
         // return success
         return MorphicResult.OkResult();
     }
+
+    // Moves the mouse cursor to the specified position (physical virtual-screen pixels for a
+    // PerMonitorV2 DPI-aware client, matching GetCurrentPosition's coordinate space).
+    public static MorphicResult<MorphicUnit, IWin32ApiError> MoveCursorToPosition(System.Drawing.Point position)
+    {
+        var setCursorPosResult = Windows.Win32.PInvoke.SetCursorPos(position.X, position.Y);
+        if (setCursorPosResult == false)
+        {
+            var win32ErrorCode = (Windows.Win32.Foundation.WIN32_ERROR)System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+            return MorphicResult.ErrorResult<IWin32ApiError>(new IWin32ApiError.Win32Error((uint)win32ErrorCode));
+        }
+
+        return MorphicResult.OkResult();
+    }
 }

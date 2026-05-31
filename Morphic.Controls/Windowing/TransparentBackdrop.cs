@@ -40,7 +40,7 @@ namespace Morphic.Controls.Windowing;
 //
 // To produce the correct type we create our own Windows.UI.Composition.Compositor.
 // This requires a Windows.System.DispatcherQueue on the current thread, which
-// TransparentBaseWindow.EnsureSystemDispatcherQueue() provides.
+// ChromelessBaseWindow.EnsureSystemDispatcherQueue() provides.
 //
 // The compositor and brush are kept alive as long as the backdrop is connected;
 // disposing the compositor would invalidate the brush.

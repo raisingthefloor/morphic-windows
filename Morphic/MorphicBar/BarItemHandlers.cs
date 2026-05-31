@@ -95,6 +95,13 @@ internal class BarItemHandlers
         // so a keyboard user stays on the +/- button they just pressed (alternative: focus
         // disappears and Alt+Tab still treats the bar as activated -- a confusing state).
         var focusSnapshot = barManager.CaptureBarFocus();
+
+        // Windows recenters the mouse cursor toward the primary monitor when a display's scaling
+        // changes. Snapshot the cursor now so we can put it back on this display (where the user
+        // clicked the +/- button) after the change settles. A DPI-scale change does not move the
+        // monitor's physical pixel rect, so the original physical position stays valid; the clamp in
+        // the finally is purely a safety net.
+        var cursorPositionSnapshot = Morphic.WindowsNative.Mouse.Mouse.GetCurrentPosition();
         try
         {
             // SetDpiOffsetAsync wraps the SPI call in Task.Run internally, so this is already off
@@ -111,6 +118,25 @@ internal class BarItemHandlers
         finally
         {
             barManager.RestoreBarFocus(focusSnapshot);
+
+            // Put the cursor back where the user clicked (Windows moved it during the scale change).
+            // Restored at the same settle point as focus -- after rasterizationChangeWait -- so it
+            // lands after Windows' recenter rather than being overwritten by it. Clamp to the
+            // display's pixel rect as a safety net (the physical rect itself does not move on a
+            // DPI-scale change, so this is normally a no-op).
+            if (cursorPositionSnapshot.IsSuccess == true)
+            {
+                var restoreCursorPosition = cursorPositionSnapshot.Value!;
+                var displayRectangleResult = display.GetDisplayRectangleInPixels();
+                if (displayRectangleResult.IsSuccess == true)
+                {
+                    var displayRectangle = displayRectangleResult.Value!;
+                    restoreCursorPosition = new System.Drawing.Point(
+                        System.Math.Clamp(restoreCursorPosition.X, displayRectangle.Left, displayRectangle.Right - 1),
+                        System.Math.Clamp(restoreCursorPosition.Y, displayRectangle.Top, displayRectangle.Bottom - 1));
+                }
+                _ = Morphic.WindowsNative.Mouse.Mouse.MoveCursorToPosition(restoreCursorPosition);
+            }
         }
     }
 

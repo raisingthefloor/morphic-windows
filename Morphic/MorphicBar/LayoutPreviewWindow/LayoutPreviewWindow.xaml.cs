@@ -198,9 +198,9 @@ public sealed partial class LayoutPreviewWindow : Morphic.Controls.Windowing.Chr
             this.RootBorder.BorderThickness = new Microsoft.UI.Xaml.Thickness(1.5);
             this.RootBorder.CornerRadius = new Microsoft.UI.Xaml.CornerRadius(8);
         }
-        else
+        else if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
         {
-            // non-HC: original frosted-glass look via AcrylicGrayBackdrop. Re-enable DWM
+            // non-HC on Win11: original frosted-glass look via AcrylicGrayBackdrop. Re-enable DWM
             // rounding so the window's outer shape is rounded (DWM clips the rectangular
             // acrylic fill to a rounded outer silhouette). The XAML Border is rectangular
             // here and just overlays the dark-overlay tint that gives the acrylic the
@@ -212,6 +212,25 @@ public sealed partial class LayoutPreviewWindow : Morphic.Controls.Windowing.Chr
             this.SystemBackdrop = new Morphic.MorphicBar.LayoutPreviewWindow.AcrylicGrayBackdrop();
 
             this.RootBorder.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(0x40, 0x00, 0x00, 0x00));
+            this.RootBorder.BorderBrush = null;
+            this.RootBorder.BorderThickness = new Microsoft.UI.Xaml.Thickness(0);
+            this.RootBorder.CornerRadius = new Microsoft.UI.Xaml.CornerRadius(0);
+        }
+        else
+        {
+            // non-HC on Win10: reproduce the Windows 10 snap-assist preview -- a translucent
+            // accent-colored ("snap blue") acrylic over the blurred desktop (Win10SnapPreviewBackdrop;
+            // tune the accent opacities there). DesktopAcrylicController works on Win10 1809+, so the
+            // only thing Win10 cannot do is round the corners (DWMWA_WINDOW_CORNER_PREFERENCE is
+            // Win11-only). We intentionally leave the preview RECTANGULAR on Win10, matching Win10's
+            // own square snap-zone previews, rather than rounding via a SetWindowRgn region (which
+            // would alias the corners). The RootBorder is fully transparent so the acrylic shows
+            // through; the acrylic IS the visible fill. We deliberately do NOT call
+            // DwmSetWindowAttribute here (it returns ERROR_INVALID_PARAMETER on Win10), mirroring
+            // ChromelessBaseWindow's own Win11-only guard.
+            this.SystemBackdrop = new Morphic.MorphicBar.LayoutPreviewWindow.Win10SnapPreviewBackdrop();
+
+            this.RootBorder.Background = null;
             this.RootBorder.BorderBrush = null;
             this.RootBorder.BorderThickness = new Microsoft.UI.Xaml.Thickness(0);
             this.RootBorder.CornerRadius = new Microsoft.UI.Xaml.CornerRadius(0);
