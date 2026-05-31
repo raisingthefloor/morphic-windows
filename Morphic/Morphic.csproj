@@ -249,4 +249,27 @@
     <Copy SourceFiles="@(NotificationHelperPublishOutputs)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
   </Target>
 
+  <!-- Copies PostInstallLauncher.* into Morphic's output directory so a dev F5 / installed run
+       finds the launcher as a sibling of Morphic.exe, exactly where the MSI also places it.
+       Mirrors CopyNotificationHelperToMorphicBin. The win-x64/win-arm64 subdir is derived from
+       $(Platform); SkipUnchangedFiles avoids repeated copies in incremental builds. -->
+  <Target Name="CopyPostInstallLauncherToMorphicBin" AfterTargets="Build">
+    <ItemGroup>
+      <PostInstallLauncherOutputs Include="..\Morphic.PostInstallLauncher\bin\$(Platform)\$(Configuration)\$(TargetFramework)\win-$(Platform.ToLower())\PostInstallLauncher.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(PostInstallLauncherOutputs)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <!-- Same launcher file copy, but into $(PublishDir) so the MSI installer picks them up when
+       MorphicSetup.wixproj's heat HarvestDirectory scans Morphic's publish output. Only the
+       launcher-specific files (PostInstallLauncher.*) are copied; its runtime deps are already
+       in the publish dir from Morphic's own self-contained publish (shared TargetFramework).
+       Mirrors CopyNotificationHelperToMorphicPublish. -->
+  <Target Name="CopyPostInstallLauncherToMorphicPublish" AfterTargets="Publish">
+    <ItemGroup>
+      <PostInstallLauncherPublishOutputs Include="..\Morphic.PostInstallLauncher\bin\$(Platform)\$(Configuration)\$(TargetFramework)\win-$(Platform.ToLower())\PostInstallLauncher.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(PostInstallLauncherPublishOutputs)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
+  </Target>
+
 </Project>
