@@ -139,6 +139,13 @@ public class ColorFilters
 
     // Change-notification event
     //
+    // Backed by a RegistryKeyChangeWatcher on HKCU\SOFTWARE\Microsoft\ColorFiltering; we
+	// compare the new value to the latest-known value cached in _cachedInActive and fire
+    // IsActiveChanged only when it actually changed -- delivering the new value (as a bool)
+	// via event args.
+    //
+    // Lifecycle: the watcher starts lazily on the first subscription, and tears down when the
+    // last subscriber detaches. No registry handle is held while there are no subscribers.
     public static event EventHandler<ColorFiltersIsActiveChangedEventArgs> IsActiveChanged
     {
         add
@@ -167,6 +174,14 @@ public class ColorFilters
             return;
         }
 
+        // Seed the initial cached value BEFORE wiring the watcher's Changed handler so the first
+        // change-fire has a baseline to compare against. The key may not exist yet (the user has
+        // never toggled color filtering, or some process has deleted the key); a missing key
+        // MIGHT mean "filter is off" -- or might mean "registry deleted but the OS service still
+        // has the filter on" (Windows feature services often cache their state in memory; the
+        // registry value is just a representation). The synchronous seed assumes "off" for now;
+        // the fire-and-forget refinement Task below queries SettingItemProxy to find the
+        // actually-current state and updates the cache (firing IsActiveChanged) if it differs.
         using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(ColorFilters.COLOR_FILTERING_REGISTRY_KEY_PATH))
         {
             _cachedIsActive = key is null ? false : ColorFilters.ReadIsActiveFromKey(key);
@@ -177,15 +192,24 @@ public class ColorFilters
             ColorFilters.COLOR_FILTERING_REGISTRY_KEY_PATH);
         if (watcherCreateResult.IsError)
         {
+            // Argument-validation failure -- means our constants are wrong (unsupported hive,
+            // path with null chars). The only fix is a code change; assert in debug builds so
+            // the cause is obvious during development, then leave the watcher null so the next
+            // subscription cycle has a chance to retry (in case the failure mode is transient).
             Debug.Assert(false, $"Could not create ColorFilters key watcher: {watcherCreateResult.Error}");
             return;
         }
         _colorFilteringKeyWatcher = watcherCreateResult.Value!;
         _colorFilteringKeyWatcher.Changed += ColorFilters.OnColorFilteringKeyChanged;
 
+        // Kick off the SettingItem-fallback refinement on a background Task. If the registry seed
+        // was wrong (registry deleted but feature still on), this updates the cache to the live
+        // state via SettingItemProxy and fires IsActiveChanged so subscribers see the correction.
+        // No-op when the registry seed agrees with SettingItem (the common case).
         _ = Task.Run(() => ColorFilters.RecomputeAndUpdateCachedIsActiveAsync(TimeSpan.FromSeconds(2)));
     }
 
+    // Pre-requisite: caller MUST hold _colorFilteringKeyWatcherLock.
     private static void StopWatcherIfNoSubscribersLocked()
     {
         if (_isActiveChanged is not null)
@@ -197,6 +221,11 @@ public class ColorFilters
         _colorFilteringKeyWatcher = null;
     }
 
+    // RegistryKeyChangeWatcher.Changed callback. Routes through the unified compute-and-update
+    // helper so registry-missing transitions get the SettingItem fallback applied. The event
+    // kind (ValueChanged / TargetCreated / TargetDeleted) doesn't change the work we do here
+    // -- the helper re-reads from the most authoritative source available regardless of why
+    // the watcher fired.
     private static async void OnColorFilteringKeyChanged(object? sender, Morphic.WindowsNative.Registry.RegistryKeyChangedEventArgs e)
     {
         try
@@ -212,6 +241,23 @@ public class ColorFilters
         }
     }
 
+    // Computes the current "filter is active" state from the most authoritative source available
+    // and updates _cachedIsActive accordingly. If the cached value changed, fires IsActiveChanged
+    // with the new value.
+    //
+    // Source priority:
+    //   1. Registry HKCU\SOFTWARE\Microsoft\ColorFiltering\Active -- when the key exists, this
+    //      is the canonical source.
+    //   2. SettingItemProxy -- when the registry key is missing, the OS may still have the
+    //      feature on (services cache state in memory; registry value is a representation that
+    //      can be deleted without changing the actual setting). SettingItem queries the live
+    //      OS state, so it can correct the registry's "appears off because key missing" picture.
+    //   3. Default `false` -- if both sources fail (e.g. SettingItem times out or also returns
+    //      null), fall back to the Windows default.
+    //
+    // Lock discipline: the async SettingItem read happens OUTSIDE the lock; only the
+    // cache-update + handler-snapshot happens under lock; the handler dispatch happens after
+    // releasing the lock. Same pattern as NightLight.SettingItem_ValueChanged.
     private static async Task RecomputeAndUpdateCachedIsActiveAsync(TimeSpan settingItemFallbackTimeout)
     {
         // Step 1: read registry (sync, fast).
@@ -263,6 +309,10 @@ public class ColorFilters
         }
     }
 
+    // Internal helper for the change-event path: returns true iff Active=1 in the key. Missing
+    // or unexpected-type values are treated as false (inactive), matching the Windows default
+    // when the user has not explicitly enabled color filtering. Differs from GetIsActive() in
+    // that this never returns null -- the change-event cache always has a concrete bool.
     private static bool ReadIsActiveFromKey(Microsoft.Win32.RegistryKey key)
     {
         var rawActiveValue = key.GetValue(ColorFilters.ACTIVE_REGISTRY_VALUE_NAME);

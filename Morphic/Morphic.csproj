@@ -7,6 +7,12 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\Icons\morphic-standardcontrast.ico</ApplicationIcon>
     <Platforms>x64;ARM64</Platforms>
+    <!-- Declares the four Configurations this csproj responds to. SDK csprojs default to
+         Debug;Release; we add the *-Packaged variants explicitly so VS's Configuration
+         Manager will let users map the solution's Debug-Packaged / Release-Packaged
+         BuildTypes (defined in Morphic.slnx) to matching project Configurations. Without
+         this property, the New Project Configuration dialog silently rejects names
+         outside the implicit Debug;Release set. -->
     <Configurations>Debug;Release;Debug-Packaged;Release-Packaged</Configurations>
     <VersionPrefix>2.0$(VersionBuildComponents)</VersionPrefix>
     <VersionSuffix Condition="$(Configuration.Contains('Debug'))">localdev</VersionSuffix>
@@ -17,11 +23,62 @@
     <WinUISDKReferences>false</WinUISDKReferences>
     <Nullable>enable</Nullable>
 
+    <!-- Morphic is built two ways from the same csproj:
+         (a) Unpackaged: shipped via MSI (MorphicSetup.wixproj). WindowsPackageType=None
+             gates bootstrap auto-init (in WindowsAppSDK.BootstrapCommon.targets), so the
+             app finds the system-installed Windows App Runtime framework package at
+             startup. MorphicSetup chains WindowsAppRuntimeInstall.exe during install so
+             that framework package is present on end-user machines. Without this property
+             AppNotificationManager.Register fails with HRESULT 0x8007007E.
+         (b) Packaged: shipped via MSIX (Morphic (Package)\Morphic (Package).wapproj).
+             WindowsAppSDKSelfContained=true tells WindowsAppSDK to deploy all WinAppSDK
+             DLLs app-locally (MSIX has no system framework-package install step) and
+             skip generating the bootstrap auto-init (the MSIX has package identity, so
+             calling MddBootstrapInitialize fails with HRESULT 0x80070032). The WAP build
+             needs this; the MSI/F5 build must NOT have it. -->
 
+    <!-- Build-mode discriminator: any solution Configuration whose name ends with "-Packaged"
+         (e.g. "Debug-Packaged", "Release-Packaged"; defined in Morphic.slnx) is the MSIX
+         build path. For MSIX we need TWO things:
+           (a) Bootstrap auto-init must NOT fire (the packaged process has package identity,
+               so MddBootstrapInitialize would fail with HRESULT 0x80070032). We set
+               WindowsAppSdkBootstrapInitialize=false explicitly to short-circuit
+               WindowsAppSDK.BootstrapCommon.targets' gate, which suppresses the
+               MddBootstrapAutoInitializer.cs compile.
+           (b) The WinAppSDK runtime DLLs must NOT be deployed app-locally. The MSIX
+               manifest declares a PackageDependency on Microsoft.WindowsAppRuntime.2
+               (Package.appxmanifest); Windows resolves that at deploy time and loads the
+               runtime DLLs from the Framework package. If we ALSO bundled the DLLs locally
+               (via WindowsAppSDKSelfContained=true), two copies of WinAppSDK end up in the
+               process at runtime and CoreMessagingXP.dll fail-fasts with 0xC0000602 (a
+               messaging-subsystem self-assertion). So WindowsAppSDKSelfContained stays
+               unset for the Packaged path; the manifest dep is sufficient.
+         Configurations WITHOUT the -Packaged suffix (Debug, Release) leave
+         WindowsAppSdkBootstrapInitialize unset (so the WindowsAppSDK gate fires
+         normally and bootstrap auto-init IS compiled in) AND set WindowsPackageType=None,
+         producing the unpackaged-MSI path with framework discovery via bootstrap.
+         We tried in-csproj WAP detection (AppxPackage, EnableMsixTooling,
+         _AppxPackageProjectPath, etc.) but the csproj is built standalone in the solution
+         build order BEFORE the WAP project consumes its output, so no WAP context is
+         visible at csproj evaluation time. A Configuration-name suffix is the cleanest
+         external discriminator and lets developers pick the build mode from the VS
+         Configuration dropdown. -->
     <WindowsAppSdkBootstrapInitialize Condition="$(Configuration.EndsWith('-Packaged'))">false</WindowsAppSdkBootstrapInitialize>
 
     <WindowsPackageType Condition="!$(Configuration.EndsWith('-Packaged'))">None</WindowsPackageType>
 
+    <!-- MorphicBuildSelfContained is a Morphic-specific MSBuild property opt-in for
+         WindowsAppSDKSelfContained=true publish output. Used by the pipeline's
+         package-msix.ps1 script (which manually assembles a self-contained MSIX layout
+         with local WinAppSDK DLLs + .pri files). The script passes
+         "-p:MorphicBuildSelfContained=true" to dotnet publish, only Morphic.csproj reacts
+         (this conditional), and the property name doesn't leak as WindowsAppSDKSelfContained
+         into the library ProjectReferences during the publish (Microsoft.WindowsAppSDK
+         targets reject WindowsAppSDKSelfContained on class libraries with
+         "WindowsAppSDKSelfContained should not be applied to a class library"). Default
+         is unset, so the normal MSI and wapproj-driven MSIX paths get framework-dependent
+         publish output as designed; the pipeline MSIX path is the only consumer that flips
+         this on. -->
     <WindowsAppSDKSelfContained Condition="'$(MorphicBuildSelfContained)' == 'true'">true</WindowsAppSDKSelfContained>
 	  
 	<!-- to support both packaged and unpacked scenarios, disable the auto-generated Program.cs and manually bootstrap WinUI instead -->    
@@ -46,14 +103,43 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.1839" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.1.3" />
+    <!-- The WindowsAppSDK metapackage transitively pulls in WindowsAppSDK.AI and
+         WindowsAppSDK.ML, which between them deploy DirectML.dll (~18 MB),
+         onnxruntime.dll (~21 MB), and Microsoft.Windows.AI.MachineLearning.dll (~1 MB) into
+         our publish output. Morphic doesn't call any of those AI/ML APIs.
+
+         For the UNPACKAGED build (WindowsAppSDKSelfContained!=true): the framework MSIX
+         installed by WindowsAppRuntimeInstall.exe already contains these DLLs, so
+         app-local copies are pure waste (~40 MB out of 86 MB publish becomes 47 MB). We
+         set ExcludeAssets="runtime;native" so no runtime DLLs land in the publish output;
+         compile-time assets stay (no impact on type resolution if any indirect AppSDK code
+         path lands there).
+
+         For the PACKAGED build (WindowsAppSDKSelfContained=true, set by the WAP project's
+         ProjectReference): MSIX deploys all WinAppSDK DLLs app-locally because there's no
+         system framework package to load from, so we MUST include these DLLs. The
+         exclusion is gated on WindowsAppSDKSelfContained != 'true' so it skips for MSIX.
+
+         Pin versions to match the WindowsAppSDK 2.1.3 metapackage's transitive dependency
+         versions; bump in lockstep when bumping the SDK. -->
     <PackageReference Include="Microsoft.WindowsAppSDK.AI" Version="2.1.10" ExcludeAssets="runtime;native" Condition="'$(WindowsAppSDKSelfContained)' != 'true'" />
     <PackageReference Include="Microsoft.WindowsAppSDK.ML" Version="2.1.1" ExcludeAssets="runtime;native" Condition="'$(WindowsAppSDKSelfContained)' != 'true'" />
+    <!-- Microsoft.Windows.AI.MachineLearning is the actual provider of DirectML.dll,
+         onnxruntime.dll, and Microsoft.Windows.AI.MachineLearning.dll. It's a transitive
+         dep of WindowsAppSDK.AI/.ML, but ExcludeAssets on those parents does not propagate
+         to grandchild packages, so we have to override it directly. Same rationale (and
+         same conditional gate) as the parent excludes above. -->
     <PackageReference Include="Microsoft.Windows.AI.MachineLearning" Version="2.1.1" ExcludeAssets="runtime;native" Condition="'$(WindowsAppSDKSelfContained)' != 'true'" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Morphic.Controls\Morphic.Controls.csproj" />
     <ProjectReference Include="..\Morphic.Core\Morphic.Core.csproj" />
+    <!-- The notification helper is launched as a separate process by
+         Morphic.Notifications.ToastNotifications when routing decides we're in the
+         uiAccess scenario. We do NOT link to it (ReferenceOutputAssembly=false), but we
+         DO want it to build before Morphic so the CopyNotificationHelperToMorphicBin
+         target below can find its output. -->
     <ProjectReference Include="..\Morphic.NotificationHelper\Morphic.NotificationHelper.csproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
@@ -88,11 +174,26 @@
   <!-- Publish Properties -->
   <PropertyGroup>
     <SelfContained>true</SelfContained>
+    <!-- WindowsAppSDKSelfContained is not set in either build path. Both the unpackaged
+         (MSI) and packaged (MSIX) paths are framework-dependent on the Windows App Runtime:
+         MSI ships the chained WindowsAppRuntimeInstall.exe to install the framework on
+         the user's machine; MSIX declares the framework as a PackageDependency in
+         Package.appxmanifest so the OS resolves it at deploy time. The Packaged-vs-MSI
+         discriminator sets WindowsAppSdkBootstrapInitialize (see the block higher up). -->
     <PublishReadyToRun Condition="$(Configuration.Contains('Debug'))">False</PublishReadyToRun>
     <PublishReadyToRun Condition="$(Configuration.Contains('Release'))">True</PublishReadyToRun>
     <PublishTrimmed Condition="$(Configuration.Contains('Debug'))">False</PublishTrimmed>
     <PublishTrimmed Condition="$(Configuration.Contains('Release'))">False</PublishTrimmed>
 
+    <!-- BuiltInComInteropSupport must be set to true if trimming (above) is ever re-enabled. The
+         trimmer disables built-in COM interop by default, which makes the tray button's UI
+         Automation provider (TrayButtonUiaProvider) throw NotSupportedException from its
+         WM_GETOBJECT handler and crash the process with STATUS_FATAL_USER_CALLBACK_EXCEPTION
+         (0xc000041d). Uncomment this line together with PublishTrimmed above. Note that enabling
+         both still leaves extra COM interop work to do: the trimmer warns (IL2050) that built-in
+         COM is not fully trim-safe, so the UIA provider must be re-verified, and may need a
+         ComWrappers-based rewrite, once trimming is on. -->
+<!--    <BuiltInComInteropSupport>true</BuiltInComInteropSupport> -->
   </PropertyGroup>
 
   <!-- prevent the trimmer from removing types only referenced in XAML; this could be narrowed to specific types if necessary (to minimize installer size) -->
@@ -109,6 +210,14 @@
     <Exec Command="IF &quot;$(ConfigurationName)&quot; == &quot;Release&quot; (&#xD;&#xA;    echo $(Version) &gt; BuildVersion.txt&#xD;&#xA;    echo $(AssemblyVersion) &gt;&gt; BuildVersion.txt&#xD;&#xA;)" />
   </Target>
 
+  <!-- Copies Morphic.NotificationHelper.* into Morphic's output directory so the
+       AppContext.BaseDirectory lookup in Morphic.Notifications.ToastNotifications finds
+       the helper at runtime. Mirrors the layout the MSI produces (helper exe sibling to
+       Morphic.exe), so dev F5 and installed runs use the exact same path lookup.
+       Pattern matches: .exe, .dll, .pdb, .deps.json, .runtimeconfig.json, .pri.
+       The win-x64/win-arm64 subdir is derived from $(Platform); for ARM64 Platform we
+       want the win-arm64 subdir. SkipUnchangedFiles avoids repeated copies in
+       incremental builds. -->
   <Target Name="CopyNotificationHelperToMorphicBin" AfterTargets="Build">
     <ItemGroup>
       <NotificationHelperOutputs Include="..\Morphic.NotificationHelper\bin\$(Platform)\$(Configuration)\$(TargetFramework)\win-$(Platform.ToLower())\Morphic.NotificationHelper.*" />
@@ -116,6 +225,13 @@
     <Copy SourceFiles="@(NotificationHelperOutputs)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
   </Target>
 
+  <!-- Same helper file copy, but into $(PublishDir) so the MSI installer picks them up
+       when MorphicSetup.wixproj's heat HarvestDirectory scans Morphic's publish output.
+       Without this, helper files would only be in $(OutDir) and the installer would not
+       know about them. Only the helper-specific files (Morphic.NotificationHelper.*) are
+       copied; the helper's transitive deps (WindowsAppSDK projection DLLs, .NET runtime
+       files, etc.) are already in the publish dir from Morphic's own publish because the
+       two projects share all package versions and the same TargetFramework. -->
   <Target Name="CopyNotificationHelperToMorphicPublish" AfterTargets="Publish">
     <ItemGroup>
       <NotificationHelperPublishOutputs Include="..\Morphic.NotificationHelper\bin\$(Platform)\$(Configuration)\$(TargetFramework)\win-$(Platform.ToLower())\Morphic.NotificationHelper.*" />

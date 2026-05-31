@@ -72,6 +72,9 @@ internal static class BarItemDataFactory
 
         // Bridge the Text Size buttons to the bar's display DPI state. The buttons reflect
         // whether stepping up (+) or down (-) is currently allowed:
+        //   * Custom-scaling override (Windows 8.1 legacy "Custom scaling" feature, surfaced in
+        //     Settings > Display > Advanced scaling settings): both buttons disabled -- we can't
+        //     step relative to an out-of-ladder sentinel.
         //   * At the maximum offset: + disabled, - enabled.
         //   * At the minimum offset: - disabled, + enabled.
         //   * In between: both enabled.
@@ -117,6 +120,12 @@ internal static class BarItemDataFactory
                 return;
             }
             var range = rangeResult.Value;
+            if (Morphic.WindowsNative.Display.Display.IsCustomScalingPercentage(range.CurrentDpiOffset))
+            {
+                increaseButton.IsEnabled = false;
+                decreaseButton.IsEnabled = false;
+                return;
+            }
             increaseButton.IsEnabled = range.CurrentDpiOffset < range.MaximumDpiOffset;
             decreaseButton.IsEnabled = range.CurrentDpiOffset > range.MinimumDpiOffset;
         };
@@ -240,6 +249,18 @@ internal static class BarItemDataFactory
         var darkButton     = new BarButtonData { Text = "Dark",     IsToggle = true, ActionTag = "dark",     Action = darkAction,     AccessibleName = new IAccessibleName.AccessibleName("Dark mode") };
         var nightButton    = new BarButtonData { Text = "Night",    IsToggle = true, ActionTag = "night",    Action = nightAction,    AccessibleName = new IAccessibleName.AccessibleName("Night light") };
 
+        // Bridge the Dark button to CachedDarkModeState, which delivers BOTH the effective dark
+        // state and whether the button should be toggleable. Under high contrast, IsDark reflects
+        // the active HC theme's darkness (HC Black -> dark, HC White / Desert -> light) and
+        // IsToggleable is false (the button shows state but doesn't accept clicks, because
+        // toggling between HC dark and HC light themes would destroy the user's HC theme choice).
+        // Outside of HC, IsDark aggregates the AppsUseDarkMode / SystemUsesDarkMode registry
+        // preferences and IsToggleable is true.
+        //
+        // Subscribe FIRST, then seed the initial values -- doing it the other way around opens
+        // a race window between the snapshot read and the subscribe. With subscribe-first, any
+        // change that arrives during the seed is delivered through the handler and the INPC
+        // equality short-circuit makes a duplicate same-value seed write a no-op.
         EventHandler<Morphic.SettingsUtils.CachedDarkModeStateChangedEventArgs> darkModeStateChangedHandler =
             (_, e) =>
             {

@@ -153,6 +153,10 @@ public partial class App : Application
         // manager wrappers (Show/Hide/Activate/IsVisible/etc.).
         var morphicBarWindow = Morphic.MorphicBar.MorphicBarWindow.CreateWithHiddenTaskbar();
 
+        // Load the persisted bar settings (visibility + orientation + docking location) up front so
+        // they can seed the bar's initial orientation (immediately below), initial dock position
+        // (further below), and initial visibility (further below still). Two-way registry sync is
+        // started later, once the bar is in this restored state.
         _appRegistrySettings = Morphic.AppRegistrySettings.Load();
 
         morphicBarWindow.Orientation = _appRegistrySettings.Orientation;
@@ -196,11 +200,22 @@ public partial class App : Application
         // so the buttons reflect the right display from first frame.
         Morphic.MorphicBar.BarItemDataFactory.RefreshTextSizeButtonState();
 
+        // Show the bar without activating it -- but only if the persisted state says it was visible.
+        // If the user had hidden it last session, leave it hidden (the tray button's "Show MorphicBar"
+        // tooltip already reflects that, since BarVisibilityChanged won't fire). Activating at launch
+        // would (a) be user-hostile by interrupting whatever the user was doing in their previous
+        // foreground app, and (b) put the bar into a sticky Win32 "active" state from which the user's
+        // first Alt+Tab would fire no WM_ACTIVATE (OS sees it as "already active"), breaking our
+        // initial-focus-ring logic. The bar is topmost anyway, so it's still immediately visible.
         if (_appRegistrySettings.IsBarVisible == true)
         {
             _morphicBarManager.ShowBar(activateWindow: false);
         }
 
+        // The bar is now in its restored state (positioned + shown/hidden per the persisted settings).
+        // Begin two-way registry sync now, so this initial application doesn't round-trip back through
+        // the registry. The bar's DispatcherQueue is the UI thread the watcher marshals its ThreadPool
+        // callbacks onto.
         _appRegistrySettings.StartSync(_morphicBarManager, morphicBarWindow.DispatcherQueue);
     }
 
@@ -241,7 +256,19 @@ public partial class App : Application
         return items;
     }
 
+    // Set to true the first time PerformShutdownCleanup runs so any subsequent invocation
+    // is a no-op. We deliberately call PerformShutdownCleanup from TWO places: the explicit
+    // Shutdown() path (synchronously, before Exit) AND the DispatcherQueue.ShutdownStarting
+    // event (as a backup for unexpected exit paths). The guard makes the second call safe.
     private bool _shutdownCleanupPerformed;
+
+    // Synchronous tray-button + handler-unsubscribe + AppNotifications cleanup. Called from
+    // Shutdown() BEFORE Application.Exit() so the user-visible tray icon and notification
+    // registration go away immediately, even when an external lifecycle signal (e.g., the
+    // Restart Manager-driven WM_ENDSESSION that fires during an MSI upgrade-over-running-
+    // Morphic) terminates the process before the dispatcher's natural ShutdownStarting
+    // event has a chance to run. Idempotent via _shutdownCleanupPerformed so the
+    // App_ShutdownStarting backup path can call it without doing duplicate disposal.
     private void PerformShutdownCleanup()
     {
         if (_shutdownCleanupPerformed)
@@ -318,6 +345,18 @@ public partial class App : Application
         _morphicBarManager?.ShowBar();
     }
 
+    internal void HandleRedirectedActivation()
+    {
+        // Called on a background thread when a second Morphic instance redirected its activation to
+        // us (single-instance enforcement; see Program.OnAppInstanceActivated). Marshal to the UI
+        // thread and show the MorphicBar, so re-launching Morphic acts as "show my MorphicBar"
+        // rather than starting a duplicate.
+        _menuOwnerWindow.DispatcherQueue.TryEnqueue(() =>
+        {
+            _morphicBarManager?.ShowBar();
+        });
+    }
+
     private void MainMenu_AboutMorphicMenuItemClicked(object? sender, EventArgs e)
     {
         if (_aboutWindow is null)
@@ -345,6 +384,14 @@ public partial class App : Application
 
         // NOTE: we should close all explicit windows in this function (required to allow the actual application Exit)
 		//       [in contrast, accessory windows like the taskbar button are torn down automatically when the app exits]
+        //
+        // The Close() calls below are filtered for HRESULT 0x800710DD (see field above).
+        // In the unpackaged build the windows are still live at this point and Close()
+        // destroys them normally; the filter never matches and never swallows. In the
+        // packaged (MSIX) build the AppX lifecycle has often already torn the windows down
+        // by the time Shutdown runs, and Close() on an already-disposed Desktop Window
+        // throws this specific HRESULT, which is safe to swallow: if the window is
+        // already closed, our call had nothing more to do.
 
         try {
 		    _aboutWindow?.Close();
@@ -361,6 +408,11 @@ public partial class App : Application
         }
         catch (System.Runtime.InteropServices.COMException ex) when (ex.HResult == E_WinUIDesktopWindowAlreadyClosed) { }
 
+        // Flush the bar's final visibility + docking state to the registry, then tear down the
+        // registry sync. PersistFinalState writes the cached state (re-creating the key if an
+        // external editor deleted it during this session); Dispose detaches the registry watcher and
+        // unsubscribes from the bar manager's events. Done BEFORE the manager is disposed so those
+        // event unsubscriptions still have a live manager to detach from.
         _appRegistrySettings?.PersistFinalState();
         _appRegistrySettings?.Dispose();
         _appRegistrySettings = null;
@@ -369,6 +421,13 @@ public partial class App : Application
         _morphicBarManager?.Dispose();
         _morphicBarManager = null;
 
+        // Tray-button + AppNotifications cleanup. Done HERE (synchronously, before Exit)
+        // rather than relying solely on App_ShutdownStarting (which fires asynchronously
+        // from the dispatcher's own shutdown sequence) because RM-driven WM_ENDSESSION
+        // shutdown gives the process only a few seconds before force-terminating; the
+        // dispatcher's natural ShutdownStarting may not fire in time, which would strand
+        // the tray icon visible after the rest of Morphic has exited. The method is
+        // idempotent (guarded), so App_ShutdownStarting calling it as a backup is safe.
         this.PerformShutdownCleanup();
 
         Morphic.RmTraceLog.Log("App.Shutdown() end -> calling Application.Exit()");
@@ -377,6 +436,15 @@ public partial class App : Application
         Morphic.RmTraceLog.Log("App.Shutdown() returned from Application.Exit() (process still alive at this line)");
         App.LogProcessThreadSnapshot("immediately after Application.Exit() returned");
 
+        // Schedule a follow-up snapshot ~500ms later, by which time WinUI 3 should have
+        // unwound its dispatcher / message loop. If the process is STILL alive at that
+        // point and threads remain, those surviving threads are what's keeping
+        // Morphic.exe pinned (the actual installer "couldn't close it" bug). The work
+        // item runs on a ThreadPool thread (background by definition) and explicitly
+        // catches all exceptions so a teardown race can't leak. We use System.Threading
+        // .Timer rather than Task.Delay so the timer survives main-thread teardown
+        // (Task.Delay's continuation is anchored to the SynchronizationContext, which
+        // is mid-teardown right now).
         try
         {
             System.Threading.Timer? delayedTimer = null;
@@ -406,6 +474,11 @@ public partial class App : Application
         }
     }
 
+    // Writes a one-line summary of the current process's threads to the RM trace log.
+    // For each non-background managed thread (the ones that keep the process alive
+    // after Application.Exit), logs an additional line with thread id + apartment +
+    // state. Native (unmanaged) threads are summarized as a count only because
+    // System.Diagnostics.Process surfaces them without start addresses we can resolve.
     private static void LogProcessThreadSnapshot(string label)
     {
         try
@@ -414,6 +487,13 @@ public partial class App : Application
             int totalThreads = currentProcess.Threads.Count;
             Morphic.RmTraceLog.Log($"Thread snapshot {label}: pid={currentProcess.Id} totalThreads={totalThreads}");
 
+            // Managed-thread inspection requires walking AppDomain... actually .NET has no
+            // public API to enumerate all managed threads. We can only inspect threads we
+            // explicitly created OR walk Process.Threads (which gives OS thread IDs but
+            // doesn't tell us which are managed vs native, or background vs foreground).
+            // The OS-level view is still useful: thread count + start time deltas tell us
+            // whether new threads spawned between snapshots, and ThreadState lets us see
+            // if any are Running vs Wait.
             foreach (System.Diagnostics.ProcessThread thread in currentProcess.Threads)
             {
                 try
@@ -555,13 +635,39 @@ public partial class App : Application
                         }
                         else
                         {
-                            var getCursorPosResult = Windows.Win32.PInvoke.GetCursorPos(out var cursorPosition);
-                            if (getCursorPosResult == false)
+                            // The taskbar-adjacent position could not be computed (e.g. the taskbar handle or
+                            // its monitor info was unavailable). Fall back through a chain of progressively
+                            // less precise anchors so the menu always pops up somewhere sensible rather than
+                            // silently failing.
+                            if (Windows.Win32.PInvoke.GetCursorPos(out var cursorPosition) == true)
                             {
-                                Debug.Assert(false);
-                                return;
+                                // Preferred fallback: the current cursor position.
+                                popupPosition = cursorPosition;
                             }
-                            popupPosition = cursorPosition;
+                            else if (this.TaskbarButton.PositionAndSize is System.Drawing.Rectangle trayButtonRect)
+                            {
+                                // Next: anchor to the tray button's own rectangle (absolute screen pixels).
+                                // The top-center sits just inside the screen from the taskbar, so the menu
+                                // opens away from the taskbar edge, mirroring a normal taskbar context menu.
+                                popupPosition = new System.Drawing.Point(trayButtonRect.Left + (trayButtonRect.Width / 2), trayButtonRect.Top);
+                            }
+                            else
+                            {
+                                // Last resort: a bottom corner of the primary display's work area, nearest
+                                // where the notification tray normally lives. LTR layouts put the tray
+                                // bottom-right; RTL layouts (Arabic, Hebrew, etc.) put it bottom-left, so flip
+                                // the corner to match.
+                                //
+                                // WorkArea's right/bottom edges are EXCLUSIVE (one pixel past the last visible
+                                // pixel); in universal/virtual-screen space that pixel can belong to an adjacent
+                                // monitor, so subtract 1 to stay on this display. The LEFT edge is inclusive, so
+                                // the RTL X uses WorkArea.X as-is (no -1).
+                                var primaryWorkArea = Microsoft.UI.Windowing.DisplayArea.Primary.WorkArea;
+                                bool isRightToLeft = _morphicBarManager?.IsRightToLeft == true;
+                                popupPosition = (isRightToLeft == true)
+                                    ? new System.Drawing.Point(primaryWorkArea.X, primaryWorkArea.Y + primaryWorkArea.Height - 1)
+                                    : new System.Drawing.Point(primaryWorkArea.X + primaryWorkArea.Width - 1, primaryWorkArea.Y + primaryWorkArea.Height - 1);
+                            }
                         }
 
                         // now pop up the main menu

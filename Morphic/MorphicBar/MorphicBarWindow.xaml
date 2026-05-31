@@ -11,6 +11,14 @@
     mc:Ignorable="d"
     Title="MorphicBar">
 
+    <!-- Background="Transparent" on the root Grid is load-bearing: it explicitly tells
+         XAML the root element is transparent, defending against any framework code path
+         that would otherwise paint a theme-default opaque background here. Combined with
+         the WM_ERASEBKGND suppression and DwmExtendFrameIntoClientArea sheet-of-glass
+         setup in ChromelessBaseWindow, ensures no opaque pixels exist anywhere in the
+         window's rectangular bounding area outside the rounded OuterBorder. Don't
+         remove without re-verifying transparent-corner behavior on the VMs known to
+         have shown the white-rectangular-corner artifact. -->
     <Grid Background="Transparent">
         <Grid.Resources>
             <!-- ViewModel wrapper for MorphicBarWindowMetrics: see comments on that class

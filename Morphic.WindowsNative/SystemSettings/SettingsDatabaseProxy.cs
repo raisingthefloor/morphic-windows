@@ -52,6 +52,9 @@ internal static class SettingsDatabaseProxy
         // inherits that affinity. See SettingItemDispatcher for the apartment-affinity
         // background.
         //
+        // Double-checked locking on _settingsDatabaseLock so concurrent first-callers don't
+        // each create their own SettingsDatabase COM object.
+        //
         // NOTE: we don't know if SettingsDatabase.GetSetting will throw an exception or not, so we "catch" out of an abundance of caution
         try
         {
@@ -84,6 +87,9 @@ internal static class SettingsDatabaseProxy
         {
             lock (_settingItemProxiesLock)
             {
+                // Re-check inside the lock so a concurrent caller that lost the race to the
+                // first-checker doesn't redundantly issue another _settingsDatabase.GetSetting
+                // COM call when the proxy is already cached.
                 if (_settingItemProxies.TryGetValue(id, out settingItemProxy))
                 {
                     return MorphicResult.OkResult(settingItemProxy!);

@@ -74,7 +74,12 @@ public static class MorphicBarWindowMetrics
     // BarItemsPanel outer margin (different per bar orientation). The
     // fractional vertical components in the horizontal case (default 4.65) center
     // the items vertically within the bar's natural height, compensating for the
-    // header's reserved-ascender top space.
+    // header's reserved-ascender top space. The +1 over the geometrically-centered
+    // value adds a touch of breathing room above and below the items so the bar
+    // doesn't feel cramped against its top and bottom edges. Since the bar's
+    // effective thickness is itemsPanelNaturalThickness (max-item-height + top+bottom
+    // margin), bumping both top and bottom by 1 adds 2 logical px of overall bar
+    // height in horizontal mode without disturbing the vertical centering of items.
     public static readonly Thickness ItemsPanelMarginHorizontal = new(10, 4.65, 13, 4.65);
     public static readonly Thickness ItemsPanelMarginVertical = new(7, 25, 7, 5);
 

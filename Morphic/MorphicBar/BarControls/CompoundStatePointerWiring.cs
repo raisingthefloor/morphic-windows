@@ -191,6 +191,28 @@ internal static class CompoundStatePointerWiring
             VisualStateManager.GoToState(button, tracker.ComputeProgressStateName(), useTransitions: false);
         };
 
+        // OUTPUT-side guard against the built-in VSM stomping our "InProgress" CommonState. The
+        // INPUT-side defenses above (pointer events + the IsPressed DP callback) and the deferred
+        // re-assertions (LayoutUpdated, post-show RefreshVisualState) all fire at FIXED moments; but
+        // when the bar is hidden then re-shown while an action is still in flight, the show transition
+        // raises a synthetic pointer-over CLEAR (and, for ToggleButton, a checked-state re-evaluation)
+        // that makes the built-in ButtonBase call GoToState("Normal"/"Checked") AFTER our last
+        // re-assertion, with no further layout pass to correct it -- the in-progress visual silently
+        // reverts while the action is still running. WinUI 3 exposes no public IsPointerOver DP, so we
+        // cannot catch that stomp at the input side. Instead we react to the stomp ITSELF: whenever
+        // CommonStates leaves "InProgress" while an action is in flight, snap it back. This is timing-
+        // AND source-independent, which the fixed-moment re-assertions are not. useTransitions:false so
+        // the revert->restore collapses into a single frame with no visible flicker. The snap-back sets
+        // CurrentState to "InProgress", which re-raises CurrentStateChanged with NewState "InProgress";
+        // the guard short-circuits that, so there is no recursion.
+        //
+        // The VisualStateGroups live on the template root (child 0 of the button), which does not exist
+        // until the template is applied, so we resolve + subscribe on Loaded. Re-subscribe idempotently
+        // (-= then +=) in case Loaded fires more than once. We deliberately do NOT unsubscribe on
+        // Unloaded: AppWindow.Hide does not tear the button's template down, so keeping the handler live
+        // is what lets the guard survive a hide/show cycle. When the button is genuinely discarded (Data
+        // reassignment rebuild), the group, the handler, and the button become collectible together
+        // (nothing external roots them), so there is no leak.
         void OnCommonStateChanged(object sender, VisualStateChangedEventArgs e)
         {
             if (tracker.InProgressVisual != InProgressVisual.None && e.NewState?.Name != "InProgress")
@@ -210,6 +232,9 @@ internal static class CompoundStatePointerWiring
         };
     }
 
+    // Resolves the "CommonStates" VisualStateGroup from the button's applied template. The groups are
+    // attached to the template root (BgBorder), which is the button's first visual child once the
+    // template has been applied. Returns null if the template isn't realized yet or has no such group.
     private static VisualStateGroup? FindCommonStatesGroup(Control button)
     {
         if (Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChildrenCount(button) == 0)

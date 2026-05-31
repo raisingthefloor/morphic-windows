@@ -33,7 +33,11 @@ namespace Morphic.MorphicBar.TransparentWindow;
 /// </summary>
 public sealed partial class TransparentWindow : Morphic.Controls.Windowing.TransparentBaseWindow
 {
-    // Optional WM_CLOSE intercept. NOT armed by default.
+    // Optional WM_CLOSE intercept. NOT armed by default -- a TransparentWindow closes normally
+    // on Alt+F4 unless DisableUserClose() is explicitly called. App._menuOwnerWindow calls it
+    // because that window hosts a MenuFlyout and Alt+F4 with the flyout focused would otherwise
+    // destroy the host window underneath the menu. Future TransparentWindow users that DO want
+    // normal Alt+F4 behavior get it for free.
     // uIdSubclass=1 because the base ChromelessBaseWindow already installs a static subclass
     // at uIdSubclass=0.
     private Windows.Win32.UI.Shell.SUBCLASSPROC? _instanceSubclassProc;

@@ -43,6 +43,13 @@ public class Program
         // See Morphic.WindowsNative/AppIdentity/AumidHelper.cs for the value and rationale.
         Morphic.WindowsNative.AppIdentity.AumidHelper.Initialize();
 
+        // Single-instance gate: if another Morphic is already running, hand our activation
+        // to it (which surfaces its MorphicBar) and exit instead of starting a second copy.
+        if (Program.DecideRedirection() == true)
+        {
+            return;
+        }
+
 //        bool bootstrapInitialized = false;
 
 //        var isRunningAsPackagedAppResult = Morphic.WindowsNative.Packaging.Package.IsRunningAsPackagedApp();
@@ -79,6 +86,66 @@ public class Program
 //                Microsoft.Windows.ApplicationModel.DynamicDependency.Bootstrap.Shutdown();
 //            }
 //        }
+    }
+
+    private static bool DecideRedirection()
+    {
+        // The first Morphic process to register this key becomes the primary instance. Any later
+        // process that registers the same key is told it is not current, so it redirects its
+        // activation to the primary (which surfaces its MorphicBar) and then exits.
+        //
+        // The key is suffixed differently for Debug vs Release builds so a Debug build launched from
+        // Visual Studio and an installed Release build do NOT treat each other as the same instance.
+        // Without distinct keys, starting a Debug session while an installed Morphic was running (or
+        // vice-versa) would redirect into the other process, and the build under test would never
+        // actually launch. (The key is per-Windows-user.)
+#if DEBUG
+        const string SINGLE_INSTANCE_KEY = "Morphic-SingleInstance-Debug";
+#else
+        const string SINGLE_INSTANCE_KEY = "Morphic-SingleInstance";
+#endif
+
+        var activationArguments = Microsoft.Windows.AppLifecycle.AppInstance.GetCurrent().GetActivatedEventArgs();
+        var keyInstance = Microsoft.Windows.AppLifecycle.AppInstance.FindOrRegisterForKey(SINGLE_INSTANCE_KEY);
+
+        if (keyInstance.IsCurrent == true)
+        {
+            // We are the primary instance: listen for activations redirected here by later instances.
+            keyInstance.Activated += Program.OnAppInstanceActivated;
+            return false;
+        }
+
+        // We are a secondary instance: redirect to the primary and tell Main to exit.
+        Program.RedirectActivationTo(activationArguments, keyInstance);
+        return true;
+    }
+
+    private static void OnAppInstanceActivated(object? sender, Microsoft.Windows.AppLifecycle.AppActivationArguments args)
+    {
+        // Fires on a background thread when a secondary instance redirects to us. Bridge into the
+        // running App, which marshals to the UI thread and shows the MorphicBar.
+        (Microsoft.UI.Xaml.Application.Current as App)?.HandleRedirectedActivation();
+    }
+
+    private static void RedirectActivationTo(Microsoft.Windows.AppLifecycle.AppActivationArguments args, Microsoft.Windows.AppLifecycle.AppInstance keyInstance)
+    {
+        // RedirectActivationToAsync marshals to the primary instance over COM. We must not block this
+        // STA thread on it directly (that would deadlock the COM call), so we run the redirect on a
+        // thread-pool thread and pump COM here via CoWaitForMultipleObjects until it signals done.
+        using var redirectCompletedEvent = new System.Threading.ManualResetEvent(false);
+        _ = System.Threading.Tasks.Task.Run(() =>
+        {
+            keyInstance.RedirectActivationToAsync(args).AsTask().Wait();
+            _ = redirectCompletedEvent.Set();
+        });
+
+        const uint CWMO_DEFAULT = 0;
+        const uint INFINITE = 0xFFFFFFFF;
+        var waitHandles = new Windows.Win32.Foundation.HANDLE[]
+        {
+            new Windows.Win32.Foundation.HANDLE(redirectCompletedEvent.SafeWaitHandle.DangerousGetHandle()),
+        };
+        _ = Windows.Win32.PInvoke.CoWaitForMultipleObjects(CWMO_DEFAULT, INFINITE, waitHandles, out _);
     }
 }
 #endif

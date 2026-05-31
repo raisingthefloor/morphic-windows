@@ -36,6 +36,11 @@ internal sealed class MorphicBarManager : IDisposable
     private readonly Microsoft.UI.Dispatching.DispatcherQueue _uiDispatcherQueue;
     private EventHandler<Morphic.SettingsUtils.CachedDarkModeStateChangedEventArgs>? _barIconRefreshHandler;
 
+    // Watches for a foreground window going full-screen on any monitor and, when that monitor is
+    // the bar's own, drops the bar's always-on-top z-order so the full-screen content (e.g. a
+    // full-screen video) can cover it. See OnFullScreenMonitorChanged.
+    private FullScreenMonitorWatcher? _fullScreenWatcher;
+
     public MorphicBarManager(MorphicBarWindow morphicBarWindow)
     {
         _morphicBarWindow = morphicBarWindow;
@@ -56,6 +61,18 @@ internal sealed class MorphicBarManager : IDisposable
             _uiDispatcherQueue.TryEnqueue(this.RefreshBarIcon);
         };
         Morphic.SettingsUtils.CachedDarkModeState.StateChanged += _barIconRefreshHandler;
+
+        // Install the full-screen watcher on this (UI) thread: its WinEvent hooks deliver on the
+        // installing thread and OnFullScreenMonitorChanged touches the bar window, so both must be
+        // the UI thread. A start failure is non-fatal (the bar simply won't yield to full-screen
+        // content), so log and continue rather than throw out of the constructor.
+        _fullScreenWatcher = new FullScreenMonitorWatcher(_uiDispatcherQueue);
+        _fullScreenWatcher.FullScreenMonitorChanged += this.OnFullScreenMonitorChanged;
+        var startWatcherResult = _fullScreenWatcher.Start();
+        if (startWatcherResult.IsError == true)
+        {
+            Morphic.RmTraceLog.Log("MorphicBarManager: FullScreenMonitorWatcher.Start() failed; bar will not yield to full-screen windows.");
+        }
     }
 
     // Picks the correct contrast-variant icon for the current system theme and applies it to
@@ -78,8 +95,12 @@ internal sealed class MorphicBarManager : IDisposable
 
     public event EventHandler? BarVisibilityChanged;
 
+    // Re-raised from the bar so App-level persistence (AppRegistrySettings) can observe re-docks
+    // without depending on MorphicBarWindow directly.
     public event EventHandler<Morphic.MorphicBar.DockingLocation>? DockingLocationChanged;
 
+    // Re-raised from the bar (companion to DockingLocationChanged) so App-level persistence can
+    // observe orientation flips. Orientation + docking location are a persisted pair.
     public event EventHandler<Microsoft.UI.Xaml.Controls.Orientation>? OrientationChanged;
 
     public bool IsBarVisible => _morphicBarWindow.Visible;
@@ -119,6 +140,11 @@ internal sealed class MorphicBarManager : IDisposable
             _morphicBarWindow.FocusController.EndSuppressUpgradeAfterPendingActivations();
         }
 
+        // Re-assert each button's compound visual state after the show transition. Without
+        // this, an in-progress action (notably the Dark toggle) whose button has been
+        // hidden + shown mid-flight reappears showing the toggled state instead of the
+        // in-progress visual, until a hover event triggers the compound-state update. See
+        // MorphicBarWindow.RefreshAllButtonCompoundStatesAfterShow for the full rationale.
         _morphicBarWindow.RefreshAllButtonCompoundStatesAfterShow();
     }
 
@@ -126,10 +152,21 @@ internal sealed class MorphicBarManager : IDisposable
 
     public void ActivateBar() => _morphicBarWindow.Activate();
 
+    // Animates the bar to the given orientation + docking location on its current monitor. Used by
+    // App-level persistence (AppRegistrySettings) to apply a registry-driven placement change with
+    // the same animated transition the user sees when re-docking or flipping orientation by drag.
+    // The pair is applied in a single animated move.
     public void MoveToPlacement(Microsoft.UI.Xaml.Controls.Orientation orientation, Morphic.MorphicBar.DockingLocation dockingLocation) => _morphicBarWindow.MoveToCurrentMonitorPlacement(orientation, dockingLocation);
 
     public IntPtr GetBarWindowHandle() => WinRT.Interop.WindowNative.GetWindowHandle(_morphicBarWindow);
 
+    /// <summary>
+    /// Awaits the next RasterizationScaleChangedExternal on the bar, or until <paramref name="timeout"/>
+    /// elapses, whichever comes first. Returns true if the event arrived, false on timeout.
+    /// Used by handlers that issue a system change which will cause the bar to relayout (e.g.,
+    /// a DPI scale change) and need to wait for the relayout before measuring or further acting.
+    /// Subscribes BEFORE the timeout starts so an event arriving immediately is not missed.
+    /// </summary>
     public async Task<bool> WaitForBarRasterizationScaleChangeAsync(TimeSpan timeout)
     {
         var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -146,10 +183,22 @@ internal sealed class MorphicBarManager : IDisposable
         }
     }
 
+    /// <summary>
+    /// Hides the bar (if visible) for the duration of <paramref name="action"/>, then restores the
+    /// prior visibility state. Used by handlers that issue a system change which would cause the
+    /// bar to flash or appear in the wrong place during the change (e.g., DPI / theme transitions
+    /// that briefly relayout all top-level windows). Preserves the original Visible state across
+    /// the action and restores even if the action throws. Also captures + restores the XAML
+    /// focused element across the Hide/Show -- AppWindow.Hide drops focus state.
+    /// </summary>
     public async Task RunWithBarHiddenAsync(Func<Task> action)
     {
         bool wasVisible = _morphicBarWindow.Visible;
         var focusSnapshot = this.CaptureBarFocus();
+        // Open a suppression scope for the WHOLE flow: covers the click activation's deferred
+        // update, the action duration, and the re-Show's WM_ACTIVATE. A depth scope (not a
+        // timer) so it can't be "exceeded" by a slow action -- it stays open until the finally
+        // closes it after the re-Show, regardless of how long the action ran.
         _morphicBarWindow.FocusController.BeginSuppressUpgrade();
         if (wasVisible) { _morphicBarWindow.AppWindow.Hide(); }
         try
@@ -165,11 +214,23 @@ internal sealed class MorphicBarManager : IDisposable
     }
 
     /// <summary>
+    /// Captures the currently-focused bar control + its FocusState so it can be restored after an
+    /// operation that would drop XAML focus (AppWindow.Hide/Show, rasterization-scale relayout
+    /// triggered by a DPI change, etc.). Thin wrapper around the focus controller's Capture using
+    /// AnyInBarXamlRoot scope (matches the legacy unfiltered behavior callers depend on -- the
+    /// DPI / hide-show paths don't drop popup-style subtrees, so the popup-filter version isn't
+    /// required here). Returns (null, Unfocused) if no element inside the bar is focused or the
+    /// bar's XamlRoot isn't available.
+    /// </summary>
     public MorphicBarFocusController.FocusSnapshot CaptureBarFocus()
     {
         return _morphicBarWindow.FocusController.Capture(MorphicBarFocusController.SnapshotScope.AnyInBarXamlRoot);
     }
 
+    /// <summary>
+    /// Restores focus from a snapshot taken by CaptureBarFocus. Thin wrapper around the focus
+    /// controller's Restore. No-op for an empty snapshot.
+    /// </summary>
     public void RestoreBarFocus(MorphicBarFocusController.FocusSnapshot snapshot)
     {
         _morphicBarWindow.FocusController.Restore(snapshot);
@@ -186,21 +247,57 @@ internal sealed class MorphicBarManager : IDisposable
         }
     }
 
+    // Driven by FullScreenMonitorWatcher (UI thread). fullScreenMonitor is the monitor that now
+    // has a full-screen foreground window, or HMONITOR.Null when none does. Suppress the bar's
+    // always-on-top z-order only when the full-screen window is on the BAR's own monitor; a
+    // full-screen video on another monitor must not affect the bar. The bar's logical visibility
+    // is untouched (see MorphicBarWindow.SetTopmostSuppressedForFullScreen).
+    private void OnFullScreenMonitorChanged(object? sender, Windows.Win32.Graphics.Gdi.HMONITOR fullScreenMonitor)
+    {
+        var barHandle = (Windows.Win32.Foundation.HWND)WinRT.Interop.WindowNative.GetWindowHandle(_morphicBarWindow);
+        var barMonitor = Windows.Win32.PInvoke.MonitorFromWindow(barHandle, Windows.Win32.Graphics.Gdi.MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
+        bool suppress = (fullScreenMonitor != Windows.Win32.Graphics.Gdi.HMONITOR.Null) && (fullScreenMonitor == barMonitor);
+        _morphicBarWindow.SetTopmostSuppressedForFullScreen(suppress);
+    }
+
+    // The bar's RasterizationScaleChangedExternal fires when the monitor DPI changes (or the bar
+    // moves to a different-DPI monitor). Refresh Text Size +/- button state so it reflects the
+    // bar's current monitor. The factory's Display.DisplayChanged subscription covers monitor
+    // add/remove and resolution changes, but Windows does NOT reliably fire WM_DISPLAYCHANGE for
+    // DPI-scaling changes -- the WinUI XamlRoot.Changed signal (which the bar wraps as
+    // RasterizationScaleChangedExternal) is the authoritative source for those. Subscribing both
+    // gives full coverage with idempotent recomputation.
     private void OnBarRasterizationScaleChanged(object? sender, EventArgs e)
     {
         BarItemDataFactory.RefreshTextSizeButtonState();
     }
 
+    // Re-raise the bar's docking-location change so App-level persistence can observe re-docks
+    // without taking a direct dependency on MorphicBarWindow. The bar raises this from its single
+    // _dockingLocation mutation point (AnimateMoveTo), so this fires for drag re-docks AND for the
+    // registry-driven moves we initiate via MoveToPlacement.
     private void OnBarWindowDockingLocationChanged(object? sender, Morphic.MorphicBar.DockingLocation dockingLocation)
     {
         this.DockingLocationChanged?.Invoke(this, dockingLocation);
     }
 
+    // Re-raise the bar's orientation change (companion to OnBarWindowDockingLocationChanged). The bar
+    // raises OrientationChanged from its Orientation setter, which AnimateMoveTo drives, so this fires
+    // for drag-driven flips AND for the registry-driven moves we initiate via MoveToPlacement.
     private void OnBarWindowOrientationChanged(object? sender, Microsoft.UI.Xaml.Controls.Orientation orientation)
     {
         this.OrientationChanged?.Invoke(this, orientation);
     }
 
+    /// <summary>
+    /// Tears down the manager and closes the bar. Unsubscribes the manager's event handlers
+    /// from the bar FIRST and then closes the bar -- order matters: closing the bar fires
+    /// AppWindow.Changed (visibility transition during teardown), which the manager's still-
+    /// active handler would translate into BarVisibilityChanged and propagate to subscribers
+    /// (e.g., App's tray-tooltip refresh) whose targets are themselves mid-teardown -- COMException
+    /// territory ("WinUI Desktop Window object has already been closed"). Unwiring before the
+    /// close eliminates that. Callers just call Dispose; the safe order is internal.
+    /// </summary>
     public void Dispose()
     {
         if (_disposed)
@@ -212,6 +309,12 @@ internal sealed class MorphicBarManager : IDisposable
         _morphicBarWindow.RasterizationScaleChangedExternal -= this.OnBarRasterizationScaleChanged;
         _morphicBarWindow.DockingLocationChanged -= this.OnBarWindowDockingLocationChanged;
         _morphicBarWindow.OrientationChanged -= this.OnBarWindowOrientationChanged;
+        if (_fullScreenWatcher is not null)
+        {
+            _fullScreenWatcher.FullScreenMonitorChanged -= this.OnFullScreenMonitorChanged;
+            _fullScreenWatcher.Dispose();
+            _fullScreenWatcher = null;
+        }
         if (_barIconRefreshHandler is not null)
         {
             Morphic.SettingsUtils.CachedDarkModeState.StateChanged -= _barIconRefreshHandler;

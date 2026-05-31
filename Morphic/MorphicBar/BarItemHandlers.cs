@@ -59,14 +59,41 @@ internal class BarItemHandlers
         }
         var range = rangeResult.Value;
 
+        if (Morphic.WindowsNative.Display.Display.IsCustomScalingPercentage(range.CurrentDpiOffset))
+        {
+            return MorphicResult.ErrorResult();
+        }
+
         var newDpiOffset = range.CurrentDpiOffset + step;
         if (newDpiOffset < range.MinimumDpiOffset || newDpiOffset > range.MaximumDpiOffset)
         {
             return MorphicResult.ErrorResult();
         }
 
+        // Subscribe to the next rasterization-scale change BEFORE we kick off the DPI change so we
+        // don't race the event (it could fire between SetDpiOffsetAsync returning and us starting
+        // the await). The helper subscribes synchronously up to its first internal await, so by
+        // the time WaitForBarRasterizationScaleChangeAsync returns its Task the listener
+        // is already in place.
+        //
+        // Why we hold the in-progress visual until the scale change is observed: without this
+        // wait, the click feels broken at higher zoom levels. SetDpiOffsetAsync returns quickly
+        // (it's just a configuration write + verify), but WinUI takes a few hundred ms to
+        // re-rasterize every window at the new scale. The user clicks +, sees the in-progress
+        // visual stop, then sees the bar (and everything else) finally pop to the new scale half
+        // a second later -- which reads as the click being "stuck". By holding the in-progress
+        // visual until the rasterization signal arrives the click feels synchronous.
+        //
+        // Timeout (5 s) is a fallback for the unusual case where the DPI write succeeded but no
+        // visible scale change occurred (e.g. some other client raced and reverted the change, or
+        // the change was applied to a monitor the bar isn't on). The handler still returns success
+        // -- the DPI write itself did succeed -- the wait is purely UX feedback.
         var rasterizationChangeWait = barManager.WaitForBarRasterizationScaleChangeAsync(TimeSpan.FromSeconds(5));
 
+        // The rasterization-scale change causes WinUI to relayout the bar, which drops the focused
+        // element. Snapshot focus before the DPI write and restore it after the relayout settles
+        // so a keyboard user stays on the +/- button they just pressed (alternative: focus
+        // disappears and Alt+Tab still treats the bar as activated -- a confusing state).
         var focusSnapshot = barManager.CaptureBarFocus();
         try
         {
@@ -313,12 +340,31 @@ internal class BarItemHandlers
 
     // snip + copy
 
+    // Process names the snip overlay runs under across Windows versions / builds.
+    // - ScreenClippingHost: older Win10/early-Win11 overlay host
+    // - ScreenSketch: original modern Snip & Sketch app
+    // - SnippingTool: redesigned Windows 11 22H2+ Snipping Tool
+    // Add new candidates here if the diagnostic log shows snip running under a name we
+    // haven't seen.
     private static readonly string[] s_snipOverlayProcessNames = new[] { "ScreenClippingHost", "ScreenSketch", "SnippingTool" };
 
+    // How long we wait (after launching ms-screenclip:) for the snip overlay process to
+    // appear. If it doesn't, snip failed to launch and we return Error. Generous enough
+    // to cover a cold-start of the snip tool on slower systems (first invocation since
+    // boot can be slow); the user only sees the bar restored after this window if the
+    // launch genuinely failed.
     private static readonly TimeSpan s_snipLaunchGracePeriod = TimeSpan.FromSeconds(5);
 
+    // Polling interval for the foreground-window check (the only condition we can't get
+    // an event-driven signal for; the process exit uses WaitForExitAsync).
     private static readonly TimeSpan s_foregroundPollInterval = TimeSpan.FromMilliseconds(200);
 
+    // Number of CONSECUTIVE "foreground is not a snip process" polls required before we
+    // restore the bar. Avoids early restoration during the brief transitions that happen
+    // as the snip tool spins up its overlay (foreground briefly bounces through the
+    // previous app / desktop before settling on the overlay). At 200 ms / poll, 3
+    // samples = 600 ms which is plenty to ride out those transitions but still feels
+    // snappy when the user genuinely moves on to another app.
     private const int s_foregroundLeftSnipConsecutiveSamplesRequired = 3;
 
     public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> SnipCopyButtonAction(string? actionTag, bool? isChecked)
@@ -333,6 +379,16 @@ internal class BarItemHandlers
 
         await barManager.RunWithBarHiddenAsync(async () =>
         {
+            // Open the Windows Screen Snipping tool overlay via its shell URI scheme.
+            // Simulating Win+Shift+S via keystroke injection does NOT work when Morphic
+            // is run with uiAccess=true (the uiAccess context bypasses the snipping
+            // tool's hotkey handler); the ms-screenclip: shell URI is the path that
+            // works in all configurations. With UseShellExecute=true on a URI handler,
+            // Process.Start typically returns null (the shell, not the target), and on
+            // Win11 22H2+ the snip tool is a singleton -- ms-screenclip: may just signal
+            // an EXISTING SnippingTool.exe rather than spawning a new one. So we can't
+            // rely on a specific PID; instead we watch whether the foreground window is
+            // owned by ANY known snip-tool process.
             try
             {
                 _ = Process.Start(new ProcessStartInfo("ms-screenclip:") { UseShellExecute = true });
@@ -343,6 +399,9 @@ internal class BarItemHandlers
                 return;
             }
 
+            // Wait up to s_snipLaunchGracePeriod for the snip tool to put a visible
+            // top-level window on screen. If it never does, snip failed to launch and we
+            // return -- bar restored by the App helper, return value stays Error.
             var graceDeadline = DateTime.UtcNow + s_snipLaunchGracePeriod;
             while (DateTime.UtcNow < graceDeadline)
             {
@@ -360,6 +419,21 @@ internal class BarItemHandlers
                 return;
             }
 
+            // Snip is in progress. Keep the bar hidden as long as ANY snip-tool process
+            // has a visible top-level window on screen. We check visibility rather than
+            // foreground because the snip tool's video-recording controls stay visible
+            // (with WDA_EXCLUDEFROMCAPTURE applied so they don't appear in the recording)
+            // but don't hold the foreground, and the user is still mid-flow there.
+            // When the user finally dismisses all snip-tool windows, the bar restores.
+            //
+            // Hysteresis: require several consecutive "no visible snip window" polls
+            // before we restore. The snip tool transitions between modes (overlay ->
+            // toast -> editor -> recording controls) can briefly leave a gap where no
+            // snip window is visible mid-transition. A few consecutive samples (~600 ms
+            // total) confirms the user is truly done.
+            //
+            // No max timeout: the user might be editing or recording for a long time;
+            // we don't want to pop the bar back into the middle of that.
             int consecutiveNoVisibleSnipSamples = 0;
             while (true)
             {
@@ -382,6 +456,19 @@ internal class BarItemHandlers
         return snipLaunched ? MorphicResult.OkResult() : MorphicResult.ErrorResult();
     }
 
+    // Returns true if any top-level visible AND always-on-top window on screen is owned
+    // by any process whose name matches a known snip-tool process name. Used as the
+    // "is snip still actively in progress" check.
+    //
+    // Why visible + always-on-top (rather than just visible):
+    //   * The snip overlay and the video-recording controls bar are WS_EX_TOPMOST --
+    //     they're floating affordances that always need to be above everything else.
+    //     If one of those is on screen, the user is still mid-snip-flow.
+    //   * The snip tool's post-recording preview window and the post-snip editor are
+    //     ordinary (non-AOT) windows. From the user's perspective the snip is "done"
+    //     at that point -- they're reviewing the result. So we should NOT keep the
+    //     MorphicBar hidden during those.
+    // The AOT filter cleanly distinguishes those two cases.
     private static bool IsAnyVisibleSnipToolWindow()
     {
         // Snapshot snip-tool PIDs once; the EnumWindows callback only does a set lookup.
@@ -431,6 +518,13 @@ internal class BarItemHandlers
     // captures the text selected in the user's previous foreground window (the one focused before
     // they reached the bar) and speaks it. The capture target is ALWAYS that prior window (resolved
     // by the foreground-window tracker), regardless of how Play was invoked.
+    //
+    // Where focus LANDS afterward is modality-aware (read from BarButtonInvocationContext, which the
+    // shared click dispatcher set for this click):
+    //   * keyboard / assistive-technology invocation -> stay on the bar (Play keeps focus, so the
+    //     user can Tab to Stop or press Space again to restart), and do NOT synthesize input;
+    //   * mouse / touch / pen invocation -> return the foreground to the user's prior window once
+    //     capture is done, so their caret and selection are where they left them.
     public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> ReadSelectedPlayButtonActionAsync(string? actionTag, bool? isChecked)
     {
         bool invokedViaKeyboard = Morphic.MorphicBar.BarControls.BarButtonInvocationContext.InvokedViaKeyboard;

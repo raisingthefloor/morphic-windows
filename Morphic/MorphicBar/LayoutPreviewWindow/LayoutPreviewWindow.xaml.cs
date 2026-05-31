@@ -262,14 +262,15 @@ public sealed partial class LayoutPreviewWindow : Morphic.Controls.Windowing.Chr
         {
             var hwnd = (Windows.Win32.Foundation.HWND)WinRT.Interop.WindowNative.GetWindowHandle(this);
 
-            // set the window position to topmost (to push it to the top of the zorder)
-            Windows.Win32.PInvoke.SetWindowPos(hwnd, Windows.Win32.Foundation.HWND.HWND_TOPMOST, 0, 0, 0, 0,
-                Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOMOVE |
-                Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOSIZE |
-                Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
-
-            // set the window position to 'no'-topmost (so that it doesn't try to stay on top of all other windows)
-            Windows.Win32.PInvoke.SetWindowPos(hwnd, Windows.Win32.Foundation.HWND.HWND_NOTOPMOST, 0, 0, 0, 0,
+            // Bring the preview to the top of the non-topmost band, so it sits above all normal
+            // windows but still below the topmost MorphicBar. HWND_TOP does this in a single call
+            // without ever touching the topmost bit, so the preview can never momentarily flash
+            // above the bar (which the HWND_TOPMOST -> HWND_NOTOPMOST idiom would risk). That idiom
+            // is only needed to re-seat a window that is ALREADY non-topmost, because HWND_NOTOPMOST
+            // is documented as a no-op in that case; here we don't need it because HWND_TOP repositions
+            // regardless. HWND_TOP preserves the window's current topmost status, which is safe
+            // precisely because this window is never topmost (it sets no WS_EX_TOPMOST / IsAlwaysOnTop).
+            _ = Windows.Win32.PInvoke.SetWindowPos(hwnd, Windows.Win32.Foundation.HWND.HWND_TOP, 0, 0, 0, 0,
                 Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOMOVE |
                 Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOSIZE |
                 Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);

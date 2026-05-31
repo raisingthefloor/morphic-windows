@@ -38,6 +38,10 @@ public sealed partial class BarButtonControl : UserControl, IBarItemControl
         this.InitializeComponent();
     }
 
+    // Re-asserts this button's compound visual state. See IBarItemControl.RefreshButtonCompoundStates
+    // for why this is needed after the bar's AppWindow.Show. The caller has already deferred past the
+    // post-show layout pass, so we re-assert synchronously. No-op before the button is built (Data not
+    // yet set) or after it's been cleared on Data reassignment.
     public void RefreshButtonCompoundStates()
     {
         if (_button is not null)

@@ -264,6 +264,14 @@ public class UIAutomationSelectedTextScripts
     }
 
     // Tier 2 capture: search the target window's UI Automation subtree for a text-pattern element that currently holds a non-empty selection, performed as a BOUNDED, PRUNING breadth-first walk rather than a single full-subtree FindAllBuildCache.
+    //
+    // WHY a bounded walk: FindAllBuildCache(TreeScope_Subtree) forces the provider to materialize its ENTIRE accessibility subtree in one call. For a classic app that is cheap, but a Chromium-based browser builds its accessibility tree lazily and on demand, so forcing the whole subtree on a large page (e.g. a single-page HTML specification) can hang for many seconds, which is the deal-killer this redesign removes.
+    //
+    // WHY pruning keeps it fast: a text-pattern element's own selection (TextPattern.GetSelection) already covers everything inside that element, so once the walk reaches a text provider it reads that provider's selection and does NOT descend into its children. In a browser the page content sits under a single Document text provider, so the walk stops at the Document and never expands the thousands of nodes beneath it; the browser chrome above the Document (toolbar, address bar, tab strip) is shallow and narrow, so reaching the Document stays well under the perf budget even on a cold tree.
+    //
+    // Ambiguity rule (unchanged in intent from the prior Tier 2): return a selection only when EXACTLY ONE text provider in the walk has one. Two or more is ambiguous (for example a page selection plus an address-bar selection), and we fall back rather than guess which the user meant; the walk stops the moment a second selection is found.
+    //
+    // Bounds: the walk also stops if it exceeds a wall-clock budget or a visited-node cap, so a pathological tree can never hang us. When a bound is hit we treat the result as "no unambiguous selection" and fall through to the optional read-all / nothing fallback. The diagnostic log records the node count, elapsed time, and whether the walk was truncated so the real-world cost can be measured.
     private static MorphicResult<string?, ICaptureSelectedTextError> FindSelectedTextWithBoundedSearch(Windows.Win32.UI.Accessibility.IUIAutomation comUIAutomation, Windows.Win32.Foundation.HWND windowHandle, Windows.Win32.Foundation.HWND focusedControlHandle, Windows.Win32.UI.Accessibility.IUIAutomationCacheRequest comUIAutomationCacheRequest, bool readFocusedControlTextWhenNoSelection)
     {
         // budget tuned from real-world logs: successful bounded searches finish well under 300ms, so 350ms keeps every observed UIA win while ending a doomed search hundreds of ms sooner (anything past it falls through to the clipboard tier, which still captures the text). The node cap guarantees we never approach the multi-second hang a full-subtree walk produced.
@@ -449,7 +457,12 @@ public class UIAutomationSelectedTextScripts
     // sentinel for the dormant full-subtree scan below: a maximumDepth of this value means "no depth limit" (descend the entire subtree, exactly like the original FindAllBuildCache full scan).
     private const int FULL_SUBTREE_SCAN_NO_DEPTH_LIMIT = int.MaxValue;
 
-    // backup strategy (may be pruned if not used)
+    /* backup strategy (may be pruned if not used) */
+    // DORMANT / NOT WIRED INTO THE LIVE PATH. The active Tier 2 is FindSelectedTextWithBoundedSearch above, which PRUNES at every text provider and is what we ship. This method is retained only as a future option (an explicit request to keep the full-depth scan available behind a "depthmax" knob); no caller invokes it today.
+    //
+    // Unlike the pruning walk, this scan is EXHAUSTIVE: it descends PAST text providers into their children, so on a browser document it can visit the entire accessibility tree. With maximumDepth == FullSubtreeScanNoDepthLimit it runs the original FindAllBuildCache(TreeScope_Subtree) full scan in a single COM call. WARNING: on a large web page that no-limit path is the multi-second / hundreds-of-thousands-of-providers worst case that motivated the pruning rewrite, and because it descends past providers it can also surface the browser "false ambiguity" where a nested provider duplicates the document's selection. With a finite maximumDepth it instead performs a manual breadth-first walk that stops descending at that depth, which is the "only scan a few levels deep" option.
+    //
+    // The ambiguity rule matches the active path: exactly one non-empty selection is read; two or more is ambiguous and we fall back rather than guess; none optionally reads the focused control's full text.
     private static MorphicResult<string?, ICaptureSelectedTextError> FindSelectedTextWithFullSubtreeScan(Windows.Win32.UI.Accessibility.IUIAutomation comUIAutomation, Windows.Win32.Foundation.HWND windowHandle, Windows.Win32.Foundation.HWND focusedControlHandle, Windows.Win32.UI.Accessibility.IUIAutomationCacheRequest comUIAutomationCacheRequest, bool readFocusedControlTextWhenNoSelection, int maximumDepth)
     {
         // resolve the top-level element for the window; its subtree is what we scan

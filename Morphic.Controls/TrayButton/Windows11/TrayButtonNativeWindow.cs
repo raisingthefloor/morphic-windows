@@ -46,6 +46,10 @@ internal class TrayButtonNativeWindow : IDisposable
 
     private bool _visible;
     private bool _taskbarIsTopmost;
+    // Set true between WTS_SESSION_LOCK and WTS_SESSION_UNLOCK. Gates visibility alongside
+    // _taskbarIsTopmost so the tray button never paints over the lock screen (some Windows
+    // configurations render the lock UI on this same desktop). Fed by WM_WTSSESSION_CHANGE.
+    private bool _sessionIsLocked = false;
 
     private System.Threading.Timer? _resurfaceTaskbarButtonTimer;
     private static readonly TimeSpan RESURFACE_TASKBAR_BUTTON_INTERVAL_TIMESPAN = new TimeSpan(0, 0, 30);
@@ -82,6 +86,9 @@ internal class TrayButtonNativeWindow : IDisposable
 
     private Windows.Win32.UI.Accessibility.HWINEVENTHOOK _objectReorderWindowEventHook = Windows.Win32.UI.Accessibility.HWINEVENTHOOK.Null;
     private Windows.Win32.UI.Accessibility.WINEVENTPROC? _objectReorderWindowEventProc = null;
+
+    private Windows.Win32.UI.Accessibility.HWINEVENTHOOK _foregroundWindowEventHook = Windows.Win32.UI.Accessibility.HWINEVENTHOOK.Null;
+    private Windows.Win32.UI.Accessibility.WINEVENTPROC? _foregroundWindowEventProc = null;
 
     private Microsoft.UI.Dispatching.DispatcherQueue _dispatcherQueue = null!; // initialized in CreateNew factory method
 
@@ -128,6 +135,10 @@ internal class TrayButtonNativeWindow : IDisposable
                 {
                     Windows.Win32.PInvoke.UnhookWinEvent(_locationChangeWindowEventHook);
                 }
+                if (_foregroundWindowEventHook != IntPtr.Zero)
+                {
+                    Windows.Win32.PInvoke.UnhookWinEvent(_foregroundWindowEventHook);
+                }
 
                 _argbImageNativeWindow?.Dispose();
 
@@ -140,6 +151,13 @@ internal class TrayButtonNativeWindow : IDisposable
             // button goes away.
             _tooltip?.Dispose();
             _tooltip = null;
+            //
+            // unregister session lock/unlock notifications before destroying the window they were
+            // registered against (paired with the WTSRegisterSessionNotification call in CreateNew)
+            if (_hwnd != Windows.Win32.Foundation.HWND.Null)
+            {
+                _ = Windows.Win32.PInvoke.WTSUnRegisterSessionNotification(_hwnd);
+            }
             //
             // free window handle
             if (_hwnd != IntPtr.Zero)
@@ -419,6 +437,39 @@ internal class TrayButtonNativeWindow : IDisposable
         result._objectReorderWindowEventHook = objectReorderWindowEventHook;
         // NOTE: we must capture the delegate so that it is not garbage collected; otherwise the native callbacks can crash the .NET execution engine
         result._objectReorderWindowEventProc = objectReorderWindowEventProc;
+        //
+        //
+        //
+        // ALSO watch foreground-window changes as an independent second trigger for the
+        // taskbar-topmost re-read. The reorder stream is incidental and browser/shell
+        // dependent; a foreground change reliably accompanies full-screen enter/exit, so
+        // this guarantees we re-evaluate visibility even if the reorder path ever misses.
+        var foregroundWindowEventProc = new Windows.Win32.UI.Accessibility.WINEVENTPROC(result.ForegroundWindowEventProc);
+        var foregroundWindowEventHook = Windows.Win32.PInvoke.SetWinEventHook(
+            Windows.Win32.PInvoke.EVENT_SYSTEM_FOREGROUND, // start index
+            Windows.Win32.PInvoke.EVENT_SYSTEM_FOREGROUND, // end index
+            Windows.Win32.Foundation.HMODULE.Null,
+            foregroundWindowEventProc,
+            0, // process handle (0 = all processes on current desktop)
+            0, // thread (0 = all existing threads on current desktop)
+            Windows.Win32.PInvoke.WINEVENT_OUTOFCONTEXT | Windows.Win32.PInvoke.WINEVENT_SKIPOWNPROCESS
+        );
+        Debug.Assert(foregroundWindowEventHook != IntPtr.Zero, "Could not wire up foreground window event listener for tray button");
+        if (foregroundWindowEventHook == IntPtr.Zero)
+        {
+            return MorphicResult.ErrorResult<ICreateNewError>(new ICreateNewError.CouldNotWireUpWatchEvents());
+        }
+        //
+        result._foregroundWindowEventHook = foregroundWindowEventHook;
+        // NOTE: we must capture the delegate so that it is not garbage collected; otherwise the native callbacks can crash the .NET execution engine
+        result._foregroundWindowEventProc = foregroundWindowEventProc;
+
+        // Register for session lock/unlock notifications so we can hide the tray button while the
+        // workstation is locked (it must never paint over the lock screen). These arrive as
+        // WM_WTSSESSION_CHANGE on this window's WndProc and are unregistered in Dispose. Failure is
+        // non-fatal: the button simply won't auto-hide on lock.
+        var registerSessionNotificationResult = Windows.Win32.PInvoke.WTSRegisterSessionNotification(result._hwnd, Windows.Win32.PInvoke.NOTIFY_FOR_THIS_SESSION);
+        Debug.Assert(registerSessionNotificationResult, "Could not register for session lock/unlock notifications for tray button");
 
         // create the modern tooltip window once and keep it alive for the tray button's lifetime.
         // Text is empty until SetText is called; visibility is controlled by WM_MOUSEHOVER /
@@ -523,6 +574,28 @@ internal class TrayButtonNativeWindow : IDisposable
 
         switch (msg)
         {
+            case Windows.Win32.PInvoke.WM_WTSSESSION_CHANGE:
+                {
+                    // Lock/unlock toggles the _sessionIsLocked visibility term (state-based, no
+                    // timer): hide while locked so the button never shows over the lock screen,
+                    // restore on unlock. Other WTS_* subcodes (logon, remote connect, etc.) are
+                    // intentionally ignored.
+                    if ((uint)wParam.Value == Windows.Win32.PInvoke.WTS_SESSION_LOCK)
+                    {
+                        _sessionIsLocked = true;
+                        var updateVisibilityResult = this.UpdateVisibility();
+                        Debug.Assert(updateVisibilityResult.IsSuccess, "Could not update visibility on session lock.");
+                    }
+                    else if ((uint)wParam.Value == Windows.Win32.PInvoke.WTS_SESSION_UNLOCK)
+                    {
+                        _sessionIsLocked = false;
+                        var updateVisibilityResult = this.UpdateVisibility();
+                        Debug.Assert(updateVisibilityResult.IsSuccess, "Could not update visibility on session unlock.");
+                    }
+
+                    result = IntPtr.Zero;
+                }
+                break;
             case Windows.Win32.PInvoke.WM_LBUTTONDOWN:
                 {
                     _visualState |= TrayButtonVisualStateFlags.LeftButtonPressed;
@@ -976,7 +1049,7 @@ internal class TrayButtonNativeWindow : IDisposable
 
     private bool ShouldWindowBeVisible()
     {
-        return (_visible == true) && (_taskbarIsTopmost == true);
+        return (_visible == true) && (_taskbarIsTopmost == true) && (_sessionIsLocked == false);
     }
 
     private MorphicResult<MorphicUnit, Morphic.WindowsNative.IWin32ApiError> UpdateVisualStateAlpha()
@@ -1119,8 +1192,43 @@ internal class TrayButtonNativeWindow : IDisposable
         }
     }
 
+    private void ForegroundWindowEventProc(Windows.Win32.UI.Accessibility.HWINEVENTHOOK hWinEventHook, uint eventType, Windows.Win32.Foundation.HWND hwnd, int idObject, int idChild, uint idEventThread, uint dwmsEventTime)
+    {
+        if (this.disposedValue == true)
+        {
+            return;
+        }
+
+        // A foreground change is a reliable, low-frequency signal that a full-screen app
+        // may have appeared or gone away. Re-evaluate by routing through the same desktop
+        // path the reorder hook uses: HandleObjectReorder treats the desktop handle as a
+        // taskbar-topmost re-read plus visibility update (it re-asserts our topmost and
+        // calls UpdateVisibility), so a single shared code path serves both triggers.
+        var desktopHandle = Windows.Win32.PInvoke.GetDesktopWindow();
+
+        _ = _dispatcherQueue.TryEnqueue(() => { this.HandleObjectReorder(desktopHandle); });
+    }
+
     private void ObjectReorderWindowEventProc(Windows.Win32.UI.Accessibility.HWINEVENTHOOK hWinEventHook, uint eventType, Windows.Win32.Foundation.HWND hwnd, int idObject, int idChild, uint idEventThread, uint dwmsEventTime)
     {
+        // Pre-filter the EVENT_OBJECT_REORDER firehose before deferring to the dispatcher.
+        // The hook is desktop-wide (processId/threadId 0), so we see a reorder for every
+        // accessibility object (menus, tooltips, the browser's render-widget storm, etc.).
+        //
+        // HandleObjectReorder only acts on two windows: the desktop and the taskbar
+        // (Shell_TrayWnd). Measured reality on this OS: those targets arrive as
+        // idObject=OBJID_CLIENT (-4), idChild=CHILDID_SELF (0). They do NOT arrive as
+        // OBJID_WINDOW (0); a prior filter that required idObject==0 therefore rejected
+        // every reorder (including the taskbar/desktop ones), so the taskbar-topmost state
+        // was never re-read and the tray button never hid for a full-screen app. Do NOT
+        // reinstate an idObject==0 check.
+        //
+        // The desktop reorder is the primary, always-present signal at a full-screen
+        // transition and the desktop handle is a free identity compare, so it passes
+        // unconditionally. Every other window drops child-element reorders (idChild != 0)
+        // cheaply, with no class-name call, which rejects the bulk of the firehose; the
+        // taskbar and the small idChild==0 residual are classified authoritatively by
+        // class name in HandleObjectReorder.
         if (this.disposedValue == true)
         {
             return;
@@ -1129,13 +1237,18 @@ internal class TrayButtonNativeWindow : IDisposable
         {
             return;
         }
-        if (idObject != 0 || idChild != 0)
+        var desktopHandle = Windows.Win32.PInvoke.GetDesktopWindow();
+        bool hwndIsDesktop = (hwnd == desktopHandle);
+        if (hwndIsDesktop == false)
         {
-            return;
-        }
-        if (Windows.Win32.PInvoke.IsWindow(hwnd) == false)
-        {
-            return;
+            if (idChild != 0)
+            {
+                return;
+            }
+            if (Windows.Win32.PInvoke.IsWindow(hwnd) == false)
+            {
+                return;
+            }
         }
 
         // make sure that HandleObjectReorder isn't called in an infinite RAPID loop (if two windows are fighting for "topmost")
@@ -1213,6 +1326,11 @@ internal class TrayButtonNativeWindow : IDisposable
     }
 
     private void HandleObjectReorder(Windows.Win32.Foundation.HWND hwnd) {
+        // Bail if Dispose ran between when this callback was enqueued and when it
+        // actually ran on the UI thread. ObjectReorderWindowEventProc already filters
+        // out the bulk of irrelevant traffic synchronously, but a dispatcher post
+        // sitting in the queue from before Dispose has no way to be retroactively
+        // cancelled, so we re-check here.
         if (this.disposedValue == true)
         {
             return;
@@ -1224,6 +1342,10 @@ internal class TrayButtonNativeWindow : IDisposable
             return;
         }
 
+        // Check the desktop case before we go anywhere near GetClassName. The desktop
+        // hwnd from GetDesktopWindow() is stable for the entire process lifetime (it's
+        // a kernel-owned root window, not Explorer's Progman/WorkerW), so an identity
+        // comparison here is both safer and cheaper than the class-name query.
         var desktopHandle = Windows.Win32.PInvoke.GetDesktopWindow();
         bool hwndIsDesktop = (hwnd == desktopHandle);
 
@@ -1234,6 +1356,12 @@ internal class TrayButtonNativeWindow : IDisposable
             var getWindowClassNameResult = TrayButtonNativeWindow.GetWindowClassName(hwnd);
             if (getWindowClassNameResult.IsError == true)
             {
+                // ERROR_INVALID_WINDOW_HANDLE (1400) is the expected race: the source
+                // window died between ObjectReorderWindowEventProc's IsWindow check and
+                // our dispatcher post running on the UI thread. Silently drop it; the
+                // window we'd have acted on no longer exists. Log only on other Win32
+                // errors (with the actual code, not the old "has it been destroyed?"
+                // guess) so genuine surprises stay visible in the debug output.
                 if (getWindowClassNameResult.Error is Morphic.WindowsNative.IWin32ApiError.Win32Error(var classNameWin32ErrorCode)
                     && classNameWin32ErrorCode == (uint)Windows.Win32.Foundation.WIN32_ERROR.ERROR_INVALID_WINDOW_HANDLE)
                 {
@@ -1274,6 +1402,7 @@ internal class TrayButtonNativeWindow : IDisposable
             if (updateVisibilityResult.IsError == true)
             {
                 // NOTE: we may want to consider parsing out errors here
+                Debug.WriteLine("Could not update .Visibility");
             }
         }
     }

@@ -1,4 +1,5 @@
 ﻿ClientToScreen
+CoWaitForMultipleObjects
 CreateRoundRectRgn
 CreateWindowEx
 DefSubclassProc
@@ -11,10 +12,12 @@ EqualRect
 FindWindow
 GetAsyncKeyState
 GetCursorPos
+GetDesktopWindow
 GetDpiForMonitor
 GetDpiForWindow
 GetForegroundWindow
 GetMonitorInfo
+GetShellWindow
 GetSysColor
 GetWindowLongPtr
 GetWindowRect
@@ -31,6 +34,8 @@ SetForegroundWindow
 SetWindowLongPtr
 SetWindowPos
 SetWindowSubclass
+SetWinEventHook
+UnhookWinEvent
 
 DWM_WINDOW_CORNER_PREFERENCE
 HRESULT
@@ -38,14 +43,19 @@ SYS_COLOR_INDEX
 WINDOW_EX_STYLE
 WINDOW_STYLE
 
+EVENT_OBJECT_LOCATIONCHANGE
+EVENT_SYSTEM_FOREGROUND
 HTCAPTION
 HWND_NOTOPMOST
+HWND_TOP
 HWND_TOPMOST
 ICON_BIG
 ICON_SMALL
 S_OK
 WA_ACTIVE
 WA_CLICKACTIVE
+WINEVENT_OUTOFCONTEXT
+WINEVENT_SKIPOWNPROCESS
 WM_ACTIVATE
 WM_CLOSE
 WM_ENDSESSION

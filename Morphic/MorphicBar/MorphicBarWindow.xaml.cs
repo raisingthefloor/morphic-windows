@@ -52,6 +52,16 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     private bool disposedValue;
 
     private IntPtr _hIconRawHandle = IntPtr.Zero;
+    // The DummyWindow is the bar's owner: owned top-level windows are hidden from the
+    // taskbar by Shell convention while remaining included in Alt+Tab, which is exactly
+    // what the MorphicBar wants. The DummyWindow MUST have WS_EX_TOPMOST because the
+    // MorphicBar has WS_EX_TOPMOST (via IsAlwaysOnTop=true), and Windows requires a
+    // topmost window's owner to also be topmost; mismatch returns ERROR_INVALID_PARAMETER
+    // from SetWindowLongPtr(GWLP_HWNDPARENT) in uiaccess=true builds (and silently
+    // reorders in non-uiaccess builds, which is why dev "worked" while prod broke).
+    // Set up by MorphicBarWindow.CreateWithHiddenTaskbar (static factory); do not
+    // construct MorphicBarWindow via `new` directly if you want the bar hidden from
+    // the taskbar.
     private DummyWindow? _dummyParentWindow;
 
     private Microsoft.UI.Dispatching.DispatcherQueue _dispatcherQueue;
@@ -134,6 +144,11 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     // NOTE: as we are handling sizing ourselves, we need to manage size scaling ourselves; this tracks the latest screen scale (so that we know if we need to resize our window)
     private double? _lastRasterizationScale = null;
 
+    // Fires after the bar handles a rasterization-scale change (DPI change on the current monitor
+    // or the bar moving to a different-DPI monitor). Subscribers that mirror display state -- e.g.
+    // the Text Size +/- buttons whose IsEnabled depends on the bar monitor's DPI -- should refresh
+    // when this fires. Subscribers run on the UI thread (the event fires from the dispatcher
+    // continuation that re-measures the bar) so they can touch UI directly.
     public event EventHandler? RasterizationScaleChangedExternal;
 
     // Tracks which monitor the bar belongs to. Kept in sync at the entry of AnimateMoveTo and
@@ -156,7 +171,30 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     private Windows.Win32.UI.Shell.SUBCLASSPROC? _subclassProc;
     private bool _userCloseEnabled;  // default false: Alt+F4 -> Hide
     //
+    // Item lengths are NOT cached: they depend on the bar's effective thickness (since a narrower
+    // bar can cause text wrapping that makes items taller). MeasureBarForOrientation performs a
+    // fresh two-pass measurement each time it's called.
 
+    // Construct a MorphicBarWindow whose outer host has a DummyWindow as its owner, which
+    // hides the bar from the Windows taskbar while keeping it in the Alt+Tab switcher
+    // (Shell convention for owned top-level windows). Callers SHOULD use this factory rather
+    // than `new MorphicBarWindow()` directly; the bare constructor creates a bar that will
+    // appear in the taskbar.
+    //
+    // The DummyWindow MUST have WS_EX_TOPMOST set in its CreateWindowEx flags so its style
+    // matches the bar (which is topmost via IsAlwaysOnTop=true). Topmost-owner style match
+    // is required for SetWindowLongPtr(GWLP_HWNDPARENT) to succeed in uiaccess=true builds;
+    // mismatch returns ERROR_INVALID_PARAMETER (in dev/non-uiaccess Windows silently
+    // reorders the relationship instead of failing).
+    //
+    // The DummyWindow's lifetime is tied to the bar (held by _dummyParentWindow, disposed
+    // in Dispose) because the owner HWND must remain valid as long as the bar references it.
+    //
+    // Empirical note (WindowsAppSDK 2.1, prod-validated 2026-05-26): the post-construction
+    // SetAsParentHwnd call here is sufficient -- WinUI 3 does NOT clobber the owner during
+    // subsequent presenter init, so no follow-up re-apply from RootGrid_Loaded is needed.
+    // If a future WinUI version regresses on this, the bar will silently reappear in the
+    // taskbar and we'll need to reintroduce a deferred re-apply.
     public static MorphicBarWindow CreateWithHiddenTaskbar()
     {
         var morphicBarWindow = new MorphicBarWindow();
@@ -164,6 +202,13 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         return morphicBarWindow;
     }
 
+    // Assigns the supplied DummyWindow as this MorphicBarWindow's owner: stores the
+    // reference on _dummyParentWindow (so Dispose can clean it up) and establishes the
+    // Win32 owner relationship via SetWindowLongPtr(GWLP_HWNDPARENT). Must be called
+    // at most once per MorphicBarWindow instance; calling again would leak the previous
+    // DummyWindow. Internal rather than public because the only legitimate caller is
+    // CreateWithHiddenTaskbar (above); arbitrary external callers should not be mutating
+    // the bar's ownership at runtime.
     internal void SetOwner(DummyWindow dummyWindow)
     {
         if (_dummyParentWindow is not null)
@@ -176,12 +221,21 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         _ = dummyWindow.SetAsParentHwnd((Windows.Win32.Foundation.HWND)hwnd);
     }
 
+    // Dedicated focus-policy companion for this bar window. Owns the suppression timer,
+    // the initial-focus placement, the WM_ACTIVATE-driven deferred-update decision tree,
+    // and the stale-keyboard-ring cleanup walk. External callers (e.g., MorphicBarManager)
+    // reach focus operations through this property rather than via individual methods on
+    // the bar window, so the bar window and its focus controller stay paired and the
+    // manager doesn't have to know about the controller separately.
     internal MorphicBarFocusController FocusController { get; }
 
     public MorphicBarWindow()
     {
         InitializeComponent();
 
+        // Construct the focus controller eagerly so other code that runs during the rest
+        // of this constructor (or before the bar's HWND is wired up) can safely reach it
+        // via this.FocusController.
         this.FocusController = new MorphicBarFocusController(this);
 
         // apply the initial orientation-specific layout via the same helpers used on orientation
@@ -284,6 +338,36 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         }
         else if (msg == Windows.Win32.PInvoke.WM_ENDSESSION && wParam.Value != 0)
         {
+            // Session is ending: Windows shutdown, user logoff, OR Restart Manager closing
+            // Morphic so an installer can replace its files (ENDSESSION_CLOSEAPP in lParam).
+            // WinUI 3's default WndProc returns TRUE from WM_QUERYENDSESSION but does NOT
+            // actually exit the process on WM_ENDSESSION -- the window message gets absorbed
+            // and the process keeps running. That's exactly what caused the installer's
+            // "RESTART MANAGER: Successfully shut down ... / The setup was unable to
+            // automatically close all requested applications" log contradiction: RM thinks
+            // we said yes and exited, but Morphic.exe is still holding its files open, and
+            // the user is prompted to close it manually.
+            //
+            // wParam == 0 means the session-end was cancelled (some other app vetoed
+            // WM_QUERYENDSESSION, or the user cancelled the shutdown dialog); in that case
+            // we do nothing and stay running. Only wParam != 0 (TRUE) means we are
+            // definitively shutting down and need to exit.
+            //
+            // Route through App.Shutdown() rather than Application.Current.Exit() directly
+            // so we get the same orderly cleanup as the menu's "Quit Morphic" command:
+            // close the About window, close the menu-owner window with user-close
+            // re-enabled, and Dispose MorphicBarManager (which tears the bar down in a
+            // safe order). Application.Exit() would skip those explicit steps; WinUI's
+            // tree-teardown would still close the windows, but MorphicBarManager.Dispose
+            // would be bypassed and any side-effects tied to it (event unsubscriptions,
+            // owned-resource cleanup) would leak until process termination.
+            //
+            // Dispatched async because Shutdown must run on the UI thread; we may be on
+            // a different thread depending on who pumped the message. The OS / RM give
+            // us several seconds of grace after WM_ENDSESSION returns before force-
+            // terminating, which is more than enough for WinUI 3 to tear down. Wrapped
+            // in try/catch because a teardown race during shutdown can throw COMException
+            // from the WinRT projection.
             var enqueued = this.DispatcherQueue.TryEnqueue(() =>
             {
                 Morphic.RmTraceLog.Log("WM_ENDSESSION dispatched lambda running on UI thread; about to call App.Shutdown()");
@@ -424,8 +508,27 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         }
     }
 
+    // Defensive re-assertion of every bar button's compound visual state, deferred via
+    // DispatcherQueue.TryEnqueue so it runs AFTER the layout pass(es) and synthetic pointer
+    // events that AppWindow.Show triggers settle. Mirrors the existing post-rotation refresh
+    // in BarMultiButtonControl (the same load-bearing pattern documented in
+    // CompoundStatePointerWiring.RefreshVisualState).
+    //
+    // Why this is needed: WinUI's built-in ButtonBase visual-state machine can call
+    // GoToState("Checked") / GoToState("Normal") on CommonStates during the show transition
+    // (e.g. when IsChecked is true at show time, or when synthetic pointer events fire). If
+    // an in-progress action is mid-flight, that stomps our "InProgress" override, and the
+    // bar reappears showing the toggled state instead of the in-progress visual until any
+    // event (typically hover) triggers our compound-state update. The LayoutUpdated guard
+    // in CompoundStatePointerWiring.Wire catches most layout-driven stomps, but the timing
+    // around AppWindow.Show isn't deterministic enough -- so we explicitly re-assert here.
     public void RefreshAllButtonCompoundStatesAfterShow()
     {
+        // Defer past the show transition's layout pass + synthetic pointer events, then ask each
+        // bar item to re-assert its own buttons' compound state. Every entry in _allBarItemControls
+        // is an IBarItemControl (see the construction switch in the build path); the cast is the
+        // contract and the null-conditional is belt-and-suspenders. Each item reads its own live
+        // button list on this (UI) thread, so there's no torn-list risk from a Data reassignment.
         this.DispatcherQueue.TryEnqueue(() =>
         {
             foreach (var control in _allBarItemControls)
@@ -668,6 +771,18 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         // AnimationUtils.AnimateMoveTo's sizeChanging check will short-circuit the size interpolation.
         _moveAnimationTimer = AnimationUtils.AnimateMoveTo(_dispatcherQueue, this.AppWindow, targetPosition, targetSize, duration);
 
+        // Re-establish focus after an orientation change. Two branches, both deferred via the
+        // dispatcher so they run after WinUI's focus subsystem has settled from the layout
+        // changes performed synchronously above:
+        //   1. If something was focused before the rotation, restore that exact control with
+        //      its original FocusState. This preserves Keyboard vs Pointer vs Programmatic
+        //      semantics (a button tabbed-into stays Keyboard, a button mouse-focused stays
+        //      Pointer, etc.) and prevents the focused button from being silently dropped or
+        //      replaced by a default focusable element on the re-oriented BarItemsPanel.
+        //   2. If nothing was focused before, defensively downgrade any spurious Keyboard
+        //      focus that the re-orientation may have placed on a default focusable child
+        //      (the typical "first button gets a focus ring after drag-release flip" bug).
+        // When orientation isn't changing, neither branch runs (orientationChanging gated above).
         if (orientationChanging)
         {
             if (preRotationFocus.Control is not null)
@@ -700,12 +815,21 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
 
     /* properties */
 
+    // The bar's current docking location. Mutated only inside AnimateMoveTo (which also raises
+    // DockingLocationChanged); exposed read-only here.
     public Morphic.MorphicBar.DockingLocation CurrentDockingLocation => _dockingLocation;
 
     // True when the bar's flow direction is right-to-left. Exposed so App-level code (which has no
     // XAML element of its own) can resolve logical docks to physical ones the same way the bar does.
     public bool IsRightToLeft => this.MorphicMenuButton.FlowDirection == FlowDirection.RightToLeft;
 
+    // Animate the bar to a new orientation + docking location on its CURRENT monitor, over the
+    // standard docking-move duration. Used to apply an external (registry-driven) placement change.
+    // Orientation and docking location are applied together as a PAIR in a single AnimateMoveTo, so a
+    // simultaneous change to both is one animation, not two. Funnels through AnimateMoveTo, which sets
+    // the orientation (raising OrientationChanged) and updates _dockingLocation (raising
+    // DockingLocationChanged) -- so an orientation change animates via the exact same path as a
+    // docking change.
     internal void MoveToCurrentMonitorPlacement(Microsoft.UI.Xaml.Controls.Orientation orientation, Morphic.MorphicBar.DockingLocation dockingLocation)
     {
         var hMonitor = this.GetVerifiedCurrentMonitorHandle();
@@ -765,6 +889,10 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         // MeasureAndResize uses GetVerifiedCurrentMonitorHandle internally, so a DPI change is
         // interpreted as "same monitor, new scale" rather than "follow the cursor to a new monitor"
         // (unless the cached handle has actually gone stale).
+		//
+        // Fire RasterizationScaleChangedExternal AFTER MeasureAndResize so subscribers (e.g. the
+        // Text Size button-state refresh) see the bar in its post-resize state -- they may query
+        // the bar's monitor handle, and MeasureAndResize re-verifies/refreshes that cache.
         this.DispatcherQueue.TryEnqueue(() =>
         {
             this.MeasureAndResize();
@@ -1204,6 +1332,76 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         return _currentMonitorHandle;
     }
 
+    // Temporarily drops (or restores) the bar's always-on-top z-order so a full-screen
+    // foreground window on the bar's own monitor can cover it. Called by MorphicBarManager
+    // in response to FullScreenMonitorWatcher. The bar's logical visibility is unchanged
+    // (Visible stays true, so registry persistence / menu text / tooltip are untouched);
+    // only the topmost band membership toggles.
+    //
+    // The bar is an owned window of the (invisible) DummyWindow, and an owner plus its owned
+    // windows form one z-order group: while the owner is topmost, the bar is pulled into the
+    // topmost band even when the bar itself is non-topmost. So the owner's topmost bit must
+    // toggle in lockstep with the bar's.
+    //
+    // Ordering preserves the topmost-owner invariant "an owned topmost window's owner must
+    // also be topmost" at every intermediate step (violating it makes a later
+    // GWLP_HWNDPARENT re-apply fail with ERROR_INVALID_PARAMETER in uiaccess builds; see the
+    // project note near the DummyWindow factory above):
+    //   * Suppress: clear the bar's topmost FIRST, then the owner's, so we never pass through
+    //     "owned topmost + owner non-topmost".
+    //   * Restore: set the owner's topmost FIRST, then the bar's, for the same reason.
+    //
+    // We poke the bar's OWN HWND with SetWindowPos in addition to setting OverlappedPresenter
+    // .IsAlwaysOnTop. The presenter property is WinUI's source of truth (needed so WinUI does not
+    // re-assert topmost on a later show/resize), but the direct SetWindowPos guarantees the
+    // WS_EX_TOPMOST bit flips immediately and reliably whether the bar is hidden or shown. That
+    // way a bar suppressed while hidden, then shown later (e.g. a second launch from a shortcut on
+    // the full-screen monitor), comes up BEHIND the full-screen window instead of popping in front
+    // of it. SetWindowPos without SWP_SHOWWINDOW never changes the window's visibility.
+    internal void SetTopmostSuppressedForFullScreen(bool suppressed)
+    {
+        var presenter = this.AppWindow.Presenter as Microsoft.UI.Windowing.OverlappedPresenter;
+        var barWindowHandle = (Windows.Win32.Foundation.HWND)WinRT.Interop.WindowNative.GetWindowHandle(this);
+        var dummyWindowHandle = _dummyParentWindow?.hwnd ?? Windows.Win32.Foundation.HWND.Null;
+
+        if (suppressed == true)
+        {
+            if (presenter is not null)
+            {
+                presenter.IsAlwaysOnTop = false;
+            }
+            _ = Windows.Win32.PInvoke.SetWindowPos(barWindowHandle, Windows.Win32.Foundation.HWND.HWND_NOTOPMOST, 0, 0, 0, 0,
+                Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOMOVE |
+                Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOSIZE |
+                Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
+            if (dummyWindowHandle != Windows.Win32.Foundation.HWND.Null)
+            {
+                _ = Windows.Win32.PInvoke.SetWindowPos(dummyWindowHandle, Windows.Win32.Foundation.HWND.HWND_NOTOPMOST, 0, 0, 0, 0,
+                    Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOMOVE |
+                    Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOSIZE |
+                    Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
+            }
+        }
+        else
+        {
+            if (dummyWindowHandle != Windows.Win32.Foundation.HWND.Null)
+            {
+                _ = Windows.Win32.PInvoke.SetWindowPos(dummyWindowHandle, Windows.Win32.Foundation.HWND.HWND_TOPMOST, 0, 0, 0, 0,
+                    Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOMOVE |
+                    Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOSIZE |
+                    Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
+            }
+            _ = Windows.Win32.PInvoke.SetWindowPos(barWindowHandle, Windows.Win32.Foundation.HWND.HWND_TOPMOST, 0, 0, 0, 0,
+                Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOMOVE |
+                Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOSIZE |
+                Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
+            if (presenter is not null)
+            {
+                presenter.IsAlwaysOnTop = true;
+            }
+        }
+    }
+
     private void InitializeBorderlessWindowProperties(Windows.Win32.Foundation.HWND hwnd)
     {
         // remove window chrome (minimize/maximize/close buttons); set the window to be 'always on top'
@@ -1238,7 +1436,12 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOSIZE | Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOZORDER);
         System.Diagnostics.Debug.Assert(setWindowPosResult != 0);
 
-        // turn off DWM corner rounding.
+        // turn off DWM corner rounding. DWMWA_WINDOW_CORNER_PREFERENCE is a Win11-only
+        // DWM attribute (introduced in build 22000); on Win10 the system returns
+        // E_INVALIDARG (0x80070057 / "The parameter is incorrect") for the call. Skip
+        // on Win10: it doesn't draw rounded top-level corners in the first place, so
+        // the "don't round" request is a no-op there anyway. See the matching gate in
+        // Morphic.Controls.Windowing.ChromelessBaseWindow for the same pattern.
         if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
         {
             int cornerPreference = (int)Windows.Win32.Graphics.Dwm.DWM_WINDOW_CORNER_PREFERENCE.DWMWCP_DONOTROUND;
@@ -1355,6 +1558,11 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             var targetOrientation = _layoutPreviewWindowOrientation ?? _orientation;
             var rawTargetDockingLocation = _layoutPreviewDockingLocation ?? _dockingLocation;
 
+            // Preserve the logical-vs-physical character of the user's CURRENT docking preference:
+            // if they currently dock logically (flow-relative, e.g. FloatingBottomTrailing), store
+            // the drop target's logical equivalent so it keeps mirroring under an RTL flip; if they
+            // dock physically (absolute corner/edge), store the physical equivalent. Both
+            // conversions preserve the on-screen position; they only normalize the representation.
             var isRightToLeft = this.MorphicMenuButton.FlowDirection == FlowDirection.RightToLeft;
             var targetDockingLocation = _dockingLocation.IsLogicalDockingLocation()
                 ? rawTargetDockingLocation.ToLogicalDockingLocation(isRightToLeft)

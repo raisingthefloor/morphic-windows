@@ -30,6 +30,9 @@ using System.Threading.Tasks;
 
 namespace Morphic.WindowsNative.Display;
 
+// NOTE: the "DPI offset" values are referenced by Microsoft in the following document (along with some notes on "Windows 8.1" scaling settings)
+// see: https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/dpi-related-apis-and-registry-settings?view=windows-11
+
 public class Display
 {
     internal readonly Windows.Win32.Graphics.Gdi.HMONITOR MonitorHandle;
@@ -354,11 +357,65 @@ public class Display
     // dpiOffset value (1234568 in all our testing) rather than a real offset within
     // [minimumDpiOffset, maximumDpiOffset], because the user has chosen an arbitrary percentage
     // outside the system's normal preset ladder.
+    //
+    // We treat EITHER signal as "custom scaling": the empirical sentinel OR the Microsoft-documented
+    // Win8DpiScaling registry flag (see the dpi-related-apis-and-registry-settings link at the top of
+    // this file). The sentinel by itself is brittle: it is an observed magic number that a future
+    // Windows build could change, so the registry flag (the way the OS records that a global custom
+    // scaling level has been applied) backstops it. The registry check is OR-ed in, so it can only
+    // ever broaden detection and never suppress a sentinel match.
     public static bool IsCustomScalingPercentage(int dpiOffset)
     {
-        // 1234568 is the documented-by-observation sentinel used by Windows when custom scaling
-        // is active. If a future Windows build switches sentinels, update this constant.
-        return dpiOffset == 1234568;
+        if (dpiOffset == Display.CUSTOM_SCALING_DPI_OFFSET_SENTINEL)
+        {
+            return true;
+        }
+
+        if (Display.IsCustomScalingEnabledInRegistry() == true)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    // The sentinel Windows reports as the "current" DPI offset when a global custom scaling
+    // percentage is active (in place of a real offset on the system's preset ladder). Observed as
+    // 1234568 across all our testing; if a future Windows build switches sentinels, update this.
+    private const int CUSTOM_SCALING_DPI_OFFSET_SENTINEL = 1234568;
+
+    // Reads HKCU\Control Panel\Desktop\Win8DpiScaling, the flag Windows sets to 1 when a global
+    // custom scaling level has been applied (Advanced scaling settings > Custom scaling). Returns
+    // true only when the value is present and equal to 1; a missing value or any read failure is
+    // treated as "not custom" so this method can only ever broaden IsCustomScalingPercentage's
+    // result, never override the sentinel check.
+    private static bool IsCustomScalingEnabledInRegistry()
+    {
+        try
+        {
+            using var desktopKey = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Control Panel\Desktop");
+            if (desktopKey is null)
+            {
+                return false;
+            }
+
+            object? win8DpiScalingValue = desktopKey.GetValue("Win8DpiScaling");
+            if (win8DpiScalingValue is null)
+            {
+                return false;
+            }
+
+            // Win8DpiScaling is REG_DWORD (surfaced as a boxed Int32); System.Convert.ToInt32 also
+            // tolerates an unexpected string-convertible type. A value of 1 means a global custom
+            // scaling level is in effect.
+            return System.Convert.ToInt32(win8DpiScalingValue) == 1;
+        }
+        catch (System.Exception)
+        {
+            // Best-effort secondary signal: treat any registry access failure as "registry does not
+            // confirm custom scaling". The sentinel check in IsCustomScalingPercentage still stands.
+            return false;
+        }
     }
 
     //

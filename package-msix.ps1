@@ -52,9 +52,38 @@ if (-not $StagingDir) {
 if (-not (Test-Path "$sdkBin\makepri.exe"))      { throw "Windows SDK 10.0.22621.0 not found at $sdkBin." }
 if (-not (Test-Path "$SourceDir\Morphic\Morphic.csproj")) { throw "Morphic.csproj not found at $SourceDir\Morphic\Morphic.csproj." }
 
+# Ensure a self-contained publish exists. The Morphic.csproj's default does NOT set
+# WindowsAppSDKSelfContained=true (it's framework-dependent for both the MSI path with
+# chained WindowsAppRuntimeInstall.exe and the WAP / wapproj MSIX path which uses
+# WindowsAppSdkBootstrapInitialize=false to suppress bootstrap auto-init). This script,
+# however, builds a SELF-CONTAINED MSIX with the .pri merge below, so it needs the
+# publish output to include Microsoft.WindowsAppRuntime.pri, Microsoft.UI.pri,
+# Microsoft.UI.Xaml.Controls.pri, and the matching WinAppSDK DLLs.
+#
+# We pass -p:MorphicBuildSelfContained=true rather than -p:WindowsAppSDKSelfContained=true.
+# Morphic.csproj has a conditional that translates the Morphic-specific property into
+# WindowsAppSDKSelfContained=true (see Morphic\Morphic.csproj). The custom property name
+# is required because WindowsAppSDKSelfContained, when set globally on the dotnet publish
+# command line, propagates to library ProjectReferences (Morphic.Controls, etc.) and the
+# WindowsAppSDK targets there reject it with "WindowsAppSDKSelfContained should not be
+# applied to a class library." Routing through MorphicBuildSelfContained keeps the global
+# property name unrecognized by the library projects while still triggering the right
+# behavior in the app project.
+#
+# Skips the publish if Morphic.exe is already present in the publish dir AND the
+# framework .pri file is there (lets local devs re-run the script repeatedly without
+# re-publishing every time).
 $skipPublish = (Test-Path "$publishDir\Morphic.exe") -and (Test-Path "$publishDir\Microsoft.WindowsAppRuntime.pri")
 if (-not $skipPublish) {
     Write-Host "Publishing Morphic.csproj (Configuration=$Configuration Platform=$Platform RuntimeIdentifier=$rid self-contained) ..." -ForegroundColor Cyan
+    # -r $rid is required: self-contained publishes (WindowsAppSDKSelfContained=true via
+    # our MorphicBuildSelfContained translation) need an explicit RuntimeIdentifier so
+    # the publish knows which native CoreCLR / WinAppSDK arch to bundle. Without it, .NET
+    # SDK picks the first entry from Morphic.csproj's <RuntimeIdentifiers>win-x64;win-arm64</...>
+    # which is win-x64 -- and on an ARM64 build that mismatches PlatformTarget=arm64 with
+    # NETSDK1032 "The RuntimeIdentifier platform 'win-x64' and the PlatformTarget 'arm64'
+    # must be compatible." Passing -r $rid (win-x64 or win-arm64, derived from $Platform
+    # above) keeps the two in sync.
     & dotnet publish "$SourceDir\Morphic\Morphic.csproj" -c $Configuration -p:Platform=$Platform -r $rid -p:MorphicBuildSelfContained=true --nologo
     if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed with exit code $LASTEXITCODE" }
 }
@@ -113,6 +142,17 @@ $resourcesNode.AppendChild($resourceElem) | Out-Null
 
 $depsNode = $manifest.Package.Dependencies
 
+# Reset Dependencies' PackageDependency children. The wapproj template
+# (Package.appxmanifest) declares a Microsoft.WindowsAppRuntime.2 framework dep for the
+# wapproj's framework-dependent MSIX flow, but THIS script builds a SELF-CONTAINED MSIX
+# (all WinAppSDK DLLs deployed app-locally via the publish step above). Carrying the
+# framework dep into a self-contained MSIX produces duplicate copies of WinAppSDK at
+# runtime (one local, one from the framework package the OS would install to satisfy
+# the dep) -- the same root cause as the CoreMessagingXP fail-fast we hit during wapproj
+# F5 testing. Stripping the existing PackageDependency entries here and re-adding only
+# the VCLibs deps below keeps the script-built MSIX purely self-contained, matching the
+# pre-PackageDependency-addition behavior of the historically-working pipeline build.
+# TargetDeviceFamily nodes inside Dependencies are unaffected.
 $existingPackageDeps = @($depsNode.ChildNodes | Where-Object { $_.LocalName -eq 'PackageDependency' })
 foreach ($oldDep in $existingPackageDeps) {
     $depsNode.RemoveChild($oldDep) | Out-Null

@@ -256,6 +256,12 @@ internal class SettingItemProxy
 
             // STEP 3: make sure that the setting is still enabled (see notes on STEP 1), as a sanity check that our value is still good; note that this is not a failproof strategy.
             //
+            // We deliberately do NOT also require IsApplicable here. Some real settings keep
+            // IsApplicable==false permanently even when the value is fully readable (e.g. the
+            // Win10 SystemUsesLightTheme / AppsUseLightTheme dark-theme toggles). Gating the
+            // break on IsApplicable+IsEnabled spins the loop forever for those settings, since
+            // WaitForIsEnabledEventAsync returns immediately when IsEnabled is already true and
+            // each iteration succeeds at GetValue but then re-fails the sanity check.
             bool isEnabled;
             try
             {
@@ -380,6 +386,10 @@ internal class SettingItemProxy
             // further marshaling. Note: sbyte (Int8) has no PropertyValue factory because WinRT itself
             // doesn't define an Int8 primitive type; pass it as int (or accept whatever the projection
             // does) if a setting ever needs it.
+            //
+            // We do the wrap INSIDE the dispatcher delegate so the IPropertyValue itself is created on
+            // the STA worker thread, keeping every WinRT object touched by SetValue in a single
+            // apartment.
             SettingItemDispatcher.Run(() =>
             {
                 object winrtValue = value switch
@@ -741,16 +751,18 @@ internal class SettingItemProxy
 
     #region Event handlers
 
-    ///// <summary>
-    ///// Raised when the WinRT SettingItem's IsApplicable property changes. Handler callbacks run
-    ///// on a Task.Run-dispatched ThreadPool thread (NOT the UI thread).
-    ///// </summary>
-    ///// <exception cref="System.Exception">
-    ///// Subscribing or unsubscribing may throw (typically COMException) if the underlying WinRT
-    ///// SettingChanged += / -= call fails. On subscribe failure the user's handler is NOT added;
-    ///// on unsubscribe failure the user's handler IS removed but downstream WinRT cleanup may
-    ///// have failed. Callers must catch.
-    ///// </exception>
+    /// <summary>
+    /// Raised when the WinRT SettingItem's IsApplicable property changes. Handler callbacks run
+    /// on a Task.Run-dispatched ThreadPool thread (NOT the UI thread). The native SettingChanged
+    /// signal arrives on the SettingItemDispatcher's STA worker thread first and is fanned out
+    /// to subscribers from a single Task.Run for isolation.
+    /// </summary>
+    /// <exception cref="System.Exception">
+    /// Subscribing or unsubscribing may throw (typically COMException) if the underlying WinRT
+    /// SettingChanged += / -= call fails. On subscribe failure the user's handler is NOT added;
+    /// on unsubscribe failure the user's handler IS removed but downstream WinRT cleanup may
+    /// have failed. Callers must catch.
+    /// </exception>
     public event EventHandler IsApplicableChanged
     {
         add
@@ -777,8 +789,10 @@ internal class SettingItemProxy
     }
 
     /// <summary>
-    /// Raised when the WinRT SettingItem's IsEnabled property changes. Handler callbacks run on
-    /// a Task.Run-dispatched ThreadPool thread (NOT the UI thread).
+    /// Raised when the WinRT SettingItem's IsEnabled property changes. Handler callbacks run
+    /// on a Task.Run-dispatched ThreadPool thread (NOT the UI thread). The native
+    /// SettingChanged signal arrives on the SettingItemDispatcher's STA worker thread first
+    /// and is fanned out to subscribers from a single Task.Run for isolation.
     /// </summary>
     /// <exception cref="System.Exception">
     /// Subscribing or unsubscribing may throw (typically COMException) if the underlying WinRT
@@ -813,7 +827,9 @@ internal class SettingItemProxy
     //
     /// <summary>
     /// Raised when the WinRT SettingItem's Value changes. Handler callbacks run on a
-    /// Task.Run-dispatched ThreadPool thread (NOT the UI thread). The event carries no payload;
+    /// Task.Run-dispatched ThreadPool thread (NOT the UI thread). The native SettingChanged
+    /// signal arrives on the SettingItemDispatcher's STA worker thread first and is fanned out
+    /// to subscribers from a single Task.Run for isolation. The event carries no payload;
     /// subscribers should re-read the current value via GetValueAsync if needed.
     /// </summary>
     /// <exception cref="System.Exception">
@@ -875,6 +891,12 @@ internal class SettingItemProxy
 
     private void _settingItem_SettingChanged(object sender, string args)
     {
+        // We arrive here on the SettingItemDispatcher's STA worker thread (because the
+        // SettingChanged += registration happened there). Hand subscribers off to a single
+        // ThreadPool task so:
+        //   * we return quickly to the worker, freeing it for the next dispatched call
+        //   * subscribers run isolated from each other via per-handler try/catch
+        //   * we don't spawn N tasks per N subscribers per event raise (the previous shape)
         EventHandler? source = args switch
         {
             "IsApplicable" => _isApplicableChanged,
@@ -885,6 +907,9 @@ internal class SettingItemProxy
         SettingItemProxy.DispatchEventToSubscribers(source, sender);
     }
 
+    // Single ThreadPool task that fans out to every current subscriber of `source`, isolating
+    // each via try/catch so one throwing handler can't suppress the others or surface as an
+    // unobserved-task exception. No-ops if there are no subscribers.
     private static void DispatchEventToSubscribers(EventHandler? source, object sender)
     {
         var invocationList = source?.GetInvocationList();

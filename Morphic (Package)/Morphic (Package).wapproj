@@ -20,6 +20,13 @@
       <Configuration>Release</Configuration>
       <Platform>ARM64</Platform>
     </ProjectConfiguration>
+    <!-- *-Packaged ProjectConfigurations let the WAP project build at the same
+         Configuration name as the solution (Debug-Packaged / Release-Packaged from
+         Morphic.slnx). This is needed because the WAP's ProjectReference to Morphic.csproj
+         inherits the WAP's Configuration; for Morphic.csproj's
+         Configuration.EndsWith('-Packaged') conditional to fire (which sets
+         WindowsAppSDKSelfContained=true and suppresses bootstrap auto-init), the
+         Configuration string must travel through the WAP build unchanged. -->
     <ProjectConfiguration Include="Debug-Packaged|x64">
       <Configuration>Debug-Packaged</Configuration>
       <Platform>x64</Platform>
@@ -70,6 +77,12 @@
     <ProjectReference Include="..\Morphic\Morphic.csproj">
       <SkipGetTargetFrameworkProperties>True</SkipGetTargetFrameworkProperties>
       <PublishProfile>Properties\PublishProfiles\win-$(Platform).pubxml</PublishProfile>
+      <!-- Configuration propagation: the WAP's $(Configuration) (Debug-Packaged or
+           Release-Packaged when building the MSIX path via Morphic.slnx) is inherited by
+           this ProjectReference automatically. Morphic.csproj's
+           Configuration.EndsWith('-Packaged') conditional then fires and sets
+           WindowsAppSDKSelfContained=true. No AdditionalProperties needed; the
+           Configuration name itself carries the build-mode signal. -->
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

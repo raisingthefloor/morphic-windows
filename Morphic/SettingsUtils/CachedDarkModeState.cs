@@ -27,13 +27,62 @@ using System.Threading.Tasks;
 
 namespace Morphic.SettingsUtils;
 
+// EventArgs payload for CachedDarkModeState.StateChanged. Carries both the new IsDark and
+// IsHighContrast values as a snapshot, so a single fire covers any combination of state changes.
 public class CachedDarkModeStateChangedEventArgs(bool isDark, bool isHighContrast) : EventArgs
 {
+    // Whether the effective rendered theme is dark. See CachedDarkModeState for the precise
+    // semantic (registry-based when HC is off; foreground-luminance-based when HC is on).
     public bool IsDark { get; } = isDark;
 
+    // Whether high contrast is currently active. Exposed alongside IsDark because the two values
+    // are tracked from the same cache (and HC active is what determines how IsDark is computed).
+    // Consumers that want a "is the Dark button toggleable" boolean can simply use !IsHighContrast.
     public bool IsHighContrast { get; } = isHighContrast;
 }
 
+// Combines the regular (non-high-contrast) dark-mode state with high-contrast theme darkness
+// into two cached values: IsDark (the effective dark-or-light state) and IsHighContrast (whether
+// HC is currently on). The bar's Dark button consumes IsDark for IsChecked and !IsHighContrast
+// for IsEnabled; other consumers can use either independently.
+//
+// The two values are computed differently depending on whether high contrast is active:
+//
+//   * High contrast OFF (IsHighContrast = false):
+//       IsDark = AppsUseDarkMode OR SystemUsesDarkMode    (v1.x's "either is dark" semantic;
+//                                                          registry-backed user preference)
+//
+//   * High contrast ON  (IsHighContrast = true):
+//       IsDark = luminance of Win32 GetSysColor(COLOR_WINDOWTEXT) is light
+//                                                         (the system's text color under HC --
+//                                                          light text means a dark theme. We
+//                                                          use TEXT, not background, because
+//                                                          text colors are unambiguously near-
+//                                                          white or near-black in every HC
+//                                                          theme; saturated-color backgrounds
+//                                                          like Aquatic's teal can fool the
+//                                                          luminance threshold. WinRT UISettings.
+//                                                          GetColorValue would NOT work here:
+//                                                          it reports the user's regular light/
+//                                                          dark preference, not the HC theme's
+//                                                          colors. GetSysColor does.)
+//
+// Subscribes to all the change sources that can affect either value:
+//   * SystemSettingsListener.HighContrastChanged -- fires on ANY SPI_SETHIGHCONTRAST broadcast
+//                                                   (HC toggle AND HC theme-to-theme switch).
+//                                                   We use this rather than HighContrast.IsOnChanged
+//                                                   because the latter only fires on on/off
+//                                                   transitions and would miss e.g. Aquatic->Desert.
+//   * DarkMode.AppsUseDarkModeChanged             -- changes IsDark when HC is off.
+//   * DarkMode.SystemUsesDarkModeChanged          -- changes IsDark when HC is off.
+//
+// Lifecycle: lazy. First subscription wires all four sources and seeds the cache; last
+// unsubscribe tears down. The fire-rate is bounded by the dedupe -- one StateChanged event per
+// genuine transition regardless of how many underlying sources fired.
+//
+// Threading: handlers fire from a Task.Run dispatch (matching CachedDarkMode's prior shape) so
+// a slow/throwing handler doesn't block the next. UI subscribers must marshal back via their
+// dispatcher.
 public static class CachedDarkModeState
 {
     private static readonly object _lock = new();

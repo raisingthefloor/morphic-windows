@@ -25,10 +25,33 @@
   <Dependencies>
     <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.19041.0" MaxVersionTested="10.0.22621.0" />
     <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.19041.0" MaxVersionTested="10.0.22621.0" />
+    <!-- Windows App Runtime framework package. Required because Morphic uses WinUI 3 and
+         other WinAppSDK APIs. Identity (Name / Publisher / Version) matches the framework
+         MSIX shipped inside
+         microsoft.windowsappsdk.runtime/2.1.3/tools/MSIX/win10-*/Microsoft.WindowsAppRuntime.2.msix
+         (verified by extracting AppxManifest.xml from that MSIX). MinVersion follows the
+         versioning of that MSIX; bump in lockstep when bumping the WindowsAppSDK package. -->
     <PackageDependency
       Name="Microsoft.WindowsAppRuntime.2"
       MinVersion="2.1.3.0"
       Publisher="CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US" />
+    <!-- DO NOT add a PackageDependency on MicrosoftCorporationII.WinAppRuntime.Singleton
+         here. The MSIX manifest's PackageDependency element only accepts FRAMEWORK packages
+         (manifests with Framework=true in their Properties), and the Singleton is registered
+         as a Main package (Framework=false). Declaring it as a PackageDependency causes
+         deployment to fail at manifest validation time with DEP0700 ("framework could not
+         be found"); even when the Singleton is correctly installed on the machine, this is a
+         misleading error that points us toward a missing dependency when the actual problem
+         is the manifest schema. AppNotificationManager and PushNotificationManager find the
+         Singleton via the Framework runtime's runtime-discovery / IPC path, not via the
+         MSIX package graph; as long as WindowsAppRuntimeInstall.exe (which installs all
+         four packages: Framework + Main + Singleton + DDLM) has run on the target machine,
+         AppNotifications will work. For end-user MSIX installs we'd need to either ship via
+         Store (which auto-installs the entire runtime) or chain the runtime installer at
+         install time the same way MorphicSetup does for the MSI path. For now,
+         IsSupported() in ToastNotifications.Initialize handles the "Singleton not present"
+         case gracefully. -->
+    <!-- (Singleton PackageDependency intentionally omitted; see comment above.) -->
   </Dependencies>
 
   <Resources>
@@ -49,6 +72,33 @@
         <uap:SplashScreen Image="Images\SplashScreen.png" />
       </uap:VisualElements>
       <Extensions>
+        <!-- COM activator for Microsoft.Windows.AppNotifications (and PushNotifications).
+             When running packaged, AppNotificationManager.Default.Register() resolves the
+             activator declaration by matching this AUMID + finding an ExeServer whose
+             Arguments attribute is the documented four-dash AppNotificationActivated prefix
+             (see the ExeServer element below for the literal value). Without this extension,
+             packaged Morphic gets "No COM servers are registered for this app" (HRESULT
+             0x80004005) on Register() and toasts silently never fire (our IsSupported and
+             try-catch in ToastNotifications.Initialize handle the failure gracefully so the
+             app still starts).
+
+             Notes on each piece:
+               * Executable="Morphic.exe" matches the main app's executable name. When a
+                 toast is clicked (or the user hits an actionable button), the Shell launches
+                 this EXE with the AppNotificationActivated arguments; our existing single-
+                 instance app picks that up via AppNotificationManager.Default's
+                 NotificationInvoked event.
+               * Arguments on the ExeServer below uses the documented four-dash
+                 AppNotificationActivated prefix (literal value as the runtime parses it
+                 strictly; do not change or extend).
+               * The Class Id GUID is a Morphic-specific CLSID for the COM activator object
+                 the runtime registers under our identity. Stable across Morphic releases
+                 (don't rotate); changing it invalidates existing notification registrations
+                 for installed copies of Morphic.
+             Unpackaged builds don't use this extension (they have no manifest at all in the
+             AppX sense); Register() in unpackaged mode wires up a dynamic activator via
+             SetCurrentProcessExplicitAppUserModelID + ShellExecute fallback path, which is
+             why AppNotifications already works in our MSI path without manifest changes. -->
         <com:Extension Category="windows.comServer">
           <com:ComServer>
             <com:ExeServer Executable="Morphic.exe" DisplayName="Morphic Notifications" Arguments="----AppNotificationActivated:">

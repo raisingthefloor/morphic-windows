@@ -45,5 +45,14 @@ public interface IBarItemControl
     // the requested orientation would arrange children, not as the current Orientation does.
     Windows.Foundation.Size MeasureForOrientation(Windows.Foundation.Size availableSize, Orientation orientation);
 
+    // Re-asserts the compound visual state of this item's button(s) onto the visual-state machine.
+    // The MorphicBar calls this on every item after AppWindow.Show (see
+    // MorphicBarWindow.RefreshAllButtonCompoundStatesAfterShow): the show transition's layout pass
+    // and the synthetic pointer events it triggers can make WinUI's built-in ButtonBase state
+    // machine stomp our custom "InProgress" override, so each item re-asserts its own buttons here.
+    //
+    // The bar invokes this from inside a DispatcherQueue.TryEnqueue continuation (already deferred
+    // past the layout pass), so implementations must re-assert SYNCHRONOUSLY rather than scheduling
+    // their own deferral. A no-op for items that have no compound-state buttons (or none built yet).
     void RefreshButtonCompoundStates();
 }

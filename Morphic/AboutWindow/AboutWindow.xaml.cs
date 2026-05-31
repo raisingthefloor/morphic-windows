@@ -60,6 +60,13 @@ public sealed partial class AboutWindow : Morphic.Controls.Theme.ThemeAwareBaseW
         base.ThemeChanged += AboutWindow_ThemeChanged;
 
         // resize and recenter window
+        //
+        // Design size is expressed in DIPs (effective pixels). The previous version
+        // hardcoded physical-pixel constants (450 x 420) that happened to look right at
+        // 150% scaling because at that DPI those physical pixels match a design footprint
+        // of 300 x 280 DIPs. Multiplying the DIP-design size by the window's current monitor 
+        // DPI here makes the AppWindow's physical size scale in lockstep with the XAML content, 
+        // so the window fits the content at any DPI.
         const int designWidthDips = 308;
         const int designHeightDips = 280;
         //

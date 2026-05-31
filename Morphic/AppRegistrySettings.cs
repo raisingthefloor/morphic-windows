@@ -25,6 +25,26 @@ using System;
 
 namespace Morphic;
 
+// Persists the MorphicBar's visibility + docking location to the v1.x-compatible registry key
+// (HKCU\Software\Raising the Floor\Morphic) and keeps the bar and the registry in two-way sync:
+//   * bar -> registry: the user shows/hides or re-docks the bar -> the new value is written.
+//   * registry -> bar: an external editor (a script, reg.exe, the v1.x app) changes a value -> the
+//     bar is updated live (a docking change animates; a visibility change shows/hides).
+//
+// Loop-break: a cache of the last-synced values is the consensus between the two sides. Before any
+// handler propagates a change to the OTHER side it updates the cache first; the echo that comes
+// back from the other side then sees "new == cache" and stops. All state is confined to the bar's
+// UI thread (the registry watcher's ThreadPool callback marshals onto the DispatcherQueue), so the
+// cache needs no lock.
+//
+// Lifecycle:
+//   * Load() reads (and first-run seeds) the persisted values up front so the caller can use them
+//     to position + show the bar during startup.
+//   * StartSync() begins two-way sync; call it AFTER the bar is in its restored state so the
+//     initial application doesn't round-trip through the registry.
+//   * PersistFinalState() writes the bar's final state at shutdown (belt-and-suspenders: also
+//     re-creates the key if an external editor deleted it -- see ApplyRegistryToBar).
+//   * Dispose() detaches the watcher + bar subscriptions.
 internal sealed class AppRegistrySettings : IDisposable
 {
     private const string MORPHIC_SUBKEY_PATH = "Software\\Raising the Floor\\Morphic";
@@ -36,9 +56,14 @@ internal sealed class AppRegistrySettings : IDisposable
     private const Morphic.MorphicBar.DockingLocation DEFAULT_DOCKING_LOCATION = Morphic.MorphicBar.DockingLocation.FloatingBottomTrailing;
     private const Microsoft.UI.Xaml.Controls.Orientation DEFAULT_ORIENTATION = Microsoft.UI.Xaml.Controls.Orientation.Horizontal;
 
+    // The MorphicBarOrientation registry value uses an EXPLICIT 0/1 convention (0 = horizontal,
+    // 1 = vertical) that we map by hand (ReadOrientation / WriteOrientation). We deliberately do NOT
+    // cast the WinUI Orientation enum to/from int, because that enum's intrinsic values are the
+    // REVERSE of this convention (Microsoft.UI.Xaml.Controls.Orientation.Vertical = 0, Horizontal = 1).
     private const int ORIENTATION_REG_HORIZONTAL = 0;
     private const int ORIENTATION_REG_VERTICAL = 1;
 
+    // Consensus between bar and registry; UI-thread confined (see class remarks), so no lock.
     private bool _cachedIsVisible;
     private Morphic.MorphicBar.DockingLocation _cachedDockingLocation;
     private Microsoft.UI.Xaml.Controls.Orientation _cachedOrientation;
@@ -90,6 +115,8 @@ internal sealed class AppRegistrySettings : IDisposable
             orientation ?? DEFAULT_ORIENTATION);
     }
 
+    // Begins two-way sync. Call AFTER the bar has been positioned + shown/hidden to the loaded
+    // state, so the initial application doesn't round-trip through the registry. Idempotent-guarded.
     public void StartSync(Morphic.MorphicBar.MorphicBarManager barManager, Microsoft.UI.Dispatching.DispatcherQueue dispatcherQueue)
     {
         if (_syncStarted == true)
@@ -146,7 +173,8 @@ internal sealed class AppRegistrySettings : IDisposable
         // Compare by physical (absolute) position: the bar may report a dock in a different
         // representation (logical vs physical) than the cached one yet mean the SAME corner/edge --
         // e.g. FloatingBottomTrailing(3) and FloatingBottomRight(7) in LTR. A raw enum compare would
-        // treat that as a change and write a redundant value.
+        // treat that as a change and write a redundant value. (_barManager is non-null while this
+        // handler is subscribed; the null-coalesce is purely defensive.)
         var isRightToLeft = _barManager?.IsRightToLeft ?? false;
         if (AppRegistrySettings.AreSamePhysicalDockingLocation(dockingLocation, _cachedDockingLocation, isRightToLeft) == true)
         {
@@ -156,6 +184,9 @@ internal sealed class AppRegistrySettings : IDisposable
         AppRegistrySettings.WriteDockingLocation(dockingLocation);
     }
 
+    // bar -> registry (UI thread): the user flipped the bar's orientation (companion to
+    // OnBarDockingLocationChanged; orientation + docking are a persisted pair, but each is written
+    // independently with its own loop-break check).
     private void OnBarOrientationChanged(object? sender, Microsoft.UI.Xaml.Controls.Orientation orientation)
     {
         if (_disposed == true)
@@ -229,6 +260,9 @@ internal sealed class AppRegistrySettings : IDisposable
         // animated move so an external change to either (or both) results in one smooth animation
         // (the same AnimateMoveTo path the user's own drag/flip travels). Update BOTH caches BEFORE
         // the move so the OrientationChanged + DockingLocationChanged echoes both loop-break here.
+        // Compare docking by physical (absolute) position so an external write of the physically
+        // equivalent dock in a different representation (e.g. FloatingBottomRight(7) when the cache
+        // holds FloatingBottomTrailing(3) in LTR) does NOT trigger a redundant re-dock animation.
         var dockingLocationChanged = AppRegistrySettings.AreSamePhysicalDockingLocation(targetDockingLocation, _cachedDockingLocation, _barManager.IsRightToLeft) == false;
         if (targetOrientation != _cachedOrientation || dockingLocationChanged == true)
         {
@@ -238,11 +272,17 @@ internal sealed class AppRegistrySettings : IDisposable
         }
     }
 
+    // Writes the bar's final visibility + docking location + orientation to the registry. Called
+    // once during app shutdown so the latest state is persisted even if an external editor had
+    // deleted the key (which we deliberately leave alone at runtime) or a runtime write had failed.
     public void PersistFinalState()
     {
         AppRegistrySettings.WriteValues(_cachedIsVisible, _cachedDockingLocation, _cachedOrientation);
     }
 
+    // True when two docking locations resolve to the SAME physical (absolute) position, regardless of
+    // whether either is expressed logically (flow-relative) or physically. Used by the bar<->registry
+    // loop-break so a representation-only difference (the same corner/edge) is not mistaken for a move.
     private static bool AreSamePhysicalDockingLocation(Morphic.MorphicBar.DockingLocation first, Morphic.MorphicBar.DockingLocation second, bool isRightToLeft)
     {
         return Morphic.MorphicBar.DockingLocationExtensions.ToPhysicalDockingLocation(first, isRightToLeft)
@@ -271,6 +311,8 @@ internal sealed class AppRegistrySettings : IDisposable
         return (Morphic.MorphicBar.DockingLocation)raw.Value;
     }
 
+    // Maps the explicit 0/1 registry convention (0 = horizontal, 1 = vertical) to the WinUI enum by
+    // hand; see the ORIENTATION_REG_* remarks for why we never cast across this boundary.
     private static Microsoft.UI.Xaml.Controls.Orientation? ReadOrientation()
     {
         var raw = AppRegistrySettings.ReadDwordValue(ORIENTATION_VALUE_NAME);

@@ -27,6 +27,62 @@
 
     <MediaTemplate EmbedCab="yes" />
 
+    <!-- Chain WindowsAppRuntimeInstall.exe during install so the Windows App Runtime MSIX
+         packages (Framework, Main, Singleton, DDLM) are registered with the OS before
+         Morphic first launches. Morphic is framework-dependent on the Windows App Runtime;
+         in particular AppNotificationManager has a hard runtime dependency on the
+         Singleton package, which cannot be satisfied by any app-local files (see
+         Microsoft's self-contained deployment doc). The installer EXE is itself installed
+         into INSTALLFOLDER\prerequisites\ by WindowsAppRuntimeInstallerComponent below, so
+         by the time these custom actions fire (after InstallFiles), it's on disk and
+         runnable.
+
+         We run it via util:WixQuietExec64 rather than a plain FileRef-based CustomAction
+         because the FileRef variant creates the child process with a normal console window
+         (briefly visible during MSI install; the simple quiet-mode CLI argument suppresses
+         the installer's own UI but not the console host that wraps the process).
+         WixQuietExec64 creates the process with CREATE_NO_WINDOW so no console flashes on
+         screen, AND it captures stdout/stderr into the MSI install log for debugging if
+         the chained install ever fails.
+
+         TWO-CA pattern (Morphic is installed for all users into Program Files, so we need
+         the runtime registered for all users too, including the one currently running the
+         installer):
+
+           1. RunWindowsAppRuntimeInstallerForAllUsers (deferred, Impersonate="no") runs
+              the EXE as NT AUTHORITY\SYSTEM. MSIX deployment in the SYSTEM context calls
+              ProvisionPackageForAllUsersAsync, which STAGES the packages on disk and
+              PROVISIONS them for all users, but registration into each user profile is
+              deferred until that user's next logon. So this CA succeeds quickly (~2s
+              because the SYSTEM context already had the packages from prior installs in
+              our dev cycle) and makes the runtime available to all future logins as well
+              as any existing users on next logon, but the CURRENTLY-logged-in user's
+              session has no registered packages yet.
+           2. RunWindowsAppRuntimeInstallerForCurrentUser (deferred, Impersonate="yes")
+              runs the EXE as the logged-in user (with elevation inherited from the MSI's
+              UAC consent). MSIX deployment in user context finishes the deferred
+              registration immediately for that user, so Morphic.exe launched right after
+              the installer finds the runtime ready in their session.
+
+         The two CAs run the same EXE with the same arguments; what differs is impersonation.
+         The user-context invocation is cheap because the SYSTEM action already staged the
+         packages: it's effectively a per-user link/register step.
+
+         Pattern detail (for each CA): A "Set..." immediate CA writes the full command line
+         into a property whose name matches the deferred CA; MSI passes that property
+         value through to the deferred CA as its CustomActionData. The deferred CA reads
+         CustomActionData and runs WixQuietExec64. [#WindowsAppRuntimeInstall_exe] is the
+         WiX install-time path-of-file token; it resolves to the full installed path of
+         WindowsAppRuntimeInstall.exe in INSTALLFOLDER\prerequisites\ at install time.
+
+         Return="ignore" on both deferred CAs means a runtime-install failure (network
+         hiccup, partial machine state, etc.) does NOT abort the Morphic install: the app
+         still installs and starts, AppNotificationManager.IsSupported() returns false at
+         runtime, and ToastNotifications.Initialize silently skips registration. Failing
+         the whole install over a non-critical sub-installer would be worse UX than
+         degrading the toast feature. Condition NOT REMOVE skips both CAs on uninstall
+         (the file is being removed anyway, and we don't want to touch the system Windows
+         App Runtime when the user uninstalls Morphic). -->
     <CustomAction
         Id="SetRunWindowsAppRuntimeInstallerForAllUsers"
         Property="RunWindowsAppRuntimeInstallerForAllUsers"
@@ -55,6 +111,30 @@
         Return="ignore"
         Impersonate="yes" />
 
+    <!-- Run `Morphic.NotificationHelper.exe` with the unregister flag during uninstall to
+         remove the COM activator's HKCU registrations. The helper's Unregister() call cleans BOTH
+         the AppUserModelId\<aumid>\Activator tree AND the matching CLSID\{generated}\
+         LocalServer32 tree (the latter we cannot pre-create in WiX because the CLSID is
+         SDK-generated and not known at install time).
+
+         Mirrors the SetRunWindowsAppRuntimeInstallerFor*** /
+         RunWindowsAppRuntimeInstallerFor*** pattern above: an immediate CA stages the
+         command line into a property whose name matches the deferred CA, then the
+         deferred WixQuietExec64 CA reads the property as CustomActionData and runs the
+         EXE with CREATE_NO_WINDOW (no console flash visible during uninstall).
+
+         Impersonate="yes" because the registry writes we're cleaning are in HKCU and
+         we need to clean the CURRENT USER's HKCU, not the elevated install context's
+         HKCU. Limitation: this only cleans the uninstalling user's keys; if other
+         users on the machine had also run Morphic and their HKCU still has stale
+         registration, those orphans remain (matches the standard MSI per-user-component
+         limitation for any HKCU state).
+
+         Sequenced BEFORE RemoveFiles so the helper exe still exists on disk when called.
+         Return="ignore" so a stale helper or transient failure does not block the
+         uninstall; the AUMID-side registry key is also marked ForceDeleteOnUninstall via
+         NotificationHelperAumidRegistryComponent as a backstop covering the most
+         user-visible orphan if the CA fails. -->
     <CustomAction
         Id="SetUnregisterNotificationHelper"
         Property="UnregisterNotificationHelper"
@@ -69,8 +149,31 @@
         Return="ignore"
         Impersonate="yes" />
 
+    <!-- DTF-wrapped managed CA assembly produced by the MorphicSetup.Actions project.
+         The $(var.MorphicSetup.Actions.TargetDir) preprocessor variable is auto-set by
+         WiX from the <ProjectReference> in MorphicSetup.wixproj and points at that
+         project's $(OutputPath) (i.e., bin/$(Configuration)/), where MorphicSetup.Actions
+         copies the .CA.dll via its CopyManagedCustomActionToOutputPath target. The
+         architecture-specific SfxCA stub is selected at build time inside the CA
+         project based on $(Platform), so this single Binary reference works for both
+         x64 and ARM64 builds without further switching. -->
     <Binary Id="MorphicSetupActionsCA" SourceFile="$(var.MorphicSetup.Actions.TargetDir)MorphicSetup.Actions.CA.dll" />
 
+    <!-- ReadWindowsUbr populates the WINDOWSUBR MSI property so the launch condition
+         can do a numeric >= 6456 check against it. Must run AFTER AppSearch (so
+         WINDOWSBUILDNUMBER is also populated for the surrounding launch condition
+         clauses) and BEFORE LaunchConditions. Scheduled in both InstallUISequence
+         (interactive installs) and InstallExecuteSequence (silent installs).
+
+         Impersonate="no": when this CA runs in InstallExecuteSequence on the server
+         side, it executes in the elevated MSI service's process tree. The default
+         (Impersonate="yes") spawns the SfxCA host as a token-restricted impersonation
+         of the invoking user, and SfxCA then tries to extract its embedded assembly
+         payload to a temp directory it doesn't have write access to, failing with
+         error 5 (ACCESS_DENIED). Running as LocalSystem instead gives the CA host
+         unambiguous access to SYSTEM's temp dir; reading HKLM (where UBR lives) and
+         writing an MSI property both work fine from SYSTEM context, so the change
+         has no other behavioral implications. -->
     <CustomAction Id="ReadWindowsUbr"
                   BinaryRef="MorphicSetupActionsCA"
                   DllEntry="ReadWindowsUbr"
@@ -79,17 +182,57 @@
                   Return="check" />
 
     <InstallUISequence>
+      <!-- NOT Installed: only run during fresh install. Skipping for uninstall, repair,
+           and modify, where the launch condition is also bypassed (see <Launch>) and the
+           CA has no useful work to do. Without this gate the CA fires during uninstall
+           too, and SfxCA's temp-directory extraction fails on the server-side maintenance
+           context (basic UI uninstall runs the entire sequence on the server, with no
+           preceding client UI run to provide a user-temp path the SfxCA stub can use). -->
       <Custom Action="ReadWindowsUbr" After="AppSearch" Condition="NOT Installed" />
     </InstallUISequence>
 
     <InstallExecuteSequence>
+      <!-- Condition has two parts ANDed together:
+             1. NOT Installed: skip during uninstall, repair, and modify; the launch
+                condition is also bypassed in those scenarios (see <Launch>) so there
+                is no UBR check to support. The basic-UI uninstall path runs entirely
+                on the server, and an immediate impersonated CA there hits a SfxCA
+                temp-directory extraction failure (error 5 / ACCESS_DENIED) before our
+                code runs (a real install log captured this exact failure), so we
+                must not let the CA fire during maintenance ops at all.
+             2. WINDOWSUBR="0": only run the CA server-side if WINDOWSUBR is still at
+                the default value defined on the <Property> above. In an interactive
+                fresh install the InstallUISequence ran the CA on the client side and
+                the value transferred across via Secure="yes"; running it again on the
+                server is pure overhead. In a silent fresh install the UI sequence was
+                skipped, so WINDOWSUBR is still "0" and the CA needs to run here. -->
       <Custom Action="ReadWindowsUbr" After="AppSearch" Condition="NOT Installed AND WINDOWSUBR=&quot;0&quot;" />
+      <!-- SYSTEM-context provisioning first (stages packages for all users), then
+           user-context registration (makes the runtime active for the current session
+           immediately so Morphic.exe finds it on first launch). See the comment block on
+           the CustomActions above for the full rationale. -->
       <Custom Action="SetRunWindowsAppRuntimeInstallerForAllUsers" Before="RunWindowsAppRuntimeInstallerForAllUsers" Condition="NOT REMOVE" />
       <Custom Action="RunWindowsAppRuntimeInstallerForAllUsers" After="InstallFiles" Condition="NOT REMOVE" />
       <Custom Action="SetRunWindowsAppRuntimeInstallerForCurrentUser" Before="RunWindowsAppRuntimeInstallerForCurrentUser" Condition="NOT REMOVE" />
       <Custom Action="RunWindowsAppRuntimeInstallerForCurrentUser" After="RunWindowsAppRuntimeInstallerForAllUsers" Condition="NOT REMOVE" />
+      <!-- Condition: REMOVE="ALL" fires only on pure uninstall (not upgrade-driven
+           removes of the old product, which are handled by NOT UPGRADINGPRODUCTCODE).
+           During an upgrade we DON'T want to unregister, because the old product's
+           uninstall and the new product's install both touch the same HKCU keys and
+           the new install's Register call would set them up again immediately; an
+           intervening unregister just creates a brief race window. On pure uninstall,
+           unregister is exactly what we want. -->
       <Custom Action="SetUnregisterNotificationHelper" Before="UnregisterNotificationHelper" Condition="REMOVE=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" />
       <Custom Action="UnregisterNotificationHelper" Before="RemoveFiles" Condition="REMOVE=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" />
+      <!-- Launch Morphic.exe after the install is fully committed. Matches 1.x's
+           "After InstallFinalize" placement. Conditions: fresh install only (not
+           repair, uninstall, or upgrade-removal); MORPHIC_LAUNCH_AFTER_INSTALL
+           public property is enabled (IT admin override); LogonUser is populated
+           (rules out completely user-less SYSTEM contexts where the
+           Impersonate=yes CA has no user session to spawn into); LogonUser is
+           not literally "SYSTEM" (the common SCCM/MDM identity). See the
+           CustomAction's comment block above for the full rationale and the matrix
+           of which install scenarios fire vs skip. -->
       <Custom Action="LaunchMorphicAfterInstall"
               After="InstallFinalize"
               Condition="NOT Installed AND MORPHIC_LAUNCH_AFTER_INSTALL=&quot;1&quot; AND LogonUser AND LogonUser &lt;&gt; &quot;SYSTEM&quot;" />
@@ -108,6 +251,13 @@
 
     <UIRef Id="WixUI_ErrorProgressText" />
 
+    <!-- ProgressText writes to the MSI ActionText table; the installer's progress dialog
+         shows this string while the matching custom action is running. Without these, the
+         dialog's "Action:" line would just show the raw CustomAction Id (e.g.
+         "RunWindowsAppRuntimeInstallerForAllUsers") for ~30 seconds while the chained
+         installer silently runs, making the user think the install hung. With these, the
+         user sees a human-readable description and knows the install is still progressing.
+         [actually, MSI installer exe seems to normally give a generic message] -->
     <UI>
       <ProgressText Action="RunWindowsAppRuntimeInstallerForAllUsers" Message="Installing the Windows App Runtime (this may take a moment)..." />
       <ProgressText Action="RunWindowsAppRuntimeInstallerForCurrentUser" Message="Registering the Windows App Runtime for your account..." />
@@ -118,17 +268,193 @@
       <RegistrySearch Id="BuildNumberSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="CurrentBuildNumber" Type="raw" />
     </Property>
 
+    <!-- UBR (Update Build Revision) is the 4th component of the full Windows build
+         number string "10.0.19045.NNNN", stored in HKLM\SOFTWARE\Microsoft\Windows NT\
+         CurrentVersion\UBR as a REG_DWORD.
+
+         We previously used the built-in <RegistrySearch Type="raw"> here, which is
+         supposed to produce a "#NNNN" integer-tagged property for REG_DWORD values
+         per the MSI/WiX docs. Verbose install logs from real machines showed that
+         search silently failing to populate the property at all (no PROPERTY CHANGE
+         line, property absent from the final property dump) on both Win10 22H2 and
+         Win11 24H2 builds. The launch condition then fell through with WINDOWSUBR
+         unset, blocking installs on Win10 22H2 even at the latest-free-update level.
+
+         The ReadWindowsUbr custom action below (in MorphicSetup.Actions) reads UBR
+         via .NET's Microsoft.Win32.Registry and writes the property explicitly as a
+         plain decimal string (NOT the documented "#NNNN" integer-tagged form). A real
+         Win10 22H2 install proved that engine's condition evaluator does NOT honor
+         the "#" prefix integer convention: "#6456" >= 6456 evaluated as a string
+         vs. integer-literal mismatch and the install was blocked even at the UBR
+         floor. Storing the property as plain "NNNN" lets the launch condition do a
+         string-vs-string comparison against a quoted literal "6456"; lexicographic
+         comparison lines up with numeric order for the values that matter (Win10
+         22H2 free-channel UBRs are all 4 digits and capped at 6456 since Microsoft
+         ended free updates to that OS line).
+
+         The default Value="0" ensures the property is always defined; if the CA
+         doesn't run (some MSI internal failure before AppSearch), the launch
+         condition's "WINDOWSUBR >= '6456'" clause fails closed rather than producing
+         an MSI evaluation error. -->
     <Property Id="WINDOWSUBR" Secure="yes" Value="0" />
 
+    <!-- Launch condition. The OS floor is driven by .NET 10's CoreCLR requiring OS
+         exports/behaviors that Microsoft added across cumulative updates between
+         Win10 22H2's original release (UBR 2006, Oct 2022) and the final free Win10
+         22H2 update (UBR 6456, Oct 2025). On an under-patched Win10 22H2, Morphic
+         crashes during CLR EE startup with 0x80131506 BEFORE any managed code runs
+         (no remediation possible from our side; the OS must provide what the CLR
+         expects).
+
+         Accepted versions:
+           1. Win11 (build > 19045): all current builds satisfy .NET 10 requirements.
+           2. Win10 22H2 (build = 19045) at UBR >= 6456: the final free Win10 22H2
+              update. Anyone on the free-update channel can be at this level.
+         Anything else is blocked with a clear "run Windows Update" message.
+
+         The 6456 floor is the safest defensible choice (last free Win10 22H2
+         servicing release) but it MIGHT be safe to lower. Empirically we have also
+         confirmed Morphic launches cleanly on Win10 22H2 at UBR 4780 (August 2024
+         cumulative). We chose 6456 to align with the "fully-patched-on-the-free-tier"
+         user story rather than reflect the strict technical minimum. If we later get
+         a customer report that their fully-up-to-date-as-of-some-earlier-date Win10
+         22H2 install (e.g., UBR somewhere between 4780 and 6456) is now blocked,
+         consider lowering this floor to 4780 (or to a value bisected between 2006
+         fail and 4780 pass if even finer-grained inclusion matters). The error
+         message also needs updating to match any change. -->
+    <!-- Note the quoting on the WINDOWSBUILDNUMBER comparisons: WINDOWSBUILDNUMBER is
+         populated from the REG_SZ CurrentBuildNumber, so it lands in the MSI property
+         table as a string ("19045", "26200", etc.). Per MSI's documented conditional
+         statement syntax, comparing a string property to an unquoted integer literal
+         is supposed to return FALSE; in practice newer Windows 11 MSI engines do an
+         implicit numeric conversion and accept it, but Win10 22H2's MSI engine
+         enforces the documented behavior strictly and rejects the comparison. Quoting
+         "19045" makes both sides strings and gets lexicographic comparison, which
+         matches numeric order for all current and foreseeable Windows build numbers
+         (they're all 5 digits starting with a digit >= 1: 19045 / 22000 / 22631 /
+         26100 / 26200, etc.).
+
+         WINDOWSUBR uses a quoted string literal "6456" for the same reason: the CA
+         writes the property as a plain decimal string (see the comment on the
+         WINDOWSUBR <Property> above for why the "#" integer-tag form was abandoned).
+         Lexicographic comparison of 4-digit UBR strings matches numeric order across
+         the only range we care about (Win10 22H2 free-channel UBRs all 4 digits and
+         capped at 6456).
+
+         "Installed OR" prefix: skip the entire OS-version gate when the product is
+         already installed, i.e., we're in any maintenance operation (uninstall,
+         repair, modify). Without it, uninstall on a system where the CA didn't run
+         (the CA itself is gated on NOT Installed) sees WINDOWSUBR at its default "0"
+         and the launch condition would block the uninstall with a "min OS" message
+         the user can't act on. Fresh install still goes through the OS check because
+         Installed is empty on first install. Major-upgrade re-install also still
+         goes through it because the new product has a fresh ProductCode and is not
+         Installed in its own session. -->
     <Launch Condition="Installed OR (WINDOWSBUILDNUMBER &gt; &quot;19045&quot;) OR (WINDOWSBUILDNUMBER = &quot;19045&quot; AND WINDOWSUBR &gt;= &quot;6456&quot;)" Message="!(loc.MinimumOsError)" />
 
+    <!-- Public MSI property that gates the ActiveSetupForRuntimeRegistrationComponent
+         install. Default is "1" (Active Setup enabled), which is the right behavior for
+         end-user installs because it ensures the Windows App Runtime Framework is
+         registered into every new user's profile at first logon (see the component's
+         comment for the full rationale).
+
+         Enterprise IT admins who manage WinAppRuntime deployment through their own
+         mechanism (SCCM, GPO, Intune, custom Active Setup at the OU level, packaged
+         runtime install via MDM, etc.) can suppress Morphic's Active Setup registration
+         at install time by passing the property explicitly:
+             msiexec /i MorphicSetup.msi MORPHIC_ACTIVE_SETUP=0 /qn
+         When set to anything other than "1", the Active Setup component is skipped;
+         Morphic's existing per-user CA still registers the runtime for the installing
+         user (so single-user deployments still work), but no per-user re-execution at
+         future logons happens.
+
+         Secure="yes" because this is a public property: enterprise installers commonly
+         run msiexec from non-interactive contexts (Group Policy, MDM), and the secure
+         attribute is required for public-prefix properties to be honored across the
+         elevated client-server boundary inside MSI. -->
     <Property Id="MORPHIC_ACTIVE_SETUP" Value="1" Secure="yes" />
 
+    <!-- Public MSI property that gates the post-install LaunchMorphicAfterInstall
+         custom action. Default is "1" (Morphic launches after install completes when
+         it is safe to do so; see the CustomAction's full condition for what "safe"
+         means; short version: there's a real logged-in user, not the SYSTEM account
+         that SCCM/MDM uses for unattended deploys).
+
+         Enterprise IT admins running silent installs in user-context contexts who
+         STILL don't want the post-install launch (e.g., they want to control launch
+         timing themselves) pass this explicitly:
+             msiexec /i MorphicSetup.msi MORPHIC_LAUNCH_AFTER_INSTALL=0 /qn
+
+         When set to anything other than "1", the post-install launch is skipped. The
+         autostart Run key (governed separately by MORPHIC_AUTOSTART) is unaffected;
+         Morphic will still auto-start at the user's NEXT logon unless that property
+         is also overridden.
+
+         Secure="yes" for the same reason as MORPHIC_ACTIVE_SETUP above. -->
     <Property Id="MORPHIC_LAUNCH_AFTER_INSTALL" Value="1" Secure="yes" />
 
+    <!-- Public MSI property that gates the AutoStartRunKeyComponent. Default is "1"
+         (Morphic auto-starts at every user logon). When set to anything other than "1",
+         the HKLM Run key is not written and Morphic only launches when the user
+         explicitly clicks the Start Menu shortcut.
+
+         Enterprise IT admins who want to suppress the auto-start (kiosks, lab machines,
+         deployments where Morphic should be launched on demand only) pass it explicitly:
+             msiexec /i MorphicSetup.msi MORPHIC_AUTOSTART=0 /qn
+
+         Per-user enable/disable AFTER install is handled separately via Windows'
+         Task Manager Startup tab (which writes to
+         HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run);
+         this property only governs whether the HKLM Run entry exists in the first place.
+
+         Secure="yes" for the same reason as MORPHIC_ACTIVE_SETUP above. -->
     <Property Id="MORPHIC_AUTOSTART" Value="1" Secure="yes" />
 
+    <!-- Post-install launch: runs Morphic.exe in InstallExecuteSequence after
+         InstallFinalize. Conditions are designed to distinguish "a real user
+         triggered this install" (fire the launch) from "this is an unattended
+         backend deploy" (skip the launch).
+
+         The naive condition would be UILevel >= 5 (interactive UI only), but that
+         excludes silent installs done by real users; e.g., winget runs MSIs at
+         UILevel = 2 (silent) but in the user's logged-in session; the Microsoft
+         Store likewise runs in user context with no MSI UI; these absolutely
+         should launch Morphic when their installs finish (the user clicked
+         "install" and expects Morphic to start). Gating on UILevel alone would
+         break those cases.
+
+         The right discriminator is LogonUser. MSI populates it with the username
+         of the account that initiated the install:
+           * winget: user's account (fires the launch; desired)
+           * Microsoft Store: user's account (fires; desired)
+           * Admin running msiexec /qn from their elevated shell: their account (fires)
+           * Interactive end-user installer GUI: user's account (fires)
+           * SCCM/Intune/MDM in SYSTEM context: "SYSTEM" or empty (skips; desired)
+         The condition checks LogonUser is non-empty AND not "SYSTEM"; that
+         captures every real-user install path including silent ones.
+
+         There's also the MORPHIC_LAUNCH_AFTER_INSTALL public property (default 1)
+         as an explicit override: IT admins running silent installs in user-context
+         scenarios who want to suppress the launch anyway can pass
+         MORPHIC_LAUNCH_AFTER_INSTALL=0 on the msiexec command line.
+
+         Note the launch target has NO CLI flag (no run-after-login): the post-install
+         launch is conceptually "user just installed me and wants to see me," which is
+         the "manual launch, force-show the bar" path. The autostart Run key (above) is
+         the only place run-after-login is set, distinguishing OS-launched from
+         user-launched in the running app.
+
+         Impersonate="yes" because Morphic must launch in the installing user's session
+         with their token, not as SYSTEM. WixShellExec spawns the target via
+         ShellExecute and returns quickly (Morphic does its own init in the background
+         after spawn), so the installer doesn't perceptibly stall waiting on us. -->
     <Property Id="WixShellExecTarget" Value="[#morphic_exe]" />
+    <!-- BinaryRef uses $(sys.BUILDARCHSHORT) so the same wxs picks the architecture-
+         matching WiX util CA DLL at build time: x64 builds get Wix4UtilCA_X64, ARM64
+         builds get Wix4UtilCA_A64, x86 builds get Wix4UtilCA_X86. Hardcoding the X64
+         variant breaks ARM64 installs with error 1723 / ERROR_DLL_NOT_FOUND (1157)
+         because the MSI server can't load the x64 CA DLL into the native ARM64 server
+         process. -->
     <CustomAction Id="LaunchMorphicAfterInstall"
                   BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)"
                   DllEntry="WixShellExec"
@@ -157,11 +483,44 @@
           Icon="MorphicIcon"
           Target="[#morphic_exe]"
           WorkingDirectory="INSTALLFOLDER">
+          <!-- System.AppUserModel.ID stamps this shortcut with Morphic's AUMID so that any
+               launch from the Start Menu/taskbar (or a pinned copy of this shortcut) tells
+               the Shell upfront which AUMID the process belongs to. Without this property the
+               Shell infers an AUMID from the .exe path (a hash that differs from what the
+               running process sets via SetCurrentProcessExplicitAppUserModelID), which causes
+               toast notifications to be misattributed, taskbar grouping to fragment, and
+               Start Menu pin tracking to lose continuity across reinstalls.
+
+               The value MUST match Morphic.WindowsNative.AppIdentity.AumidHelper.AppUserModelId.
+               If that constant ever changes, update this line in the same commit; mismatched
+               values reintroduce the same Shell-attribution problems this property exists to
+               prevent. Docs: https://wixtoolset.org/docs/reference/schema/wxs/shortcutproperty/ -->
           <ShortcutProperty Key="System.AppUserModel.ID" Value="RaisingTheFloor.Morphic" />
         </Shortcut>
         <RegistryValue Root="HKCU" Key="Software\Raising the Floor\Morphic" Name="installed" Type="integer" Value="1" KeyPath="yes" />
       </Component>
 
+      <!-- Backstop cleanup for the HKCU AUMID-side registration tree. The
+           UnregisterNotificationHelper custom action above is the primary cleanup
+           (calls AppNotificationManager.Default.Unregister() which removes both this
+           key AND the CLSID-side key), but if that CA fails for any reason (helper
+           missing on disk, transient error), this WiX-level deletion still cleans the
+           most user-visible orphan. The CLSID-side key cannot be similarly backstopped
+           because its GUID is auto-generated by the SDK and not known at install time.
+
+           ForceDeleteOnUninstall removes the key + all nested values + subkeys, so even
+           though the SDK's Register() call adds its own values inside this key at
+           runtime (Activator\CLSID, etc.), the uninstall sweeps them all.
+
+           Per-user component (HKCU KeyPath via RegistryValue); MSI per-user component
+           lifecycle handles per-user install/uninstall automatically. The RegistryValue
+           is a placeholder marker that gives the component a KeyPath; the runtime
+           Register() writes go into other names within the same key and don't conflict.
+
+           Lives under ProgramMenuFolder as a sibling to ApplicationComponent for
+           consistency (both are per-user HKCU-keyed components). The Directory parent
+           does not affect HKCU-based components functionally; ProgramMenuFolder is just
+           a scope chosen to match. -->
       <Component Id="NotificationHelperAumidRegistryComponent" Guid="9F3C1E5B-7A2D-4F8B-9C6E-5D4A3B2C1F0E">
         <RegistryKey Root="HKCU"
                      Key="Software\Classes\AppUserModelId\RaisingTheFloor.Morphic"
@@ -173,6 +532,14 @@
   </Fragment>
 
   <Fragment>
+    <!-- Subdirectory of INSTALLFOLDER (Program Files\Morphic\prerequisites\) that holds the
+         chained WindowsAppRuntimeInstall.exe. Kept in its own folder (instead of dropping
+         the EXE at the install root) to avoid confusing users who browse Program Files\Morphic
+         and would not expect to see a second installer EXE alongside Morphic.exe. Leaving
+         the file in place after install (rather than deleting it post-CA) lets future
+         repair/upgrade scenarios re-run the runtime installer without re-downloading.
+         DirectoryRef threads onto the existing INSTALLFOLDER definition (above) so we add
+         a child without redefining the parent. -->
     <DirectoryRef Id="INSTALLFOLDER">
       <Directory Id="PrerequisitesFolder" Name="prerequisites">
         <!-- Single component (single key file), so no explicit Guid needed; WiX will
@@ -190,6 +557,47 @@
           <?endif?>
         </Component>
 
+        <!-- ActiveSetupForRuntimeRegistrationComponent: per-machine HKLM registration
+             that triggers a per-user invocation of WindowsAppRuntimeInstall.exe at each
+             user's logon. Companion to the SYSTEM+user two-CA pattern above.
+
+             Why this exists: our SYSTEM-context CA
+             (RunWindowsAppRuntimeInstallerForAllUsers) calls into MSIX deployment which
+             provisions Main, Singleton, and DDLM packages for all users, but it does
+             NOT provision the Framework package (Microsoft.WindowsAppRuntime.2). The
+             Framework only gets registered into a user's profile via a user-context
+             invocation. Our second CA (RunWindowsAppRuntimeInstallerForCurrentUser,
+             Impersonate=yes) handles the user who ran the installer. For ANY OTHER user
+             who later logs into the same machine, neither CA fires for them; they would
+             hit Morphic's bootstrap "Required components missing" dialog on first launch
+             without this Active Setup entry.
+
+             How Active Setup works: at each user logon, Windows enumerates HKLM\...\
+             Active Setup\Installed Components, and for each GUID checks the per-user
+             HKCU mirror. If HKLM\...\{GUID}\Version > HKCU\...\{GUID}\Version (or the
+             HKCU subkey doesn't exist), Windows synchronously runs the HKLM StubPath in
+             the user's session and copies the Version into HKCU on success. Effect for
+             our case: every new user gets WindowsAppRuntimeInstall.exe (quiet mode) run once
+             in their session at first logon, which registers the Framework into their
+             profile.
+
+             Version format note: Active Setup compares Version values with comma
+             separators, not dots. The value here ("2,1,3,0") deliberately tracks the
+             bundled WinAppSDK version. WHEN BUMPING WinAppSDK to a newer release,
+             update this Version string in the same commit, so existing users will then
+             pick up a re-run at their next logon and re-register against the new
+             runtime. (Leaving the version stale is harmless on a stable WinAppSDK; it
+             just means users only run StubPath once ever.)
+
+             The Active Setup subkey GUID and the Component Guid are intentionally the
+             same value, which makes registry inspection easier (the subkey directly
+             matches the component). The default registry value also serves as the
+             KeyPath so MSI tracks this component via the registry presence.
+
+             Per-machine component (HKLM keypath); MSI uninstall removes the HKLM key
+             cleanly. Per-user HKCU mirrors that Active Setup writes during normal
+             operation are NOT removed by MSI uninstall (each user owns their own
+             HKCU); harmless orphans that the next install would overwrite anyway. -->
         <Component Id="ActiveSetupForRuntimeRegistrationComponent"
                    Guid="7C8B9A6F-3D2E-4B1A-9F8E-5C7D6E8A2B3F"
                    Condition="MORPHIC_ACTIVE_SETUP=&quot;1&quot;">
@@ -204,6 +612,34 @@
           </RegistryKey>
         </Component>
 
+        <!-- AutoStartRunKeyComponent: writes a per-machine HKLM Run entry so Morphic
+             auto-starts at every user's logon on this machine. As an accessibility
+             tool installed for all users, the per-machine HKLM Run is the natural
+             default (every user benefits without each having to enable it themselves).
+
+             Per-user opt-out without admin: each user can disable Morphic's auto-start
+             from Task Manager's Startup tab (or Settings > Apps > Startup). Both UIs
+             write a per-user suppression marker at
+             HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run\Morphic
+             which Windows checks at logon and respects without touching our HKLM key.
+
+             Enterprise opt-out at install time: the MORPHIC_AUTOSTART public property
+             gates this component. Default 1 (component installs); set to anything else
+             via msiexec command line to skip the Run-key write entirely.
+
+             Ordering at logon: Run keys are processed by Explorer.exe AFTER Active
+             Setup completes synchronously, so for new users the WinAppRuntime Framework
+             is registered (by the Active Setup StubPath above) before Morphic.exe
+             launches via the Run key. No bootstrap-dialog race.
+
+             Value-name "Morphic" matches the friendly name shown in Task Manager's
+             Startup tab; users who want to disable will find it under that label.
+             The value data is the full quoted EXE path followed by the
+             run-after-login CLI flag (matches Morphic 1.x's convention; the app
+             reads this flag at startup via Environment.GetCommandLineArgs and treats
+             its presence as "the OS started me at logon" vs absence as "user launched
+             me manually, force-show the bar"). The quoting is defensive against future
+             install-path changes (Program Files has a space). -->
         <Component Id="AutoStartRunKeyComponent"
                    Guid="D8E5B4A7-2C1F-4F9E-B6D3-7A8C9E1F2B5D"
                    Condition="MORPHIC_AUTOSTART=&quot;1&quot;">
@@ -221,10 +657,36 @@
 
   <Fragment>
     <ComponentGroup Id="MorphicComponents" Directory="INSTALLFOLDER">
+      <!-- Pull the runtime installer Component into the main feature so it ships with
+           Morphic and the CustomAction in Package.wxs can resolve WindowsAppRuntimeInstall_exe. -->
       <ComponentRef Id="WindowsAppRuntimeInstallerComponent" />
+      <!-- morphic.exe's Component also contains Morphic.Core.dll and Microsoft.DiaSymReader.Native.amd64.dll
+           as CompanionFile entries. The previous installer (v1.x) shipped these two DLLs at higher
+           baked-in versions than v2.x does, which triggers MSI's "Disallowing installation of component since the 
+           same component with higher versioned keyfile exists" rule at CostFinalize. That decision is locked
+           in before RemoveExistingProducts can clear the old files. Marking these files CompanionFile of
+           morphic_exe makes their install decision inherit from morphic.exe (whose version always
+           increases each release), bypassing the per-file version comparison entirely.
+
+           Both DLLs are excluded from heat's harvest by FilterMorphicCoreDll and
+           FilterDiaSymReaderNativeAmd64Dll in heatfilter.xsl. They are app-local private DLLs that always
+           ship with Morphic.exe, so grouping them in one Component is acceptable here (they have no
+           independent lifecycle: not GAC-installed, not COM-registered, not shared with other products).
+
+           If a future build regresses some other file's version, the "Disallowing installation of
+           component" message in the install log will identify it and it can be added to this same
+           exclude-from-heat + CompanionFile-in-Package.wxs pattern. -->
+      <!-- Explicit Guid (vs. the default Guid="*") because WiX 4 requires explicit Guids
+           for any Component that contains more than one versioned file, even if the
+           non-keypath files are CompanionFiles. Stable across releases so MSI's
+           component reference counting tracks correctly across upgrades. -->
       <Component Id="MorphicExeComponent" Guid="2E5F8A1B-3D7C-4E9A-B6F2-1D4C8E7A9B3F">
         <File Id="morphic_exe" Source="Morphic.exe" KeyPath="yes" />
         <File Id="morphic_core_dll" Source="Morphic.Core.dll" CompanionFile="morphic_exe" />
+        <!-- DiaSymReader's native DLL has architecture-specific filenames (.amd64 / .arm64).
+             The conditional picks the architecture-matched filename for the current build; 
+	     the matching FilterDiaSymReaderNative*Dll keys in heatfilter.xsl strip the 
+	     heat-generated component for the same file so it doesn't double-declare. -->
         <?if $(sys.BUILDARCH) = "x64" ?>
           <File Id="dia_sym_reader_native_amd64_dll" Source="Microsoft.DiaSymReader.Native.amd64.dll" CompanionFile="morphic_exe" />
         <?elseif $(sys.BUILDARCH) = "arm64" ?>
@@ -232,6 +694,27 @@
         <?endif?>
       </Component>
 
+      <!-- Notification helper EXE + its supporting files. The helper is the COM activator
+           that Explorer launches for toast notification clicks; Morphic.exe itself can't
+           serve as the activator because its uiAccess=true manifest makes it un-CreateProcess
+           able by Explorer (error 740).
+
+           Files are excluded from heat's harvest via heatfilter.xsl's FilterNotificationHelper*
+           keys so they're declared here with stable File IDs. The notification_helper_exe
+           File ID is referenced by SetUnregisterNotificationHelper's CustomAction Value to
+           build the uninstall command line.
+
+           Helper's transitive deps (WindowsAppSDK projection DLLs, .NET runtime files, etc.)
+           are NOT declared here. They're shared with Morphic.exe's deps and arrive in the
+           install dir via heat's harvest of Morphic's publish output. At runtime, the
+           helper's .deps.json-driven resolver finds those shared files in its own directory
+           (same dir as helper.exe = same dir as Morphic.exe). Both projects pin the same
+           WindowsAppSDK version, so the shared resolution is reliable. This is the entire
+           reason both EXEs are designed to live in the same install dir.
+
+           Explicit Guid because the component contains multiple files (WiX 4 requires
+           explicit Guid for that). Stable across releases so MSI's component reference
+           counting tracks correctly across upgrades. -->
       <Component Id="NotificationHelperComponent" Guid="4A5F8E2B-1D3C-4F7E-A8B9-6C7D8E9F0A1B">
         <File Id="notification_helper_exe" Source="Morphic.NotificationHelper.exe" KeyPath="yes" />
         <File Id="notification_helper_dll" Source="Morphic.NotificationHelper.dll" />

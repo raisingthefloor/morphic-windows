@@ -531,6 +531,15 @@ public class DarkMode
             return;
         }
 
+        // Seed the initial cached values BEFORE wiring the watcher's Changed handler, so the
+        // first change-fire has a baseline to compare against. The Personalize key is OS-owned
+        // and effectively always present on a normal Windows install, but a missing key MIGHT
+        // mean "neither preference set" -- or might mean "registry deleted but the OS theme
+        // service still has dark mode on" (services often cache state in memory; the registry
+        // value is just a representation that can be deleted without changing the actual state).
+        // The synchronous seed below assumes "off" if the key is missing; the fire-and-forget
+        // refinement Task that follows queries SettingItemProxy to find the actually-current
+        // state and updates the cache (firing the appropriate *Changed event) if it differs.
         using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(DarkMode.PERSONALIZE_REGISTRY_KEY_PATH))
         {
             _cachedAppsUseDarkMode = key is null ? false : DarkMode.ReadAppsUseDarkModeFromKey(key);
@@ -542,12 +551,20 @@ public class DarkMode
             DarkMode.PERSONALIZE_REGISTRY_KEY_PATH);
         if (watcherCreateResult.IsError)
         {
+            // Argument-validation failure -- means our constants are wrong (unsupported hive,
+            // path with null chars). The only fix is a code change; assert in debug builds so
+            // the cause is obvious during development, then leave the watcher null so the next
+            // subscription cycle has a chance to retry (in case the failure mode is transient).
             Debug.Assert(false, $"Could not create DarkMode key watcher: {watcherCreateResult.Error}");
             return;
         }
         _personalizeKeyWatcher = watcherCreateResult.Value!;
         _personalizeKeyWatcher.Changed += DarkMode.OnPersonalizeKeyChanged;
 
+        // Kick off the SettingItem-fallback refinement on a background Task. If the registry
+        // seed was wrong (registry deleted but theme still applied), this updates the cache to
+        // the live state via SettingItemProxy and fires the appropriate *Changed events so
+        // subscribers see the correction.
         _ = Task.Run(() => DarkMode.RecomputeAndUpdateCachedDarkModeAsync(TimeSpan.FromSeconds(2)));
     }
 
@@ -562,6 +579,12 @@ public class DarkMode
         _personalizeKeyWatcher?.Dispose();
         _personalizeKeyWatcher = null;
     }
+
+    // RegistryKeyChangeWatcher.Changed callback. Routes through the unified compute-and-update
+    // helper so registry-missing transitions get the SettingItem fallback applied. The event
+    // kind (ValueChanged / TargetCreated / TargetDeleted) doesn't change the work we do here
+    // -- the helper re-reads from the most authoritative source available regardless of why
+    // the watcher fired.
     private static async void OnPersonalizeKeyChanged(object? sender, Morphic.WindowsNative.Registry.RegistryKeyChangedEventArgs e)
     {
         try
@@ -576,6 +599,23 @@ public class DarkMode
         }
     }
 
+    // Computes the current AppsUseDarkMode and SystemUsesDarkMode values from the most
+    // authoritative source available and updates the caches accordingly. Fires the appropriate
+    // *Changed events for each value that actually changed.
+    //
+    // Source priority (per value):
+    //   1. Registry HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -- when
+    //      the key exists, this is the canonical source.
+    //   2. SettingItemProxy -- when the registry key is missing, the OS may still have the
+    //      themes applied (services cache state in memory; registry value is a representation
+    //      that can be deleted without changing the actual setting). SettingItem queries the
+    //      live OS state, so it can correct the registry's "appears default because key
+    //      missing" picture.
+    //   3. Default `false` -- if both sources fail, fall back to the Windows default.
+    //
+    // Lock discipline: the async SettingItem reads happen OUTSIDE the lock; only the cache
+    // updates + handler snapshots happen under lock; the handler dispatch happens after
+    // releasing the lock.
     private static async Task RecomputeAndUpdateCachedDarkModeAsync(TimeSpan settingItemFallbackTimeout)
     {
         // Step 1: read registry (sync, fast). Track whether each value came from the key.
@@ -651,6 +691,11 @@ public class DarkMode
         }
     }
 
+    // Reads the apps' "uses dark mode" state from an open Personalize key. The registry stores
+    // AppsUseLightTheme as REG_DWORD (1 = light, 0 = dark); we return the inverted semantic
+    // ("uses dark mode") so callers don't have to think about LightTheme vs. DarkMode every time.
+    // A missing or unexpected-type value is treated as light (not dark), matching the Windows
+    // default when the user has not explicitly set a theme.
     private static bool ReadAppsUseDarkModeFromKey(Microsoft.Win32.RegistryKey key)
     {
         var raw = key.GetValue(APPS_USE_LIGHT_THEME_REGISTRY_VALUE_NAME);
@@ -661,6 +706,13 @@ public class DarkMode
         return false;
     }
 
+    // Reads the system's "uses dark mode" state from an open Personalize key. Tries the newer
+    // SystemTheme value (REG_SZ, "Light" / "Dark") first -- Win11 v23H2 build 4037+ / v24H2+
+    // exposes the system theme this way -- and falls back to SystemUsesLightTheme (REG_DWORD,
+    // 1 = light, 0 = dark) for older Windows. Trying both in this order (rather than branching
+    // on OS version) keeps the hot path simple and works across the whole supported range, and
+    // it correctly handles versions where the OS writes both for back-compat. A missing or
+    // unrecognized value falls through to "not dark" (the Windows default).
     private static bool ReadSystemUsesDarkModeFromKey(Microsoft.Win32.RegistryKey key)
     {
         var rawSystemTheme = key.GetValue(SYSTEM_THEME_REGISTRY_VALUE_NAME);
@@ -683,6 +735,11 @@ public class DarkMode
         return false;
     }
 
+    // SettingItem-based fallback readers used by RecomputeAndUpdateCachedDarkModeAsync when the
+    // Personalize registry key is missing. SettingItems return the "uses light theme" boolean;
+    // we invert to "uses dark mode" so the rest of the class works in dark-mode semantics. A
+    // failed read (timeout, SettingItem not available, etc.) returns false -- the Windows
+    // default if no preference is reachable from either source.
     private static async Task<bool> ReadAppsUseDarkModeViaSettingItemAsync(TimeSpan timeout)
     {
         var settingItem = DarkMode.AppsUseLightThemeSettingItem;
@@ -699,6 +756,10 @@ public class DarkMode
         return !result.Value.Value;
     }
 
+    // Same pattern for system theme. Reads via the bool-typed SystemUsesLightThemeSettingItem
+    // exclusively (skipping the Win11-modern SystemThemeSettingItem string variant): both proxies
+    // reflect the same underlying Settings-framework state, and the static GetSettingItemValueAsync
+    // helper is constrained to value types, so the bool variant is the simpler path.
     private static async Task<bool> ReadSystemUsesDarkModeViaSettingItemAsync(TimeSpan timeout)
     {
         var settingItem = DarkMode.SystemUsesLightThemeSettingItem;

@@ -162,6 +162,14 @@ public class ChromelessBaseWindow : Window
 
         if (msg == Windows.Win32.PInvoke.WM_ERASEBKGND)
         {
+            // Returning 1 (background erased / no action needed) prevents Windows from
+            // filling the redirection bitmap with the registered class background brush
+            // (typically COLOR_WINDOW, which is white on a default theme). DWM composites
+            // our transparent DComp output on top of the redirection bitmap for the live
+            // display, so the white pixels are normally invisible to the user, but
+            // legacy capture APIs (some screen-capture tools, certain Snipping Tool code
+            // paths, BitBlt-based capture) read directly from the redirection bitmap and
+            // do see them. Suppressing the erase keeps the bitmap fully transparent.
             return new LRESULT(1);
         }
 
