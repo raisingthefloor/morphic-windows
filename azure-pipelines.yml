@@ -509,6 +509,9 @@ stages:
             artifactType: pipeline
 
   - stage: publish
+    # skip publishing entirely for pull-request builds (only publish from real branch builds);
+    # and() preserves the implicit succeeded() dependency on the build stage
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
     jobs:
       - job: publish
         pool:
