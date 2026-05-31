@@ -509,9 +509,10 @@ stages:
             artifactType: pipeline
 
   - stage: publish
-    # skip publishing entirely for pull-request builds (only publish from real branch builds);
-    # and() preserves the implicit succeeded() dependency on the build stage
-    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    # Runs for every build, including PRs, so a PR on a recognized build-type branch
+    # (dev/canary/preview/release) publishes its installers. The upload step derives the build type
+    # from the branch and skips gracefully (exit 0, no upload) on an unrecognized prefix.
+    condition: succeeded()
     jobs:
       - job: publish
         pool:
@@ -560,9 +561,18 @@ stages:
                     # Derive the build type from the git branch name. Branches are named
                     # "BUILDTYPE/..." (e.g. dev/2.x, canary/2.x, preview/2.x, release/2.x), so the
                     # build type is the branch-name segment before the first "/".
-                    SOURCE_BRANCH="${BUILD_SOURCEBRANCH#refs/heads/}"
+                    #
+                    # For a PR validation build, Build.SourceBranch is the merge ref
+                    # (refs/pull/N/merge), NOT the branch under review, so use the PR's actual source
+                    # branch (System.PullRequest.SourceBranch); otherwise use Build.SourceBranch.
+                    if [ "${BUILD_REASON}" = "PullRequest" ]; then
+                      SOURCE_BRANCH_REF="${SYSTEM_PULLREQUEST_SOURCEBRANCH}"
+                    else
+                      SOURCE_BRANCH_REF="${BUILD_SOURCEBRANCH}"
+                    fi
+                    SOURCE_BRANCH="${SOURCE_BRANCH_REF#refs/heads/}"
                     S3_BUILD_TYPE="${SOURCE_BRANCH%%/*}"
-                    echo "detected build type '${S3_BUILD_TYPE}' from branch '${BUILD_SOURCEBRANCH}'"
+                    echo "detected build type '${S3_BUILD_TYPE}' from branch '${SOURCE_BRANCH_REF}' (reason '${BUILD_REASON}')"
 
                     # Map the build type to its S3 folder name and installer filename suffix:
                     #   dev     -> folder "dev",    suffix "-dev"
@@ -574,7 +584,7 @@ stages:
                       canary)  S3_BUILD_FOLDER="edge";   S3_BUILD_TYPE_FILENAME_SUFFIX="-canary";;
                       preview) S3_BUILD_FOLDER="stable"; S3_BUILD_TYPE_FILENAME_SUFFIX="-preview";;
                       release) S3_BUILD_FOLDER="stable"; S3_BUILD_TYPE_FILENAME_SUFFIX="";;
-                      *)       echo "ERROR: unrecognized build type '${S3_BUILD_TYPE}' (branch '${BUILD_SOURCEBRANCH}')" >&2; exit 1;;
+                      *)       echo "Build type '${S3_BUILD_TYPE}' (branch '${SOURCE_BRANCH_REF}') is not a recognized publish target; skipping publish."; exit 0;;
                     esac
 
                     # expire dev builds after 7 days
