@@ -109,7 +109,7 @@
     <UIRef Id="WixUI_ErrorProgressText" />
 
     <UI>
-      <ProgressText Action="RunWindowsAppRuntimeInstallerForAllUsers" Message="Installing the Windows App Runtime prerequisite (this may take a moment)..." />
+      <ProgressText Action="RunWindowsAppRuntimeInstallerForAllUsers" Message="Installing the Windows App Runtime (this may take a moment)..." />
       <ProgressText Action="RunWindowsAppRuntimeInstallerForCurrentUser" Message="Registering the Windows App Runtime for your account..." />
       <ProgressText Action="UnregisterNotificationHelper" Message="Removing Morphic's notification helper registration..." />
     </UI>
