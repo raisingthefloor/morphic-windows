@@ -161,6 +161,12 @@ internal sealed class MorphicBarManager : IDisposable
 
     public IntPtr GetBarWindowHandle() => WinRT.Interop.WindowNative.GetWindowHandle(_morphicBarWindow);
 
+    // The bar's authoritative CURRENT (destination) monitor handle, as IntPtr. Unlike deriving the
+    // monitor from the live window position, this is animation-independent: during a drag-release the
+    // window can straddle the monitor boundary at the moment we read it, so display-dependent state
+    // (Text Size +/- enablement) must key off the bar's intended monitor, not where the window is mid-move.
+    public IntPtr GetBarCurrentMonitorHandle() => _morphicBarWindow.GetVerifiedCurrentMonitorHandle();
+
     /// <summary>
     /// Awaits the next RasterizationScaleChangedExternal on the bar, or until <paramref name="timeout"/>
     /// elapses, whichever comes first. Returns true if the event arrived, false on timeout.

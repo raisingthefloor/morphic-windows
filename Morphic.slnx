@@ -29,6 +29,14 @@
     <Build Solution="Debug-Packaged|*" Project="false" />
     <Build Solution="Release-Packaged|*" Project="false" />
   </Project>
+  <Project Path="Morphic.PostInstallLauncher/Morphic.PostInstallLauncher.csproj">
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+    <BuildType Solution="Debug-Packaged|*" Project="Debug" />
+    <BuildType Solution="Release-Packaged|*" Project="Release" />
+    <Build Solution="Debug-Packaged|*" Project="false" />
+    <Build Solution="Release-Packaged|*" Project="false" />
+  </Project>
   <Project Path="Morphic.Notifications/Morphic.Notifications.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />

@@ -1407,7 +1407,7 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     // GetMonitorInfo, which returns zero when the monitor is no longer attached). If the cache is
     // stale (e.g. the display was disconnected), falls back to whatever monitor the window is
     // currently on, refreshes the cache, and returns the new handle.
-    private Windows.Win32.Graphics.Gdi.HMONITOR GetVerifiedCurrentMonitorHandle()
+    internal Windows.Win32.Graphics.Gdi.HMONITOR GetVerifiedCurrentMonitorHandle()
     {
         var monitorInfo = new Windows.Win32.Graphics.Gdi.MONITORINFO();
         monitorInfo.cbSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf<Windows.Win32.Graphics.Gdi.MONITORINFO>();

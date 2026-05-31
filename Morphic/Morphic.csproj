@@ -143,6 +143,16 @@
     <ProjectReference Include="..\Morphic.NotificationHelper\Morphic.NotificationHelper.csproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+    <!-- PostInstallLauncher.exe is launched by the MSI's WixShellExec custom action at the end
+         of install; it then ShellExecutes Morphic.exe with the run-after-install flag (Morphic
+         is uiAccess=true and can't be started directly from the installer; see the project's
+         Program.cs for the full rationale). Like the notification helper we do NOT link to it
+         (ReferenceOutputAssembly=false), but we DO want it built before Morphic so the
+         CopyPostInstallLauncherToMorphic* targets below find its output, and so it inherits
+         Morphic's version via shared global properties. -->
+    <ProjectReference Include="..\Morphic.PostInstallLauncher\Morphic.PostInstallLauncher.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
     <ProjectReference Include="..\Morphic.Notifications\Morphic.Notifications.csproj" />
     <ProjectReference Include="..\Morphic.WindowsNative\Morphic.WindowsNative.csproj" />
   </ItemGroup>

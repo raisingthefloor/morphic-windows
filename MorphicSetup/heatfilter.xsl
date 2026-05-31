@@ -51,6 +51,16 @@
   <xsl:key name="FilterNotificationHelperRuntimeConfigJson" match="wix:Component[wix:File/@Source = 'SourceDir\Morphic.NotificationHelper.runtimeconfig.json']" use="@Id" />
   <xsl:key name="FilterNotificationHelperPri" match="wix:Component[wix:File/@Source = 'SourceDir\Morphic.NotificationHelper.pri']" use="@Id" />
 
+  <!-- Exclude PostInstallLauncher.* (exe, dll, deps.json, runtimeconfig.json) from heat so we can
+       declare them manually in Package.wxs's PostInstallLauncherComponent with stable File IDs.
+       The WixShellExecTarget SetProperty references post_install_launcher_exe by File ID; heat
+       generated IDs are not stable across builds, so the manual declaration is required. There is
+       no .pri (the launcher has no WinUI/resources); the .pdb is covered by FilterPdbs above. -->
+  <xsl:key name="FilterPostInstallLauncherExe" match="wix:Component[wix:File/@Source = 'SourceDir\PostInstallLauncher.exe']" use="@Id" />
+  <xsl:key name="FilterPostInstallLauncherDll" match="wix:Component[wix:File/@Source = 'SourceDir\PostInstallLauncher.dll']" use="@Id" />
+  <xsl:key name="FilterPostInstallLauncherDepsJson" match="wix:Component[wix:File/@Source = 'SourceDir\PostInstallLauncher.deps.json']" use="@Id" />
+  <xsl:key name="FilterPostInstallLauncherRuntimeConfigJson" match="wix:Component[wix:File/@Source = 'SourceDir\PostInstallLauncher.runtimeconfig.json']" use="@Id" />
+
   <!-- Copy all elements and their attributes. -->
   <xsl:template match="@*|node()">
     <xsl:copy>
@@ -67,6 +77,11 @@
   <xsl:template match="*[ self::wix:Component or self::wix:ComponentRef ][ key( 'FilterNotificationHelperDepsJson', @Id ) ]" />
   <xsl:template match="*[ self::wix:Component or self::wix:ComponentRef ][ key( 'FilterNotificationHelperRuntimeConfigJson', @Id ) ]" />
   <xsl:template match="*[ self::wix:Component or self::wix:ComponentRef ][ key( 'FilterNotificationHelperPri', @Id ) ]" />
+  <!-- Filter out the post-install launcher files (declared manually in PostInstallLauncherComponent) -->
+  <xsl:template match="*[ self::wix:Component or self::wix:ComponentRef ][ key( 'FilterPostInstallLauncherExe', @Id ) ]" />
+  <xsl:template match="*[ self::wix:Component or self::wix:ComponentRef ][ key( 'FilterPostInstallLauncherDll', @Id ) ]" />
+  <xsl:template match="*[ self::wix:Component or self::wix:ComponentRef ][ key( 'FilterPostInstallLauncherDepsJson', @Id ) ]" />
+  <xsl:template match="*[ self::wix:Component or self::wix:ComponentRef ][ key( 'FilterPostInstallLauncherRuntimeConfigJson', @Id ) ]" />
   <!-- Additionally, filter out binraies that should always be replaced (even if it's a "downgrade") -->
   <xsl:template match="*[ self::wix:Component or self::wix:ComponentRef ][ key( 'FilterMorphicCoreDll', @Id ) ]" />
   <xsl:template match="*[ self::wix:Component or self::wix:ComponentRef ][ key( 'FilterDiaSymReaderNativeAmd64Dll', @Id ) ]" />

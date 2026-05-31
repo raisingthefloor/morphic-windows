@@ -444,20 +444,39 @@
          from login later). This keeps a bar the user had hidden from reappearing after an update.
          (A manual Start Menu / .exe launch passes no flag and force-shows.)
 
-         We launch via the LaunchMorphic managed custom action (in MorphicSetup.Actions), NOT a
-         file-based exe CustomAction. A type-18 EXE custom action starts the target with CreateProcess,
-         and Morphic ships with uiAccess=true: a uiAccess executable CANNOT be launched by CreateProcess
-         from the msiexec context (it fails, typically with ERROR_ELEVATION_REQUIRED / 740). LaunchMorphic
-         uses Process.Start with UseShellExecute=true (ShellExecute), which IS the path that starts a
-         uiAccess app (the same path the old WixShellExec used), and unlike WixShellExec it can also pass
-         the run-after-install argument. Execute="immediate" + Impersonate="yes" run it in the installing
-         user's session with their token (not SYSTEM), so Morphic appears on their desktop; the action is
-         best-effort and never fails the install. -->
+         We launch via WixShellExec (the WiX util CA, ShellExecute under the hood) targeting
+         PostInstallLauncher.exe, NOT a type-18 EXE custom action. A type-18 EXE CA starts the
+         target with CreateProcess, and Morphic ships with uiAccess=true: a uiAccess executable
+         CANNOT be launched by CreateProcess from the msiexec context (it fails, typically with
+         ERROR_ELEVATION_REQUIRED / 740). ShellExecute IS the path that starts a uiAccess app, but
+         WixShellExec cannot pass command line arguments and we need to pass the run-after-install
+         flag. PostInstallLauncher.exe bridges that gap: WixShellExec ShellExecutes the launcher
+         (no arguments needed), and the launcher (a plain Medium IL exe, running in the installing
+         user's session) in turn ShellExecutes Morphic.exe with the run-after-install argument baked
+         in. See Morphic.PostInstallLauncher/Program.cs for the full rationale.
+
+         History (do not repeat): an earlier attempt used a DTF managed custom action calling
+         Process.Start directly. It failed at install time with "SFXCA: Failed to create temp
+         directory. Error code 5", because a DTF/SfxCA managed CA running Impersonate="yes" after
+         InstallFinalize cannot extract its payload in that impersonated server side context.
+         WixShellExec is native (no SfxCA extraction), so it sidesteps that entirely. Do NOT
+         reintroduce a managed CA or a CreateProcess based EXE CA for this launch.
+
+         WixShellExecTarget is set to the launcher's installed path immediately before the CA (see
+         the SetProperty below). Execute="immediate" + Impersonate="yes" run in the installing
+         user's session with their token (not SYSTEM), so Morphic appears on their desktop;
+         Return="ignore" makes it best-effort so it never fails the install. -->
+    <SetProperty Id="WixShellExecTarget"
+                 Value="[#post_install_launcher_exe]"
+                 Before="LaunchMorphicAfterInstall"
+                 Sequence="execute" />
+
     <CustomAction Id="LaunchMorphicAfterInstall"
-                  BinaryRef="MorphicSetupActionsCA"
-                  DllEntry="LaunchMorphic"
+                  BinaryRef="Wix4UtilCA_X64"
+                  DllEntry="WixShellExec"
                   Execute="immediate"
-                  Impersonate="yes" />
+                  Impersonate="yes"
+                  Return="ignore" />
   </Package>
 
   <Fragment>
@@ -720,6 +739,33 @@
         <File Id="notification_helper_deps_json" Source="Morphic.NotificationHelper.deps.json" />
         <File Id="notification_helper_runtimeconfig_json" Source="Morphic.NotificationHelper.runtimeconfig.json" />
         <File Id="notification_helper_pri" Source="Morphic.NotificationHelper.pri" />
+      </Component>
+
+      <!-- PostInstallLauncher.exe + its supporting files. WixShellExec launches this exe at the
+           end of install (see LaunchMorphicAfterInstall in Package.wxs), and it ShellExecutes
+           Morphic.exe with the run-after-install flag. Morphic.exe is uiAccess=true and can't be
+           started directly from the installer (CreateProcess fails with 740); this launcher is the
+           ShellExecute bridge that can also carry the argument WixShellExec itself cannot pass. See
+           Morphic.PostInstallLauncher/Program.cs.
+
+           Files are excluded from heat's harvest via heatfilter.xsl's FilterPostInstallLauncher*
+           keys so they're declared here with stable File IDs. The post_install_launcher_exe File ID
+           is referenced by the WixShellExecTarget SetProperty to build the launch path; heat
+           generated IDs are not guaranteed stable across builds, so the manual declaration is
+           required.
+
+           The launcher has no .pri (no WinUI/resources). Its transitive runtime deps are NOT
+           declared here: they're shared with Morphic.exe's deps and arrive in the install dir via
+           heat's harvest of Morphic's publish output (both ship self-contained against the same
+           TargetFramework). The .pdb is excluded by heatfilter's universal FilterPdbs key.
+
+           Explicit Guid because the component contains multiple files (WiX 4 requires it). Stable
+           across releases so MSI component reference counting tracks correctly across upgrades. -->
+      <Component Id="PostInstallLauncherComponent" Guid="3F6A1C8D-9E2B-4A7F-8C5D-1B4E7A9C2D6F">
+        <File Id="post_install_launcher_exe" Source="PostInstallLauncher.exe" KeyPath="yes" />
+        <File Id="post_install_launcher_dll" Source="PostInstallLauncher.dll" />
+        <File Id="post_install_launcher_deps_json" Source="PostInstallLauncher.deps.json" />
+        <File Id="post_install_launcher_runtimeconfig_json" Source="PostInstallLauncher.runtimeconfig.json" />
       </Component>
       <ComponentGroupRef Id="MorphicSupportComponents" />
     </ComponentGroup>

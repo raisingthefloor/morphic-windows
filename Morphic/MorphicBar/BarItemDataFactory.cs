@@ -97,14 +97,19 @@ internal static class BarItemDataFactory
                 decreaseButton.IsEnabled = false;
                 return;
             }
-            var barHwnd = barManager.GetBarWindowHandle();
-            if (barHwnd == IntPtr.Zero)
+            // Use the bar's INTENDED current monitor, not the live window position: during a
+            // drag-release the bar window can straddle the monitor boundary at the moment we
+            // recompute, which made GetDisplayNearestWindowHandle pick the wrong monitor and the +/-
+            // buttons disable inconsistently. GetBarCurrentMonitorHandle is the authoritative
+            // destination monitor and is animation-independent.
+            var barMonitorHandle = barManager.GetBarCurrentMonitorHandle();
+            if (barMonitorHandle == IntPtr.Zero)
             {
                 increaseButton.IsEnabled = false;
                 decreaseButton.IsEnabled = false;
                 return;
             }
-            var displayResult = Morphic.WindowsNative.Display.Display.GetDisplayNearestWindowHandle(barHwnd);
+            var displayResult = Morphic.WindowsNative.Display.Display.GetDisplayByMonitorHandle(barMonitorHandle);
             if (displayResult.IsError)
             {
                 increaseButton.IsEnabled = false;

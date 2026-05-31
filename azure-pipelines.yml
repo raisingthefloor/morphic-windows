@@ -175,6 +175,28 @@ stages:
               -v
               $(Build.SourcesDirectory)\Morphic\bin\x64\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-x64\publish\Morphic.NotificationHelper.exe
 
+        # Sign PostInstallLauncher.exe with the same cert as Morphic.exe. Not strictly required by
+        # the uiAccess launch mechanism (only Morphic.exe must be signed to be granted uiAccess),
+        # but it ships inside the signed Program Files install and is launched during setup, so an
+        # unsigned exe here would be poor hygiene and a SmartScreen/AV snag. It lands in Morphic's
+        # publish dir via the CopyPostInstallLauncherToMorphicPublish target in Morphic.csproj.
+        - task: CmdLine@2
+          displayName: 'sign post-install launcher exe (x64)'
+          inputs:
+            targetType: 'inline'
+            script: >
+              AzureSignTool sign
+              -d Morphic
+              -du "$(SigningURL)"
+              -kvu "$(SigningVaultURL)"
+              -kvi "$(SigningClientId)"
+              -kvs "$(SigningClientSecret)"
+              -kvt "$(AzureTenantId)"
+              -kvc "$(SigningCertName)"
+              -tr "$(TimestampUrl2)"
+              -v
+              $(Build.SourcesDirectory)\Morphic\bin\x64\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-x64\publish\PostInstallLauncher.exe
+
         - task: VSBuild@1
           displayName: "restore installer dependencies"
           env:
@@ -327,6 +349,24 @@ stages:
               -tr "$(TimestampUrl2)"
               -v
               $(Build.SourcesDirectory)\Morphic\bin\arm64\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-arm64\publish\Morphic.NotificationHelper.exe
+
+        # See the x64 post-install launcher signing step above for rationale.
+        - task: CmdLine@2
+          displayName: 'sign post-install launcher exe (arm64)'
+          inputs:
+            targetType: 'inline'
+            script: >
+              AzureSignTool sign
+              -d Morphic
+              -du "$(SigningURL)"
+              -kvu "$(SigningVaultURL)"
+              -kvi "$(SigningClientId)"
+              -kvs "$(SigningClientSecret)"
+              -kvt "$(AzureTenantId)"
+              -kvc "$(SigningCertName)"
+              -tr "$(TimestampUrl2)"
+              -v
+              $(Build.SourcesDirectory)\Morphic\bin\arm64\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-arm64\publish\PostInstallLauncher.exe
 
         - task: VSBuild@1
           displayName: "restore installer dependencies"
