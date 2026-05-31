@@ -117,8 +117,6 @@ public sealed partial class LayoutPreviewWindow : Morphic.Controls.Windowing.Chr
         this.UpdateAppearanceForCurrentHighContrastState();
         Morphic.WindowsNative.SystemSettings.SystemSettingsListener.Shared.HighContrastChanged += this.OnHighContrastSettingChanged;
         this.Closed += this.LayoutPreviewWindow_Closed;
-
-        this.Activated += LayoutPreviewWindow_Activated;
     }
 
     private void LayoutPreviewWindow_Closed(object sender, WindowEventArgs args)
@@ -232,16 +230,38 @@ public sealed partial class LayoutPreviewWindow : Morphic.Controls.Windowing.Chr
     }
 
     // Per-instance window subclass proc. Intercepts WM_SHOWWINDOW (wParam=TRUE means the window
-    // is about to be shown, wParam=FALSE means about to be hidden) and refreshes the appearance
-    // synchronously before the first paint of the new show. WM_SHOWWINDOW fires for any path that
-    // ends in user32!ShowWindow under the hood, which AppWindow.Show() does, so this is
-    // automatically compatible with callers that use [LayoutPreviewWindow].AppWindow.Show()
-    // directly. All other messages are passed through to DefSubclassProc unchanged.
+    // is about to be shown, wParam=FALSE means about to be hidden) and, synchronously before the
+    // first paint of the new show: (1) refreshes the appearance (HC vs non-HC), and (2) re-seats
+    // the window's z-order just below the always-on-top MorphicBar. WM_SHOWWINDOW fires for any
+    // path that ends in user32!ShowWindow under the hood, which AppWindow.Show() does (with or
+    // without activation), so this is automatically compatible with callers that use
+    // [LayoutPreviewWindow].AppWindow.Show() directly. Doing the z-order re-seat HERE (rather than
+    // in an Activated handler) is required because the bar shows the preview non-activated
+    // (Show(false)) to avoid disturbing the bar's focus ring, so the Activated event never fires.
+    // All other messages are passed through to DefSubclassProc unchanged.
     private Windows.Win32.Foundation.LRESULT InstanceSubclassWndProc(Windows.Win32.Foundation.HWND hwnd, uint msg, Windows.Win32.Foundation.WPARAM wParam, Windows.Win32.Foundation.LPARAM lParam, nuint uIdSubclass, nuint dwRefData)
     {
         if (msg == Windows.Win32.PInvoke.WM_SHOWWINDOW && wParam != 0)
         {
             this.UpdateAppearanceForCurrentHighContrastState();
+
+            // Re-seat the preview at the top of the NON-topmost band: above all normal windows, but
+            // still below the always-on-top MorphicBar. We force the topmost bit ON (HWND_TOPMOST) and
+            // then immediately OFF (HWND_NOTOPMOST). The round trip is deliberate: HWND_NOTOPMOST on its
+            // own is documented as a no-op when the window is ALREADY non-topmost, so it would not raise
+            // the preview at all; forcing topmost first guarantees the following HWND_NOTOPMOST actually
+            // re-seats the window at the very top of the non-topmost band. (Empirically the preview can
+            // land in the topmost band at show time, so a single HWND_TOP can leave it drawing ABOVE the
+            // bar.) SWP_NOACTIVATE keeps the re-seat from stealing activation.
+            _ = Windows.Win32.PInvoke.SetWindowPos(hwnd, Windows.Win32.Foundation.HWND.HWND_TOPMOST, 0, 0, 0, 0,
+                Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOMOVE |
+                Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOSIZE |
+                Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
+
+            _ = Windows.Win32.PInvoke.SetWindowPos(hwnd, Windows.Win32.Foundation.HWND.HWND_NOTOPMOST, 0, 0, 0, 0,
+                Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOMOVE |
+                Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOSIZE |
+                Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
         }
         return Windows.Win32.PInvoke.DefSubclassProc(hwnd, msg, wParam, lParam);
     }
@@ -254,32 +274,6 @@ public sealed partial class LayoutPreviewWindow : Morphic.Controls.Windowing.Chr
         byte g = (byte)((colorRef >> 8) & 0xFF);
         byte b = (byte)((colorRef >> 16) & 0xFF);
         return Windows.UI.Color.FromArgb(0xFF, r, g, b);
-    }
-
-    private void LayoutPreviewWindow_Activated(object sender, WindowActivatedEventArgs args)
-    {
-        if (args.WindowActivationState != WindowActivationState.Deactivated)
-        {
-            var hwnd = (Windows.Win32.Foundation.HWND)WinRT.Interop.WindowNative.GetWindowHandle(this);
-
-            // Re-seat the preview at the top of the NON-topmost band: above all normal windows, but
-            // still below the always-on-top MorphicBar. We force the topmost bit ON (HWND_TOPMOST) and
-            // then immediately OFF (HWND_NOTOPMOST). The round trip is deliberate: HWND_NOTOPMOST on its
-            // own is documented as a no-op when the window is ALREADY non-topmost, so it would not raise
-            // the preview at all; forcing topmost first guarantees the following HWND_NOTOPMOST actually
-            // re-seats the window at the very top of the non-topmost band. (Empirically the preview can
-            // land in the topmost band at activation time, so a single HWND_TOP can leave it drawing
-            // ABOVE the bar.) SWP_NOACTIVATE keeps the re-seat from stealing activation.
-            _ = Windows.Win32.PInvoke.SetWindowPos(hwnd, Windows.Win32.Foundation.HWND.HWND_TOPMOST, 0, 0, 0, 0,
-                Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOMOVE |
-                Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOSIZE |
-                Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
-
-            _ = Windows.Win32.PInvoke.SetWindowPos(hwnd, Windows.Win32.Foundation.HWND.HWND_NOTOPMOST, 0, 0, 0, 0,
-                Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOMOVE |
-                Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOSIZE |
-                Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
-        }
     }
 
     /* public methods */
