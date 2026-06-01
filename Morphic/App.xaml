@@ -59,12 +59,23 @@
                     <SolidColorBrush x:Key="ThemeAwareForeground" Color="#FF000000"/>
                     <SolidColorBrush x:Key="ThemeAwareBorder" Color="#FF000000"/>
                     <SolidColorBrush x:Key="ThemeAwareMorphicBarMorphieTextForeground" Color="#FF002957"/>
+                    <!-- Disabled-button fill. Unlike the other MorphicBarControl* palette brushes (which
+                         live at the root because they must NOT follow Light/Dark), this one IS in the
+                         ThemeDictionaries: Light and Dark carry the SAME value (so it still does not
+                         track Light/Dark), but the HighContrast entry must differ (it follows the system
+                         ButtonFace, bound in App.xaml.cs). The green normal fill is illegible behind the
+                         GrayText disabled foreground (~1.3:1), so the Disabled visual states swap to this
+                         neutral fill instead. Starting value is a light neutral gray; tweak to taste. -->
+                    <SolidColorBrush x:Key="MorphicBarControlDisabledBackground" Color="#E8E8E8"/>
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="Dark">
                     <SolidColorBrush x:Key="ThemeAwareBackground" Color="#FF000000"/>
                     <SolidColorBrush x:Key="ThemeAwareForeground" Color="#FFFFFFFF"/>
                     <SolidColorBrush x:Key="ThemeAwareBorder" Color="#FF333333"/>
                     <SolidColorBrush x:Key="ThemeAwareMorphicBarMorphieTextForeground" Color="#FFFFFFFF"/>
+                    <!-- Same value as Light on purpose (the bar palette is theme-independent); see the
+                         Light entry's comment. Only HighContrast diverges. -->
+                    <SolidColorBrush x:Key="MorphicBarControlDisabledBackground" Color="#E8E8E8"/>
                 </ResourceDictionary>
                 <!-- HighContrast: WinUI 3's SystemColorWindowBrush and SystemColorWindowTextBrush
                      do NOT track the active HC theme correctly in our context (they stay at
@@ -80,6 +91,10 @@
                     <SolidColorBrush x:Key="ThemeAwareBackground" Color="Transparent"/>
                     <StaticResource x:Key="ThemeAwareForeground" ResourceKey="SystemColorWindowTextBrush"/>
                     <SolidColorBrush x:Key="ThemeAwareBorder" Color="Transparent"/>
+                    <!-- Placeholder bound to GetSysColor(COLOR_BTNFACE) in App.xaml.cs so a disabled
+                         button under HC shows the active HC theme's button surface (with GrayText text),
+                         which is the HC-correct disabled treatment, instead of our standard-mode gray. -->
+                    <SolidColorBrush x:Key="MorphicBarControlDisabledBackground" Color="Transparent"/>
                     <!-- ThemeAwareMorphicBarMorphieTextForeground is used by the Menu logo's Path
                          glyphs. We can't alias it to SystemColorWindowTextBrush (broken in our
                          context, always returns white), and unlike TextBlocks, Path fills are NOT

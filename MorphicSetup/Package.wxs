@@ -1,4 +1,22 @@
 ﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui" xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+  <!-- The WiX util-extension custom actions (WixQuietExec64, WixShellExec) are referenced by their
+       per-architecture CA binary. The x64 binary (Wix4UtilCA_X64) loads on ARM64 (under x64
+       emulation), but it then fails to launch the NATIVE ARM64 child process: a verbose ARM64
+       install log showed every util CA hardcoded to Wix4UtilCA_X64 returning error 1157
+       (ERROR_DLL_NOT_FOUND) when it tried to run WindowsAppRuntimeInstall.exe / PostInstallLauncher
+       .exe, while running those EXEs by hand worked fine. Because all three are best-effort
+       Return="ignore" CAs, the failures were swallowed, so the Windows App Runtime never installed
+       and Morphic never auto-launched, yet the install "succeeded". In the SAME log, WiX's OWN util
+       CAs (Wix4CloseApplications_A64, Wix4CheckRebootRequired_A64) used the ARCHITECTURE-NATIVE
+       binary and ran fine. So we select the native util CA binary by architecture too. NOTE the WiX
+       ARM64 suffix is "_A64" (the token WiX emits into the MSI, as seen in that log), NOT "_ARM64".
+       The CA entry point names (WixQuietExec64, WixShellExec) are identical across the per-arch
+       binaries; only the Binary id differs, so one arch-selected define covers every util CA below. -->
+  <?if $(sys.BUILDARCH) = "arm64" ?>
+    <?define UtilCustomActionBinaryRef = "Wix4UtilCA_A64" ?>
+  <?else?>
+    <?define UtilCustomActionBinaryRef = "Wix4UtilCA_X64" ?>
+  <?endif?>
   <Package Name="Morphic" Manufacturer="Raising the Floor - US, Inc." Version="!(bind.FileVersion.morphic_exe)" UpgradeCode="7d0ee114-79e8-4ff6-b28b-0408551483f5" InstallerVersion="500">
 
     <Icon Id="MorphicIcon" SourceFile="..\Morphic\Assets\Icons\morphic.ico" />
@@ -91,7 +109,7 @@
 
     <CustomAction
         Id="RunWindowsAppRuntimeInstallerForAllUsers"
-        BinaryRef="Wix4UtilCA_X64"
+        BinaryRef="$(var.UtilCustomActionBinaryRef)"
         DllEntry="WixQuietExec64"
         Execute="deferred"
         Return="ignore"
@@ -105,7 +123,7 @@
 
     <CustomAction
         Id="RunWindowsAppRuntimeInstallerForCurrentUser"
-        BinaryRef="Wix4UtilCA_X64"
+        BinaryRef="$(var.UtilCustomActionBinaryRef)"
         DllEntry="WixQuietExec64"
         Execute="deferred"
         Return="ignore"
@@ -143,7 +161,7 @@
 
     <CustomAction
         Id="UnregisterNotificationHelper"
-        BinaryRef="Wix4UtilCA_X64"
+        BinaryRef="$(var.UtilCustomActionBinaryRef)"
         DllEntry="WixQuietExec64"
         Execute="deferred"
         Return="ignore"
@@ -472,7 +490,7 @@
                  Sequence="execute" />
 
     <CustomAction Id="LaunchMorphicAfterInstall"
-                  BinaryRef="Wix4UtilCA_X64"
+                  BinaryRef="$(var.UtilCustomActionBinaryRef)"
                   DllEntry="WixShellExec"
                   Execute="immediate"
                   Impersonate="yes"

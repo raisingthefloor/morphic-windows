@@ -92,6 +92,14 @@ public partial class App : Application
         Morphic.Theme.MorphicSysColorBrushBinder.Bind((Microsoft.UI.Xaml.Media.SolidColorBrush)highContrastResources["ThemeAwareBorder"], Morphic.Theme.MorphicSysColor.WindowText);
         Morphic.Theme.MorphicSysColorBrushBinder.Bind((Microsoft.UI.Xaml.Media.SolidColorBrush)highContrastResources["ThemeAwareMorphicBarMorphieTextForeground"], Morphic.Theme.MorphicSysColor.WindowText);
 
+        // MorphicBarControlDisabledBackground lives in the ThemeDictionaries (Light/Dark carry our
+        // standard-mode gray; only this HighContrast entry differs). Bind it to ButtonFace so a
+        // disabled button under HC shows the active HC theme's button surface, with GrayText text,
+        // which is the HC-correct disabled treatment. Refreshes on HC-theme change broadcasts.
+        Morphic.Theme.MorphicSysColorBrushBinder.Bind(
+            (Microsoft.UI.Xaml.Media.SolidColorBrush)highContrastResources["MorphicBarControlDisabledBackground"],
+            Morphic.Theme.MorphicSysColor.ButtonFace);
+
         // MorphicBarControlDisabledForeground is defined at the root (not in ThemeDictionaries) because
         // it's used in BOTH HC and non-HC modes (every disabled button shows gray text regardless
         // of theme). The binder makes it track GetSysColor(COLOR_GRAYTEXT), which gives the active

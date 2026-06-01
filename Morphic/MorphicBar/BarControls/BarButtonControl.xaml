@@ -77,12 +77,14 @@
                                             <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlPressedBackground}"/>
                                         </VisualState.Setters>
                                     </VisualState>
-                                    <!-- Disabled: keep the normal bg and swap the text Foreground to the
-                                         system disabled-text gray, matching the Windows convention for
-                                         disabled controls. -->
+                                    <!-- Disabled: swap the green fill for the neutral disabled background AND
+                                         the text for GrayText. The fill has to change too: GrayText on the
+                                         green fill is ~1.3:1 and illegible. MorphicBarControlDisabledBackground
+                                         is a light neutral in standard contrast and the system ButtonFace under
+                                         HC (see App.xaml). -->
                                     <VisualState x:Name="Disabled">
                                         <VisualState.Setters>
-                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlBackground}"/>
+                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlDisabledBackground}"/>
                                             <Setter Target="ButtonText.Foreground" Value="{ThemeResource MorphicBarControlDisabledForeground}"/>
                                         </VisualState.Setters>
                                     </VisualState>
@@ -213,14 +215,14 @@
                                         </VisualState.Setters>
                                     </VisualState>
                                     <VisualState x:Name="Indeterminate"/>
-                                    <!-- Disabled / CheckedDisabled: keep the toggle-state bg color (so the
-                                         green-vs-white background still reads as unchecked vs checked) and
-                                         swap the text Foreground to the system disabled-text gray. Matches
-                                         the Windows convention for disabled toggle controls: bg shows the
-                                         toggle state, gray text signals "you can't interact with this". -->
+                                    <!-- Disabled (unchecked) shows the neutral disabled fill; CheckedDisabled
+                                         keeps the white checked fill (GrayText is legible on white) so a
+                                         disabled toggle still reads on vs off. Both use GrayText for the text.
+                                         The unchecked case no longer keeps the green fill because GrayText on
+                                         green is ~1.3:1 and illegible (see MorphicBarControlDisabledBackground). -->
                                     <VisualState x:Name="Disabled">
                                         <VisualState.Setters>
-                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlBackground}"/>
+                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlDisabledBackground}"/>
                                             <Setter Target="ButtonText.Foreground" Value="{ThemeResource MorphicBarControlDisabledForeground}"/>
                                         </VisualState.Setters>
                                     </VisualState>
