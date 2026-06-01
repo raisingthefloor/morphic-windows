@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.22621.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <Platforms>x64;ARM64</Platforms>
+    <!-- See the Configurations comment in Morphic\Morphic.csproj for why we declare the
+         *-Packaged variants explicitly. Required for VS Configuration Manager to allow
+         mapping the solution's *-Packaged BuildTypes to a same-name project Configuration. -->
+    <Configurations>Debug;Release;Debug-Packaged;Release-Packaged</Configurations>
+    <Version>2.0.0.0</Version>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.1839" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.1.3" />
+    <!-- AI/ML payload strip; same rationale as Morphic.csproj. The notifications library
+         never calls Microsoft.Windows.AI.* APIs, and the framework MSIX (installed by
+         WindowsAppRuntimeInstall.exe) supplies them at runtime if anything ever indirectly
+         needs them. -->
+    <PackageReference Include="Microsoft.WindowsAppSDK.AI" Version="2.1.10" ExcludeAssets="runtime;native" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.ML" Version="2.1.1" ExcludeAssets="runtime;native" />
+    <PackageReference Include="Microsoft.Windows.AI.MachineLearning" Version="2.1.1" ExcludeAssets="runtime;native" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Morphic.WindowsNative\Morphic.WindowsNative.csproj" />
+  </ItemGroup>
+
+</Project>

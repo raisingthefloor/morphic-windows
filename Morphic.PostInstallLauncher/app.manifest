@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
+  <assemblyIdentity version="2.0.0.0" name="PostInstallLauncher.app"/>
+  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v2">
+    <security>
+      <requestedPrivileges xmlns="urn:schemas-microsoft-com:asm.v3">
+        <!-- asInvoker + uiAccess=false is LOAD-BEARING. This launcher exists to be started by
+             the MSI's WixShellExec custom action (in the installing user's session) and to then
+             ShellExecute Morphic.exe. Morphic.exe itself ships with uiAccess=true; a uiAccess
+             (Medium+ IL) executable cannot be CreateProcess'd by the msiexec context, which is
+             exactly why we route through this plain Medium IL launcher and let it ShellExecute
+             Morphic (the path that DOES grant a uiAccess app its token). Do NOT add
+             uiAccess="true" here: that would make this launcher un-launchable the same way
+             Morphic.exe is, defeating the entire purpose. -->
+        <requestedExecutionLevel level="asInvoker" uiAccess="false" />
+      </requestedPrivileges>
+    </security>
+  </trustInfo>
+
+  <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
+    <application>
+      <!-- Windows 10 -->
+      <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}" />
+    </application>
+  </compatibility>
+</assembly>

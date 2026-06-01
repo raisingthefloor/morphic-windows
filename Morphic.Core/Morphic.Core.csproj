@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <!-- See the Configurations comment in Morphic\Morphic.csproj for why we declare the
+         *-Packaged variants explicitly. Required for VS Configuration Manager to allow
+         mapping the solution's *-Packaged BuildTypes to a same-name project Configuration. -->
+    <Configurations>Debug;Release;Debug-Packaged;Release-Packaged</Configurations>
+  </PropertyGroup>
+
+</Project>

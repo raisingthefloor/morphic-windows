@@ -1,0 +1,695 @@
+# Morphic for Windows (.NET Desktop)
+
+# Documentation used in this pipeline:
+# .NET pipelines docs: 
+# - Build, test, and deploy: https://docs.microsoft.com/en-us/azure/devops/pipelines/ecosystems/dotnet-core
+# - .NET pipelines tasks: https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/
+# Microsoft-hosted agents: https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops
+# - Windows 2022 components and version options: https://github.com/actions/virtual-environments/blob/main/images/win/Windows2022-Readme.md
+# .NET Core release versions: https://github.com/dotnet/core/blob/main/release-notes/releases-index.json
+# .NET Core RIDs (including x86/x64/ARM64): https://docs.microsoft.com/en-us/dotnet/core/rid-catalog
+
+# NOTE: we version the builds using the current date in the build # (and the current same-day build number as the revision/patch #)
+# major.minor.YYDDD.RRR (where YY is the year; DDD is the day of year; where RRR is the build run # within the day, starting at one)
+name: $(Year:yy)$(DayOfYear).$(Rev:r)
+
+# build all release and dev builds (as well as check-ins to the master branch)
+trigger:
+  branches:
+    include:
+      - master
+      - dev/*
+      - release/*
+#      - '*'
+
+# build all check-ins to pull requests
+pr:
+  branches:
+    include:
+    - '*'
+variables:
+# Import all Amazon S3 upload credentials and settings
+- group: 's3-public-bucket-upload'
+# Import all the code-signing variables (from the Library)
+- group: 'windows-code-sign'
+- name: mainProject
+  value: Morphic/Morphic.csproj
+- name: projects
+  value: |
+         Morphic/Morphic.csproj
+         MorphicSetup.Actions/MorphicSetup.Actions.csproj
+         MorphicSetup/MorphicSetup.wixproj
+- name: buildConfiguration
+  value: 'Release'
+- name: versionBuildComponents
+  value: '.$(Build.BuildNumber)'
+
+stages:
+  - stage: build
+    jobs:
+      - job: build
+        pool:
+          vmImage: 'windows-2025-vs2026'
+        steps:
+
+
+        - task: UseDotNet@2
+          displayName: 'Use .NET SDK 10.0.201'
+          inputs:
+            packageType: sdk
+            version: 10.0.201
+            installationPath: $(Agent.ToolsDirectory)/dotnet
+
+        - task: DotNetCoreCLI@2
+          displayName: 'Install AzureSignTool 7.0.1'
+          inputs:
+            command: 'custom'
+            custom: 'tool'
+            arguments: 'install --global AzureSignTool --version 7.0.1'
+
+
+        - powershell: |
+            winget install --source winget --exact --id Microsoft.WindowsSDK.10.0.22621 --log $env:USERPROFILE/Desktop/sdk-install.log
+          displayName: "Install Windows SDK v10.0.22621.0"
+        
+        # NOTE: although NuGet restore is traditional for msbuild-based builds (and 'dotnet restore' for 'dotnet build'-based builds), 'dotnet restore' works with both
+        - task: DotNetCoreCLI@2
+          displayName: 'dotnet restore'
+          inputs:
+            command: restore
+            projects: '$(projects)'
+        
+        # Set a $(BUILD_TYPE) variable
+        # NOTE: we could change the build type depending on the branch type/name, but we currently do "production builds" for all branches
+        - bash: |
+            BUILD_TYPE="Production"
+            echo "##vso[task.setvariable variable=BUILD_TYPE]${BUILD_TYPE}"
+          env:
+            BRANCH: $(Build.SourceBranch)
+            BRANCH_NAME: $(Build.SourceBranchName)
+
+#        - task: Bash@3
+#          displayName: "write build info"
+#          env:
+#            BRANCH: $(Build.SourceBranch)
+#            BRANCH_NAME: $(Build.SourceBranchName)
+#            BUILD_NUM: $(Build.BuildNumber)
+#            COMMIT: $(Build.SourceVersion)
+#          inputs:
+#            targetType: 'filePath'
+#            filePath: set-build-info.sh
+
+
+### BUILD AND PUBLISH, CREATE MSI: x64
+
+        - task: MSBuild@1
+          displayName: "Build Morphic Client (x64)"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
+          inputs:       
+            solution: '$(Build.SourcesDirectory)\Morphic\Morphic.csproj'
+            platform: 'x64'
+            configuration: '$(buildConfiguration)'
+            msbuildArguments: '/t:restore,build /p:BuildType=$(BUILD_TYPE) /p:RuntimeIdentifier=win-x64'
+
+        - task: MSBuild@1
+          displayName: "Publish Morphic Client (x64)"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
+          inputs:       
+            solution: '$(Build.SourcesDirectory)\Morphic\Morphic.csproj'
+            platform: 'x64'
+            configuration: '$(buildConfiguration)'
+            msbuildArguments: '/t:publish /p:BuildType=$(BUILD_TYPE) /p:RuntimeIdentifier=win-x64'
+
+#        - task: CmdLine@2
+#          inputs:
+#            targetType: 'inline'
+#            script: >
+#              tree $(Build.SourcesDirectory)\Morphic.Client\bin /f
+              
+        - task: CmdLine@2
+          displayName: 'sign morphic client exe (x64)'
+          inputs:
+            targetType: 'inline'
+# NOTE: if we experience downtime with our cert provider's timestamp servers (which causes signing to fail),
+#       we can use the test server (production timestamps, but from a 2nd provider); note that we should NOT do
+#       this for any public preview or release builds...only for internal testing or emergency scenarios.
+#              -tr "$(TimestampUrl)"
+#              -tr "$(TimestampUrl2)"
+#              vs.
+#              -tr "$(TestOnlyTimestampUrl)"
+            script: >
+              AzureSignTool sign
+              -d Morphic
+              -du "$(SigningURL)"
+              -kvu "$(SigningVaultURL)"
+              -kvi "$(SigningClientId)"
+              -kvs "$(SigningClientSecret)"
+              -kvt "$(AzureTenantId)"
+              -kvc "$(SigningCertName)"
+              -tr "$(TimestampUrl2)"
+              -v
+              $(Build.SourcesDirectory)\Morphic\bin\x64\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-x64\publish\Morphic.exe
+
+        # Sign Morphic.NotificationHelper.exe with the same cert as Morphic.exe. Required for the
+        # helper's CallerVerification.IsCallerSignedByMorphic() check: at runtime the helper
+        # extracts Morphic.exe's signer thumbprint and compares to its own thumbprint; mismatch
+        # (including either being unsigned) causes the helper to refuse --show with the
+        # "companion app cannot be launched independently" message. The helper lands in Morphic's
+        # publish dir via the CopyNotificationHelperToMorphicPublish target in Morphic.csproj.
+        - task: CmdLine@2
+          displayName: 'sign notification helper exe (x64)'
+          inputs:
+            targetType: 'inline'
+            script: >
+              AzureSignTool sign
+              -d Morphic
+              -du "$(SigningURL)"
+              -kvu "$(SigningVaultURL)"
+              -kvi "$(SigningClientId)"
+              -kvs "$(SigningClientSecret)"
+              -kvt "$(AzureTenantId)"
+              -kvc "$(SigningCertName)"
+              -tr "$(TimestampUrl2)"
+              -v
+              $(Build.SourcesDirectory)\Morphic\bin\x64\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-x64\publish\Morphic.NotificationHelper.exe
+
+        # Sign PostInstallLauncher.exe with the same cert as Morphic.exe. Not strictly required by
+        # the uiAccess launch mechanism (only Morphic.exe must be signed to be granted uiAccess),
+        # but it ships inside the signed Program Files install and is launched during setup, so an
+        # unsigned exe here would be poor hygiene and a SmartScreen/AV snag. It lands in Morphic's
+        # publish dir via the CopyPostInstallLauncherToMorphicPublish target in Morphic.csproj.
+        - task: CmdLine@2
+          displayName: 'sign post-install launcher exe (x64)'
+          inputs:
+            targetType: 'inline'
+            script: >
+              AzureSignTool sign
+              -d Morphic
+              -du "$(SigningURL)"
+              -kvu "$(SigningVaultURL)"
+              -kvi "$(SigningClientId)"
+              -kvs "$(SigningClientSecret)"
+              -kvt "$(AzureTenantId)"
+              -kvc "$(SigningCertName)"
+              -tr "$(TimestampUrl2)"
+              -v
+              $(Build.SourcesDirectory)\Morphic\bin\x64\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-x64\publish\PostInstallLauncher.exe
+
+        - task: VSBuild@1
+          displayName: "restore installer dependencies"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
+          inputs:
+            solution: 'MorphicSetup\MorphicSetup.wixproj'
+            configuration: '$(buildConfiguration)'
+            msbuildArgs: '/t:restore'
+
+        - powershell: |
+            .\finalize-winui-publish.ps1 `
+              -Platform x64 `
+              -Configuration $(buildConfiguration) `
+              -SourceDir "$(Build.SourcesDirectory)"
+          displayName: 'finalize WinUI publishing (x64)'
+
+        - task: CopyFiles@2
+          displayName: "copy published/signed files (x64)"
+          inputs:
+            Contents: '**'
+            SourceFolder: 'Morphic\bin\x64\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-x64\publish\'
+            TargetFolder: 'MorphicSetup\obj\x64\$(buildConfiguration)\publish\Morphic'
+            CleanTargetFolder: true
+
+#        - powershell: |
+#            .\copy-extras-to-installer-staging.ps1 `
+#              -Platform x64 `
+#              -Configuration $(buildConfiguration) `
+#              -SourceDir "$(Build.SourcesDirectory)" `
+#              -TargetDir "MorphicSetup\obj\x64\$(buildConfiguration)\publish\Morphic"
+#          displayName: 'copy compiled XAML (x64)'
+
+        # Build the MorphicSetup.Actions managed-CA assembly before the installer build.
+        # The installer wixproj is built with /p:BuildProjectReferences=false (so the
+        # already-published Morphic.csproj isn't rebuilt), which also skips the implicit
+        # build of MorphicSetup.Actions. This step builds it explicitly so the
+        # SfxCA-wrapped MorphicSetup.Actions.CA.dll exists before WiX tries to bind to it.
+        - task: MSBuild@1
+          displayName: "Build MorphicSetup.Actions (x64)"
+          inputs:
+            solution: '$(Build.SourcesDirectory)\MorphicSetup.Actions\MorphicSetup.Actions.csproj'
+            platform: 'x64'
+            configuration: '$(buildConfiguration)'
+            msbuildArguments: '/t:build'
+
+        - task: VSBuild@1
+          displayName: "build installer (x64)"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
+          inputs:
+            solution: 'MorphicSetup\MorphicSetup.wixproj'
+            platform: 'x64'
+            configuration: '$(buildConfiguration)'
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false'
+
+        - task: CmdLine@2
+          displayName: 'sign installer (x64)'
+          inputs:
+            targetType: 'inline'
+# NOTE: if we experience downtime with our cert provider's timestamp servers (which causes signing to fail), 
+#       we can use the test server (production timestamps, but from a 2nd provider); note that we should NOT do
+#       this for any public preview or release builds...only for internal testing or emergency scenarios.
+#              -tr "$(TimestampUrl)"
+#              -tr "$(TimestampUrl2)"
+#              vs.
+#              -tr "$(TestOnlyTimestampUrl)"
+            script: >
+              AzureSignTool sign
+              -d Morphic
+              -du "$(SigningURL)"
+              -kvu "$(SigningVaultURL)"
+              -kvi "$(SigningClientId)"
+              -kvt "$(AzureTenantId)"
+              -kvs "$(SigningClientSecret)"
+              -kvc "$(SigningCertName)"
+              -tr "$(TimestampUrl2)"
+              -v $(System.DefaultWorkingDirectory)\MorphicSetup\bin\x64\$(buildConfiguration)\en-US\MorphicSetup.msi
+
+        - publish: $(System.DefaultWorkingDirectory)\MorphicSetup\bin\x64\$(buildConfiguration)\en-US\MorphicSetup.msi
+          displayName: "Cache MSI for upload (x64)"
+          artifact: msi-x64
+
+
+### BUILD AND PUBLISH, CREATE MSI: ARM64
+
+        - task: MSBuild@1
+          displayName: "Build Morphic Client (arm64)"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
+          inputs:       
+            solution: '$(Build.SourcesDirectory)\Morphic\Morphic.csproj'
+            platform: 'arm64'
+            configuration: '$(buildConfiguration)'
+            msbuildArguments: '/t:restore,build /p:BuildType=$(BUILD_TYPE) /p:RuntimeIdentifier=win-arm64'
+
+        - task: MSBuild@1
+          displayName: "Publish Morphic Client (arm64)"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'             
+          inputs:       
+            solution: '$(Build.SourcesDirectory)\Morphic\Morphic.csproj'
+            platform: 'arm64'
+            configuration: '$(buildConfiguration)'
+            msbuildArguments: '/t:publish /p:BuildType=$(BUILD_TYPE) /p:RuntimeIdentifier=win-arm64'
+
+#        - task: CmdLine@2
+#          inputs:
+#            targetType: 'inline'
+#            script: >
+#              tree $(Build.SourcesDirectory)\Morphic.Client\bin /f
+              
+        - task: CmdLine@2
+          displayName: 'sign morphic client exe (arm64)'
+          inputs:
+            targetType: 'inline'
+# NOTE: if we experience downtime with our cert provider's timestamp servers (which causes signing to fail),
+#       we can use the test server (production timestamps, but from a 2nd provider); note that we should NOT do
+#       this for any public preview or release builds...only for internal testing or emergency scenarios.
+#              -tr "$(TimestampUrl)"
+#              -tr "$(TimestampUrl2)"
+#              vs.
+#              -tr "$(TestOnlyTimestampUrl)"
+            script: >
+              AzureSignTool sign
+              -d Morphic
+              -du "$(SigningURL)"
+              -kvu "$(SigningVaultURL)"
+              -kvi "$(SigningClientId)"
+              -kvs "$(SigningClientSecret)"
+              -kvt "$(AzureTenantId)"
+              -kvc "$(SigningCertName)"
+              -tr "$(TimestampUrl2)"
+              -v
+              $(Build.SourcesDirectory)\Morphic\bin\arm64\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-arm64\publish\Morphic.exe
+
+        # See the x64 helper-signing step above for rationale.
+        - task: CmdLine@2
+          displayName: 'sign notification helper exe (arm64)'
+          inputs:
+            targetType: 'inline'
+            script: >
+              AzureSignTool sign
+              -d Morphic
+              -du "$(SigningURL)"
+              -kvu "$(SigningVaultURL)"
+              -kvi "$(SigningClientId)"
+              -kvs "$(SigningClientSecret)"
+              -kvt "$(AzureTenantId)"
+              -kvc "$(SigningCertName)"
+              -tr "$(TimestampUrl2)"
+              -v
+              $(Build.SourcesDirectory)\Morphic\bin\arm64\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-arm64\publish\Morphic.NotificationHelper.exe
+
+        # See the x64 post-install launcher signing step above for rationale.
+        - task: CmdLine@2
+          displayName: 'sign post-install launcher exe (arm64)'
+          inputs:
+            targetType: 'inline'
+            script: >
+              AzureSignTool sign
+              -d Morphic
+              -du "$(SigningURL)"
+              -kvu "$(SigningVaultURL)"
+              -kvi "$(SigningClientId)"
+              -kvs "$(SigningClientSecret)"
+              -kvt "$(AzureTenantId)"
+              -kvc "$(SigningCertName)"
+              -tr "$(TimestampUrl2)"
+              -v
+              $(Build.SourcesDirectory)\Morphic\bin\arm64\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-arm64\publish\PostInstallLauncher.exe
+
+        - task: VSBuild@1
+          displayName: "restore installer dependencies"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
+          inputs:
+            solution: 'MorphicSetup\MorphicSetup.wixproj'
+            configuration: '$(buildConfiguration)'
+            msbuildArgs: '/t:restore'
+
+        - powershell: |
+            .\finalize-winui-publish.ps1 `
+              -Platform arm64 `
+              -Configuration $(buildConfiguration) `
+              -SourceDir "$(Build.SourcesDirectory)"
+          displayName: 'finalize WinUI publishing (arm64)'
+
+        - task: CopyFiles@2
+          displayName: "copy published/signed files (arm64)"
+          inputs:
+            Contents: '**'
+            SourceFolder: 'Morphic\bin\arm64\$(buildConfiguration)\net10.0-windows10.0.22621.0\win-arm64\publish\'
+            TargetFolder: 'MorphicSetup\obj\arm64\$(buildConfiguration)\publish\Morphic'
+            CleanTargetFolder: true
+
+#        - powershell: |
+#            .\copy-extras-to-installer-staging.ps1 `
+#              -Platform ARM64 `
+#              -Configuration $(buildConfiguration) `
+#              -SourceDir "$(Build.SourcesDirectory)" `
+#              -TargetDir "MorphicSetup\obj\ARM64\$(buildConfiguration)\publish\Morphic"
+#          displayName: 'copy compiled XAML (ARM64)'
+
+        - task: MSBuild@1
+          displayName: "Build MorphicSetup.Actions (arm64)"
+          inputs:
+            solution: '$(Build.SourcesDirectory)\MorphicSetup.Actions\MorphicSetup.Actions.csproj'
+            platform: 'arm64'
+            configuration: '$(buildConfiguration)'
+            msbuildArguments: '/t:build'
+
+        - task: VSBuild@1
+          displayName: "build installer (arm64)"
+          env:
+            VERSIONBUILDCOMPONENTS: '$(versionBuildComponents)'
+          inputs:
+            solution: 'MorphicSetup\MorphicSetup.wixproj'
+            platform: 'arm64'
+            configuration: '$(buildConfiguration)'
+            msbuildArgs: '/p:BuildType=$(BUILD_TYPE) /p:BuildProjectReferences=false'
+
+        - task: CmdLine@2
+          displayName: 'sign installer (arm64)'
+          inputs:
+            targetType: 'inline'
+# NOTE: if we experience downtime with our cert provider's timestamp servers (which causes signing to fail), 
+#       we can use the test server (production timestamps, but from a 2nd provider); note that we should NOT do
+#       this for any public preview or release builds...only for internal testing or emergency scenarios.
+#              -tr "$(TimestampUrl)"
+#              -tr "$(TimestampUrl2)"
+#              vs.
+#              -tr "$(TestOnlyTimestampUrl)"
+            script: >
+              AzureSignTool sign
+              -d Morphic
+              -du "$(SigningURL)"
+              -kvu "$(SigningVaultURL)"
+              -kvi "$(SigningClientId)"
+              -kvt "$(AzureTenantId)"
+              -kvs "$(SigningClientSecret)"
+              -kvc "$(SigningCertName)"
+              -tr "$(TimestampUrl2)"
+              -v $(System.DefaultWorkingDirectory)\MorphicSetup\bin\arm64\$(buildConfiguration)\en-US\MorphicSetup.msi
+
+        - publish: $(System.DefaultWorkingDirectory)\MorphicSetup\bin\arm64\$(buildConfiguration)\en-US\MorphicSetup.msi
+          displayName: "Cache MSI for upload (arm64)"
+          artifact: msi-arm64
+
+
+### PREPARE TO BUILD MSIx
+
+        - publish: $(System.DefaultWorkingDirectory)\Morphic\BuildVersion.txt
+          displayName: "Cache build version number"
+          artifact: build-version
+
+        - powershell: |
+            # Read the full version string from line 2 of BuildVersion.txt
+            $version = (Get-Content "$(System.DefaultWorkingDirectory)\Morphic\BuildVersion.txt")[1].Trim()
+            Write-Host "Using version: $version"
+            # Update MorphicPackage's appmanifest with the version number before building it
+            [xml]$manifest = Get-Content "$(System.DefaultWorkingDirectory)\Morphic (Package)\Package.appxmanifest"
+            $manifest.Package.Identity.Version = $version
+            $manifest.Save("$(System.DefaultWorkingDirectory)\Morphic (Package)\Package.appxmanifest")
+          displayName: 'Assign version to package manifest'
+
+
+### BUILD MSIx: x64
+
+
+#        - task: MSBuild@1
+#          displayName: 'Build packaged app (x64)'
+#          inputs:
+#            solution: 'Morphic (Package)/Morphic (Package).wapproj'
+#            platform: 'x64'
+#            configuration: $(buildConfiguration)
+#            msbuildArguments: '/p:UapAppxPackageBuildMode=SideLoadOnly /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-x64.msix /p:AppxPackageSigningEnabled=false'
+
+        - powershell: |
+            .\package-msix.ps1 `
+              -Platform x64 `
+              -Configuration $(buildConfiguration) `
+              -SourceDir "$(Build.SourcesDirectory)" `
+              -OutputMsix "$(Build.ArtifactStagingDirectory)\MorphicSetup-x64.msix" `
+              -StagingDir "$(Build.BinariesDirectory)\MsixStaging"
+          displayName: 'Build packaged app (x64)'
+
+        - task: CmdLine@2
+          displayName: 'Sign MSIX (x64)'
+          inputs:
+            script: >
+              AzureSignTool sign
+              -d Morphic
+              -du "$(SigningURL)"
+              -kvu "$(SigningVaultURL)"
+              -kvi "$(SigningClientId)"
+              -kvt "$(AzureTenantId)"
+              -kvs "$(SigningClientSecret)"
+              -kvc "$(SigningCertName)"
+              -tr "$(TimestampUrl2)"
+              -v $(Build.ArtifactStagingDirectory)\MorphicSetup-x64.msix
+
+        - task: PublishPipelineArtifact@1
+          displayName: "Cache MSIX (x64) for upload"
+          inputs:
+            targetPath: $(Build.ArtifactStagingDirectory)\MorphicSetup-x64.msix
+            artifactName: msix-x64
+            artifactType: pipeline
+
+
+### BUILD MSIx: ARM64
+
+
+#        - task: MSBuild@1
+#          displayName: 'Build packaged app (ARM64)'
+#          inputs:
+#            solution: 'Morphic (Package)/Morphic (Package).wapproj'
+#            platform: 'ARM64'
+#            configuration: $(buildConfiguration)
+#            msbuildArguments: '/p:UapAppxPackageBuildMode=SideLoadOnly /p:AppxBundle=Never /p:AppxPackageOutput=$(Build.ArtifactStagingDirectory)\MorphicSetup-ARM64.msix /p:AppxPackageSigningEnabled=false'
+
+        - powershell: |
+            .\package-msix.ps1 `
+              -Platform ARM64 `
+              -Configuration $(buildConfiguration) `
+              -SourceDir "$(Build.SourcesDirectory)" `
+              -OutputMsix "$(Build.ArtifactStagingDirectory)\MorphicSetup-ARM64.msix" `
+              -StagingDir "$(Build.BinariesDirectory)\MsixStaging"
+          displayName: 'Build packaged app (ARM64)'
+
+        - task: CmdLine@2
+          displayName: 'Sign MSIX (arm64)'
+          inputs:
+            script: >
+              AzureSignTool sign
+              -d Morphic
+              -du "$(SigningURL)"
+              -kvu "$(SigningVaultURL)"
+              -kvi "$(SigningClientId)"
+              -kvt "$(AzureTenantId)"
+              -kvs "$(SigningClientSecret)"
+              -kvc "$(SigningCertName)"
+              -tr "$(TimestampUrl2)"
+              -v $(Build.ArtifactStagingDirectory)\MorphicSetup-arm64.msix
+
+        - task: PublishPipelineArtifact@1
+          displayName: "Cache MSIX (arm64) for upload"
+          inputs:
+            targetPath: $(Build.ArtifactStagingDirectory)\MorphicSetup-arm64.msix
+            artifactName: msix-arm64
+            artifactType: pipeline
+
+  - stage: publish
+    # Runs for every build, including PRs, so a PR on a recognized build-type branch
+    # (dev/canary/preview/release) publishes its installers. The upload step derives the build type
+    # from the branch and skips gracefully (exit 0, no upload) on an unrecognized prefix.
+    condition: succeeded()
+    jobs:
+      - job: publish
+        pool:
+          vmImage: "ubuntu-24.04"
+        steps:
+        - download: current
+          artifact: build-version
+
+        - download: current
+          artifact: msi-x64
+
+        - download: current
+          artifact: msi-arm64
+
+        - task: DownloadPipelineArtifact@2
+          displayName: "Capture MSIX (x64) for upload"
+          inputs:
+            source: 'current'
+            artifact: msix-x64
+            path: msix-x64
+
+        - task: DownloadPipelineArtifact@2
+          displayName: "Capture MSIX (arm64) for upload"
+          inputs:
+            source: 'current'
+            artifact: msix-arm64
+            path: msix-arm64
+
+        - task: Bash@3
+          displayName: "Upload MSIs/MSIXs to S3"
+          env:
+              AWS_ACCESS_KEY_ID: $(accessKey)
+              AWS_SECRET_ACCESS_KEY: $(secretKey)
+              AWS_DEFAULT_REGION: $(region)
+              BUCKET: $(bucket)
+          inputs:
+            targetType: 'inline'
+            script: |
+                    # automatically exit if any command returns an error exit code
+                    set -e
+                    # print all commands to the terminal output
+                    set -x
+
+                    S3_BUILD_OPERATING_SYSTEM="win"
+
+                    # Derive the build type from the git branch name. Branches are named
+                    # "BUILDTYPE/..." (e.g. dev/2.x, canary/2.x, preview/2.x, release/2.x), so the
+                    # build type is the branch-name segment before the first "/".
+                    #
+                    # For a PR validation build, Build.SourceBranch is the merge ref
+                    # (refs/pull/N/merge), NOT the branch under review, so use the PR's actual source
+                    # branch (System.PullRequest.SourceBranch); otherwise use Build.SourceBranch.
+                    if [ "${BUILD_REASON}" = "PullRequest" ]; then
+                      SOURCE_BRANCH_REF="${SYSTEM_PULLREQUEST_SOURCEBRANCH}"
+                    else
+                      SOURCE_BRANCH_REF="${BUILD_SOURCEBRANCH}"
+                    fi
+                    SOURCE_BRANCH="${SOURCE_BRANCH_REF#refs/heads/}"
+                    S3_BUILD_TYPE="${SOURCE_BRANCH%%/*}"
+                    echo "detected build type '${S3_BUILD_TYPE}' from branch '${SOURCE_BRANCH_REF}' (reason '${BUILD_REASON}')"
+
+                    # Map the build type to its S3 folder name and installer filename suffix:
+                    #   dev     -> folder "dev",    suffix "-dev"
+                    #   canary  -> folder "edge",   suffix "-canary"
+                    #   preview -> folder "stable", suffix "-preview"
+                    #   release -> folder "stable", suffix "" (none)
+                    case "${S3_BUILD_TYPE}" in
+                      dev)     S3_BUILD_FOLDER="dev";    S3_BUILD_TYPE_FILENAME_SUFFIX="-dev";;
+                      canary)  S3_BUILD_FOLDER="edge";   S3_BUILD_TYPE_FILENAME_SUFFIX="-canary";;
+                      preview) S3_BUILD_FOLDER="stable"; S3_BUILD_TYPE_FILENAME_SUFFIX="-preview";;
+                      release) S3_BUILD_FOLDER="stable"; S3_BUILD_TYPE_FILENAME_SUFFIX="";;
+                      *)       echo "Build type '${S3_BUILD_TYPE}' (branch '${SOURCE_BRANCH_REF}') is not a recognized publish target; skipping publish."; exit 0;;
+                    esac
+
+                    # expire dev builds after 7 days
+                    EXTRA_ARGS="--expires $(date -d '+7 days' --iso-8601=seconds)"
+
+                    S3_PUBLISHED_HTTP_URL="https://d23vryjv7k8eyb.cloudfront.net"
+
+                    publishMsixInstaller() {
+                      VERSION=$(sed -n 1p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
+                      LOCAL_MSIX_SOURCE="${AGENT_BUILDDIRECTORY}/${LOCAL_MSIX_DIR}/${MSIX_NAME_BASE}.msix"
+                      S3_MSIX_OBJECT_NAME="${S3_BUILD_OPERATING_SYSTEM}/${S3_BUILD_ARCHITECTURE}/${S3_BUILD_FOLDER}/MorphicSetup-v${VERSION}${S3_BUILD_TYPE_FILENAME_SUFFIX}-${S3_BUILD_ARCHITECTURE}.msix"
+
+                      # debug: output the contents of the build directory
+                      ls -al ${AGENT_BUILDDIRECTORY}/${LOCAL_MSIX_DIR}
+                      aws s3 cp $EXTRA_ARGS "${LOCAL_MSIX_SOURCE}" "s3://${BUCKET}/${S3_MSIX_OBJECT_NAME}"
+                    }
+
+                    publishMsiInstaller() {
+                      VERSION=$(sed -n 1p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
+                      ASSEMBLY_VERSION=$(sed -n 2p ${AGENT_BUILDDIRECTORY}/build-version/BuildVersion.txt | tr -d [:space:])
+                      LOCAL_MSI_SOURCE="${AGENT_BUILDDIRECTORY}/${LOCAL_MSI_DIR}/${MSI_NAME_BASE}.msi"
+                      LOCAL_APPCAST_SOURCE="${AGENT_BUILDDIRECTORY}/${MSI_NAME_BASE}-v${VERSION}.appcast.xml"
+                      S3_MSI_OBJECT_NAME="${S3_BUILD_OPERATING_SYSTEM}/${S3_BUILD_ARCHITECTURE}/${S3_BUILD_FOLDER}/${MSI_NAME_BASE}-v${VERSION}${S3_BUILD_TYPE_FILENAME_SUFFIX}-${S3_BUILD_ARCHITECTURE}.msi"
+                      S3_APPCAST_OBJECT_NAME="${S3_BUILD_OPERATING_SYSTEM}/${S3_BUILD_ARCHITECTURE}/${S3_BUILD_FOLDER}/${MSI_NAME_BASE}-v${VERSION}.appcast.xml"
+
+                      cat > "${LOCAL_APPCAST_SOURCE}" <<EOF
+                    <?xml version="1.0" encoding="utf-8"?>
+                    <item>
+                        <version>${ASSEMBLY_VERSION}</version>
+                        <url>${S3_PUBLISHED_HTTP_URL}/${S3_MSI_OBJECT_NAME}</url>
+                    </item>
+                    EOF
+
+                      echo ${S3_PUBLISHED_HTTP_URL}/${S3_APPCAST_OBJECT_NAME}
+                      cat "${LOCAL_APPCAST_SOURCE}"
+
+                      # debug: output the contents of the build directory
+                      ls -al ${AGENT_BUILDDIRECTORY}
+                      aws s3 cp $EXTRA_ARGS "${LOCAL_MSI_SOURCE}" "s3://${BUCKET}/${S3_MSI_OBJECT_NAME}"
+                      aws s3 cp $EXTRA_ARGS "${LOCAL_APPCAST_SOURCE}" "s3://${BUCKET}/${S3_APPCAST_OBJECT_NAME}"
+                    }
+
+                    echo "Upload MSI (x64) to S3"
+                    MSI_NAME_BASE="MorphicSetup"
+                    LOCAL_MSI_DIR="msi-x64"
+                    S3_BUILD_ARCHITECTURE="x64"
+                    publishMsiInstaller
+
+                    echo "Upload MSI (arm64) to S3"
+                    MSI_NAME_BASE="MorphicSetup"
+                    LOCAL_MSI_DIR="msi-arm64"
+                    S3_BUILD_ARCHITECTURE="arm64"
+                    publishMsiInstaller
+
+                    echo "Uploading MSIX (x64) to S3"
+                    MSIX_NAME_BASE="MorphicSetup-x64"
+                    # NOTE: "s/" is a temporary path requirement; we may also consider calling these folders just "x64" etc.
+                    LOCAL_MSIX_DIR="s/msix-x64"
+                    S3_BUILD_ARCHITECTURE="x64"
+                    publishMsixInstaller
+
+                    echo "Uploading MSIX (arm64) to S3"
+                    MSIX_NAME_BASE="MorphicSetup-arm64"
+                    # NOTE: "s/" is a temporary path requirement; we may also consider calling these folders just "arm64" etc.
+                    LOCAL_MSIX_DIR="s/msix-arm64"
+                    S3_BUILD_ARCHITECTURE="arm64"
+                    publishMsixInstaller
+

@@ -1,0 +1,94 @@
+﻿<Project Sdk="WixToolset.Sdk/4.0.6">
+	
+  <!-- Suppressed ICE checks:
+       * ICE03 - incorrect-validation false positives from the WiX validation framework.
+       * ICE61 - false positive caused by AllowSameVersionUpgrades="yes" on MajorUpgrade
+                (Package.wxs). That attribute makes WiX author an Upgrade row with
+                Maximum=current Version and IncludeMaximum="yes", which ICE61 flags as
+                "this product should remove only older versions of itself" because under
+                normal MajorUpgrade semantics it would make the new product try to
+                uninstall itself. With AllowSameVersionUpgrades that's the intended
+                behavior (needed because Morphic puts build info in the 4th version
+                component, which MSI's version comparison ignores), so the ICE check is
+                wrong here.
+       * ICE69 - intentionally triggered by the Start Menu shortcut in ApplicationComponent
+                (Package.wxs): the shortcut's Target=[#morphic_exe] references a file in a
+                different component. This is Microsoft's documented best practice for
+                non-advertised shortcuts (per-user shortcut in a HKCU-keyed component,
+                pointing at a per-machine file in its own component); ICE69 fires anyway as
+                a generic cross-component-reference warning, but in this exact pattern it's
+                benign because both components are in the same Feature and install/uninstall
+                atomically. See the comment on ApplicationComponent in Package.wxs for the
+                rationale on why the alternative layouts trigger worse problems. -->
+  <PropertyGroup>
+    <RunWixToolsOutOfProc Condition=" '$(PROCESSOR_ARCHITECTURE)'!='x86' ">true</RunWixToolsOutOfProc>
+    <SuppressValidation>false</SuppressValidation>
+    <SuppressIces>ICE03;ICE61;ICE69</SuppressIces>
+  </PropertyGroup>
+	
+  <ItemGroup>
+    <ProjectReference Include="..\Morphic\Morphic.csproj" Publish="true" />
+
+    <!-- Managed custom-action assembly. Built before this wixproj so the .CA.dll
+         referenced from Package.wxs (via $(var.MorphicSetup.Actions.TargetDir))
+         exists at WiX bind time. -->
+    <ProjectReference Include="..\MorphicSetup.Actions\MorphicSetup.Actions.csproj" />
+
+    <HarvestDirectory Include="$(IntermediateOutputPath)\publish\Morphic">
+      <ComponentGroupName>MorphicSupportComponents</ComponentGroupName>
+      <DirectoryRefId>INSTALLFOLDER</DirectoryRefId>
+      <SuppressRootDirectory>true</SuppressRootDirectory>
+      <SuppressRegistry>true</SuppressRegistry>
+      <Transforms>heatfilter.xsl</Transforms>
+    </HarvestDirectory>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Content Include="License.rtf" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="WixToolset.Heat" Version="4.0.6" />
+    <PackageReference Include="WixToolset.UI.wixext" Version="4.0.6" />
+    <PackageReference Include="WixToolset.Util.wixext" Version="4.0.6" />
+  </ItemGroup>
+
+  <!-- Windows App Runtime installer EXE that Package.wxs chains during install. Pinned to
+       the same version as the Microsoft.WindowsAppSDK PackageReference in
+       Morphic\Morphic.csproj (currently 2.1.3); update both in lockstep when bumping the
+       SDK. The aka.ms redirects below are the stable per-version download URLs published
+       by Microsoft. -->
+  <PropertyGroup>
+    <WindowsAppRuntimeVersion>2.1.3</WindowsAppRuntimeVersion>
+    <WindowsAppRuntimeInstallerUrlX64>https://aka.ms/windowsappsdk/2.1/$(WindowsAppRuntimeVersion)/windowsappruntimeinstall-x64.exe</WindowsAppRuntimeInstallerUrlX64>
+    <WindowsAppRuntimeInstallerUrlArm64>https://aka.ms/windowsappsdk/2.1/$(WindowsAppRuntimeVersion)/windowsappruntimeinstall-arm64.exe</WindowsAppRuntimeInstallerUrlArm64>
+  </PropertyGroup>
+
+  <!-- Downloads the architecture-matched WindowsAppRuntimeInstall*.exe into prerequisites\
+       before the WiX compile starts. Runs only for the platform being built and only when the 
+       destination file is missing (so repeated local builds don't re-download). BeforeTargets 
+       ties this to the earliest part of the WiX build pipeline; using "Build" alone would race 
+       the WXS compile that needs the file. SkipUnchangedFiles also guards against accidental
+       overwrites of a file that's already correct. -->
+  <Target Name="DownloadWindowsAppRuntimeInstallerX64"
+          BeforeTargets="BeforeBuild;Compile"
+          Condition="'$(Platform)' == 'x64' AND !Exists('prerequisites\WindowsAppRuntimeInstall-x64.exe')">
+    <Message Importance="High" Text="Downloading WindowsAppRuntimeInstall-x64.exe (Windows App Runtime $(WindowsAppRuntimeVersion)) from $(WindowsAppRuntimeInstallerUrlX64)..." />
+    <DownloadFile SourceUrl="$(WindowsAppRuntimeInstallerUrlX64)"
+                  DestinationFolder="prerequisites"
+                  DestinationFileName="WindowsAppRuntimeInstall-x64.exe"
+                  SkipUnchangedFiles="true"
+                  Retries="3" />
+  </Target>
+
+  <Target Name="DownloadWindowsAppRuntimeInstallerArm64"
+          BeforeTargets="BeforeBuild;Compile"
+          Condition="'$(Platform)' == 'ARM64' AND !Exists('prerequisites\WindowsAppRuntimeInstall-arm64.exe')">
+    <Message Importance="High" Text="Downloading WindowsAppRuntimeInstall-arm64.exe (Windows App Runtime $(WindowsAppRuntimeVersion)) from $(WindowsAppRuntimeInstallerUrlArm64)..." />
+    <DownloadFile SourceUrl="$(WindowsAppRuntimeInstallerUrlArm64)"
+                  DestinationFolder="prerequisites"
+                  DestinationFileName="WindowsAppRuntimeInstall-arm64.exe"
+                  SkipUnchangedFiles="true"
+                  Retries="3" />
+  </Target>
+</Project>

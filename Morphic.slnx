@@ -1,0 +1,68 @@
+<Solution>
+  <Configurations>
+    <BuildType Name="Debug" />
+    <BuildType Name="Release" />
+    <BuildType Name="Debug-Packaged" />
+    <BuildType Name="Release-Packaged" />
+    <Platform Name="ARM64" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Project Path="Morphic (Package)/Morphic (Package).wapproj" Type="c7167f0d-bc9f-4e6e-afe1-012c56b48db5">
+    <Build Solution="Debug|*" Project="false" />
+    <Build Solution="Release|*" Project="false" />
+    <Deploy Solution="Debug-Packaged|*" />
+    <Deploy Solution="Release-Packaged|*" />
+  </Project>
+  <Project Path="Morphic.Controls/Morphic.Controls.csproj" Id="6d98212d-7747-45a2-bcce-3bd49279a865">
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="Morphic.Core/Morphic.Core.csproj" Id="8f7fe745-1eaa-4c54-9644-c8bb0a8eb1ed">
+    <Platform Solution="*|ARM64" Project="AnyCPU" />
+    <Platform Solution="*|x64" Project="AnyCPU" />
+  </Project>
+  <Project Path="Morphic.NotificationHelper/Morphic.NotificationHelper.csproj">
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+    <BuildType Solution="Debug-Packaged|*" Project="Debug" />
+    <BuildType Solution="Release-Packaged|*" Project="Release" />
+    <Build Solution="Debug-Packaged|*" Project="false" />
+    <Build Solution="Release-Packaged|*" Project="false" />
+  </Project>
+  <Project Path="Morphic.PostInstallLauncher/Morphic.PostInstallLauncher.csproj">
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+    <BuildType Solution="Debug-Packaged|*" Project="Debug" />
+    <BuildType Solution="Release-Packaged|*" Project="Release" />
+    <Build Solution="Debug-Packaged|*" Project="false" />
+    <Build Solution="Release-Packaged|*" Project="false" />
+  </Project>
+  <Project Path="Morphic.Notifications/Morphic.Notifications.csproj">
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="Morphic.WindowsNative/Morphic.WindowsNative.csproj" Id="70c9b628-abe5-4bc6-983b-84acbaaf454d">
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="Morphic/Morphic.csproj">
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="MorphicSetup.Actions/MorphicSetup.Actions.csproj">
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+    <BuildType Solution="Debug-Packaged|*" Project="Debug" />
+    <BuildType Solution="Release-Packaged|*" Project="Release" />
+    <Build Solution="Debug-Packaged|*" Project="false" />
+    <Build Solution="Release-Packaged|*" Project="false" />
+  </Project>
+  <Project Path="MorphicSetup/MorphicSetup.wixproj" Type="b7dd6f7e-def8-4e67-b5b7-07ef123db6f0">
+    <Platform Solution="*|x64" Project="x64" />
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <BuildType Solution="Debug-Packaged|*" Project="Debug" />
+    <BuildType Solution="Release-Packaged|*" Project="Release" />
+    <Build Solution="Debug-Packaged|*" Project="false" />
+    <Build Solution="Release-Packaged|*" Project="false" />
+  </Project>
+</Solution>

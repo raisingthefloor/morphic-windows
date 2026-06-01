@@ -1,0 +1,50 @@
+# copy-extras-to-installer-staging.ps1 — Copies build-output-only files to the installer staging directory
+# The publish step does not include .xbf or Morphic.pri files; they must be copied from the build output.
+# Used by both Azure Pipelines and local builds.
+#
+# Usage:
+#   .\copy-extras-to-installer-staging.ps1 -Platform x64 -Configuration Release -SourceDir . -TargetDir MorphicSetup\obj\x64\Release\publish\Morphic
+
+param(
+    [Parameter(Mandatory)][ValidateSet("x64","x86","ARM64")][string]$Platform,
+    [Parameter(Mandatory)][string]$Configuration,
+    [Parameter(Mandatory)][string]$SourceDir,
+    [Parameter(Mandatory)][string]$TargetDir
+)
+
+$ErrorActionPreference = "Stop"
+
+$rid = switch ($Platform) {
+    "x64"   { "win-x64" }
+    "x86"   { "win-x86" }
+    "ARM64" { "win-arm64" }
+}
+
+$buildDir = "$SourceDir\Morphic\bin\$Platform\$Configuration\net10.0-windows10.0.22621.0\$rid"
+
+# Copy compiled XAML files (.xbf) that the publish step does not include (recursing into subdirectories)
+$xbfFiles = Get-ChildItem -Path $buildDir -Filter "*.xbf" -File -Recurse
+if ($xbfFiles.Count -eq 0) {
+    throw "No .xbf files found in $buildDir. Ensure the build step completed successfully."
+}
+
+foreach ($file in $xbfFiles) {
+    $relativePath = $file.FullName.Substring($buildDir.Length).TrimStart('\')
+    $destPath = Join-Path $TargetDir $relativePath
+    $destDir = Split-Path $destPath -Parent
+    if (-not (Test-Path $destDir)) {
+        New-Item -ItemType Directory -Force -Path $destDir | Out-Null
+    }
+    Write-Host "Copying $relativePath..."
+    Copy-Item -Path $file.FullName -Destination $destPath -Force
+}
+
+# Copy Morphic.pri (app resource index — maps .xbf files for the XAML resource loader)
+$priFile = "$buildDir\Morphic.pri"
+if (-not (Test-Path $priFile)) {
+    throw "Morphic.pri not found at $buildDir. Ensure the build step completed successfully."
+}
+Write-Host "Copying Morphic.pri..."
+Copy-Item -Path $priFile -Destination "$TargetDir\Morphic.pri" -Force
+
+Write-Host "Copied $($xbfFiles.Count) .xbf file(s) and Morphic.pri to $TargetDir"

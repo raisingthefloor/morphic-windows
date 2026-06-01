@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Application
+    x:Class="Morphic.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Morphic">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+                <!-- Other merged dictionaries here -->
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- App-wide icon paths for the three contrast variants. Single source of truth so
+                 every window and tray-icon swap point uses the same files.
+		 Naming convention: the file name describes the TARGET HC theme family, not the 
+		 color of the pixels. "highcontrastblack" is the icon FOR the HC Black-style theme 
+		 (and thus contains light pixels); "highcontrastwhite" is for HC White-style (contains 
+		 dark pixels). -->
+            <x:String x:Key="AppIconStandardContrastPath">Assets/Icons/morphic-standardcontrast.ico</x:String>
+            <x:String x:Key="AppIconHighContrastBlackPath">Assets/Icons/morphic-highcontrastblack.ico</x:String>
+            <x:String x:Key="AppIconHighContrastWhitePath">Assets/Icons/morphic-highcontrastwhite.ico</x:String>
+
+            <!-- Color palette for MorphicBar item controls.
+                 These are NOT placed inside ThemeDictionaries because they
+                 should not follow the system Light/Dark setting. -->
+            <SolidColorBrush x:Key="MorphicBarControlBackground"              Color="#008145"/>
+            <SolidColorBrush x:Key="MorphicBarControlHoverBackground"         Color="#269562"/>
+            <SolidColorBrush x:Key="MorphicBarControlPressedBackground"       Color="#4DA880"/>
+            <SolidColorBrush x:Key="MorphicBarControlCheckedBackground"       Color="White"/>
+            <SolidColorBrush x:Key="MorphicBarControlCheckedHoverBackground"  Color="#E8E8E8"/>
+            <SolidColorBrush x:Key="MorphicBarControlCheckedPressedBackground" Color="#D0D0D0"/>
+            <SolidColorBrush x:Key="MorphicBarControlCheckedForeground"       Color="#008145"/>
+            <SolidColorBrush x:Key="MorphicBarControlForeground"              Color="White"/>
+            <!-- -->
+            <!-- Toggle button border: matches the unchecked bg green in non-HC (so the border is
+                 invisible when unchecked and shows as a 2px green ring around the white fill when
+                 checked). Currently NOT overridden in the HighContrast ThemeDictionary or bound
+                 by code, so under HC the same green resolves through. Kept as a dedicated key
+                 (rather than reusing MorphicBarControlBackground) as a PLACEHOLDER, similar
+                 in spirit to MorphicBarControlDisabledForeground below, so a future HC variant
+                 can wire it up via MorphicSysColorBrushBinder in App.xaml.cs (e.g. to
+                 MorphicSysColor.WindowText) without having to retrofit the templates. -->
+            <SolidColorBrush x:Key="MorphicBarControlBorder"                  Color="#008145"/>
+            <!-- -->
+            <!-- Disabled foreground: a placeholder that App.xaml.cs binds to GetSysColor(COLOR_GRAYTEXT)
+                 via MorphicSysColorBrushBinder. Under HC the bound value follows the active theme's
+                 GRAYTEXT (per-HC-theme), and outside HC it gets Windows' standard disabled gray.
+                 Used in the Disabled / CheckedDisabled VSM states for the button text Foreground;
+                 the button bg stays at the normal Background / CheckedBackground brush so the
+                 toggle state (green vs. white) remains visible while the gray text signals
+                 "disabled". This matches the Windows convention for disabled toggle buttons. -->
+            <SolidColorBrush x:Key="MorphicBarControlDisabledForeground"      Color="#808080"/>
+
+            <!-- Other app resources here -->
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="ThemeAwareBackground" Color="#FFFFFFFF"/>
+                    <SolidColorBrush x:Key="ThemeAwareForeground" Color="#FF000000"/>
+                    <SolidColorBrush x:Key="ThemeAwareBorder" Color="#FF000000"/>
+                    <SolidColorBrush x:Key="ThemeAwareMorphicBarMorphieTextForeground" Color="#FF002957"/>
+                    <!-- Disabled-button fill. Unlike the other MorphicBarControl* palette brushes (which
+                         live at the root because they must NOT follow Light/Dark), this one IS in the
+                         ThemeDictionaries: Light and Dark carry the SAME value (so it still does not
+                         track Light/Dark), but the HighContrast entry must differ (it follows the system
+                         ButtonFace, bound in App.xaml.cs). The green normal fill is illegible behind the
+                         GrayText disabled foreground (~1.3:1), so the Disabled visual states swap to this
+                         neutral fill instead. Starting value is a light neutral gray; tweak to taste. -->
+                    <SolidColorBrush x:Key="MorphicBarControlDisabledBackground" Color="#E8E8E8"/>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="ThemeAwareBackground" Color="#FF000000"/>
+                    <SolidColorBrush x:Key="ThemeAwareForeground" Color="#FFFFFFFF"/>
+                    <SolidColorBrush x:Key="ThemeAwareBorder" Color="#FF333333"/>
+                    <SolidColorBrush x:Key="ThemeAwareMorphicBarMorphieTextForeground" Color="#FFFFFFFF"/>
+                    <!-- Same value as Light on purpose (the bar palette is theme-independent); see the
+                         Light entry's comment. Only HighContrast diverges. -->
+                    <SolidColorBrush x:Key="MorphicBarControlDisabledBackground" Color="#E8E8E8"/>
+                </ResourceDictionary>
+                <!-- HighContrast: WinUI 3's SystemColorWindowBrush and SystemColorWindowTextBrush
+                     do NOT track the active HC theme correctly in our context (they stay at
+                     fixed defaults regardless of which HC theme is selected). So the brushes
+                     that source from those system keys are declared here as placeholder
+                     SolidColorBrushes; App.xaml.cs wires each up at startup via
+                     MorphicSysColorBrushBinder, which sources Color from GetSysColor and
+                     refreshes on HC change broadcasts. ThemeAwareForeground is intentionally
+                     left as a StaticResource alias (the framework's HighContrastAdjustment
+                     overrides text Foreground at render time anyway, so the bound value would
+                     never be observed). -->
+                <ResourceDictionary x:Key="HighContrast">
+                    <SolidColorBrush x:Key="ThemeAwareBackground" Color="Transparent"/>
+                    <StaticResource x:Key="ThemeAwareForeground" ResourceKey="SystemColorWindowTextBrush"/>
+                    <SolidColorBrush x:Key="ThemeAwareBorder" Color="Transparent"/>
+                    <!-- Placeholder bound to GetSysColor(COLOR_BTNFACE) in App.xaml.cs so a disabled
+                         button under HC shows the active HC theme's button surface (with GrayText text),
+                         which is the HC-correct disabled treatment, instead of our standard-mode gray. -->
+                    <SolidColorBrush x:Key="MorphicBarControlDisabledBackground" Color="Transparent"/>
+                    <!-- ThemeAwareMorphicBarMorphieTextForeground is used by the Menu logo's Path
+                         glyphs. We can't alias it to SystemColorWindowTextBrush (broken in our
+                         context, always returns white), and unlike TextBlocks, Path fills are NOT
+                         covered by the framework's HighContrastAdjustment auto-backing. So it's a
+                         placeholder, bound via MorphicSysColorBrushBinder in App.xaml.cs. -->
+                    <SolidColorBrush x:Key="ThemeAwareMorphicBarMorphieTextForeground" Color="Transparent"/>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

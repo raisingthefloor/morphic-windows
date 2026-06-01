@@ -1,0 +1,56 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- WinExe (not Exe) so no console window flashes on screen when the MSI's WixShellExec
+         custom action launches this during install. The launcher has no console output. -->
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.22621.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
+    <RootNamespace>Morphic.PostInstallLauncher</RootNamespace>
+    <!-- AssemblyName is the bare "PostInstallLauncher" (not "Morphic.PostInstallLauncher") so
+         the produced executable is PostInstallLauncher.exe: the name reflects that the only
+         command line it ever issues is fixed (it always launches Morphic.exe with the
+         run-after-install flag). -->
+    <AssemblyName>PostInstallLauncher</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>x64;ARM64</Platforms>
+    <Configurations>Debug;Release</Configurations>
+    <!-- Mirrors Morphic.csproj / Morphic.NotificationHelper.csproj versioning so this exe's
+         assembly/file version tracks Morphic.exe's exactly. The pipeline sets the
+         VERSIONBUILDCOMPONENTS env var (read by MSBuild as $(VersionBuildComponents)) once at
+         the top of the build; that property propagates into here automatically because
+         Morphic.csproj's ProjectReference to this project causes MSBuild to evaluate this
+         csproj with the same global properties. So PostInstallLauncher.exe ends up with the
+         same 2.0.YYDDD.RRR version as Morphic.exe each release. Debug builds get the localdev
+         suffix; Release lets an externally-supplied VersionSuffix pass through. -->
+    <VersionPrefix>2.0$(VersionBuildComponents)</VersionPrefix>
+    <VersionSuffix Condition="$(Configuration.Contains('Debug'))">localdev</VersionSuffix>
+    <VersionSuffix Condition="$(Configuration.Contains('Release'))">$(VersionSuffix)</VersionSuffix>
+    <Company>Raising the Floor - US, Inc.</Company>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <Nullable>enable</Nullable>
+
+    <!-- Always unpackaged: it ships ALONGSIDE Morphic.exe in the MSI's install directory
+         (Program Files\Morphic\). MSIX builds have their own launch lifecycle and never use
+         this exe, so there is no -Packaged configuration. -->
+    <WindowsPackageType>None</WindowsPackageType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Manifest Include="$(ApplicationManifest)" />
+  </ItemGroup>
+
+  <!-- Publish properties: self-contained so PostInstallLauncher.exe's apphost binds to the
+       app-local .NET runtime that Morphic.exe already ships in the same install directory
+       (Morphic publishes self-contained specifically so end-user machines need no
+       system-installed .NET). This exe only uses System.Diagnostics.Process, which lives in
+       that shared runtime, so its own copy targets in Morphic.csproj ship just the launcher's
+       handful of files (.exe/.dll/.deps.json/.runtimeconfig.json) next to Morphic.exe and let
+       the runtime resolve from the shared directory. Same model as Morphic.NotificationHelper. -->
+  <PropertyGroup>
+    <SelfContained>true</SelfContained>
+    <PublishReadyToRun Condition="$(Configuration.Contains('Debug'))">False</PublishReadyToRun>
+    <PublishReadyToRun Condition="$(Configuration.Contains('Release'))">True</PublishReadyToRun>
+    <PublishTrimmed Condition="$(Configuration.Contains('Debug'))">False</PublishTrimmed>
+    <PublishTrimmed Condition="$(Configuration.Contains('Release'))">False</PublishTrimmed>
+  </PropertyGroup>
+</Project>

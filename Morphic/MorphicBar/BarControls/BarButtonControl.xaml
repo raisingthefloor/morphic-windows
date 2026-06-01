@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="Morphic.MorphicBar.BarControls.BarButtonControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:primitives="using:Microsoft.UI.Xaml.Controls.Primitives"
+    xmlns:bcm="using:Morphic.MorphicBar.BarControls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    HorizontalAlignment="Center"
+    VerticalAlignment="Center"
+    HorizontalContentAlignment="Center"
+    VerticalContentAlignment="Center"
+    IsTabStop="False">
+
+    <UserControl.Resources>
+        <!-- Control palette brushes live in App.xaml (MorphicBarControl*) -->
+
+        <!-- Non-toggle button style -->
+        <Style x:Key="BarButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Foreground" Value="{ThemeResource MorphicBarControlForeground}"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="{x:Bind bcm:BarControlMetrics.ButtonFontSize}"/>
+            <Setter Property="UseSystemFocusVisuals" Value="True"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+            <Setter Property="MinHeight" Value="{x:Bind bcm:BarControlMetrics.ButtonMinHeight}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <!-- See BarMultiButtonControl.xaml SubButtonStyle for the full rationale.
+                             Same border setup as the toggle template: structural height parity
+                             plus a dedicated MorphicBarControlBorder key. Under HC the same green
+                             resolves through today (see the placeholder note on that key in
+                             App.xaml). -->
+                        <Border x:Name="BgBorder"
+                                Background="{ThemeResource MorphicBarControlBackground}"
+                                BackgroundSizing="OuterBorderEdge"
+                                BorderBrush="{ThemeResource MorphicBarControlBorder}"
+                                BorderThickness="{x:Bind bcm:BarControlMetrics.ButtonBorderThickness}"
+                                CornerRadius="{TemplateBinding CornerRadius}">
+                            <VisualStateManager.VisualStateGroups>
+                                <!-- CommonStates owns BgBorder.Background. The "InProgress" state is entered
+                                     only while ProgressStates is "Visible", so the pressed-color flip on
+                                     BgBorder is part of the in-progress feedback (alongside the actual
+                                     ProgressBar). ProgressBar properties live in ProgressStates below. -->
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <!-- Explicit setter (rather than relying on the implicit unset of the previously
+                                         active state's setter) so transitions out of "InProgress" or other states
+                                         that flipped BgBorder.Background reliably restore the base color. Without
+                                         this, the post-action visual could get stuck at the InProgress pressed
+                                         color until a pointer event re-triggered the VSM. -->
+                                    <VisualState x:Name="Normal">
+                                        <VisualState.Setters>
+                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlBackground}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="PointerOver">
+                                        <VisualState.Setters>
+                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlHoverBackground}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="Pressed">
+                                        <VisualState.Setters>
+                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlPressedBackground}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="InProgress">
+                                        <VisualState.Setters>
+                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlPressedBackground}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <!-- Disabled: swap the green fill for the neutral disabled background AND
+                                         the text for GrayText. The fill has to change too: GrayText on the
+                                         green fill is ~1.3:1 and illegible. MorphicBarControlDisabledBackground
+                                         is a light neutral in standard contrast and the system ButtonFace under
+                                         HC (see App.xaml). -->
+                                    <VisualState x:Name="Disabled">
+                                        <VisualState.Setters>
+                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlDisabledBackground}"/>
+                                            <Setter Target="ButtonText.Foreground" Value="{ThemeResource MorphicBarControlDisabledForeground}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                </VisualStateGroup>
+                                <!-- ProgressStates owns ProgressBar.Visibility/IsIndeterminate/Opacity only.
+                                     "Preparing" runs the indeterminate animation invisibly (Opacity=0) so
+                                     that, when "Visible" reveals the bar, its animation is already mid-cycle
+                                     instead of starting fresh. See DelayedInProgressVisual.cs for the rationale. -->
+                                <VisualStateGroup x:Name="ProgressStates">
+                                    <VisualState x:Name="None"/>
+                                    <VisualState x:Name="Preparing">
+                                        <VisualState.Setters>
+                                            <Setter Target="ButtonProgressBar.Visibility" Value="Visible"/>
+                                            <Setter Target="ButtonProgressBar.IsIndeterminate" Value="True"/>
+                                            <Setter Target="ButtonProgressBar.Opacity" Value="0"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="Visible">
+                                        <VisualState.Setters>
+                                            <Setter Target="ButtonProgressBar.Visibility" Value="Visible"/>
+                                            <Setter Target="ButtonProgressBar.IsIndeterminate" Value="True"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+
+                            <Grid>
+                                <TextBlock x:Name="ButtonText"
+                                    Text="{TemplateBinding Content}"
+                                    Foreground="{TemplateBinding Foreground}"
+                                    FontFamily="Segoe UI"
+                                    FontWeight="Bold"
+                                    FontSize="{x:Bind bcm:BarControlMetrics.ButtonFontSize}"
+                                    IsColorFontEnabled="False"
+                                    HighContrastAdjustment="None"
+                                    HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                                    TextAlignment="Center"
+                                    TextWrapping="Wrap"
+                                    MaxLines="2"
+                                    Padding="{x:Bind bcm:BarControlMetrics.ButtonTextPadding}"/>
+                                <ProgressBar x:Name="ButtonProgressBar"
+                                    Height="{x:Bind bcm:BarControlMetrics.ProgressBarHeight}"
+                                    IsIndeterminate="False"
+                                    Visibility="Collapsed"
+                                    Foreground="{ThemeResource MorphicBarControlForeground}"
+                                    Background="Transparent"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Bottom"/>
+                            </Grid>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Toggle style. Uses a single VisualStateGroup with COMPOUND state names to avoid the
+             cross-group BgBorder.Background clash that would otherwise leave the toggle in a wrong
+             visual state after a click/unclick cycle. See WireToggleButtonCompoundStates in the
+             code-behind for the accompanying state-tracking helper. -->
+        <Style x:Key="BarToggleButtonStyle" TargetType="primitives:ToggleButton">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Foreground" Value="{ThemeResource MorphicBarControlForeground}"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="{x:Bind bcm:BarControlMetrics.ButtonFontSize}"/>
+            <Setter Property="UseSystemFocusVisuals" Value="True"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+            <Setter Property="MinHeight" Value="{x:Bind bcm:BarControlMetrics.ButtonMinHeight}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="primitives:ToggleButton">
+                        <!-- BorderThickness is fixed at 2 so the button's natural size does not change
+                             when toggled on. -->
+                        <Border x:Name="BgBorder"
+                                Background="{ThemeResource MorphicBarControlBackground}"
+                                BackgroundSizing="OuterBorderEdge"
+                                BorderBrush="{ThemeResource MorphicBarControlBorder}"
+                                BorderThickness="{x:Bind bcm:BarControlMetrics.ButtonBorderThickness}"
+                                CornerRadius="{TemplateBinding CornerRadius}">
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <!-- Explicit setter (rather than relying on the implicit unset of the previously
+                                         active state's setter) so transitions out of "InProgress" or other states
+                                         that flipped BgBorder.Background reliably restore the base color. Without
+                                         this, the post-action visual could get stuck at the InProgress pressed
+                                         color until a pointer event re-triggered the VSM. -->
+                                    <VisualState x:Name="Normal">
+                                        <VisualState.Setters>
+                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlBackground}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="PointerOver">
+                                        <VisualState.Setters>
+                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlHoverBackground}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="Pressed">
+                                        <VisualState.Setters>
+                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlPressedBackground}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="Checked">
+                                        <VisualState.Setters>
+                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlCheckedBackground}"/>
+                                            <Setter Target="ButtonText.Foreground" Value="{ThemeResource MorphicBarControlCheckedForeground}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="CheckedPointerOver">
+                                        <VisualState.Setters>
+                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlCheckedHoverBackground}"/>
+                                            <Setter Target="ButtonText.Foreground" Value="{ThemeResource MorphicBarControlCheckedForeground}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="CheckedPressed">
+                                        <VisualState.Setters>
+                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlCheckedPressedBackground}"/>
+                                            <Setter Target="ButtonText.Foreground" Value="{ThemeResource MorphicBarControlCheckedForeground}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="InProgress">
+                                        <VisualState.Setters>
+                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlPressedBackground}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="Indeterminate"/>
+                                    <!-- Disabled (unchecked) shows the neutral disabled fill; CheckedDisabled
+                                         keeps the white checked fill (GrayText is legible on white) so a
+                                         disabled toggle still reads on vs off. Both use GrayText for the text.
+                                         The unchecked case no longer keeps the green fill because GrayText on
+                                         green is ~1.3:1 and illegible (see MorphicBarControlDisabledBackground). -->
+                                    <VisualState x:Name="Disabled">
+                                        <VisualState.Setters>
+                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlDisabledBackground}"/>
+                                            <Setter Target="ButtonText.Foreground" Value="{ThemeResource MorphicBarControlDisabledForeground}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="CheckedDisabled">
+                                        <VisualState.Setters>
+                                            <Setter Target="BgBorder.Background" Value="{ThemeResource MorphicBarControlCheckedBackground}"/>
+                                            <Setter Target="ButtonText.Foreground" Value="{ThemeResource MorphicBarControlDisabledForeground}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                </VisualStateGroup>
+                                <!-- ProgressStates owns ProgressBar.Visibility/IsIndeterminate/Opacity only.
+                                     "Preparing" runs the indeterminate animation invisibly (Opacity=0) so
+                                     that, when "Visible" reveals the bar, its animation is already mid-cycle
+                                     instead of starting fresh. See DelayedInProgressVisual.cs for the rationale. -->
+                                <VisualStateGroup x:Name="ProgressStates">
+                                    <VisualState x:Name="None"/>
+                                    <VisualState x:Name="Preparing">
+                                        <VisualState.Setters>
+                                            <Setter Target="ButtonProgressBar.Visibility" Value="Visible"/>
+                                            <Setter Target="ButtonProgressBar.IsIndeterminate" Value="True"/>
+                                            <Setter Target="ButtonProgressBar.Opacity" Value="0"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="Visible">
+                                        <VisualState.Setters>
+                                            <Setter Target="ButtonProgressBar.Visibility" Value="Visible"/>
+                                            <Setter Target="ButtonProgressBar.IsIndeterminate" Value="True"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+
+                            <Grid>
+                                <TextBlock x:Name="ButtonText"
+                                    Text="{TemplateBinding Content}"
+                                    Foreground="{TemplateBinding Foreground}"
+                                    FontFamily="Segoe UI"
+                                    FontWeight="Bold"
+                                    FontSize="{x:Bind bcm:BarControlMetrics.ButtonFontSize}"
+                                    IsColorFontEnabled="False"
+                                    HighContrastAdjustment="None"
+                                    HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                                    TextAlignment="Center"
+                                    TextWrapping="Wrap"
+                                    MaxLines="2"
+                                    Padding="{x:Bind bcm:BarControlMetrics.ButtonTextPadding}"/>
+                                <ProgressBar x:Name="ButtonProgressBar"
+                                    Height="{x:Bind bcm:BarControlMetrics.ProgressBarHeight}"
+                                    IsIndeterminate="False"
+                                    Visibility="Collapsed"
+                                    Foreground="{ThemeResource MorphicBarControlForeground}"
+                                    Background="Transparent"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Bottom"/>
+                            </Grid>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+        <!-- See BarMultiButtonControl.xaml for header-margin rationale. Default Visibility
+             is Collapsed because BarButtonControl is the single-button case and only shows
+             a header when one is explicitly provided. -->
+        <TextBlock x:Name="HeaderTextBlock"
+                   Foreground="{ThemeResource ThemeAwareForeground}"
+                   HorizontalAlignment="Center"
+                   TextAlignment="Center"
+                   TextWrapping="Wrap"
+                   FontFamily="Segoe UI"
+                   FontWeight="Bold"
+                   FontSize="{x:Bind bcm:BarControlMetrics.ButtonFontSize}"
+                   MaxLines="2"
+                   Margin="{x:Bind bcm:BarControlMetrics.HeaderBottomMargin}"
+                   Visibility="Collapsed"/>
+        <!-- Bottom margin matches BarMultiButtonControl's ButtonsContainer 0,0,0,3 in horizontal
+             mode so a single-button item gets the same 1.5-logical-px upward visual shift from 
+	     VerticalAlignment=Center centering as the multi-button items, and ends up vertically 
+	     aligned with them across the bar. (Unlike BarMultiButtonControl we do NOT make this 
+	     orientation-conditional here) -->
+        <Grid x:Name="RootContainer" Margin="{x:Bind bcm:BarControlMetrics.ButtonContainerBottomMargin_Horizontal}"/>
+    </StackPanel>
+</UserControl>

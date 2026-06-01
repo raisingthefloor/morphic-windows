@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tw:TransparentBaseWindow
+    x:Class="Morphic.MorphicBar.MorphicBarWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:tw="using:Morphic.Controls.Windowing"
+    xmlns:local="using:Morphic.MorphicBar"
+    xmlns:controls="using:Morphic.MorphicBar.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="MorphicBar">
+
+    <!-- Background="Transparent" on the root Grid is load-bearing: it explicitly tells
+         XAML the root element is transparent, defending against any framework code path
+         that would otherwise paint a theme-default opaque background here. Combined with
+         the WM_ERASEBKGND suppression and DwmExtendFrameIntoClientArea sheet-of-glass
+         setup in ChromelessBaseWindow, ensures no opaque pixels exist anywhere in the
+         window's rectangular bounding area outside the rounded OuterBorder. Don't
+         remove without re-verifying transparent-corner behavior on the VMs known to
+         have shown the white-rectangular-corner artifact. -->
+    <Grid Background="Transparent">
+        <Grid.Resources>
+            <!-- ViewModel wrapper for MorphicBarWindowMetrics: see comments on that class
+                 for why this exists. Used by VisualState.Setter Value bindings below where
+                 {x:Bind} can't reach static metric values at runtime. -->
+            <local:MorphicBarWindowMetricsViewModel x:Key="MetricsViewModel"/>
+        </Grid.Resources>
+        <Border x:Name="OuterBorder"
+                Background="{ThemeResource ThemeAwareBackground}"
+                BorderBrush="{ThemeResource ThemeAwareBorder}"
+                BorderThickness="{x:Bind local:MorphicBarWindowMetrics.BarBorderThickness}"
+                CornerRadius="{x:Bind local:MorphicBarWindowMetrics.BarCornerRadiusUniform}">
+            <Grid x:Name="LayoutGrid">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition x:Name="LogoColumn" Width="Auto"/>
+                    <ColumnDefinition x:Name="CloseButtonColumn" Width="{x:Bind local:MorphicBarWindowMetrics.CloseButtonColumnGridLength}"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition x:Name="LogoRow" Height="0"/>
+                </Grid.RowDefinitions>
+
+                <!-- Bar items container (column 0, spanning all rows in horizontal orientation) -->
+                <!-- Weightless host: not focusable, no background, children (bar item controls) handle their own pointer/keyboard events -->
+                <!-- NOTE: Margin is set per orientation by UpdateBarItemsPanelLayout via GetBarItemsPanelMargin -->
+                <StackPanel x:Name="BarItemsPanel" x:FieldModifier="internal"
+                            Grid.Column="0" Grid.Row="0"
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                            Spacing="{x:Bind local:MorphicBarWindowMetrics.ItemsPanelSpacing}"
+                            IsTabStop="False"/>
+
+                <!-- Morphic menu logo button (column 1 when horizontal; row 1 when vertical) -->
+                <!-- NOTE: Margin is set per orientation by UpdateMorphicMenuButtonLayout via GetMorphicMenuButtonMargin -->
+                <Button x:Name="MorphicMenuButton" x:FieldModifier="internal"
+                        Grid.Column="1" Grid.Row="0"
+                        Background="Transparent" BorderThickness="0"
+                        Padding="0" MinWidth="0" MinHeight="0"
+                        HorizontalAlignment="Center" VerticalAlignment="Center"
+                        Click="MorphicMenuButton_Click"
+                        RightTapped="MorphicMenuButton_RightTapped"
+                        AutomationProperties.Name="Morphic Menu">
+                    <controls:MorphicMenuLogoViewbox Width="{x:Bind local:MorphicBarWindowMetrics.MenuLogoWidth}" Height="{x:Bind local:MorphicBarWindowMetrics.MenuLogoHeight}"/>
+                </Button>
+
+                <!-- Close button (top-right corner by default (LTR flow direction); top-left corner when RTL flow direction) -->
+		<!-- NOTE: the grid column/row changes when the orientation changes; default orientation is horizontal -->
+                <Button x:Name="CloseButton"
+                        Grid.Column="2" Grid.Row="0"
+                        Width="{x:Bind local:MorphicBarWindowMetrics.CloseButtonWidth}" Height="{x:Bind local:MorphicBarWindowMetrics.CloseButtonHeight}"
+                        HorizontalAlignment="Right" VerticalAlignment="Top"
+                        Click="CloseButton_Click"
+                        AutomationProperties.Name="Close">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="CloseButtonBorder"
+                                    Background="{ThemeResource ThemeAwareBackground}"
+                                    CornerRadius="{x:Bind local:MorphicBarWindowMetrics.BarCornerRadiusTopRightOnly}">
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup x:Name="CommonStates">
+                                        <VisualState x:Name="Normal"/>
+                                        <VisualState x:Name="PointerOver">
+                                            <VisualState.Setters>
+                                                <Setter Target="CloseButtonBorder.Background" Value="#E4142C"/>
+                                                <Setter Target="CloseButtonPath.Stroke" Value="White"/>
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="Pressed">
+                                            <VisualState.Setters>
+                                                <Setter Target="CloseButtonBorder.Background" Value="#F1707A"/>
+                                                <Setter Target="CloseButtonPath.Stroke" Value="White"/>
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                    <!-- FocusStates: mirror the PointerOver visual on Keyboard focus so a Tab-to-Close
+                                         user gets the same red affordance as mouse hover. PointerFocused (mouse-induced
+                                         focus) is left empty; the PointerOver state already handles the mouse case. -->
+                                    <VisualStateGroup x:Name="FocusStates">
+                                        <VisualState x:Name="Unfocused"/>
+                                        <VisualState x:Name="PointerFocused"/>
+                                        <VisualState x:Name="Focused">
+                                            <VisualState.Setters>
+                                                <Setter Target="CloseButtonBorder.Background" Value="#E4142C"/>
+                                                <Setter Target="CloseButtonPath.Stroke" Value="White"/>
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                    <VisualStateGroup x:Name="DirectionStates">
+                                        <!-- default is LTR flow direction; when in RTL flow direction, round the top-left corner instead -->
+                                        <VisualState x:Name="LeftToRight"/>
+                                        <VisualState x:Name="RightToLeft">
+                                            <VisualState.StateTriggers>
+                                                <local:FlowDirectionTrigger
+                                                    Target="{Binding RelativeSource={RelativeSource TemplatedParent}}"
+                                                    Direction="RightToLeft"/>
+                                            </VisualState.StateTriggers>
+                                            <VisualState.Setters>
+                                                <Setter Target="CloseButtonBorder.CornerRadius" Value="{Binding BarCornerRadiusTopLeftOnly, Source={StaticResource MetricsViewModel}}"/>
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+                                <Path x:Name="CloseButtonPath"
+                                      Data="M0,0 L10,11 M0,11 L10,0"
+                                      Stroke="Gray" StrokeThickness="1"
+                                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </Grid>
+        </Border>
+    </Grid>
+</tw:TransparentBaseWindow>
