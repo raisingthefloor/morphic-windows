@@ -33,6 +33,19 @@ public sealed partial class AboutWindow : Morphic.Controls.Theme.ThemeAwareBaseW
 {
     private readonly Lazy<Version> _applicationVersion = new(() => Assembly.GetExecutingAssembly().GetName().Version! );
 
+    // Design footprint in DIPs (effective pixels). Multiplied by the rasterization scale the content
+    // actually renders at to get a physical size that fits the XAML content on any display.
+    private const int DESIGN_WIDTH_DIPS = 308;
+    private const int DESIGN_HEIGHT_DIPS = 280;
+
+    // The monitor the box should be sized + centered on (the launch monitor; see CenterOnMonitor).
+    private Windows.Win32.Graphics.Gdi.HMONITOR _targetMonitorHandle;
+    // The rasterization scale we last sized to. Used to ignore XamlRoot.Changed notifications that are
+    // only our own MoveAndResize (a size change, not a scale change), which would otherwise loop.
+    private double _lastAppliedRasterizationScale = 0.0;
+    // The XamlRoot we subscribed Changed on, kept so we can unsubscribe on Close.
+    private XamlRoot? _subscribedXamlRoot;
+
     public string VersionDisplayString
     {
         get
@@ -59,14 +72,20 @@ public sealed partial class AboutWindow : Morphic.Controls.Theme.ThemeAwareBaseW
         // capture theme changes so we can update our iconography
         base.ThemeChanged += AboutWindow_ThemeChanged;
 
-        // resize and recenter window
-        //
-        // Design size is expressed in DIPs (effective pixels). The previous version
-        // hardcoded physical-pixel constants (450 x 420) that happened to look right at
-        // 150% scaling because at that DPI those physical pixels match a design footprint
-        // of 300 x 280 DIPs. Multiplying the DIP-design size by the window's current monitor 
-        // DPI here makes the AppWindow's physical size scale in lockstep with the XAML content, 
-        // so the window fits the content at any DPI.
+        // Re-fit the window once its content is connected and we can read the scale it ACTUALLY
+        // renders at, and unhook that tracking on close. The pre-show monitor-DPI estimate (in
+        // ApplySizeAndCenterOnTargetMonitor) is not enough on a non-primary display: a WinUI window
+        // is born on the primary monitor and keeps that rasterization scale when moved to another
+        // monitor before being shown, so the content can render at the primary's scale while the
+        // frame was sized for the launch display. RootContent_Loaded + XamlRoot.Changed correct that.
+        if (this.Content is FrameworkElement rootContentForScaleTracking)
+        {
+            rootContentForScaleTracking.Loaded += this.RootContent_Loaded;
+        }
+        this.Closed += this.AboutWindow_Closed;
+
+        // initial placement on the window's creation monitor (a best estimate before the content is
+        // shown; re-applied with the true scale once Loaded fires)
         var hwnd = (Windows.Win32.Foundation.HWND)WinRT.Interop.WindowNative.GetWindowHandle(this);
         var initialMonitorHandle = Windows.Win32.PInvoke.MonitorFromWindow(hwnd, Windows.Win32.Graphics.Gdi.MONITOR_FROM_FLAGS.MONITOR_DEFAULTTOPRIMARY);
         this.CenterOnMonitor(initialMonitorHandle);
@@ -81,31 +100,86 @@ public sealed partial class AboutWindow : Morphic.Controls.Theme.ThemeAwareBaseW
         this.UpdateLogoImage();
     }
 
-    // Sizes the About window for the target monitor's DPI and centers it within that monitor's work
-    // area. Used both at construction (initial placement) and by the App's About-menu handler to
-    // (re-)center the single About box on whichever monitor the user launched it from.
+    // Records the monitor the About box should appear on and (re-)fits the window there. Used at
+    // construction (initial placement) and by the App's About-menu handler to (re-)center the single
+    // About box on whichever monitor the user launched it from.
     internal void CenterOnMonitor(Windows.Win32.Graphics.Gdi.HMONITOR monitorHandle)
     {
-        // Design footprint in DIPs (effective pixels). Multiplying by the TARGET monitor's
-        // rasterization scale yields a physical size that fits the XAML content at that monitor's
-        // DPI, so the window scales in lockstep with its content on any display.
-        const int DESIGN_WIDTH_DIPS = 308;
-        const int DESIGN_HEIGHT_DIPS = 280;
+        _targetMonitorHandle = monitorHandle;
+        this.ApplySizeAndCenterOnTargetMonitor();
+    }
 
-        double scale = 1.0;
-        var getScaleResult = Morphic.MorphicBar.LayoutUtils.GetRasterizationScaleForMonitor(monitorHandle);
-        if (getScaleResult.IsSuccess == true)
+    private void RootContent_Loaded(object sender, RoutedEventArgs e)
+    {
+        // The content is connected now, so XamlRoot (and its real RasterizationScale) is available.
+        // Subscribe to scale changes once, so a later DPI settle / cross-monitor move re-fits, then
+        // re-apply immediately with the now-known scale (this is the step that corrects a box shown
+        // on a non-primary display, where the pre-show monitor-DPI estimate did not match the
+        // content's actual scale).
+        var xamlRoot = (this.Content as FrameworkElement)?.XamlRoot;
+        if (xamlRoot is not null && _subscribedXamlRoot is null)
         {
-            scale = getScaleResult.Value!;
+            _subscribedXamlRoot = xamlRoot;
+            _subscribedXamlRoot.Changed += this.XamlRoot_Changed;
         }
-        var width = (int)System.Math.Round(DESIGN_WIDTH_DIPS * scale);
-        var height = (int)System.Math.Round(DESIGN_HEIGHT_DIPS * scale);
+        this.ApplySizeAndCenterOnTargetMonitor();
+    }
+
+    private void XamlRoot_Changed(XamlRoot sender, XamlRootChangedEventArgs args)
+    {
+        // XamlRoot.Changed fires on rasterization-scale AND size changes (including the size changes
+        // our own MoveAndResize causes). Only re-fit when the SCALE actually changed: that both does
+        // the real work (a DPI settle, or a cross-monitor move while shown) and avoids looping on our
+        // own resize.
+        if (sender.RasterizationScale != _lastAppliedRasterizationScale)
+        {
+            this.ApplySizeAndCenterOnTargetMonitor();
+        }
+    }
+
+    private void AboutWindow_Closed(object sender, WindowEventArgs args)
+    {
+        if (_subscribedXamlRoot is not null)
+        {
+            _subscribedXamlRoot.Changed -= this.XamlRoot_Changed;
+            _subscribedXamlRoot = null;
+        }
+    }
+
+    // Sizes the About window to fit its content and centers it within the target monitor's work area.
+    private void ApplySizeAndCenterOnTargetMonitor()
+    {
+        // Size from the scale the content ACTUALLY renders at whenever we can read it (XamlRoot), so
+        // the frame always matches the content and never clips or over-sizes. Before the content is
+        // shown XamlRoot is null, so fall back to the target monitor's DPI as a first estimate;
+        // RootContent_Loaded re-applies with the real scale once it is available. (A WinUI window is
+        // born on the primary monitor and keeps that rasterization scale when moved to another monitor
+        // before being shown, so the monitor-DPI estimate alone is wrong on a non-primary display:
+        // the regression this fixes.)
+        double rasterizationScale = 1.0;
+        var xamlRoot = (this.Content as FrameworkElement)?.XamlRoot;
+        if (xamlRoot is not null && xamlRoot.RasterizationScale > 0.0)
+        {
+            rasterizationScale = xamlRoot.RasterizationScale;
+        }
+        else
+        {
+            var getScaleResult = Morphic.MorphicBar.LayoutUtils.GetRasterizationScaleForMonitor(_targetMonitorHandle);
+            if (getScaleResult.IsSuccess == true)
+            {
+                rasterizationScale = getScaleResult.Value!;
+            }
+        }
+        _lastAppliedRasterizationScale = rasterizationScale;
+
+        var width = (int)System.Math.Round(AboutWindow.DESIGN_WIDTH_DIPS * rasterizationScale);
+        var height = (int)System.Math.Round(AboutWindow.DESIGN_HEIGHT_DIPS * rasterizationScale);
 
         // Center within the target monitor's WORK area (excludes the taskbar), in physical pixels.
         // Using the work area's left/top offset is what makes this correct on secondary monitors.
-        bool gotMonitorInfo = false;
+        bool gotMonitorInfo;
         var monitorInfo = new Windows.Win32.Graphics.Gdi.MONITORINFO { cbSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf<Windows.Win32.Graphics.Gdi.MONITORINFO>() };
-        gotMonitorInfo = Windows.Win32.PInvoke.GetMonitorInfo(monitorHandle, ref monitorInfo);
+        gotMonitorInfo = Windows.Win32.PInvoke.GetMonitorInfo(_targetMonitorHandle, ref monitorInfo);
 
         int x;
         int y;
