@@ -1,6 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Name="logo__youtubeMusic" Width="176" Height="176" Clip="F1 M 0,0L 176,0L 176,176L 0,176L 0,0">
-	<Path Width="176" Height="176" Canvas.Left="0" Canvas.Top="0" Stretch="Fill" Fill="#FFFF0000" Data="F1 M 176,88C 176,136.599 136.599,176 88,176C 39.4013,176 0,136.599 0,88C 0,39.4014 39.4013,0 88,0C 136.599,0 176,39.4014 176,88 Z "/>
-	<Path Width="92" Height="92" Canvas.Left="42" Canvas.Top="42" Stretch="Fill" Fill="#FFFFFFFF" Data="F1 M 88,46C 111.099,46 130,64.8027 130,88C 130,111.197 111.197,130 88,130C 64.8027,130 46,111.197 46,88C 46,64.8027 64.9013,46 88,46 Z M 88,42C 62.5987,42 42,62.5987 42,88C 42,113.401 62.5987,134 88,134C 113.401,134 134,113.401 134,88C 134,62.5987 113.401,42 88,42 Z "/>
-	<Path Width="39" Height="46" Canvas.Left="72" Canvas.Top="65" Stretch="Fill" Fill="#FFFFFFFF" Data="F1 M 72,111L 111,87L 72,65"/>
-</Canvas>

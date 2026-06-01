@@ -1,4 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Name="logo__dropbox" Width="528" Height="448" Clip="F1 M 0,0L 528,0L 528,448L 0,448L 0,0">
-	<Path Width="528" Height="448" Canvas.Left="0" Canvas.Top="0" Stretch="Fill" Fill="#FF0061FF" Data="F1 M 264.401,84.3026L 132.401,168.599L 264.401,252.901L 132.401,337.197L 0,252.099L 132.303,167.803L 0,84.3026L 132.303,0M 131.599,363.697L 263.599,279.401L 395.599,363.697L 263.599,448M 264.401,252.099L 396.401,167.803L 264.401,84.1974L 395.697,0L 528,84.3026L 395.697,168.599L 528,252.803L 395.697,337.099"/>
-</Canvas>
