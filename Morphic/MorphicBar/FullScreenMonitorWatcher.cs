@@ -38,6 +38,11 @@ namespace Morphic.MorphicBar;
 //     foreground window WITHOUT a foreground change.
 // Both feed one predicate (GetForegroundFullScreenMonitor). Results are coalesced onto the
 // dispatcher and de-duplicated, so FullScreenMonitorChanged fires only on an actual transition.
+// NOTE on the SKIPOWNPROCESS asymmetry: the foreground hook deliberately receives our OWN process's
+// events (it does NOT pass WINEVENT_SKIPOWNPROCESS) so the bar can lift a stale suppression the
+// instant focus returns to it -- see the foreground-hook install site for the full rationale (the
+// High Contrast sethc.exe full-screen cover window). The location-change hook keeps
+// WINEVENT_SKIPOWNPROCESS to avoid a firehose from the bar's own drag-moves.
 internal sealed class FullScreenMonitorWatcher : IDisposable
 {
     // OBJID_WINDOW (winuser.h): the EVENT_OBJECT_LOCATIONCHANGE idObject value identifying the
@@ -79,6 +84,17 @@ internal sealed class FullScreenMonitorWatcher : IDisposable
         }
 
         _foregroundEventProc = new Windows.Win32.UI.Accessibility.WINEVENTPROC(this.WindowEventProc);
+        // IMPORTANT: this foreground hook intentionally does NOT pass WINEVENT_SKIPOWNPROCESS (the
+        // location-change hook below still does). When the user toggles High Contrast, sethc.exe shows
+        // a full-screen "CoverWindowClass" transition overlay; that overlay is a real full-screen
+        // foreground window on the bar's monitor, so the bar gets (correctly) topmost-suppressed while
+        // it is up (invisibly -- the overlay covers the whole screen anyway). When the overlay closes,
+        // the foreground returns to MORPHIC'S OWN bar/preview window. If we skipped our own process's
+        // foreground events, that transition would be dropped, EvaluateAndRaise would never re-run, and
+        // the suppression would stay latched until some unrelated app next took the foreground. Receiving
+        // our own foreground events lets us re-evaluate the moment focus returns and lift the
+        // suppression. Our own SetWindowPos during suppression uses SWP_NOACTIVATE and never changes the
+        // foreground, so there is no feedback loop.
         _foregroundEventHook = Windows.Win32.PInvoke.SetWinEventHook(
             Windows.Win32.PInvoke.EVENT_SYSTEM_FOREGROUND, // start index
             Windows.Win32.PInvoke.EVENT_SYSTEM_FOREGROUND, // end index
@@ -86,7 +102,7 @@ internal sealed class FullScreenMonitorWatcher : IDisposable
             _foregroundEventProc,
             0, // process (0 = all processes on current desktop)
             0, // thread (0 = all existing threads on current desktop)
-            Windows.Win32.PInvoke.WINEVENT_OUTOFCONTEXT | Windows.Win32.PInvoke.WINEVENT_SKIPOWNPROCESS);
+            Windows.Win32.PInvoke.WINEVENT_OUTOFCONTEXT);
         if (_foregroundEventHook == Windows.Win32.UI.Accessibility.HWINEVENTHOOK.Null)
         {
             this.Dispose();
