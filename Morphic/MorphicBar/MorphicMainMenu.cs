@@ -72,7 +72,7 @@ internal class MorphicMainMenu
         aboutMorphicMenuItem.Click += (s, _) => { this.AboutMorphicMenuItemClicked?.Invoke(s, EventArgs.Empty); };
         menuFlyout.Items.Add(aboutMorphicMenuItem);
 
-        var quitMorphicMenuItem = new MenuFlyoutItem { Text = "Quit Morphic", /*Icon = new SymbolIcon(Symbol.Paste), */Padding = padding, MinHeight = 0 };
+        var quitMorphicMenuItem = new MenuFlyoutItem { Text = Morphic.Localization.Strings.QuitMorphic, /*Icon = new SymbolIcon(Symbol.Paste), */Padding = padding, MinHeight = 0 };
         quitMorphicMenuItem.KeyboardAccelerators.Add(new Microsoft.UI.Xaml.Input.KeyboardAccelerator
         {
             Key = Windows.System.VirtualKey.Q,

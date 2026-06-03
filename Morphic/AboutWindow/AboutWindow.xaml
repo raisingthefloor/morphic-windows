@@ -22,8 +22,7 @@
                 VerticalAlignment="Center">
         <Image x:Name="LogoImage" Width="50" Height="50" Margin="30,0,30,20"/>
 
-        <TextBlock HorizontalAlignment="Center" FontWeight="Bold" FontSize="13"
-                   Text="Morphic for Windows"/>
+        <TextBlock x:Uid="MorphicForWindows" HorizontalAlignment="Center" FontWeight="Bold" FontSize="13"/>
 
         <TextBlock HorizontalAlignment="Center" Margin="0,5,0,0" FontSize="12"
                    Text="{x:Bind VersionDisplayString}"/>
@@ -33,8 +32,7 @@
         <TextBlock HorizontalAlignment="Center" Margin="0,10,0,0" FontSize="12"
                    Text="Copyright 2020-2026 Raising the Floor - US, Inc."/>
 
-        <HyperlinkButton HorizontalAlignment="Center" Margin="0,10,0,0" FontSize="9"
-                         Content="Learn More about Morphic"
+        <HyperlinkButton x:Uid="LearnMoreAboutMorphic" HorizontalAlignment="Center" Margin="0,10,0,0" FontSize="9"
                          Click="LearnMoreHyperlink_Click"/>
     </StackPanel>
 </theme:ThemeAwareBaseWindow>
