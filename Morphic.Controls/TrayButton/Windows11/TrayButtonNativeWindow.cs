@@ -1150,7 +1150,10 @@ internal class TrayButtonNativeWindow : IDisposable
             // NOTE: we might also consider watching for location changes of the task button container, but as we don't use it for position/size calculations at the present time we do not watch accordingly
             var repositionResult = this.RecalculatePositionAndRepositionWindow();
             // NOTE: if we want to handle error cases of RecalculatePositionAndRepositionWindow, we can do so here.
-            Debug.Assert(repositionResult.IsSuccess, "Could not reposition Tray Button window");
+            if (repositionResult.IsError == false)
+            {
+                Debug.WriteLine("[TrayButtonNativeWindow.LocationChangeWindowEventProc(...): Could not reposition Tray Button window");
+            }
         }
     }
 
@@ -1496,7 +1499,7 @@ internal class TrayButtonNativeWindow : IDisposable
             var positionAndResizeBitmapResult = this.PositionAndResizeBitmap(bitmapSize.Value);
             if (positionAndResizeBitmapResult.IsError == true)
             {
-                Debug.Assert(false, "Could not position and resize bitmap.");
+                Debug.WriteLine("[TrayButtonNativeWindow.RecalculatePositionAndRepositionWindow]: could not position and resize bitmap.");
                 var innerError = positionAndResizeBitmapResult.Error!;
                 return MorphicResult.ErrorResult<IRecalculatePositionAndRepositionWindowError>(new IRecalculatePositionAndRepositionWindowError.CouldNotPositionAndResizeBitmap(innerError));
             }
