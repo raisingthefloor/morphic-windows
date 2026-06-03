@@ -213,6 +213,7 @@ internal class TrayButton : IDisposable
     //
 
     // NOTE: the Show() method is only concerned with immediately showing the window (by creating the native window); the Visibility property is separate, a state which indicates if the control SHOULD be shown (and whether or not it's currently shown or _trying_ to be shown (i.e. pending))
+    // FUTURE: this error result-type interface is slated to become a discriminated union (via the new C# 'union' language feature) once C# 11 or 12 (long-term) ships.
     public interface IShowError
     {
         public record CouldNotCreateWindow(ICreateNewError InnerError) : IShowError;
@@ -281,6 +282,7 @@ internal class TrayButton : IDisposable
 
     //
 
+    // FUTURE: this error result-type interface is slated to become a discriminated union (via the new C# 'union' language feature) once C# 11 or 12 (long-term) ships.
     private interface ICreateNativeWindowError
     {
         public record AlreadyExists : ICreateNativeWindowError;

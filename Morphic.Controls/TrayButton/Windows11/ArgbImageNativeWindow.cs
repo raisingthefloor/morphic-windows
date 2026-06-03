@@ -309,6 +309,7 @@ internal class ArgbImageNativeWindow : IDisposable
         return new System.Drawing.Size(_bitmapInfo.SourceWidth, _bitmapInfo.SourceHeight);
     }
 
+    // FUTURE: this error result-type interface is slated to become a discriminated union (via the new C# 'union' language feature) once C# 11 or 12 (long-term) ships.
     public interface ISetBitmapError
     {
         public record CannotRequestWindowRedraw(IRequestRedrawError InnerError) : ISetBitmapError;
@@ -361,6 +362,7 @@ internal class ArgbImageNativeWindow : IDisposable
         return MorphicResult.OkResult();
     }
 
+    // FUTURE: this error result-type interface is slated to become a discriminated union (via the new C# 'union' language feature) once C# 11 or 12 (long-term) ships.
     public interface ISetPositionAndSizeError
     {
         public record CannotRequestWindowRedraw(IRequestRedrawError InnerError) : ISetPositionAndSizeError;
@@ -406,6 +408,7 @@ internal class ArgbImageNativeWindow : IDisposable
         return MorphicResult.OkResult();
     }
 
+    // FUTURE: this error result-type interface is slated to become a discriminated union (via the new C# 'union' language feature) once C# 11 or 12 (long-term) ships.
     public interface ISetVisibleError
     {
         public record Win32Error(uint Win32ErrorCode) : ISetVisibleError;
@@ -449,6 +452,7 @@ internal class ArgbImageNativeWindow : IDisposable
         return MorphicResult.OkResult();
     }
 
+    // FUTURE: this error result-type interface is slated to become a discriminated union (via the new C# 'union' language feature) once C# 11 or 12 (long-term) ships.
     public interface ICreateAndCacheSizedBitmapError
     {
         public record OtherException(Exception Ex) : ICreateAndCacheSizedBitmapError;
@@ -518,6 +522,7 @@ internal class ArgbImageNativeWindow : IDisposable
 
     //
 
+    // FUTURE: this error result-type interface is slated to become a discriminated union (via the new C# 'union' language feature) once C# 11 or 12 (long-term) ships.
     internal interface IRequestRedrawError
     {
         public record CouldNotInvalidateWindow : IRequestRedrawError;
@@ -544,6 +549,7 @@ internal class ArgbImageNativeWindow : IDisposable
         return MorphicResult.OkResult();
     }
 
+    // FUTURE: this error result-type interface is slated to become a discriminated union (via the new C# 'union' language feature) once C# 11 or 12 (long-term) ships.
     internal interface IUpdateLayeredPaintingError
     {
         public record CouldNotCreateCompatibleDeviceContext : IUpdateLayeredPaintingError;

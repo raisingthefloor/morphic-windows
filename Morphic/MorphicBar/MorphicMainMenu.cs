@@ -53,17 +53,17 @@ internal class MorphicMainMenu
         var padding = new Thickness(11, 4, 11, 5);
 
         // NOTE: Show/Hide MorphicBar are mutually exclusive; only one will be visible at any given time
-        _showMorphicBarMenuItem = new MenuFlyoutItem { Text = "Show MorphicBar", Padding = padding, MinHeight = 0 };
+        _showMorphicBarMenuItem = new MenuFlyoutItem { Text = Morphic.Localization.Strings.ShowMorphicBar, Padding = padding, MinHeight = 0 };
         _showMorphicBarMenuItem.Click += (s, _) => { this.ShowMorphicBarMenuItemClicked?.Invoke(s, EventArgs.Empty); };
         menuFlyout.Items.Add(_showMorphicBarMenuItem);
         //
-        _hideMorphicBarMenuItem = new MenuFlyoutItem { Text = "Hide MorphicBar", Padding = padding, MinHeight = 0 };
+        _hideMorphicBarMenuItem = new MenuFlyoutItem { Text = Morphic.Localization.Strings.HideMorphicBar, Padding = padding, MinHeight = 0 };
         _hideMorphicBarMenuItem.Click += (s, _) => { this.HideMorphicBarMenuItemClicked?.Invoke(s, EventArgs.Empty); };
         menuFlyout.Items.Add(_hideMorphicBarMenuItem);
 
         menuFlyout.Items.Add(new MenuFlyoutSeparator());
 
-        var aboutMorphicMenuItem = new MenuFlyoutItem { Text = "About Morphic...", Padding = padding, MinHeight = 0 };
+        var aboutMorphicMenuItem = new MenuFlyoutItem { Text = Morphic.Localization.Strings.AboutMorphicMenuItem, Padding = padding, MinHeight = 0 };
         aboutMorphicMenuItem.KeyboardAccelerators.Add(new Microsoft.UI.Xaml.Input.KeyboardAccelerator
         {
             Key = Windows.System.VirtualKey.A,

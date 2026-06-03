@@ -1407,6 +1407,7 @@ internal class TrayButtonNativeWindow : IDisposable
         }
     }
 
+    // FUTURE: this error result-type interface is slated to become a discriminated union (via the new C# 'union' language feature) once C# 11 or 12 (long-term) ships.
     private interface IGetTaskbarIsTopmostError
     {
         public record CouldNotFindTaskbarRelatedHandle : IGetTaskbarIsTopmostError;
@@ -1452,6 +1453,7 @@ internal class TrayButtonNativeWindow : IDisposable
         return MorphicResult.OkResult(taskbarIsTopmost);
     }
 
+    // FUTURE: this error result-type interface is slated to become a discriminated union (via the new C# 'union' language feature) once C# 11 or 12 (long-term) ships.
     private interface IRecalculatePositionAndRepositionWindowError
     {
         public record CouldNotBringToTop(uint Win32ErrorCode) : IRecalculatePositionAndRepositionWindowError;
@@ -1542,6 +1544,7 @@ internal class TrayButtonNativeWindow : IDisposable
 
     //
 
+    // FUTURE: this error result-type interface is slated to become a discriminated union (via the new C# 'union' language feature) once C# 11 or 12 (long-term) ships.
     public interface ISetBitmapError
     {
         public record CouldNotPositionAndResizeBitmap(IPositionAndResizeBitmapError InnerError) : ISetBitmapError;
@@ -1579,6 +1582,7 @@ internal class TrayButtonNativeWindow : IDisposable
         return MorphicResult.OkResult();
     }
 
+    // FUTURE: this error result-type interface is slated to become a discriminated union (via the new C# 'union' language feature) once C# 11 or 12 (long-term) ships.
     internal interface IPositionAndResizeBitmapError
     {
         public record CouldNotGetCurrentPositionAndSize(uint Win32ErrorCode) : IPositionAndResizeBitmapError;
@@ -1808,6 +1812,7 @@ internal class TrayButtonNativeWindow : IDisposable
         };
     }
 
+    // FUTURE: this error result-type interface is slated to become a discriminated union (via the new C# 'union' language feature) once C# 11 or 12 (long-term) ships.
     internal interface ICalculatePositionAndSizeForTrayButtonError
     {
         public record CouldNotFindTaskbarRelatedHandle : ICalculatePositionAndSizeForTrayButtonError;

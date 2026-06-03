@@ -145,6 +145,7 @@ public sealed class SystemSettingsListener
     // Errors returned by StartListening. Public so explicit callers can pattern-match on
     // the specific failure mode rather than treating all start failures the same. Both
     // failure modes leave _isListening == false; future subscribes will retry.
+    // FUTURE: this error result-type interface is slated to become a discriminated union (via the new C# 'union' language feature) once C# 11 or 12 (long-term) ships.
     public interface IStartListeningError
     {
         public record WrongThread(System.Threading.ApartmentState Observed) : IStartListeningError;

@@ -57,7 +57,7 @@ internal static class BarItemDataFactory
             // the VS forces monochrome text rendering -- without it Windows falls back
             // to Segoe UI Emoji and renders the glyph in color (e.g. purple).
             Text = "\u2795\uFE0E",
-            AccessibleName = new IAccessibleName.AccessibleName("Increase size of text"),
+            AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.IncreaseTextSizeAccessibleName),
             ActionTag = "increase",
             Action = increaseAction,
         };
@@ -65,7 +65,7 @@ internal static class BarItemDataFactory
         {
             // U+2796 HEAVY MINUS SIGN + U+FE0E (see note above)
             Text = "\u2796\uFE0E",
-            AccessibleName = new IAccessibleName.AccessibleName("Decrease size of text"),
+            AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.DecreaseTextSizeAccessibleName),
             ActionTag = "decrease",
             Action = decreaseAction,
         };
@@ -150,7 +150,7 @@ internal static class BarItemDataFactory
         // `-` key invokes the decrement sub-button, `+` key invokes the increment sub-button
         return new BarMultiButtonData
         {
-            Header = "Size of Text",
+            Header = Morphic.Localization.Strings.SizeOfTextHeader,
             SizingMode = MultiButtonSizingMode.StretchToLargest,
             // +/- is an inc/dec pair; keep them side-by-side even when the bar is vertical so the
             // pair reads as one control rather than two stacked rows
@@ -171,21 +171,21 @@ internal static class BarItemDataFactory
         // "Magnifier" -- two pushbuttons (Show on the left, Hide on the right), equal width.
         return new BarMultiButtonData
         {
-            Header = "Magnifier",
+            Header = Morphic.Localization.Strings.MagnifierHeader,
             SizingMode = MultiButtonSizingMode.StretchToLargest,
             Buttons = new List<BarButtonData>
                 {
                     new BarButtonData
                     {
-                        Text = "Show",
-                        AccessibleName = new IAccessibleName.AccessibleName("Show Magnifier"),
+                        Text = Morphic.Localization.Strings.MagnifierShowLabel,
+                        AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.MagnifierShowAccessibleName),
                         ActionTag = "magnifier-show",
                         Action = showAction,
                     },
                     new BarButtonData
                     {
-                        Text = "Hide",
-                        AccessibleName = new IAccessibleName.AccessibleName("Hide Magnifier"),
+                        Text = Morphic.Localization.Strings.MagnifierHideLabel,
+                        AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.MagnifierHideAccessibleName),
                         ActionTag = "magnifier-hide",
                         Action = hideAction,
                     },
@@ -200,9 +200,9 @@ internal static class BarItemDataFactory
         // "Snip" -- single label pushbutton
         return new BarButtonData
         {
-            Header = "Snip",
-            Text = "Copy",
-            AccessibleName = new IAccessibleName.AccessibleName("Snip and copy part of the screen"),
+            Header = Morphic.Localization.Strings.SnipHeader,
+            Text = Morphic.Localization.Strings.SnipCopyLabel,
+            AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.SnipAccessibleName),
             ActionTag = "snip-copy",
             Action = action,
         };
@@ -215,7 +215,7 @@ internal static class BarItemDataFactory
         // "Read Selected" -- two pushbuttons (Play on the left, Stop on the right), equal width.
         return new BarMultiButtonData
         {
-            Header = "Read Selected",
+            Header = Morphic.Localization.Strings.ReadSelectedHeader,
             SizingMode = MultiButtonSizingMode.StretchToLargest,
             // Play/Stop is a transport pair; keep them side-by-side even when the bar is vertical
             // so the pair reads as one control rather than two stacked rows (matches Text Size).
@@ -228,7 +228,7 @@ internal static class BarItemDataFactory
                         // (text presentation); the VS forces monochrome rendering -- without it
                         // Windows can fall back to Segoe UI Emoji and render the glyph in color.
                         Text = "\u25B6\uFE0E", // ▶
-                        AccessibleName = new IAccessibleName.AccessibleName("Read selected text"),
+                        AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.ReadSelectedPlayAccessibleName),
                         ActionTag = "read-selected-play",
                         Action = playAction,
                     },
@@ -236,7 +236,7 @@ internal static class BarItemDataFactory
                     {
                         // U+25A0 BLACK SQUARE + U+FE0E (see note above)
                         Text = "\u25A0\uFE0E", // ■
-                        AccessibleName = new IAccessibleName.AccessibleName("Stop reading selected text"),
+                        AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.ReadSelectedStopAccessibleName),
                         ActionTag = "read-selected-stop",
                         Action = stopAction,
                     },
@@ -249,10 +249,10 @@ internal static class BarItemDataFactory
     public static IBarItemData CreateContrastColorButtonGroup(BarButtonAction? contrastAction, BarButtonAction? colorAction, BarButtonAction? darkAction, BarButtonAction? nightAction)
     {
         // "Contrast & Color" -- 4 toggle buttons, per-content sized
-        var contrastButton = new BarButtonData { Text = "Contrast", IsToggle = true, ActionTag = "contrast", Action = contrastAction, AccessibleName = new IAccessibleName.AccessibleName("Contrast theme") };
-        var colorButton    = new BarButtonData { Text = "Color",    IsToggle = true, ActionTag = "color",    Action = colorAction,    AccessibleName = new IAccessibleName.AccessibleName("Color filters") };
-        var darkButton     = new BarButtonData { Text = "Dark",     IsToggle = true, ActionTag = "dark",     Action = darkAction,     AccessibleName = new IAccessibleName.AccessibleName("Dark mode") };
-        var nightButton    = new BarButtonData { Text = "Night",    IsToggle = true, ActionTag = "night",    Action = nightAction,    AccessibleName = new IAccessibleName.AccessibleName("Night light") };
+        var contrastButton = new BarButtonData { Text = Morphic.Localization.Strings.ContrastLabel, IsToggle = true, ActionTag = "contrast", Action = contrastAction, AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.ContrastThemeAccessibleName) };
+        var colorButton    = new BarButtonData { Text = Morphic.Localization.Strings.ColorLabel,    IsToggle = true, ActionTag = "color",    Action = colorAction,    AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.ColorFiltersAccessibleName) };
+        var darkButton     = new BarButtonData { Text = Morphic.Localization.Strings.DarkLabel,     IsToggle = true, ActionTag = "dark",     Action = darkAction,     AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.DarkModeAccessibleName) };
+        var nightButton    = new BarButtonData { Text = Morphic.Localization.Strings.NightLabel,    IsToggle = true, ActionTag = "night",    Action = nightAction,    AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.NightLightAccessibleName) };
 
         // Bridge the Dark button to CachedDarkModeState, which delivers BOTH the effective dark
         // state and whether the button should be toggleable. Under high contrast, IsDark reflects
@@ -371,7 +371,7 @@ internal static class BarItemDataFactory
 
         return new BarMultiButtonData
         {
-            Header = "Contrast & Color",
+            Header = Morphic.Localization.Strings.ContrastAndColorHeader,
             SizingMode = MultiButtonSizingMode.AutoSize,
             Buttons = new List<BarButtonData>
                 {

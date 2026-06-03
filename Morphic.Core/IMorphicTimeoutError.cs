@@ -23,6 +23,7 @@
 
 namespace Morphic.Core;
 
+// FUTURE: this error result-type interface is slated to become a discriminated union (via the new C# 'union' language feature) once C# 11 or 12 (long-term) ships.
 public interface IMorphicTimeoutError
 {
     public record Timeout : IMorphicTimeoutError;

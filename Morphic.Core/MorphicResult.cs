@@ -1,4 +1,4 @@
-﻿// Copyright 2021-2022 Raising the Floor - US, Inc.
+﻿// Copyright 2021-2026 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -37,6 +37,8 @@ namespace Morphic.Core;
 //       with generic types.  This is a bit of compiler magic to keep code simple while preserving full static typing
 
 // MorphicResult<TValue, TError> is the actual result type returned by functions; instances are to be created via the non-generic MorphicResult type (below)
+//
+// FUTURE: MorphicResult is slated to be migrated to a discriminated union (using the new C# 'union' language feature) once C# 11 or 12 (long-term) ships.
 public readonly struct MorphicResult<TValue, TError>
 {
     // properties which the caller of a function will check to see if the function succeeded or failed (and the corresponding success/error value)

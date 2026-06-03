@@ -25,6 +25,7 @@ using System;
 
 namespace Morphic.Controls.TrayButton.Windows11;
 
+// FUTURE: this error result-type interface is slated to become a discriminated union (via the new C# 'union' language feature) once C# 11 or 12 (long-term) ships.
 internal interface ICreateNewError
 {
     public record CannotFitOnTaskbar : ICreateNewError;

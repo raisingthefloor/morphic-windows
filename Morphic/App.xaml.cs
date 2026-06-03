@@ -40,6 +40,13 @@ namespace Morphic;
 /// </summary>
 public partial class App : Application
 {
+    // Copyright year range surfaced by the app (e.g. the About box). Centralized here as the single
+    // source of truth; bump COPYRIGHT_END_YEAR per release. The years are deliberately kept OUT of the
+    // translatable CopyrightNoticeFormat string -- the About box injects this range into that string's
+    // {0} placeholder (see AboutWindow.CopyrightDisplayString).
+    internal const int COPYRIGHT_START_YEAR = 2020;
+    internal const int COPYRIGHT_END_YEAR = 2026;
+
     // NOTE: we initialize this when the application starts up
     internal Morphic.Controls.TrayButton.TrayButton TaskbarButton = null!;
 
@@ -584,7 +591,7 @@ public partial class App : Application
         }
         try
         {
-            this.TaskbarButton.Text = _morphicBarManager.IsBarVisible ? "Hide MorphicBar" : "Show MorphicBar";
+            this.TaskbarButton.Text = _morphicBarManager.IsBarVisible ? Morphic.Localization.Strings.HideMorphicBar : Morphic.Localization.Strings.ShowMorphicBar;
         }
         catch (System.Runtime.InteropServices.COMException)
         {

@@ -50,7 +50,7 @@ public sealed partial class AboutWindow : Morphic.Controls.Theme.ThemeAwareBaseW
     {
         get
         {
-            return $"version {_applicationVersion.Value.Major}.{_applicationVersion.Value.Minor}";
+            return string.Format(System.Globalization.CultureInfo.InvariantCulture, Morphic.Localization.Strings.AboutVersionFormat, _applicationVersion.Value.Major, _applicationVersion.Value.Minor);
         }
     }
     //
@@ -59,7 +59,19 @@ public sealed partial class AboutWindow : Morphic.Controls.Theme.ThemeAwareBaseW
         get
         {
             var applicationVersion = Assembly.GetExecutingAssembly().GetName().Version!;
-            return applicationVersion.Build != 0 ? $"(build {applicationVersion.Build})" : "(build unknown)";
+            return applicationVersion.Build != 0 ? string.Format(System.Globalization.CultureInfo.InvariantCulture, Morphic.Localization.Strings.AboutBuildFormat, applicationVersion.Build) : Morphic.Localization.Strings.AboutBuildUnknown;
+        }
+    }
+    //
+    // Copyright notice with the year range injected from code (so the years are not part of the
+    // translatable string). CopyrightNoticeFormat = "Copyright {0} Raising the Floor - US, Inc.".
+    public string CopyrightDisplayString
+    {
+        get
+        {
+            var yearRange = Morphic.App.COPYRIGHT_START_YEAR.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                + "-" + Morphic.App.COPYRIGHT_END_YEAR.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            return string.Format(Morphic.Localization.Strings.CopyrightNoticeFormat, yearRange);
         }
     }
 
@@ -68,6 +80,9 @@ public sealed partial class AboutWindow : Morphic.Controls.Theme.ThemeAwareBaseW
         InitializeComponent();
         // NOTE: we should call base.SwitchToWinUIThemeTracking() after InitializeComponent (to switch from Win32 theme tracking to WinUI theme tracking)
         base.SwitchToWinUIThemeTracking();
+
+        // Window.Title cannot be set via x:Uid, so apply the localized title from code.
+        this.Title = Morphic.Localization.Strings.AboutWindowTitle;
 
         // capture theme changes so we can update our iconography
         base.ThemeChanged += AboutWindow_ThemeChanged;
