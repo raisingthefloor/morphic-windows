@@ -393,6 +393,23 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             // Exit runs in parallel.
             return new Windows.Win32.Foundation.LRESULT(0);
         }
+
+        // Enforce the bar's always-on-top invariant. WinUI's AppWindow.Resize / MoveAndResize (used by
+        // the drag DPI-rescale and the high-contrast re-fit paths) silently demote the bar OUT of the
+        // WS_EX_TOPMOST band even though OverlappedPresenter.IsAlwaysOnTop is still true; once demoted
+        // the bar used to recover only when the FullScreenMonitorWatcher next happened to fire on some
+        // foreground change (so the LayoutPreviewWindow, and any other window, drew over the bar mid-
+        // drag until then -- a non-deterministic "after a few drags / a while" restore). We re-assert
+        // immediately: any WM_WINDOWPOSCHANGED that leaves the bar non-topmost while it SHOULD be on
+        // top is corrected on the spot. Gated on IsAlwaysOnTop (so the deliberate full-screen
+        // suppression is respected); ReassertBarTopmostIfOnTop is a no-op when the bit is already set
+        // (so it adds nothing on a normal drag frame); _isReassertingTopmost guards against re-entry
+        // from our own SetWindowPos.
+        if (msg == Windows.Win32.PInvoke.WM_WINDOWPOSCHANGED && _isReassertingTopmost == false)
+        {
+            this.ReassertBarTopmostIfOnTop();
+        }
+
         return Windows.Win32.PInvoke.DefSubclassProc(hwnd, msg, wParam, lParam);
     }
 
@@ -1495,6 +1512,53 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             {
                 presenter.IsAlwaysOnTop = true;
             }
+        }
+    }
+
+    // Re-entrancy guard: ReassertBarTopmostIfOnTop calls SetWindowPos, which re-enters SubclassWndProc
+    // with WM_WINDOWPOSCHANGED; this flag stops that from recursing back into another re-assert.
+    private bool _isReassertingTopmost = false;
+
+    // Re-asserts the bar's always-on-top z-order if the bar SHOULD be on top but has been demoted out
+    // of the WS_EX_TOPMOST band. WinUI's AppWindow.Resize / MoveAndResize (drag DPI-rescale + high-
+    // contrast re-fit) silently drop the bar from the topmost band despite
+    // OverlappedPresenter.IsAlwaysOnTop=true; this restores it. Gated on IsAlwaysOnTop so it does NOT
+    // fight the deliberate full-screen suppression (which sets IsAlwaysOnTop=false). No-op when the
+    // WS_EX_TOPMOST bit is already set (so calling it on every WM_WINDOWPOSCHANGED is cheap). The
+    // owner (DummyWindow) is re-topmosted FIRST to preserve "an owned topmost window's owner must also
+    // be topmost" (see SetTopmostSuppressedForFullScreen above for the full invariant rationale).
+    private void ReassertBarTopmostIfOnTop()
+    {
+        var presenter = this.AppWindow.Presenter as Microsoft.UI.Windowing.OverlappedPresenter;
+        if (presenter is null || presenter.IsAlwaysOnTop == false)
+        {
+            return;
+        }
+        var barWindowHandle = (Windows.Win32.Foundation.HWND)WinRT.Interop.WindowNative.GetWindowHandle(this);
+        var exStyle = (Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE)Windows.Win32.PInvoke.GetWindowLongPtr(barWindowHandle, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE);
+        if ((exStyle & Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE.WS_EX_TOPMOST) != 0)
+        {
+            return;
+        }
+        var dummyWindowHandle = _dummyParentWindow?.hwnd ?? Windows.Win32.Foundation.HWND.Null;
+        _isReassertingTopmost = true;
+        try
+        {
+            if (dummyWindowHandle != Windows.Win32.Foundation.HWND.Null)
+            {
+                _ = Windows.Win32.PInvoke.SetWindowPos(dummyWindowHandle, Windows.Win32.Foundation.HWND.HWND_TOPMOST, 0, 0, 0, 0,
+                    Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOMOVE |
+                    Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOSIZE |
+                    Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
+            }
+            _ = Windows.Win32.PInvoke.SetWindowPos(barWindowHandle, Windows.Win32.Foundation.HWND.HWND_TOPMOST, 0, 0, 0, 0,
+                Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOMOVE |
+                Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOSIZE |
+                Windows.Win32.UI.WindowsAndMessaging.SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
+        }
+        finally
+        {
+            _isReassertingTopmost = false;
         }
     }
 
