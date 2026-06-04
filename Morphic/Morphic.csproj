@@ -172,10 +172,15 @@
     <ProjectReference Include="..\Morphic.WindowsNative\Morphic.WindowsNative.csproj" />
     <!-- Roslyn source generator that emits Morphic.Localization.Strings (one typed property per key in
          Strings\en-US\Resources.resw). OutputItemType=Analyzer + ReferenceOutputAssembly=false: it runs
-         at compile time only and is NOT a runtime dependency / not shipped in any installer. -->
+         at compile time only and is NOT a runtime dependency / not shipped in any installer.
+         SetPlatform=Platform=AnyCPU is REQUIRED: this csproj builds for x64/ARM64, but the generator is a
+         platform-neutral netstandard2.0 analyzer. Without pinning the reference to AnyCPU, the ARM64
+         build's platform negotiation fails to resolve the analyzer (the x64 build happens to work), so
+         the generator never runs and every Morphic.Localization.Strings use breaks with CS0234. -->
     <ProjectReference Include="..\Morphic.Localization.SourceGenerator\Morphic.Localization.SourceGenerator.csproj"
                       OutputItemType="Analyzer"
-                      ReferenceOutputAssembly="false" />
+                      ReferenceOutputAssembly="false"
+                      SetPlatform="Platform=AnyCPU" />
   </ItemGroup>
 
   <ItemGroup>
