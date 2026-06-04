@@ -78,6 +78,11 @@ public sealed partial class AboutWindow : Morphic.Controls.Theme.ThemeAwareBaseW
     public AboutWindow()
     {
         InitializeComponent();
+
+        // Mirror the window layout for right-to-left UI languages: WinUI renders translated text but does
+        // not flip layout from the language, so drive FlowDirection off the session display language.
+        Morphic.Localization.ReadingDirection.ApplyTo(this);
+
         // NOTE: we should call base.SwitchToWinUIThemeTracking() after InitializeComponent (to switch from Win32 theme tracking to WinUI theme tracking)
         base.SwitchToWinUIThemeTracking();
 

@@ -255,6 +255,13 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     {
         InitializeComponent();
 
+        // Mirror the bar layout for right-to-left UI languages BEFORE the orientation/layout setup below,
+        // so the existing IsRightToLeft machinery (docking side, item layout) sees the correct direction.
+        // WinUI renders translated text but does not flip layout from the language; this drives
+        // FlowDirection off the session display language, which the rest of the IsRightToLeft code reads
+        // back via MorphicMenuButton.FlowDirection.
+        Morphic.Localization.ReadingDirection.ApplyTo(this);
+
         // Construct the focus controller eagerly so other code that runs during the rest
         // of this constructor (or before the bar's HWND is wired up) can safely reach it
         // via this.FocusController.
