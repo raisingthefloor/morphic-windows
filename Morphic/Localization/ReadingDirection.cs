@@ -56,14 +56,12 @@ internal static class ReadingDirection
         }
     }
 
-    [System.Runtime.InteropServices.DllImport("kernel32.dll")]
-    private static extern ushort GetUserDefaultUILanguage();
-
     private static bool ComputeSessionIsRightToLeft()
     {
         try
         {
-            ushort languageId = ReadingDirection.GetUserDefaultUILanguage();
+            // The user's Windows DISPLAY language (a LANGID), via CsWin32; logout-stable.
+            var languageId = Windows.Win32.PInvoke.GetUserDefaultUILanguage();
             return System.Globalization.CultureInfo.GetCultureInfo(languageId).TextInfo.IsRightToLeft;
         }
         catch (System.Exception)

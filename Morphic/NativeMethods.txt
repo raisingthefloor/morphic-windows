@@ -19,6 +19,7 @@ GetForegroundWindow
 GetMonitorInfo
 GetShellWindow
 GetSysColor
+GetUserDefaultUILanguage
 GetWindowLongPtr
 GetWindowRect
 GetWindowThreadProcessId
