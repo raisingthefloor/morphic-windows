@@ -1060,6 +1060,17 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         var monitorCenterX = monitorInfo.rcWork.left + (monitorInfo.rcWork.Width / 2);
         var monitorCenterY = monitorInfo.rcWork.top + (monitorInfo.rcWork.Height / 2);
 
+        // The anchor below is in PHYSICAL (left-origin) client coordinates, because ClientToScreen needs
+        // them. Under RTL, TransformToVisual reports the button in the bar's MIRRORED (right-origin) frame,
+        // so mirror its X back to physical first -- this is why the menu previously opened on the wrong
+        // side in RTL. The button's physical left/right edges below drive the anchor; LTR math is unchanged
+        // (buttonLeftPhysical == buttonPosition.X, buttonRightPhysical == buttonPosition.X + width), so this
+        // is a no-op for LTR. Y is unaffected by reading direction.
+        var buttonWidth = this.MorphicMenuButton.ActualWidth;
+        var contentWidth = (this.Content as FrameworkElement)?.ActualWidth ?? 0.0;
+        var buttonRightPhysical = isRtl ? contentWidth - buttonPosition.X : buttonPosition.X + buttonWidth;
+        var buttonLeftPhysical = buttonRightPhysical - buttonWidth;
+
         // anchor the menu to the corner of the button that opens the menu away from the bar
         double anchorX;
         double anchorY;
@@ -1069,9 +1080,9 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
                 {
                     // open above if bar is in the bottom half, below if in the top half
                     bool openAbove = windowCenterY > monitorCenterY;
-                    anchorX = isRtl
-                        ? buttonPosition.X + this.MorphicMenuButton.ActualWidth
-                        : buttonPosition.X;
+                    // anchor to the button edge at the start of the reading direction: left edge in LTR
+                    // (menu extends right), right edge in RTL (menu extends left).
+                    anchorX = isRtl ? buttonRightPhysical : buttonLeftPhysical;
                     anchorY = openAbove
                         ? buttonPosition.Y
                         : buttonPosition.Y + this.MorphicMenuButton.ActualHeight;
@@ -1081,14 +1092,12 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
                 {
                     // open to the left if bar is on the right half, to the right if on the left half
                     bool openLeft = windowCenterX > monitorCenterX;
-                    anchorX = openLeft
-                        ? buttonPosition.X
-                        : buttonPosition.X + this.MorphicMenuButton.ActualWidth;
+                    anchorX = openLeft ? buttonLeftPhysical : buttonRightPhysical;
                     anchorY = buttonPosition.Y;
                 }
                 break;
             default:
-                anchorX = buttonPosition.X;
+                anchorX = buttonLeftPhysical;
                 anchorY = buttonPosition.Y;
                 break;
         }
