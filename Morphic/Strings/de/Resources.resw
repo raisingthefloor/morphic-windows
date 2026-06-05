@@ -37,9 +37,6 @@
   <data name="ContrastAndColorHeader" xml:space="preserve">
     <value>Kontrast &amp; Farbe</value>
   </data>
-  <data name="ContrastAutomationFailedMessage" xml:space="preserve">
-    <value>Morphic konnte „Kontrast erhöhen“ nicht automatisch umschalten. Öffnen Sie die Bedienungshilfen-Einstellungen, um die Option umzuschalten.</value>
-  </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>Kontrast</value>
   </data>
@@ -60,9 +57,6 @@
   </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>MorphicBar ausblenden</value>
-  </data>
-  <data name="IncreaseContrastAccessibleName" xml:space="preserve">
-    <value>Kontrast erhöhen</value>
   </data>
   <data name="IncreaseTextSizeAccessibleName" xml:space="preserve">
     <value>Textgröße vergrößern</value>
@@ -85,12 +79,6 @@
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Einblenden</value>
   </data>
-  <data name="MagnifierZoomShortcutsDisabledMessage" xml:space="preserve">
-    <value>Die Bildschirmlupe verwendet die macOS-Tastaturkurzbefehle zum Zoomen, die deaktiviert sind. Aktivieren Sie „Tastaturkurzbefehle zum Zoomen verwenden“ in den Bedienungshilfen-Einstellungen, und versuchen Sie es erneut.</value>
-  </data>
-  <data name="MorphicForMacOSLabel" xml:space="preserve">
-    <value>Morphic für macOS</value>
-  </data>
   <data name="MorphicForWindows.Text" xml:space="preserve">
     <value>Morphic für Windows</value>
   </data>
@@ -99,12 +87,6 @@
   </data>
   <data name="NightLightAccessibleName" xml:space="preserve">
     <value>Nachtlicht</value>
-  </data>
-  <data name="NightShiftAccessibleName" xml:space="preserve">
-    <value>Night Shift</value>
-  </data>
-  <data name="OpenSettingsButtonLabel" xml:space="preserve">
-    <value>Einstellungen öffnen</value>
   </data>
   <data name="QuitMorphic" xml:space="preserve">
     <value>Morphic beenden</value>
@@ -118,29 +100,11 @@
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>Ausgewählten Text vorlesen</value>
   </data>
-  <data name="ReadSelectedSpeakSelectionDisabledMessage" xml:space="preserve">
-    <value>„Auswahl vorlesen“ verwendet die macOS-Funktion „Auswahl sprechen“, die derzeit deaktiviert ist. Aktivieren Sie sie in den Bedienungshilfen-Einstellungen, und versuchen Sie es erneut.</value>
-  </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Vorlesen des ausgewählten Textes beenden</value>
   </data>
-  <data name="ReadSelectedWrongWindowMessage" xml:space="preserve">
-    <value>„Auswahl vorlesen“ hat möglicherweise aus dem falschen Fenster vorgelesen. Klicken Sie in Ihren Text, und versuchen Sie es erneut.</value>
-  </data>
-  <data name="RestartMorphicButtonLabel" xml:space="preserve">
-    <value>Morphic neu starten</value>
-  </data>
-  <data name="ScreenRecordingGrantedRestartMessage" xml:space="preserve">
-    <value>Die Berechtigung für Bildschirmaufnahme wurde erteilt. Starten Sie Morphic neu, damit die Änderung wirksam wird.</value>
-  </data>
-  <data name="SettingsDialogBlockingMessage" xml:space="preserve">
-    <value>Morphic versucht, eine Einstellung zu ändern, aber in den Systemeinstellungen ist ein Dialogfeld geöffnet, das nicht automatisch geschlossen werden kann. Schließen Sie dieses Dialogfeld, und versuchen Sie es erneut.</value>
-  </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>MorphicBar anzeigen</value>
-  </data>
-  <data name="ShowSettingsButtonLabel" xml:space="preserve">
-    <value>Einstellungen anzeigen</value>
   </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>Textgröße</value>
@@ -153,11 +117,5 @@
   </data>
   <data name="SnipHeader" xml:space="preserve">
     <value>Ausschnitt</value>
-  </data>
-  <data name="SnipScreenRecordingRequiredMessage" xml:space="preserve">
-    <value>Für „Ausschnitt“ ist die Bildschirmaufnahme erforderlich. Erteilen Sie die Berechtigung in den Systemeinstellungen und starten Sie Morphic neu.</value>
-  </data>
-  <data name="StatusItemAccessibleName" xml:space="preserve">
-    <value>Morphic</value>
   </data>
 </root>

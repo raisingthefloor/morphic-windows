@@ -194,6 +194,11 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
             headerWidth = this.HeaderTextBlock.DesiredSize.Width;
             headerHeight = this.HeaderTextBlock.DesiredSize.Height;
         }
+        // Widest single word in the header. In a vertical bar the group reports only its button width (so a
+        // multi-word header WRAPS at spaces rather than widening the bar), but a single word wider than the
+        // buttons would otherwise break MID-CHARACTER. Reporting at least the widest word keeps long words
+        // (common in translated headers, e.g. "Magnificador") whole while still letting multi-word headers wrap.
+        double headerWidestWord = BarHeaderText.WidestWordWidth(this.HeaderTextBlock);
 
         // measure each sub-button and back out the in-effect Margin so we work in natural
         // (margin-free) sizes; the live Margin that would be set by ApplyData for the _current_
@@ -282,7 +287,7 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
         // group's reported WIDTH still needs to follow the vertical-bar-thickness rule.
         double returnedWidth = (orientation == Orientation.Horizontal)
             ? System.Math.Max(subButtonsWidth, headerWidth)
-            : subButtonsWidth;
+            : System.Math.Max(subButtonsWidth, headerWidestWord);
         return new Windows.Foundation.Size(
             returnedWidth,
             headerHeight + subButtonsHeight);
