@@ -255,11 +255,11 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     {
         InitializeComponent();
 
-        // Mirror the bar layout for right-to-left UI languages BEFORE the orientation/layout setup below,
-        // so the existing IsRightToLeft machinery (docking side, item layout) sees the correct direction.
-        // WinUI renders translated text but does not flip layout from the language; this drives
-        // FlowDirection off the session display language, which the rest of the IsRightToLeft code reads
-        // back via MorphicMenuButton.FlowDirection.
+        // Mirror the bar's CONTENT (item layout) for an RTL APP language. WinUI renders translated text but
+        // does not flip layout from the language, so ApplyTo drives FlowDirection off the app's display
+        // language (ReadingDirection's CONTENT axis). NOTE: the bar's spatial DOCKING side is a SEPARATE axis
+        // -- it follows the SYSTEM direction (ReadingDirection.SystemIsRightToLeft), not this content
+        // FlowDirection -- so the bar lines up with the real taskbar even when app and system languages differ.
         Morphic.Localization.ReadingDirection.ApplyTo(this);
 
         // Construct the focus controller eagerly so other code that runs during the rest
@@ -771,7 +771,9 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
 
         // compute the target rect (already in physical pixels; GetRectForDockingLocation multiplies
         // by the monitor's rasterization scale internally)
-        var isRightToLeft = this.MorphicMenuButton.FlowDirection == FlowDirection.RightToLeft;
+        // SPATIAL axis: the docking rect must align with the shell/taskbar, which mirrors off the SYSTEM
+        // language -- not the bar's content FlowDirection (which follows the app language).
+        var isRightToLeft = Morphic.Localization.ReadingDirection.SystemIsRightToLeft;
         var getRectForDockingLocationResult = LayoutUtils.GetRectForDockingLocation(targetDockingLocation, isRightToLeft, targetOrientation, logicalLength, logicalThickness, hMonitor);
         if (getRectForDockingLocationResult.IsError)
         {
@@ -866,9 +868,11 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     // DockingLocationChanged); exposed read-only here.
     public Morphic.MorphicBar.DockingLocation CurrentDockingLocation => _dockingLocation;
 
-    // True when the bar's flow direction is right-to-left. Exposed so App-level code (which has no
-    // XAML element of its own) can resolve logical docks to physical ones the same way the bar does.
-    public bool IsRightToLeft => this.MorphicMenuButton.FlowDirection == FlowDirection.RightToLeft;
+    // True when the SYSTEM reading direction is right-to-left (NOT the bar's content FlowDirection, which
+    // follows the app language). This is the SPATIAL axis: App-level code resolves logical docks to physical
+    // ones (and positions the tray-corner menu) off it, so the bar lines up with the shell/taskbar even when
+    // the app language and the system language differ.
+    public bool IsRightToLeft => Morphic.Localization.ReadingDirection.SystemIsRightToLeft;
 
     // Animate the bar to a new orientation + docking location on its CURRENT monitor, over the
     // standard docking-move duration. Used to apply an external (registry-driven) placement change.
@@ -1765,7 +1769,7 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             // the drop target's logical equivalent so it keeps mirroring under an RTL flip; if they
             // dock physically (absolute corner/edge), store the physical equivalent. Both
             // conversions preserve the on-screen position; they only normalize the representation.
-            var isRightToLeft = this.MorphicMenuButton.FlowDirection == FlowDirection.RightToLeft;
+            var isRightToLeft = Morphic.Localization.ReadingDirection.SystemIsRightToLeft;   // SPATIAL/docking axis -> SYSTEM, not the bar's content FlowDirection
             var targetDockingLocation = _dockingLocation.IsLogicalDockingLocation()
                 ? rawTargetDockingLocation.ToLogicalDockingLocation(isRightToLeft)
                 : rawTargetDockingLocation.ToPhysicalDockingLocation(isRightToLeft);
@@ -1865,7 +1869,7 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         // e.g. FloatingBottomTrailing(3) and the proposed FloatingBottomRight(7) are the SAME corner in
         // LTR yet compare unequal as raw enums. Without normalizing, a logically-docked bar never matches
         // its own flip zone, so the accidental-drag gate silently disengages and a tiny drag rotates it.
-        var isRightToLeft = this.MorphicMenuButton.FlowDirection == FlowDirection.RightToLeft;
+        var isRightToLeft = Morphic.Localization.ReadingDirection.SystemIsRightToLeft;   // SPATIAL/docking axis -> SYSTEM, not the bar's content FlowDirection
         var dragStartPhysicalDockingLocation = dragStart.DockingLocation.ToPhysicalDockingLocation(isRightToLeft);
         var proposedPhysicalDockingLocation = proposedDockingLocation.ToPhysicalDockingLocation(isRightToLeft);
 
@@ -2010,7 +2014,7 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         // FlowDirection-aware normalization: the docking comparisons below must reduce logical
         // (flow-relative) docks to physical (absolute) ones, because newPreviewDockingLocation is
         // always physical while _dockingLocation / _dragStartDockedState may be logical.
-        var isRightToLeft = this.MorphicMenuButton.FlowDirection == FlowDirection.RightToLeft;
+        var isRightToLeft = Morphic.Localization.ReadingDirection.SystemIsRightToLeft;   // SPATIAL/docking axis -> SYSTEM, not the bar's content FlowDirection
 
         // Accidental-drag suppression: if the drag is a small motion that would land in an
         // "accidental flip" zone (same-corner-with-opposite-orientation, or cross-edge-fixed-dock

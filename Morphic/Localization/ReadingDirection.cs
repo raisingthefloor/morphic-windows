@@ -23,29 +23,36 @@
 
 namespace Morphic.Localization;
 
-// Session reading direction for window LAYOUT (FlowDirection). WinUI renders translated text from the
-// live MRT language, but it does NOT mirror window layout from the language, so without this an Arabic
-// (or Farsi/Urdu/...) session shows translated text inside a left-to-right layout. We drive FlowDirection
-// off the user's Windows DISPLAY language (GetUserDefaultUILanguage), which changes only at sign-out --
-// the same signal the shell itself mirrors from -- so Morphic's layout flips exactly when the rest of the
-// desktop does, rather than the instant a preferred language is added mid-session. Cached because the
-// display language cannot change within a session.
+// Reading direction has TWO INDEPENDENT axes, and conflating them is the classic RTL bug:
 //
-// Mental model: TEXT follows the live MRT language; LAYOUT follows the session display language. The two
-// differ only between adding a preferred language and signing out, which is precisely when Windows itself
-// shows translated text in an unmirrored layout, so we match it.
+//   * CONTENT (window FlowDirection) follows the APP's display language -- the same live preferred-language
+//     signal the strings resolve through (GlobalizationPreferences, as in ResourceLanguage). So Morphic's UI
+//     mirrors whenever Morphic is shown in an RTL language, even on a left-to-right Windows.
+//
+//   * SPATIAL placement that must line up with the SHELL -- the MorphicBar's docking edge and the
+//     notification-tray corner -- follows the SYSTEM display language (GetUserDefaultUILanguage). The taskbar
+//     and tray only mirror when the SYSTEM is RTL, regardless of Morphic's own language, so our spatial math
+//     has to key off the same system signal to stay aligned with them.
+//
+// The two axes differ only when the app language and the system language disagree (e.g. an Arabic Morphic on
+// an English/LTR Windows, or vice versa). When they agree -- the common case -- both axes are identical.
 internal static class ReadingDirection
 {
-    private static readonly bool s_sessionIsRightToLeft = ReadingDirection.ComputeSessionIsRightToLeft();
+    // CONTENT axis -- the app's display language (live; the same source the strings resolve through).
+    private static readonly bool s_appIsRightToLeft = ReadingDirection.ComputeAppIsRightToLeft();
+    public static bool AppIsRightToLeft => ReadingDirection.s_appIsRightToLeft;
 
-    public static bool SessionIsRightToLeft => ReadingDirection.s_sessionIsRightToLeft;
+    // SPATIAL axis -- the system display language (logout-stable; what the shell mirrors from).
+    private static readonly bool s_systemIsRightToLeft = ReadingDirection.ComputeSystemIsRightToLeft();
+    public static bool SystemIsRightToLeft => ReadingDirection.s_systemIsRightToLeft;
 
+    // Window CONTENT flow direction, from the APP axis.
     public static Microsoft.UI.Xaml.FlowDirection SessionFlowDirection =>
-        ReadingDirection.s_sessionIsRightToLeft
+        ReadingDirection.s_appIsRightToLeft
             ? Microsoft.UI.Xaml.FlowDirection.RightToLeft
             : Microsoft.UI.Xaml.FlowDirection.LeftToRight;
 
-    // Applies the session reading direction to a window's root content. Call right after
+    // Applies the CONTENT flow direction (APP axis) to a window's root content. Call right after
     // InitializeComponent (once Window.Content is set, and before any layout that depends on reading
     // direction). No-op if the content is not yet a FrameworkElement.
     public static void ApplyTo(Microsoft.UI.Xaml.Window window)
@@ -56,11 +63,59 @@ internal static class ReadingDirection
         }
     }
 
-    private static bool ComputeSessionIsRightToLeft()
+    // Mirrors the window FRAME (title bar + caption buttons) for an RTL APP language by adding WS_EX_LAYOUTRTL
+    // to the window's extended style. This is ORTHOGONAL to ApplyTo's content mirroring: per the Win32/WinUI
+    // model WS_EX_LAYOUTRTL flips the FRAME while FlowDirection flips the CONTENT, so calling BOTH gives a
+    // fully-mirrored window with no double-flip. Call in the window ctor, before the window is shown.
+    //
+    // KNOWN WinUI 3 caveat (microsoft-ui-xaml#8559): in RTL the caption-button HIT-BOXES may not be swapped,
+    // so close/minimize can LOOK mirrored but not click. Verify on the target SDK; if it bites, just stop
+    // calling this method -- content mirroring via ApplyTo is unaffected.
+    public static void ApplyChromeMirroringTo(Microsoft.UI.Xaml.Window window)
+    {
+        if (ReadingDirection.AppIsRightToLeft == false)
+        {
+            return;
+        }
+
+        try
+        {
+            var windowHandle = (Windows.Win32.Foundation.HWND)WinRT.Interop.WindowNative.GetWindowHandle(window);
+            nint currentExtendedStyle = Windows.Win32.PInvoke.GetWindowLongPtr(windowHandle, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE);
+            nint mirroredExtendedStyle = currentExtendedStyle | (nint)(uint)Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE.WS_EX_LAYOUTRTL;
+            _ = Windows.Win32.PInvoke.SetWindowLongPtr(windowHandle, Windows.Win32.UI.WindowsAndMessaging.WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE, mirroredExtendedStyle);
+        }
+        catch (System.Exception)
+        {
+            // Leave LTR chrome on any failure; content mirroring (ApplyTo) is unaffected.
+        }
+    }
+
+    // The app's CURRENT top preferred UI language -> RTL? Read from GlobalizationPreferences (the SAME live
+    // source ResourceLanguage pins PrimaryLanguageOverride to), so content direction always matches the
+    // rendered text and updates without a sign-out.
+    private static bool ComputeAppIsRightToLeft()
     {
         try
         {
-            // The user's Windows DISPLAY language (a LANGID), via CsWin32; logout-stable.
+            var preferredLanguages = Windows.System.UserProfile.GlobalizationPreferences.Languages;
+            if (preferredLanguages.Count > 0)
+            {
+                return System.Globalization.CultureInfo.GetCultureInfo(preferredLanguages[0]).TextInfo.IsRightToLeft;
+            }
+        }
+        catch (System.Exception)
+        {
+        }
+        return false;
+    }
+
+    // The user's Windows DISPLAY language (a LANGID, via CsWin32; logout-stable) -> RTL? This is the signal
+    // the shell mirrors from, so spatial placement that must align with the taskbar/tray keys off it.
+    private static bool ComputeSystemIsRightToLeft()
+    {
+        try
+        {
             var languageId = Windows.Win32.PInvoke.GetUserDefaultUILanguage();
             return System.Globalization.CultureInfo.GetCultureInfo(languageId).TextInfo.IsRightToLeft;
         }

@@ -86,6 +86,15 @@ public partial class App : Application
     /// </summary>
     public App()
     {
+        // Pin the app's MRT resource language to the user's top preferred UI language, with en-US as the
+        // GUARANTEED fallback, so a string missing in that language can NEVER resolve to another installed
+        // language (we saw German leak into a Spanish session). See ResourceLanguage.cs.
+        //
+        // DO NOT MOVE THIS BELOW InitializeComponent. InitializeComponent loads App.xaml's resources and
+        // initializes MRT Core's resolution context; once that context is cached, PrimaryLanguageOverride is
+        // ignored. It has to be the first statement in the ctor, before any resource is touched.
+        Morphic.Localization.ResourceLanguage.ApplyDisplayLanguageWithEnglishFallback();
+
         this.InitializeComponent();
 
 		// capture shutdown events (to clean up the tray icon, etc.)
