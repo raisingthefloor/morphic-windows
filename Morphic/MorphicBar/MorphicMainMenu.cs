@@ -38,22 +38,17 @@ internal class MorphicMainMenu
     // === RTL menu placement: cached menu width (DIPs) ===
     //
     // Under RTL the menu opens to the LEFT of the click (native RTL behavior). A flyout's Position is ALWAYS its
-    // top-LEFT corner regardless of FlowDirection, so we shift the show-position left by the menu's own width to
-    // land its RIGHT edge at the click. The width depends on which of Show/Hide MorphicBar is the visible item --
-    // and those two strings can differ a LOT in width across languages (they are only coincidentally similar in
-    // English) -- so we cache the two configurations SEPARATELY. The bar-visible one is measured up front
-    // (PrewarmWidth); the bar-hidden one is learned on its first real open by the (config-aware) Opened handler.
-    // We deliberately do NOT measure both up front: showing the flyout twice back-to-back at startup queues a
-    // deferred focus update that swallows the menu's first real click. Widths are in DIPs, which are
-    // scale-independent (a DPI change does not invalidate them).
+    // top-LEFT corner regardless of FlowDirection, so Show() shifts the position left by the menu's own width so
+    // its RIGHT edge lands at the click. The width depends on which of Show/Hide MorphicBar is the visible item --
+    // those two strings can differ a LOT in width across languages (only coincidentally similar in English) -- so
+    // we cache the two configurations SEPARATELY and measure BOTH (see MeasureWidthInvisibly): up front at startup
+    // (PrewarmWidth) and again on any item change (RefreshWidth). Widths are in DIPs, which are scale-independent
+    // (a DPI change does not invalidate them).
     private double _cachedWidthWhenBarVisibleInDips = 0.0;   // the "Hide MorphicBar" item is the one showing
     private double _cachedWidthWhenBarHiddenInDips = 0.0;    // the "Show MorphicBar" item is the one showing
     private const double DEFAULT_MENU_WIDTH_ESTIMATE_IN_DIPS = 200.0;
     // The menu-owner window, captured by PrewarmWidth so RefreshWidth can re-measure later without re-passing it.
     private Microsoft.UI.Xaml.Window? _ownerWindowForMeasuring = null;
-    // Which configuration was last shown (set by Show and by the measure pass) so the Opened handler caches the
-    // measured width into the matching slot. The bar starts visible, so default to true.
-    private bool _lastShownBarIsVisible = true;
 
     public event EventHandler<EventArgs>? AboutMorphicMenuItemClicked;
     public event EventHandler<EventArgs>? HideMorphicBarMenuItemClicked;
@@ -102,10 +97,10 @@ internal class MorphicMainMenu
         // RTL bar; even the logo menu's RTL bar target does not propagate it), so set it explicitly. CONTENT
         // axis -> the APP language (ReadingDirection.SessionFlowDirection), consistent with the bar/About box.
         //
-        // TWO layers need it: the ITEMS (so their text right-aligns + accelerators flip) and the PRESENTER --
-        // the box itself -- so it anchors its top-RIGHT corner at the click and grows LEFTWARD (the native RTL
-        // menu open direction) instead of growing rightward. The presenter style adds only a FlowDirection
-        // setter, so the presenter keeps its default theme template/appearance.
+        // Set it on TWO layers: the ITEMS (so their text right-aligns + accelerators flip) and the PRESENTER (so
+        // the box's own content lays out RTL). NOTE: this does NOT control which side the box opens on -- a flyout
+        // always anchors at its top-LEFT corner; the leftward open is done by the width offset in Show(). The
+        // presenter style adds only a FlowDirection setter, so it keeps its default theme template/appearance.
         foreach (var menuFlyoutItemElement in menuFlyout.Items)
         {
             menuFlyoutItemElement.FlowDirection = Morphic.Localization.ReadingDirection.SessionFlowDirection;
@@ -118,8 +113,9 @@ internal class MorphicMainMenu
         }
 
         _menuFlyout = menuFlyout;
-        // Cache the presenter's real width on every open (into the slot for the configuration being shown) so RTL
-        // placement self-corrects across Show/Hide swaps even when a configuration was not pre-measured.
+        // Safety-net width re-cache on every open (see MenuFlyout_Opened) -- covers menu-width DRIFT with no item
+        // change, e.g. a runtime high-contrast / text-size change that re-sizes the menu text (PrewarmWidth /
+        // RefreshWidth would not catch that, and this menu is a singleton so it is never rebuilt).
         _menuFlyout.Opened += this.MenuFlyout_Opened;
     }
 
@@ -141,8 +137,6 @@ internal class MorphicMainMenu
                 _hideMorphicBarMenuItem.Visibility = Visibility.Collapsed;
                 break;
         }
-        // remember which configuration is showing so the Opened handler caches its width into the right slot
-        _lastShownBarIsVisible = morphicBarIsVisible;
 
         // capture the content root of the owner (required to show the menu)
         var root = (FrameworkElement)ownerWindow.Content;
@@ -220,12 +214,10 @@ internal class MorphicMainMenu
         });
     }
 
-    // Pre-measures the menu width (bar-visible configuration) ONCE at startup so the menu's first RTL open is
-    // close to its final position. This is the ONLY place we measure by showing the flyout, and it is safe ONLY
-    // because it runs at startup -- before the bar is interactive -- so the brief activation churn settles long
-    // before the user can click. (A flyout show at RUNTIME steals activation and eats the next click; that is why
-    // RefreshWidth does NOT show.) No-op in LTR (no offset is applied); if the owner content is not laid out yet,
-    // waits for Loaded.
+    // Pre-measures BOTH configurations' widths ONCE at startup so the menu's first RTL open is already exact.
+    // Delegates to MeasureWidthInvisibly (a single synchronous show); RefreshWidth re-runs the same measure when
+    // the items change. No-op in LTR (no offset is applied); if the owner content is not laid out yet, waits for
+    // Loaded.
     public void PrewarmWidth(Microsoft.UI.Xaml.Window ownerWindow)
     {
         _ownerWindowForMeasuring = ownerWindow;
@@ -354,30 +346,26 @@ internal class MorphicMainMenu
         return null;
     }
 
-    // Caches the menu presenter's real width on every open, into the slot matching the configuration being shown
-    // (tracked by _lastShownBarIsVisible). A MenuFlyout does not expose its presenter directly, so find it among
-    // the open popups for the flyout's XamlRoot.
+    // Safety net (see ctor subscription): on every real open, re-cache the presenter's actual width into the slot
+    // for whichever Show/Hide item is currently showing, so width drift from a runtime display change (high
+    // contrast, system text size) self-heals on the next open. PrewarmWidth/RefreshWidth already fill both slots
+    // for normal cases; this is only for drift that happens WITHOUT an item change. (It does not run during the
+    // invisible measure: that show+hide is synchronous, so the flyout never actually opens and Opened never fires.)
     private void MenuFlyout_Opened(object? sender, object e)
     {
-        var xamlRoot = _menuFlyout.XamlRoot;
-        if (xamlRoot is null)
+        var menuFlyoutPresenter = this.FindOpenMenuPresenter();
+        if (menuFlyoutPresenter is null || menuFlyoutPresenter.ActualWidth <= 0.0)
         {
             return;
         }
-        foreach (var openPopup in Microsoft.UI.Xaml.Media.VisualTreeHelper.GetOpenPopupsForXamlRoot(xamlRoot))
+        // bar VISIBLE => the "Hide MorphicBar" item is the one showing.
+        if (_hideMorphicBarMenuItem.Visibility == Visibility.Visible)
         {
-            if (openPopup.Child is MenuFlyoutPresenter menuFlyoutPresenter && menuFlyoutPresenter.ActualWidth > 0.0)
-            {
-                if (_lastShownBarIsVisible == true)
-                {
-                    _cachedWidthWhenBarVisibleInDips = menuFlyoutPresenter.ActualWidth;
-                }
-                else
-                {
-                    _cachedWidthWhenBarHiddenInDips = menuFlyoutPresenter.ActualWidth;
-                }
-                break;
-            }
+            _cachedWidthWhenBarVisibleInDips = menuFlyoutPresenter.ActualWidth;
+        }
+        else
+        {
+            _cachedWidthWhenBarHiddenInDips = menuFlyoutPresenter.ActualWidth;
         }
     }
 }
