@@ -171,6 +171,11 @@ public partial class App : Application
         _menuOwnerWindow.AppWindow.MoveAndResize(new Windows.Graphics.RectInt32(-10000, -10000, 0, 0)); // move off the main screen (unnecessary, but good for VS debugging so we don't get GUI debug overlays), make it zero pixels in size (also unnecessary, but a safeguard)
         _menuOwnerWindow.AppWindow.Show();
 
+        // Pre-warm the main menu's width now that its owner window exists, so the menu's FIRST right-to-left
+        // open is positioned exactly. The menu is placed by absolute coordinate minus its own width; without
+        // this the first open would use an estimate (then self-correct). No-op in left-to-right sessions.
+        App.MainMenu.PrewarmWidth(_menuOwnerWindow);
+
         // Construct the MorphicBarWindow and do all one-time setup before handing it to MorphicBarManager.
         // The local `morphicBarWindow` reference goes out of scope after the manager takes it; App keeps
         // only the manager reference (this.MorphicBarManager): all subsequent bar operations go through
