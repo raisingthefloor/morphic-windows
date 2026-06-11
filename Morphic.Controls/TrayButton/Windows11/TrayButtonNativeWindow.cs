@@ -324,8 +324,13 @@ internal class TrayButtonNativeWindow : IDisposable
             var atomAsString = new Windows.Win32.Foundation.PCWSTR((char*)(nint)s_morphicTrayButtonClassInfoExAtom!.Value);
             fixed (char* pointerToNativeWindowClassName = nativeWindowClassName)
             {
+                // NOTE: WS_EX_TOOLWINDOW keeps this window out of the taskbar and out of the ALT+TAB switcher. Being owned by the
+                //       taskbar (see hWndParent below) would normally have the same effect, but Windows severs the cross-process owner
+                //       link if the taskbar window is destroyed and recreated -- which can happen in-place, without an Explorer restart
+                //       -- and the shell then gives the orphaned (visible, unowned, non-toolwindow) popup a taskbar button. The style 
+                //       bit, unlike the owner link, cannot be severed at runtime, so taskbar exclusion must not rely on ownership alone.
                 handle = Windows.Win32.PInvoke.CreateWindowEx(
-                    dwExStyle: Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE.WS_EX_LAYERED/* | Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE..WS_EX_TOOLWINDOW*//* | Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE..WS_EX_TOPMOST*/,
+                    dwExStyle: Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE.WS_EX_LAYERED | Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE.WS_EX_TOOLWINDOW/* | Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE.WS_EX_TOPMOST*/,
                     lpClassName: atomAsString,
                     lpWindowName: pointerToNativeWindowClassName,
                     dwStyle: /*Windows.Win32.UI.WindowsAndMessaging.WINDOW_STYLE.WS_CLIPSIBLINGS | */Windows.Win32.UI.WindowsAndMessaging.WINDOW_STYLE.WS_POPUP /*| Windows.Win32.UI.WindowsAndMessaging.WINDOW_STYLE.WS_TABSTOP*/ | Windows.Win32.UI.WindowsAndMessaging.WINDOW_STYLE.WS_VISIBLE,
