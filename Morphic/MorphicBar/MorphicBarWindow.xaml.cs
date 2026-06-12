@@ -759,9 +759,46 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         // items that fit. Pass 1 of MeasureBarForOrientation determines bar thickness; Pass 2
         // re-measures each item with that thickness as the cross-axis constraint, capturing any
         // text wrapping in headers/buttons that the unconstrained Pass 1 would have missed.
+        // Clear any per-item explicit Width pin (see below) BEFORE measuring, so Pass 1 of
+        // MeasureBarForOrientation sees the items' true natural widths (a stale pin would lock the bar's
+        // thickness at its previous value and corrupt a flip back to horizontal).
+        foreach (var itemControl in _allBarItemControls)
+        {
+            if (itemControl is Microsoft.UI.Xaml.FrameworkElement itemElement)
+            {
+                itemElement.Width = double.NaN;
+            }
+        }
+
         var (logicalLength, logicalThickness, fittingCount) = this.MeasureBarForOrientation(hMonitor, targetOrientation);
         _logicalLength = logicalLength;
         _logicalThickness = logicalThickness;
+
+        // Pin each bar item's explicit Width (vertical mode) to the EXACT width Pass 2 of
+        // MeasureBarForOrientation measured it at: the bar's inner thickness minus the items-panel side
+        // margins. WHY: each item's height depends on whether its header TextBlock wraps, and the wrap
+        // depends on the width the item is measured at. The live layout's width constraint is unreliable
+        // around window resizes (the window starts small, items get measured at the startup width, and
+        // WinUI's measure caching can keep those stale wrapped heights even after the window grows;
+        // invalidation alone did not reliably purge it). An explicit Width makes the wrap
+        // decision a property of the element rather than of layout timing, so the rendered height always
+        // matches the budget. Horizontal mode stays auto (NaN, cleared above): there the item's width IS
+        // the bar's length axis and must size to content.
+        if (targetOrientation == Orientation.Vertical)
+        {
+            var itemsPanelMarginForPin = GetBarItemsPanelMargin(targetOrientation);
+            double pinnedItemWidth = System.Math.Max(0,
+                (double)logicalThickness
+                - (MorphicBarWindowMetrics.BarBorderThicknessPerSide * 2)
+                - (itemsPanelMarginForPin.Left + itemsPanelMarginForPin.Right));
+            foreach (var itemControl in _allBarItemControls)
+            {
+                if (itemControl is Microsoft.UI.Xaml.FrameworkElement itemElement)
+                {
+                    itemElement.Width = pinnedItemWidth;
+                }
+            }
+        }
 
         // sync BarItemsPanel.Children to the leading prefix of _allBarItemControls that fits.
         // Trimmed items remain in the _allBarItemControls cache (unparented for now; will move

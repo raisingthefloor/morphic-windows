@@ -217,7 +217,6 @@ internal sealed class MorphicBarFocusController
         bool mousePressed = (Windows.Win32.PInvoke.GetAsyncKeyState(0x01) & 0x8000) != 0
             || (Windows.Win32.PInvoke.GetAsyncKeyState(0x02) & 0x8000) != 0
             || (Windows.Win32.PInvoke.GetAsyncKeyState(0x04) & 0x8000) != 0;
-        System.Diagnostics.Debug.WriteLine($"[Focus] RunDeferredFocusUpdate({activationState}) mousePressed={mousePressed}");
         if (mousePressed)
         {
             activationState = Microsoft.UI.Xaml.WindowActivationState.PointerActivated;
@@ -368,15 +367,11 @@ internal sealed class MorphicBarFocusController
         {
             try
             {
-                var barHwnd = (Windows.Win32.Foundation.HWND)WinRT.Interop.WindowNative.GetWindowHandle(_barWindow);
-                var foreground = Windows.Win32.PInvoke.GetForegroundWindow();
-                var isForeground = foreground == barHwnd;
-                var result = snapshot.Control.Focus(state);
-                System.Diagnostics.Debug.WriteLine($"[Restore] Focus({state}) returned {result}, barIsForeground={isForeground}");
+                _ = snapshot.Control.Focus(state);
             }
-            catch (System.Runtime.InteropServices.COMException ex)
+            catch (System.Runtime.InteropServices.COMException)
             {
-                System.Diagnostics.Debug.WriteLine($"[Restore] COMException: {ex.Message}");
+                // teardown race (control's window already closed); nothing to restore
             }
         });
     }
@@ -425,7 +420,6 @@ internal sealed class MorphicBarFocusController
             if (current is Microsoft.UI.Xaml.Controls.Control control
                 && control.FocusState == Microsoft.UI.Xaml.FocusState.Keyboard)
             {
-                System.Diagnostics.Debug.WriteLine($"[Focus] Downgrading {control.GetType().Name} Keyboard -> Pointer");
                 _ = control.Focus(Microsoft.UI.Xaml.FocusState.Pointer);
             }
             int childCount = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChildrenCount(current);
