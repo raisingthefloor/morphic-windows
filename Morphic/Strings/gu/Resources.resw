@@ -79,6 +79,9 @@
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>બતાવો</value>
   </data>
+  <data name="MoreSettingsToMakeComputerEasierMenuItem" xml:space="preserve">
+    <value>કમ્પ્યુટરને સરળ બનાવવા માટે વધુ સેટિંગ્સ</value>
+  </data>
   <data name="MorphicForWindows.Text" xml:space="preserve">
     <value>Windows માટે Morphic</value>
   </data>
@@ -87,6 +90,15 @@
   </data>
   <data name="NightLightAccessibleName" xml:space="preserve">
     <value>નાઇટ લાઇટ</value>
+  </data>
+  <data name="OsMagnifierSettingsMenuItem" xml:space="preserve">
+    <value>મેગ્નિફાયર સેટિંગ્સ</value>
+  </data>
+  <data name="OsReadAloudSettingsMenuItem" xml:space="preserve">
+    <value>મોટેથી વાંચવાની સેટિંગ્સ</value>
+  </data>
+  <data name="OsSettingsSectionHeader" xml:space="preserve">
+    <value>MorphicBar નિયંત્રણો માટે Windows સેટિંગ્સ</value>
   </data>
   <data name="QuitMorphic" xml:space="preserve">
     <value>Morphic છોડો</value>
@@ -108,6 +120,9 @@
   </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>ટેક્સ્ટનું કદ</value>
+  </data>
+  <data name="SnipAccessibleName" xml:space="preserve">
+    <value>સ્ક્રીનનો ભાગ સ્નિપ અને કૉપિ કરો</value>
   </data>
   <data name="SnipCopyLabel" xml:space="preserve">
     <value>કોપી કરો</value>

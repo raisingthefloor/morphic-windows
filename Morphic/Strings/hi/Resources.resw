@@ -79,6 +79,9 @@
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>शो (दिखाएँ)</value>
   </data>
+  <data name="MoreSettingsToMakeComputerEasierMenuItem" xml:space="preserve">
+    <value>कंप्यूटर का उपयोग आसान बनाने के लिए अधिक सेटिंग्स</value>
+  </data>
   <data name="MorphicForWindows.Text" xml:space="preserve">
     <value>Windows के लिए Morphic</value>
   </data>
@@ -87,6 +90,15 @@
   </data>
   <data name="NightLightAccessibleName" xml:space="preserve">
     <value>नाइट लाइट</value>
+  </data>
+  <data name="OsMagnifierSettingsMenuItem" xml:space="preserve">
+    <value>मैग्निफ़ायर सेटिंग्स</value>
+  </data>
+  <data name="OsReadAloudSettingsMenuItem" xml:space="preserve">
+    <value>पढ़कर सुनाने की सेटिंग्स</value>
+  </data>
+  <data name="OsSettingsSectionHeader" xml:space="preserve">
+    <value>MorphicBar नियंत्रणों के लिए Windows सेटिंग्स</value>
   </data>
   <data name="QuitMorphic" xml:space="preserve">
     <value>मॉर्फिक छोड़ो</value>
