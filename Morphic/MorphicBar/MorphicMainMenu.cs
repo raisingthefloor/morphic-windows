@@ -77,6 +77,7 @@ internal class MorphicMainMenu
         // "More settings to make the computer easier" (OS accessibility-related settings) submenu
         var moreSettingsMenuItem = new MenuFlyoutSubItem { Text = Morphic.Localization.Strings.MoreSettingsToMakeComputerEasierMenuItem, Padding = padding, MinHeight = 0 };
         moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsSettingsSectionHeader, IsEnabled = false, Padding = padding, MinHeight = 0 });
+        moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsMagnifierSettingsMenuItem, Padding = padding, MinHeight = 0 });
         menuFlyout.Items.Add(moreSettingsMenuItem);
 
         menuFlyout.Items.Add(new MenuFlyoutSeparator());

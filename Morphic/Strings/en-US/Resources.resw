@@ -205,6 +205,10 @@
     <value>Windows Settings for MorphicBar Controls</value>
     <comment>[loc-id:520fefe2e53642e0] Non-interactive section header inside the "More settings to make the computer easier" submenu; labels the group of Windows settings links that match the MorphicBar's controls. "MorphicBar" is a product name; do not translate it.</comment>
   </data>
+  <data name="OsMagnifierSettingsMenuItem" xml:space="preserve">
+    <value>Magnifier Settings</value>
+    <comment>[loc-id:6575adad287a4dd3] Menu item inside the "More settings to make the computer easier" submenu; opens the Windows Magnifier settings page.</comment>
+  </data>
 
   <!-- ===================== About box ===================== -->
   <data name="AboutWindowTitle" xml:space="preserve">
