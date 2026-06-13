@@ -200,6 +200,11 @@
     <value>More settings to make the computer easier</value>
     <comment>[loc-id:a5c102c351264b4a] Tray menu submenu title; opens a submenu of shortcuts to Windows accessibility settings.</comment>
   </data>
+  <!-- "More settings to make the computer easier" submenu children -->
+  <data name="OsSettingsSectionHeader" xml:space="preserve">
+    <value>Windows Settings for MorphicBar Controls</value>
+    <comment>[loc-id:520fefe2e53642e0] Non-interactive section header inside the "More settings to make the computer easier" submenu; labels the group of Windows settings links that match the MorphicBar's controls. "MorphicBar" is a product name; do not translate it.</comment>
+  </data>
 
   <!-- ===================== About box ===================== -->
   <data name="AboutWindowTitle" xml:space="preserve">
