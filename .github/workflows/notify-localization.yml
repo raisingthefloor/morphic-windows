@@ -1,0 +1,26 @@
+name: Notify localization on English change
+
+# On a push to dev/2.x that touches the en-US source strings, queue the morphic-localization "English-In"
+# Azure DevOps pipeline (it clones this public repo, ingests the new/changed English, translates it, and
+# opens a review PR in morphic-localization). The only secret is AZDO_PIPELINE_PAT (an Azure DevOps PAT
+# scoped to Build: Read & execute) -- it can queue that pipeline and nothing else.
+
+on:
+  push:
+    branches: [dev/2.x]
+    paths:
+      - 'Morphic/Strings/en-US/Resources.resw'   # ONLY an English-source change fires this
+
+jobs:
+  queue-english-in:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Queue the localization English-In pipeline (Azure DevOps)
+        run: |
+          curl -sf -X POST \
+            -u ":$AZDO_PAT" \
+            -H "Content-Type: application/json" \
+            "https://dev.azure.com/raisingthefloor/Morphic/_apis/pipelines/34/runs?api-version=7.1" \
+            -d '{"templateParameters": {"productSha": "${{ github.sha }}"}}'
+        env:
+          AZDO_PAT: ${{ secrets.AZDO_PIPELINE_PAT }}
