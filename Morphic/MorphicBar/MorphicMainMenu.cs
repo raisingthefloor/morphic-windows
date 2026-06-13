@@ -78,6 +78,7 @@ internal class MorphicMainMenu
         var moreSettingsMenuItem = new MenuFlyoutSubItem { Text = Morphic.Localization.Strings.MoreSettingsToMakeComputerEasierMenuItem, Padding = padding, MinHeight = 0 };
         moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsSettingsSectionHeader, IsEnabled = false, Padding = padding, MinHeight = 0 });
         moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsMagnifierSettingsMenuItem, Padding = padding, MinHeight = 0 });
+        moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsReadAloudSettingsMenuItem, Padding = padding, MinHeight = 0 });
         menuFlyout.Items.Add(moreSettingsMenuItem);
 
         menuFlyout.Items.Add(new MenuFlyoutSeparator());
