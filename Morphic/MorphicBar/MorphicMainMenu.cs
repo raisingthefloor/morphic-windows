@@ -74,6 +74,12 @@ internal class MorphicMainMenu
 
         menuFlyout.Items.Add(new MenuFlyoutSeparator());
 
+        // "More settings to make the computer easier" (OS accessibility-related settings) submenu
+        var moreSettingsMenuItem = new MenuFlyoutSubItem { Text = Morphic.Localization.Strings.MoreSettingsToMakeComputerEasierMenuItem, Padding = padding, MinHeight = 0 };
+        menuFlyout.Items.Add(moreSettingsMenuItem);
+
+        menuFlyout.Items.Add(new MenuFlyoutSeparator());
+
         var aboutMorphicMenuItem = new MenuFlyoutItem { Text = Morphic.Localization.Strings.AboutMorphicMenuItem, Padding = padding, MinHeight = 0 };
         aboutMorphicMenuItem.KeyboardAccelerators.Add(new Microsoft.UI.Xaml.Input.KeyboardAccelerator
         {
