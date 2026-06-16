@@ -119,7 +119,7 @@
     <value>تنظیمات نور شب</value>
   </data>
   <data name="OsOtherSettingsSectionHeader" xml:space="preserve">
-    <value>Other Key Windows Settings</value>
+    <value>سایر تنظیمات کلیدی ویندوز</value>
   </data>
   <data name="OsPointerSizeSettingsMenuItem" xml:space="preserve">
     <value>اندازه اشاره‌گر</value>
