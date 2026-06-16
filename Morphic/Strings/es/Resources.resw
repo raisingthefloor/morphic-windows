@@ -91,14 +91,47 @@
   <data name="NightLightAccessibleName" xml:space="preserve">
     <value>Luz nocturna</value>
   </data>
+  <data name="OsAllAccessibilityOptionsMenuItem" xml:space="preserve">
+    <value>Todas las opciones de accesibilidad</value>
+  </data>
+  <data name="OsColorVisionSettingsMenuItem" xml:space="preserve">
+    <value>Configuración de visión del color</value>
+  </data>
+  <data name="OsContrastSettingsMenuItem" xml:space="preserve">
+    <value>Configuración de contraste</value>
+  </data>
+  <data name="OsDarkModeSettingsMenuItem" xml:space="preserve">
+    <value>Configuración del modo oscuro</value>
+  </data>
+  <data name="OsKeyboardSettingsMenuItem" xml:space="preserve">
+    <value>Configuración del teclado</value>
+  </data>
+  <data name="OsLanguageSettingsMenuItem" xml:space="preserve">
+    <value>Idioma</value>
+  </data>
   <data name="OsMagnifierSettingsMenuItem" xml:space="preserve">
     <value>Configuración de la Lupa</value>
+  </data>
+  <data name="OsMouseSettingsMenuItem" xml:space="preserve">
+    <value>Configuración del mouse</value>
+  </data>
+  <data name="OsNightModeSettingsMenuItem" xml:space="preserve">
+    <value>Configuración de luz nocturna</value>
+  </data>
+  <data name="OsOtherSettingsSectionHeader" xml:space="preserve">
+    <value>Otras opciones importantes de Windows</value>
+  </data>
+  <data name="OsPointerSizeSettingsMenuItem" xml:space="preserve">
+    <value>Tamaño del puntero</value>
   </data>
   <data name="OsReadAloudSettingsMenuItem" xml:space="preserve">
     <value>Configuración de lectura en voz alta</value>
   </data>
   <data name="OsSettingsSectionHeader" xml:space="preserve">
     <value>Configuración de Windows para los controles de MorphicBar</value>
+  </data>
+  <data name="OsVoiceSettingsMenuItem" xml:space="preserve">
+    <value>Configuración de voz</value>
   </data>
   <data name="QuitMorphic" xml:space="preserve">
     <value>Cerrar Morphic</value>
