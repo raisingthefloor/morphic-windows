@@ -91,14 +91,47 @@
   <data name="NightLightAccessibleName" xml:space="preserve">
     <value>야간 모드</value>
   </data>
+  <data name="OsAllAccessibilityOptionsMenuItem" xml:space="preserve">
+    <value>모든 접근성 옵션</value>
+  </data>
+  <data name="OsColorVisionSettingsMenuItem" xml:space="preserve">
+    <value>색 필터 설정</value>
+  </data>
+  <data name="OsContrastSettingsMenuItem" xml:space="preserve">
+    <value>대비 설정</value>
+  </data>
+  <data name="OsDarkModeSettingsMenuItem" xml:space="preserve">
+    <value>다크 모드 설정</value>
+  </data>
+  <data name="OsKeyboardSettingsMenuItem" xml:space="preserve">
+    <value>키보드 설정</value>
+  </data>
+  <data name="OsLanguageSettingsMenuItem" xml:space="preserve">
+    <value>언어</value>
+  </data>
   <data name="OsMagnifierSettingsMenuItem" xml:space="preserve">
     <value>돋보기 설정</value>
+  </data>
+  <data name="OsMouseSettingsMenuItem" xml:space="preserve">
+    <value>마우스 설정</value>
+  </data>
+  <data name="OsNightModeSettingsMenuItem" xml:space="preserve">
+    <value>야간 모드 설정</value>
+  </data>
+  <data name="OsOtherSettingsSectionHeader" xml:space="preserve">
+    <value>기타 주요 Windows 설정</value>
+  </data>
+  <data name="OsPointerSizeSettingsMenuItem" xml:space="preserve">
+    <value>포인터 크기</value>
   </data>
   <data name="OsReadAloudSettingsMenuItem" xml:space="preserve">
     <value>소리내어 읽기 설정</value>
   </data>
   <data name="OsSettingsSectionHeader" xml:space="preserve">
     <value>MorphicBar 컨트롤용 Windows 설정</value>
+  </data>
+  <data name="OsVoiceSettingsMenuItem" xml:space="preserve">
+    <value>음성 설정</value>
   </data>
   <data name="QuitMorphic" xml:space="preserve">
     <value>Morphic 종료</value>

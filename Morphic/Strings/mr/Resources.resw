@@ -91,14 +91,47 @@
   <data name="NightLightAccessibleName" xml:space="preserve">
     <value>नाईट लाईट</value>
   </data>
+  <data name="OsAllAccessibilityOptionsMenuItem" xml:space="preserve">
+    <value>सर्व प्रवेशयोग्यता पर्याय</value>
+  </data>
+  <data name="OsColorVisionSettingsMenuItem" xml:space="preserve">
+    <value>रंग दृष्टी सेटिंग्ज</value>
+  </data>
+  <data name="OsContrastSettingsMenuItem" xml:space="preserve">
+    <value>कॉन्ट्रास्ट सेटिंग्ज</value>
+  </data>
+  <data name="OsDarkModeSettingsMenuItem" xml:space="preserve">
+    <value>गडद मोड सेटिंग्ज</value>
+  </data>
+  <data name="OsKeyboardSettingsMenuItem" xml:space="preserve">
+    <value>कीबोर्ड सेटिंग्ज</value>
+  </data>
+  <data name="OsLanguageSettingsMenuItem" xml:space="preserve">
+    <value>भाषा</value>
+  </data>
   <data name="OsMagnifierSettingsMenuItem" xml:space="preserve">
     <value>भिंग सेटिंग्ज</value>
+  </data>
+  <data name="OsMouseSettingsMenuItem" xml:space="preserve">
+    <value>माउस सेटिंग्ज</value>
+  </data>
+  <data name="OsNightModeSettingsMenuItem" xml:space="preserve">
+    <value>नाईट मोड सेटिंग्ज</value>
+  </data>
+  <data name="OsOtherSettingsSectionHeader" xml:space="preserve">
+    <value>इतर महत्त्वाच्या Windows सेटिंग्ज</value>
+  </data>
+  <data name="OsPointerSizeSettingsMenuItem" xml:space="preserve">
+    <value>पॉइंटरचा आकार</value>
   </data>
   <data name="OsReadAloudSettingsMenuItem" xml:space="preserve">
     <value>मोठ्याने वाचण्याची सेटिंग्ज</value>
   </data>
   <data name="OsSettingsSectionHeader" xml:space="preserve">
     <value>MorphicBar नियंत्रणांसाठी Windows सेटिंग्ज</value>
+  </data>
+  <data name="OsVoiceSettingsMenuItem" xml:space="preserve">
+    <value>व्हॉइस सेटिंग्ज</value>
   </data>
   <data name="QuitMorphic" xml:space="preserve">
     <value>मॉर्फिक सोडा</value>
