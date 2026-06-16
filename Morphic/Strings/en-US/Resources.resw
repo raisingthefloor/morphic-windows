@@ -213,6 +213,50 @@
     <value>Read Aloud Settings</value>
     <comment>[loc-id:fa1c7736937d4140] Menu item inside the "More settings to make the computer easier" submenu; opens the Windows speech / read-aloud (text-to-speech) settings page.</comment>
   </data>
+  <data name="OsColorVisionSettingsMenuItem" xml:space="preserve">
+    <value>Color Vision Settings</value>
+    <comment>[loc-id:3b2afcf968d34654] Menu item in the "More settings to make the computer easier" submenu; opens the Windows color filters (color vision) settings page.</comment>
+  </data>
+  <data name="OsNightModeSettingsMenuItem" xml:space="preserve">
+    <value>Night Mode Settings</value>
+    <comment>[loc-id:440b2e69859744da] Menu item in the "More settings to make the computer easier" submenu; opens the Windows Night Light settings page.</comment>
+  </data>
+  <data name="OsDarkModeSettingsMenuItem" xml:space="preserve">
+    <value>Dark Mode Settings</value>
+    <comment>[loc-id:fb44d6a8778049ec] Menu item in the "More settings to make the computer easier" submenu; opens the Windows colors / dark mode settings page.</comment>
+  </data>
+  <data name="OsContrastSettingsMenuItem" xml:space="preserve">
+    <value>Contrast Settings</value>
+    <comment>[loc-id:ee596e531a1e466b] Menu item in the "More settings to make the computer easier" submenu; opens the Windows high-contrast settings page.</comment>
+  </data>
+  <data name="OsVoiceSettingsMenuItem" xml:space="preserve">
+    <value>Voice Settings</value>
+    <comment>[loc-id:59fb052ad960489b] Menu item in the "More settings to make the computer easier" submenu; opens the Windows speech-recognition (voice) settings page.</comment>
+  </data>
+  <data name="OsOtherSettingsSectionHeader" xml:space="preserve">
+    <value>Other Key Windows Settings</value>
+    <comment>[loc-id:086a24fe9312457f] Non-interactive section header in the "More settings to make the computer easier" submenu; labels a group of other useful Windows settings links below it.</comment>
+  </data>
+  <data name="OsMouseSettingsMenuItem" xml:space="preserve">
+    <value>Mouse Settings</value>
+    <comment>[loc-id:4990d7d4500648f2] Menu item in the "More settings to make the computer easier" submenu; opens the Windows mouse and touchpad settings page.</comment>
+  </data>
+  <data name="OsPointerSizeSettingsMenuItem" xml:space="preserve">
+    <value>Pointer Size</value>
+    <comment>[loc-id:106bd92203ac4e05] Menu item in the "More settings to make the computer easier" submenu; opens the Windows mouse-pointer size settings page.</comment>
+  </data>
+  <data name="OsKeyboardSettingsMenuItem" xml:space="preserve">
+    <value>Keyboard Settings</value>
+    <comment>[loc-id:625716fae7a749f3] Menu item in the "More settings to make the computer easier" submenu; opens the Windows keyboard accessibility settings page.</comment>
+  </data>
+  <data name="OsLanguageSettingsMenuItem" xml:space="preserve">
+    <value>Language</value>
+    <comment>[loc-id:a7dc77f7ed934f03] Menu item in the "More settings to make the computer easier" submenu; opens the Windows language and region settings page.</comment>
+  </data>
+  <data name="OsAllAccessibilityOptionsMenuItem" xml:space="preserve">
+    <value>All Accessibility Options</value>
+    <comment>[loc-id:1a2093156e78472a] Menu item in the "More settings to make the computer easier" submenu; opens the Windows accessibility (Ease of Access) settings hub.</comment>
+  </data>
 
   <!-- ===================== About box ===================== -->
   <data name="AboutWindowTitle" xml:space="preserve">

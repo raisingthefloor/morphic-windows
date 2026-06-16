@@ -79,6 +79,19 @@ internal class MorphicMainMenu
         moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsSettingsSectionHeader, IsEnabled = false, Padding = padding, MinHeight = 0 });
         moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsMagnifierSettingsMenuItem, Padding = padding, MinHeight = 0 });
         moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsReadAloudSettingsMenuItem, Padding = padding, MinHeight = 0 });
+        moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsColorVisionSettingsMenuItem, Padding = padding, MinHeight = 0 });        // ms-settings:easeofaccess-colorfilter
+        moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsNightModeSettingsMenuItem, Padding = padding, MinHeight = 0 });          // ms-settings:nightlight
+        moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsDarkModeSettingsMenuItem, Padding = padding, MinHeight = 0 });           // ms-settings:colors
+        moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsContrastSettingsMenuItem, Padding = padding, MinHeight = 0 });           // ms-settings:easeofaccess-highcontrast
+        moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsVoiceSettingsMenuItem, Padding = padding, MinHeight = 0 });              // ms-settings:easeofaccess-speechrecognition
+        //
+        moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsOtherSettingsSectionHeader, IsEnabled = false, Padding = padding, MinHeight = 0 });   // section header
+        moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsMouseSettingsMenuItem, Padding = padding, MinHeight = 0 });              // ms-settings:mousetouchpad
+        moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsPointerSizeSettingsMenuItem, Padding = padding, MinHeight = 0 });        // ms-settings:easeofaccess-mousepointer
+        moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsKeyboardSettingsMenuItem, Padding = padding, MinHeight = 0 });           // ms-settings:easeofaccess-keyboard
+        moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsLanguageSettingsMenuItem, Padding = padding, MinHeight = 0 });           // ms-settings:regionlanguage
+        moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsAllAccessibilityOptionsMenuItem, Padding = padding, MinHeight = 0 });    // ms-settings:easeofaccess
+        //
         menuFlyout.Items.Add(moreSettingsMenuItem);
 
         menuFlyout.Items.Add(new MenuFlyoutSeparator());
