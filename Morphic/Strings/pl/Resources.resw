@@ -20,13 +20,13 @@
     <value>(nieznana kompilacja)</value>
   </data>
   <data name="AboutMorphicMenuItem" xml:space="preserve">
-    <value>Morphic — informacje...</value>
+    <value>Informacje o Morphic...</value>
   </data>
   <data name="AboutVersionFormat" xml:space="preserve">
     <value>wersja {0}.{1}</value>
   </data>
   <data name="AboutWindowTitle" xml:space="preserve">
-    <value>Morphic — informacje</value>
+    <value>Informacje o Morphic</value>
   </data>
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>Filtry kolorów</value>
@@ -83,10 +83,10 @@
     <value>Więcej ustawień ułatwiających korzystanie z komputera</value>
   </data>
   <data name="MorphicForWindows.Text" xml:space="preserve">
-    <value>Morphic dla Windows</value>
+    <value>Morphic dla systemu Windows</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
-    <value>Nocne</value>
+    <value>Noc</value>
   </data>
   <data name="NightLightAccessibleName" xml:space="preserve">
     <value>Wyświetlanie nocne</value>
@@ -116,7 +116,7 @@
     <value>Ustawienia myszy</value>
   </data>
   <data name="OsNightModeSettingsMenuItem" xml:space="preserve">
-    <value>Ustawienia wyświetlania nocnego</value>
+    <value>Ustawienia trybu nocnego</value>
   </data>
   <data name="OsOtherSettingsSectionHeader" xml:space="preserve">
     <value>Inne kluczowe ustawienia systemu Windows</value>
@@ -143,10 +143,10 @@
     <value>Czytaj zaznaczone</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
-    <value>Czytaj zaznaczony tekst</value>
+    <value>Odczytaj zaznaczony tekst</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
-    <value>Zatrzymaj czytanie zaznaczonego tekstu</value>
+    <value>Zatrzymaj odczytywanie zaznaczonego tekstu</value>
   </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>Pokaż MorphicBar</value>
@@ -155,7 +155,7 @@
     <value>Rozmiar tekstu</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
-    <value>Zrób wycinek i skopiuj część ekranu</value>
+    <value>Wytnij i skopiuj fragment ekranu</value>
   </data>
   <data name="SnipCopyLabel" xml:space="preserve">
     <value>Kopiuj</value>

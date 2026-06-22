@@ -53,13 +53,13 @@
     <value>Mørk tilstand</value>
   </data>
   <data name="DecreaseTextSizeAccessibleName" xml:space="preserve">
-    <value>Formindsk tekststørrelse</value>
+    <value>Formindsk tekststørrelsen</value>
   </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>Skjul MorphicBar</value>
   </data>
   <data name="IncreaseTextSizeAccessibleName" xml:space="preserve">
-    <value>Forøg tekststørrelse</value>
+    <value>Forøg tekststørrelsen</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Få mere at vide om Morphic</value>
@@ -140,10 +140,10 @@
     <value>Morphic kunne ikke registrere den markerede tekst.</value>
   </data>
   <data name="ReadSelectedHeader" xml:space="preserve">
-    <value>Læs det valgte</value>
+    <value>Læs markeret</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
-    <value>Læs markeret tekst op</value>
+    <value>Læs markeret tekst</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Stop oplæsning af markeret tekst</value>
@@ -161,6 +161,6 @@
     <value>Kopiér</value>
   </data>
   <data name="SnipHeader" xml:space="preserve">
-    <value>Klip</value>
+    <value>Udklip</value>
   </data>
 </root>

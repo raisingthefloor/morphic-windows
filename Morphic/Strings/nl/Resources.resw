@@ -53,13 +53,13 @@
     <value>Donkere modus</value>
   </data>
   <data name="DecreaseTextSizeAccessibleName" xml:space="preserve">
-    <value>Tekst verkleinen</value>
+    <value>Tekstgrootte verkleinen</value>
   </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>MorphicBar verbergen</value>
   </data>
   <data name="IncreaseTextSizeAccessibleName" xml:space="preserve">
-    <value>Tekst vergroten</value>
+    <value>Tekstgrootte vergroten</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Meer informatie over Morphic</value>
@@ -80,7 +80,7 @@
     <value>Weergeven</value>
   </data>
   <data name="MoreSettingsToMakeComputerEasierMenuItem" xml:space="preserve">
-    <value>Meer instellingen om de computer gemakkelijker te gebruiken</value>
+    <value>Meer instellingen om de computer eenvoudiger te gebruiken</value>
   </data>
   <data name="MorphicForWindows.Text" xml:space="preserve">
     <value>Morphic voor Windows</value>
@@ -95,7 +95,7 @@
     <value>Alle toegankelijkheidsopties</value>
   </data>
   <data name="OsColorVisionSettingsMenuItem" xml:space="preserve">
-    <value>Instellingen voor kleurenzicht</value>
+    <value>Instellingen voor kleurfilters</value>
   </data>
   <data name="OsContrastSettingsMenuItem" xml:space="preserve">
     <value>Contrastinstellingen</value>
@@ -110,13 +110,13 @@
     <value>Taal</value>
   </data>
   <data name="OsMagnifierSettingsMenuItem" xml:space="preserve">
-    <value>Vergrootglasinstellingen</value>
+    <value>Instellingen voor Vergrootglas</value>
   </data>
   <data name="OsMouseSettingsMenuItem" xml:space="preserve">
     <value>Muisinstellingen</value>
   </data>
   <data name="OsNightModeSettingsMenuItem" xml:space="preserve">
-    <value>Instellingen voor nachtmodus</value>
+    <value>Instellingen voor nachtlamp</value>
   </data>
   <data name="OsOtherSettingsSectionHeader" xml:space="preserve">
     <value>Andere belangrijke Windows-instellingen</value>
@@ -128,7 +128,7 @@
     <value>Instellingen voor voorlezen</value>
   </data>
   <data name="OsSettingsSectionHeader" xml:space="preserve">
-    <value>Windows-instellingen voor MorphicBar-bedieningselementen</value>
+    <value>Windows-instellingen voor MorphicBar-besturingselementen</value>
   </data>
   <data name="OsVoiceSettingsMenuItem" xml:space="preserve">
     <value>Spraakinstellingen</value>
@@ -146,7 +146,7 @@
     <value>Geselecteerde tekst voorlezen</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
-    <value>Stoppen met voorlezen van geselecteerde tekst</value>
+    <value>Voorlezen van geselecteerde tekst stoppen</value>
   </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>MorphicBar weergeven</value>
@@ -155,7 +155,7 @@
     <value>Tekstgrootte</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
-    <value>Deel van het scherm knippen en kopiëren</value>
+    <value>Een deel van het scherm knippen en kopiëren</value>
   </data>
   <data name="SnipCopyLabel" xml:space="preserve">
     <value>Kopiëren</value>

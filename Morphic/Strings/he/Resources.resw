@@ -122,7 +122,7 @@
     <value>הגדרות Windows חשובות נוספות</value>
   </data>
   <data name="OsPointerSizeSettingsMenuItem" xml:space="preserve">
-    <value>Pointer Size</value>
+    <value>גודל מצביע</value>
   </data>
   <data name="OsReadAloudSettingsMenuItem" xml:space="preserve">
     <value>הגדרות הקראה</value>

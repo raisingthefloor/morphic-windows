@@ -92,7 +92,7 @@
     <value>Nachtlicht</value>
   </data>
   <data name="OsAllAccessibilityOptionsMenuItem" xml:space="preserve">
-    <value>Alle Barrierefreiheitsoptionen</value>
+    <value>Alle Optionen für erleichterte Bedienung</value>
   </data>
   <data name="OsColorVisionSettingsMenuItem" xml:space="preserve">
     <value>Farbfilter-Einstellungen</value>

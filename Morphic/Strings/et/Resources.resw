@@ -116,25 +116,25 @@
     <value>Hiire sätted</value>
   </data>
   <data name="OsNightModeSettingsMenuItem" xml:space="preserve">
-    <value>Öövalguse sätted</value>
+    <value>Öörežiimi sätted</value>
   </data>
   <data name="OsOtherSettingsSectionHeader" xml:space="preserve">
     <value>Muud olulised Windowsi sätted</value>
   </data>
   <data name="OsPointerSizeSettingsMenuItem" xml:space="preserve">
-    <value>Hiirekursori suurus</value>
+    <value>Kursori suurus</value>
   </data>
   <data name="OsReadAloudSettingsMenuItem" xml:space="preserve">
     <value>Ettelugemise sätted</value>
   </data>
   <data name="OsSettingsSectionHeader" xml:space="preserve">
-    <value>Windowsi sätted MorphicBari juhtelementidele</value>
+    <value>MorphicBari juhtelementide Windowsi sätted</value>
   </data>
   <data name="OsVoiceSettingsMenuItem" xml:space="preserve">
-    <value>Kõnesätted</value>
+    <value>Häälesätted</value>
   </data>
   <data name="QuitMorphic" xml:space="preserve">
-    <value>Välju rakendusest Morphic</value>
+    <value>Sulge Morphic</value>
   </data>
   <data name="ReadSelectedCaptureFailedMessage" xml:space="preserve">
     <value>Morphic ei saanud valitud teksti kätte.</value>
@@ -155,12 +155,12 @@
     <value>Teksti suurus</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
-    <value>Snip and copy part of the screen</value>
+    <value>Tee ekraani osast väljalõige ja kopeeri</value>
   </data>
   <data name="SnipCopyLabel" xml:space="preserve">
     <value>Kopeeri</value>
   </data>
   <data name="SnipHeader" xml:space="preserve">
-    <value>Ekraanilõige</value>
+    <value>Väljalõige</value>
   </data>
 </root>

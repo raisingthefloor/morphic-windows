@@ -17,7 +17,7 @@
     <value>(koontiversio {0})</value>
   </data>
   <data name="AboutBuildUnknown" xml:space="preserve">
-    <value>(tuntematon koontiversio)</value>
+    <value>(koontiversio tuntematon)</value>
   </data>
   <data name="AboutMorphicMenuItem" xml:space="preserve">
     <value>Tietoja Morphicista...</value>
@@ -92,7 +92,7 @@
     <value>Yövalo</value>
   </data>
   <data name="OsAllAccessibilityOptionsMenuItem" xml:space="preserve">
-    <value>Kaikki saavutettavuusasetukset</value>
+    <value>Kaikki helppokäyttöasetukset</value>
   </data>
   <data name="OsColorVisionSettingsMenuItem" xml:space="preserve">
     <value>Värinäön asetukset</value>
@@ -128,7 +128,7 @@
     <value>Ääneen lukemisen asetukset</value>
   </data>
   <data name="OsSettingsSectionHeader" xml:space="preserve">
-    <value>MorphicBar-säätimien Windows-asetukset</value>
+    <value>MorphicBar-ohjainten Windows-asetukset</value>
   </data>
   <data name="OsVoiceSettingsMenuItem" xml:space="preserve">
     <value>Puheasetukset</value>
@@ -161,6 +161,6 @@
     <value>Kopioi</value>
   </data>
   <data name="SnipHeader" xml:space="preserve">
-    <value>Leike</value>
+    <value>Näyttöleike</value>
   </data>
 </root>
