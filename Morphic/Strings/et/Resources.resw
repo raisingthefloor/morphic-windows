@@ -17,7 +17,7 @@
     <value>(järk {0})</value>
   </data>
   <data name="AboutBuildUnknown" xml:space="preserve">
-    <value>(build unknown)</value>
+    <value>(järk teadmata)</value>
   </data>
   <data name="AboutMorphicMenuItem" xml:space="preserve">
     <value>Teave Morphicu kohta...</value>
@@ -35,10 +35,10 @@
     <value>Värv</value>
   </data>
   <data name="ContrastAndColorHeader" xml:space="preserve">
-    <value>Contrast &amp; Color</value>
+    <value>Kontrastsus ja värv</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
-    <value>Contrast</value>
+    <value>Kontrastsus</value>
   </data>
   <data name="ContrastThemeAccessibleName" xml:space="preserve">
     <value>Kontrastne kujundus</value>
@@ -80,31 +80,31 @@
     <value>Kuva</value>
   </data>
   <data name="MoreSettingsToMakeComputerEasierMenuItem" xml:space="preserve">
-    <value>More settings to make the computer easier</value>
+    <value>Veel sätteid arvuti kasutamise hõlbustamiseks</value>
   </data>
   <data name="MorphicForWindows.Text" xml:space="preserve">
     <value>Morphic Windowsile</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
-    <value>Night</value>
+    <value>Öö</value>
   </data>
   <data name="NightLightAccessibleName" xml:space="preserve">
     <value>Öövalgus</value>
   </data>
   <data name="OsAllAccessibilityOptionsMenuItem" xml:space="preserve">
-    <value>All Accessibility Options</value>
+    <value>Kõik hõlbustussuvandid</value>
   </data>
   <data name="OsColorVisionSettingsMenuItem" xml:space="preserve">
     <value>Värvinägemise sätted</value>
   </data>
   <data name="OsContrastSettingsMenuItem" xml:space="preserve">
-    <value>Contrast Settings</value>
+    <value>Kontrastsuse sätted</value>
   </data>
   <data name="OsDarkModeSettingsMenuItem" xml:space="preserve">
     <value>Tumeda režiimi sätted</value>
   </data>
   <data name="OsKeyboardSettingsMenuItem" xml:space="preserve">
-    <value>Keyboard Settings</value>
+    <value>Klaviatuuri sätted</value>
   </data>
   <data name="OsLanguageSettingsMenuItem" xml:space="preserve">
     <value>Keel</value>
@@ -149,18 +149,18 @@
     <value>Lõpeta valitud teksti ettelugemine</value>
   </data>
   <data name="ShowMorphicBar" xml:space="preserve">
-    <value>Show MorphicBar</value>
+    <value>Kuva MorphicBar</value>
   </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>Teksti suurus</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
-    <value>Snip and copy part of the screen</value>
+    <value>Tee ekraani osast väljalõige ja kopeeri</value>
   </data>
   <data name="SnipCopyLabel" xml:space="preserve">
     <value>Kopeeri</value>
   </data>
   <data name="SnipHeader" xml:space="preserve">
-    <value>Snip</value>
+    <value>Väljalõige</value>
   </data>
 </root>
