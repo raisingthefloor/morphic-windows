@@ -95,7 +95,7 @@
     <value>તમામ ઍક્સેસિબિલિટી વિકલ્પો</value>
   </data>
   <data name="OsColorVisionSettingsMenuItem" xml:space="preserve">
-    <value>Color Vision Settings</value>
+    <value>રંગ દૃષ્ટિ સેટિંગ્સ</value>
   </data>
   <data name="OsContrastSettingsMenuItem" xml:space="preserve">
     <value>કૉન્ટ્રાસ્ટ સેટિંગ્સ</value>
@@ -119,7 +119,7 @@
     <value>નાઇટ મોડ સેટિંગ્સ</value>
   </data>
   <data name="OsOtherSettingsSectionHeader" xml:space="preserve">
-    <value>Other Key Windows Settings</value>
+    <value>અન્ય મુખ્ય Windows સેટિંગ્સ</value>
   </data>
   <data name="OsPointerSizeSettingsMenuItem" xml:space="preserve">
     <value>પૉઇન્ટરનું કદ</value>

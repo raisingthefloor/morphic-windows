@@ -95,7 +95,7 @@
     <value>כל אפשרויות הנגישות</value>
   </data>
   <data name="OsColorVisionSettingsMenuItem" xml:space="preserve">
-    <value>Color Vision Settings</value>
+    <value>הגדרות ראיית צבעים</value>
   </data>
   <data name="OsContrastSettingsMenuItem" xml:space="preserve">
     <value>הגדרות ניגודיות</value>
