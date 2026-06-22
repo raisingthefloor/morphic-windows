@@ -95,7 +95,7 @@
     <value>כל אפשרויות הנגישות</value>
   </data>
   <data name="OsColorVisionSettingsMenuItem" xml:space="preserve">
-    <value>Color Vision Settings</value>
+    <value>הגדרות ראיית צבעים</value>
   </data>
   <data name="OsContrastSettingsMenuItem" xml:space="preserve">
     <value>הגדרות ניגודיות</value>
@@ -122,7 +122,7 @@
     <value>הגדרות Windows חשובות נוספות</value>
   </data>
   <data name="OsPointerSizeSettingsMenuItem" xml:space="preserve">
-    <value>Pointer Size</value>
+    <value>גודל מצביע</value>
   </data>
   <data name="OsReadAloudSettingsMenuItem" xml:space="preserve">
     <value>הגדרות הקראה</value>
