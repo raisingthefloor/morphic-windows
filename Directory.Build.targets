@@ -1,0 +1,11 @@
+<Project>
+
+  <!-- Appends the Windows 10 support compile constant for EVERY project, AFTER each project's own
+       DefineConstants. This MUST be a .targets file (imported after the project body): The .csproj files
+       overwrite DefineConstants in their bodies, so appending here is what makes the constant survive. 
+       The toggle itself lives in Directory.Build.props (IncludeWindows10Support). -->
+  <PropertyGroup Condition="'$(IncludeWindows10Support)' == 'true'">
+    <DefineConstants>$(DefineConstants);INCLUDE_WINDOWS_10_SUPPORT</DefineConstants>
+  </PropertyGroup>
+
+</Project>

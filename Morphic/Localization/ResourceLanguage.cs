@@ -75,4 +75,26 @@ internal static class ResourceLanguage
             // than risk forcing the app to the wrong language.
         }
     }
+
+    // The CultureInfo matching the language the app's localized strings actually resolve in -- i.e. the
+    // PrimaryLanguageOverride pinned above, NOT CurrentUICulture (which is the logon-cached OS UI language and
+    // can briefly diverge from it; see the note above). Use this for culture-correct operations on localized
+    // text, such as alphabetically sorting menu items so accented / non-Latin labels order the way that language
+    // expects. Falls back to the OS UI culture if the override is unset or unrecognized.
+    public static System.Globalization.CultureInfo CurrentDisplayCulture
+    {
+        get
+        {
+            try
+            {
+                var tag = Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride;
+                if (!string.IsNullOrEmpty(tag)) { return System.Globalization.CultureInfo.GetCultureInfo(tag); }
+            }
+            catch (System.Exception)
+            {
+                // Unrecognized / unsupported tag -- fall through to the OS UI culture.
+            }
+            return System.Globalization.CultureInfo.CurrentUICulture;
+        }
+    }
 }

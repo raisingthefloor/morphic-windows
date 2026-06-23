@@ -200,11 +200,8 @@
     <value>More settings to make the computer easier</value>
     <comment>[loc-id:a5c102c351264b4a] Tray menu submenu title; opens a submenu of shortcuts to Windows accessibility settings.</comment>
   </data>
-  <!-- "More settings to make the computer easier" submenu children -->
-  <data name="OsSettingsSectionHeader" xml:space="preserve">
-    <value>Windows Settings for MorphicBar Controls</value>
-    <comment>[loc-id:520fefe2e53642e0] Non-interactive section header inside the "More settings to make the computer easier" submenu; labels the group of Windows settings links that match the MorphicBar's controls. "MorphicBar" is a product name; do not translate it.</comment>
-  </data>
+  <!-- "More settings to make the computer easier" submenu children. The submenu sorts these accessibility links
+       alphabetically at runtime in the display language; the .resw order here does not matter. -->
   <data name="OsMagnifierSettingsMenuItem" xml:space="preserve">
     <value>Magnifier Settings</value>
     <comment>[loc-id:6575adad287a4dd3] Menu item inside the "More settings to make the computer easier" submenu; opens the Windows Magnifier settings page.</comment>
@@ -218,7 +215,7 @@
     <comment>[loc-id:3b2afcf968d34654] Menu item in the "More settings to make the computer easier" submenu; opens the Windows color filters (color vision) settings page.</comment>
   </data>
   <data name="OsNightModeSettingsMenuItem" xml:space="preserve">
-    <value>Night Mode Settings</value>
+    <value>Night Light Settings</value>
     <comment>[loc-id:440b2e69859744da] Menu item in the "More settings to make the computer easier" submenu; opens the Windows Night Light settings page.</comment>
   </data>
   <data name="OsDarkModeSettingsMenuItem" xml:space="preserve">
@@ -233,10 +230,6 @@
     <value>Voice Settings</value>
     <comment>[loc-id:59fb052ad960489b] Menu item in the "More settings to make the computer easier" submenu; opens the Windows speech-recognition (voice) settings page.</comment>
   </data>
-  <data name="OsOtherSettingsSectionHeader" xml:space="preserve">
-    <value>Other Key Windows Settings</value>
-    <comment>[loc-id:086a24fe9312457f] Non-interactive section header in the "More settings to make the computer easier" submenu; labels a group of other useful Windows settings links below it.</comment>
-  </data>
   <data name="OsMouseSettingsMenuItem" xml:space="preserve">
     <value>Mouse Settings</value>
     <comment>[loc-id:4990d7d4500648f2] Menu item in the "More settings to make the computer easier" submenu; opens the Windows mouse and touchpad settings page.</comment>
@@ -250,12 +243,12 @@
     <comment>[loc-id:625716fae7a749f3] Menu item in the "More settings to make the computer easier" submenu; opens the Windows keyboard accessibility settings page.</comment>
   </data>
   <data name="OsLanguageSettingsMenuItem" xml:space="preserve">
-    <value>Language</value>
+    <value>Language Settings</value>
     <comment>[loc-id:a7dc77f7ed934f03] Menu item in the "More settings to make the computer easier" submenu; opens the Windows language and region settings page.</comment>
   </data>
   <data name="OsAllAccessibilityOptionsMenuItem" xml:space="preserve">
-    <value>All Accessibility Options</value>
-    <comment>[loc-id:1a2093156e78472a] Menu item in the "More settings to make the computer easier" submenu; opens the Windows accessibility (Ease of Access) settings hub.</comment>
+    <value>All Accessibility Settings</value>
+    <comment>[loc-id:1a2093156e78472a] Menu item in the "More settings to make the computer easier" submenu; the LAST item, shown below a separator, opens the Windows accessibility (Ease of Access) settings hub. (The resource key keeps "Options" for loc-id stability; the displayed label is "All Accessibility Settings".)</comment>
   </data>
 
   <!-- ===================== About box ===================== -->

@@ -74,24 +74,49 @@ internal class MorphicMainMenu
 
         menuFlyout.Items.Add(new MenuFlyoutSeparator());
 
-        // "More settings to make the computer easier" (OS accessibility-related settings) submenu
+        // "More settings to make the computer easier" (OS accessibility-related settings) submenu. The
+        // accessibility-link items are sorted ALPHABETICALLY in the app's display language (so accented and
+        // non-Latin labels order the way that language expects -- see ResourceLanguage.CurrentDisplayCulture),
+        // then a separator, then "All Accessibility Settings" which always stays last as the catch-all.
         var moreSettingsMenuItem = new MenuFlyoutSubItem { Text = Morphic.Localization.Strings.MoreSettingsToMakeComputerEasierMenuItem, Padding = padding, MinHeight = 0 };
-        moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsSettingsSectionHeader, IsEnabled = false, Padding = padding, MinHeight = 0 });
-        moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsMagnifierSettingsMenuItem, Padding = padding, MinHeight = 0 });
-        moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsReadAloudSettingsMenuItem, Padding = padding, MinHeight = 0 });
-        moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsColorVisionSettingsMenuItem, Padding = padding, MinHeight = 0 });        // ms-settings:easeofaccess-colorfilter
-        moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsNightModeSettingsMenuItem, Padding = padding, MinHeight = 0 });          // ms-settings:nightlight
-        moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsDarkModeSettingsMenuItem, Padding = padding, MinHeight = 0 });           // ms-settings:colors
-        moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsContrastSettingsMenuItem, Padding = padding, MinHeight = 0 });           // ms-settings:easeofaccess-highcontrast
-        moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsVoiceSettingsMenuItem, Padding = padding, MinHeight = 0 });              // ms-settings:easeofaccess-speechrecognition
-        //
-        moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsOtherSettingsSectionHeader, IsEnabled = false, Padding = padding, MinHeight = 0 });   // section header
-        moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsMouseSettingsMenuItem, Padding = padding, MinHeight = 0 });              // ms-settings:mousetouchpad
-        moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsPointerSizeSettingsMenuItem, Padding = padding, MinHeight = 0 });        // ms-settings:easeofaccess-mousepointer
-        moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsKeyboardSettingsMenuItem, Padding = padding, MinHeight = 0 });           // ms-settings:easeofaccess-keyboard
-        moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsLanguageSettingsMenuItem, Padding = padding, MinHeight = 0 });           // ms-settings:regionlanguage
-        moreSettingsMenuItem.Items.Add(new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsAllAccessibilityOptionsMenuItem, Padding = padding, MinHeight = 0 });    // ms-settings:easeofaccess
-        //
+
+        // The accessibility links shown ABOVE the separator: the localized label + the Windows Settings page each
+        // opens. Authored in any order -- sorted below. The ms-settings: targets live in WindowsSettings (one
+        // source), shared with the future MorphicBar-button right-click "Settings" entries.
+        var accessibilityLinks = new (string text, Morphic.SystemSettings.WindowsSettings.Page page)[]
+        {
+            (Morphic.Localization.Strings.OsMagnifierSettingsMenuItem, Morphic.SystemSettings.WindowsSettings.Page.Magnifier),
+            (Morphic.Localization.Strings.OsReadAloudSettingsMenuItem, Morphic.SystemSettings.WindowsSettings.Page.ReadAloud),
+            (Morphic.Localization.Strings.OsColorVisionSettingsMenuItem, Morphic.SystemSettings.WindowsSettings.Page.ColorVision),
+            (Morphic.Localization.Strings.OsNightModeSettingsMenuItem, Morphic.SystemSettings.WindowsSettings.Page.NightLight),
+            (Morphic.Localization.Strings.OsDarkModeSettingsMenuItem, Morphic.SystemSettings.WindowsSettings.Page.DarkMode),
+            (Morphic.Localization.Strings.OsContrastSettingsMenuItem, Morphic.SystemSettings.WindowsSettings.Page.Contrast),
+            (Morphic.Localization.Strings.OsVoiceSettingsMenuItem, Morphic.SystemSettings.WindowsSettings.Page.Voice),
+            (Morphic.Localization.Strings.OsMouseSettingsMenuItem, Morphic.SystemSettings.WindowsSettings.Page.Mouse),
+            (Morphic.Localization.Strings.OsPointerSizeSettingsMenuItem, Morphic.SystemSettings.WindowsSettings.Page.PointerSize),
+            (Morphic.Localization.Strings.OsKeyboardSettingsMenuItem, Morphic.SystemSettings.WindowsSettings.Page.Keyboard),
+            (Morphic.Localization.Strings.OsLanguageSettingsMenuItem, Morphic.SystemSettings.WindowsSettings.Page.Language),
+        };
+
+        // Sort by the localized label using the DISPLAY LANGUAGE's collation (not ordinal, not the OS UI culture):
+        // this is what makes the order correct for internationalized strings -- e.g. Swedish places "Ö" after "Z",
+        // German treats "Ö" like "O". Array.Sort with a Comparison keeps this LINQ-free (no extra using).
+        var displayLanguageComparer = System.StringComparer.Create(Morphic.Localization.ResourceLanguage.CurrentDisplayCulture, ignoreCase: true);
+        System.Array.Sort(accessibilityLinks, (firstLink, secondLink) => displayLanguageComparer.Compare(firstLink.text, secondLink.text));
+        foreach (var link in accessibilityLinks)
+        {
+            var settingsPage = link.page;   // capture per iteration for the click closure
+            var linkItem = new MenuFlyoutItem { Text = link.text, Padding = padding, MinHeight = 0 };
+            linkItem.Click += (s, e) => { _ = Morphic.SystemSettings.WindowsSettings.Open(settingsPage); };
+            moreSettingsMenuItem.Items.Add(linkItem);
+        }
+
+        moreSettingsMenuItem.Items.Add(new MenuFlyoutSeparator());
+        // Always LAST (below the separator): the catch-all link to the full Windows accessibility settings hub.
+        var allAccessibilityItem = new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsAllAccessibilityOptionsMenuItem, Padding = padding, MinHeight = 0 };
+        allAccessibilityItem.Click += (s, e) => { _ = Morphic.SystemSettings.WindowsSettings.Open(Morphic.SystemSettings.WindowsSettings.Page.AllAccessibility); };
+        moreSettingsMenuItem.Items.Add(allAccessibilityItem);
+
         menuFlyout.Items.Add(moreSettingsMenuItem);
 
         menuFlyout.Items.Add(new MenuFlyoutSeparator());
