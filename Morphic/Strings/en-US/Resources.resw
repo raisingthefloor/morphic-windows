@@ -251,6 +251,12 @@
     <comment>[loc-id:1a2093156e78472a] Menu item in the "More settings to make the computer easier" submenu; the LAST item, shown below a separator, opens the Windows accessibility (Ease of Access) settings hub. (The resource key keeps "Options" for loc-id stability; the displayed label is "All Accessibility Settings".)</comment>
   </data>
 
+  <!-- MorphicBar button right-click context menus -->
+  <data name="BarButtonContextMenuSettings" xml:space="preserve">
+    <value>Settings</value>
+    <comment>[loc-id:249902538c4845c8] Right-click context-menu item shown on a MorphicBar button; opens the Windows Settings page for that button's feature.</comment>
+  </data>
+
   <!-- ===================== About box ===================== -->
   <data name="AboutWindowTitle" xml:space="preserve">
     <value>About Morphic</value>
