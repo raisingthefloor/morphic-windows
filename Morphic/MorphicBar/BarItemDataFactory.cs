@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2026 Raising the Floor - US, Inc.
+// Copyright 2020-2026 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -151,6 +151,7 @@ internal static class BarItemDataFactory
         return new BarMultiButtonData
         {
             Header = Morphic.Localization.Strings.SizeOfTextHeader,
+            SettingsPage = Morphic.SystemSettings.WindowsSettings.Page.Display,
             SizingMode = MultiButtonSizingMode.StretchToLargest,
             // +/- is an inc/dec pair; keep them side-by-side even when the bar is vertical so the
             // pair reads as one control rather than two stacked rows
@@ -172,6 +173,7 @@ internal static class BarItemDataFactory
         return new BarMultiButtonData
         {
             Header = Morphic.Localization.Strings.MagnifierHeader,
+            SettingsPage = Morphic.SystemSettings.WindowsSettings.Page.Magnifier,
             SizingMode = MultiButtonSizingMode.StretchToLargest,
             Buttons = new List<BarButtonData>
                 {
@@ -216,6 +218,7 @@ internal static class BarItemDataFactory
         return new BarMultiButtonData
         {
             Header = Morphic.Localization.Strings.ReadSelectedHeader,
+            SettingsPage = Morphic.SystemSettings.WindowsSettings.Page.ReadAloud,
             SizingMode = MultiButtonSizingMode.StretchToLargest,
             // Play/Stop is a transport pair; keep them side-by-side even when the bar is vertical
             // so the pair reads as one control rather than two stacked rows (matches Text Size).
@@ -249,10 +252,10 @@ internal static class BarItemDataFactory
     public static IBarItemData CreateContrastColorButtonGroup(BarButtonAction? contrastAction, BarButtonAction? colorAction, BarButtonAction? darkAction, BarButtonAction? nightAction)
     {
         // "Contrast & Color" -- 4 toggle buttons, per-content sized
-        var contrastButton = new BarButtonData { Text = Morphic.Localization.Strings.ContrastLabel, IsToggle = true, ActionTag = "contrast", Action = contrastAction, AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.ContrastThemeAccessibleName) };
-        var colorButton    = new BarButtonData { Text = Morphic.Localization.Strings.ColorLabel,    IsToggle = true, ActionTag = "color",    Action = colorAction,    AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.ColorFiltersAccessibleName) };
-        var darkButton     = new BarButtonData { Text = Morphic.Localization.Strings.DarkLabel,     IsToggle = true, ActionTag = "dark",     Action = darkAction,     AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.DarkModeAccessibleName) };
-        var nightButton    = new BarButtonData { Text = Morphic.Localization.Strings.NightLabel,    IsToggle = true, ActionTag = "night",    Action = nightAction,    AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.NightLightAccessibleName) };
+        var contrastButton = new BarButtonData { Text = Morphic.Localization.Strings.ContrastLabel, IsToggle = true, ActionTag = "contrast", Action = contrastAction, AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.ContrastThemeAccessibleName), SettingsPage = Morphic.SystemSettings.WindowsSettings.Page.Contrast };
+        var colorButton    = new BarButtonData { Text = Morphic.Localization.Strings.ColorLabel,    IsToggle = true, ActionTag = "color",    Action = colorAction,    AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.ColorFiltersAccessibleName), SettingsPage = Morphic.SystemSettings.WindowsSettings.Page.ColorVision };
+        var darkButton     = new BarButtonData { Text = Morphic.Localization.Strings.DarkLabel,     IsToggle = true, ActionTag = "dark",     Action = darkAction,     AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.DarkModeAccessibleName), SettingsPage = Morphic.SystemSettings.WindowsSettings.Page.DarkMode };
+        var nightButton    = new BarButtonData { Text = Morphic.Localization.Strings.NightLabel,    IsToggle = true, ActionTag = "night",    Action = nightAction,    AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.NightLightAccessibleName), SettingsPage = Morphic.SystemSettings.WindowsSettings.Page.NightLight };
 
         // Bridge the Dark button to CachedDarkModeState, which delivers BOTH the effective dark
         // state and whether the button should be toggleable. Under high contrast, IsDark reflects
