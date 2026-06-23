@@ -28,6 +28,9 @@
   <data name="AboutWindowTitle" xml:space="preserve">
     <value>Acerca do Morphic</value>
   </data>
+  <data name="BarButtonContextMenuSettings" xml:space="preserve">
+    <value>Definições</value>
+  </data>
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>Filtros de cor</value>
   </data>
@@ -92,7 +95,7 @@
     <value>Luz noturna</value>
   </data>
   <data name="OsAllAccessibilityOptionsMenuItem" xml:space="preserve">
-    <value>Todas as Opções de Acessibilidade</value>
+    <value>Todas as Definições de Acessibilidade</value>
   </data>
   <data name="OsColorVisionSettingsMenuItem" xml:space="preserve">
     <value>Definições dos filtros de cor</value>
@@ -107,7 +110,7 @@
     <value>Definições do teclado</value>
   </data>
   <data name="OsLanguageSettingsMenuItem" xml:space="preserve">
-    <value>Idioma</value>
+    <value>Definições de Idioma</value>
   </data>
   <data name="OsMagnifierSettingsMenuItem" xml:space="preserve">
     <value>Definições da Lupa</value>
@@ -116,19 +119,13 @@
     <value>Definições do Rato</value>
   </data>
   <data name="OsNightModeSettingsMenuItem" xml:space="preserve">
-    <value>Definições da luz noturna</value>
-  </data>
-  <data name="OsOtherSettingsSectionHeader" xml:space="preserve">
-    <value>Outras definições importantes do Windows</value>
+    <value>Definições de luz noturna</value>
   </data>
   <data name="OsPointerSizeSettingsMenuItem" xml:space="preserve">
     <value>Tamanho do Ponteiro</value>
   </data>
   <data name="OsReadAloudSettingsMenuItem" xml:space="preserve">
     <value>Definições de Leitura em Voz Alta</value>
-  </data>
-  <data name="OsSettingsSectionHeader" xml:space="preserve">
-    <value>Definições do Windows para os Controlos da MorphicBar</value>
   </data>
   <data name="OsVoiceSettingsMenuItem" xml:space="preserve">
     <value>Definições de Voz</value>

@@ -28,6 +28,9 @@
   <data name="AboutWindowTitle" xml:space="preserve">
     <value>Giới thiệu về Morphic</value>
   </data>
+  <data name="BarButtonContextMenuSettings" xml:space="preserve">
+    <value>Cài đặt</value>
+  </data>
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>Bộ lọc màu</value>
   </data>
@@ -92,7 +95,7 @@
     <value>Ánh sáng ban đêm</value>
   </data>
   <data name="OsAllAccessibilityOptionsMenuItem" xml:space="preserve">
-    <value>Tất cả tùy chọn trợ năng</value>
+    <value>Tất cả cài đặt trợ năng</value>
   </data>
   <data name="OsColorVisionSettingsMenuItem" xml:space="preserve">
     <value>Cài đặt thị giác màu</value>
@@ -107,7 +110,7 @@
     <value>Cài đặt bàn phím</value>
   </data>
   <data name="OsLanguageSettingsMenuItem" xml:space="preserve">
-    <value>Ngôn ngữ</value>
+    <value>Cài đặt ngôn ngữ</value>
   </data>
   <data name="OsMagnifierSettingsMenuItem" xml:space="preserve">
     <value>Cài đặt Kính lúp</value>
@@ -116,19 +119,13 @@
     <value>Cài đặt chuột</value>
   </data>
   <data name="OsNightModeSettingsMenuItem" xml:space="preserve">
-    <value>Cài đặt ánh sáng đêm</value>
-  </data>
-  <data name="OsOtherSettingsSectionHeader" xml:space="preserve">
-    <value>Các cài đặt Windows quan trọng khác</value>
+    <value>Cài đặt Ánh sáng đêm</value>
   </data>
   <data name="OsPointerSizeSettingsMenuItem" xml:space="preserve">
     <value>Kích thước con trỏ chuột</value>
   </data>
   <data name="OsReadAloudSettingsMenuItem" xml:space="preserve">
     <value>Cài đặt Đọc to</value>
-  </data>
-  <data name="OsSettingsSectionHeader" xml:space="preserve">
-    <value>Cài đặt Windows cho các điều khiển MorphicBar</value>
   </data>
   <data name="OsVoiceSettingsMenuItem" xml:space="preserve">
     <value>Cài đặt giọng nói</value>

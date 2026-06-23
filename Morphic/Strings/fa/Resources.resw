@@ -28,6 +28,9 @@
   <data name="AboutWindowTitle" xml:space="preserve">
     <value>درباره مورفیک</value>
   </data>
+  <data name="BarButtonContextMenuSettings" xml:space="preserve">
+    <value>تنظیمات</value>
+  </data>
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>فیلترهای رنگ</value>
   </data>
@@ -92,7 +95,7 @@
     <value>نور شب</value>
   </data>
   <data name="OsAllAccessibilityOptionsMenuItem" xml:space="preserve">
-    <value>همه گزینه‌های دسترس‌پذیری</value>
+    <value>همه تنظیمات دسترسی‌پذیری</value>
   </data>
   <data name="OsColorVisionSettingsMenuItem" xml:space="preserve">
     <value>تنظیمات دید رنگ</value>
@@ -107,7 +110,7 @@
     <value>تنظیمات صفحه‌کلید</value>
   </data>
   <data name="OsLanguageSettingsMenuItem" xml:space="preserve">
-    <value>زبان</value>
+    <value>تنظیمات زبان</value>
   </data>
   <data name="OsMagnifierSettingsMenuItem" xml:space="preserve">
     <value>تنظیمات ذره‌بین</value>
@@ -118,17 +121,11 @@
   <data name="OsNightModeSettingsMenuItem" xml:space="preserve">
     <value>تنظیمات نور شب</value>
   </data>
-  <data name="OsOtherSettingsSectionHeader" xml:space="preserve">
-    <value>سایر تنظیمات کلیدی ویندوز</value>
-  </data>
   <data name="OsPointerSizeSettingsMenuItem" xml:space="preserve">
     <value>اندازه اشاره‌گر</value>
   </data>
   <data name="OsReadAloudSettingsMenuItem" xml:space="preserve">
     <value>تنظیمات خواندن با صدای بلند</value>
-  </data>
-  <data name="OsSettingsSectionHeader" xml:space="preserve">
-    <value>تنظیمات ویندوز برای کنترل‌های MorphicBar</value>
   </data>
   <data name="OsVoiceSettingsMenuItem" xml:space="preserve">
     <value>تنظیمات گفتار</value>

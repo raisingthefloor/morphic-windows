@@ -28,6 +28,9 @@
   <data name="AboutWindowTitle" xml:space="preserve">
     <value>אודות Morphic</value>
   </data>
+  <data name="BarButtonContextMenuSettings" xml:space="preserve">
+    <value>הגדרות</value>
+  </data>
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>מסנני צבע</value>
   </data>
@@ -92,7 +95,7 @@
     <value>תאורת לילה</value>
   </data>
   <data name="OsAllAccessibilityOptionsMenuItem" xml:space="preserve">
-    <value>כל אפשרויות הנגישות</value>
+    <value>כל הגדרות הנגישות</value>
   </data>
   <data name="OsColorVisionSettingsMenuItem" xml:space="preserve">
     <value>הגדרות ראיית צבעים</value>
@@ -107,7 +110,7 @@
     <value>הגדרות מקלדת</value>
   </data>
   <data name="OsLanguageSettingsMenuItem" xml:space="preserve">
-    <value>שפה</value>
+    <value>הגדרות שפה</value>
   </data>
   <data name="OsMagnifierSettingsMenuItem" xml:space="preserve">
     <value>הגדרות זכוכית מגדלת</value>
@@ -118,17 +121,11 @@
   <data name="OsNightModeSettingsMenuItem" xml:space="preserve">
     <value>הגדרות תאורת לילה</value>
   </data>
-  <data name="OsOtherSettingsSectionHeader" xml:space="preserve">
-    <value>הגדרות Windows חשובות נוספות</value>
-  </data>
   <data name="OsPointerSizeSettingsMenuItem" xml:space="preserve">
     <value>גודל מצביע</value>
   </data>
   <data name="OsReadAloudSettingsMenuItem" xml:space="preserve">
     <value>הגדרות הקראה</value>
-  </data>
-  <data name="OsSettingsSectionHeader" xml:space="preserve">
-    <value>הגדרות Windows לפקדי MorphicBar</value>
   </data>
   <data name="OsVoiceSettingsMenuItem" xml:space="preserve">
     <value>הגדרות דיבור</value>

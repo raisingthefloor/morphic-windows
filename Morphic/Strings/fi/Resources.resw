@@ -28,6 +28,9 @@
   <data name="AboutWindowTitle" xml:space="preserve">
     <value>Tietoja Morphicista</value>
   </data>
+  <data name="BarButtonContextMenuSettings" xml:space="preserve">
+    <value>Asetukset</value>
+  </data>
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>Värisuodattimet</value>
   </data>
@@ -107,7 +110,7 @@
     <value>Näppäimistöasetukset</value>
   </data>
   <data name="OsLanguageSettingsMenuItem" xml:space="preserve">
-    <value>Kieli</value>
+    <value>Kieliasetukset</value>
   </data>
   <data name="OsMagnifierSettingsMenuItem" xml:space="preserve">
     <value>Suurennuslasin asetukset</value>
@@ -118,17 +121,11 @@
   <data name="OsNightModeSettingsMenuItem" xml:space="preserve">
     <value>Yövalon asetukset</value>
   </data>
-  <data name="OsOtherSettingsSectionHeader" xml:space="preserve">
-    <value>Muut tärkeät Windows-asetukset</value>
-  </data>
   <data name="OsPointerSizeSettingsMenuItem" xml:space="preserve">
     <value>Osoittimen koko</value>
   </data>
   <data name="OsReadAloudSettingsMenuItem" xml:space="preserve">
     <value>Ääneen lukemisen asetukset</value>
-  </data>
-  <data name="OsSettingsSectionHeader" xml:space="preserve">
-    <value>MorphicBar-ohjainten Windows-asetukset</value>
   </data>
   <data name="OsVoiceSettingsMenuItem" xml:space="preserve">
     <value>Puheasetukset</value>

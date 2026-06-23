@@ -28,6 +28,9 @@
   <data name="AboutWindowTitle" xml:space="preserve">
     <value>Teave Morphicu kohta</value>
   </data>
+  <data name="BarButtonContextMenuSettings" xml:space="preserve">
+    <value>Sätted</value>
+  </data>
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>Värvifiltrid</value>
   </data>
@@ -92,7 +95,7 @@
     <value>Öövalgus</value>
   </data>
   <data name="OsAllAccessibilityOptionsMenuItem" xml:space="preserve">
-    <value>Kõik hõlbustussuvandid</value>
+    <value>Kõik hõlbustussätted</value>
   </data>
   <data name="OsColorVisionSettingsMenuItem" xml:space="preserve">
     <value>Värvinägemise sätted</value>
@@ -107,7 +110,7 @@
     <value>Klaviatuuri sätted</value>
   </data>
   <data name="OsLanguageSettingsMenuItem" xml:space="preserve">
-    <value>Keel</value>
+    <value>Keelesätted</value>
   </data>
   <data name="OsMagnifierSettingsMenuItem" xml:space="preserve">
     <value>Luubi sätted</value>
@@ -116,19 +119,13 @@
     <value>Hiire sätted</value>
   </data>
   <data name="OsNightModeSettingsMenuItem" xml:space="preserve">
-    <value>Öörežiimi sätted</value>
-  </data>
-  <data name="OsOtherSettingsSectionHeader" xml:space="preserve">
-    <value>Muud olulised Windowsi sätted</value>
+    <value>Öövalguse sätted</value>
   </data>
   <data name="OsPointerSizeSettingsMenuItem" xml:space="preserve">
     <value>Kursori suurus</value>
   </data>
   <data name="OsReadAloudSettingsMenuItem" xml:space="preserve">
     <value>Ettelugemise sätted</value>
-  </data>
-  <data name="OsSettingsSectionHeader" xml:space="preserve">
-    <value>MorphicBari juhtelementide Windowsi sätted</value>
   </data>
   <data name="OsVoiceSettingsMenuItem" xml:space="preserve">
     <value>Häälesätted</value>

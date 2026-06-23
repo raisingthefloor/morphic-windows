@@ -28,6 +28,9 @@
   <data name="AboutWindowTitle" xml:space="preserve">
     <value>关于 Morphic</value>
   </data>
+  <data name="BarButtonContextMenuSettings" xml:space="preserve">
+    <value>设置</value>
+  </data>
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>颜色滤镜</value>
   </data>
@@ -92,7 +95,7 @@
     <value>夜间模式</value>
   </data>
   <data name="OsAllAccessibilityOptionsMenuItem" xml:space="preserve">
-    <value>所有辅助功能选项</value>
+    <value>所有辅助功能设置</value>
   </data>
   <data name="OsColorVisionSettingsMenuItem" xml:space="preserve">
     <value>色觉设置</value>
@@ -107,7 +110,7 @@
     <value>键盘设置</value>
   </data>
   <data name="OsLanguageSettingsMenuItem" xml:space="preserve">
-    <value>语言</value>
+    <value>语言设置</value>
   </data>
   <data name="OsMagnifierSettingsMenuItem" xml:space="preserve">
     <value>放大镜设置</value>
@@ -118,17 +121,11 @@
   <data name="OsNightModeSettingsMenuItem" xml:space="preserve">
     <value>夜间模式设置</value>
   </data>
-  <data name="OsOtherSettingsSectionHeader" xml:space="preserve">
-    <value>其他重要 Windows 设置</value>
-  </data>
   <data name="OsPointerSizeSettingsMenuItem" xml:space="preserve">
     <value>指针大小</value>
   </data>
   <data name="OsReadAloudSettingsMenuItem" xml:space="preserve">
     <value>朗读设置</value>
-  </data>
-  <data name="OsSettingsSectionHeader" xml:space="preserve">
-    <value>MorphicBar 控件的 Windows 设置</value>
   </data>
   <data name="OsVoiceSettingsMenuItem" xml:space="preserve">
     <value>语音设置</value>
