@@ -28,6 +28,9 @@
   <data name="AboutWindowTitle" xml:space="preserve">
     <value>Morphic વિશે</value>
   </data>
+  <data name="BarButtonContextMenuSettings" xml:space="preserve">
+    <value>સેટિંગ્સ</value>
+  </data>
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>રંગ ફિલ્ટર્સ</value>
   </data>
@@ -92,7 +95,7 @@
     <value>નાઇટ લાઇટ</value>
   </data>
   <data name="OsAllAccessibilityOptionsMenuItem" xml:space="preserve">
-    <value>તમામ ઍક્સેસિબિલિટી વિકલ્પો</value>
+    <value>બધી ઍક્સેસિબિલિટી સેટિંગ્સ</value>
   </data>
   <data name="OsColorVisionSettingsMenuItem" xml:space="preserve">
     <value>રંગ દૃષ્ટિ સેટિંગ્સ</value>
@@ -107,7 +110,7 @@
     <value>કીબોર્ડ સેટિંગ્સ</value>
   </data>
   <data name="OsLanguageSettingsMenuItem" xml:space="preserve">
-    <value>ભાષા</value>
+    <value>ભાષા સેટિંગ્સ</value>
   </data>
   <data name="OsMagnifierSettingsMenuItem" xml:space="preserve">
     <value>મેગ્નિફાયર સેટિંગ્સ</value>
@@ -116,19 +119,13 @@
     <value>માઉસ સેટિંગ્સ</value>
   </data>
   <data name="OsNightModeSettingsMenuItem" xml:space="preserve">
-    <value>નાઇટ મોડ સેટિંગ્સ</value>
-  </data>
-  <data name="OsOtherSettingsSectionHeader" xml:space="preserve">
-    <value>અન્ય મુખ્ય Windows સેટિંગ્સ</value>
+    <value>નાઇટ લાઇટ સેટિંગ્સ</value>
   </data>
   <data name="OsPointerSizeSettingsMenuItem" xml:space="preserve">
     <value>પૉઇન્ટરનું કદ</value>
   </data>
   <data name="OsReadAloudSettingsMenuItem" xml:space="preserve">
     <value>મોટેથી વાંચવાની સેટિંગ્સ</value>
-  </data>
-  <data name="OsSettingsSectionHeader" xml:space="preserve">
-    <value>MorphicBar નિયંત્રણો માટે Windows સેટિંગ્સ</value>
   </data>
   <data name="OsVoiceSettingsMenuItem" xml:space="preserve">
     <value>વૉઇસ સેટિંગ્સ</value>

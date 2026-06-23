@@ -28,6 +28,9 @@
   <data name="AboutWindowTitle" xml:space="preserve">
     <value>Om Morphic</value>
   </data>
+  <data name="BarButtonContextMenuSettings" xml:space="preserve">
+    <value>Inställningar</value>
+  </data>
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>Färgfilter</value>
   </data>
@@ -92,7 +95,7 @@
     <value>Nattbelysning</value>
   </data>
   <data name="OsAllAccessibilityOptionsMenuItem" xml:space="preserve">
-    <value>Alla hjälpmedelsalternativ</value>
+    <value>Alla hjälpmedelsinställningar</value>
   </data>
   <data name="OsColorVisionSettingsMenuItem" xml:space="preserve">
     <value>Inställningar för färgfilter</value>
@@ -107,7 +110,7 @@
     <value>Tangentbordsinställningar</value>
   </data>
   <data name="OsLanguageSettingsMenuItem" xml:space="preserve">
-    <value>Språk</value>
+    <value>Språkinställningar</value>
   </data>
   <data name="OsMagnifierSettingsMenuItem" xml:space="preserve">
     <value>Inställningar för Förstoringsglaset</value>
@@ -116,19 +119,13 @@
     <value>Musinställningar</value>
   </data>
   <data name="OsNightModeSettingsMenuItem" xml:space="preserve">
-    <value>Inställningar för nattläge</value>
-  </data>
-  <data name="OsOtherSettingsSectionHeader" xml:space="preserve">
-    <value>Andra viktiga Windows-inställningar</value>
+    <value>Inställningar för nattbelysning</value>
   </data>
   <data name="OsPointerSizeSettingsMenuItem" xml:space="preserve">
     <value>Muspekarens storlek</value>
   </data>
   <data name="OsReadAloudSettingsMenuItem" xml:space="preserve">
     <value>Inställningar för uppläsning</value>
-  </data>
-  <data name="OsSettingsSectionHeader" xml:space="preserve">
-    <value>Windows-inställningar för MorphicBar-kontroller</value>
   </data>
   <data name="OsVoiceSettingsMenuItem" xml:space="preserve">
     <value>Röstinställningar</value>

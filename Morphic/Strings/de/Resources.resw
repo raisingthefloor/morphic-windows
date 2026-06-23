@@ -28,6 +28,9 @@
   <data name="AboutWindowTitle" xml:space="preserve">
     <value>Info zu Morphic</value>
   </data>
+  <data name="BarButtonContextMenuSettings" xml:space="preserve">
+    <value>Einstellungen</value>
+  </data>
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>Farbfilter</value>
   </data>
@@ -92,7 +95,7 @@
     <value>Nachtlicht</value>
   </data>
   <data name="OsAllAccessibilityOptionsMenuItem" xml:space="preserve">
-    <value>Alle Optionen für erleichterte Bedienung</value>
+    <value>Alle Einstellungen für Barrierefreiheit</value>
   </data>
   <data name="OsColorVisionSettingsMenuItem" xml:space="preserve">
     <value>Farbfilter-Einstellungen</value>
@@ -107,7 +110,7 @@
     <value>Tastatureinstellungen</value>
   </data>
   <data name="OsLanguageSettingsMenuItem" xml:space="preserve">
-    <value>Sprache</value>
+    <value>Spracheinstellungen</value>
   </data>
   <data name="OsMagnifierSettingsMenuItem" xml:space="preserve">
     <value>Einstellungen für die Bildschirmlupe</value>
@@ -118,17 +121,11 @@
   <data name="OsNightModeSettingsMenuItem" xml:space="preserve">
     <value>Nachtmodus-Einstellungen</value>
   </data>
-  <data name="OsOtherSettingsSectionHeader" xml:space="preserve">
-    <value>Weitere wichtige Windows-Einstellungen</value>
-  </data>
   <data name="OsPointerSizeSettingsMenuItem" xml:space="preserve">
     <value>Mauszeigergröße</value>
   </data>
   <data name="OsReadAloudSettingsMenuItem" xml:space="preserve">
     <value>Sprachausgabe-Einstellungen</value>
-  </data>
-  <data name="OsSettingsSectionHeader" xml:space="preserve">
-    <value>Windows-Einstellungen für MorphicBar-Steuerelemente</value>
   </data>
   <data name="OsVoiceSettingsMenuItem" xml:space="preserve">
     <value>Spracherkennungseinstellungen</value>

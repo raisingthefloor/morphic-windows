@@ -28,6 +28,9 @@
   <data name="AboutWindowTitle" xml:space="preserve">
     <value>عن المورفيك</value>
   </data>
+  <data name="BarButtonContextMenuSettings" xml:space="preserve">
+    <value>الإعدادات</value>
+  </data>
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>عوامل تصفية الألوان</value>
   </data>
@@ -92,7 +95,7 @@
     <value>الإضاءة الليلية</value>
   </data>
   <data name="OsAllAccessibilityOptionsMenuItem" xml:space="preserve">
-    <value>جميع خيارات إمكانية الوصول</value>
+    <value>كل إعدادات إمكانية الوصول</value>
   </data>
   <data name="OsColorVisionSettingsMenuItem" xml:space="preserve">
     <value>إعدادات رؤية الألوان</value>
@@ -107,7 +110,7 @@
     <value>إعدادات لوحة المفاتيح</value>
   </data>
   <data name="OsLanguageSettingsMenuItem" xml:space="preserve">
-    <value>اللغة</value>
+    <value>إعدادات اللغة</value>
   </data>
   <data name="OsMagnifierSettingsMenuItem" xml:space="preserve">
     <value>إعدادات المكبّر</value>
@@ -116,19 +119,13 @@
     <value>إعدادات الماوس</value>
   </data>
   <data name="OsNightModeSettingsMenuItem" xml:space="preserve">
-    <value>إعدادات الوضع الليلي</value>
-  </data>
-  <data name="OsOtherSettingsSectionHeader" xml:space="preserve">
-    <value>إعدادات Windows الرئيسية الأخرى</value>
+    <value>إعدادات الإضاءة الليلية</value>
   </data>
   <data name="OsPointerSizeSettingsMenuItem" xml:space="preserve">
     <value>حجم المؤشر</value>
   </data>
   <data name="OsReadAloudSettingsMenuItem" xml:space="preserve">
     <value>إعدادات القراءة بصوت عالٍ</value>
-  </data>
-  <data name="OsSettingsSectionHeader" xml:space="preserve">
-    <value>إعدادات Windows لعناصر تحكم MorphicBar</value>
   </data>
   <data name="OsVoiceSettingsMenuItem" xml:space="preserve">
     <value>إعدادات الكلام</value>

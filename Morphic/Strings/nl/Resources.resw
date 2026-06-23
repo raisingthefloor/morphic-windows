@@ -28,6 +28,9 @@
   <data name="AboutWindowTitle" xml:space="preserve">
     <value>Over Morphic</value>
   </data>
+  <data name="BarButtonContextMenuSettings" xml:space="preserve">
+    <value>Instellingen</value>
+  </data>
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>Kleurfilters</value>
   </data>
@@ -92,7 +95,7 @@
     <value>Nachtlamp</value>
   </data>
   <data name="OsAllAccessibilityOptionsMenuItem" xml:space="preserve">
-    <value>Alle toegankelijkheidsopties</value>
+    <value>Alle toegankelijkheidsinstellingen</value>
   </data>
   <data name="OsColorVisionSettingsMenuItem" xml:space="preserve">
     <value>Instellingen voor kleurfilters</value>
@@ -107,7 +110,7 @@
     <value>Toetsenbordinstellingen</value>
   </data>
   <data name="OsLanguageSettingsMenuItem" xml:space="preserve">
-    <value>Taal</value>
+    <value>Taalinstellingen</value>
   </data>
   <data name="OsMagnifierSettingsMenuItem" xml:space="preserve">
     <value>Instellingen voor Vergrootglas</value>
@@ -116,19 +119,13 @@
     <value>Muisinstellingen</value>
   </data>
   <data name="OsNightModeSettingsMenuItem" xml:space="preserve">
-    <value>Instellingen voor nachtlamp</value>
-  </data>
-  <data name="OsOtherSettingsSectionHeader" xml:space="preserve">
-    <value>Andere belangrijke Windows-instellingen</value>
+    <value>Instellingen voor Nachtlamp</value>
   </data>
   <data name="OsPointerSizeSettingsMenuItem" xml:space="preserve">
     <value>Aanwijzergrootte</value>
   </data>
   <data name="OsReadAloudSettingsMenuItem" xml:space="preserve">
     <value>Instellingen voor voorlezen</value>
-  </data>
-  <data name="OsSettingsSectionHeader" xml:space="preserve">
-    <value>Windows-instellingen voor MorphicBar-besturingselementen</value>
   </data>
   <data name="OsVoiceSettingsMenuItem" xml:space="preserve">
     <value>Spraakinstellingen</value>

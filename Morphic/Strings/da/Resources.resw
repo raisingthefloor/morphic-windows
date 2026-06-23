@@ -28,6 +28,9 @@
   <data name="AboutWindowTitle" xml:space="preserve">
     <value>Om Morphic</value>
   </data>
+  <data name="BarButtonContextMenuSettings" xml:space="preserve">
+    <value>Indstillinger</value>
+  </data>
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>Farvefiltre</value>
   </data>
@@ -92,7 +95,7 @@
     <value>Nattelys</value>
   </data>
   <data name="OsAllAccessibilityOptionsMenuItem" xml:space="preserve">
-    <value>Alle tilgængelighedsindstillinger</value>
+    <value>Alle indstillinger for tilgængelighed</value>
   </data>
   <data name="OsColorVisionSettingsMenuItem" xml:space="preserve">
     <value>Indstillinger for farvefiltre</value>
@@ -107,7 +110,7 @@
     <value>Tastaturindstillinger</value>
   </data>
   <data name="OsLanguageSettingsMenuItem" xml:space="preserve">
-    <value>Sprog</value>
+    <value>Sprogindstillinger</value>
   </data>
   <data name="OsMagnifierSettingsMenuItem" xml:space="preserve">
     <value>Indstillinger for Forstørrelsesglas</value>
@@ -118,17 +121,11 @@
   <data name="OsNightModeSettingsMenuItem" xml:space="preserve">
     <value>Indstillinger for nattelys</value>
   </data>
-  <data name="OsOtherSettingsSectionHeader" xml:space="preserve">
-    <value>Andre vigtige Windows-indstillinger</value>
-  </data>
   <data name="OsPointerSizeSettingsMenuItem" xml:space="preserve">
     <value>Markørstørrelse</value>
   </data>
   <data name="OsReadAloudSettingsMenuItem" xml:space="preserve">
     <value>Indstillinger for oplæsning</value>
-  </data>
-  <data name="OsSettingsSectionHeader" xml:space="preserve">
-    <value>Windows-indstillinger for MorphicBar-kontrolelementer</value>
   </data>
   <data name="OsVoiceSettingsMenuItem" xml:space="preserve">
     <value>Taleindstillinger</value>

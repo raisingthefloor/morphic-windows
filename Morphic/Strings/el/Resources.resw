@@ -28,6 +28,9 @@
   <data name="AboutWindowTitle" xml:space="preserve">
     <value>Σχετικά με το Morphic</value>
   </data>
+  <data name="BarButtonContextMenuSettings" xml:space="preserve">
+    <value>Ρυθμίσεις</value>
+  </data>
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>Φίλτρα χρωμάτων</value>
   </data>
@@ -92,7 +95,7 @@
     <value>Νυχτερινός φωτισμός</value>
   </data>
   <data name="OsAllAccessibilityOptionsMenuItem" xml:space="preserve">
-    <value>Όλες οι επιλογές Προσβασιμότητας</value>
+    <value>Όλες οι ρυθμίσεις προσβασιμότητας</value>
   </data>
   <data name="OsColorVisionSettingsMenuItem" xml:space="preserve">
     <value>Ρυθμίσεις φίλτρων χρωμάτων</value>
@@ -107,7 +110,7 @@
     <value>Ρυθμίσεις πληκτρολογίου</value>
   </data>
   <data name="OsLanguageSettingsMenuItem" xml:space="preserve">
-    <value>Γλώσσα</value>
+    <value>Ρυθμίσεις γλώσσας</value>
   </data>
   <data name="OsMagnifierSettingsMenuItem" xml:space="preserve">
     <value>Ρυθμίσεις Μεγεθυντικού φακού</value>
@@ -118,17 +121,11 @@
   <data name="OsNightModeSettingsMenuItem" xml:space="preserve">
     <value>Ρυθμίσεις νυχτερινού φωτισμού</value>
   </data>
-  <data name="OsOtherSettingsSectionHeader" xml:space="preserve">
-    <value>Άλλες βασικές ρυθμίσεις των Windows</value>
-  </data>
   <data name="OsPointerSizeSettingsMenuItem" xml:space="preserve">
     <value>Μέγεθος δείκτη</value>
   </data>
   <data name="OsReadAloudSettingsMenuItem" xml:space="preserve">
     <value>Ρυθμίσεις εκφώνησης</value>
-  </data>
-  <data name="OsSettingsSectionHeader" xml:space="preserve">
-    <value>Ρυθμίσεις των Windows για τα στοιχεία ελέγχου του MorphicBar</value>
   </data>
   <data name="OsVoiceSettingsMenuItem" xml:space="preserve">
     <value>Ρυθμίσεις φωνής</value>

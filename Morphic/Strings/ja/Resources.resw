@@ -28,6 +28,9 @@
   <data name="AboutWindowTitle" xml:space="preserve">
     <value>Morphic について</value>
   </data>
+  <data name="BarButtonContextMenuSettings" xml:space="preserve">
+    <value>設定</value>
+  </data>
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>カラー フィルター</value>
   </data>
@@ -92,7 +95,7 @@
     <value>夜間モード</value>
   </data>
   <data name="OsAllAccessibilityOptionsMenuItem" xml:space="preserve">
-    <value>すべてのアクセシビリティオプション</value>
+    <value>すべてのアクセシビリティ設定</value>
   </data>
   <data name="OsColorVisionSettingsMenuItem" xml:space="preserve">
     <value>色覚の設定</value>
@@ -107,7 +110,7 @@
     <value>キーボードの設定</value>
   </data>
   <data name="OsLanguageSettingsMenuItem" xml:space="preserve">
-    <value>言語</value>
+    <value>言語の設定</value>
   </data>
   <data name="OsMagnifierSettingsMenuItem" xml:space="preserve">
     <value>拡大鏡の設定</value>
@@ -118,17 +121,11 @@
   <data name="OsNightModeSettingsMenuItem" xml:space="preserve">
     <value>夜間モードの設定</value>
   </data>
-  <data name="OsOtherSettingsSectionHeader" xml:space="preserve">
-    <value>その他の主な Windows 設定</value>
-  </data>
   <data name="OsPointerSizeSettingsMenuItem" xml:space="preserve">
     <value>ポインターのサイズ</value>
   </data>
   <data name="OsReadAloudSettingsMenuItem" xml:space="preserve">
     <value>読み上げの設定</value>
-  </data>
-  <data name="OsSettingsSectionHeader" xml:space="preserve">
-    <value>MorphicBar コントロールの Windows 設定</value>
   </data>
   <data name="OsVoiceSettingsMenuItem" xml:space="preserve">
     <value>音声の設定</value>
