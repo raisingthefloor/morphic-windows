@@ -392,6 +392,11 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
                     throw new ArgumentException("LayoutStyle must be 'TextOnly' for horizontal multi-button controls");
             }
 
+            // A sub-button without its own SettingsPage inherits the group's (e.g. Magnifier Show/Hide both
+            // open the Magnifier settings); a sub-button that sets its own keeps it (the Contrast & Color
+            // toggles each open a different page). Resolved here so CreateButton's context-menu wiring sees it.
+            buttonData.SettingsPage ??= _data.SettingsPage;
+
             var button = BarButtonBuilder.CreateButton(buttonData, plainStyle, toggleStyle);
 
             if (this.HeaderTextBlock.Visibility == Visibility.Visible)

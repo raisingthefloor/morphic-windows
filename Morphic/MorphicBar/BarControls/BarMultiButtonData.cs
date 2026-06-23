@@ -52,6 +52,13 @@ public class BarMultiButtonData : IBarItemData, IDisposable
 	// in vertical).
     public bool AlwaysHorizontalSubButtons { get; set; } = false;
 
+    // When set, every sub-button in this group whose own SettingsPage is null inherits this Windows Settings
+    // page for its right-click "Settings" menu item (e.g. the Magnifier group's Show/Hide both open the
+    // Magnifier settings). A sub-button that sets its own SettingsPage overrides this (e.g. the Contrast &
+    // Color group, whose four toggles each open a different page). Internal because the type
+    // (WindowsSettings.Page) is app-internal; only the factory sets it and the context-menu builder reads it.
+    internal Morphic.SystemSettings.WindowsSettings.Page? SettingsPage { get; set; }
+
     protected virtual void Dispose(bool disposing)
     {
         if (!disposedValue)

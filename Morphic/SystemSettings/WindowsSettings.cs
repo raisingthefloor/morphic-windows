@@ -38,18 +38,20 @@ internal static class WindowsSettings
     // The Windows Settings pages Morphic links to; each maps to an ms-settings: URI (see UriFor).
     public enum Page
     {
-        Magnifier,
-        ReadAloud,
+        AllAccessibility,
+        //
         ColorVision,
-        NightLight,
-        DarkMode,
         Contrast,
-        Voice,
-        Mouse,
-        PointerSize,
+        DarkMode,
+        Display,
         Keyboard,
         Language,
-        AllAccessibility,
+        Magnifier,
+        Mouse,
+        NightLight,
+        PointerSize,
+        ReadAloud,
+        Voice,
     }
 
     // Opens a known settings page.
@@ -79,18 +81,20 @@ internal static class WindowsSettings
     {
         return page switch
         {
-            Page.Magnifier => "ms-settings:easeofaccess-magnifier",
-            Page.ReadAloud => "ms-settings:speech",
+            Page.AllAccessibility => WindowsSettings.AllAccessibilityUri(),
+            //
             Page.ColorVision => "ms-settings:easeofaccess-colorfilter",
-            Page.NightLight => "ms-settings:nightlight",
-            Page.DarkMode => "ms-settings:colors",
             Page.Contrast => "ms-settings:easeofaccess-highcontrast",
-            Page.Voice => "ms-settings:easeofaccess-speechrecognition",
-            Page.Mouse => "ms-settings:mousetouchpad",
-            Page.PointerSize => "ms-settings:easeofaccess-mousepointer",
+            Page.DarkMode => "ms-settings:colors",
+            Page.Display => "ms-settings:display",
             Page.Keyboard => "ms-settings:easeofaccess-keyboard",
             Page.Language => "ms-settings:regionlanguage",
-            Page.AllAccessibility => WindowsSettings.AllAccessibilityUri(),
+            Page.Magnifier => "ms-settings:easeofaccess-magnifier",
+            Page.Mouse => "ms-settings:mousetouchpad",
+            Page.NightLight => "ms-settings:nightlight",
+            Page.PointerSize => "ms-settings:easeofaccess-mousepointer",
+            Page.ReadAloud => "ms-settings:speech",
+            Page.Voice => "ms-settings:easeofaccess-speechrecognition",
             _ => throw new System.ComponentModel.InvalidEnumArgumentException(nameof(page), (int)page, typeof(Page)),
         };
     }

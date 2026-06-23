@@ -107,6 +107,13 @@ public class BarButtonData : IBarItemData, INotifyPropertyChanged, IDisposable
     // Opaque caller-supplied value passed back to the Action callback.
     public string? ActionTag { get; set; }
 
+    // When set, the button's right-click context menu includes a "Settings" item that opens this Windows
+    // Settings page (via the shared WindowsSettings launcher). When null AND no other menu items are present,
+    // the button has no context menu at all. For a sub-button in a group, the group's SettingsPage is the
+    // fallback when the sub-button does not set its own (see BarMultiButtonControl). Internal because the type
+    // (WindowsSettings.Page) is app-internal; only the factory sets it and the context-menu builder reads it.
+    internal Morphic.SystemSettings.WindowsSettings.Page? SettingsPage { get; set; }
+
     public BarButtonAction? Action { get; set; }
 
     public event PropertyChangedEventHandler? PropertyChanged;

@@ -255,6 +255,14 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     {
         InitializeComponent();
 
+        // Show bar-button right-click "Settings" menus ourselves (OnBarItemContextRequested) so they open with
+        // the same away-from-bar placement as the logo menu, instead of WinUI's default pointer-anchored flyout.
+        // ContextRequested bubbles up from the buttons to the bar's root content.
+        if (this.Content is not null)
+        {
+            this.Content.ContextRequested += this.OnBarItemContextRequested;
+        }
+
         // Mirror the bar's CONTENT (item layout) for an RTL APP language. WinUI renders translated text but
         // does not flip layout from the language, so ApplyTo drives FlowDirection off the app's display
         // language (ReadingDirection's CONTENT axis). NOTE: the bar's spatial DOCKING side is a SEPARATE axis
@@ -1089,17 +1097,9 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         var rasterizationScale = this.Content.XamlRoot.RasterizationScale;
         var isRtl = this.MorphicMenuButton.FlowDirection == FlowDirection.RightToLeft;
 
-        // determine which half of the monitor the bar is on, so we can open the menu _away_ from the bar
-        var windowPos = this.AppWindow.Position;
-        var windowSize = this.AppWindow.Size;
-        var windowCenterX = windowPos.X + (windowSize.Width / 2);
-        var windowCenterY = windowPos.Y + (windowSize.Height / 2);
-        //
-        var hMonitor = Windows.Win32.PInvoke.MonitorFromWindow(hwnd, Windows.Win32.Graphics.Gdi.MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
-        var monitorInfo = new Windows.Win32.Graphics.Gdi.MONITORINFO { cbSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf<Windows.Win32.Graphics.Gdi.MONITORINFO>() };
-        Windows.Win32.PInvoke.GetMonitorInfo(hMonitor, ref monitorInfo);
-        var monitorCenterX = monitorInfo.rcWork.left + (monitorInfo.rcWork.Width / 2);
-        var monitorCenterY = monitorInfo.rcWork.top + (monitorInfo.rcWork.Height / 2);
+        // determine which way to open the menu so it appears AWAY from the bar (shared with the bar-button
+        // context menus, so their placement matches)
+        var popupDirection = this.GetAwayFromBarPopupDirection();
 
         // The anchor below is in PHYSICAL (left-origin) client coordinates, because ClientToScreen needs
         // them. Under RTL, TransformToVisual reports the button in the bar's MIRRORED (right-origin) frame,
@@ -1120,7 +1120,7 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             case Orientation.Horizontal:
                 {
                     // open above if bar is in the bottom half, below if in the top half
-                    bool openAbove = windowCenterY > monitorCenterY;
+                    bool openAbove = popupDirection == BarPopupDirection.Above;
                     // anchor to the button edge at the start of the reading direction: left edge in LTR
                     // (menu extends right), right edge in RTL (menu extends left).
                     anchorX = isRtl ? buttonRightPhysical : buttonLeftPhysical;
@@ -1132,7 +1132,7 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             case Orientation.Vertical:
                 {
                     // open to the left if bar is on the right half, to the right if on the left half
-                    bool openLeft = windowCenterX > monitorCenterX;
+                    bool openLeft = popupDirection == BarPopupDirection.Left;
                     anchorX = openLeft ? buttonLeftPhysical : buttonRightPhysical;
                     anchorY = buttonPosition.Y;
                 }
@@ -1156,6 +1156,100 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         // coherent: ESC dismisses the menu and the user is back on the logo button, ready to
         // re-open the menu, tab to the bar items, or press Esc again to send focus elsewhere.
         App.MainMenu.Show(App.MenuOwnerWindow, this.Visible, clientPoint.X, clientPoint.Y, returnFocusTo: this.MorphicMenuButton);
+    }
+
+    // The direction a bar popup (the logo menu or a bar-button context menu) should open so it appears AWAY from
+    // the bar -- toward the screen interior. A horizontal bar in the bottom half of the work area opens upward
+    // (top half opens downward); a vertical bar on the right half opens left (left half opens right). Shared by
+    // ShowMorphicMenu and the bar-button context menus so their placement matches.
+    private enum BarPopupDirection { Above, Below, Left, Right }
+
+    private BarPopupDirection GetAwayFromBarPopupDirection()
+    {
+        var hwnd = new Windows.Win32.Foundation.HWND(WinRT.Interop.WindowNative.GetWindowHandle(this));
+        var windowPos = this.AppWindow.Position;
+        var windowSize = this.AppWindow.Size;
+        var windowCenterX = windowPos.X + (windowSize.Width / 2);
+        var windowCenterY = windowPos.Y + (windowSize.Height / 2);
+        //
+        var hMonitor = Windows.Win32.PInvoke.MonitorFromWindow(hwnd, Windows.Win32.Graphics.Gdi.MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
+        var monitorInfo = new Windows.Win32.Graphics.Gdi.MONITORINFO { cbSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf<Windows.Win32.Graphics.Gdi.MONITORINFO>() };
+        Windows.Win32.PInvoke.GetMonitorInfo(hMonitor, ref monitorInfo);
+        var monitorCenterX = monitorInfo.rcWork.left + (monitorInfo.rcWork.Width / 2);
+        var monitorCenterY = monitorInfo.rcWork.top + (monitorInfo.rcWork.Height / 2);
+
+        switch (this._orientation)
+        {
+            case Orientation.Horizontal:
+                return (windowCenterY > monitorCenterY) ? BarPopupDirection.Above : BarPopupDirection.Below;
+            case Orientation.Vertical:
+                return (windowCenterX > monitorCenterX) ? BarPopupDirection.Left : BarPopupDirection.Right;
+            default:
+                return BarPopupDirection.Below;
+        }
+    }
+
+    // Shows a bar BUTTON's right-click "Settings" context menu (attached in BarButtonBuilder via
+    // FlyoutBase.SetAttachedFlyout) with the SAME edge-anchored, away-from-bar placement the logo menu uses --
+    // rather than WinUI's default pointer-anchored ContextFlyout. Handled centrally here because the placement
+    // needs the bar window's monitor quadrant. A button with no attached flyout (the menu/close chrome, or a
+    // button whose menu was empty) is ignored, so it shows no context menu.
+    private void OnBarItemContextRequested(Microsoft.UI.Xaml.UIElement sender, Microsoft.UI.Xaml.Input.ContextRequestedEventArgs e)
+    {
+        // Walk up from the deepest source element (e.g. the button's TextBlock) to the nearest button that carries
+        // an attached flyout.
+        var node = e.OriginalSource as Microsoft.UI.Xaml.DependencyObject;
+        Microsoft.UI.Xaml.Controls.Primitives.ButtonBase? button = null;
+        Microsoft.UI.Xaml.Controls.Primitives.FlyoutBase? flyout = null;
+        while (node is not null)
+        {
+            if (node is Microsoft.UI.Xaml.Controls.Primitives.ButtonBase candidate)
+            {
+                var candidateFlyout = Microsoft.UI.Xaml.Controls.Primitives.FlyoutBase.GetAttachedFlyout(candidate);
+                if (candidateFlyout is not null)
+                {
+                    button = candidate;
+                    flyout = candidateFlyout;
+                    break;
+                }
+            }
+            node = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetParent(node);
+        }
+        if (button is null || flyout is null)
+        {
+            return;
+        }
+
+        var direction = this.GetAwayFromBarPopupDirection();
+        var isRtl = button.FlowDirection == FlowDirection.RightToLeft;
+
+        // Anchor the menu to the right-clicked button, opening on the side that faces AWAY from the bar (above when
+        // docked at the bottom, below at the top, left/right when vertical), edge-aligned to the button's leading
+        // edge -- the same logo-menu placement, applied uniformly. No header math: an upward menu opens directly
+        // above the button.
+        var options = new Microsoft.UI.Xaml.Controls.Primitives.FlyoutShowOptions();
+        switch (direction)
+        {
+            case BarPopupDirection.Above:
+                options.Placement = isRtl
+                    ? Microsoft.UI.Xaml.Controls.Primitives.FlyoutPlacementMode.TopEdgeAlignedRight
+                    : Microsoft.UI.Xaml.Controls.Primitives.FlyoutPlacementMode.TopEdgeAlignedLeft;
+                break;
+            case BarPopupDirection.Below:
+                options.Placement = isRtl
+                    ? Microsoft.UI.Xaml.Controls.Primitives.FlyoutPlacementMode.BottomEdgeAlignedRight
+                    : Microsoft.UI.Xaml.Controls.Primitives.FlyoutPlacementMode.BottomEdgeAlignedLeft;
+                break;
+            case BarPopupDirection.Left:
+                options.Placement = Microsoft.UI.Xaml.Controls.Primitives.FlyoutPlacementMode.LeftEdgeAlignedTop;
+                break;
+            case BarPopupDirection.Right:
+                options.Placement = Microsoft.UI.Xaml.Controls.Primitives.FlyoutPlacementMode.RightEdgeAlignedTop;
+                break;
+        }
+
+        flyout.ShowAt(button, options);
+        e.Handled = true;
     }
 
     /* layout methods */
