@@ -68,16 +68,16 @@
     <value>Sužinokite daugiau apie „Morphic“</value>
   </data>
   <data name="MagnifierHeader" xml:space="preserve">
-    <value>Magnifier</value>
+    <value>Didinamasis stiklas</value>
   </data>
   <data name="MagnifierHideAccessibleName" xml:space="preserve">
-    <value>Hide Magnifier</value>
+    <value>Slėpti didinamąjį stiklą</value>
   </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>Slėpti</value>
   </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
-    <value>Show Magnifier</value>
+    <value>Rodyti didinamąjį stiklą</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Rodyti</value>
@@ -113,7 +113,7 @@
     <value>Kalbos parametrai</value>
   </data>
   <data name="OsMagnifierSettingsMenuItem" xml:space="preserve">
-    <value>Magnifier Settings</value>
+    <value>Didinamojo stiklo parametrai</value>
   </data>
   <data name="OsMouseSettingsMenuItem" xml:space="preserve">
     <value>Pelės parametrai</value>
