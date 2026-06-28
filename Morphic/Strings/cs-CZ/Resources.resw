@@ -95,7 +95,7 @@
     <value>Noční osvětlení</value>
   </data>
   <data name="OsAllAccessibilityOptionsMenuItem" xml:space="preserve">
-    <value>All Accessibility Settings</value>
+    <value>Všechna nastavení usnadnění přístupu</value>
   </data>
   <data name="OsColorVisionSettingsMenuItem" xml:space="preserve">
     <value>Nastavení barevných filtrů</value>
