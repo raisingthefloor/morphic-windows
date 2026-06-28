@@ -20,13 +20,13 @@
     <value>(izrada nepoznata)</value>
   </data>
   <data name="AboutMorphicMenuItem" xml:space="preserve">
-    <value>About Morphic...</value>
+    <value>O programu Morphic...</value>
   </data>
   <data name="AboutVersionFormat" xml:space="preserve">
     <value>verzija {0}.{1}</value>
   </data>
   <data name="AboutWindowTitle" xml:space="preserve">
-    <value>About Morphic</value>
+    <value>O programu Morphic</value>
   </data>
   <data name="BarButtonContextMenuSettings" xml:space="preserve">
     <value>Postavke</value>
@@ -35,7 +35,7 @@
     <value>Filteri boja</value>
   </data>
   <data name="ColorLabel" xml:space="preserve">
-    <value>Color</value>
+    <value>Boja</value>
   </data>
   <data name="ContrastAndColorHeader" xml:space="preserve">
     <value>Kontrast i boja</value>
@@ -65,19 +65,19 @@
     <value>Povećaj veličinu teksta</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
-    <value>Learn More about Morphic</value>
+    <value>Saznajte više o programu Morphic</value>
   </data>
   <data name="MagnifierHeader" xml:space="preserve">
-    <value>Magnifier</value>
+    <value>Lupa</value>
   </data>
   <data name="MagnifierHideAccessibleName" xml:space="preserve">
-    <value>Hide Magnifier</value>
+    <value>Sakrij Lupu</value>
   </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>Sakrij</value>
   </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
-    <value>Show Magnifier</value>
+    <value>Prikaži Lupu</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Prikaži</value>
@@ -98,7 +98,7 @@
     <value>Sve postavke pristupačnosti</value>
   </data>
   <data name="OsColorVisionSettingsMenuItem" xml:space="preserve">
-    <value>Color Vision Settings</value>
+    <value>Postavke filtera za boje</value>
   </data>
   <data name="OsContrastSettingsMenuItem" xml:space="preserve">
     <value>Postavke kontrasta</value>
@@ -134,7 +134,7 @@
     <value>Zatvori Morphic</value>
   </data>
   <data name="ReadSelectedCaptureFailedMessage" xml:space="preserve">
-    <value>Morphic wasn't able to capture the selected text.</value>
+    <value>Morphic nije uspio snimiti odabrani tekst.</value>
   </data>
   <data name="ReadSelectedHeader" xml:space="preserve">
     <value>Čitaj odabrano</value>
@@ -152,7 +152,7 @@
     <value>Veličina teksta</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
-    <value>Snip and copy part of the screen</value>
+    <value>Isijeci i kopiraj dio ekrana</value>
   </data>
   <data name="SnipCopyLabel" xml:space="preserve">
     <value>Kopiraj</value>

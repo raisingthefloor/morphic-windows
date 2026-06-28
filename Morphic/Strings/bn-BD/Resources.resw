@@ -35,10 +35,10 @@
     <value>কালার ফিল্টার</value>
   </data>
   <data name="ColorLabel" xml:space="preserve">
-    <value>Color</value>
+    <value>রং</value>
   </data>
   <data name="ContrastAndColorHeader" xml:space="preserve">
-    <value>Contrast &amp; Color</value>
+    <value>কনট্রাস্ট ও রং</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>কনট্রাস্ট</value>
@@ -68,10 +68,10 @@
     <value>Morphic সম্পর্কে আরও জানুন</value>
   </data>
   <data name="MagnifierHeader" xml:space="preserve">
-    <value>Magnifier</value>
+    <value>ম্যাগনিফায়ার</value>
   </data>
   <data name="MagnifierHideAccessibleName" xml:space="preserve">
-    <value>Hide Magnifier</value>
+    <value>ম্যাগনিফায়ার লুকান</value>
   </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>লুকান</value>
@@ -113,7 +113,7 @@
     <value>ভাষা সেটিংস</value>
   </data>
   <data name="OsMagnifierSettingsMenuItem" xml:space="preserve">
-    <value>Magnifier Settings</value>
+    <value>ম্যাগনিফায়ার সেটিংস</value>
   </data>
   <data name="OsMouseSettingsMenuItem" xml:space="preserve">
     <value>মাউস সেটিংস</value>
@@ -128,13 +128,13 @@
     <value>জোরে পড়ে শোনানোর সেটিংস</value>
   </data>
   <data name="OsVoiceSettingsMenuItem" xml:space="preserve">
-    <value>Voice Settings</value>
+    <value>ভয়েস সেটিংস</value>
   </data>
   <data name="QuitMorphic" xml:space="preserve">
-    <value>Quit Morphic</value>
+    <value>Morphic বন্ধ করুন</value>
   </data>
   <data name="ReadSelectedCaptureFailedMessage" xml:space="preserve">
-    <value>Morphic wasn't able to capture the selected text.</value>
+    <value>Morphic নির্বাচিত লেখা ক্যাপচার করতে পারেনি।</value>
   </data>
   <data name="ReadSelectedHeader" xml:space="preserve">
     <value>নির্বাচিত লেখা পড়ুন</value>
@@ -143,7 +143,7 @@
     <value>Read selected text</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
-    <value>Stop reading selected text</value>
+    <value>নির্বাচিত লেখা পড়া বন্ধ করুন</value>
   </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>MorphicBar দেখান</value>
@@ -152,7 +152,7 @@
     <value>লেখার আকার</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
-    <value>Snip and copy part of the screen</value>
+    <value>স্ক্রিনের অংশ স্নিপ করে কপি করুন</value>
   </data>
   <data name="SnipCopyLabel" xml:space="preserve">
     <value>কপি</value>
