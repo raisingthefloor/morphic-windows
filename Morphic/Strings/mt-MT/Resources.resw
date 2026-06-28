@@ -104,7 +104,7 @@
     <value>Settings tal-Kuntrast</value>
   </data>
   <data name="OsDarkModeSettingsMenuItem" xml:space="preserve">
-    <value>Dark Mode Settings</value>
+    <value>Issettjar tal-Modalità Skura</value>
   </data>
   <data name="OsKeyboardSettingsMenuItem" xml:space="preserve">
     <value>Settings tat-Tastiera</value>
@@ -119,7 +119,7 @@
     <value>Settings tal-Maws</value>
   </data>
   <data name="OsNightModeSettingsMenuItem" xml:space="preserve">
-    <value>Night Light Settings</value>
+    <value>Issettjar tad-Dawl tal-Lejl</value>
   </data>
   <data name="OsPointerSizeSettingsMenuItem" xml:space="preserve">
     <value>Daqs tal-Pointer</value>
