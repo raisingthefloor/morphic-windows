@@ -143,7 +143,7 @@
     <value>მონიშნული ტექსტის წაკითხვა</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
-    <value>Stop reading selected text</value>
+    <value>მონიშნული ტექსტის კითხვის შეჩერება</value>
   </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>MorphicBar-ის ჩვენება</value>

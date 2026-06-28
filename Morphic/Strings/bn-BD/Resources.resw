@@ -140,7 +140,7 @@
     <value>নির্বাচিত লেখা পড়ুন</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
-    <value>Read selected text</value>
+    <value>নির্বাচিত টেক্সট পড়ুন</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>নির্বাচিত লেখা পড়া বন্ধ করুন</value>
