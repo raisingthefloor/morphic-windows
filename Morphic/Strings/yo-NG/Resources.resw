@@ -17,7 +17,7 @@
     <value>(build {0})</value>
   </data>
   <data name="AboutBuildUnknown" xml:space="preserve">
-    <value>(ìkọ́ àìmọ̀)</value>
+    <value>(ẹ̀yà àìmọ̀)</value>
   </data>
   <data name="AboutMorphicMenuItem" xml:space="preserve">
     <value>Nípa Morphic...</value>
@@ -32,7 +32,7 @@
     <value>Ètò</value>
   </data>
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
-    <value>Color filters</value>
+    <value>Àwọn àlẹ̀mọ́ àwọ̀</value>
   </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>Àwọ̀</value>
@@ -53,7 +53,7 @@
     <value>Òkùnkùn</value>
   </data>
   <data name="DarkModeAccessibleName" xml:space="preserve">
-    <value>Dark mode</value>
+    <value>Ipò òkùnkùn</value>
   </data>
   <data name="DecreaseTextSizeAccessibleName" xml:space="preserve">
     <value>Dín ìwọ̀n ọ̀rọ̀ kù</value>
@@ -62,7 +62,7 @@
     <value>Fi MorphicBar pamọ́</value>
   </data>
   <data name="IncreaseTextSizeAccessibleName" xml:space="preserve">
-    <value>Increase size of text</value>
+    <value>Mú ìwọ̀n ọ̀rọ̀ pọ̀ sí i</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Kọ́ ẹ̀kọ́ síi nípa Morphic</value>
@@ -80,10 +80,10 @@
     <value>Fi Amú-nlá hàn</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
-    <value>Fihàn</value>
+    <value>Fi hàn</value>
   </data>
   <data name="MoreSettingsToMakeComputerEasierMenuItem" xml:space="preserve">
-    <value>More settings to make the computer easier</value>
+    <value>Àwọn ètò míì láti mú kọ̀ǹpútà rọrùn</value>
   </data>
   <data name="MorphicForWindows.Text" xml:space="preserve">
     <value>Morphic fún Windows</value>
@@ -95,49 +95,49 @@
     <value>Ìmọ́lẹ̀ alẹ́</value>
   </data>
   <data name="OsAllAccessibilityOptionsMenuItem" xml:space="preserve">
-    <value>All Accessibility Settings</value>
+    <value>Gbogbo Àwọn Ètò Ìrọ̀rùn-Ìlò</value>
   </data>
   <data name="OsColorVisionSettingsMenuItem" xml:space="preserve">
     <value>Àwọn Ètò Ríran Àwọ̀</value>
   </data>
   <data name="OsContrastSettingsMenuItem" xml:space="preserve">
-    <value>Contrast Settings</value>
+    <value>Àwọn Ètò Ìyàtọ̀ Àwọ̀</value>
   </data>
   <data name="OsDarkModeSettingsMenuItem" xml:space="preserve">
     <value>Ètò Ipò Dúdú</value>
   </data>
   <data name="OsKeyboardSettingsMenuItem" xml:space="preserve">
-    <value>Àwọn Ètò Bọ́tìnnì-Ìtẹ̀wé</value>
+    <value>Ètò Kíbọ́ọ̀dù</value>
   </data>
   <data name="OsLanguageSettingsMenuItem" xml:space="preserve">
-    <value>Àwọn Ètò Èdè</value>
+    <value>Ètò Èdè</value>
   </data>
   <data name="OsMagnifierSettingsMenuItem" xml:space="preserve">
     <value>Àwọn Ètò Atóbilọ́jú</value>
   </data>
   <data name="OsMouseSettingsMenuItem" xml:space="preserve">
-    <value>Mouse Settings</value>
+    <value>Àwọn Ètò Máàsì</value>
   </data>
   <data name="OsNightModeSettingsMenuItem" xml:space="preserve">
     <value>Ètò Ìmọ́lẹ̀ Alẹ́</value>
   </data>
   <data name="OsPointerSizeSettingsMenuItem" xml:space="preserve">
-    <value>Pointer Size</value>
+    <value>Ìwọ̀n Atọ́ka</value>
   </data>
   <data name="OsReadAloudSettingsMenuItem" xml:space="preserve">
     <value>Àwọn Ètò Kíkà Sókè</value>
   </data>
   <data name="OsVoiceSettingsMenuItem" xml:space="preserve">
-    <value>Àwọn Ètò Ohùn</value>
+    <value>Ètò Ohùn</value>
   </data>
   <data name="QuitMorphic" xml:space="preserve">
-    <value>Quit Morphic</value>
+    <value>Jáde kúrò ní Morphic</value>
   </data>
   <data name="ReadSelectedCaptureFailedMessage" xml:space="preserve">
     <value>Morphic kò lè gba ọ̀rọ̀ tí a yàn.</value>
   </data>
   <data name="ReadSelectedHeader" xml:space="preserve">
-    <value>Kà Èyí tí a Yàn</value>
+    <value>Ka Èyí Tí a Yàn</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>Kà ọ̀rọ̀ tí a yàn</value>
@@ -155,9 +155,9 @@
     <value>Snip and copy part of the screen</value>
   </data>
   <data name="SnipCopyLabel" xml:space="preserve">
-    <value>Daakọ</value>
+    <value>Ṣe àdàkọ</value>
   </data>
   <data name="SnipHeader" xml:space="preserve">
-    <value>Snip</value>
+    <value>Gígé</value>
   </data>
 </root>

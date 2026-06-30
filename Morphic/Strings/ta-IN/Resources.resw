@@ -17,7 +17,7 @@
     <value>(கட்டமைப்பு {0})</value>
   </data>
   <data name="AboutBuildUnknown" xml:space="preserve">
-    <value>(build unknown)</value>
+    <value>(பில்ட் தெரியவில்லை)</value>
   </data>
   <data name="AboutMorphicMenuItem" xml:space="preserve">
     <value>Morphic பற்றி...</value>
@@ -140,7 +140,7 @@
     <value>தேர்ந்தெடுக்கப்பட்டதை வாசி</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
-    <value>Read selected text</value>
+    <value>தேர்ந்தெடுக்கப்பட்ட உரையை வாசிக்கவும்</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>தேர்ந்தெடுத்த உரையை வாசிப்பதை நிறுத்து</value>

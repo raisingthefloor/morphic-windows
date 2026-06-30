@@ -101,7 +101,7 @@
     <value>Параметри колірних фільтрів</value>
   </data>
   <data name="OsContrastSettingsMenuItem" xml:space="preserve">
-    <value>Contrast Settings</value>
+    <value>Параметри контрастності</value>
   </data>
   <data name="OsDarkModeSettingsMenuItem" xml:space="preserve">
     <value>Параметри темного режиму</value>
@@ -140,7 +140,7 @@
     <value>Читати виділене</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
-    <value>Read selected text</value>
+    <value>Прочитати виділений текст</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Зупинити читання виділеного тексту</value>
@@ -158,6 +158,6 @@
     <value>Копіювати</value>
   </data>
   <data name="SnipHeader" xml:space="preserve">
-    <value>Фрагмент екрана</value>
+    <value>Фрагмент</value>
   </data>
 </root>

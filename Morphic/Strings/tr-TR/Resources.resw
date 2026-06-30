@@ -152,7 +152,7 @@
     <value>Metin Boyutu</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
-    <value>Snip and copy part of the screen</value>
+    <value>Ekranın bir bölümünü alıntılayıp kopyala</value>
   </data>
   <data name="SnipCopyLabel" xml:space="preserve">
     <value>Kopyala</value>

@@ -104,7 +104,7 @@
     <value>Roghainnean iomsgaraidh</value>
   </data>
   <data name="OsDarkModeSettingsMenuItem" xml:space="preserve">
-    <value>Dark Mode Settings</value>
+    <value>Roghainnean Modh Dorcha</value>
   </data>
   <data name="OsKeyboardSettingsMenuItem" xml:space="preserve">
     <value>Roghainnean a' Mheur-chlàir</value>

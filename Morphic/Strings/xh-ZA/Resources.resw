@@ -44,7 +44,7 @@
     <value>Umahluko</value>
   </data>
   <data name="ContrastThemeAccessibleName" xml:space="preserve">
-    <value>Contrast theme</value>
+    <value>Umxholo womehluko</value>
   </data>
   <data name="CopyrightNoticeFormat" xml:space="preserve">
     <value>Ilungelo lokushicilela {0} Raising the Floor - US, Inc.</value>
@@ -53,7 +53,7 @@
     <value>Mnyama</value>
   </data>
   <data name="DarkModeAccessibleName" xml:space="preserve">
-    <value>Imowudi emnyama</value>
+    <value>Imo emnyama</value>
   </data>
   <data name="DecreaseTextSizeAccessibleName" xml:space="preserve">
     <value>Nciphisa ubungakanani bombhalo</value>
@@ -83,7 +83,7 @@
     <value>Bonisa</value>
   </data>
   <data name="MoreSettingsToMakeComputerEasierMenuItem" xml:space="preserve">
-    <value>Ezinye izicwangciso zokwenza ikhompyutha ibe lula</value>
+    <value>Iisetingi ezingakumbi zokwenza ikhompyutha ibe lula</value>
   </data>
   <data name="MorphicForWindows.Text" xml:space="preserve">
     <value>Morphic ye-Windows</value>
@@ -92,49 +92,49 @@
     <value>Ubusuku</value>
   </data>
   <data name="NightLightAccessibleName" xml:space="preserve">
-    <value>Night light</value>
+    <value>Ukukhanya kwasebusuku</value>
   </data>
   <data name="OsAllAccessibilityOptionsMenuItem" xml:space="preserve">
-    <value>Zonke iiSetingi zoFikelelo</value>
+    <value>Zonke Iisetingi Zokufikeleleka</value>
   </data>
   <data name="OsColorVisionSettingsMenuItem" xml:space="preserve">
-    <value>Izicwangciso Zokubona Imibala</value>
+    <value>IiSetingi zoMbono weMibala</value>
   </data>
   <data name="OsContrastSettingsMenuItem" xml:space="preserve">
-    <value>Contrast Settings</value>
+    <value>Iisetingi Zomehluko</value>
   </data>
   <data name="OsDarkModeSettingsMenuItem" xml:space="preserve">
-    <value>Dark Mode Settings</value>
+    <value>Iisetingi Zemowudi Emnyama</value>
   </data>
   <data name="OsKeyboardSettingsMenuItem" xml:space="preserve">
-    <value>Keyboard Settings</value>
+    <value>Iisetingi Zekhibhodi</value>
   </data>
   <data name="OsLanguageSettingsMenuItem" xml:space="preserve">
     <value>IiSetingi zoLwimi</value>
   </data>
   <data name="OsMagnifierSettingsMenuItem" xml:space="preserve">
-    <value>Magnifier Settings</value>
+    <value>Iisetingi Zesikhulisi</value>
   </data>
   <data name="OsMouseSettingsMenuItem" xml:space="preserve">
     <value>IiSetingi zeMawusi</value>
   </data>
   <data name="OsNightModeSettingsMenuItem" xml:space="preserve">
-    <value>Night Light Settings</value>
+    <value>Iisetingi Zokukhanya Kwasebusuku</value>
   </data>
   <data name="OsPointerSizeSettingsMenuItem" xml:space="preserve">
     <value>Ubungakanani besalathisi</value>
   </data>
   <data name="OsReadAloudSettingsMenuItem" xml:space="preserve">
-    <value>Read Aloud Settings</value>
+    <value>Iisetingi Zokufunda Ngokuvakalayo</value>
   </data>
   <data name="OsVoiceSettingsMenuItem" xml:space="preserve">
     <value>IiSetingi zeLizwi</value>
   </data>
   <data name="QuitMorphic" xml:space="preserve">
-    <value>Phuma kuMorphic</value>
+    <value>Phuma ku-Morphic</value>
   </data>
   <data name="ReadSelectedCaptureFailedMessage" xml:space="preserve">
-    <value>Morphic wasn't able to capture the selected text.</value>
+    <value>I-Morphic ayikwazanga ukuthatha umbhalo okhethiweyo.</value>
   </data>
   <data name="ReadSelectedHeader" xml:space="preserve">
     <value>Funda Okukhethiweyo</value>
@@ -146,16 +146,16 @@
     <value>Yeka ukufunda umbhalo okhethiweyo</value>
   </data>
   <data name="ShowMorphicBar" xml:space="preserve">
-    <value>Show MorphicBar</value>
+    <value>Bonisa i-MorphicBar</value>
   </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>Ubungakanani Bombhalo</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
-    <value>Snip and copy part of the screen</value>
+    <value>Sika uze ukope inxalenye yesikrini</value>
   </data>
   <data name="SnipCopyLabel" xml:space="preserve">
-    <value>Copy</value>
+    <value>Kopa</value>
   </data>
   <data name="SnipHeader" xml:space="preserve">
     <value>Sika</value>

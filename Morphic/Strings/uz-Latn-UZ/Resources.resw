@@ -50,10 +50,10 @@
     <value>Mualliflik huquqi {0} Raising the Floor - US, Inc.</value>
   </data>
   <data name="DarkLabel" xml:space="preserve">
-    <value>Qorong'i</value>
+    <value>Qorong‘i</value>
   </data>
   <data name="DarkModeAccessibleName" xml:space="preserve">
-    <value>Qorong'i rejim</value>
+    <value>Qorong‘i rejim</value>
   </data>
   <data name="DecreaseTextSizeAccessibleName" xml:space="preserve">
     <value>Matn o'lchamini kichraytirish</value>
@@ -77,7 +77,7 @@
     <value>Yashirish</value>
   </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
-    <value>Lupani ko'rsatish</value>
+    <value>Lupani ko‘rsatish</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Ko'rsatish</value>
@@ -98,7 +98,7 @@
     <value>Barcha maxsus imkoniyatlar sozlamalari</value>
   </data>
   <data name="OsColorVisionSettingsMenuItem" xml:space="preserve">
-    <value>Rangni ko‘rish sozlamalari</value>
+    <value>Rang filtrlari sozlamalari</value>
   </data>
   <data name="OsContrastSettingsMenuItem" xml:space="preserve">
     <value>Kontrast sozlamalari</value>
@@ -134,7 +134,7 @@
     <value>Morphic’dan chiqish</value>
   </data>
   <data name="ReadSelectedCaptureFailedMessage" xml:space="preserve">
-    <value>Morphic tanlangan matnni olishga muvaffaq bo‘lmadi.</value>
+    <value>Morphic tanlangan matnni ololmadi.</value>
   </data>
   <data name="ReadSelectedHeader" xml:space="preserve">
     <value>Tanlanganni o‘qish</value>
@@ -152,7 +152,7 @@
     <value>Matn o‘lchami</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
-    <value>Snip and copy part of the screen</value>
+    <value>Ekranning bir qismini qirqib olish va nusxalash</value>
   </data>
   <data name="SnipCopyLabel" xml:space="preserve">
     <value>Nusxalash</value>

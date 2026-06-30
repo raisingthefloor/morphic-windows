@@ -56,13 +56,13 @@
     <value>ሁነታ ጸልማት</value>
   </data>
   <data name="DecreaseTextSizeAccessibleName" xml:space="preserve">
-    <value>Decrease size of text</value>
+    <value>ዓቐን ጽሑፍ ኣንእስ</value>
   </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>MorphicBar ሕባእ</value>
   </data>
   <data name="IncreaseTextSizeAccessibleName" xml:space="preserve">
-    <value>Increase size of text</value>
+    <value>ዓቐን ጽሑፍ ኣዕብይ</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>ብዛዕባ Morphic ዝያዳ ፍለጥ</value>
@@ -95,7 +95,7 @@
     <value>ናይ ለይቲ ብርሃን</value>
   </data>
   <data name="OsAllAccessibilityOptionsMenuItem" xml:space="preserve">
-    <value>All Accessibility Settings</value>
+    <value>ኩሎም ናይ ተበጻሕነት ቅንብራት</value>
   </data>
   <data name="OsColorVisionSettingsMenuItem" xml:space="preserve">
     <value>ቅንብራት ምርኣይ ሕብሪ</value>

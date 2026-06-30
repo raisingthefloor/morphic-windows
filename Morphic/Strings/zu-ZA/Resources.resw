@@ -17,7 +17,7 @@
     <value>(build {0})</value>
   </data>
   <data name="AboutBuildUnknown" xml:space="preserve">
-    <value>(build unknown)</value>
+    <value>(ibhildi ayaziwa)</value>
   </data>
   <data name="AboutMorphicMenuItem" xml:space="preserve">
     <value>Mayelana ne-Morphic...</value>
@@ -113,7 +113,7 @@
     <value>Izilungiselelo Zolimi</value>
   </data>
   <data name="OsMagnifierSettingsMenuItem" xml:space="preserve">
-    <value>Magnifier Settings</value>
+    <value>Izilungiselelo Zesikhulisi</value>
   </data>
   <data name="OsMouseSettingsMenuItem" xml:space="preserve">
     <value>Izilungiselelo Zegundane</value>
@@ -134,7 +134,7 @@
     <value>Phuma ku-Morphic</value>
   </data>
   <data name="ReadSelectedCaptureFailedMessage" xml:space="preserve">
-    <value>Morphic wasn't able to capture the selected text.</value>
+    <value>I-Morphic ayikwazanga ukuthwebula umbhalo okhethiwe.</value>
   </data>
   <data name="ReadSelectedHeader" xml:space="preserve">
     <value>Funda Okukhethiwe</value>
@@ -143,10 +143,10 @@
     <value>Funda umbhalo okhethiwe</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
-    <value>Stop reading selected text</value>
+    <value>Yeka ukufunda umbhalo okhethiwe</value>
   </data>
   <data name="ShowMorphicBar" xml:space="preserve">
-    <value>Show MorphicBar</value>
+    <value>Veza i-MorphicBar</value>
   </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>Usayizi Wombhalo</value>
@@ -158,6 +158,6 @@
     <value>Kopisha</value>
   </data>
   <data name="SnipHeader" xml:space="preserve">
-    <value>Snip</value>
+    <value>Sika</value>
   </data>
 </root>

@@ -83,7 +83,7 @@
     <value>Vis</value>
   </data>
   <data name="MoreSettingsToMakeComputerEasierMenuItem" xml:space="preserve">
-    <value>Flere innstillinger for å gjøre datamaskinen enklere</value>
+    <value>Flere innstillinger for enklere bruk</value>
   </data>
   <data name="MorphicForWindows.Text" xml:space="preserve">
     <value>Morphic for Windows</value>
@@ -134,13 +134,13 @@
     <value>Avslutt Morphic</value>
   </data>
   <data name="ReadSelectedCaptureFailedMessage" xml:space="preserve">
-    <value>Morphic kunne ikke hente den markerte teksten.</value>
+    <value>Morphic kunne ikke hente den merkede teksten.</value>
   </data>
   <data name="ReadSelectedHeader" xml:space="preserve">
     <value>Les opp markert</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
-    <value>Les opp markert tekst</value>
+    <value>Les opp merket tekst</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Stopp opplesing av merket tekst</value>
