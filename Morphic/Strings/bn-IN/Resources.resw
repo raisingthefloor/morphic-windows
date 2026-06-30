@@ -125,7 +125,7 @@
     <value>পয়েন্টারের আকার</value>
   </data>
   <data name="OsReadAloudSettingsMenuItem" xml:space="preserve">
-    <value>রিড অ্যালাউড সেটিংস</value>
+    <value>পড়ে শোনানো সেটিংস</value>
   </data>
   <data name="OsVoiceSettingsMenuItem" xml:space="preserve">
     <value>ভয়েস সেটিংস</value>
@@ -137,7 +137,7 @@
     <value>Morphic নির্বাচিত টেক্সট ক্যাপচার করতে পারেনি।</value>
   </data>
   <data name="ReadSelectedHeader" xml:space="preserve">
-    <value>নির্বাচিত অংশ পড়ুন</value>
+    <value>নির্বাচিত অংশ পড়ুন</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>নির্বাচিত টেক্সট পড়ুন</value>

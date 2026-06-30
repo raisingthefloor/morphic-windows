@@ -83,7 +83,7 @@
     <value>Göstər</value>
   </data>
   <data name="MoreSettingsToMakeComputerEasierMenuItem" xml:space="preserve">
-    <value>Kompüteri asanlaşdırmaq üçün əlavə parametrlər</value>
+    <value>Kompüterdən istifadəni asanlaşdıran daha çox parametr</value>
   </data>
   <data name="MorphicForWindows.Text" xml:space="preserve">
     <value>Windows üçün Morphic</value>
@@ -98,7 +98,7 @@
     <value>Bütün Əlçatanlıq parametrləri</value>
   </data>
   <data name="OsColorVisionSettingsMenuItem" xml:space="preserve">
-    <value>Rəng Görmə Parametrləri</value>
+    <value>Rəng görmə parametrləri</value>
   </data>
   <data name="OsContrastSettingsMenuItem" xml:space="preserve">
     <value>Kontrast Parametrləri</value>
@@ -143,7 +143,7 @@
     <value>Seçilmiş mətni oxu</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
-    <value>Seçilmiş mətni oxumağı dayandır</value>
+    <value>Seçilmiş mətni oxumağı dayandırın</value>
   </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>MorphicBar-ı göstər</value>

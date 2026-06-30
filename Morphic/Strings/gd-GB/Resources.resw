@@ -104,7 +104,7 @@
     <value>Roghainnean iomsgaraidh</value>
   </data>
   <data name="OsDarkModeSettingsMenuItem" xml:space="preserve">
-    <value>Dark Mode Settings</value>
+    <value>Roghainnean Modh Dorcha</value>
   </data>
   <data name="OsKeyboardSettingsMenuItem" xml:space="preserve">
     <value>Roghainnean a' Mheur-chlàir</value>
@@ -125,7 +125,7 @@
     <value>Meud a' Phuingeir</value>
   </data>
   <data name="OsReadAloudSettingsMenuItem" xml:space="preserve">
-    <value>Read Aloud Settings</value>
+    <value>Roghainnean leughaidh a-mach</value>
   </data>
   <data name="OsVoiceSettingsMenuItem" xml:space="preserve">
     <value>Roghainnean Gutha</value>
@@ -152,12 +152,12 @@
     <value>Meud an Teacsa</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
-    <value>Snip and copy part of the screen</value>
+    <value>Bearr is dèan lethbhreac de phàirt dhen sgrìn</value>
   </data>
   <data name="SnipCopyLabel" xml:space="preserve">
     <value>Dèan lethbhreac</value>
   </data>
   <data name="SnipHeader" xml:space="preserve">
-    <value>Snip</value>
+    <value>Bearr</value>
   </data>
 </root>
