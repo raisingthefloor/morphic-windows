@@ -143,7 +143,7 @@
     <value>Kà ọ̀rọ̀ tí a yàn</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
-    <value>Stop reading selected text</value>
+    <value>Dáwọ́ kíka ọ̀rọ̀ tí a yàn dúró</value>
   </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>Fi MorphicBar hàn</value>
@@ -152,7 +152,7 @@
     <value>Ìwọ̀n Ọ̀rọ̀</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
-    <value>Snip and copy part of the screen</value>
+    <value>Gé apá kan ojú ìwò kí o sì ṣe àdàkọ</value>
   </data>
   <data name="SnipCopyLabel" xml:space="preserve">
     <value>Ṣe àdàkọ</value>
