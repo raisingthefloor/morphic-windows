@@ -98,6 +98,7 @@ public sealed partial class BarButtonControl : UserControl, IBarItemControl
         {
             this.HeaderTextBlock.Text = string.Empty;
             this.HeaderTextBlock.Visibility = Visibility.Collapsed;
+            Morphic.MorphicBar.Info.BarInfo.SetContent(this, null);
             return;
         }
 
@@ -146,6 +147,12 @@ public sealed partial class BarButtonControl : UserControl, IBarItemControl
         this.RootContainer.Children.Add(button);
         _button = button;
         this.ApplyButtonHorizontalAlignmentForOrientation();
+
+        // The hover Info panel is shown for the BUTTON only, NOT the header above it: we deliberately do NOT stash
+        // Info content on this control (a header hover would otherwise resolve to it via the pointer walk-up). The
+        // button itself carries its content (stashed in BarButtonBuilder.CreateButton). Clear here in case this
+        // control instance is reused with different data.
+        Morphic.MorphicBar.Info.BarInfo.SetContent(this, null);
     }
 
     // In a VERTICAL bar every item's Width is pinned to the bar's full inner thickness so headers wrap

@@ -210,6 +210,21 @@ internal static class BarButtonBuilder
             Microsoft.UI.Xaml.Controls.Primitives.FlyoutBase.SetAttachedFlyout(button, contextFlyout);
         }
 
+        // Stash the hover Info content on the button so a sub-button shows its OWN info (e.g. each Contrast/Color/
+        // Dark/Night toggle, or the +/- , Show/Hide, Play/Stop halves), resolved by MorphicBarWindow walking up from
+        // the pointer -- the button is the NEAREST ancestor with content, so it wins over the group. Only when a
+        // description is authored; a sub-button without one falls through to the group's Info content. The right-
+        // click Settings hint is set as a separate footer line when this button has a Settings menu (SettingsPage,
+        // possibly inherited).
+        if (string.IsNullOrWhiteSpace(data.InfoSubtitle) == false)
+        {
+            var infoTitle = string.IsNullOrEmpty(data.InfoTitle)
+                ? (string.IsNullOrEmpty(data.Header) ? data.Text : data.Header!)
+                : data.InfoTitle!;
+            var infoHint = Morphic.MorphicBar.Info.BarInfo.SettingsHint(data.SettingsPage is not null);
+            Morphic.MorphicBar.Info.BarInfo.SetContent(button, new Morphic.MorphicBar.Info.BarInfoContent(infoTitle, data.InfoSubtitle, data.InfoDotsProvider, infoHint));
+        }
+
         return button;
     }
 

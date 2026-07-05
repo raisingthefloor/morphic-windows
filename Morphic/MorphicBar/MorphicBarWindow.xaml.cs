@@ -261,6 +261,12 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         if (this.Content is not null)
         {
             this.Content.ContextRequested += this.OnBarItemContextRequested;
+
+            // Show the hover Info panel for bar items. Pointer events are added with handledEventsToo so a
+            // button's own hover handling does not swallow them; the walk-up + away-from-bar placement mirror the
+            // context menu, and the panel itself is a separate topmost overlay (Morphic.MorphicBar.Info).
+            this.Content.AddHandler(Microsoft.UI.Xaml.UIElement.PointerMovedEvent, new Microsoft.UI.Xaml.Input.PointerEventHandler(this.OnBarPointerMoved), handledEventsToo: true);
+            this.Content.AddHandler(Microsoft.UI.Xaml.UIElement.PointerExitedEvent, new Microsoft.UI.Xaml.Input.PointerEventHandler(this.OnBarPointerExited), handledEventsToo: true);
         }
 
         // Mirror the bar's CONTENT (item layout) for an RTL APP language. WinUI renders translated text but
@@ -301,10 +307,15 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         // create a layout preview window; we'll need this whenever the MorphicBar is moved; this is created up front, as it can take a little time to create the window
         _layoutPreviewWindow = new();
 
+        // warm up the hover Info panel now (off-screen, deferred) so the FIRST hover is instant + flash-free --
+        // same rationale as pre-creating the layout preview window above
+        _infoPresenter.Preload();
+
         this.InitializeBorderlessWindowProperties(hwnd);
 
         // if the user clicks on the window, let them drag it (i.e. release the pointer capture and forward the left-click as if it's a "caption bar" left-click instead)
-        this.InitializePointerPressAndDrag(this.Content);
+        // Content is set by InitializeComponent (the XAML root) earlier in this ctor, so it is non-null here.
+        this.InitializePointerPressAndDrag(this.Content!);
 
         // Install the WM_ACTIVATE + WM_CLOSE subclass. See _subclassProc field comment for why.
         _subclassProc = this.SubclassWndProc;
@@ -326,6 +337,16 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     // Unhooks the subclass before the HWND is destroyed.
     private void MorphicBarWindow_Closed(object sender, Microsoft.UI.Xaml.WindowEventArgs args)
     {
+        // The window is going away. Stop all Info-panel tracking FIRST so no deferred work runs after teardown and
+        // dereferences this.AppWindow -- the getter throws a COMException once the window is closed. Three such paths
+        // exist: a queued RepositionInfoPanelForCurrentTarget callback (enqueued from a teardown WM_WINDOWPOSCHANGED),
+        // a hover-bridge timer tick, and a late PointerMoved. Setting _isClosing and clearing _currentInfoTarget makes
+        // all three bail (the queued reposition and the timer tick both re-check _currentInfoTarget before touching
+        // AppWindow); stopping the timer keeps it from firing again.
+        _isClosing = true;
+        this.StopHoverBridge();
+        _currentInfoTarget = null;
+
         if (_subclassProc is not null)
         {
             var hwnd = (Windows.Win32.Foundation.HWND)WinRT.Interop.WindowNative.GetWindowHandle(this);
@@ -423,6 +444,10 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         if (msg == Windows.Win32.PInvoke.WM_WINDOWPOSCHANGED && _isReassertingTopmost == false)
         {
             this.ReassertBarTopmostIfOnTop();
+            // The bar's position/size just changed (drag, Text Size zoom re-dock, DPI, HC re-fit). If the hover Info
+            // panel is showing, snap it to the bar's new geometry -- OnBarPointerMoved only fires on a target CHANGE,
+            // so a resize under a stationary pointer would strand the panel at its old spot.
+            this.RepositionInfoPanelForCurrentTarget();
         }
 
         return Windows.Win32.PInvoke.DefSubclassProc(hwnd, msg, wParam, lParam);
@@ -1092,62 +1117,10 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
 
     private void ShowMorphicMenu()
     {
-        var hwnd = new Windows.Win32.Foundation.HWND(WinRT.Interop.WindowNative.GetWindowHandle(this));
-        var buttonPosition = this.MorphicMenuButton.TransformToVisual(this.Content).TransformPoint(new Windows.Foundation.Point(0, 0));
-        var rasterizationScale = this.Content.XamlRoot.RasterizationScale;
-        var isRtl = this.MorphicMenuButton.FlowDirection == FlowDirection.RightToLeft;
-
-        // determine which way to open the menu so it appears AWAY from the bar (shared with the bar-button
-        // context menus, so their placement matches)
+        // Open the menu AWAY from the bar (toward the screen interior), edge-anchored to the logo button -- the
+        // same placement the bar-button context menus and the hover Info panel use.
         var popupDirection = this.GetAwayFromBarPopupDirection();
-
-        // The anchor below is in PHYSICAL (left-origin) client coordinates, because ClientToScreen needs
-        // them. Under RTL, TransformToVisual reports the button in the bar's MIRRORED (right-origin) frame,
-        // so mirror its X back to physical first -- this is why the menu previously opened on the wrong
-        // side in RTL. The button's physical left/right edges below drive the anchor; LTR math is unchanged
-        // (buttonLeftPhysical == buttonPosition.X, buttonRightPhysical == buttonPosition.X + width), so this
-        // is a no-op for LTR. Y is unaffected by reading direction.
-        var buttonWidth = this.MorphicMenuButton.ActualWidth;
-        var contentWidth = (this.Content as FrameworkElement)?.ActualWidth ?? 0.0;
-        var buttonRightPhysical = isRtl ? contentWidth - buttonPosition.X : buttonPosition.X + buttonWidth;
-        var buttonLeftPhysical = buttonRightPhysical - buttonWidth;
-
-        // anchor the menu to the corner of the button that opens the menu away from the bar
-        double anchorX;
-        double anchorY;
-        switch (this._orientation)
-        {
-            case Orientation.Horizontal:
-                {
-                    // open above if bar is in the bottom half, below if in the top half
-                    bool openAbove = popupDirection == BarPopupDirection.Above;
-                    // anchor to the button edge at the start of the reading direction: left edge in LTR
-                    // (menu extends right), right edge in RTL (menu extends left).
-                    anchorX = isRtl ? buttonRightPhysical : buttonLeftPhysical;
-                    anchorY = openAbove
-                        ? buttonPosition.Y
-                        : buttonPosition.Y + this.MorphicMenuButton.ActualHeight;
-                }
-                break;
-            case Orientation.Vertical:
-                {
-                    // open to the left if bar is on the right half, to the right if on the left half
-                    bool openLeft = popupDirection == BarPopupDirection.Left;
-                    anchorX = openLeft ? buttonLeftPhysical : buttonRightPhysical;
-                    anchorY = buttonPosition.Y;
-                }
-                break;
-            default:
-                anchorX = buttonLeftPhysical;
-                anchorY = buttonPosition.Y;
-                break;
-        }
-
-        // convert from DIPs to physical pixels, then to screen coordinates
-        var clientPoint = new System.Drawing.Point(
-            (int)(anchorX * rasterizationScale),
-            (int)(anchorY * rasterizationScale));
-        _ = Windows.Win32.PInvoke.ClientToScreen(hwnd, ref clientPoint);
+        var anchor = this.ComputeAwayFromBarScreenAnchor(this.MorphicMenuButton, popupDirection);
 
         // NOTE: always show the menu via the transparent window to avoid XamlRoot conflicts
         // (a MenuFlyout can only be associated with one XamlRoot at a time).
@@ -1155,7 +1128,7 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         // (Space/Enter on the logo). Restoring focus to it on menu close keeps keyboard navigation
         // coherent: ESC dismisses the menu and the user is back on the logo button, ready to
         // re-open the menu, tab to the bar items, or press Esc again to send focus elsewhere.
-        App.MainMenu.Show(App.MenuOwnerWindow, this.Visible, clientPoint.X, clientPoint.Y, returnFocusTo: this.MorphicMenuButton);
+        App.MainMenu.Show(App.MenuOwnerWindow, this.Visible, anchor.X, anchor.Y, returnFocusTo: this.MorphicMenuButton);
     }
 
     // The direction a bar popup (the logo menu or a bar-button context menu) should open so it appears AWAY from
@@ -1187,6 +1160,380 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             default:
                 return BarPopupDirection.Below;
         }
+    }
+
+    // The hover Info panel ("Info panel"). The presenter is the code-level switch between the big window (now) and
+    // a future TeachingTip ("Info tip"); a Morphic Settings toggle will choose it later.
+    private readonly Morphic.MorphicBar.Info.IBarInfoPresenter _infoPresenter = new Morphic.MorphicBar.Info.InfoPanelPresenter();
+
+    // The bar element we are currently showing the Info panel for, so PointerMoved only re-shows on a CHANGE.
+    private Microsoft.UI.Xaml.DependencyObject? _currentInfoTarget;
+
+    // Set once in MorphicBarWindow_Closed so any deferred Info-panel work (queued reposition, hover-bridge tick, late
+    // pointer event) bails instead of dereferencing this.AppWindow after teardown (its getter throws once closed).
+    private bool _isClosing;
+
+    // Which side of the bar the currently-shown panel is on, so the WCAG hover-bridge can build its keep-alive
+    // region (the panel plus the gap-corridor to the bar). Set every time we Show the panel.
+    private Morphic.MorphicBar.Info.InfoPlacement _currentInfoPlacement;
+
+    // The hovered control's away-from-bar corner (screen px) for the currently-shown panel. Its PERPENDICULAR
+    // coordinate is the button's panel-facing edge, which the hover-bridge corridor uses to require the cursor be
+    // moving TOWARD the panel (not deeper into the bar / to another stacked button). Set every time we Show.
+    private System.Drawing.Point _currentControlAnchor;
+
+    // WCAG "content on hover/focus" bridge (SC 1.4.13, "hoverable"): once the pointer leaves the bar, this UI-thread
+    // watcher keeps the panel alive while the cursor stays over it -- or in the gap-corridor moving straight toward
+    // it -- so magnifier users can move onto the popup to read it. It hides only when the cursor leaves that region
+    // and is not back on the bar. Polls the physical cursor because the panel is a separate click-through window
+    // that receives no pointer events of its own.
+    private const int HOVER_BRIDGE_POLL_MILLISECONDS = 40;
+    private Microsoft.UI.Dispatching.DispatcherQueueTimer? _hoverBridgeTimer;
+
+    // Returns `element`'s away-from-bar corner in PHYSICAL SCREEN pixels for the given direction. The anchored edge
+    // follows reading direction (LTR: the left edge so the surface extends right; RTL: the right edge). Under RTL,
+    // TransformToVisual reports the element in the bar's right-origin frame, so X is mirrored back to physical
+    // first (a no-op in LTR); Y is unaffected. Shared by the logo menu, the bar-button context menus, and the
+    // hover Info panel so they all anchor identically.
+    private System.Drawing.Point ComputeAwayFromBarScreenAnchor(FrameworkElement element, BarPopupDirection direction)
+    {
+        var hwnd = new Windows.Win32.Foundation.HWND(WinRT.Interop.WindowNative.GetWindowHandle(this));
+        var elementPosition = element.TransformToVisual(this.Content).TransformPoint(new Windows.Foundation.Point(0, 0));
+        var rasterizationScale = this.Content.XamlRoot.RasterizationScale;
+        var isRtl = element.FlowDirection == FlowDirection.RightToLeft;
+
+        var elementWidth = element.ActualWidth;
+        var contentWidth = (this.Content as FrameworkElement)?.ActualWidth ?? 0.0;
+        var elementRightPhysical = isRtl ? contentWidth - elementPosition.X : elementPosition.X + elementWidth;
+        var elementLeftPhysical = elementRightPhysical - elementWidth;
+
+        double anchorX;
+        double anchorY;
+        switch (this._orientation)
+        {
+            case Orientation.Horizontal:
+                // anchor to the edge at the start of the reading direction (left in LTR, right in RTL); Y is the
+                // top edge when opening above, the bottom edge when opening below.
+                anchorX = isRtl ? elementRightPhysical : elementLeftPhysical;
+                anchorY = (direction == BarPopupDirection.Above) ? elementPosition.Y : elementPosition.Y + element.ActualHeight;
+                break;
+            case Orientation.Vertical:
+                anchorX = (direction == BarPopupDirection.Left) ? elementLeftPhysical : elementRightPhysical;
+                anchorY = elementPosition.Y;
+                break;
+            default:
+                anchorX = elementLeftPhysical;
+                anchorY = elementPosition.Y;
+                break;
+        }
+
+        var clientPoint = new System.Drawing.Point((int)(anchorX * rasterizationScale), (int)(anchorY * rasterizationScale));
+        _ = Windows.Win32.PInvoke.ClientToScreen(hwnd, ref clientPoint);
+        return clientPoint;
+    }
+
+    // Pointer moved over the bar: show the Info panel for the hovered item, or hide if the pointer is over a
+    // non-item area (close/menu chrome, gaps). Only acts on a target CHANGE so it stays cheap on every move.
+    private void OnBarPointerMoved(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+    {
+        // The window is tearing down -- do not touch AppWindow (its getter throws once closed).
+        if (_isClosing)
+        {
+            return;
+        }
+
+        // No Info panel while the bar is being actively MOVED (a drag, or the post-drag rotation/re-dock animation):
+        // the bar sliding under a stationary cursor raises synthetic pointer moves that would otherwise keep popping
+        // the panel up. (The Text Size auto re-dock uses a zero-duration animation, so IsBarMoving stays false there
+        // and the panel still follows the bar as designed.)
+        if (this.IsBarMoving())
+        {
+            this.HideInfoPanel();
+            return;
+        }
+
+        // The pointer is back on the bar, so the WinUI pointer events drive the panel again; cancel any hover-bridge
+        // keep-alive watch that a prior PointerExited started.
+        this.StopHoverBridge();
+
+        var target = this.FindInfoTarget(e.OriginalSource as Microsoft.UI.Xaml.DependencyObject);
+        if (ReferenceEquals(target, _currentInfoTarget))
+        {
+            return;
+        }
+
+        var content = target is null ? null : Morphic.MorphicBar.Info.BarInfo.GetContent(target);
+        if (content is null || target is not FrameworkElement element)
+        {
+            // Moved to a NON-button bar area (the group header, the gap between items). If a panel is showing and the
+            // cursor is still within its ALONG-bar span -- i.e. moving straight toward the panel, not sideways off it
+            // -- KEEP it: this is the WCAG "hoverable" corridor across the bar's own chrome, and once the cursor
+            // leaves the bar entirely PointerExited hands off to the hover-bridge watcher. Otherwise hide. Note we do
+            // NOT clear _currentInfoTarget in the keep case, so the panel stays anchored to its button.
+            if (_currentInfoTarget is not null && this.CursorInPanelCorridor())
+            {
+                return;
+            }
+            _currentInfoTarget = null;
+            _infoPresenter.Hide();
+            return;
+        }
+
+        _currentInfoTarget = target;
+        var (anchor, placement, tailCenter, controlAnchor) = this.ComputeInfoPanelAnchor(element);
+        _currentInfoPlacement = placement;
+        _currentControlAnchor = controlAnchor;
+        _infoPresenter.Show(anchor.X, anchor.Y, placement, tailCenter, content);
+    }
+
+    // True while the bar is being actively moved by the user: a drag in progress, or a NON-zero-duration move/rotate
+    // animation running (AnimateMoveTo with a real duration). The Text Size auto re-dock uses TimeSpan.Zero, which
+    // never starts the timer, so it reports false -- the panel keeps following the bar there.
+    private bool IsBarMoving()
+    {
+        return _isDraggingWindow || (_moveAnimationTimer?.IsRunning == true);
+    }
+
+    // Hide the Info panel and stop all of its tracking (hover-bridge + current target).
+    private void HideInfoPanel()
+    {
+        this.StopHoverBridge();
+        _currentInfoTarget = null;
+        _infoPresenter.Hide();
+    }
+
+    // True if the cursor is in the WCAG keep-alive CORRIDOR for the showing panel: within the panel's span ALONG the
+    // bar (not sideways off it), AND on the PANEL's side of the button's panel-facing edge (i.e. moving TOWARD the
+    // panel). The perpendicular test is what stops it keeping the panel when the cursor moves deeper into the bar or
+    // down to another stacked button (the vertical-mode over-generosity), or up onto the header away from a panel
+    // that is below the bar.
+    private bool CursorInPanelCorridor()
+    {
+        if (_infoPresenter.GetScreenRect() is not Windows.Graphics.RectInt32 panel)
+        {
+            return false;
+        }
+        if (Windows.Win32.PInvoke.GetCursorPos(out var cursor) == false)
+        {
+            return false;
+        }
+
+        var horizontal = _currentInfoPlacement is Morphic.MorphicBar.Info.InfoPlacement.Above or Morphic.MorphicBar.Info.InfoPlacement.Below;
+        var withinAlongBar = horizontal
+            ? (cursor.X >= panel.X && cursor.X < panel.X + panel.Width)
+            : (cursor.Y >= panel.Y && cursor.Y < panel.Y + panel.Height);
+        if (withinAlongBar == false)
+        {
+            return false;
+        }
+
+        // Perpendicular: on the PANEL's side of the button's panel-facing edge (_currentControlAnchor's perpendicular
+        // coordinate = that edge). Above -> cursor at/above the button top; Below -> at/below the button bottom; etc.
+        return _currentInfoPlacement switch
+        {
+            Morphic.MorphicBar.Info.InfoPlacement.Above => cursor.Y <= _currentControlAnchor.Y,
+            Morphic.MorphicBar.Info.InfoPlacement.Below => cursor.Y >= _currentControlAnchor.Y,
+            Morphic.MorphicBar.Info.InfoPlacement.Left => cursor.X <= _currentControlAnchor.X,
+            Morphic.MorphicBar.Info.InfoPlacement.Right => cursor.X >= _currentControlAnchor.X,
+            _ => false,
+        };
+    }
+
+    // Re-anchor the Info panel to the bar's CURRENT geometry for the item already being shown (if any). Called when
+    // the bar moves/resizes (WM_WINDOWPOSCHANGED) -- e.g. a Text Size zoom re-docks the bar under a stationary
+    // pointer, which OnBarPointerMoved (target-change only) does not catch, so the panel would otherwise stay at its
+    // old location. No-op when nothing is showing.
+    //
+    // DEFERRED one turn: the WM_WINDOWPOSCHANGED that triggers this fires from our subclass proc BEFORE DefSubclassProc
+    // runs, so WinUI has not yet updated AppWindow.Position/Size (and, on a Text Size zoom, the content has not
+    // re-arranged at the new scale). Computing the anchor synchronously here would read the PRE-move geometry, and the
+    // panel would appear frozen until the pointer moved. Enqueuing lets that state settle first.
+    private void RepositionInfoPanelForCurrentTarget()
+    {
+        // Nothing showing, the window is closing, or the bar is being actively moved (drag/rotation) -- in which case
+        // the panel is suppressed anyway, so do not re-anchor it. (The Text Size zero-duration re-dock reports
+        // not-moving, so the panel still follows it there.)
+        if (_currentInfoTarget is null || _isClosing || this.IsBarMoving())
+        {
+            return;
+        }
+
+        _ = this.DispatcherQueue.TryEnqueue(() =>
+        {
+            if (_currentInfoTarget is not FrameworkElement element || _isClosing)
+            {
+                return;
+            }
+            var content = Morphic.MorphicBar.Info.BarInfo.GetContent(element);
+            if (content is null)
+            {
+                return;
+            }
+            var (anchor, placement, tailCenter, controlAnchor) = this.ComputeInfoPanelAnchor(element);
+            _currentInfoPlacement = placement;
+            _currentControlAnchor = controlAnchor;
+            _infoPresenter.Show(anchor.X, anchor.Y, placement, tailCenter, content);
+        });
+    }
+
+    // Anchor for the Info panel. Unlike the menu (which anchors to the full-height logo button and so never tucks
+    // under the bar), the panel anchors to the BAR WINDOW's OUTER edge on the away-from-bar side -- clearing the
+    // whole bar and the padding above an item's header, which is what made it sit slightly under the bar -- plus a
+    // small gap. ALONG the bar it lines up with the hovered control's leading edge.
+    private (System.Drawing.Point Anchor, Morphic.MorphicBar.Info.InfoPlacement Placement, double TailCenterDip, System.Drawing.Point ControlAnchor) ComputeInfoPanelAnchor(FrameworkElement element)
+    {
+        var direction = this.GetAwayFromBarPopupDirection();
+        var controlAnchor = this.ComputeAwayFromBarScreenAnchor(element, direction);   // control's leading corner (screen px), for the ALONG-bar axis
+        var barPosition = this.AppWindow.Position;
+        var barSize = this.AppWindow.Size;
+        // The panel sits the tail's length plus a floored, scaled apex clearance from the bar, so the tail tip clears
+        // the bar by a zoom-consistent hairline (never touching). Derived from the tail so the clearance is exact at
+        // every scale -- see InfoPanelWindow.GetBarGapInPixels.
+        var gap = Morphic.MorphicBar.Info.InfoPanelWindow.GetBarGapInPixels(this.Content.XamlRoot.RasterizationScale);
+
+        // The panel's leading corner lines up with the control's leading edge, so the control's CENTER along the bar
+        // is half its along-bar extent from that corner -- the tail aims there so it points at the hovered button.
+        var tailCenterDip = (this._orientation == Orientation.Horizontal ? element.ActualWidth : element.ActualHeight) / 2.0;
+
+        int x = controlAnchor.X;
+        int y = controlAnchor.Y;
+        Morphic.MorphicBar.Info.InfoPlacement placement;
+        switch (direction)
+        {
+            case BarPopupDirection.Above:
+                y = barPosition.Y - gap;                    // panel bottom = bar top - gap
+                placement = Morphic.MorphicBar.Info.InfoPlacement.Above;
+                break;
+            case BarPopupDirection.Below:
+                y = barPosition.Y + barSize.Height + gap;   // panel top = bar bottom + gap
+                placement = Morphic.MorphicBar.Info.InfoPlacement.Below;
+                break;
+            case BarPopupDirection.Left:
+                x = barPosition.X - gap;                    // panel right = bar left - gap
+                placement = Morphic.MorphicBar.Info.InfoPlacement.Left;
+                break;
+            case BarPopupDirection.Right:
+                x = barPosition.X + barSize.Width + gap;    // panel left = bar right + gap
+                placement = Morphic.MorphicBar.Info.InfoPlacement.Right;
+                break;
+            default:
+                y = barPosition.Y + barSize.Height + gap;
+                placement = Morphic.MorphicBar.Info.InfoPlacement.Below;
+                break;
+        }
+        return (new System.Drawing.Point(x, y), placement, tailCenterDip, controlAnchor);
+    }
+
+    // Pointer left the bar entirely. WCAG hoverable: do NOT hide immediately -- start the hover-bridge watcher, which
+    // keeps the panel alive while the cursor is over it (or in the gap-corridor to it) and hides only when the cursor
+    // leaves that region. See _hoverBridgeTimer.
+    private void OnBarPointerExited(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+    {
+        this.StartHoverBridge();
+    }
+
+    // Begin watching the physical cursor after the pointer leaves the bar (no-op if no panel is showing). Idempotent.
+    private void StartHoverBridge()
+    {
+        if (_currentInfoTarget is null)
+        {
+            return;
+        }
+        _hoverBridgeTimer ??= this.DispatcherQueue.CreateTimer();
+        _hoverBridgeTimer.Interval = TimeSpan.FromMilliseconds(MorphicBarWindow.HOVER_BRIDGE_POLL_MILLISECONDS);
+        _hoverBridgeTimer.IsRepeating = true;
+        _hoverBridgeTimer.Tick -= this.OnHoverBridgeTick;
+        _hoverBridgeTimer.Tick += this.OnHoverBridgeTick;
+        _hoverBridgeTimer.Start();
+    }
+
+    private void StopHoverBridge()
+    {
+        _hoverBridgeTimer?.Stop();
+    }
+
+    // One poll of the hover-bridge: keep the panel alive while the cursor is over it or in the corridor to it; hand
+    // back to the WinUI pointer events once the cursor is on the bar again; hide once it leaves the region entirely.
+    private void OnHoverBridgeTick(Microsoft.UI.Dispatching.DispatcherQueueTimer sender, object args)
+    {
+        var panelScreenRect = _infoPresenter.GetScreenRect();
+        if (_currentInfoTarget is null || panelScreenRect is not Windows.Graphics.RectInt32 panel)
+        {
+            this.StopHoverBridge();   // nothing left to keep alive
+            return;
+        }
+
+        if (Windows.Win32.PInvoke.GetCursorPos(out var cursor) == false)
+        {
+            return;   // transient read failure; try again on the next tick
+        }
+
+        var bar = this.GetBarScreenRectEdges();
+
+        // Back on the bar -> the WinUI pointer events (OnBarPointerMoved/Exited) drive from here; stop watching.
+        if (cursor.X >= bar.Left && cursor.X < bar.Right && cursor.Y >= bar.Top && cursor.Y < bar.Bottom)
+        {
+            this.StopHoverBridge();
+            return;
+        }
+
+        // Over the panel, or in the gap-corridor between the bar and the panel -> keep it alive.
+        var region = MorphicBarWindow.ComputeKeepAliveRegion(bar, panel, _currentInfoPlacement);
+        if (cursor.X >= region.Left && cursor.X < region.Right && cursor.Y >= region.Top && cursor.Y < region.Bottom)
+        {
+            return;
+        }
+
+        // Left the region (and not on the bar) -> hide.
+        _currentInfoTarget = null;
+        _infoPresenter.Hide();
+        this.StopHoverBridge();
+    }
+
+    // Bar window's screen rectangle edges (physical pixels).
+    private (int Left, int Top, int Right, int Bottom) GetBarScreenRectEdges()
+    {
+        var position = this.AppWindow.Position;
+        var size = this.AppWindow.Size;
+        return (position.X, position.Y, position.X + size.Width, position.Y + size.Height);
+    }
+
+    // The hover-bridge keep-alive region: from the BAR's near edge to the PANEL's far edge, at the panel's full
+    // cross-axis extent (its width for a horizontal bar, its height for a vertical bar) -- the panel plus the
+    // gap-corridor to it. Moving straight from the button onto the panel stays inside; moving sideways past the
+    // panel's width/height leaves it (the "move left/right of the panel" hide case; top/bottom for a vertical bar).
+    private static (int Left, int Top, int Right, int Bottom) ComputeKeepAliveRegion(
+        (int Left, int Top, int Right, int Bottom) bar,
+        Windows.Graphics.RectInt32 panel,
+        Morphic.MorphicBar.Info.InfoPlacement placement)
+    {
+        int panelLeft = panel.X;
+        int panelTop = panel.Y;
+        int panelRight = panel.X + panel.Width;
+        int panelBottom = panel.Y + panel.Height;
+        return placement switch
+        {
+            Morphic.MorphicBar.Info.InfoPlacement.Below => (panelLeft, bar.Bottom, panelRight, panelBottom),
+            Morphic.MorphicBar.Info.InfoPlacement.Above => (panelLeft, panelTop, panelRight, bar.Top),
+            Morphic.MorphicBar.Info.InfoPlacement.Right => (bar.Right, panelTop, panelRight, panelBottom),
+            Morphic.MorphicBar.Info.InfoPlacement.Left => (panelLeft, panelTop, bar.Left, panelBottom),
+            _ => (panelLeft, panelTop, panelRight, panelBottom),
+        };
+    }
+
+    // Walk UP from the pointer's element to the nearest one carrying BarInfo content (an IBarItemControl or the
+    // Menu button); null if none. Mirrors OnBarItemContextRequested's walk.
+    private Microsoft.UI.Xaml.DependencyObject? FindInfoTarget(Microsoft.UI.Xaml.DependencyObject? node)
+    {
+        while (node is not null)
+        {
+            if (Morphic.MorphicBar.Info.BarInfo.GetContent(node) is not null)
+            {
+                return node;
+            }
+            node = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetParent(node);
+        }
+        return null;
     }
 
     // Shows a bar BUTTON's right-click "Settings" context menu (attached in BarButtonBuilder via
@@ -1785,6 +2132,10 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
                 this.AnimateStop();
 
                 _isDraggingWindow = true;
+
+                // Hide the hover Info panel immediately when a drag begins (don't wait for the next synthetic pointer
+                // move): there should be no panel while the bar is being moved.
+                this.HideInfoPanel();
 
                 // capture the window's current position (i.e. at the time that we start the drag)
                 _dragStartWindowPosition = this.AppWindow.Position;

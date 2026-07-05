@@ -57,6 +57,20 @@ public class BarButtonData : IBarItemData, INotifyPropertyChanged, IDisposable
 
     public string? Tooltip { get; set; }
 
+    // Contextual help shown by the Info panel (the hover "Info panel"/"Info tip"; see Morphic.MorphicBar.Info).
+    // InfoTitle is the name shown (falls back to Header, then Text, when null); InfoSubtitle is a short
+    // description. When InfoSubtitle is null/empty AND there is no other info to show, the control gets no Info
+    // surface on hover. Authored as localized .resw strings by the factory.
+    public string? InfoTitle { get; set; }
+    public string? InfoSubtitle { get; set; }
+    // Optional LIVE value indicator (the Size of Text zoom "dots"): invoked at each hover so it tracks the current
+    // level. Null = no dots. Set by the factory for the Text Size buttons.
+    internal System.Func<Morphic.MorphicBar.Info.InfoValueDots?>? InfoDotsProvider { get; set; }
+    // Message the Info panel shows INSTEAD of InfoSubtitle while this button is DISABLED. A WinUI-disabled button
+    // swallows hover, so BarMultiButtonControl overlays a transparent hover catcher (only while disabled) carrying
+    // this. Currently the Text Size +/- "can't go any bigger/smaller" limit. Null = no disabled-state panel.
+    public string? DisabledInfoSubtitle { get; set; }
+
     public BarButtonLayoutStyle LayoutStyle { get; set; } = BarButtonLayoutStyle.TextOnly;
 
     // When true, the button renders as a ToggleButton and maintains checked state.

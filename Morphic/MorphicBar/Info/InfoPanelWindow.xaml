@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tw:TransparentBaseWindow
+    x:Class="Morphic.MorphicBar.Info.InfoPanelWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:tw="using:Morphic.Controls.Windowing"
+    xmlns:shapes="using:Microsoft.UI.Xaml.Shapes"
+    mc:Ignorable="d">
+
+    <!-- The window is transparent (TransparentBaseWindow's sheet-of-glass). RootGrid with Background="Transparent" is
+         the proven transparency root pattern (same as the MorphicBar): it STRETCHES to fill the client area and
+         PAINTS alpha-0 pixels across ALL of it (a bare Canvas does not; its desired size is 0, so its Background
+         paints nothing). NOTE: the light rounded band once visible in the tail-band area was NOT unpainted client
+         pixels; it was the Win11 rounded-corner compositor shadow, re-introduced when presenter configuration
+         clobbered DWMWCP_DONOTROUND (re-asserted in the ctor via DisableDwmCornerRoundingAndBorder). Inside RootGrid,
+         RootCanvas holds the panel: ShapePath draws the rounded dark body AND the speech-bubble tail as ONE filled
+         geometry (built in code-behind, BuildPanelGeometry), so the tail joins the body with no seam. Two separate
+         semi-transparent shapes that merely abut leave an antialiasing hairline along the join (a light line over
+         light backgrounds, most visible on a left-docked bar). ContentHost sits on top and hosts the text/dots at
+         the body's padding but paints no background of its own. The Canvas is pinned LeftToRight so the tail's
+         positional math is not mirrored (RTL is applied to ContentHost's content instead). Opacity lives on RootGrid
+         so the shape and content reveal together. -->
+    <Grid x:Name="RootGrid" Background="Transparent" Opacity="0">
+        <Canvas x:Name="RootCanvas" FlowDirection="LeftToRight">
+            <shapes:Path x:Name="ShapePath" Fill="#E6101010" Visibility="Collapsed" />
+            <Border x:Name="ContentHost"
+                    Background="Transparent"
+                    Padding="20,14,20,19">
+                <StackPanel x:Name="ContentStack" Orientation="Vertical" Spacing="6">
+                    <TextBlock x:Name="TitleText"
+                               FontWeight="Bold"
+                               Foreground="White"
+                               TextWrapping="NoWrap" />
+                    <TextBlock x:Name="SubtitleText"
+                               Foreground="White"
+                               TextWrapping="Wrap" />
+                    <!-- Secondary footer line (the "right-click to change settings" hint). Its own TextBlock so it
+                         stays at the base size while the subtitle above it is larger. Collapsed unless a menu exists. -->
+                    <TextBlock x:Name="HintText"
+                               Foreground="White"
+                               TextWrapping="Wrap"
+                               Margin="0,8,0,0"
+                               Visibility="Collapsed" />
+                    <!-- Value indicator: one dot per display-scale (zoom) step, the current step filled, the rest
+                         outlined. Populated in code-behind (RenderDots); Collapsed unless the control supplies dots
+                         (currently only Size of Text). -->
+                    <StackPanel x:Name="DotsPanel"
+                                Orientation="Horizontal"
+                                Spacing="6"
+                                Margin="0,10,0,0"
+                                Visibility="Collapsed" />
+                </StackPanel>
+            </Border>
+        </Canvas>
+    </Grid>
+</tw:TransparentBaseWindow>

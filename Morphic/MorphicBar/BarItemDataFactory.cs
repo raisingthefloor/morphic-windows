@@ -48,8 +48,10 @@ internal static class BarItemDataFactory
 
     public static IBarItemData CreateTextSizeButtonGroup(BarButtonAction? increaseAction, BarButtonAction? decreaseAction)
     {
-        const int TextSizeIncrementIndex = 0;
-        const int TextSizeDecrementIndex = 1;
+        // Layout order along the group: minus (decrement) on the LEFT, plus (increment) on the RIGHT -- matching the
+        // dots below (smallest zoom on the left, largest on the right).
+        const int TextSizeDecrementIndex = 0;
+        const int TextSizeIncrementIndex = 1;
 
         var increaseButton = new BarButtonData
         {
@@ -58,6 +60,11 @@ internal static class BarItemDataFactory
             // to Segoe UI Emoji and renders the glyph in color (e.g. purple).
             Text = "\u2795\uFE0E",
             AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.IncreaseTextSizeAccessibleName),
+            // Per-button Info panel (title = the group name "Size of Text"; subtitle is specific to THIS half).
+            InfoTitle = Morphic.Localization.Strings.SizeOfTextHeader,
+            InfoSubtitle = Morphic.Localization.Strings.IncreaseTextSizeInfoSubtitle,
+            InfoDotsProvider = BarItemDataFactory.ComputeTextSizeDots,
+            DisabledInfoSubtitle = Morphic.Localization.Strings.SizeOfTextAtMaximumInfoSubtitle,
             ActionTag = "increase",
             Action = increaseAction,
         };
@@ -66,6 +73,10 @@ internal static class BarItemDataFactory
             // U+2796 HEAVY MINUS SIGN + U+FE0E (see note above)
             Text = "\u2796\uFE0E",
             AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.DecreaseTextSizeAccessibleName),
+            InfoTitle = Morphic.Localization.Strings.SizeOfTextHeader,
+            InfoSubtitle = Morphic.Localization.Strings.DecreaseTextSizeInfoSubtitle,
+            InfoDotsProvider = BarItemDataFactory.ComputeTextSizeDots,
+            DisabledInfoSubtitle = Morphic.Localization.Strings.SizeOfTextAtMinimumInfoSubtitle,
             ActionTag = "decrease",
             Action = decreaseAction,
         };
@@ -146,17 +157,22 @@ internal static class BarItemDataFactory
         //
         recomputeState();
 
-        // "Text Size" -- two pushbuttons (+ on the left, - on the right), equal width;
+        // "Text Size" -- two pushbuttons (- on the left, + on the right), equal width;
         // `-` key invokes the decrement sub-button, `+` key invokes the increment sub-button
         return new BarMultiButtonData
         {
             Header = Morphic.Localization.Strings.SizeOfTextHeader,
-            SettingsPage = Morphic.SystemSettings.WindowsSettings.Page.Display,
+            // Info panel (hover help). InfoTitle falls back to Header ("Size of Text"). The dots show the zoom
+            // ladder with the current step filled (also on each +/- sub-button; recomputed at every hover). No
+            // SettingsPage on purpose: Text Size has no right-click Settings menu (removed per design), so no menu
+            // and no "right-click to change settings" hint on its panels.
+            InfoSubtitle = Morphic.Localization.Strings.SizeOfTextInfoSubtitle,
+            InfoDotsProvider = BarItemDataFactory.ComputeTextSizeDots,
             SizingMode = MultiButtonSizingMode.StretchToLargest,
             // +/- is an inc/dec pair; keep them side-by-side even when the bar is vertical so the
             // pair reads as one control rather than two stacked rows
             AlwaysHorizontalSubButtons = true,
-            Buttons = new List<BarButtonData> { increaseButton, decreaseButton },
+            Buttons = new List<BarButtonData> { decreaseButton, increaseButton },
             IncDecShortcuts = new BarMultiButtonIncDecShortcuts
             {
                 DecrementButtonIndex = TextSizeDecrementIndex,
@@ -167,12 +183,68 @@ internal static class BarItemDataFactory
 
     //
 
+    // Live value indicator for the Size of Text Info panel: one dot per available display-scale (zoom) step on the
+    // bar's CURRENT monitor, with the current step filled. Recomputed at every hover (like 1.x QuickHelp) so it
+    // tracks +/- clicks and monitor/scale changes. Returns null (no dots) whenever the data is unavailable or the
+    // display is on a custom (out-of-ladder) scale -- the same conditions under which the +/- buttons disable.
+    // Mirrors the display lookup in CreateTextSizeButtonGroup's recomputeState (authoritative bar-monitor handle).
+    internal static Morphic.MorphicBar.Info.InfoValueDots? ComputeTextSizeDots()
+    {
+        var barManager = ((App)Microsoft.UI.Xaml.Application.Current).MorphicBarManager;
+        if (barManager is null)
+        {
+            return null;
+        }
+
+        var barMonitorHandle = barManager.GetBarCurrentMonitorHandle();
+        if (barMonitorHandle == IntPtr.Zero)
+        {
+            return null;
+        }
+
+        var displayResult = Morphic.WindowsNative.Display.Display.GetDisplayByMonitorHandle(barMonitorHandle);
+        if (displayResult.IsError)
+        {
+            return null;
+        }
+
+        var rangeResult = displayResult.Value!.GetCurrentDpiOffsetAndRange();
+        if (rangeResult.IsError)
+        {
+            return null;
+        }
+
+        var range = rangeResult.Value;
+        if (Morphic.WindowsNative.Display.Display.IsCustomScalingPercentage(range.CurrentDpiOffset))
+        {
+            return null;
+        }
+
+        var count = range.MaximumDpiOffset - range.MinimumDpiOffset + 1;
+        if (count <= 0)
+        {
+            return null;
+        }
+        var filledIndex = range.CurrentDpiOffset - range.MinimumDpiOffset;
+        // "Smaller" flanks the low (leftmost) end, "Larger" the high (rightmost) end -- matching the - (left) / +
+        // (right) button order. FlowDirection mirrors the whole row under RTL.
+        return new Morphic.MorphicBar.Info.InfoValueDots(
+            count,
+            filledIndex,
+            Morphic.Localization.Strings.SizeOfTextSmallerLabel,
+            Morphic.Localization.Strings.SizeOfTextLargerLabel);
+    }
+
+    //
+
     public static IBarItemData CreateMagnifierButtonGroup(BarButtonAction? showAction, BarButtonAction? hideAction)
     {
         // "Magnifier" -- two pushbuttons (Show on the left, Hide on the right), equal width.
         return new BarMultiButtonData
         {
             Header = Morphic.Localization.Strings.MagnifierHeader,
+            // Info panel (hover help). InfoTitle falls back to Header ("Magnifier").
+            InfoSubtitle = Morphic.Localization.Strings.MagnifierInfoSubtitle,
             SettingsPage = Morphic.SystemSettings.WindowsSettings.Page.Magnifier,
             SizingMode = MultiButtonSizingMode.StretchToLargest,
             Buttons = new List<BarButtonData>
@@ -181,6 +253,8 @@ internal static class BarItemDataFactory
                     {
                         Text = Morphic.Localization.Strings.MagnifierShowLabel,
                         AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.MagnifierShowAccessibleName),
+                        InfoTitle = Morphic.Localization.Strings.MagnifierHeader,
+                        InfoSubtitle = Morphic.Localization.Strings.MagnifierShowInfoSubtitle,
                         ActionTag = "magnifier-show",
                         Action = showAction,
                     },
@@ -188,6 +262,8 @@ internal static class BarItemDataFactory
                     {
                         Text = Morphic.Localization.Strings.MagnifierHideLabel,
                         AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.MagnifierHideAccessibleName),
+                        InfoTitle = Morphic.Localization.Strings.MagnifierHeader,
+                        InfoSubtitle = Morphic.Localization.Strings.MagnifierHideInfoSubtitle,
                         ActionTag = "magnifier-hide",
                         Action = hideAction,
                     },
@@ -203,6 +279,10 @@ internal static class BarItemDataFactory
         return new BarButtonData
         {
             Header = Morphic.Localization.Strings.SnipHeader,
+            // Substitute the {0} placeholder with the button's OWN label, so the "Click <label>" instruction stays in
+            // sync with the button text in every language (they are separate localized strings). Safe .Replace: a
+            // translation that drops {0} simply omits the name rather than throwing (unlike string.Format).
+            InfoSubtitle = Morphic.Localization.Strings.SnipInfoSubtitle.Replace("{0}", Morphic.Localization.Strings.SnipCopyLabel),
             Text = Morphic.Localization.Strings.SnipCopyLabel,
             AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.SnipAccessibleName),
             ActionTag = "snip-copy",
@@ -218,6 +298,7 @@ internal static class BarItemDataFactory
         return new BarMultiButtonData
         {
             Header = Morphic.Localization.Strings.ReadSelectedHeader,
+            InfoSubtitle = Morphic.Localization.Strings.ReadSelectedInfoSubtitle,
             SettingsPage = Morphic.SystemSettings.WindowsSettings.Page.ReadAloud,
             SizingMode = MultiButtonSizingMode.StretchToLargest,
             // Play/Stop is a transport pair; keep them side-by-side even when the bar is vertical
@@ -232,6 +313,8 @@ internal static class BarItemDataFactory
                         // Windows can fall back to Segoe UI Emoji and render the glyph in color.
                         Text = "\u25B6\uFE0E", // ▶
                         AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.ReadSelectedPlayAccessibleName),
+                        InfoTitle = Morphic.Localization.Strings.ReadSelectedHeader,
+                        InfoSubtitle = Morphic.Localization.Strings.ReadSelectedPlayInfoSubtitle,
                         ActionTag = "read-selected-play",
                         Action = playAction,
                     },
@@ -240,6 +323,8 @@ internal static class BarItemDataFactory
                         // U+25A0 BLACK SQUARE + U+FE0E (see note above)
                         Text = "\u25A0\uFE0E", // ■
                         AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.ReadSelectedStopAccessibleName),
+                        InfoTitle = Morphic.Localization.Strings.ReadSelectedHeader,
+                        InfoSubtitle = Morphic.Localization.Strings.ReadSelectedStopInfoSubtitle,
                         ActionTag = "read-selected-stop",
                         Action = stopAction,
                     },
@@ -252,10 +337,10 @@ internal static class BarItemDataFactory
     public static IBarItemData CreateContrastColorButtonGroup(BarButtonAction? contrastAction, BarButtonAction? colorAction, BarButtonAction? darkAction, BarButtonAction? nightAction)
     {
         // "Contrast & Color" -- 4 toggle buttons, per-content sized
-        var contrastButton = new BarButtonData { Text = Morphic.Localization.Strings.ContrastLabel, IsToggle = true, ActionTag = "contrast", Action = contrastAction, AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.ContrastThemeAccessibleName), SettingsPage = Morphic.SystemSettings.WindowsSettings.Page.Contrast };
-        var colorButton    = new BarButtonData { Text = Morphic.Localization.Strings.ColorLabel,    IsToggle = true, ActionTag = "color",    Action = colorAction,    AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.ColorFiltersAccessibleName), SettingsPage = Morphic.SystemSettings.WindowsSettings.Page.ColorVision };
-        var darkButton     = new BarButtonData { Text = Morphic.Localization.Strings.DarkLabel,     IsToggle = true, ActionTag = "dark",     Action = darkAction,     AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.DarkModeAccessibleName), SettingsPage = Morphic.SystemSettings.WindowsSettings.Page.DarkMode };
-        var nightButton    = new BarButtonData { Text = Morphic.Localization.Strings.NightLabel,    IsToggle = true, ActionTag = "night",    Action = nightAction,    AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.NightLightAccessibleName), SettingsPage = Morphic.SystemSettings.WindowsSettings.Page.NightLight };
+        var contrastButton = new BarButtonData { Text = Morphic.Localization.Strings.ContrastLabel, InfoSubtitle = Morphic.Localization.Strings.ContrastInfoSubtitle, IsToggle = true, ActionTag = "contrast", Action = contrastAction, AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.ContrastThemeAccessibleName), SettingsPage = Morphic.SystemSettings.WindowsSettings.Page.Contrast };
+        var colorButton    = new BarButtonData { Text = Morphic.Localization.Strings.ColorLabel,    InfoSubtitle = Morphic.Localization.Strings.ColorInfoSubtitle,    IsToggle = true, ActionTag = "color",    Action = colorAction,    AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.ColorFiltersAccessibleName), SettingsPage = Morphic.SystemSettings.WindowsSettings.Page.ColorVision };
+        var darkButton     = new BarButtonData { Text = Morphic.Localization.Strings.DarkLabel,     InfoSubtitle = Morphic.Localization.Strings.DarkInfoSubtitle,     IsToggle = true, ActionTag = "dark",     Action = darkAction,     AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.DarkModeAccessibleName), SettingsPage = Morphic.SystemSettings.WindowsSettings.Page.DarkMode };
+        var nightButton    = new BarButtonData { Text = Morphic.Localization.Strings.NightLabel,    InfoSubtitle = Morphic.Localization.Strings.NightInfoSubtitle,    IsToggle = true, ActionTag = "night",    Action = nightAction,    AccessibleName = new IAccessibleName.AccessibleName(Morphic.Localization.Strings.NightLightAccessibleName), SettingsPage = Morphic.SystemSettings.WindowsSettings.Page.NightLight };
 
         // Bridge the Dark button to CachedDarkModeState, which delivers BOTH the effective dark
         // state and whether the button should be toggleable. Under high contrast, IsDark reflects

@@ -90,18 +90,56 @@
     <value>Size of Text</value>
     <comment>[loc-id:2793a67f04774c33]</comment>
   </data>
+  <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
+    <value>Make the text on your screen larger or smaller.</value>
+    <comment>[loc-id:8f3c1a90b27d4e65]</comment>
+  </data>
+  <data name="SizeOfTextSmallerLabel" xml:space="preserve">
+    <value>Smaller</value>
+    <comment>[loc-id:5f2a91c7e0b374d6] End label at the SMALL end of the Size of Text zoom dots (leftmost dot).</comment>
+  </data>
+  <data name="SizeOfTextLargerLabel" xml:space="preserve">
+    <value>Larger</value>
+    <comment>[loc-id:3d8b06f4a1e29c57] End label at the LARGE end of the Size of Text zoom dots (rightmost dot).</comment>
+  </data>
+  <!-- Shared Info-panel hint, appended (on its own line) to the description of every bar button that has a
+       right-click Settings menu, so users discover the menu. Not tied to any single feature. -->
+  <data name="InfoRightClickSettingsHint" xml:space="preserve">
+    <value>Right-click to change settings.</value>
+    <comment>[loc-id:d5a90c37e1f84b26]</comment>
+  </data>
   <data name="IncreaseTextSizeAccessibleName" xml:space="preserve">
     <value>Increase size of text</value>
     <comment>[loc-id:5ec285d4c2a24299]</comment>
+  </data>
+  <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>Make everything on your screen larger.</value>
+    <comment>[loc-id:a17f9c4e0b3d2856]</comment>
+  </data>
+  <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
+    <value>The text cannot get any larger.</value>
+    <comment>[loc-id:1b6f4e920a7c3d58] Shown in the hover Info panel when the Increase Text Size button is disabled because the screen is already at its largest text size.</comment>
   </data>
   <data name="DecreaseTextSizeAccessibleName" xml:space="preserve">
     <value>Decrease size of text</value>
     <comment>[loc-id:6c7259d06b6741b7]</comment>
   </data>
+  <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>Make everything on your screen smaller.</value>
+    <comment>[loc-id:c83b21f6a4e70d9c]</comment>
+  </data>
+  <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
+    <value>The text cannot get any smaller.</value>
+    <comment>[loc-id:8c05a3e71f9b4d26] Shown in the hover Info panel when the Decrease Text Size button is disabled because the screen is already at its smallest text size.</comment>
+  </data>
   <!-- Magnifier group -->
   <data name="MagnifierHeader" xml:space="preserve">
     <value>Magnifier</value>
     <comment>[loc-id:6a2b978525a24d26]</comment>
+  </data>
+  <data name="MagnifierInfoSubtitle" xml:space="preserve">
+    <value>Zoom in to enlarge part of your screen.</value>
+    <comment>[loc-id:4b7e2d18c93a05f6]</comment>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Show</value>
@@ -111,6 +149,10 @@
     <value>Show Magnifier</value>
     <comment>[loc-id:c334c9571557498e]</comment>
   </data>
+  <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
+    <value>Turn on a magnifying lens that follows your mouse.</value>
+    <comment>[loc-id:4e0d9a17c2f8b365]</comment>
+  </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>Hide</value>
     <comment>[loc-id:eb2ceef519734c49] Short button label; hides the Windows Magnifier.</comment>
@@ -119,10 +161,18 @@
     <value>Hide Magnifier</value>
     <comment>[loc-id:026b9d8170994374]</comment>
   </data>
+  <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
+    <value>Turn off the magnifier.</value>
+    <comment>[loc-id:7b6c15e830a94df2]</comment>
+  </data>
   <!-- Snip group -->
   <data name="SnipHeader" xml:space="preserve">
     <value>Snip</value>
     <comment>[loc-id:af6dfa97a5784f1c]</comment>
+  </data>
+  <data name="SnipInfoSubtitle" xml:space="preserve">
+    <value>Take a picture of part of your screen. Click {0}, then drag your mouse across the area you want to capture.</value>
+    <comment>[loc-id:3a91f7c02e8b4d16] Hover help for the Snip button. {0} is a PLACEHOLDER replaced at runtime with the Copy button's own translated label (SnipCopyLabel); KEEP {0} in the translation, positioned where the button name belongs, so the sentence and the button always match. Keep the 2-step sequence: (1) click the {0} button, (2) drag the mouse across the screen area to capture.</comment>
   </data>
   <data name="SnipCopyLabel" xml:space="preserve">
     <value>Copy</value>
@@ -137,13 +187,25 @@
     <value>Read Selected</value>
     <comment>[loc-id:91edb1a868534049]</comment>
   </data>
+  <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
+    <value>Read your selected text aloud, or stop reading.</value>
+    <comment>[loc-id:5c2e8b1f9a3d47e0]</comment>
+  </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>Read selected text</value>
     <comment>[loc-id:20dc9650e6ce4cd4]</comment>
   </data>
+  <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
+    <value>Read your selected text aloud.</value>
+    <comment>[loc-id:2d5a8f01e69c37b4]</comment>
+  </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Stop reading selected text</value>
     <comment>[loc-id:790ca1cc08e14464]</comment>
+  </data>
+  <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
+    <value>Stop reading aloud.</value>
+    <comment>[loc-id:90e34c7b1a5f28d6]</comment>
   </data>
   <!-- Contrast and Color group (toggle buttons) -->
   <data name="ContrastAndColorHeader" xml:space="preserve">
@@ -154,6 +216,10 @@
     <value>Contrast</value>
     <comment>[loc-id:e16e7456d6be49ea] Toggle button label; turns a high-contrast color theme on or off.</comment>
   </data>
+  <data name="ContrastInfoSubtitle" xml:space="preserve">
+    <value>Turn high contrast on or off to make the screen easier to read.</value>
+    <comment>[loc-id:7d4a1e6b28c05f93]</comment>
+  </data>
   <data name="ContrastThemeAccessibleName" xml:space="preserve">
     <value>Contrast theme</value>
     <comment>[loc-id:d6d7596ec4e84845]</comment>
@@ -161,6 +227,10 @@
   <data name="ColorLabel" xml:space="preserve">
     <value>Color</value>
     <comment>[loc-id:56ca54ca1f8e406f] Toggle button label; turns Windows color filters on or off.</comment>
+  </data>
+  <data name="ColorInfoSubtitle" xml:space="preserve">
+    <value>Turn color filters on or off to adjust colors for color vision differences.</value>
+    <comment>[loc-id:2f8b91c3e5a74d60]</comment>
   </data>
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>Color filters</value>
@@ -170,6 +240,10 @@
     <value>Dark</value>
     <comment>[loc-id:ac529a4cc8564b09] Toggle button label; turns dark mode on or off.</comment>
   </data>
+  <data name="DarkInfoSubtitle" xml:space="preserve">
+    <value>Turn dark mode on or off.</value>
+    <comment>[loc-id:9e1c47a0b3d8256f]</comment>
+  </data>
   <data name="DarkModeAccessibleName" xml:space="preserve">
     <value>Dark mode</value>
     <comment>[loc-id:4976a5a59d1c4f77]</comment>
@@ -177,6 +251,10 @@
   <data name="NightLabel" xml:space="preserve">
     <value>Night</value>
     <comment>[loc-id:7e348238323e48ee] Toggle button label; turns Night Light (warmer screen colors) on or off.</comment>
+  </data>
+  <data name="NightInfoSubtitle" xml:space="preserve">
+    <value>Turn Night Light on or off to warm the screen colors and reduce eye strain.</value>
+    <comment>[loc-id:6b3d0f82a1e94c57]</comment>
   </data>
   <data name="NightLightAccessibleName" xml:space="preserve">
     <value>Night light</value>
