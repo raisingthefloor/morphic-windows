@@ -34,11 +34,17 @@
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>રંગ ફિલ્ટર્સ</value>
   </data>
+  <data name="ColorInfoSubtitle" xml:space="preserve">
+    <value>રંગ દ્રષ્ટિના તફાવતો માટે રંગો સમાયોજિત કરવા રંગ ફિલ્ટર્સ ચાલુ અથવા બંધ કરો.</value>
+  </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>રંગ</value>
   </data>
   <data name="ContrastAndColorHeader" xml:space="preserve">
     <value>કોન્ટ્રાસ્ટ અને રંગ</value>
+  </data>
+  <data name="ContrastInfoSubtitle" xml:space="preserve">
+    <value>સ્ક્રીનને વાંચવામાં સરળ બનાવવા માટે ઉચ્ચ કોન્ટ્રાસ્ટ ચાલુ અથવા બંધ કરો.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>કોન્ટ્રાસ્ટ</value>
@@ -49,6 +55,9 @@
   <data name="CopyrightNoticeFormat" xml:space="preserve">
     <value>કૉપિરાઇટ {0} Raising the Floor - US, Inc.</value>
   </data>
+  <data name="DarkInfoSubtitle" xml:space="preserve">
+    <value>ડાર્ક મોડ ચાલુ અથવા બંધ કરો.</value>
+  </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>ડાર્ક</value>
   </data>
@@ -58,11 +67,20 @@
   <data name="DecreaseTextSizeAccessibleName" xml:space="preserve">
     <value>ટેક્સ્ટનું કદ ઘટાડો</value>
   </data>
+  <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>તમારી સ્ક્રીન પર બધું નાનું કરો.</value>
+  </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>MorphicBar છુપાવો</value>
   </data>
   <data name="IncreaseTextSizeAccessibleName" xml:space="preserve">
     <value>ટેક્સ્ટનું કદ વધારો</value>
+  </data>
+  <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>તમારી સ્ક્રીન પર બધું મોટું કરો.</value>
+  </data>
+  <data name="InfoRightClickSettingsHint" xml:space="preserve">
+    <value>સેટિંગ્સ બદલવા માટે રાઇટ-ક્લિક કરો.</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Morphic વિશે વધુ જાણો</value>
@@ -73,11 +91,20 @@
   <data name="MagnifierHideAccessibleName" xml:space="preserve">
     <value>મેગ્નિફાયર છુપાવો</value>
   </data>
+  <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
+    <value>મેગ્નિફાયર બંધ કરો.</value>
+  </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>છુપાવો</value>
   </data>
+  <data name="MagnifierInfoSubtitle" xml:space="preserve">
+    <value>તમારી સ્ક્રીનના ભાગને મોટો કરવા માટે ઝૂમ ઇન કરો.</value>
+  </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>મેગ્નિફાયર બતાવો</value>
+  </data>
+  <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
+    <value>તમારા માઉસને અનુસરતો મેગ્નિફાઇંગ લેન્સ ચાલુ કરો.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>બતાવો</value>
@@ -87,6 +114,9 @@
   </data>
   <data name="MorphicForWindows.Text" xml:space="preserve">
     <value>Windows માટે Morphic</value>
+  </data>
+  <data name="NightInfoSubtitle" xml:space="preserve">
+    <value>સ્ક્રીનના રંગોને હુંફાળા કરવા અને આંખોનો તાણ ઘટાડવા માટે નાઇટ લાઇટ ચાલુ અથવા બંધ કરો.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>નાઇટ</value>
@@ -139,17 +169,41 @@
   <data name="ReadSelectedHeader" xml:space="preserve">
     <value>પસંદ કરેલ વાંચો</value>
   </data>
+  <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
+    <value>તમારા પસંદ કરેલા ટેક્સ્ટને મોટેથી વાંચો, અથવા વાંચવાનું બંધ કરો.</value>
+  </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>પસંદ કરેલ ટેક્સ્ટ વાંચો</value>
+  </data>
+  <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
+    <value>તમારા પસંદ કરેલા ટેક્સ્ટને મોટેથી વાંચો.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>પસંદ કરેલ ટેક્સ્ટ વાંચવાનું બંધ કરો</value>
   </data>
+  <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
+    <value>મોટેથી વાંચવાનું બંધ કરો.</value>
+  </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>MorphicBar બતાવો</value>
   </data>
+  <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
+    <value>લખાણ આનાથી વધુ મોટું થઈ શકતું નથી.</value>
+  </data>
+  <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
+    <value>ટેક્સ્ટ આનાથી વધુ નાનું થઈ શકતું નથી.</value>
+  </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>ટેક્સ્ટનું કદ</value>
+  </data>
+  <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
+    <value>તમારી સ્ક્રીન પરના ટેક્સ્ટને મોટું કે નાનું કરો.</value>
+  </data>
+  <data name="SizeOfTextLargerLabel" xml:space="preserve">
+    <value>મોટું</value>
+  </data>
+  <data name="SizeOfTextSmallerLabel" xml:space="preserve">
+    <value>નાનું</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>સ્ક્રીનનો ભાગ સ્નિપ અને કૉપિ કરો</value>
@@ -159,5 +213,8 @@
   </data>
   <data name="SnipHeader" xml:space="preserve">
     <value>કાપો</value>
+  </data>
+  <data name="SnipInfoSubtitle" xml:space="preserve">
+    <value>તમારી સ્ક્રીનના એક ભાગનું ચિત્ર લો. {0} પર ક્લિક કરો, પછી તમે જે વિસ્તારને કેપ્ચર કરવા માંગો છો તેના પર તમારું માઉસ ખેંચો.</value>
   </data>
 </root>

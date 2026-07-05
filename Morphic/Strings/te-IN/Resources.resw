@@ -34,11 +34,17 @@
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>రంగు ఫిల్టర్‌లు</value>
   </data>
+  <data name="ColorInfoSubtitle" xml:space="preserve">
+    <value>రంగు దృష్టి తేడాల కోసం రంగులను సర్దుబాటు చేయడానికి రంగు ఫిల్టర్‌లను ఆన్ లేదా ఆఫ్ చేయండి.</value>
+  </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>రంగు</value>
   </data>
   <data name="ContrastAndColorHeader" xml:space="preserve">
     <value>కాంట్రాస్ట్ &amp; రంగు</value>
+  </data>
+  <data name="ContrastInfoSubtitle" xml:space="preserve">
+    <value>స్క్రీన్‌ను చదవడం సులభతరం చేయడానికి హై కాంట్రాస్ట్‌ను ఆన్ లేదా ఆఫ్ చేయండి.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>కాంట్రాస్ట్</value>
@@ -49,6 +55,9 @@
   <data name="CopyrightNoticeFormat" xml:space="preserve">
     <value>కాపీరైట్ {0} Raising the Floor - US, Inc.</value>
   </data>
+  <data name="DarkInfoSubtitle" xml:space="preserve">
+    <value>డార్క్ మోడ్‌ను ఆన్ లేదా ఆఫ్ చేయండి.</value>
+  </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>ముదురు</value>
   </data>
@@ -58,11 +67,20 @@
   <data name="DecreaseTextSizeAccessibleName" xml:space="preserve">
     <value>వచన పరిమాణాన్ని తగ్గించు</value>
   </data>
+  <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>మీ స్క్రీన్‌పై ఉన్న ప్రతిదాన్ని చిన్నదిగా చేయండి.</value>
+  </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>MorphicBarను దాచండి</value>
   </data>
   <data name="IncreaseTextSizeAccessibleName" xml:space="preserve">
     <value>వచన పరిమాణాన్ని పెంచు</value>
+  </data>
+  <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>మీ స్క్రీన్‌పై ఉన్న ప్రతిదాన్ని పెద్దదిగా చేయండి.</value>
+  </data>
+  <data name="InfoRightClickSettingsHint" xml:space="preserve">
+    <value>సెట్టింగ్‌లను మార్చడానికి రైట్-క్లిక్ చేయండి.</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Morphic గురించి మరింత తెలుసుకోండి</value>
@@ -73,11 +91,20 @@
   <data name="MagnifierHideAccessibleName" xml:space="preserve">
     <value>మాగ్నిఫైయర్‌ను దాచు</value>
   </data>
+  <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
+    <value>మాగ్నిఫైయర్‌ను ఆఫ్ చేయండి.</value>
+  </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>దాచు</value>
   </data>
+  <data name="MagnifierInfoSubtitle" xml:space="preserve">
+    <value>మీ స్క్రీన్‌లో కొంత భాగాన్ని పెద్దదిగా చేయడానికి జూమ్ ఇన్ చేయండి.</value>
+  </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>మాగ్నిఫైయర్‌ను చూపించు</value>
+  </data>
+  <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
+    <value>మీ మౌస్‌ను అనుసరించే మాగ్నిఫైయింగ్ లెన్స్‌ను ఆన్ చేయండి.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>చూపించు</value>
@@ -87,6 +114,9 @@
   </data>
   <data name="MorphicForWindows.Text" xml:space="preserve">
     <value>Windows కోసం Morphic</value>
+  </data>
+  <data name="NightInfoSubtitle" xml:space="preserve">
+    <value>స్క్రీన్ రంగులను వెచ్చగా చేసి కంటి ఒత్తిడిని తగ్గించడానికి నైట్ లైట్‌ను ఆన్ లేదా ఆఫ్ చేయండి.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>రాత్రి</value>
@@ -139,17 +169,41 @@
   <data name="ReadSelectedHeader" xml:space="preserve">
     <value>ఎంచుకున్నది చదవండి</value>
   </data>
+  <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
+    <value>మీరు ఎంచుకున్న వచనాన్ని బిగ్గరగా చదవండి లేదా చదవడం ఆపండి.</value>
+  </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>ఎంచుకున్న వచనాన్ని చదవండి</value>
+  </data>
+  <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
+    <value>మీరు ఎంచుకున్న వచనాన్ని బిగ్గరగా చదవండి.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>ఎంచుకున్న వచనాన్ని చదవడం ఆపు</value>
   </data>
+  <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
+    <value>బిగ్గరగా చదవడం ఆపండి.</value>
+  </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>MorphicBar చూపించు</value>
   </data>
+  <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
+    <value>The text cannot get any larger.</value>
+  </data>
+  <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
+    <value>The text cannot get any smaller.</value>
+  </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>టెక్స్ట్ పరిమాణం</value>
+  </data>
+  <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
+    <value>మీ స్క్రీన్‌పై వచనాన్ని పెద్దదిగా లేదా చిన్నదిగా చేయండి.</value>
+  </data>
+  <data name="SizeOfTextLargerLabel" xml:space="preserve">
+    <value>పెద్దది</value>
+  </data>
+  <data name="SizeOfTextSmallerLabel" xml:space="preserve">
+    <value>చిన్నది</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>స్క్రీన్‌లోని కొంత భాగాన్ని స్నిప్ చేసి కాపీ చేయండి</value>
@@ -159,5 +213,8 @@
   </data>
   <data name="SnipHeader" xml:space="preserve">
     <value>స్నిప్</value>
+  </data>
+  <data name="SnipInfoSubtitle" xml:space="preserve">
+    <value>మీ స్క్రీన్‌లో కొంత భాగం చిత్రాన్ని తీసుకోండి. {0} క్లిక్ చేసి, ఆపై మీరు క్యాప్చర్ చేయాలనుకుంటున్న ప్రాంతం మీదుగా మీ మౌస్‌ను లాగండి.</value>
   </data>
 </root>

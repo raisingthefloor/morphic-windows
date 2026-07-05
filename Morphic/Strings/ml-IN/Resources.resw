@@ -34,11 +34,17 @@
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>കളർ ഫിൽട്ടറുകൾ</value>
   </data>
+  <data name="ColorInfoSubtitle" xml:space="preserve">
+    <value>വർണ്ണ കാഴ്ചാ വ്യത്യാസങ്ങൾക്കായി നിറങ്ങൾ ക്രമീകരിക്കാൻ കളർ ഫിൽട്ടറുകൾ ഓണാക്കുകയോ ഓഫാക്കുകയോ ചെയ്യുക.</value>
+  </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>കളർ</value>
   </data>
   <data name="ContrastAndColorHeader" xml:space="preserve">
     <value>കോൺട്രാസ്റ്റും കളറും</value>
+  </data>
+  <data name="ContrastInfoSubtitle" xml:space="preserve">
+    <value>സ്ക്രീൻ വായിക്കാൻ എളുപ്പമാക്കാൻ ഹൈ കോൺട്രാസ്റ്റ് ഓണാക്കുകയോ ഓഫാക്കുകയോ ചെയ്യുക.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>കോൺട്രാസ്റ്റ്</value>
@@ -49,6 +55,9 @@
   <data name="CopyrightNoticeFormat" xml:space="preserve">
     <value>പകർപ്പവകാശം {0} Raising the Floor - US, Inc.</value>
   </data>
+  <data name="DarkInfoSubtitle" xml:space="preserve">
+    <value>ഡാർക്ക് മോഡ് ഓണാക്കുകയോ ഓഫാക്കുകയോ ചെയ്യുക.</value>
+  </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>ഡാർക്ക്</value>
   </data>
@@ -58,11 +67,20 @@
   <data name="DecreaseTextSizeAccessibleName" xml:space="preserve">
     <value>ടെക്സ്റ്റിന്റെ വലുപ്പം കുറയ്ക്കുക</value>
   </data>
+  <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>നിങ്ങളുടെ സ്ക്രീനിലുള്ളതെല്ലാം ചെറുതാക്കുക.</value>
+  </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>MorphicBar മറയ്ക്കുക</value>
   </data>
   <data name="IncreaseTextSizeAccessibleName" xml:space="preserve">
     <value>ടെക്സ്റ്റിന്റെ വലുപ്പം കൂട്ടുക</value>
+  </data>
+  <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>നിങ്ങളുടെ സ്ക്രീനിലുള്ളതെല്ലാം വലുതാക്കുക.</value>
+  </data>
+  <data name="InfoRightClickSettingsHint" xml:space="preserve">
+    <value>ക്രമീകരണങ്ങൾ മാറ്റാൻ റൈറ്റ്-ക്ലിക്ക് ചെയ്യുക.</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Morphic-നെക്കുറിച്ച് കൂടുതലറിയുക</value>
@@ -73,11 +91,20 @@
   <data name="MagnifierHideAccessibleName" xml:space="preserve">
     <value>മാഗ്നിഫയർ മറയ്ക്കുക</value>
   </data>
+  <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
+    <value>മാഗ്നിഫയർ ഓഫാക്കുക.</value>
+  </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>മറയ്ക്കുക</value>
   </data>
+  <data name="MagnifierInfoSubtitle" xml:space="preserve">
+    <value>നിങ്ങളുടെ സ്ക്രീനിന്റെ ഒരു ഭാഗം വലുതാക്കാൻ സൂം ഇൻ ചെയ്യുക.</value>
+  </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>മാഗ്നിഫയർ കാണിക്കുക</value>
+  </data>
+  <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
+    <value>നിങ്ങളുടെ മൗസിനെ പിന്തുടരുന്ന മാഗ്നിഫൈയിംഗ് ലെൻസ് ഓണാക്കുക.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>കാണിക്കുക</value>
@@ -87,6 +114,9 @@
   </data>
   <data name="MorphicForWindows.Text" xml:space="preserve">
     <value>Windows-നുള്ള Morphic</value>
+  </data>
+  <data name="NightInfoSubtitle" xml:space="preserve">
+    <value>സ്ക്രീൻ നിറങ്ങൾ ഊഷ്മളമാക്കാനും കണ്ണിന്റെ ആയാസം കുറയ്ക്കാനും നൈറ്റ് ലൈറ്റ് ഓണാക്കുകയോ ഓഫാക്കുകയോ ചെയ്യുക.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>രാത്രി</value>
@@ -139,17 +169,41 @@
   <data name="ReadSelectedHeader" xml:space="preserve">
     <value>തിരഞ്ഞെടുത്തത് വായിക്കുക</value>
   </data>
+  <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
+    <value>നിങ്ങൾ തിരഞ്ഞെടുത്ത ടെക്സ്റ്റ് ഉറക്കെ വായിക്കുക, അല്ലെങ്കിൽ വായന നിർത്തുക.</value>
+  </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>തിരഞ്ഞെടുത്ത ടെക്സ്റ്റ് വായിക്കുക</value>
+  </data>
+  <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
+    <value>നിങ്ങൾ തിരഞ്ഞെടുത്ത ടെക്സ്റ്റ് ഉറക്കെ വായിക്കുക.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>തിരഞ്ഞെടുത്ത ടെക്സ്റ്റ് വായിക്കുന്നത് നിർത്തുക</value>
   </data>
+  <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
+    <value>ഉറക്കെ വായിക്കുന്നത് നിർത്തുക.</value>
+  </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>MorphicBar കാണിക്കുക</value>
   </data>
+  <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
+    <value>ടെക്സ്റ്റ് ഇതിലും വലുതാക്കാൻ കഴിയില്ല.</value>
+  </data>
+  <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
+    <value>ടെക്സ്റ്റ് ഇതിലും ചെറുതാക്കാൻ കഴിയില്ല.</value>
+  </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>ടെക്സ്റ്റിന്റെ വലുപ്പം</value>
+  </data>
+  <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
+    <value>നിങ്ങളുടെ സ്ക്രീനിലെ ടെക്സ്റ്റ് വലുതാക്കുകയോ ചെറുതാക്കുകയോ ചെയ്യുക.</value>
+  </data>
+  <data name="SizeOfTextLargerLabel" xml:space="preserve">
+    <value>വലുത്</value>
+  </data>
+  <data name="SizeOfTextSmallerLabel" xml:space="preserve">
+    <value>ചെറുത്</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>സ്ക്രീനിന്റെ ഒരു ഭാഗം സ്നിപ്പ് ചെയ്ത് പകർത്തുക</value>
@@ -159,5 +213,8 @@
   </data>
   <data name="SnipHeader" xml:space="preserve">
     <value>സ്നിപ്പ്</value>
+  </data>
+  <data name="SnipInfoSubtitle" xml:space="preserve">
+    <value>നിങ്ങളുടെ സ്ക്രീനിന്റെ ഒരു ഭാഗത്തിന്റെ ചിത്രം എടുക്കുക. {0} ക്ലിക്ക് ചെയ്യുക, തുടർന്ന് പകർത്താൻ ആഗ്രഹിക്കുന്ന ഭാഗത്തിലൂടെ മൗസ് വലിച്ചിടുക.</value>
   </data>
 </root>

@@ -34,11 +34,17 @@
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>מסנני צבע</value>
   </data>
+  <data name="ColorInfoSubtitle" xml:space="preserve">
+    <value>הפעל או כבה מסנני צבע כדי להתאים צבעים להבדלים בראיית צבעים.</value>
+  </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>צבע</value>
   </data>
   <data name="ContrastAndColorHeader" xml:space="preserve">
     <value>ניגודיות וצבע</value>
+  </data>
+  <data name="ContrastInfoSubtitle" xml:space="preserve">
+    <value>הפעל או כבה ניגודיות גבוהה כדי להקל על הקריאה מהמסך.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>ניגודיות</value>
@@ -49,6 +55,9 @@
   <data name="CopyrightNoticeFormat" xml:space="preserve">
     <value>זכויות יוצרים {0} Raising the Floor - US, Inc.</value>
   </data>
+  <data name="DarkInfoSubtitle" xml:space="preserve">
+    <value>הפעל או כבה מצב כהה.</value>
+  </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>כהה</value>
   </data>
@@ -58,11 +67,20 @@
   <data name="DecreaseTextSizeAccessibleName" xml:space="preserve">
     <value>הקטן את גודל הטקסט</value>
   </data>
+  <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>הקטן את כל הפריטים על המסך.</value>
+  </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>הסתר את MorphicBar</value>
   </data>
   <data name="IncreaseTextSizeAccessibleName" xml:space="preserve">
     <value>הגדל את גודל הטקסט</value>
+  </data>
+  <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>הגדל את כל הפריטים על המסך.</value>
+  </data>
+  <data name="InfoRightClickSettingsHint" xml:space="preserve">
+    <value>לחץ לחיצה ימנית כדי לשנות הגדרות.</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>מידע נוסף על Morphic</value>
@@ -73,11 +91,20 @@
   <data name="MagnifierHideAccessibleName" xml:space="preserve">
     <value>הסתר זכוכית מגדלת</value>
   </data>
+  <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
+    <value>כבה את הזכוכית המגדלת.</value>
+  </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>הסתר</value>
   </data>
+  <data name="MagnifierInfoSubtitle" xml:space="preserve">
+    <value>הגדל תצוגה כדי להגדיל חלק מהמסך.</value>
+  </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>הצג זכוכית מגדלת</value>
+  </data>
+  <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
+    <value>הפעל עדשת הגדלה שעוקבת אחר סמן העכבר.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>הצג</value>
@@ -87,6 +114,9 @@
   </data>
   <data name="MorphicForWindows.Text" xml:space="preserve">
     <value>Morphic עבור Windows</value>
+  </data>
+  <data name="NightInfoSubtitle" xml:space="preserve">
+    <value>הפעל או כבה 'תאורת לילה' כדי לחמם את צבעי המסך ולהפחית את מאמץ העיניים.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>לילה</value>
@@ -139,17 +169,41 @@
   <data name="ReadSelectedHeader" xml:space="preserve">
     <value>הקראת הבחירה</value>
   </data>
+  <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
+    <value>הקרא בקול את הטקסט שבחרת, או הפסק את ההקראה.</value>
+  </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>הקרא את הטקסט שנבחר</value>
+  </data>
+  <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
+    <value>הקרא בקול את הטקסט שבחרת.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>הפסק להקריא את הטקסט שנבחר</value>
   </data>
+  <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
+    <value>הפסק הקראה בקול.</value>
+  </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>הצג את MorphicBar</value>
   </data>
+  <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
+    <value>לא ניתן להגדיל עוד את הטקסט.</value>
+  </data>
+  <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
+    <value>לא ניתן להקטין עוד את הטקסט.</value>
+  </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>גודל הטקסט</value>
+  </data>
+  <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
+    <value>הגדל או הקטן את הטקסט על המסך.</value>
+  </data>
+  <data name="SizeOfTextLargerLabel" xml:space="preserve">
+    <value>גדול יותר</value>
+  </data>
+  <data name="SizeOfTextSmallerLabel" xml:space="preserve">
+    <value>קטן יותר</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>חיתוך והעתקת חלק מהמסך</value>
@@ -159,5 +213,8 @@
   </data>
   <data name="SnipHeader" xml:space="preserve">
     <value>חיתוך</value>
+  </data>
+  <data name="SnipInfoSubtitle" xml:space="preserve">
+    <value>צלם תמונה של חלק מהמסך. לחץ על {0}, ולאחר מכן גרור את העכבר על פני האזור שברצונך ללכוד.</value>
   </data>
 </root>

@@ -34,11 +34,17 @@
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>د رنګ فلټرونه</value>
   </data>
+  <data name="ColorInfoSubtitle" xml:space="preserve">
+    <value>د رنګ لید توپیرونو لپاره د رنګونو تنظیمولو لپاره د رنګ فلټرونه فعال یا غیر فعال کړئ.</value>
+  </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>رنګ</value>
   </data>
   <data name="ContrastAndColorHeader" xml:space="preserve">
     <value>کنتراست او رنګ</value>
+  </data>
+  <data name="ContrastInfoSubtitle" xml:space="preserve">
+    <value>د سکرین لوستل اسانه کولو لپاره لوړ کنټراسټ فعال یا غیر فعال کړئ.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>کنتراست</value>
@@ -49,6 +55,9 @@
   <data name="CopyrightNoticeFormat" xml:space="preserve">
     <value>د چاپ حق {0} Raising the Floor - US, Inc.</value>
   </data>
+  <data name="DarkInfoSubtitle" xml:space="preserve">
+    <value>تیاره حالت فعال یا غیر فعال کړئ.</value>
+  </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>تیاره</value>
   </data>
@@ -58,11 +67,20 @@
   <data name="DecreaseTextSizeAccessibleName" xml:space="preserve">
     <value>د متن اندازه کمول</value>
   </data>
+  <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>ستاسو په سکرین کې هر څه کوچني کړئ.</value>
+  </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>MorphicBar پټول</value>
   </data>
   <data name="IncreaseTextSizeAccessibleName" xml:space="preserve">
     <value>د متن اندازه زیاتول</value>
+  </data>
+  <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>ستاسو په سکرین کې هر څه لوی کړئ.</value>
+  </data>
+  <data name="InfoRightClickSettingsHint" xml:space="preserve">
+    <value>د امستنو بدلولو لپاره ښي کلیک وکړئ.</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>د Morphic په اړه نور زده کړئ</value>
@@ -73,11 +91,20 @@
   <data name="MagnifierHideAccessibleName" xml:space="preserve">
     <value>لويونکی پټول</value>
   </data>
+  <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
+    <value>Turn off the magnifier.</value>
+  </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>پټول</value>
   </data>
+  <data name="MagnifierInfoSubtitle" xml:space="preserve">
+    <value>د خپل سکرین یوه برخه لویه کولو لپاره زوم ان کړئ.</value>
+  </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>لويونکی ښکاره کول</value>
+  </data>
+  <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
+    <value>Turn on a magnifying lens that follows your mouse.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>ښکاره کول</value>
@@ -87,6 +114,9 @@
   </data>
   <data name="MorphicForWindows.Text" xml:space="preserve">
     <value>د Windows لپاره Morphic</value>
+  </data>
+  <data name="NightInfoSubtitle" xml:space="preserve">
+    <value>د سکرین رنګونو ګرمولو او د سترګو فشار کمولو لپاره د شپې رڼا فعاله یا غیر فعاله کړئ.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>شپه</value>
@@ -139,17 +169,41 @@
   <data name="ReadSelectedHeader" xml:space="preserve">
     <value>ټاکل شوی ولولئ</value>
   </data>
+  <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
+    <value>خپل ټاکل شوی متن په لوړ غږ ولولئ، یا لوستل ودروئ.</value>
+  </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>ټاکل شوی متن ولولئ</value>
+  </data>
+  <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
+    <value>خپل ټاکل شوی متن په لوړ غږ ولولئ.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>د ټاکل شوي متن لوستل ودروئ</value>
   </data>
+  <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
+    <value>په لوړ غږ لوستل ودروئ.</value>
+  </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>MorphicBar وښایئ</value>
   </data>
+  <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
+    <value>متن نور نه شي لویېدای.</value>
+  </data>
+  <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
+    <value>The text cannot get any smaller.</value>
+  </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>د متن اندازه</value>
+  </data>
+  <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
+    <value>ستاسو په سکرین کې متن لوی یا کوچنی کړئ.</value>
+  </data>
+  <data name="SizeOfTextLargerLabel" xml:space="preserve">
+    <value>لوی</value>
+  </data>
+  <data name="SizeOfTextSmallerLabel" xml:space="preserve">
+    <value>کوچنی</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>د سکرین یوه برخه پرې کړئ او کاپي یې کړئ</value>
@@ -159,5 +213,8 @@
   </data>
   <data name="SnipHeader" xml:space="preserve">
     <value>پرې کول</value>
+  </data>
+  <data name="SnipInfoSubtitle" xml:space="preserve">
+    <value>د خپل سکرین د یوې برخې انځور واخلئ. په {0} کلیک وکړئ، بیا خپل ماوس د هغې ساحې پر مخ راکش کړئ چې غواړئ یې واخلئ.</value>
   </data>
 </root>

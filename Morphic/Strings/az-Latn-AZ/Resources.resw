@@ -34,11 +34,17 @@
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>Rəng filtrləri</value>
   </data>
+  <data name="ColorInfoSubtitle" xml:space="preserve">
+    <value>Rəng görmə fərqlərinə görə rəngləri tənzimləmək üçün rəng filtrlərini yandırın və ya söndürün.</value>
+  </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>Rəng</value>
   </data>
   <data name="ContrastAndColorHeader" xml:space="preserve">
     <value>Kontrast və Rəng</value>
+  </data>
+  <data name="ContrastInfoSubtitle" xml:space="preserve">
+    <value>Ekranın oxunmasını asanlaşdırmaq üçün yüksək kontrastı yandırıb-söndürün.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>Kontrast</value>
@@ -49,6 +55,9 @@
   <data name="CopyrightNoticeFormat" xml:space="preserve">
     <value>Müəllif hüquqları {0} Raising the Floor - US, Inc.</value>
   </data>
+  <data name="DarkInfoSubtitle" xml:space="preserve">
+    <value>Qaranlıq rejimi yandırın və ya söndürün.</value>
+  </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>Tünd</value>
   </data>
@@ -58,11 +67,20 @@
   <data name="DecreaseTextSizeAccessibleName" xml:space="preserve">
     <value>Mətnin ölçüsünü kiçilt</value>
   </data>
+  <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>Ekranınızdakı hər şeyi kiçildin.</value>
+  </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>MorphicBar-ı gizlət</value>
   </data>
   <data name="IncreaseTextSizeAccessibleName" xml:space="preserve">
     <value>Mətnin ölçüsünü böyüt</value>
+  </data>
+  <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>Ekranınızdakı hər şeyi böyüdün.</value>
+  </data>
+  <data name="InfoRightClickSettingsHint" xml:space="preserve">
+    <value>Parametrləri dəyişmək üçün sağ klikləyin.</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Morphic haqqında ətraflı öyrən</value>
@@ -73,11 +91,20 @@
   <data name="MagnifierHideAccessibleName" xml:space="preserve">
     <value>Böyüdücünü gizlət</value>
   </data>
+  <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
+    <value>Böyüdücünü söndürün.</value>
+  </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>Gizlət</value>
   </data>
+  <data name="MagnifierInfoSubtitle" xml:space="preserve">
+    <value>Ekranınızın bir hissəsini böyütmək üçün yaxınlaşdırın.</value>
+  </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>Böyüdücünü göstər</value>
+  </data>
+  <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
+    <value>Siçanınızı izləyən böyüdücü linzanı yandırın.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Göstər</value>
@@ -87,6 +114,9 @@
   </data>
   <data name="MorphicForWindows.Text" xml:space="preserve">
     <value>Windows üçün Morphic</value>
+  </data>
+  <data name="NightInfoSubtitle" xml:space="preserve">
+    <value>Ekran rənglərini isitmək və göz yorğunluğunu azaltmaq üçün Gecə işığını yandırın və ya söndürün.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>Gecə</value>
@@ -139,17 +169,41 @@
   <data name="ReadSelectedHeader" xml:space="preserve">
     <value>Seçiləni Oxu</value>
   </data>
+  <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
+    <value>Seçdiyiniz mətni ucadan oxuyun və ya oxumağı dayandırın.</value>
+  </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>Seçilmiş mətni oxu</value>
+  </data>
+  <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
+    <value>Seçdiyiniz mətni ucadan oxuyun.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Seçilmiş mətni oxumağı dayandırın</value>
   </data>
+  <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
+    <value>Ucadan oxumağı dayandırın.</value>
+  </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>MorphicBar-ı göstər</value>
   </data>
+  <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
+    <value>Mətn daha da böyüdülə bilməz.</value>
+  </data>
+  <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
+    <value>Mətn daha da kiçildilə bilməz.</value>
+  </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>Mətn ölçüsü</value>
+  </data>
+  <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
+    <value>Ekranınızdakı mətni böyüdün və ya kiçildin.</value>
+  </data>
+  <data name="SizeOfTextLargerLabel" xml:space="preserve">
+    <value>Daha böyük</value>
+  </data>
+  <data name="SizeOfTextSmallerLabel" xml:space="preserve">
+    <value>Daha kiçik</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>Ekranın bir hissəsini kəs və kopyala</value>
@@ -159,5 +213,8 @@
   </data>
   <data name="SnipHeader" xml:space="preserve">
     <value>Kəsmə</value>
+  </data>
+  <data name="SnipInfoSubtitle" xml:space="preserve">
+    <value>Ekranınızın bir hissəsinin şəklini çəkin. {0} düyməsinə klikləyin, sonra çəkmək istədiyiniz sahə boyunca siçanı sürükləyin.</value>
   </data>
 </root>

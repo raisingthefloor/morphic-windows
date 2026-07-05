@@ -34,11 +34,17 @@
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>색상 필터</value>
   </data>
+  <data name="ColorInfoSubtitle" xml:space="preserve">
+    <value>색 필터를 켜거나 꺼서 색각 이상에 맞게 색을 조정합니다.</value>
+  </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>색상</value>
   </data>
   <data name="ContrastAndColorHeader" xml:space="preserve">
     <value>대비 및 색상</value>
+  </data>
+  <data name="ContrastInfoSubtitle" xml:space="preserve">
+    <value>고대비를 켜거나 꺼서 화면을 더 쉽게 읽을 수 있도록 합니다.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>콘트라스트</value>
@@ -49,6 +55,9 @@
   <data name="CopyrightNoticeFormat" xml:space="preserve">
     <value>저작권 © {0} Raising the Floor - US, Inc.</value>
   </data>
+  <data name="DarkInfoSubtitle" xml:space="preserve">
+    <value>다크 모드를 켜거나 끕니다.</value>
+  </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>다크</value>
   </data>
@@ -58,11 +67,20 @@
   <data name="DecreaseTextSizeAccessibleName" xml:space="preserve">
     <value>텍스트 크기 줄이기</value>
   </data>
+  <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>화면의 모든 항목을 더 작게 만듭니다.</value>
+  </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>MorphicBar 숨기기</value>
   </data>
   <data name="IncreaseTextSizeAccessibleName" xml:space="preserve">
     <value>텍스트 크기 늘리기</value>
+  </data>
+  <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>화면의 모든 항목을 더 크게 만듭니다.</value>
+  </data>
+  <data name="InfoRightClickSettingsHint" xml:space="preserve">
+    <value>설정을 변경하려면 마우스 오른쪽 단추로 클릭하세요.</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Morphic에 대해 더 알아보기</value>
@@ -73,11 +91,20 @@
   <data name="MagnifierHideAccessibleName" xml:space="preserve">
     <value>돋보기 숨기기</value>
   </data>
+  <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
+    <value>돋보기를 끕니다.</value>
+  </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>숨다</value>
   </data>
+  <data name="MagnifierInfoSubtitle" xml:space="preserve">
+    <value>확대하여 화면의 일부를 크게 봅니다.</value>
+  </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>돋보기 표시</value>
+  </data>
+  <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
+    <value>마우스를 따라다니는 돋보기 렌즈를 켭니다.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>보여주다</value>
@@ -87,6 +114,9 @@
   </data>
   <data name="MorphicForWindows.Text" xml:space="preserve">
     <value>Windows용 Morphic</value>
+  </data>
+  <data name="NightInfoSubtitle" xml:space="preserve">
+    <value>야간 모드를 켜거나 꺼서 화면 색상을 따뜻하게 하고 눈의 피로를 줄입니다.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>야간</value>
@@ -139,17 +169,41 @@
   <data name="ReadSelectedHeader" xml:space="preserve">
     <value>선택 항목 읽기</value>
   </data>
+  <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
+    <value>선택한 텍스트를 소리 내어 읽거나 읽기를 중지합니다.</value>
+  </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>선택한 텍스트 읽기</value>
+  </data>
+  <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
+    <value>선택한 텍스트를 소리 내어 읽습니다.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>선택한 텍스트 읽기 중지</value>
   </data>
+  <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
+    <value>소리 내어 읽기를 중지합니다.</value>
+  </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>MorphicBar 보여주다</value>
   </data>
+  <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
+    <value>텍스트를 더 크게 할 수 없습니다.</value>
+  </data>
+  <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
+    <value>텍스트를 더 작게 할 수 없습니다.</value>
+  </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>텍스트 크기</value>
+  </data>
+  <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
+    <value>화면의 텍스트를 더 크게 또는 더 작게 만듭니다.</value>
+  </data>
+  <data name="SizeOfTextLargerLabel" xml:space="preserve">
+    <value>더 크게</value>
+  </data>
+  <data name="SizeOfTextSmallerLabel" xml:space="preserve">
+    <value>더 작게</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>화면 일부 캡처 및 복사</value>
@@ -159,5 +213,8 @@
   </data>
   <data name="SnipHeader" xml:space="preserve">
     <value>자르다</value>
+  </data>
+  <data name="SnipInfoSubtitle" xml:space="preserve">
+    <value>화면의 일부를 캡처합니다. {0}을(를) 클릭한 다음 캡처할 영역 위로 마우스를 드래그하세요.</value>
   </data>
 </root>

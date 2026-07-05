@@ -34,11 +34,17 @@
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>رنگ جا فلٽر</value>
   </data>
+  <data name="ColorInfoSubtitle" xml:space="preserve">
+    <value>رنگ جي بصارت جي فرقن لاءِ رنگن کي ترتيب ڏيڻ لاءِ ڪلر فلٽر آن يا آف ڪريو.</value>
+  </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>رنگ</value>
   </data>
   <data name="ContrastAndColorHeader" xml:space="preserve">
     <value>ڪنٽراسٽ ۽ رنگ</value>
+  </data>
+  <data name="ContrastInfoSubtitle" xml:space="preserve">
+    <value>اسڪرين کي پڙهڻ ۾ آسان بڻائڻ لاءِ هاءِ ڪنٽراسٽ آن يا آف ڪريو.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>ڪنٽراسٽ</value>
@@ -49,6 +55,9 @@
   <data name="CopyrightNoticeFormat" xml:space="preserve">
     <value>ڪاپي رائيٽ {0} Raising the Floor - US, Inc.</value>
   </data>
+  <data name="DarkInfoSubtitle" xml:space="preserve">
+    <value>ڊارڪ موڊ آن يا آف ڪريو.</value>
+  </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>ڊارڪ</value>
   </data>
@@ -58,11 +67,20 @@
   <data name="DecreaseTextSizeAccessibleName" xml:space="preserve">
     <value>متن جي سائيز گھٽايو</value>
   </data>
+  <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>پنهنجي اسڪرين تي سڀ ڪجهه ننڍو ڪريو.</value>
+  </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>MorphicBar لڪايو</value>
   </data>
   <data name="IncreaseTextSizeAccessibleName" xml:space="preserve">
     <value>متن جي سائيز وڌايو</value>
+  </data>
+  <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>پنهنجي اسڪرين تي سڀ ڪجهه وڏو ڪريو.</value>
+  </data>
+  <data name="InfoRightClickSettingsHint" xml:space="preserve">
+    <value>سيٽنگون تبديل ڪرڻ لاءِ رائيٽ-ڪلڪ ڪريو.</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Morphic بابت وڌيڪ ڄاڻو</value>
@@ -73,11 +91,20 @@
   <data name="MagnifierHideAccessibleName" xml:space="preserve">
     <value>ميگني فائر لڪايو</value>
   </data>
+  <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
+    <value>ميگنيفائر بند ڪريو.</value>
+  </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>لڪايو</value>
   </data>
+  <data name="MagnifierInfoSubtitle" xml:space="preserve">
+    <value>Zoom in to enlarge part of your screen.</value>
+  </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>ميگني فائر ڏيکاريو</value>
+  </data>
+  <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
+    <value>پنهنجي مائوس جي پٺيان هلندڙ ميگنيفائنگ لينس آن ڪريو.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>ڏيکاريو</value>
@@ -87,6 +114,9 @@
   </data>
   <data name="MorphicForWindows.Text" xml:space="preserve">
     <value>Morphic for Windows</value>
+  </data>
+  <data name="NightInfoSubtitle" xml:space="preserve">
+    <value>اسڪرين جا رنگ گرم ڪرڻ ۽ اکين جو ٿڪ گهٽائڻ لاءِ نائيٽ لائيٽ آن يا آف ڪريو.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>رات</value>
@@ -139,17 +169,41 @@
   <data name="ReadSelectedHeader" xml:space="preserve">
     <value>چونڊيل پڙهو</value>
   </data>
+  <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
+    <value>پنهنجو چونڊيل ٽيڪسٽ وڏي آواز سان پڙهو، يا پڙهڻ بند ڪريو.</value>
+  </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>چونڊيل متن پڙهو</value>
+  </data>
+  <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
+    <value>پنهنجو چونڊيل ٽيڪسٽ وڏي آواز سان پڙهو.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>چونڊيل متن پڙهڻ بند ڪريو</value>
   </data>
+  <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
+    <value>وڏي آواز سان پڙهڻ بند ڪريو.</value>
+  </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>MorphicBar ڏيکاريو</value>
   </data>
+  <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
+    <value>متن هن کان وڌيڪ وڏو نٿو ٿي سگھي.</value>
+  </data>
+  <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
+    <value>متن هن کان وڌيڪ ننڍو نٿو ٿي سگھي.</value>
+  </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>متن جي سائيز</value>
+  </data>
+  <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
+    <value>پنهنجي اسڪرين تي متن وڏو يا ننڍو ڪريو.</value>
+  </data>
+  <data name="SizeOfTextLargerLabel" xml:space="preserve">
+    <value>وڏو</value>
+  </data>
+  <data name="SizeOfTextSmallerLabel" xml:space="preserve">
+    <value>ننڍو</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>اسڪرين جو حصو سنيپ ڪري ڪاپي ڪريو</value>
@@ -159,5 +213,8 @@
   </data>
   <data name="SnipHeader" xml:space="preserve">
     <value>سنيپ</value>
+  </data>
+  <data name="SnipInfoSubtitle" xml:space="preserve">
+    <value>پنهنجي اسڪرين جي هڪ حصي جي تصوير وٺو. {0} تي ڪلڪ ڪريو، پوءِ پنهنجي ماؤس کي ان علائقي تي ڊريگ ڪريو جنهن کي توهان ڪيپچر ڪرڻ چاهيو ٿا.</value>
   </data>
 </root>

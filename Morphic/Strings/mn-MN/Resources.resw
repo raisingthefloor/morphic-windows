@@ -34,11 +34,17 @@
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>Өнгөний шүүлтүүрүүд</value>
   </data>
+  <data name="ColorInfoSubtitle" xml:space="preserve">
+    <value>Өнгө ялгах харааны онцлогт тааруулж өнгөний шүүлтүүрийг асаах эсвэл унтраах.</value>
+  </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>Өнгө</value>
   </data>
   <data name="ContrastAndColorHeader" xml:space="preserve">
     <value>Тодосгол ба өнгө</value>
+  </data>
+  <data name="ContrastInfoSubtitle" xml:space="preserve">
+    <value>Дэлгэцийг уншихад хялбар болгохын тулд өндөр тодролыг асаах эсвэл унтраах.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>Тодосгол</value>
@@ -49,6 +55,9 @@
   <data name="CopyrightNoticeFormat" xml:space="preserve">
     <value>Зохиогчийн эрх {0} Raising the Floor - US, Inc.</value>
   </data>
+  <data name="DarkInfoSubtitle" xml:space="preserve">
+    <value>Бараан горимыг асаах эсвэл унтраах.</value>
+  </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>Бараан</value>
   </data>
@@ -58,11 +67,20 @@
   <data name="DecreaseTextSizeAccessibleName" xml:space="preserve">
     <value>Текстийн хэмжээг багасгах</value>
   </data>
+  <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>Дэлгэц дээрх бүх зүйлийг жижигрүүлэх.</value>
+  </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>MorphicBar-ыг нуух</value>
   </data>
   <data name="IncreaseTextSizeAccessibleName" xml:space="preserve">
     <value>Текстийн хэмжээг нэмэгдүүлэх</value>
+  </data>
+  <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>Дэлгэц дээрх бүх зүйлийг томруулах.</value>
+  </data>
+  <data name="InfoRightClickSettingsHint" xml:space="preserve">
+    <value>Тохиргоог өөрчлөхийн тулд баруун товшино уу.</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Morphic-ийн талаар дэлгэрэнгүй</value>
@@ -73,11 +91,20 @@
   <data name="MagnifierHideAccessibleName" xml:space="preserve">
     <value>Томруулагчийг нуух</value>
   </data>
+  <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
+    <value>Томруулагчийг унтраах.</value>
+  </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>Нуух</value>
   </data>
+  <data name="MagnifierInfoSubtitle" xml:space="preserve">
+    <value>Дэлгэцийнхээ хэсгийг томруулахын тулд ойртуулах.</value>
+  </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>Томруулагчийг харуулах</value>
+  </data>
+  <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
+    <value>Хулганыг дагадаг томруулдаг линзийг асаах.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Харуулах</value>
@@ -87,6 +114,9 @@
   </data>
   <data name="MorphicForWindows.Text" xml:space="preserve">
     <value>Windows-д зориулсан Morphic</value>
+  </data>
+  <data name="NightInfoSubtitle" xml:space="preserve">
+    <value>Дэлгэцийн өнгийг дулаацуулж нүдний ачааллыг бууруулахын тулд Шөнийн гэрлийг асаах эсвэл унтраах.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>Шөнийн</value>
@@ -139,17 +169,41 @@
   <data name="ReadSelectedHeader" xml:space="preserve">
     <value>Сонгосныг унших</value>
   </data>
+  <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
+    <value>Сонгосон текстээ чангаар уншуулах эсвэл уншихыг зогсоох.</value>
+  </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>Сонгосон текстийг унших</value>
+  </data>
+  <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
+    <value>Сонгосон текстээ чангаар уншуулах.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Сонгосон текстийг уншихаа зогсоох</value>
   </data>
+  <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
+    <value>Чангаар уншихыг зогсоох.</value>
+  </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>MorphicBar-ыг харуулах</value>
   </data>
+  <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
+    <value>Текстийг үүнээс илүү томруулах боломжгүй.</value>
+  </data>
+  <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
+    <value>Текстийг үүнээс илүү жижигрүүлэх боломжгүй.</value>
+  </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>Текстийн хэмжээ</value>
+  </data>
+  <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
+    <value>Дэлгэц дээрх текстийг томруулах эсвэл жижигрүүлэх.</value>
+  </data>
+  <data name="SizeOfTextLargerLabel" xml:space="preserve">
+    <value>Илүү том</value>
+  </data>
+  <data name="SizeOfTextSmallerLabel" xml:space="preserve">
+    <value>Илүү жижиг</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>Дэлгэцийн хэсгийг хайчилж хуулах</value>
@@ -159,5 +213,8 @@
   </data>
   <data name="SnipHeader" xml:space="preserve">
     <value>Хайчлах</value>
+  </data>
+  <data name="SnipInfoSubtitle" xml:space="preserve">
+    <value>Дэлгэцийнхээ хэсгийн зургийг авах. {0} дээр дарж, дараа нь авахыг хүссэн хэсгээрээ хулганаа чирнэ үү.</value>
   </data>
 </root>

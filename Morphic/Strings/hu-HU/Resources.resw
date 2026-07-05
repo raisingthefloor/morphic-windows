@@ -34,11 +34,17 @@
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>Színszűrők</value>
   </data>
+  <data name="ColorInfoSubtitle" xml:space="preserve">
+    <value>A színszűrők be- vagy kikapcsolásával igazíthatja a színeket a színlátási különbségekhez.</value>
+  </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>Színszűrő</value>
   </data>
   <data name="ContrastAndColorHeader" xml:space="preserve">
     <value>Kontraszt és szín</value>
+  </data>
+  <data name="ContrastInfoSubtitle" xml:space="preserve">
+    <value>A kontrasztos megjelenítés be- vagy kikapcsolásával könnyebben olvashatóvá teheti a képernyőt.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>Kontraszt</value>
@@ -49,6 +55,9 @@
   <data name="CopyrightNoticeFormat" xml:space="preserve">
     <value>Copyright {0} Raising the Floor - US, Inc.</value>
   </data>
+  <data name="DarkInfoSubtitle" xml:space="preserve">
+    <value>Sötét mód be- vagy kikapcsolása.</value>
+  </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>Sötét</value>
   </data>
@@ -58,11 +67,20 @@
   <data name="DecreaseTextSizeAccessibleName" xml:space="preserve">
     <value>Szövegméret csökkentése</value>
   </data>
+  <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>Minden elem kisebbítése a képernyőn.</value>
+  </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>A MorphicBar elrejtése</value>
   </data>
   <data name="IncreaseTextSizeAccessibleName" xml:space="preserve">
     <value>Szövegméret növelése</value>
+  </data>
+  <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>Minden elem nagyítása a képernyőn.</value>
+  </data>
+  <data name="InfoRightClickSettingsHint" xml:space="preserve">
+    <value>Kattintson a jobb gombbal a beállítások módosításához.</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>További információ a Morphicról</value>
@@ -73,11 +91,20 @@
   <data name="MagnifierHideAccessibleName" xml:space="preserve">
     <value>Nagyító elrejtése</value>
   </data>
+  <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
+    <value>A nagyító kikapcsolása.</value>
+  </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>Elrejtés</value>
   </data>
+  <data name="MagnifierInfoSubtitle" xml:space="preserve">
+    <value>Nagyítás a képernyő egy részének felnagyításához.</value>
+  </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>Nagyító megjelenítése</value>
+  </data>
+  <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
+    <value>Az egérmutatót követő nagyítólencse bekapcsolása.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Megjelenítés</value>
@@ -87,6 +114,9 @@
   </data>
   <data name="MorphicForWindows.Text" xml:space="preserve">
     <value>Morphic a Windows rendszerhez</value>
+  </data>
+  <data name="NightInfoSubtitle" xml:space="preserve">
+    <value>Az Éjszakai fény be- vagy kikapcsolása a képernyő színeinek melegebbé tételéhez és a szemkíméléshez.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>Éjszakai</value>
@@ -139,17 +169,41 @@
   <data name="ReadSelectedHeader" xml:space="preserve">
     <value>Kijelölés felolvasása</value>
   </data>
+  <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
+    <value>A kijelölt szöveg felolvasása vagy a felolvasás leállítása.</value>
+  </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>Kijelölt szöveg felolvasása</value>
+  </data>
+  <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
+    <value>A kijelölt szöveg felolvasása.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Kijelölt szöveg felolvasásának leállítása</value>
   </data>
+  <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
+    <value>A felolvasás leállítása.</value>
+  </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>A MorphicBar megjelenítése</value>
   </data>
+  <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
+    <value>A szövegméret tovább nem növelhető.</value>
+  </data>
+  <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
+    <value>A szövegméret tovább nem csökkenthető.</value>
+  </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>Szövegméret</value>
+  </data>
+  <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
+    <value>A képernyőn látható szöveg nagyítása vagy kicsinyítése.</value>
+  </data>
+  <data name="SizeOfTextLargerLabel" xml:space="preserve">
+    <value>Nagyobb</value>
+  </data>
+  <data name="SizeOfTextSmallerLabel" xml:space="preserve">
+    <value>Kisebb</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>Képernyőrészlet kivágása és másolása</value>
@@ -159,5 +213,8 @@
   </data>
   <data name="SnipHeader" xml:space="preserve">
     <value>Kivágás</value>
+  </data>
+  <data name="SnipInfoSubtitle" xml:space="preserve">
+    <value>Készítsen képet a képernyő egy részéről. Kattintson a(z) {0} gombra, majd húzza az egeret a kimetszeni kívánt területre.</value>
   </data>
 </root>

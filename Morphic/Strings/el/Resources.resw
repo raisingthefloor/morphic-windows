@@ -34,11 +34,17 @@
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>Φίλτρα χρωμάτων</value>
   </data>
+  <data name="ColorInfoSubtitle" xml:space="preserve">
+    <value>Ενεργοποιήστε ή απενεργοποιήστε τα φίλτρα χρωμάτων για προσαρμογή των χρωμάτων σε διαφορές χρωματικής όρασης.</value>
+  </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>Χρώμα</value>
   </data>
   <data name="ContrastAndColorHeader" xml:space="preserve">
     <value>Αντίθεση και χρώμα</value>
+  </data>
+  <data name="ContrastInfoSubtitle" xml:space="preserve">
+    <value>Ενεργοποιήστε ή απενεργοποιήστε την υψηλή αντίθεση για να κάνετε την οθόνη πιο ευανάγνωστη.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>Αντίθεση</value>
@@ -49,6 +55,9 @@
   <data name="CopyrightNoticeFormat" xml:space="preserve">
     <value>Πνευματικά δικαιώματα {0} Raising the Floor - US, Inc.</value>
   </data>
+  <data name="DarkInfoSubtitle" xml:space="preserve">
+    <value>Ενεργοποιήστε ή απενεργοποιήστε τη σκούρα λειτουργία.</value>
+  </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>Σκούρο</value>
   </data>
@@ -58,11 +67,20 @@
   <data name="DecreaseTextSizeAccessibleName" xml:space="preserve">
     <value>Μείωση μεγέθους κειμένου</value>
   </data>
+  <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>Κάντε τα πάντα στην οθόνη σας μικρότερα.</value>
+  </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>Απόκρυψη MorphicBar</value>
   </data>
   <data name="IncreaseTextSizeAccessibleName" xml:space="preserve">
     <value>Αύξηση μεγέθους κειμένου</value>
+  </data>
+  <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>Κάντε τα πάντα στην οθόνη σας μεγαλύτερα.</value>
+  </data>
+  <data name="InfoRightClickSettingsHint" xml:space="preserve">
+    <value>Κάντε δεξί κλικ για να αλλάξετε τις ρυθμίσεις.</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Μάθετε περισσότερα για το Morphic</value>
@@ -73,11 +91,20 @@
   <data name="MagnifierHideAccessibleName" xml:space="preserve">
     <value>Απόκρυψη Μεγεθυντικού φακού</value>
   </data>
+  <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
+    <value>Απενεργοποιήστε τον μεγεθυντικό φακό.</value>
+  </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>Απόκρυψη</value>
   </data>
+  <data name="MagnifierInfoSubtitle" xml:space="preserve">
+    <value>Κάντε μεγέθυνση για να μεγαλώσετε ένα τμήμα της οθόνης σας.</value>
+  </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>Εμφάνιση Μεγεθυντικού φακού</value>
+  </data>
+  <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
+    <value>Ενεργοποιήστε έναν μεγεθυντικό φακό που ακολουθεί το ποντίκι σας.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Εμφάνιση</value>
@@ -87,6 +114,9 @@
   </data>
   <data name="MorphicForWindows.Text" xml:space="preserve">
     <value>Morphic για Windows</value>
+  </data>
+  <data name="NightInfoSubtitle" xml:space="preserve">
+    <value>Ενεργοποιήστε ή απενεργοποιήστε τον Νυχτερινό φωτισμό για πιο θερμά χρώματα οθόνης και μείωση της καταπόνησης των ματιών.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>Νύχτα</value>
@@ -139,17 +169,41 @@
   <data name="ReadSelectedHeader" xml:space="preserve">
     <value>Ανάγνωση επιλεγμένου</value>
   </data>
+  <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
+    <value>Εκφωνήστε το επιλεγμένο κείμενο ή διακόψτε την εκφώνηση.</value>
+  </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>Ανάγνωση επιλεγμένου κειμένου</value>
+  </data>
+  <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
+    <value>Εκφωνήστε το επιλεγμένο κείμενο.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Διακοπή ανάγνωσης επιλεγμένου κειμένου</value>
   </data>
+  <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
+    <value>Διακόψτε την εκφώνηση.</value>
+  </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>Εμφάνιση MorphicBar</value>
   </data>
+  <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
+    <value>Το κείμενο δεν μπορεί να γίνει μεγαλύτερο.</value>
+  </data>
+  <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
+    <value>Το κείμενο δεν μπορεί να γίνει μικρότερο.</value>
+  </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>Μέγεθος κειμένου</value>
+  </data>
+  <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
+    <value>Κάντε το κείμενο στην οθόνη σας μεγαλύτερο ή μικρότερο.</value>
+  </data>
+  <data name="SizeOfTextLargerLabel" xml:space="preserve">
+    <value>Μεγαλύτερο</value>
+  </data>
+  <data name="SizeOfTextSmallerLabel" xml:space="preserve">
+    <value>Μικρότερο</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>Λήψη και αντιγραφή τμήματος της οθόνης</value>
@@ -159,5 +213,8 @@
   </data>
   <data name="SnipHeader" xml:space="preserve">
     <value>Απόκομμα</value>
+  </data>
+  <data name="SnipInfoSubtitle" xml:space="preserve">
+    <value>Αποτυπώστε ένα τμήμα της οθόνης σας. Κάντε κλικ στο {0} και, στη συνέχεια, σύρετε το ποντίκι σας στην περιοχή που θέλετε να αποτυπώσετε.</value>
   </data>
 </root>

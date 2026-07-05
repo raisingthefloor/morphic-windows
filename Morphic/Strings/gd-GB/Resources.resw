@@ -34,11 +34,17 @@
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>Criathragan datha</value>
   </data>
+  <data name="ColorInfoSubtitle" xml:space="preserve">
+    <value>Cuir criathragan dhathan air no dheth gus na dathan atharrachadh a-rèir diofar lèirsinn dhathan.</value>
+  </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>Dath</value>
   </data>
   <data name="ContrastAndColorHeader" xml:space="preserve">
     <value>Iomsgaradh is Dath</value>
+  </data>
+  <data name="ContrastInfoSubtitle" xml:space="preserve">
+    <value>Cuir iomsgaradh àrd air no dheth gus am bi an sgrìn nas fhasa a leughadh.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>Iomsgaradh</value>
@@ -49,6 +55,9 @@
   <data name="CopyrightNoticeFormat" xml:space="preserve">
     <value>Còir-lethbhreac {0} Raising the Floor - US, Inc.</value>
   </data>
+  <data name="DarkInfoSubtitle" xml:space="preserve">
+    <value>Cuir am modh dorcha air no dheth.</value>
+  </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>Dorcha</value>
   </data>
@@ -58,11 +67,20 @@
   <data name="DecreaseTextSizeAccessibleName" xml:space="preserve">
     <value>Lùghdaich meud an teacsa</value>
   </data>
+  <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>Dèan a h-uile rud air an sgrìn agad nas lugha.</value>
+  </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>Falaich am MorphicBar</value>
   </data>
   <data name="IncreaseTextSizeAccessibleName" xml:space="preserve">
     <value>Meudaich meud an teacsa</value>
+  </data>
+  <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>Dèan a h-uile rud air an sgrìn agad nas motha.</value>
+  </data>
+  <data name="InfoRightClickSettingsHint" xml:space="preserve">
+    <value>Dèan briogadh deas gus na roghainnean atharrachadh.</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Ionnsaich tuilleadh mu Morphic</value>
@@ -73,11 +91,20 @@
   <data name="MagnifierHideAccessibleName" xml:space="preserve">
     <value>Falaich am Meudachair</value>
   </data>
+  <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
+    <value>Cuir am meudaichear dheth.</value>
+  </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>Falaich</value>
   </data>
+  <data name="MagnifierInfoSubtitle" xml:space="preserve">
+    <value>Sùm a-steach gus pàirt dhen sgrìn agad a mheudachadh.</value>
+  </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>Seall am Meudachair</value>
+  </data>
+  <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
+    <value>Cuir air lionsa meudachaidh a leanas an luchag agad.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Seall</value>
@@ -87,6 +114,9 @@
   </data>
   <data name="MorphicForWindows.Text" xml:space="preserve">
     <value>Morphic airson Windows</value>
+  </data>
+  <data name="NightInfoSubtitle" xml:space="preserve">
+    <value>Cuir Solas na h-oidhche air no dheth gus dathan na sgrìn a bhlàthachadh is sgìths sùla a lùghdachadh.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>Oidhche</value>
@@ -139,17 +169,41 @@
   <data name="ReadSelectedHeader" xml:space="preserve">
     <value>Leugh an Taghadh</value>
   </data>
+  <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
+    <value>Leugh an teacsa a thagh thu a-mach no sguir dhen leughadh.</value>
+  </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>Leugh an teacsa taghte</value>
+  </data>
+  <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
+    <value>Leugh an teacsa a thagh thu a-mach.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Cuir stad air leughadh an teacsa thaghte</value>
   </data>
+  <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
+    <value>Sguir dhen leughadh a-mach.</value>
+  </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>Seall MorphicBar</value>
   </data>
+  <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
+    <value>Chan urrainn dhan teacsa fàs nas motha.</value>
+  </data>
+  <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
+    <value>Chan urrainn dhan teacsa fàs nas lugha.</value>
+  </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>Meud an Teacsa</value>
+  </data>
+  <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
+    <value>Dèan an teacsa air an sgrìn agad nas motha no nas lugha.</value>
+  </data>
+  <data name="SizeOfTextLargerLabel" xml:space="preserve">
+    <value>Nas motha</value>
+  </data>
+  <data name="SizeOfTextSmallerLabel" xml:space="preserve">
+    <value>Nas lugha</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>Bearr is dèan lethbhreac de phàirt dhen sgrìn</value>
@@ -159,5 +213,8 @@
   </data>
   <data name="SnipHeader" xml:space="preserve">
     <value>Bearr</value>
+  </data>
+  <data name="SnipInfoSubtitle" xml:space="preserve">
+    <value>Tog dealbh de phàirt dhen sgrìn agad. Briog air {0}, an uair sin slaod an luchag agad thairis air an raon a tha thu airson a ghlacadh.</value>
   </data>
 </root>

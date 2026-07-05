@@ -34,11 +34,17 @@
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>Filtros de cor</value>
   </data>
+  <data name="ColorInfoSubtitle" xml:space="preserve">
+    <value>Ative ou desative os filtros de cor para ajustar as cores para diferenças de percepção de cores.</value>
+  </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>Cor</value>
   </data>
   <data name="ContrastAndColorHeader" xml:space="preserve">
     <value>Contraste e Cor</value>
+  </data>
+  <data name="ContrastInfoSubtitle" xml:space="preserve">
+    <value>Ative ou desative o alto contraste para facilitar a leitura da tela.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>Contraste</value>
@@ -49,6 +55,9 @@
   <data name="CopyrightNoticeFormat" xml:space="preserve">
     <value>Copyright {0} Raising the Floor - US, Inc.</value>
   </data>
+  <data name="DarkInfoSubtitle" xml:space="preserve">
+    <value>Ative ou desative o modo escuro.</value>
+  </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>Escuro</value>
   </data>
@@ -58,11 +67,20 @@
   <data name="DecreaseTextSizeAccessibleName" xml:space="preserve">
     <value>Diminuir o tamanho do texto</value>
   </data>
+  <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>Diminua tudo na sua tela.</value>
+  </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>Ocultar a MorphicBar</value>
   </data>
   <data name="IncreaseTextSizeAccessibleName" xml:space="preserve">
     <value>Aumentar o tamanho do texto</value>
+  </data>
+  <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>Aumente tudo na sua tela.</value>
+  </data>
+  <data name="InfoRightClickSettingsHint" xml:space="preserve">
+    <value>Clique com o botão direito para alterar as configurações.</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Saiba mais sobre o Morphic</value>
@@ -73,11 +91,20 @@
   <data name="MagnifierHideAccessibleName" xml:space="preserve">
     <value>Ocultar Lupa</value>
   </data>
+  <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
+    <value>Desative a Lupa.</value>
+  </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>Ocultar</value>
   </data>
+  <data name="MagnifierInfoSubtitle" xml:space="preserve">
+    <value>Amplie parte da sua tela.</value>
+  </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>Mostrar Lupa</value>
+  </data>
+  <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
+    <value>Ative uma lente de aumento que acompanha o mouse.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Mostrar</value>
@@ -87,6 +114,9 @@
   </data>
   <data name="MorphicForWindows.Text" xml:space="preserve">
     <value>Morphic para Windows</value>
+  </data>
+  <data name="NightInfoSubtitle" xml:space="preserve">
+    <value>Ative ou desative a Luz Noturna para deixar as cores da tela mais quentes e reduzir o cansaço visual.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>Noturno</value>
@@ -139,17 +169,41 @@
   <data name="ReadSelectedHeader" xml:space="preserve">
     <value>Ler Seleção</value>
   </data>
+  <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
+    <value>Leia o texto selecionado em voz alta ou pare a leitura.</value>
+  </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>Ler o texto selecionado</value>
+  </data>
+  <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
+    <value>Leia o texto selecionado em voz alta.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Parar de ler o texto selecionado</value>
   </data>
+  <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
+    <value>Pare a leitura em voz alta.</value>
+  </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>Mostrar a MorphicBar</value>
   </data>
+  <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
+    <value>O texto não pode ficar maior.</value>
+  </data>
+  <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
+    <value>O texto não pode ficar menor.</value>
+  </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>Tamanho do Texto</value>
+  </data>
+  <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
+    <value>Aumente ou diminua o texto na tela.</value>
+  </data>
+  <data name="SizeOfTextLargerLabel" xml:space="preserve">
+    <value>Maior</value>
+  </data>
+  <data name="SizeOfTextSmallerLabel" xml:space="preserve">
+    <value>Menor</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>Capturar e copiar parte da tela</value>
@@ -159,5 +213,8 @@
   </data>
   <data name="SnipHeader" xml:space="preserve">
     <value>Recorte</value>
+  </data>
+  <data name="SnipInfoSubtitle" xml:space="preserve">
+    <value>Capture parte da tela. Clique em {0} e arraste o mouse pela área que você quer capturar.</value>
   </data>
 </root>

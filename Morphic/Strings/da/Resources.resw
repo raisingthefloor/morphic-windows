@@ -34,11 +34,17 @@
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>Farvefiltre</value>
   </data>
+  <data name="ColorInfoSubtitle" xml:space="preserve">
+    <value>Slå farvefiltre til eller fra for at justere farverne efter forskelle i farvesyn.</value>
+  </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>Farve</value>
   </data>
   <data name="ContrastAndColorHeader" xml:space="preserve">
     <value>Kontrast og farve</value>
+  </data>
+  <data name="ContrastInfoSubtitle" xml:space="preserve">
+    <value>Slå høj kontrast til eller fra for at gøre skærmen nemmere at læse.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>Kontrast</value>
@@ -49,6 +55,9 @@
   <data name="CopyrightNoticeFormat" xml:space="preserve">
     <value>Copyright {0} Raising the Floor - US, Inc.</value>
   </data>
+  <data name="DarkInfoSubtitle" xml:space="preserve">
+    <value>Slå mørk tilstand til eller fra.</value>
+  </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>Mørk</value>
   </data>
@@ -58,11 +67,20 @@
   <data name="DecreaseTextSizeAccessibleName" xml:space="preserve">
     <value>Formindsk tekststørrelsen</value>
   </data>
+  <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>Gør alt på skærmen mindre.</value>
+  </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>Skjul MorphicBar</value>
   </data>
   <data name="IncreaseTextSizeAccessibleName" xml:space="preserve">
     <value>Forøg tekststørrelsen</value>
+  </data>
+  <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>Gør alt på skærmen større.</value>
+  </data>
+  <data name="InfoRightClickSettingsHint" xml:space="preserve">
+    <value>Højreklik for at ændre indstillinger.</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Få mere at vide om Morphic</value>
@@ -73,11 +91,20 @@
   <data name="MagnifierHideAccessibleName" xml:space="preserve">
     <value>Skjul Forstørrelsesglas</value>
   </data>
+  <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
+    <value>Slå Forstørrelsesglas fra.</value>
+  </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>Skjul</value>
   </data>
+  <data name="MagnifierInfoSubtitle" xml:space="preserve">
+    <value>Zoom ind for at forstørre en del af skærmen.</value>
+  </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>Vis Forstørrelsesglas</value>
+  </data>
+  <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
+    <value>Slå en forstørrelseslinse til, der følger musen.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Vis</value>
@@ -87,6 +114,9 @@
   </data>
   <data name="MorphicForWindows.Text" xml:space="preserve">
     <value>Morphic til Windows</value>
+  </data>
+  <data name="NightInfoSubtitle" xml:space="preserve">
+    <value>Slå Nattelys til eller fra for at gøre skærmfarverne varmere og mindske belastningen af øjnene.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>Nat</value>
@@ -139,17 +169,41 @@
   <data name="ReadSelectedHeader" xml:space="preserve">
     <value>Læs markeret</value>
   </data>
+  <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
+    <value>Læs den markerede tekst højt, eller stop oplæsningen.</value>
+  </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>Læs markeret tekst</value>
+  </data>
+  <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
+    <value>Læs den markerede tekst højt.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Stop oplæsning af markeret tekst</value>
   </data>
+  <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
+    <value>Stop oplæsningen.</value>
+  </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>Vis MorphicBar</value>
   </data>
+  <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
+    <value>Teksten kan ikke blive større.</value>
+  </data>
+  <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
+    <value>Teksten kan ikke blive mindre.</value>
+  </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>Tekststørrelse</value>
+  </data>
+  <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
+    <value>Gør teksten på skærmen større eller mindre.</value>
+  </data>
+  <data name="SizeOfTextLargerLabel" xml:space="preserve">
+    <value>Større</value>
+  </data>
+  <data name="SizeOfTextSmallerLabel" xml:space="preserve">
+    <value>Mindre</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>Klip og kopiér en del af skærmen</value>
@@ -159,5 +213,8 @@
   </data>
   <data name="SnipHeader" xml:space="preserve">
     <value>Udklip</value>
+  </data>
+  <data name="SnipInfoSubtitle" xml:space="preserve">
+    <value>Tag et billede af en del af din skærm. Klik på {0}, og træk derefter musen hen over det område, du vil tage et billede af.</value>
   </data>
 </root>

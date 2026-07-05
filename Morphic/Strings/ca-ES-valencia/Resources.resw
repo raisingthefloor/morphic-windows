@@ -34,11 +34,17 @@
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>Filtres de color</value>
   </data>
+  <data name="ColorInfoSubtitle" xml:space="preserve">
+    <value>Activa o desactiva els filtres de color per a ajustar els colors segons les diferències de visió del color.</value>
+  </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>Color</value>
   </data>
   <data name="ContrastAndColorHeader" xml:space="preserve">
     <value>Contrast i color</value>
+  </data>
+  <data name="ContrastInfoSubtitle" xml:space="preserve">
+    <value>Activa o desactiva el contrast alt perquè la pantalla siga més fàcil de llegir.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>Contrast</value>
@@ -49,6 +55,9 @@
   <data name="CopyrightNoticeFormat" xml:space="preserve">
     <value>Copyright {0} Raising the Floor - US, Inc.</value>
   </data>
+  <data name="DarkInfoSubtitle" xml:space="preserve">
+    <value>Activa o desactiva el mode fosc.</value>
+  </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>Fosc</value>
   </data>
@@ -58,11 +67,20 @@
   <data name="DecreaseTextSizeAccessibleName" xml:space="preserve">
     <value>Reduïx la grandària del text</value>
   </data>
+  <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>Fes més menut tot el que hi ha en la pantalla.</value>
+  </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>Amaga la MorphicBar</value>
   </data>
   <data name="IncreaseTextSizeAccessibleName" xml:space="preserve">
     <value>Augmenta la grandària del text</value>
+  </data>
+  <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>Fes més gran tot el que hi ha en la pantalla.</value>
+  </data>
+  <data name="InfoRightClickSettingsHint" xml:space="preserve">
+    <value>Fes clic amb el botó dret per a canviar la configuració.</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Més informació sobre Morphic</value>
@@ -73,11 +91,20 @@
   <data name="MagnifierHideAccessibleName" xml:space="preserve">
     <value>Amaga la Lupa</value>
   </data>
+  <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
+    <value>Desactiva la lupa.</value>
+  </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>Amaga</value>
   </data>
+  <data name="MagnifierInfoSubtitle" xml:space="preserve">
+    <value>Amplia per a fer més gran una part de la pantalla.</value>
+  </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>Mostra la Lupa</value>
+  </data>
+  <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
+    <value>Activa una lent d'augment que seguix el ratolí.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Mostra</value>
@@ -87,6 +114,9 @@
   </data>
   <data name="MorphicForWindows.Text" xml:space="preserve">
     <value>Morphic per a Windows</value>
+  </data>
+  <data name="NightInfoSubtitle" xml:space="preserve">
+    <value>Activa o desactiva la llum nocturna per a fer més càlids els colors de la pantalla i reduir la fatiga visual.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>Nit</value>
@@ -139,17 +169,41 @@
   <data name="ReadSelectedHeader" xml:space="preserve">
     <value>Llig la selecció</value>
   </data>
+  <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
+    <value>Llig en veu alta el text seleccionat o para la lectura.</value>
+  </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>Llig el text seleccionat</value>
+  </data>
+  <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
+    <value>Llig en veu alta el text seleccionat.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Para de llegir el text seleccionat</value>
   </data>
+  <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
+    <value>Para la lectura en veu alta.</value>
+  </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>Mostra la MorphicBar</value>
   </data>
+  <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
+    <value>El text no es pot fer més gran.</value>
+  </data>
+  <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
+    <value>El text no es pot fer més menut.</value>
+  </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>Grandària del text</value>
+  </data>
+  <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
+    <value>Fes més gran o més xicotet el text de la pantalla.</value>
+  </data>
+  <data name="SizeOfTextLargerLabel" xml:space="preserve">
+    <value>Més gran</value>
+  </data>
+  <data name="SizeOfTextSmallerLabel" xml:space="preserve">
+    <value>Més xicotet</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>Retalla i copia una part de la pantalla</value>
@@ -159,5 +213,8 @@
   </data>
   <data name="SnipHeader" xml:space="preserve">
     <value>Retall</value>
+  </data>
+  <data name="SnipInfoSubtitle" xml:space="preserve">
+    <value>Fes una captura d'una part de la pantalla. Fes clic en {0} i, després, arrossega el ratolí per la zona que vols capturar.</value>
   </data>
 </root>
