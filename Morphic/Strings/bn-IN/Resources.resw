@@ -34,11 +34,17 @@
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>রঙের ফিল্টার</value>
   </data>
+  <data name="ColorInfoSubtitle" xml:space="preserve">
+    <value>রঙের দৃষ্টিভেদ অনুযায়ী রঙ ঠিক করতে কালার ফিল্টার চালু বা বন্ধ করুন।</value>
+  </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>রঙ</value>
   </data>
   <data name="ContrastAndColorHeader" xml:space="preserve">
     <value>কনট্রাস্ট ও রঙ</value>
+  </data>
+  <data name="ContrastInfoSubtitle" xml:space="preserve">
+    <value>স্ক্রিন সহজে পড়তে হাই কনট্রাস্ট চালু বা বন্ধ করুন।</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>কনট্রাস্ট</value>
@@ -49,6 +55,9 @@
   <data name="CopyrightNoticeFormat" xml:space="preserve">
     <value>কপিরাইট {0} Raising the Floor - US, Inc.</value>
   </data>
+  <data name="DarkInfoSubtitle" xml:space="preserve">
+    <value>ডার্ক মোড চালু বা বন্ধ করুন।</value>
+  </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>ডার্ক</value>
   </data>
@@ -58,11 +67,20 @@
   <data name="DecreaseTextSizeAccessibleName" xml:space="preserve">
     <value>টেক্সটের আকার কমান</value>
   </data>
+  <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>আপনার স্ক্রিনের সবকিছু ছোট করুন।</value>
+  </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>MorphicBar লুকান</value>
   </data>
   <data name="IncreaseTextSizeAccessibleName" xml:space="preserve">
     <value>টেক্সটের আকার বাড়ান</value>
+  </data>
+  <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>আপনার স্ক্রিনের সবকিছু বড় করুন।</value>
+  </data>
+  <data name="InfoRightClickSettingsHint" xml:space="preserve">
+    <value>সেটিংস পরিবর্তন করতে রাইট-ক্লিক করুন।</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Morphic সম্পর্কে আরও জানুন</value>
@@ -73,11 +91,20 @@
   <data name="MagnifierHideAccessibleName" xml:space="preserve">
     <value>ম্যাগনিফায়ার লুকান</value>
   </data>
+  <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
+    <value>ম্যাগনিফায়ার বন্ধ করুন।</value>
+  </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>লুকান</value>
   </data>
+  <data name="MagnifierInfoSubtitle" xml:space="preserve">
+    <value>স্ক্রিনের একটি অংশ বড় করে দেখতে জুম ইন করুন।</value>
+  </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>ম্যাগনিফায়ার দেখান</value>
+  </data>
+  <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
+    <value>আপনার মাউস অনুসরণ করে এমন একটি ম্যাগনিফাইং লেন্স চালু করুন।</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>দেখান</value>
@@ -87,6 +114,9 @@
   </data>
   <data name="MorphicForWindows.Text" xml:space="preserve">
     <value>Windows-এর জন্য Morphic</value>
+  </data>
+  <data name="NightInfoSubtitle" xml:space="preserve">
+    <value>স্ক্রিনের রঙ উষ্ণ করে চোখের চাপ কমাতে নাইট লাইট চালু বা বন্ধ করুন।</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>নাইট</value>
@@ -139,17 +169,41 @@
   <data name="ReadSelectedHeader" xml:space="preserve">
     <value>নির্বাচিত অংশ পড়ুন</value>
   </data>
+  <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
+    <value>আপনার নির্বাচিত লেখা পড়ে শোনান, বা পড়া বন্ধ করুন।</value>
+  </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>নির্বাচিত টেক্সট পড়ুন</value>
+  </data>
+  <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
+    <value>আপনার নির্বাচিত লেখা পড়ে শোনান।</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>নির্বাচিত টেক্সট পড়া বন্ধ করুন</value>
   </data>
+  <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
+    <value>পড়ে শোনানো বন্ধ করুন।</value>
+  </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>MorphicBar দেখান</value>
   </data>
+  <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
+    <value>লেখা আর বড় করা যাবে না।</value>
+  </data>
+  <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
+    <value>লেখা আর ছোট করা যাবে না।</value>
+  </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>টেক্সটের আকার</value>
+  </data>
+  <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
+    <value>আপনার স্ক্রিনের লেখা বড় বা ছোট করুন।</value>
+  </data>
+  <data name="SizeOfTextLargerLabel" xml:space="preserve">
+    <value>বড়</value>
+  </data>
+  <data name="SizeOfTextSmallerLabel" xml:space="preserve">
+    <value>ছোট</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>স্ক্রিনের অংশ স্নিপ করে কপি করুন</value>
@@ -159,5 +213,8 @@
   </data>
   <data name="SnipHeader" xml:space="preserve">
     <value>স্নিপ</value>
+  </data>
+  <data name="SnipInfoSubtitle" xml:space="preserve">
+    <value>আপনার স্ক্রিনের একটি অংশের ছবি তুলুন। {0}-এ ক্লিক করুন, তারপর যে অংশটি ক্যাপচার করতে চান তার উপর মাউস টেনে নিয়ে যান।</value>
   </data>
 </root>

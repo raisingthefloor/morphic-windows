@@ -34,11 +34,17 @@
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>Värisuodattimet</value>
   </data>
+  <data name="ColorInfoSubtitle" xml:space="preserve">
+    <value>Ota värisuodattimet käyttöön tai poista ne käytöstä, jotta voit säätää värejä värinäön eroja varten.</value>
+  </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>Väri</value>
   </data>
   <data name="ContrastAndColorHeader" xml:space="preserve">
     <value>Kontrasti ja väri</value>
+  </data>
+  <data name="ContrastInfoSubtitle" xml:space="preserve">
+    <value>Ota suuri kontrasti käyttöön tai poista se käytöstä, jotta näyttöä on helpompi lukea.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>Kontrasti</value>
@@ -49,6 +55,9 @@
   <data name="CopyrightNoticeFormat" xml:space="preserve">
     <value>Copyright {0} Raising the Floor - US, Inc.</value>
   </data>
+  <data name="DarkInfoSubtitle" xml:space="preserve">
+    <value>Ota tumma tila käyttöön tai poista se käytöstä.</value>
+  </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>Tumma</value>
   </data>
@@ -58,11 +67,20 @@
   <data name="DecreaseTextSizeAccessibleName" xml:space="preserve">
     <value>Pienennä tekstin kokoa</value>
   </data>
+  <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>Pienennä kaikkea näytöllä.</value>
+  </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>Piilota MorphicBar</value>
   </data>
   <data name="IncreaseTextSizeAccessibleName" xml:space="preserve">
     <value>Suurenna tekstin kokoa</value>
+  </data>
+  <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>Suurenna kaikkea näytöllä.</value>
+  </data>
+  <data name="InfoRightClickSettingsHint" xml:space="preserve">
+    <value>Muuta asetuksia napsauttamalla hiiren kakkospainikkeella.</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Lue lisää Morphicista</value>
@@ -73,11 +91,20 @@
   <data name="MagnifierHideAccessibleName" xml:space="preserve">
     <value>Piilota Suurennuslasi</value>
   </data>
+  <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
+    <value>Poista suurennuslasi käytöstä.</value>
+  </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>Piilota</value>
   </data>
+  <data name="MagnifierInfoSubtitle" xml:space="preserve">
+    <value>Lähennä suurentaaksesi osaa näytöstäsi.</value>
+  </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>Näytä Suurennuslasi</value>
+  </data>
+  <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
+    <value>Ota käyttöön hiirtä seuraava suurennuslasi.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Näytä</value>
@@ -87,6 +114,9 @@
   </data>
   <data name="MorphicForWindows.Text" xml:space="preserve">
     <value>Morphic Windowsille</value>
+  </data>
+  <data name="NightInfoSubtitle" xml:space="preserve">
+    <value>Ota yövalo käyttöön tai poista se käytöstä, jotta näytön värit lämpenevät ja silmien rasitus vähenee.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>Yö</value>
@@ -139,17 +169,41 @@
   <data name="ReadSelectedHeader" xml:space="preserve">
     <value>Lue valittu</value>
   </data>
+  <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
+    <value>Lue valittu teksti ääneen tai lopeta lukeminen.</value>
+  </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>Lue valittu teksti</value>
+  </data>
+  <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
+    <value>Lue valittu teksti ääneen.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Lopeta valitun tekstin lukeminen</value>
   </data>
+  <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
+    <value>Lopeta ääneen lukeminen.</value>
+  </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>Näytä MorphicBar</value>
   </data>
+  <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
+    <value>Tekstiä ei voi suurentaa enempää.</value>
+  </data>
+  <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
+    <value>Tekstiä ei voi pienentää enempää.</value>
+  </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>Tekstin koko</value>
+  </data>
+  <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
+    <value>Suurenna tai pienennä näytön tekstiä.</value>
+  </data>
+  <data name="SizeOfTextLargerLabel" xml:space="preserve">
+    <value>Suurempi</value>
+  </data>
+  <data name="SizeOfTextSmallerLabel" xml:space="preserve">
+    <value>Pienempi</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>Ota näyttöleike ja kopioi se</value>
@@ -159,5 +213,8 @@
   </data>
   <data name="SnipHeader" xml:space="preserve">
     <value>Näyttöleike</value>
+  </data>
+  <data name="SnipInfoSubtitle" xml:space="preserve">
+    <value>Ota kuva osasta näyttöä. Napsauta {0} ja vedä sitten hiirellä sen alueen yli, jonka haluat kaapata.</value>
   </data>
 </root>

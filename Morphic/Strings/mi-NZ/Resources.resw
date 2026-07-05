@@ -34,11 +34,17 @@
   <data name="ColorFiltersAccessibleName" xml:space="preserve">
     <value>Ngā tātari tae</value>
   </data>
+  <data name="ColorInfoSubtitle" xml:space="preserve">
+    <value>Turn color filters on or off to adjust colors for color vision differences.</value>
+  </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>Tae</value>
   </data>
   <data name="ContrastAndColorHeader" xml:space="preserve">
     <value>Rerekētanga me te Tae</value>
+  </data>
+  <data name="ContrastInfoSubtitle" xml:space="preserve">
+    <value>Turn high contrast on or off to make the screen easier to read.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>Rerekētanga</value>
@@ -49,6 +55,9 @@
   <data name="CopyrightNoticeFormat" xml:space="preserve">
     <value>Manatārua {0} Raising the Floor - US, Inc.</value>
   </data>
+  <data name="DarkInfoSubtitle" xml:space="preserve">
+    <value>Turn dark mode on or off.</value>
+  </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>Pōuri</value>
   </data>
@@ -58,11 +67,20 @@
   <data name="DecreaseTextSizeAccessibleName" xml:space="preserve">
     <value>Whakaiti i te rahi o te kuputuhi</value>
   </data>
+  <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>Make everything on your screen smaller.</value>
+  </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>Hunaia te MorphicBar</value>
   </data>
   <data name="IncreaseTextSizeAccessibleName" xml:space="preserve">
     <value>Whakarahi i te rahi o te kuputuhi</value>
+  </data>
+  <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
+    <value>Make everything on your screen larger.</value>
+  </data>
+  <data name="InfoRightClickSettingsHint" xml:space="preserve">
+    <value>Right-click to change settings.</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Ako anō mō Morphic</value>
@@ -73,11 +91,20 @@
   <data name="MagnifierHideAccessibleName" xml:space="preserve">
     <value>Hunaia te Karāhe Whakarahi</value>
   </data>
+  <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
+    <value>Turn off the magnifier.</value>
+  </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>Hunaia</value>
   </data>
+  <data name="MagnifierInfoSubtitle" xml:space="preserve">
+    <value>Zoom in to enlarge part of your screen.</value>
+  </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>Whakaatuhia te Karāhe Whakarahi</value>
+  </data>
+  <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
+    <value>Turn on a magnifying lens that follows your mouse.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Whakaatu</value>
@@ -87,6 +114,9 @@
   </data>
   <data name="MorphicForWindows.Text" xml:space="preserve">
     <value>Morphic mō Windows</value>
+  </data>
+  <data name="NightInfoSubtitle" xml:space="preserve">
+    <value>Turn Night Light on or off to warm the screen colors and reduce eye strain.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>Pō</value>
@@ -139,17 +169,41 @@
   <data name="ReadSelectedHeader" xml:space="preserve">
     <value>Pānui Tīpakonga</value>
   </data>
+  <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
+    <value>Read your selected text aloud, or stop reading.</value>
+  </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>Pānuitia te kuputuhi kua tīpakohia</value>
+  </data>
+  <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
+    <value>Read your selected text aloud.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Kati te pānui i te kuputuhi kua tīpakohia</value>
   </data>
+  <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
+    <value>Stop reading aloud.</value>
+  </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>Whakaatu i te MorphicBar</value>
   </data>
+  <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
+    <value>The text cannot get any larger.</value>
+  </data>
+  <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
+    <value>The text cannot get any smaller.</value>
+  </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>Rahi o te Kuputuhi</value>
+  </data>
+  <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
+    <value>Make the text on your screen larger or smaller.</value>
+  </data>
+  <data name="SizeOfTextLargerLabel" xml:space="preserve">
+    <value>Larger</value>
+  </data>
+  <data name="SizeOfTextSmallerLabel" xml:space="preserve">
+    <value>Smaller</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>Topengia, tāruatia tētahi wāhanga o te mata</value>
@@ -159,5 +213,8 @@
   </data>
   <data name="SnipHeader" xml:space="preserve">
     <value>Topenga</value>
+  </data>
+  <data name="SnipInfoSubtitle" xml:space="preserve">
+    <value>Take a picture of part of your screen. Click {0}, then drag your mouse across the area you want to capture.</value>
   </data>
 </root>
