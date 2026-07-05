@@ -35,7 +35,7 @@
     <value>Цветовые фильтры</value>
   </data>
   <data name="ColorInfoSubtitle" xml:space="preserve">
-    <value>Turn color filters on or off to adjust colors for color vision differences.</value>
+    <value>Включите или выключите цветовые фильтры, чтобы настроить цвета с учетом особенностей цветовосприятия.</value>
   </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>Цвет</value>
@@ -44,7 +44,7 @@
     <value>Контрастность и цвет</value>
   </data>
   <data name="ContrastInfoSubtitle" xml:space="preserve">
-    <value>Turn high contrast on or off to make the screen easier to read.</value>
+    <value>Включите или выключите высокую контрастность, чтобы текст на экране было легче читать.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>Контрастность</value>
@@ -56,7 +56,7 @@
     <value>© {0} Raising the Floor - US, Inc.</value>
   </data>
   <data name="DarkInfoSubtitle" xml:space="preserve">
-    <value>Turn dark mode on or off.</value>
+    <value>Включите или выключите тёмный режим.</value>
   </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>Тёмная</value>
@@ -68,7 +68,7 @@
     <value>Уменьшить размер текста</value>
   </data>
   <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen smaller.</value>
+    <value>Уменьшить всё на экране.</value>
   </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>Скрыть MorphicBar</value>
@@ -77,10 +77,10 @@
     <value>Увеличить размер текста</value>
   </data>
   <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen larger.</value>
+    <value>Увеличить всё на экране.</value>
   </data>
   <data name="InfoRightClickSettingsHint" xml:space="preserve">
-    <value>Right-click to change settings.</value>
+    <value>Щёлкните правой кнопкой мыши, чтобы изменить параметры.</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Подробнее о Morphic</value>
@@ -92,19 +92,19 @@
     <value>Скрыть экранную лупу</value>
   </data>
   <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
-    <value>Turn off the magnifier.</value>
+    <value>Выключить экранную лупу.</value>
   </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>Скрыть</value>
   </data>
   <data name="MagnifierInfoSubtitle" xml:space="preserve">
-    <value>Zoom in to enlarge part of your screen.</value>
+    <value>Увеличьте масштаб, чтобы рассмотреть часть экрана.</value>
   </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>Показать экранную лупу</value>
   </data>
   <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
-    <value>Turn on a magnifying lens that follows your mouse.</value>
+    <value>Включить лупу, которая следует за указателем мыши.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Показать</value>
@@ -116,7 +116,7 @@
     <value>Morphic для Windows</value>
   </data>
   <data name="NightInfoSubtitle" xml:space="preserve">
-    <value>Turn Night Light on or off to warm the screen colors and reduce eye strain.</value>
+    <value>Включите или выключите ночной свет, чтобы сделать цвета экрана теплее и снизить нагрузку на глаза.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>Ночной режим</value>
@@ -170,40 +170,40 @@
     <value>Читать выделенное</value>
   </data>
   <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud, or stop reading.</value>
+    <value>Прочитать выделенный текст вслух или остановить чтение.</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>Прочитать выделенный текст</value>
   </data>
   <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud.</value>
+    <value>Прочитать выделенный текст вслух.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Остановить чтение выделенного текста</value>
   </data>
   <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
-    <value>Stop reading aloud.</value>
+    <value>Остановить чтение вслух.</value>
   </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>Показать MorphicBar</value>
   </data>
   <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any larger.</value>
+    <value>Текст больше увеличить нельзя.</value>
   </data>
   <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any smaller.</value>
+    <value>Текст больше уменьшить нельзя.</value>
   </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>Размер текста</value>
   </data>
   <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
-    <value>Make the text on your screen larger or smaller.</value>
+    <value>Увеличить или уменьшить текст на экране.</value>
   </data>
   <data name="SizeOfTextLargerLabel" xml:space="preserve">
-    <value>Larger</value>
+    <value>Крупнее</value>
   </data>
   <data name="SizeOfTextSmallerLabel" xml:space="preserve">
-    <value>Smaller</value>
+    <value>Мельче</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>Захват и копирование части экрана</value>

@@ -44,7 +44,7 @@
     <value>Contraste y color</value>
   </data>
   <data name="ContrastInfoSubtitle" xml:space="preserve">
-    <value>Turn high contrast on or off to make the screen easier to read.</value>
+    <value>Activa o desactiva el contraste alto para que la pantalla sea más fácil de leer.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>Contraste</value>
@@ -98,13 +98,13 @@
     <value>Ocultar</value>
   </data>
   <data name="MagnifierInfoSubtitle" xml:space="preserve">
-    <value>Zoom in to enlarge part of your screen.</value>
+    <value>Acerca para agrandar una parte de la pantalla.</value>
   </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>Mostrar Lupa</value>
   </data>
   <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
-    <value>Turn on a magnifying lens that follows your mouse.</value>
+    <value>Activa una lupa que sigue al mouse.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Mostrar</value>
@@ -170,13 +170,13 @@
     <value>Leer selección</value>
   </data>
   <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud, or stop reading.</value>
+    <value>Lee en voz alta el texto seleccionado o detén la lectura.</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>Leer el texto seleccionado</value>
   </data>
   <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud.</value>
+    <value>Lee en voz alta el texto seleccionado.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Dejar de leer el texto seleccionado</value>

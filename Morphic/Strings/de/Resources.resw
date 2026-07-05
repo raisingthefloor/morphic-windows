@@ -44,7 +44,7 @@
     <value>Kontrast &amp; Farbe</value>
   </data>
   <data name="ContrastInfoSubtitle" xml:space="preserve">
-    <value>Turn high contrast on or off to make the screen easier to read.</value>
+    <value>Hohen Kontrast ein- oder ausschalten, um den Bildschirm besser lesbar zu machen.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>Kontrast</value>
@@ -68,7 +68,7 @@
     <value>Textgröße verringern</value>
   </data>
   <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen smaller.</value>
+    <value>Alles auf dem Bildschirm verkleinern.</value>
   </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>MorphicBar ausblenden</value>
@@ -77,7 +77,7 @@
     <value>Textgröße vergrößern</value>
   </data>
   <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen larger.</value>
+    <value>Alles auf dem Bildschirm vergrößern.</value>
   </data>
   <data name="InfoRightClickSettingsHint" xml:space="preserve">
     <value>Rechtsklicken, um Einstellungen zu ändern.</value>
@@ -116,7 +116,7 @@
     <value>Morphic für Windows</value>
   </data>
   <data name="NightInfoSubtitle" xml:space="preserve">
-    <value>Turn Night Light on or off to warm the screen colors and reduce eye strain.</value>
+    <value>Nachtmodus ein- oder ausschalten, um die Bildschirmfarben wärmer darzustellen und die Augen zu entlasten.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>Nacht</value>
@@ -176,7 +176,7 @@
     <value>Ausgewählten Text vorlesen</value>
   </data>
   <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud.</value>
+    <value>Ausgewählten Text vorlesen lassen.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Vorlesen des ausgewählten Textes beenden</value>
@@ -215,6 +215,6 @@
     <value>Ausschnitt</value>
   </data>
   <data name="SnipInfoSubtitle" xml:space="preserve">
-    <value>Take a picture of part of your screen. Click {0}, then drag your mouse across the area you want to capture.</value>
+    <value>Erstellen Sie einen Screenshot von einem Teil Ihres Bildschirms. Klicken Sie auf {0} und ziehen Sie dann die Maus über den Bereich, den Sie erfassen möchten.</value>
   </data>
 </root>

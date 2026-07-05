@@ -35,7 +35,7 @@
     <value>カラー フィルター</value>
   </data>
   <data name="ColorInfoSubtitle" xml:space="preserve">
-    <value>Turn color filters on or off to adjust colors for color vision differences.</value>
+    <value>カラー フィルターをオンまたはオフにして、色覚の違いに合わせて色を調整します。</value>
   </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>カラー</value>
@@ -44,7 +44,7 @@
     <value>コントラストと色</value>
   </data>
   <data name="ContrastInfoSubtitle" xml:space="preserve">
-    <value>Turn high contrast on or off to make the screen easier to read.</value>
+    <value>ハイ コントラストをオンまたはオフにして、画面を読みやすくします。</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>コントラスト</value>
@@ -56,7 +56,7 @@
     <value>Copyright {0} Raising the Floor - US, Inc.</value>
   </data>
   <data name="DarkInfoSubtitle" xml:space="preserve">
-    <value>Turn dark mode on or off.</value>
+    <value>ダーク モードをオンまたはオフにします。</value>
   </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>ダーク</value>
@@ -68,7 +68,7 @@
     <value>テキストのサイズを小さくする</value>
   </data>
   <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen smaller.</value>
+    <value>画面上のすべてを小さくします。</value>
   </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>MorphicBar を非表示にする</value>
@@ -77,10 +77,10 @@
     <value>テキストのサイズを大きくする</value>
   </data>
   <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen larger.</value>
+    <value>画面上のすべてを大きくします。</value>
   </data>
   <data name="InfoRightClickSettingsHint" xml:space="preserve">
-    <value>Right-click to change settings.</value>
+    <value>右クリックして設定を変更します。</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Morphic の詳細</value>
@@ -92,19 +92,19 @@
     <value>拡大鏡を非表示にする</value>
   </data>
   <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
-    <value>Turn off the magnifier.</value>
+    <value>拡大鏡をオフにします。</value>
   </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>非表示</value>
   </data>
   <data name="MagnifierInfoSubtitle" xml:space="preserve">
-    <value>Zoom in to enlarge part of your screen.</value>
+    <value>ズーム インして画面の一部を拡大します。</value>
   </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>拡大鏡を表示する</value>
   </data>
   <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
-    <value>Turn on a magnifying lens that follows your mouse.</value>
+    <value>マウスに追従する拡大レンズをオンにします。</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>表示</value>
@@ -116,7 +116,7 @@
     <value>Windows 用 Morphic</value>
   </data>
   <data name="NightInfoSubtitle" xml:space="preserve">
-    <value>Turn Night Light on or off to warm the screen colors and reduce eye strain.</value>
+    <value>夜間モードをオンまたはオフにして、画面の色を暖色系にし、目の疲れを軽減します。</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>夜間</value>
@@ -170,40 +170,40 @@
     <value>選択範囲の読み上げ</value>
   </data>
   <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud, or stop reading.</value>
+    <value>選択したテキストを読み上げるか、読み上げを停止します。</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>選択したテキストを読み上げる</value>
   </data>
   <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud.</value>
+    <value>選択したテキストを読み上げます。</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>選択したテキストの読み上げを停止</value>
   </data>
   <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
-    <value>Stop reading aloud.</value>
+    <value>読み上げを停止します。</value>
   </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>MorphicBar を表示する</value>
   </data>
   <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any larger.</value>
+    <value>これ以上テキストを大きくできません。</value>
   </data>
   <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any smaller.</value>
+    <value>これ以上テキストを小さくできません。</value>
   </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>テキストのサイズ</value>
   </data>
   <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
-    <value>Make the text on your screen larger or smaller.</value>
+    <value>画面上のテキストを大きくまたは小さくします。</value>
   </data>
   <data name="SizeOfTextLargerLabel" xml:space="preserve">
-    <value>Larger</value>
+    <value>大きい</value>
   </data>
   <data name="SizeOfTextSmallerLabel" xml:space="preserve">
-    <value>Smaller</value>
+    <value>小さい</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>画面の一部を切り取ってコピー</value>
@@ -215,6 +215,6 @@
     <value>切り取り</value>
   </data>
   <data name="SnipInfoSubtitle" xml:space="preserve">
-    <value>Take a picture of part of your screen. Click {0}, then drag your mouse across the area you want to capture.</value>
+    <value>画面の一部をキャプチャします。{0} をクリックし、次にキャプチャしたい領域をマウスでドラッグします。</value>
   </data>
 </root>

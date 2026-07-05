@@ -35,7 +35,7 @@
     <value>Filtros de color</value>
   </data>
   <data name="ColorInfoSubtitle" xml:space="preserve">
-    <value>Active o desactive los filtros de color para ajustar los colores según las diferencias en la visión del color.</value>
+    <value>Activa o desactiva los filtros de color para ajustar los colores según las diferencias de visión cromática.</value>
   </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>Color</value>
@@ -92,7 +92,7 @@
     <value>Ocultar magnificador de pantalla</value>
   </data>
   <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
-    <value>Desactive la lupa.</value>
+    <value>Desactiva la Lupa.</value>
   </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>Ocultar</value>
@@ -116,7 +116,7 @@
     <value>Morphic para Windows</value>
   </data>
   <data name="NightInfoSubtitle" xml:space="preserve">
-    <value>Active o desactive la Luz nocturna para dar calidez a los colores de la pantalla y reducir la fatiga visual.</value>
+    <value>Activa o desactiva la Luz nocturna para usar colores más cálidos en la pantalla y reducir la fatiga visual.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>Noche</value>
@@ -170,28 +170,28 @@
     <value>Leer la selección</value>
   </data>
   <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
-    <value>Lea en voz alta el texto seleccionado o detenga la lectura.</value>
+    <value>Lee en voz alta el texto seleccionado o detén la lectura.</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>Leer el texto seleccionado</value>
   </data>
   <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
-    <value>Lea en voz alta el texto seleccionado.</value>
+    <value>Lee en voz alta el texto seleccionado.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Dejar de leer el texto seleccionado</value>
   </data>
   <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
-    <value>Detenga la lectura en voz alta.</value>
+    <value>Detén la lectura en voz alta.</value>
   </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>Mostrar la barra de Morphic</value>
   </data>
   <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
-    <value>El texto no puede hacerse más grande.</value>
+    <value>El texto no se puede hacer más grande.</value>
   </data>
   <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
-    <value>El texto no puede hacerse más pequeño.</value>
+    <value>El texto no se puede hacer más pequeño.</value>
   </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>Tamaño del texto</value>
@@ -215,6 +215,6 @@
     <value>Recortar</value>
   </data>
   <data name="SnipInfoSubtitle" xml:space="preserve">
-    <value>Tome una imagen de una parte de la pantalla. Haga clic en {0} y luego arrastre el mouse por el área que desea capturar.</value>
+    <value>Haz una captura de una parte de la pantalla. Haz clic en {0} y luego arrastra el mouse por el área que quieres capturar.</value>
   </data>
 </root>

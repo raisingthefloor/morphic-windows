@@ -35,7 +35,7 @@
     <value>የቀለም ማጣሪያዎች</value>
   </data>
   <data name="ColorInfoSubtitle" xml:space="preserve">
-    <value>Turn color filters on or off to adjust colors for color vision differences.</value>
+    <value>ለቀለም እይታ ልዩነቶች ቀለሞችን ለማስተካከል የቀለም ማጣሪያዎችን ያብሩ ወይም ያጥፉ።</value>
   </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>ቀለም</value>

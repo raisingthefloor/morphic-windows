@@ -170,13 +170,13 @@
     <value>Basahin ang Napili</value>
   </data>
   <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud, or stop reading.</value>
+    <value>Basahin nang malakas ang iyong napiling teksto, o ihinto ang pagbabasa.</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>Basahin ang napiling teksto</value>
   </data>
   <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud.</value>
+    <value>Basahin nang malakas ang iyong napiling teksto.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Itigil ang pagbasa ng napiling teksto</value>

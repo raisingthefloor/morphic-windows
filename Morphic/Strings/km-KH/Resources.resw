@@ -35,7 +35,7 @@
     <value>តម្រងពណ៌</value>
   </data>
   <data name="ColorInfoSubtitle" xml:space="preserve">
-    <value>Turn color filters on or off to adjust colors for color vision differences.</value>
+    <value>បើក ឬបិទតម្រងពណ៌ ដើម្បីកែសម្រួលពណ៌សម្រាប់ភាពខុសគ្នានៃការមើលឃើញពណ៌។</value>
   </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>ពណ៌</value>
@@ -44,7 +44,7 @@
     <value>កម្រិតពណ៌ផ្ទុយ និងពណ៌</value>
   </data>
   <data name="ContrastInfoSubtitle" xml:space="preserve">
-    <value>Turn high contrast on or off to make the screen easier to read.</value>
+    <value>បើក ឬបិទកម្រិតពណ៌ខ្ពស់ ដើម្បីធ្វើឱ្យអេក្រង់កាន់តែងាយស្រួលអាន។</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>កម្រិតពណ៌ផ្ទុយ</value>
@@ -56,7 +56,7 @@
     <value>រក្សាសិទ្ធិ {0} Raising the Floor - US, Inc.</value>
   </data>
   <data name="DarkInfoSubtitle" xml:space="preserve">
-    <value>Turn dark mode on or off.</value>
+    <value>បើក ឬបិទរបៀបងងឹត។</value>
   </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>ងងឹត</value>
@@ -68,7 +68,7 @@
     <value>បន្ថយទំហំអត្ថបទ</value>
   </data>
   <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen smaller.</value>
+    <value>បង្រួមអ្វីៗទាំងអស់នៅលើអេក្រង់របស់អ្នកឱ្យតូចជាងមុន។</value>
   </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>លាក់ MorphicBar</value>
@@ -77,10 +77,10 @@
     <value>បង្កើនទំហំអត្ថបទ</value>
   </data>
   <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen larger.</value>
+    <value>ពង្រីកអ្វីៗទាំងអស់នៅលើអេក្រង់របស់អ្នកឱ្យធំជាងមុន។</value>
   </data>
   <data name="InfoRightClickSettingsHint" xml:space="preserve">
-    <value>Right-click to change settings.</value>
+    <value>ចុចកណ្ដុរស្ដាំ ដើម្បីផ្លាស់ប្ដូរការកំណត់។</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>ស្វែងយល់បន្ថែមអំពី Morphic</value>
@@ -92,19 +92,19 @@
     <value>លាក់កែវពង្រីក</value>
   </data>
   <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
-    <value>Turn off the magnifier.</value>
+    <value>បិទកែវពង្រីក។</value>
   </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>លាក់</value>
   </data>
   <data name="MagnifierInfoSubtitle" xml:space="preserve">
-    <value>Zoom in to enlarge part of your screen.</value>
+    <value>ពង្រីក ដើម្បីធ្វើឱ្យផ្នែកមួយនៃអេក្រង់របស់អ្នកធំជាងមុន។</value>
   </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>បង្ហាញកែវពង្រីក</value>
   </data>
   <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
-    <value>Turn on a magnifying lens that follows your mouse.</value>
+    <value>បើកកញ្ចក់ពង្រីកដែលផ្លាស់ទីតាមកណ្ដុររបស់អ្នក។</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>បង្ហាញ</value>
@@ -116,7 +116,7 @@
     <value>Morphic សម្រាប់ Windows</value>
   </data>
   <data name="NightInfoSubtitle" xml:space="preserve">
-    <value>Turn Night Light on or off to warm the screen colors and reduce eye strain.</value>
+    <value>បើក ឬបិទ Night Light ដើម្បីធ្វើឱ្យពណ៌អេក្រង់កក់ក្តៅ និងកាត់បន្ថយភាពនឿយភ្នែក។</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>យប់</value>
@@ -170,40 +170,40 @@
     <value>អានអត្ថបទដែលបានជ្រើស</value>
   </data>
   <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud, or stop reading.</value>
+    <value>អានអត្ថបទដែលអ្នកបានជ្រើសរើសឮៗ ឬបញ្ឈប់ការអាន។</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>អានអត្ថបទដែលបានជ្រើសរើស</value>
   </data>
   <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud.</value>
+    <value>អានអត្ថបទដែលអ្នកបានជ្រើសរើសឮៗ។</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>បញ្ឈប់ការអានអត្ថបទដែលបានជ្រើសរើស</value>
   </data>
   <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
-    <value>Stop reading aloud.</value>
+    <value>បញ្ឈប់ការអានឮៗ។</value>
   </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>បង្ហាញ MorphicBar</value>
   </data>
   <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any larger.</value>
+    <value>អត្ថបទមិនអាចធំជាងនេះទៀតទេ។</value>
   </data>
   <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any smaller.</value>
+    <value>អត្ថបទមិនអាចតូចជាងនេះទៀតទេ។</value>
   </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>ទំហំអក្សរ</value>
   </data>
   <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
-    <value>Make the text on your screen larger or smaller.</value>
+    <value>ពង្រីក ឬបង្រួមអត្ថបទនៅលើអេក្រង់របស់អ្នក។</value>
   </data>
   <data name="SizeOfTextLargerLabel" xml:space="preserve">
-    <value>Larger</value>
+    <value>ធំជាង</value>
   </data>
   <data name="SizeOfTextSmallerLabel" xml:space="preserve">
-    <value>Smaller</value>
+    <value>តូចជាង</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>កាត់ថត និងចម្លងផ្នែកមួយនៃអេក្រង់</value>
@@ -215,6 +215,6 @@
     <value>កាត់ថត</value>
   </data>
   <data name="SnipInfoSubtitle" xml:space="preserve">
-    <value>Take a picture of part of your screen. Click {0}, then drag your mouse across the area you want to capture.</value>
+    <value>ថតរូបផ្នែកមួយនៃអេក្រង់របស់អ្នក។ ចុច {0} បន្ទាប់មកអូសកណ្ដុររបស់អ្នកលើតំបន់ដែលអ្នកចង់ថត។</value>
   </data>
 </root>

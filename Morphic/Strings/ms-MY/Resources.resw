@@ -35,7 +35,7 @@
     <value>Penapis warna</value>
   </data>
   <data name="ColorInfoSubtitle" xml:space="preserve">
-    <value>Turn color filters on or off to adjust colors for color vision differences.</value>
+    <value>Hidupkan atau matikan penapis warna untuk melaraskan warna bagi perbezaan penglihatan warna.</value>
   </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>Warna</value>
@@ -44,7 +44,7 @@
     <value>Kontras &amp; Warna</value>
   </data>
   <data name="ContrastInfoSubtitle" xml:space="preserve">
-    <value>Turn high contrast on or off to make the screen easier to read.</value>
+    <value>Hidupkan atau matikan kontras tinggi untuk menjadikan skrin lebih mudah dibaca.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>Kontras</value>
@@ -56,7 +56,7 @@
     <value>Hak Cipta {0} Raising the Floor - US, Inc.</value>
   </data>
   <data name="DarkInfoSubtitle" xml:space="preserve">
-    <value>Turn dark mode on or off.</value>
+    <value>Hidupkan atau matikan mod gelap.</value>
   </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>Gelap</value>
@@ -68,7 +68,7 @@
     <value>Kecilkan saiz teks</value>
   </data>
   <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen smaller.</value>
+    <value>Kecilkan segala-galanya pada skrin anda.</value>
   </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>Sembunyikan MorphicBar</value>
@@ -77,10 +77,10 @@
     <value>Besarkan saiz teks</value>
   </data>
   <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen larger.</value>
+    <value>Besarkan segala-galanya pada skrin anda.</value>
   </data>
   <data name="InfoRightClickSettingsHint" xml:space="preserve">
-    <value>Right-click to change settings.</value>
+    <value>Klik kanan untuk mengubah tetapan.</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Ketahui Lebih Lanjut tentang Morphic</value>
@@ -92,19 +92,19 @@
     <value>Sembunyikan Pembesar</value>
   </data>
   <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
-    <value>Turn off the magnifier.</value>
+    <value>Matikan pembesar.</value>
   </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>Sembunyikan</value>
   </data>
   <data name="MagnifierInfoSubtitle" xml:space="preserve">
-    <value>Zoom in to enlarge part of your screen.</value>
+    <value>Zum masuk untuk membesarkan sebahagian skrin anda.</value>
   </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>Tunjukkan Pembesar</value>
   </data>
   <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
-    <value>Turn on a magnifying lens that follows your mouse.</value>
+    <value>Hidupkan kanta pembesar yang mengikuti tetikus anda.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Tunjukkan</value>
@@ -116,7 +116,7 @@
     <value>Morphic untuk Windows</value>
   </data>
   <data name="NightInfoSubtitle" xml:space="preserve">
-    <value>Turn Night Light on or off to warm the screen colors and reduce eye strain.</value>
+    <value>Hidupkan atau matikan Cahaya Malam untuk menghangatkan warna skrin dan mengurangkan ketegangan mata.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>Malam</value>
@@ -170,40 +170,40 @@
     <value>Baca Pilihan</value>
   </data>
   <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud, or stop reading.</value>
+    <value>Baca teks pilihan anda dengan kuat, atau berhenti membaca.</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>Baca teks yang dipilih</value>
   </data>
   <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud.</value>
+    <value>Baca teks pilihan anda dengan kuat.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Berhenti membaca teks yang dipilih</value>
   </data>
   <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
-    <value>Stop reading aloud.</value>
+    <value>Berhenti membaca dengan kuat.</value>
   </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>Tunjukkan MorphicBar</value>
   </data>
   <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any larger.</value>
+    <value>Teks tidak boleh dibesarkan lagi.</value>
   </data>
   <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any smaller.</value>
+    <value>Teks tidak boleh dikecilkan lagi.</value>
   </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>Saiz Teks</value>
   </data>
   <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
-    <value>Make the text on your screen larger or smaller.</value>
+    <value>Besarkan atau kecilkan teks pada skrin anda.</value>
   </data>
   <data name="SizeOfTextLargerLabel" xml:space="preserve">
-    <value>Larger</value>
+    <value>Lebih Besar</value>
   </data>
   <data name="SizeOfTextSmallerLabel" xml:space="preserve">
-    <value>Smaller</value>
+    <value>Lebih Kecil</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>Petik dan salin sebahagian skrin</value>
@@ -215,6 +215,6 @@
     <value>Petikan</value>
   </data>
   <data name="SnipInfoSubtitle" xml:space="preserve">
-    <value>Take a picture of part of your screen. Click {0}, then drag your mouse across the area you want to capture.</value>
+    <value>Ambil gambar sebahagian skrin anda. Klik {0}, kemudian seret tetikus anda merentasi kawasan yang ingin anda tangkap.</value>
   </data>
 </root>

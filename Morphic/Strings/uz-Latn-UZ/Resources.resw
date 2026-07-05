@@ -35,7 +35,7 @@
     <value>Rang filtrlari</value>
   </data>
   <data name="ColorInfoSubtitle" xml:space="preserve">
-    <value>Turn color filters on or off to adjust colors for color vision differences.</value>
+    <value>Rang koʻrish farqlariga moslash uchun rang filtrlarini yoqing yoki oʻchiring.</value>
   </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>Rang</value>
@@ -44,7 +44,7 @@
     <value>Kontrast va rang</value>
   </data>
   <data name="ContrastInfoSubtitle" xml:space="preserve">
-    <value>Turn high contrast on or off to make the screen easier to read.</value>
+    <value>Ekranni oʻqishni osonlashtirish uchun yuqori kontrastni yoqing yoki oʻchiring.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>Kontrast</value>
@@ -56,7 +56,7 @@
     <value>Mualliflik huquqi {0} Raising the Floor - US, Inc.</value>
   </data>
   <data name="DarkInfoSubtitle" xml:space="preserve">
-    <value>Turn dark mode on or off.</value>
+    <value>Tungi rejimni yoqing yoki oʻchiring.</value>
   </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>Qorong‘i</value>
@@ -68,7 +68,7 @@
     <value>Matn o'lchamini kichraytirish</value>
   </data>
   <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen smaller.</value>
+    <value>Ekraningizdagi hamma narsani kichraytiring.</value>
   </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>MorphicBar ni yashirish</value>
@@ -77,10 +77,10 @@
     <value>Matn o'lchamini kattalashtirish</value>
   </data>
   <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen larger.</value>
+    <value>Ekraningizdagi hamma narsani kattalashtiring.</value>
   </data>
   <data name="InfoRightClickSettingsHint" xml:space="preserve">
-    <value>Right-click to change settings.</value>
+    <value>Sozlamalarni oʻzgartirish uchun sichqonchaning oʻng tugmasini bosing.</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Morphic haqida batafsil</value>
@@ -92,19 +92,19 @@
     <value>Lupani yashirish</value>
   </data>
   <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
-    <value>Turn off the magnifier.</value>
+    <value>Ekran lupasini oʻchiring.</value>
   </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>Yashirish</value>
   </data>
   <data name="MagnifierInfoSubtitle" xml:space="preserve">
-    <value>Zoom in to enlarge part of your screen.</value>
+    <value>Ekraningizning bir qismini kattalashtirish uchun yaqinlashtiring.</value>
   </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>Lupani ko‘rsatish</value>
   </data>
   <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
-    <value>Turn on a magnifying lens that follows your mouse.</value>
+    <value>Sichqonchangizni kuzatib boradigan kattalashtiruvchi linzani yoqing.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Ko'rsatish</value>
@@ -116,7 +116,7 @@
     <value>Windows uchun Morphic</value>
   </data>
   <data name="NightInfoSubtitle" xml:space="preserve">
-    <value>Turn Night Light on or off to warm the screen colors and reduce eye strain.</value>
+    <value>Ekran ranglarini isitib, koʻz charchoqini kamaytirish uchun Tungi yorugʻlikni yoqing yoki oʻchiring.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>Tungi</value>
@@ -170,40 +170,40 @@
     <value>Tanlanganni o‘qish</value>
   </data>
   <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud, or stop reading.</value>
+    <value>Tanlangan matnni ovoz chiqarib oʻqing yoki oʻqishni toʻxtating.</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>Tanlangan matnni o‘qish</value>
   </data>
   <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud.</value>
+    <value>Tanlangan matnni ovoz chiqarib oʻqing.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Tanlangan matnni o‘qishni to‘xtatish</value>
   </data>
   <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
-    <value>Stop reading aloud.</value>
+    <value>Ovoz chiqarib oʻqishni toʻxtating.</value>
   </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>MorphicBar'ni ko‘rsatish</value>
   </data>
   <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any larger.</value>
+    <value>Matnni bundan ortiq kattalashtirib boʻlmaydi.</value>
   </data>
   <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any smaller.</value>
+    <value>Matnni bundan ortiq kichraytirib boʻlmaydi.</value>
   </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>Matn o‘lchami</value>
   </data>
   <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
-    <value>Make the text on your screen larger or smaller.</value>
+    <value>Ekraningizdagi matnni kattalashtiring yoki kichraytiring.</value>
   </data>
   <data name="SizeOfTextLargerLabel" xml:space="preserve">
-    <value>Larger</value>
+    <value>Kattaroq</value>
   </data>
   <data name="SizeOfTextSmallerLabel" xml:space="preserve">
-    <value>Smaller</value>
+    <value>Kichikroq</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>Ekranning bir qismini qirqib olish va nusxalash</value>
@@ -215,6 +215,6 @@
     <value>Qirqib olish</value>
   </data>
   <data name="SnipInfoSubtitle" xml:space="preserve">
-    <value>Take a picture of part of your screen. Click {0}, then drag your mouse across the area you want to capture.</value>
+    <value>Ekraningizning bir qismidan suratga oling. {0} tugmasini bosing, soʻng sichqonchani suratga olmoqchi boʻlgan joyingiz boʻylab torting.</value>
   </data>
 </root>

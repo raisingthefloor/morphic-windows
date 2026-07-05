@@ -98,13 +98,13 @@
     <value>Схаваць</value>
   </data>
   <data name="MagnifierInfoSubtitle" xml:space="preserve">
-    <value>Zoom in to enlarge part of your screen.</value>
+    <value>Павялічце маштаб часткі экрана.</value>
   </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>Паказаць экранную лупу</value>
   </data>
   <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
-    <value>Turn on a magnifying lens that follows your mouse.</value>
+    <value>Уключыце лупу, якая рухаецца за курсорам.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Паказаць</value>
@@ -182,7 +182,7 @@
     <value>Спыніць чытанне вылучанага тэксту</value>
   </data>
   <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
-    <value>Stop reading aloud.</value>
+    <value>Спыніць чытанне ўслых.</value>
   </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>Паказаць MorphicBar</value>
@@ -215,6 +215,6 @@
     <value>Фрагмент</value>
   </data>
   <data name="SnipInfoSubtitle" xml:space="preserve">
-    <value>Take a picture of part of your screen. Click {0}, then drag your mouse across the area you want to capture.</value>
+    <value>Зрабіце здымак часткі экрана. Націсніце {0}, затым перацягніце мышшу па вобласці, якую хочаце захапіць.</value>
   </data>
 </root>

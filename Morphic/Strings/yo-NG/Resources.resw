@@ -35,7 +35,7 @@
     <value>Àwọn àlẹ̀mọ́ àwọ̀</value>
   </data>
   <data name="ColorInfoSubtitle" xml:space="preserve">
-    <value>Turn color filters on or off to adjust colors for color vision differences.</value>
+    <value>Tan tabi paa àwọn àlẹmọ́ àwọ̀ láti ṣàtúnṣe àwọ̀ fún ìyàtọ̀ ìríran àwọ̀.</value>
   </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>Àwọ̀</value>
@@ -44,7 +44,7 @@
     <value>Ìyàtọ̀ &amp; Àwọ̀</value>
   </data>
   <data name="ContrastInfoSubtitle" xml:space="preserve">
-    <value>Turn high contrast on or off to make the screen easier to read.</value>
+    <value>Tan tàbí pa ìyàtọ̀ gíga láti jẹ́ kí iboju rọrùn láti kà.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>Ìyàtọ̀</value>
@@ -68,7 +68,7 @@
     <value>Dín ìwọ̀n ọ̀rọ̀ kù</value>
   </data>
   <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen smaller.</value>
+    <value>Mú kí ohun gbogbo lórí ìbòjú rẹ kéré sí i.</value>
   </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>Fi MorphicBar pamọ́</value>
@@ -77,10 +77,10 @@
     <value>Mú ìwọ̀n ọ̀rọ̀ pọ̀ sí i</value>
   </data>
   <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen larger.</value>
+    <value>Mú kí ohun gbogbo lórí ìbòjú rẹ tóbi sí i.</value>
   </data>
   <data name="InfoRightClickSettingsHint" xml:space="preserve">
-    <value>Right-click to change settings.</value>
+    <value>Tẹ̀-ọ̀tún láti yí àwọn ètò padà.</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Kọ́ ẹ̀kọ́ síi nípa Morphic</value>
@@ -92,7 +92,7 @@
     <value>Fi Amú-nlá pamọ́</value>
   </data>
   <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
-    <value>Turn off the magnifier.</value>
+    <value>Pa amúgbòòrò.</value>
   </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>Fipamọ́</value>
@@ -104,7 +104,7 @@
     <value>Fi Amú-nlá hàn</value>
   </data>
   <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
-    <value>Turn on a magnifying lens that follows your mouse.</value>
+    <value>Tan lẹ́ńsì amúgbòòrò tó ń tẹ̀lé mouse rẹ.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Fi hàn</value>
@@ -116,7 +116,7 @@
     <value>Morphic fún Windows</value>
   </data>
   <data name="NightInfoSubtitle" xml:space="preserve">
-    <value>Turn Night Light on or off to warm the screen colors and reduce eye strain.</value>
+    <value>Tan tàbí pa Ìmọ́lẹ̀ alẹ́ láti mú awọ iboju gbóná kí ó sì dín ìrora ojú kù.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>Alẹ́</value>
@@ -170,28 +170,28 @@
     <value>Ka Èyí Tí a Yàn</value>
   </data>
   <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud, or stop reading.</value>
+    <value>Ka ọ̀rọ̀ tí o yàn sókè, tàbí dá kíkà dúró.</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>Kà ọ̀rọ̀ tí a yàn</value>
   </data>
   <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud.</value>
+    <value>Ka ọ̀rọ̀ tí o yàn sókè.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Dáwọ́ kíka ọ̀rọ̀ tí a yàn dúró</value>
   </data>
   <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
-    <value>Stop reading aloud.</value>
+    <value>Dá kíkà sókè dúró.</value>
   </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>Fi MorphicBar hàn</value>
   </data>
   <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any larger.</value>
+    <value>Ọ̀rọ̀ náà kò lè tóbi sí i mọ́.</value>
   </data>
   <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any smaller.</value>
+    <value>Ọ̀rọ̀ náà kò lè kéré sí i mọ́.</value>
   </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>Ìwọ̀n Ọ̀rọ̀</value>
@@ -200,10 +200,10 @@
     <value>Make the text on your screen larger or smaller.</value>
   </data>
   <data name="SizeOfTextLargerLabel" xml:space="preserve">
-    <value>Larger</value>
+    <value>Tóbi síi</value>
   </data>
   <data name="SizeOfTextSmallerLabel" xml:space="preserve">
-    <value>Smaller</value>
+    <value>Kéré síi</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>Gé apá kan ojú ìwò kí o sì ṣe àdàkọ</value>

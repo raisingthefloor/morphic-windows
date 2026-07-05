@@ -35,7 +35,7 @@
     <value>Llimp'i suysuna</value>
   </data>
   <data name="ColorInfoSubtitle" xml:space="preserve">
-    <value>Turn color filters on or off to adjust colors for color vision differences.</value>
+    <value>Llinphi suysunakunata hap'ichiy utaq wañuchiy, llinphikunata wakniraq rikuqkunapaq allichanapaq.</value>
   </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>Llimp'i</value>
@@ -44,7 +44,7 @@
     <value>Chimpapuray &amp; llimp'i</value>
   </data>
   <data name="ContrastInfoSubtitle" xml:space="preserve">
-    <value>Turn high contrast on or off to make the screen easier to read.</value>
+    <value>Sinchi t'aqanakuyta hap'ichiy utaq wañuchiy, pantallata aswan allin ñawinchanapaq.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>Chimpapuray</value>
@@ -68,7 +68,7 @@
     <value>Qillqa sayayninta huch'uyyachiy</value>
   </data>
   <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen smaller.</value>
+    <value>Pantallaykipi tukuy imata huch'uyyachiy.</value>
   </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>MorphicBar pakay</value>
@@ -77,10 +77,10 @@
     <value>Qillqap sayayninta hatunyachiy</value>
   </data>
   <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen larger.</value>
+    <value>Pantallaykipi tukuy imata hatunyachiy.</value>
   </data>
   <data name="InfoRightClickSettingsHint" xml:space="preserve">
-    <value>Right-click to change settings.</value>
+    <value>Churakuykunata tikranapaq paña ñit'iy.</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Morphicmanta aswan yachay</value>
@@ -92,19 +92,19 @@
     <value>Hatunyachiqta pakay</value>
   </data>
   <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
-    <value>Turn off the magnifier.</value>
+    <value>Hatunyachiqta wañuchiy.</value>
   </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>Pakay</value>
   </data>
   <data name="MagnifierInfoSubtitle" xml:space="preserve">
-    <value>Zoom in to enlarge part of your screen.</value>
+    <value>Pantallaykipa huk rakinta hatunyachinapaq asuykuchiy.</value>
   </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>Hatunyachiqta rikuchiy</value>
   </data>
   <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
-    <value>Turn on a magnifying lens that follows your mouse.</value>
+    <value>Mouseykita qatiq hatunyachiq lenteta hap'ichiy.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Rikuchiy</value>
@@ -116,7 +116,7 @@
     <value>Morphic Windowspaq</value>
   </data>
   <data name="NightInfoSubtitle" xml:space="preserve">
-    <value>Turn Night Light on or off to warm the screen colors and reduce eye strain.</value>
+    <value>Tuta K'anchayta hap'ichiy utaq wañuchiy, pantallapa llinphinkunata q'uñiyachinapaq, chaynapi ñawiyki mana sayk'unanpaq.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>Tuta</value>
@@ -170,40 +170,40 @@
     <value>Akllasqata Ñawinchay</value>
   </data>
   <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud, or stop reading.</value>
+    <value>Akllasqa qillqaykita kunkawan ñawinchay, utaq ñawinchayta sayachiy.</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>Akllasqa qillqata ñawinchay</value>
   </data>
   <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud.</value>
+    <value>Akllasqa qillqaykita kunkawan ñawinchay.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Akllasqa qillqata ñawinchayta sayachiy</value>
   </data>
   <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
-    <value>Stop reading aloud.</value>
+    <value>Kunkawan ñawinchayta sayachiy.</value>
   </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>MorphicBar rikuchiy</value>
   </data>
   <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any larger.</value>
+    <value>Qillqaqa manañan aswan hatunyayta atinchu.</value>
   </data>
   <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any smaller.</value>
+    <value>Qillqaqa manañan aswan huch'uyyayta atinchu.</value>
   </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>Qillqap Sayaynin</value>
   </data>
   <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
-    <value>Make the text on your screen larger or smaller.</value>
+    <value>Pantallaykipi qillqata hatunyachiy utaq huch'uyyachiy.</value>
   </data>
   <data name="SizeOfTextLargerLabel" xml:space="preserve">
-    <value>Larger</value>
+    <value>Aswan hatun</value>
   </data>
   <data name="SizeOfTextSmallerLabel" xml:space="preserve">
-    <value>Smaller</value>
+    <value>Aswan huch'uy</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>Pantallamanta huk rak'inta kuchuy hinaspa kopyay</value>
@@ -215,6 +215,6 @@
     <value>Kuchuy</value>
   </data>
   <data name="SnipInfoSubtitle" xml:space="preserve">
-    <value>Take a picture of part of your screen. Click {0}, then drag your mouse across the area you want to capture.</value>
+    <value>Pantallaykipa huk rakinta siq'iy. {0} ñit'iy, chaymanta hap'iy munasqayki cheqasta mouse-niykita aysay.</value>
   </data>
 </root>

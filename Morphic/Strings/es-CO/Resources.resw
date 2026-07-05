@@ -98,13 +98,13 @@
     <value>Ocultar</value>
   </data>
   <data name="MagnifierInfoSubtitle" xml:space="preserve">
-    <value>Zoom in to enlarge part of your screen.</value>
+    <value>Haga zoom para ampliar una parte de su pantalla.</value>
   </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>Mostrar la Lupa</value>
   </data>
   <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
-    <value>Turn on a magnifying lens that follows your mouse.</value>
+    <value>Active una lupa que sigue el puntero de su mouse.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Mostrar</value>
@@ -176,7 +176,7 @@
     <value>Leer el texto seleccionado</value>
   </data>
   <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud.</value>
+    <value>Lea en voz alta el texto seleccionado.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Dejar de leer el texto seleccionado</value>
@@ -197,7 +197,7 @@
     <value>Tamaño del texto</value>
   </data>
   <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
-    <value>Make the text on your screen larger or smaller.</value>
+    <value>Aumente o disminuya el tamaño del texto en su pantalla.</value>
   </data>
   <data name="SizeOfTextLargerLabel" xml:space="preserve">
     <value>Más grande</value>
@@ -215,6 +215,6 @@
     <value>Recorte</value>
   </data>
   <data name="SnipInfoSubtitle" xml:space="preserve">
-    <value>Take a picture of part of your screen. Click {0}, then drag your mouse across the area you want to capture.</value>
+    <value>Tome una captura de parte de la pantalla. Haga clic en {0} y luego arrastre el mouse por el área que quiere capturar.</value>
   </data>
 </root>

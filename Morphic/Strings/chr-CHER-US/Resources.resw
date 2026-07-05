@@ -44,7 +44,7 @@
     <value>ᎤᏓᏚᎬ ᎠᎴ ᎤᏃᏍᏓ</value>
   </data>
   <data name="ContrastInfoSubtitle" xml:space="preserve">
-    <value>Turn high contrast on or off to make the screen easier to read.</value>
+    <value>ᎤᏟ ᎢᏯᏓᏅᏓ ᏗᏑᏰᏍᏗ ᎭᏗᏍᎪᎢ ᎠᎴ ᏞᎬᎾ ᎭᏁᎦ, ᎠᏟᎶᏍᏗ ᎤᏟ ᎠᎯᏗᏱ ᎠᎪᏩᏛᏗ.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>ᎤᏓᏚᎬ</value>
@@ -68,7 +68,7 @@
     <value>ᎪᏪᎵ ᎤᏍᏗ ᏩᏂᎦᏛᏁᏗ</value>
   </data>
   <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen smaller.</value>
+    <value>ᎠᏟᎶᏍᏗ ᎾᎿ ᏂᎦᏛ ᎤᏍᏗ ᎢᏴᏁᏗ.</value>
   </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>MorphicBar ᎬᏍᎦᎳᏁᏗ</value>
@@ -77,7 +77,7 @@
     <value>ᎪᏪᎵ ᎤᏔᎾ ᏩᏂᎦᏛᏁᏗ</value>
   </data>
   <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen larger.</value>
+    <value>ᎠᏟᎶᏍᏗ ᎾᎿ ᏂᎦᏛ ᎤᏔᎾ ᎢᏴᏁᏗ.</value>
   </data>
   <data name="InfoRightClickSettingsHint" xml:space="preserve">
     <value>ᎠᎦᏘᏏᏗᏢ ᏗᎬᏔᏛ ᏣᏒᏂᎦ ᏗᎦᏃᏢᏅ ᏗᏣᏁᏟᏴᏍᏗᎢ.</value>
@@ -98,7 +98,7 @@
     <value>ᎬᏍᎦᎳᏁᏗ</value>
   </data>
   <data name="MagnifierInfoSubtitle" xml:space="preserve">
-    <value>Zoom in to enlarge part of your screen.</value>
+    <value>ᎠᏟᎶᏍᏗ ᎢᎦᏛ ᎤᏔᎾ ᎢᏴᏁᏗ ᎠᏂᎩᏍᏗ.</value>
   </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>ᎠᎾᏍᎦᏂᎵᏙᏗ ᎾᏄᎪᏫᏒ</value>
@@ -188,7 +188,7 @@
     <value>MorphicBar ᎾᏄᎪᏫᏎᏍᏗ</value>
   </data>
   <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any larger.</value>
+    <value>ᎪᏪᎵ ᎥᏝ ᎤᏟ ᎤᏔᏂ ᏳᎵᏍᏙᏗ.</value>
   </data>
   <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
     <value>ᎪᏪᎵ ᎥᏝ ᎤᏟ ᎡᏍᎦ ᏰᎵ ᏱᏂᎦᎵᏍᏓ.</value>
@@ -197,7 +197,7 @@
     <value>ᎪᏪᎵ ᎢᎦᏘᎢ</value>
   </data>
   <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
-    <value>Make the text on your screen larger or smaller.</value>
+    <value>ᎠᏟᎶᏍᏗ ᎾᎿ ᎪᏪᎵ ᎤᏔᎾ ᎠᎴ ᎤᏍᏗ ᎢᏴᏁᏗ.</value>
   </data>
   <data name="SizeOfTextLargerLabel" xml:space="preserve">
     <value>ᎤᏟ ᎡᏆ</value>

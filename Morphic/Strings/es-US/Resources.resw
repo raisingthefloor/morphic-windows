@@ -68,7 +68,7 @@
     <value>Disminuir tamaño del texto</value>
   </data>
   <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen smaller.</value>
+    <value>Haz que todo en tu pantalla se vea más pequeño.</value>
   </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>Ocultar MorphicBar</value>
@@ -77,7 +77,7 @@
     <value>Aumentar tamaño del texto</value>
   </data>
   <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen larger.</value>
+    <value>Haz que todo en tu pantalla se vea más grande.</value>
   </data>
   <data name="InfoRightClickSettingsHint" xml:space="preserve">
     <value>Haz clic derecho para cambiar la configuración.</value>
@@ -197,7 +197,7 @@
     <value>Tamaño del texto</value>
   </data>
   <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
-    <value>Make the text on your screen larger or smaller.</value>
+    <value>Haz que el texto en tu pantalla se vea más grande o más pequeño.</value>
   </data>
   <data name="SizeOfTextLargerLabel" xml:space="preserve">
     <value>Más grande</value>

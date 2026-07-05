@@ -35,7 +35,7 @@
     <value>Vichujio vya rangi</value>
   </data>
   <data name="ColorInfoSubtitle" xml:space="preserve">
-    <value>Turn color filters on or off to adjust colors for color vision differences.</value>
+    <value>Washa au zima vichujio vya rangi ili kurekebisha rangi kwa tofauti za uoni wa rangi.</value>
   </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>Rangi</value>
@@ -44,7 +44,7 @@
     <value>Utofautishaji na Rangi</value>
   </data>
   <data name="ContrastInfoSubtitle" xml:space="preserve">
-    <value>Turn high contrast on or off to make the screen easier to read.</value>
+    <value>Washa au zima utofautishaji wa juu ili kurahisisha kusoma skrini.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>Utofautishaji</value>
@@ -56,7 +56,7 @@
     <value>Hakimiliki {0} Raising the Floor - US, Inc.</value>
   </data>
   <data name="DarkInfoSubtitle" xml:space="preserve">
-    <value>Turn dark mode on or off.</value>
+    <value>Washa au zima hali ya giza.</value>
   </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>Giza</value>
@@ -68,7 +68,7 @@
     <value>Punguza ukubwa wa maandishi</value>
   </data>
   <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen smaller.</value>
+    <value>Fanya kila kitu kwenye skrini yako kiwe kidogo zaidi.</value>
   </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>Ficha MorphicBar</value>
@@ -77,10 +77,10 @@
     <value>Ongeza ukubwa wa maandishi</value>
   </data>
   <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen larger.</value>
+    <value>Fanya kila kitu kwenye skrini yako kiwe kikubwa zaidi.</value>
   </data>
   <data name="InfoRightClickSettingsHint" xml:space="preserve">
-    <value>Right-click to change settings.</value>
+    <value>Bofya kulia ili kubadilisha mipangilio.</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Pata Maelezo Zaidi kuhusu Morphic</value>
@@ -92,19 +92,19 @@
     <value>Ficha Kikuzaji</value>
   </data>
   <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
-    <value>Turn off the magnifier.</value>
+    <value>Zima kikuzaji.</value>
   </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>Ficha</value>
   </data>
   <data name="MagnifierInfoSubtitle" xml:space="preserve">
-    <value>Zoom in to enlarge part of your screen.</value>
+    <value>Vuta karibu ili kukuza sehemu ya skrini yako.</value>
   </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>Onyesha Kikuzaji</value>
   </data>
   <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
-    <value>Turn on a magnifying lens that follows your mouse.</value>
+    <value>Washa lenzi ya kukuza inayofuata kipanya chako.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Onyesha</value>
@@ -116,7 +116,7 @@
     <value>Morphic kwa Windows</value>
   </data>
   <data name="NightInfoSubtitle" xml:space="preserve">
-    <value>Turn Night Light on or off to warm the screen colors and reduce eye strain.</value>
+    <value>Washa au zima Mwanga wa Usiku ili kupasha joto rangi za skrini na kupunguza uchovu wa macho.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>Usiku</value>
@@ -170,40 +170,40 @@
     <value>Soma Yaliyochaguliwa</value>
   </data>
   <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud, or stop reading.</value>
+    <value>Soma kwa sauti maandishi uliyochagua, au acha kusoma.</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>Soma maandishi yaliyochaguliwa</value>
   </data>
   <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud.</value>
+    <value>Soma kwa sauti maandishi uliyochagua.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Acha kusoma maandishi yaliyochaguliwa</value>
   </data>
   <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
-    <value>Stop reading aloud.</value>
+    <value>Acha kusoma kwa sauti.</value>
   </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>Onyesha MorphicBar</value>
   </data>
   <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any larger.</value>
+    <value>Maandishi hayawezi kuwa makubwa zaidi.</value>
   </data>
   <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any smaller.</value>
+    <value>Maandishi hayawezi kuwa madogo zaidi.</value>
   </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>Ukubwa wa Maandishi</value>
   </data>
   <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
-    <value>Make the text on your screen larger or smaller.</value>
+    <value>Fanya maandishi kwenye skrini yako yawe makubwa au madogo zaidi.</value>
   </data>
   <data name="SizeOfTextLargerLabel" xml:space="preserve">
-    <value>Larger</value>
+    <value>Kubwa zaidi</value>
   </data>
   <data name="SizeOfTextSmallerLabel" xml:space="preserve">
-    <value>Smaller</value>
+    <value>Ndogo zaidi</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>Nasa na unakili sehemu ya skrini</value>
@@ -215,6 +215,6 @@
     <value>Nasa</value>
   </data>
   <data name="SnipInfoSubtitle" xml:space="preserve">
-    <value>Take a picture of part of your screen. Click {0}, then drag your mouse across the area you want to capture.</value>
+    <value>Piga picha ya sehemu ya skrini yako. Bofya {0}, kisha uburute kipanya chako kwenye eneo unalotaka kunasa.</value>
   </data>
 </root>

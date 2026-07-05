@@ -35,7 +35,7 @@
     <value>ಬಣ್ಣ ಫಿಲ್ಟರ್‌ಗಳು</value>
   </data>
   <data name="ColorInfoSubtitle" xml:space="preserve">
-    <value>Turn color filters on or off to adjust colors for color vision differences.</value>
+    <value>ಬಣ್ಣ ದೃಷ್ಟಿ ವ್ಯತ್ಯಾಸಗಳಿಗೆ ಬಣ್ಣಗಳನ್ನು ಸರಿಹೊಂದಿಸಲು ಬಣ್ಣ ಫಿಲ್ಟರ್‌ಗಳನ್ನು ಆನ್ ಅಥವಾ ಆಫ್ ಮಾಡಿ.</value>
   </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>ಬಣ್ಣ</value>
@@ -44,7 +44,7 @@
     <value>ಕಾಂಟ್ರಾಸ್ಟ್ ಮತ್ತು ಬಣ್ಣ</value>
   </data>
   <data name="ContrastInfoSubtitle" xml:space="preserve">
-    <value>Turn high contrast on or off to make the screen easier to read.</value>
+    <value>ಪರದೆಯನ್ನು ಓದಲು ಸುಲಭವಾಗಿಸಲು ಹೆಚ್ಚಿನ ಕಾಂಟ್ರಾಸ್ಟ್ ಅನ್ನು ಆನ್ ಅಥವಾ ಆಫ್ ಮಾಡಿ.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>ಕಾಂಟ್ರಾಸ್ಟ್</value>
@@ -56,7 +56,7 @@
     <value>ಕೃತಿಸ್ವಾಮ್ಯ {0} Raising the Floor - US, Inc.</value>
   </data>
   <data name="DarkInfoSubtitle" xml:space="preserve">
-    <value>Turn dark mode on or off.</value>
+    <value>ಡಾರ್ಕ್ ಮೋಡ್ ಅನ್ನು ಆನ್ ಅಥವಾ ಆಫ್ ಮಾಡಿ.</value>
   </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>ಡಾರ್ಕ್</value>
@@ -68,7 +68,7 @@
     <value>ಪಠ್ಯದ ಗಾತ್ರವನ್ನು ಕಡಿಮೆ ಮಾಡಿ</value>
   </data>
   <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen smaller.</value>
+    <value>ನಿಮ್ಮ ಪರದೆಯಲ್ಲಿರುವ ಎಲ್ಲವನ್ನೂ ಚಿಕ್ಕದಾಗಿಸಿ.</value>
   </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>MorphicBar ಅನ್ನು ಮರೆಮಾಡಿ</value>
@@ -77,10 +77,10 @@
     <value>ಪಠ್ಯದ ಗಾತ್ರವನ್ನು ಹೆಚ್ಚಿಸಿ</value>
   </data>
   <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen larger.</value>
+    <value>ನಿಮ್ಮ ಪರದೆಯಲ್ಲಿರುವ ಎಲ್ಲವನ್ನೂ ದೊಡ್ಡದಾಗಿಸಿ.</value>
   </data>
   <data name="InfoRightClickSettingsHint" xml:space="preserve">
-    <value>Right-click to change settings.</value>
+    <value>ಸೆಟ್ಟಿಂಗ್‌ಗಳನ್ನು ಬದಲಾಯಿಸಲು ಬಲ-ಕ್ಲಿಕ್ ಮಾಡಿ.</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Morphic ಕುರಿತು ಇನ್ನಷ್ಟು ತಿಳಿಯಿರಿ</value>
@@ -92,19 +92,19 @@
     <value>ವರ್ಧಕವನ್ನು ಮರೆಮಾಡಿ</value>
   </data>
   <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
-    <value>Turn off the magnifier.</value>
+    <value>ವರ್ಧಕವನ್ನು ಆಫ್ ಮಾಡಿ.</value>
   </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>ಮರೆಮಾಡಿ</value>
   </data>
   <data name="MagnifierInfoSubtitle" xml:space="preserve">
-    <value>Zoom in to enlarge part of your screen.</value>
+    <value>ನಿಮ್ಮ ಪರದೆಯ ಭಾಗವನ್ನು ದೊಡ್ಡದಾಗಿಸಲು ಜೂಮ್ ಇನ್ ಮಾಡಿ.</value>
   </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>ವರ್ಧಕವನ್ನು ತೋರಿಸಿ</value>
   </data>
   <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
-    <value>Turn on a magnifying lens that follows your mouse.</value>
+    <value>ನಿಮ್ಮ ಮೌಸ್ ಅನ್ನು ಅನುಸರಿಸುವ ವರ್ಧಕ ಲೆನ್ಸ್ ಅನ್ನು ಆನ್ ಮಾಡಿ.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>ತೋರಿಸಿ</value>
@@ -116,7 +116,7 @@
     <value>Windows ಗಾಗಿ Morphic</value>
   </data>
   <data name="NightInfoSubtitle" xml:space="preserve">
-    <value>Turn Night Light on or off to warm the screen colors and reduce eye strain.</value>
+    <value>ಪರದೆಯ ಬಣ್ಣಗಳನ್ನು ಬೆಚ್ಚಗಾಗಿಸಲು ಮತ್ತು ಕಣ್ಣಿನ ಆಯಾಸವನ್ನು ಕಡಿಮೆ ಮಾಡಲು ನೈಟ್ ಲೈಟ್ ಅನ್ನು ಆನ್ ಅಥವಾ ಆಫ್ ಮಾಡಿ.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>ರಾತ್ರಿ</value>
@@ -170,40 +170,40 @@
     <value>ಆಯ್ದದ್ದನ್ನು ಓದಿ</value>
   </data>
   <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud, or stop reading.</value>
+    <value>ನೀವು ಆಯ್ಕೆ ಮಾಡಿದ ಪಠ್ಯವನ್ನು ಗಟ್ಟಿಯಾಗಿ ಓದಿ, ಅಥವಾ ಓದುವುದನ್ನು ನಿಲ್ಲಿಸಿ.</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>ಆಯ್ಕೆ ಮಾಡಿದ ಪಠ್ಯವನ್ನು ಓದಿ</value>
   </data>
   <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud.</value>
+    <value>ನೀವು ಆಯ್ಕೆ ಮಾಡಿದ ಪಠ್ಯವನ್ನು ಗಟ್ಟಿಯಾಗಿ ಓದಿ.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>ಆಯ್ದ ಪಠ್ಯವನ್ನು ಓದುವುದನ್ನು ನಿಲ್ಲಿಸಿ</value>
   </data>
   <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
-    <value>Stop reading aloud.</value>
+    <value>ಗಟ್ಟಿಯಾಗಿ ಓದುವುದನ್ನು ನಿಲ್ಲಿಸಿ.</value>
   </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>MorphicBar ಅನ್ನು ತೋರಿಸಿ</value>
   </data>
   <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any larger.</value>
+    <value>ಪಠ್ಯವು ಇದಕ್ಕಿಂತ ದೊಡ್ಡದಾಗಲು ಸಾಧ್ಯವಿಲ್ಲ.</value>
   </data>
   <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any smaller.</value>
+    <value>ಪಠ್ಯವು ಇದಕ್ಕಿಂತ ಚಿಕ್ಕದಾಗಲು ಸಾಧ್ಯವಿಲ್ಲ.</value>
   </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>ಪಠ್ಯದ ಗಾತ್ರ</value>
   </data>
   <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
-    <value>Make the text on your screen larger or smaller.</value>
+    <value>ನಿಮ್ಮ ಪರದೆಯ ಮೇಲಿನ ಪಠ್ಯವನ್ನು ದೊಡ್ಡದಾಗಿಸಿ ಅಥವಾ ಚಿಕ್ಕದಾಗಿಸಿ.</value>
   </data>
   <data name="SizeOfTextLargerLabel" xml:space="preserve">
-    <value>Larger</value>
+    <value>ದೊಡ್ಡದು</value>
   </data>
   <data name="SizeOfTextSmallerLabel" xml:space="preserve">
-    <value>Smaller</value>
+    <value>ಚಿಕ್ಕದು</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>ಪರದೆಯ ಭಾಗವನ್ನು ಸ್ನಿಪ್ ಮಾಡಿ ಮತ್ತು ನಕಲಿಸಿ</value>
@@ -215,6 +215,6 @@
     <value>ಸ್ನಿಪ್</value>
   </data>
   <data name="SnipInfoSubtitle" xml:space="preserve">
-    <value>Take a picture of part of your screen. Click {0}, then drag your mouse across the area you want to capture.</value>
+    <value>ನಿಮ್ಮ ಪರದೆಯ ಭಾಗದ ಚಿತ್ರವನ್ನು ತೆಗೆಯಿರಿ. {0} ಕ್ಲಿಕ್ ಮಾಡಿ, ನಂತರ ನೀವು ಸೆರೆಹಿಡಿಯಲು ಬಯಸುವ ಪ್ರದೇಶದಾದ್ಯಂತ ನಿಮ್ಮ ಮೌಸ್ ಅನ್ನು ಎಳೆಯಿರಿ.</value>
   </data>
 </root>

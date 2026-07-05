@@ -68,7 +68,7 @@
     <value>ટેક્સ્ટનું કદ ઘટાડો</value>
   </data>
   <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen smaller.</value>
+    <value>તમારી સ્ક્રીન પર બધું નાનું કરો.</value>
   </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>MorphicBar છુપાવો</value>
@@ -77,7 +77,7 @@
     <value>ટેક્સ્ટનું કદ વધારો</value>
   </data>
   <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen larger.</value>
+    <value>તમારી સ્ક્રીન પર બધું મોટું કરો.</value>
   </data>
   <data name="InfoRightClickSettingsHint" xml:space="preserve">
     <value>સેટિંગ્સ બદલવા માટે રાઇટ-ક્લિક કરો.</value>
@@ -197,7 +197,7 @@
     <value>ટેક્સ્ટનું કદ</value>
   </data>
   <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
-    <value>Make the text on your screen larger or smaller.</value>
+    <value>તમારી સ્ક્રીન પરના ટેક્સ્ટને મોટું કે નાનું કરો.</value>
   </data>
   <data name="SizeOfTextLargerLabel" xml:space="preserve">
     <value>મોટું</value>

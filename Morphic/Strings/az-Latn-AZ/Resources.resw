@@ -35,7 +35,7 @@
     <value>Rəng filtrləri</value>
   </data>
   <data name="ColorInfoSubtitle" xml:space="preserve">
-    <value>Turn color filters on or off to adjust colors for color vision differences.</value>
+    <value>Rəng görmə fərqlərinə görə rəngləri tənzimləmək üçün rəng filtrlərini yandırın və ya söndürün.</value>
   </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>Rəng</value>
@@ -188,10 +188,10 @@
     <value>MorphicBar-ı göstər</value>
   </data>
   <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any larger.</value>
+    <value>Mətn daha da böyüdülə bilməz.</value>
   </data>
   <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any smaller.</value>
+    <value>Mətn daha da kiçildilə bilməz.</value>
   </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>Mətn ölçüsü</value>

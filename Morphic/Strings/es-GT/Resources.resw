@@ -98,7 +98,7 @@
     <value>Ocultar</value>
   </data>
   <data name="MagnifierInfoSubtitle" xml:space="preserve">
-    <value>Zoom in to enlarge part of your screen.</value>
+    <value>Hacé zoom para agrandar una parte de tu pantalla.</value>
   </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>Mostrar Lupa</value>
@@ -116,7 +116,7 @@
     <value>Morphic para Windows</value>
   </data>
   <data name="NightInfoSubtitle" xml:space="preserve">
-    <value>Turn Night Light on or off to warm the screen colors and reduce eye strain.</value>
+    <value>Activá o desactivá la Luz nocturna para dar tonos cálidos a los colores de la pantalla y descansar la vista.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>Luz nocturna</value>
@@ -170,13 +170,13 @@
     <value>Leer selección</value>
   </data>
   <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
-    <value>Leé en voz alta el texto que seleccionaste o detené la lectura.</value>
+    <value>Leé en voz alta el texto seleccionado o detené la lectura.</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>Leer el texto seleccionado</value>
   </data>
   <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
-    <value>Leé en voz alta el texto que seleccionaste.</value>
+    <value>Leé en voz alta el texto seleccionado.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Dejar de leer el texto seleccionado</value>
@@ -188,16 +188,16 @@
     <value>Mostrar MorphicBar</value>
   </data>
   <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any larger.</value>
+    <value>El texto ya no se puede agrandar más.</value>
   </data>
   <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any smaller.</value>
+    <value>El texto ya no puede achicarse más.</value>
   </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>Tamaño del texto</value>
   </data>
   <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
-    <value>Make the text on your screen larger or smaller.</value>
+    <value>Hacé el texto de tu pantalla más grande o más pequeño.</value>
   </data>
   <data name="SizeOfTextLargerLabel" xml:space="preserve">
     <value>Más grande</value>
@@ -215,6 +215,6 @@
     <value>Recorte</value>
   </data>
   <data name="SnipInfoSubtitle" xml:space="preserve">
-    <value>Tomá una imagen de parte de tu pantalla. Hacé clic en {0} y luego arrastrá el mouse sobre el área que querés capturar.</value>
+    <value>Tomá una captura de una parte de la pantalla. Hacé clic en {0} y luego arrastrá el mouse sobre el área que querés capturar.</value>
   </data>
 </root>

@@ -35,7 +35,7 @@
     <value>Izihluzi zemibala</value>
   </data>
   <data name="ColorInfoSubtitle" xml:space="preserve">
-    <value>Turn color filters on or off to adjust colors for color vision differences.</value>
+    <value>Vula okanye ucime izihluzi zemibala ukuze ulungise imibala kubantu ababona imibala ngokwahlukileyo.</value>
   </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>Umbala</value>
@@ -44,7 +44,7 @@
     <value>Umahluko nombala</value>
   </data>
   <data name="ContrastInfoSubtitle" xml:space="preserve">
-    <value>Turn high contrast on or off to make the screen easier to read.</value>
+    <value>Vula okanye ucime umahluko ophezulu ukuze isikrini sifundeke lula.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>Umahluko</value>
@@ -56,7 +56,7 @@
     <value>Ilungelo lokushicilela {0} Raising the Floor - US, Inc.</value>
   </data>
   <data name="DarkInfoSubtitle" xml:space="preserve">
-    <value>Turn dark mode on or off.</value>
+    <value>Vula okanye ucime imowudi emnyama.</value>
   </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>Mnyama</value>
@@ -68,7 +68,7 @@
     <value>Nciphisa ubungakanani bombhalo</value>
   </data>
   <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen smaller.</value>
+    <value>Yenza yonke into ekwisikrini sakho ibe ncinci.</value>
   </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>Fihla i-MorphicBar</value>
@@ -77,10 +77,10 @@
     <value>Yandisa ubungakanani bombhalo</value>
   </data>
   <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen larger.</value>
+    <value>Yenza yonke into ekwisikrini sakho ibe nkulu.</value>
   </data>
   <data name="InfoRightClickSettingsHint" xml:space="preserve">
-    <value>Right-click to change settings.</value>
+    <value>Cofa ekunene ukutshintsha iisetingi.</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Funda ngakumbi nge-Morphic</value>
@@ -92,19 +92,19 @@
     <value>Fihla Isikhulisi</value>
   </data>
   <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
-    <value>Turn off the magnifier.</value>
+    <value>Cima isikhulisi.</value>
   </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>Fihla</value>
   </data>
   <data name="MagnifierInfoSubtitle" xml:space="preserve">
-    <value>Zoom in to enlarge part of your screen.</value>
+    <value>Sondeza ukukhulisa inxalenye yesikrini sakho.</value>
   </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>Bonisa Isikhulisi</value>
   </data>
   <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
-    <value>Turn on a magnifying lens that follows your mouse.</value>
+    <value>Vula ilensi yokukhulisa elandela imawusi yakho.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Bonisa</value>
@@ -116,7 +116,7 @@
     <value>Morphic ye-Windows</value>
   </data>
   <data name="NightInfoSubtitle" xml:space="preserve">
-    <value>Turn Night Light on or off to warm the screen colors and reduce eye strain.</value>
+    <value>Vula okanye ucime iSibane sasebusuku ukuze ufudumeze imibala yesikrini unciphise nokudinwa kwamehlo.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>Ubusuku</value>
@@ -170,40 +170,40 @@
     <value>Funda Okukhethiweyo</value>
   </data>
   <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud, or stop reading.</value>
+    <value>Funda umbhalo owukhethileyo ngokuvakalayo, okanye uyeke ukufunda.</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>Funda umbhalo okhethiweyo</value>
   </data>
   <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud.</value>
+    <value>Funda umbhalo owukhethileyo ngokuvakalayo.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Yeka ukufunda umbhalo okhethiweyo</value>
   </data>
   <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
-    <value>Stop reading aloud.</value>
+    <value>Yeka ukufunda ngokuvakalayo.</value>
   </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>Bonisa i-MorphicBar</value>
   </data>
   <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any larger.</value>
+    <value>Umbhalo awunakuba mkhulu ngakumbi.</value>
   </data>
   <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any smaller.</value>
+    <value>Umbhalo awunakuba mncinane ngakumbi.</value>
   </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>Ubungakanani Bombhalo</value>
   </data>
   <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
-    <value>Make the text on your screen larger or smaller.</value>
+    <value>Yenza umbhalo okwisikrini sakho ube mkhulu okanye ube mncinane.</value>
   </data>
   <data name="SizeOfTextLargerLabel" xml:space="preserve">
-    <value>Larger</value>
+    <value>Nkulu</value>
   </data>
   <data name="SizeOfTextSmallerLabel" xml:space="preserve">
-    <value>Smaller</value>
+    <value>Ncinci</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>Sika uze ukope inxalenye yesikrini</value>
@@ -215,6 +215,6 @@
     <value>Sika</value>
   </data>
   <data name="SnipInfoSubtitle" xml:space="preserve">
-    <value>Take a picture of part of your screen. Click {0}, then drag your mouse across the area you want to capture.</value>
+    <value>Thatha umfanekiso wenxalenye yesikrini sakho. Cofa {0}, uze utsale imawusi yakho kwindawo ofuna ukuyithatha.</value>
   </data>
 </root>

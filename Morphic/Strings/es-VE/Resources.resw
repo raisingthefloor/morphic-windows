@@ -104,7 +104,7 @@
     <value>Mostrar Lupa</value>
   </data>
   <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
-    <value>Turn on a magnifying lens that follows your mouse.</value>
+    <value>Activa una lupa que sigue el puntero del mouse.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Mostrar</value>

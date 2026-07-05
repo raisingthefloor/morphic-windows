@@ -35,7 +35,7 @@
     <value>ରଙ୍ଗ ଫିଲ୍ଟର୍</value>
   </data>
   <data name="ColorInfoSubtitle" xml:space="preserve">
-    <value>Turn color filters on or off to adjust colors for color vision differences.</value>
+    <value>ରଙ୍ଗ ଦୃଷ୍ଟି ଭିନ୍ନତା ପାଇଁ ରଙ୍ଗ ସଜାଡ଼ିବାକୁ ରଙ୍ଗ ଫିଲ୍ଟର ଚାଲୁ କିମ୍ବା ବନ୍ଦ କରନ୍ତୁ।</value>
   </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>ରଙ୍ଗ</value>
@@ -44,7 +44,7 @@
     <value>କଣ୍ଟ୍ରାଷ୍ଟ ଓ ରଙ୍ଗ</value>
   </data>
   <data name="ContrastInfoSubtitle" xml:space="preserve">
-    <value>Turn high contrast on or off to make the screen easier to read.</value>
+    <value>ସ୍କ୍ରିନ୍ ପଢ଼ିବାକୁ ସହଜ କରିବା ପାଇଁ ଉଚ୍ଚ କନ୍ଟ୍ରାଷ୍ଟ ଅନ୍ କିମ୍ବା ଅଫ୍ କରନ୍ତୁ।</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>କଣ୍ଟ୍ରାଷ୍ଟ</value>
@@ -56,7 +56,7 @@
     <value>କପିରାଇଟ୍ {0} Raising the Floor - US, Inc.</value>
   </data>
   <data name="DarkInfoSubtitle" xml:space="preserve">
-    <value>Turn dark mode on or off.</value>
+    <value>ଡାର୍କ ମୋଡ୍ ଚାଲୁ କିମ୍ବା ବନ୍ଦ କରନ୍ତୁ।</value>
   </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>ଗାଢ଼</value>
@@ -68,7 +68,7 @@
     <value>ପାଠ୍ୟର ଆକାର କମାନ୍ତୁ</value>
   </data>
   <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen smaller.</value>
+    <value>ଆପଣଙ୍କ ସ୍କ୍ରିନ୍‌ରେ ଥିବା ସବୁକିଛିକୁ ଛୋଟ କରନ୍ତୁ।</value>
   </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>MorphicBar ଲୁଚାନ୍ତୁ</value>
@@ -77,10 +77,10 @@
     <value>ପାଠ୍ୟର ଆକାର ବଢ଼ାନ୍ତୁ</value>
   </data>
   <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen larger.</value>
+    <value>ଆପଣଙ୍କ ସ୍କ୍ରିନ୍‌ରେ ଥିବା ସବୁକିଛିକୁ ବଡ଼ କରନ୍ତୁ।</value>
   </data>
   <data name="InfoRightClickSettingsHint" xml:space="preserve">
-    <value>Right-click to change settings.</value>
+    <value>ସେଟିଙ୍ଗ ବଦଳାଇବାକୁ ଡାହାଣ-କ୍ଲିକ୍ କରନ୍ତୁ।</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Morphic ବିଷୟରେ ଅଧିକ ଜାଣନ୍ତୁ</value>
@@ -92,19 +92,19 @@
     <value>ମ୍ୟାଗ୍ନିଫାୟର୍ ଲୁଚାନ୍ତୁ</value>
   </data>
   <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
-    <value>Turn off the magnifier.</value>
+    <value>ମ୍ୟାଗ୍ନିଫାୟର୍ ବନ୍ଦ କରନ୍ତୁ।</value>
   </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>ଲୁଚାନ୍ତୁ</value>
   </data>
   <data name="MagnifierInfoSubtitle" xml:space="preserve">
-    <value>Zoom in to enlarge part of your screen.</value>
+    <value>ଆପଣଙ୍କ ସ୍କ୍ରିନ୍‌ର ଏକ ଅଂଶକୁ ବଡ଼ କରିବାକୁ ଜୁମ୍ ଇନ୍ କରନ୍ତୁ।</value>
   </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>ମ୍ୟାଗ୍ନିଫାୟର୍ ଦେଖାନ୍ତୁ</value>
   </data>
   <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
-    <value>Turn on a magnifying lens that follows your mouse.</value>
+    <value>ଆପଣଙ୍କ ମାଉସ୍‌କୁ ଅନୁସରଣ କରୁଥିବା ଏକ ମ୍ୟାଗ୍ନିଫାୟିଂ ଲେନ୍ସ ଚାଲୁ କରନ୍ତୁ।</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>ଦେଖାନ୍ତୁ</value>
@@ -170,40 +170,40 @@
     <value>ଚୟନିତକୁ ପଢ଼ନ୍ତୁ</value>
   </data>
   <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud, or stop reading.</value>
+    <value>ଆପଣଙ୍କ ଚୟନିତ ପାଠ୍ୟକୁ ଉଚ୍ଚସ୍ୱରରେ ପଢ଼ନ୍ତୁ, କିମ୍ବା ପଢ଼ିବା ବନ୍ଦ କରନ୍ତୁ।</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>ଚୟନିତ ଟେକ୍ସଟ ପଢ଼ନ୍ତୁ</value>
   </data>
   <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud.</value>
+    <value>ଆପଣଙ୍କ ଚୟନିତ ପାଠ୍ୟକୁ ଉଚ୍ଚସ୍ୱରରେ ପଢ଼ନ୍ତୁ।</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>ଚୟନିତ ପାଠ୍ୟ ପଢ଼ିବା ବନ୍ଦ କରନ୍ତୁ</value>
   </data>
   <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
-    <value>Stop reading aloud.</value>
+    <value>ଉଚ୍ଚସ୍ୱରରେ ପଢ଼ିବା ବନ୍ଦ କରନ୍ତୁ।</value>
   </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>MorphicBar ଦେଖାନ୍ତୁ</value>
   </data>
   <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any larger.</value>
+    <value>ପାଠ୍ୟ ଆଉ ବଡ଼ ହୋଇପାରିବ ନାହିଁ।</value>
   </data>
   <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any smaller.</value>
+    <value>ପାଠ୍ୟ ଆଉ ଛୋଟ ହୋଇପାରିବ ନାହିଁ।</value>
   </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>ପାଠ୍ୟର ଆକାର</value>
   </data>
   <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
-    <value>Make the text on your screen larger or smaller.</value>
+    <value>ଆପଣଙ୍କ ସ୍କ୍ରିନ୍‌ର ପାଠ୍ୟକୁ ବଡ଼ କିମ୍ବା ଛୋଟ କରନ୍ତୁ।</value>
   </data>
   <data name="SizeOfTextLargerLabel" xml:space="preserve">
-    <value>Larger</value>
+    <value>ବଡ଼</value>
   </data>
   <data name="SizeOfTextSmallerLabel" xml:space="preserve">
-    <value>Smaller</value>
+    <value>ଛୋଟ</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>ସ୍କ୍ରିନ୍‌ର ଏକ ଅଂଶ ସ୍ନିପ୍ କରି କପି କରନ୍ତୁ</value>
@@ -215,6 +215,6 @@
     <value>ସ୍ନିପ୍</value>
   </data>
   <data name="SnipInfoSubtitle" xml:space="preserve">
-    <value>Take a picture of part of your screen. Click {0}, then drag your mouse across the area you want to capture.</value>
+    <value>ଆପଣଙ୍କ ସ୍କ୍ରିନ୍‌ର ଏକ ଅଂଶର ଛବି ନିଅନ୍ତୁ। {0} କ୍ଲିକ୍ କରନ୍ତୁ, ତାପରେ କ୍ୟାପ୍ଚର୍ କରିବାକୁ ଚାହୁଁଥିବା ଅଞ୍ଚଳ ଉପରେ ମାଉସ୍ ଟାଣନ୍ତୁ।</value>
   </data>
 </root>

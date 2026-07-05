@@ -35,7 +35,7 @@
     <value>Filtri tal-kulur</value>
   </data>
   <data name="ColorInfoSubtitle" xml:space="preserve">
-    <value>Turn color filters on or off to adjust colors for color vision differences.</value>
+    <value>Ixgħel jew itfi l-filtri tal-kulur biex taġġusta l-kuluri għad-differenzi fil-viżjoni tal-kulur.</value>
   </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>Kulur</value>
@@ -44,7 +44,7 @@
     <value>Kuntrast u Kulur</value>
   </data>
   <data name="ContrastInfoSubtitle" xml:space="preserve">
-    <value>Turn high contrast on or off to make the screen easier to read.</value>
+    <value>Ixgħel jew itfi l-kuntrast għoli biex l-iskrin ikun aktar faċli biex jinqara.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>Kuntrast</value>
@@ -56,7 +56,7 @@
     <value>Copyright {0} Raising the Floor - US, Inc.</value>
   </data>
   <data name="DarkInfoSubtitle" xml:space="preserve">
-    <value>Turn dark mode on or off.</value>
+    <value>Ixgħel jew itfi l-modalità skura.</value>
   </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>Skur</value>
@@ -68,7 +68,7 @@
     <value>Naqqas id-daqs tat-test</value>
   </data>
   <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen smaller.</value>
+    <value>Ċekken kollox fuq l-iskrin tiegħek.</value>
   </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>Aħbi l-MorphicBar</value>
@@ -77,10 +77,10 @@
     <value>Kabbar id-daqs tat-test</value>
   </data>
   <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen larger.</value>
+    <value>Kabbar kollox fuq l-iskrin tiegħek.</value>
   </data>
   <data name="InfoRightClickSettingsHint" xml:space="preserve">
-    <value>Right-click to change settings.</value>
+    <value>Ikklikkja bil-lemin biex tibdel is-settings.</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Sir af aktar dwar Morphic</value>
@@ -92,19 +92,19 @@
     <value>Aħbi l-Lenti ta' Kabbir</value>
   </data>
   <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
-    <value>Turn off the magnifier.</value>
+    <value>Itfi l-Lenti.</value>
   </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>Aħbi</value>
   </data>
   <data name="MagnifierInfoSubtitle" xml:space="preserve">
-    <value>Zoom in to enlarge part of your screen.</value>
+    <value>Żid iż-żoom biex tkabbar parti mill-iskrin tiegħek.</value>
   </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>Uri l-Lenti ta' Kabbir</value>
   </data>
   <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
-    <value>Turn on a magnifying lens that follows your mouse.</value>
+    <value>Ixgħel lenti tal-kobor li ssegwi l-maws tiegħek.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Uri</value>
@@ -116,7 +116,7 @@
     <value>Morphic għal Windows</value>
   </data>
   <data name="NightInfoSubtitle" xml:space="preserve">
-    <value>Turn Night Light on or off to warm the screen colors and reduce eye strain.</value>
+    <value>Ixgħel jew itfi d-Dawl ta' Billejl biex issaħħan il-kuluri tal-iskrin u tnaqqas l-għeja tal-għajnejn.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>Lejl</value>
@@ -170,40 +170,40 @@
     <value>Aqra l-Magħżul</value>
   </data>
   <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud, or stop reading.</value>
+    <value>Aqra t-test magħżul tiegħek b'leħen għoli, jew waqqaf il-qari.</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>Aqra t-test magħżul</value>
   </data>
   <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud.</value>
+    <value>Aqra t-test magħżul tiegħek b'leħen għoli.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Waqqaf il-qari tat-test magħżul</value>
   </data>
   <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
-    <value>Stop reading aloud.</value>
+    <value>Waqqaf il-qari b'leħen għoli.</value>
   </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>Uri l-MorphicBar</value>
   </data>
   <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any larger.</value>
+    <value>It-test ma jistax jikber aktar.</value>
   </data>
   <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any smaller.</value>
+    <value>It-test ma jistax jiċċekken aktar.</value>
   </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>Daqs tat-Test</value>
   </data>
   <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
-    <value>Make the text on your screen larger or smaller.</value>
+    <value>Kabbar jew ċekken it-test fuq l-iskrin tiegħek.</value>
   </data>
   <data name="SizeOfTextLargerLabel" xml:space="preserve">
-    <value>Larger</value>
+    <value>Akbar</value>
   </data>
   <data name="SizeOfTextSmallerLabel" xml:space="preserve">
-    <value>Smaller</value>
+    <value>Iżgħar</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>Aqta' u kkopja parti mill-iskrin</value>
@@ -215,6 +215,6 @@
     <value>Aqta'</value>
   </data>
   <data name="SnipInfoSubtitle" xml:space="preserve">
-    <value>Take a picture of part of your screen. Click {0}, then drag your mouse across the area you want to capture.</value>
+    <value>Ħu ritratt ta' parti mill-iskrin tiegħek. Ikklikkja {0}, imbagħad kaxkar il-maws tiegħek mal-erja li trid taqbad.</value>
   </data>
 </root>

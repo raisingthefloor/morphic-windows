@@ -44,7 +44,7 @@
     <value>Contrast și culoare</value>
   </data>
   <data name="ContrastInfoSubtitle" xml:space="preserve">
-    <value>Turn high contrast on or off to make the screen easier to read.</value>
+    <value>Activați sau dezactivați contrastul înalt pentru a face ecranul mai ușor de citit.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>Contrast</value>
@@ -56,7 +56,7 @@
     <value>Copyright {0} Raising the Floor - US, Inc.</value>
   </data>
   <data name="DarkInfoSubtitle" xml:space="preserve">
-    <value>Turn dark mode on or off.</value>
+    <value>Activați sau dezactivați modul întunecat.</value>
   </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>Întunecat</value>
@@ -68,7 +68,7 @@
     <value>Micșorare dimensiune text</value>
   </data>
   <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen smaller.</value>
+    <value>Micșorați totul de pe ecran.</value>
   </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>Ascunde MorphicBar</value>
@@ -77,10 +77,10 @@
     <value>Mărire dimensiune text</value>
   </data>
   <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen larger.</value>
+    <value>Măriți totul de pe ecran.</value>
   </data>
   <data name="InfoRightClickSettingsHint" xml:space="preserve">
-    <value>Right-click to change settings.</value>
+    <value>Faceți clic dreapta pentru a modifica setările.</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Aflați mai multe despre Morphic</value>
@@ -92,19 +92,19 @@
     <value>Ascunde Lupa</value>
   </data>
   <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
-    <value>Turn off the magnifier.</value>
+    <value>Dezactivați lupa.</value>
   </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>Ascunde</value>
   </data>
   <data name="MagnifierInfoSubtitle" xml:space="preserve">
-    <value>Zoom in to enlarge part of your screen.</value>
+    <value>Măriți pentru a vedea o parte a ecranului mai mare.</value>
   </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>Afișează Lupa</value>
   </data>
   <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
-    <value>Turn on a magnifying lens that follows your mouse.</value>
+    <value>Activați o lupă care urmărește mouse-ul.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Afișează</value>
@@ -116,7 +116,7 @@
     <value>Morphic pentru Windows</value>
   </data>
   <data name="NightInfoSubtitle" xml:space="preserve">
-    <value>Turn Night Light on or off to warm the screen colors and reduce eye strain.</value>
+    <value>Activați sau dezactivați Lumina de noapte pentru a încălzi culorile ecranului și a reduce oboseala ochilor.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>Noapte</value>
@@ -170,40 +170,40 @@
     <value>Citire selecție</value>
   </data>
   <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud, or stop reading.</value>
+    <value>Citiți cu voce tare textul selectat sau opriți citirea.</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>Citiți textul selectat</value>
   </data>
   <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud.</value>
+    <value>Citiți cu voce tare textul selectat.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Opriți citirea textului selectat</value>
   </data>
   <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
-    <value>Stop reading aloud.</value>
+    <value>Opriți citirea cu voce tare.</value>
   </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>Afișați MorphicBar</value>
   </data>
   <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any larger.</value>
+    <value>Textul nu poate fi mărit mai mult.</value>
   </data>
   <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any smaller.</value>
+    <value>Textul nu poate fi micșorat mai mult.</value>
   </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>Dimensiunea textului</value>
   </data>
   <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
-    <value>Make the text on your screen larger or smaller.</value>
+    <value>Măriți sau micșorați textul de pe ecran.</value>
   </data>
   <data name="SizeOfTextLargerLabel" xml:space="preserve">
-    <value>Larger</value>
+    <value>Mai mare</value>
   </data>
   <data name="SizeOfTextSmallerLabel" xml:space="preserve">
-    <value>Smaller</value>
+    <value>Mai mic</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>Decupați și copiați o parte a ecranului</value>
@@ -215,6 +215,6 @@
     <value>Decupare</value>
   </data>
   <data name="SnipInfoSubtitle" xml:space="preserve">
-    <value>Take a picture of part of your screen. Click {0}, then drag your mouse across the area you want to capture.</value>
+    <value>Faceți o captură a unei părți a ecranului. Faceți clic pe {0}, apoi glisați mouse-ul peste zona pe care doriți să o capturați.</value>
   </data>
 </root>

@@ -104,7 +104,7 @@
     <value>Mostrar la Lupa</value>
   </data>
   <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
-    <value>Activá una lupa que sigue el mouse.</value>
+    <value>Activá una lupa que sigue tu mouse.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Mostrar</value>
@@ -170,7 +170,7 @@
     <value>Leer selección</value>
   </data>
   <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
-    <value>Leé en voz alta el texto que seleccionaste, o dejá de leer.</value>
+    <value>Leé en voz alta el texto que seleccionaste o detené la lectura.</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>Leer el texto seleccionado</value>

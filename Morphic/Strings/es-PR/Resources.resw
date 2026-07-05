@@ -68,7 +68,7 @@
     <value>Reducir el tamaño del texto</value>
   </data>
   <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen smaller.</value>
+    <value>Haz que todo en tu pantalla se vea más pequeño.</value>
   </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>Ocultar MorphicBar</value>
@@ -77,7 +77,7 @@
     <value>Aumentar el tamaño del texto</value>
   </data>
   <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen larger.</value>
+    <value>Haz que todo en tu pantalla se vea más grande.</value>
   </data>
   <data name="InfoRightClickSettingsHint" xml:space="preserve">
     <value>Haz clic derecho para cambiar la configuración.</value>
@@ -170,13 +170,13 @@
     <value>Leer selección</value>
   </data>
   <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud, or stop reading.</value>
+    <value>Lee en voz alta el texto que seleccionaste, o detén la lectura.</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>Leer texto seleccionado</value>
   </data>
   <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud.</value>
+    <value>Lee en voz alta el texto que seleccionaste.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Dejar de leer el texto seleccionado</value>
@@ -188,10 +188,10 @@
     <value>Mostrar MorphicBar</value>
   </data>
   <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any larger.</value>
+    <value>El texto no se puede agrandar más.</value>
   </data>
   <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any smaller.</value>
+    <value>El texto no se puede achicar más.</value>
   </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>Tamaño del texto</value>

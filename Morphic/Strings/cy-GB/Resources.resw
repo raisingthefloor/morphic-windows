@@ -35,7 +35,7 @@
     <value>Hidlyddion lliw</value>
   </data>
   <data name="ColorInfoSubtitle" xml:space="preserve">
-    <value>Turn color filters on or off to adjust colors for color vision differences.</value>
+    <value>Trowch hidlyddion lliw ymlaen neu i ffwrdd i addasu lliwiau ar gyfer gwahaniaethau golwg lliw.</value>
   </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>Lliw</value>
@@ -44,7 +44,7 @@
     <value>Cyferbyniad a Lliw</value>
   </data>
   <data name="ContrastInfoSubtitle" xml:space="preserve">
-    <value>Turn high contrast on or off to make the screen easier to read.</value>
+    <value>Trowch gyferbyniad uchel ymlaen neu i ffwrdd i wneud y sgrin yn haws i'w darllen.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>Cyferbyniad</value>
@@ -92,13 +92,13 @@
     <value>Cuddio'r Chwyddwydr</value>
   </data>
   <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
-    <value>Turn off the magnifier.</value>
+    <value>Diffoddwch y chwyddwydr.</value>
   </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>Cuddio</value>
   </data>
   <data name="MagnifierInfoSubtitle" xml:space="preserve">
-    <value>Zoom in to enlarge part of your screen.</value>
+    <value>Chwyddwch i mewn i ehangu rhan o'ch sgrin.</value>
   </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>Dangos y Chwyddwydr</value>
@@ -170,13 +170,13 @@
     <value>Darllen y Dewis</value>
   </data>
   <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud, or stop reading.</value>
+    <value>Darllenwch eich testun dethol yn uchel, neu stopiwch ddarllen.</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>Darllen y testun a ddewiswyd</value>
   </data>
   <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud.</value>
+    <value>Darllenwch eich testun dethol yn uchel.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Stopio darllen y testun a ddewiswyd</value>
@@ -215,6 +215,6 @@
     <value>Cipio</value>
   </data>
   <data name="SnipInfoSubtitle" xml:space="preserve">
-    <value>Take a picture of part of your screen. Click {0}, then drag your mouse across the area you want to capture.</value>
+    <value>Tynnwch lun o ran o'ch sgrin. Cliciwch {0}, yna llusgwch eich llygoden ar draws yr ardal rydych am ei chipio.</value>
   </data>
 </root>

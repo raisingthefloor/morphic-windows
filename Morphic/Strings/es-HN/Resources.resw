@@ -68,7 +68,7 @@
     <value>Reducir el tamaño del texto</value>
   </data>
   <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen smaller.</value>
+    <value>Hacé que todo en tu pantalla se vea más pequeño.</value>
   </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>Ocultar MorphicBar</value>
@@ -77,7 +77,7 @@
     <value>Aumentar el tamaño del texto</value>
   </data>
   <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen larger.</value>
+    <value>Hacé que todo en tu pantalla se vea más grande.</value>
   </data>
   <data name="InfoRightClickSettingsHint" xml:space="preserve">
     <value>Hacé clic derecho para cambiar la configuración.</value>
@@ -98,13 +98,13 @@
     <value>Ocultar</value>
   </data>
   <data name="MagnifierInfoSubtitle" xml:space="preserve">
-    <value>Zoom in to enlarge part of your screen.</value>
+    <value>Acercá para agrandar una parte de tu pantalla.</value>
   </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>Mostrar Lupa</value>
   </data>
   <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
-    <value>Turn on a magnifying lens that follows your mouse.</value>
+    <value>Activá una lupa que sigue tu mouse.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Mostrar</value>

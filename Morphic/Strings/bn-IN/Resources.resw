@@ -35,7 +35,7 @@
     <value>রঙের ফিল্টার</value>
   </data>
   <data name="ColorInfoSubtitle" xml:space="preserve">
-    <value>রঙের দৃষ্টিভেদ অনুযায়ী রঙ ঠিক করতে কালার ফিল্টার চালু বা বন্ধ করুন।</value>
+    <value>রঙের দৃষ্টির পার্থক্যের জন্য রঙ সামঞ্জস্য করতে কালার ফিল্টার চালু বা বন্ধ করুন।</value>
   </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>রঙ</value>
@@ -44,7 +44,7 @@
     <value>কনট্রাস্ট ও রঙ</value>
   </data>
   <data name="ContrastInfoSubtitle" xml:space="preserve">
-    <value>স্ক্রিন সহজে পড়তে হাই কনট্রাস্ট চালু বা বন্ধ করুন।</value>
+    <value>স্ক্রিনকে আরও সহজে পড়ার যোগ্য করতে হাই কন্ট্রাস্ট চালু বা বন্ধ করুন।</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>কনট্রাস্ট</value>
@@ -77,7 +77,7 @@
     <value>টেক্সটের আকার বাড়ান</value>
   </data>
   <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>আপনার স্ক্রিনের সবকিছু বড় করুন।</value>
+    <value>আপনার স্ক্রিনের সবকিছু বড় করুন।</value>
   </data>
   <data name="InfoRightClickSettingsHint" xml:space="preserve">
     <value>সেটিংস পরিবর্তন করতে রাইট-ক্লিক করুন।</value>
@@ -98,13 +98,13 @@
     <value>লুকান</value>
   </data>
   <data name="MagnifierInfoSubtitle" xml:space="preserve">
-    <value>স্ক্রিনের একটি অংশ বড় করে দেখতে জুম ইন করুন।</value>
+    <value>আপনার স্ক্রিনের একটি অংশ বড় করতে জুম ইন করুন।</value>
   </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>ম্যাগনিফায়ার দেখান</value>
   </data>
   <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
-    <value>আপনার মাউস অনুসরণ করে এমন একটি ম্যাগনিফাইং লেন্স চালু করুন।</value>
+    <value>আপনার মাউসকে অনুসরণ করে এমন একটি ম্যাগনিফাইং লেন্স চালু করুন।</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>দেখান</value>
@@ -116,7 +116,7 @@
     <value>Windows-এর জন্য Morphic</value>
   </data>
   <data name="NightInfoSubtitle" xml:space="preserve">
-    <value>স্ক্রিনের রঙ উষ্ণ করে চোখের চাপ কমাতে নাইট লাইট চালু বা বন্ধ করুন।</value>
+    <value>স্ক্রিনের রঙ উষ্ণ করতে এবং চোখের চাপ কমাতে নাইট লাইট চালু বা বন্ধ করুন।</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>নাইট</value>
@@ -188,10 +188,10 @@
     <value>MorphicBar দেখান</value>
   </data>
   <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
-    <value>লেখা আর বড় করা যাবে না।</value>
+    <value>টেক্সট আর বড় করা যাবে না।</value>
   </data>
   <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
-    <value>লেখা আর ছোট করা যাবে না।</value>
+    <value>টেক্সট আর ছোট করা যাবে না।</value>
   </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>টেক্সটের আকার</value>

@@ -35,7 +35,7 @@
     <value>ৰঙৰ ফিল্টাৰ</value>
   </data>
   <data name="ColorInfoSubtitle" xml:space="preserve">
-    <value>Turn color filters on or off to adjust colors for color vision differences.</value>
+    <value>ৰঙৰ দৃষ্টিৰ পাৰ্থক্যৰ বাবে ৰং সমন্বয় কৰিবলৈ ৰং ফিল্টাৰ অন বা অফ কৰক।</value>
   </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>ৰং</value>
@@ -44,7 +44,7 @@
     <value>কনট্ৰাষ্ট আৰু ৰং</value>
   </data>
   <data name="ContrastInfoSubtitle" xml:space="preserve">
-    <value>Turn high contrast on or off to make the screen easier to read.</value>
+    <value>স্ক্ৰীণখন পঢ়িবলৈ সহজ কৰিবলৈ উচ্চ কণ্ট্ৰাষ্ট অন বা অফ কৰক।</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>কনট্ৰাষ্ট</value>
@@ -116,7 +116,7 @@
     <value>Windows-ৰ বাবে Morphic</value>
   </data>
   <data name="NightInfoSubtitle" xml:space="preserve">
-    <value>স্ক্ৰীণৰ ৰং উষ্ণ কৰি চকুৰ চাপ কমাবলৈ নাইট লাইট অন বা অফ কৰক।</value>
+    <value>স্ক্ৰীণৰ ৰংবোৰ উষ্ণ কৰিবলৈ আৰু চকুৰ চাপ কমাবলৈ নাইট লাইট অন বা অফ কৰক।</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>নাইট</value>
@@ -170,13 +170,13 @@
     <value>নিৰ্বাচিত পাঠ পঢ়ক</value>
   </data>
   <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
-    <value>আপুনি বাছনি কৰা লিখনি উচ্চস্বৰে পঢ়ক, বা পঢ়া বন্ধ কৰক।</value>
+    <value>আপুনি বাছনি কৰা পাঠ উচ্চস্বৰে পঢ়ক, বা পঢ়া বন্ধ কৰক।</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>নিৰ্বাচিত পাঠ পঢ়ক</value>
   </data>
   <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
-    <value>আপুনি বাছনি কৰা লিখনি উচ্চস্বৰে পঢ়ক।</value>
+    <value>আপুনি বাছনি কৰা পাঠ উচ্চস্বৰে পঢ়ক।</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>নিৰ্বাচিত পাঠ পঢ়া বন্ধ কৰক</value>
@@ -188,16 +188,16 @@
     <value>MorphicBar দেখুৱাওক</value>
   </data>
   <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
-    <value>লিখনি ইয়াতকৈ ডাঙৰ হ'ব নোৱাৰে।</value>
+    <value>পাঠ ইয়াতকৈ আৰু ডাঙৰ কৰিব নোৱাৰি।</value>
   </data>
   <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
-    <value>লিখনি ইয়াতকৈ সৰু হ'ব নোৱাৰে।</value>
+    <value>পাঠ ইয়াতকৈ আৰু সৰু কৰিব নোৱাৰি।</value>
   </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>লিখনিৰ আকাৰ</value>
   </data>
   <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
-    <value>আপোনাৰ স্ক্ৰীণৰ লিখনি ডাঙৰ বা সৰু কৰক।</value>
+    <value>আপোনাৰ স্ক্ৰীণৰ পাঠ ডাঙৰ বা সৰু কৰক।</value>
   </data>
   <data name="SizeOfTextLargerLabel" xml:space="preserve">
     <value>ডাঙৰ</value>

@@ -35,7 +35,7 @@
     <value>কালার ফিল্টার</value>
   </data>
   <data name="ColorInfoSubtitle" xml:space="preserve">
-    <value>Turn color filters on or off to adjust colors for color vision differences.</value>
+    <value>রঙ দেখার ভিন্নতার জন্য কালার ফিল্টার চালু বা বন্ধ করে রঙ অ্যাডজাস্ট করুন।</value>
   </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>রং</value>
@@ -92,7 +92,7 @@
     <value>ম্যাগনিফায়ার লুকান</value>
   </data>
   <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
-    <value>Turn off the magnifier.</value>
+    <value>ম্যাগনিফায়ার বন্ধ করুন।</value>
   </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>লুকান</value>
@@ -104,7 +104,7 @@
     <value>ম্যাগনিফায়ার দেখান</value>
   </data>
   <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
-    <value>Turn on a magnifying lens that follows your mouse.</value>
+    <value>আপনার মাউস অনুসরণ করে এমন একটি ম্যাগনিফাইং লেন্স চালু করুন।</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>দেখান</value>
@@ -116,7 +116,7 @@
     <value>Windows-এর জন্য Morphic</value>
   </data>
   <data name="NightInfoSubtitle" xml:space="preserve">
-    <value>Turn Night Light on or off to warm the screen colors and reduce eye strain.</value>
+    <value>স্ক্রিনের রঙ উষ্ণ করতে এবং চোখের উপর চাপ কমাতে নাইট লাইট চালু বা বন্ধ করুন।</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>নাইট</value>
@@ -188,10 +188,10 @@
     <value>MorphicBar দেখান</value>
   </data>
   <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any larger.</value>
+    <value>টেক্সট আর বড় করা যাবে না।</value>
   </data>
   <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any smaller.</value>
+    <value>টেক্সট আর ছোট করা যাবে না।</value>
   </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>লেখার আকার</value>

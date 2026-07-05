@@ -35,7 +35,7 @@
     <value>Filtres de color</value>
   </data>
   <data name="ColorInfoSubtitle" xml:space="preserve">
-    <value>Turn color filters on or off to adjust colors for color vision differences.</value>
+    <value>Activeu o desactiveu els filtres de color per ajustar els colors segons les diferències de visió cromàtica.</value>
   </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>Color</value>
@@ -68,7 +68,7 @@
     <value>Redueix la mida del text</value>
   </data>
   <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen smaller.</value>
+    <value>Feu que tot el que hi ha a la pantalla sigui més petit.</value>
   </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>Amaga la MorphicBar</value>
@@ -77,7 +77,7 @@
     <value>Augmenta la mida del text</value>
   </data>
   <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen larger.</value>
+    <value>Feu que tot el que hi ha a la pantalla sigui més gran.</value>
   </data>
   <data name="InfoRightClickSettingsHint" xml:space="preserve">
     <value>Feu clic amb el botó dret per canviar la configuració.</value>
@@ -98,7 +98,7 @@
     <value>Amaga</value>
   </data>
   <data name="MagnifierInfoSubtitle" xml:space="preserve">
-    <value>Zoom in to enlarge part of your screen.</value>
+    <value>Amplieu una part de la pantalla amb el zoom.</value>
   </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>Mostra la Lupa</value>
@@ -197,7 +197,7 @@
     <value>Mida del text</value>
   </data>
   <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
-    <value>Make the text on your screen larger or smaller.</value>
+    <value>Feu que el text de la pantalla sigui més gran o més petit.</value>
   </data>
   <data name="SizeOfTextLargerLabel" xml:space="preserve">
     <value>Més gran</value>

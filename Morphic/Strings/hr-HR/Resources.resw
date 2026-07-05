@@ -35,7 +35,7 @@
     <value>Filtri za boje</value>
   </data>
   <data name="ColorInfoSubtitle" xml:space="preserve">
-    <value>Turn color filters on or off to adjust colors for color vision differences.</value>
+    <value>Uključite ili isključite filtre boja da biste prilagodili boje za različito raspoznavanje boja.</value>
   </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>Boja</value>
@@ -44,7 +44,7 @@
     <value>Kontrast i boja</value>
   </data>
   <data name="ContrastInfoSubtitle" xml:space="preserve">
-    <value>Turn high contrast on or off to make the screen easier to read.</value>
+    <value>Uključite ili isključite visoki kontrast kako bi zaslon bio čitljiviji.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>Kontrast</value>
@@ -56,7 +56,7 @@
     <value>Autorska prava {0} Raising the Floor - US, Inc.</value>
   </data>
   <data name="DarkInfoSubtitle" xml:space="preserve">
-    <value>Turn dark mode on or off.</value>
+    <value>Uključite ili isključite tamni način rada.</value>
   </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>Tamno</value>
@@ -68,7 +68,7 @@
     <value>Smanji veličinu teksta</value>
   </data>
   <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen smaller.</value>
+    <value>Smanjite sve na zaslonu.</value>
   </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>Sakrij MorphicBar</value>
@@ -77,10 +77,10 @@
     <value>Povećaj veličinu teksta</value>
   </data>
   <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen larger.</value>
+    <value>Povećajte sve na zaslonu.</value>
   </data>
   <data name="InfoRightClickSettingsHint" xml:space="preserve">
-    <value>Right-click to change settings.</value>
+    <value>Kliknite desnom tipkom miša za promjenu postavki.</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Saznajte više o programu Morphic</value>
@@ -92,19 +92,19 @@
     <value>Sakrij Povećalo</value>
   </data>
   <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
-    <value>Turn off the magnifier.</value>
+    <value>Isključite povećalo.</value>
   </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>Sakrij</value>
   </data>
   <data name="MagnifierInfoSubtitle" xml:space="preserve">
-    <value>Zoom in to enlarge part of your screen.</value>
+    <value>Povećajte prikaz da biste uvećali dio zaslona.</value>
   </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>Prikaži Povećalo</value>
   </data>
   <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
-    <value>Turn on a magnifying lens that follows your mouse.</value>
+    <value>Uključite povećalo koje prati pokazivač miša.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Prikaži</value>
@@ -116,7 +116,7 @@
     <value>Morphic za Windows</value>
   </data>
   <data name="NightInfoSubtitle" xml:space="preserve">
-    <value>Turn Night Light on or off to warm the screen colors and reduce eye strain.</value>
+    <value>Uključite ili isključite noćno svjetlo kako biste utoplili boje zaslona i smanjili naprezanje očiju.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>Noć</value>
@@ -170,40 +170,40 @@
     <value>Čitaj odabrano</value>
   </data>
   <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud, or stop reading.</value>
+    <value>Pročitajte odabrani tekst naglas ili zaustavite čitanje.</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>Čitaj odabrani tekst</value>
   </data>
   <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud.</value>
+    <value>Pročitajte odabrani tekst naglas.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Zaustavi čitanje odabranog teksta</value>
   </data>
   <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
-    <value>Stop reading aloud.</value>
+    <value>Zaustavite čitanje naglas.</value>
   </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>Prikaži MorphicBar</value>
   </data>
   <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any larger.</value>
+    <value>Tekst se ne može dodatno povećati.</value>
   </data>
   <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any smaller.</value>
+    <value>Tekst se ne može dodatno smanjiti.</value>
   </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>Veličina teksta</value>
   </data>
   <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
-    <value>Make the text on your screen larger or smaller.</value>
+    <value>Povećajte ili smanjite tekst na zaslonu.</value>
   </data>
   <data name="SizeOfTextLargerLabel" xml:space="preserve">
-    <value>Larger</value>
+    <value>Veće</value>
   </data>
   <data name="SizeOfTextSmallerLabel" xml:space="preserve">
-    <value>Smaller</value>
+    <value>Manje</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>Izreži i kopiraj dio zaslona</value>
@@ -215,6 +215,6 @@
     <value>Izrezivanje</value>
   </data>
   <data name="SnipInfoSubtitle" xml:space="preserve">
-    <value>Take a picture of part of your screen. Click {0}, then drag your mouse across the area you want to capture.</value>
+    <value>Napravite snimku dijela zaslona. Kliknite {0}, a zatim povucite mišem preko područja koje želite snimiti.</value>
   </data>
 </root>

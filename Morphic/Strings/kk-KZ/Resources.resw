@@ -35,7 +35,7 @@
     <value>Түс сүзгілері</value>
   </data>
   <data name="ColorInfoSubtitle" xml:space="preserve">
-    <value>Turn color filters on or off to adjust colors for color vision differences.</value>
+    <value>Түсті көру ерекшеліктеріне сай түстерді реттеу үшін түс сүзгілерін қосыңыз немесе өшіріңіз.</value>
   </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>Түс</value>
@@ -44,7 +44,7 @@
     <value>Контраст және түс</value>
   </data>
   <data name="ContrastInfoSubtitle" xml:space="preserve">
-    <value>Turn high contrast on or off to make the screen easier to read.</value>
+    <value>Экранды оқуды жеңілдету үшін жоғары контрастты қосыңыз немесе өшіріңіз.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>Контраст</value>
@@ -56,7 +56,7 @@
     <value>Авторлық құқық {0} Raising the Floor - US, Inc.</value>
   </data>
   <data name="DarkInfoSubtitle" xml:space="preserve">
-    <value>Turn dark mode on or off.</value>
+    <value>Қараңғы режимді қосыңыз немесе өшіріңіз.</value>
   </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>Қараңғы</value>
@@ -68,7 +68,7 @@
     <value>Мәтін өлшемін кішірейту</value>
   </data>
   <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen smaller.</value>
+    <value>Экрандағы барлығын кішірейтіңіз.</value>
   </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>MorphicBar тақтасын жасыру</value>
@@ -77,10 +77,10 @@
     <value>Мәтін өлшемін үлкейту</value>
   </data>
   <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen larger.</value>
+    <value>Экрандағы барлығын үлкейтіңіз.</value>
   </data>
   <data name="InfoRightClickSettingsHint" xml:space="preserve">
-    <value>Right-click to change settings.</value>
+    <value>Параметрлерді өзгерту үшін тінтуірдің оң жақ түймесін басыңыз.</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Morphic туралы көбірек білу</value>
@@ -92,19 +92,19 @@
     <value>Экрандық лупаны жасыру</value>
   </data>
   <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
-    <value>Turn off the magnifier.</value>
+    <value>Ұлғайтқышты өшіріңіз.</value>
   </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>Жасыру</value>
   </data>
   <data name="MagnifierInfoSubtitle" xml:space="preserve">
-    <value>Zoom in to enlarge part of your screen.</value>
+    <value>Экранның бір бөлігін үлкейту үшін жақындатыңыз.</value>
   </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>Экрандық лупаны көрсету</value>
   </data>
   <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
-    <value>Turn on a magnifying lens that follows your mouse.</value>
+    <value>Тінтуіріңізге ілесетін ұлғайтқыш линзаны қосыңыз.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Көрсету</value>
@@ -116,7 +116,7 @@
     <value>Windows жүйесіне арналған Morphic</value>
   </data>
   <data name="NightInfoSubtitle" xml:space="preserve">
-    <value>Turn Night Light on or off to warm the screen colors and reduce eye strain.</value>
+    <value>Экран түстерін жылыту және көздің шаршауын азайту үшін «Түнгі жарық» режимін қосыңыз немесе өшіріңіз.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>Түнгі</value>
@@ -170,40 +170,40 @@
     <value>Таңдалғанды оқу</value>
   </data>
   <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud, or stop reading.</value>
+    <value>Таңдалған мәтінді дауыстап оқыңыз немесе оқуды тоқтатыңыз.</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>Таңдалған мәтінді оқу</value>
   </data>
   <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud.</value>
+    <value>Таңдалған мәтінді дауыстап оқыңыз.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Таңдалған мәтінді оқуды тоқтату</value>
   </data>
   <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
-    <value>Stop reading aloud.</value>
+    <value>Дауыстап оқуды тоқтатыңыз.</value>
   </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>MorphicBar тақтасын көрсету</value>
   </data>
   <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any larger.</value>
+    <value>Мәтінді бұдан әрі үлкейту мүмкін емес.</value>
   </data>
   <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any smaller.</value>
+    <value>Мәтінді бұдан әрі кішірейту мүмкін емес.</value>
   </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>Мәтін өлшемі</value>
   </data>
   <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
-    <value>Make the text on your screen larger or smaller.</value>
+    <value>Экрандағы мәтінді үлкейтіңіз немесе кішірейтіңіз.</value>
   </data>
   <data name="SizeOfTextLargerLabel" xml:space="preserve">
-    <value>Larger</value>
+    <value>Үлкенірек</value>
   </data>
   <data name="SizeOfTextSmallerLabel" xml:space="preserve">
-    <value>Smaller</value>
+    <value>Кішірек</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>Экранның бір бөлігін қиып, көшіру</value>
@@ -215,6 +215,6 @@
     <value>Қиып алу</value>
   </data>
   <data name="SnipInfoSubtitle" xml:space="preserve">
-    <value>Take a picture of part of your screen. Click {0}, then drag your mouse across the area you want to capture.</value>
+    <value>Экранның бір бөлігін суретке түсіріңіз. {0} түймесін басыңыз, содан кейін тінтуірді түсіргіңіз келетін аймақ бойынша сүйреңіз.</value>
   </data>
 </root>

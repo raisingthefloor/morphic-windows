@@ -44,7 +44,7 @@
     <value>Contraste y color</value>
   </data>
   <data name="ContrastInfoSubtitle" xml:space="preserve">
-    <value>Turn high contrast on or off to make the screen easier to read.</value>
+    <value>Activa o desactiva el contraste alto para que la pantalla se lea más fácil.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>Contraste</value>
@@ -80,7 +80,7 @@
     <value>Haz que todo en tu pantalla se vea más grande.</value>
   </data>
   <data name="InfoRightClickSettingsHint" xml:space="preserve">
-    <value>Right-click to change settings.</value>
+    <value>Haz clic derecho pa' cambiar la configuración.</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Conoce más sobre Morphic</value>
@@ -98,13 +98,13 @@
     <value>Ocultar</value>
   </data>
   <data name="MagnifierInfoSubtitle" xml:space="preserve">
-    <value>Zoom in to enlarge part of your screen.</value>
+    <value>Haz zoom para agrandar una parte de tu pantalla.</value>
   </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>Mostrar Lupa</value>
   </data>
   <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
-    <value>Turn on a magnifying lens that follows your mouse.</value>
+    <value>Activa una lupa que sigue tu mouse.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Mostrar</value>
@@ -116,7 +116,7 @@
     <value>Morphic para Windows</value>
   </data>
   <data name="NightInfoSubtitle" xml:space="preserve">
-    <value>Turn Night Light on or off to warm the screen colors and reduce eye strain.</value>
+    <value>Activa o desactiva la Luz nocturna para poner los colores de la pantalla más cálidos y cansar menos la vista.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>Nocturno</value>
@@ -191,13 +191,13 @@
     <value>El texto no se puede agrandar más.</value>
   </data>
   <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any smaller.</value>
+    <value>El texto no se puede poner más pequeño.</value>
   </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>Tamaño del texto</value>
   </data>
   <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
-    <value>Make the text on your screen larger or smaller.</value>
+    <value>Haz el texto de tu pantalla más grande o más pequeño.</value>
   </data>
   <data name="SizeOfTextLargerLabel" xml:space="preserve">
     <value>Más grande</value>

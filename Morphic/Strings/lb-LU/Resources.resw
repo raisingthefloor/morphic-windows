@@ -35,7 +35,7 @@
     <value>Faarffilteren</value>
   </data>
   <data name="ColorInfoSubtitle" xml:space="preserve">
-    <value>Turn color filters on or off to adjust colors for color vision differences.</value>
+    <value>Faarffilteren un- oder ausschalten, fir d'Faarwe bei Ënnerscheeder am Faarfgesinn unzepassen.</value>
   </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>Faarf</value>
@@ -44,7 +44,7 @@
     <value>Kontrast &amp; Faarf</value>
   </data>
   <data name="ContrastInfoSubtitle" xml:space="preserve">
-    <value>Turn high contrast on or off to make the screen easier to read.</value>
+    <value>Héije Kontrast un- oder ausschalten, fir den Écran méi liicht liesbar ze maachen.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>Kontrast</value>
@@ -56,7 +56,7 @@
     <value>Copyright {0} Raising the Floor - US, Inc.</value>
   </data>
   <data name="DarkInfoSubtitle" xml:space="preserve">
-    <value>Turn dark mode on or off.</value>
+    <value>Donkele Modus un- oder ausschalten.</value>
   </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>Däischter</value>
@@ -68,7 +68,7 @@
     <value>Textgréisst verklengeren</value>
   </data>
   <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen smaller.</value>
+    <value>Alles op Ärem Bildschierm méi kleng maachen.</value>
   </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>MorphicBar verstoppen</value>
@@ -77,10 +77,10 @@
     <value>Textgréisst vergréisseren</value>
   </data>
   <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen larger.</value>
+    <value>Alles op Ärem Bildschierm méi grouss maachen.</value>
   </data>
   <data name="InfoRightClickSettingsHint" xml:space="preserve">
-    <value>Right-click to change settings.</value>
+    <value>Mat rietser Maustast klicken, fir d'Astellungen z'änneren.</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Méi iwwer Morphic gewuer ginn</value>
@@ -92,19 +92,19 @@
     <value>Lupp verstoppen</value>
   </data>
   <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
-    <value>Turn off the magnifier.</value>
+    <value>D'Lupp ausschalten.</value>
   </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>Verstoppen</value>
   </data>
   <data name="MagnifierInfoSubtitle" xml:space="preserve">
-    <value>Zoom in to enlarge part of your screen.</value>
+    <value>Erazoomen, fir en Deel vun Ärem Écran ze vergréisseren.</value>
   </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>Lupp weisen</value>
   </data>
   <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
-    <value>Turn on a magnifying lens that follows your mouse.</value>
+    <value>Eng Lupp uschalten, déi der Maus nofiert.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Weisen</value>
@@ -116,7 +116,7 @@
     <value>Morphic fir Windows</value>
   </data>
   <data name="NightInfoSubtitle" xml:space="preserve">
-    <value>Turn Night Light on or off to warm the screen colors and reduce eye strain.</value>
+    <value>Nuetsliicht un- oder ausschalten, fir d'Écranfaarwe méi waarm ze maachen an d'Aen ze entlaaschten.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>Nuecht</value>
@@ -170,40 +170,40 @@
     <value>Auswiel virliesen</value>
   </data>
   <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud, or stop reading.</value>
+    <value>Ären ausgewielten Text virliesen oder d'Virliesen stoppen.</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>Ausgewielten Text virliesen</value>
   </data>
   <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud.</value>
+    <value>Ären ausgewielten Text virliesen.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>Virliesen vum ausgewielten Text stoppen</value>
   </data>
   <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
-    <value>Stop reading aloud.</value>
+    <value>D'Virliesen stoppen.</value>
   </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>MorphicBar uweisen</value>
   </data>
   <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any larger.</value>
+    <value>Den Text ka net méi grouss gemaach ginn.</value>
   </data>
   <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any smaller.</value>
+    <value>Den Text ka net méi kleng gemaach ginn.</value>
   </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>Textgréisst</value>
   </data>
   <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
-    <value>Make the text on your screen larger or smaller.</value>
+    <value>Den Text op Ärem Écran méi grouss oder méi kleng maachen.</value>
   </data>
   <data name="SizeOfTextLargerLabel" xml:space="preserve">
-    <value>Larger</value>
+    <value>Méi grouss</value>
   </data>
   <data name="SizeOfTextSmallerLabel" xml:space="preserve">
-    <value>Smaller</value>
+    <value>Méi kleng</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>En Deel vum Bildschierm ausschneiden a kopéieren</value>
@@ -215,6 +215,6 @@
     <value>Ausschneiden</value>
   </data>
   <data name="SnipInfoSubtitle" xml:space="preserve">
-    <value>Take a picture of part of your screen. Click {0}, then drag your mouse across the area you want to capture.</value>
+    <value>Eng Foto vun engem Deel vun Ärem Écran maachen. Klickt op {0}, an zitt dann Är Maus iwwer de Beräich, deen Dir erfaasse wëllt.</value>
   </data>
 </root>

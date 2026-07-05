@@ -35,7 +35,7 @@
     <value>रंग फिल्टरां</value>
   </data>
   <data name="ColorInfoSubtitle" xml:space="preserve">
-    <value>Turn color filters on or off to adjust colors for color vision differences.</value>
+    <value>रंग दिसपांतल्या फरकां खातीर रंग जुळोवपाक रंग फिल्टर चालू वा बंद करात.</value>
   </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>रंग</value>
@@ -44,7 +44,7 @@
     <value>कॉन्ट्रास्ट आनी रंग</value>
   </data>
   <data name="ContrastInfoSubtitle" xml:space="preserve">
-    <value>Turn high contrast on or off to make the screen easier to read.</value>
+    <value>पडदो वाचपाक सोपो जावचो म्हूण उच्च कॉन्ट्रास्ट चालू वा बंद करात.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>कॉन्ट्रास्ट</value>
@@ -56,7 +56,7 @@
     <value>कॉपीराइट {0} Raising the Floor - US, Inc.</value>
   </data>
   <data name="DarkInfoSubtitle" xml:space="preserve">
-    <value>Turn dark mode on or off.</value>
+    <value>गडद मोड चालू वा बंद करात.</value>
   </data>
   <data name="DarkLabel" xml:space="preserve">
     <value>गडद</value>
@@ -68,7 +68,7 @@
     <value>मजकुराचो आकार उणो करात</value>
   </data>
   <data name="DecreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen smaller.</value>
+    <value>तुमच्या पडद्यावेलें सगळें ल्हान करात.</value>
   </data>
   <data name="HideMorphicBar" xml:space="preserve">
     <value>MorphicBar लिपयात</value>
@@ -77,10 +77,10 @@
     <value>मजकुराचो आकार वाडयात</value>
   </data>
   <data name="IncreaseTextSizeInfoSubtitle" xml:space="preserve">
-    <value>Make everything on your screen larger.</value>
+    <value>तुमच्या पडद्यावेलें सगळें व्हड करात.</value>
   </data>
   <data name="InfoRightClickSettingsHint" xml:space="preserve">
-    <value>Right-click to change settings.</value>
+    <value>सेटिंग्ज बदलपाक उजवो-क्लिक करात.</value>
   </data>
   <data name="LearnMoreAboutMorphic.Content" xml:space="preserve">
     <value>Morphic विशीं चड जाणून घेयात</value>
@@ -92,19 +92,19 @@
     <value>मॅग्निफायर लिपयात</value>
   </data>
   <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
-    <value>Turn off the magnifier.</value>
+    <value>मॅग्निफायर बंद करात.</value>
   </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>लिपयात</value>
   </data>
   <data name="MagnifierInfoSubtitle" xml:space="preserve">
-    <value>Zoom in to enlarge part of your screen.</value>
+    <value>तुमच्या पडद्याचो एक भाग व्हड करपाक झूम इन करात.</value>
   </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>मॅग्निफायर दाखयात</value>
   </data>
   <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
-    <value>Turn on a magnifying lens that follows your mouse.</value>
+    <value>तुमच्या माउसाफाटल्यान वचपी मॅग्निफायिंग लेन्स चालू करात.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>दाखयात</value>
@@ -116,7 +116,7 @@
     <value>Windows खातीर Morphic</value>
   </data>
   <data name="NightInfoSubtitle" xml:space="preserve">
-    <value>Turn Night Light on or off to warm the screen colors and reduce eye strain.</value>
+    <value>पडद्याचे रंग उबदार करपाक आनी दोळ्यांचो ताण उणो करपाक नायट लायट चालू वा बंद करात.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>रात</value>
@@ -170,40 +170,40 @@
     <value>निवडिल्लें वाचात</value>
   </data>
   <data name="ReadSelectedInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud, or stop reading.</value>
+    <value>तुमी निवडिल्लो मजकूर मोठ्यान वाचात, वा वाचप थांबयात.</value>
   </data>
   <data name="ReadSelectedPlayAccessibleName" xml:space="preserve">
     <value>निवडिल्लो मजकूर वाचात</value>
   </data>
   <data name="ReadSelectedPlayInfoSubtitle" xml:space="preserve">
-    <value>Read your selected text aloud.</value>
+    <value>तुमी निवडिल्लो मजकूर मोठ्यान वाचात.</value>
   </data>
   <data name="ReadSelectedStopAccessibleName" xml:space="preserve">
     <value>निवडिल्लो मजकूर वाचप थांबयात</value>
   </data>
   <data name="ReadSelectedStopInfoSubtitle" xml:space="preserve">
-    <value>Stop reading aloud.</value>
+    <value>मोठ्यान वाचप थांबयात.</value>
   </data>
   <data name="ShowMorphicBar" xml:space="preserve">
     <value>MorphicBar दाखयात</value>
   </data>
   <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any larger.</value>
+    <value>मजकूर आनीक व्हड जावंक शकना.</value>
   </data>
   <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
-    <value>The text cannot get any smaller.</value>
+    <value>मजकूर आनीक ल्हान जावंक शकना.</value>
   </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>मजकुराचो आकार</value>
   </data>
   <data name="SizeOfTextInfoSubtitle" xml:space="preserve">
-    <value>Make the text on your screen larger or smaller.</value>
+    <value>तुमच्या पडद्यावेलो मजकूर व्हड वा ल्हान करात.</value>
   </data>
   <data name="SizeOfTextLargerLabel" xml:space="preserve">
-    <value>Larger</value>
+    <value>व्हड</value>
   </data>
   <data name="SizeOfTextSmallerLabel" xml:space="preserve">
-    <value>Smaller</value>
+    <value>ल्हान</value>
   </data>
   <data name="SnipAccessibleName" xml:space="preserve">
     <value>स्क्रीनाचो भाग स्निप करून कॉपी करात</value>
@@ -215,6 +215,6 @@
     <value>स्निप</value>
   </data>
   <data name="SnipInfoSubtitle" xml:space="preserve">
-    <value>Take a picture of part of your screen. Click {0}, then drag your mouse across the area you want to capture.</value>
+    <value>तुमच्या पडद्याच्या एका भागाचें चित्र काडात. {0} क्लिक करात, मागीर पकडपाक जाय त्या क्षेत्राचेर माऊस ओडात.</value>
   </data>
 </root>

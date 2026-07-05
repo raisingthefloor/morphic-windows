@@ -35,7 +35,7 @@
     <value>Filteri boja</value>
   </data>
   <data name="ColorInfoSubtitle" xml:space="preserve">
-    <value>Uključite ili isključite filtere boja za prilagođavanje boja osobama koje drugačije vide boje.</value>
+    <value>Uključite ili isključite filtere boja da biste prilagodili boje za razlike u percepciji boja.</value>
   </data>
   <data name="ColorLabel" xml:space="preserve">
     <value>Boja</value>
@@ -44,7 +44,7 @@
     <value>Kontrast i boja</value>
   </data>
   <data name="ContrastInfoSubtitle" xml:space="preserve">
-    <value>Uključite ili isključite visoki kontrast da olakšate čitanje ekrana.</value>
+    <value>Uključite ili isključite visoki kontrast da bi ekran bio lakši za čitanje.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>Kontrast</value>
@@ -92,13 +92,13 @@
     <value>Sakrij Lupu</value>
   </data>
   <data name="MagnifierHideInfoSubtitle" xml:space="preserve">
-    <value>Isključite lupu.</value>
+    <value>Isključite Povećalo.</value>
   </data>
   <data name="MagnifierHideLabel" xml:space="preserve">
     <value>Sakrij</value>
   </data>
   <data name="MagnifierInfoSubtitle" xml:space="preserve">
-    <value>Uvećajte dio ekrana.</value>
+    <value>Uvećajte prikaz da biste povećali dio ekrana.</value>
   </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>Prikaži Lupu</value>
@@ -116,7 +116,7 @@
     <value>Morphic za Windows</value>
   </data>
   <data name="NightInfoSubtitle" xml:space="preserve">
-    <value>Uključite ili isključite Noćno svjetlo za toplije boje ekrana i manje naprezanje očiju.</value>
+    <value>Uključite ili isključite Noćno svjetlo da biste utoplili boje na ekranu i smanjili naprezanje očiju.</value>
   </data>
   <data name="NightLabel" xml:space="preserve">
     <value>Noćno</value>

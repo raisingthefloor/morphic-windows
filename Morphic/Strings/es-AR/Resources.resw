@@ -44,7 +44,7 @@
     <value>Contraste y color</value>
   </data>
   <data name="ContrastInfoSubtitle" xml:space="preserve">
-    <value>Turn high contrast on or off to make the screen easier to read.</value>
+    <value>Activá o desactivá el alto contraste para que la pantalla sea más fácil de leer.</value>
   </data>
   <data name="ContrastLabel" xml:space="preserve">
     <value>Contraste</value>
@@ -98,13 +98,13 @@
     <value>Ocultar</value>
   </data>
   <data name="MagnifierInfoSubtitle" xml:space="preserve">
-    <value>Zoom in to enlarge part of your screen.</value>
+    <value>Acercá para agrandar una parte de la pantalla.</value>
   </data>
   <data name="MagnifierShowAccessibleName" xml:space="preserve">
     <value>Mostrar Lupa</value>
   </data>
   <data name="MagnifierShowInfoSubtitle" xml:space="preserve">
-    <value>Activá una lupa que sigue el mouse.</value>
+    <value>Activá una lupa que sigue el puntero del mouse.</value>
   </data>
   <data name="MagnifierShowLabel" xml:space="preserve">
     <value>Mostrar</value>
@@ -188,10 +188,10 @@
     <value>Mostrar MorphicBar</value>
   </data>
   <data name="SizeOfTextAtMaximumInfoSubtitle" xml:space="preserve">
-    <value>El texto no puede agrandarse más.</value>
+    <value>El texto no se puede agrandar más.</value>
   </data>
   <data name="SizeOfTextAtMinimumInfoSubtitle" xml:space="preserve">
-    <value>El texto no puede achicarse más.</value>
+    <value>El texto no se puede achicar más.</value>
   </data>
   <data name="SizeOfTextHeader" xml:space="preserve">
     <value>Tamaño del texto</value>
