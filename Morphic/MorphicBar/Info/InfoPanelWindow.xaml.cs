@@ -225,6 +225,21 @@ public sealed partial class InfoPanelWindow : Morphic.Controls.Windowing.Transpa
         _isShown = false;
     }
 
+    // Hide the panel RIGHT NOW, cancelling any pending delayed hide. Used when the bar is hidden for a screen
+    // capture (snip): the normal HideInfo waits HIDE_DELAY_MILLISECONDS, and the snip tool freezes the screen the
+    // instant its overlay appears, so a delayed hide can leave the panel in the captured image.
+    internal void HideImmediately()
+    {
+        _hideTimer?.Stop();
+        if (_isShown == false)
+        {
+            return;
+        }
+        this.RootGrid.Opacity = 0;
+        this.AppWindow.Hide();
+        _isShown = false;
+    }
+
     // Warm the window up OFF-SCREEN once, deferred to the next idle (so the bar finishes initializing first): the
     // first time a WinUI window is shown it renders a brief frame before its transparent backdrop applies, and its
     // XamlRoot is not ready until it has been shown once. Doing that quietly at startup makes the first REAL hover
@@ -308,6 +323,12 @@ public sealed partial class InfoPanelWindow : Morphic.Controls.Windowing.Transpa
     // place it next to the bar; then reveal it.
     private void LayoutAndPlace()
     {
+        // A hide (HideImmediately) can run between ShowInfo enqueuing this and it firing (e.g. the bar was hidden for
+        // a screen capture the instant after a hover). Don't place/reveal a window that is no longer meant to show.
+        if (_isShown == false)
+        {
+            return;
+        }
         if (this.Content is not Microsoft.UI.Xaml.FrameworkElement root || root.XamlRoot is null)
         {
             return;

@@ -203,6 +203,11 @@ internal sealed class MorphicBarManager : IDisposable
         // timer) so it can't be "exceeded" by a slow action -- it stays open until the finally
         // closes it after the re-Show, regardless of how long the action ran.
         _morphicBarWindow.FocusController.BeginSuppressUpgrade();
+        // The Info panel is a SEPARATE topmost window, so hiding the bar does not hide it -- and while the bar is
+        // hidden, the snip overlay's z-order/pointer churn can re-show it (a flash, or fully back). Suppress it for
+        // the whole scope: this hides it now AND blocks every re-show path until we resume. It can't appear in the
+        // capture, and no restore is needed (it is a hover surface; the next hover over the bar re-shows it).
+        _morphicBarWindow.SuppressInfoPanel();
         if (wasVisible) { _morphicBarWindow.AppWindow.Hide(); }
         try
         {
@@ -213,6 +218,7 @@ internal sealed class MorphicBarManager : IDisposable
             if (wasVisible) { _morphicBarWindow.AppWindow.Show(); }
             this.RestoreBarFocus(focusSnapshot);
             _morphicBarWindow.FocusController.EndSuppressUpgradeAfterPendingActivations();
+            _morphicBarWindow.ResumeInfoPanel();
         }
     }
 

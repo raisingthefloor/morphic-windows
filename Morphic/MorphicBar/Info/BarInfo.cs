@@ -81,6 +81,10 @@ internal interface IBarInfoPresenter
     // does not flash the surface off and on.
     void Hide();
 
+    // Hide the surface RIGHT NOW, with no fade-out delay -- for when the bar is hidden for a screen capture (snip),
+    // so the surface can't be caught in the shot by the snip tool's screen freeze.
+    void HideImmediately();
+
     // Warm the surface up at startup so the FIRST real Show is instant and flash-free (a freshly created window
     // renders a brief frame and has no XamlRoot until shown once). May be a no-op for kinds that do not need it.
     void Preload();
@@ -111,6 +115,8 @@ internal sealed class InfoPanelPresenter : IBarInfoPresenter
     }
 
     public void Hide() => _window?.HideInfo();
+
+    public void HideImmediately() => _window?.HideImmediately();
 
     public Windows.Graphics.RectInt32? GetScreenRect() => _window?.GetScreenRect();
 }

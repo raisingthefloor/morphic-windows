@@ -1173,6 +1173,10 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     // pointer event) bails instead of dereferencing this.AppWindow after teardown (its getter throws once closed).
     private bool _isClosing;
 
+    // Latched while the bar is hidden for an action (a screen capture) via SuppressInfoPanel/ResumeInfoPanel, so the
+    // Info panel can't be re-shown by the pointer / WM_WINDOWPOSCHANGED churn the snip overlay generates while it is up.
+    private bool _infoPanelSuppressed;
+
     // Which side of the bar the currently-shown panel is on, so the WCAG hover-bridge can build its keep-alive
     // region (the panel plus the gap-corridor to the bar). Set every time we Show the panel.
     private Morphic.MorphicBar.Info.InfoPlacement _currentInfoPlacement;
@@ -1242,6 +1246,12 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
             return;
         }
 
+        // The panel is suppressed while the bar is hidden for an action (a screen capture) -- do not re-show it.
+        if (_infoPanelSuppressed)
+        {
+            return;
+        }
+
         // No Info panel while the bar is being actively MOVED (a drag, or the post-drag rotation/re-dock animation):
         // the bar sliding under a stationary cursor raises synthetic pointer moves that would otherwise keep popping
         // the panel up. (The Text Size auto re-dock uses a zero-duration animation, so IsBarMoving stays false there
@@ -1302,6 +1312,35 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         _infoPresenter.Hide();
     }
 
+    // Hide the Info panel RIGHT NOW (no fade delay) and stop its tracking. The panel is a SEPARATE topmost window, so
+    // hiding the bar does not hide it, and the normal delayed Hide would leave it on screen long enough for a snip
+    // tool's screen freeze to capture it.
+    private void HideInfoPanelImmediately()
+    {
+        this.StopHoverBridge();
+        _currentInfoTarget = null;
+        _infoPresenter.HideImmediately();
+    }
+
+    // Suppress the Info panel for as long as the bar is hidden for an action (e.g. a Snip/Copy screen capture).
+    // Hiding it once is NOT enough: while the bar is hidden, the snip overlay's foreground/z-order churn still drives
+    // pointer and WM_WINDOWPOSCHANGED traffic that re-shows the panel (a flash, or it comes fully back). This latches
+    // a flag that every show vector checks (OnBarPointerMoved, RepositionInfoPanelForCurrentTarget, StartHoverBridge)
+    // and hides whatever is currently up. Paired with ResumeInfoPanel; mirrors the FocusController suppression scope
+    // RunWithBarHiddenAsync already opens.
+    internal void SuppressInfoPanel()
+    {
+        _infoPanelSuppressed = true;
+        this.HideInfoPanelImmediately();
+    }
+
+    // End the suppression opened by SuppressInfoPanel (the bar is visible again). No re-show here -- the panel is a
+    // hover surface, so the next pointer move over the bar shows it again naturally.
+    internal void ResumeInfoPanel()
+    {
+        _infoPanelSuppressed = false;
+    }
+
     // True if the cursor is in the WCAG keep-alive CORRIDOR for the showing panel: within the panel's span ALONG the
     // bar (not sideways off it), AND on the PANEL's side of the button's panel-facing edge (i.e. moving TOWARD the
     // panel). The perpendicular test is what stops it keeping the panel when the cursor moves deeper into the bar or
@@ -1353,14 +1392,14 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
         // Nothing showing, the window is closing, or the bar is being actively moved (drag/rotation) -- in which case
         // the panel is suppressed anyway, so do not re-anchor it. (The Text Size zero-duration re-dock reports
         // not-moving, so the panel still follows it there.)
-        if (_currentInfoTarget is null || _isClosing || this.IsBarMoving())
+        if (_currentInfoTarget is null || _isClosing || _infoPanelSuppressed || this.IsBarMoving())
         {
             return;
         }
 
         _ = this.DispatcherQueue.TryEnqueue(() =>
         {
-            if (_currentInfoTarget is not FrameworkElement element || _isClosing)
+            if (_currentInfoTarget is not FrameworkElement element || _isClosing || _infoPanelSuppressed)
             {
                 return;
             }
@@ -1435,7 +1474,7 @@ public sealed partial class MorphicBarWindow : Morphic.Controls.Windowing.Transp
     // Begin watching the physical cursor after the pointer leaves the bar (no-op if no panel is showing). Idempotent.
     private void StartHoverBridge()
     {
-        if (_currentInfoTarget is null)
+        if (_currentInfoTarget is null || _infoPanelSuppressed)
         {
             return;
         }
